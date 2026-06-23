@@ -1220,7 +1220,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.7.0</h1>
+        <h1>NEXUS-Shield v5.8.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1240,7 +1240,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.7.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1383,12 +1383,13 @@
 
   <section id="view-field-rf" class="view">
     <div class="field-rf-wrap">
-      <p class="field-rf-motto" id="field-rf-motto" data-tip="FCC Part 15 passive global wireless watch. No jamming, no bursts, no unsafe RF. Lawful kick disconnects rogues and wire-kicks hostile IPs at 100%.">
-        <strong>Field Wireless · FCC Passive Global</strong> — detect threats worldwide in our scan field. Lawful kick only. FCC rules rule the show.
+      <p class="field-rf-motto" id="field-rf-motto" data-tip="FCC Part 15 permitted-spectrum whitelist. Anything outside permitted bands is hostile — shoot to kill on the wire. No jamming, no bursts, no unsafe RF.">
+        <strong>Field Wireless · Permitted Spectrum Only</strong> — whitelist all FCC bands. Wipe everything else. Shoot to kill on the wire.
       </p>
-      <div id="field-rf-fcc-banner" class="gov-merge-banner" style="border-color:#3a5080;background:rgba(20,36,56,0.55);margin-bottom:14px;">
-        <strong>FCC Part 15</strong> — passive receive-only scan. Lawful kick: disconnect <em>our</em> station from rogues, firewall block, 100% autokill on wire. <strong>No bursts · no jamming · no deauth floods.</strong>
+      <div id="field-rf-fcc-banner" class="gov-merge-banner" style="border-color:#8b3030;background:rgba(56,20,20,0.55);margin-bottom:14px;">
+        <strong>SHOOT TO KILL · Permitted spectrum only</strong> — passive receive-only scan. Unpermitted frequencies = hostile. Lawful kick: disconnect <em>our</em> station, firewall block, 100% autokill + hardware destroy. <strong>No bursts · no jamming · no deauth floods.</strong>
       </div>
+      <div id="field-rf-permitted-bands" class="meta" style="font-size:0.66rem;margin-bottom:10px;"></div>
       <div class="honor-grid">
         <div class="honor-card">
           <h4 data-tip="Passive global wireless field — all visible APs across 2.4/5/6 GHz bands.">Global antenna telemetry</h4>
@@ -1409,13 +1410,21 @@
               <span><strong>Lawful kick</strong> — disconnect rogues + wire-kick hostiles</span>
             </label>
             <label class="toggle" style="font-size:0.72rem;margin-left:12px;">
+              <input type="checkbox" id="field-rf-shoot-to-kill" checked />
+              <span><strong>Shoot to kill</strong> — wipe all unpermitted spectrum on the wire</span>
+            </label>
+            <label class="toggle" style="font-size:0.72rem;margin-left:12px;">
               <input type="checkbox" id="field-rf-auto-rfkill" />
               <span><strong>Soft rfkill (advanced)</strong> — OUR radio only; off by default</span>
             </label>
           </div>
         </div>
         <div class="honor-card">
-          <h4 data-tip="Wireless threats detected passively — evil twin, rogue open, hostile OUI, 100% correlated IP.">Global threat detection</h4>
+          <h4 data-tip="Unpermitted FCC frequencies detected in passive scan — marked hostile, shoot-to-kill eligible.">Unpermitted spectrum · wiped</h4>
+          <div id="field-rf-unpermitted"><div class="empty">No unpermitted frequencies — all APs in permitted bands.</div></div>
+        </div>
+        <div class="honor-card">
+          <h4 data-tip="Wireless threats detected passively — unpermitted spectrum, evil twin, rogue open, hostile OUI, 100% correlated IP.">Global threat detection</h4>
           <div id="field-rf-bursts"><div class="empty">No wireless threats this cycle — passive watch active.</div></div>
           <div id="field-rf-kicks" style="margin-top:10px;font-size:0.68rem;"></div>
           <div id="field-rf-recent" style="margin-top:10px;font-size:0.68rem;"></div>
@@ -3824,11 +3833,11 @@
       return `<span class="rf-burst-chip severity-${esc(sev)}">${esc(sev)} · ${esc(kind)} · ${esc(who)}<br/><span class="meta">${esc(b.detail || "")}</span></span>`;
     }
 
-    async function setFieldRfShield(enabled, autoRfkill, lawfulKick) {
+    async function setFieldRfShield(enabled, autoRfkill, lawfulKick, shootToKill) {
       await fetch("/api/field-rf/shield", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled, auto_rfkill: autoRfkill, lawful_kick: lawfulKick }),
+        body: JSON.stringify({ enabled, auto_rfkill: autoRfkill, lawful_kick: lawfulKick, shoot_to_kill: shootToKill }),
       });
       refresh();
     }
@@ -3844,11 +3853,13 @@
         const en = $("field-rf-shield-enabled")?.checked;
         const auto = $("field-rf-auto-rfkill")?.checked;
         const lawful = $("field-rf-lawful-kick")?.checked;
-        setFieldRfShield(en, auto, lawful);
+        const shoot = $("field-rf-shoot-to-kill")?.checked;
+        setFieldRfShield(en, auto, lawful, shoot);
       };
       $("field-rf-shield-enabled")?.addEventListener("change", onShield);
       $("field-rf-auto-rfkill")?.addEventListener("change", onShield);
       $("field-rf-lawful-kick")?.addEventListener("change", onShield);
+      $("field-rf-shoot-to-kill")?.addEventListener("change", onShield);
       $("police-category-filter")?.addEventListener("change", () => {
         if (policeAgencyCache) renderPoliceAgency(policeAgencyCache, true);
       });
@@ -3935,13 +3946,22 @@
       if (motto && fr.motto) {
         motto.innerHTML = `<strong>Field RF · Internal Antenna</strong> — ${esc(fr.motto)} ${esc(fr.tagline || "")}`;
       }
+      const bandsEl = $("field-rf-permitted-bands");
+      if (bandsEl) {
+        const bands = fr.permitted_bands || [];
+        bandsEl.innerHTML = bands.length
+          ? `<strong>Permitted FCC bands</strong> — ${bands.map((b) => esc(b.label || b.id)).join(" · ")}`
+          : "";
+      }
       const ant = fr.antenna || {};
       const meta = $("field-rf-antenna-meta");
       if (meta) {
         meta.textContent = [
-          ant.mode || "fcc_passive_global",
+          ant.mode || "fcc_permitted_spectrum_shoot_to_kill",
           ant.wifi_device ? `wifi:${ant.wifi_device}` : "no wifi iface",
           `scan:${ant.scan_count ?? 0}`,
+          `permitted:${ant.permitted_count ?? "—"}`,
+          `hostile:${ant.unpermitted_count ?? 0}`,
           (ant.bands_seen || []).join("/") || "bands:—",
           ant.active_connection?.ssid ? `connected:${ant.active_connection.ssid}` : "not connected",
         ].filter(Boolean).join(" · ");
@@ -3966,16 +3986,27 @@
       if (shieldEl) {
         const on = shield.enabled !== false;
         const kicks = shield.kick_count ?? (fr.lawful_kicks || []).length;
+        const shoot = shield.shoot_to_kill !== false;
         shieldEl.innerHTML = on
-          ? `<span class="rf-shield-on">Watch ON</span> · ${esc(shield.action || "passive")}${kicks ? ` · ${kicks} lawful kick(s)` : ""}`
+          ? `<span class="rf-shield-on">Watch ON</span>${shoot ? ' · <span class="severity-critical">SHOOT TO KILL</span>' : ""} · ${esc(shield.action || "passive")}${kicks ? ` · ${kicks} kick(s)` : ""}`
           : `<span class="rf-shield-off">Watch OFF</span>`;
       }
       const enBox = $("field-rf-shield-enabled");
       const autoBox = $("field-rf-auto-rfkill");
       const lawfulBox = $("field-rf-lawful-kick");
+      const shootBox = $("field-rf-shoot-to-kill");
       if (enBox && document.activeElement !== enBox) enBox.checked = shield.enabled !== false;
       if (autoBox && document.activeElement !== autoBox) autoBox.checked = shield.auto_rfkill === true;
       if (lawfulBox && document.activeElement !== lawfulBox) lawfulBox.checked = shield.lawful_kick !== false;
+      if (shootBox && document.activeElement !== shootBox) shootBox.checked = shield.shoot_to_kill !== false;
+
+      const unpermEl = $("field-rf-unpermitted");
+      const unperm = fr.unpermitted_aps || fr.unpermitted_killed || [];
+      if (unpermEl) {
+        unpermEl.innerHTML = unperm.length
+          ? unperm.map((u) => rfThreatChip({ kind: "unpermitted_spectrum", severity: "critical", bssid: u.bssid, ssid: u.ssid, detail: `${u.channel || "?"} ch · ${u.freq_mhz || "?"} MHz — HOSTILE` })).join("")
+          : '<div class="empty">No unpermitted frequencies — all APs in permitted bands.</div>';
+      }
 
       const burstEl = $("field-rf-bursts");
       const threats = fr.threats || fr.bursts || [];

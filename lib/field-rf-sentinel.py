@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Field RF Sentinel — FCC-compliant passive wireless threat watch.
+"""Field RF Sentinel — FCC permitted-spectrum enforcement + passive threat watch.
 
-Passive global WiFi field scan (receive-only beacon correlation). Detects rogue
-APs, evil twins, hostile OUIs, and open downgrades. Lawful kick: disconnect OUR
-station from threats, firewall-block correlated hostile IPs, autokill at 100%
-certainty — never jamming, bursts, or unsafe RF transmission.
+Passive global WiFi field scan (receive-only beacon correlation). Whitelists all
+FCC Part 15 permitted bands; anything outside is hostile and gets shoot-to-kill
+lawful response on the wire (disconnect, firewall, autokill, hardware destroy).
+Never jamming, bursts, or unsafe RF transmission.
 """
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ SHIELD_CFG = STATE / "field-rf-shield.json"
 THREATS_LOG = STATE / "field-rf-threats.jsonl"
 PANEL_CACHE = STATE / "field-rf-panel.json"
 FCC_POLICY = INSTALL / "data" / "fcc-wireless-policy.json"
+FCC_PERMITTED = INSTALL / "data" / "fcc-permitted-frequencies.json"
 HOSTILE_TSV = STATE / "field-hostile.tsv"
 HOST_ATTACKS = STATE / "host-attacks.json"
 OUI_VENDORS = INSTALL / "data" / "oui-vendors.tsv"
@@ -45,9 +46,13 @@ VECTOR_MAP = {
     "enterprise_downgrade": "WIFI_THREAT",
     "hidden_surveillance": "WIFI_THREAT",
     "connected_rogue": "WIFI_THREAT",
+    "connected_unpermitted": "WIFI_THREAT",
+    "unpermitted_spectrum": "WIFI_THREAT",
     "correlated_hostile_ip": "WIFI_THREAT",
     "global_wireless_field": "FIELD_ANTENNA_ALERT",
 }
+
+_PERMITTED_CACHE: dict[str, Any] | None = None
 
 
 def _now() -> str:
@@ -85,6 +90,85 @@ def _mac_oui(mac: str) -> str:
     if len(raw) < 6:
         return ""
     return f"{raw[0:2]}:{raw[2:4]}:{raw[4:6]}".upper()
+
+
+def _permitted_bands() -> dict[str, Any]:
+    global _PERMITTED_CACHE
+    if _PERMITTED_CACHE is not None:
+        return _PERMITTED_CACHE
+    doc = _load_json(FCC_PERMITTED, {})
+    if not doc.get("bands"):
+        doc = {
+            "bands": [
+                {"id": "2.4ghz_wifi", "freq_mhz_min": 2401, "freq_mhz_max": 2473, "channels": list(range(1, 12))},
+                {"id": "5ghz_unii1", "freq_mhz_min": 5150, "freq_mhz_max": 5250, "channels": [36, 40, 44, 48]},
+                {"id": "5ghz_unii2a", "freq_mhz_min": 5250, "freq_mhz_max": 5350, "channels": [52, 56, 60, 64]},
+                {"id": "5ghz_unii2c", "freq_mhz_min": 5470, "freq_mhz_max": 5725, "channels": list(range(100, 145, 4))},
+                {"id": "5ghz_unii3", "freq_mhz_min": 5725, "freq_mhz_max": 5850, "channels": [149, 153, 157, 161, 165]},
+                {"id": "6ghz_unii5", "freq_mhz_min": 5925, "freq_mhz_max": 6425, "channels": []},
+                {"id": "6ghz_unii6", "freq_mhz_min": 6425, "freq_mhz_max": 6525, "channels": []},
+                {"id": "6ghz_unii7", "freq_mhz_min": 6525, "freq_mhz_max": 6875, "channels": []},
+                {"id": "6ghz_unii8", "freq_mhz_min": 6875, "freq_mhz_max": 7125, "channels": []},
+            ],
+        }
+    _PERMITTED_CACHE = doc
+    return doc
+
+
+def _parse_freq_mhz(freq: Any) -> float | None:
+    raw = str(freq or "").strip().lower().replace("mhz", "").strip()
+    if not raw:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        m = re.search(r"(\d+(?:\.\d+)?)", raw)
+        return float(m.group(1)) if m else None
+
+
+def _parse_channel(channel: Any) -> int | None:
+    raw = str(channel or "").strip()
+    if not raw or raw in ("--", "-", "n/a"):
+        return None
+    try:
+        return int(float(raw))
+    except ValueError:
+        return None
+
+
+def _is_permitted_frequency(freq_mhz: Any, channel: Any = None) -> tuple[bool, str]:
+    """Return (permitted, band_id_or_reason)."""
+    bands_doc = _permitted_bands()
+    freq = _parse_freq_mhz(freq_mhz)
+    ch = _parse_channel(channel)
+
+    if freq is None and ch is None:
+        return False, "unknown_frequency"
+
+    for band in bands_doc.get("bands") or []:
+        lo = float(band.get("freq_mhz_min") or 0)
+        hi = float(band.get("freq_mhz_max") or 0)
+        allowed_ch = band.get("channels") or []
+        in_range = freq is not None and lo <= freq <= hi
+        ch_ok = True
+        if allowed_ch and ch is not None:
+            ch_ok = ch in allowed_ch
+        elif ch is not None and not allowed_ch:
+            ch_ok = True
+        if in_range and ch_ok:
+            return True, str(band.get("id") or "permitted")
+        if in_range and not ch_ok:
+            return False, f"channel_{ch}_not_in_{band.get('id', 'band')}"
+
+    if ch is not None:
+        for band in bands_doc.get("bands") or []:
+            allowed_ch = band.get("channels") or []
+            if allowed_ch and ch in allowed_ch:
+                return True, str(band.get("id") or "permitted")
+
+    if freq is not None:
+        return False, f"freq_{int(freq)}_mhz_unpermitted"
+    return False, f"channel_{ch}_unpermitted"
 
 
 def _fcc_policy() -> dict[str, Any]:
@@ -277,6 +361,8 @@ def _shield_config() -> dict[str, Any]:
     doc = _load_json(SHIELD_CFG, {})
     doc.setdefault("enabled", True)
     doc.setdefault("lawful_kick", True)
+    doc.setdefault("shoot_to_kill", True)
+    doc.setdefault("permitted_spectrum_only", True)
     doc.setdefault("fcc_passive_only", True)
     doc.setdefault("global_watch", True)
     doc.setdefault("auto_rfkill", False)
@@ -287,6 +373,7 @@ def _set_shield(
     enabled: bool | None = None,
     auto_rfkill: bool | None = None,
     lawful_kick: bool | None = None,
+    shoot_to_kill: bool | None = None,
 ) -> dict[str, Any]:
     doc = _shield_config()
     if enabled is not None:
@@ -295,7 +382,10 @@ def _set_shield(
         doc["auto_rfkill"] = bool(auto_rfkill)
     if lawful_kick is not None:
         doc["lawful_kick"] = bool(lawful_kick)
+    if shoot_to_kill is not None:
+        doc["shoot_to_kill"] = bool(shoot_to_kill)
     doc["fcc_passive_only"] = True
+    doc["permitted_spectrum_only"] = True
     doc["updated"] = _now()
     _save_json(SHIELD_CFG, doc)
     return doc
@@ -337,15 +427,47 @@ def _detect_wireless_threats(
     suspicious_ouis = _suspicious_ouis()
     trusted_ssids = set(hist.get("trusted_ssids") or [])
 
+    cfg = _shield_config()
+    permitted_only = cfg.get("permitted_spectrum_only", True)
+    shoot = cfg.get("shoot_to_kill", True)
+    unpermitted_aps: list[dict[str, Any]] = []
+
     if scan:
+        permitted_n = 0
+        for ap in scan:
+            ok, band_id = _is_permitted_frequency(ap.get("freq_mhz"), ap.get("channel"))
+            ap["permitted"] = ok
+            ap["permitted_band"] = band_id if ok else ""
+            if ok:
+                permitted_n += 1
+            elif permitted_only:
+                unpermitted_aps.append(ap)
+                threats.append({
+                    "ts": ts,
+                    "kind": "unpermitted_spectrum",
+                    "severity": "critical",
+                    "ssid": ap.get("ssid"),
+                    "bssid": ap.get("bssid"),
+                    "channel": ap.get("channel"),
+                    "freq_mhz": ap.get("freq_mhz"),
+                    "detail": (
+                        f"UNPERMITTED — ch{ap.get('channel')} {ap.get('freq_mhz')} MHz "
+                        f"({band_id}) · shoot-to-kill eligible"
+                    ),
+                    "shoot_to_kill": shoot,
+                    "global": True,
+                })
         threats.append({
             "ts": ts,
             "kind": "global_wireless_field",
             "severity": "info",
-            "detail": f"Passive global field — {len(scan)} APs across bands "
+            "detail": f"Passive global field — {len(scan)} APs "
+            f"({permitted_n} permitted / {len(unpermitted_aps)} hostile unpermitted) "
             f"({sum(1 for s in scan if s.get('band') == '2.4GHz')} 2.4 / "
             f"{sum(1 for s in scan if s.get('band') == '5GHz')} 5 / "
             f"{sum(1 for s in scan if s.get('band') == '6GHz')} 6 GHz)",
+            "permitted_count": permitted_n,
+            "unpermitted_count": len(unpermitted_aps),
             "global": True,
         })
 
@@ -431,6 +553,24 @@ def _detect_wireless_threats(
 
     if active:
         active_bssid = _norm_mac(str(active.get("bssid") or ""))
+        active_ok, active_reason = _is_permitted_frequency(
+            active.get("freq_mhz"), active.get("channel"),
+        )
+        if not active_ok and permitted_only:
+            threats.append({
+                "ts": ts,
+                "kind": "connected_unpermitted",
+                "severity": "critical",
+                "ssid": active.get("ssid"),
+                "bssid": active.get("bssid"),
+                "device": active.get("device"),
+                "detail": (
+                    f"CONNECTED ON UNPERMITTED SPECTRUM — {active_reason} · "
+                    f"immediate lawful disconnect + shoot-to-kill"
+                ),
+                "shoot_to_kill": shoot,
+                "global": True,
+            })
         for t in threats:
             if t.get("severity") in ("high", "critical") and t.get("bssid"):
                 if _norm_mac(str(t.get("bssid"))) == active_bssid:
@@ -442,6 +582,7 @@ def _detect_wireless_threats(
                         "bssid": active.get("bssid"),
                         "device": active.get("device"),
                         "detail": f"Connected to flagged AP {active.get('ssid')} — lawful kick eligible",
+                        "shoot_to_kill": shoot,
                         "global": True,
                     })
                     break
@@ -521,16 +662,27 @@ def _lawful_kick(
 
     kicks: list[dict[str, Any]] = []
     kicked_ips: set[str] = set()
+    shoot = cfg.get("shoot_to_kill", True)
 
     kickable = {t.get("kind") for t in threats if t.get("severity") in ("high", "critical")}
-    if active and wifi_dev and ("connected_rogue" in kickable or "evil_twin" in kickable or "rogue_open" in kickable):
-        if _disconnect_wifi(wifi_dev, "fcc_lawful_kick_rogue_ap"):
+    disconnect_kinds = {
+        "connected_rogue", "connected_unpermitted", "evil_twin", "rogue_open",
+        "unpermitted_spectrum", "hostile_oui",
+    }
+    if shoot:
+        disconnect_kinds.update(kickable)
+
+    must_disconnect = bool(kickable & disconnect_kinds) or "connected_unpermitted" in kickable
+    if active and wifi_dev and must_disconnect:
+        reason = "fcc_shoot_to_kill_unpermitted" if "connected_unpermitted" in kickable else "fcc_lawful_kick_rogue_ap"
+        if _disconnect_wifi(wifi_dev, reason):
             kicks.append({
-                "action": "disconnect_rogue_ap",
+                "action": "disconnect_unpermitted_spectrum" if "connected_unpermitted" in kickable else "disconnect_rogue_ap",
                 "device": wifi_dev,
                 "ssid": active.get("ssid"),
                 "bssid": active.get("bssid"),
                 "fcc": "Part15_device_control",
+                "shoot_to_kill": shoot,
             })
 
     for t in threats:
@@ -547,13 +699,31 @@ def _lawful_kick(
                 "ip": ip,
                 "hardware_destroy": result.get("hardware_destroy"),
                 "fcc": "network_layer_only",
+                "shoot_to_kill": shoot,
             })
         elif _firewall_block_ip(ip, "fcc_wifi_correlated_hostile"):
             kicks.append({
                 "action": "firewall_block_correlated_ip",
                 "ip": ip,
                 "fcc": "network_layer_only",
+                "shoot_to_kill": shoot,
             })
+
+    if shoot:
+        for t in threats:
+            if t.get("kind") not in ("unpermitted_spectrum", "connected_unpermitted", "hostile_oui"):
+                continue
+            ip = str(t.get("ip") or "")
+            if not ip or ip in kicked_ips:
+                continue
+            if _firewall_block_ip(ip, "fcc_unpermitted_spectrum_shoot_to_kill"):
+                kicked_ips.add(ip)
+                kicks.append({
+                    "action": "firewall_block_unpermitted",
+                    "ip": ip,
+                    "bssid": t.get("bssid"),
+                    "shoot_to_kill": True,
+                })
 
     for t in threats:
         ip = str(t.get("ip") or "")
@@ -561,14 +731,29 @@ def _lawful_kick(
             continue
         if t.get("severity") == "critical" and _firewall_block_ip(ip, "fcc_wifi_threat"):
             kicked_ips.add(ip)
-            kicks.append({"action": "firewall_block_correlated_ip", "ip": ip})
+            kicks.append({"action": "firewall_block_correlated_ip", "ip": ip, "shoot_to_kill": shoot})
+
+    unpermitted_killed = [
+        {
+            "bssid": t.get("bssid"),
+            "ssid": t.get("ssid"),
+            "channel": t.get("channel"),
+            "freq_mhz": t.get("freq_mhz"),
+            "detail": t.get("detail"),
+        }
+        for t in threats
+        if t.get("kind") == "unpermitted_spectrum"
+    ]
 
     return {
         "active": True,
-        "action": "lawful_kick" if kicks else "watch_only",
+        "action": "shoot_to_kill" if (shoot and kicks) else ("lawful_kick" if kicks else "watch_only"),
         "fcc_passive_only": cfg.get("fcc_passive_only", True),
+        "shoot_to_kill": shoot,
+        "permitted_spectrum_only": cfg.get("permitted_spectrum_only", True),
         "kicks": kicks,
         "kick_count": len(kicks),
+        "unpermitted_killed": unpermitted_killed,
         "auto_rfkill": False,
     }
 
@@ -622,6 +807,15 @@ def sample_cycle() -> dict[str, Any]:
         scan = _wifi_scan(wifi_dev)
         active = _active_wifi_connection(wifi_dev)
 
+    if active and scan:
+        active_bssid = _norm_mac(str(active.get("bssid") or ""))
+        for ap in scan:
+            if _norm_mac(str(ap.get("bssid") or "")) == active_bssid:
+                active["channel"] = ap.get("channel")
+                active["freq_mhz"] = ap.get("freq_mhz")
+                active["permitted"] = ap.get("permitted")
+                break
+
     threats = _detect_wireless_threats(scan, active, hist)
     for t in threats:
         if t.get("severity") != "info":
@@ -642,14 +836,18 @@ def sample_cycle() -> dict[str, Any]:
     _save_history(hist)
 
     bands = {s.get("band") for s in scan if s.get("band")}
+    unpermitted = [s for s in scan if s.get("permitted") is False]
     return {
         "updated": _now(),
         "fcc": _fcc_policy(),
+        "permitted_bands": _permitted_bands().get("bands") or [],
         "antenna": {
-            "mode": "fcc_passive_global",
-            "description": "Passive global wireless field — FCC Part 15 receive-only scan",
+            "mode": "fcc_permitted_spectrum_shoot_to_kill",
+            "description": "Permitted FCC spectrum only — shoot to kill all unpermitted APs on the wire",
             "wifi_device": wifi_dev,
             "scan_count": len(scan),
+            "permitted_count": sum(1 for s in scan if s.get("permitted")),
+            "unpermitted_count": len(unpermitted),
             "bands_seen": sorted(b for b in bands if b),
             "rfkill_count": len(rfkill),
             "active_connection": active,
@@ -661,6 +859,8 @@ def sample_cycle() -> dict[str, Any]:
         "recent_threats": _recent_threats(30),
         "shield": {**_shield_config(), **kick_result},
         "lawful_kicks": kick_result.get("kicks") or [],
+        "unpermitted_killed": kick_result.get("unpermitted_killed") or [],
+        "unpermitted_aps": unpermitted[:40],
         "bursts": [],
         "recent_bursts": [],
     }
@@ -672,9 +872,10 @@ def panel_json() -> dict[str, Any]:
         doc = sample_cycle()
         _save_json(PANEL_CACHE, doc)
     return {
-        "motto": "FCC-compliant passive global wireless watch — lawful kick on the wire, never jamming.",
-        "tagline": "Detect threats worldwide in our scan field. Disconnect rogues. Block hostile IPs. 100% autokill. No bursts.",
+        "motto": "Permitted FCC spectrum only — shoot to kill everything else on the wire.",
+        "tagline": "Whitelist all Part 15 bands. Wipe unpermitted APs. Disconnect. Firewall. 100% autokill. No jamming.",
         "fcc": doc.get("fcc") or _fcc_policy(),
+        "permitted_bands": doc.get("permitted_bands") or _permitted_bands().get("bands") or [],
         "updated": doc.get("updated") or _now(),
         "antenna": doc.get("antenna") or {},
         "interfaces": doc.get("interfaces") or _nmcli_devices(),
@@ -683,8 +884,12 @@ def panel_json() -> dict[str, Any]:
         "global_field": doc.get("global_field"),
         "recent_threats": doc.get("recent_threats") or _recent_threats(),
         "lawful_kicks": doc.get("lawful_kicks") or [],
+        "unpermitted_killed": doc.get("unpermitted_killed") or [],
+        "unpermitted_aps": doc.get("unpermitted_aps") or [],
         "shield": doc.get("shield") or _shield_config(),
         "threat_kinds": [
+            {"id": "unpermitted_spectrum", "label": "Unpermitted spectrum (SHOOT TO KILL)", "vector": "WIFI_THREAT"},
+            {"id": "connected_unpermitted", "label": "Connected on illegal frequency", "vector": "WIFI_THREAT"},
             {"id": "evil_twin", "label": "Evil twin AP", "vector": "WIFI_THREAT"},
             {"id": "rogue_open", "label": "Rogue open AP", "vector": "WIFI_THREAT"},
             {"id": "hostile_oui", "label": "Hostile / suspicious OUI", "vector": "WIFI_THREAT"},
@@ -716,14 +921,26 @@ def main() -> int:
         enabled = sys.argv[2].strip().lower() in ("1", "true", "on", "yes")
         auto = False
         lawful = True
+        shoot = True
         if len(sys.argv) >= 4:
             auto = sys.argv[3].strip().lower() in ("1", "true", "on", "yes")
         if len(sys.argv) >= 5:
             lawful = sys.argv[4].strip().lower() in ("1", "true", "on", "yes", "")
-        doc = _set_shield(enabled=enabled, auto_rfkill=auto, lawful_kick=lawful)
-        print(json.dumps({"ok": True, "shield": doc, "fcc_passive_only": True}, ensure_ascii=False))
+        if len(sys.argv) >= 6:
+            shoot = sys.argv[5].strip().lower() in ("1", "true", "on", "yes", "")
+        doc = _set_shield(enabled=enabled, auto_rfkill=auto, lawful_kick=lawful, shoot_to_kill=shoot)
+        print(json.dumps({
+            "ok": True,
+            "shield": doc,
+            "fcc_passive_only": True,
+            "shoot_to_kill": doc.get("shoot_to_kill", True),
+        }, ensure_ascii=False))
         return 0
-    print(json.dumps({"error": "usage: field-rf-sentinel.py [json|cycle|shield on|off [auto_rfkill] [lawful_kick]]"}))
+    if cmd == "permitted-check" and len(sys.argv) >= 4:
+        ok, reason = _is_permitted_frequency(sys.argv[2], sys.argv[3])
+        print(json.dumps({"permitted": ok, "reason": reason}, ensure_ascii=False))
+        return 0
+    print(json.dumps({"error": "usage: field-rf-sentinel.py [json|cycle|shield on|off [auto_rfkill] [lawful_kick] [shoot_to_kill]|permitted-check FREQ CHAN]"}))
     return 1
 
 

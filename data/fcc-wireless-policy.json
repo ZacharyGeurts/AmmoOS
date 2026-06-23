@@ -1,23 +1,33 @@
 {
-  "schema": "nexus-fcc-wireless-v1",
+  "schema": "nexus-fcc-wireless-v2",
   "authority": "FCC Part 15 (unlicensed) + operator device control",
-  "motto": "Passive watch globally. Lawful kick on the wire. No bursts. No jamming.",
+  "motto": "Permitted spectrum only. Shoot to kill everything else — on the wire, never on the air.",
+  "permitted_spectrum": "data/fcc-permitted-frequencies.json",
   "allowed": [
     "Passive WiFi beacon scan (receive-only correlation via nmcli)",
-    "Disconnect OUR station from rogue or hostile APs (nmcli dev disconnect)",
+    "Permitted-frequency whitelist enforcement (2.4/5/6 GHz FCC UNII/ISM)",
+    "Disconnect OUR station from rogue, unpermitted, or hostile APs (nmcli dev disconnect)",
     "Firewall block hostile IPs on the wire path (nftables)",
-    "Trust Strike autokill at 100% certainty on correlated network threats",
+    "Trust Strike autokill + hardware destroy at 100% certainty on correlated threats",
     "Operator-initiated soft rfkill on OUR wlan only (optional, off by default)"
   ],
   "forbidden": [
     "Intentional jamming or deauthentication floods",
     "Overpower transmission or burst interference",
     "Spoofed beacon frames or deceptive RF transmission",
-    "Automatic rfkill on heuristic burst spikes"
+    "Automatic rfkill on heuristic burst spikes",
+    "Tolerating APs outside FCC permitted frequency bands"
   ],
   "lawful_kick_actions": [
     "disconnect_rogue_ap",
+    "disconnect_unpermitted_spectrum",
     "firewall_block_correlated_ip",
-    "autokill_strike_certain"
-  ]
+    "autokill_strike_certain",
+    "hardware_destroy_strike_certain"
+  ],
+  "shoot_to_kill": {
+    "enabled_by_default": true,
+    "targets": ["unpermitted_spectrum", "evil_twin", "rogue_open", "hostile_oui", "connected_rogue", "connected_unpermitted"],
+    "note": "Aggressive lawful wire-layer kill chain. No RF transmission."
+  }
 }

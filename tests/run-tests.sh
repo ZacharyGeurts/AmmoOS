@@ -460,21 +460,29 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.7\.0' "$panel"
+  grep -q 'v5\.8\.0' "$panel"
 }
 
 test_field_rf_module() {
   [[ -f "${ROOT}/lib/field-rf-sentinel.py" ]]
   [[ -f "${ROOT}/lib/field-rf-sentinel.sh" ]]
   [[ -f "${ROOT}/data/fcc-wireless-policy.json" ]]
+  [[ -f "${ROOT}/data/fcc-permitted-frequencies.json" ]]
   grep -q 'field_rf' "${ROOT}/lib/threat-panel.sh"
   grep -q '/api/field-rf' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'WIFI_THREAT' "${ROOT}/lib/threat-vectors.sh"
   grep -q '_lawful_kick' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q '_detect_wireless_threats' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q '_is_permitted_frequency' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'shoot_to_kill' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'unpermitted_spectrum' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'fcc_passive_only' "${ROOT}/lib/field-rf-sentinel.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'fcc_passive_global'
+    python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'permitted_bands'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-rf-sentinel.py" permitted-check 2437 6 | grep -q '"permitted": true'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-rf-sentinel.py" permitted-check 2484 14 | grep -q '"permitted": false'
 }
 
 test_program_tags_module() {
@@ -557,8 +565,11 @@ test_panel_field_rf_ui() {
   grep -q 'location.reload' "$panel"
   grep -q 'field-rf-shield-enabled' "$panel"
   grep -q 'field-rf-lawful-kick' "$panel"
+  grep -q 'field-rf-shoot-to-kill' "$panel"
+  grep -q 'field-rf-unpermitted' "$panel"
   grep -q 'view-field-rf' "$panel"
-  grep -q 'FCC Part 15' "$panel"
+  grep -q 'SHOOT TO KILL' "$panel"
+  grep -q 'Permitted spectrum' "$panel"
   grep -q 'WIFI_THREAT' "$panel" || grep -q 'Lawful kick' "$panel"
 }
 
@@ -777,7 +788,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Old Man mode' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.7.0' "$panel"
+  grep -q 'v5.8.0' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -786,7 +797,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.7.0' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.8.0' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
