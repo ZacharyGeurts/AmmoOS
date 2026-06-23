@@ -58,6 +58,11 @@ nexus_shutdown_startup_check
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/packet-oracle.sh"
 # shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh"
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/adblock-loader.sh"
+nexus_settings_init
+# shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/threat-panel.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/panel-launch.sh"
@@ -108,5 +113,8 @@ while true; do
   nexus_firewall_verify
   nexus_tamper_guard_cycle || true
   nexus_threat_panel_publish
+  if [[ "${NEXUS_ADBLOCK:-0}" == "1" ]]; then
+    nexus_adblock_apply 2>/dev/null || true
+  fi
   sleep "${NEXUS_VIGIL_MAINTAIN_INTERVAL:-300}"
 done

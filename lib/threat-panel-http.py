@@ -138,6 +138,64 @@ def _run_nexus_firewall_trust(cmd: str, ip: str, direction: str = "out", label: 
     return proc.returncode == 0
 
 
+def _run_nexus_bash(inner: str, timeout: int = 30) -> bool:
+    env = os.environ.copy()
+    env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+    env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+    proc = subprocess.run(
+        ["bash", "-c", inner],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        env=env,
+    )
+    return proc.returncode == 0
+
+
+def _nexus_shell_prelude() -> str:
+    return (
+        f"source {INSTALL_ROOT}/lib/nexus-common.sh && nexus_load_config && "
+        f"source {INSTALL_ROOT}/lib/firewall-sentinel.sh && "
+        f"source {INSTALL_ROOT}/lib/threat-autosanitize.sh && "
+        f"source {INSTALL_ROOT}/lib/paranoia-mode.sh && "
+        f"source {INSTALL_ROOT}/lib/nexus-settings.sh && "
+        f"source {INSTALL_ROOT}/lib/adblock-loader.sh && "
+    )
+
+
+def _run_nexus_settings_set(key: str, val: str) -> bool:
+    script = INSTALL_ROOT / "lib" / "nexus-settings.sh"
+    if not script.is_file():
+        return False
+    safe_key = key.replace("'", "'\"'\"'")
+    inner = _nexus_shell_prelude() + f"nexus_settings_set '{safe_key}' '{val}'"
+    return _run_nexus_bash(inner, timeout=45)
+
+
+def _run_nexus_adblock_load(preset: str = "", url: str = "") -> bool:
+    script = INSTALL_ROOT / "lib" / "adblock-loader.sh"
+    if not script.is_file():
+        return False
+    inner = _nexus_shell_prelude()
+    if preset:
+        safe = preset.replace("'", "'\"'\"'")
+        inner += f"nexus_adblock_load_preset '{safe}'"
+    elif url:
+        safe = url.replace("'", "'\"'\"'")
+        inner += f"nexus_adblock_load_url '{safe}'"
+    else:
+        return False
+    return _run_nexus_bash(inner, timeout=180)
+
+
+def _run_nexus_adblock_apply() -> bool:
+    script = INSTALL_ROOT / "lib" / "adblock-loader.sh"
+    if not script.is_file():
+        return False
+    inner = _nexus_shell_prelude() + "nexus_adblock_apply"
+    return _run_nexus_bash(inner, timeout=120)
+
+
 def _run_nexus_autosanitize_toggle(enabled: bool) -> bool:
     script = INSTALL_ROOT / "lib" / "threat-autosanitize.sh"
     if not script.is_file():
@@ -391,6 +449,50 @@ class Handler(BaseHTTPRequestHandler):
                 return
             ok = _run_nexus_paranoia("reenable", incident_id)
             self._send(200 if ok else 404, json.dumps({"ok": ok, "id": incident_id}), "application/json")
+            return
+
+        if path == "/api/settings":
+            key = str(body.get("key", "")).strip()
+            val = str(body.get("value", body.get("val", ""))).strip()
+            bulk = body.get("settings")
+            if isinstance(bulk, dict) and bulk:
+                ok_all = True
+                for k, v in bulk.items():
+                    if not _run_nexus_settings_set(str(k), str(v)):
+                        ok_all = False
+                self._send(200 if ok_all else 500, json.dumps({"ok": ok_all}), "application/json")
+                return
+            if not key:
+                self._send(400, json.dumps({"ok": False, "error": "missing key"}), "application/json")
+                return
+            if val not in ("0", "1"):
+                self._send(400, json.dumps({"ok": False, "error": "value must be 0 or 1"}), "application/json")
+                return
+            ok = _run_nexus_settings_set(key, val)
+            self._send(200 if ok else 500, json.dumps({"ok": ok, "key": key, "value": val}), "application/json")
+            return
+
+        if path == "/api/adblock/load":
+            preset = str(body.get("preset", "")).strip()
+            url = str(body.get("url", "")).strip()
+            if not preset and not url:
+                self._send(400, json.dumps({"ok": False, "error": "preset or url required"}), "application/json")
+                return
+            ok = _run_nexus_adblock_load(preset=preset, url=url)
+            if ok and body.get("apply", True):
+                _run_nexus_adblock_apply()
+            self._send(200 if ok else 500, json.dumps({"ok": ok, "preset": preset, "url": url}), "application/json")
+            return
+
+        if path == "/api/adblock/toggle":
+            enabled = bool(body.get("enabled", body.get("value", "0") in ("1", True, "true")))
+            ok = _run_nexus_settings_set("NEXUS_ADBLOCK", "1" if enabled else "0")
+            self._send(200 if ok else 500, json.dumps({"ok": ok, "enabled": enabled}), "application/json")
+            return
+
+        if path == "/api/adblock/apply":
+            ok = _run_nexus_adblock_apply()
+            self._send(200 if ok else 500, json.dumps({"ok": ok}), "application/json")
             return
 
         self._send(404, "not found", "text/plain")

@@ -59,14 +59,15 @@ nexus_panel_install_desktop() {
   install -d -m 755 "$icon_dir" 2>/dev/null || return 0
   install -m 644 "$icon_src" "${icon_dir}/nexus-shield.png" 2>/dev/null || true
 
+  install -m 755 "${root}/nexus.sh" /usr/local/bin/nexus.sh 2>/dev/null || true
   cat >"${apps_dir}/nexus-shield.desktop" <<EOF
 [Desktop Entry]
-Version=2.0.1
+Version=2.0.2
 Type=Application
 Name=NEXUS-Shield
 GenericName=Network Gatekeeper
-Comment=AMOURANTHRTX field security — connection intent panel
-Exec=xdg-open ${url}
+Comment=Open NEXUS connection gatekeeper panel
+Exec=/usr/local/bin/nexus.sh
 Icon=nexus-shield
 Terminal=false
 Categories=Security;Network;System;

@@ -2,7 +2,7 @@
 # NEXUS-Shield shared runtime — invisible to consumers, root-only state.
 # shellcheck disable=SC2034
 
-NEXUS_VERSION="2.0.1"
+NEXUS_VERSION="2.0.2"
 NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 NEXUS_SHADOW_DIR="${NEXUS_SHADOW_DIR:-${NEXUS_STATE_DIR}/shadow}"
@@ -73,6 +73,10 @@ nexus_load_config() {
   if [[ -f "$NEXUS_CONFIG" ]]; then
     # shellcheck source=/dev/null
     source "$NEXUS_CONFIG"
+  fi
+  if [[ -f "${NEXUS_STATE_DIR}/settings.override" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_STATE_DIR}/settings.override"
   fi
 }
 

@@ -206,6 +206,42 @@
     .safe-modal-actions button.ghost { background: transparent; color: #ffd6de; border-color: #5a2030; }
     .safe-modal-actions button.safe { color: var(--ok); border-color: #2a5040; }
     .safe-modal-hint { margin-top: 12px; font-size: 0.68rem; color: var(--muted); }
+    .settings-wrap { padding: 16px 18px; max-width: 920px; }
+    .settings-group {
+      margin-bottom: 20px; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--panel); overflow: hidden;
+    }
+    .settings-group h3 {
+      margin: 0; padding: 12px 16px; font-size: 0.72rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--gold); background: #0e1118;
+      border-bottom: 1px solid var(--border);
+    }
+    .setting-row {
+      display: flex; align-items: flex-start; gap: 12px; padding: 10px 16px;
+      border-bottom: 1px solid #1a1f2a; font-size: 0.8rem;
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-row label.toggle { flex: 1; }
+    .setting-row .hint { display: block; color: var(--muted); font-size: 0.72rem; margin-top: 3px; }
+    .adblock-actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 16px; }
+    .adblock-actions button, .adblock-url-row button {
+      background: var(--panel); border: 1px solid var(--border); color: var(--text);
+      padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.76rem;
+    }
+    .adblock-actions button:hover, .adblock-url-row button:hover { border-color: var(--internet); color: var(--internet); }
+    .adblock-url-row {
+      display: flex; gap: 8px; padding: 0 16px 12px; flex-wrap: wrap;
+    }
+    .adblock-url-row input {
+      flex: 1; min-width: 200px; padding: 8px 10px; background: #080a10;
+      border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.78rem;
+    }
+    .adblock-status { padding: 0 16px 12px; font-size: 0.74rem; color: var(--muted); }
+    .settings-subhead {
+      padding: 10px 16px; font-size: 0.68rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--threat); background: #1a0d12;
+      border-top: 1px solid var(--border);
+    }
     @media (max-width: 900px) {
       .grid { grid-template-columns: 1fr; }
       .pane { border-right: none; border-bottom: 1px solid var(--border); }
@@ -214,7 +250,7 @@
 </head>
 <body>
   <header>
-    <h1>NEXUS-Shield v2.0.1 · Gatekeeper</h1>
+    <h1>NEXUS-Shield v2.0.2 · Gatekeeper</h1>
     <div class="meta">
       mode <strong id="mode">—</strong> ·
       truth <strong id="signal">—</strong>% ·
@@ -240,7 +276,7 @@
       <label for="offender-pick" class="meta" style="font-size:0.72rem;display:block;margin-bottom:4px;">Block target (remote peer — not your machine)</label>
       <select id="offender-pick" class="offender-pick" aria-label="Suspect IP to block"></select>
       <div class="safe-modal-actions">
-        <button type="button" id="modal-review" class="safe">Review forensics first <small>Opens Paranoia tab — no changes</small></button>
+        <button type="button" id="modal-review" class="safe">Review forensics first <small>Opens Settings — no changes</small></button>
         <button type="button" id="modal-block" class="recommended">Block offender &amp; restart <small>Recommended — crushes suspect IP, turns paranoia block ON</small></button>
         <button type="button" id="modal-permissive" class="ghost">Restart — log only <small>No firewall block; detect &amp; record only</small></button>
         <button type="button" id="modal-later" class="ghost">Not now <small>Keep protecting if up; banner stays</small></button>
@@ -251,9 +287,7 @@
 
   <nav class="menu" aria-label="Panel sections">
     <button type="button" class="active" data-view="monitor">Monitor</button>
-    <button type="button" class="view-paranoia" data-view="paranoia">Paranoia</button>
-    <button type="button" data-view="sanitize">Autosanitize</button>
-    <button type="button" data-view="data">Data</button>
+    <button type="button" data-view="settings">Settings</button>
     <button type="button" data-view="logs">Logs</button>
   </nav>
 
@@ -286,32 +320,120 @@
     </div>
   </section>
 
-  <section id="view-paranoia" class="view">
-    <div class="toolbar">
-      <label class="toggle">
-        <input type="checkbox" id="paranoia-block-toggle" />
-        <span><strong>Auto-disable</strong> — OFF first: detect + log all forensics; enable to block after log</span>
-      </label>
-      <span id="paranoia-status" class="meta">Paranoia ON · log-only</span>
-    </div>
-    <div class="pane-head" style="color:var(--threat);background:#1a0d12;">Incidents — who / what / full forensics</div>
-    <div class="list" id="paranoia-list"><div class="empty">No paranoia incidents yet</div></div>
-  </section>
+  <section id="view-settings" class="view">
+    <div class="settings-wrap">
+      <div class="settings-group">
+        <h3>Protection</h3>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_PARANOIA_BLOCK" id="set-paranoia-block" />
+            <span><strong>Paranoia auto-block</strong><span class="hint">OFF first: detect + log. Enable to block after forensics.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_FIREWALL_AUTO_BLOCK" id="set-fw-auto" />
+            <span><strong>Firewall auto-block</strong><span class="hint">Auto-block on threat vectors. Gatekeeper still needs your click for connections.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_AUTOSANITIZE" id="set-autosanitize" />
+            <span><strong>Autosanitize</strong><span class="hint">Legacy auto-sanitize on threat detect. Prefer paranoia + gatekeeper clicks.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_SHUTDOWN_GUARD" id="set-shutdown" />
+            <span><strong>Shutdown guard</strong><span class="hint">Capture forensics if NEXUS is killed; safe restart modal.</span></span>
+          </label>
+        </div>
+      </div>
 
-  <section id="view-sanitize" class="view">
-    <div class="toolbar">
-      <label class="toggle">
-        <input type="checkbox" id="autosanitize-toggle" />
-        <span><strong>Autosanitize threats</strong> — legacy auto-block (use Paranoia tab instead)</span>
-      </label>
-      <span id="sanitize-status" class="meta"></span>
-    </div>
-    <div class="pane-head" style="color:var(--gold);background:#14120a;">Sanitize actions — check to undo</div>
-    <div class="list" id="sanitize-list"><div class="empty">No sanitize actions yet</div></div>
-  </section>
+      <div class="settings-group">
+        <h3>Modules</h3>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_CONNECTION_GATEKEEPER" id="set-gatekeeper" />
+            <span><strong>Connection gatekeeper</strong><span class="hint">10-axis intent scoring on live connections.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_PACKET_ORACLE" id="set-packet" />
+            <span><strong>Packet oracle</strong><span class="hint">Connection + ARP snapshots for the panel.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_SHADOW_WATCH" id="set-shadow" />
+            <span><strong>Shadow reality</strong><span class="hint">File integrity inotify watcher.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_ENTROPY_WATCH" id="set-entropy" />
+            <span><strong>Entropy oracle</strong><span class="hint">Shannon entropy on new files.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_BEHAVIOR_WATCH" id="set-behavior" />
+            <span><strong>Behavior symphony</strong><span class="hint">Process chain scoring.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_PRIVACY_GUARD" id="set-privacy" />
+            <span><strong>Privacy guard</strong><span class="hint">Sensitive file view detection.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_HOSTESS7_CORROBORATE" id="set-hostess7" />
+            <span><strong>Hostess7 corroborate</strong><span class="hint">Field memory integrity cross-check.</span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_PANEL_AUTO_OPEN" id="set-panel-open" />
+            <span><strong>Auto-open panel on boot</strong><span class="hint">Once per day when daemon starts. Or run ./nexus.sh / click the icon anytime.</span></span>
+          </label>
+        </div>
+        <p class="meta" style="padding:8px 16px 12px;margin:0;font-size:0.7rem;">Module toggles save instantly; some need a service restart to fully apply.</p>
+      </div>
 
-  <section id="view-data" class="view">
-    <div class="data-grid" id="data-list"><div class="empty">Loading data files…</div></div>
+      <div class="settings-group">
+        <h3>Adblock loader</h3>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_ADBLOCK" id="set-adblock" />
+            <span><strong>Enable adblock</strong><span class="hint">Resolve filter-list domains to IPs and block outbound via nft.</span></span>
+          </label>
+        </div>
+        <div class="adblock-status" id="adblock-status">Domains: 0 · IPs blocked: 0</div>
+        <div class="adblock-actions">
+          <button type="button" id="adblock-easylist">Load EasyList</button>
+          <button type="button" id="adblock-easyprivacy">Load EasyPrivacy</button>
+          <button type="button" id="adblock-fanboy">Load Fanboy Annoyance</button>
+          <button type="button" id="adblock-apply">Apply to firewall</button>
+        </div>
+        <div class="adblock-url-row">
+          <input type="url" id="adblock-custom-url" placeholder="Custom filter list URL (adblock syntax)" />
+          <button type="button" id="adblock-custom-load">Load URL</button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3>Paranoia incidents</h3>
+        <div class="list" id="paranoia-list"><div class="empty">No paranoia incidents yet</div></div>
+      </div>
+
+      <div class="settings-group">
+        <h3>Autosanitize actions</h3>
+        <div class="list" id="sanitize-list"><div class="empty">No sanitize actions yet</div></div>
+      </div>
+    </div>
   </section>
 
   <section id="view-logs" class="view">
@@ -335,9 +457,74 @@
         document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
         btn.classList.add("active");
         $(`view-${btn.dataset.view}`).classList.add("active");
-        if (btn.dataset.view === "data") loadData();
         if (btn.dataset.view === "logs") loadLog(currentLog);
       });
+    });
+
+    async function setSetting(key, value) {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value: value ? "1" : "0" }),
+      });
+      const j = await res.json();
+      if (!j.ok) throw new Error("settings failed");
+      return j;
+    }
+
+    document.querySelectorAll("[data-setting]").forEach((cb) => {
+      cb.addEventListener("change", async (e) => {
+        const key = cb.dataset.setting;
+        const on = e.target.checked;
+        try {
+          await setSetting(key, on);
+          refresh();
+        } catch {
+          e.target.checked = !on;
+          alert("Could not save setting: " + key);
+        }
+      });
+    });
+
+    async function adblockLoad(body, btn) {
+      if (btn) { btn.disabled = true; btn.textContent = "Loading…"; }
+      try {
+        const res = await fetch("/api/adblock/load", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const j = await res.json();
+        if (!j.ok) alert("Adblock load failed — check network or URL");
+        else refresh();
+      } catch {
+        alert("Adblock load failed");
+      } finally {
+        if (btn) { btn.disabled = false; if (btn.dataset.label) btn.textContent = btn.dataset.label; }
+      }
+    }
+
+    $("adblock-easylist").dataset.label = "Load EasyList";
+    $("adblock-easyprivacy").dataset.label = "Load EasyPrivacy";
+    $("adblock-fanboy").dataset.label = "Load Fanboy Annoyance";
+    $("adblock-easylist").addEventListener("click", (e) => adblockLoad({ preset: "easylist" }, e.target));
+    $("adblock-easyprivacy").addEventListener("click", (e) => adblockLoad({ preset: "easyprivacy" }, e.target));
+    $("adblock-fanboy").addEventListener("click", (e) => adblockLoad({ preset: "fanboy" }, e.target));
+    $("adblock-custom-load").addEventListener("click", (e) => {
+      const url = $("adblock-custom-url").value.trim();
+      if (!url) { alert("Enter a filter list URL"); return; }
+      adblockLoad({ url }, e.target);
+    });
+    $("adblock-apply").addEventListener("click", async (e) => {
+      const btn = e.target;
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/adblock/apply", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        const j = await res.json();
+        if (j.ok) refresh();
+        else alert("Apply failed — enable adblock first");
+      } catch { alert("Apply failed"); }
+      finally { btn.disabled = false; }
     });
 
     document.querySelectorAll(".log-tabs button[data-log]").forEach((btn) => {
@@ -405,7 +592,7 @@
     $("modal-permissive").addEventListener("click", () => nexusRestart("permissive", { skipConfirm: true }));
     $("modal-review").addEventListener("click", () => {
       closeMurderModal();
-      document.querySelector('nav.menu button[data-view="paranoia"]').click();
+      document.querySelector('nav.menu button[data-view="settings"]').click();
     });
     $("modal-later").addEventListener("click", () => {
       sessionStorage.setItem("nexus_shutdown_dismissed", window._lastShutdownIncidentId || "");
@@ -499,25 +686,6 @@
       }
     }
 
-    $("paranoia-block-toggle").addEventListener("change", async (e) => {
-      const block = e.target.checked;
-      try {
-        const res = await fetch("/api/paranoia/toggle", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ block }),
-        });
-        const j = await res.json();
-        $("paranoia-status").textContent = j.ok
-          ? (block ? "Paranoia ON · auto-disable after log" : "Paranoia ON · log-only (OFF first)")
-          : "Paranoia toggle failed";
-        if (!j.ok) e.target.checked = !block;
-      } catch {
-        $("paranoia-status").textContent = "Paranoia toggle failed";
-        e.target.checked = !block;
-      }
-    });
-
     async function paranoiaDisable(id, btn) {
       try {
         const res = await fetch("/api/paranoia/disable", {
@@ -544,17 +712,23 @@
       } catch { alert("Re-enable failed"); }
     }
 
+    function renderSettings(s) {
+      if (!s) return;
+      document.querySelectorAll("[data-setting]").forEach((cb) => {
+        const key = cb.dataset.setting;
+        if (s[key] !== undefined) cb.checked = s[key] === 1 || s[key] === "1";
+      });
+      const ab = s.adblock || {};
+      $("adblock-status").textContent =
+        `Adblock ${ab.enabled ? "ON" : "OFF"} · Domains: ${ab.domains ?? 0} · IPs blocked: ${ab.ips ?? 0}`;
+    }
+
     function renderParanoia(p) {
       const el = $("paranoia-list");
-      const toggle = $("paranoia-block-toggle");
       if (!p) {
         el.innerHTML = '<div class="empty">Paranoia mode not loaded</div>';
         return;
       }
-      toggle.checked = !!p.block;
-      $("paranoia-status").textContent = p.enabled
-        ? (p.block ? "Paranoia ON · auto-disable after log" : "Paranoia ON · log-only (OFF first)")
-        : "Paranoia OFF";
       const items = p.incidents || [];
       if (!items.length) {
         el.innerHTML = '<div class="empty">No incidents — field calm or waiting for first detect</div>';
@@ -588,22 +762,6 @@
         btn.addEventListener("click", () => paranoiaReenable(btn.dataset.reenable, btn));
       });
     }
-
-    $("autosanitize-toggle").addEventListener("change", async (e) => {
-      const enabled = e.target.checked;
-      try {
-        const res = await fetch("/api/autosanitize/toggle", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ enabled }),
-        });
-        const j = await res.json();
-        $("sanitize-status").textContent = j.ok ? (enabled ? "Autosanitize ON" : "Autosanitize OFF") : "Toggle failed";
-      } catch {
-        $("sanitize-status").textContent = "Toggle failed";
-        e.target.checked = !enabled;
-      }
-    });
 
     async function undoAction(id, checkbox) {
       try {
@@ -832,11 +990,6 @@
 
     function renderSanitize(as) {
       const el = $("sanitize-list");
-      const toggle = $("autosanitize-toggle");
-      if (as) {
-        toggle.checked = !!as.enabled;
-        $("sanitize-status").textContent = as.enabled ? "Autosanitize ON" : "Autosanitize OFF";
-      }
       const actions = as?.actions || [];
       if (!actions.length) {
         el.innerHTML = '<div class="empty">No sanitize actions — threats will auto-block when detected</div>';
@@ -864,24 +1017,6 @@
     function renderVectors(list) {
       $("vector-catalog").innerHTML = "Auto vectors: " +
         (list || []).map((v) => `<code>${v}</code>`).join("");
-    }
-
-    async function loadData() {
-      const el = $("data-list");
-      try {
-        const res = await fetch("/api/data", { cache: "no-store" });
-        const j = await res.json();
-        el.innerHTML = (j.files || []).map((f) => `
-          <div class="data-card">
-            <div>
-              <strong>${f.id}</strong><br>
-              <span class="size">${f.exists ? f.size + " bytes" : "missing"} · ${f.path}</span>
-            </div>
-            ${f.exists ? `<a href="${f.url}" target="_blank" rel="noopener">Open</a>` : '<span class="size">—</span>'}
-          </div>`).join("") || '<div class="empty">No data files</div>';
-      } catch {
-        el.innerHTML = '<div class="empty">Data API offline</div>';
-      }
     }
 
     async function loadLog(name) {
@@ -917,6 +1052,7 @@
         renderTrusted(data.trusted);
         renderThreats(data.threats);
         renderVectors(data.vectors);
+        renderSettings(data.settings);
         renderSanitize(data.autosanitize);
         renderParanoia(data.paranoia);
         renderShutdown(data.shutdown);

@@ -43,6 +43,8 @@ cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/as
 chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" "${ROOT}/lib/connection-gatekeeper.py" 2>/dev/null || true
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/lib/nexus-shield/bin/nexus
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/bin/nexus
+install -m 755 -o root -g nexus "${ROOT}/nexus.sh" /usr/local/bin/nexus.sh
+chmod 755 "${ROOT}/nexus.sh" 2>/dev/null || true
 install -m 750 -o root -g nexus "${ROOT}/lib/nexus-daemon.sh" /usr/local/lib/nexus-shield/lib/
 mkdir -p /var/lib/nexus-shield/shadow /var/lib/nexus-shield/behavior /var/lib/nexus-shield/hostess7-cache
 touch /var/log/nexus-alerts.log

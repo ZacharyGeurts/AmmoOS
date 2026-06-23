@@ -6,6 +6,8 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/threat-autosanitize.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/threat-autosanitize.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/paranoia-mode.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/paranoia-mode.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/firewall-trust.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/firewall-trust.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/adblock-loader.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/adblock-loader.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/shutdown-guard.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/shutdown-guard.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
@@ -117,6 +119,12 @@ nexus_threat_panel_publish() {
       nexus_paranoia_panel_json
     else
       printf '{"enabled":false,"block":false,"incidents":[]}'
+    fi
+    printf ',"settings":'
+    if declare -f nexus_settings_json >/dev/null 2>&1; then
+      nexus_settings_json
+    else
+      printf '{}'
     fi
     printf ',"gatekeeper":'
     if [[ -s "${NEXUS_STATE_DIR}/connection-intent.json" ]]; then

@@ -1,33 +1,45 @@
-# NEXUS-Shield v2.0.1 — Connection Gatekeeper
+# NEXUS-Shield v2.0.2 — Connection Gatekeeper
 
 **NEXUS ∞** by [AmouranthRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — invisible, zero-trust behavioral security. Pure genius heuristics. No heavy AV agents.
 
-## v2.0.1
+## Use it
 
-- Removed legacy AV install stack entirely
-- Code cleanup, gatekeeper ss-parser fix, panel JSON hardening
+After install, that's all you need:
 
-## v2.0 highlights
+```bash
+./nexus.sh
+```
 
-- **Connection Gatekeeper** — 10-axis intent score per live connection (user browsing vs ephemeral search vs harm candidate)
-- **Click to Authorize** — permanent trust stored in Hostess7 field memory (local + TEAM NVMe)
-- **Click to Block** — harm candidates only; never auto-blocks your CDN/browser traffic
-- **Panel auto-opens** on startup · **Start menu entry** + icon
+Or click **NEXUS-Shield** in your app menu / desktop icon.
 
-## Quick launch
+The web panel opens at `https://127.0.0.1:9477/` — monitor connections, authorize trust, block harm, and flip every setting (adblock loaders, paranoia, modules) from **Settings**. No config file editing.
+
+## Install once
 
 ```bash
 git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
 cd NEXUS-Shield
-chmod +x stealth_install.sh genius_shield.sh
+chmod +x stealth_install.sh genius_shield.sh nexus.sh
 sudo ./stealth_install.sh
 ```
 
+## v2.0.2
+
+- **Simple launcher** — `./nexus.sh` or desktop icon; daemon starts automatically
+- **Settings tab** — all toggles, adblock list loaders, paranoia & autosanitize in one place
+- **Monitor | Settings | Logs** — trimmed panel navigation
+
+## v2.0 highlights
+
+- **Connection Gatekeeper** — 10-axis intent score per live connection
+- **Click to Authorize** — permanent trust in Hostess7 field memory
+- **Click to Block** — harm candidates only; never auto-blocks CDN/browser traffic
+
 ## Goals
 
-- **Non-intrusive** — `<5%` CPU, cgroup-limited, `Nice=19`, idle I/O; never breaks peripherals, network, or usability
+- **Non-intrusive** — `<5%` CPU, cgroup-limited, `Nice=19`
 - **Secure** — multi-layer behavioral + integrity + predictive correlation
-- **AMOURANTHRTX field learnings** — silent daemon, whitelisted consumer devices/processes, user-just-use focus
+- **AMOURANTHRTX field learnings** — silent daemon, whitelisted consumer apps
 
 ## Modules
 
@@ -35,42 +47,25 @@ sudo ./stealth_install.sh
 |--------|------|
 | Shadow Reality | inotify + SHA256 tamper detection |
 | Entropy Oracle | Shannon entropy on new files |
-| Behavior Symphony | procfs chain scoring (whitelisted consumer apps) |
+| Behavior Symphony | procfs chain scoring |
 | Privacy Guard | sensitive-file view detection |
 | Predictive Guard | correlates alerts to pre-tighten thresholds |
 | Eternal Vigil | calm / alert / storm adaptive pacing |
 | Self-Defense | signed manifest verified on daemon load |
 
-## Quick start
+## Operator CLI
 
-**Windows (Admin):** `.\stealth.ps1`
+`nexus status` · `nexus verify` · `nexus sign` · `nexus alerts`
 
 **Tests:** `nexus test` or `./tests/run-tests.sh`
-
-**Operator CLI:** `nexus status` · `nexus verify` · `nexus sign` · `nexus alerts`
-
-## Documentation
-
-📖 **[Live Wiki](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki)** · [Design doc](NEXUS-DESIGN-IMPROVEMENT.md)
-
-| Page | Topic |
-|------|-------|
-| [Architecture](wiki/Architecture.md) | Module map, ultra-stealth |
-| [Configuration](wiki/Configuration.md) | Granular toggles |
-| [Ultra-Stealth](wiki/Ultra-Stealth.md) | cgroup, event-driven pacing |
-| [Self-Defense](wiki/Self-Defense.md) | Script signing |
-| [AMOURANTHRTX Integration](wiki/AMOURANTHRTX-Integration.md) | Device whitelist |
 
 ## Layout
 
 ```
-lib/                 # Core modules + ultra-stealth + self-defense
-config/              # nexus.conf + device-whitelist.conf
-tests/               # Test suite
-stealth_install.sh   # Default installer
+stealth_install.sh   # one-shot install
 genius_shield.sh     # Genius layer install + service
+nexus.sh             # open panel (starts daemon if needed)
+lib/                 # daemon modules
+panel/               # threat panel UI
+config/nexus.conf    # defaults (overridden by panel Settings)
 ```
-
-Pure NEXUS genius heuristics — no third-party AV stack.
-
-Part of the AmouranthRTX security ecosystem. Test in a VM before production deploy.

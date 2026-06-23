@@ -1,0 +1,91 @@
+#!/bin/bash
+# NEXUS settings — panel-driven toggles via settings.override (no manual config editing).
+
+NEXUS_SETTINGS_OVERRIDE="${NEXUS_SETTINGS_OVERRIDE:-${NEXUS_STATE_DIR}/settings.override}"
+
+NEXUS_SETTINGS_KEYS=(
+  NEXUS_PARANOIA_BLOCK
+  NEXUS_PARANOIA_MODE
+  NEXUS_FIREWALL_AUTO_BLOCK
+  NEXUS_AUTOSANITIZE
+  NEXUS_ADBLOCK
+  NEXUS_PANEL_AUTO_OPEN
+  NEXUS_CONNECTION_GATEKEEPER
+  NEXUS_PACKET_ORACLE
+  NEXUS_SHADOW_WATCH
+  NEXUS_ENTROPY_WATCH
+  NEXUS_BEHAVIOR_WATCH
+  NEXUS_PRIVACY_GUARD
+  NEXUS_SHUTDOWN_GUARD
+  NEXUS_HOSTESS7_CORROBORATE
+)
+
+nexus_settings_init() {
+  [[ -f "$NEXUS_SETTINGS_OVERRIDE" ]] || touch "$NEXUS_SETTINGS_OVERRIDE" 2>/dev/null || true
+  chmod 640 "$NEXUS_SETTINGS_OVERRIDE" 2>/dev/null || true
+  chown root:nexus "$NEXUS_SETTINGS_OVERRIDE" 2>/dev/null || true
+}
+
+nexus_settings_get() {
+  local key="$1" val=""
+  val="$(sed -n "s/^${key}=//p" "$NEXUS_SETTINGS_OVERRIDE" 2>/dev/null | tail -1)"
+  if [[ -n "$val" ]]; then
+    printf '%s' "$val"
+    return 0
+  fi
+  val="${!key:-}"
+  printf '%s' "${val:-0}"
+}
+
+nexus_settings_set() {
+  local key="$1" val="$2" tmp
+  nexus_settings_init
+  case "$key" in
+    NEXUS_PARANOIA_BLOCK|NEXUS_PARANOIA_MODE|NEXUS_FIREWALL_AUTO_BLOCK|NEXUS_AUTOSANITIZE|NEXUS_ADBLOCK|NEXUS_PANEL_AUTO_OPEN|NEXUS_CONNECTION_GATEKEEPER|NEXUS_PACKET_ORACLE|NEXUS_SHADOW_WATCH|NEXUS_ENTROPY_WATCH|NEXUS_BEHAVIOR_WATCH|NEXUS_PRIVACY_GUARD|NEXUS_SHUTDOWN_GUARD|NEXUS_HOSTESS7_CORROBORATE) ;;
+    *) return 1 ;;
+  esac
+  [[ "$val" == "1" || "$val" == "0" ]] || return 1
+  tmp="${NEXUS_SETTINGS_OVERRIDE}.tmp"
+  grep -v "^${key}=" "$NEXUS_SETTINGS_OVERRIDE" 2>/dev/null >"$tmp" || : >"$tmp"
+  printf '%s=%s\n' "$key" "$val" >>"$tmp"
+  mv -f "$tmp" "$NEXUS_SETTINGS_OVERRIDE"
+  chmod 640 "$NEXUS_SETTINGS_OVERRIDE" 2>/dev/null || true
+
+  case "$key" in
+    NEXUS_PARANOIA_BLOCK)
+      declare -f nexus_paranoia_set_block >/dev/null 2>&1 && nexus_paranoia_set_block "$val"
+      ;;
+    NEXUS_AUTOSANITIZE)
+      declare -f nexus_autosanitize_set_enabled >/dev/null 2>&1 && nexus_autosanitize_set_enabled "$val"
+      ;;
+    NEXUS_ADBLOCK)
+      if [[ "$val" == "1" ]]; then
+        declare -f nexus_adblock_apply >/dev/null 2>&1 && nexus_adblock_apply
+      else
+        declare -f nexus_adblock_clear >/dev/null 2>&1 && nexus_adblock_clear
+      fi
+      ;;
+  esac
+  nexus_log "INFO" "nexus-settings" "SET ${key}=${val}"
+  return 0
+}
+
+nexus_settings_json() {
+  nexus_settings_init
+  local key val first=1
+  printf '{'
+  for key in "${NEXUS_SETTINGS_KEYS[@]}"; do
+    val="$(nexus_settings_get "$key")"
+    [[ -n "$val" ]] || val="0"
+    [[ "$first" -eq 1 ]] || printf ','
+    first=0
+    printf '"%s":%s' "$key" "$val"
+  done
+  if declare -f nexus_adblock_status_json >/dev/null 2>&1; then
+    printf ',"adblock":'
+    nexus_adblock_status_json
+  else
+    printf ',"adblock":{"enabled":0,"domains":0,"ips":0}'
+  fi
+  printf '}'
+}

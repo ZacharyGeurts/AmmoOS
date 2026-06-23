@@ -59,6 +59,10 @@ source "${ROOT}/lib/seal-vault.sh"
 source "${ROOT}/lib/tamper-guard.sh"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/panel-tls.sh"
+# shellcheck source=/dev/null
+source "${ROOT}/lib/nexus-settings.sh"
+# shellcheck source=/dev/null
+source "${ROOT}/lib/adblock-loader.sh"
 
 nexus_ensure_dirs
 
@@ -175,6 +179,14 @@ test_threat_panel_json() {
   grep -q '"vector":"PACKET_INJECTION"' "${NEXUS_STATE_DIR}/threat-panel.json"
 }
 
+test_nexus_settings_roundtrip() {
+  nexus_settings_set "NEXUS_ADBLOCK" "1"
+  [[ "$(nexus_settings_get NEXUS_ADBLOCK)" == "1" ]]
+  nexus_settings_set "NEXUS_ADBLOCK" "0"
+  [[ "$(nexus_settings_get NEXUS_ADBLOCK)" == "0" ]]
+  nexus_settings_json | grep -q '"NEXUS_ADBLOCK":0'
+}
+
 test_seal_vault_refresh_verify() {
   NEXUS_MANIFEST="${NEXUS_STATE_DIR}/test.manifest"
   nexus_sign_manifest "$NEXUS_MANIFEST"
@@ -221,6 +233,7 @@ run_test "packet oracle parse" test_packet_parse_line
 run_test "connection gatekeeper json" test_gatekeeper_json
 run_test "firewall trust authorize" test_firewall_trust_roundtrip
 run_test "threat panel json publish" test_threat_panel_json
+run_test "nexus settings roundtrip" test_nexus_settings_roundtrip
 run_test "firewall parse threat ip" test_firewall_parse_ip
 run_test "firewall private ip detect" test_firewall_private_skip
 run_test "seal vault refresh/verify" test_seal_vault_refresh_verify
