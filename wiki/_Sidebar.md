@@ -1,5 +1,10 @@
 **[Home](Home)**
 
+### Start here
+- [Panel Guide](Panel-Guide)
+- [Linux Installation](Linux-Installation)
+- [Configuration](Configuration)
+
 ### Modules
 - [Shadow Reality](Shadow-Reality)
 - [Entropy Oracle](Entropy-Oracle)
@@ -7,11 +12,11 @@
 - [Eternal Vigil](Eternal-Vigil)
 - [Privacy Guard](Privacy-Guard)
 
-### Guides
+### Deep dive
 - [Architecture](Architecture)
 - [Ultra-Stealth](Ultra-Stealth)
-- [Configuration](Configuration)
 - [Self-Defense](Self-Defense)
 - [AMOURANTHRTX Integration](AMOURANTHRTX-Integration)
-- [Linux Installation](Linux-Installation)
 - [Windows Installation](Windows-Installation)
+
+**[License (MIT)](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE)**

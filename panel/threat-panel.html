@@ -451,15 +451,27 @@
     const $ = (id) => document.getElementById(id);
     let currentLog = "alerts";
 
+    function showView(name) {
+      const btn = document.querySelector(`nav.menu button[data-view="${name}"]`);
+      if (!btn) return;
+      document.querySelectorAll("nav.menu button").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+      btn.classList.add("active");
+      $(`view-${name}`).classList.add("active");
+      if (name === "logs") loadLog(currentLog);
+      if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
+    }
+
     document.querySelectorAll("nav.menu button").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll("nav.menu button").forEach((b) => b.classList.remove("active"));
-        document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
-        btn.classList.add("active");
-        $(`view-${btn.dataset.view}`).classList.add("active");
-        if (btn.dataset.view === "logs") loadLog(currentLog);
-      });
+      btn.addEventListener("click", () => showView(btn.dataset.view));
     });
+
+    function applyHashView() {
+      const name = (location.hash || "#monitor").replace("#", "");
+      if (name && name !== "monitor") showView(name);
+    }
+    window.addEventListener("hashchange", applyHashView);
+    applyHashView();
 
     async function setSetting(key, value) {
       const res = await fetch("/api/settings", {

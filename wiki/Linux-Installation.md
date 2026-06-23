@@ -1,54 +1,97 @@
 # Linux Installation
 
-## Default install (genius-only) ✅
+Install once. Use forever with `./nexus.sh` or the desktop icon.
+
+---
+
+## Requirements
+
+- Linux with systemd
+- Root/sudo for install
+- `curl`, Python 3 (installed automatically on Debian/Ubuntu via apt)
+
+---
+
+## Install (recommended)
 
 ```bash
 git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
 cd NEXUS-Shield
+chmod +x stealth_install.sh nexus.sh
 sudo ./stealth_install.sh
 ```
 
-Installs:
-- `inotify-tools`, `nftables`, `openssl` (genius layer only)
-- `nexus-genius.service` with ultra-stealth cgroup limits
-- Signed `MANIFEST.sha256` for self-defense
+This installs:
 
-### Verify
+| Piece | Where |
+|-------|-------|
+| Daemon + libs | `/usr/local/lib/nexus-shield` |
+| CLI | `/usr/local/bin/nexus` |
+| Launcher | `/usr/local/bin/nexus.sh` |
+| State | `/var/lib/nexus-shield` |
+| Service | `nexus-genius.service` |
+| Desktop entry | **NEXUS-Shield** in app menu |
+| Panel | `https://127.0.0.1:9477/` |
+
+Packages pulled on Debian/Ubuntu: `inotify-tools`, `nftables`, `openssl`, `iproute2`, `tcpdump`.
+
+---
+
+## First run
 
 ```bash
-sudo systemctl is-active nexus-genius.service
+./nexus.sh
+```
+
+Or click **NEXUS-Shield** in your application launcher.
+
+The panel opens in your default browser. If the service wasn't running, the launcher starts it for you.
+
+---
+
+## Verify install
+
+```bash
+sudo systemctl is-active nexus-genius.service   # should print: active
 nexus status
 nexus verify
 nexus test
 ```
 
-### Uninstall
+`nexus verify` checks the signed manifest — if you edited libs, run `sudo nexus sign` then restart.
+
+---
+
+## Add yourself to the nexus group (optional)
+
+Install adds your user to group `nexus` so you can read state files without sudo:
 
 ```bash
-sudo systemctl disable --now nexus-genius.service
-sudo rm /etc/systemd/system/nexus-genius.service
-sudo rm -rf /usr/local/lib/nexus-shield /usr/local/bin/nexus
-sudo rm -rf /var/lib/nexus-shield
+# log out/in, or:
+sg nexus -c 'nexus status'
 ```
 
 ---
 
-## Genius layer direct
+## Uninstall
+
+```bash
+sudo systemctl disable --now nexus-genius.service
+sudo rm -f /etc/systemd/system/nexus-genius.service
+sudo rm -f /usr/local/bin/nexus /usr/local/bin/nexus.sh
+sudo rm -rf /usr/local/lib/nexus-shield /var/lib/nexus-shield
+sudo rm -f /usr/share/applications/nexus-shield.desktop
+```
+
+---
+
+## Direct install (same stack)
 
 ```bash
 sudo ./genius_shield.sh
 ```
 
----
-
-## Configuration
-
-See [Configuration](Configuration). After edits:
-
-```bash
-sudo nexus sign
-sudo systemctl restart nexus-genius.service
-```
+Same as `stealth_install.sh` on Linux — use whichever you prefer.
 
 ---
 
@@ -56,6 +99,16 @@ sudo systemctl restart nexus-genius.service
 
 | Problem | Fix |
 |---------|-----|
-| Daemon won't start | `nexus verify` — manifest mismatch? run `nexus sign` |
-| High CPU | confirm `CPUQuota=5%` in `systemctl show nexus-genius` |
-| False behavior alert | add process to `device-whitelist.conf` |
+| Panel won't open | `sudo systemctl start nexus-genius.service` then `./nexus.sh` |
+| Browser TLS warning | Expected — self-signed localhost cert. Proceed once for 127.0.0.1 |
+| Daemon won't start | `nexus verify` — manifest mismatch? `sudo nexus sign` |
+| High CPU | `systemctl show nexus-genius` — confirm `CPUQuota=5%` |
+| False behavior alert | Settings → check whitelist in `device-whitelist.conf` |
+| "Broke internet" | Settings → ensure Paranoia auto-block and Firewall auto-block are OFF unless you want them |
+
+---
+
+## Next steps
+
+- [Panel Guide](Panel-Guide) — what every screen means
+- [Configuration](Configuration) — settings in the panel vs config files

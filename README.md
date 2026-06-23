@@ -1,71 +1,145 @@
-# NEXUS-Shield v2.0.2 — Connection Gatekeeper
+# NEXUS-Shield
 
-**NEXUS ∞** by [AmouranthRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — invisible, zero-trust behavioral security. Pure genius heuristics. No heavy AV agents.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Use it
+**Your network bodyguard that stays out of the way.**
 
-After install, that's all you need:
+NEXUS-Shield watches what's leaving your machine, scores every live connection for intent (browsing vs sketchy), and puts you in control with two clicks: **Authorize** (trust forever) or **Block** (stop harm). No bloated antivirus. No config-file archaeology. Just run it and use the panel.
+
+Built by [Zachary Geurts](https://github.com/ZacharyGeurts) as part of the [AmouranthRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) field stack.
+
+---
+
+## Start here (30 seconds)
+
+**Already installed?** Pick one:
 
 ```bash
 ./nexus.sh
 ```
 
-Or click **NEXUS-Shield** in your app menu / desktop icon.
+…or click **NEXUS-Shield** in your app menu / desktop.
 
-The web panel opens at `https://127.0.0.1:9477/` — monitor connections, authorize trust, block harm, and flip every setting (adblock loaders, paranoia, modules) from **Settings**. No config file editing.
+That's it. Your browser opens the local panel at `https://127.0.0.1:9477/`. The daemon starts itself if it isn't running.
 
-## Install once
+**First time?** Install once:
 
 ```bash
 git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
 cd NEXUS-Shield
-chmod +x stealth_install.sh genius_shield.sh nexus.sh
+chmod +x stealth_install.sh nexus.sh
 sudo ./stealth_install.sh
+./nexus.sh
 ```
 
-## v2.0.2
+---
 
-- **Simple launcher** — `./nexus.sh` or desktop icon; daemon starts automatically
-- **Settings tab** — all toggles, adblock list loaders, paranoia & autosanitize in one place
-- **Monitor | Settings | Logs** — trimmed panel navigation
+## The panel — three tabs, everything you need
 
-## v2.0 highlights
+### Monitor — see what's happening right now
 
-- **Connection Gatekeeper** — 10-axis intent score per live connection
-- **Click to Authorize** — permanent trust in Hostess7 field memory
-- **Click to Block** — harm candidates only; never auto-blocks CDN/browser traffic
+![NEXUS Monitor tab — connection gatekeeper and threats](docs/screenshots/panel-monitor.png)
 
-## Goals
+| Area | What you're looking at |
+|------|------------------------|
+| **Left — Internet / Gatekeeper** | Every live connection scored on 10 axes: user browsing, media, search, bandwidth abuse, beacons, etc. |
+| **Verdict badges** | `USER_OK` = normal. `HARM_CANDIDATE` = review before blocking. NEXUS does **not** auto-block your CDN or browser traffic. |
+| **Authorize** | One click → permanent trust. Saved to Hostess7 field memory (local + TEAM). NEXUS stops nagging that peer. |
+| **Block harm** | Only on harm candidates — stops a suspicious outbound path when **you** say so. |
+| **Right — Threats** | Active threat vectors, correlation score, firewall status. Calm field = empty list. |
 
-- **Non-intrusive** — `<5%` CPU, cgroup-limited, `Nice=19`
-- **Secure** — multi-layer behavioral + integrity + predictive correlation
-- **AMOURANTHRTX field learnings** — silent daemon, whitelisted consumer apps
+---
 
-## Modules
+### Settings — every toggle, no terminal required
 
-| Module | Role |
-|--------|------|
-| Shadow Reality | inotify + SHA256 tamper detection |
-| Entropy Oracle | Shannon entropy on new files |
-| Behavior Symphony | procfs chain scoring |
-| Privacy Guard | sensitive-file view detection |
-| Predictive Guard | correlates alerts to pre-tighten thresholds |
-| Eternal Vigil | calm / alert / storm adaptive pacing |
-| Self-Defense | signed manifest verified on daemon load |
+![NEXUS Settings tab — protection, modules, adblock](docs/screenshots/panel-settings.png)
 
-## Operator CLI
+| Section | What it does |
+|---------|----------------|
+| **Protection** | Paranoia auto-block, firewall auto-block, autosanitize, shutdown guard — all checkboxes. |
+| **Modules** | Turn gatekeeper, packet oracle, shadow/entropy/behavior watchers, privacy guard, etc. on or off. |
+| **Adblock loader** | Pull **EasyList**, **EasyPrivacy**, or **Fanboy** filter lists (or paste a custom URL), then apply to the firewall. |
+| **Paranoia incidents** | Full forensics when something looked wrong — who, what IP, which process. |
+| **Autosanitize actions** | Past auto-blocks you can undo with a checkbox. |
 
-`nexus status` · `nexus verify` · `nexus sign` · `nexus alerts`
+No editing `nexus.conf` by hand unless you want to. The panel writes `settings.override` for you.
 
-**Tests:** `nexus test` or `./tests/run-tests.sh`
+---
 
-## Layout
+### Logs — when you need the paper trail
+
+![NEXUS Logs tab — alerts and vigil output](docs/screenshots/panel-logs.png)
+
+| Log | Contents |
+|-----|----------|
+| **Alerts** | Unified `/var/log/nexus-alerts.log` — everything NEXUS noticed. |
+| **Vigil** | Eternal Vigil mode changes and maintenance events. |
+
+Refresh anytime. If logs say "offline", run `./nexus.sh` or `sudo systemctl start nexus-genius.service`.
+
+---
+
+## What makes NEXUS different
+
+- **Click-first security** — Gatekeeper scores connections; you authorize or block. No surprise internet outages from false positives.
+- **Invisible daemon** — Under 5% CPU cap, `Nice=19`, event-driven file watchers. Whitelists normal apps (browsers, PipeWire, game launchers).
+- **Genius-only** — Pure heuristics: shadow integrity, entropy, behavior chains, privacy guard, predictive correlation. No ClamAV / no third-party AV bundle.
+- **Shutdown guard** — If something kills NEXUS, forensics are captured and a safe restart modal walks you through options.
+- **Self-defense** — Signed `MANIFEST.sha256`; daemon refuses to load tampered scripts.
+
+---
+
+## Everyday commands
+
+| Command | Purpose |
+|---------|---------|
+| `./nexus.sh` | Open the panel (starts daemon if needed) |
+| `nexus status` | Quick health check |
+| `nexus verify` | Manifest / integrity check |
+| `nexus alerts` | Tail recent alerts |
+| `nexus test` | Run the test suite |
+
+---
+
+## Project layout
 
 ```
-stealth_install.sh   # one-shot install
-genius_shield.sh     # Genius layer install + service
-nexus.sh             # open panel (starts daemon if needed)
-lib/                 # daemon modules
-panel/               # threat panel UI
-config/nexus.conf    # defaults (overridden by panel Settings)
+nexus.sh              ← you run this
+stealth_install.sh    ← one-shot install
+lib/                  ← daemon modules
+panel/                ← web UI
+config/nexus.conf     ← defaults (panel overrides these)
+docs/screenshots/     ← README visuals
 ```
+
+---
+
+## Docs & wiki
+
+- **[Wiki home](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki)** — friendly guides for humans
+- **[Panel guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Panel-Guide)** — walkthrough of every screen
+- **[Linux install](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Linux-Installation)** — step-by-step
+- **[Architecture](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Architecture)** — how modules fit together
+
+Regenerate screenshots after UI changes:
+
+```bash
+python3 -m venv .venv-screenshots && .venv-screenshots/bin/pip install playwright
+.venv-screenshots/bin/python -m playwright install chromium
+.venv-screenshots/bin/python docs/capture-screenshots.py
+```
+
+---
+
+## License
+
+MIT License — Copyright (c) 2026 Zachary Geurts
+
+See [LICENSE](LICENSE) for the full text. You are free to use, modify, and distribute this software with attribution. The software is provided **as is**, without warranty.
+
+---
+
+## Related
+
+- [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — Field Die runtime
+- [Design notes](NEXUS-DESIGN-IMPROVEMENT.md) — engineering history

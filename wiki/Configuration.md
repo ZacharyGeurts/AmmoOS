@@ -1,8 +1,37 @@
 # Configuration
 
-Granular toggles in `config/nexus.conf`. Installed copy: `/usr/local/lib/nexus-shield/config/nexus.conf`.
+**You don't need to edit config files.** Open the panel → **Settings** tab.
 
-## Ultra-stealth
+Every checkbox writes to `/var/lib/nexus-shield/settings.override`, which overrides defaults from `config/nexus.conf` on the next daemon read.
+
+---
+
+## Panel settings (recommended)
+
+| Setting | Default | What it does |
+|---------|---------|--------------|
+| Paranoia auto-block | OFF | Block after logging forensics |
+| Firewall auto-block | OFF | Auto-block threat vectors |
+| Autosanitize | OFF | Legacy auto-sanitize |
+| Shutdown guard | ON | Forensics on unclean kill |
+| Connection gatekeeper | ON | 10-axis connection scoring |
+| Packet oracle | ON | Connection snapshots for panel |
+| Shadow / Entropy / Behavior / Privacy | ON | File & process watchers |
+| Hostess7 corroborate | ON | Field memory cross-check |
+| Auto-open panel on boot | ON | Once per day when daemon starts |
+| Adblock | OFF | Filter-list domain blocking |
+
+See [Panel Guide](Panel-Guide#settings-tab) for adblock loader steps.
+
+---
+
+## Config file (advanced)
+
+Installed copy: `/usr/local/lib/nexus-shield/config/nexus.conf`
+
+Use this for defaults on fresh install or automation — not day-to-day tuning.
+
+### Ultra-stealth
 
 | Toggle | Default | Purpose |
 |--------|---------|---------|
@@ -11,16 +40,7 @@ Granular toggles in `config/nexus.conf`. Installed copy: `/usr/local/lib/nexus-s
 | `NEXUS_SELF_DEFENSE` | `1` | verify MANIFEST on load |
 | `NEXUS_PREDICTIVE` | `1` | correlate alerts pre-tighten |
 
-## Module toggles
-
-| Toggle | Default |
-|--------|---------|
-| `NEXUS_SHADOW_WATCH` | `1` |
-| `NEXUS_ENTROPY_WATCH` | `1` |
-| `NEXUS_BEHAVIOR_WATCH` | `1` |
-| `NEXUS_PRIVACY_GUARD` | `1` |
-
-## Polling cadence
+### Polling cadence
 
 | Setting | Calm default |
 |---------|--------------|
@@ -28,9 +48,11 @@ Granular toggles in `config/nexus.conf`. Installed copy: `/usr/local/lib/nexus-s
 | `NEXUS_PRIVACY_POLL_CALM` | 60 |
 | `NEXUS_VIGIL_MAINTAIN_INTERVAL` | 300 |
 
+---
+
 ## Device whitelist
 
-Extend consumer-safe processes in `config/device-whitelist.conf`:
+Consumer-safe apps live in `config/device-whitelist.conf`:
 
 ```bash
 NEXUS_DEVICE_WHITELIST_COMM+=(
@@ -38,9 +60,20 @@ NEXUS_DEVICE_WHITELIST_COMM+=(
 )
 ```
 
-## Apply changes
+After edits:
 
 ```bash
-sudo nexus sign          # re-sign after lib edits
+sudo nexus sign
 sudo systemctl restart nexus-genius.service
 ```
+
+---
+
+## Apply file-based changes
+
+```bash
+sudo nexus sign          # re-sign after lib/ edits
+sudo systemctl restart nexus-genius.service
+```
+
+Panel-only changes apply immediately for paranoia/autosanitize/adblock; module restarts may need the service bounce above.
