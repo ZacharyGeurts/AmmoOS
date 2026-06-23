@@ -460,7 +460,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.8\.2' "$panel"
+  grep -q 'v5\.8\.3' "$panel"
 }
 
 test_field_rf_module() {
@@ -798,9 +798,9 @@ test_panel_field_attack_kit_ui() {
   grep -q 'HARDWARE DESTROY' "$panel"
   grep -q 'strike-destroy' "$panel"
   grep -q 'old-man' "$panel"
-  grep -q 'Old Man mode' "$panel"
+  grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.8.2' "$panel"
+  grep -q 'v5.8.3' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -809,7 +809,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.8.2' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.8.3' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null

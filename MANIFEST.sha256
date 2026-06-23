@@ -39,7 +39,7 @@ f2248270e6932125882c2338e97b2fbcdc07cefd20efbed2b841b745cb95c094  /home/default/
 67ae593060b9734859c691ad04110743a6d87f7de21602d98b0bf766b2f08c08  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/human-dossier.sh
 3e1346c71c85a633da36c4a64f22c24e40737c2f444b2969dbb5448d842db8fb  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/lockdown-first.sh
 de90af3922e507a8dd219e4533083a3c0f57845522e0523da6d5328eeb4b2c93  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/network-lockdown.sh
-88283f313a91285d1f2bc18a6c1bd6992d841502ce5d0de3e7402d31cc8a7961  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-common.sh
+7cae831187ffe8212a395ea5dc37ac18fb22e375ac773370ec6e6403ddc9cf15  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-common.sh
 d66ac52bd6a405688542e2797a3da4d0cc9cac60b85a64c994a20b61c542c422  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-daemon.sh
 b55f8724cb278007769ff59a15a803a387ae4a74b8b349a204952c37dc0961cf  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-settings.sh
 7da7fdb2f600c0b74d4d44d85d17d4260d5c44d17e19500e4e9224f5889141a0  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-update-lock.py
@@ -108,6 +108,6 @@ d68835d49ad61a0987ca07e0aa3979574677fcfe9d481c0531e75c1c4a1be4cb  /home/default/
 d1815307ba108b4a4529bf4443839f93bfd7ce6a3c9f4347ac99c335ca2a4f16  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/ring-pulse.sdf.json
 8d417ae6a47dd704c4fb295aba11b57e20773c617afca6008780c0bd66b527c6  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/ring-pulse.sdf.png
 a78d379e8758df4bdfde293ab2191b9d5c3cc32172424f692687974556b18cf0  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/field.html
-9d4e901b1ca838f4c06d7bd666efb5c734f7b364dcd5bdfc0fa7d21c6c93b506  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/threat-panel.html
+7a3b75b41a79454634e66fa3387f0da25158b1c1a7d29bd4ca0791398da777a1  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/threat-panel.html
 303864a25e969ee6d9fcd5e7e270a77aaf1ff0237662a0561dfdcc8606d7c70d  /home/default/Desktop/SG/Latest/NEXUS-Shield/config/nexus.conf
 4f8d5ec4dbe916c9c15c83e97dca2daf187caabaf5c9de965f0428b0633b0abf  /home/default/Desktop/SG/Latest/NEXUS-Shield/config/device-whitelist.conf

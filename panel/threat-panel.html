@@ -1,35 +1,43 @@
 <!DOCTYPE html>
-<html lang="en" class="old-man">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <script>
     (function () {
       try {
-        if (localStorage.getItem("nexus_old_man") === "0") document.documentElement.classList.remove("old-man");
+        if (localStorage.getItem("nexus_old_man") === "1") document.documentElement.classList.add("old-man");
+        var raw = sessionStorage.getItem("nexus-field-v3");
+        if (raw) window.NEXUS_FIELD = JSON.parse(raw);
       } catch (_) {}
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NEXUS-Shield — Threat Panel</title>
+  <link rel="preload" href="/api/status" as="fetch" crossorigin />
   <link rel="preload" href="/api/field" as="fetch" crossorigin />
-  <script src="/assets/field-foundation.js"></script>
+  <script defer src="/assets/field-foundation.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
     :root {
+      --text-base: 18px;
+      --text-sm: 0.8125rem;
+      --text-xs: 0.75rem;
       --bg: #080a10;
       --bg-accent: #0d1220;
       --panel: #12151d;
       --card: #141a26;
       --border: #2a3040;
       --text: #e8ecf4;
-      --muted: #8b95a8;
+      --muted: #9aa8be;
       --internet: #4d9bff;
       --threat: #ff5c7a;
       --gold: #d4af37;
       --ok: #3dd68c;
       --murder: #ff0033;
       --glow: rgba(61, 139, 253, 0.15);
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
     }
     .murder-banner {
       display: none;
@@ -47,10 +55,16 @@
     .murder-actions button.ghost { background: transparent; border: 1px solid var(--murder); color: #ffd6de; }
     * { box-sizing: border-box; }
     body {
-      margin: 0; font-family: "Segoe UI", system-ui, sans-serif; color: var(--text); min-height: 100vh;
-      font-size: 17px; line-height: 1.55;
+      margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: var(--text); min-height: 100vh;
+      font-size: var(--text-base); line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
       background: radial-gradient(1200px 600px at 10% -10%, #152040 0%, transparent 55%),
         radial-gradient(900px 500px at 90% 0%, #2a1030 0%, transparent 50%), var(--bg);
+    }
+    .meta { font-size: var(--text-sm); line-height: 1.5; }
+    .honor-card {
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
     }
     header.app-header {
       display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
@@ -1155,9 +1169,10 @@
       .intent-head .ip { text-align: left; justify-self: start; }
       #tip-portal.tip-flyout.visible { pointer-events: auto; }
     }
-    /* Old Man mode — 2× font scale + high-contrast retheme (default ON) */
+    /* Comfort reading — modest bump + high contrast (optional, not giant) */
     html.old-man {
-      --font-scale: 2;
+      --text-base: 20px;
+      --text-sm: 0.875rem;
       --bg: #000408;
       --bg-accent: #0a1018;
       --panel: #101820;
@@ -1173,13 +1188,12 @@
       --glow: rgba(100, 170, 255, 0.22);
     }
     html.old-man body {
-      font-size: 34px;
       font-weight: 500;
-      letter-spacing: 0.025em;
+      letter-spacing: 0.02em;
       background: var(--bg);
-      line-height: 1.65;
+      line-height: 1.6;
     }
-    html.old-man header.app-header { padding: 18px 28px; }
+    html.old-man header.app-header { padding: 16px 24px; }
     html.old-man nav.menu button,
     html.old-man .panel-subnav button,
     html.old-man .attack-kit-bar button,
@@ -1189,38 +1203,34 @@
     html.old-man .ha-check-online-btn,
     html.old-man .setting-row .toggle,
     html.old-man #nexus-update-btn {
-      min-height: 48px;
-      font-size: 0.82rem !important;
+      min-height: 42px;
     }
-    html.old-man .setting-row .hint { font-size: 0.72rem !important; }
-    html.old-man #tip-portal.tip-flyout { font-size: 0.78rem !important; max-width: 420px; line-height: 1.55; }
-    html.old-man .ha-strike-badge { font-size: 0.72rem !important; padding: 6px 12px; }
     html.old-man .brand-sub::after {
-      content: " · OLD MAN MODE · 2× scale";
+      content: " · comfort reading";
       color: var(--gold);
-      font-weight: 700;
+      font-weight: 600;
     }
     html.old-man .old-man-banner {
       display: block;
-      padding: 10px 20px;
+      padding: 8px 16px;
       background: linear-gradient(90deg, #1a2840, #102030);
       border-bottom: 2px solid var(--gold);
       color: var(--gold);
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      letter-spacing: 0.06em;
       text-align: center;
     }
     .old-man-banner { display: none; }
   </style>
 </head>
 <body>
-  <div class="old-man-banner" id="old-man-banner">OLD MAN MODE — 2× font scale · high contrast · built for tired eyes</div>
+  <div class="old-man-banner" id="old-man-banner">Comfort reading — slightly larger text · high contrast · not giant</div>
   <header class="app-header">
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.8.2</h1>
+        <h1>NEXUS-Shield v5.8.3</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1240,7 +1250,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.2</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.3</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1389,17 +1399,17 @@
       <div id="field-rf-fcc-banner" class="gov-merge-banner" style="border-color:#8b3030;background:rgba(56,20,20,0.55);margin-bottom:14px;">
         <strong>NEAR-INFINITE PASSIVE REACH · GLOBAL POLLUTION CLEANUP</strong> — receive-only scan extends horizon every cycle. Pollution ledger never forgets. Unhealthy RF <strong>disabled forever</strong> on the wire. <strong>FCC safe · no bursts · no jamming · no deauth floods.</strong>
       </div>
-      <div id="field-rf-reach-banner" class="gov-merge-banner" style="border-color:#3a5080;background:rgba(20,36,56,0.55);margin-bottom:10px;font-size:0.68rem;"></div>
-      <div id="field-rf-permitted-bands" class="meta" style="font-size:0.66rem;margin-bottom:10px;"></div>
+      <div id="field-rf-reach-banner" class="gov-merge-banner meta" style="border-color:#3a5080;background:rgba(20,36,56,0.55);margin-bottom:10px;"></div>
+      <div id="field-rf-permitted-bands" class="meta" style="margin-bottom:10px;"></div>
       <div class="honor-grid">
         <div class="honor-card">
           <h4 data-tip="Passive global wireless field — all visible APs across 2.4/5/6 GHz bands.">Global antenna telemetry</h4>
-          <div id="field-rf-antenna-meta" class="meta" style="font-size:0.68rem;margin-bottom:8px;">Sampling…</div>
-          <div id="field-rf-global-field" class="meta" style="font-size:0.66rem;margin-bottom:8px;"></div>
+          <div id="field-rf-antenna-meta" class="meta" style="margin-bottom:8px;">Sampling…</div>
+          <div id="field-rf-global-field" class="meta" style="margin-bottom:8px;"></div>
           <div id="field-rf-interfaces"></div>
           <div style="margin-top:10px;">
             <button type="button" id="field-rf-cycle" data-tip="Force one passive global scan cycle now (FCC receive-only).">Scan now</button>
-            <span id="field-rf-shield-status" class="meta" style="margin-left:10px;font-size:0.68rem;"></span>
+            <span id="field-rf-shield-status" class="meta" style="margin-left:10px;"></span>
           </div>
           <div style="margin-top:10px;">
             <label class="toggle" style="font-size:0.72rem;">
@@ -1422,7 +1432,7 @@
         </div>
         <div class="honor-card">
           <h4 data-tip="Cumulative global pollution ledger — every hostile AP ever seen in our passive field, cleaned forever.">Global pollution cleanup</h4>
-          <div id="field-rf-pollution-stats" class="meta" style="font-size:0.66rem;margin-bottom:8px;"></div>
+          <div id="field-rf-pollution-stats" class="meta" style="margin-bottom:8px;"></div>
           <div id="field-rf-pollution-cleaned"><div class="empty">No pollution cleaned this cycle — field is clean.</div></div>
         </div>
         <div class="honor-card">
@@ -1431,13 +1441,13 @@
         </div>
         <div class="honor-card" style="grid-column: 1 / -1;">
           <h4 data-tip="Full detail of every global pollution cleanup action — discover, clean, re-enforce.">Operations log · full detail</h4>
-          <div id="field-rf-operations" class="meta" style="font-size:0.64rem;max-height:220px;overflow:auto;"><div class="empty">Operations log populates after first scan cycle.</div></div>
+          <div id="field-rf-operations" class="meta" style="max-height:220px;overflow:auto;"><div class="empty">Operations log populates after first scan cycle.</div></div>
         </div>
         <div class="honor-card">
           <h4 data-tip="Wireless threats detected passively — unpermitted spectrum, evil twin, rogue open, hostile OUI, 100% correlated IP.">Global threat detection</h4>
           <div id="field-rf-bursts"><div class="empty">No wireless threats this cycle — passive watch active.</div></div>
-          <div id="field-rf-kicks" style="margin-top:10px;font-size:0.68rem;"></div>
-          <div id="field-rf-recent" style="margin-top:10px;font-size:0.68rem;"></div>
+          <div id="field-rf-kicks" class="meta" style="margin-top:10px;"></div>
+          <div id="field-rf-recent" class="meta" style="margin-top:10px;"></div>
         </div>
         <div class="honor-card" style="grid-column: 1 / -1;">
           <h4 data-tip="Police, law, intelligence, courts, corrections, emergency, and government data — CIA, NSA, FBI, KGB/SVR/FSB/GRU, Mossad, Shin Bet, MI6, BND, DGSE, MSS, RAW, ISI, Five Eyes, NATO, Europol, and Michigan MPSCS/Tri/Quad-State. Merge-only: never deletes existing dossier data.">Government · law · intelligence databases</h4>
@@ -1830,10 +1840,10 @@
         </div>
         <div class="setting-row" id="old-man-setting-row">
           <label class="toggle">
-            <input type="checkbox" id="set-old-man" checked />
-            <span><strong>Old Man mode</strong><span class="hint">2× font scale + high-contrast retheme — easier on old eyes.</span></span>
+            <input type="checkbox" id="set-old-man" />
+            <span><strong>Comfort reading</strong><span class="hint">Modest text bump + high contrast — not giant fonts.</span></span>
           </label>
-          <span class="has-tip-row" data-tip="Doubles all text size (rem-based) and switches to a high-contrast palette with larger buttons. Saved in your browser. Default ON."></span>
+          <span class="has-tip-row" data-tip="Slightly larger base text (18→20px) and high-contrast colors. Off by default. No super-giant scaling."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
@@ -2358,7 +2368,7 @@
     }
 
     $("set-old-man")?.addEventListener("change", (e) => applyOldManMode(e.target.checked));
-    applyOldManMode(localStorage.getItem("nexus_old_man") !== "0");
+    applyOldManMode(localStorage.getItem("nexus_old_man") === "1");
 
     async function setSetting(key, value) {
       const res = await fetch("/api/settings", {
