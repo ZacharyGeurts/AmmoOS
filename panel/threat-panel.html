@@ -53,14 +53,20 @@
     }
     header h1 { margin: 0; font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase; }
     .brand-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
-    .meta { font-size: 0.78rem; color: var(--muted); }
+    .meta {
+      display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
+      font-size: 0.78rem; color: var(--muted); line-height: 1.4;
+    }
     .meta strong { color: var(--gold); }
+    .meta-chip { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
     nav.menu {
-      display: flex; gap: 4px; padding: 0 18px; border-bottom: 1px solid var(--border); background: #0c1018;
+      display: flex; gap: 2px; padding: 0 18px; border-bottom: 1px solid var(--border); background: #0c1018;
     }
     nav.menu button {
-      background: transparent; border: none; color: var(--muted); padding: 10px 14px; cursor: pointer;
-      font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; border-bottom: 2px solid transparent;
+      display: inline-flex; align-items: center; gap: 5px;
+      background: transparent; border: none; color: var(--muted); padding: 10px 16px; cursor: pointer;
+      font-size: 0.84rem; letter-spacing: 0.02em; text-transform: none; border-bottom: 2px solid transparent;
+      white-space: nowrap;
     }
     nav.menu button.active {
       color: var(--internet); border-bottom-color: var(--internet);
@@ -79,13 +85,23 @@
     .pane { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
     .pane:last-child { border-right: none; }
     .pane-head {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
       padding: 12px 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
       font-size: 0.72rem; border-bottom: 1px solid var(--border);
     }
+    .pane-head .pane-title { flex: 1; min-width: 0; }
     .pane.internet .pane-head { color: var(--internet); background: #0d1524; }
     .pane.threat .pane-head { color: var(--threat); background: #1a0d12; }
-    .stats { display: flex; gap: 16px; padding: 10px 18px; font-size: 0.8rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-    .stat span { color: var(--muted); }
+    .stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); gap: 8px;
+      padding: 10px 18px; font-size: 0.8rem; border-bottom: 1px solid var(--border);
+    }
+    .stat {
+      display: flex; flex-direction: column; gap: 2px; min-width: 0;
+      padding: 6px 10px; border-radius: 6px; background: rgba(0, 0, 0, 0.18);
+    }
+    .stat > span:first-child { color: var(--muted); font-size: 0.72rem; }
+    .stat strong { font-size: 0.9rem; }
     .list { flex: 1; overflow: auto; padding: 6px 0; font-size: 0.74rem; line-height: 1.45; }
     .list.mono { font-family: ui-monospace, monospace; font-size: 0.72rem; }
     .row { padding: 6px 18px; border-bottom: 1px solid #1a1f2a; word-break: break-all; }
@@ -112,12 +128,14 @@
       color: var(--ok); border-top: 1px solid var(--border); background: #0d1512;
     }
     .trusted-row {
-      display: flex; align-items: center; gap: 8px; padding: 5px 18px;
+      display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px;
+      align-items: center; padding: 5px 18px;
       border-bottom: 1px solid #1a2430; font-size: 0.7rem;
     }
     .trusted-row .ip { color: var(--ok); font-weight: 600; font-family: ui-monospace, monospace; }
     .trusted-row .meta { color: var(--muted); flex: 1; }
     .gatekeeper-banner {
+      display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline;
       padding: 10px 18px; font-size: 0.76rem; line-height: 1.45;
       background: #0d1520; border-bottom: 1px solid var(--border); color: var(--muted);
     }
@@ -167,13 +185,28 @@
     }
     .axis-details summary::-webkit-details-marker { display: none; }
     .axis-details[open] summary { color: var(--internet); }
-    .intent-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
-    .intent-head .ip { font-family: ui-monospace, monospace; color: var(--internet); font-weight: 600; }
-    .intent-head .proc { color: var(--muted); }
+    .intent-head {
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto); gap: 4px 10px;
+      align-items: center; margin-bottom: 6px;
+    }
+    .intent-head .friendly-verdict { min-width: 0; }
+    .intent-head .ip {
+      font-family: ui-monospace, monospace; color: var(--internet); font-weight: 600;
+      text-align: right; word-break: break-all; justify-self: end;
+    }
+    .intent-head .proc { grid-column: 1 / -1; color: var(--muted); word-break: break-word; }
+    .intent-head .meta { grid-column: 1 / -1; font-size: 0.65rem; color: var(--muted); }
     .intent-reason { color: #b8c0d0; margin-bottom: 6px; }
-    .axis-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px 12px; }
-    .axis { display: flex; align-items: center; gap: 6px; }
-    .axis label { width: 108px; color: var(--muted); font-size: 0.62rem; text-transform: uppercase; }
+    .axis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px 12px; }
+    .axis {
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(48px, 1.4fr) 26px;
+      gap: 4px 6px; align-items: center; min-width: 0;
+    }
+    .axis label {
+      min-width: 0; color: var(--muted); font-size: 0.62rem; text-transform: uppercase;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .axis > span:last-child { text-align: right; font-size: 0.62rem; color: var(--muted); flex-shrink: 0; }
     .axis bar { flex: 1; height: 5px; background: #1a2030; border-radius: 3px; overflow: hidden; }
     .axis bar span { display: block; height: 100%; border-radius: 3px; }
     .axis bar span.harm { background: var(--threat); }
@@ -201,7 +234,8 @@
     .sev-medium { color: var(--gold); }
     .sev-low { color: var(--muted); }
     .sanitize-row {
-      display: flex; align-items: flex-start; gap: 10px; padding: 8px 18px; border-bottom: 1px solid #1a2430;
+      display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px 10px;
+      align-items: start; padding: 8px 18px; border-bottom: 1px solid #1a2430;
       font-size: 0.74rem;
     }
     .sanitize-row.undone { opacity: 0.45; }
@@ -276,16 +310,18 @@
       background: var(--panel); overflow: hidden;
     }
     .settings-group h3 {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
       margin: 0; padding: 12px 16px; font-size: 0.72rem; letter-spacing: 0.1em;
       text-transform: uppercase; color: var(--gold); background: #0e1118;
       border-bottom: 1px solid var(--border);
     }
     .setting-row {
-      display: flex; align-items: flex-start; gap: 12px; padding: 10px 16px;
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px;
+      align-items: start; padding: 10px 16px;
       border-bottom: 1px solid #1a1f2a; font-size: 0.8rem;
     }
     .setting-row:last-child { border-bottom: none; }
-    .setting-row label.toggle { flex: 1; }
+    .setting-row label.toggle { min-width: 0; }
     .setting-row .hint { display: block; color: var(--muted); font-size: 0.72rem; margin-top: 3px; }
     .adblock-actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 16px; }
     .adblock-actions button, .adblock-url-row button {
@@ -339,28 +375,33 @@
     }
     .tip-btn:hover, .tip-btn:focus { background: var(--internet); color: #fff; outline: none; }
     .tip-flyout {
-      display: none; position: absolute; left: 0; top: calc(100% + 6px); z-index: 200;
-      min-width: 200px; max-width: min(320px, 90vw); padding: 10px 12px;
+      display: none; min-width: 200px; max-width: min(320px, 90vw); padding: 10px 12px;
       background: #1a2234; border: 1px solid #3d8bfd; border-radius: 8px;
       box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55); font-size: 0.76rem; line-height: 1.5;
       color: #dce4f4; font-weight: 400; text-transform: none; letter-spacing: normal;
-      white-space: normal; pointer-events: none;
+      white-space: normal;
     }
-    .has-tip.open .tip-flyout,
-    .has-tip:hover .tip-flyout,
-    .has-tip:focus-within .tip-flyout { display: block; }
-    .has-tip.tip-above .tip-flyout { top: auto; bottom: calc(100% + 6px); }
-    .has-tip.tip-right .tip-flyout { left: auto; right: 0; }
-    .pane-head .has-tip { margin-left: 6px; }
-    .setting-row .has-tip.has-tip-row { margin-left: auto; flex-shrink: 0; margin-top: 2px; }
+    .has-tip > .tip-flyout { display: none !important; }
+    #tip-portal.tip-flyout {
+      position: fixed; z-index: 9999; pointer-events: none;
+    }
+    #tip-portal.tip-flyout.visible { display: block; }
+    .pane-head .has-tip { flex-shrink: 0; }
+    .setting-row .has-tip.has-tip-row { justify-self: end; flex-shrink: 0; margin-top: 2px; }
+    nav.menu .tip-btn { width: 15px; height: 15px; font-size: 0.58rem; }
     .friendly-verdict { font-weight: 700; }
     .friendly-verdict .tech { font-weight: 400; font-size: 0.62rem; color: var(--muted); margin-left: 4px; }
     .axis label .tip-btn { width: 14px; height: 14px; font-size: 0.55rem; }
     .axis .has-tip { gap: 2px; }
-    @media (max-width: 900px) {
+    @media (max-width: 1100px) {
+      .signal-cols { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
       .pane { border-right: none; border-bottom: 1px solid var(--border); }
-      .has-tip.open .tip-flyout { pointer-events: auto; }
+      .intent-head { grid-template-columns: 1fr; }
+      .intent-head .ip { text-align: left; justify-self: start; }
+      #tip-portal.tip-flyout.visible { pointer-events: auto; }
     }
   </style>
 </head>
@@ -369,17 +410,20 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.1.1</h1>
+        <h1>NEXUS-Shield v2.1.2</h1>
         <div class="brand-sub">Your network helper</div>
       </div>
     </div>
     <div class="meta">
-      <span data-tip="How alert NEXUS is right now: calm = quiet day, storm = lots going on.">Activity</span>
-      <strong id="mode">—</strong> ·
-      <span data-tip="Roughly how confident NEXUS is that recent warnings are real — not a grade on you.">Signal</span>
-      <strong id="signal">—</strong>% ·
-      <span data-tip="When this screen last refreshed. Updates every few seconds.">Updated</span>
-      <strong id="updated">—</strong>
+      <span class="meta-chip" data-tip="How alert NEXUS is right now: calm = quiet day, storm = lots going on.">
+        <span>Activity</span> <strong id="mode">—</strong>
+      </span>
+      <span class="meta-chip" data-tip="Roughly how confident NEXUS is that recent warnings are real — not a grade on you.">
+        <span>Signal</span> <strong id="signal">—</strong>%
+      </span>
+      <span class="meta-chip" data-tip="When this screen last refreshed. Updates every few seconds.">
+        <span>Updated</span> <strong id="updated">—</strong>
+      </span>
     </div>
   </header>
 
@@ -418,16 +462,16 @@
   </div>
 
   <nav class="menu" aria-label="Panel sections">
-    <button type="button" class="active" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">What's happening</button>
+    <button type="button" class="active" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">Monitor</button>
     <button type="button" data-view="settings" data-tip="Turn features on/off, load ad block lists, and review past incidents. No terminal needed.">Settings</button>
-    <button type="button" data-view="logs" data-tip="A diary of everything NEXUS noticed — useful when something feels wrong.">Activity log</button>
+    <button type="button" data-view="logs" data-tip="A diary of everything NEXUS noticed — useful when something feels wrong.">Logs</button>
   </nav>
 
   <section id="view-monitor" class="view active">
     <div id="gatekeeper-banner" class="gatekeeper-banner"></div>
     <div class="grid">
       <section class="pane internet">
-        <div class="pane-head">What's online now <span data-tip="Every connection your PC has open to the internet. NEXUS scores each one: normal browsing vs something that might be stealing data or hogging bandwidth.">?</span></div>
+        <div class="pane-head"><span class="pane-title">Live connections</span><span data-tip="Every connection your PC has open to the internet. NEXUS scores each one: normal browsing vs something that might be stealing data or hogging bandwidth."></span></div>
         <div class="stats">
           <div class="stat"><span data-tip="Outgoing connections — your apps talking to websites and servers. Normal when browsing, gaming, or streaming.">Outgoing</span> <strong id="egress">0</strong></div>
           <div class="stat"><span data-tip="Programs waiting for someone to connect in. A few is normal; a sudden jump might be worth a look.">Listening</span> <strong id="listeners">0</strong></div>
@@ -439,7 +483,7 @@
         <div class="list" id="trusted-list"><div class="empty">See something normal but flagged? Click <strong>Trust forever</strong> on that connection.</div></div>
       </section>
       <section class="pane threat">
-        <div class="pane-head">Warnings <span data-tip="Things NEXUS noticed that might need attention. An empty list is a good day. Warnings don't always mean danger — click ? on each row when we add them.">?</span></div>
+        <div class="pane-head"><span class="pane-title">Warnings</span><span data-tip="Things NEXUS noticed that might need attention. An empty list is a good day. Warnings don't always mean danger — click ? on each row when we add them."></span></div>
         <div class="stats">
           <div class="stat"><span data-tip="How many separate warnings are piling up at once. Higher = busier, not automatically bad.">Overlap</span> <strong id="corr">0</strong></div>
           <div class="stat"><span data-tip="Number of active warning entries in the list below.">Count</span> <strong id="threat-count">0</strong></div>
@@ -455,7 +499,7 @@
   <section id="view-settings" class="view">
     <div class="settings-wrap">
       <div class="settings-group">
-        <h3>Protection <span data-tip="These control how aggressive NEXUS is. Safe default: everything that auto-blocks stays OFF — you click buttons on the What's happening tab instead.">?</span></h3>
+        <h3><span>Protection</span><span data-tip="These control how aggressive NEXUS is. Safe default: everything that auto-blocks stays OFF — you click buttons on the Monitor tab instead."></span></h3>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_PARANOIA_BLOCK" id="set-paranoia-block" />
@@ -487,13 +531,13 @@
       </div>
 
       <div class="settings-group">
-        <h3>Watchers <span data-tip="Background helpers that run quietly. Turning one OFF reduces work — only do that if you know you don't need it.">?</span></h3>
+        <h3><span>Watchers</span><span data-tip="Background helpers that run quietly. Turning one OFF reduces work — only do that if you know you don't need it."></span></h3>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_CONNECTION_GATEKEEPER" id="set-gatekeeper" />
             <span><strong>Score live connections</strong><span class="hint">Powers the main tab — normal vs sketchy.</span></span>
           </label>
-          <span class="has-tip-row" data-tip="The brain behind the What's happening tab. Reads each connection and labels it for you. Leave ON."></span>
+          <span class="has-tip-row" data-tip="The brain behind the Monitor tab. Reads each connection and labels it for you. Leave ON."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
@@ -548,7 +592,7 @@
       </div>
 
       <div class="settings-group">
-        <h3>Ad blocking <span data-tip="Optional: download popular block lists and stop ads/trackers at the network level. Load a list first, then turn ON, then click Apply.">?</span></h3>
+        <h3><span>Ad blocking</span><span data-tip="Optional: download popular block lists and stop ads/trackers at the network level. Load a list first, then turn ON, then click Apply."></span></h3>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_ADBLOCK" id="set-adblock" />
@@ -570,12 +614,12 @@
       </div>
 
       <div class="settings-group">
-        <h3>Suspicious event history <span data-tip="A diary of things NEXUS thought were odd enough to write down. Empty is good.">?</span></h3>
+        <h3><span>Suspicious event history</span><span data-tip="A diary of things NEXUS thought were odd enough to write down. Empty is good."></span></h3>
         <div class="list" id="paranoia-list"><div class="empty">Nothing recorded yet — quiet is good.</div></div>
       </div>
 
       <div class="settings-group">
-        <h3>Auto-fix history <span data-tip="If auto-fix was ever on, past actions show here. Check Undo to reverse one.">?</span></h3>
+        <h3><span>Auto-fix history</span><span data-tip="If auto-fix was ever on, past actions show here. Check Undo to reverse one."></span></h3>
         <div class="list" id="sanitize-list"><div class="empty">No auto-fix actions yet.</div></div>
       </div>
     </div>
@@ -601,7 +645,7 @@
     }
 
     function tipMarkup(text) {
-      return `<button type="button" class="tip-btn" aria-label="Help">?</button><span class="tip-flyout" role="tooltip">${esc(text)}</span>`;
+      return `<span class="tip-btn" role="button" tabindex="0" aria-label="Help">?</span><span class="tip-flyout" role="tooltip">${esc(text)}</span>`;
     }
 
     function decorateTips(root = document) {
@@ -609,6 +653,14 @@
         if (el.dataset.tipDone || el.querySelector(":scope > .tip-btn")) return;
         const text = el.getAttribute("data-tip");
         if (!text) return;
+        if (el.matches("nav.menu button")) {
+          el.insertAdjacentHTML("beforeend", tipMarkup(text));
+          el.removeAttribute("data-tip");
+          el.dataset.tipDone = "1";
+          el.classList.add("has-tip");
+          bindTip(el);
+          return;
+        }
         const wrap = document.createElement("span");
         const extra = el.classList.contains("stat") ? " has-tip-stat"
           : el.classList.contains("setting-row") ? "" : "";
@@ -624,22 +676,81 @@
       });
     }
 
+    let tipPortal = null;
+    let activeTipWrap = null;
+
+    function getTipPortal() {
+      if (!tipPortal) {
+        tipPortal = document.createElement("div");
+        tipPortal.id = "tip-portal";
+        tipPortal.className = "tip-flyout tip-portal";
+        tipPortal.setAttribute("role", "tooltip");
+        document.body.appendChild(tipPortal);
+      }
+      return tipPortal;
+    }
+
+    function hideTipPortal() {
+      if (!tipPortal) return;
+      tipPortal.classList.remove("visible");
+      tipPortal.textContent = "";
+      activeTipWrap = null;
+    }
+
+    function positionTipPortal(wrap) {
+      const btn = wrap.querySelector(".tip-btn");
+      const flyout = wrap.querySelector(".tip-flyout");
+      if (!btn || !flyout) return;
+      const portal = getTipPortal();
+      portal.innerHTML = flyout.innerHTML;
+      portal.classList.add("visible");
+      activeTipWrap = wrap;
+      portal.style.visibility = "hidden";
+      portal.classList.add("visible");
+      const rect = btn.getBoundingClientRect();
+      const pw = portal.offsetWidth;
+      const ph = portal.offsetHeight;
+      let top = rect.bottom + 6;
+      let left = rect.left;
+      if (top + ph > window.innerHeight - 8) top = Math.max(8, rect.top - ph - 6);
+      if (left + pw > window.innerWidth - 8) left = Math.max(8, rect.right - pw);
+      if (left < 8) left = 8;
+      portal.style.top = `${top}px`;
+      portal.style.left = `${left}px`;
+      portal.style.visibility = "";
+    }
+
     function bindTip(wrap) {
       const btn = wrap.querySelector(".tip-btn");
       if (!btn || btn.dataset.tipBound) return;
       btn.dataset.tipBound = "1";
-      btn.addEventListener("click", (e) => {
+      const show = () => positionTipPortal(wrap);
+      const hide = () => { if (activeTipWrap === wrap && !wrap.classList.contains("open")) hideTipPortal(); };
+      wrap.addEventListener("mouseenter", show);
+      wrap.addEventListener("mouseleave", hide);
+      btn.addEventListener("focus", show);
+      btn.addEventListener("blur", hide);
+      const toggleOpen = (e) => {
         e.stopPropagation();
         e.preventDefault();
         document.querySelectorAll(".has-tip.open").forEach((w) => { if (w !== wrap) w.classList.remove("open"); });
         wrap.classList.toggle("open");
+        if (wrap.classList.contains("open")) positionTipPortal(wrap);
+        else hideTipPortal();
+      };
+      btn.addEventListener("click", toggleOpen);
+      btn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") toggleOpen(e);
       });
     }
 
     function initTips() {
       decorateTips(document);
+      window.addEventListener("scroll", hideTipPortal, true);
+      window.addEventListener("resize", hideTipPortal);
       document.addEventListener("click", () => {
         document.querySelectorAll(".has-tip.open").forEach((w) => w.classList.remove("open"));
+        hideTipPortal();
       });
       if (!sessionStorage.getItem("nexus_help_dismissed")) {
         $("help-bar")?.classList.remove("hidden");
@@ -1318,7 +1429,7 @@
         const help = THREAT_VECTOR_HELP[t.vector] || {
           meaning: "NEXUS spotted an automated threat pattern.",
           likely: "Review the detail line — severity reflects how urgent it looks.",
-          action: "Check Activity log if unsure; use Settings for auto-block toggles.",
+          action: "Check Logs if unsure; use Settings for auto-block toggles.",
         };
         const sevTip = {
           critical: "Treat immediately — high-confidence problem.",

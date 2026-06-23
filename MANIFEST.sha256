@@ -8,11 +8,11 @@ a2310011532b89e3ad44201b7c6684950c230e543f9e2cdbd93694575ec81ffc  /home/default/
 5b2568da4f316a87d2dfa099ccc9ac56a9714176e0e3f94d9736929315c38926  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/firewall-trust.sh
 0d475beecfc6730c29c69e22c4bac9d56dfac1bc50a918a0ea604e804a5f6ee2  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/hostess7-bridge.sh
 de90af3922e507a8dd219e4533083a3c0f57845522e0523da6d5328eeb4b2c93  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/network-lockdown.sh
-5e38cab937f4ea9d58c75ec9209803ee9ae09d3c8f43a46d569b7a5a1d37c921  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-common.sh
+8b618690b349ecd0fe498a29370549b354f6429b9bdaba2ceb11c342c4b18df6  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-common.sh
 3bec27cca300b0eebe8f878cc82f590c0980e7db8c715d6f275dd39a437d757a  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-daemon.sh
 b8ea667b6523f02837b6b6cbb937f988f1fb16989ae2f8a281df8be7becdee9a  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-settings.sh
 c9ac3e1825bef7700d88bd85e8622494b7717941950605d8dabb64693f7d3eb6  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/packet-oracle.sh
-bc13301f3ecdc64f0dc33142c106cd98fe8d37dae2ff51f494dcdf63e93f4482  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/panel-launch.sh
+737eaa23d2d9245868f81e700ef8204cf865fb904c9d197eda1af029309a17d9  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/panel-launch.sh
 217fd29a3fcb3b575b6dfa39815d428ae3c5d0510dfa02401237af7961812e0b  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/panel-tls.sh
 912606db0fb6f58b1b93e06a0b12b238a67fc8a586a1806f35c43c1a4b7aecb6  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/paranoia-mode.sh
 1a982d3a0bdd9d3c849608118667a1de3e20dd0fe4cfac32ff97b0ba9a5d6a2f  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/predictive-guard.sh
@@ -30,6 +30,6 @@ f838cf5da9c1c49807d5defaaead2a461ac4ead717eec07a66d37e3bcecae183  /home/default/
 174aaf4fcf30e9185b77279d2b90d8cb1ca31d7987fd84f48c24651c0fe5ba44  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/ultra-stealth.sh
 da4d2e521788aac74ce8669f7941201fa62b5562c33b7c546dc4bd898c6434d8  /home/default/Desktop/SG/Latest/NEXUS-Shield/bin/nexus
 8ea9e94ef6585272786e4e8aa1363a39b8eac7d59e049a4a08f6acf565ab91a3  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/nexus-shield.png
-d04ce50c698d95dfee76cd5348260b240afe9ad7be9a3d82896f45b7fea0f613  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/threat-panel.html
+d45e9188cbd1b91fa4963e05ade3679ca485e580a5da5eba0e473ba6111e72e8  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/threat-panel.html
 72dcf1d52be2fa4358ca0d015edd8848233f46402cbe78d511d2a1ccad26f60e  /home/default/Desktop/SG/Latest/NEXUS-Shield/config/nexus.conf
 17a8336a1d6e2ab3389cd0e78b16446179ccc69f70ca5a6c3efcafd066199c0a  /home/default/Desktop/SG/Latest/NEXUS-Shield/config/device-whitelist.conf

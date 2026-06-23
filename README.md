@@ -34,6 +34,12 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.1.2 — layout polish
+
+- **Cleaner menu** — Monitor · Settings · Logs (short labels; long help stays in ? tooltips)
+- **No overlapping text** — grid layouts for stats, connection cards, and settings rows
+- **Fixed-position tooltips** — ? help floats above the panel instead of clipping inside cards
+
 ## v2.1.1 — scoring explained
 
 - **NEXUS suggests** box on every connection — trust vs concern meters, friendly/cautious bullet lists, specific what-to-do
