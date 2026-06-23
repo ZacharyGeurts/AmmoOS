@@ -134,6 +134,17 @@
     }
     .trusted-row .ip { color: var(--ok); font-weight: 600; font-family: ui-monospace, monospace; }
     .trusted-row .meta { color: var(--muted); flex: 1; }
+    .intel-banner {
+      margin: 0 0 12px; padding: 10px 14px; border-radius: 8px;
+      background: linear-gradient(90deg, #0d1828, #101a28);
+      border: 1px solid #2a4060; font-size: 0.74rem; line-height: 1.5; color: var(--muted);
+    }
+    .intel-banner strong { color: var(--internet); }
+    .intel-banner .pest-chip {
+      display: inline-block; margin: 4px 6px 0 0; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.62rem; border: 1px solid #4a2030; color: var(--threat); background: rgba(255, 80, 100, 0.08);
+    }
+    .intel-label { color: var(--internet); font-size: 0.68rem; }
     .gatekeeper-banner {
       display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline;
       padding: 10px 18px; font-size: 0.76rem; line-height: 1.45;
@@ -492,7 +503,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.4.1</h1>
+        <h1>NEXUS-Shield v2.5.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -550,6 +561,7 @@
   </nav>
 
   <section id="view-monitor" class="view active">
+    <div id="intel-banner" class="intel-banner" role="status" aria-live="polite"></div>
     <div id="gatekeeper-banner" class="gatekeeper-banner"></div>
     <div class="grid">
       <section class="pane internet">
@@ -1593,6 +1605,23 @@
       finally { if (btn) btn.disabled = false; }
     }
 
+    async function pestEradicate(ip, pid, vector, exe, btn) {
+      const procLabel = pid ? `process ${pid}` : "this peer";
+      if (!confirm(`Remove pest?\n\nBlock ${ip || "peer"} · stop ${procLabel} · quarantine temp binary if present.\n\nThis cannot be undone automatically.`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/pest/eradicate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, pid: pid || "0", vector: vector || "HARM_CANDIDATE", exe: exe || "" }),
+        });
+        const j = await res.json();
+        if (j.ok) refresh();
+        else alert("Pest removal failed — peer may be sacred or already gone.");
+      } catch { alert("Pest removal failed"); }
+      finally { if (btn) btn.disabled = false; }
+    }
+
     async function firewallUnblockDay(ip, direction, btn) {
       if (!ip) return;
       if (!confirm(`Unblock ${ip} for 1 day?\n\nTraffic allowed for 24 hours — not the same as Trust forever.`)) return;
@@ -1629,12 +1658,18 @@
       if (blockedRow) {
         actions += `<span class="has-tip has-tip-action"><button type="button" class="unblock-day" data-unblock-day="${ip}" data-dir="${dir}">Unblock 1 day</button>${tipMarkup(TIP_UNBLOCK_DAY)}</span>`;
       }
+      const intel = c.intel || {};
+      const intelLabel = intel.label || c.notes?.intel_label || "";
+      const showPest = v === "HARM_CANDIDATE" || (c.block_recommended && !trustedRow);
+      if (showPest) {
+        actions += `<span class="has-tip has-tip-action"><button type="button" class="danger eradicate" data-eradicate="${ip}" data-pid="${c.pid || ""}" data-vector="${v}">Remove pest</button>${tipMarkup("Block peer, stop process, quarantine temp binary — full host pest removal.")}</span>`;
+      }
       return `<div class="intent-row verdict-${v}${blockedRow ? " is-blocked" : ""}">
         <div class="intent-head">
           <span class="verdict-${v} friendly-verdict"><span class="has-tip">${esc(vf.label)}${tipMarkup(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""))}</span></span>
           <span class="ip" title="Internet address">${ip}:${c.remote_port || "?"}</span>
-          <span class="proc" title="Program using this connection">${c.process || "unknown app"}</span>
-          <span class="meta">${c.ip_class || ""}${blockedRow ? " · blocked" : ""}</span>
+          <span class="proc" title="Program using this connection">${c.process || "background app"}</span>
+          <span class="meta intel-label">${intelLabel ? esc(intelLabel) : esc(c.ip_class || "classified peer")}${blockedRow ? " · blocked" : ""}</span>
         </div>
         ${renderSuggestionBox(sug, v, c.scores)}
         ${c.reason ? `<details class="axis-details"><summary>Technical notes</summary><div class="intent-reason">${esc(c.reason)}</div></details>` : ""}
@@ -1655,7 +1690,29 @@
       root.querySelectorAll("[data-unblock-day]").forEach((btn) => {
         btn.addEventListener("click", () => firewallUnblockDay(btn.dataset.unblockDay, btn.dataset.dir, btn));
       });
+      root.querySelectorAll("[data-eradicate]").forEach((btn) => {
+        btn.addEventListener("click", () => pestEradicate(btn.dataset.eradicate, btn.dataset.pid, btn.dataset.vector, "", btn));
+      });
       root.querySelectorAll(".has-tip").forEach(bindTip);
+    }
+
+    function renderIntelBanner(vi) {
+      const el = $("intel-banner");
+      if (!vi || !vi.active_count) {
+        el.innerHTML = "<strong>Vector intelligence</strong> — classifying every peer (never unknown). Scour runs with each refresh.";
+        return;
+      }
+      const online = vi.online ? "online" : "offline (cached/heuristic)";
+      const pests = vi.pest_count || 0;
+      let chips = "";
+      (vi.pests || []).slice(0, 4).forEach((p) => {
+        const label = p.ip_intel?.label || p.remote_ip;
+        chips += `<span class="pest-chip">${esc(label)}</span>`;
+      });
+      el.innerHTML =
+        `<strong>Vector intelligence</strong> — ${vi.active_count} active peers classified · ${online}` +
+        (pests ? ` · <strong>${pests} pest${pests === 1 ? "" : "s"}</strong> flagged` : "") +
+        (chips ? `<div>${chips}</div>` : "");
     }
 
     function renderConnections(gk, trusted, blocked, lockdownFirst) {
@@ -1788,6 +1845,7 @@
         if (!gk.connections?.length && data.internet?.connections?.length) {
           gk._fallback = data.internet.connections;
         }
+        renderIntelBanner(data.vector_intel);
         renderGatekeeperBanner(gk);
         renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
         renderTrusted(data.trusted);

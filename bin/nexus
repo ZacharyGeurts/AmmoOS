@@ -54,6 +54,9 @@ NEXUS-Shield CLI — full control if the browser won't open
   nexus block <ip>          Block for 1 day
   nexus block <ip> --forever
   nexus unblock <ip>        Unblock for 1 day (temp allow)
+  nexus scour               Classify active vectors (never unknown)
+  nexus intel <ip>          Look up peer intelligence
+  nexus eradicate <ip> [pid]  Remove host pest (block + stop + quarantine)
   nexus paranoia            Paranoia mode status
   nexus shutdown            Shutdown guard / restart
 
@@ -240,6 +243,34 @@ case "$cmd" in
     # shellcheck source=/dev/null
     source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
     nexus_firewall_temp_allow_ip out "$ip" "${NEXUS_FIREWALL_TEMP_ALLOW_DURATION:-86400}" && echo "unblocked 1 day ${ip}"
+    ;;
+  scour)
+    script="${NEXUS_INSTALL_ROOT}/lib/vector-intel.py"
+    [[ -f "$script" ]] || { echo "vector-intel missing"; exit 1; }
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "$script" scour
+    ;;
+  intel)
+    ip="${sub:-}"
+    [[ -n "$ip" ]] || { echo "usage: nexus intel <ip>"; exit 1; }
+    script="${NEXUS_INSTALL_ROOT}/lib/vector-intel.py"
+    [[ -f "$script" ]] || { echo "vector-intel missing"; exit 1; }
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "$script" lookup "$ip"
+    ;;
+  eradicate)
+    ip="${sub:-}"
+    pid="${3:-0}"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/firewall-trust.sh"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/self-access.sh"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
+    [[ -n "$ip" ]] || { echo "usage: nexus eradicate <ip> [pid]"; exit 1; }
+    nexus_pest_eradicate "$ip" "$pid" "CLI_HARM" "" && echo "eradicated ${ip}" || exit 1
     ;;
   *)
     usage

@@ -36,6 +36,13 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.5.0 — vector intelligence (never unknown)
+
+- **Never unknown** — every peer gets a classified label (CDN, org, PTR, or inferred remote peer)
+- **Vector scour** — when online, enriches active connections via intelligence lookup (cached)
+- **Pest arsenal** — Remove pest: block peer, stop process, quarantine temp binaries (operator-initiated)
+- **CLI** — `nexus scour`, `nexus intel <ip>`, `nexus eradicate <ip> [pid]`
+
 ## v2.4.1 — settings you can see
 
 - **Settings mirror reality** — each row shows ON/OFF badges and green (on) vs muted (off) styling that matches saved choices

@@ -58,6 +58,10 @@ nexus_shutdown_init
 nexus_shutdown_install_traps
 nexus_shutdown_startup_check
 # shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
+# shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/packet-oracle.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh"

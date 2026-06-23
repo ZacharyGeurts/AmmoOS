@@ -205,13 +205,20 @@ nexus_packet_evaluate() {
     case "$proc" in
       firefox|chrome|chromium|brave|vivaldi|opera|msedge|waterfox|librewolf) return 0 ;;
     esac
-    nexus_threat_record "C2_CORRELATION" high "correlation_score=${corr} dst=${beacon_ip:-unknown} proc=${proc:-unknown}"
+    nexus_threat_record "C2_CORRELATION" high "correlation_score=${corr} dst=${beacon_ip:-unresolved} proc=${proc:-network-peer}"
   fi
 }
 
 nexus_connection_gatekeeper_publish() {
   [[ "${NEXUS_CONNECTION_GATEKEEPER:-1}" == "1" ]] || return 0
   command -v python3 >/dev/null 2>&1 || return 0
+  if declare -f nexus_vector_scour_publish >/dev/null 2>&1; then
+    nexus_vector_scour_publish
+  elif [[ -f "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
+    nexus_vector_scour_publish
+  fi
   local out="${NEXUS_STATE_DIR}/connection-intent.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${NEXUS_INSTALL_ROOT}/lib/connection-gatekeeper.py" \
     >"${out}.tmp" 2>/dev/null \

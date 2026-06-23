@@ -10,6 +10,8 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/adblock-loader.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/adblock-loader.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/shutdown-guard.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/shutdown-guard.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -43,7 +45,7 @@ nexus_threat_panel_publish() {
       local fw_state fw_blocks
       fw_state="$(nexus_firewall_status 2>/dev/null | awk -F= '/^firewall=/ {print $2}')"
       fw_blocks="$(nexus_firewall_status 2>/dev/null | awk -F= '/^blocks=/ {print $2}')"
-      printf '"firewall":"%s",' "${fw_state:-unknown}"
+      printf '"firewall":"%s",' "${fw_state:-checking}"
       printf '"firewall_blocks":%s,' "${fw_blocks:-0}"
     fi
     printf '"internet":{'
@@ -151,7 +153,19 @@ nexus_threat_panel_publish() {
     if declare -f nexus_shutdown_status_json >/dev/null 2>&1; then
       nexus_shutdown_status_json
     else
-      printf '{"killed":false,"status":"unknown","incidents":[]}'
+      printf '{"killed":false,"status":"idle","incidents":[]}'
+    fi
+    printf ',"vector_intel":'
+    if declare -f nexus_vector_intel_json >/dev/null 2>&1; then
+      nexus_vector_intel_json
+    else
+      printf '{"active_count":0,"pest_count":0,"active_vectors":[],"pests":[],"never_unknown":true}'
+    fi
+    printf ',"pest_actions":'
+    if declare -f nexus_pest_actions_json >/dev/null 2>&1; then
+      nexus_pest_actions_json 15
+    else
+      printf '[]'
     fi
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'

@@ -40,7 +40,9 @@ printf 'mode=1\nblock=0\nautosanitize_override=0\nupdated=%s\n' "$(date -u '+%Y-
 
 install -d -m 750 -o root -g nexus /usr/local/lib/nexus-shield /usr/local/lib/nexus-shield/bin /usr/local/bin
 cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/assets" /usr/local/lib/nexus-shield/
-chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" "${ROOT}/lib/connection-gatekeeper.py" 2>/dev/null || true
+chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
+  "${ROOT}/lib/connection-gatekeeper.py" "${ROOT}/lib/vector-intel.py" 2>/dev/null || true
+chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" 2>/dev/null || true
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/lib/nexus-shield/bin/nexus
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/bin/nexus
 install -m 755 -o root -g nexus "${ROOT}/nexus.sh" /usr/local/bin/nexus.sh

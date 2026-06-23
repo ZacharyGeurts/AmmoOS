@@ -213,7 +213,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -q 'v2.4.1' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0)' "$panel"
 }
 
 test_self_access_script() {
@@ -228,6 +228,31 @@ test_localhost_block_refused() {
   nexus_firewall_refuse_block_self "127.0.0.1"
   nexus_firewall_refuse_block_self "127.0.0.2"
   ! nexus_firewall_refuse_block_self "203.0.113.1"
+}
+
+test_vector_intel_no_unknown() {
+  local gk="${ROOT}/lib/connection-gatekeeper.py"
+  local intel="${ROOT}/lib/vector-intel.py"
+  [[ -f "$intel" && -f "$gk" ]]
+  ! grep -q 'public_unknown' "$gk"
+  grep -q 'classified_remote' "$gk"
+  grep -q 'never_unknown' "$intel"
+}
+
+test_pest_arsenal_sacred() {
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/pest-arsenal.sh"
+  nexus_pest_is_sacred_comm "systemd"
+  nexus_pest_is_sacred_comm "sshd"
+  ! nexus_pest_is_sacred_comm "evil-miner"
+}
+
+test_panel_v25_intel_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'renderIntelBanner' "$panel"
+  grep -q 'Remove pest' "$panel"
+  grep -q 'v2.5.0' "$panel"
+  grep -q '/api/pest/eradicate' "${ROOT}/lib/threat-panel-http.py"
 }
 
 test_gatekeeper_trust_rank() {
@@ -339,6 +364,9 @@ run_test "panel v2.4 action buttons" test_panel_v24_actions
 run_test "panel v2.4.1 settings visual sync" test_panel_v241_settings_visual
 run_test "self-access script wired" test_self_access_script
 run_test "localhost block refused" test_localhost_block_refused
+run_test "vector intel never unknown" test_vector_intel_no_unknown
+run_test "pest arsenal sacred processes" test_pest_arsenal_sacred
+run_test "panel v2.5 intel UI" test_panel_v25_intel_ui
 run_test "gatekeeper trust rank" test_gatekeeper_trust_rank
 run_test "firewall temp allow helpers" test_firewall_temp_allow_fn
 run_test "lockdown-first script" test_lockdown_first_script

@@ -15,9 +15,11 @@ from pathlib import Path
 from typing import Any
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 HISTORY = STATE / "connection-history.json"
 TRUSTED_TSV = STATE / "firewall-trusted.tsv"
 THREATS_TSV = STATE / "threat-vectors.tsv"
+INTEL_CACHE = STATE / "vector-intel-cache.json"
 
 BROWSER_PROCS = frozenset({
     "firefox", "chrome", "chromium", "brave", "brave-browser", "vivaldi", "opera",
@@ -123,16 +125,74 @@ def _parse_addr(addr: str) -> tuple[str, str]:
     return host, ""
 
 
+def _load_intel_cache() -> dict[str, Any]:
+    return _load_json(INTEL_CACHE, {"ips": {}})
+
+
+def _resolve_proc_pid(line: str, proc: str) -> tuple[str, int]:
+    pid = 0
+    m = re.search(r'users:\(\("([^"]+)"[^)]*pid=(\d+)', line)
+    if m:
+        if not proc:
+            proc = m.group(1).lower()
+            if proc.endswith("-bin"):
+                proc = proc[:-4]
+        pid = int(m.group(2))
+    else:
+        m2 = re.search(r"pid=(\d+)", line)
+        if m2:
+            pid = int(m2.group(2))
+    if (not proc or proc == "pid-unknown") and pid:
+        comm_path = Path(f"/proc/{pid}/comm")
+        try:
+            comm = comm_path.read_text(encoding="utf-8", errors="replace").strip("\0")
+            if comm:
+                proc = comm.lower()
+        except OSError:
+            proc = f"pid-{pid}"
+    if not proc:
+        proc = "network-peer"
+    return proc, pid
+
+
+def _intel_for_ip(ip: str, cache: dict[str, Any]) -> dict[str, Any]:
+    entry = (cache.get("ips") or {}).get(ip)
+    if entry:
+        return {
+            "ip_class": entry.get("ip_class") or "classified_remote",
+            "label": entry.get("label") or "Public internet peer",
+            "org": entry.get("org") or "",
+            "hostname": entry.get("hostname") or "",
+            "confidence": entry.get("confidence") or "inferred",
+            "source": entry.get("source") or "cache",
+        }
+    ip_class = _ip_class_legacy(ip)
+    label = {
+        "stream_cdn": "Major streaming / web CDN",
+        "search_cdn": "Search / social CDN",
+        "private": "Private LAN address",
+        "classified_remote": "Public internet peer",
+    }.get(ip_class, "Public internet peer")
+    return {
+        "ip_class": ip_class,
+        "label": label,
+        "org": "",
+        "hostname": "",
+        "confidence": "inferred",
+        "source": "heuristic",
+    }
+
+
 def _parse_ss(line: str) -> dict[str, str]:
     parts = line.split()
     proc = ""
+    pid = 0
     m = re.search(r'users:\(\("([^"]+)"', line)
     if m:
         proc = m.group(1).lower()
         if proc.endswith("-bin"):
             proc = proc[:-4]
-    elif "pid=" in line:
-        proc = "pid-unknown"
+    proc, pid = _resolve_proc_pid(line, proc)
     state = parts[0] if parts else ""
     local_idx, remote_idx = 3, 4
     if parts and parts[0] in ("tcp", "udp", "tcp6", "udp6"):
@@ -151,11 +211,12 @@ def _parse_ss(line: str) -> dict[str, str]:
         "remote_ip": rip,
         "remote_port": rport,
         "proc": proc,
+        "pid": str(pid) if pid else "",
         "line": line,
     }
 
 
-def _ip_class(ip: str) -> str:
+def _ip_class_legacy(ip: str) -> str:
     if not ip or PRIVATE_RE.match(ip):
         return "private"
     for p in STREAM_CDN_PREFIXES:
@@ -164,7 +225,7 @@ def _ip_class(ip: str) -> str:
     for p in SEARCH_CDN_PREFIXES:
         if ip.startswith(p):
             return "search_cdn"
-    return "public_unknown"
+    return "classified_remote"
 
 
 def _axis_user_browser(proc: str) -> tuple[int, str]:
@@ -174,8 +235,8 @@ def _axis_user_browser(proc: str) -> tuple[int, str]:
         return 8, f"email:{proc}"
     if proc in MEDIA_PROCS:
         return 7, f"media_app:{proc}"
-    if proc in ("", "pid-unknown"):
-        return 2, "unknown_process"
+    if proc in ("", "pid-unknown", "network-peer"):
+        return 2, "unidentified_process"
     if "/tmp/" in proc or "/dev/shm/" in proc:
         return 0, f"tmp_binary:{proc}"
     return 4, f"daemon:{proc}"
@@ -223,10 +284,10 @@ def _axis_search_ephemeral(key: str, history: dict, ip_class: str) -> tuple[int,
 def _axis_bandwidth_abuse(proc: str, ip_class: str, rport: str) -> tuple[int, str]:
     if proc in CONSUMER_PROCS:
         return 1, "user_app_expected"
-    if ip_class == "public_unknown" and rport == "443":
-        return 6, "unknown_bulk_https"
-    if ip_class == "public_unknown":
-        return 8, "unknown_non_cdn_egress"
+    if ip_class == "classified_remote" and rport == "443":
+        return 6, "remote_bulk_https"
+    if ip_class in ("classified_remote", "hosting", "identified_org"):
+        return 8, "non_cdn_egress"
     return 2, "cdn_normal"
 
 
@@ -263,14 +324,14 @@ def _axis_process_trust(proc: str) -> tuple[int, str]:
         return 8, "known_media"
     if "/tmp/" in proc or "/dev/shm/" in proc or proc.startswith("."):
         return 0, "untrusted_path"
-    if proc in ("", "pid-unknown"):
+    if proc in ("", "pid-unknown", "network-peer"):
         return 3, "unidentified"
     return 5, "system_daemon"
 
 
 def _axis_destination(ip_class: str, rport: str) -> tuple[int, str]:
     harm = 0
-    if ip_class == "public_unknown":
+    if ip_class in ("classified_remote", "hosting", "identified_org", "cloud_aws", "cloud_azure"):
         harm = 7
     elif ip_class == "search_cdn":
         harm = 2
@@ -314,7 +375,7 @@ def _build_suggestion(
 ) -> dict[str, Any]:
     friendly: list[str] = []
     unfriendly: list[str] = []
-    proc_name = proc or "unknown app"
+    proc_name = proc or "background app"
 
     ub = int(scores.get("user_browser", 0))
     if proc in EMAIL_PROCS:
@@ -373,8 +434,9 @@ def _build_suggestion(
     }
     if ip_class in cdn_labels and dc <= 3:
         friendly.append(cdn_labels[ip_class])
-    elif ip_class == "public_unknown" and dc >= 6:
-        unfriendly.append(f"{rip} is an unknown public server, not a well-known CDN ({dc}/10).")
+    elif ip_class in ("classified_remote", "hosting", "identified_org") and dc >= 6:
+        intel_label = notes.get("intel_label") or rip
+        unfriendly.append(f"{intel_label} is not a well-known CDN — classified remote peer ({dc}/10).")
     if rport in HARM_PORTS:
         unfriendly.append(f"Port {rport} is commonly used by malware and remote-control tools.")
 
@@ -449,7 +511,7 @@ def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str
     if scores["stream_theft_risk"] >= 8:
         return "HARM_CANDIDATE", "Non-browser stream path — possible video exfil/theft", True
     if harm >= 14 and scores["process_trust"] <= 4:
-        return "HARM_CANDIDATE", "Daemon to unknown host — bandwidth with harm intent", True
+        return "HARM_CANDIDATE", "Daemon to classified remote host — bandwidth with harm intent", True
     if harm >= 10:
         return "SUSPICIOUS", "Worth watching — not typical user browsing", False
     if ephemeral:
@@ -462,6 +524,7 @@ def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str
 def analyze_connections(lines: list[str]) -> dict[str, Any]:
     trusted = _load_trusted()
     threats = _recent_threat_ips()
+    intel_cache = _load_intel_cache()
     history: dict[str, Any] = _load_json(HISTORY, {"ticks": 0, "peers": {}})
     history["ticks"] = int(history.get("ticks", 0)) + 1
     peers: dict[str, Any] = history.get("peers", {})
@@ -480,7 +543,8 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         if not rip or PRIVATE_RE.match(rip):
             continue
         proc = p["proc"]
-        ip_class = _ip_class(rip)
+        intel = _intel_for_ip(rip, intel_cache)
+        ip_class = intel["ip_class"]
         key = f"{rip}:{rport}:{proc}"
         current_keys.add(key)
         peer_hist = peers.get(key, {"seen_count": 0, "first_tick": history["ticks"]})
@@ -523,6 +587,8 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         s, n = _axis_destination(ip_class, rport)
         scores["destination_class"] = s
         notes["destination_class"] = n
+        notes["intel_label"] = intel.get("label") or rip
+        notes["intel_org"] = intel.get("org") or ""
 
         s, n = _axis_threat_linked(rip, threats)
         scores["threat_linked"] = s
@@ -547,8 +613,10 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "remote_ip": rip,
             "remote_port": rport,
             "process": proc,
+            "pid": p.get("pid") or "",
             "state": state,
             "ip_class": ip_class,
+            "intel": intel,
             "line": line,
             "scores": scores,
             "notes": notes,

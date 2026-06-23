@@ -303,6 +303,49 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, _tail_file(fp, lines), "text/plain")
             return
 
+        if path == "/api/intel/scour":
+            script = INSTALL_ROOT / "lib" / "vector-intel.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "vector-intel missing"}), "application/json")
+                return
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            proc = subprocess.run(
+                ["python3", str(script), "scour"],
+                capture_output=True,
+                text=True,
+                timeout=90,
+                env=env,
+            )
+            if proc.returncode == 0 and proc.stdout.strip():
+                self._send(200, proc.stdout, "application/json")
+            else:
+                self._send(500, json.dumps({"ok": False, "error": "scour failed"}), "application/json")
+            return
+
+        if path == "/api/intel/lookup":
+            ip = str(query.get("ip", [""])[0]).strip()
+            if not ip:
+                self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
+                return
+            script = INSTALL_ROOT / "lib" / "vector-intel.py"
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            proc = subprocess.run(
+                ["python3", str(script), "lookup", ip],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env=env,
+            )
+            if proc.returncode == 0:
+                self._send(200, proc.stdout, "application/json")
+            else:
+                self._send(500, json.dumps({"ok": False, "error": "lookup failed"}), "application/json")
+            return
+
         if path in ("/", "/index.html"):
             target = PANEL_DIR / "threat-panel.html"
         else:
@@ -531,6 +574,32 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/adblock/apply":
             ok = _run_nexus_adblock_apply()
             self._send(200 if ok else 500, json.dumps({"ok": ok}), "application/json")
+            return
+
+        if path == "/api/pest/eradicate":
+            ip = str(body.get("ip", "")).strip()
+            pid = str(body.get("pid", body.get("process_id", "0"))).strip() or "0"
+            vector = str(body.get("vector", "HARM_CANDIDATE")).strip()
+            exe = str(body.get("exe", body.get("path", ""))).strip()
+            if not ip and pid == "0":
+                self._send(400, json.dumps({"ok": False, "error": "ip or pid required"}), "application/json")
+                return
+            safe_ip = ip.replace("'", "'\"'\"'")
+            safe_exe = exe.replace("'", "'\"'\"'")
+            inner = (
+                f"source {INSTALL_ROOT}/lib/nexus-common.sh && nexus_load_config && "
+                f"source {INSTALL_ROOT}/lib/firewall-sentinel.sh && "
+                f"source {INSTALL_ROOT}/lib/firewall-trust.sh && "
+                f"source {INSTALL_ROOT}/lib/self-access.sh && "
+                f"source {INSTALL_ROOT}/lib/pest-arsenal.sh && "
+                f"nexus_pest_eradicate '{safe_ip}' '{pid}' '{vector}' '{safe_exe}'"
+            )
+            ok = _run_nexus_bash(inner, timeout=45)
+            self._send(
+                200 if ok else 500,
+                json.dumps({"ok": ok, "ip": ip, "pid": pid, "vector": vector}),
+                "application/json",
+            )
             return
 
         self._send(404, "not found", "text/plain")
