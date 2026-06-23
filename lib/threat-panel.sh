@@ -344,7 +344,7 @@ def _us_field_slim(us):
         "network": {
             "default_route": net.get("default_route") or {},
             "dns": net.get("dns") or {},
-            "interfaces": (net.get("interfaces") or [])[:8],
+            "connections": net.get("connections") or [],
         },
         "sockets": {
             "established": sock.get("established", 0),

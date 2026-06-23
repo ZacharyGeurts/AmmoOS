@@ -144,6 +144,45 @@ def _dns_local() -> dict[str, Any]:
     return {"nameservers": servers, "search_domains": search, "dns_hash": dns_hash}
 
 
+def _ss_connections() -> list[dict[str, Any]]:
+    """Every established socket from ss -ti — label + TX/RX byte counters, no cap."""
+    text = _run(["ss", "-H", "-ti", "-n", "-p"], timeout=15)
+    conns: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split()
+        if parts and parts[0] in ("ESTAB", "ESTABLISHED"):
+            if current:
+                conns.append(current)
+            local = parts[3] if len(parts) > 3 else ""
+            remote = parts[4] if len(parts) > 4 else ""
+            proc_m = re.search(r'users:\(\("([^"]+)"', line)
+            proc = proc_m.group(1) if proc_m else ""
+            current = {
+                "state": parts[0],
+                "local": local,
+                "remote": remote,
+                "process": proc,
+                "tx_bytes": 0,
+                "rx_bytes": 0,
+            }
+        elif current and "bytes_sent:" in line:
+            sent_m = re.search(r"bytes_sent:(\d+)", line)
+            recv_m = re.search(r"bytes_received:(\d+)", line)
+            if sent_m:
+                current["tx_bytes"] = int(sent_m.group(1))
+            if recv_m:
+                current["rx_bytes"] = int(recv_m.group(1))
+    if current:
+        conns.append(current)
+    for c in conns:
+        proc = c.get("process") or "unknown"
+        c["label"] = f"{proc} · {c.get('local', '—')} → {c.get('remote', '—')}"
+    return conns
+
+
 def _ss_summary() -> dict[str, Any]:
     text = _run(["ss", "-H", "-tunap"], timeout=12)
     estab = listen = syn = 0
@@ -419,6 +458,7 @@ def build_us_field() -> dict[str, Any]:
             "default_route": _default_route(),
             "dns": _dns_local(),
             "arp_neighbors": _arp_neighbors(),
+            "connections": _ss_connections(),
         },
         "sockets": _ss_summary(),
         "gatekeeper": _gatekeeper_slice(),

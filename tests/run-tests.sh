@@ -333,6 +333,8 @@ test_us_field_module() {
   grep -q 'us_field' "${ROOT}/lib/threat-panel.sh"
   grep -q 'view-us' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderUSField' "${ROOT}/panel/threat-panel.html"
+  grep -q 'usNetConnectionsHtml' "${ROOT}/panel/threat-panel.html"
+  grep -q '_ss_connections' "${ROOT}/lib/field-us-intel.py"
   grep -q 'data-view="us"' "${ROOT}/panel/threat-panel.html"
   grep -q 'nexus_us_field_json' "${ROOT}/lib/field-us-intel.sh"
   ! grep -q 'Likely friendly' "${ROOT}/lib/connection-gatekeeper.py"
@@ -800,7 +802,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.8.5' "$panel"
+  grep -q 'v5.8.6' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -809,7 +811,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.8.5' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.8.6' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null

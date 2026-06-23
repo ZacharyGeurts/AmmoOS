@@ -462,6 +462,30 @@
     .us-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 8px; }
     .us-table th, .us-table td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #1a2430; }
     .us-table th { color: var(--muted); font-weight: 600; }
+    .us-net-conns { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .us-net-head {
+      display: grid; grid-template-columns: 1fr 80px 80px; gap: 8px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--muted); padding-bottom: 4px; border-bottom: 1px solid #1a2430;
+    }
+    .us-net-conn {
+      display: grid; grid-template-columns: 1fr 80px 80px; gap: 8px; align-items: stretch;
+      min-width: 0;
+    }
+    .us-net-label {
+      margin: 0; padding: 8px 10px; border-radius: 6px; background: #0a1018;
+      border: 1px solid #1a2838; font-size: 0.82rem; line-height: 1.45;
+      word-break: break-word; font-family: ui-monospace, monospace; color: var(--text);
+    }
+    .us-net-win {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 8px 6px; border-radius: 6px; font-family: ui-monospace, monospace;
+      font-size: 0.78rem; font-weight: 600; line-height: 1.2; min-height: 44px;
+    }
+    .us-net-win span { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 2px; }
+    .us-net-tx { background: rgba(77, 155, 255, 0.1); border: 1px solid #2a4060; color: #9ac8ff; }
+    .us-net-rx { background: rgba(61, 220, 104, 0.08); border: 1px solid #2a5040; color: #8ee8a8; }
+    .us-card.us-net-wide { grid-column: 1 / -1; }
     .us-crossrefs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .us-crossrefs button {
       background: #0d1828; border: 1px solid #2a4060; color: var(--internet);
@@ -1257,7 +1281,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.8.5</h1>
+        <h1>NEXUS-Shield v5.8.6</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1277,7 +1301,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.5</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.6</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1359,7 +1383,7 @@
       <div id="us-observations" class="us-observations"><h3>Plain-English rundown</h3><div class="us-rundown"><div class="us-rundown-item"><p>Gathering ss · ip · proc · NEXUS state…</p></div></div></div>
       <div class="us-grid" id="us-grid">
         <div class="us-card"><h4>Identity</h4><div id="us-identity">Loading…</div></div>
-        <div class="us-card"><h4>Network</h4><div id="us-network">Loading…</div></div>
+        <div class="us-card us-net-wide"><h4>Network</h4><div id="us-network">Loading…</div></div>
         <div class="us-card"><h4>Socket posture</h4><div id="us-sockets">Loading…</div></div>
         <div class="us-card"><h4>Gatekeeper</h4><div id="us-gatekeeper">Loading…</div></div>
         <div class="us-card"><h4>Trust posture</h4><div id="us-trust">Loading…</div></div>
@@ -4982,6 +5006,33 @@
       return `<dl class="us-kv">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v ?? "—")}</dd>`).join("")}</dl>`;
     }
 
+    function usFormatBytes(n) {
+      const v = Number(n) || 0;
+      if (v < 1024) return `${v} B`;
+      if (v < 1024 * 1024) return `${(v / 1024).toFixed(1)} KiB`;
+      if (v < 1024 * 1024 * 1024) return `${(v / (1024 * 1024)).toFixed(1)} MiB`;
+      return `${(v / (1024 * 1024 * 1024)).toFixed(2)} GiB`;
+    }
+
+    function usNetConnectionsHtml(conns) {
+      const rows = conns || [];
+      if (!rows.length) {
+        return '<div class="empty">No established connections detected.</div>';
+      }
+      const body = rows.map((c) => {
+        const label = c.label || `${c.process || "unknown"} · ${c.local || "—"} → ${c.remote || "—"}`;
+        return `<div class="us-net-conn">` +
+          `<div class="us-net-label">${esc(label)}</div>` +
+          `<div class="us-net-win us-net-tx"><span>TX</span>${esc(usFormatBytes(c.tx_bytes))}</div>` +
+          `<div class="us-net-win us-net-rx"><span>RX</span>${esc(usFormatBytes(c.rx_bytes))}</div>` +
+          `</div>`;
+      }).join("");
+      return `<div class="us-net-conns">` +
+        `<div class="us-net-head"><span>Detected</span><span>TX</span><span>RX</span></div>` +
+        body +
+        `</div>`;
+    }
+
     function usRundownHtml(obs) {
       if (!obs?.length) {
         return '<div class="us-rundown-item"><p>No observations yet — field intel warming up.</p></div>';
@@ -5035,28 +5086,9 @@
         ]);
       }
       const net = us.network || {};
-      const route = net.default_route || {};
-      const dns = net.dns || {};
-      const ifaces = net.interfaces || [];
       const netEl = $("us-network");
       if (netEl) {
-        let ifaceRows = "";
-        if (ifaces.length && ifaces[0].name) {
-          ifaceRows = `<table class="us-table"><thead><tr><th>iface</th><th>state</th><th>addresses</th></tr></thead><tbody>${
-            ifaces.map((i) => {
-              const addrs = (i.addresses || []).map((a) => `${a.local}/${a.prefixlen || ""}`).join(", ") || "—";
-              return `<tr><td>${esc(i.name)}</td><td>${esc(i.state)}</td><td>${esc(addrs)}</td></tr>`;
-            }).join("")
-          }</tbody></table>`;
-        } else if (ifaces.length) {
-          ifaceRows = `<pre style="margin:6px 0 0;font-size:0.64rem;white-space:pre-wrap">${esc(ifaces.map((i) => i.raw || i.line || "").filter(Boolean).join("\n"))}</pre>`;
-        }
-        netEl.innerHTML = usKv([
-          ["Gateway", route.gateway ? `${route.gateway} dev ${route.device || "—"}` : (route.raw || "—")],
-          ["DNS", (dns.nameservers || []).join(", ") || "—"],
-          ["Search", (dns.search_domains || []).join(", ") || "—"],
-          ["DNS hash", dns.dns_hash ? dns.dns_hash.slice(0, 16) : "—"],
-        ]) + ifaceRows;
+        netEl.innerHTML = usNetConnectionsHtml(net.connections);
       }
       const sock = us.sockets || {};
       const sockEl = $("us-sockets");
