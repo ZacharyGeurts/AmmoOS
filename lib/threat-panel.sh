@@ -188,6 +188,9 @@ nexus_threat_panel_publish() {
       printf '{}'
     fi
     printf ',"host_attacks":'
+    if declare -f nexus_host_attack_publish >/dev/null 2>&1; then
+      nexus_host_attack_publish
+    fi
     if declare -f nexus_host_attacks_json >/dev/null 2>&1; then
       nexus_host_attacks_json
     else

@@ -36,6 +36,13 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.9.0 — Host Attack Globe (real satellite zoom)
+
+- **Leaflet + Esri World Imagery** — Google Earth-style infinite zoom (street + offline NASA globe fallback)
+- **Standards intel** — IEEE 802 OUI (MAC vendor), RFC 7483 RDAP (registrar/network), GeoIP city lat/lon
+- **Rich popups** — registrar, ASN, org, hostname, abuse contact, MAC vendor per dot
+- **RFC 7946 GeoJSON** — `host_attacks.geojson` in panel API for map consumers
+
 ## v2.8.0 — Host Attack Map
 
 - **Global globe** — pulsing dots on Earth for every hostile host signal (green → yellow → red)

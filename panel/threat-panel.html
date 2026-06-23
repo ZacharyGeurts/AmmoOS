@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NEXUS-Shield — Threat Panel</title>
+  <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <style>
     :root {
       --bg: #080a10;
@@ -568,29 +569,52 @@
       border: 1px solid var(--border); background: #060a14;
       box-shadow: inset 0 0 60px rgba(20, 60, 120, 0.15);
     }
-    #host-attack-svg { width: 100%; height: auto; display: block; min-height: 340px; }
+    #host-earth-map { width: 100%; height: 520px; min-height: 340px; background: #060a14; z-index: 1; }
+    .host-map-toolbar {
+      position: absolute; top: 10px; right: 10px; z-index: 1000;
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .host-map-toolbar button {
+      background: rgba(8, 12, 20, 0.88); border: 1px solid var(--border); color: var(--text);
+      padding: 5px 10px; border-radius: 6px; font-size: 0.68rem; cursor: pointer;
+    }
+    .host-map-toolbar button:hover { border-color: var(--internet); color: var(--internet); }
     .host-map-legend {
-      position: absolute; left: 12px; bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap;
-      font-size: 0.65rem; color: var(--muted); background: rgba(8, 12, 20, 0.82);
+      position: absolute; left: 12px; bottom: 12px; z-index: 1000;
+      display: flex; gap: 10px; flex-wrap: wrap;
+      font-size: 0.65rem; color: var(--muted); background: rgba(8, 12, 20, 0.88);
       padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
+      pointer-events: none;
     }
     .legend-swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-    .host-attack-dot {
-      transform-origin: center; transform-box: fill-box;
-      animation: host-pulse var(--pulse-ms, 2s) ease-in-out infinite;
+    .ha-marker-wrap { position: relative; width: 28px; height: 28px; }
+    .ha-marker-core {
+      position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px;
+      border-radius: 50%; background: var(--ha-color, #3dd68c);
+      box-shadow: 0 0 12px var(--ha-color, #3dd68c);
+      animation: ha-pulse var(--ha-pulse, 2s) ease-in-out infinite;
     }
-    @keyframes host-pulse {
-      0%, 100% { transform: scale(0.75); opacity: 0.55; }
-      50% { transform: scale(1.15); opacity: 1; }
+    .ha-marker-ring {
+      position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+      border-radius: 50%; border: 2px solid var(--ha-color, #3dd68c);
+      animation: ha-ring var(--ha-pulse, 2s) ease-out infinite;
     }
-    .host-attack-ring {
-      transform-origin: center; transform-box: fill-box;
-      animation: host-ring var(--pulse-ms, 2s) ease-out infinite;
+    @keyframes ha-pulse {
+      0%, 100% { transform: scale(0.7); opacity: 0.6; }
+      50% { transform: scale(1.2); opacity: 1; }
     }
-    @keyframes host-ring {
-      0% { transform: scale(0.6); opacity: 0.7; }
-      100% { transform: scale(2.2); opacity: 0; }
+    @keyframes ha-ring {
+      0% { transform: scale(0.5); opacity: 0.75; }
+      100% { transform: scale(1.8); opacity: 0; }
     }
+    .host-point-row { cursor: pointer; }
+    .host-point-row:hover { background: rgba(77, 155, 255, 0.06); }
+    .host-standards { font-size: 0.62rem; color: #7a9ab8; margin-top: 2px; }
+    .leaflet-container { background: #060a14; font-family: inherit; }
+    .leaflet-control-layers { background: rgba(8, 12, 20, 0.92) !important; color: var(--text) !important; border: 1px solid var(--border) !important; }
+    .leaflet-control-layers label { color: var(--text) !important; }
+    .host-map-popup { font-size: 0.74rem; line-height: 1.45; min-width: 200px; }
+    .host-map-popup strong { color: #c8d8f0; }
     .host-point-list {
       border: 1px solid var(--border); border-radius: 10px; background: var(--card);
       overflow: auto; max-height: 520px;
@@ -616,7 +640,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.8.0</h1>
+        <h1>NEXUS-Shield v2.9.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -725,32 +749,16 @@
       </div>
       <div class="host-attack-layout">
         <div class="host-map-panel">
-          <svg id="host-attack-svg" viewBox="0 0 1000 500" role="img" aria-label="World host attack map">
-            <defs>
-              <linearGradient id="ocean-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#0a1830"/>
-                <stop offset="50%" stop-color="#061018"/>
-                <stop offset="100%" stop-color="#0c2040"/>
-              </linearGradient>
-              <radialGradient id="globe-glow" cx="50%" cy="45%" r="55%">
-                <stop offset="0%" stop-color="rgba(60,120,200,0.12)"/>
-                <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
-              </radialGradient>
-              <filter id="dot-glow" x="-80%" y="-80%" width="260%" height="260%">
-                <feGaussianBlur stdDeviation="2.5" result="b"/>
-                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-            <rect width="1000" height="500" fill="url(#ocean-grad)"/>
-            <rect width="1000" height="500" fill="url(#globe-glow)"/>
-            <g id="host-graticule" stroke="rgba(80,120,180,0.12)" stroke-width="0.6" fill="none"></g>
-            <g id="host-land" fill="#142a3a" stroke="#1e4058" stroke-width="0.5" opacity="0.92"></g>
-            <g id="host-dots" filter="url(#dot-glow)"></g>
-          </svg>
+          <div class="host-map-toolbar">
+            <button type="button" id="ha-fit-all" data-tip="Zoom map to fit all threat dots.">Fit all</button>
+            <button type="button" id="ha-reset-globe" data-tip="Reset to full-world view.">World view</button>
+          </div>
+          <div id="host-earth-map" role="application" aria-label="Zoomable satellite world map with host attack markers"></div>
           <div class="host-map-legend">
             <span><span class="legend-swatch" style="background:#3dd68c"></span>Calm</span>
             <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
             <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
+            <span>· Satellite zoom · IEEE OUI · RDAP · GeoIP</span>
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
@@ -947,6 +955,7 @@
     </div>
   </section>
 
+  <script src="/assets/leaflet/leaflet.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let currentLog = "alerts";
@@ -1192,6 +1201,10 @@
       btn.classList.add("active");
       $(`view-${name}`).classList.add("active");
       if (name === "logs") loadLog(currentLog);
+      if (name === "host-attack") {
+        ensureHostEarthMap();
+        setTimeout(() => hostEarthMap?.invalidateSize(), 150);
+      }
       if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
     }
 
@@ -1971,44 +1984,92 @@
       root.querySelectorAll(".has-tip").forEach(bindTip);
     }
 
-    const HOST_LAND_PATHS = [
-      "M120,72 L210,58 L290,82 L330,128 L318,188 L268,248 L198,272 L138,248 L98,188 L108,128 Z",
-      "M338,168 L378,158 L408,188 L418,238 L388,288 L348,308 L318,268 L322,218 Z",
-      "M448,88 L548,72 L648,82 L738,108 L768,148 L748,198 L678,238 L588,248 L498,228 L448,178 Z",
-      "M498,248 L558,238 L618,258 L648,308 L618,358 L548,378 L488,358 L468,298 Z",
-      "M758,108 L848,98 L918,128 L938,178 L908,238 L838,268 L768,248 L738,188 Z",
-      "M818,288 L878,278 L928,308 L938,358 L898,398 L838,408 L788,378 L798,318 Z",
-      "M548,358 L618,348 L668,378 L658,428 L598,448 L538,428 L528,388 Z",
-    ];
+    let hostEarthMap = null;
+    let hostMarkerLayer = null;
+    let hostMarkersById = {};
+    let hostLastPoints = [];
 
-    function projectHostLatLon(lat, lon) {
-      const x = ((lon + 180) / 360) * 1000;
-      const y = ((90 - lat) / 180) * 500;
-      return { x: Math.max(4, Math.min(996, x)), y: Math.max(4, Math.min(496, y)) };
+    function haMarkerIcon(p) {
+      const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
+      const pulse = (p.pulse_ms || 2000) + "ms";
+      return L.divIcon({
+        className: "ha-marker-leaflet",
+        html: `<div class="ha-marker-wrap" style="--ha-color:${col};--ha-pulse:${pulse}"><span class="ha-marker-ring"></span><span class="ha-marker-core"></span></div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
     }
 
-    function initHostMapBasemap() {
-      const land = $("host-land");
-      const graticule = $("host-graticule");
-      if (land.dataset.ready === "1") return;
-      let g = "";
-      for (let lon = -180; lon <= 180; lon += 30) {
-        const x = ((lon + 180) / 360) * 1000;
-        g += `<line x1="${x}" y1="0" x2="${x}" y2="500"/>`;
-      }
-      for (let lat = -60; lat <= 60; lat += 30) {
-        const y = ((90 - lat) / 180) * 500;
-        g += `<line x1="0" y1="${y}" x2="1000" y2="${y}"/>`;
-      }
-      graticule.innerHTML = g;
-      land.innerHTML = HOST_LAND_PATHS.map((d) => `<path d="${d}"/>`).join("");
-      land.dataset.ready = "1";
+    function haPopupHtml(p) {
+      const std = (p.standards || []).map((s) => `<code>${esc(s)}</code>`).join(" ");
+      return `<div class="host-map-popup">
+        <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span></div>
+        <div>${esc(p.label || p.city || p.country || "—")}</div>
+        ${p.registrar ? `<div>Registrar: ${esc(p.registrar)}</div>` : ""}
+        ${p.org ? `<div>Org: ${esc(p.org)}</div>` : ""}
+        ${p.asn ? `<div>ASN: ${esc(p.asn)} ${esc(p.asname || "")}</div>` : ""}
+        ${p.mac_vendor ? `<div>MAC: ${esc(p.mac || "—")} · ${esc(p.mac_vendor)} (IEEE OUI)</div>` : ""}
+        ${p.hostname ? `<div>Host: ${esc(p.hostname)}</div>` : ""}
+        <div class="host-standards">${std || "GeoIP"} · heat ${(p.heat ?? 0).toFixed(2)}</div>
+      </div>`;
+    }
+
+    function ensureHostEarthMap() {
+      if (hostEarthMap) return hostEarthMap;
+      if (typeof L === "undefined") return null;
+      hostEarthMap = L.map("host-earth-map", {
+        center: [20, 0],
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 19,
+        worldCopyJump: true,
+        zoomControl: true,
+      });
+      const satellite = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { attribution: "Esri, Maxar, Earthstar", maxZoom: 19 }
+      );
+      const street = L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { attribution: "© OpenStreetMap", maxZoom: 19 }
+      );
+      const labels = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+        { attribution: "Esri labels", maxZoom: 19, opacity: 0.85 }
+      );
+      const offline = L.imageOverlay("/assets/earth-satellite-2k.jpg", [[-90, -180], [90, 180]]);
+      satellite.addTo(hostEarthMap);
+      labels.addTo(hostEarthMap);
+      L.control.layers(
+        { "Satellite (Esri)": satellite, "Street (OSM)": street, "Offline NASA globe": offline },
+        { "Place labels": labels },
+        { collapsed: false }
+      ).addTo(hostEarthMap);
+      hostMarkerLayer = L.layerGroup().addTo(hostEarthMap);
+      $("ha-fit-all")?.addEventListener("click", () => {
+        if (!hostLastPoints.length || !hostEarthMap) return;
+        const bounds = L.latLngBounds(hostLastPoints.map((p) => [p.lat, p.lon]));
+        hostEarthMap.fitBounds(bounds.pad(0.35), { maxZoom: 12 });
+      });
+      $("ha-reset-globe")?.addEventListener("click", () => {
+        hostEarthMap?.setView([20, 0], 2);
+      });
+      setTimeout(() => hostEarthMap.invalidateSize(), 120);
+      return hostEarthMap;
+    }
+
+    function flyToHostPoint(p) {
+      const map = ensureHostEarthMap();
+      if (!map || !p) return;
+      map.flyTo([p.lat, p.lon], Math.max(map.getZoom(), 8), { duration: 0.8 });
+      const m = hostMarkersById[p.id];
+      if (m) m.openPopup();
     }
 
     function renderHostAttackMap(ha) {
-      initHostMapBasemap();
       const doc = ha || {};
       const points = doc.points || [];
+      hostLastPoints = points;
       const stats = doc.stats || {};
       const author = doc.author || {};
       $("ha-total").textContent = stats.total ?? points.length;
@@ -2024,36 +2085,48 @@
           `${esc(author.service || "Iraq War Veteran")} · ${esc(author.discharge || "Honorable Discharge")}. ` +
           `<span id="host-attack-tagline">${esc(doc.tagline || "")}</span>`;
       }
-      const dots = $("host-dots");
+      const list = $("host-point-list");
       if (!points.length) {
-        dots.innerHTML = "";
-        $("host-point-list").innerHTML = '<div class="empty">No hostile host signals on the globe — calm day. Connections still monitored.</div>';
+        hostMarkerLayer?.clearLayers();
+        hostMarkersById = {};
+        list.innerHTML = '<div class="empty">No hostile host signals on the globe — calm day. Connections still monitored.</div>';
         return;
       }
-      dots.innerHTML = points.map((p) => {
-        const { x, y } = projectHostLatLon(p.lat, p.lon);
+      const map = ensureHostEarthMap();
+      if (!map || !hostMarkerLayer) {
+        list.innerHTML = '<div class="empty">Map engine loading… refresh in a moment.</div>';
+        return;
+      }
+      hostMarkerLayer.clearLayers();
+      hostMarkersById = {};
+      points.forEach((p) => {
+        const m = L.marker([p.lat, p.lon], { icon: haMarkerIcon(p) })
+          .bindPopup(haPopupHtml(p), { maxWidth: 320 });
+        m.addTo(hostMarkerLayer);
+        hostMarkersById[p.id] = m;
+      });
+      if ($("view-host-attack").classList.contains("active")) {
+        setTimeout(() => map.invalidateSize(), 80);
+      }
+      list.innerHTML = points.slice(0, 50).map((p) => {
         const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
-        const pulse = p.pulse_ms || 2000;
-        const r = p.radius || 6;
-        const ring = p.ring || 2;
-        const title = `${p.ip} · ${p.vector} · ${p.severity} · ${p.label || p.country || ""}`;
-        return `<g class="host-dot-group" data-id="${esc(p.id)}">
-          <circle class="host-attack-ring" cx="${x}" cy="${y}" r="${r * ring}" fill="none" stroke="${col}" stroke-width="1.2" style="--pulse-ms:${pulse}ms"/>
-          <circle class="host-attack-dot" cx="${x}" cy="${y}" r="${r}" fill="${col}" style="--pulse-ms:${pulse}ms">
-            <title>${esc(title)}</title>
-          </circle>
-        </g>`;
-      }).join("");
-      $("host-point-list").innerHTML = points.slice(0, 40).map((p) => {
-        const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
-        return `<div class="host-point-row">
+        const std = (p.standards || []).slice(0, 3).join(" · ");
+        const loc = [p.city, p.region, p.country].filter(Boolean).join(", ") || p.label || "classified";
+        return `<div class="host-point-row" data-ha-id="${esc(p.id)}">
           <span class="host-point-swatch" style="background:${col}"></span>
           <div>
             <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span></div>
-            <div class="host-point-meta">${esc(p.label || p.country || "classified")} · ${esc(p.process || "—")} · heat ${(p.heat ?? 0).toFixed(2)} · ${esc(p.source)}</div>
+            <div class="host-point-meta">${esc(loc)} · ${esc(p.registrar || p.org || "—")} · heat ${(p.heat ?? 0).toFixed(2)}</div>
+            ${std ? `<div class="host-standards">${esc(std)}</div>` : ""}
           </div>
         </div>`;
       }).join("");
+      list.querySelectorAll(".host-point-row[data-ha-id]").forEach((row) => {
+        row.addEventListener("click", () => {
+          const pt = points.find((x) => x.id === row.dataset.haId);
+          flyToHostPoint(pt);
+        });
+      });
     }
 
     function renderDossiers(ad) {

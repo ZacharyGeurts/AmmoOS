@@ -131,7 +131,7 @@ def _org_class(org: str, asname: str = "") -> tuple[str, str]:
 def lookup_ip_online(ip: str, timeout: float = 4.0) -> dict[str, Any]:
     url = (
         f"http://ip-api.com/json/{ip}"
-        "?fields=status,message,country,countryCode,regionName,city,lat,lon,isp,org,as,asname,reverse,query"
+        "?fields=status,message,country,countryCode,regionName,city,zip,lat,lon,isp,org,as,asname,reverse,query"
     )
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "NEXUS-Shield/2.5 vector-intel"})
@@ -167,6 +167,9 @@ def lookup_ip_online(ip: str, timeout: float = 4.0) -> dict[str, Any]:
         "asname": asname,
         "country": str(data.get("country") or ""),
         "country_code": str(data.get("countryCode") or ""),
+        "region": str(data.get("regionName") or ""),
+        "city": str(data.get("city") or ""),
+        "zip": str(data.get("zip") or ""),
         "lat": lat if lat is not None else None,
         "lon": lon if lon is not None else None,
         "hostname": hostname,
@@ -235,7 +238,7 @@ def classify_ip(ip: str, cache: dict[str, Any], online: bool | None = None) -> d
                 k: remote[k]
                 for k in (
                     "ip_class", "label", "org", "as", "asname", "country", "country_code",
-                    "lat", "lon", "hostname", "confidence", "source",
+                    "region", "city", "zip", "lat", "lon", "hostname", "confidence", "source",
                 )
                 if k in remote
             })

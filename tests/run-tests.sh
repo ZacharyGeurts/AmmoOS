@@ -215,7 +215,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0)' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)' "$panel"
 }
 
 test_self_access_script() {
@@ -280,7 +280,7 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -qE 'v2\.(7\.0|8\.0)' "$panel"
+  grep -qE 'v2\.(7\.0|8\.0|9\.0)' "$panel"
 }
 
 test_host_attack_module() {
@@ -298,9 +298,21 @@ test_panel_host_attack_ui() {
   grep -q 'view-host-attack' "$panel"
   grep -q 'Host Attack' "$panel"
   grep -q 'renderHostAttackMap' "$panel"
-  grep -q 'host-attack-dot' "$panel"
+  grep -q 'host-earth-map' "$panel"
+  grep -q 'leaflet.js' "$panel"
+  grep -q 'World_Imagery' "$panel"
   grep -q 'Zachary Geurts' "$panel"
-  grep -q 'v2.8.0' "$panel"
+  grep -q 'v2.9.0' "$panel"
+}
+
+test_geo_intel_standards_module() {
+  [[ -f "${ROOT}/lib/geo-intel-standards.py" ]]
+  grep -q 'RFC7483-RDAP' "${ROOT}/lib/geo-intel-standards.py"
+  grep -q 'IEEE-802-OUI' "${ROOT}/lib/geo-intel-standards.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/host-attack-map.py" build | grep -q 'point_count'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/host-attack-map.py" json | grep -q 'geojson'
 }
 
 test_panel_v26_angels_tabs() {
@@ -439,6 +451,7 @@ run_test "fair ad guardian module" test_fair_ad_guardian_module
 run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
 run_test "host attack map module" test_host_attack_module
 run_test "panel host attack UI" test_panel_host_attack_ui
+run_test "geo intel standards module" test_geo_intel_standards_module
 run_test "gatekeeper ipv6 direction fields" test_gatekeeper_ipv6_direction
 run_test "gatekeeper trust rank" test_gatekeeper_trust_rank
 run_test "firewall temp allow helpers" test_firewall_temp_allow_fn
