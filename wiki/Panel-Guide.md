@@ -4,6 +4,17 @@ The NEXUS panel is your entire control surface. No config-file spelunking requir
 
 **Open it:** `./nexus.sh` or the **NEXUS-Shield** desktop icon → `https://127.0.0.1:9477/`
 
+### v2.1 — confused? Click ?
+
+Every tab, stat, setting, and action button has a **?** flyout. Hover on desktop, tap on phone. Plain English — no jargon required.
+
+| Old name | New name |
+|----------|----------|
+| Monitor | **What's happening** |
+| Authorize | **Trust forever** |
+| Block harm | **Stop this site** |
+| USER_OK | **Looks normal** |
+
 ---
 
 ## Monitor tab

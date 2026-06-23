@@ -2,7 +2,7 @@
 
 **NEXUS ∞** is a quiet network bodyguard for Linux. It watches connections, spots weird behavior, and lets **you** decide what to trust — without killing your internet over a false alarm.
 
-> **TL;DR:** Install once, then run `./nexus.sh` or click the desktop icon. Everything else is in the web panel.
+> **TL;DR:** Install once, then run `./nexus.sh` or click the desktop icon. Everything else is in the web panel. **v2.1:** click any **?** for plain-English help on every button.
 
 ---
 

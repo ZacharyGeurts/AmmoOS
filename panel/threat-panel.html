@@ -242,29 +242,91 @@
       text-transform: uppercase; color: var(--threat); background: #1a0d12;
       border-top: 1px solid var(--border);
     }
+    .help-bar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 8px 18px; font-size: 0.78rem; line-height: 1.45;
+      background: linear-gradient(90deg, #0d1520, #101820); border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .help-bar.hidden { display: none; }
+    .help-bar strong { color: var(--text); }
+    .help-bar .tip-demo {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%; font-size: 0.68rem; font-weight: 700;
+      background: var(--internet); color: #fff; vertical-align: middle;
+    }
+    .help-dismiss {
+      margin-left: auto; background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.72rem;
+    }
+    .help-dismiss:hover { border-color: var(--internet); color: var(--text); }
+    .has-tip {
+      position: relative; display: inline-flex; align-items: center; gap: 4px;
+      vertical-align: middle;
+    }
+    .has-tip-block { display: flex; align-items: flex-start; gap: 6px; }
+    .has-tip-action { gap: 6px; flex-wrap: wrap; }
+    .has-tip-stat { margin-left: 2px; }
+    .tip-btn {
+      flex-shrink: 0; width: 17px; height: 17px; padding: 0; border-radius: 50%;
+      border: 1px solid #3a5070; background: #1a2840; color: var(--internet);
+      font-size: 0.62rem; font-weight: 800; line-height: 1; cursor: help;
+      font-family: system-ui, sans-serif;
+    }
+    .tip-btn:hover, .tip-btn:focus { background: var(--internet); color: #fff; outline: none; }
+    .tip-flyout {
+      display: none; position: absolute; left: 0; top: calc(100% + 6px); z-index: 200;
+      min-width: 200px; max-width: min(320px, 90vw); padding: 10px 12px;
+      background: #1a2234; border: 1px solid #3d8bfd; border-radius: 8px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55); font-size: 0.76rem; line-height: 1.5;
+      color: #dce4f4; font-weight: 400; text-transform: none; letter-spacing: normal;
+      white-space: normal; pointer-events: none;
+    }
+    .has-tip.open .tip-flyout,
+    .has-tip:hover .tip-flyout,
+    .has-tip:focus-within .tip-flyout { display: block; }
+    .has-tip.tip-above .tip-flyout { top: auto; bottom: calc(100% + 6px); }
+    .has-tip.tip-right .tip-flyout { left: auto; right: 0; }
+    .pane-head .has-tip { margin-left: 6px; }
+    .setting-row .has-tip.has-tip-row { margin-left: auto; flex-shrink: 0; margin-top: 2px; }
+    .friendly-verdict { font-weight: 700; }
+    .friendly-verdict .tech { font-weight: 400; font-size: 0.62rem; color: var(--muted); margin-left: 4px; }
+    .axis label .tip-btn { width: 14px; height: 14px; font-size: 0.55rem; }
+    .axis .has-tip { gap: 2px; }
     @media (max-width: 900px) {
       .grid { grid-template-columns: 1fr; }
       .pane { border-right: none; border-bottom: 1px solid var(--border); }
+      .has-tip.open .tip-flyout { pointer-events: auto; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>NEXUS-Shield v2.0.2 · Gatekeeper</h1>
+    <h1>NEXUS-Shield v2.1 · Your network helper</h1>
     <div class="meta">
-      mode <strong id="mode">—</strong> ·
-      truth <strong id="signal">—</strong>% ·
-      updated <strong id="updated">—</strong>
+      <span data-tip="How alert NEXUS is right now: calm = quiet day, storm = lots going on.">Activity</span>
+      <strong id="mode">—</strong> ·
+      <span data-tip="Roughly how confident NEXUS is that recent warnings are real — not a grade on you.">Signal</span>
+      <strong id="signal">—</strong>% ·
+      <span data-tip="When this screen last refreshed. Updates every few seconds.">Updated</span>
+      <strong id="updated">—</strong>
     </div>
   </header>
+
+  <div id="help-bar" class="help-bar" role="note">
+    <span aria-hidden="true">💡</span>
+    <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
+    <strong>Nothing gets blocked unless you click Stop or turn on auto-block in Settings.</strong>
+    <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
+  </div>
 
   <div id="murder-banner" class="murder-banner" role="alert">
     <h2>Bloody murder — NEXUS was shut down</h2>
     <div id="murder-detail">We were killed. Forensics captured. Review what hit us, then restart.</div>
     <div class="murder-actions">
-      <button type="button" id="murder-open-modal">Choose restart action…</button>
-      <button type="button" id="restart-block">Restart + BLOCK offender (recommended)</button>
-      <button type="button" id="restart-permissive" class="ghost">Restart permissive (log only)</button>
+      <button type="button" id="murder-open-modal" data-tip="Opens a step-by-step screen — nothing happens until you pick an option.">What should I do?</button>
+      <button type="button" id="restart-block" data-tip="Starts NEXUS again and blocks the suspect internet address you pick. Use when you're sure something attacked you.">Restart and block suspect</button>
+      <button type="button" id="restart-permissive" class="ghost" data-tip="Starts NEXUS again without blocking anyone — just keeps watching and logging.">Restart without blocking</button>
     </div>
   </div>
 
@@ -286,33 +348,33 @@
   </div>
 
   <nav class="menu" aria-label="Panel sections">
-    <button type="button" class="active" data-view="monitor">Monitor</button>
-    <button type="button" data-view="settings">Settings</button>
-    <button type="button" data-view="logs">Logs</button>
+    <button type="button" class="active" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">What's happening</button>
+    <button type="button" data-view="settings" data-tip="Turn features on/off, load ad block lists, and review past incidents. No terminal needed.">Settings</button>
+    <button type="button" data-view="logs" data-tip="A diary of everything NEXUS noticed — useful when something feels wrong.">Activity log</button>
   </nav>
 
   <section id="view-monitor" class="view active">
     <div id="gatekeeper-banner" class="gatekeeper-banner"></div>
     <div class="grid">
       <section class="pane internet">
-        <div class="pane-head">Internet · Connection Gatekeeper</div>
+        <div class="pane-head">What's online now <span data-tip="Every connection your PC has open to the internet. NEXUS scores each one: normal browsing vs something that might be stealing data or hogging bandwidth.">?</span></div>
         <div class="stats">
-          <div class="stat"><span>egress</span> <strong id="egress">0</strong></div>
-          <div class="stat"><span>listeners</span> <strong id="listeners">0</strong></div>
-          <div class="stat"><span>dns</span> <strong id="dns">—</strong></div>
-          <div class="stat"><span>authorized</span> <strong id="trust-count">0</strong></div>
+          <div class="stat"><span data-tip="Outgoing connections — your apps talking to websites and servers. Normal when browsing, gaming, or streaming.">Outgoing</span> <strong id="egress">0</strong></div>
+          <div class="stat"><span data-tip="Programs waiting for someone to connect in. A few is normal; a sudden jump might be worth a look.">Listening</span> <strong id="listeners">0</strong></div>
+          <div class="stat"><span data-tip="A short fingerprint of your DNS (how names like google.com get found). You rarely need to worry about this.">DNS id</span> <strong id="dns">—</strong></div>
+          <div class="stat"><span data-tip="Sites and addresses you already clicked Trust forever on. NEXUS won't block or warn about these.">Trusted</span> <strong id="trust-count">0</strong></div>
         </div>
-        <div class="list" id="connections"><div class="empty">Awaiting packet oracle…</div></div>
-        <div class="trusted-head">Permanent authorizations (Hostess7 field memory)</div>
-        <div class="list" id="trusted-list"><div class="empty">Click Authorize on a connection to trust it forever</div></div>
+        <div class="list" id="connections"><div class="empty">Loading connections…</div></div>
+        <div class="trusted-head" data-tip="Your personal allow-list. These IPs stay trusted even after reboot — saved on this machine.">Sites you trust forever</div>
+        <div class="list" id="trusted-list"><div class="empty">See something normal but flagged? Click <strong>Trust forever</strong> on that connection.</div></div>
       </section>
       <section class="pane threat">
-        <div class="pane-head">Threats</div>
+        <div class="pane-head">Warnings <span data-tip="Things NEXUS noticed that might need attention. An empty list is a good day. Warnings don't always mean danger — click ? on each row when we add them.">?</span></div>
         <div class="stats">
-          <div class="stat"><span>correlation</span> <strong id="corr">0</strong></div>
-          <div class="stat"><span>active</span> <strong id="threat-count">0</strong></div>
-          <div class="stat"><span>firewall</span> <strong id="firewall">—</strong></div>
-          <div class="stat"><span>blocks</span> <strong id="fw-blocks">0</strong></div>
+          <div class="stat"><span data-tip="How many separate warnings are piling up at once. Higher = busier, not automatically bad.">Overlap</span> <strong id="corr">0</strong></div>
+          <div class="stat"><span data-tip="Number of active warning entries in the list below.">Count</span> <strong id="threat-count">0</strong></div>
+          <div class="stat"><span data-tip="Whether NEXUS's network shield is running. Should say active after install.">Shield</span> <strong id="firewall">—</strong></div>
+          <div class="stat"><span data-tip="How many addresses are currently blocked from reaching you.">Blocked</span> <strong id="fw-blocks">0</strong></div>
         </div>
         <div class="list" id="threats"><div class="empty">No vectors detected</div></div>
         <div class="vectors" id="vector-catalog"></div>
@@ -323,115 +385,128 @@
   <section id="view-settings" class="view">
     <div class="settings-wrap">
       <div class="settings-group">
-        <h3>Protection</h3>
+        <h3>Protection <span data-tip="These control how aggressive NEXUS is. Safe default: everything that auto-blocks stays OFF — you click buttons on the What's happening tab instead.">?</span></h3>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_PARANOIA_BLOCK" id="set-paranoia-block" />
-            <span><strong>Paranoia auto-block</strong><span class="hint">OFF first: detect + log. Enable to block after forensics.</span></span>
+            <span><strong>Auto-block after logging</strong><span class="hint">Leave OFF to only record suspicious events. Turn ON to also block automatically.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="When ON, NEXUS can block something after it writes a full report. When OFF (recommended), it only watches and lets you decide."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_FIREWALL_AUTO_BLOCK" id="set-fw-auto" />
-            <span><strong>Firewall auto-block</strong><span class="hint">Auto-block on threat vectors. Gatekeeper still needs your click for connections.</span></span>
+            <span><strong>Auto-block warnings</strong><span class="hint">Blocks based on threat warnings — not the same as connections on the main tab.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="Turns on automatic blocking when NEXUS sees certain attack patterns. Your everyday websites still need you to click Trust forever — they won't vanish on their own."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_AUTOSANITIZE" id="set-autosanitize" />
-            <span><strong>Autosanitize</strong><span class="hint">Legacy auto-sanitize on threat detect. Prefer paranoia + gatekeeper clicks.</span></span>
+            <span><strong>Auto-fix threats</strong><span class="hint">Older feature — tries to fix problems without asking. Most people leave this OFF.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="Automatically tries to undo or block when a threat is found. Prefer clicking Trust forever or Stop this site on the main tab instead."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_SHUTDOWN_GUARD" id="set-shutdown" />
-            <span><strong>Shutdown guard</strong><span class="hint">Capture forensics if NEXUS is killed; safe restart modal.</span></span>
+            <span><strong>Remember if we're shut down</strong><span class="hint">If something kills NEXUS, save clues and show a safe restart screen.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="If NEXUS gets force-stopped, it saves what was happening and shows a red banner with restart choices. Recommended ON."></span>
         </div>
       </div>
 
       <div class="settings-group">
-        <h3>Modules</h3>
+        <h3>Watchers <span data-tip="Background helpers that run quietly. Turning one OFF reduces work — only do that if you know you don't need it.">?</span></h3>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_CONNECTION_GATEKEEPER" id="set-gatekeeper" />
-            <span><strong>Connection gatekeeper</strong><span class="hint">10-axis intent scoring on live connections.</span></span>
+            <span><strong>Score live connections</strong><span class="hint">Powers the main tab — normal vs sketchy.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="The brain behind the What's happening tab. Reads each connection and labels it for you. Leave ON."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_PACKET_ORACLE" id="set-packet" />
-            <span><strong>Packet oracle</strong><span class="hint">Connection + ARP snapshots for the panel.</span></span>
+            <span><strong>Network snapshot</strong><span class="hint">Feeds connection lists to the panel.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="Collects the list of open connections you see on the main tab. Leave ON unless troubleshooting."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_SHADOW_WATCH" id="set-shadow" />
-            <span><strong>Shadow reality</strong><span class="hint">File integrity inotify watcher.</span></span>
+            <span><strong>File tamper watch</strong><span class="hint">Notices when important files change unexpectedly.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="Watches for files being changed behind your back — like a quiet integrity check."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_ENTROPY_WATCH" id="set-entropy" />
-            <span><strong>Entropy oracle</strong><span class="hint">Shannon entropy on new files.</span></span>
+            <span><strong>Weird file detector</strong><span class="hint">Flags new files that look encrypted or packed.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="New files that look highly scrambled or random can be a sign of malware packing."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_BEHAVIOR_WATCH" id="set-behavior" />
-            <span><strong>Behavior symphony</strong><span class="hint">Process chain scoring.</span></span>
+            <span><strong>App behavior watch</strong><span class="hint">Scores running programs — whitelists browsers and games.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="Looks at which programs launched which. Normal apps like Firefox are whitelisted so you won't get nagged."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_PRIVACY_GUARD" id="set-privacy" />
-            <span><strong>Privacy guard</strong><span class="hint">Sensitive file view detection.</span></span>
+            <span><strong>Private file peek watch</strong><span class="hint">Alerts when sensitive paths are read.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="Notices if something tries to read paths that look like passwords or keys."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_HOSTESS7_CORROBORATE" id="set-hostess7" />
-            <span><strong>Hostess7 corroborate</strong><span class="hint">Field memory integrity cross-check.</span></span>
+            <span><strong>Trust list backup</strong><span class="hint">Double-checks saved trust entries.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="Cross-checks your Trust forever list against field memory storage. Helps trust survive reboots."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_PANEL_AUTO_OPEN" id="set-panel-open" />
-            <span><strong>Auto-open panel on boot</strong><span class="hint">Once per day when daemon starts. Or run ./nexus.sh / click the icon anytime.</span></span>
+            <span><strong>Open panel once a day</strong><span class="hint">When the computer starts NEXUS. Or run ./nexus.sh anytime.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="Opens this screen in your browser once per day at startup. You can always open it yourself with ./nexus.sh or the desktop icon."></span>
         </div>
-        <p class="meta" style="padding:8px 16px 12px;margin:0;font-size:0.7rem;">Module toggles save instantly; some need a service restart to fully apply.</p>
+        <p class="meta" style="padding:8px 16px 12px;margin:0;font-size:0.7rem;">Checkboxes save right away. If something still looks wrong after toggling, restart: <code>sudo systemctl restart nexus-genius.service</code></p>
       </div>
 
       <div class="settings-group">
-        <h3>Adblock loader</h3>
+        <h3>Ad blocking <span data-tip="Optional: download popular block lists and stop ads/trackers at the network level. Load a list first, then turn ON, then click Apply.">?</span></h3>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_ADBLOCK" id="set-adblock" />
-            <span><strong>Enable adblock</strong><span class="hint">Resolve filter-list domains to IPs and block outbound via nft.</span></span>
+            <span><strong>Turn on ad blocking</strong><span class="hint">Needs a list loaded below first.</span></span>
           </label>
+          <span class="has-tip-row" data-tip="Blocks ad and tracker addresses after you load a list. Won't block sites you've marked Trust forever."></span>
         </div>
         <div class="adblock-status" id="adblock-status">Domains: 0 · IPs blocked: 0</div>
         <div class="adblock-actions">
-          <button type="button" id="adblock-easylist">Load EasyList</button>
-          <button type="button" id="adblock-easyprivacy">Load EasyPrivacy</button>
-          <button type="button" id="adblock-fanboy">Load Fanboy Annoyance</button>
-          <button type="button" id="adblock-apply">Apply to firewall</button>
+          <button type="button" id="adblock-easylist" data-tip="Popular general ad list — good first choice for most people.">Get EasyList</button>
+          <button type="button" id="adblock-easyprivacy" data-tip="Extra privacy trackers — pair with EasyList.">Get EasyPrivacy</button>
+          <button type="button" id="adblock-fanboy" data-tip="Blocks annoyances like newsletter popups and social widgets.">Get Fanboy list</button>
+          <button type="button" id="adblock-apply" data-tip="Push the downloaded list into the network shield. Do this after loading lists and turning ad blocking ON.">Apply block list</button>
         </div>
         <div class="adblock-url-row">
-          <input type="url" id="adblock-custom-url" placeholder="Custom filter list URL (adblock syntax)" />
-          <button type="button" id="adblock-custom-load">Load URL</button>
+          <input type="url" id="adblock-custom-url" placeholder="Paste a block-list web address (advanced)" data-tip="For advanced users: paste a URL to any compatible adblock-style list." />
+          <button type="button" id="adblock-custom-load" data-tip="Download a block list from the address you pasted above.">Load from URL</button>
         </div>
       </div>
 
       <div class="settings-group">
-        <h3>Paranoia incidents</h3>
-        <div class="list" id="paranoia-list"><div class="empty">No paranoia incidents yet</div></div>
+        <h3>Suspicious event history <span data-tip="A diary of things NEXUS thought were odd enough to write down. Empty is good.">?</span></h3>
+        <div class="list" id="paranoia-list"><div class="empty">Nothing recorded yet — quiet is good.</div></div>
       </div>
 
       <div class="settings-group">
-        <h3>Autosanitize actions</h3>
-        <div class="list" id="sanitize-list"><div class="empty">No sanitize actions yet</div></div>
+        <h3>Auto-fix history <span data-tip="If auto-fix was ever on, past actions show here. Check Undo to reverse one.">?</span></h3>
+        <div class="list" id="sanitize-list"><div class="empty">No auto-fix actions yet.</div></div>
       </div>
     </div>
   </section>
@@ -439,9 +514,9 @@
   <section id="view-logs" class="view">
     <div class="logs-wrap">
       <div class="log-tabs">
-        <button type="button" class="active" data-log="alerts">Alerts</button>
-        <button type="button" data-log="vigil">Vigil</button>
-        <button type="button" id="log-refresh">Refresh</button>
+        <button type="button" class="active" data-log="alerts" data-tip="Everything NEXUS wrote to its main diary — searches, blocks, warnings.">All notes</button>
+        <button type="button" data-log="vigil" data-tip="When NEXUS changed how hard it's watching (calm vs alert vs storm).">Watch level</button>
+        <button type="button" id="log-refresh" data-tip="Pull the latest lines from the log file.">Refresh</button>
       </div>
       <pre class="log-view" id="log-content">Loading…</pre>
     </div>
@@ -450,6 +525,87 @@
   <script>
     const $ = (id) => document.getElementById(id);
     let currentLog = "alerts";
+
+    function esc(s) {
+      return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+    }
+
+    function tipMarkup(text) {
+      return `<button type="button" class="tip-btn" aria-label="Help">?</button><span class="tip-flyout" role="tooltip">${esc(text)}</span>`;
+    }
+
+    function decorateTips(root = document) {
+      root.querySelectorAll("[data-tip]").forEach((el) => {
+        if (el.dataset.tipDone || el.querySelector(":scope > .tip-btn")) return;
+        const text = el.getAttribute("data-tip");
+        if (!text) return;
+        const wrap = document.createElement("span");
+        const extra = el.classList.contains("stat") ? " has-tip-stat"
+          : el.classList.contains("setting-row") ? "" : "";
+        wrap.className = `has-tip${extra}`;
+        if (el.classList.contains("has-tip-row")) wrap.classList.add("has-tip-row");
+        if (el.classList.contains("has-tip-action")) wrap.classList.add("has-tip-action");
+        el.parentNode.insertBefore(wrap, el);
+        wrap.appendChild(el);
+        wrap.insertAdjacentHTML("beforeend", tipMarkup(text));
+        el.removeAttribute("data-tip");
+        el.dataset.tipDone = "1";
+        bindTip(wrap);
+      });
+    }
+
+    function bindTip(wrap) {
+      const btn = wrap.querySelector(".tip-btn");
+      if (!btn || btn.dataset.tipBound) return;
+      btn.dataset.tipBound = "1";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        document.querySelectorAll(".has-tip.open").forEach((w) => { if (w !== wrap) w.classList.remove("open"); });
+        wrap.classList.toggle("open");
+      });
+    }
+
+    function initTips() {
+      decorateTips(document);
+      document.addEventListener("click", () => {
+        document.querySelectorAll(".has-tip.open").forEach((w) => w.classList.remove("open"));
+      });
+      if (!sessionStorage.getItem("nexus_help_dismissed")) {
+        $("help-bar")?.classList.remove("hidden");
+      } else {
+        $("help-bar")?.classList.add("hidden");
+      }
+      $("help-bar-dismiss")?.addEventListener("click", () => {
+        sessionStorage.setItem("nexus_help_dismissed", "1");
+        $("help-bar")?.classList.add("hidden");
+      });
+    }
+
+    const VERDICT_FRIENDLY = {
+      USER_OK: { label: "Looks normal", tip: "Behaves like everyday browsing or streaming. No action needed." },
+      EPHEMERAL: { label: "Quick lookup", tip: "Short-lived traffic — often a search or one-off request." },
+      SUSPICIOUS: { label: "Keep an eye on", tip: "A bit unusual. NEXUS won't block this on its own — glance at the app name." },
+      HARM_CANDIDATE: { label: "Might be harmful", tip: "Could be heavy data leaving or a risky destination. Use Stop this site only if you don't recognize it." },
+      MONITOR: { label: "Watching", tip: "NEXUS is still gathering info about this connection." },
+    };
+
+    const AXIS_TIPS = {
+      user_browser: "Looks like a normal web browser session.",
+      media_stream: "Looks like video or music streaming.",
+      search_ephemeral: "Quick search or short request — usually fine.",
+      bandwidth_abuse: "A lot of data moving — could be innocent updates or something hogging bandwidth.",
+      stream_theft_risk: "Pattern sometimes seen when streams or content are ripped.",
+      beacon_pattern: "Repeated check-ins to a server — common in apps, occasionally spyware.",
+      process_trust: "How much NEXUS trusts the app making this connection.",
+      destination_class: "How risky the remote address looks overall.",
+      threat_linked: "Tied to other warnings NEXUS already saw.",
+      operator_auth: "You already clicked Trust forever on this one.",
+    };
+
+    const TIP_TRUST = "Tell NEXUS this address is okay forever — use for sites that keep getting flagged by mistake (CDNs, games, work VPNs). Saved on your machine.";
+    const TIP_STOP = "Stop your computer from sending data to this address for about a day. Only use when you don't recognize the app or the warning says might be harmful. Won't break normal browsing unless you click it.";
+    const TIP_REVOKE = "Remove forever-trust. NEXUS will watch this address again like any other connection.";
 
     function showView(name) {
       const btn = document.querySelector(`nav.menu button[data-view="${name}"]`);
@@ -516,9 +672,9 @@
       }
     }
 
-    $("adblock-easylist").dataset.label = "Load EasyList";
-    $("adblock-easyprivacy").dataset.label = "Load EasyPrivacy";
-    $("adblock-fanboy").dataset.label = "Load Fanboy Annoyance";
+    $("adblock-easylist").dataset.label = "Get EasyList";
+    $("adblock-easyprivacy").dataset.label = "Get EasyPrivacy";
+    $("adblock-fanboy").dataset.label = "Get Fanboy list";
     $("adblock-easylist").addEventListener("click", (e) => adblockLoad({ preset: "easylist" }, e.target));
     $("adblock-easyprivacy").addEventListener("click", (e) => adblockLoad({ preset: "easyprivacy" }, e.target));
     $("adblock-fanboy").addEventListener("click", (e) => adblockLoad({ preset: "fanboy" }, e.target));
@@ -760,8 +916,8 @@
           <div><strong>Detail:</strong> ${inc.detail || ""}</div>
           <div style="margin-top:6px;font-size:0.68rem;color:var(--muted)"><strong>Connections:</strong><br>${conns}</div>
           <div style="margin-top:8px;display:flex;gap:8px;">
-            ${!disabled ? `<button type="button" class="tool danger" data-disable="${inc.id}">Disable</button>` : ""}
-            ${disabled && !reenabled ? `<button type="button" class="tool" data-reenable="${inc.id}">Re-enable</button>` : ""}
+            ${!disabled ? `<span class="has-tip has-tip-action"><button type="button" class="tool danger" data-disable="${inc.id}">Dismiss warning</button>${tipMarkup("Mark this incident handled — stops it from cluttering the list.")}</span>` : ""}
+            ${disabled && !reenabled ? `<span class="has-tip has-tip-action"><button type="button" class="tool" data-reenable="${inc.id}">Show again</button>${tipMarkup("Bring this incident back into the active list.")}</span>` : ""}
             ${reenabled ? '<span class="meta">Re-enabled</span>' : ""}
             ${disabled ? '<span class="meta">Blocked: ' + (inc.block_target || "—") + '</span>' : ""}
           </div>
@@ -773,6 +929,7 @@
       el.querySelectorAll("[data-reenable]").forEach((btn) => {
         btn.addEventListener("click", () => paranoiaReenable(btn.dataset.reenable, btn));
       });
+      el.querySelectorAll(".has-tip").forEach(bindTip);
     }
 
     async function undoAction(id, checkbox) {
@@ -836,7 +993,7 @@
     async function authorizeIp(ip, direction, label, btn) {
       if (!ip) return;
       const dirLabel = direction === "in" ? "inbound" : "outbound";
-      if (!confirm(`Permanently authorize ${dirLabel} traffic to ${ip}?\n\nStored in Hostess7 field memory. NEXUS will never block or alert on this peer.`)) return;
+      if (!confirm(`Trust ${ip} forever?\n\n${dirLabel} traffic to this address will always be allowed. Use when a normal site keeps getting flagged.`)) return;
       if (btn) { btn.disabled = true; btn.textContent = "…"; }
       try {
         const res = await fetch("/api/firewall/authorize", {
@@ -850,13 +1007,13 @@
       } catch {
         alert("Authorize failed — panel offline?");
       } finally {
-        if (btn) { btn.disabled = false; btn.textContent = "Authorize"; }
+        if (btn) { btn.disabled = false; btn.textContent = "Trust forever"; }
       }
     }
 
     async function revokeTrust(ip, direction, btn) {
       if (!ip) return;
-      if (!confirm(`Revoke permanent authorization for ${ip} (${direction})?`)) return;
+      if (!confirm(`Remove trust for ${ip}?\n\nNEXUS will watch this address again.`)) return;
       if (btn) btn.disabled = true;
       try {
         const res = await fetch("/api/firewall/revoke", {
@@ -879,31 +1036,35 @@
       const items = trusted || [];
       $("trust-count").textContent = String(items.length);
       if (!items.length) {
-        el.innerHTML = '<div class="empty">Click Authorize on a connection to trust it forever</div>';
+        el.innerHTML = '<div class="empty">See something normal but flagged? Click <strong>Trust forever</strong> on that connection.</div>';
         return;
       }
       el.innerHTML = items.map((t) => `
         <div class="trusted-row">
           <span class="ip">${t.ip}</span>
           <span class="meta">${t.direction} · ${t.label || "—"} · ${t.ts || ""}</span>
-          <button type="button" class="revoke" data-revoke="${t.ip}" data-dir="${t.direction}">Revoke</button>
+          <span class="has-tip has-tip-action">
+            <button type="button" class="revoke" data-revoke="${t.ip}" data-dir="${t.direction}">Remove trust</button>
+            ${tipMarkup(TIP_REVOKE)}
+          </span>
         </div>`).join("");
       el.querySelectorAll("[data-revoke]").forEach((btn) => {
         btn.addEventListener("click", () => revokeTrust(btn.dataset.revoke, btn.dataset.dir, btn));
       });
+      decorateTips(el);
     }
 
     const AXIS_LABELS = {
-      user_browser: "User browser",
-      media_stream: "Media/stream",
-      search_ephemeral: "Search/ephemeral",
-      bandwidth_abuse: "Bandwidth abuse",
-      stream_theft_risk: "Stream theft",
-      beacon_pattern: "Beacon pattern",
-      process_trust: "Process trust",
-      destination_class: "Destination risk",
-      threat_linked: "Threat linked",
-      operator_auth: "You authorized",
+      user_browser: "Browser-like",
+      media_stream: "Streaming",
+      search_ephemeral: "Quick search",
+      bandwidth_abuse: "Heavy data",
+      stream_theft_risk: "Stream risk",
+      beacon_pattern: "Repeating pings",
+      process_trust: "App trust",
+      destination_class: "Site risk",
+      threat_linked: "Other warnings",
+      operator_auth: "You trusted",
     };
     const HARM_AXES = new Set(["bandwidth_abuse", "stream_theft_risk", "destination_class", "threat_linked", "beacon_pattern"]);
     const USER_AXES = new Set(["user_browser", "media_stream", "operator_auth", "process_trust"]);
@@ -912,7 +1073,8 @@
       return Object.entries(AXIS_LABELS).map(([key, label]) => {
         const v = scores?.[key] ?? 0;
         const cls = HARM_AXES.has(key) ? "harm" : USER_AXES.has(key) ? "user" : "neutral";
-        return `<div class="axis"><label>${label}</label><bar><span class="${cls}" style="width:${v * 10}%"></span></bar><span>${v}/10</span></div>`;
+        const axisTip = AXIS_TIPS[key] || "";
+        return `<div class="axis"><label><span class="has-tip">${esc(label)}${tipMarkup(axisTip)}</span></label><bar><span class="${cls}" style="width:${v * 10}%"></span></bar><span>${v}/10</span></div>`;
       }).join("");
     }
 
@@ -921,13 +1083,14 @@
       if (!gk) { el.innerHTML = ""; return; }
       const harm = gk.harm_candidates || 0;
       el.innerHTML =
-        `<strong>Gatekeeper</strong> — ${gk.connection_count || 0} connections scored · ` +
-        `<strong>${harm}</strong> harm candidate${harm === 1 ? "" : "s"} · ` +
-        `${gk.why_no_auto_block || ""}`;
+        `<span class="has-tip"><strong>Connection checker</strong>${tipMarkup("Scores every open connection. NEXUS does not block your browser or CDN traffic by itself — you choose Trust forever or Stop this site.")}</span> — ` +
+        `${gk.connection_count || 0} checked · ` +
+        `<strong>${harm}</strong> might need review${harm === 1 ? "" : "s"} · ` +
+        `${gk.why_no_auto_block || "Safe mode: nothing blocked without your click."}`;
     }
 
     async function blockHarmIp(ip, btn) {
-      if (!ip || !confirm(`Block outbound to ${ip}?\n\nFor harm candidates only — stops exfil/theft path.`)) return;
+      if (!ip || !confirm(`Stop traffic to ${ip}?\n\nYour PC won't send data there for about a day. Only do this if you don't recognize the connection.`)) return;
       if (btn) btn.disabled = true;
       try {
         const res = await fetch("/api/firewall/block", {
@@ -954,19 +1117,20 @@
           const v = c.verdict || "MONITOR";
           const trustedRow = isTrustedIp(c.remote_ip, trusted, c.direction) || c.scores?.operator_auth >= 10;
           const actions = [];
+          const vf = VERDICT_FRIENDLY[v] || { label: v, tip: "NEXUS is classifying this connection." };
           if (c.block_recommended) {
-            actions.push(`<button type="button" class="block" data-block="${c.remote_ip}">Block harm</button>`);
+            actions.push(`<span class="has-tip has-tip-action"><button type="button" class="block" data-block="${c.remote_ip}">Stop this site</button>${tipMarkup(TIP_STOP)}</span>`);
           }
           if (!trustedRow) {
-            actions.push(`<button type="button" class="auth" data-auth="${c.remote_ip}" data-dir="${c.direction || "out"}" data-label="${c.process || ""}">Authorize</button>`);
+            actions.push(`<span class="has-tip has-tip-action"><button type="button" class="auth" data-auth="${c.remote_ip}" data-dir="${c.direction || "out"}" data-label="${c.process || ""}">Trust forever</button>${tipMarkup(TIP_TRUST)}</span>`);
           } else {
-            actions.push('<span style="color:var(--ok);font-size:0.65rem">✓ authorized</span>');
+            actions.push(`<span style="color:var(--ok);font-size:0.65rem">✓ trusted</span>`);
           }
           return `<div class="intent-row">
             <div class="intent-head">
-              <span class="verdict-${v}">${v}</span>
-              <span class="ip">${c.remote_ip}:${c.remote_port || "?"}</span>
-              <span class="proc">${c.process || "?"}</span>
+              <span class="verdict-${v} friendly-verdict"><span class="has-tip">${esc(vf.label)}${tipMarkup(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""))}</span></span>
+              <span class="ip" title="Internet address">${c.remote_ip}:${c.remote_port || "?"}</span>
+              <span class="proc" title="Program using this connection">${c.process || "unknown app"}</span>
               <span class="meta">${c.ip_class || ""}</span>
             </div>
             <div class="intent-reason">${c.reason || ""}</div>
@@ -980,6 +1144,7 @@
         el.querySelectorAll("[data-block]").forEach((btn) => {
           btn.addEventListener("click", () => blockHarmIp(btn.dataset.block, btn));
         });
+        el.querySelectorAll(".has-tip").forEach(bindTip);
         return;
       }
     }
@@ -987,7 +1152,7 @@
     function renderThreats(items) {
       const el = $("threats");
       if (!items?.length) {
-        el.innerHTML = '<div class="empty">No vectors detected — field calm</div>';
+        el.innerHTML = '<div class="empty">No warnings right now — that\'s a good thing.</div>';
         $("threat-count").textContent = "0";
         return;
       }
@@ -1009,10 +1174,8 @@
       }
       el.innerHTML = actions.map((a) => `
         <div class="sanitize-row${a.undone ? " undone" : ""}">
-          <label title="Undo this sanitize">
-            <input type="checkbox" ${a.undone ? "checked disabled" : ""} data-id="${a.id}" />
-            Undo
-          </label>
+          <label><input type="checkbox" ${a.undone ? "checked disabled" : ""} data-id="${a.id}" /> Undo</label>
+          <span class="has-tip-row" data-tip="Check to reverse an automatic fix NEXUS applied earlier. Only appears if auto-fix was turned on."></span>
           <div class="sanitize-meta">
             <div><strong>${a.vector}</strong> · ${a.severity} · ${a.action}</div>
             <div>target: ${a.target || "—"} (${a.target_type})</div>
@@ -1024,11 +1187,13 @@
           if (cb.checked) undoAction(cb.dataset.id, cb);
         });
       });
+      decorateTips(el);
     }
 
     function renderVectors(list) {
-      $("vector-catalog").innerHTML = "Auto vectors: " +
-        (list || []).map((v) => `<code>${v}</code>`).join("");
+      $("vector-catalog").innerHTML = `<span class="has-tip"><span>What NEXUS can detect</span>${tipMarkup("Technical names for warning types NEXUS knows how to spot. You don't need to memorize these.")}</span>: ` +
+        (list || []).map((v) => `<code title="Warning type">${v}</code>`).join("");
+      decorateTips($("vector-catalog"));
     }
 
     async function loadLog(name) {
@@ -1069,10 +1234,11 @@
         renderParanoia(data.paranoia);
         renderShutdown(data.shutdown);
       } catch {
-        $("connections").innerHTML = '<div class="empty">Panel offline — is nexus-genius.service running?</div>';
+        $("connections").innerHTML = '<div class="empty">Can\'t reach NEXUS — try running <strong>./nexus.sh</strong> or click the desktop icon.</div>';
       }
     }
 
+    initTips();
     refresh();
     setInterval(refresh, 3000);
   </script>

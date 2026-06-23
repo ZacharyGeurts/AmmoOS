@@ -4,7 +4,7 @@
 
 **Your network bodyguard that stays out of the way.**
 
-NEXUS-Shield watches what's leaving your machine, scores every live connection for intent (browsing vs sketchy), and puts you in control with two clicks: **Authorize** (trust forever) or **Block** (stop harm). No bloated antivirus. No config-file archaeology. Just run it and use the panel.
+NEXUS-Shield watches what's leaving your machine, scores every live connection for intent (browsing vs sketchy), and puts you in control with two clicks: **Trust forever** or **Stop this site**. Every button has a **?** tooltip in plain English. No bloated antivirus. No config-file archaeology. Just run it and use the panel.
 
 Built by [Zachary Geurts](https://github.com/ZacharyGeurts) as part of the [AmouranthRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) field stack.
 
@@ -34,6 +34,15 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.1 — help for everyone
+
+- **? flyouts everywhere** — hover or tap any question mark for a plain-English explanation
+- **Friendly names** — What's happening, Trust forever, Stop this site (not engineer jargon)
+- **Welcome tip bar** — reminds you nothing blocks unless you say so
+- **Settings renamed** — Auto-block after logging, Watchers, Ad blocking
+
+---
+
 ## The panel — three tabs, everything you need
 
 ### Monitor — see what's happening right now
@@ -44,8 +53,8 @@ sudo ./stealth_install.sh
 |------|------------------------|
 | **Left — Internet / Gatekeeper** | Every live connection scored on 10 axes: user browsing, media, search, bandwidth abuse, beacons, etc. |
 | **Verdict badges** | `USER_OK` = normal. `HARM_CANDIDATE` = review before blocking. NEXUS does **not** auto-block your CDN or browser traffic. |
-| **Authorize** | One click → permanent trust. Saved to Hostess7 field memory (local + TEAM). NEXUS stops nagging that peer. |
-| **Block harm** | Only on harm candidates — stops a suspicious outbound path when **you** say so. |
+| **Trust forever** (? explains it) | One click → permanent allow. Saved on your machine. NEXUS stops nagging that site. |
+| **Stop this site** (? explains it) | Only on "might be harmful" rows — blocks outbound when **you** say so. |
 | **Right — Threats** | Active threat vectors, correlation score, firewall status. Calm field = empty list. |
 
 ---
