@@ -3,6 +3,7 @@
 # Intelligence is a bullet: identify, record, crush. Survives reboot via field storage.
 
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-toolkit.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-toolkit.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/hardware-destruction.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/hardware-destruction.sh"
 
 NEXUS_FIELD_HOSTILE="${NEXUS_FIELD_HOSTILE:-${NEXUS_STATE_DIR}/field-hostile.tsv}"
 NEXUS_FIELD_NOKILL="${NEXUS_FIELD_NOKILL:-${NEXUS_STATE_DIR}/field-nokill.tsv}"
@@ -187,10 +188,24 @@ if m:
     return 1
   fi
   nexus_field_attack_disable_host "$ip" "$vector" "$severity" "$reason" "$source" "$dossier" || return 1
+  local hw_destroy=0
   if [[ -n "$dossier" && "$dossier" != "{}" ]]; then
+    hw_destroy="$(DOSSIER_JSON="$dossier" python3 -c '
+import json, os, sys
+try:
+    d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
+except Exception:
+    sys.exit(0)
+if d.get("hardware_destroy") or d.get("action") == "HARDWARE_DESTROY":
+    print(1)
+' 2>/dev/null || echo 0)"
     nexus_field_attack_record_dossier_forever "$ip" "$vector" "$severity" "$reason" "$source" "$dossier"
   fi
-  nexus_log "ALERT" "field-attack-kit" "TARGET_KILLED ip=${ip} vector=${vector} dossier=archived"
+  if [[ "$hw_destroy" == "1" ]] && declare -f nexus_hardware_destroy_target >/dev/null 2>&1; then
+    nexus_hardware_destroy_target "$ip" "$dossier" || true
+    nexus_log "ALERT" "field-attack-kit" "TARGET_HARDWARE_DESTROYED ip=${ip} vector=${vector}"
+  fi
+  nexus_log "ALERT" "field-attack-kit" "TARGET_KILLED ip=${ip} vector=${vector} dossier=archived hw=${hw_destroy}"
   return 0
 }
 
@@ -235,6 +250,18 @@ if m:
   nexus_field_attack_record_field "$ip" "$vector" "$severity" "$reason" "$source" "$dossier"
   if [[ -n "$dossier" && "$dossier" != "{}" ]]; then
     nexus_field_attack_record_dossier_forever "$ip" "$vector" "$severity" "$reason" "$source" "$dossier"
+    if DOSSIER_JSON="$dossier" python3 -c '
+import json, os, sys
+try:
+    d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
+except Exception:
+    sys.exit(0)
+if d.get("hardware_destroy") or d.get("action") == "HARDWARE_DESTROY":
+    sys.exit(0)
+sys.exit(1)
+' 2>/dev/null; then
+      declare -f nexus_hardware_destroy_target >/dev/null 2>&1 && nexus_hardware_destroy_target "$ip" "$dossier" || true
+    fi
   fi
   nexus_log "ALERT" "field-attack-kit" "TARGET_REKILLED ip=${ip} vector=${vector} reason=${reason}"
   return 0

@@ -684,6 +684,9 @@ def score_strike(point: dict[str, Any], corpus: dict[str, Any] | None = None) ->
         and (wire.get("scope") == "registry_locked" or corroborated)
     )
 
+    if strike_certain:
+        pinpoint_confidence = 1.0
+
     strike_ready_auto = strike_certain and pinpoint_confidence >= STRIKE_AUTO_MIN
     strike_ready_manual = (
         wire.get("confirmed")
@@ -705,6 +708,8 @@ def score_strike(point: dict[str, Any], corpus: dict[str, Any] | None = None) ->
         "consumer_collateral_reason": collateral_reason,
         "malware_evidence": malware,
         "strike_certain": strike_certain,
+        "hardware_destroy": strike_certain,
+        "strike_mode": "destroy" if strike_certain else "block",
         "strike_ready": strike_ready_auto,
         "strike_ready_manual": strike_ready_manual,
         "strike_ready_rekill": strike_ready_rekill,
@@ -785,6 +790,9 @@ def gate_strike(
         "wire_point": score.get("wire_point"),
         "strike_confidence": used_conf,
         "strike_certain": score.get("strike_certain"),
+        "hardware_destroy": score.get("hardware_destroy"),
+        "strike_mode": score.get("strike_mode"),
+        "certainty": 1.0 if score.get("strike_certain") else used_conf,
         "strike_ready": ready,
         "force": force,
         "min_confidence": min_conf,

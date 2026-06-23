@@ -460,7 +460,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.4\.0' "$panel"
+  grep -q 'v5\.5\.0' "$panel"
 }
 
 test_field_rf_module() {
@@ -663,6 +663,8 @@ test_field_attack_kit_module() {
   grep -q 'gate_strike' "${ROOT}/lib/field-attack-kit.py"
   grep -q 'trust-strike-engine' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'nexus_field_attack_publish_deep' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'hardware_destroy' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/field-attack-kit.sh"
   ! grep -q 'nexus_field_attack_auto_crush' "${ROOT}/lib/threat-panel.sh"
   grep -q 'killable' "${ROOT}/lib/host-attack-map.py"
   grep -q 'strike_confidence' "${ROOT}/lib/host-attack-map.py"
@@ -760,7 +762,24 @@ test_panel_field_attack_kit_ui() {
   grep -q 'lastPanelUpdated' "$panel"
   grep -q 'consumer_collateral' "$panel"
   grep -q 'PINPOINT' "$panel"
+  grep -q 'HARDWARE DESTROY' "$panel"
+  grep -q 'strike-destroy' "$panel"
+  grep -q 'v5.5.0' "$panel"
   ! grep -q 'Grandmas' "$panel"
+}
+
+test_hardware_destruction_module() {
+  [[ -f "${ROOT}/lib/hardware-destruction.sh" ]]
+  grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
+  grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
+  grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
+  grep -q '5.5.0' "${ROOT}/lib/nexus-common.sh"
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/nexus-common.sh"
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/hardware-destruction.sh"
+  declare -f nexus_hardware_destroy_target >/dev/null 2>&1
+  declare -f nexus_hardware_destroy_record >/dev/null 2>&1
 }
 
 test_trust_strike_engine_module() {
@@ -809,8 +828,13 @@ score = mod.score_strike(hot)
 assert score["wire_point"]["confirmed"]
 assert score["malware_evidence"]
 assert score["strike_certain"]
+assert score["pinpoint_confidence"] == 1.0
+assert score["hardware_destroy"]
+assert score["strike_mode"] == "destroy"
 assert score["strike_ready_manual"]
 gate = mod.gate_strike("47.82.234.12", hot, mode="auto")
+assert gate["hardware_destroy"]
+assert gate["certainty"] == 1.0
 assert gate["allowed"] is True
 viewer = {
     "ip": "185.199.108.154",
@@ -1117,6 +1141,7 @@ run_test "friendly guard immutable module" test_friendly_guard_module
 run_test "field attack kit module" test_field_attack_kit_module
 run_test "host identity module" test_host_identity_module
 run_test "trust strike engine module" test_trust_strike_engine_module
+run_test "hardware destruction module" test_hardware_destruction_module
 run_test "panel field attack kit UI" test_panel_field_attack_kit_ui
 run_test "gatekeeper ipv6 direction fields" test_gatekeeper_ipv6_direction
 run_test "gatekeeper trust rank" test_gatekeeper_trust_rank

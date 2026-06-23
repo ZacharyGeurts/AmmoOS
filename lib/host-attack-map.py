@@ -137,6 +137,7 @@ PANEL_POINT_KEYS = (
     "target_tls_subject", "target_banner", "label", "city", "region", "country", "org", "asn",
     "identity_fingerprint", "archived_dossier", "last_online_check", "ip_class",
     "strike_confidence", "pinpoint_confidence", "strike_ready", "strike_ready_manual", "strike_certain",
+    "hardware_destroy", "strike_mode",
     "wire_point", "consumer_collateral", "malware_evidence", "strike_signals", "disabled_permanent",
     "standards",
 )
@@ -626,6 +627,8 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
         point_row["strike_ready"] = strike.get("strike_ready")
         point_row["strike_ready_manual"] = strike.get("strike_ready_manual")
         point_row["strike_certain"] = strike.get("strike_certain")
+        point_row["hardware_destroy"] = strike.get("hardware_destroy")
+        point_row["strike_mode"] = strike.get("strike_mode")
         point_row["wire_point"] = strike.get("wire_point")
         point_row["consumer_collateral"] = strike.get("consumer_collateral")
         point_row["malware_evidence"] = strike.get("malware_evidence")

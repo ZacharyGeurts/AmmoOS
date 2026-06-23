@@ -304,15 +304,32 @@ def kill_target(
             "dossier": {},
         }
     dossier = _full_dossier_for_ip(ip, extra)
+    hardware_destroy = bool(strike_gate.get("hardware_destroy") or strike_gate.get("strike_certain"))
+    if hardware_destroy:
+        dossier.update({
+            "action": "HARDWARE_DESTROY",
+            "hardware_destroy": True,
+            "certainty": 1.0,
+            "strike_mode": "destroy",
+            "wire_point": strike_gate.get("wire_point") or (strike_gate.get("score") or {}).get("wire_point"),
+        })
+    dossier["strike_gate"] = {
+        "strike_certain": strike_gate.get("strike_certain"),
+        "hardware_destroy": hardware_destroy,
+        "strike_confidence": strike_gate.get("strike_confidence"),
+        "certainty": strike_gate.get("certainty"),
+    }
     ok = _run_kill(ip, vector, severity, reason, dossier)
     return {
         "ok": ok,
         "ip": ip,
         "permanent": ok,
         "killed": ok,
+        "hardware_destroy": hardware_destroy and ok,
         "dossier_archived": ok,
         "friendly_refused": False,
         "strike_confidence": strike_gate.get("strike_confidence"),
+        "certainty": 1.0 if hardware_destroy else strike_gate.get("strike_confidence"),
         "strike_gate": strike_gate,
         "dossier": dossier if ok else {},
     }
@@ -332,12 +349,17 @@ def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
             skipped.append(ip)
             continue
         heat = float(p.get("heat") or 0)
-        if heat < heat_min:
+        strike_certain = bool(p.get("strike_certain"))
+        if not strike_certain and heat < heat_min:
             skipped.append(ip)
             continue
         vector = str(p.get("vector") or "HOSTILE")
         severity = str(p.get("severity") or "high")
-        reason = f"attack_kit:heat={heat:.2f}"
+        reason = (
+            f"attack_kit:strike_certain=1.0"
+            if strike_certain
+            else f"attack_kit:heat={heat:.2f}"
+        )
         result = kill_target(
             ip,
             vector,
@@ -512,12 +534,18 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
         }
     archived = load_archived_dossier(ip) or _full_dossier_for_ip(ip)
     dossier = dict(archived)
+    strike_gate = gate_strike(ip, point, mode="rekill", monitor=point.get("monitor") if isinstance(point.get("monitor"), dict) else None)
+    hardware_destroy = bool(strike_gate.get("hardware_destroy") or strike_gate.get("strike_certain"))
     dossier.update({
-        "action": "REKILL",
+        "action": "HARDWARE_DESTROY" if hardware_destroy else "REKILL",
+        "hardware_destroy": hardware_destroy,
+        "certainty": 1.0 if hardware_destroy else strike_gate.get("certainty"),
+        "strike_mode": "destroy" if hardware_destroy else "rekill",
         "rekill": True,
         "rekill_ts": _now(),
         "online_check": online_doc,
         "identity_validation": online_doc.get("validation"),
+        "wire_point": strike_gate.get("wire_point"),
     })
     reason = "rekill_same_host_validated"
     ok = _run_rekill(ip, vector, severity, reason, dossier)
@@ -526,10 +554,12 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
         "ip": ip,
         "rekill": ok,
         "killed": ok,
+        "hardware_destroy": hardware_destroy and ok,
         "same_host": True,
         "online": True,
         "online_check": online_doc,
         "dossier_archived": ok,
+        "certainty": 1.0 if hardware_destroy else strike_gate.get("certainty"),
     }
 
 

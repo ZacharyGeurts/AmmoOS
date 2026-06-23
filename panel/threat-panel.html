@@ -1108,6 +1108,8 @@
       padding: 3px 8px; border-radius: 4px; margin: 6px 0 4px;
     }
     .ha-strike-badge.strike-ready { background: rgba(255, 0, 51, 0.18); color: var(--murder); border: 1px solid var(--murder); }
+    .ha-strike-badge.strike-destroy { background: rgba(255, 0, 51, 0.28); color: #fff; border: 1px solid #ff3355; box-shadow: 0 0 10px rgba(255, 0, 51, 0.35); }
+    .ha-destroy-badge { font-size: 0.62rem; color: #ff6688; margin-top: 4px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
     .ha-strike-badge.strike-warm { background: rgba(255, 180, 0, 0.12); color: #e8b040; border: 1px solid #a87820; }
     .ha-strike-badge.strike-cold { background: rgba(80, 100, 130, 0.15); color: #8aa0b8; border: 1px solid var(--border); }
     .ha-strike-signals { font-size: 0.6rem; color: var(--muted); margin-top: 2px; font-family: ui-monospace, monospace; }
@@ -1153,7 +1155,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.4.0</h1>
+        <h1>NEXUS-Shield v5.5.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1173,7 +1175,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.4.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.5.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -3207,8 +3209,12 @@
       root.querySelectorAll(".has-tip").forEach(bindTip);
     }
 
-    async function attackKitKill(ip, vector, severity, btn) {
-      if (!ip || !confirm(`KILL ${ip}?\n\nPermanent firewall block (in+out).\nFull dossier archived forever on field drive.\nThis does not undo itself.`)) return;
+    async function attackKitKill(ip, vector, severity, btn, opts = {}) {
+      const destroy = !!opts.hardwareDestroy;
+      const prompt = destroy
+        ? `HARDWARE DESTROY ${ip}?\n\n100% pinpoint certainty — full hardware destruction:\n· Permanent firewall block (in+out + C2 flows)\n· Live connection teardown\n· Hostile monitor process kill\n· LAN neighbor isolation (if wire device)\nFull dossier archived forever on field drive.\nThis does not undo itself.`
+        : `KILL ${ip}?\n\nPermanent firewall block (in+out).\nFull dossier archived forever on field drive.\nThis does not undo itself.`;
+      if (!ip || !confirm(prompt)) return;
       if (btn) btn.disabled = true;
       try {
         const res = await fetch("/api/attack-kit/kill", {
@@ -3225,6 +3231,7 @@
           alert(`KILL refused — ${why} (${conf}). Pinpoint the actual end wire host, not CDN collateral or insecure viewers.`);
         }
         else if (!data.ok) alert("KILL failed — target may be trusted or protected.");
+        else if (data.dossier_archived && data.hardware_destroy) alert(`HARDWARE DESTROY confirmed — ${ip} crushed. Connections torn down. Dossier archived forever.`);
         else if (data.dossier_archived) alert(`KILL confirmed — ${ip} blocked. Dossier archived forever.`);
         refresh();
       } catch {
@@ -3235,12 +3242,12 @@
     }
 
     async function attackKitCrushHot(btn) {
-      if (!confirm("KILL ALL hot monitor targets?\nPinpoint Strike: wire-locked end host + malware campaign + 99% certainty.\nNever CDN edges or insecure browser viewers.\nEach strike gets permanent block + full dossier archived forever.")) return;
+      if (!confirm("HARDWARE DESTROY all 100% certain targets?\nPinpoint Strike: wire-locked end host + malware campaign + 100% certainty.\nFull hardware destruction: firewall, connection teardown, process kill, LAN isolate.\nNever CDN edges or insecure browser viewers.\nEach strike archives full dossier forever on field drive.")) return;
       if (btn) btn.disabled = true;
       try {
         const res = await fetch("/api/attack-kit/crush-hot", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
         const data = await res.json();
-        alert(data.killed_count != null ? `KILLED ${data.killed_count} target(s). Dossiers archived.` : (data.ok ? "KILL batch complete." : "KILL batch failed."));
+        alert(data.killed_count != null ? `HARDWARE DESTROYED ${data.killed_count} target(s). Dossiers archived.` : (data.ok ? "Destroy batch complete." : "Destroy batch failed."));
         refresh();
       } catch {
         alert("Attack kit unreachable.");
@@ -3391,10 +3398,10 @@
           <div class="ha-strike-signals">${esc(p.wire_point?.label || "Consumer/CDN — not the actual hostile host")}</div>`;
       }
       const conf = Number(p.pinpoint_confidence ?? p.strike_confidence ?? 0);
-      const pct = Math.round(conf * 100);
+      const pct = p.strike_certain ? 100 : Math.round(conf * 100);
       const wire = p.wire_point || {};
-      const cls = p.strike_certain ? "strike-ready" : p.strike_ready_manual ? "strike-ready" : conf >= 0.35 ? "strike-warm" : "strike-cold";
-      const label = p.strike_certain ? "PINPOINT CERTAIN · 100%" : p.strike_ready ? "STRIKE READY · autokill" : p.strike_ready_manual ? "KILL READY" : wire.confirmed ? "WIRE LOCKED · low malware proof" : "WIRE UNCONFIRMED";
+      const cls = p.strike_certain ? "strike-destroy" : p.strike_ready_manual ? "strike-ready" : conf >= 0.35 ? "strike-warm" : "strike-cold";
+      const label = p.strike_certain ? "PINPOINT CERTAIN · 100% · HARDWARE DESTROY" : p.strike_ready ? "STRIKE READY · autokill" : p.strike_ready_manual ? "KILL READY" : wire.confirmed ? "WIRE LOCKED · low malware proof" : "WIRE UNCONFIRMED";
       const sigs = (p.strike_signals || []).slice(0, 4).map((s) => s.id).join(" · ");
       const wireLine = wire.label ? `<div class="ha-strike-signals">Wire: ${esc(wire.label)}${wire.lan_device ? " · LAN" : ""}</div>` : "";
       return `<div class="ha-strike-badge ${cls}">${label} · ${pct}%</div>${wireLine}${sigs ? `<div class="ha-strike-signals">${esc(sigs)}</div>` : ""}`;
@@ -4445,18 +4452,18 @@
         <div class="host-kill-actions">
           ${friendly
             ? '<div class="ha-friendly-badge">✓ FRIENDLY — immutable guard</div>'
-            : `<button type="button" class="ha-kill-btn" id="ha-kill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}"${killDisabled ? " disabled" : ""}>KILL</button>
+            : `<button type="button" class="ha-kill-btn" id="ha-kill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}" data-ha-destroy="${p.strike_certain ? "1" : "0"}"${killDisabled ? " disabled" : ""}>${p.strike_certain ? "HARDWARE DESTROY" : "KILL"}</button>
                <button type="button" class="ha-rekill-btn" id="ha-rekill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}"${rekillDisabled ? " disabled" : ""}>RE-KILL</button>
                <button type="button" class="ha-nokill-btn" id="ha-nokill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}"${nokillDisabled ? " disabled" : ""}>NO-KILL</button>
                <button type="button" class="ha-check-online-btn" id="ha-check-online">Check Online</button>
-               ${killed ? '<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>' : ""}
+               ${killed ? `<div class="ha-killed-badge">✓ ${p.archived_dossier?.action === "HARDWARE_DESTROY" || p.hardware_destroy ? "HARDWARE DESTROYED" : "KILLED"} · dossier archived forever</div>` : ""}
                ${nokill ? '<div class="ha-nokill-badge">✓ NO-KILL — exempt from autokill &amp; crush</div>' : ""}`}
           <button type="button" class="ghost" id="ha-clear-selection" style="font-size:0.66rem;padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;cursor:pointer;">Clear</button>
         </div>`;
       $("ha-kill-selected")?.addEventListener("click", (e) => {
         const btn = e.currentTarget;
         if (btn.disabled) return;
-        attackKitKill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn);
+        attackKitKill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn, { hardwareDestroy: btn.dataset.haDestroy === "1" });
       });
       $("ha-check-online")?.addEventListener("click", (e) => attackKitCheckOnline(p.ip, e.currentTarget));
       $("ha-rekill-selected")?.addEventListener("click", (e) => {
