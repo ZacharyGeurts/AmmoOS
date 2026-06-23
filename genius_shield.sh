@@ -138,5 +138,5 @@ if [[ -n "$INSTALL_USER" && "$INSTALL_USER" != "root" ]]; then
   echo "Log out/in (or: sg nexus -c 'nexus status') — no further sudo needed."
 fi
 
-echo 'NEXUS-Shield v2.0 active — panel https://127.0.0.1:9477/ (browser opens on startup).'
+echo "NEXUS-Shield v${NEXUS_VERSION:-2.0.1} active — panel https://127.0.0.1:9477/ (browser opens on startup)."
 echo 'Start menu: NEXUS-Shield'

@@ -132,7 +132,7 @@ nexus_threat_panel_publish() {
     else
       printf '{"killed":false,"status":"unknown","incidents":[]}'
     fi
-    printf ',"version":"%s"' "${NEXUS_VERSION:-2.0.0}"
+    printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'
   } >"${NEXUS_THREAT_PANEL_JSON}.tmp" 2>/dev/null \
     && mv -f "${NEXUS_THREAT_PANEL_JSON}.tmp" "$NEXUS_THREAT_PANEL_JSON"

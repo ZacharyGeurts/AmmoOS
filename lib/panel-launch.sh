@@ -61,7 +61,7 @@ nexus_panel_install_desktop() {
 
   cat >"${apps_dir}/nexus-shield.desktop" <<EOF
 [Desktop Entry]
-Version=2.0
+Version=2.0.1
 Type=Application
 Name=NEXUS-Shield
 GenericName=Network Gatekeeper

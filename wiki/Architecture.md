@@ -1,6 +1,6 @@
 # Architecture
 
-NEXUS-Shield v1.1 — **genius-only default**, ultra-stealth, self-defended.
+NEXUS-Shield v2.0.1 — genius-only, connection gatekeeper, ultra-stealth.
 
 ## Tiers
 

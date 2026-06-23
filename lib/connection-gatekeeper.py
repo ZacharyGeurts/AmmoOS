@@ -282,20 +282,6 @@ def _axis_auth(rip: str, trusted: set[str]) -> tuple[int, str]:
     return 0, "not_authorized"
 
 
-AXES = (
-    ("user_browser", _axis_user_browser),
-    ("media_stream", None),
-    ("search_ephemeral", None),
-    ("bandwidth_abuse", None),
-    ("stream_theft_risk", None),
-    ("beacon_pattern", None),
-    ("process_trust", None),
-    ("destination_class", None),
-    ("threat_linked", None),
-    ("operator_auth", None),
-)
-
-
 def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str, bool]:
     harm = (
         scores["stream_theft_risk"] * 2

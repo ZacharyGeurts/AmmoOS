@@ -43,7 +43,6 @@ source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
 source "${NEXUS_INSTALL_ROOT}/lib/firewall-trust.sh"
 nexus_firewall_trust_init
 nexus_firewall_trust_sync_from_memory
-nexus_firewall_trust_reload
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/threat-vectors.sh"
 # shellcheck source=/dev/null

@@ -251,7 +251,7 @@ nexus_firewall_on_threat() {
       ip="$(nexus_firewall_parse_ip "$detail" "ip")"
       [[ -n "$ip" ]] && nexus_firewall_block_ip in "$ip" "$NEXUS_FIREWALL_BLOCK_DURATION" "$vector"
       ;;
-    EGRESS_BEACON|EGRESS_TMP_BINARY|C2_CORRELATION|RST_FLOOD)
+    EGRESS_BEACON|EGRESS_TMP_BINARY)
       ip="$(nexus_firewall_parse_ip "$detail" "dst")"
       [[ -n "$ip" ]] && nexus_firewall_block_ip out "$ip" "$NEXUS_FIREWALL_BLOCK_DURATION" "$vector"
       ;;

@@ -1,6 +1,11 @@
-# NEXUS-Shield v2.0 — Connection Gatekeeper
+# NEXUS-Shield v2.0.1 — Connection Gatekeeper
 
 **NEXUS ∞** by [AmouranthRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — invisible, zero-trust behavioral security. Pure genius heuristics. No heavy AV agents.
+
+## v2.0.1
+
+- Removed legacy AV install stack entirely
+- Code cleanup, gatekeeper ss-parser fix, panel JSON hardening
 
 ## v2.0 highlights
 
