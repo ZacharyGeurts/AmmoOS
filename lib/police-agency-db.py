@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""Police / public-safety agency database — global dropdown + format import."""
+"""Police / law / government agency database — global dropdown + merge-only import."""
 from __future__ import annotations
 
-import csv
-import io
+import importlib.util
 import json
 import os
-import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -14,9 +12,16 @@ from typing import Any
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 SEED = INSTALL / "data" / "police-agencies-seed.json"
+GOV_SEED = INSTALL / "data" / "gov-databases-seed.json"
 USER_DB = STATE / "police-agencies-user.json"
 SELECTED = STATE / "police-agency-selected.json"
-IMPORTS_DIR = STATE / "police-imports"
+
+
+def _gov_intel():
+    spec = importlib.util.spec_from_file_location("gov_intel_db", INSTALL / "lib" / "gov-intel-db.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def _now() -> str:
@@ -38,7 +43,23 @@ def _save_json(path: Path, data: Any) -> None:
 
 
 def _seed_doc() -> dict[str, Any]:
-    return _load_json(SEED, {"agencies": [], "regions": []})
+    police = _load_json(SEED, {"agencies": [], "regions": []})
+    gov = _load_json(GOV_SEED, {"agencies": [], "categories": []})
+    agencies = list(police.get("agencies") or []) + list(gov.get("agencies") or [])
+    regions = list(police.get("regions") or [])
+    seen_r = {r.get("id") for r in regions}
+    for r in gov.get("regions") or []:
+        if r.get("id") not in seen_r:
+            regions.append(r)
+    categories = list(gov.get("categories") or [])
+    return {
+        "schema": "nexus-gov-agency-v2",
+        "motto": "Police, law enforcement, and government informational databases — merge-only updates.",
+        "default_region": police.get("default_region") or "us",
+        "regions": regions,
+        "categories": categories,
+        "agencies": agencies,
+    }
 
 
 def _user_doc() -> dict[str, Any]:
@@ -64,12 +85,14 @@ def _agency_index() -> dict[str, dict[str, Any]]:
     return out
 
 
-def list_agencies(region: str | None = None) -> list[dict[str, Any]]:
+def list_agencies(region: str | None = None, category: str | None = None) -> list[dict[str, Any]]:
     idx = _agency_index()
     rows = list(idx.values())
     if region:
         rows = [r for r in rows if r.get("region") == region or region == "all"]
-    return sorted(rows, key=lambda r: (r.get("country") or "", r.get("name") or ""))
+    if category:
+        rows = [r for r in rows if r.get("category") == category or category == "all"]
+    return sorted(rows, key=lambda r: (r.get("category") or "", r.get("country") or "", r.get("name") or ""))
 
 
 def get_agency(agency_id: str) -> dict[str, Any] | None:
@@ -96,32 +119,13 @@ def select_agency(agency_id: str) -> bool:
     return True
 
 
-def _parse_csv(text: str) -> list[dict[str, str]]:
-    reader = csv.DictReader(io.StringIO(text))
-    return [dict(row) for row in reader]
-
-
-def _parse_ics205(text: str) -> list[dict[str, str]]:
-    rows: list[dict[str, str]] = []
-    for line in text.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = re.split(r"\t|,|;", line)
-        if len(parts) < 4:
-            continue
-        rows.append({
-            "channel": parts[0].strip(),
-            "function": parts[1].strip() if len(parts) > 1 else "",
-            "rx_freq": parts[2].strip() if len(parts) > 2 else "",
-            "tx_freq": parts[3].strip() if len(parts) > 3 else "",
-            "mode": parts[4].strip() if len(parts) > 4 else "",
-            "remarks": parts[5].strip() if len(parts) > 5 else "",
-        })
-    return rows
-
-
-def import_format(agency_id: str, format_id: str, payload: str, filename: str = "") -> dict[str, Any]:
+def import_format(
+    agency_id: str,
+    format_id: str,
+    payload: str,
+    filename: str = "",
+    images: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     agency = get_agency(agency_id)
     if not agency:
         return {"ok": False, "error": "unknown_agency"}
@@ -132,60 +136,15 @@ def import_format(agency_id: str, format_id: str, payload: str, filename: str = 
             break
     if not fmt:
         return {"ok": False, "error": "unknown_format"}
-
-    ext = str(fmt.get("ext") or "csv").lower()
-    parsed: list[dict[str, Any]]
-    if ext == "json":
-        try:
-            doc = json.loads(payload)
-            parsed = doc if isinstance(doc, list) else [doc]
-        except json.JSONDecodeError as exc:
-            return {"ok": False, "error": f"invalid_json: {exc}"}
-    elif ext == "ics205":
-        parsed = _parse_ics205(payload)
-    else:
-        parsed = _parse_csv(payload)
-
-    if not parsed:
-        return {"ok": False, "error": "empty_import"}
-
-    IMPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    safe_name = re.sub(r"[^a-zA-Z0-9._-]+", "_", filename or f"{format_id}.import")[:80]
-    out_path = IMPORTS_DIR / f"{agency_id}__{format_id}__{stamp}__{safe_name}.json"
-    record = {
-        "agency_id": agency_id,
-        "format_id": format_id,
-        "format_name": fmt.get("name"),
-        "filename": filename,
-        "imported_at": _now(),
-        "row_count": len(parsed),
-        "rows": parsed[:500],
-    }
-    _save_json(out_path, record)
-
-    udoc = _user_doc()
-    imports = list(udoc.get("imports") or [])
-    imports.append({
-        "agency_id": agency_id,
-        "format_id": format_id,
-        "path": str(out_path),
-        "row_count": len(parsed),
-        "imported_at": record["imported_at"],
-        "filename": filename,
-    })
-    udoc["imports"] = imports[-200:]
-    udoc["updated"] = _now()
-    _save_json(USER_DB, udoc)
-
-    return {
-        "ok": True,
-        "agency_id": agency_id,
-        "format_id": format_id,
-        "row_count": len(parsed),
-        "path": str(out_path),
-        "preview": parsed[:8],
-    }
+    gi = _gov_intel()
+    return gi.import_and_merge(
+        agency_id,
+        format_id,
+        payload,
+        filename,
+        str(fmt.get("ext") or "csv"),
+        images,
+    )
 
 
 def panel_json() -> dict[str, Any]:
@@ -196,11 +155,14 @@ def panel_json() -> dict[str, Any]:
     udoc = _user_doc()
     regions = seed.get("regions") or []
     agencies = list_agencies()
+    gi = _gov_intel()
+    gov = gi.panel_json()
     return {
-        "motto": seed.get("motto") or "Police protection systems — local and surrounding import.",
+        "motto": seed.get("motto") or "Police, law, and government databases — merge-only dossier updates.",
         "schema": seed.get("schema"),
         "default_region": seed.get("default_region") or "us",
         "regions": regions,
+        "categories": seed.get("categories") or [],
         "agencies": agencies,
         "agency_count": len(agencies),
         "selected_id": sel_id,
@@ -208,6 +170,12 @@ def panel_json() -> dict[str, Any]:
         "surrounding": surrounding,
         "imports": (udoc.get("imports") or [])[-20:],
         "import_count": len(udoc.get("imports") or []),
+        "merge_only": True,
+        "gov_intel": gov,
+        "supported_formats": gov.get("supported_formats") or [],
+        "image_formats": gov.get("image_formats") or [],
+        "dossier_record_count": gov.get("record_count", 0),
+        "human_override_count": gov.get("human_override_count", 0),
         "updated": _now(),
     }
 
@@ -220,8 +188,12 @@ def main() -> int:
         print(json.dumps(panel_json(), ensure_ascii=False))
         return 0
     if cmd == "list":
-        region = sys.argv[2] if len(sys.argv) > 2 else None
-        print(json.dumps({"agencies": list_agencies(region)}, ensure_ascii=False))
+        region = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith("--") else None
+        category = None
+        for arg in sys.argv[2:]:
+            if arg.startswith("--category="):
+                category = arg.split("=", 1)[1]
+        print(json.dumps({"agencies": list_agencies(region, category)}, ensure_ascii=False))
         return 0
     if cmd == "select" and len(sys.argv) >= 3:
         ok = select_agency(sys.argv[2])
@@ -235,6 +207,18 @@ def main() -> int:
             payload = sys.stdin.read()
         filename = sys.argv[5] if len(sys.argv) > 5 else ""
         result = import_format(agency_id, format_id, payload, filename)
+        print(json.dumps(result, ensure_ascii=False))
+        return 0 if result.get("ok") else 1
+    if cmd == "import-json":
+        raw = sys.argv[2] if len(sys.argv) > 2 else "-"
+        doc = json.loads(raw if raw != "-" else sys.stdin.read())
+        result = import_format(
+            str(doc.get("agency_id") or ""),
+            str(doc.get("format_id") or ""),
+            str(doc.get("payload") or doc.get("data") or ""),
+            str(doc.get("filename") or ""),
+            doc.get("images"),
+        )
         print(json.dumps(result, ensure_ascii=False))
         return 0 if result.get("ok") else 1
     if cmd == "get" and len(sys.argv) >= 3:

@@ -403,6 +403,32 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/gov-intel":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "gov-intel-db.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/gov-intel/image":
+            rel = str(query.get("path", [""])[0]).strip()
+            if not rel:
+                self._send(400, "missing path", "text/plain")
+                return
+            gi_py = INSTALL_ROOT / "lib" / "gov-intel-db.py"
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("gov_intel_db", gi_py)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                got = mod.get_image(rel)
+                if not got:
+                    self._send(404, "not found", "text/plain")
+                    return
+                data, ctype = got
+                self._send(200, data, ctype)
+            except Exception:
+                self._send(404, "not found", "text/plain")
+            return
+
         if path == "/api/field":
             field_path = STATE_DIR / "field-snapshot.json"
             if field_path.is_file():
@@ -667,13 +693,31 @@ class Handler(BaseHTTPRequestHandler):
             format_id = str(body.get("format_id", "")).strip()
             payload_text = str(body.get("payload", body.get("data", "")))
             filename = str(body.get("filename", ""))[:120]
+            images = body.get("images") if isinstance(body.get("images"), list) else None
             if not agency_id or not format_id or not payload_text:
                 self._send(400, json.dumps({"ok": False, "error": "missing agency_id, format_id, or payload"}), "application/json")
                 return
-            args = ["import", agency_id, format_id, payload_text]
-            if filename:
-                args.append(filename)
-            result = _nexus_py_json(INSTALL_ROOT / "lib" / "police-agency-db.py", args)
+            import_doc = {
+                "agency_id": agency_id,
+                "format_id": format_id,
+                "payload": payload_text,
+                "filename": filename,
+                "images": images,
+            }
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            proc = subprocess.run(
+                [sys.executable, str(INSTALL_ROOT / "lib" / "police-agency-db.py"), "import-json", json.dumps(import_doc)],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                env=env,
+            )
+            try:
+                result = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                result = {"ok": False, "error": "import_failed"}
             self._send(200 if result.get("ok") else 400, json.dumps(result), "application/json")
             return
 

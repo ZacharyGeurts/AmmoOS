@@ -128,6 +128,16 @@
     .police-import-area {
       width: 100%; min-height: 88px; font-family: ui-monospace, monospace; font-size: 0.68rem;
     }
+    .gov-merge-banner {
+      padding: 8px 12px; margin-bottom: 10px; border-radius: 6px; font-size: 0.68rem;
+      border: 1px solid #2a5040; background: rgba(72, 200, 140, 0.08); color: #9fd4b8;
+    }
+    .police-stats {
+      display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; font-size: 0.68rem;
+    }
+    .police-stats strong { color: var(--ok); }
+    .police-file-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; font-size: 0.68rem; }
+    .police-file-row input[type="file"] { font-size: 0.64rem; max-width: 100%; }
     .surrounding-chip {
       display: inline-block; margin: 0 6px 6px 0; padding: 4px 10px; border-radius: 6px;
       font-size: 0.66rem; border: 1px solid #2a4060; color: var(--internet); cursor: pointer;
@@ -1105,7 +1115,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.0.0</h1>
+        <h1>NEXUS-Shield v5.1.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1125,7 +1135,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub, runs stealth_install (restarts nexus-genius), then reloads this browser tab automatically.">v5.0.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub, runs stealth_install (restarts nexus-genius), then reloads this browser tab automatically.">v5.1.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1297,8 +1307,17 @@
           <div id="field-rf-recent" style="margin-top:10px;font-size:0.68rem;"></div>
         </div>
         <div class="honor-card" style="grid-column: 1 / -1;">
-          <h4 data-tip="Major police protection systems worldwide — select agency, import local format packs (CSV, ICS-205, JSON). Michigan: MPSCS, Tri-County, Quad-State.">Police interop · global agencies</h4>
+          <h4 data-tip="Police, law enforcement, courts, corrections, emergency management, and government open-data — FBI, DEA, NCIC, DOJ, DHS, FEMA, Europol, RCMP, and Michigan MPSCS/Tri/Quad-State. Merge-only: never deletes existing dossier data.">Government · law · police databases</h4>
+          <div id="gov-merge-banner" class="gov-merge-banner" data-tip="Imports merge into gov-dossiers.json and human-dossier overrides. Existing fields are preserved; only empty or new values update.">
+            <strong>Merge-only</strong> — updates dossiers and images; never deletes or harms existing records.
+          </div>
+          <div id="police-dossier-stats" class="police-stats"></div>
           <div class="police-toolbar">
+            <label>Category
+              <select id="police-category-filter" data-tip="Filter by database type — police, federal law, government, courts, corrections, emergency, international.">
+                <option value="">All categories</option>
+              </select>
+            </label>
             <label>Region
               <select id="police-region-filter" data-tip="Filter agencies by region — US includes Michigan Tri/Quad-State packs.">
                 <option value="">All regions</option>
@@ -1310,15 +1329,23 @@
               </select>
             </label>
             <label>Format
-              <select id="police-format-select" data-tip="Known import format for the selected agency.">
+              <select id="police-format-select" data-tip="Known import format for the selected agency — CSV, TSV, JSON, NDJSON, ICS-205, or XML.">
                 <option value="">— format —</option>
               </select>
             </label>
-            <button type="button" id="police-import-btn" data-tip="Import pasted CSV/ICS-205/JSON into field drive.">Import format</button>
+            <button type="button" id="police-import-btn" data-tip="Merge import into field drive dossiers — page reloads automatically on success.">Import &amp; merge</button>
+          </div>
+          <div class="police-file-row">
+            <label>Data file
+              <input type="file" id="police-import-file" accept=".csv,.tsv,.json,.jsonl,.ndjson,.xml,.txt,.ics205" data-tip="Optional — choose CSV, TSV, JSON, NDJSON, ICS-205, or XML instead of pasting below." />
+            </label>
+            <label>Images
+              <input type="file" id="police-import-images" accept="image/*,.svg" multiple data-tip="Optional — attach photos, badges, wanted posters; stored on field drive and linked to dossiers." />
+            </label>
           </div>
           <div id="police-selected-meta" class="meta" style="font-size:0.68rem;margin-bottom:8px;"></div>
           <div id="police-surrounding" style="margin-bottom:10px;"></div>
-          <textarea id="police-import-payload" class="police-import-area" placeholder="Paste talkgroup CSV, ICS-205 radio plan, or JSON interop matrix…" data-tip="Example: channel,rx,tx,mode for ICS-205 or tg_decimal,alias,agency for MPSCS."></textarea>
+          <textarea id="police-import-payload" class="police-import-area" placeholder="Paste talkgroup CSV, ICS-205 radio plan, ORI roster, NCIC codes, or JSON interop matrix…" data-tip="Example: channel,rx,tx,mode for ICS-205; ori,agency,state for NCIC; tg_decimal,alias,agency for MPSCS."></textarea>
           <div id="police-imports-list" style="margin-top:10px;font-size:0.68rem;"></div>
         </div>
       </div>
@@ -3503,6 +3530,27 @@
     let policeAgencyCache = null;
     let fieldRfBound = false;
 
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(reader.error || new Error("read failed"));
+        reader.readAsText(file);
+      });
+    }
+
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const raw = String(reader.result || "");
+          resolve(raw.includes(",") ? raw.split(",", 2)[1] : raw);
+        };
+        reader.onerror = () => reject(reader.error || new Error("read failed"));
+        reader.readAsDataURL(file);
+      });
+    }
+
     function rfBurstChip(b) {
       const sev = (b.severity || "medium").toLowerCase();
       const kind = (b.kind || "burst").replace(/_/g, " ");
@@ -3532,6 +3580,9 @@
       };
       $("field-rf-shield-enabled")?.addEventListener("change", onShield);
       $("field-rf-auto-rfkill")?.addEventListener("change", onShield);
+      $("police-category-filter")?.addEventListener("change", () => {
+        if (policeAgencyCache) renderPoliceAgency(policeAgencyCache, true);
+      });
       $("police-region-filter")?.addEventListener("change", () => {
         if (policeAgencyCache) renderPoliceAgency(policeAgencyCache, true);
       });
@@ -3548,21 +3599,63 @@
       $("police-import-btn")?.addEventListener("click", async () => {
         const agency_id = $("police-agency-select")?.value;
         const format_id = $("police-format-select")?.value;
-        const payload = $("police-import-payload")?.value || "";
-        if (!agency_id || !format_id || !payload.trim()) {
-          alert("Select agency, format, and paste data.");
-          return;
+        let payload = $("police-import-payload")?.value || "";
+        let filename = "";
+        const dataFile = $("police-import-file")?.files?.[0];
+        const btn = $("police-import-btn");
+        try {
+          if (dataFile) {
+            payload = await readFileAsText(dataFile);
+            filename = dataFile.name || "";
+          }
+          if (!agency_id || !format_id || !payload.trim()) {
+            alert("Select agency, format, and paste data or choose a data file.");
+            return;
+          }
+          const images = [];
+          const imgFiles = $("police-import-images")?.files;
+          if (imgFiles?.length) {
+            for (const file of imgFiles) {
+              images.push({
+                filename: file.name || "image.jpg",
+                data_b64: await readFileAsBase64(file),
+              });
+            }
+          }
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = "Merging…";
+          }
+          const res = await fetch("/api/police-agencies/import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              agency_id,
+              format_id,
+              payload,
+              filename,
+              images: images.length ? images : undefined,
+            }),
+          });
+          const j = await res.json();
+          if (j.ok) {
+            $("police-import-payload").value = "";
+            if ($("police-import-file")) $("police-import-file").value = "";
+            if ($("police-import-images")) $("police-import-images").value = "";
+            if (j.reload_panel) {
+              location.reload();
+              return;
+            }
+            refresh();
+          } else alert(j.error || "Import failed");
+        } catch (err) {
+          alert(err?.message || "Import failed");
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Import & merge";
+          }
         }
-        const res = await fetch("/api/police-agencies/import", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ agency_id, format_id, payload }),
-        });
-        const j = await res.json();
-        if (j.ok) {
-          $("police-import-payload").value = "";
-          refresh();
-        } else alert(j.error || "Import failed");
       });
     }
 
@@ -3627,7 +3720,18 @@
       if (!pa) return;
       policeAgencyCache = pa;
       bindFieldRfControls();
+      const categoryFilter = $("police-category-filter")?.value || "";
       const regionFilter = $("police-region-filter")?.value || "";
+      const catEl = $("police-category-filter");
+      if (catEl && !catEl.dataset.filled) {
+        catEl.dataset.filled = "1";
+        (pa.categories || []).forEach((c) => {
+          const opt = document.createElement("option");
+          opt.value = c.id;
+          opt.textContent = c.label || c.id;
+          catEl.appendChild(opt);
+        });
+      }
       const regEl = $("police-region-filter");
       if (regEl && !regEl.dataset.filled) {
         regEl.dataset.filled = "1";
@@ -3638,7 +3742,23 @@
           regEl.appendChild(opt);
         });
       }
-      const agencies = (pa.agencies || []).filter((a) => !regionFilter || a.region === regionFilter);
+      const statsEl = $("police-dossier-stats");
+      if (statsEl) {
+        const fmts = (pa.supported_formats || []).join(", ") || "csv, tsv, json, ndjson, ics205, xml";
+        const imgs = (pa.image_formats || []).map((x) => x.replace(/^\./, "")).join(", ") || "jpg, png, webp";
+        statsEl.innerHTML = [
+          `<span><strong>${pa.dossier_record_count ?? pa.gov_intel?.record_count ?? 0}</strong> dossier records</span>`,
+          `<span><strong>${pa.human_override_count ?? pa.gov_intel?.human_override_count ?? 0}</strong> human dossier merges</span>`,
+          `<span>${pa.agency_count || 0} agencies</span>`,
+          `<span>Formats: ${esc(fmts)}</span>`,
+          `<span>Images: ${esc(imgs)}</span>`,
+        ].join("");
+      }
+      const agencies = (pa.agencies || []).filter((a) => {
+        if (categoryFilter && a.category !== categoryFilter) return false;
+        if (regionFilter && a.region !== regionFilter) return false;
+        return true;
+      });
       const selEl = $("police-agency-select");
       const prev = pa.selected_id || selEl?.value || "";
       if (selEl) {
@@ -3656,8 +3776,8 @@
       const meta = $("police-selected-meta");
       if (meta) {
         meta.textContent = selected
-          ? `${selected.name} · ${selected.system || "—"} · ${selected.coverage || ""}`
-          : `${pa.agency_count || 0} agencies loaded — select yours for local/surrounding import.`;
+          ? `${selected.name} · ${selected.category || "agency"} · ${selected.system || "—"} · ${selected.coverage || ""}`
+          : `${pa.agency_count || 0} agencies loaded — select yours for merge-only import.`;
       }
       const surEl = $("police-surrounding");
       const surrounding = pa.surrounding || [];
@@ -3685,10 +3805,16 @@
       const imports = pa.imports || [];
       if (impEl) {
         impEl.innerHTML = imports.length
-          ? `<strong>Imports</strong><ul style="margin:6px 0;padding-left:1.2rem;">${imports.slice().reverse().map((i) =>
-              `<li>${esc(i.agency_id)} · ${esc(i.format_id)} · ${i.row_count} rows · ${esc(i.imported_at || "")}</li>`
+          ? `<strong>Recent merges</strong><ul style="margin:6px 0;padding-left:1.2rem;">${imports.slice().reverse().map((i) =>
+              `<li>${esc(i.agency_id)} · ${esc(i.format_id)} · ${i.row_count} rows` +
+              `${i.merged != null ? ` · ${i.merged} merged` : ""}` +
+              `${i.created != null ? ` · ${i.created} new` : ""}` +
+              `${i.human_merged ? ` · ${i.human_merged} IP dossiers` : ""}` +
+              `${i.images ? ` · ${i.images} images` : ""}` +
+              `${i.filename ? ` · ${esc(i.filename)}` : ""}` +
+              ` · ${esc(i.imported_at || "")}</li>`
             ).join("")}</ul>`
-          : '<span class="meta">No imports yet — paste a format above.</span>';
+          : '<span class="meta">No imports yet — paste data or choose a file above.</span>';
       }
       if (regionOnly) return;
     }

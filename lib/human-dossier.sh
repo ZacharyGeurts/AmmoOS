@@ -13,8 +13,45 @@ from pathlib import Path
 state = Path(os.environ["NEXUS_STATE_DIR"])
 src = Path(os.environ["NEXUS_INSTALL_ROOT"]) / "data" / "human-dossier-kill-orders.json"
 dst = state / "human-dossier.json"
+def merge_dict(a, b):
+    if not isinstance(a, dict):
+        return dict(b) if isinstance(b, dict) else b
+    if not isinstance(b, dict):
+        return a
+    out = dict(a)
+    for k, v in b.items():
+        if k in out and isinstance(out[k], dict) and isinstance(v, dict):
+            out[k] = merge_dict(out[k], v)
+        elif k in out and isinstance(out[k], list) and isinstance(v, list):
+            seen = {json.dumps(x, sort_keys=True, default=str) for x in out[k]}
+            for item in v:
+                key = json.dumps(item, sort_keys=True, default=str)
+                if key not in seen:
+                    out[k].append(item)
+                    seen.add(key)
+        elif v is not None and v != "":
+            out[k] = v
+    return out
+
 doc = json.loads(src.read_text(encoding="utf-8"))
-ips = doc.get("ips") or []
+ips = list(doc.get("ips") or [])
+overrides_path = state / "human-dossier-overrides.json"
+if overrides_path.is_file():
+    try:
+        ov = json.loads(overrides_path.read_text(encoding="utf-8"))
+        omap = ov.get("ips") or {}
+        if isinstance(omap, dict):
+            by_ip = {str(r.get("ip")): r for r in ips if r.get("ip")}
+            for ip, patch in omap.items():
+                if ip in by_ip:
+                    by_ip[ip] = merge_dict(by_ip[ip], patch)
+                else:
+                    by_ip[ip] = dict(patch)
+            ips = list(by_ip.values())
+            doc["gov_merge_applied"] = ov.get("updated")
+    except (OSError, json.JSONDecodeError):
+        pass
+doc["ips"] = ips
 doc["ip_count"] = len(ips)
 doc["malware_counts"] = {}
 for row in ips:

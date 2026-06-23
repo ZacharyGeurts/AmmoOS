@@ -460,7 +460,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.0\.0' "$panel"
+  grep -q 'v5\.1\.0' "$panel"
 }
 
 test_field_rf_module() {
@@ -473,11 +473,30 @@ test_field_rf_module() {
     python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'internal_field'
 }
 
+test_gov_intel_module() {
+  [[ -f "${ROOT}/lib/gov-intel-db.py" ]]
+  [[ -f "${ROOT}/data/gov-databases-seed.json" ]]
+  grep -q 'us_fbi' "${ROOT}/data/gov-databases-seed.json"
+  grep -q '/api/gov-intel' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'gov_intel' "${ROOT}/lib/threat-panel.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/gov-intel-db.py" json | grep -q '"merge_only": true'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"us_fbi","format_id":"fbi_ori","payload":"ori,agency,state\nMI0000001,Test Agency,MI","filename":"test.csv"}')" \
+    | grep -q '"ok": true'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"us_fbi","format_id":"fbi_ori","payload":"ori,agency,state\nMI0000001,Test Agency Updated,MI","filename":"test2.csv"}')" \
+    | grep -q '"merged":'
+  [[ -f "${NEXUS_STATE_DIR}/gov-dossiers.json" ]]
+}
+
 test_police_agency_module() {
   [[ -f "${ROOT}/lib/police-agency-db.py" ]]
   [[ -f "${ROOT}/data/police-agencies-seed.json" ]]
+  [[ -f "${ROOT}/data/gov-databases-seed.json" ]]
   grep -q 'us_mi_tri_county' "${ROOT}/data/police-agencies-seed.json"
   grep -q 'us_mi_quad_state' "${ROOT}/data/police-agencies-seed.json"
+  grep -q 'us_fbi' "${ROOT}/data/gov-databases-seed.json"
   grep -q '/api/police-agencies' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'police_agency' "${ROOT}/lib/threat-panel.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -485,8 +504,10 @@ test_police_agency_module() {
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/police-agency-db.py" json | grep -q 'us_mi_mpscs'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/police-agency-db.py" json | grep -q 'dossier_record_count'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/police-agency-db.py" import us_mi_tri_county tri_county_channel "channel,rx_mhz,tx_mhz,mode,notes
-1,460.100,460.100,FM,test" test.csv | grep -q '"ok": true'
+1,460.100,460.100,FM,test" test.csv | grep -q '"merge_only": true'
 }
 
 test_panel_field_rf_ui() {
@@ -495,6 +516,11 @@ test_panel_field_rf_ui() {
   grep -q 'renderFieldRF' "$panel"
   grep -q 'renderPoliceAgency' "$panel"
   grep -q 'police-agency-select' "$panel"
+  grep -q 'police-category-filter' "$panel"
+  grep -q 'police-import-file' "$panel"
+  grep -q 'police-import-images' "$panel"
+  grep -q 'gov-merge-banner' "$panel"
+  grep -q 'location.reload' "$panel"
   grep -q 'field-rf-shield-enabled' "$panel"
   grep -q 'view-field-rf' "$panel"
   grep -q 'RF_BURST' "$panel"
@@ -1012,6 +1038,7 @@ test_host_map_trash_module() {
 run_test "honorability module" test_honorability_module
 run_test "panel honor UI" test_panel_honor_ui
 run_test "field rf sentinel module" test_field_rf_module
+run_test "gov intel module" test_gov_intel_module
 run_test "police agency module" test_police_agency_module
 run_test "panel field rf UI" test_panel_field_rf_ui
 run_test "field command module" test_field_command_module
