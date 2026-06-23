@@ -163,6 +163,40 @@ tcp ESTAB 0 0 10.0.0.5:44444 104.18.29.234:443 users:(("firefox",pid=1,fd=3))
 EOF
 }
 
+test_gatekeeper_youtube() {
+  command -v python3 >/dev/null 2>&1 || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -qE '"verdict":\s*"USER_OK"'
+tcp ESTAB 0 0 10.0.0.5:52444 172.217.14.206:443 users:(("firefox",pid=1,fd=3))
+EOF
+}
+
+test_gatekeeper_email() {
+  command -v python3 >/dev/null 2>&1 || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -qE '"verdict":\s*"(USER_OK|EPHEMERAL)"'
+tcp ESTAB 0 0 10.0.0.5:38444 142.250.80.46:993 users:(("thunderbird",pid=2,fd=4))
+EOF
+}
+
+test_consumer_defaults() {
+  nexus_settings_apply_consumer_defaults
+  [[ "$(nexus_settings_get NEXUS_PARANOIA_BLOCK)" == "0" ]]
+  [[ "$(nexus_settings_get NEXUS_FIREWALL_AUTO_BLOCK)" == "0" ]]
+  [[ "$(nexus_settings_get NEXUS_AUTOSANITIZE)" == "0" ]]
+  [[ "$(nexus_settings_get NEXUS_ADBLOCK)" == "0" ]]
+  [[ "$(nexus_settings_get NEXUS_CONNECTION_GATEKEEPER)" == "1" ]]
+  [[ "$(nexus_settings_get NEXUS_SHADOW_WATCH)" == "0" ]]
+  [[ "$(nexus_settings_get NEXUS_ENTROPY_WATCH)" == "0" ]]
+  [[ "$(nexus_settings_get NEXUS_PRIVACY_GUARD)" == "0" ]]
+}
+
+test_panel_v22_axis_layout() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'axis-grid-prominent' "$panel"
+  grep -q 'renderSuggestionBox(sug, v, c.scores)' "$panel"
+  grep -q 'renderAxisBars(scores)' "$panel"
+  ! grep -q 'score-meters' "$panel"
+}
+
 test_firewall_trust_roundtrip() {
   nexus_firewall_trust_init
   nexus_firewall_authorize_ip "203.0.113.50" out "test-peer" "run-tests"
@@ -239,6 +273,10 @@ run_test "threat vector catalog" test_threat_vector_catalog
 run_test "packet oracle parse" test_packet_parse_line
 run_test "connection gatekeeper json" test_gatekeeper_json
 run_test "connection gatekeeper suggestions" test_gatekeeper_suggestions
+run_test "connection gatekeeper youtube" test_gatekeeper_youtube
+run_test "connection gatekeeper email" test_gatekeeper_email
+run_test "consumer everyday defaults" test_consumer_defaults
+run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout
 run_test "firewall trust authorize" test_firewall_trust_roundtrip
 run_test "threat panel json publish" test_threat_panel_json
 run_test "nexus settings roundtrip" test_nexus_settings_roundtrip

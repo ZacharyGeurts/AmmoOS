@@ -36,6 +36,12 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.2.0 — everyday mode
+
+- **Auto settings on install** — everyday profile for email, YouTube, and browsing (no auto-block, light watchers)
+- **10-bar score layout** — all axis bars visible per connection; trust/concern as compact chips (no fat twin meters)
+- **Consumer whitelist** — Thunderbird, Evolution, Chrome, Slack, Zoom, Spotify, and more pre-trusted
+
 ## v2.1.4 — licensing clarity
 
 - **NEXUS-Shield = MIT** called out in README, panel footer, install output, and [Licensing wiki](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Licensing)

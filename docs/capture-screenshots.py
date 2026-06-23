@@ -35,6 +35,8 @@ def main() -> int:
         page.wait_for_timeout(2000)
         for filename, view in VIEWS:
             page.click(f'nav.menu button[data-view="{view}"]')
+            if view == "monitor":
+                page.wait_for_selector(".axis-grid-prominent", timeout=15000)
             page.wait_for_timeout(1500 if view != "logs" else 2500)
             page.screenshot(path=str(OUT / filename), full_page=False)
             print(f"wrote {OUT / filename}")

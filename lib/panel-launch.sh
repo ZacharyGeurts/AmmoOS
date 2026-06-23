@@ -62,7 +62,7 @@ nexus_panel_install_desktop() {
   install -m 755 "${root}/nexus.sh" /usr/local/bin/nexus.sh 2>/dev/null || true
   cat >"${apps_dir}/nexus-shield.desktop" <<EOF
 [Desktop Entry]
-Version=2.1.4
+Version=2.2.0
 Type=Application
 Name=NEXUS-Shield
 GenericName=Network Gatekeeper

@@ -20,13 +20,19 @@ TRUSTED_TSV = STATE / "firewall-trusted.tsv"
 THREATS_TSV = STATE / "threat-vectors.tsv"
 
 BROWSER_PROCS = frozenset({
-    "firefox", "chrome", "chromium", "brave", "vivaldi", "opera",
+    "firefox", "chrome", "chromium", "brave", "brave-browser", "vivaldi", "opera",
     "msedge", "waterfox", "librewolf", "floorp", "thorium",
+    "google-chrome", "google-chrome-stable",
 })
-MEDIA_PROCS = BROWSER_PROCS | frozenset({
+EMAIL_PROCS = frozenset({
+    "thunderbird", "betterbird", "evolution", "geary", "mailspring", "kmail",
+    "sylpheed", "claws-mail", "slack", "zoom", "zoomclient", "teams", "teams-for-linux",
+})
+MEDIA_PROCS = BROWSER_PROCS | EMAIL_PROCS | frozenset({
     "vlc", "mpv", "totem", "spotify", "discord", "obs", "ffmpeg",
     "youtube", "celluloid", "streamlink", "grok",
 })
+CONSUMER_PROCS = BROWSER_PROCS | EMAIL_PROCS | MEDIA_PROCS
 SEARCH_CDN_PREFIXES = (
     "34.", "35.", "142.250.", "172.217.", "216.58.",  # Google
     "13.", "20.", "40.", "52.", "104.",  # Azure/CF misc
@@ -157,6 +163,8 @@ def _ip_class(ip: str) -> str:
 def _axis_user_browser(proc: str) -> tuple[int, str]:
     if proc in BROWSER_PROCS:
         return 9, f"browser:{proc}"
+    if proc in EMAIL_PROCS:
+        return 8, f"email:{proc}"
     if proc in MEDIA_PROCS:
         return 7, f"media_app:{proc}"
     if proc in ("", "pid-unknown"):
@@ -206,7 +214,7 @@ def _axis_search_ephemeral(key: str, history: dict, ip_class: str) -> tuple[int,
 
 
 def _axis_bandwidth_abuse(proc: str, ip_class: str, rport: str) -> tuple[int, str]:
-    if proc in BROWSER_PROCS | MEDIA_PROCS:
+    if proc in CONSUMER_PROCS:
         return 1, "user_app_expected"
     if ip_class == "public_unknown" and rport == "443":
         return 6, "unknown_bulk_https"
@@ -216,7 +224,7 @@ def _axis_bandwidth_abuse(proc: str, ip_class: str, rport: str) -> tuple[int, st
 
 
 def _axis_stream_theft(proc: str, rport: str, lip: str) -> tuple[int, str]:
-    if proc in BROWSER_PROCS | MEDIA_PROCS:
+    if proc in CONSUMER_PROCS:
         return 0, "user_media_path"
     if rport in ("1935", "554", "8554", "8081", "9000"):
         return 10, "non_browser_stream_port"
@@ -242,6 +250,8 @@ def _axis_beacon(proc: str, key: str, history: dict) -> tuple[int, str]:
 def _axis_process_trust(proc: str) -> tuple[int, str]:
     if proc in BROWSER_PROCS:
         return 10, "signed_browser"
+    if proc in EMAIL_PROCS:
+        return 9, "known_email"
     if proc in MEDIA_PROCS:
         return 8, "known_media"
     if "/tmp/" in proc or "/dev/shm/" in proc or proc.startswith("."):
@@ -300,7 +310,9 @@ def _build_suggestion(
     proc_name = proc or "unknown app"
 
     ub = int(scores.get("user_browser", 0))
-    if ub >= 7:
+    if proc in EMAIL_PROCS:
+        friendly.append(f"{proc_name} is a mail or chat app — everyday email and messaging ({ub}/10).")
+    elif ub >= 7:
         friendly.append(f"{proc_name} looks like a browser or media app you opened ({ub}/10).")
     elif ub <= 3:
         unfriendly.append(

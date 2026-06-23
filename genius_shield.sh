@@ -87,6 +87,11 @@ declare -f nexus_firewall_flush_blocks >/dev/null 2>&1 && nexus_firewall_flush_b
 source "${NEXUS_INSTALL_ROOT}/lib/panel-launch.sh"
 nexus_panel_install_desktop
 
+# Everyday profile — email/YouTube/browsing defaults (no auto-block, light watchers)
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh"
+nexus_settings_apply_consumer_defaults
+
 cat >/etc/systemd/system/nexus-genius.service <<'EOF'
 [Unit]
 Description=NEXUS-Shield Genius Layer (ultra-stealth, event-driven)
@@ -143,3 +148,4 @@ fi
 echo "NEXUS-Shield v${NEXUS_VERSION:-2.0.1} active — panel https://127.0.0.1:9477/ (browser opens on startup)."
 echo 'Start menu: NEXUS-Shield'
 echo 'License: NEXUS-Shield = MIT. AMOURANTHRTX (Field Die) = GPL v3 or commercial — not MIT-free.'
+echo 'Profile: Everyday defaults applied — email, YouTube, browsing; no auto-block.'

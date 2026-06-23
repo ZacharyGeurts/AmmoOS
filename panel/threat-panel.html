@@ -156,14 +156,28 @@
     .intent-row.verdict-SUSPICIOUS { border-left: 4px solid var(--gold); }
     .intent-row.verdict-HARM_CANDIDATE { border-left: 4px solid var(--threat); }
     .intent-row.verdict-MONITOR { border-left: 4px solid var(--muted); }
-    .score-meters { display: flex; gap: 14px; margin: 0; flex-wrap: wrap; }
-    .meter { flex: 1; min-width: 130px; }
-    .meter label { display: block; font-size: 0.62rem; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-    .meter bar { height: 6px; background: #1a2030; border-radius: 4px; overflow: hidden; }
-    .meter bar span { display: block; height: 100%; border-radius: 4px; transition: width 0.3s ease; }
-    .meter.trust bar span { background: linear-gradient(90deg, #2a8050, var(--ok)); }
-    .meter.concern bar span { background: linear-gradient(90deg, #803040, var(--threat)); }
-    .meter .val { font-size: 0.65rem; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+    .score-chips {
+      display: block; margin-top: 6px; font-size: 0.68rem; color: var(--muted); letter-spacing: 0.02em;
+    }
+    .score-chips .trust-chip { color: var(--ok); }
+    .score-chips .concern-chip { color: var(--threat); }
+    .axis-breakdown { margin: 0; }
+    .axis-breakdown-title {
+      margin: 0 0 6px; font-size: 0.62rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .axis-grid-prominent {
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .axis-grid-prominent .axis {
+      grid-template-columns: minmax(88px, 118px) minmax(0, 1fr) 24px;
+      gap: 6px 8px;
+    }
+    .axis-grid-prominent .axis label {
+      font-size: 0.6rem; white-space: normal; line-height: 1.25;
+      overflow: visible; text-overflow: unset;
+    }
+    .axis-grid-prominent .axis bar { height: 7px; border-radius: 4px; }
     .suggestion-box {
       margin: 0; padding: 12px 14px; border-radius: 8px;
       background: #0e1420; border: 1px solid #243048;
@@ -422,7 +436,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.1.4</h1>
+        <h1>NEXUS-Shield v2.2.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -858,7 +872,7 @@
       },
     };
 
-    function renderSuggestionBox(sug, verdict) {
+    function renderSuggestionBox(sug, verdict, scores) {
       if (!sug) return "";
       const friendly = sug.friendly_signals || [];
       const unfriendly = sug.unfriendly_signals || [];
@@ -871,12 +885,13 @@
           <div class="signal-col unfriendly"><h4>Why we're cautious</h4><ul>${unfriendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
         </div>`;
       }
+      const axisBars = scores
+        ? `<div class="axis-breakdown"><div class="axis-breakdown-title">10 checks per connection</div><div class="axis-grid axis-grid-prominent">${renderAxisBars(scores)}</div></div>`
+        : "";
       return `<div class="suggestion-box verdict-${verdict}">
-        <div class="summary"><strong>NEXUS suggests:</strong> ${esc(sug.summary || "")}</div>
-        <div class="score-meters">
-          <div class="meter trust"><label>Trust score</label><bar><span style="width:${trustPct}%"></span></bar><div class="val">${trustPct}% — higher = more like normal you</div></div>
-          <div class="meter concern"><label>Concern score</label><bar><span style="width:${concernPct}%"></span></bar><div class="val">${concernPct}% — higher = more reason to review</div></div>
-        </div>
+        <div class="summary"><strong>NEXUS suggests:</strong> ${esc(sug.summary || "")}
+          <span class="score-chips"><span class="trust-chip">Trust ${trustPct}%</span> · <span class="concern-chip">Concern ${concernPct}%</span></span></div>
+        ${axisBars}
         <div class="action"><strong>What to do:</strong> ${esc(sug.action || "")}</div>
         ${signals}
       </div>`;
@@ -1409,12 +1424,8 @@
               <span class="proc" title="Program using this connection">${c.process || "unknown app"}</span>
               <span class="meta">${c.ip_class || ""}</span>
             </div>
-            ${renderSuggestionBox(sug, v)}
-            <details class="axis-details">
-              <summary>See score breakdown (10 checks per connection)</summary>
-              <div class="intent-reason">${c.reason || ""}</div>
-              <div class="axis-grid">${renderAxisBars(c.scores)}</div>
-            </details>
+            ${renderSuggestionBox(sug, v, c.scores)}
+            ${c.reason ? `<details class="axis-details"><summary>Technical notes</summary><div class="intent-reason">${esc(c.reason)}</div></details>` : ""}
             <div class="intent-actions">${actions.join("")}</div>
           </div>`;
         }).join("");

@@ -70,6 +70,34 @@ nexus_settings_set() {
   return 0
 }
 
+# Everyday profile — email, YouTube, browsing; no auto-block, light watchers.
+nexus_settings_apply_consumer_defaults() {
+  nexus_settings_init
+  local kv key val
+  for kv in \
+    NEXUS_PARANOIA_BLOCK=0 \
+    NEXUS_PARANOIA_MODE=1 \
+    NEXUS_FIREWALL_AUTO_BLOCK=0 \
+    NEXUS_AUTOSANITIZE=0 \
+    NEXUS_ADBLOCK=0 \
+    NEXUS_PANEL_AUTO_OPEN=1 \
+    NEXUS_CONNECTION_GATEKEEPER=1 \
+    NEXUS_PACKET_ORACLE=1 \
+    NEXUS_SHADOW_WATCH=0 \
+    NEXUS_ENTROPY_WATCH=0 \
+    NEXUS_BEHAVIOR_WATCH=1 \
+    NEXUS_PRIVACY_GUARD=0 \
+    NEXUS_SHUTDOWN_GUARD=1 \
+    NEXUS_HOSTESS7_CORROBORATE=0
+  do
+    key="${kv%%=*}"
+    val="${kv#*=}"
+    nexus_settings_set "$key" "$val" || return 1
+  done
+  nexus_log "INFO" "nexus-settings" "CONSUMER_DEFAULTS applied (everyday profile)"
+  return 0
+}
+
 nexus_settings_json() {
   nexus_settings_init
   local key val first=1

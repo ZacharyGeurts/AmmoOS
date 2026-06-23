@@ -23,6 +23,18 @@ NEXUS_DEVICE_WHITELIST_COMM=(
   firefox
   chrome
   chromium
+  google-chrome
+  google-chrome-stable
+  brave
+  brave-browser
+  thunderbird
+  betterbird
+  evolution
+  geary
+  mailspring
+  slack
+  zoom
+  teams
   code
   cursor
   steam
