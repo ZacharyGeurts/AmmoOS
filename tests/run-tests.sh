@@ -460,7 +460,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.2\.0' "$panel"
+  grep -q 'v5\.3\.0' "$panel"
 }
 
 test_field_rf_module() {
@@ -471,6 +471,24 @@ test_field_rf_module() {
   grep -q 'RF_BURST' "${ROOT}/lib/threat-vectors.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'internal_field'
+}
+
+test_program_tags_module() {
+  [[ -f "${ROOT}/lib/program-tags-db.py" ]]
+  [[ -f "${ROOT}/data/obscure-programs-seed.json" ]]
+  grep -q 'mkultra' "${ROOT}/data/obscure-programs-seed.json"
+  grep -q 'project_monarch' "${ROOT}/data/obscure-programs-seed.json"
+  grep -q '/api/program-tags' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'program_tags' "${ROOT}/lib/threat-panel.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/program-tags-db.py" json | grep -q 'mkultra'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/program-tags-db.py" get mkultra | grep -q 'Project Monarch'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/program-tags-db.py" apply-json "$(printf '%s' '{"tag_ids":["mkultra","project_monarch"],"coords":"45.5048,-73.5772","place":"Allan Memorial Institute","notes":"MKUltra Cameron site"}')" \
+    | grep -q '"ok": true'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/police-agency-db.py" json | grep -q 'program_count'
 }
 
 test_gov_intel_module() {
@@ -529,6 +547,9 @@ test_panel_field_rf_ui() {
   grep -q 'police-import-images' "$panel"
   grep -q 'gov-merge-banner' "$panel"
   grep -q 'intelligence databases' "$panel"
+  grep -q 'program-tag-select' "$panel"
+  grep -q 'Obscure programs' "$panel"
+  grep -q 'program-tag-desc' "$panel"
   grep -q 'location.reload' "$panel"
   grep -q 'field-rf-shield-enabled' "$panel"
   grep -q 'view-field-rf' "$panel"
@@ -1047,6 +1068,7 @@ test_host_map_trash_module() {
 run_test "honorability module" test_honorability_module
 run_test "panel honor UI" test_panel_honor_ui
 run_test "field rf sentinel module" test_field_rf_module
+run_test "program tags module" test_program_tags_module
 run_test "gov intel module" test_gov_intel_module
 run_test "police agency module" test_police_agency_module
 run_test "panel field rf UI" test_panel_field_rf_ui

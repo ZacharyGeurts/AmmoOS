@@ -138,6 +138,29 @@
     .police-stats strong { color: var(--ok); }
     .police-file-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; font-size: 0.68rem; }
     .police-file-row input[type="file"] { font-size: 0.64rem; max-width: 100%; }
+    .program-tag-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .program-tag-toolbar input, .program-tag-toolbar select, .program-tag-toolbar textarea {
+      background: #0d1524; border: 1px solid var(--border); color: var(--text);
+      padding: 7px 10px; border-radius: 6px; font-size: 0.72rem;
+    }
+    .program-tag-desc {
+      padding: 10px 12px; margin: 8px 0 12px; border-radius: 6px; font-size: 0.68rem; line-height: 1.45;
+      border: 1px solid #3a3050; background: rgba(120, 90, 200, 0.08); color: #c8b8e8;
+      min-height: 48px;
+    }
+    .program-tag-meta { font-size: 0.62rem; color: var(--muted); margin-bottom: 6px; }
+    .program-subtags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .program-subtag-chip {
+      padding: 3px 10px; border-radius: 999px; font-size: 0.62rem; cursor: pointer;
+      border: 1px solid #4a3868; background: rgba(140, 100, 220, 0.1); color: #d8c8ff;
+    }
+    .program-subtag-chip:hover, .program-subtag-chip.active { border-color: #8a6ad8; background: rgba(140, 100, 220, 0.22); }
+    .program-location-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px;
+    }
+    .program-location-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 0.64rem; }
+    .program-recent-tags { font-size: 0.64rem; margin-top: 10px; }
+    .program-recent-tags li { margin: 4px 0; }
     .surrounding-chip {
       display: inline-block; margin: 0 6px 6px 0; padding: 4px 10px; border-radius: 6px;
       font-size: 0.66rem; border: 1px solid #2a4060; color: var(--internet); cursor: pointer;
@@ -1115,7 +1138,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.2.0</h1>
+        <h1>NEXUS-Shield v5.3.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1135,7 +1158,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub, runs stealth_install (restarts nexus-genius), then reloads this browser tab automatically.">v5.2.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub, runs stealth_install (restarts nexus-genius), then reloads this browser tab automatically.">v5.3.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1347,6 +1370,54 @@
           <div id="police-surrounding" style="margin-bottom:10px;"></div>
           <textarea id="police-import-payload" class="police-import-area" placeholder="Paste talkgroup CSV, ICS-205 radio plan, ORI roster, NCIC codes, or JSON interop matrix…" data-tip="Example: channel,rx,tx,mode for ICS-205; ori,agency,state for NCIC; tg_decimal,alias,agency for MPSCS."></textarea>
           <div id="police-imports-list" style="margin-top:10px;font-size:0.68rem;"></div>
+        </div>
+        <div class="honor-card" style="grid-column: 1 / -1;">
+          <h4 data-tip="MKUltra, Project Monarch, and obscure covert program tags with known descriptions. Pin precise locations — paste coords (lat,lon), place name, or address. Merge-only.">Obscure programs · tags · precise locations</h4>
+          <div class="program-tag-toolbar">
+            <label>Search
+              <input type="search" id="program-tag-search" placeholder="MKUltra, Monarch, Paperclip…" data-tip="Filter program list by name, alias, or description keyword." />
+            </label>
+            <label>Program / tag
+              <select id="program-tag-select" data-tip="Select a known program or obscure tag — description appears below.">
+                <option value="">— select program —</option>
+              </select>
+            </label>
+            <button type="button" id="program-tag-apply-btn" data-tip="Merge tag + location into dossiers on field drive. Page reloads on success.">Tag location</button>
+          </div>
+          <div id="program-tag-meta" class="program-tag-meta"></div>
+          <div id="program-tag-desc" class="program-tag-desc" data-tip="What is known about this program — era, status, declassified vs alleged.">Select a program to see what is known.</div>
+          <div id="program-subtags" class="program-subtags"></div>
+          <div class="program-location-grid">
+            <label>Quick coords
+              <input type="text" id="program-coords" placeholder="45.5048,-73.5772" data-tip="Paste lat,lon — e.g. Allan Memorial Institute, Montreal." />
+            </label>
+            <label>Lat
+              <input type="text" id="program-lat" placeholder="Latitude" />
+            </label>
+            <label>Lon
+              <input type="text" id="program-lon" placeholder="Longitude" />
+            </label>
+            <label>Place name
+              <input type="text" id="program-place" placeholder="Allan Memorial Institute" />
+            </label>
+            <label>Address
+              <input type="text" id="program-address" placeholder="1025 Pine Ave, Montreal" />
+            </label>
+            <label>City
+              <input type="text" id="program-city" placeholder="City" />
+            </label>
+            <label>Label
+              <input type="text" id="program-label" placeholder="MKUltra site" />
+            </label>
+          </div>
+          <label style="display:block;font-size:0.64rem;margin-bottom:8px;">Notes
+            <textarea id="program-notes" rows="2" style="width:100%;margin-top:4px;font-size:0.68rem;" placeholder="Operator notes — merge-only, appended to dossier."></textarea>
+          </label>
+          <label style="display:block;font-size:0.64rem;margin-bottom:8px;">Dossier record key (optional)
+            <input type="text" id="program-record-key" style="width:100%;margin-top:4px;" placeholder="Leave blank to create location-only dossier pin" data-tip="Link tags to an existing gov-dossier record_key, or leave empty for a new location pin." />
+          </label>
+          <div id="program-tag-stats" class="police-stats" style="margin-top:8px;"></div>
+          <div id="program-recent-tags" class="program-recent-tags"></div>
         </div>
       </div>
       <div class="honor-crossrefs">
@@ -3529,6 +3600,9 @@
 
     let policeAgencyCache = null;
     let fieldRfBound = false;
+    let programTagsCache = null;
+    let programTagsBound = false;
+    let selectedProgramTagIds = [];
 
     function readFileAsText(file) {
       return new Promise((resolve, reject) => {
@@ -3716,10 +3790,193 @@
       }
     }
 
+    function programStatusLabel(status) {
+      const map = {
+        declassified: "Declassified",
+        declassified_partial: "Partially declassified",
+        documented: "Documented",
+        disputed_unconfirmed: "Disputed / unconfirmed",
+        alleged: "Alleged",
+        operator_tag: "Operator tag",
+      };
+      return map[status] || status || "—";
+    }
+
+    function showProgramDescription(prog) {
+      const metaEl = $("program-tag-meta");
+      const descEl = $("program-tag-desc");
+      const subEl = $("program-subtags");
+      if (!prog) {
+        if (metaEl) metaEl.textContent = "";
+        if (descEl) descEl.textContent = "Select a program to see what is known.";
+        if (subEl) subEl.innerHTML = "";
+        return;
+      }
+      const aliases = (prog.aliases || []).slice(0, 6).join(" · ");
+      if (metaEl) {
+        metaEl.innerHTML = [
+          prog.parent_id ? `Sub-project of <strong>${esc(prog.parent_id)}</strong>` : "Top-level program",
+          prog.era ? `Era: ${esc(prog.era)}` : "",
+          `Status: ${esc(programStatusLabel(prog.status))}`,
+          aliases ? `Also known as: ${esc(aliases)}` : "",
+        ].filter(Boolean).join(" · ");
+      }
+      if (descEl) descEl.textContent = prog.description || "No description on file.";
+      if (subEl) {
+        const kids = (programTagsCache?.programs || []).filter((p) => p.parent_id === prog.id);
+        subEl.innerHTML = kids.length
+          ? kids.map((c) =>
+              `<button type="button" class="program-subtag-chip${selectedProgramTagIds.includes(c.id) ? " active" : ""}" data-program-sub="${esc(c.id)}" data-tip="${esc(c.description || c.label)}">${esc(c.label)}</button>`
+            ).join("")
+          : "";
+        subEl.querySelectorAll("[data-program-sub]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.programSub;
+            if (!id) return;
+            if (selectedProgramTagIds.includes(id)) {
+              selectedProgramTagIds = selectedProgramTagIds.filter((x) => x !== id);
+            } else {
+              selectedProgramTagIds.push(id);
+            }
+            if (prog.id && !selectedProgramTagIds.includes(prog.id)) selectedProgramTagIds.unshift(prog.id);
+            showProgramDescription(prog);
+          });
+        });
+      }
+    }
+
+    function bindProgramTagControls() {
+      if (programTagsBound) return;
+      programTagsBound = true;
+      $("program-tag-search")?.addEventListener("input", () => {
+        if (programTagsCache) renderProgramTags(programTagsCache, true);
+      });
+      $("program-tag-select")?.addEventListener("change", (ev) => {
+        const id = ev.target.value;
+        selectedProgramTagIds = id ? [id] : [];
+        const prog = (programTagsCache?.programs || []).find((p) => p.id === id);
+        showProgramDescription(prog);
+      });
+      $("program-coords")?.addEventListener("change", () => {
+        const raw = $("program-coords")?.value || "";
+        const parts = raw.split(/[,;\s]+/).map((x) => x.trim()).filter(Boolean);
+        if (parts.length >= 2) {
+          if ($("program-lat")) $("program-lat").value = parts[0];
+          if ($("program-lon")) $("program-lon").value = parts[1];
+        }
+      });
+      $("program-tag-apply-btn")?.addEventListener("click", async () => {
+        const tag_ids = [...selectedProgramTagIds];
+        const sel = $("program-tag-select")?.value;
+        if (sel && !tag_ids.includes(sel)) tag_ids.unshift(sel);
+        if (!tag_ids.length) {
+          alert("Select at least one program tag.");
+          return;
+        }
+        const coords = $("program-coords")?.value || "";
+        const lat = $("program-lat")?.value || "";
+        const lon = $("program-lon")?.value || "";
+        const place = $("program-place")?.value || "";
+        const address = $("program-address")?.value || "";
+        if (!coords.trim() && !lat.trim() && !lon.trim() && !place.trim() && !address.trim()) {
+          alert("Enter quick coords (lat,lon), lat/lon fields, place name, or address.");
+          return;
+        }
+        const btn = $("program-tag-apply-btn");
+        if (btn) { btn.disabled = true; btn.textContent = "Tagging…"; }
+        try {
+          const res = await fetch("/api/program-tags/apply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tag_ids,
+              record_key: $("program-record-key")?.value || "",
+              coords,
+              lat: lat || undefined,
+              lon: lon || undefined,
+              place,
+              address,
+              city: $("program-city")?.value || "",
+              label: $("program-label")?.value || "",
+              notes: $("program-notes")?.value || "",
+            }),
+          });
+          const j = await res.json();
+          if (j.ok) {
+            if (j.reload_panel) { location.reload(); return; }
+            refresh();
+          } else alert(j.error || "Tag failed");
+        } catch (err) {
+          alert(err?.message || "Tag failed");
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = "Tag location"; }
+        }
+      });
+    }
+
+    function renderProgramTags(pt, searchOnly) {
+      if (!pt) return;
+      programTagsCache = pt;
+      bindProgramTagControls();
+      const q = ($("program-tag-search")?.value || "").toLowerCase();
+      const programs = (pt.programs || []).filter((p) => {
+        if (!q) return true;
+        const blob = [
+          p.id, p.label, p.description, p.category, p.era, p.status,
+          ...(p.aliases || []),
+        ].join(" ").toLowerCase();
+        return blob.includes(q);
+      });
+      const selEl = $("program-tag-select");
+      const prev = selEl?.value || "";
+      if (selEl) {
+        const top = programs.filter((p) => !p.parent_id);
+        const child = (parentId) => programs.filter((p) => p.parent_id === parentId);
+        const opts = ['<option value="">— select program —</option>'];
+        const walk = (parentId, depth) => {
+          (parentId ? child(parentId) : top).forEach((p) => {
+            const pad = depth ? `${"—".repeat(depth)} ` : "";
+            opts.push(`<option value="${esc(p.id)}"${p.id === prev ? " selected" : ""}>${pad}${esc(p.label)}</option>`);
+            walk(p.id, depth + 1);
+          });
+        };
+        walk(null, 0);
+        selEl.innerHTML = opts.join("");
+      }
+      const statsEl = $("program-tag-stats");
+      if (statsEl) {
+        statsEl.innerHTML = [
+          `<span><strong>${pt.program_count || programs.length}</strong> known programs</span>`,
+          `<span><strong>${pt.tagged_record_count || 0}</strong> tagged dossiers</span>`,
+          `<span><strong>${pt.pinned_location_count || 0}</strong> pinned locations</span>`,
+        ].join("");
+      }
+      const recentEl = $("program-recent-tags");
+      const recent = pt.recent_tags || [];
+      if (recentEl) {
+        recentEl.innerHTML = recent.length
+          ? `<strong>Recent tags</strong><ul>${recent.slice(0, 8).map((r) => {
+              const locs = (r.locations || []).map((l) => {
+                const bits = [];
+                if (l.lat != null && l.lon != null) bits.push(`${l.lat},${l.lon}`);
+                if (l.place) bits.push(l.place);
+                return bits.join(" · ");
+              }).filter(Boolean).join("; ");
+              return `<li><code>${esc(r.record_key)}</code> · ${(r.program_tags || []).map(esc).join(", ")}${locs ? ` · ${esc(locs)}` : ""}</li>`;
+            }).join("")}</ul>`
+          : '<span class="meta">No program tags yet — select MKUltra, Monarch, or another tag and pin a location.</span>';
+      }
+      if (!searchOnly && prev) {
+        const prog = (pt.programs || []).find((p) => p.id === prev);
+        if (prog) showProgramDescription(prog);
+      }
+    }
+
     function renderPoliceAgency(pa, regionOnly) {
       if (!pa) return;
       policeAgencyCache = pa;
       bindFieldRfControls();
+      renderProgramTags(pa.program_tags || pa);
       const categoryFilter = $("police-category-filter")?.value || "";
       const regionFilter = $("police-region-filter")?.value || "";
       const catEl = $("police-category-filter");

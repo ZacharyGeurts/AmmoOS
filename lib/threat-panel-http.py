@@ -408,6 +408,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/program-tags":
+            program_id = str(query.get("id", [""])[0]).strip()
+            script = INSTALL_ROOT / "lib" / "program-tags-db.py"
+            if program_id:
+                payload = _nexus_py_json(script, ["get", program_id])
+            else:
+                payload = _nexus_py_json(script, ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/gov-intel/image":
             rel = str(query.get("path", [""])[0]).strip()
             if not rel:
@@ -718,6 +728,43 @@ class Handler(BaseHTTPRequestHandler):
                 result = json.loads(proc.stdout or "{}")
             except json.JSONDecodeError:
                 result = {"ok": False, "error": "import_failed"}
+            self._send(200 if result.get("ok") else 400, json.dumps(result), "application/json")
+            return
+
+        if path == "/api/program-tags/apply":
+            tag_ids = body.get("tag_ids") or body.get("tags")
+            if isinstance(tag_ids, str):
+                tag_ids = [t.strip() for t in tag_ids.split(",") if t.strip()]
+            if not tag_ids:
+                self._send(400, json.dumps({"ok": False, "error": "missing tag_ids"}), "application/json")
+                return
+            apply_doc = {
+                "tag_ids": tag_ids,
+                "record_key": str(body.get("record_key", "")).strip(),
+                "lat": body.get("lat"),
+                "lon": body.get("lon"),
+                "coords": str(body.get("coords", "")),
+                "place": str(body.get("place", "")),
+                "address": str(body.get("address", "")),
+                "city": str(body.get("city", "")),
+                "country": str(body.get("country", "")),
+                "label": str(body.get("label", "")),
+                "notes": str(body.get("notes", "")),
+            }
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            proc = subprocess.run(
+                [sys.executable, str(INSTALL_ROOT / "lib" / "program-tags-db.py"), "apply-json", json.dumps(apply_doc)],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                env=env,
+            )
+            try:
+                result = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                result = {"ok": False, "error": "tag_apply_failed"}
             self._send(200 if result.get("ok") else 400, json.dumps(result), "application/json")
             return
 

@@ -347,6 +347,16 @@ def import_and_merge(
         incoming["import_history"] = incoming["import_history"][-50:]
 
         merged = _merge_value(existing, incoming)
+        try:
+            import importlib.util
+            pt_spec = importlib.util.spec_from_file_location(
+                "program_tags_db", INSTALL / "lib" / "program-tags-db.py"
+            )
+            pt_mod = importlib.util.module_from_spec(pt_spec)
+            pt_spec.loader.exec_module(pt_mod)
+            merged = pt_mod.apply_row_tags(merged, row)
+        except Exception:
+            pass
         records[key] = merged
         if existed:
             merged_count += 1

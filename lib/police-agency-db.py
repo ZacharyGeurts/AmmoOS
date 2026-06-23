@@ -24,6 +24,13 @@ def _gov_intel():
     return mod
 
 
+def _program_tags():
+    spec = importlib.util.spec_from_file_location("program_tags_db", INSTALL / "lib" / "program-tags-db.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -157,6 +164,8 @@ def panel_json() -> dict[str, Any]:
     agencies = list_agencies()
     gi = _gov_intel()
     gov = gi.panel_json()
+    pt = _program_tags()
+    programs = pt.panel_json()
     return {
         "motto": seed.get("motto") or "Police, law, and government databases — merge-only dossier updates.",
         "schema": seed.get("schema"),
@@ -176,6 +185,10 @@ def panel_json() -> dict[str, Any]:
         "image_formats": gov.get("image_formats") or [],
         "dossier_record_count": gov.get("record_count", 0),
         "human_override_count": gov.get("human_override_count", 0),
+        "program_tags": programs,
+        "program_count": programs.get("program_count", 0),
+        "tagged_record_count": programs.get("tagged_record_count", 0),
+        "pinned_location_count": programs.get("pinned_location_count", 0),
         "updated": _now(),
     }
 
