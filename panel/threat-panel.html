@@ -411,6 +411,31 @@
       border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.78rem;
     }
     .adblock-status { padding: 0 16px 12px; font-size: 0.74rem; color: var(--muted); }
+    .fair-ad-card {
+      margin: 0 16px 14px; padding: 12px 14px; border-radius: 10px;
+      background: linear-gradient(135deg, #0e1828, #121a24);
+      border: 1px solid #2a4060; font-size: 0.76rem; line-height: 1.55; color: var(--muted);
+    }
+    .fair-ad-card strong { color: #9ec5ff; }
+    .policy-picks { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 12px; }
+    .policy-pick {
+      flex: 1; min-width: 140px; padding: 10px 12px; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--border); background: #0c1018; font-size: 0.72rem; text-align: left;
+    }
+    .policy-pick.active { border-color: var(--ok); background: rgba(61, 214, 140, 0.08); }
+    .policy-pick strong { display: block; color: var(--text); margin-bottom: 4px; font-size: 0.78rem; }
+    .guardian-feed { padding: 0 16px 12px; max-height: 200px; overflow-y: auto; }
+    .guardian-feed .feed-row {
+      padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; font-size: 0.7rem;
+      background: #0a0e14; border-left: 3px solid var(--internet);
+    }
+    .guardian-feed .feed-row.warn { border-left-color: var(--gold); }
+    .guardian-feed .feed-row.block { border-left-color: var(--threat); }
+    .site-policy-add { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 16px 12px; }
+    .site-policy-add input {
+      flex: 1; min-width: 160px; padding: 8px 10px; background: #080a10;
+      border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.76rem;
+    }
     .settings-profile-card {
       margin-bottom: 18px; padding: 14px 16px; border-radius: 10px;
       background: linear-gradient(135deg, #0d1524 0%, #101820 100%);
@@ -532,7 +557,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.6.0</h1>
+        <h1>NEXUS-Shield v2.7.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -739,25 +764,49 @@
       </div>
 
       <div class="settings-group" data-settings-group="adblock">
-        <h3><span>Ad blocking</span><span data-tip="Optional: download popular block lists and stop ads/trackers at the network level. Load a list first, then turn ON, then click Apply."></span></h3>
+        <h3><span>Fair Ad Guardian</span><span data-tip="Friendly, non-intrusive protection. Blocks popups, lockouts, and complained-about third parties — fair to sites that require ads."></span></h3>
         <div class="group-summary" id="summary-adblock">—</div>
+        <div class="fair-ad-card" id="fair-ad-motto">
+          <strong>Fair to everyone</strong> — We block what people actually complain about (popups, anti-adblock walls, clickbait widgets from <em>not the site owner</em>). Sites with an ads-required policy? Opt out means <strong>leave the site</strong> — we won't break their business model.
+        </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_ADBLOCK" id="set-adblock" />
-            <span><strong>Turn on ad blocking</strong><span class="hint">Needs a list loaded below first.</span></span>
+            <span><strong>Enable Fair Ad Guardian</strong><span class="hint">Recommended: Annoyance mode — no blunt full-web blocking.</span></span>
           </label>
-          <span class="has-tip-row" data-tip="Blocks ad and tracker addresses after you load a list. Won't block sites you've marked Trust forever."></span>
+          <span class="has-tip-row" data-tip="Turns on smart blocking. Default Annoyance mode uses our complaint table + Fanboy list — not aggressive EasyList."></span>
         </div>
-        <div class="adblock-status" id="adblock-status">Domains: 0 · IPs blocked: 0</div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_ADBLOCK_RESPECT_POLICY" id="set-adblock-respect" checked />
+            <span><strong>Respect site ad policies</strong><span class="hint">Allow first-party ads on sites that require them (YouTube, news, etc.).</span></span>
+          </label>
+          <span class="has-tip-row" data-tip="When ON, we skip blocking a site's own ad domains while you're browsing them. If you won't view ads, leave the site instead."></span>
+        </div>
+        <p class="meta" style="padding:4px 16px 8px;margin:0;font-size:0.68rem;">Blocking policy</p>
+        <div class="policy-picks" id="policy-picks">
+          <button type="button" class="policy-pick active" data-policy="annoyance"><strong>Annoyance</strong>Popups, lockouts, spam widgets — recommended</button>
+          <button type="button" class="policy-pick" data-policy="fair"><strong>Fair</strong>Annoyance + honor ads-required sites</button>
+          <button type="button" class="policy-pick" data-policy="strict"><strong>Strict</strong>Legacy full lists (advanced)</button>
+        </div>
+        <div class="adblock-status" id="adblock-status">Guardian off</div>
+        <div class="guardian-feed" id="guardian-feed"><div class="feed-row">Watching browser connections for proactive tips…</div></div>
+        <div class="site-policy-add">
+          <input type="text" id="site-policy-domain" placeholder="example.com — site requires ads" />
+          <button type="button" id="site-policy-add" data-tip="Mark a site as ads-required — we allow their first-party ads while you visit.">Add site policy</button>
+        </div>
         <div class="adblock-actions">
-          <button type="button" id="adblock-easylist" data-tip="Popular general ad list — good first choice for most people.">Get EasyList</button>
-          <button type="button" id="adblock-easyprivacy" data-tip="Extra privacy trackers — pair with EasyList.">Get EasyPrivacy</button>
-          <button type="button" id="adblock-fanboy" data-tip="Blocks annoyances like newsletter popups and social widgets.">Get Fanboy list</button>
-          <button type="button" id="adblock-apply" data-tip="Push the downloaded list into the network shield. Do this after loading lists and turning ad blocking ON.">Apply block list</button>
+          <button type="button" id="adblock-annoyance" data-tip="Load Fanboy Annoyance — popups, newsletters, social clutter. Best for Fair Guardian.">Load annoyance list</button>
+          <button type="button" id="adblock-apply" data-tip="Apply current policy blocklist to the network shield.">Apply guardian</button>
+        </div>
+        <p class="meta" style="padding:4px 16px 0;margin:0;font-size:0.65rem;">Advanced (strict mode only)</p>
+        <div class="adblock-actions">
+          <button type="button" id="adblock-easylist" data-tip="Full EasyList — only used in Strict policy.">Get EasyList</button>
+          <button type="button" id="adblock-easyprivacy" data-tip="Full EasyPrivacy — Strict mode.">Get EasyPrivacy</button>
         </div>
         <div class="adblock-url-row">
-          <input type="url" id="adblock-custom-url" placeholder="Paste a block-list web address (advanced)" data-tip="For advanced users: paste a URL to any compatible adblock-style list." />
-          <button type="button" id="adblock-custom-load" data-tip="Download a block list from the address you pasted above.">Load from URL</button>
+          <input type="url" id="adblock-custom-url" placeholder="Custom list URL (strict/advanced)" />
+          <button type="button" id="adblock-custom-load">Load from URL</button>
         </div>
       </div>
 
@@ -1078,7 +1127,7 @@
         "NEXUS_ENTROPY_WATCH", "NEXUS_BEHAVIOR_WATCH", "NEXUS_PRIVACY_GUARD",
         "NEXUS_HOSTESS7_CORROBORATE", "NEXUS_PANEL_AUTO_OPEN",
       ],
-      adblock: ["NEXUS_ADBLOCK"],
+      adblock: ["NEXUS_ADBLOCK", "NEXUS_ADBLOCK_RESPECT_POLICY"],
     };
 
     function settingIsOn(val) {
@@ -1141,9 +1190,10 @@
           (watch >= 4 && watch <= 5 ? " — everyday profile (core helpers on)" : "");
       }
       if (elAb) {
+        const pol = s.NEXUS_ADBLOCK_POLICY || ab.policy || "annoyance";
         elAb.innerHTML = abOn
-          ? `<strong>ON</strong> · ${ab.domains ?? 0} domains · ${ab.ips ?? 0} IPs blocked`
-          : `<strong>OFF</strong> · load a list below, then turn ON and Apply`;
+          ? `<strong>ON</strong> · policy <strong>${esc(pol)}</strong> · ${ab.domains ?? 0} domains · ${ab.ips ?? 0} IPs`
+          : `<strong>OFF</strong> · enable Fair Ad Guardian — Annoyance mode recommended`;
       }
     }
 
@@ -1159,7 +1209,7 @@
         `<span class="chip profile">${everyday ? "Everyday profile" : "Custom profile"}</span>`,
         `<span class="chip ${prot ? "on" : "off"}">Protection ${prot}/${SETTING_GROUPS.protection.length}</span>`,
         `<span class="chip ${watch ? "on" : "off"}">Watchers ${watch}/${SETTING_GROUPS.watchers.length}</span>`,
-        `<span class="chip ${abOn ? "on" : "off"}">Adblock ${abOn ? "ON" : "OFF"}</span>`,
+        `<span class="chip ${abOn ? "on" : "off"}">Guardian ${abOn ? (s.NEXUS_ADBLOCK_POLICY || "annoyance") : "OFF"}</span>`,
       ];
       $("settings-profile-stats").innerHTML = chips.join("");
     }
@@ -1204,12 +1254,50 @@
       }
     }
 
+    async function setAdblockPolicy(policy) {
+      const res = await fetch("/api/adblock/policy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ policy }),
+      });
+      const j = await res.json();
+      if (!j.ok) throw new Error("policy failed");
+      document.querySelectorAll(".policy-pick").forEach((b) => {
+        b.classList.toggle("active", b.dataset.policy === policy);
+      });
+      return j;
+    }
+
+    document.querySelectorAll(".policy-pick").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        try {
+          await setAdblockPolicy(btn.dataset.policy);
+          refresh();
+        } catch { alert("Could not save ad policy"); }
+      });
+    });
+
+    $("site-policy-add").addEventListener("click", async () => {
+      const domain = $("site-policy-domain").value.trim().toLowerCase();
+      if (!domain) { alert("Enter a domain like example.com"); return; }
+      try {
+        const res = await fetch("/api/adblock/site-policy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ domain, policy: "ads_required", note: "User marked ads required" }),
+        });
+        const j = await res.json();
+        if (j.ok) { $("site-policy-domain").value = ""; refresh(); }
+        else alert("Could not save site policy");
+      } catch { alert("Site policy failed"); }
+    });
+
     $("adblock-easylist").dataset.label = "Get EasyList";
     $("adblock-easyprivacy").dataset.label = "Get EasyPrivacy";
-    $("adblock-fanboy").dataset.label = "Get Fanboy list";
+    $("adblock-annoyance").dataset.label = "Load annoyance list";
     $("adblock-easylist").addEventListener("click", (e) => adblockLoad({ preset: "easylist" }, e.target));
     $("adblock-easyprivacy").addEventListener("click", (e) => adblockLoad({ preset: "easyprivacy" }, e.target));
-    $("adblock-fanboy").addEventListener("click", (e) => adblockLoad({ preset: "fanboy" }, e.target));
+    $("adblock-annoyance").addEventListener("click", (e) => adblockLoad({ preset: "annoyance" }, e.target));
     $("adblock-custom-load").addEventListener("click", (e) => {
       const url = $("adblock-custom-url").value.trim();
       if (!url) { alert("Enter a filter list URL"); return; }
@@ -1412,6 +1500,31 @@
       } catch { alert("Re-enable failed"); }
     }
 
+    function renderGuardianFeed(guardian, settings) {
+      const el = $("guardian-feed");
+      if (!el) return;
+      const rows = [];
+      (guardian?.suggestions || []).forEach((s) => {
+        const cls = s.policy === "ads_required" ? "warn" : "";
+        rows.push(`<div class="feed-row ${cls}">${esc(s.message || "")}${s.site ? ` <span class="meta">(${esc(s.site)})</span>` : ""}</div>`);
+      });
+      (guardian?.events || []).slice(0, 8).forEach((ev) => {
+        const cls = ev.action === "block" ? "block" : "";
+        rows.push(`<div class="feed-row ${cls}"><strong>${esc(ev.category || "match")}</strong> ${esc(ev.domain || "")} — ${esc(ev.reason || "")}</div>`);
+      });
+      (guardian?.browser_sites || []).slice(0, 4).forEach((bs) => {
+        rows.push(`<div class="feed-row">Browser on <strong>${esc(bs.host)}</strong> via ${esc(bs.process || "browser")}</div>`);
+      });
+      if (!rows.length) {
+        rows.push('<div class="feed-row">Guardian ready — enable and pick Annoyance mode to start.</div>');
+      }
+      el.innerHTML = rows.join("");
+      const pol = settings?.NEXUS_ADBLOCK_POLICY || guardian?.policy || "annoyance";
+      document.querySelectorAll(".policy-pick").forEach((b) => {
+        b.classList.toggle("active", b.dataset.policy === pol);
+      });
+    }
+
     function renderSettings(s) {
       if (!s) return;
       document.querySelectorAll("[data-setting]").forEach((cb) => {
@@ -1424,8 +1537,10 @@
       renderSettingsProfile(s);
       renderGroupSummaries(s);
       const ab = s.adblock || {};
-      $("adblock-status").textContent =
-        `Adblock ${ab.enabled ? "ON" : "OFF"} · Domains: ${ab.domains ?? 0} · IPs blocked: ${ab.ips ?? 0}`;
+      const pol = s.NEXUS_ADBLOCK_POLICY || ab.policy || "annoyance";
+      $("adblock-status").textContent = ab.enabled || settingIsOn(s.NEXUS_ADBLOCK)
+        ? `Fair Ad Guardian ON · policy: ${pol} · ${ab.domains ?? 0} domains · ${ab.ips ?? 0} IPs blocked`
+        : "Fair Ad Guardian OFF — turn on with Annoyance policy (recommended)";
     }
 
     function renderParanoia(p) {
@@ -1950,6 +2065,7 @@
         renderThreats(data.threats);
         renderVectors(data.vectors);
         renderSettings(data.settings);
+        renderGuardianFeed(data.adblock_guardian, data.settings);
         renderSanitize(data.autosanitize);
         renderParanoia(data.paranoia);
         renderShutdown(data.shutdown);

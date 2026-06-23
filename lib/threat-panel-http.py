@@ -576,6 +576,33 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200 if ok else 500, json.dumps({"ok": ok}), "application/json")
             return
 
+        if path == "/api/adblock/policy":
+            policy = str(body.get("policy", "annoyance")).strip().lower()
+            if policy not in ("annoyance", "fair", "strict"):
+                self._send(400, json.dumps({"ok": False, "error": "invalid policy"}), "application/json")
+                return
+            inner = _nexus_shell_prelude() + f"nexus_adblock_set_policy '{policy}'"
+            ok = _run_nexus_bash(inner, timeout=120)
+            self._send(200 if ok else 500, json.dumps({"ok": ok, "policy": policy}), "application/json")
+            return
+
+        if path == "/api/adblock/site-policy":
+            domain = str(body.get("domain", "")).strip().lower()
+            policy = str(body.get("policy", "ads_required")).strip().lower()
+            note = str(body.get("note", "")).strip()
+            if not domain:
+                self._send(400, json.dumps({"ok": False, "error": "missing domain"}), "application/json")
+                return
+            safe_d = domain.replace("'", "'\"'\"'")
+            safe_p = policy.replace("'", "'\"'\"'")
+            safe_n = note.replace("'", "'\"'\"'")
+            inner = _nexus_shell_prelude() + f"nexus_adblock_site_policy '{safe_d}' '{safe_p}' '{safe_n}'"
+            ok = _run_nexus_bash(inner, timeout=30)
+            if ok:
+                _run_nexus_adblock_apply()
+            self._send(200 if ok else 500, json.dumps({"ok": ok, "domain": domain, "policy": policy}), "application/json")
+            return
+
         if path == "/api/pest/eradicate":
             ip = str(body.get("ip", "")).strip()
             pid = str(body.get("pid", body.get("process_id", "0"))).strip() or "0"

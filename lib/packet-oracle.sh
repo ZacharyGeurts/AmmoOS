@@ -235,6 +235,9 @@ nexus_packet_loop() {
     nexus_cpu_budget_ok || { sleep 15; continue; }
     nexus_packet_evaluate
     nexus_connection_gatekeeper_publish
+    if declare -f nexus_adblock_guardian_scan >/dev/null 2>&1; then
+      [[ "$(nexus_settings_get NEXUS_ADBLOCK 2>/dev/null || echo 0)" == "1" ]] && nexus_adblock_guardian_scan
+    fi
     if declare -f nexus_shutdown_heartbeat >/dev/null 2>&1; then
       nexus_shutdown_heartbeat
     fi

@@ -180,6 +180,12 @@ nexus_threat_panel_publish() {
     else
       printf '{"tables":{"mac_vendors":[],"exploit_cve_map":[]}}'
     fi
+    printf ',"adblock_guardian":'
+    if declare -f nexus_adblock_guardian_json >/dev/null 2>&1; then
+      nexus_adblock_guardian_json
+    else
+      printf '{}'
+    fi
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'
   } >"${NEXUS_THREAT_PANEL_JSON}.tmp" 2>/dev/null \

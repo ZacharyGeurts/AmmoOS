@@ -213,7 +213,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0|6\.0)' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0)' "$panel"
 }
 
 test_self_access_script() {
@@ -251,7 +251,7 @@ test_panel_v25_intel_ui() {
   local panel="${ROOT}/panel/threat-panel.html"
   grep -q 'renderIntelBanner' "$panel"
   grep -q 'Remove pest' "$panel"
-  grep -qE 'v2\.(5\.0|6\.0)' "$panel"
+  grep -qE 'v2\.(5\.0|6\.0|7\.0)' "$panel"
   grep -q '/api/pest/eradicate' "${ROOT}/lib/threat-panel-http.py"
 }
 
@@ -261,6 +261,24 @@ test_angel_dossier_module() {
   [[ -f "${ROOT}/data/oui-vendors.tsv" ]]
   grep -q 'attack_path' "${ROOT}/lib/angel-dossier.py"
   grep -q 'mac_vendors' "${ROOT}/lib/angel-dossier.py"
+}
+
+test_fair_ad_guardian_module() {
+  [[ -f "${ROOT}/lib/fair-ad-guardian.py" ]]
+  [[ -f "${ROOT}/data/annoyance-complaints.tsv" ]]
+  [[ -f "${ROOT}/data/site-ad-policies.json" ]]
+  grep -q 'fair_guardian' "${ROOT}/lib/adblock-loader.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/fair-ad-guardian.py" blocklist annoyance | grep -q 'domain_count'
+}
+
+test_panel_fair_ad_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'Fair Ad Guardian' "$panel"
+  grep -q 'policy-pick' "$panel"
+  grep -q 'guardian-feed' "$panel"
+  grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'v2.7.0' "$panel"
 }
 
 test_panel_v26_angels_tabs() {
@@ -327,11 +345,14 @@ test_threat_panel_json() {
 }
 
 test_nexus_settings_roundtrip() {
+  local j
   nexus_settings_set "NEXUS_ADBLOCK" "1"
   [[ "$(nexus_settings_get NEXUS_ADBLOCK)" == "1" ]]
   nexus_settings_set "NEXUS_ADBLOCK" "0"
   [[ "$(nexus_settings_get NEXUS_ADBLOCK)" == "0" ]]
-  nexus_settings_json | grep -q '"NEXUS_ADBLOCK":0'
+  j="$(nexus_settings_json)"
+  [[ "$j" == *'"NEXUS_ADBLOCK":0'* ]]
+  [[ "$j" == *'"NEXUS_ADBLOCK_POLICY":"annoyance"'* ]]
 }
 
 test_seal_vault_refresh_verify() {
@@ -392,6 +413,8 @@ run_test "pest arsenal sacred processes" test_pest_arsenal_sacred
 run_test "panel v2.5 intel UI" test_panel_v25_intel_ui
 run_test "angel dossier module" test_angel_dossier_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
+run_test "fair ad guardian module" test_fair_ad_guardian_module
+run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
 run_test "gatekeeper ipv6 direction fields" test_gatekeeper_ipv6_direction
 run_test "gatekeeper trust rank" test_gatekeeper_trust_rank
 run_test "firewall temp allow helpers" test_firewall_temp_allow_fn

@@ -36,6 +36,13 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.7.0 — Fair Ad Guardian
+
+- **Non-intrusive by default** — Annoyance mode blocks popups, lockouts, and complained-about third parties (not blunt full-web blocking)
+- **Fair to advertisers** — sites with ads-required policy keep first-party ads; opt out means leave the site
+- **Browser-aware** — proactive feed from live connections; blocks not-the-guy widgets and anti-adblock walls
+- **Policies** — Annoyance (recommended) · Fair · Strict (legacy full lists)
+
 ## v2.6.0 — Let's Be Angels (dossiers & research)
 
 - **Dossier tab** — full attack-path chains: vector → peer (IPv4/IPv6) → process → MAC vendor → CVE/MITRE
