@@ -217,7 +217,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|1\.(0|1))' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
 }
 
 test_self_access_script() {
@@ -282,7 +282,7 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|1\.(0|1))' "$panel"
+  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
 }
 
 test_host_attack_module() {
@@ -326,9 +326,34 @@ test_panel_host_attack_ui() {
   grep -q 'normalizeGeo' "$panel"
   grep -q 'warmHostEarthMap' "$panel"
   grep -q 'attackKitKill' "$panel"
-  grep -q 'Our Monitor' "$panel"
+  grep -q 'haBleedLine' "$panel"
+  grep -q 'target_os' "$panel"
   grep -q 'earth-satellite-2k.jpg' "$panel"
-  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|1\.(0|1)))' "$panel"
+  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|[12]\.(0|1)))' "$panel"
+}
+
+test_target_bleed_module() {
+  [[ -f "${ROOT}/lib/target-bleed.py" ]]
+  grep -q 'host_endpoint_context' "${ROOT}/lib/target-bleed.py"
+  grep -q 'bleed_target' "${ROOT}/lib/target-bleed.py"
+  grep -q 'target_bleed' "${ROOT}/lib/host-attack-map.py"
+  grep -q 'target_os' "${ROOT}/lib/host-attack-map.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/target-bleed.py" bleed 127.0.0.1 2>/dev/null | grep -q '"skipped": "private"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 - <<'PY'
+import importlib.util
+from pathlib import Path
+root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
+spec = importlib.util.spec_from_file_location("tb", root / "lib" / "target-bleed.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+hc = mod.host_endpoint_context()
+assert hc.get("os")
+assert hc.get("hostname")
+guess = mod.ttl_os_guess("127.0.0.1")
+assert guess.get("skipped") == "private"
+PY
 }
 
 test_friendly_guard_module() {
@@ -382,7 +407,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'friendly_refused' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'NEXUS_ATTACK_KIT_AUTO_CRUSH' "$panel"
   grep -q 'God Bless' "$panel"
-  grep -qE 'v3\.(0\.(0|1)|1\.(0|1))' "$panel"
+  grep -qE 'v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -531,6 +556,7 @@ run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
 run_test "fair ad guardian module" test_fair_ad_guardian_module
 run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
 run_test "host attack map module" test_host_attack_module
+run_test "target bleed module" test_target_bleed_module
 run_test "panel host attack UI" test_panel_host_attack_ui
 run_test "geo intel standards module" test_geo_intel_standards_module
 run_test "friendly guard immutable module" test_friendly_guard_module

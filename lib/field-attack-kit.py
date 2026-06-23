@@ -70,6 +70,15 @@ def _full_dossier_for_ip(ip: str, extra: dict[str, Any] | None = None) -> dict[s
             angel = d
             break
 
+    bleed_doc: dict[str, Any] = {}
+    bleed_script = INSTALL / "lib" / "target-bleed.py"
+    if bleed_script.is_file():
+        _tb_spec = importlib.util.spec_from_file_location("target_bleed_kit", bleed_script)
+        _tb = importlib.util.module_from_spec(_tb_spec)
+        assert _tb_spec and _tb_spec.loader
+        _tb_spec.loader.exec_module(_tb)
+        bleed_doc = _tb.bleed_target(ip, conn_hint=point.get("monitor"), online=False)
+
     return {
         "archived": _now(),
         "ip": ip,
@@ -91,6 +100,9 @@ def _full_dossier_for_ip(ip: str, extra: dict[str, Any] | None = None) -> dict[s
         "monitor": point.get("monitor") or (extra or {}).get("monitor"),
         "dossier": point.get("dossier") or (extra or {}).get("dossier"),
         "angel_dossier": angel,
+        "host_context": point.get("host_context") or bleed_doc.get("host"),
+        "target_bleed": point.get("target_bleed") or bleed_doc,
+        "target_os": point.get("target_os") or bleed_doc.get("target_os") or "",
         "intel": {
             "hostname": point.get("hostname"),
             "mac": point.get("mac"),

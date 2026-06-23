@@ -649,6 +649,7 @@
     .host-point-row.target-live { border-left: 2px solid var(--murder); }
     .host-monitor-line { font-size: 0.66rem; color: #9ab4d0; margin-top: 3px; }
     .host-dossier-line { font-size: 0.62rem; color: #7a9ab8; margin-top: 2px; }
+    .host-bleed-line { font-size: 0.62rem; color: #b8a878; margin-top: 2px; font-family: ui-monospace, monospace; }
     .ha-kill-btn {
       margin-top: 6px; background: var(--murder); color: #fff; border: none;
       padding: 5px 10px; border-radius: 5px; font-size: 0.66rem; font-weight: 700;
@@ -698,7 +699,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.1.1</h1>
+        <h1>NEXUS-Shield v3.2.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -823,7 +824,7 @@
             <span><span class="legend-swatch" style="background:#3dd68c"></span>Calm</span>
             <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
             <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
-            <span>· Friendly Guard · Immutable · Never kill trusted</span>
+            <span>· Host→Target Bleed · OS · PTR · TLS</span>
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
@@ -2169,6 +2170,21 @@
       return `${steps} path step(s)${mac ? ` · MAC ${esc(mac)}` : ""}${cves ? ` · CVE ${esc(cves)}` : ""}`;
     }
 
+    function haBleedLine(p) {
+      const hc = p.host_context || {};
+      const parts = [];
+      if (hc.os) parts.push(`us:${esc(hc.os)} ${esc(hc.os_release || "")}`);
+      if (p.our_process) parts.push(`via ${esc(p.our_process)}`);
+      if (p.target_os) parts.push(`them:${esc(p.target_os)}`);
+      if (p.ptr_hostname) parts.push(`ptr ${esc(p.ptr_hostname)}`);
+      if (p.target_http_server) parts.push(`srv ${esc(p.target_http_server)}`);
+      if (p.target_tls_subject) parts.push(`tls ${esc(p.target_tls_subject).slice(0, 60)}`);
+      if (p.target_banner) parts.push(`ban ${esc(p.target_banner).slice(0, 40)}`);
+      const ports = (p.target_ports || []).slice(0, 4).join(",");
+      if (ports) parts.push(`:${ports}`);
+      return parts.join(" · ");
+    }
+
     function haPopupHtml(p) {
       const std = (p.standards || []).map((s) => `<code>${esc(s)}</code>`).join(" ");
       const mon = p.monitor;
@@ -2176,6 +2192,10 @@
       const status = p.target_status === "killed" ? '<div class="ha-killed-badge">✓ KILLED · dossier archived</div>' : "";
       const monBlock = mon ? `<div class="popup-monitor"><strong>Monitor</strong><div>${haMonitorLine(mon)}</div>${mon.suggestion_summary ? `<div class="popup-path">${esc(mon.suggestion_summary)}</div>` : ""}</div>` : "";
       const dosBlock = dos ? `<div class="popup-monitor"><strong>Dossier</strong><div class="popup-path">${haDossierLine(dos)}</div></div>` : "";
+      const bleedLine = haBleedLine(p);
+      const bleedBlock = bleedLine ? `<div class="popup-monitor"><strong>Bleed</strong><div class="host-bleed-line">${bleedLine}</div></div>` : "";
+      const hc = p.host_context || {};
+      const hostBlock = hc.os ? `<div class="popup-path">Host ${esc(hc.hostname || "—")} · ${esc(hc.os)} ${esc(hc.kernel || "")} · NEXUS ${esc(hc.nexus_version || "")}</div>` : "";
       return `<div class="host-map-popup">
         <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span>${p.is_monitor_target ? " · <em>live target</em>" : ""}</div>
         <div>${esc(p.label || p.city || p.country || "—")}</div>
@@ -2183,8 +2203,9 @@
         ${p.org ? `<div>Org: ${esc(p.org)}</div>` : ""}
         ${p.asn ? `<div>ASN: ${esc(p.asn)} ${esc(p.asname || "")}</div>` : ""}
         ${p.mac_vendor ? `<div>MAC: ${esc(p.mac || "—")} · ${esc(p.mac_vendor)} (IEEE OUI)</div>` : ""}
-        ${p.hostname ? `<div>Host: ${esc(p.hostname)}</div>` : ""}
-        ${monBlock}${dosBlock}
+        ${p.hostname ? `<div>DNS: ${esc(p.hostname)}</div>` : ""}
+        ${p.target_os ? `<div>Target OS: <strong>${esc(p.target_os)}</strong>${p.target_os_family ? ` (${esc(p.target_os_family)})` : ""}</div>` : ""}
+        ${hostBlock}${monBlock}${bleedBlock}${dosBlock}
         <div class="host-standards">${std || "GeoIP"} · heat ${(p.heat ?? 0).toFixed(2)}</div>
         ${status}
       </div>`;
@@ -2376,13 +2397,15 @@
         const live = p.is_monitor_target && !killed && !friendly;
         const rowClass = killed ? " target-killed" : friendly ? " target-friendly" : live ? " target-live" : "";
         const monLine = p.monitor ? `<div class="host-monitor-line">${haMonitorLine(p.monitor)}</div>` : "";
+        const bleedLine = haBleedLine(p);
+        const bleedRow = bleedLine ? `<div class="host-bleed-line">${bleedLine}</div>` : "";
         const dosLine = p.dossier ? `<div class="host-dossier-line">${haDossierLine(p.dossier)}</div>` : "";
         return `<div class="host-point-row${rowClass}" data-ha-id="${esc(p.id)}">
           <span class="host-point-swatch" style="background:${killed ? "#556" : col}"></span>
           <div>
             <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span>${live ? " · <em>shooting</em>" : ""}</div>
             <div class="host-point-meta">${esc(loc)} · ${esc(p.registrar || p.org || "—")} · heat ${(p.heat ?? 0).toFixed(2)}</div>
-            ${monLine}${dosLine}
+            ${monLine}${bleedRow}${dosLine}
             ${std ? `<div class="host-standards">${esc(std)}</div>` : ""}
             ${killed
               ? '<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>'

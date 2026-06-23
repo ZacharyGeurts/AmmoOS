@@ -36,6 +36,13 @@ assert _fg_spec and _fg_spec.loader
 _fg_spec.loader.exec_module(_fg)
 refuse_kill = _fg.refuse_kill
 
+_tb_spec = importlib.util.spec_from_file_location("target_bleed", INSTALL / "lib" / "target-bleed.py")
+_tb = importlib.util.module_from_spec(_tb_spec)
+assert _tb_spec and _tb_spec.loader
+_tb_spec.loader.exec_module(_tb)
+bleed_target = _tb.bleed_target
+host_endpoint_context = _tb.host_endpoint_context
+
 PRIVATE_RE = re.compile(
     r"^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|169\.254\.|::1|fe80:|fd)"
 )
@@ -89,6 +96,7 @@ COUNTRY_CENTROIDS: dict[str, tuple[float, float]] = {
 }
 
 RDAP_BUDGET = 18
+BLEED_BUDGET = 15
 
 
 def _now() -> str:
@@ -354,13 +362,27 @@ def _collect_points() -> list[dict[str, Any]]:
 
     unique_ips = list(dict.fromkeys(r["ip"] for r in raw))
     geo_cache = _load_json(STATE / "geo-intel-cache.json", {"ips": {}})
+    bleed_cache = _load_json(STATE / "target-bleed-cache.json", {"ips": {}})
+    host_ctx = host_endpoint_context()
     enriched_by_ip: dict[str, dict[str, Any]] = {}
+    bleed_by_ip: dict[str, dict[str, Any]] = {}
     rdap_left = RDAP_BUDGET
+    bleed_left = BLEED_BUDGET
     for ip in unique_ips:
         do_rdap = rdap_left > 0
         if do_rdap:
             rdap_left -= 1
         enriched_by_ip[ip] = enrich_ip(ip, cache=geo_cache, online=do_rdap)
+        refuse, _ = refuse_kill(ip, monitor=_monitor_snapshot(conn_by_ip[ip]) if ip in conn_by_ip else None)
+        do_bleed = bleed_left > 0 and not refuse
+        if do_bleed:
+            bleed_left -= 1
+        bleed_by_ip[ip] = bleed_target(
+            ip,
+            conn_hint=conn_by_ip.get(ip),
+            online=do_bleed,
+            cache=bleed_cache,
+        )
 
     disabled_ips = _disabled_ips()
     points: list[dict[str, Any]] = []
@@ -388,6 +410,9 @@ def _collect_points() -> list[dict[str, Any]]:
         )
         friendly_refuse, friendly_reason = refuse_kill(ip, monitor=monitor)
         killable = not friendly_refuse and target_status != "killed"
+        bleed = bleed_by_ip.get(ip) or {}
+        target_intel = bleed.get("target") or {}
+        bleed_standards = list(bleed.get("standards") or [])
 
         points.append({
             "id": hashlib.sha256(r["key"].encode()).hexdigest()[:16],
@@ -407,6 +432,17 @@ def _collect_points() -> list[dict[str, Any]]:
             "is_monitor_target": is_monitor_target,
             "killable": killable,
             "friendly_reason": friendly_reason if friendly_refuse else "",
+            "host_context": host_ctx,
+            "target_bleed": bleed,
+            "target_os": bleed.get("target_os") or target_intel.get("os_guess") or "",
+            "target_os_family": target_intel.get("os_family") or "",
+            "ptr_hostname": bleed.get("ptr_hostname") or target_intel.get("ptr_hostname") or "",
+            "our_process": (bleed.get("link") or {}).get("our_process") or r.get("process", ""),
+            "target_ports": target_intel.get("ports_seen") or [],
+            "target_http_server": (target_intel.get("http") or {}).get("server") or "",
+            "target_tls_subject": (target_intel.get("tls") or {}).get("subject") or "",
+            "target_banner": (target_intel.get("banner") or {}).get("banner") or "",
+            "bleed_ms": bleed.get("bleed_ms"),
             "label": loc_label,
             "city": enriched.get("city") or "",
             "region": enriched.get("region") or "",
@@ -423,7 +459,7 @@ def _collect_points() -> list[dict[str, Any]]:
             "mac": enriched.get("mac") or "",
             "mac_vendor": enriched.get("mac_vendor") or "",
             "mac_oui": enriched.get("mac_oui") or "",
-            "standards": enriched.get("standards") or [],
+            "standards": list(dict.fromkeys((enriched.get("standards") or []) + bleed_standards)),
             "geo_source": geo_src,
             "disabled_permanent": ip in disabled_ips,
             **style,
@@ -454,11 +490,12 @@ def build_host_attacks() -> dict[str, Any]:
     }
     return {
         "updated": _now(),
-        "motto": "Our monitor feeds the globe — every dot is who we are shooting at, not just who we blocked.",
-        "tagline": "Full dossier. Permanent field memory. KILL on command — intelligence is a bullet.",
+        "motto": "Host to hostile — bleed OS, PTR, TTL, TLS, banners on a quick hit. End-to-end.",
+        "tagline": "Our machine → their socket → their OS. Full dossier. KILL on command.",
+        "host_endpoint": host_endpoint_context(),
         "map_engine": "leaflet-esri-imagery",
         "map_layers": ["satellite", "street", "offline-globe"],
-        "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON", "Friendly-Guard-Immutable"],
+        "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON", "Target-Bleed", "Friendly-Guard-Immutable"],
         "friendly_guard": {"immutable": True, "fail_closed": True},
         "author": {
             "name": "Zachary Geurts",
