@@ -544,7 +544,66 @@
     .app-footer a { color: var(--internet); text-decoration: none; }
     .app-footer a:hover { text-decoration: underline; }
     .app-footer strong { color: #b8c4d8; font-weight: 600; }
+    .host-attack-wrap { padding: 12px 18px 24px; }
+    .host-attack-motto {
+      margin: 0 0 10px; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; line-height: 1.55;
+      background: linear-gradient(135deg, rgba(20, 40, 70, 0.55), rgba(40, 20, 50, 0.35));
+      border: 1px solid var(--border);
+    }
+    .host-attack-motto strong { color: var(--gold); }
+    .host-attack-credit {
+      margin: 8px 0 14px; font-size: 0.72rem; color: var(--muted); line-height: 1.5;
+    }
+    .host-attack-credit em { color: #b8c8e0; font-style: normal; }
+    .host-attack-stats {
+      display: flex; flex-wrap: wrap; gap: 10px 18px; margin-bottom: 12px; font-size: 0.78rem;
+    }
+    .host-attack-stats span strong { color: var(--gold); margin-left: 4px; }
+    .host-attack-layout {
+      display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr); gap: 14px;
+      min-height: 420px;
+    }
+    .host-map-panel {
+      position: relative; border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border); background: #060a14;
+      box-shadow: inset 0 0 60px rgba(20, 60, 120, 0.15);
+    }
+    #host-attack-svg { width: 100%; height: auto; display: block; min-height: 340px; }
+    .host-map-legend {
+      position: absolute; left: 12px; bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap;
+      font-size: 0.65rem; color: var(--muted); background: rgba(8, 12, 20, 0.82);
+      padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
+    }
+    .legend-swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+    .host-attack-dot {
+      transform-origin: center; transform-box: fill-box;
+      animation: host-pulse var(--pulse-ms, 2s) ease-in-out infinite;
+    }
+    @keyframes host-pulse {
+      0%, 100% { transform: scale(0.75); opacity: 0.55; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+    .host-attack-ring {
+      transform-origin: center; transform-box: fill-box;
+      animation: host-ring var(--pulse-ms, 2s) ease-out infinite;
+    }
+    @keyframes host-ring {
+      0% { transform: scale(0.6); opacity: 0.7; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    .host-point-list {
+      border: 1px solid var(--border); border-radius: 10px; background: var(--card);
+      overflow: auto; max-height: 520px;
+    }
+    .host-point-row {
+      padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.76rem;
+      display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 8px;
+    }
+    .host-point-row:last-child { border-bottom: none; }
+    .host-point-swatch { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
+    .host-point-meta { color: var(--muted); font-size: 0.68rem; margin-top: 3px; }
     @media (max-width: 900px) {
+      .host-attack-layout { grid-template-columns: 1fr; }
       .pane { border-right: none; border-bottom: 1px solid var(--border); }
       .intent-head { grid-template-columns: 1fr; }
       .intent-head .ip { text-align: left; justify-self: start; }
@@ -557,7 +616,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.7.0</h1>
+        <h1>NEXUS-Shield v2.8.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -610,6 +669,7 @@
 
   <nav class="menu" aria-label="Panel sections">
     <button type="button" class="active" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">Monitor</button>
+    <button type="button" data-view="host-attack" data-tip="Global host attack map — pulsing dots on Earth, green through red by threat. Built for Zachary Geurts and everyone defending their machine in 2026.">Host Attack</button>
     <button type="button" data-view="dossier" data-tip="Full attack-path dossiers — vector to peer to process to MAC to CVE. They look at us; we look back HARD.">Dossier</button>
     <button type="button" data-view="research" data-tip="Research tables — MAC vendors, IP intel, CVE/exploit maps, zero-day watch list.">Research</button>
     <button type="button" data-view="settings" data-tip="Turn features on/off, load ad block lists, and review past incidents. No terminal needed.">Settings</button>
@@ -643,6 +703,60 @@
         <div class="list" id="threats"><div class="empty">No vectors detected</div></div>
         <div class="vectors" id="vector-catalog"></div>
       </section>
+    </div>
+  </section>
+
+  <section id="view-host-attack" class="view">
+    <div class="host-attack-wrap">
+      <p class="host-attack-motto" id="host-attack-motto">
+        <strong>Host Attack Map</strong> — every hostile signal earns its own pulse on the globe.
+        Green is calm, yellow is watch, red is act. Infinite variety per data point — no two dots share the same fingerprint.
+      </p>
+      <p class="host-attack-credit" id="host-attack-credit">
+        <em>Zachary Geurts</em> · Army Specialist · Iraq War Veteran · Honorable Discharge.
+        <span id="host-attack-tagline">They say we give these to even Grandmas now because it is 2026.</span>
+      </p>
+      <div class="host-attack-stats" id="host-attack-stats">
+        <span>Signals<strong id="ha-total">0</strong></span>
+        <span>Hot<strong id="ha-hot">0</strong></span>
+        <span>Warm<strong id="ha-warm">0</strong></span>
+        <span>Cool<strong id="ha-cool">0</strong></span>
+        <span>Updated<strong id="ha-updated">—</strong></span>
+      </div>
+      <div class="host-attack-layout">
+        <div class="host-map-panel">
+          <svg id="host-attack-svg" viewBox="0 0 1000 500" role="img" aria-label="World host attack map">
+            <defs>
+              <linearGradient id="ocean-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0a1830"/>
+                <stop offset="50%" stop-color="#061018"/>
+                <stop offset="100%" stop-color="#0c2040"/>
+              </linearGradient>
+              <radialGradient id="globe-glow" cx="50%" cy="45%" r="55%">
+                <stop offset="0%" stop-color="rgba(60,120,200,0.12)"/>
+                <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+              </radialGradient>
+              <filter id="dot-glow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="2.5" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <rect width="1000" height="500" fill="url(#ocean-grad)"/>
+            <rect width="1000" height="500" fill="url(#globe-glow)"/>
+            <g id="host-graticule" stroke="rgba(80,120,180,0.12)" stroke-width="0.6" fill="none"></g>
+            <g id="host-land" fill="#142a3a" stroke="#1e4058" stroke-width="0.5" opacity="0.92"></g>
+            <g id="host-dots" filter="url(#dot-glow)"></g>
+          </svg>
+          <div class="host-map-legend">
+            <span><span class="legend-swatch" style="background:#3dd68c"></span>Calm</span>
+            <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
+            <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
+          </div>
+        </div>
+        <div class="host-point-list" id="host-point-list">
+          <div class="empty">Scanning global host signals…</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1857,6 +1971,91 @@
       root.querySelectorAll(".has-tip").forEach(bindTip);
     }
 
+    const HOST_LAND_PATHS = [
+      "M120,72 L210,58 L290,82 L330,128 L318,188 L268,248 L198,272 L138,248 L98,188 L108,128 Z",
+      "M338,168 L378,158 L408,188 L418,238 L388,288 L348,308 L318,268 L322,218 Z",
+      "M448,88 L548,72 L648,82 L738,108 L768,148 L748,198 L678,238 L588,248 L498,228 L448,178 Z",
+      "M498,248 L558,238 L618,258 L648,308 L618,358 L548,378 L488,358 L468,298 Z",
+      "M758,108 L848,98 L918,128 L938,178 L908,238 L838,268 L768,248 L738,188 Z",
+      "M818,288 L878,278 L928,308 L938,358 L898,398 L838,408 L788,378 L798,318 Z",
+      "M548,358 L618,348 L668,378 L658,428 L598,448 L538,428 L528,388 Z",
+    ];
+
+    function projectHostLatLon(lat, lon) {
+      const x = ((lon + 180) / 360) * 1000;
+      const y = ((90 - lat) / 180) * 500;
+      return { x: Math.max(4, Math.min(996, x)), y: Math.max(4, Math.min(496, y)) };
+    }
+
+    function initHostMapBasemap() {
+      const land = $("host-land");
+      const graticule = $("host-graticule");
+      if (land.dataset.ready === "1") return;
+      let g = "";
+      for (let lon = -180; lon <= 180; lon += 30) {
+        const x = ((lon + 180) / 360) * 1000;
+        g += `<line x1="${x}" y1="0" x2="${x}" y2="500"/>`;
+      }
+      for (let lat = -60; lat <= 60; lat += 30) {
+        const y = ((90 - lat) / 180) * 500;
+        g += `<line x1="0" y1="${y}" x2="1000" y2="${y}"/>`;
+      }
+      graticule.innerHTML = g;
+      land.innerHTML = HOST_LAND_PATHS.map((d) => `<path d="${d}"/>`).join("");
+      land.dataset.ready = "1";
+    }
+
+    function renderHostAttackMap(ha) {
+      initHostMapBasemap();
+      const doc = ha || {};
+      const points = doc.points || [];
+      const stats = doc.stats || {};
+      const author = doc.author || {};
+      $("ha-total").textContent = stats.total ?? points.length;
+      $("ha-hot").textContent = stats.hot ?? 0;
+      $("ha-warm").textContent = stats.warm ?? 0;
+      $("ha-cool").textContent = stats.cool ?? 0;
+      $("ha-updated").textContent = (doc.updated || "—").replace("T", " ").replace("Z", " UTC");
+      if (doc.motto) $("host-attack-motto").innerHTML = `<strong>Host Attack Map</strong> — ${esc(doc.motto)}`;
+      if (doc.tagline) $("host-attack-tagline").textContent = doc.tagline;
+      if (author.name) {
+        $("host-attack-credit").innerHTML =
+          `<em>${esc(author.name)}</em> · ${esc(author.rank || "Army Specialist")} · ` +
+          `${esc(author.service || "Iraq War Veteran")} · ${esc(author.discharge || "Honorable Discharge")}. ` +
+          `<span id="host-attack-tagline">${esc(doc.tagline || "")}</span>`;
+      }
+      const dots = $("host-dots");
+      if (!points.length) {
+        dots.innerHTML = "";
+        $("host-point-list").innerHTML = '<div class="empty">No hostile host signals on the globe — calm day. Connections still monitored.</div>';
+        return;
+      }
+      dots.innerHTML = points.map((p) => {
+        const { x, y } = projectHostLatLon(p.lat, p.lon);
+        const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
+        const pulse = p.pulse_ms || 2000;
+        const r = p.radius || 6;
+        const ring = p.ring || 2;
+        const title = `${p.ip} · ${p.vector} · ${p.severity} · ${p.label || p.country || ""}`;
+        return `<g class="host-dot-group" data-id="${esc(p.id)}">
+          <circle class="host-attack-ring" cx="${x}" cy="${y}" r="${r * ring}" fill="none" stroke="${col}" stroke-width="1.2" style="--pulse-ms:${pulse}ms"/>
+          <circle class="host-attack-dot" cx="${x}" cy="${y}" r="${r}" fill="${col}" style="--pulse-ms:${pulse}ms">
+            <title>${esc(title)}</title>
+          </circle>
+        </g>`;
+      }).join("");
+      $("host-point-list").innerHTML = points.slice(0, 40).map((p) => {
+        const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
+        return `<div class="host-point-row">
+          <span class="host-point-swatch" style="background:${col}"></span>
+          <div>
+            <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span></div>
+            <div class="host-point-meta">${esc(p.label || p.country || "classified")} · ${esc(p.process || "—")} · heat ${(p.heat ?? 0).toFixed(2)} · ${esc(p.source)}</div>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
     function renderDossiers(ad) {
       const list = $("dossier-list");
       const stats = $("dossier-stats");
@@ -2057,6 +2256,7 @@
           gk._fallback = data.internet.connections;
         }
         renderIntelBanner(data.vector_intel);
+        renderHostAttackMap(data.host_attacks);
         renderDossiers(data.angel_dossiers);
         renderResearch(data.angel_research);
         renderGatekeeperBanner(gk);

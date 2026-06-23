@@ -13,6 +13,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -185,6 +186,12 @@ nexus_threat_panel_publish() {
       nexus_adblock_guardian_json
     else
       printf '{}'
+    fi
+    printf ',"host_attacks":'
+    if declare -f nexus_host_attacks_json >/dev/null 2>&1; then
+      nexus_host_attacks_json
+    else
+      printf '{"points":[],"stats":{"total":0,"hot":0,"warm":0,"cool":0}}'
     fi
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'

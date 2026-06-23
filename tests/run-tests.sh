@@ -63,6 +63,8 @@ source "${ROOT}/lib/panel-tls.sh"
 source "${ROOT}/lib/nexus-settings.sh"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/adblock-loader.sh"
+# shellcheck source=/dev/null
+source "${ROOT}/lib/host-attack.sh"
 
 nexus_ensure_dirs
 
@@ -213,7 +215,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0)' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0)' "$panel"
 }
 
 test_self_access_script() {
@@ -278,7 +280,27 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -q 'v2.7.0' "$panel"
+  grep -qE 'v2\.(7\.0|8\.0)' "$panel"
+}
+
+test_host_attack_module() {
+  [[ -f "${ROOT}/lib/host-attack-map.py" ]]
+  [[ -f "${ROOT}/lib/host-attack.sh" ]]
+  grep -q 'host_attacks' "${ROOT}/lib/threat-panel.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/host-attack-map.py" build | grep -q 'point_count'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/host-attack-map.py" json | grep -q 'Zachary Geurts'
+}
+
+test_panel_host_attack_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'view-host-attack' "$panel"
+  grep -q 'Host Attack' "$panel"
+  grep -q 'renderHostAttackMap' "$panel"
+  grep -q 'host-attack-dot' "$panel"
+  grep -q 'Zachary Geurts' "$panel"
+  grep -q 'v2.8.0' "$panel"
 }
 
 test_panel_v26_angels_tabs() {
@@ -415,6 +437,8 @@ run_test "angel dossier module" test_angel_dossier_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
 run_test "fair ad guardian module" test_fair_ad_guardian_module
 run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
+run_test "host attack map module" test_host_attack_module
+run_test "panel host attack UI" test_panel_host_attack_ui
 run_test "gatekeeper ipv6 direction fields" test_gatekeeper_ipv6_direction
 run_test "gatekeeper trust rank" test_gatekeeper_trust_rank
 run_test "firewall temp allow helpers" test_firewall_temp_allow_fn

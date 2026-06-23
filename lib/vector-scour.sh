@@ -15,6 +15,13 @@ nexus_vector_scour_publish() {
     source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
     nexus_angel_dossier_publish
   fi
+  if declare -f nexus_host_attack_publish >/dev/null 2>&1; then
+    nexus_host_attack_publish
+  elif [[ -f "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh"
+    nexus_host_attack_publish
+  fi
 }
 
 nexus_vector_intel_json() {

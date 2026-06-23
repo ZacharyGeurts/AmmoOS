@@ -131,7 +131,7 @@ def _org_class(org: str, asname: str = "") -> tuple[str, str]:
 def lookup_ip_online(ip: str, timeout: float = 4.0) -> dict[str, Any]:
     url = (
         f"http://ip-api.com/json/{ip}"
-        "?fields=status,message,country,countryCode,regionName,city,isp,org,as,asname,reverse,query"
+        "?fields=status,message,country,countryCode,regionName,city,lat,lon,isp,org,as,asname,reverse,query"
     )
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "NEXUS-Shield/2.5 vector-intel"})
@@ -155,6 +155,8 @@ def lookup_ip_online(ip: str, timeout: float = 4.0) -> dict[str, Any]:
     if country and label and country not in label:
         label = f"{label} ({country})"
 
+    lat = data.get("lat")
+    lon = data.get("lon")
     return {
         "ok": True,
         "ip": ip,
@@ -164,6 +166,9 @@ def lookup_ip_online(ip: str, timeout: float = 4.0) -> dict[str, Any]:
         "as": str(data.get("as") or ""),
         "asname": asname,
         "country": str(data.get("country") or ""),
+        "country_code": str(data.get("countryCode") or ""),
+        "lat": lat if lat is not None else None,
+        "lon": lon if lon is not None else None,
         "hostname": hostname,
         "confidence": "high",
         "source": "ip-api",
@@ -226,7 +231,14 @@ def classify_ip(ip: str, cache: dict[str, Any], online: bool | None = None) -> d
     if online and ip_class in ("classified_remote", "identified_org", "hosting", "cloud_aws", "cloud_azure"):
         remote = lookup_ip_online(ip)
         if remote.get("ok"):
-            entry.update({k: remote[k] for k in ("ip_class", "label", "org", "as", "asname", "country", "hostname", "confidence", "source")})
+            entry.update({
+                k: remote[k]
+                for k in (
+                    "ip_class", "label", "org", "as", "asname", "country", "country_code",
+                    "lat", "lon", "hostname", "confidence", "source",
+                )
+                if k in remote
+            })
             entry["updated"] = remote["updated"]
 
     entry["_ts"] = time.time()

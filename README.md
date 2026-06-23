@@ -36,6 +36,13 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.8.0 — Host Attack Map
+
+- **Global globe** — pulsing dots on Earth for every hostile host signal (green → yellow → red)
+- **Infinite variety** — each data point gets unique hue, pulse speed, and size from its threat fingerprint
+- **Zachary Geurts** — Army Specialist, Iraq War Veteran, Honorable Discharge — *they say we give these to even Grandmas now because it is 2026*
+- **Sources** — gatekeeper harm candidates, threat log, dossier chains, firewall blocks + ip-api geo
+
 ## v2.7.0 — Fair Ad Guardian
 
 - **Non-intrusive by default** — Annoyance mode blocks popups, lockouts, and complained-about third parties (not blunt full-web blocking)
