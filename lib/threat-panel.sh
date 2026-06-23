@@ -13,6 +13,8 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
 
@@ -144,6 +146,20 @@ nexus_threat_panel_publish() {
     else
       printf '{}'
     fi
+    printf ',"packet_field":'
+    if [[ -s "${NEXUS_STATE_DIR}/packet-field.json" ]]; then
+      python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
+        "${NEXUS_STATE_DIR}/packet-field.json" 2>/dev/null || printf '{}'
+    else
+      printf '{}'
+    fi
+    printf ',"h7_library":'
+    if [[ -s "${NEXUS_STATE_DIR}/h7-library.json" ]]; then
+      python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
+        "${NEXUS_STATE_DIR}/h7-library.json" 2>/dev/null || printf '{}'
+    else
+      printf '{"books":[]}'
+    fi
     printf ',"gatekeeper":'
     if [[ -s "${NEXUS_STATE_DIR}/connection-intent.json" ]]; then
       python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
@@ -182,6 +198,18 @@ nexus_threat_panel_publish() {
     else
       printf '{"tables":{"mac_vendors":[],"exploit_cve_map":[]}}'
     fi
+    printf ',"us_field":'
+    if declare -f nexus_us_field_json >/dev/null 2>&1; then
+      nexus_us_field_json
+    else
+      printf '{"page":1,"title":"US","observations":["US field intel module not loaded."]}'
+    fi
+    printf ',"human_dossier":'
+    if declare -f nexus_human_dossier_json >/dev/null 2>&1; then
+      nexus_human_dossier_json
+    else
+      printf '{"dossier_version":"1.0","ip_count":0,"ips":[],"analyst":"Grok Heavy"}'
+    fi
     printf ',"adblock_guardian":'
     if declare -f nexus_adblock_guardian_json >/dev/null 2>&1; then
       nexus_adblock_guardian_json
@@ -189,13 +217,9 @@ nexus_threat_panel_publish() {
       printf '{}'
     fi
     printf ',"host_attacks":'
-    if declare -f nexus_field_attack_publish >/dev/null 2>&1; then
-      nexus_field_attack_publish
-    fi
-    if declare -f nexus_host_attack_publish >/dev/null 2>&1; then
-      nexus_host_attack_publish
-    fi
-    if declare -f nexus_host_attacks_json >/dev/null 2>&1; then
+    if declare -f nexus_host_attacks_panel_json >/dev/null 2>&1; then
+      nexus_host_attacks_panel_json
+    elif declare -f nexus_host_attacks_json >/dev/null 2>&1; then
       nexus_host_attacks_json
     else
       printf '{"points":[],"stats":{"total":0,"hot":0,"warm":0,"cool":0}}'
@@ -212,6 +236,127 @@ nexus_threat_panel_publish() {
     && mv -f "${NEXUS_THREAT_PANEL_JSON}.tmp" "$NEXUS_THREAT_PANEL_JSON"
   chmod 640 "$NEXUS_THREAT_PANEL_JSON" 2>/dev/null || true
   chown root:nexus "$NEXUS_THREAT_PANEL_JSON" 2>/dev/null || true
+  if [[ -s "$NEXUS_THREAT_PANEL_JSON" ]] && command -v python3 >/dev/null 2>&1; then
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 - <<'PY' 2>/dev/null || true
+import json, os
+from pathlib import Path
+state = Path(os.environ["NEXUS_STATE_DIR"])
+src = state / "threat-panel.json"
+dst = state / "field-snapshot.json"
+try:
+    raw = src.read_text(encoding="utf-8")
+except OSError:
+    raise SystemExit(0)
+try:
+    doc = json.loads(raw)
+except json.JSONDecodeError:
+    try:
+        doc, _end = json.JSONDecoder().raw_decode(raw.lstrip())
+    except json.JSONDecodeError:
+        raise SystemExit(0)
+gk = doc.get("gatekeeper") or {}
+ha = doc.get("host_attacks") or {}
+ak = doc.get("attack_kit") or {}
+
+def _us_field_slim(us):
+    ident = us.get("identity") or {}
+    gk = us.get("gatekeeper") or {}
+    trust = us.get("trust_posture") or {}
+    sock = us.get("sockets") or {}
+    net = us.get("network") or {}
+    return {
+        "page": us.get("page", 1),
+        "title": us.get("title", "US"),
+        "subtitle": us.get("subtitle"),
+        "motto": us.get("motto"),
+        "generated_at": us.get("generated_at"),
+        "observations": (us.get("observations") or [])[:12],
+        "identity": {
+            "hostname": ident.get("hostname"),
+            "fqdn": ident.get("fqdn"),
+            "os": ident.get("os"),
+            "os_release": ident.get("os_release"),
+            "kernel": ident.get("kernel"),
+            "arch": ident.get("arch"),
+            "cpu_model": ident.get("cpu_model"),
+            "cpu_count": ident.get("cpu_count"),
+            "uptime_human": ident.get("uptime_human"),
+            "nexus_version": ident.get("nexus_version"),
+            "vigil_mode": ident.get("vigil_mode"),
+            "operator_user": ident.get("operator_user"),
+            "disk_root": ident.get("disk_root") or {},
+            "memory": {
+                "MemTotal_kB": (ident.get("memory") or {}).get("MemTotal_kB"),
+                "MemAvailable_kB": (ident.get("memory") or {}).get("MemAvailable_kB"),
+            },
+        },
+        "network": {
+            "default_route": net.get("default_route") or {},
+            "dns": net.get("dns") or {},
+            "interfaces": (net.get("interfaces") or [])[:8],
+        },
+        "sockets": {
+            "established": sock.get("established", 0),
+            "listening": sock.get("listening", 0),
+            "syn_state": sock.get("syn_state", 0),
+            "top_processes": (sock.get("top_processes") or [])[:8],
+            "top_remote_peers": (sock.get("top_remote_peers") or [])[:8],
+        },
+        "gatekeeper": {
+            "strict_trust": gk.get("strict_trust"),
+            "pending_trust_count": gk.get("pending_trust_count", 0),
+            "verdict_histogram": gk.get("verdict_histogram") or {},
+            "harm_candidates": gk.get("harm_candidates", 0),
+        },
+        "trust_posture": trust,
+    }
+
+slim = {
+    "field": True,
+    "updated": doc.get("updated"),
+    "vigil_mode": doc.get("vigil_mode"),
+    "version": doc.get("version"),
+    "truth_signal": doc.get("truth_signal"),
+    "correlation_score": doc.get("correlation_score"),
+    "firewall": doc.get("firewall"),
+    "firewall_blocks": doc.get("firewall_blocks"),
+    "lockdown_first": doc.get("lockdown_first"),
+    "internet": doc.get("internet") or {},
+    "gatekeeper": {
+        "connections": (gk.get("connections") or [])[:80],
+        "harm_candidates": gk.get("harm_candidates", 0),
+        "why_no_auto_block": gk.get("why_no_auto_block", ""),
+    },
+    "host_attacks": ha,
+    "attack_kit": {
+        "disabled_count": ak.get("disabled_count", 0),
+        "nokill_count": ak.get("nokill_count", 0),
+        "field_paths_ready": ak.get("field_paths_ready", 0),
+        "trust_strike": ak.get("trust_strike") or {},
+    },
+    "trusted": (doc.get("trusted") or [])[:40],
+    "blocked": (doc.get("blocked") or [])[:40],
+    "vector_intel": doc.get("vector_intel") or {},
+    "settings": doc.get("settings") or {},
+    "threats": (doc.get("threats") or [])[:30],
+    "vectors": (doc.get("vectors") or [])[:40],
+    "us_field": _us_field_slim(doc.get("us_field") or {}),
+    "human_dossier": {
+        "dossier_version": (doc.get("human_dossier") or {}).get("dossier_version"),
+        "generated_at": (doc.get("human_dossier") or {}).get("generated_at"),
+        "analyst": (doc.get("human_dossier") or {}).get("analyst"),
+        "ip_count": (doc.get("human_dossier") or {}).get("ip_count") or len((doc.get("human_dossier") or {}).get("ips") or []),
+        "summary": (doc.get("human_dossier") or {}).get("summary"),
+        "malware_counts": (doc.get("human_dossier") or {}).get("malware_counts") or {},
+    },
+}
+tmp = dst.with_suffix(".tmp")
+tmp.write_text(json.dumps(slim, ensure_ascii=False) + "\n", encoding="utf-8")
+tmp.replace(dst)
+PY
+    chmod 640 "${NEXUS_STATE_DIR}/field-snapshot.json" 2>/dev/null || true
+    chown root:nexus "${NEXUS_STATE_DIR}/field-snapshot.json" 2>/dev/null || true
+  fi
   flock -u 9 2>/dev/null || true
 }
 
