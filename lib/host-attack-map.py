@@ -120,21 +120,35 @@ def _heat_color(heat: float, fp: int) -> dict[str, Any]:
     }
 
 
-def _resolve_coords(ip: str, enriched: dict[str, Any]) -> tuple[float, float, str]:
+def _clamp_coords(lat: Any, lon: Any) -> tuple[float, float] | None:
+    try:
+        la, lo = float(lat), float(lon)
+    except (TypeError, ValueError):
+        return None
+    if la < -90.0 or la > 90.0:
+        return None
+    while lo > 180.0:
+        lo -= 360.0
+    while lo < -180.0:
+        lo += 360.0
+    return round(la, 5), round(lo, 5)
+
+
+def _resolve_coords(ip: str, enriched: dict[str, Any]) -> tuple[float, float, str] | None:
     lat, lon = enriched.get("lat"), enriched.get("lon")
     if lat is not None and lon is not None:
-        try:
-            return float(lat), float(lon), enriched.get("geo_source") or "GeoIP"
-        except (TypeError, ValueError):
-            pass
+        clamped = _clamp_coords(lat, lon)
+        if clamped:
+            return clamped[0], clamped[1], enriched.get("geo_source") or "GeoIP"
     cc = str(enriched.get("country_code") or "")
     if cc in COUNTRY_CENTROIDS:
         fp = _fingerprint(ip, cc)
-        jitter = ((fp % 1000) - 500) / 250.0
+        jitter = ((fp % 1000) - 500) / 400.0
         base = COUNTRY_CENTROIDS[cc]
-        return base[0] + jitter * 0.4, base[1] + jitter * 0.6, "country-centroid"
-    fp = _fingerprint(ip)
-    return ((fp % 120) - 60) + ((fp >> 8) % 30) * 0.1, ((fp >> 4) % 360) - 180, "estimated"
+        clamped = _clamp_coords(base[0] + jitter * 0.35, base[1] + jitter * 0.55)
+        if clamped:
+            return clamped[0], clamped[1], "country-centroid"
+    return None
 
 
 def _disabled_ips() -> set[str]:
@@ -274,7 +288,10 @@ def _collect_points() -> list[dict[str, Any]]:
             heat = max(heat, VERDICT_HEAT.get(r["verdict"], 0.0))
         fp = _fingerprint(ip, r["vector"], r.get("process", ""), r.get("verdict", ""), r.get("detail", ""))
         style = _heat_color(heat, fp)
-        lat, lon, geo_src = _resolve_coords(ip, enriched)
+        resolved = _resolve_coords(ip, enriched)
+        if not resolved:
+            continue
+        lat, lon, geo_src = resolved
         loc_label = ", ".join(
             x for x in (enriched.get("city"), enriched.get("region"), enriched.get("country")) if x
         ) or enriched.get("org") or ip

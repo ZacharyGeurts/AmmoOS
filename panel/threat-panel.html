@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NEXUS-Shield — Threat Panel</title>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
+  <link rel="preload" href="/assets/earth-satellite-2k.jpg" as="image" />
   <style>
     :root {
       --bg: #080a10;
@@ -569,7 +570,23 @@
       border: 1px solid var(--border); background: #060a14;
       box-shadow: inset 0 0 60px rgba(20, 60, 120, 0.15);
     }
-    #host-earth-map { width: 100%; height: 520px; min-height: 340px; background: #060a14; z-index: 1; }
+    #host-earth-map {
+      width: 100%; height: 520px; min-height: 340px; z-index: 1;
+      background: #060a14 url(/assets/earth-satellite-2k.jpg) center / cover no-repeat;
+    }
+    #host-earth-map.host-map-ready { background: #060a14; }
+    #host-earth-map.host-map-booting::after {
+      content: "Loading globe…"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 0.78rem; pointer-events: none; background: rgba(6, 10, 20, 0.35);
+    }
+    .host-map-panel::after {
+      content: ""; pointer-events: none; position: absolute; inset: 0; z-index: 500;
+      border-radius: 12px; box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.45);
+    }
+    .ha-marker-leaflet { background: transparent !important; border: none !important; }
+    .host-map-hd-ready .leaflet-tile-pane { filter: saturate(1.08) contrast(1.04); }
+    .leaflet-control-zoom a { background: rgba(8, 12, 20, 0.9) !important; color: var(--text) !important; border-color: var(--border) !important; }
+    .leaflet-control-attribution { background: rgba(8, 12, 20, 0.75) !important; color: var(--muted) !important; font-size: 0.58rem !important; }
     .host-map-toolbar {
       position: absolute; top: 10px; right: 10px; z-index: 1000;
       display: flex; gap: 6px; flex-wrap: wrap;
@@ -666,7 +683,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.0.0</h1>
+        <h1>NEXUS-Shield v3.0.1</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1243,7 +1260,11 @@
       if (name === "logs") loadLog(currentLog);
       if (name === "host-attack") {
         ensureHostEarthMap();
-        setTimeout(() => hostEarthMap?.invalidateSize(), 150);
+        invalidateHostMapSize();
+        requestAnimationFrame(invalidateHostMapSize);
+        setTimeout(invalidateHostMapSize, 80);
+        setTimeout(invalidateHostMapSize, 320);
+        if (hostLastPoints.length) renderHostAttackMap({ points: hostLastPoints, stats: {}, author: {} });
       }
       if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
     }
@@ -2086,6 +2107,25 @@
     let hostMarkerLayer = null;
     let hostMarkersById = {};
     let hostLastPoints = [];
+    let hostOfflineLayer = null;
+    let hostSatelliteLayer = null;
+    const HOST_MAP_BOUNDS = [[-85, -180], [85, 180]];
+
+    function normalizeGeo(lat, lon) {
+      const la = Number(lat);
+      const lo = Number(lon);
+      if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+      const clampedLat = Math.max(-85, Math.min(85, la));
+      let clampedLon = lo;
+      while (clampedLon > 180) clampedLon -= 360;
+      while (clampedLon < -180) clampedLon += 360;
+      return [clampedLat, clampedLon];
+    }
+
+    function invalidateHostMapSize() {
+      if (!hostEarthMap) return;
+      hostEarthMap.invalidateSize({ animate: false, pan: false });
+    }
 
     function haMarkerIcon(p) {
       const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
@@ -2113,53 +2153,130 @@
     }
 
     function ensureHostEarthMap() {
-      if (hostEarthMap) return hostEarthMap;
+      if (hostEarthMap) {
+        invalidateHostMapSize();
+        return hostEarthMap;
+      }
       if (typeof L === "undefined") return null;
-      hostEarthMap = L.map("host-earth-map", {
-        center: [20, 0],
+      const el = $("host-earth-map");
+      if (!el) return null;
+      el.classList.add("host-map-booting");
+
+      hostEarthMap = L.map(el, {
+        center: [22, 0],
         zoom: 2,
         minZoom: 2,
-        maxZoom: 19,
-        worldCopyJump: true,
+        maxZoom: 18,
+        maxBounds: HOST_MAP_BOUNDS,
+        maxBoundsViscosity: 0.9,
+        worldCopyJump: false,
         zoomControl: true,
+        attributionControl: true,
+        fadeAnimation: true,
+        zoomAnimation: true,
       });
-      const satellite = L.tileLayer(
+
+      hostOfflineLayer = L.imageOverlay("/assets/earth-satellite-2k.jpg", [[-90, -180], [90, 180]], {
+        opacity: 1,
+        interactive: false,
+      });
+      hostOfflineLayer.addTo(hostEarthMap);
+
+      hostSatelliteLayer = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { attribution: "Esri, Maxar, Earthstar", maxZoom: 19 }
+        { attribution: "Esri, Maxar", maxZoom: 18, updateWhenIdle: false, keepBuffer: 6, crossOrigin: true }
       );
       const street = L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        { attribution: "© OpenStreetMap", maxZoom: 19 }
+        { attribution: "© OpenStreetMap", maxZoom: 19, crossOrigin: true }
       );
       const labels = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-        { attribution: "Esri labels", maxZoom: 19, opacity: 0.85 }
+        { attribution: "", maxZoom: 18, opacity: 0.88, crossOrigin: true }
       );
-      const offline = L.imageOverlay("/assets/earth-satellite-2k.jpg", [[-90, -180], [90, 180]]);
-      satellite.addTo(hostEarthMap);
-      labels.addTo(hostEarthMap);
+
+      let hdEnabled = false;
+      const enableHdTiles = () => {
+        if (hdEnabled || !hostEarthMap) return;
+        hdEnabled = true;
+        hostSatelliteLayer.addTo(hostEarthMap);
+        labels.addTo(hostEarthMap);
+        if (hostOfflineLayer) hostOfflineLayer.setOpacity(0.15);
+        el.classList.add("host-map-hd-ready");
+        invalidateHostMapSize();
+      };
+      hostSatelliteLayer.once("tileload", enableHdTiles);
+      hostSatelliteLayer.once("load", enableHdTiles);
+      setTimeout(enableHdTiles, 1200);
+
       L.control.layers(
-        { "Satellite (Esri)": satellite, "Street (OSM)": street, "Offline NASA globe": offline },
-        { "Place labels": labels },
-        { collapsed: false }
+        { "HD Satellite": hostSatelliteLayer, "Street": street, "NASA Globe": hostOfflineLayer },
+        { "Labels": labels },
+        { collapsed: true, position: "topright" }
       ).addTo(hostEarthMap);
+
       hostMarkerLayer = L.layerGroup().addTo(hostEarthMap);
-      $("ha-fit-all")?.addEventListener("click", () => {
-        if (!hostLastPoints.length || !hostEarthMap) return;
-        const bounds = L.latLngBounds(hostLastPoints.map((p) => [p.lat, p.lon]));
-        hostEarthMap.fitBounds(bounds.pad(0.35), { maxZoom: 12 });
-      });
-      $("ha-reset-globe")?.addEventListener("click", () => {
-        hostEarthMap?.setView([20, 0], 2);
-      });
-      setTimeout(() => hostEarthMap.invalidateSize(), 120);
+      el.classList.remove("host-map-booting");
+      el.classList.add("host-map-ready");
+
+      if (!$("ha-fit-all")?.dataset.bound) {
+        $("ha-fit-all")?.addEventListener("click", () => {
+          if (!hostLastPoints.length || !hostEarthMap) return;
+          const bounds = L.latLngBounds(
+            hostLastPoints.map((p) => normalizeGeo(p.lat, p.lon)).filter(Boolean)
+          );
+          if (bounds.isValid()) hostEarthMap.fitBounds(bounds.pad(0.35), { maxZoom: 10, animate: true });
+        });
+        $("ha-reset-globe")?.addEventListener("click", () => hostEarthMap?.setView([22, 0], 2, { animate: true }));
+        $("ha-fit-all").dataset.bound = "1";
+      }
+
+      invalidateHostMapSize();
+      requestAnimationFrame(invalidateHostMapSize);
+      setTimeout(invalidateHostMapSize, 120);
+      setTimeout(invalidateHostMapSize, 400);
       return hostEarthMap;
+    }
+
+    function warmHostEarthMap() {
+      if (hostEarthMap || typeof L === "undefined") return;
+      const view = $("view-host-attack");
+      if (!view) return;
+      const wasActive = view.classList.contains("active");
+      const prev = {
+        display: view.style.display,
+        visibility: view.style.visibility,
+        position: view.style.position,
+        left: view.style.left,
+        top: view.style.top,
+        width: view.style.width,
+        pointerEvents: view.style.pointerEvents,
+      };
+      view.classList.add("active");
+      view.style.visibility = "hidden";
+      view.style.position = "fixed";
+      view.style.left = "-10000px";
+      view.style.top = "0";
+      view.style.width = "100vw";
+      view.style.pointerEvents = "none";
+      ensureHostEarthMap();
+      if (!wasActive) view.classList.remove("active");
+      view.style.display = prev.display || "";
+      view.style.visibility = prev.visibility || "";
+      view.style.position = prev.position || "";
+      view.style.left = prev.left || "";
+      view.style.top = prev.top || "";
+      view.style.width = prev.width || "";
+      view.style.pointerEvents = prev.pointerEvents || "";
+      invalidateHostMapSize();
     }
 
     function flyToHostPoint(p) {
       const map = ensureHostEarthMap();
       if (!map || !p) return;
-      map.flyTo([p.lat, p.lon], Math.max(map.getZoom(), 8), { duration: 0.8 });
+      const ll = normalizeGeo(p.lat, p.lon);
+      if (!ll) return;
+      map.flyTo(ll, Math.max(map.getZoom(), 8), { duration: 0.65 });
       const m = hostMarkersById[p.id];
       if (m) m.openPopup();
     }
@@ -2197,8 +2314,14 @@
       }
       hostMarkerLayer.clearLayers();
       hostMarkersById = {};
-      points.forEach((p) => {
-        const m = L.marker([p.lat, p.lon], { icon: haMarkerIcon(p) })
+      const geoPoints = points
+        .map((p) => {
+          const ll = normalizeGeo(p.lat, p.lon);
+          return ll ? { ...p, _ll: ll } : null;
+        })
+        .filter(Boolean);
+      geoPoints.forEach((p) => {
+        const m = L.marker(p._ll, { icon: haMarkerIcon(p), riseOnHover: true })
           .bindPopup(haPopupHtml(p), { maxWidth: 320 });
         m.addTo(hostMarkerLayer);
         hostMarkersById[p.id] = m;
@@ -2457,6 +2580,7 @@
     }
 
     initTips();
+    warmHostEarthMap();
     refresh();
     setInterval(refresh, 3000);
   </script>

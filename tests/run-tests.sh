@@ -217,7 +217,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.0\.0' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.0\.(0|1)' "$panel"
 }
 
 test_self_access_script() {
@@ -282,17 +282,34 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.0\.0' "$panel"
+  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.0\.(0|1)' "$panel"
 }
 
 test_host_attack_module() {
   [[ -f "${ROOT}/lib/host-attack-map.py" ]]
   [[ -f "${ROOT}/lib/host-attack.sh" ]]
   grep -q 'host_attacks' "${ROOT}/lib/threat-panel.sh"
+  grep -q '_clamp_coords' "${ROOT}/lib/host-attack-map.py"
+  grep -q 'return None' "${ROOT}/lib/host-attack-map.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/host-attack-map.py" build | grep -q 'point_count'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/host-attack-map.py" json | grep -q 'Zachary Geurts'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 - <<'PY'
+import importlib.util
+from pathlib import Path
+root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
+spec = importlib.util.spec_from_file_location("ham", root / "lib" / "host-attack-map.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+assert mod._clamp_coords(40.7, -74.0) == (40.7, -74.0)
+assert mod._clamp_coords(0, 200) == (0.0, -160.0)
+assert mod._clamp_coords("bad", 10) is None
+assert mod._resolve_coords("1.2.3.4", {"lat": 51.5, "lon": -0.1}) == (51.5, -0.1, "GeoIP")
+assert mod._resolve_coords("1.2.3.4", {"country_code": "US"}) is not None
+assert mod._resolve_coords("1.2.3.4", {}) is None
+PY
 }
 
 test_panel_host_attack_ui() {
@@ -304,7 +321,10 @@ test_panel_host_attack_ui() {
   grep -q 'leaflet.js' "$panel"
   grep -q 'World_Imagery' "$panel"
   grep -q 'Zachary Geurts' "$panel"
-  grep -qE 'v(2\.(9\.0)|3\.0\.0)' "$panel"
+  grep -q 'normalizeGeo' "$panel"
+  grep -q 'warmHostEarthMap' "$panel"
+  grep -q 'earth-satellite-2k.jpg' "$panel"
+  grep -qE 'v(2\.(9\.0)|3\.0\.(0|1))' "$panel"
 }
 
 test_field_attack_kit_module() {
@@ -324,7 +344,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'attack-kit/disable' "$panel"
   grep -q 'NEXUS_ATTACK_KIT_AUTO_CRUSH' "$panel"
   grep -q 'God Bless' "$panel"
-  grep -q 'v3.0.0' "$panel"
+  grep -qE 'v3\.0\.(0|1)' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
