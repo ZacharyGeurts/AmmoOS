@@ -44,9 +44,11 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/connection-gatekeeper.py" "${ROOT}/lib/vector-intel.py" "${ROOT}/lib/angel-dossier.py" \
   "${ROOT}/lib/fair-ad-guardian.py" "${ROOT}/lib/host-attack-map.py" "${ROOT}/lib/geo-intel-standards.py" \
   "${ROOT}/lib/field-attack-kit.py" "${ROOT}/lib/friendly-guard.py" "${ROOT}/lib/target-bleed.py" \
-  "${ROOT}/lib/host-identity.py" "${ROOT}/lib/sdf-assets.py" 2>/dev/null || true
+  "${ROOT}/lib/host-identity.py" "${ROOT}/lib/sdf-assets.py" "${ROOT}/lib/field-us-intel.py" "${ROOT}/lib/packet-permission.py" \
+  "${ROOT}/lib/nexus-update.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
-  "${ROOT}/lib/host-attack.sh" "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" 2>/dev/null || true
+  "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
+  "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" 2>/dev/null || true
 chmod 555 /usr/local/lib/nexus-shield/lib/friendly-guard.py /usr/local/lib/nexus-shield/lib/friendly-guard.sh 2>/dev/null || true
 chmod 755 /usr/local/lib/nexus-shield/lib/*.py 2>/dev/null || true
 chmod -R a+rX /usr/local/lib/nexus-shield/data 2>/dev/null || true
@@ -176,5 +178,5 @@ fi
 echo "NEXUS-Shield v${NEXUS_VERSION:-2.0.1} active — panel https://127.0.0.1:9477/ (browser opens on startup)."
 echo 'Start menu: NEXUS-Shield'
 echo 'License: NEXUS-Shield = MIT. AMOURANTHRTX (Field Die) = GPL v3 or commercial — not MIT-free.'
-echo 'Profile: Everyday defaults applied — email, YouTube, browsing; no auto-block.'
+echo 'Profile: Packet permission v4.0 — DPI knows intent; harmful sections blocked; good flows pass.'
 echo 'First-run lockdown applied — trust recommended connections in panel or: nexus trust <ip>'

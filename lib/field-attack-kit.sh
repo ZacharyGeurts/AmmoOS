@@ -3,6 +3,7 @@
 # Intelligence is a bullet: identify, record, crush. Survives reboot via field storage.
 
 NEXUS_FIELD_HOSTILE="${NEXUS_FIELD_HOSTILE:-${NEXUS_STATE_DIR}/field-hostile.tsv}"
+NEXUS_FIELD_NOKILL="${NEXUS_FIELD_NOKILL:-${NEXUS_STATE_DIR}/field-nokill.tsv}"
 NEXUS_HOSTILE_MEMORY_FILE="${NEXUS_HOSTILE_MEMORY_FILE:-nexus-hostile.jsonl}"
 NEXUS_TARGET_DOSSIER_FILE="${NEXUS_TARGET_DOSSIER_FILE:-nexus-target-dossiers.jsonl}"
 HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}"
@@ -28,6 +29,9 @@ nexus_field_attack_init() {
   [[ -f "$NEXUS_FIELD_HOSTILE" ]] || printf 'ts\tip\tvector\tseverity\treason\tsource\n' >"$NEXUS_FIELD_HOSTILE"
   chmod 640 "$NEXUS_FIELD_HOSTILE" 2>/dev/null || true
   chown root:nexus "$NEXUS_FIELD_HOSTILE" 2>/dev/null || true
+  [[ -f "$NEXUS_FIELD_NOKILL" ]] || printf 'ts\tip\tvector\tseverity\treason\tsource\n' >"$NEXUS_FIELD_NOKILL"
+  chmod 640 "$NEXUS_FIELD_NOKILL" 2>/dev/null || true
+  chown root:nexus "$NEXUS_FIELD_NOKILL" 2>/dev/null || true
   mkdir -p "${NEXUS_STATE_DIR}/field-storage/brain/security" 2>/dev/null || true
 }
 
@@ -41,6 +45,14 @@ nexus_field_attack_is_disabled() {
   nexus_field_attack_init
   awk -F'\t' -v ip="$ip" 'NR > 1 && $2 == ip { found = 1 } END { exit(found ? 0 : 1) }' \
     "$NEXUS_FIELD_HOSTILE" 2>/dev/null
+}
+
+nexus_field_attack_is_nokill() {
+  local ip="${1:-}"
+  [[ -n "$ip" ]] || return 1
+  nexus_field_attack_init
+  awk -F'\t' -v ip="$ip" 'NR > 1 && $2 == ip { found = 1 } END { exit(found ? 0 : 1) }' \
+    "$NEXUS_FIELD_NOKILL" 2>/dev/null
 }
 
 nexus_field_attack_record_field() {
@@ -125,10 +137,34 @@ print(json.dumps({
   done < <(nexus_field_attack_dossier_paths)
 }
 
+nexus_field_attack_nokill_target() {
+  local ip="${1:-}" vector="${2:-HOSTILE}" severity="${3:-high}" reason="${4:-operator_nokill}"
+  local source="${5:-attack-kit}"
+  [[ -n "$ip" ]] || return 1
+  nexus_field_attack_is_ipv4 "$ip" || return 1
+  nexus_field_attack_init
+  nexus_field_attack_is_nokill "$ip" && {
+    nexus_log "INFO" "field-attack-kit" "NOKILL_ALREADY ip=${ip}"
+    return 0
+  }
+  local ts
+  ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$ts" "$ip" "$vector" "$severity" "$reason" "$source" \
+    >>"$NEXUS_FIELD_NOKILL"
+  nexus_field_attack_record_field "$ip" "$vector" "$severity" "$reason" "$source" \
+    '{"action":"NO_KILL","exempt":true}'
+  nexus_log "ALERT" "field-attack-kit" "TARGET_NOKILL ip=${ip} vector=${vector} reason=${reason}"
+  return 0
+}
+
 nexus_field_attack_kill_target() {
   local ip="${1:-}" vector="${2:-HOSTILE}" severity="${3:-high}" reason="${4:-target_kill}"
   local source="${5:-attack-kit}" dossier="${6:-}"
   [[ -n "$ip" ]] || return 1
+  nexus_field_attack_is_nokill "$ip" && {
+    nexus_log "ALERT" "field-attack-kit" "KILL_REFUSED_NOKILL ip=${ip}"
+    return 1
+  }
   # shellcheck source=/dev/null
   source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
   local monitor_json=""
@@ -160,6 +196,10 @@ nexus_field_attack_rekill_target() {
   local ip="${1:-}" vector="${2:-HOSTILE}" severity="${3:-high}" reason="${4:-rekill_validated}"
   local source="${5:-attack-kit}" dossier="${6:-}"
   [[ -n "$ip" ]] || return 1
+  nexus_field_attack_is_nokill "$ip" && {
+    nexus_log "ALERT" "field-attack-kit" "REKILL_REFUSED_NOKILL ip=${ip}"
+    return 1
+  }
   # shellcheck source=/dev/null
   source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
   local monitor_json=""
@@ -348,6 +388,11 @@ nexus_field_attack_publish() {
   [[ "${NEXUS_FIELD_ATTACK_KIT:-1}" == "1" ]] || return 0
   nexus_field_attack_sync_from_memory
   nexus_field_attack_apply_registry
+}
+
+nexus_field_attack_publish_deep() {
+  [[ "${NEXUS_FIELD_ATTACK_KIT:-1}" == "1" ]] || return 0
+  nexus_field_attack_publish
   nexus_field_attack_auto_crush
 }
 
@@ -356,10 +401,17 @@ nexus_field_attack_count() {
   awk 'NR > 1 && $2 != "" { c++ } END { print c + 0 }' "$NEXUS_FIELD_HOSTILE" 2>/dev/null
 }
 
+nexus_field_attack_nokill_count() {
+  nexus_field_attack_init
+  awk 'NR > 1 && $2 != "" { c++ } END { print c + 0 }' "$NEXUS_FIELD_NOKILL" 2>/dev/null
+}
+
 nexus_field_attack_json() {
   nexus_field_attack_init
   local count field_paths=0 p
   count="$(nexus_field_attack_count)"
+  local nokill_count
+  nokill_count="$(nexus_field_attack_nokill_count)"
   while IFS= read -r p; do
     [[ -f "$p" ]] && field_paths=$((field_paths + 1))
   done < <(nexus_field_attack_memory_paths)
@@ -369,8 +421,18 @@ nexus_field_attack_json() {
   printf '"enabled":%s,' "${NEXUS_FIELD_ATTACK_KIT:-1}"
   printf '"auto_crush":%s,' "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH 2>/dev/null || echo 0)"
   printf '"disabled_count":%s,' "${count:-0}"
+  printf '"nokill_count":%s,' "${nokill_count:-0}"
   printf '"field_paths_ready":%s,' "$field_paths"
-  printf '"standards":["IEEE-802-OUI","RFC7483-RDAP","GeoIP","Field-Memory"],'
+  printf '"standards":["IEEE-802-OUI","RFC7483-RDAP","GeoIP","Field-Memory","Trust-Strike-Engine"],'
+  local trust_json="{}"
+  if [[ -s "${NEXUS_STATE_DIR}/trust-strike-summary.json" ]]; then
+    trust_json="$(python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
+      "${NEXUS_STATE_DIR}/trust-strike-summary.json" 2>/dev/null || echo '{}')"
+  elif [[ -f "${NEXUS_INSTALL_ROOT}/lib/trust-strike-engine.py" ]]; then
+    trust_json="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "${NEXUS_INSTALL_ROOT}/lib/trust-strike-engine.py" summary 2>/dev/null || echo '{}')"
+  fi
+  printf '"trust_strike":%s,' "${trust_json:-{}}"
   printf '"hosts":['
   local first=1 ts ip vector severity reason source
   while IFS=$'\t' read -r ts ip vector severity reason source; do

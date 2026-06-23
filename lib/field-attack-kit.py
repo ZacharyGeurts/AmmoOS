@@ -15,6 +15,7 @@ STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 HOST_ATTACKS = STATE / "host-attacks.json"
 HOSTILE_TSV = STATE / "field-hostile.tsv"
+NOKILL_TSV = STATE / "field-nokill.tsv"
 DOSSIERS = STATE / "angel-dossiers.json"
 AUTO_REKILL_LOG = STATE / "auto-rekill-log.json"
 AUTO_REKILL_COOLDOWN_SEC = 3600
@@ -36,6 +37,12 @@ check_target_online = _hi.check_target_online
 extract_identity_fingerprint = _hi.extract_identity_fingerprint
 fingerprint_from_point_or_dossier = _hi.fingerprint_from_point_or_dossier
 load_archived_dossier = _hi.load_archived_dossier
+
+_ts_spec = importlib.util.spec_from_file_location("trust_strike", INSTALL / "lib" / "trust-strike-engine.py")
+_ts = importlib.util.module_from_spec(_ts_spec)
+assert _ts_spec and _ts_spec.loader
+_ts_spec.loader.exec_module(_ts)
+gate_strike = _ts.gate_strike
 
 
 def _now() -> str:
@@ -61,6 +68,24 @@ def _disabled_ips() -> set[str]:
     except OSError:
         pass
     return ips
+
+
+def _nokill_ips() -> set[str]:
+    ips: set[str] = set()
+    if not NOKILL_TSV.is_file():
+        return ips
+    try:
+        for line in NOKILL_TSV.read_text(encoding="utf-8", errors="replace").splitlines()[1:]:
+            parts = line.split("\t")
+            if len(parts) >= 2 and parts[1]:
+                ips.add(parts[1])
+    except OSError:
+        pass
+    return ips
+
+
+def _is_nokill(ip: str) -> bool:
+    return ip in _nokill_ips()
 
 
 def _point_for_ip(ip: str) -> dict[str, Any]:
@@ -195,6 +220,40 @@ def _run_kill(
     return proc.returncode == 0
 
 
+def nokill_target(
+    ip: str,
+    vector: str = "HOSTILE",
+    severity: str = "high",
+    reason: str = "operator_nokill",
+) -> dict[str, Any]:
+    if not ip:
+        return {"ok": False, "ip": ip, "nokill": False, "reason": "missing_ip"}
+    if _is_nokill(ip):
+        return {"ok": True, "ip": ip, "nokill": True, "already": True, "reason": "already_nokill"}
+    script = INSTALL / "lib" / "field-attack-kit.sh"
+    if not script.is_file():
+        return {"ok": False, "ip": ip, "nokill": False, "reason": "kit_missing"}
+    safe_ip = ip.replace("'", "'\"'\"'")
+    safe_vector = vector.replace("'", "'\"'\"'")
+    safe_reason = reason.replace("'", "'\"'\"'")
+    cmd = (
+        f"source {INSTALL}/lib/nexus-common.sh && "
+        f"source {script} && "
+        f"nexus_field_attack_nokill_target '{safe_ip}' '{safe_vector}' '{severity}' '{safe_reason}' 'attack-kit'"
+    )
+    env = os.environ.copy()
+    env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
+    env["NEXUS_STATE_DIR"] = str(STATE)
+    proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=20, env=env)
+    ok = proc.returncode == 0
+    return {
+        "ok": ok,
+        "ip": ip,
+        "nokill": ok,
+        "reason": reason if ok else "nokill_failed",
+    }
+
+
 def kill_target(
     ip: str,
     vector: str = "HOSTILE",
@@ -202,11 +261,24 @@ def kill_target(
     reason: str = "target_kill",
     extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    if _is_nokill(ip):
+        return {
+            "ok": False,
+            "ip": ip,
+            "permanent": False,
+            "killed": False,
+            "dossier_archived": False,
+            "nokill_refused": True,
+            "reason": "nokill_exempt",
+            "dossier": {},
+        }
     point = _point_for_ip(ip)
     monitor = (extra or {}).get("monitor") or point.get("monitor")
     monitor_dict = monitor if isinstance(monitor, dict) else None
-    refuse, guard_reason = refuse_kill(ip, monitor=monitor_dict)
-    if refuse:
+    force = bool((extra or {}).get("force"))
+    strike_mode = str((extra or {}).get("strike_mode") or "manual")
+    strike_gate = gate_strike(ip, point, mode=strike_mode, monitor=monitor_dict, force=force)
+    if strike_gate.get("friendly_refused"):
         return {
             "ok": False,
             "ip": ip,
@@ -214,7 +286,21 @@ def kill_target(
             "killed": False,
             "dossier_archived": False,
             "friendly_refused": True,
-            "reason": guard_reason,
+            "reason": strike_gate.get("friendly_reason") or strike_gate.get("reason"),
+            "strike_gate": strike_gate,
+            "dossier": {},
+        }
+    if not strike_gate.get("allowed"):
+        return {
+            "ok": False,
+            "ip": ip,
+            "permanent": False,
+            "killed": False,
+            "dossier_archived": False,
+            "strike_refused": True,
+            "reason": strike_gate.get("reason", "strike_confidence_low"),
+            "strike_confidence": strike_gate.get("strike_confidence"),
+            "strike_gate": strike_gate,
             "dossier": {},
         }
     dossier = _full_dossier_for_ip(ip, extra)
@@ -226,6 +312,8 @@ def kill_target(
         "killed": ok,
         "dossier_archived": ok,
         "friendly_refused": False,
+        "strike_confidence": strike_gate.get("strike_confidence"),
+        "strike_gate": strike_gate,
         "dossier": dossier if ok else {},
     }
 
@@ -234,12 +322,13 @@ def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
     doc = _load_json(HOST_ATTACKS, {})
     points = doc.get("points") or []
     disabled = _disabled_ips()
+    nokill = _nokill_ips()
     crushed: list[str] = []
     skipped: list[str] = []
 
     for p in points:
         ip = str(p.get("ip") or "")
-        if not ip or ip in disabled:
+        if not ip or ip in disabled or ip in nokill:
             skipped.append(ip)
             continue
         heat = float(p.get("heat") or 0)
@@ -249,7 +338,13 @@ def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
         vector = str(p.get("vector") or "HOSTILE")
         severity = str(p.get("severity") or "high")
         reason = f"attack_kit:heat={heat:.2f}"
-        result = kill_target(ip, vector, severity, reason)
+        result = kill_target(
+            ip,
+            vector,
+            severity,
+            reason,
+            extra={"strike_mode": "auto", "monitor": p.get("monitor")},
+        )
         if result.get("ok"):
             crushed.append(ip)
             disabled.add(ip)
@@ -322,7 +417,11 @@ def auto_rekill_validated(max_ips: int = AUTO_REKILL_MAX_IPS) -> dict[str, Any]:
     skipped: list[str] = []
     checked = 0
 
+    nokill = _nokill_ips()
     for ip in disabled[:max_ips]:
+        if ip in nokill:
+            skipped.append(ip)
+            continue
         if _auto_rekill_cooldown_active(ip):
             skipped.append(ip)
             continue
@@ -385,6 +484,14 @@ def _run_rekill(
 
 
 def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> dict[str, Any]:
+    if _is_nokill(ip):
+        return {
+            "ok": False,
+            "ip": ip,
+            "rekill": False,
+            "nokill_refused": True,
+            "reason": "nokill_exempt",
+        }
     point = _point_for_ip(ip)
     online_doc = check_target_online(ip, point or None)
     if not online_doc.get("online"):
@@ -429,7 +536,7 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
 def main() -> int:
     if len(sys.argv) < 2:
         print(
-            "usage: field-attack-kit.py [crush-hot|auto-rekill|kill|disable|check-online|rekill <ip> ...]",
+            "usage: field-attack-kit.py [crush-hot|auto-rekill|kill|disable|nokill|check-online|rekill <ip> ...]",
             file=sys.stderr,
         )
         return 1
@@ -456,6 +563,19 @@ def main() -> int:
         return 0
     if cmd == "crush-hot":
         json.dump(crush_hot(), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+    if cmd == "nokill" and len(sys.argv) >= 3:
+        json.dump(
+            nokill_target(
+                sys.argv[2],
+                sys.argv[3] if len(sys.argv) > 3 else "HOSTILE",
+                sys.argv[4] if len(sys.argv) > 4 else "high",
+                sys.argv[5] if len(sys.argv) > 5 else "operator_nokill",
+            ),
+            sys.stdout,
+            indent=2,
+        )
         sys.stdout.write("\n")
         return 0
     if cmd in ("kill", "disable") and len(sys.argv) >= 3:

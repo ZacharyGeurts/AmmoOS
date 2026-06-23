@@ -6,6 +6,7 @@ NEXUS_FIREWALL_BLOCKS="${NEXUS_FIREWALL_BLOCKS:-${NEXUS_STATE_DIR}/firewall-bloc
 NEXUS_FIREWALL_BLOCK_DURATION="${NEXUS_FIREWALL_BLOCK_DURATION:-86400}"
 NEXUS_FIREWALL_BLOCK_FOREVER="${NEXUS_FIREWALL_BLOCK_FOREVER:-3153600000}"
 NEXUS_FIREWALL_TEMP_ALLOW_DURATION="${NEXUS_FIREWALL_TEMP_ALLOW_DURATION:-86400}"
+NEXUS_FIREWALL_PERMIT_FLOW_DURATION="${NEXUS_FIREWALL_PERMIT_FLOW_DURATION:-7200}"
 
 NEXUS_FIREWALL_BAD_PORTS=(
   4444 5555 1337 31337 6666 6667 9001 9050 1080 3128 4443
@@ -103,6 +104,21 @@ table inet ${NEXUS_FIREWALL_TABLE} {
     flags timeout
     timeout ${NEXUS_FIREWALL_TEMP_ALLOW_DURATION}s
   }
+  set permit_flow_out {
+    type ipv4_addr . inet_service
+    flags timeout
+    timeout ${NEXUS_FIREWALL_PERMIT_FLOW_DURATION}s
+  }
+  set block_flow_out {
+    type ipv4_addr . inet_service
+    flags timeout
+    timeout ${NEXUS_FIREWALL_BLOCK_DURATION}s
+  }
+  set block_flow_in {
+    type ipv4_addr . inet_service
+    flags timeout
+    timeout ${NEXUS_FIREWALL_BLOCK_DURATION}s
+  }
 
   chain input {
     type filter hook input priority -120; policy drop;
@@ -110,6 +126,8 @@ table inet ${NEXUS_FIREWALL_TABLE} {
     ct state established,related accept
     ct state invalid drop
     ip saddr @trusted_in accept
+    ip saddr . tcp sport @block_flow_in drop
+    ip saddr . udp sport @block_flow_in drop
     ip saddr @block_in drop
     ip6 saddr @block6_in drop
     tcp dport @block_in_ports drop
@@ -127,6 +145,10 @@ table inet ${NEXUS_FIREWALL_TABLE} {
     type filter hook output priority -120; policy accept;
     ip daddr @trusted_out accept
     ip daddr @temp_allow_out accept
+    ip daddr . tcp dport @permit_flow_out accept
+    ip daddr . udp dport @permit_flow_out accept
+    ip daddr . tcp dport @block_flow_out drop
+    ip daddr . udp dport @block_flow_out drop
     ip daddr @block_out drop
     ip6 daddr @block6_out drop
     tcp dport @bad_ports drop
@@ -178,13 +200,54 @@ nexus_firewall_flush_blocks() {
   nft flush set inet "${NEXUS_FIREWALL_TABLE}" block6_in 2>/dev/null || true
   nft flush set inet "${NEXUS_FIREWALL_TABLE}" block6_out 2>/dev/null || true
   nft flush set inet "${NEXUS_FIREWALL_TABLE}" block_in_ports 2>/dev/null || true
+  nft flush set inet "${NEXUS_FIREWALL_TABLE}" permit_flow_out 2>/dev/null || true
+  nft flush set inet "${NEXUS_FIREWALL_TABLE}" block_flow_out 2>/dev/null || true
+  nft flush set inet "${NEXUS_FIREWALL_TABLE}" block_flow_in 2>/dev/null || true
   printf 'ts\tdirection\tip\tport\treason\texpires\n' >"$NEXUS_FIREWALL_BLOCKS"
   nexus_log "ALERT" "firewall-sentinel" "FIREWALL_FLUSH_ALL — cleared outbound blocks (internet safe)"
+}
+
+nexus_firewall_permit_flow() {
+  local direction="${1:-out}" ip="$2" port="$3" timeout="${4:-$NEXUS_FIREWALL_PERMIT_FLOW_DURATION}" reason="${5:-permit_flow}"
+  [[ "${NEXUS_FIREWALL:-1}" == "1" ]] || return 0
+  [[ "$direction" == "out" ]] || return 0
+  nexus_firewall_available || return 0
+  [[ -n "$ip" && "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ && "$port" =~ ^[0-9]+$ ]] || return 0
+  nft add element inet "${NEXUS_FIREWALL_TABLE}" permit_flow_out "{ ${ip} . ${port} timeout ${timeout}s }" 2>/dev/null \
+    || nexus_firewall_apply_base
+  nft add element inet "${NEXUS_FIREWALL_TABLE}" permit_flow_out "{ ${ip} . ${port} timeout ${timeout}s }" 2>/dev/null || true
+  nexus_log "INFO" "firewall-sentinel" "PERMIT_FLOW_OUT ${ip}:${port} reason=${reason}"
+}
+
+nexus_firewall_block_flow() {
+  local direction="${1:-out}" ip="$2" port="$3" timeout="${4:-$NEXUS_FIREWALL_BLOCK_DURATION}" reason="${5:-segment}"
+  [[ "${NEXUS_FIREWALL:-1}" == "1" ]] || return 0
+  nexus_firewall_available || return 0
+  [[ -n "$ip" && "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ && "$port" =~ ^[0-9]+$ ]] || return 0
+  nexus_firewall_is_sacred_ip "$ip" && return 0
+  if declare -f nexus_firewall_is_trusted >/dev/null 2>&1; then
+    nexus_firewall_is_trusted "$ip" "$direction" && return 0
+  fi
+  local set="block_flow_${direction}"
+  [[ "$direction" == "in" || "$direction" == "out" ]] || direction="out"
+  set="block_flow_${direction}"
+  nft add element inet "${NEXUS_FIREWALL_TABLE}" "${set}" "{ ${ip} . ${port} timeout ${timeout}s }" 2>/dev/null \
+    || nexus_firewall_apply_base
+  nft add element inet "${NEXUS_FIREWALL_TABLE}" "${set}" "{ ${ip} . ${port} timeout ${timeout}s }" 2>/dev/null || true
+  nexus_firewall_blocks_init
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$direction" "$ip" "$port" "$reason" "$timeout" \
+    >>"$NEXUS_FIREWALL_BLOCKS"
+  nexus_log "INFO" "firewall-sentinel" "BLOCK_FLOW_${direction^^} ${ip}:${port} reason=${reason}"
 }
 
 nexus_firewall_block_ip() {
   local direction="${1:-out}" ip="$2" timeout="${3:-$NEXUS_FIREWALL_BLOCK_DURATION}" reason="${4:-manual}"
   [[ "${NEXUS_FIREWALL:-1}" == "1" ]] || return 0
+  if [[ "$direction" == "both" ]]; then
+    nexus_firewall_block_ip in "$ip" "$timeout" "$reason"
+    nexus_firewall_block_ip out "$ip" "$timeout" "$reason"
+    return 0
+  fi
   nexus_firewall_available || return 0
   [[ -n "$ip" ]] || return 0
   [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 0
@@ -229,6 +292,11 @@ nexus_firewall_block_port_in() {
 nexus_firewall_unblock_ip() {
   local direction="${1:-out}" ip="$2"
   [[ "${NEXUS_FIREWALL:-1}" == "1" ]] || return 0
+  if [[ "$direction" == "both" ]]; then
+    nexus_firewall_unblock_ip in "$ip"
+    nexus_firewall_unblock_ip out "$ip"
+    return 0
+  fi
   nexus_firewall_available || return 0
   [[ -n "$ip" && "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 0
   local set="block_${direction}"

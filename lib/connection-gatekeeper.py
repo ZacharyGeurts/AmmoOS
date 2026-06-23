@@ -59,6 +59,8 @@ TRUST_RANK = {
     "SUSPICIOUS": 3,
     "HARM_CANDIDATE": 4,
 }
+# v4.0 packet permission: ranks 0–2 (USER_OK, EPHEMERAL, MONITOR) auto-permit at zero nft cost.
+MIN_ACCEPT_TRUST_RANK = 2
 
 
 def _now() -> str:
@@ -485,18 +487,18 @@ def _build_suggestion(
         friendly.append("You already marked this address Trust forever.")
 
     actions = {
-        "USER_OK": "No action needed. Use Trust forever only if it gets flagged again later.",
-        "EPHEMERAL": "Usually fine — quick tabs come and go. Trust forever if the same CDN keeps nagging you.",
-        "SUSPICIOUS": "Glance at the app name. If you recognize it (game launcher, updater), Trust forever. If not, keep watching.",
-        "HARM_CANDIDATE": "If you do not recognize the app, click Stop this site. If it is a game, VPN, or CDN you use, Trust forever.",
-        "MONITOR": "Routine traffic — no action unless the list keeps growing.",
+        "USER_OK": "No operator action — egress scores match intentional browser/media session.",
+        "EPHEMERAL": "No action unless strict trust blocks the CDN — then Trust forever on recognized search/social peers.",
+        "SUSPICIOUS": "Identify the process name. Recognized launcher/updater → Trust forever; unknown → keep blocked under strict trust.",
+        "HARM_CANDIDATE": "Unrecognized process → Block forever or Remove pest. Recognized game/VPN/CDN → Trust forever with eyes open.",
+        "MONITOR": "MONITOR — routine egress; no harm axis fired. Permitted under packet permission v4.0.",
     }
     summaries = {
-        "USER_OK": "Likely friendly — matches normal browsing or something you chose to open.",
-        "EPHEMERAL": "Likely friendly — looks like a short search or social tab.",
-        "SUSPICIOUS": "Mixed signals — some concern, but not enough to auto-block.",
-        "HARM_CANDIDATE": "Likely unfriendly until you prove otherwise — harm scores outweigh browser trust.",
-        "MONITOR": "Neutral — nothing strong either way yet.",
+        "USER_OK": "USER_OK — user_browser≥7, stream_theft_risk≤2; operator-initiated browser or media egress.",
+        "EPHEMERAL": "EPHEMERAL — search_ephemeral≥6; short-lived CDN tab; stream_theft_risk≤3.",
+        "SUSPICIOUS": "SUSPICIOUS — harm and trust scores diverge; destination_class elevated; not auto-blocked alone.",
+        "HARM_CANDIDATE": "HARM_CANDIDATE — harm_total exceeds trust_total; non-browser stream or beacon pattern detected.",
+        "MONITOR": "MONITOR — verdict_rank≥2 under strict trust; inbound+outbound held until operator Trust forever.",
     }
     if block_rec:
         action = actions["HARM_CANDIDATE"]
@@ -550,10 +552,56 @@ def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str
     if harm >= 10:
         return "SUSPICIOUS", "Worth watching — not typical user browsing", False
     if ephemeral:
-        return "EPHEMERAL", "Short-lived CDN — likely search/social", False
+        return "EPHEMERAL", "Short-lived CDN — search_ephemeral score high", False
     if ip_class in ("stream_cdn", "search_cdn") and scores["process_trust"] >= 5:
         return "USER_OK", "Known CDN + trusted process", False
     return "MONITOR", "Routine connection — no harm signal", False
+
+
+def _flow_intent(proc: str, verdict: str, reason: str, intel: dict[str, Any], direction_label: str) -> dict[str, str]:
+    return {
+        "who": proc or "unknown process",
+        "purpose": reason,
+        "direction": direction_label,
+        "org": intel.get("label") or intel.get("org") or "",
+        "verdict": verdict,
+    }
+
+
+def _flow_policy(verdict: str, trust_rank: int, rip: str, rport: str, proc: str, direction: str) -> dict[str, Any]:
+    flow_key = f"{rip}:{rport}:{proc}"
+    if trust_rank <= MIN_ACCEPT_TRUST_RANK:
+        return {
+            "permit": True,
+            "block_scope": "none",
+            "block_direction": None,
+            "flow_key": flow_key,
+            "zero_cost": True,
+        }
+    if verdict == "SUSPICIOUS":
+        block_dir = "in" if direction == "at_us" else "out"
+        return {
+            "permit": False,
+            "block_scope": "segment",
+            "block_direction": block_dir,
+            "flow_key": flow_key,
+            "zero_cost": False,
+        }
+    if verdict == "HARM_CANDIDATE":
+        return {
+            "permit": False,
+            "block_scope": "ip",
+            "block_direction": "both",
+            "flow_key": flow_key,
+            "zero_cost": False,
+        }
+    return {
+        "permit": True,
+        "block_scope": "none",
+        "block_direction": None,
+        "flow_key": flow_key,
+        "zero_cost": True,
+    }
 
 
 def analyze_connections(lines: list[str]) -> dict[str, Any]:
@@ -645,6 +693,9 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             harm_total, user_total, block_rec,
         )
 
+        trust_rank = TRUST_RANK.get(verdict, 5)
+        flow_policy = _flow_policy(verdict, trust_rank, rip, rport, proc, direction)
+        intent = _flow_intent(proc, verdict, reason, intel, direction_label)
         results.append({
             "remote_ip": rip,
             "remote_port": rport,
@@ -664,9 +715,12 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "verdict": verdict,
             "reason": reason,
             "block_recommended": block_rec,
-            "trust_rank": TRUST_RANK.get(verdict, 5),
+            "trust_rank": trust_rank,
+            "requires_user_trust": trust_rank > MIN_ACCEPT_TRUST_RANK,
             "direction": "out",
             "suggestion": suggestion,
+            "intent": intent,
+            "flow_policy": flow_policy,
         })
 
     # decay history
@@ -692,14 +746,36 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         )
     )
     harm_candidates = [r for r in results if r["block_recommended"]]
+    packet_permission = (
+        os.environ.get("NEXUS_PACKET_PERMISSION", "") == "1"
+        or os.environ.get("NEXUS_GATEKEEPER_STRICT_TRUST", "1") == "1"
+    )
+    strict_trust = packet_permission
+    pending_trust = [r for r in results if r.get("requires_user_trust")]
+    permitted = [r for r in results if (r.get("flow_policy") or {}).get("permit")]
+    segment_blocks = [r for r in results if (r.get("flow_policy") or {}).get("block_scope") == "segment"]
+    if packet_permission:
+        why_no_auto_block = (
+            "Packet permission v4.0: DPI + gatekeeper know who and intent on every flow. "
+            f"Good traffic ({len(permitted)} flow(s)) passes at zero nft cost. "
+            "Only harmful sections get segment blocks; harm candidates get IP blocks."
+        )
+    else:
+        why_no_auto_block = (
+            "Advisory mode: NEXUS classifies all traffic but does not auto-block segments. "
+            "Turn on Packet permission to block harmful sections only."
+        )
     return {
         "updated": _now(),
         "connection_count": len(results),
         "harm_candidates": len(harm_candidates),
-        "why_no_auto_block": (
-            "Safe mode: NEXUS scores everything but only suggests actions. "
-            "CDNs and browsers are never crushed automatically — you pick Trust forever or Stop this site."
-        ),
+        "pending_trust_count": len(pending_trust),
+        "permitted_flow_count": len(permitted),
+        "segment_block_count": len(segment_blocks),
+        "strict_trust": strict_trust,
+        "packet_permission": packet_permission,
+        "min_accept_trust_rank": MIN_ACCEPT_TRUST_RANK,
+        "why_no_auto_block": why_no_auto_block,
         "connections": results[:60],
     }
 
