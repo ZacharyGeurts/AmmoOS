@@ -4,6 +4,7 @@
 
 NEXUS_FIELD_HOSTILE="${NEXUS_FIELD_HOSTILE:-${NEXUS_STATE_DIR}/field-hostile.tsv}"
 NEXUS_HOSTILE_MEMORY_FILE="${NEXUS_HOSTILE_MEMORY_FILE:-nexus-hostile.jsonl}"
+NEXUS_TARGET_DOSSIER_FILE="${NEXUS_TARGET_DOSSIER_FILE:-nexus-target-dossiers.jsonl}"
 HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}"
 
 nexus_field_attack_memory_paths() {
@@ -12,6 +13,14 @@ nexus_field_attack_memory_paths() {
     "${root}/cache/fieldstorage/brain/security/${NEXUS_HOSTILE_MEMORY_FILE}" \
     "${HOSTESS7_TEAM_FIELD}/brain/security/${NEXUS_HOSTILE_MEMORY_FILE}" \
     "${NEXUS_STATE_DIR}/field-storage/${NEXUS_HOSTILE_MEMORY_FILE}"
+}
+
+nexus_field_attack_dossier_paths() {
+  local root="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
+  printf '%s\n' \
+    "${root}/cache/fieldstorage/brain/security/${NEXUS_TARGET_DOSSIER_FILE}" \
+    "${HOSTESS7_TEAM_FIELD}/brain/security/${NEXUS_TARGET_DOSSIER_FILE}" \
+    "${NEXUS_STATE_DIR}/field-storage/${NEXUS_TARGET_DOSSIER_FILE}"
 }
 
 nexus_field_attack_init() {
@@ -75,6 +84,57 @@ print(json.dumps({
     chmod 640 "$path" 2>/dev/null || true
     chown root:nexus "$path" 2>/dev/null || chown root:root "$path" 2>/dev/null || true
   done < <(nexus_field_attack_memory_paths)
+}
+
+nexus_field_attack_record_dossier_forever() {
+  local ip="$1" vector="$2" severity="$3" reason="$4" source="${5:-attack-kit}" dossier="${6:-}"
+  local ts path dir entry
+  [[ -n "$ip" && -n "$dossier" ]] || return 0
+  ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
+  entry="$(
+    TS="$ts" IP="$ip" VECTOR="${vector:-HOSTILE}" SEV="${severity:-high}" \
+      REASON="${reason:-target_kill}" SRC="$source" DOSSIER="$dossier" python3 -c '
+import json, os
+raw = os.environ.get("DOSSIER", "")
+try:
+    dossier = json.loads(raw) if raw else {}
+except Exception:
+    dossier = {"note": raw[:2000]}
+print(json.dumps({
+    "kind": "nexus_target_dossier",
+    "ts": os.environ["TS"],
+    "ip": os.environ["IP"],
+    "vector": os.environ["VECTOR"],
+    "severity": os.environ["SEV"],
+    "reason": os.environ["REASON"],
+    "source": os.environ["SRC"],
+    "permanent": True,
+    "dossier": dossier,
+}, ensure_ascii=False))
+' 2>/dev/null
+  )" || return 0
+  [[ -n "$entry" ]] || return 0
+
+  while IFS= read -r path; do
+    [[ -n "$path" ]] || continue
+    dir="$(dirname "$path")"
+    mkdir -p "$dir" 2>/dev/null || continue
+    printf '%s\n' "$entry" >>"$path" 2>/dev/null || continue
+    chmod 640 "$path" 2>/dev/null || true
+    chown root:nexus "$path" 2>/dev/null || chown root:root "$path" 2>/dev/null || true
+  done < <(nexus_field_attack_dossier_paths)
+}
+
+nexus_field_attack_kill_target() {
+  local ip="${1:-}" vector="${2:-HOSTILE}" severity="${3:-high}" reason="${4:-target_kill}"
+  local source="${5:-attack-kit}" dossier="${6:-}"
+  [[ -n "$ip" ]] || return 1
+  nexus_field_attack_disable_host "$ip" "$vector" "$severity" "$reason" "$source" "$dossier" || return 1
+  if [[ -n "$dossier" && "$dossier" != "{}" ]]; then
+    nexus_field_attack_record_dossier_forever "$ip" "$vector" "$severity" "$reason" "$source" "$dossier"
+  fi
+  nexus_log "ALERT" "field-attack-kit" "TARGET_KILLED ip=${ip} vector=${vector} dossier=archived"
+  return 0
 }
 
 nexus_field_attack_disable_host() {
@@ -207,7 +267,7 @@ nexus_field_attack_json() {
   done < <(nexus_field_attack_memory_paths)
 
   printf '{'
-  printf '"motto":"Intelligence is a bullet — identify, record on field drive, disable permanently.",'
+  printf '"motto":"Our monitor feeds the globe — KILL archives full dossier forever on field drive.",'
   printf '"enabled":%s,' "${NEXUS_FIELD_ATTACK_KIT:-1}"
   printf '"auto_crush":%s,' "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH 2>/dev/null || echo 0)"
   printf '"disabled_count":%s,' "${count:-0}"

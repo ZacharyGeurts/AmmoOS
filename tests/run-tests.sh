@@ -217,7 +217,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.0\.(0|1)' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|1\.0)' "$panel"
 }
 
 test_self_access_script() {
@@ -282,7 +282,7 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.0\.(0|1)' "$panel"
+  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|1\.0)' "$panel"
 }
 
 test_host_attack_module() {
@@ -290,6 +290,8 @@ test_host_attack_module() {
   [[ -f "${ROOT}/lib/host-attack.sh" ]]
   grep -q 'host_attacks' "${ROOT}/lib/threat-panel.sh"
   grep -q '_clamp_coords' "${ROOT}/lib/host-attack-map.py"
+  grep -q '_monitor_snapshot' "${ROOT}/lib/host-attack-map.py"
+  grep -q 'is_monitor_target' "${ROOT}/lib/host-attack-map.py"
   grep -q 'return None' "${ROOT}/lib/host-attack-map.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/host-attack-map.py" build | grep -q 'point_count'
@@ -323,8 +325,10 @@ test_panel_host_attack_ui() {
   grep -q 'Zachary Geurts' "$panel"
   grep -q 'normalizeGeo' "$panel"
   grep -q 'warmHostEarthMap' "$panel"
+  grep -q 'attackKitKill' "$panel"
+  grep -q 'Our Monitor' "$panel"
   grep -q 'earth-satellite-2k.jpg' "$panel"
-  grep -qE 'v(2\.(9\.0)|3\.0\.(0|1))' "$panel"
+  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|1\.0))' "$panel"
 }
 
 test_field_attack_kit_module() {
@@ -332,8 +336,10 @@ test_field_attack_kit_module() {
   [[ -f "${ROOT}/lib/field-attack-kit.py" ]]
   grep -q 'attack_kit' "${ROOT}/lib/threat-panel.sh"
   grep -q '/api/attack-kit/disable' "${ROOT}/lib/threat-panel-http.py"
-  grep -q 'nexus_field_attack_disable_host' "${ROOT}/lib/field-attack-kit.sh"
-  grep -q 'Intelligence is a bullet' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q '/api/attack-kit/kill' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus_field_attack_kill_target' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'nexus_target_dossier' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'kill_target' "${ROOT}/lib/field-attack-kit.py"
   declare -f nexus_field_attack_json >/dev/null 2>&1
 }
 
@@ -341,10 +347,11 @@ test_panel_field_attack_kit_ui() {
   local panel="${ROOT}/panel/threat-panel.html"
   grep -q 'Field Attack Kit' "$panel"
   grep -q 'ak-crush-hot' "$panel"
-  grep -q 'attack-kit/disable' "$panel"
+  grep -q 'attack-kit/kill' "$panel"
+  grep -q 'KILL' "$panel"
   grep -q 'NEXUS_ATTACK_KIT_AUTO_CRUSH' "$panel"
   grep -q 'God Bless' "$panel"
-  grep -qE 'v3\.0\.(0|1)' "$panel"
+  grep -qE 'v3\.(0\.(0|1)|1\.0)' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 

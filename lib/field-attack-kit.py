@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""NEXUS Field Attack Kit — batch crush + field intel for hostile hosts."""
+"""NEXUS Field Attack Kit — batch crush, KILL targets, permanent dossier archive."""
 from __future__ import annotations
 
 import json
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,11 @@ STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 HOST_ATTACKS = STATE / "host-attacks.json"
 HOSTILE_TSV = STATE / "field-hostile.tsv"
+DOSSIERS = STATE / "angel-dossiers.json"
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -36,16 +42,82 @@ def _disabled_ips() -> set[str]:
     return ips
 
 
-def _run_disable(ip: str, vector: str, severity: str, reason: str, meta: dict[str, Any]) -> bool:
+def _point_for_ip(ip: str) -> dict[str, Any]:
+    doc = _load_json(HOST_ATTACKS, {})
+    for p in doc.get("points") or []:
+        if str(p.get("ip") or "") == ip:
+            return p
+    return {}
+
+
+def _full_dossier_for_ip(ip: str, extra: dict[str, Any] | None = None) -> dict[str, Any]:
+    point = _point_for_ip(ip)
+    if extra:
+        point = {**point, **{k: v for k, v in extra.items() if v is not None}}
+
+    dossier_doc = _load_json(DOSSIERS, {"dossiers": []})
+    angel = None
+    for d in dossier_doc.get("dossiers") or []:
+        if str(d.get("peer") or "") == ip:
+            angel = d
+            break
+
+    return {
+        "archived": _now(),
+        "ip": ip,
+        "vector": point.get("vector") or (extra or {}).get("vector") or "HOSTILE",
+        "severity": point.get("severity") or (extra or {}).get("severity") or "high",
+        "verdict": point.get("verdict", ""),
+        "heat": point.get("heat"),
+        "geo": {
+            "lat": point.get("lat"),
+            "lon": point.get("lon"),
+            "city": point.get("city"),
+            "region": point.get("region"),
+            "country": point.get("country"),
+            "org": point.get("org"),
+            "asn": point.get("asn"),
+            "registrar": point.get("registrar"),
+            "geo_source": point.get("geo_source"),
+        },
+        "monitor": point.get("monitor") or (extra or {}).get("monitor"),
+        "dossier": point.get("dossier") or (extra or {}).get("dossier"),
+        "angel_dossier": angel,
+        "intel": {
+            "hostname": point.get("hostname"),
+            "mac": point.get("mac"),
+            "mac_vendor": point.get("mac_vendor"),
+            "abuse_contact": point.get("abuse_contact"),
+            "standards": point.get("standards"),
+            "detail": point.get("detail"),
+            "process": point.get("process"),
+            "direction": point.get("direction"),
+            "source": point.get("source"),
+        },
+        "permanent": True,
+        "action": "KILL",
+    }
+
+
+def _run_kill(
+    ip: str,
+    vector: str,
+    severity: str,
+    reason: str,
+    dossier: dict[str, Any],
+) -> bool:
     script = INSTALL / "lib" / "field-attack-kit.sh"
     if not script.is_file():
         return False
     meta_path = STATE / "attack-kit-meta.tmp"
-    meta_path.write_text(json.dumps(meta, ensure_ascii=False) + "\n", encoding="utf-8")
+    dossier_path = STATE / "attack-kit-dossier.tmp"
+    meta_path.write_text(json.dumps(dossier, ensure_ascii=False) + "\n", encoding="utf-8")
+    dossier_path.write_text(json.dumps(dossier, ensure_ascii=False) + "\n", encoding="utf-8")
     env = os.environ.copy()
     env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
     env["NEXUS_STATE_DIR"] = str(STATE)
     env["NEXUS_ATTACK_META"] = str(meta_path)
+    env["NEXUS_ATTACK_DOSSIER"] = str(dossier_path)
     safe_ip = ip.replace("'", "'\"'\"'")
     safe_vector = vector.replace("'", "'\"'\"'")
     safe_reason = reason.replace("'", "'\"'\"'")
@@ -54,10 +126,30 @@ def _run_disable(ip: str, vector: str, severity: str, reason: str, meta: dict[st
         f"source {INSTALL}/lib/firewall-sentinel.sh && "
         f"source {INSTALL}/lib/self-access.sh && "
         f"source {script} && "
-        f"nexus_field_attack_disable_host '{safe_ip}' '{safe_vector}' '{severity}' '{safe_reason}' 'attack-kit'"
+        f'DOSSIER_JSON="$(cat "{dossier_path}")" && '
+        f"nexus_field_attack_kill_target '{safe_ip}' '{safe_vector}' '{severity}' '{safe_reason}' 'attack-kit' \"$DOSSIER_JSON\""
     )
-    proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=30, env=env)
+    proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=45, env=env)
     return proc.returncode == 0
+
+
+def kill_target(
+    ip: str,
+    vector: str = "HOSTILE",
+    severity: str = "high",
+    reason: str = "target_kill",
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    dossier = _full_dossier_for_ip(ip, extra)
+    ok = _run_kill(ip, vector, severity, reason, dossier)
+    return {
+        "ok": ok,
+        "ip": ip,
+        "permanent": ok,
+        "killed": ok,
+        "dossier_archived": ok,
+        "dossier": dossier if ok else {},
+    }
 
 
 def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
@@ -79,43 +171,34 @@ def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
         vector = str(p.get("vector") or "HOSTILE")
         severity = str(p.get("severity") or "high")
         reason = f"attack_kit:heat={heat:.2f}"
-        meta = {
-            "heat": heat,
-            "org": p.get("org"),
-            "registrar": p.get("registrar"),
-            "city": p.get("city"),
-            "country": p.get("country"),
-            "standards": p.get("standards"),
-            "lat": p.get("lat"),
-            "lon": p.get("lon"),
-        }
-        if _run_disable(ip, vector, severity, reason, meta):
+        result = kill_target(ip, vector, severity, reason)
+        if result.get("ok"):
             crushed.append(ip)
             disabled.add(ip)
 
-    return {"ok": True, "crushed": crushed, "crushed_count": len(crushed), "skipped": len(skipped)}
+    return {"ok": True, "crushed": crushed, "crushed_count": len(crushed), "killed_count": len(crushed), "skipped": len(skipped)}
 
 
 def disable_one(ip: str, vector: str = "HOSTILE", severity: str = "high", reason: str = "operator_disable") -> dict[str, Any]:
-    ok = _run_disable(ip, vector, severity, reason, {"ip": ip, "vector": vector})
-    return {"ok": ok, "ip": ip, "permanent": ok}
+    return kill_target(ip, vector, severity, reason)
 
 
 def main() -> int:
     if len(sys.argv) < 2:
-        print("usage: field-attack-kit.py [crush-hot|disable <ip> [vector] [severity]]", file=sys.stderr)
+        print("usage: field-attack-kit.py [crush-hot|kill|disable <ip> [vector] [severity]]", file=sys.stderr)
         return 1
     cmd = sys.argv[1]
     if cmd == "crush-hot":
         json.dump(crush_hot(), sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0
-    if cmd == "disable" and len(sys.argv) >= 3:
+    if cmd in ("kill", "disable") and len(sys.argv) >= 3:
         json.dump(
-            disable_one(
+            kill_target(
                 sys.argv[2],
                 sys.argv[3] if len(sys.argv) > 3 else "HOSTILE",
                 sys.argv[4] if len(sys.argv) > 4 else "high",
+                "target_kill" if cmd == "kill" else "operator_disable",
             ),
             sys.stdout,
             indent=2,

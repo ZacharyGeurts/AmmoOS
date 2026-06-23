@@ -509,11 +509,12 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
 
-        if path == "/api/attack-kit/disable":
+        if path in ("/api/attack-kit/disable", "/api/attack-kit/kill"):
             ip = str(body.get("ip", "")).strip()
             vector = str(body.get("vector", "HOSTILE")).strip() or "HOSTILE"
             severity = str(body.get("severity", "high")).strip() or "high"
-            reason = str(body.get("reason", "operator_disable")).strip() or "operator_disable"
+            reason = str(body.get("reason", "target_kill" if path.endswith("/kill") else "operator_disable")).strip()
+            reason = reason or ("target_kill" if path.endswith("/kill") else "operator_disable")
             if not ip:
                 self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
                 return
@@ -521,18 +522,19 @@ class Handler(BaseHTTPRequestHandler):
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            cmd = "kill" if path.endswith("/kill") else "disable"
             proc = subprocess.run(
-                [sys.executable, str(script), "disable", ip, vector, severity],
+                [sys.executable, str(script), cmd, ip, vector, severity],
                 capture_output=True,
                 text=True,
-                timeout=45,
+                timeout=60,
                 env=env,
             )
             ok = proc.returncode == 0
             try:
                 payload = json.loads(proc.stdout or "{}")
             except json.JSONDecodeError:
-                payload = {"ok": ok, "ip": ip}
+                payload = {"ok": ok, "ip": ip, "killed": ok}
             self._send(200 if ok else 500, json.dumps(payload), "application/json")
             return
 

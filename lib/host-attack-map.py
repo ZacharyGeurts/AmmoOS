@@ -45,10 +45,19 @@ SEVERITY_HEAT = {
 VERDICT_HEAT = {
     "HARM_CANDIDATE": 0.82,
     "BLOCK_RECOMMENDED": 0.88,
+    "SUSPICIOUS": 0.58,
     "MONITOR": 0.45,
     "EPHEMERAL": 0.22,
     "USER_OK": 0.12,
 }
+
+HARM_AXES = (
+    "stream_theft_risk",
+    "bandwidth_abuse",
+    "destination_class",
+    "threat_linked",
+    "beacon_pattern",
+)
 
 COUNTRY_CENTROIDS: dict[str, tuple[float, float]] = {
     "US": (39.8283, -98.5795),
@@ -92,6 +101,60 @@ def _save_json(path: Path, data: Any) -> None:
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)
+
+
+def _top_harm_vector(scores: dict[str, Any]) -> str:
+    if not scores:
+        return "CONNECTION_HARM"
+    ranked = sorted(
+        ((k, int(v or 0)) for k, v in scores.items() if k in HARM_AXES),
+        key=lambda x: -x[1],
+    )
+    if ranked and ranked[0][1] > 0:
+        return ranked[0][0].upper()
+    return "CONNECTION_HARM"
+
+
+def _monitor_snapshot(conn: dict[str, Any]) -> dict[str, Any]:
+    sug = conn.get("suggestion") or {}
+    scores = conn.get("scores") or {}
+    top_axes = sorted(scores.items(), key=lambda x: -int(x[1] or 0))[:4]
+    return {
+        "verdict": conn.get("verdict", ""),
+        "reason": conn.get("reason", ""),
+        "harm_total": int(conn.get("harm_total") or 0),
+        "user_total": int(conn.get("user_total") or 0),
+        "trust_rank": int(conn.get("trust_rank") or 5),
+        "block_recommended": bool(conn.get("block_recommended")),
+        "process": conn.get("process", ""),
+        "pid": conn.get("pid", ""),
+        "remote_port": conn.get("remote_port", ""),
+        "traffic_direction": conn.get("traffic_direction", ""),
+        "traffic_direction_label": conn.get("traffic_direction_label", ""),
+        "ip_class": conn.get("ip_class", ""),
+        "top_vector": _top_harm_vector(scores),
+        "axis_scores": {k: int(v or 0) for k, v in top_axes},
+        "suggestion_summary": (sug.get("summary") or "")[:240],
+        "suggestion_action": (sug.get("action") or "")[:240],
+        "trust_meter": int(sug.get("trust_meter") or 0),
+        "concern_meter": int(sug.get("concern_meter") or 0),
+    }
+
+
+def _dossier_snapshot(dossier: dict[str, Any]) -> dict[str, Any]:
+    path = dossier.get("attack_path") or []
+    return {
+        "dossier_id": dossier.get("id", ""),
+        "direction": dossier.get("direction", ""),
+        "direction_label": dossier.get("direction_label", ""),
+        "process": dossier.get("process", ""),
+        "attack_path_steps": len(path),
+        "attack_path": path[:8],
+        "mac_intel": dossier.get("mac_intel") or {},
+        "exploit_intel": dossier.get("exploit_intel") or {},
+        "ip_intel": dossier.get("ip_intel") or {},
+        "lookback": dossier.get("lookback", ""),
+    }
 
 
 def _fingerprint(*parts: str) -> int:
@@ -225,16 +288,25 @@ def _collect_points() -> list[dict[str, Any]]:
             "key": key,
         })
 
+    conn_by_ip: dict[str, dict[str, Any]] = {}
     for c in conn_doc.get("connections") or []:
         rip = str(c.get("remote_ip") or "")
+        if rip:
+            conn_by_ip[rip] = c
         verdict = str(c.get("verdict") or "")
+        harm_total = int(c.get("harm_total") or 0)
         if verdict in ("USER_OK", "EPHEMERAL") and c.get("trust_rank", 5) <= 2:
             continue
-        if verdict in ("HARM_CANDIDATE", "BLOCK_RECOMMENDED", "MONITOR") or (c.get("harm_score") or 0) >= 3:
+        if (
+            verdict in ("HARM_CANDIDATE", "BLOCK_RECOMMENDED", "MONITOR", "SUSPICIOUS")
+            or harm_total >= 3
+            or c.get("block_recommended")
+        ):
             sev = "high" if verdict == "HARM_CANDIDATE" else "medium"
+            snap = _monitor_snapshot(c)
             queue(
                 rip,
-                vector=str(c.get("top_vector") or "CONNECTION_HARM"),
+                vector=snap["top_vector"],
                 severity=sev,
                 verdict=verdict,
                 process=str(c.get("process") or ""),
@@ -268,6 +340,12 @@ def _collect_points() -> list[dict[str, Any]]:
         elif isinstance(b, str):
             queue(b, vector="FIREWALL_BLOCK", severity="high", source="blocked")
 
+    dossier_by_ip: dict[str, dict[str, Any]] = {}
+    for d in dossiers.get("dossiers") or []:
+        peer = str(d.get("peer") or d.get("remote_ip") or "")
+        if peer and peer not in dossier_by_ip:
+            dossier_by_ip[peer] = d
+
     unique_ips = list(dict.fromkeys(r["ip"] for r in raw))
     geo_cache = _load_json(STATE / "geo-intel-cache.json", {"ips": {}})
     enriched_by_ip: dict[str, dict[str, Any]] = {}
@@ -296,6 +374,13 @@ def _collect_points() -> list[dict[str, Any]]:
             x for x in (enriched.get("city"), enriched.get("region"), enriched.get("country")) if x
         ) or enriched.get("org") or ip
 
+        monitor = _monitor_snapshot(conn_by_ip[ip]) if ip in conn_by_ip else None
+        dossier = _dossier_snapshot(dossier_by_ip[ip]) if ip in dossier_by_ip else None
+        target_status = "killed" if ip in disabled_ips else ("live" if monitor else "intel")
+        is_monitor_target = bool(
+            monitor and monitor.get("verdict") not in ("USER_OK", "EPHEMERAL")
+        )
+
         points.append({
             "id": hashlib.sha256(r["key"].encode()).hexdigest()[:16],
             "ip": ip,
@@ -308,6 +393,10 @@ def _collect_points() -> list[dict[str, Any]]:
             "direction": r.get("direction", ""),
             "source": r["source"],
             "detail": r.get("detail", "")[:200],
+            "monitor": monitor,
+            "dossier": dossier,
+            "target_status": target_status,
+            "is_monitor_target": is_monitor_target,
             "label": loc_label,
             "city": enriched.get("city") or "",
             "region": enriched.get("region") or "",
@@ -330,7 +419,15 @@ def _collect_points() -> list[dict[str, Any]]:
             **style,
         })
 
-    points.sort(key=lambda p: (-p["heat"], p["vector"], p["ip"]))
+    points.sort(
+        key=lambda p: (
+            0 if p.get("is_monitor_target") else 1,
+            0 if p.get("target_status") == "live" else 1 if p.get("target_status") == "killed" else 2,
+            -p["heat"],
+            p["vector"],
+            p["ip"],
+        )
+    )
     return points[:120]
 
 
@@ -339,14 +436,16 @@ def build_host_attacks() -> dict[str, Any]:
     hot = sum(1 for p in points if p["heat"] >= 0.7)
     warm = sum(1 for p in points if 0.4 <= p["heat"] < 0.7)
     cool = len(points) - hot - warm
+    monitor_targets = sum(1 for p in points if p.get("is_monitor_target"))
+    killed = sum(1 for p in points if p.get("target_status") == "killed")
     geojson = {
         "type": "FeatureCollection",
         "features": [to_geojson_feature(p) for p in points if p.get("lat") is not None],
     }
     return {
         "updated": _now(),
-        "motto": "Field intelligence, precisely placed. Harmful hosts identified — disable permanently on your command.",
-        "tagline": "Intelligence is a bullet. Field drive remembers. Widely distributed — act with discipline.",
+        "motto": "Our monitor feeds the globe — every dot is who we are shooting at, not just who we blocked.",
+        "tagline": "Full dossier. Permanent field memory. KILL on command — intelligence is a bullet.",
         "map_engine": "leaflet-esri-imagery",
         "map_layers": ["satellite", "street", "offline-globe"],
         "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON"],
@@ -356,7 +455,14 @@ def build_host_attacks() -> dict[str, Any]:
             "service": "Iraq War Veteran",
             "discharge": "Honorable Discharge",
         },
-        "stats": {"total": len(points), "hot": hot, "warm": warm, "cool": cool},
+        "stats": {
+            "total": len(points),
+            "hot": hot,
+            "warm": warm,
+            "cool": cool,
+            "monitor_targets": monitor_targets,
+            "killed": killed,
+        },
         "geojson": geojson,
         "points": points,
     }

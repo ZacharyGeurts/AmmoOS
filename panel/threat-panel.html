@@ -643,8 +643,21 @@
     .host-point-row:last-child { border-bottom: none; }
     .host-point-swatch { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
     .host-point-meta { color: var(--muted); font-size: 0.68rem; margin-top: 3px; }
-    .host-point-row.disabled-permanent { opacity: 0.55; }
-    .host-point-row.disabled-permanent .host-point-swatch { background: #556 !important; }
+    .host-point-row.disabled-permanent, .host-point-row.target-killed { opacity: 0.55; }
+    .host-point-row.disabled-permanent .host-point-swatch,
+    .host-point-row.target-killed .host-point-swatch { background: #556 !important; }
+    .host-point-row.target-live { border-left: 2px solid var(--murder); }
+    .host-monitor-line { font-size: 0.66rem; color: #9ab4d0; margin-top: 3px; }
+    .host-dossier-line { font-size: 0.62rem; color: #7a9ab8; margin-top: 2px; }
+    .ha-kill-btn {
+      margin-top: 6px; background: var(--murder); color: #fff; border: none;
+      padding: 5px 10px; border-radius: 5px; font-size: 0.66rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .ha-kill-btn:hover { filter: brightness(1.1); }
+    .ha-killed-badge { font-size: 0.62rem; color: var(--murder); margin-top: 4px; font-weight: 700; letter-spacing: 0.04em; }
+    .host-map-popup .popup-monitor { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+    .host-map-popup .popup-path { font-size: 0.66rem; color: var(--muted); margin-top: 4px; }
     .attack-kit-bar {
       display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
       margin-bottom: 12px; padding: 10px 14px; border-radius: 8px;
@@ -683,7 +696,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.0.1</h1>
+        <h1>NEXUS-Shield v3.1.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -776,25 +789,25 @@
   <section id="view-host-attack" class="view">
     <div class="host-attack-wrap">
       <p class="host-attack-motto" id="host-attack-motto">
-        <strong>Field Attack Kit</strong> — intelligence placed with precision on a live satellite globe.
-        Identify hostile hosts. Disable them permanently. Field drive carries the record across reboots.
+        <strong>Our Monitor → Globe</strong> — every dot is who we are shooting at from live connections.
+        Full dossier on target. KILL archives forever on field drive.
       </p>
       <p class="host-attack-credit" id="host-attack-credit">
         <em>Zachary Geurts</em> · Army Specialist · Iraq War Veteran · Honorable Discharge.
-        <span id="host-attack-tagline">Intelligence is a bullet. Field technology remembers what you crush.</span>
+        <span id="host-attack-tagline">Intelligence is a bullet. Identify. Record. KILL.</span>
       </p>
       <div class="attack-kit-bar" id="attack-kit-bar">
         <strong>Field Attack Kit</strong>
-        <span class="attack-kit-stat">Permanently disabled: <em id="ak-disabled-count">0</em></span>
+        <span class="attack-kit-stat">Killed: <em id="ak-disabled-count">0</em></span>
         <span class="attack-kit-stat">Field paths: <em id="ak-field-paths">0</em></span>
-        <button type="button" id="ak-crush-hot" data-tip="Permanently disable every hot signal (heat ≥ 0.7) — firewall block + field memory.">Crush all hot</button>
+        <button type="button" id="ak-crush-hot" data-tip="KILL every hot monitor target (heat ≥ 0.7) — firewall block + full dossier archived forever.">KILL all hot</button>
         <button type="button" id="ak-sync-field" class="ghost" data-tip="Pull hostile registry from field drive and re-apply firewall blocks.">Sync field drive</button>
       </div>
       <div class="host-attack-stats" id="host-attack-stats">
-        <span>Signals<strong id="ha-total">0</strong></span>
+        <span>Targets<strong id="ha-total">0</strong></span>
+        <span>Monitor<strong id="ha-monitor">0</strong></span>
         <span>Hot<strong id="ha-hot">0</strong></span>
-        <span>Warm<strong id="ha-warm">0</strong></span>
-        <span>Cool<strong id="ha-cool">0</strong></span>
+        <span>Killed<strong id="ha-killed">0</strong></span>
         <span>Updated<strong id="ha-updated">—</strong></span>
       </div>
       <div class="host-attack-layout">
@@ -808,7 +821,7 @@
             <span><span class="legend-swatch" style="background:#3dd68c"></span>Calm</span>
             <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
             <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
-            <span>· Satellite · IEEE OUI · RDAP · GeoIP · Field Memory</span>
+            <span>· Monitor · Dossier · KILL · Field Memory</span>
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
@@ -2046,17 +2059,18 @@
       root.querySelectorAll(".has-tip").forEach(bindTip);
     }
 
-    async function attackKitDisable(ip, vector, severity, btn) {
-      if (!ip || !confirm(`Permanently disable ${ip}? Firewall block + field drive record. This does not undo itself.`)) return;
+    async function attackKitKill(ip, vector, severity, btn) {
+      if (!ip || !confirm(`KILL ${ip}?\n\nPermanent firewall block (in+out).\nFull dossier archived forever on field drive.\nThis does not undo itself.`)) return;
       if (btn) btn.disabled = true;
       try {
-        const res = await fetch("/api/attack-kit/disable", {
+        const res = await fetch("/api/attack-kit/kill", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ip, vector, severity, reason: "operator_disable" }),
+          body: JSON.stringify({ ip, vector, severity, reason: "target_kill" }),
         });
         const data = await res.json();
-        if (!data.ok) alert("Disable failed — host may be trusted or protected.");
+        if (!data.ok) alert("KILL failed — target may be trusted or protected.");
+        else if (data.dossier_archived) alert(`KILL confirmed — ${ip} blocked. Dossier archived forever.`);
         refresh();
       } catch {
         alert("Attack kit unreachable.");
@@ -2066,12 +2080,12 @@
     }
 
     async function attackKitCrushHot(btn) {
-      if (!confirm("Crush ALL hot signals (heat ≥ 0.7)? Each gets permanent firewall block + field memory.")) return;
+      if (!confirm("KILL ALL hot monitor targets (heat ≥ 0.7)?\nEach gets permanent block + full dossier archived forever.")) return;
       if (btn) btn.disabled = true;
       try {
         const res = await fetch("/api/attack-kit/crush-hot", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
         const data = await res.json();
-        alert(data.crushed_count != null ? `Crushed ${data.crushed_count} hostile host(s).` : (data.ok ? "Crush complete." : "Crush failed."));
+        alert(data.killed_count != null ? `KILLED ${data.killed_count} target(s). Dossiers archived.` : (data.ok ? "KILL batch complete." : "KILL batch failed."));
         refresh();
       } catch {
         alert("Attack kit unreachable.");
@@ -2138,17 +2152,38 @@
       });
     }
 
+    function haMonitorLine(m) {
+      if (!m) return "";
+      const dir = m.traffic_direction_label || m.traffic_direction || "";
+      return `${esc(m.verdict || "—")} · harm ${m.harm_total ?? 0} · ${esc(m.process || "—")}${dir ? ` · ${esc(dir)}` : ""}`;
+    }
+
+    function haDossierLine(d) {
+      if (!d) return "";
+      const mac = d.mac_intel?.vendor || "";
+      const cves = (d.exploit_intel?.cves || []).slice(0, 3).join(", ");
+      const steps = d.attack_path_steps ?? (d.attack_path || []).length;
+      return `${steps} path step(s)${mac ? ` · MAC ${esc(mac)}` : ""}${cves ? ` · CVE ${esc(cves)}` : ""}`;
+    }
+
     function haPopupHtml(p) {
       const std = (p.standards || []).map((s) => `<code>${esc(s)}</code>`).join(" ");
+      const mon = p.monitor;
+      const dos = p.dossier;
+      const status = p.target_status === "killed" ? '<div class="ha-killed-badge">✓ KILLED · dossier archived</div>' : "";
+      const monBlock = mon ? `<div class="popup-monitor"><strong>Monitor</strong><div>${haMonitorLine(mon)}</div>${mon.suggestion_summary ? `<div class="popup-path">${esc(mon.suggestion_summary)}</div>` : ""}</div>` : "";
+      const dosBlock = dos ? `<div class="popup-monitor"><strong>Dossier</strong><div class="popup-path">${haDossierLine(dos)}</div></div>` : "";
       return `<div class="host-map-popup">
-        <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span></div>
+        <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span>${p.is_monitor_target ? " · <em>live target</em>" : ""}</div>
         <div>${esc(p.label || p.city || p.country || "—")}</div>
         ${p.registrar ? `<div>Registrar: ${esc(p.registrar)}</div>` : ""}
         ${p.org ? `<div>Org: ${esc(p.org)}</div>` : ""}
         ${p.asn ? `<div>ASN: ${esc(p.asn)} ${esc(p.asname || "")}</div>` : ""}
         ${p.mac_vendor ? `<div>MAC: ${esc(p.mac || "—")} · ${esc(p.mac_vendor)} (IEEE OUI)</div>` : ""}
         ${p.hostname ? `<div>Host: ${esc(p.hostname)}</div>` : ""}
+        ${monBlock}${dosBlock}
         <div class="host-standards">${std || "GeoIP"} · heat ${(p.heat ?? 0).toFixed(2)}</div>
+        ${status}
       </div>`;
     }
 
@@ -2288,9 +2323,9 @@
       const stats = doc.stats || {};
       const author = doc.author || {};
       $("ha-total").textContent = stats.total ?? points.length;
+      $("ha-monitor").textContent = stats.monitor_targets ?? points.filter((p) => p.is_monitor_target).length;
       $("ha-hot").textContent = stats.hot ?? 0;
-      $("ha-warm").textContent = stats.warm ?? 0;
-      $("ha-cool").textContent = stats.cool ?? 0;
+      $("ha-killed").textContent = stats.killed ?? points.filter((p) => p.target_status === "killed").length;
       $("ha-updated").textContent = (doc.updated || "—").replace("T", " ").replace("Z", " UTC");
       if (doc.motto) $("host-attack-motto").innerHTML = `<strong>Host Attack Map</strong> — ${esc(doc.motto)}`;
       if (doc.tagline) $("host-attack-tagline").textContent = doc.tagline;
@@ -2304,7 +2339,7 @@
       if (!points.length) {
         hostMarkerLayer?.clearLayers();
         hostMarkersById = {};
-        list.innerHTML = '<div class="empty">No hostile host signals on the globe — calm day. Connections still monitored.</div>';
+        list.innerHTML = '<div class="empty">No monitor targets on the globe — calm day. Our connections are still watched.</div>';
         return;
       }
       const map = ensureHostEarthMap();
@@ -2333,23 +2368,28 @@
         const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
         const std = (p.standards || []).slice(0, 3).join(" · ");
         const loc = [p.city, p.region, p.country].filter(Boolean).join(", ") || p.label || "classified";
-        const crushed = p.disabled_permanent;
-        return `<div class="host-point-row${crushed ? " disabled-permanent" : ""}" data-ha-id="${esc(p.id)}">
-          <span class="host-point-swatch" style="background:${crushed ? "#556" : col}"></span>
+        const killed = p.target_status === "killed" || p.disabled_permanent;
+        const live = p.is_monitor_target && !killed;
+        const rowClass = killed ? " target-killed" : live ? " target-live" : "";
+        const monLine = p.monitor ? `<div class="host-monitor-line">${haMonitorLine(p.monitor)}</div>` : "";
+        const dosLine = p.dossier ? `<div class="host-dossier-line">${haDossierLine(p.dossier)}</div>` : "";
+        return `<div class="host-point-row${rowClass}" data-ha-id="${esc(p.id)}">
+          <span class="host-point-swatch" style="background:${killed ? "#556" : col}"></span>
           <div>
-            <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span></div>
+            <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span>${live ? " · <em>shooting</em>" : ""}</div>
             <div class="host-point-meta">${esc(loc)} · ${esc(p.registrar || p.org || "—")} · heat ${(p.heat ?? 0).toFixed(2)}</div>
+            ${monLine}${dosLine}
             ${std ? `<div class="host-standards">${esc(std)}</div>` : ""}
-            ${crushed
-              ? '<div class="ha-disabled-badge">✓ Permanently disabled · field registry</div>'
-              : `<button type="button" class="ha-disable-btn" data-ha-disable="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">Disable permanently</button>`}
+            ${killed
+              ? '<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>'
+              : `<button type="button" class="ha-kill-btn" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">KILL</button>`}
           </div>
         </div>`;
       }).join("");
-      list.querySelectorAll("[data-ha-disable]").forEach((btn) => {
+      list.querySelectorAll("[data-ha-kill]").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
-          attackKitDisable(btn.dataset.haDisable, btn.dataset.haVector, btn.dataset.haSeverity, btn);
+          attackKitKill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn);
         });
       });
       list.querySelectorAll(".host-point-row[data-ha-id]").forEach((row) => {
