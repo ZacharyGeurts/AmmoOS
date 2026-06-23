@@ -34,6 +34,11 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.1.3 — taller threat cards
+
+- **~10% more vertical room** on connection and warning cards — padding, line-height, and section gaps
+- **NEXUS suggests** summary moved above score meters so text doesn't crowd the bars
+
 ## v2.1.2 — layout polish
 
 - **Cleaner menu** — Monitor · Settings · Logs (short labels; long help stays in ? tooltips)
