@@ -71,7 +71,19 @@ nexus_threat_panel_publish() {
     done <<<"$arp"
     printf ']'
     printf '},'
-    printf '"trusted":'
+    printf '"blocked":'
+    if declare -f nexus_firewall_blocks_json >/dev/null 2>&1; then
+      nexus_firewall_blocks_json
+    else
+      printf '[]'
+    fi
+    printf ',"lockdown_first":'
+    if [[ -f "${NEXUS_STATE_DIR}/lockdown-first.done" ]]; then
+      printf 'true'
+    else
+      printf 'false'
+    fi
+    printf ',"trusted":'
     if declare -f nexus_firewall_trust_json >/dev/null 2>&1; then
       nexus_firewall_trust_json
     else

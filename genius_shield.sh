@@ -130,6 +130,13 @@ systemctl enable nexus-genius.service
 systemctl reset-failed nexus-genius.service 2>/dev/null || true
 systemctl restart nexus-genius.service
 
+sleep 8
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/lockdown-first.sh"
+nexus_lockdown_first_apply || true
+
 if ! systemctl is-active --quiet nexus-genius.service; then
   echo 'NEXUS-Shield install finished, but nexus-genius.service failed to start.' >&2
   echo 'Check: systemctl status nexus-genius.service' >&2
@@ -149,3 +156,4 @@ echo "NEXUS-Shield v${NEXUS_VERSION:-2.0.1} active — panel https://127.0.0.1:9
 echo 'Start menu: NEXUS-Shield'
 echo 'License: NEXUS-Shield = MIT. AMOURANTHRTX (Field Die) = GPL v3 or commercial — not MIT-free.'
 echo 'Profile: Everyday defaults applied — email, YouTube, browsing; no auto-block.'
+echo 'First-run lockdown applied — trust recommended connections in panel or: nexus trust <ip>'

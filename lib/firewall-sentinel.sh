@@ -4,6 +4,8 @@
 NEXUS_FIREWALL_TABLE="${NEXUS_FIREWALL_TABLE:-nexus}"
 NEXUS_FIREWALL_BLOCKS="${NEXUS_FIREWALL_BLOCKS:-${NEXUS_STATE_DIR}/firewall-blocks.tsv}"
 NEXUS_FIREWALL_BLOCK_DURATION="${NEXUS_FIREWALL_BLOCK_DURATION:-86400}"
+NEXUS_FIREWALL_BLOCK_FOREVER="${NEXUS_FIREWALL_BLOCK_FOREVER:-3153600000}"
+NEXUS_FIREWALL_TEMP_ALLOW_DURATION="${NEXUS_FIREWALL_TEMP_ALLOW_DURATION:-86400}"
 
 NEXUS_FIREWALL_BAD_PORTS=(
   4444 5555 1337 31337 6666 6667 9001 9050 1080 3128 4443
@@ -96,6 +98,11 @@ table inet ${NEXUS_FIREWALL_TABLE} {
   set trusted_out {
     type ipv4_addr
   }
+  set temp_allow_out {
+    type ipv4_addr
+    flags timeout
+    timeout ${NEXUS_FIREWALL_TEMP_ALLOW_DURATION}s
+  }
 
   chain input {
     type filter hook input priority -120; policy drop;
@@ -119,6 +126,7 @@ table inet ${NEXUS_FIREWALL_TABLE} {
   chain output {
     type filter hook output priority -120; policy accept;
     ip daddr @trusted_out accept
+    ip daddr @temp_allow_out accept
     ip daddr @block_out drop
     ip6 daddr @block6_out drop
     tcp dport @bad_ports drop
@@ -220,6 +228,47 @@ nexus_firewall_unblock_ip() {
   local set="block_${direction}"
   nft delete element inet "${NEXUS_FIREWALL_TABLE}" "${set}" "{ ${ip} }" 2>/dev/null || true
   nexus_log "INFO" "firewall-sentinel" "UNBLOCK_${direction^^} ip=${ip}"
+}
+
+nexus_firewall_block_ip_forever() {
+  nexus_firewall_block_ip "${1:-out}" "$2" "${NEXUS_FIREWALL_BLOCK_FOREVER}" "${3:-block_forever}"
+}
+
+nexus_firewall_temp_allow_ip() {
+  local direction="${1:-out}" ip="$2" timeout="${3:-$NEXUS_FIREWALL_TEMP_ALLOW_DURATION}"
+  [[ "${NEXUS_FIREWALL:-1}" == "1" ]] || return 0
+  nexus_firewall_available || return 0
+  [[ -n "$ip" && "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 0
+  [[ "$direction" == "out" ]] || return 0
+  nexus_firewall_unblock_ip out "$ip"
+  nft add element inet "${NEXUS_FIREWALL_TABLE}" temp_allow_out "{ ${ip} timeout ${timeout}s }" 2>/dev/null \
+    || nexus_firewall_apply_base
+  nft add element inet "${NEXUS_FIREWALL_TABLE}" temp_allow_out "{ ${ip} timeout ${timeout}s }" 2>/dev/null || true
+  nexus_log "INFO" "firewall-sentinel" "TEMP_ALLOW_OUT ip=${ip} timeout=${timeout}s"
+}
+
+nexus_firewall_is_blocked() {
+  local direction="${1:-out}" ip="$2"
+  [[ -n "$ip" ]] || return 1
+  nexus_firewall_blocks_init
+  awk -F'\t' -v ip="$ip" -v dir="$direction" '
+    NR > 1 && $3 == ip && ($2 == dir || $2 == "both") { found = 1 }
+    END { exit(found ? 0 : 1) }
+  ' "$NEXUS_FIREWALL_BLOCKS" 2>/dev/null
+}
+
+nexus_firewall_blocks_json() {
+  nexus_firewall_blocks_init
+  local first=1 line ts direction ip port reason expires
+  printf '['
+  while IFS=$'\t' read -r ts direction ip port reason expires; do
+    [[ -n "$ip" ]] || continue
+    [[ "$first" -eq 1 ]] || printf ','
+    first=0
+    printf '{"ts":"%s","direction":"%s","ip":"%s","port":"%s","reason":"%s","expires":"%s"}' \
+      "$ts" "$direction" "$ip" "${port:-}" "${reason:-}" "${expires:-}"
+  done < <(tail -n +2 "$NEXUS_FIREWALL_BLOCKS" 2>/dev/null)
+  printf ']'
 }
 
 nexus_firewall_unblock_port_in() {

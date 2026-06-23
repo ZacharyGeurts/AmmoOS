@@ -233,8 +233,23 @@
       padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: 600;
       border: 1px solid var(--border); background: var(--panel); color: var(--text);
     }
-    .intent-actions button.block { border-color: var(--threat); color: var(--threat); }
+    .intent-actions button.block-day { border-color: #a06040; color: #e8b090; }
+    .intent-actions button.block-forever { border-color: var(--threat); color: var(--threat); }
     .intent-actions button.auth { border-color: #2a5040; color: var(--ok); }
+    .intent-actions button.unblock-day { border-color: var(--internet); color: var(--internet); }
+    .intent-actions .trusted-badge { color: var(--ok); font-size: 0.65rem; align-self: center; }
+    .lockdown-banner {
+      margin: 8px 12px; padding: 10px 14px; border-radius: 8px; font-size: 0.76rem; line-height: 1.5;
+      background: linear-gradient(90deg, #1a1020, #201018); border: 1px solid #5a3040; color: #e8d0d6;
+    }
+    .conn-section-head {
+      margin: 10px 12px 4px; padding: 6px 10px; font-size: 0.68rem; letter-spacing: 0.08em;
+      text-transform: uppercase; border-radius: 6px;
+    }
+    .conn-section-head.rec { color: var(--ok); background: rgba(61, 214, 140, 0.08); border-left: 3px solid var(--ok); }
+    .conn-section-head.review { color: var(--gold); background: rgba(212, 175, 55, 0.08); border-left: 3px solid var(--gold); }
+    .conn-section-head.risk { color: var(--threat); background: rgba(255, 92, 122, 0.08); border-left: 3px solid var(--threat); }
+    .intent-row.is-blocked { opacity: 0.92; border-style: dashed; }
     .threat-row {
       margin: 10px 12px; padding: 14px 16px; border-radius: 10px;
       background: var(--card); border: 1px solid #2a2030; border-left: 4px solid var(--threat);
@@ -436,7 +451,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.2.0</h1>
+        <h1>NEXUS-Shield v2.4.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -456,7 +471,7 @@
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
-    <strong>Nothing gets blocked unless you click Stop or turn on auto-block in Settings.</strong>
+    <strong>First run blocks unknown sites — trust email &amp; YouTube from the recommended list. CLI: <code>nexus trust &lt;ip&gt;</code> if the browser won't open.</strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
   </div>
 
@@ -810,8 +825,10 @@
       operator_auth: "You already clicked Trust forever on this one.",
     };
 
-    const TIP_TRUST = "Tell NEXUS this address is okay forever — use for sites that keep getting flagged by mistake (CDNs, games, work VPNs). Saved on your machine.";
-    const TIP_STOP = "Stop your computer from sending data to this address for about a day. Only use when you don't recognize the app or the warning says might be harmful. Won't break normal browsing unless you click it.";
+    const TIP_TRUST = "Tell NEXUS this address is okay forever — use for email, YouTube, CDNs, and games you recognize. Saved on your machine.";
+    const TIP_BLOCK_DAY = "Block outbound traffic to this address for about 24 hours.";
+    const TIP_BLOCK_FOREVER = "Block this address until you remove the block manually. Use when you never want traffic there again.";
+    const TIP_UNBLOCK_DAY = "Remove the block and allow traffic for 24 hours without trusting forever.";
     const TIP_REVOKE = "Remove forever-trust. NEXUS will watch this address again like any other connection.";
 
     const THREAT_VECTOR_HELP = {
@@ -1373,20 +1390,29 @@
       if (!gk) { el.innerHTML = ""; return; }
       const harm = gk.harm_candidates || 0;
       el.innerHTML =
-        `<span class="has-tip"><strong>Connection checker</strong>${tipMarkup("Scores every open connection. NEXUS does not block your browser or CDN traffic by itself — you choose Trust forever or Stop this site.")}</span> — ` +
+        `<span class="has-tip"><strong>Connection checker</strong>${tipMarkup("Sorted by what to allow first. Every row has Trust forever, Block 1 day, Block forever, and Unblock 1 day when blocked.")}</span> — ` +
         `${gk.connection_count || 0} checked · ` +
         `<strong>${harm}</strong> might need review${harm === 1 ? "" : "s"} · ` +
         `${gk.why_no_auto_block || "Safe mode: nothing blocked without your click."}`;
     }
 
-    async function blockHarmIp(ip, btn) {
-      if (!ip || !confirm(`Stop traffic to ${ip}?\n\nYour PC won't send data there for about a day. Only do this if you don't recognize the connection.`)) return;
+    function isBlockedIp(ip, blocked, direction) {
+      if (!ip || !blocked?.length) return false;
+      return blocked.some((b) => b.ip === ip && (!b.direction || b.direction === direction || b.direction === "both"));
+    }
+
+    async function firewallBlock(ip, direction, duration, btn) {
+      if (!ip) return;
+      const msg = duration === "forever"
+        ? `Block ${ip} forever?\n\nTraffic stays blocked until you change it.`
+        : `Block ${ip} for 1 day?`;
+      if (!confirm(msg)) return;
       if (btn) btn.disabled = true;
       try {
         const res = await fetch("/api/firewall/block", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ip, direction: "out", reason: "harm_candidate" }),
+          body: JSON.stringify({ ip, direction: direction || "out", duration, reason: "panel" }),
         });
         const j = await res.json();
         if (j.ok) refresh();
@@ -1395,49 +1421,106 @@
       finally { if (btn) btn.disabled = false; }
     }
 
-    function renderConnections(gk, trusted) {
+    async function firewallUnblockDay(ip, direction, btn) {
+      if (!ip) return;
+      if (!confirm(`Unblock ${ip} for 1 day?\n\nTraffic allowed for 24 hours — not the same as Trust forever.`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/firewall/unblock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, direction: direction || "out", duration: "day" }),
+        });
+        const j = await res.json();
+        if (j.ok) refresh();
+        else alert("Unblock failed");
+      } catch { alert("Unblock failed"); }
+      finally { if (btn) btn.disabled = false; }
+    }
+
+    function renderConnectionCard(c, trusted, blocked) {
+      const v = c.verdict || "MONITOR";
+      const vf = VERDICT_FRIENDLY[v] || { label: v, tip: "NEXUS is classifying this connection." };
+      const ip = c.remote_ip;
+      const dir = c.direction || "out";
+      const trustedRow = isTrustedIp(ip, trusted, dir) || c.scores?.operator_auth >= 10;
+      const blockedRow = isBlockedIp(ip, blocked, dir);
+      const sug = c.suggestion || null;
+      let actions = "";
+      if (!trustedRow) {
+        actions += `<span class="has-tip has-tip-action"><button type="button" class="auth" data-auth="${ip}" data-dir="${dir}" data-label="${c.process || ""}">Trust forever</button>${tipMarkup(TIP_TRUST)}</span>`;
+      } else {
+        actions += `<span class="trusted-badge">✓ trusted</span>`;
+      }
+      actions += `<span class="has-tip has-tip-action"><button type="button" class="block-day" data-block-day="${ip}" data-dir="${dir}">Block 1 day</button>${tipMarkup(TIP_BLOCK_DAY)}</span>`;
+      actions += `<span class="has-tip has-tip-action"><button type="button" class="block-forever" data-block-forever="${ip}" data-dir="${dir}">Block forever</button>${tipMarkup(TIP_BLOCK_FOREVER)}</span>`;
+      if (blockedRow) {
+        actions += `<span class="has-tip has-tip-action"><button type="button" class="unblock-day" data-unblock-day="${ip}" data-dir="${dir}">Unblock 1 day</button>${tipMarkup(TIP_UNBLOCK_DAY)}</span>`;
+      }
+      return `<div class="intent-row verdict-${v}${blockedRow ? " is-blocked" : ""}">
+        <div class="intent-head">
+          <span class="verdict-${v} friendly-verdict"><span class="has-tip">${esc(vf.label)}${tipMarkup(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""))}</span></span>
+          <span class="ip" title="Internet address">${ip}:${c.remote_port || "?"}</span>
+          <span class="proc" title="Program using this connection">${c.process || "unknown app"}</span>
+          <span class="meta">${c.ip_class || ""}${blockedRow ? " · blocked" : ""}</span>
+        </div>
+        ${renderSuggestionBox(sug, v, c.scores)}
+        ${c.reason ? `<details class="axis-details"><summary>Technical notes</summary><div class="intent-reason">${esc(c.reason)}</div></details>` : ""}
+        <div class="intent-actions">${actions}</div>
+      </div>`;
+    }
+
+    function bindConnectionActions(root) {
+      root.querySelectorAll("[data-auth]").forEach((btn) => {
+        btn.addEventListener("click", () => authorizeIp(btn.dataset.auth, btn.dataset.dir, btn.dataset.label, btn));
+      });
+      root.querySelectorAll("[data-block-day]").forEach((btn) => {
+        btn.addEventListener("click", () => firewallBlock(btn.dataset.blockDay, btn.dataset.dir, "day", btn));
+      });
+      root.querySelectorAll("[data-block-forever]").forEach((btn) => {
+        btn.addEventListener("click", () => firewallBlock(btn.dataset.blockForever, btn.dataset.dir, "forever", btn));
+      });
+      root.querySelectorAll("[data-unblock-day]").forEach((btn) => {
+        btn.addEventListener("click", () => firewallUnblockDay(btn.dataset.unblockDay, btn.dataset.dir, btn));
+      });
+      root.querySelectorAll(".has-tip").forEach(bindTip);
+    }
+
+    function renderConnections(gk, trusted, blocked, lockdownFirst) {
       const el = $("connections");
       const conns = gk?.connections || [];
       if (!conns.length) {
         const raw = gk?._fallback || [];
         if (!raw.length) { el.innerHTML = '<div class="empty">No active flows</div>'; return; }
       }
-      if (conns.length) {
-        el.innerHTML = conns.map((c) => {
-          const v = c.verdict || "MONITOR";
-          const trustedRow = isTrustedIp(c.remote_ip, trusted, c.direction) || c.scores?.operator_auth >= 10;
-          const actions = [];
-          const vf = VERDICT_FRIENDLY[v] || { label: v, tip: "NEXUS is classifying this connection." };
-          if (c.block_recommended) {
-            actions.push(`<span class="has-tip has-tip-action"><button type="button" class="block" data-block="${c.remote_ip}">Stop this site</button>${tipMarkup(TIP_STOP)}</span>`);
-          }
-          if (!trustedRow) {
-            actions.push(`<span class="has-tip has-tip-action"><button type="button" class="auth" data-auth="${c.remote_ip}" data-dir="${c.direction || "out"}" data-label="${c.process || ""}">Trust forever</button>${tipMarkup(TIP_TRUST)}</span>`);
-          } else {
-            actions.push(`<span style="color:var(--ok);font-size:0.65rem">✓ trusted</span>`);
-          }
-          const sug = c.suggestion || null;
-          return `<div class="intent-row verdict-${v}">
-            <div class="intent-head">
-              <span class="verdict-${v} friendly-verdict"><span class="has-tip">${esc(vf.label)}${tipMarkup(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""))}</span></span>
-              <span class="ip" title="Internet address">${c.remote_ip}:${c.remote_port || "?"}</span>
-              <span class="proc" title="Program using this connection">${c.process || "unknown app"}</span>
-              <span class="meta">${c.ip_class || ""}</span>
-            </div>
-            ${renderSuggestionBox(sug, v, c.scores)}
-            ${c.reason ? `<details class="axis-details"><summary>Technical notes</summary><div class="intent-reason">${esc(c.reason)}</div></details>` : ""}
-            <div class="intent-actions">${actions.join("")}</div>
-          </div>`;
-        }).join("");
-        el.querySelectorAll("[data-auth]").forEach((btn) => {
-          btn.addEventListener("click", () => authorizeIp(btn.dataset.auth, btn.dataset.dir, btn.dataset.label, btn));
-        });
-        el.querySelectorAll("[data-block]").forEach((btn) => {
-          btn.addEventListener("click", () => blockHarmIp(btn.dataset.block, btn));
-        });
-        el.querySelectorAll(".has-tip").forEach(bindTip);
-        return;
+      if (!conns.length) return;
+      const sorted = [...conns].sort((a, b) => {
+        const ra = a.trust_rank ?? 5;
+        const rb = b.trust_rank ?? 5;
+        if (ra !== rb) return ra - rb;
+        return (b.suggestion?.trust_meter ?? 0) - (a.suggestion?.trust_meter ?? 0);
+      });
+      const recommended = sorted.filter((c) => (c.trust_rank ?? 5) <= 1);
+      const review = sorted.filter((c) => (c.trust_rank ?? 5) === 2 || (c.trust_rank ?? 5) === 3);
+      const risky = sorted.filter((c) => (c.trust_rank ?? 5) >= 4);
+      let html = "";
+      if (lockdownFirst) {
+        html += `<div class="lockdown-banner" role="note"><strong>First-run lockdown</strong> — unknown addresses start blocked. Work top-down: trust the <em>Recommended</em> connections first (email, YouTube, browsers). CLI fallback: <code>nexus trust &lt;ip&gt;</code></div>`;
       }
+      if (recommended.length) {
+        html += `<div class="conn-section-head rec">Recommended to allow first (${recommended.length})</div>`;
+        html += recommended.map((c) => renderConnectionCard(c, trusted, blocked)).join("");
+      }
+      if (review.length) {
+        html += `<div class="conn-section-head review">Review when you have a minute (${review.length})</div>`;
+        html += review.map((c) => renderConnectionCard(c, trusted, blocked)).join("");
+      }
+      if (risky.length) {
+        html += `<div class="conn-section-head risk">Higher concern — trust only if you recognize the app (${risky.length})</div>`;
+        html += risky.map((c) => renderConnectionCard(c, trusted, blocked)).join("");
+      }
+      el.innerHTML = html;
+      bindConnectionActions(el);
     }
 
     function renderThreats(items) {
@@ -1534,7 +1617,7 @@
           gk._fallback = data.internet.connections;
         }
         renderGatekeeperBanner(gk);
-        renderConnections(gk, data.trusted);
+        renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
         renderTrusted(data.trusted);
         renderThreats(data.threats);
         renderVectors(data.vectors);

@@ -36,6 +36,12 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.4.0 — full control on every connection
+
+- **Three actions on every row** — Trust forever · Block 1 day · Block forever · Unblock 1 day (when blocked)
+- **First-run lockdown** — unknown public peers blocked on install; list sorted **recommended to allow first** (email, YouTube, browsers)
+- **Full CLI** — `nexus trust/block/unblock/connections` if the browser won't open; `nexus panel --wait` and browser detection in `./nexus.sh`
+
 ## v2.2.0 — everyday mode
 
 - **Auto settings on install** — everyday profile for email, YouTube, and browsing (no auto-block, light watchers)

@@ -410,6 +410,7 @@ class Handler(BaseHTTPRequestHandler):
             ip = str(body.get("ip", "")).strip()
             direction = str(body.get("direction", "out")).strip().lower() or "out"
             reason = str(body.get("reason", "harm_candidate")).strip()
+            duration = str(body.get("duration", "day")).strip().lower() or "day"
             if not ip:
                 self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
                 return
@@ -418,14 +419,51 @@ class Handler(BaseHTTPRequestHandler):
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
             safe_ip = ip.replace("'", "'\"'\"'")
+            if duration in ("forever", "permanent"):
+                block_fn = f"nexus_firewall_block_ip_forever {direction} '{safe_ip}' '{reason}'"
+            else:
+                timeout = str(body.get("timeout", 86400))
+                block_fn = f"nexus_firewall_block_ip {direction} '{safe_ip}' {timeout} '{reason}'"
             cmd = (
                 f"source {INSTALL_ROOT}/lib/nexus-common.sh && nexus_load_config && "
-                f"source {script} && "
-                f"nexus_firewall_block_ip {direction} '{safe_ip}' 86400 '{reason}'"
+                f"source {script} && {block_fn}"
             )
             proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=20, env=env)
             ok = proc.returncode == 0
-            self._send(200 if ok else 500, json.dumps({"ok": ok, "ip": ip}), "application/json")
+            self._send(
+                200 if ok else 500,
+                json.dumps({"ok": ok, "ip": ip, "duration": duration}),
+                "application/json",
+            )
+            return
+
+        if path == "/api/firewall/unblock":
+            ip = str(body.get("ip", "")).strip()
+            direction = str(body.get("direction", "out")).strip().lower() or "out"
+            duration = str(body.get("duration", "day")).strip().lower() or "day"
+            if not ip:
+                self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
+                return
+            script = INSTALL_ROOT / "lib" / "firewall-sentinel.sh"
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            safe_ip = ip.replace("'", "'\"'\"'")
+            if duration in ("day", "1day", "24h"):
+                unblock_fn = f"nexus_firewall_temp_allow_ip {direction} '{safe_ip}' 86400"
+            else:
+                unblock_fn = f"nexus_firewall_unblock_ip {direction} '{safe_ip}'"
+            cmd = (
+                f"source {INSTALL_ROOT}/lib/nexus-common.sh && nexus_load_config && "
+                f"source {script} && {unblock_fn}"
+            )
+            proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=20, env=env)
+            ok = proc.returncode == 0
+            self._send(
+                200 if ok else 500,
+                json.dumps({"ok": ok, "ip": ip, "duration": duration}),
+                "application/json",
+            )
             return
 
         if path == "/api/firewall/revoke":

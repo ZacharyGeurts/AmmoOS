@@ -49,6 +49,13 @@ HARM_PORTS = frozenset({"4444", "5555", "1337", "31337", "6666", "9001", "9050",
 PRIVATE_RE = re.compile(
     r"^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|169\.254\.|::1|fe80:|fd)"
 )
+TRUST_RANK = {
+    "USER_OK": 0,
+    "EPHEMERAL": 1,
+    "MONITOR": 2,
+    "SUSPICIOUS": 3,
+    "HARM_CANDIDATE": 4,
+}
 
 
 def _now() -> str:
@@ -550,6 +557,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "verdict": verdict,
             "reason": reason,
             "block_recommended": block_rec,
+            "trust_rank": TRUST_RANK.get(verdict, 5),
             "direction": "out",
             "suggestion": suggestion,
         })
@@ -568,7 +576,14 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
     history["updated"] = _now()
     _save_json(HISTORY, history)
 
-    results.sort(key=lambda x: (-int(x["block_recommended"]), -x["harm_total"], x["verdict"]))
+    results.sort(
+        key=lambda x: (
+            x.get("trust_rank", 5),
+            -(x.get("suggestion") or {}).get("trust_meter", 0),
+            int(x.get("block_recommended", False)),
+            -x.get("harm_total", 0),
+        )
+    )
     harm_candidates = [r for r in results if r["block_recommended"]]
     return {
         "updated": _now(),

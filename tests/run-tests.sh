@@ -197,6 +197,40 @@ test_panel_v22_axis_layout() {
   ! grep -q 'score-meters' "$panel"
 }
 
+test_panel_v24_actions() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'data-block-day' "$panel"
+  grep -q 'data-block-forever' "$panel"
+  grep -q 'data-unblock-day' "$panel"
+  grep -q 'Trust forever' "$panel"
+  grep -q 'Recommended to allow first' "$panel"
+}
+
+test_gatekeeper_trust_rank() {
+  command -v python3 >/dev/null 2>&1 || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"trust_rank": 0'
+tcp ESTAB 0 0 10.0.0.5:52444 172.217.14.206:443 users:(("firefox",pid=1,fd=3))
+EOF
+}
+
+test_firewall_temp_allow_fn() {
+  declare -f nexus_firewall_temp_allow_ip >/dev/null 2>&1
+  declare -f nexus_firewall_block_ip_forever >/dev/null 2>&1
+  declare -f nexus_firewall_blocks_json >/dev/null 2>&1
+}
+
+test_lockdown_first_script() {
+  [[ -f "${ROOT}/lib/lockdown-first.sh" ]]
+  grep -q 'nexus_lockdown_first_apply' "${ROOT}/lib/lockdown-first.sh"
+}
+
+test_panel_browser_helpers() {
+  [[ -f "${ROOT}/lib/panel-browser.sh" ]]
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/panel-browser.sh"
+  nexus_panel_url | grep -q '127.0.0.1'
+}
+
 test_firewall_trust_roundtrip() {
   nexus_firewall_trust_init
   nexus_firewall_authorize_ip "203.0.113.50" out "test-peer" "run-tests"
@@ -277,6 +311,11 @@ run_test "connection gatekeeper youtube" test_gatekeeper_youtube
 run_test "connection gatekeeper email" test_gatekeeper_email
 run_test "consumer everyday defaults" test_consumer_defaults
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout
+run_test "panel v2.4 action buttons" test_panel_v24_actions
+run_test "gatekeeper trust rank" test_gatekeeper_trust_rank
+run_test "firewall temp allow helpers" test_firewall_temp_allow_fn
+run_test "lockdown-first script" test_lockdown_first_script
+run_test "panel browser helpers" test_panel_browser_helpers
 run_test "firewall trust authorize" test_firewall_trust_roundtrip
 run_test "threat panel json publish" test_threat_panel_json
 run_test "nexus settings roundtrip" test_nexus_settings_roundtrip

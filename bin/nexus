@@ -39,19 +39,26 @@ EOF
 
 usage() {
   cat <<'EOF'
-NEXUS-Shield CLI (read-only — no sudo after install)
-  nexus status          Show vigil mode and recent alert count
-  nexus verify          Verify script integrity manifest
-  nexus alerts          Tail unified alert log
-  nexus entropy <file>  Score file entropy
-  nexus test            Run test suite
-  nexus panel           Open Internet + Threat Panel (localhost)
-  nexus paranoia        Paranoia mode status (detect → log → disable → re-enable)
-  nexus shutdown        Shutdown guard — bloody murder if killed; restart block|permissive
-  nexus paranoia block on|off   Auto-disable after forensic log
-  nexus paranoia incidents      Recent paranoia incidents (full forensics)
+NEXUS-Shield CLI — full control if the browser won't open
+  nexus status              Vigil mode, firewall, panel URL
+  nexus verify              Script integrity manifest
+  nexus alerts              Tail unified alert log
+  nexus entropy <file>      Score file entropy
+  nexus test                Run test suite
+  nexus panel               Open panel (browser detection)
+  nexus panel --url         Print panel URL only
+  nexus panel --wait        Wait until panel responds
+  nexus panel --no-browser  Print URL + CLI help (no browser)
+  nexus connections         List scored live connections (JSON)
+  nexus trust <ip> [label]  Trust forever (allow outbound)
+  nexus block <ip>          Block for 1 day
+  nexus block <ip> --forever
+  nexus unblock <ip>        Unblock for 1 day (temp allow)
+  nexus paranoia            Paranoia mode status
+  nexus shutdown            Shutdown guard / restart
 
-Admin actions run automatically during: sudo ./stealth_install.sh
+Admin: sudo ./stealth_install.sh
+Panel: https://127.0.0.1:9477/  (or: ./nexus.sh)
 EOF
 }
 
@@ -168,14 +175,71 @@ case "$cmd" in
     esac
     ;;
   panel)
-    port="${NEXUS_THREAT_PANEL_PORT:-9477}"
-    if [[ "${NEXUS_PANEL_TLS:-1}" == "1" ]]; then
-      url="https://127.0.0.1:${port}/"
-    else
-      url="http://127.0.0.1:${port}/"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh"
+    flag="${sub:-}"
+    url="$(nexus_panel_url)"
+    case "$flag" in
+      --url) echo "$url" ;;
+      --wait)
+        if nexus_panel_wait_ready "$url" 45; then echo "Panel ready: $url"; else exit 1; fi
+        ;;
+      --no-browser)
+        nexus_panel_wait_ready "$url" 20 || true
+        nexus_panel_open_help "$url"
+        ;;
+      *)
+        echo "Panel: $url"
+        browsers="$(nexus_panel_detect_browsers | tr '\n' ' ')"
+        echo "Browsers detected: ${browsers:-none}"
+        if ! nexus_panel_open_browser "$url"; then
+          nexus_panel_open_help "$url" >&2
+          exit 1
+        fi
+        ;;
+    esac
+    ;;
+  connections)
+    json="${NEXUS_STATE_DIR}/connection-intent.json"
+    if [[ ! -s "$json" ]]; then
+      json="${NEXUS_STATE_DIR}/threat-panel.json"
+      if [[ -s "$json" ]]; then
+        python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps(d.get('gatekeeper',{}), indent=2))" "$json" 2>/dev/null \
+          || echo '{"connections":[]}'
+        exit 0
+      fi
+      echo '{"connections":[],"error":"gatekeeper warming up"}'
+      exit 0
     fi
-    echo "Threat panel (secured): ${url}"
-    command -v xdg-open >/dev/null 2>&1 && xdg-open "$url" 2>/dev/null || true
+    cat "$json"
+    ;;
+  trust)
+    ip="${sub:-}"
+    label="${3:-cli}"
+    [[ -n "$ip" ]] || { echo "usage: nexus trust <ip> [label]"; exit 1; }
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/firewall-trust.sh"
+    nexus_firewall_authorize_ip "$ip" out "$label" "nexus-cli" && echo "trusted ${ip}" || exit 1
+    ;;
+  block)
+    ip="${sub:-}"
+    forever=0
+    [[ "${3:-}" == "--forever" ]] && forever=1
+    [[ -n "$ip" ]] || { echo "usage: nexus block <ip> [--forever]"; exit 1; }
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
+    if [[ "$forever" -eq 1 ]]; then
+      nexus_firewall_block_ip_forever out "$ip" "nexus-cli" && echo "blocked forever ${ip}"
+    else
+      nexus_firewall_block_ip out "$ip" "${NEXUS_FIREWALL_BLOCK_DURATION:-86400}" "nexus-cli" && echo "blocked 1 day ${ip}"
+    fi
+    ;;
+  unblock)
+    ip="${sub:-}"
+    [[ -n "$ip" ]] || { echo "usage: nexus unblock <ip>"; exit 1; }
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
+    nexus_firewall_temp_allow_ip out "$ip" "${NEXUS_FIREWALL_TEMP_ALLOW_DURATION:-86400}" && echo "unblocked 1 day ${ip}"
     ;;
   *)
     usage
