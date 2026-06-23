@@ -460,7 +460,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.5\.0' "$panel"
+  grep -q 'v5\.6\.0' "$panel"
 }
 
 test_field_rf_module() {
@@ -665,6 +665,10 @@ test_field_attack_kit_module() {
   grep -q 'nexus_field_attack_publish_deep' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/field-attack-kit.py"
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'nexus_field_attack_autokill_certain' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'nexus_field_attack_forever_kill_enforce' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'autokill_certain' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'forever_kill_enforce' "${ROOT}/lib/field-attack-kit.py"
   ! grep -q 'nexus_field_attack_auto_crush' "${ROOT}/lib/threat-panel.sh"
   grep -q 'killable' "${ROOT}/lib/host-attack-map.py"
   grep -q 'strike_confidence' "${ROOT}/lib/host-attack-map.py"
@@ -764,7 +768,10 @@ test_panel_field_attack_kit_ui() {
   grep -q 'PINPOINT' "$panel"
   grep -q 'HARDWARE DESTROY' "$panel"
   grep -q 'strike-destroy' "$panel"
-  grep -q 'v5.5.0' "$panel"
+  grep -q 'old-man' "$panel"
+  grep -q 'Old Man mode' "$panel"
+  grep -q 'set-old-man' "$panel"
+  grep -q 'v5.6.0' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -773,7 +780,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.5.0' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.6.0' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null

@@ -68,7 +68,7 @@ chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/l
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
   "${ROOT}/lib/honorability.sh" "${ROOT}/lib/field-rf-sentinel.sh" "${ROOT}/lib/police-agency.sh" \
   "${ROOT}/lib/field-command.sh" "${ROOT}/lib/gov-intel.sh" "${ROOT}/lib/program-tags.sh" \
-  "${ROOT}/lib/nexus-update-lock.sh" "${ROOT}/lib/field-toolkit.sh" 2>/dev/null || true
+  "${ROOT}/lib/nexus-update-lock.sh" "${ROOT}/lib/field-toolkit.sh" "${ROOT}/lib/hardware-destruction.sh" 2>/dev/null || true
 chmod 555 /usr/local/lib/nexus-shield/lib/friendly-guard.py /usr/local/lib/nexus-shield/lib/friendly-guard.sh 2>/dev/null || true
 chmod 755 /usr/local/lib/nexus-shield/lib/*.py 2>/dev/null || true
 chmod -R a+rX /usr/local/lib/nexus-shield/data 2>/dev/null || true

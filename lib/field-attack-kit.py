@@ -335,7 +335,76 @@ def kill_target(
     }
 
 
+def _kill_strike_certain_point(
+    p: dict[str, Any],
+    *,
+    reason_prefix: str,
+    disabled: set[str],
+    nokill: set[str],
+) -> tuple[str | None, dict[str, Any] | None]:
+    ip = str(p.get("ip") or "")
+    if not ip or ip in disabled or ip in nokill:
+        return ip or None, None
+    if not p.get("strike_certain"):
+        return ip, None
+    vector = str(p.get("vector") or "HOSTILE")
+    severity = str(p.get("severity") or "high")
+    reason = f"{reason_prefix}:strike_certain=1.0"
+    result = kill_target(
+        ip,
+        vector,
+        severity,
+        reason,
+        extra={"strike_mode": "auto", "monitor": p.get("monitor")},
+    )
+    if result.get("ok"):
+        disabled.add(ip)
+        return ip, result
+    return ip, result
+
+
+def autokill_certain() -> dict[str, Any]:
+    """Autokill path — PINPOINT CERTAIN · 100% only. Hardware destroy + forever kill."""
+    doc = _load_json(HOST_ATTACKS, {})
+    points = doc.get("points") or []
+    disabled = _disabled_ips()
+    nokill = _nokill_ips()
+    destroyed: list[str] = []
+    skipped: list[str] = []
+    results: list[dict[str, Any]] = []
+
+    for p in points:
+        ip, result = _kill_strike_certain_point(
+            p,
+            reason_prefix="autokill_certain",
+            disabled=disabled,
+            nokill=nokill,
+        )
+        if not ip:
+            continue
+        if result and result.get("ok"):
+            destroyed.append(ip)
+            results.append({"ip": ip, "hardware_destroy": result.get("hardware_destroy"), "ok": True})
+        elif not p.get("strike_certain"):
+            skipped.append(ip)
+        elif result:
+            skipped.append(ip)
+            results.append({"ip": ip, "ok": False, "reason": result.get("reason")})
+
+    return {
+        "ok": True,
+        "autokill": True,
+        "destroyed": destroyed,
+        "destroyed_count": len(destroyed),
+        "killed_count": len(destroyed),
+        "hardware_destroy_count": sum(1 for r in results if r.get("hardware_destroy")),
+        "skipped": len(skipped),
+        "results": results[:24],
+    }
+
+
 def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
+    """Operator crush — 100% PINPOINT CERTAIN targets only (hardware destroy)."""
     doc = _load_json(HOST_ATTACKS, {})
     points = doc.get("points") or []
     disabled = _disabled_ips()
@@ -344,34 +413,86 @@ def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
     skipped: list[str] = []
 
     for p in points:
-        ip = str(p.get("ip") or "")
-        if not ip or ip in disabled or ip in nokill:
-            skipped.append(ip)
-            continue
-        heat = float(p.get("heat") or 0)
-        strike_certain = bool(p.get("strike_certain"))
-        if not strike_certain and heat < heat_min:
-            skipped.append(ip)
-            continue
-        vector = str(p.get("vector") or "HOSTILE")
-        severity = str(p.get("severity") or "high")
-        reason = (
-            f"attack_kit:strike_certain=1.0"
-            if strike_certain
-            else f"attack_kit:heat={heat:.2f}"
+        ip, result = _kill_strike_certain_point(
+            p,
+            reason_prefix="attack_kit:crush_hot",
+            disabled=disabled,
+            nokill=nokill,
         )
-        result = kill_target(
-            ip,
-            vector,
-            severity,
-            reason,
-            extra={"strike_mode": "auto", "monitor": p.get("monitor")},
-        )
-        if result.get("ok"):
+        if not ip:
+            continue
+        if result and result.get("ok"):
             crushed.append(ip)
-            disabled.add(ip)
+        else:
+            skipped.append(ip)
 
-    return {"ok": True, "crushed": crushed, "crushed_count": len(crushed), "killed_count": len(crushed), "skipped": len(skipped)}
+    return {
+        "ok": True,
+        "crushed": crushed,
+        "crushed_count": len(crushed),
+        "killed_count": len(crushed),
+        "hardware_destroy": True,
+        "skipped": len(skipped),
+    }
+
+
+def forever_kill_enforce(max_ips: int = 64) -> dict[str, Any]:
+    """Re-apply forever kill + hardware destroy for archived HARDWARE_DESTROY registry entries."""
+    disabled = sorted(_disabled_ips())[:max_ips]
+    if not disabled:
+        return {"ok": True, "enforced": [], "enforced_count": 0}
+
+    enforced: list[str] = []
+    skipped: list[str] = []
+    script = INSTALL / "lib" / "field-attack-kit.sh"
+
+    for ip in disabled:
+        archived = load_archived_dossier(ip) or {}
+        hw = bool(
+            archived.get("hardware_destroy")
+            or archived.get("action") == "HARDWARE_DESTROY"
+        )
+        if not hw:
+            skipped.append(ip)
+            continue
+        dossier = dict(archived)
+        dossier.setdefault("ip", ip)
+        dossier.setdefault("action", "HARDWARE_DESTROY")
+        dossier.setdefault("hardware_destroy", True)
+        dossier.setdefault("certainty", 1.0)
+        if not script.is_file():
+            skipped.append(ip)
+            continue
+        dossier_path = STATE / "attack-kit-dossier.tmp"
+        dossier_path.write_text(json.dumps(dossier, ensure_ascii=False) + "\n", encoding="utf-8")
+        env = os.environ.copy()
+        env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
+        env["NEXUS_STATE_DIR"] = str(STATE)
+        safe_ip = ip.replace("'", "'\"'\"'")
+        cmd = (
+            f"source {INSTALL}/lib/nexus-common.sh && "
+            f"source {INSTALL}/lib/firewall-sentinel.sh && "
+            f"source {INSTALL}/lib/firewall-trust.sh && "
+            f"source {INSTALL}/lib/self-access.sh && "
+            f"source {INSTALL}/lib/friendly-guard.sh && "
+            f"source {INSTALL}/lib/pest-arsenal.sh && "
+            f"source {script} && "
+            f'DOSSIER_JSON="$(cat "{dossier_path}")" && '
+            f"nexus_hardware_destroy_target '{safe_ip}' \"$DOSSIER_JSON\""
+        )
+        proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=45, env=env)
+        if proc.returncode == 0:
+            enforced.append(ip)
+        else:
+            skipped.append(ip)
+
+    return {
+        "ok": True,
+        "forever_kill": True,
+        "enforced": enforced,
+        "enforced_count": len(enforced),
+        "skipped": len(skipped),
+    }
 
 
 def disable_one(ip: str, vector: str = "HOSTILE", severity: str = "high", reason: str = "operator_disable") -> dict[str, Any]:
@@ -566,7 +687,7 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
 def main() -> int:
     if len(sys.argv) < 2:
         print(
-            "usage: field-attack-kit.py [crush-hot|auto-rekill|kill|disable|nokill|check-online|rekill <ip> ...]",
+            "usage: field-attack-kit.py [autokill-certain|forever-kill-enforce|crush-hot|auto-rekill|kill|disable|nokill|check-online|rekill <ip> ...]",
             file=sys.stderr,
         )
         return 1
@@ -589,6 +710,14 @@ def main() -> int:
             sys.stdout,
             indent=2,
         )
+        sys.stdout.write("\n")
+        return 0
+    if cmd == "autokill-certain":
+        json.dump(autokill_certain(), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+    if cmd == "forever-kill-enforce":
+        json.dump(forever_kill_enforce(), sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0
     if cmd == "crush-hot":

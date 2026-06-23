@@ -16,7 +16,7 @@
     {"id": "web_skimmer", "label": "Web skimmer / form steal", "vector": "WEB_SKIM", "severity": "high", "category": "fraud", "indicators": ["checkout domain mismatch", "honorability drop", "browser awareness flag"], "study": "Payment page tampering. Honorability + browser awareness feed gatekeeper; fair ad guardian for ad-tier threats.", "defenses": ["honorability_gate", "fair_ad_guardian"]}
   ],
   "defenses": [
-    {"id": "auto_crush_hot", "label": "Auto-crush hot targets", "module": "field-attack-kit", "default": false, "description": "Trust Strike autokill on hot monitor targets ≥78% confidence with dossier corroboration.", "setting_key": "NEXUS_ATTACK_KIT_AUTO_CRUSH"},
+    {"id": "auto_crush_hot", "label": "Autokill · 100% hardware destroy", "module": "field-attack-kit", "default": true, "description": "PINPOINT CERTAIN · 100% only — forever kill + full hardware destruction. Registry re-enforces on boot.", "setting_key": "NEXUS_ATTACK_KIT_AUTO_CRUSH"},
     {"id": "auto_rekill", "label": "Auto RE-KILL validated hosts", "module": "field-attack-kit", "default": true, "description": "Re-block killed IPs when same-host identity comes back online.", "setting_key": "NEXUS_FIELD_AUTO_REKILL"},
     {"id": "trust_strike_autokill", "label": "Trust Strike autokill gate", "module": "trust-strike-engine", "default": true, "description": "Require strike confidence before permanent KILL unless operator forces.", "setting_key": null},
     {"id": "rf_shield_burst", "label": "RF shield on burst", "module": "field-rf-sentinel", "default": true, "description": "Soft rfkill wlan on severe RF bursts.", "setting_key": "NEXUS_RF_SHIELD_ENABLED"},

@@ -1,7 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="old-man">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem("nexus_old_man") === "0") document.documentElement.classList.remove("old-man");
+      } catch (_) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NEXUS-Shield — Threat Panel</title>
   <link rel="preload" href="/api/field" as="fetch" crossorigin />
@@ -1148,14 +1155,72 @@
       .intent-head .ip { text-align: left; justify-self: start; }
       #tip-portal.tip-flyout.visible { pointer-events: auto; }
     }
+    /* Old Man mode — 2× font scale + high-contrast retheme (default ON) */
+    html.old-man {
+      --font-scale: 2;
+      --bg: #000408;
+      --bg-accent: #0a1018;
+      --panel: #101820;
+      --card: #141c2a;
+      --border: #5a7090;
+      --text: #ffffff;
+      --muted: #c4d0e4;
+      --internet: #7ec0ff;
+      --threat: #ff8aa0;
+      --gold: #ffe066;
+      --ok: #66ffbb;
+      --murder: #ff4466;
+      --glow: rgba(100, 170, 255, 0.22);
+    }
+    html.old-man body {
+      font-size: 34px;
+      font-weight: 500;
+      letter-spacing: 0.025em;
+      background: var(--bg);
+      line-height: 1.65;
+    }
+    html.old-man header.app-header { padding: 18px 28px; }
+    html.old-man nav.menu button,
+    html.old-man .panel-subnav button,
+    html.old-man .attack-kit-bar button,
+    html.old-man .ha-kill-btn,
+    html.old-man .ha-rekill-btn,
+    html.old-man .ha-nokill-btn,
+    html.old-man .ha-check-online-btn,
+    html.old-man .setting-row .toggle,
+    html.old-man #nexus-update-btn {
+      min-height: 48px;
+      font-size: 0.82rem !important;
+    }
+    html.old-man .setting-row .hint { font-size: 0.72rem !important; }
+    html.old-man #tip-portal.tip-flyout { font-size: 0.78rem !important; max-width: 420px; line-height: 1.55; }
+    html.old-man .ha-strike-badge { font-size: 0.72rem !important; padding: 6px 12px; }
+    html.old-man .brand-sub::after {
+      content: " · OLD MAN MODE · 2× scale";
+      color: var(--gold);
+      font-weight: 700;
+    }
+    html.old-man .old-man-banner {
+      display: block;
+      padding: 10px 20px;
+      background: linear-gradient(90deg, #1a2840, #102030);
+      border-bottom: 2px solid var(--gold);
+      color: var(--gold);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+    .old-man-banner { display: none; }
   </style>
 </head>
 <body>
+  <div class="old-man-banner" id="old-man-banner">OLD MAN MODE — 2× font scale · high contrast · built for tired eyes</div>
   <header class="app-header">
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.5.0</h1>
+        <h1>NEXUS-Shield v5.6.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1175,7 +1240,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.5.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.6.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1543,7 +1608,7 @@
         <span class="attack-kit-stat">Killed: <em id="ak-disabled-count">0</em></span>
         <span class="attack-kit-stat">Field paths: <em id="ak-field-paths">0</em></span>
         <span class="attack-kit-stat">Strike corpus: <em id="ak-strike-corpus">0</em></span>
-        <button type="button" id="ak-crush-hot" data-tip="Trust Strike autokill — only hot monitor targets with dossier-backed confidence ≥ 78% and corroboration. Permanent block + archived dossier.">KILL all hot</button>
+        <button type="button" id="ak-crush-hot" data-tip="Hardware destroy all PINPOINT CERTAIN · 100% targets. Full teardown + permanent forever kill on field drive.">HARDWARE DESTROY 100%</button>
         <button type="button" id="ak-sync-field" class="ghost" data-tip="Pull hostile registry from field drive and re-apply firewall blocks.">Sync field drive</button>
       </div>
       <div class="field-toolkit-panel" id="field-toolkit-panel">
@@ -1731,9 +1796,16 @@
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_ATTACK_KIT_AUTO_CRUSH" id="set-auto-crush" />
-            <span><strong>Auto-kill hostile targets</strong><span class="hint">KILL hot monitor targets + RE-KILL validated same-host attackers.</span></span>
+            <span><strong>Autokill · 100% hardware destroy</strong><span class="hint">PINPOINT CERTAIN targets only — forever kill + full hardware destruction. RE-KILL validated same-host returners.</span></span>
           </label>
-          <span class="has-tip-row" data-tip="ON by default. Crushes heat ≥ 0.7 automatically. When a KILLED attacker returns online and same-host identity validates (PTR, TLS, ASN, MAC OUI), NEXUS RE-KILLs without waiting for you."></span>
+          <span class="has-tip-row" data-tip="ON by default. Autokill runs only at 100% strike certainty: permanent firewall block, connection teardown, process kill, LAN isolate, dossier archived forever. Registry re-applies hardware destroy on boot. RE-KILL when a killed attacker returns online with same-host identity."></span>
+        </div>
+        <div class="setting-row" id="old-man-setting-row">
+          <label class="toggle">
+            <input type="checkbox" id="set-old-man" checked />
+            <span><strong>Old Man mode</strong><span class="hint">2× font scale + high-contrast retheme — easier on old eyes.</span></span>
+          </label>
+          <span class="has-tip-row" data-tip="Doubles all text size (rem-based) and switches to a high-contrast palette with larger buttons. Saved in your browser. Default ON."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
@@ -2247,6 +2319,18 @@
     }
     window.addEventListener("hashchange", applyHashView);
     applyHashView();
+
+    function applyOldManMode(on) {
+      document.documentElement.classList.toggle("old-man", !!on);
+      try { localStorage.setItem("nexus_old_man", on ? "1" : "0"); } catch (_) {}
+      const banner = $("old-man-banner");
+      if (banner) banner.style.display = on ? "block" : "none";
+      const cb = $("set-old-man");
+      if (cb && document.activeElement !== cb) cb.checked = !!on;
+    }
+
+    $("set-old-man")?.addEventListener("change", (e) => applyOldManMode(e.target.checked));
+    applyOldManMode(localStorage.getItem("nexus_old_man") !== "0");
 
     async function setSetting(key, value) {
       const res = await fetch("/api/settings", {
