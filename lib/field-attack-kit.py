@@ -499,6 +499,20 @@ def disable_one(ip: str, vector: str = "HOSTILE", severity: str = "high", reason
     return kill_target(ip, vector, severity, reason)
 
 
+def forever_disable_ip(
+    ip: str,
+    vector: str = "WIFI_THREAT",
+    severity: str = "critical",
+    reason: str = "rf_unhealthy_forever",
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Force permanent disable for unhealthy RF-correlated host — no strike gate."""
+    meta = dict(extra or {})
+    meta.setdefault("force", True)
+    meta.setdefault("strike_mode", "destroy")
+    return kill_target(ip, vector, severity, reason, extra=meta)
+
+
 def _save_online_check(ip: str, doc: dict[str, Any]) -> None:
     path = STATE / "target-online-check.json"
     cache = _load_json(path, {"checks": {}})
@@ -687,7 +701,7 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
 def main() -> int:
     if len(sys.argv) < 2:
         print(
-            "usage: field-attack-kit.py [autokill-certain|forever-kill-enforce|crush-hot|auto-rekill|kill|disable|nokill|check-online|rekill <ip> ...]",
+            "usage: field-attack-kit.py [autokill-certain|forever-kill-enforce|forever-disable|crush-hot|auto-rekill|kill|disable|nokill|check-online|rekill <ip> ...]",
             file=sys.stderr,
         )
         return 1
@@ -731,6 +745,26 @@ def main() -> int:
                 sys.argv[3] if len(sys.argv) > 3 else "HOSTILE",
                 sys.argv[4] if len(sys.argv) > 4 else "high",
                 sys.argv[5] if len(sys.argv) > 5 else "operator_nokill",
+            ),
+            sys.stdout,
+            indent=2,
+        )
+        sys.stdout.write("\n")
+        return 0
+    if cmd == "forever-disable" and len(sys.argv) >= 3:
+        extra: dict[str, Any] = {}
+        if len(sys.argv) >= 7:
+            try:
+                extra = json.loads(sys.argv[6])
+            except json.JSONDecodeError:
+                extra = {}
+        json.dump(
+            forever_disable_ip(
+                sys.argv[2],
+                sys.argv[3] if len(sys.argv) > 3 else "WIFI_THREAT",
+                sys.argv[4] if len(sys.argv) > 4 else "critical",
+                sys.argv[5] if len(sys.argv) > 5 else "rf_unhealthy_forever",
+                extra=extra,
             ),
             sys.stdout,
             indent=2,

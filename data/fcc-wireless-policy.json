@@ -23,11 +23,18 @@
     "disconnect_unpermitted_spectrum",
     "firewall_block_correlated_ip",
     "autokill_strike_certain",
-    "hardware_destroy_strike_certain"
+    "hardware_destroy_strike_certain",
+    "disable_unhealthy_forever"
   ],
   "shoot_to_kill": {
     "enabled_by_default": true,
     "targets": ["unpermitted_spectrum", "evil_twin", "rogue_open", "hostile_oui", "connected_rogue", "connected_unpermitted"],
     "note": "Aggressive lawful wire-layer kill chain. No RF transmission."
+  },
+  "disable_unhealthy_forever": {
+    "enabled_by_default": true,
+    "registry": "field-rf-disabled-forever.json",
+    "actions": ["permanent_bssid_registry", "forever_firewall_block", "forever_dossier_archive", "boot_reenforce_disconnect"],
+    "note": "Unhealthy RF detections are disabled forever — never allowed back."
   }
 }

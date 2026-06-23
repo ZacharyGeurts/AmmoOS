@@ -1220,7 +1220,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.8.0</h1>
+        <h1>NEXUS-Shield v5.8.1</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1240,7 +1240,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.1</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1387,7 +1387,7 @@
         <strong>Field Wireless · Permitted Spectrum Only</strong> — whitelist all FCC bands. Wipe everything else. Shoot to kill on the wire.
       </p>
       <div id="field-rf-fcc-banner" class="gov-merge-banner" style="border-color:#8b3030;background:rgba(56,20,20,0.55);margin-bottom:14px;">
-        <strong>SHOOT TO KILL · Permitted spectrum only</strong> — passive receive-only scan. Unpermitted frequencies = hostile. Lawful kick: disconnect <em>our</em> station, firewall block, 100% autokill + hardware destroy. <strong>No bursts · no jamming · no deauth floods.</strong>
+        <strong>SHOOT TO KILL · Permitted spectrum only</strong> — passive receive-only scan. Unpermitted frequencies = hostile. Unhealthy shit gets <strong>disabled forever</strong>: permanent registry, dossier archive, firewall block, disconnect on sight. <strong>No bursts · no jamming · no deauth floods.</strong>
       </div>
       <div id="field-rf-permitted-bands" class="meta" style="font-size:0.66rem;margin-bottom:10px;"></div>
       <div class="honor-grid">
@@ -3830,7 +3830,8 @@
       const sev = (b.severity || "medium").toLowerCase();
       const kind = (b.kind || "threat").replace(/_/g, " ");
       const who = b.bssid || b.ip || b.device || b.ssid || "—";
-      return `<span class="rf-burst-chip severity-${esc(sev)}">${esc(sev)} · ${esc(kind)} · ${esc(who)}<br/><span class="meta">${esc(b.detail || "")}</span></span>`;
+      const forever = b.disabled_forever || b.forever ? ' · <strong>DISABLED FOREVER</strong>' : "";
+      return `<span class="rf-burst-chip severity-${esc(sev)}">${esc(sev)} · ${esc(kind)} · ${esc(who)}${forever}<br/><span class="meta">${esc(b.detail || "")}</span></span>`;
     }
 
     async function setFieldRfShield(enabled, autoRfkill, lawfulKick, shootToKill) {
@@ -3987,8 +3988,9 @@
         const on = shield.enabled !== false;
         const kicks = shield.kick_count ?? (fr.lawful_kicks || []).length;
         const shoot = shield.shoot_to_kill !== false;
+        const foreverN = shield.forever_registry_count ?? (fr.forever_registry?.entries ? Object.keys(fr.forever_registry.entries).length : 0);
         shieldEl.innerHTML = on
-          ? `<span class="rf-shield-on">Watch ON</span>${shoot ? ' · <span class="severity-critical">SHOOT TO KILL</span>' : ""} · ${esc(shield.action || "passive")}${kicks ? ` · ${kicks} kick(s)` : ""}`
+          ? `<span class="rf-shield-on">Watch ON</span>${shoot ? ' · <span class="severity-critical">SHOOT TO KILL</span>' : ""}${foreverN ? ` · ${foreverN} disabled forever` : ""} · ${esc(shield.action || "passive")}${kicks ? ` · ${kicks} kick(s)` : ""}`
           : `<span class="rf-shield-off">Watch OFF</span>`;
       }
       const enBox = $("field-rf-shield-enabled");
@@ -4017,10 +4019,14 @@
       }
       const kicksEl = $("field-rf-kicks");
       const kicks = fr.lawful_kicks || shield.kicks || [];
+      const foreverDisabled = fr.forever_disabled || shield.forever_disabled || [];
       if (kicksEl) {
-        kicksEl.innerHTML = kicks.length
-          ? `<strong>Lawful kicks</strong> ${kicks.map((k) => `<span class="meta">${esc(k.action)} ${esc(k.ip || k.ssid || k.device || "")}</span>`).join(" · ")}`
+        const foreverHtml = foreverDisabled.length
+          ? `<div style="margin-top:6px;"><strong>Disabled forever</strong> ${foreverDisabled.map((k) => `<span class="meta severity-critical">${esc(k.action || "disabled")} ${esc(k.bssid || k.ip || k.kind || "")}</span>`).join(" · ")}</div>`
           : "";
+        kicksEl.innerHTML = kicks.length
+          ? `<strong>Lawful kicks</strong> ${kicks.map((k) => `<span class="meta">${esc(k.action)} ${esc(k.ip || k.ssid || k.device || k.bssid || "")}</span>`).join(" · ")}${foreverHtml}`
+          : foreverHtml;
       }
       const recentEl = $("field-rf-recent");
       const recent = fr.recent_threats || fr.recent_bursts || [];

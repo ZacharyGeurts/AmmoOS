@@ -144,6 +144,9 @@ while true; do
   if declare -f nexus_host_attack_publish_deep >/dev/null 2>&1; then
     nexus_host_attack_publish_deep
   fi
+  if declare -f nexus_field_rf_forever_enforce >/dev/null 2>&1; then
+    nexus_field_rf_forever_enforce
+  fi
   if [[ "${NEXUS_ADBLOCK:-0}" == "1" ]]; then
     nexus_adblock_apply 2>/dev/null || true
   fi

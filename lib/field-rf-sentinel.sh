@@ -18,3 +18,10 @@ nexus_field_rf_json() {
     python3 "$script" json 2>/dev/null \
     || printf '{"antenna":{"mode":"error"},"bursts":[],"recent_bursts":[],"shield":{"enabled":true}}'
 }
+
+nexus_field_rf_forever_enforce() {
+  local script="${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.py"
+  [[ -f "$script" ]] || return 0
+  NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+    python3 "$script" forever-enforce >/dev/null 2>&1 || true
+}

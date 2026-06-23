@@ -28,7 +28,23 @@ FCC_POLICY = INSTALL / "data" / "fcc-wireless-policy.json"
 FCC_PERMITTED = INSTALL / "data" / "fcc-permitted-frequencies.json"
 HOSTILE_TSV = STATE / "field-hostile.tsv"
 HOST_ATTACKS = STATE / "host-attacks.json"
+RF_DISABLED_FOREVER = STATE / "field-rf-disabled-forever.json"
 OUI_VENDORS = INSTALL / "data" / "oui-vendors.tsv"
+HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
+HOSTESS7_TEAM_FIELD = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
+TARGET_DOSSIER_FILE = "nexus-target-dossiers.jsonl"
+HOSTILE_MEMORY_FILE = "nexus-hostile.jsonl"
+
+UNHEALTHY_FOREVER_KINDS = frozenset({
+    "unpermitted_spectrum",
+    "connected_unpermitted",
+    "evil_twin",
+    "rogue_open",
+    "hostile_oui",
+    "connected_rogue",
+    "correlated_hostile_ip",
+    "enterprise_downgrade",
+})
 
 SUSPICIOUS_SSID_RE = re.compile(
     r"(free[\s_-]?wifi|airport|xfinitywifi|attwifi|starbucks|"
@@ -362,11 +378,262 @@ def _shield_config() -> dict[str, Any]:
     doc.setdefault("enabled", True)
     doc.setdefault("lawful_kick", True)
     doc.setdefault("shoot_to_kill", True)
+    doc.setdefault("disable_unhealthy_forever", True)
     doc.setdefault("permitted_spectrum_only", True)
     doc.setdefault("fcc_passive_only", True)
     doc.setdefault("global_watch", True)
     doc.setdefault("auto_rfkill", False)
     return doc
+
+
+def _dossier_storage_paths() -> list[Path]:
+    return [
+        HOSTESS7_ROOT / "cache" / "fieldstorage" / "brain" / "security" / TARGET_DOSSIER_FILE,
+        HOSTESS7_TEAM_FIELD / "brain" / "security" / TARGET_DOSSIER_FILE,
+        STATE / "field-storage" / TARGET_DOSSIER_FILE,
+    ]
+
+
+def _hostile_memory_paths() -> list[Path]:
+    return [
+        HOSTESS7_ROOT / "cache" / "fieldstorage" / "brain" / "security" / HOSTILE_MEMORY_FILE,
+        HOSTESS7_TEAM_FIELD / "brain" / "security" / HOSTILE_MEMORY_FILE,
+        STATE / "field-storage" / HOSTILE_MEMORY_FILE,
+    ]
+
+
+def _forever_registry() -> dict[str, Any]:
+    doc = _load_json(RF_DISABLED_FOREVER, {"entries": {}, "ips": {}, "updated": ""})
+    if not isinstance(doc.get("entries"), dict):
+        doc["entries"] = {}
+    if not isinstance(doc.get("ips"), dict):
+        doc["ips"] = {}
+    return doc
+
+
+def _save_forever_registry(doc: dict[str, Any]) -> None:
+    doc["updated"] = _now()
+    _save_json(RF_DISABLED_FOREVER, doc)
+
+
+def _is_ipv4(ip: str) -> bool:
+    return bool(re.match(r"^\d{1,3}(\.\d{1,3}){3}$", str(ip or "").strip()))
+
+
+def _is_disabled_forever(*, bssid: str = "", ip: str = "") -> bool:
+    reg = _forever_registry()
+    if ip and ip in (reg.get("ips") or {}):
+        return True
+    bnorm = _norm_mac(bssid)
+    if bnorm and bnorm in (reg.get("entries") or {}):
+        return True
+    return False
+
+
+def _append_storage_jsonl(paths: list[Path], entry: dict[str, Any], dedupe_key: str) -> None:
+    payload = json.dumps(entry, ensure_ascii=False) + "\n"
+    needle = f'"{dedupe_key}"'
+    for path in paths:
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if path.is_file():
+                text = path.read_text(encoding="utf-8", errors="replace")
+                if needle in text and str(entry.get(dedupe_key, "")) in text:
+                    continue
+            with path.open("a", encoding="utf-8") as fh:
+                fh.write(payload)
+        except OSError:
+            continue
+
+
+def _append_hostile_tsv(ip: str, vector: str, severity: str, reason: str) -> None:
+    if not _is_ipv4(ip):
+        return
+    try:
+        STATE.mkdir(parents=True, exist_ok=True)
+        if not HOSTILE_TSV.is_file():
+            HOSTILE_TSV.write_text("ts\tip\tvector\tseverity\treason\tsource\n", encoding="utf-8")
+        text = HOSTILE_TSV.read_text(encoding="utf-8", errors="replace")
+        if f"\t{ip}\t" in text:
+            return
+        with HOSTILE_TSV.open("a", encoding="utf-8") as fh:
+            fh.write(f"{_now()}\t{ip}\t{vector}\t{severity}\t{reason}\trf_unhealthy_forever\n")
+    except OSError:
+        pass
+
+
+def _archive_rf_dossier_forever(threat: dict[str, Any], ip: str = "") -> None:
+    bssid = str(threat.get("bssid") or "")
+    dossier = {
+        "action": "RF_UNHEALTHY_DISABLED_FOREVER",
+        "disabled_permanent": True,
+        "forever": True,
+        "vector": VECTOR_MAP.get(str(threat.get("kind") or ""), "WIFI_THREAT"),
+        "kind": threat.get("kind"),
+        "ssid": threat.get("ssid"),
+        "bssid": bssid,
+        "channel": threat.get("channel"),
+        "freq_mhz": threat.get("freq_mhz"),
+        "detail": threat.get("detail"),
+        "ip": ip or threat.get("ip") or "",
+        "intel": {"mac": bssid, "bssid": bssid},
+        "permanent": True,
+        "hardware_destroy": bool(threat.get("strike_certain") or threat.get("kind") in (
+            "unpermitted_spectrum", "connected_unpermitted",
+        )),
+    }
+    entry = {
+        "kind": "nexus_target_dossier",
+        "ts": _now(),
+        "ip": ip or f"rf:{_norm_mac(bssid) or 'unknown'}",
+        "vector": dossier["vector"],
+        "severity": threat.get("severity") or "critical",
+        "reason": "rf_unhealthy_disabled_forever",
+        "source": "field-rf-sentinel",
+        "permanent": True,
+        "dossier": dossier,
+    }
+    _append_storage_jsonl(_dossier_storage_paths(), entry, "ip")
+    if ip:
+        meta_entry = {
+            "kind": "nexus_hostile",
+            "ts": _now(),
+            "ip": ip,
+            "vector": dossier["vector"],
+            "severity": threat.get("severity") or "critical",
+            "reason": "rf_unhealthy_disabled_forever",
+            "source": "field-rf-sentinel",
+            "permanent": True,
+            "meta": {"bssid": bssid, "kind": threat.get("kind"), "rf_forever": True},
+        }
+        _append_storage_jsonl(_hostile_memory_paths(), meta_entry, "ip")
+
+
+def _forever_disable_ip(ip: str, threat: dict[str, Any]) -> dict[str, Any]:
+    script = INSTALL / "lib" / "field-attack-kit.py"
+    if not script.is_file() or not _is_ipv4(ip):
+        return {"ok": False, "ip": ip}
+    env = os.environ.copy()
+    env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
+    env["NEXUS_STATE_DIR"] = str(STATE)
+    meta = json.dumps({
+        "force": True,
+        "strike_mode": "destroy",
+        "bssid": threat.get("bssid"),
+        "rf_kind": threat.get("kind"),
+    })
+    proc = subprocess.run(
+        [
+            os.environ.get("PYTHON", "python3"), str(script),
+            "forever-disable", ip, "WIFI_THREAT", "critical", "rf_unhealthy_forever", meta,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=90,
+        env=env,
+    )
+    try:
+        return json.loads(proc.stdout or "{}")
+    except json.JSONDecodeError:
+        return {"ok": proc.returncode == 0, "ip": ip}
+
+
+def _disable_unhealthy_forever(threat: dict[str, Any]) -> dict[str, Any] | None:
+    kind = str(threat.get("kind") or "")
+    if kind not in UNHEALTHY_FOREVER_KINDS:
+        return None
+    if kind == "hostile_oui" and threat.get("severity") != "critical":
+        return None
+    if kind == "correlated_hostile_ip" and not threat.get("strike_certain"):
+        return None
+
+    bssid = str(threat.get("bssid") or "")
+    ip = str(threat.get("ip") or "")
+    bnorm = _norm_mac(bssid)
+    reg = _forever_registry()
+    entries = reg.setdefault("entries", {})
+    ips = reg.setdefault("ips", {})
+
+    if bnorm and bnorm in entries and (not ip or ip in ips):
+        return {"action": "already_disabled_forever", "bssid": bssid, "ip": ip or None}
+
+    record = {
+        "ts": _now(),
+        "kind": kind,
+        "severity": threat.get("severity") or "critical",
+        "ssid": threat.get("ssid"),
+        "bssid": bssid,
+        "channel": threat.get("channel"),
+        "freq_mhz": threat.get("freq_mhz"),
+        "detail": threat.get("detail"),
+        "disabled_permanent": True,
+        "forever": True,
+        "shoot_to_kill": True,
+    }
+    if bnorm:
+        entries[bnorm] = record
+    kill_result: dict[str, Any] = {}
+    if ip and _is_ipv4(ip):
+        if ip not in ips:
+            kill_result = _forever_disable_ip(ip, threat)
+            _append_hostile_tsv(ip, "WIFI_THREAT", "critical", f"rf_unhealthy:{kind}")
+            _firewall_block_ip(ip, "rf_unhealthy_disabled_forever")
+            ips[ip] = {**record, "ip": ip, "kill": kill_result}
+    _archive_rf_dossier_forever(threat, ip=ip)
+    _save_forever_registry(reg)
+    return {
+        "action": "disabled_unhealthy_forever",
+        "bssid": bssid or None,
+        "ip": ip or None,
+        "kind": kind,
+        "forever": True,
+        "kill": kill_result or None,
+    }
+
+
+def _forever_rf_enforce(
+    wifi_dev: str | None,
+    active: dict[str, Any] | None,
+    scan: list[dict[str, Any]],
+) -> dict[str, Any]:
+    cfg = _shield_config()
+    if not cfg.get("enabled") or not cfg.get("disable_unhealthy_forever", True):
+        return {"enforced": False, "reason": "forever_disable_off"}
+
+    reg = _forever_registry()
+    entries = reg.get("entries") or {}
+    ips = reg.get("ips") or {}
+    actions: list[dict[str, Any]] = []
+
+    if active and wifi_dev:
+        active_bssid = _norm_mac(str(active.get("bssid") or ""))
+        if active_bssid and active_bssid in entries:
+            if _disconnect_wifi(wifi_dev, "rf_unhealthy_disabled_forever"):
+                actions.append({
+                    "action": "disconnect_forever_disabled_bssid",
+                    "bssid": active.get("bssid"),
+                    "ssid": active.get("ssid"),
+                })
+
+    for ip, meta in list(ips.items())[:48]:
+        if not _is_ipv4(ip):
+            continue
+        if _firewall_block_ip(ip, "rf_unhealthy_forever_reenforce"):
+            actions.append({"action": "firewall_reenforce_forever", "ip": ip, "kind": meta.get("kind")})
+
+    for ap in scan[:80]:
+        bnorm = _norm_mac(str(ap.get("bssid") or ""))
+        if bnorm and bnorm in entries:
+            ap["disabled_forever"] = True
+            ap["hostile_forever"] = True
+
+    return {
+        "enforced": True,
+        "forever_entries": len(entries),
+        "forever_ips": len(ips),
+        "actions": actions,
+        "action_count": len(actions),
+    }
 
 
 def _set_shield(
@@ -745,15 +1012,35 @@ def _lawful_kick(
         if t.get("kind") == "unpermitted_spectrum"
     ]
 
+    forever_disabled: list[dict[str, Any]] = []
+    if cfg.get("disable_unhealthy_forever", True) and shoot:
+        seen: set[str] = set()
+        for t in threats:
+            if t.get("severity") not in ("high", "critical"):
+                continue
+            key = f"{t.get('kind')}|{_norm_mac(str(t.get('bssid') or ''))}|{t.get('ip') or ''}"
+            if key in seen:
+                continue
+            seen.add(key)
+            result = _disable_unhealthy_forever(t)
+            if result:
+                forever_disabled.append(result)
+                kicks.append({**result, "fcc": "disabled_forever"})
+
+    reg = _forever_registry()
     return {
         "active": True,
         "action": "shoot_to_kill" if (shoot and kicks) else ("lawful_kick" if kicks else "watch_only"),
         "fcc_passive_only": cfg.get("fcc_passive_only", True),
         "shoot_to_kill": shoot,
+        "disable_unhealthy_forever": cfg.get("disable_unhealthy_forever", True),
         "permitted_spectrum_only": cfg.get("permitted_spectrum_only", True),
         "kicks": kicks,
         "kick_count": len(kicks),
         "unpermitted_killed": unpermitted_killed,
+        "forever_disabled": forever_disabled,
+        "forever_disabled_count": len(forever_disabled),
+        "forever_registry_count": len(reg.get("entries") or {}),
         "auto_rfkill": False,
     }
 
@@ -816,12 +1103,21 @@ def sample_cycle() -> dict[str, Any]:
                 active["permitted"] = ap.get("permitted")
                 break
 
+    forever_enforce = _forever_rf_enforce(wifi_dev, active, scan)
+
     threats = _detect_wireless_threats(scan, active, hist)
     for t in threats:
         if t.get("severity") != "info":
+            bnorm = _norm_mac(str(t.get("bssid") or ""))
+            if bnorm and _is_disabled_forever(bssid=bnorm):
+                t["disabled_forever"] = True
+            ip = str(t.get("ip") or "")
+            if ip and _is_disabled_forever(ip=ip):
+                t["disabled_forever"] = True
             _append_threat(t)
 
     kick_result = _lawful_kick(threats, wifi_dev, active)
+    kick_result["forever_enforce"] = forever_enforce
 
     if wifi_dev:
         scans = hist.get("scans") or {}
@@ -861,6 +1157,9 @@ def sample_cycle() -> dict[str, Any]:
         "lawful_kicks": kick_result.get("kicks") or [],
         "unpermitted_killed": kick_result.get("unpermitted_killed") or [],
         "unpermitted_aps": unpermitted[:40],
+        "forever_disabled": kick_result.get("forever_disabled") or [],
+        "forever_registry": _forever_registry(),
+        "forever_enforce": kick_result.get("forever_enforce") or {},
         "bursts": [],
         "recent_bursts": [],
     }
@@ -886,6 +1185,8 @@ def panel_json() -> dict[str, Any]:
         "lawful_kicks": doc.get("lawful_kicks") or [],
         "unpermitted_killed": doc.get("unpermitted_killed") or [],
         "unpermitted_aps": doc.get("unpermitted_aps") or [],
+        "forever_disabled": doc.get("forever_disabled") or [],
+        "forever_registry": doc.get("forever_registry") or _forever_registry(),
         "shield": doc.get("shield") or _shield_config(),
         "threat_kinds": [
             {"id": "unpermitted_spectrum", "label": "Unpermitted spectrum (SHOOT TO KILL)", "vector": "WIFI_THREAT"},
@@ -940,7 +1241,18 @@ def main() -> int:
         ok, reason = _is_permitted_frequency(sys.argv[2], sys.argv[3])
         print(json.dumps({"permitted": ok, "reason": reason}, ensure_ascii=False))
         return 0
-    print(json.dumps({"error": "usage: field-rf-sentinel.py [json|cycle|shield on|off [auto_rfkill] [lawful_kick] [shoot_to_kill]|permitted-check FREQ CHAN]"}))
+    if cmd == "forever-enforce":
+        wifi_dev = None
+        for row in _nmcli_devices():
+            if row.get("type") == "wifi":
+                wifi_dev = row.get("device")
+                break
+        active = _active_wifi_connection(wifi_dev) if wifi_dev else None
+        scan = _wifi_scan(wifi_dev) if wifi_dev else []
+        result = _forever_rf_enforce(wifi_dev, active, scan)
+        print(json.dumps({"ok": True, **result}, ensure_ascii=False))
+        return 0
+    print(json.dumps({"error": "usage: field-rf-sentinel.py [json|cycle|forever-enforce|shield on|off [auto_rfkill] [lawful_kick] [shoot_to_kill]|permitted-check FREQ CHAN]"}))
     return 1
 
 
