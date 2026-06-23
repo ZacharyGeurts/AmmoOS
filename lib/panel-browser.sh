@@ -4,9 +4,18 @@
 nexus_panel_url() {
   local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
   if [[ "${NEXUS_PANEL_TLS:-1}" == "1" ]]; then
-    printf 'https://127.0.0.1:%s/' "$port"
+    printf 'https://127.0.0.1:%s/field' "$port"
   else
-    printf 'http://127.0.0.1:%s/' "$port"
+    printf 'http://127.0.0.1:%s/field' "$port"
+  fi
+}
+
+nexus_panel_app_url() {
+  local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
+  if [[ "${NEXUS_PANEL_TLS:-1}" == "1" ]]; then
+    printf 'https://127.0.0.1:%s/app' "$port"
+  else
+    printf 'http://127.0.0.1:%s/app' "$port"
   fi
 }
 
@@ -43,8 +52,14 @@ nexus_panel_detect_browsers() {
 nexus_panel_open_browser() {
   local url="${1:-$(nexus_panel_url)}"
   local browser opened=0
+  local ready_url
+  ready_url="$(nexus_panel_app_url)"
 
-  if ! nexus_panel_wait_ready "$url" 30; then
+  if ! nexus_panel_wait_ready "$ready_url" 30; then
+    nexus_panel_wait_ready "${url%/field}/" 10 || true
+  fi
+  if ! curl -sk --connect-timeout 1 "$url" >/dev/null 2>&1 \
+    && ! curl -sk --connect-timeout 1 "$ready_url" >/dev/null 2>&1; then
     nexus_log "WARN" "panel-browser" "PANEL_NOT_READY url=${url}"
     return 1
   fi
@@ -53,12 +68,17 @@ nexus_panel_open_browser() {
     [[ -n "$browser" ]] || continue
     if [[ "$browser" == "xdg-open" ]]; then
       DISPLAY="${DISPLAY:-:0}" xdg-open "$url" >/dev/null 2>&1 &
+    elif [[ "$browser" == "google-chrome-stable" || "$browser" == "google-chrome" || "$browser" == "chromium-browser" || "$browser" == "chromium" ]]; then
+      DISPLAY="${DISPLAY:-:0}" "$browser" --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
+        || DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
+    elif [[ "$browser" == "firefox" ]]; then
+      DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
     else
       DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 \
         || DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
     fi
     opened=1
-    nexus_log "INFO" "panel-browser" "OPENED url=${url} via=${browser}"
+    nexus_log "INFO" "panel-browser" "FIELD_WINDOW_OPENED url=${url} via=${browser}"
     return 0
   done < <(nexus_panel_detect_browsers)
 

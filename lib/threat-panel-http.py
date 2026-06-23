@@ -32,10 +32,13 @@ DATA_FILES = {
     "shutdown-state": STATE_DIR / "shutdown.state",
     "nexus-last-alive": STATE_DIR / "nexus-last-alive.json",
     "packet-snapshot": STATE_DIR / "packet.snapshot",
+    "packet-field": STATE_DIR / "packet-field.json",
+    "packet-field-ring": STATE_DIR / "packet-field.ring.jsonl",
     "arp-snapshot": STATE_DIR / "arp.snapshot",
     "firewall-state": STATE_DIR / "firewall.state",
     "firewall-trusted": STATE_DIR / "firewall-trusted.tsv",
     "vigil-state": STATE_DIR / "vigil.state",
+    "human-dossier": STATE_DIR / "human-dossier.json",
 }
 
 LOG_FILES = {
@@ -152,6 +155,38 @@ def _run_nexus_bash(inner: str, timeout: int = 30) -> bool:
     return proc.returncode == 0
 
 
+def _nexus_update_check(force: bool = False) -> dict:
+    script = INSTALL_ROOT / "lib" / "nexus-update.py"
+    if not script.is_file():
+        return {"ok": False, "error": "update_checker_missing"}
+    env = os.environ.copy()
+    env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+    env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+    args = [sys.executable, str(script)]
+    if force:
+        args.append("--force")
+    proc = subprocess.run(args, capture_output=True, text=True, timeout=30, env=env)
+    try:
+        return json.loads(proc.stdout or "{}")
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "update_check_failed", "detail": (proc.stderr or "")[:200]}
+
+
+def _nexus_host_map_trash_add(pin_id: str) -> bool:
+    pin_id = str(pin_id or "").strip()
+    if not pin_id:
+        return False
+    trash_sh = INSTALL_ROOT / "lib" / "host-map-trash.sh"
+    if not trash_sh.is_file():
+        return False
+    safe = pin_id.replace("'", "'\"'\"'")
+    inner = (
+        f"source {INSTALL_ROOT}/lib/nexus-common.sh && nexus_load_config && "
+        f"source {trash_sh} && nexus_host_map_trash_add '{safe}'"
+    )
+    return _run_nexus_bash(inner, timeout=15)
+
+
 def _nexus_shell_prelude() -> str:
     return (
         f"source {INSTALL_ROOT}/lib/nexus-common.sh && nexus_load_config && "
@@ -229,6 +264,59 @@ def _tail_file(path: Path, lines: int = 120) -> str:
         return ""
 
 
+def _read_panel_json_raw() -> str | None:
+    field_path = STATE_DIR / "field-snapshot.json"
+    if field_path.is_file():
+        return field_path.read_text(encoding="utf-8")
+    if not STATUS_JSON.is_file():
+        return None
+    return STATUS_JSON.read_text(encoding="utf-8")
+
+
+def _coerce_json_object(raw: str) -> str | None:
+    if not raw:
+        return None
+    try:
+        obj = json.loads(raw)
+    except json.JSONDecodeError:
+        try:
+            obj, _end = json.JSONDecoder().raw_decode(raw.lstrip())
+        except json.JSONDecodeError:
+            return None
+    return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+
+
+def _inject_field_bootstrap(html: str) -> str:
+    payload = _coerce_json_object(_read_panel_json_raw() or "")
+    if not payload:
+        return html
+    tag = '<script id="nexus-field-bootstrap">window.NEXUS_FIELD='
+    if tag in html:
+        return html
+    script = f'{tag}{payload};</script>\n'
+    for marker in ("<body>", "<BODY>"):
+        if marker in html:
+            return html.replace(marker, marker + "\n" + script, 1)
+    if "</head>" in html:
+        return html.replace("</head>", script + "</head>", 1)
+    return script + html
+
+
+def _serve_panel_html(handler: "Handler", target: Path) -> None:
+    if target.suffix == ".html" and target.name == "threat-panel.html":
+        try:
+            body = _inject_field_bootstrap(target.read_text(encoding="utf-8"))
+        except OSError:
+            handler._send(404, "not found", "text/plain")
+            return
+        handler._send(200, body, "text/html")
+        return
+    try:
+        handler._send(200, target.read_bytes(), "text/html" if target.suffix == ".html" else "application/octet-stream")
+    except OSError:
+        handler._send(404, "not found", "text/plain")
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_):
         return
@@ -263,6 +351,46 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, STATUS_JSON.read_text(encoding="utf-8"), "application/json")
             else:
                 self._send(200, "{}", "application/json")
+            return
+
+        if path == "/api/update/check":
+            force = str(query.get("force", ["0"])[0]).strip() in ("1", "true", "yes")
+            payload = _nexus_update_check(force=force)
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field":
+            field_path = STATE_DIR / "field-snapshot.json"
+            if field_path.is_file():
+                self._send(200, field_path.read_text(encoding="utf-8"), "application/json")
+            elif STATUS_JSON.is_file():
+                self._send(200, STATUS_JSON.read_text(encoding="utf-8"), "application/json")
+            else:
+                self._send(200, '{"field":true,"points":[],"gatekeeper":{"connections":[]}}', "application/json")
+            return
+
+        if path == "/api/library/page":
+            book_id = str(query.get("book", [""])[0]).strip()
+            page = int(query.get("page", ["1"])[0] or "1")
+            if not book_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing book"}), "application/json")
+                return
+            script = INSTALL_ROOT / "lib" / "h7-library-bridge.py"
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            proc = subprocess.run(
+                [sys.executable, str(script), "page", book_id, str(page)],
+                capture_output=True,
+                text=True,
+                timeout=20,
+                env=env,
+            )
+            try:
+                payload = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "library_read_failed"}
+            self._send(200 if payload.get("ok") else 404, json.dumps(payload), "application/json")
             return
 
         if path == "/api/data":
@@ -346,7 +474,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(500, json.dumps({"ok": False, "error": "lookup failed"}), "application/json")
             return
 
-        if path in ("/", "/index.html"):
+        if path in ("/field", "/field/", "/app", "/app/", "/", "/index.html"):
             target = PANEL_DIR / "threat-panel.html"
         else:
             target = (PANEL_DIR / path.lstrip("/")).resolve()
@@ -354,8 +482,11 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(403, "forbidden", "text/plain")
                 return
         if target.is_file():
-            ctype = "text/html" if target.suffix == ".html" else "application/octet-stream"
-            self._send(200, target.read_bytes(), ctype)
+            if target.suffix == ".html" and target.name == "threat-panel.html":
+                _serve_panel_html(self, target)
+            else:
+                ctype = "text/html" if target.suffix == ".html" else "application/octet-stream"
+                self._send(200, target.read_bytes(), ctype)
             return
         self._send(404, "not found", "text/plain")
 
@@ -370,6 +501,63 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(413, "payload too large", "text/plain")
                 return
         body = self._read_json_body()
+
+        if path == "/api/update/apply":
+            upd = _nexus_update_check(force=True)
+            if not upd.get("update_available"):
+                self._send(200, json.dumps({"ok": True, "already_current": True, **upd}), "application/json")
+                return
+            install_sh = INSTALL_ROOT.parent / "stealth_install.sh"
+            if not install_sh.is_file():
+                for candidate in (
+                    Path("/home/default/Desktop/SG/Latest/NEXUS-Shield/stealth_install.sh"),
+                    INSTALL_ROOT / "stealth_install.sh",
+                ):
+                    if candidate.is_file():
+                        install_sh = candidate
+                        break
+            git_dir = install_sh.parent if install_sh.is_file() else None
+            applied = False
+            detail = ""
+            if git_dir and (git_dir / ".git").is_dir() and install_sh.is_file():
+                inner = (
+                    f"cd '{git_dir}' && git fetch --tags origin 2>/dev/null && "
+                    f"git pull --ff-only origin main 2>/dev/null && "
+                    f"sudo bash '{install_sh}'"
+                )
+                applied = _run_nexus_bash(inner, timeout=300)
+                detail = "git_pull_stealth_install"
+            payload = {
+                "ok": True,
+                "applied": applied,
+                "detail": detail,
+                "release_url": upd.get("release_url"),
+                "previous": upd.get("previous"),
+                "latest": upd.get("latest"),
+            }
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/host-attack/trash":
+            pin_id = str(body.get("id", "")).strip()
+            if not pin_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing id"}), "application/json")
+                return
+            ok = _nexus_host_map_trash_add(pin_id)
+            if ok:
+                map_py = INSTALL_ROOT / "lib" / "host-attack-map.py"
+                if map_py.is_file():
+                    env = os.environ.copy()
+                    env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+                    env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+                    subprocess.run(
+                        [sys.executable, str(map_py), "build-fast"],
+                        capture_output=True,
+                        timeout=45,
+                        env=env,
+                    )
+            self._send(200 if ok else 500, json.dumps({"ok": ok, "id": pin_id}), "application/json")
+            return
 
         if path == "/api/autosanitize/toggle":
             enabled = bool(body.get("enabled", True))
@@ -601,6 +789,32 @@ class Handler(BaseHTTPRequestHandler):
                 payload = json.loads(proc.stdout or "{}")
             except json.JSONDecodeError:
                 payload = {"ok": False, "ip": ip}
+            self._send(200 if proc.returncode == 0 else 500, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/attack-kit/nokill":
+            ip = str(body.get("ip", "")).strip()
+            vector = str(body.get("vector", "HOSTILE")).strip() or "HOSTILE"
+            severity = str(body.get("severity", "high")).strip() or "high"
+            reason = str(body.get("reason", "operator_nokill")).strip() or "operator_nokill"
+            if not ip:
+                self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
+                return
+            script = INSTALL_ROOT / "lib" / "field-attack-kit.py"
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            proc = subprocess.run(
+                [sys.executable, str(script), "nokill", ip, vector, severity, reason],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env=env,
+            )
+            try:
+                payload = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                payload = {"ok": proc.returncode == 0, "ip": ip}
             self._send(200 if proc.returncode == 0 else 500, json.dumps(payload), "application/json")
             return
 

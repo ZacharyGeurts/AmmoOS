@@ -6,7 +6,7 @@ NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
 
 nexus_panel_open_browser() {
   [[ "${NEXUS_PANEL_AUTO_OPEN:-1}" == "1" ]] || return 0
-  local url="https://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/"
+  local url="https://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/field"
   local today
   today="$(date -u '+%Y-%m-%d' 2>/dev/null || date '+%Y-%m-%d')"
 
@@ -53,7 +53,7 @@ nexus_panel_install_desktop() {
   local icon_src="${root}/assets/nexus-shield.png"
   local apps_dir="/usr/share/applications"
   local icon_dir="/usr/share/icons/hicolor/256x256/apps"
-  local url="https://127.0.0.1:${port}/"
+  local url="https://127.0.0.1:${port}/field"
 
   [[ -f "$icon_src" ]] || return 0
   install -d -m 755 "$icon_dir" 2>/dev/null || return 0

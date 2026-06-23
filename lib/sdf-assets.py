@@ -7,16 +7,24 @@ from __future__ import annotations
 
 import json
 import math
-import struct
-import zlib
+import urllib.request
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "panel" / "assets" / "sdf"
+GEO_DIR = ROOT / "panel" / "assets" / "geo"
 EARTH_SRC = ROOT / "panel" / "assets" / "earth-satellite-2k.jpg"
+NE_COUNTRIES_URL = (
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/"
+    "geojson/ne_110m_admin_0_countries.geojson"
+)
+NE_STATES_URL = (
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/"
+    "geojson/ne_110m_admin_1_states_provinces.geojson"
+)
 
 
 def _save_r8_png(path: Path, field: np.ndarray) -> None:
@@ -84,6 +92,76 @@ def _dot_sdf(size: int) -> np.ndarray:
     return (dist - r).astype(np.float32)
 
 
+def _ensure_geojson(name: str, url: str) -> Path:
+    GEO_DIR.mkdir(parents=True, exist_ok=True)
+    dest = GEO_DIR / name
+    if dest.is_file() and dest.stat().st_size > 1000:
+        return dest
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "NEXUS-SDF-Builder"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            dest.write_bytes(resp.read())
+    except (OSError, urllib.error.URLError):
+        if not dest.is_file():
+            dest.write_text('{"type":"FeatureCollection","features":[]}\n', encoding="utf-8")
+    return dest
+
+
+def _lonlat_to_px(lon: float, lat: float, w: int, h: int) -> tuple[float, float]:
+    x = (lon + 180.0) / 360.0 * (w - 1)
+    y = (90.0 - lat) / 180.0 * (h - 1)
+    return x, y
+
+
+def _draw_geo_rings(draw: ImageDraw.ImageDraw, geom: dict, w: int, h: int) -> None:
+    gtype = geom.get("type")
+    coords = geom.get("coordinates")
+    if not coords:
+        return
+
+    def _ring(ring: list) -> None:
+        if len(ring) < 2:
+            return
+        pts = [_lonlat_to_px(lon, lat, w, h) for lon, lat in ring]
+        draw.line(pts, fill=255, width=1)
+
+    if gtype == "Polygon":
+        for ring in coords:
+            _ring(ring)
+    elif gtype == "MultiPolygon":
+        for poly in coords:
+            for ring in poly:
+                _ring(ring)
+    elif gtype == "LineString":
+        _ring(coords)
+
+
+def _wireframe_sdf(w: int, h: int) -> np.ndarray:
+    """Admin-0 country + admin-1 state/province borders → wireframe distance field."""
+    countries = _ensure_geojson("ne_110m_admin_0_countries.geojson", NE_COUNTRIES_URL)
+    states = _ensure_geojson("ne_110m_admin_1_states_provinces.geojson", NE_STATES_URL)
+    mask = Image.new("L", (w, h), 0)
+    draw = ImageDraw.Draw(mask)
+    for path in (countries, states):
+        try:
+            doc = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for feat in doc.get("features") or []:
+            _draw_geo_rings(draw, feat.get("geometry") or {}, w, h)
+    arr = np.asarray(mask, dtype=np.float32) / 255.0
+    border = arr > 0.35
+    try:
+        from scipy.ndimage import distance_transform_edt  # type: ignore
+
+        dist_in = distance_transform_edt(border)
+        dist_out = distance_transform_edt(1.0 - border)
+        field = (dist_out - dist_in).astype(np.float32)
+    except ImportError:
+        field = np.where(border, -2.0, 4.0).astype(np.float32)
+    return field / max(w, h) * 14.0
+
+
 def _globe_sdf_from_jpg(w: int = 512, h: int = 256) -> np.ndarray:
     """Coastline/edge SDF from offline earth image — compact storage, crisp at any zoom."""
     if not EARTH_SRC.is_file():
@@ -128,7 +206,7 @@ def build_assets() -> dict:
     OUT.mkdir(parents=True, exist_ok=True)
     manifest: dict = {"version": 1, "format": "r8", "assets": {}}
 
-    pin_w, pin_h = 96, 144
+    pin_w, pin_h = 128, 192
     pin_field, pin_anchor = _analytic_pin_sdf(pin_w, pin_h)
     for name in ("pin-hostile", "pin-killed", "pin-friendly"):
         png = OUT / f"{name}.sdf.png"
@@ -142,7 +220,7 @@ def build_assets() -> dict:
             "pointy_tip": True,
             "format": "r8",
             "file": f"/assets/sdf/{name}.sdf.png",
-            "display_scale": 0.72 if name == "pin-hostile" else 0.66,
+            "display_scale": 1.05 if name == "pin-hostile" else 0.95,
         }
         _save_meta(meta_path, meta)
         manifest["assets"][name] = meta
@@ -177,7 +255,7 @@ def build_assets() -> dict:
     _save_meta(OUT / "legend-dot.sdf.json", dot_meta)
     manifest["assets"]["legend-dot"] = dot_meta
 
-    gw, gh = 512, 256
+    gw, gh = 1024, 512
     globe_field = _globe_sdf_from_jpg(gw, gh)
     _save_r8_png(OUT / "globe-world.sdf.png", globe_field)
     globe_meta = {
@@ -192,6 +270,23 @@ def build_assets() -> dict:
     }
     _save_meta(OUT / "globe-world.sdf.json", globe_meta)
     manifest["assets"]["globe-world"] = globe_meta
+
+    wire_field = _wireframe_sdf(gw, gh)
+    _save_r8_png(OUT / "globe-wireframe.sdf.png", wire_field)
+    wire_meta = {
+        "id": "globe-wireframe",
+        "width": gw,
+        "height": gh,
+        "anchor": [0, 0],
+        "bounds": [[-90, -180], [90, 180]],
+        "format": "r8",
+        "file": "/assets/sdf/globe-wireframe.sdf.png",
+        "equirectangular": True,
+        "wireframe": True,
+        "source": "Natural Earth 110m admin-0 + admin-1",
+    }
+    _save_meta(OUT / "globe-wireframe.sdf.json", wire_meta)
+    manifest["assets"]["globe-wireframe"] = wire_meta
 
     manifest_path = OUT / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
