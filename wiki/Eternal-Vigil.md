@@ -6,19 +6,9 @@
 
 Eternal Vigil is the **watchdog heartbeat** of NEXUS-Shield. It never stops. It adjusts how aggressively other modules scan based on recent activity.
 
-## Shipped — two systemd services
+## Shipped service
 
-### `stealth-av.service` (Tier 1 AV)
-
-```
-stealth-av.service
-  └── /usr/local/bin/stealth_av_watch.sh
-        ├── clamscan -r /home  (adaptive interval)
-        ├── rkhunter --check
-        └── aide --check (integrity)
-```
-
-### `nexus-genius.service` (Genius layer)
+### `nexus-genius.service`
 
 ```
 nexus-genius.service
@@ -26,10 +16,12 @@ nexus-genius.service
         ├── Shadow Reality (inotify)
         ├── Entropy Oracle (inotify)
         ├── Behavior Symphony (procfs)
-        └── Privacy Guard (fd scan)
+        ├── Privacy Guard (fd scan)
+        ├── Connection Gatekeeper (intent scoring)
+        └── Threat Panel (HTTPS localhost)
 ```
 
-Both run at `Nice=19` with idle I/O scheduling — invisible to consumers.
+Runs at `Nice=19` with idle I/O scheduling — invisible to consumers.
 
 ## Adaptive thresholds ✅
 
@@ -44,10 +36,9 @@ Calm state returns after 24h without alerts.
 ## Commands
 
 ```bash
-sudo systemctl status stealth-av.service nexus-genius.service
+sudo systemctl status nexus-genius.service
 nexus status
 tail -f /var/log/nexus-alerts.log
-tail -f /var/log/stealth_av.log
 ```
 
 ## Logs
@@ -55,5 +46,4 @@ tail -f /var/log/stealth_av.log
 | File | Content |
 |------|---------|
 | `/var/log/nexus-alerts.log` | Unified alert stream (all modules) |
-| `/var/log/stealth_av.log` | ClamAV infected file reports |
 | `journalctl -u nexus-genius` | Genius layer service output |

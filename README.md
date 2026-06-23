@@ -38,11 +38,6 @@ sudo ./stealth_install.sh
 
 ## Quick start
 
-**Legacy AV (deprecated, opt-in only):**
-```bash
-sudo NEXUS_LEGACY_AV=1 ./stealth_install.sh
-```
-
 **Windows (Admin):** `.\stealth.ps1`
 
 **Tests:** `nexus test` or `./tests/run-tests.sh`
@@ -67,11 +62,10 @@ sudo NEXUS_LEGACY_AV=1 ./stealth_install.sh
 lib/                 # Core modules + ultra-stealth + self-defense
 config/              # nexus.conf + device-whitelist.conf
 tests/               # Test suite
-stealth_install.sh   # Default installer (genius-only)
+stealth_install.sh   # Default installer
 genius_shield.sh     # Genius layer install + service
-full_av_install.sh   # DEPRECATED legacy AV (opt-in)
 ```
 
-ClamAV/rkhunter are **not** installed by default. Pure NEXUS genius heuristics only.
+Pure NEXUS genius heuristics — no third-party AV stack.
 
 Part of the AmouranthRTX security ecosystem. Test in a VM before production deploy.

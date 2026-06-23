@@ -11,7 +11,7 @@
 | # | Improvement | Status | Implementation |
 |---|-------------|--------|----------------|
 | 1 | Ultra-stealth mode | ✅ | `lib/ultra-stealth.sh`, cgroup, Nice=19, inotify event-driven |
-| 2 | Custom only (deprecate ClamAV/rkhunter default) | ✅ | `stealth_install.sh` → `genius_shield.sh`; `NEXUS_LEGACY_AV=0` |
+| 2 | Genius-only (no third-party AV) | ✅ | `stealth_install.sh` → `genius_shield.sh` |
 | 3 | Self-defense | ✅ | `lib/self-defense.sh`, `MANIFEST.sha256`, `nexus sign/verify` |
 | 4 | Granular config | ✅ | `config/nexus.conf`, `device-whitelist.conf` |
 | 5 | Test suite | ✅ | `tests/run-tests.sh`, `nexus test` |
@@ -24,11 +24,3 @@ sudo ./stealth_install.sh
 ```
 
 Genius-only. Ultra-stealth. Non-intrusive defaults enforced at install.
-
-## Legacy opt-in
-
-```bash
-sudo NEXUS_LEGACY_AV=1 ./stealth_install.sh
-```
-
-Deprecated ClamAV/rkhunter stack.

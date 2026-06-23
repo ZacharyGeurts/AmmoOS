@@ -9,7 +9,7 @@ sudo ./stealth_install.sh
 ```
 
 Installs:
-- `inotify-tools` only (no ClamAV/rkhunter)
+- `inotify-tools`, `nftables`, `openssl` (genius layer only)
 - `nexus-genius.service` with ultra-stealth cgroup limits
 - Signed `MANIFEST.sha256` for self-defense
 
@@ -38,16 +38,6 @@ sudo rm -rf /var/lib/nexus-shield
 ```bash
 sudo ./genius_shield.sh
 ```
-
----
-
-## Legacy AV (deprecated)
-
-```bash
-sudo NEXUS_LEGACY_AV=1 ./stealth_install.sh
-```
-
-Adds `stealth-av.service` with ClamAV + rkhunter. Not recommended for consumer machines.
 
 ---
 

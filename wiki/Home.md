@@ -28,8 +28,6 @@ sudo ./genius_shield.sh      # same stack, direct
 nexus test                   # run test suite
 ```
 
-Legacy ClamAV/rkhunter: `sudo NEXUS_LEGACY_AV=1 ./stealth_install.sh` (deprecated)
-
 ## Guides
 
 | Page | Topic |

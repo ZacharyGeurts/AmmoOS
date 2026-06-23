@@ -20,12 +20,6 @@ nexus-genius.service (CPUQuota=5%, Nice=19, MemoryMax=128M)
         └── Eternal Vigil (calm/alert/storm)
 ```
 
-### Deprecated — Legacy AV (`NEXUS_LEGACY_AV=1`) ⚠️
-
-ClamAV + rkhunter + AIDE. Opt-in only. Genius layer still runs as primary.
-
----
-
 ## Module map
 
 ```

@@ -10,7 +10,6 @@ Shadow Reality maintains a **shadow hash baseline** of critical system and user 
 
 | Layer | Tool | Role |
 |-------|------|------|
-| Persistent baseline | AIDE (via `full_av_install.sh`) | Full filesystem integrity DB |
 | Hot shadow | `lib/shadow-reality.sh` + inotify | Real-time diff on watched paths |
 | Alert | syslog + `/var/log/nexus-alerts.log` | Operator visibility only |
 

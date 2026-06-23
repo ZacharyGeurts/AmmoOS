@@ -11,14 +11,6 @@ Granular toggles in `config/nexus.conf`. Installed copy: `/usr/local/lib/nexus-s
 | `NEXUS_SELF_DEFENSE` | `1` | verify MANIFEST on load |
 | `NEXUS_PREDICTIVE` | `1` | correlate alerts pre-tighten |
 
-## Legacy AV (deprecated)
-
-| Toggle | Default | Purpose |
-|--------|---------|---------|
-| `NEXUS_LEGACY_AV` | `0` | ClamAV/rkhunter opt-in only |
-
-Set at install: `sudo NEXUS_LEGACY_AV=1 ./stealth_install.sh`
-
 ## Module toggles
 
 | Toggle | Default |
