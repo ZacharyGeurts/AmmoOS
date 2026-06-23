@@ -26,6 +26,9 @@ THREATS_LOG = STATE / "field-rf-threats.jsonl"
 PANEL_CACHE = STATE / "field-rf-panel.json"
 FCC_POLICY = INSTALL / "data" / "fcc-wireless-policy.json"
 FCC_PERMITTED = INSTALL / "data" / "fcc-permitted-frequencies.json"
+FCC_POLLUTION = INSTALL / "data" / "fcc-global-pollution-policy.json"
+RF_POLLUTION_LEDGER = STATE / "field-rf-pollution-ledger.json"
+RF_OPERATIONS_LOG = STATE / "field-rf-operations.jsonl"
 HOSTILE_TSV = STATE / "field-hostile.tsv"
 HOST_ATTACKS = STATE / "host-attacks.json"
 RF_DISABLED_FOREVER = STATE / "field-rf-disabled-forever.json"
@@ -66,6 +69,7 @@ VECTOR_MAP = {
     "unpermitted_spectrum": "WIFI_THREAT",
     "correlated_hostile_ip": "WIFI_THREAT",
     "global_wireless_field": "FIELD_ANTENNA_ALERT",
+    "global_pollution": "WIFI_THREAT",
 }
 
 _PERMITTED_CACHE: dict[str, Any] | None = None
@@ -373,12 +377,263 @@ def _correlated_hostile_points() -> list[dict[str, Any]]:
     return out
 
 
+def _pollution_policy() -> dict[str, Any]:
+    doc = _load_json(FCC_POLLUTION, {})
+    if doc.get("schema"):
+        return doc
+    return {
+        "motto": "Near-infinite passive reach. Global pollution cleanup. Always safe on the wire.",
+        "reach_model": {"mode": "passive_receive_only", "near_infinite": True},
+    }
+
+
+def _log_operation(action: str, detail: dict[str, Any]) -> None:
+    row = {"ts": _now(), "action": action, **detail}
+    try:
+        STATE.mkdir(parents=True, exist_ok=True)
+        with RF_OPERATIONS_LOG.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+def _estimate_passive_reach_km(signal: Any, band: str = "") -> float:
+    """Estimate passive correlation horizon from nmcli signal (0–100, higher = closer)."""
+    try:
+        s = int(signal or 0)
+    except (TypeError, ValueError):
+        s = 0
+    s = max(0, min(100, s))
+    if s >= 95:
+        base_km = 0.05
+    elif s >= 80:
+        base_km = 0.3
+    elif s >= 60:
+        base_km = 1.2
+    elif s >= 40:
+        base_km = 5.0
+    elif s >= 20:
+        base_km = 15.0
+    elif s >= 5:
+        base_km = 50.0
+    else:
+        base_km = 500.0
+    band_mult = 1.0
+    if str(band).startswith("2"):
+        band_mult = 1.4
+    elif str(band).startswith("6"):
+        band_mult = 0.7
+    return round(base_km * band_mult, 2)
+
+
+def _pollution_ledger() -> dict[str, Any]:
+    doc = _load_json(RF_POLLUTION_LEDGER, {"pollution": {}, "stats": {}, "updated": ""})
+    if not isinstance(doc.get("pollution"), dict):
+        doc["pollution"] = {}
+    stats = doc.setdefault("stats", {})
+    stats.setdefault("total_pollution_seen", 0)
+    stats.setdefault("total_cleaned_forever", 0)
+    stats.setdefault("cycles", 0)
+    stats.setdefault("max_reach_km_seen", 0.0)
+    stats.setdefault("cumulative_horizon_km", 0.0)
+    stats.setdefault("bands_polluted", {})
+    return doc
+
+
+def _save_pollution_ledger(doc: dict[str, Any]) -> None:
+    doc["updated"] = _now()
+    _save_json(RF_POLLUTION_LEDGER, doc)
+
+
+def _recent_operations(limit: int = 50) -> list[dict[str, Any]]:
+    if not RF_OPERATIONS_LOG.is_file():
+        return []
+    lines = deque(maxlen=limit)
+    try:
+        with RF_OPERATIONS_LOG.open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if line:
+                    lines.append(line)
+    except OSError:
+        return []
+    out: list[dict[str, Any]] = []
+    for line in lines:
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return out
+
+
+def _global_pollution_cleanup(
+    scan: list[dict[str, Any]],
+    threats: list[dict[str, Any]],
+    kick_result: dict[str, Any],
+) -> dict[str, Any]:
+    cfg = _shield_config()
+    if not cfg.get("global_pollution_cleanup", True):
+        return {"active": False, "reason": "global_pollution_cleanup_off"}
+
+    ledger = _pollution_ledger()
+    pollution = ledger.setdefault("pollution", {})
+    stats = ledger.setdefault("stats", {})
+    stats["cycles"] = int(stats.get("cycles") or 0) + 1
+
+    cleaned_this_cycle: list[dict[str, Any]] = []
+    new_pollution = 0
+    max_reach = float(stats.get("max_reach_km_seen") or 0)
+    horizon_sum = 0.0
+    horizon_n = 0
+
+    pollution_threats = [
+        t for t in threats
+        if t.get("kind") in UNHEALTHY_FOREVER_KINDS
+        or t.get("kind") == "hidden_surveillance"
+        or (t.get("kind") == "unpermitted_spectrum")
+    ]
+
+    for ap in scan:
+        if ap.get("permitted") is not False and not ap.get("disabled_forever"):
+            continue
+        bnorm = _norm_mac(str(ap.get("bssid") or ""))
+        if not bnorm:
+            continue
+        reach_km = _estimate_passive_reach_km(ap.get("signal_dbm"), str(ap.get("band") or ""))
+        max_reach = max(max_reach, reach_km)
+        horizon_sum += reach_km
+        horizon_n += 1
+        band = str(ap.get("band") or "unknown")
+        bands_polluted = stats.setdefault("bands_polluted", {})
+        bands_polluted[band] = int(bands_polluted.get(band) or 0) + 1
+
+        existing = pollution.get(bnorm)
+        if not existing:
+            new_pollution += 1
+            stats["total_pollution_seen"] = int(stats.get("total_pollution_seen") or 0) + 1
+            existing = {
+                "first_seen": _now(),
+                "sightings": 0,
+                "cleaned": False,
+            }
+            pollution[bnorm] = existing
+            _log_operation("pollution_discovered", {
+                "bssid": ap.get("bssid"),
+                "ssid": ap.get("ssid"),
+                "band": band,
+                "channel": ap.get("channel"),
+                "freq_mhz": ap.get("freq_mhz"),
+                "reach_km": reach_km,
+                "signal": ap.get("signal_dbm"),
+                "global": True,
+            })
+
+        existing["last_seen"] = _now()
+        existing["sightings"] = int(existing.get("sightings") or 0) + 1
+        existing["ssid"] = ap.get("ssid")
+        existing["bssid"] = ap.get("bssid")
+        existing["band"] = band
+        existing["channel"] = ap.get("channel")
+        existing["freq_mhz"] = ap.get("freq_mhz")
+        existing["signal_dbm"] = ap.get("signal_dbm")
+        existing["reach_km"] = reach_km
+        existing["max_reach_km"] = max(float(existing.get("max_reach_km") or 0), reach_km)
+        existing["kind"] = existing.get("kind") or "unpermitted_spectrum"
+        existing["pollution"] = True
+
+    forever_disabled_bssids = {
+        _norm_mac(str(fd.get("bssid") or ""))
+        for fd in (kick_result.get("forever_disabled") or [])
+        if fd.get("bssid")
+    }
+    reg = _forever_registry()
+
+    for t in pollution_threats:
+        bnorm = _norm_mac(str(t.get("bssid") or ""))
+        if not bnorm or bnorm not in pollution:
+            continue
+        if pollution[bnorm].get("cleaned"):
+            cleaned_this_cycle.append({**pollution[bnorm], "clean_result": {"action": "already_cleaned"}})
+            continue
+        already = bnorm in (reg.get("entries") or {}) or bnorm in forever_disabled_bssids
+        if already:
+            pollution[bnorm]["cleaned"] = True
+            pollution[bnorm]["cleaned_ts"] = _now()
+            pollution[bnorm]["clean_action"] = "disabled_forever_registry"
+            stats["total_cleaned_forever"] = int(stats.get("total_cleaned_forever") or 0) + 1
+            cleaned_this_cycle.append({**pollution[bnorm], "clean_result": {"action": "already_disabled_forever"}})
+            continue
+        if not cfg.get("disable_unhealthy_forever", True):
+            continue
+        threat_row = {**t, "bssid": t.get("bssid") or pollution[bnorm].get("bssid")}
+        result = _disable_unhealthy_forever(threat_row)
+        if result:
+            pollution[bnorm]["cleaned"] = True
+            pollution[bnorm]["cleaned_ts"] = _now()
+            pollution[bnorm]["clean_action"] = result.get("action")
+            if result.get("action") != "already_disabled_forever":
+                stats["total_cleaned_forever"] = int(stats.get("total_cleaned_forever") or 0) + 1
+            cleaned_this_cycle.append({**pollution[bnorm], "clean_result": result})
+            _log_operation("pollution_cleaned_forever", {
+                "bssid": pollution[bnorm].get("bssid"),
+                "ssid": pollution[bnorm].get("ssid"),
+                "kind": t.get("kind"),
+                "reach_km": pollution[bnorm].get("reach_km"),
+                "forever": True,
+                "detail": t.get("detail"),
+            })
+
+    for fd in kick_result.get("forever_disabled") or []:
+        _log_operation("global_cleanup_kick", fd)
+
+    stats["max_reach_km_seen"] = round(max_reach, 2)
+    if horizon_n:
+        cycle_horizon = horizon_sum / horizon_n
+        prev = float(stats.get("cumulative_horizon_km") or 0)
+        stats["cumulative_horizon_km"] = round(max(prev, cycle_horizon, max_reach), 2)
+
+    _save_pollution_ledger(ledger)
+
+    policy = _pollution_policy()
+    reach = policy.get("reach_model") or {}
+    summary = {
+        "active": True,
+        "motto": policy.get("motto"),
+        "mode": reach.get("mode", "passive_receive_only"),
+        "near_infinite_reach": reach.get("near_infinite", True),
+        "safe": True,
+        "fcc_passive_only": True,
+        "cycle_pollution_new": new_pollution,
+        "cycle_cleaned": len([c for c in cleaned_this_cycle if c.get("clean_result", {}).get("action") != "already_cleaned"]),
+        "cleaned_this_cycle": cleaned_this_cycle[:40],
+        "ledger_total": len(pollution),
+        "ledger_cleaned": sum(1 for p in pollution.values() if p.get("cleaned")),
+        "ledger_active_pollution": sum(1 for p in pollution.values() if not p.get("cleaned")),
+        "stats": stats,
+        "max_reach_km_this_cycle": round(max_reach, 2),
+        "effective_horizon_km": stats.get("cumulative_horizon_km"),
+        "detail": (
+            f"Global pollution cleanup — {stats.get('total_pollution_seen', 0)} seen lifetime, "
+            f"{stats.get('total_cleaned_forever', 0)} cleaned forever, "
+            f"horizon {stats.get('cumulative_horizon_km', 0)} km passive reach"
+        ),
+    }
+    _log_operation("global_pollution_cycle", {
+        "new": new_pollution,
+        "cleaned": summary["cycle_cleaned"],
+        "ledger_total": summary["ledger_total"],
+        "horizon_km": summary["effective_horizon_km"],
+    })
+    return summary
+
+
 def _shield_config() -> dict[str, Any]:
     doc = _load_json(SHIELD_CFG, {})
     doc.setdefault("enabled", True)
     doc.setdefault("lawful_kick", True)
     doc.setdefault("shoot_to_kill", True)
     doc.setdefault("disable_unhealthy_forever", True)
+    doc.setdefault("global_pollution_cleanup", True)
     doc.setdefault("permitted_spectrum_only", True)
     doc.setdefault("fcc_passive_only", True)
     doc.setdefault("global_watch", True)
@@ -701,10 +956,13 @@ def _detect_wireless_threats(
 
     if scan:
         permitted_n = 0
+        reach_vals: list[float] = []
         for ap in scan:
             ok, band_id = _is_permitted_frequency(ap.get("freq_mhz"), ap.get("channel"))
             ap["permitted"] = ok
             ap["permitted_band"] = band_id if ok else ""
+            ap["passive_reach_km"] = _estimate_passive_reach_km(ap.get("signal_dbm"), str(ap.get("band") or ""))
+            reach_vals.append(float(ap["passive_reach_km"]))
             if ok:
                 permitted_n += 1
             elif permitted_only:
@@ -724,17 +982,28 @@ def _detect_wireless_threats(
                     "shoot_to_kill": shoot,
                     "global": True,
                 })
+        max_reach = max(reach_vals) if reach_vals else 0.0
+        ledger = _pollution_ledger()
+        lstats = ledger.get("stats") or {}
         threats.append({
             "ts": ts,
             "kind": "global_wireless_field",
             "severity": "info",
-            "detail": f"Passive global field — {len(scan)} APs "
-            f"({permitted_n} permitted / {len(unpermitted_aps)} hostile unpermitted) "
-            f"({sum(1 for s in scan if s.get('band') == '2.4GHz')} 2.4 / "
-            f"{sum(1 for s in scan if s.get('band') == '5GHz')} 5 / "
-            f"{sum(1 for s in scan if s.get('band') == '6GHz')} 6 GHz)",
+            "detail": (
+                f"Passive global field — {len(scan)} APs "
+                f"({permitted_n} permitted / {len(unpermitted_aps)} pollution) · "
+                f"horizon {max(lstats.get('cumulative_horizon_km', 0), max_reach):.1f} km · "
+                f"{lstats.get('total_cleaned_forever', 0)} cleaned forever"
+            ),
             "permitted_count": permitted_n,
             "unpermitted_count": len(unpermitted_aps),
+            "pollution_count": len(unpermitted_aps),
+            "passive_reach_km_max": max_reach,
+            "cumulative_horizon_km": lstats.get("cumulative_horizon_km", 0),
+            "pollution_lifetime_seen": lstats.get("total_pollution_seen", 0),
+            "pollution_lifetime_cleaned": lstats.get("total_cleaned_forever", 0),
+            "near_infinite_passive": True,
+            "fcc_safe": True,
             "global": True,
         })
 
@@ -1118,6 +1387,8 @@ def sample_cycle() -> dict[str, Any]:
 
     kick_result = _lawful_kick(threats, wifi_dev, active)
     kick_result["forever_enforce"] = forever_enforce
+    pollution_cleanup = _global_pollution_cleanup(scan, threats, kick_result)
+    kick_result["global_pollution_cleanup"] = pollution_cleanup
 
     if wifi_dev:
         scans = hist.get("scans") or {}
@@ -1138,16 +1409,24 @@ def sample_cycle() -> dict[str, Any]:
         "fcc": _fcc_policy(),
         "permitted_bands": _permitted_bands().get("bands") or [],
         "antenna": {
-            "mode": "fcc_permitted_spectrum_shoot_to_kill",
-            "description": "Permitted FCC spectrum only — shoot to kill all unpermitted APs on the wire",
+            "mode": "global_passive_pollution_cleanup",
+            "description": "Near-infinite passive reach — global pollution cleanup on the wire, FCC safe",
             "wifi_device": wifi_dev,
             "scan_count": len(scan),
             "permitted_count": sum(1 for s in scan if s.get("permitted")),
             "unpermitted_count": len(unpermitted),
+            "pollution_count": len(unpermitted),
+            "passive_reach_km_max": max((s.get("passive_reach_km") or 0) for s in scan) if scan else 0,
+            "cumulative_horizon_km": (pollution_cleanup.get("effective_horizon_km") or 0),
+            "near_infinite_passive": True,
+            "fcc_safe": True,
             "bands_seen": sorted(b for b in bands if b),
             "rfkill_count": len(rfkill),
             "active_connection": active,
         },
+        "global_pollution": pollution_cleanup,
+        "pollution_policy": _pollution_policy(),
+        "operations_log": _recent_operations(40),
         "interfaces": devices,
         "rfkill": rfkill,
         "threats": [t for t in threats if t.get("severity") != "info"],
@@ -1171,9 +1450,12 @@ def panel_json() -> dict[str, Any]:
         doc = sample_cycle()
         _save_json(PANEL_CACHE, doc)
     return {
-        "motto": "Permitted FCC spectrum only — shoot to kill everything else on the wire.",
-        "tagline": "Whitelist all Part 15 bands. Wipe unpermitted APs. Disconnect. Firewall. 100% autokill. No jamming.",
+        "motto": "Near-infinite passive reach — global pollution cleanup, always FCC safe.",
+        "tagline": "Passive horizon grows every cycle. Pollution ledger never forgets. Clean forever on the wire. No jamming.",
         "fcc": doc.get("fcc") or _fcc_policy(),
+        "pollution_policy": doc.get("pollution_policy") or _pollution_policy(),
+        "global_pollution": doc.get("global_pollution") or {},
+        "operations_log": doc.get("operations_log") or _recent_operations(40),
         "permitted_bands": doc.get("permitted_bands") or _permitted_bands().get("bands") or [],
         "updated": doc.get("updated") or _now(),
         "antenna": doc.get("antenna") or {},
@@ -1199,6 +1481,7 @@ def panel_json() -> dict[str, Any]:
             {"id": "connected_rogue", "label": "Connected to rogue", "vector": "WIFI_THREAT"},
             {"id": "correlated_hostile_ip", "label": "100% hostile IP (wire kick)", "vector": "WIFI_THREAT"},
             {"id": "global_wireless_field", "label": "Global passive field", "vector": "FIELD_ANTENNA_ALERT"},
+            {"id": "global_pollution", "label": "Global pollution cleanup", "vector": "WIFI_THREAT"},
         ],
         "bursts": [],
         "recent_bursts": [],

@@ -460,7 +460,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.8\.1' "$panel"
+  grep -q 'v5\.8\.2' "$panel"
 }
 
 test_field_rf_module() {
@@ -468,6 +468,7 @@ test_field_rf_module() {
   [[ -f "${ROOT}/lib/field-rf-sentinel.sh" ]]
   [[ -f "${ROOT}/data/fcc-wireless-policy.json" ]]
   [[ -f "${ROOT}/data/fcc-permitted-frequencies.json" ]]
+  [[ -f "${ROOT}/data/fcc-global-pollution-policy.json" ]]
   grep -q 'field_rf' "${ROOT}/lib/threat-panel.sh"
   grep -q '/api/field-rf' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'WIFI_THREAT' "${ROOT}/lib/threat-vectors.sh"
@@ -480,6 +481,9 @@ test_field_rf_module() {
   grep -q '_forever_rf_enforce' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'forever-disable' "${ROOT}/lib/field-attack-kit.py"
   grep -q 'nexus_field_rf_forever_enforce' "${ROOT}/lib/field-rf-sentinel.sh"
+  grep -q '_global_pollution_cleanup' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q '_pollution_ledger' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'global_pollution_cleanup' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'fcc_passive_only' "${ROOT}/lib/field-rf-sentinel.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'permitted_bands'
@@ -574,6 +578,9 @@ test_panel_field_rf_ui() {
   grep -q 'view-field-rf' "$panel"
   grep -q 'SHOOT TO KILL' "$panel"
   grep -q 'disabled forever' "$panel"
+  grep -q 'field-rf-pollution' "$panel"
+  grep -q 'field-rf-operations' "$panel"
+  grep -q 'NEAR-INFINITE' "$panel"
   grep -q 'Permitted spectrum' "$panel"
   grep -q 'WIFI_THREAT' "$panel" || grep -q 'Lawful kick' "$panel"
 }
@@ -793,7 +800,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Old Man mode' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.8.1' "$panel"
+  grep -q 'v5.8.2' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -802,7 +809,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.8.1' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.8.2' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null

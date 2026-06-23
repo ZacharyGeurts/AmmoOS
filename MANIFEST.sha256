@@ -12,7 +12,7 @@ fe3e615a641bdf90f84a6991ab1faa709fe2882ad17d5f335d41a0a998c6cade  /home/default/
 67702c622e363ea09e9e5c8c436caffede62744630d8ee36c2fbca1bd281cbcc  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-attack-kit.sh
 ec320feba59c171d463fcea9eae35e0ead91f1549235ce6757e723167adffc5c  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-command.py
 b6dcd251c11dd3f392a82895dbf5f746bc096e357f573fc1f43be2ee7c5b3402  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-command.sh
-fb5addd2731fa467c0014107509f18a2fff01b0484ad5f7feca7e99c466a50d1  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-rf-sentinel.py
+59946b172238610f1d051bb12febcf24e57b615633e53c5886702317f2f29992  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-rf-sentinel.py
 219d96bd45f9125e31bd05fe5b6a4f1d9ef2827e308948fa998219d0dbcb9189  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-rf-sentinel.sh
 24c72ee29b8a527a32e446fb6efdfc6d9640634f54e742f34f66e8cef3902f2d  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-toolkit-db.py
 a232e01f433bd2370c424fbbb945c5e047a8a77659fc8352514cf50868ac5434  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-toolkit.sh
@@ -39,7 +39,7 @@ f2248270e6932125882c2338e97b2fbcdc07cefd20efbed2b841b745cb95c094  /home/default/
 67ae593060b9734859c691ad04110743a6d87f7de21602d98b0bf766b2f08c08  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/human-dossier.sh
 3e1346c71c85a633da36c4a64f22c24e40737c2f444b2969dbb5448d842db8fb  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/lockdown-first.sh
 de90af3922e507a8dd219e4533083a3c0f57845522e0523da6d5328eeb4b2c93  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/network-lockdown.sh
-ac5d7b1e7da1e00a153c09def5690aa99b6acee4b240e2025065665d8f92e237  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-common.sh
+88283f313a91285d1f2bc18a6c1bd6992d841502ce5d0de3e7402d31cc8a7961  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-common.sh
 d66ac52bd6a405688542e2797a3da4d0cc9cac60b85a64c994a20b61c542c422  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-daemon.sh
 b55f8724cb278007769ff59a15a803a387ae4a74b8b349a204952c37dc0961cf  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-settings.sh
 7da7fdb2f600c0b74d4d44d85d17d4260d5c44d17e19500e4e9224f5889141a0  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-update-lock.py
@@ -108,6 +108,6 @@ d68835d49ad61a0987ca07e0aa3979574677fcfe9d481c0531e75c1c4a1be4cb  /home/default/
 d1815307ba108b4a4529bf4443839f93bfd7ce6a3c9f4347ac99c335ca2a4f16  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/ring-pulse.sdf.json
 8d417ae6a47dd704c4fb295aba11b57e20773c617afca6008780c0bd66b527c6  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/ring-pulse.sdf.png
 a78d379e8758df4bdfde293ab2191b9d5c3cc32172424f692687974556b18cf0  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/field.html
-e941cc891918efa5c83e6c75bf3e69ea655f54d2f38c7611a2602bd55d34276a  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/threat-panel.html
+9d4e901b1ca838f4c06d7bd666efb5c734f7b364dcd5bdfc0fa7d21c6c93b506  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/threat-panel.html
 303864a25e969ee6d9fcd5e7e270a77aaf1ff0237662a0561dfdcc8606d7c70d  /home/default/Desktop/SG/Latest/NEXUS-Shield/config/nexus.conf
 4f8d5ec4dbe916c9c15c83e97dca2daf187caabaf5c9de965f0428b0633b0abf  /home/default/Desktop/SG/Latest/NEXUS-Shield/config/device-whitelist.conf

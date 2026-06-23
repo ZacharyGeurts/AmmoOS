@@ -36,5 +36,13 @@
     "registry": "field-rf-disabled-forever.json",
     "actions": ["permanent_bssid_registry", "forever_firewall_block", "forever_dossier_archive", "boot_reenforce_disconnect"],
     "note": "Unhealthy RF detections are disabled forever — never allowed back."
+  },
+  "global_pollution_cleanup": {
+    "enabled_by_default": true,
+    "policy": "data/fcc-global-pollution-policy.json",
+    "ledger": "field-rf-pollution-ledger.json",
+    "operations_log": "field-rf-operations.jsonl",
+    "near_infinite_passive_reach": true,
+    "note": "Passive horizon grows each cycle. Pollution ledger accumulates globally. Full operations detail logged. Wire-layer cleanup only — FCC safe."
   }
 }

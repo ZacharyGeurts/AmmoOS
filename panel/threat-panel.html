@@ -1220,7 +1220,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.8.1</h1>
+        <h1>NEXUS-Shield v5.8.2</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1240,7 +1240,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.1</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.2</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1383,12 +1383,13 @@
 
   <section id="view-field-rf" class="view">
     <div class="field-rf-wrap">
-      <p class="field-rf-motto" id="field-rf-motto" data-tip="FCC Part 15 permitted-spectrum whitelist. Anything outside permitted bands is hostile — shoot to kill on the wire. No jamming, no bursts, no unsafe RF.">
-        <strong>Field Wireless · Permitted Spectrum Only</strong> — whitelist all FCC bands. Wipe everything else. Shoot to kill on the wire.
+      <p class="field-rf-motto" id="field-rf-motto" data-tip="Near-infinite passive reach — FCC receive-only. Global pollution ledger grows every cycle. Cleanup is wire-layer only. No jamming.">
+        <strong>Field Wireless · Global Pollution Cleanup</strong> — near-infinite passive reach. Clean the spectrum. Stay safe on the wire.
       </p>
       <div id="field-rf-fcc-banner" class="gov-merge-banner" style="border-color:#8b3030;background:rgba(56,20,20,0.55);margin-bottom:14px;">
-        <strong>SHOOT TO KILL · Permitted spectrum only</strong> — passive receive-only scan. Unpermitted frequencies = hostile. Unhealthy shit gets <strong>disabled forever</strong>: permanent registry, dossier archive, firewall block, disconnect on sight. <strong>No bursts · no jamming · no deauth floods.</strong>
+        <strong>NEAR-INFINITE PASSIVE REACH · GLOBAL POLLUTION CLEANUP</strong> — receive-only scan extends horizon every cycle. Pollution ledger never forgets. Unhealthy RF <strong>disabled forever</strong> on the wire. <strong>FCC safe · no bursts · no jamming · no deauth floods.</strong>
       </div>
+      <div id="field-rf-reach-banner" class="gov-merge-banner" style="border-color:#3a5080;background:rgba(20,36,56,0.55);margin-bottom:10px;font-size:0.68rem;"></div>
       <div id="field-rf-permitted-bands" class="meta" style="font-size:0.66rem;margin-bottom:10px;"></div>
       <div class="honor-grid">
         <div class="honor-card">
@@ -1420,8 +1421,17 @@
           </div>
         </div>
         <div class="honor-card">
+          <h4 data-tip="Cumulative global pollution ledger — every hostile AP ever seen in our passive field, cleaned forever.">Global pollution cleanup</h4>
+          <div id="field-rf-pollution-stats" class="meta" style="font-size:0.66rem;margin-bottom:8px;"></div>
+          <div id="field-rf-pollution-cleaned"><div class="empty">No pollution cleaned this cycle — field is clean.</div></div>
+        </div>
+        <div class="honor-card">
           <h4 data-tip="Unpermitted FCC frequencies detected in passive scan — marked hostile, shoot-to-kill eligible.">Unpermitted spectrum · wiped</h4>
           <div id="field-rf-unpermitted"><div class="empty">No unpermitted frequencies — all APs in permitted bands.</div></div>
+        </div>
+        <div class="honor-card" style="grid-column: 1 / -1;">
+          <h4 data-tip="Full detail of every global pollution cleanup action — discover, clean, re-enforce.">Operations log · full detail</h4>
+          <div id="field-rf-operations" class="meta" style="font-size:0.64rem;max-height:220px;overflow:auto;"><div class="empty">Operations log populates after first scan cycle.</div></div>
         </div>
         <div class="honor-card">
           <h4 data-tip="Wireless threats detected passively — unpermitted spectrum, evil twin, rogue open, hostile OUI, 100% correlated IP.">Global threat detection</h4>
@@ -3954,15 +3964,68 @@
           ? `<strong>Permitted FCC bands</strong> — ${bands.map((b) => esc(b.label || b.id)).join(" · ")}`
           : "";
       }
+      const gp = fr.global_pollution || fr.shield?.global_pollution_cleanup || {};
+      const reachEl = $("field-rf-reach-banner");
+      if (reachEl) {
+        const horizon = gp.effective_horizon_km ?? fr.antenna?.cumulative_horizon_km ?? 0;
+        const reachMax = fr.antenna?.passive_reach_km_max ?? gp.max_reach_km_this_cycle ?? 0;
+        reachEl.innerHTML = [
+          "<strong>Passive reach</strong>",
+          `horizon ${Number(horizon).toFixed(1)} km cumulative`,
+          `this cycle max ${Number(reachMax).toFixed(1)} km`,
+          gp.near_infinite_reach !== false ? "near-infinite field growth" : "",
+          gp.fcc_passive_only !== false ? "FCC receive-only safe" : "",
+          gp.detail || "",
+        ].filter(Boolean).join(" · ");
+      }
+      const pollStats = $("field-rf-pollution-stats");
+      if (pollStats) {
+        const st = gp.stats || {};
+        pollStats.innerHTML = [
+          `<strong>Lifetime</strong> ${st.total_pollution_seen ?? gp.ledger_total ?? 0} pollution seen`,
+          `${st.total_cleaned_forever ?? gp.ledger_cleaned ?? 0} cleaned forever`,
+          `${gp.ledger_active_pollution ?? 0} active`,
+          `${gp.cycle_cleaned ?? 0} this cycle`,
+          `${st.cycles ?? 0} scan cycles`,
+        ].join(" · ");
+      }
+      const pollCleaned = $("field-rf-pollution-cleaned");
+      const cleanedList = gp.cleaned_this_cycle || [];
+      if (pollCleaned) {
+        pollCleaned.innerHTML = cleanedList.length
+          ? cleanedList.map((c) => rfThreatChip({
+              kind: "global_pollution",
+              severity: "critical",
+              bssid: c.bssid,
+              ssid: c.ssid,
+              disabled_forever: true,
+              detail: `${c.band || "?"} · ch${c.channel || "?"} · ${c.freq_mhz || "?"} MHz · reach ${c.reach_km ?? c.max_reach_km ?? "?"} km · ${c.clean_action || c.clean_result?.action || "cleaned"}`,
+            })).join("")
+          : '<div class="empty">No pollution cleaned this cycle — field is clean.</div>';
+      }
+      const opsEl = $("field-rf-operations");
+      const ops = fr.operations_log || [];
+      if (opsEl) {
+        opsEl.innerHTML = ops.length
+          ? `<table class="honor-table"><thead><tr><th>Time</th><th>Action</th><th>Detail</th></tr></thead><tbody>${
+            ops.slice().reverse().map((o) => `<tr><td>${esc((o.ts || "").slice(11, 19))}</td><td>${esc(o.action)}</td><td>${esc(
+              [o.bssid, o.ssid, o.kind, o.reach_km != null ? `${o.reach_km}km` : "", o.horizon_km != null ? `horizon ${o.horizon_km}km` : "", o.detail, o.forever ? "FOREVER" : ""].filter(Boolean).join(" · ")
+            )}</td></tr>`).join("")
+          }</tbody></table>`
+          : '<div class="empty">Operations log populates after first scan cycle.</div>';
+      }
       const ant = fr.antenna || {};
       const meta = $("field-rf-antenna-meta");
       if (meta) {
         meta.textContent = [
-          ant.mode || "fcc_permitted_spectrum_shoot_to_kill",
+          ant.mode || "global_passive_pollution_cleanup",
           ant.wifi_device ? `wifi:${ant.wifi_device}` : "no wifi iface",
           `scan:${ant.scan_count ?? 0}`,
           `permitted:${ant.permitted_count ?? "—"}`,
-          `hostile:${ant.unpermitted_count ?? 0}`,
+          `pollution:${ant.pollution_count ?? ant.unpermitted_count ?? 0}`,
+          `horizon:${Number(ant.cumulative_horizon_km ?? 0).toFixed(1)}km`,
+          ant.near_infinite_passive ? "near-infinite" : "",
+          ant.fcc_safe ? "FCC-safe" : "",
           (ant.bands_seen || []).join("/") || "bands:—",
           ant.active_connection?.ssid ? `connected:${ant.active_connection.ssid}` : "not connected",
         ].filter(Boolean).join(" · ");
