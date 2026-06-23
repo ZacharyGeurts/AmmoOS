@@ -761,14 +761,16 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/field-rf/shield":
             enabled = body.get("enabled")
             auto_rfkill = body.get("auto_rfkill")
+            lawful_kick = body.get("lawful_kick")
             if enabled is None:
                 self._send(400, json.dumps({"ok": False, "error": "missing enabled"}), "application/json")
                 return
             flag = "on" if enabled in (True, 1, "1", "true", "yes", "on") else "off"
-            auto_flag = "on" if auto_rfkill in (True, 1, "1", "true", "yes", "on", None) else "off"
+            auto_flag = "on" if auto_rfkill in (True, 1, "1", "true", "yes", "on") else "off"
+            lawful_flag = "on" if lawful_kick in (True, 1, "1", "true", "yes", "on", None) else "off"
             payload = _nexus_py_json(
                 INSTALL_ROOT / "lib" / "field-rf-sentinel.py",
-                ["shield", flag, auto_flag],
+                ["shield", flag, auto_flag, lawful_flag],
             )
             self._send(200, json.dumps(payload), "application/json")
             return

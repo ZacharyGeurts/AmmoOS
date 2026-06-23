@@ -1220,7 +1220,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.6.0</h1>
+        <h1>NEXUS-Shield v5.7.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1240,7 +1240,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.6.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.7.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1383,32 +1383,41 @@
 
   <section id="view-field-rf" class="view">
     <div class="field-rf-wrap">
-      <p class="field-rf-motto" id="field-rf-motto" data-tip="We synthesize a software field antenna from nmcli, rfkill, and sysfs — no external SDR required. Bursts trigger shield and threat vectors.">
-        <strong>Field RF · Internal Antenna</strong> — WiFi interference, RF bursts, dog-collar 2.4GHz chatter, IR-proxy correlation. Shield protects the operator.
+      <p class="field-rf-motto" id="field-rf-motto" data-tip="FCC Part 15 passive global wireless watch. No jamming, no bursts, no unsafe RF. Lawful kick disconnects rogues and wire-kicks hostile IPs at 100%.">
+        <strong>Field Wireless · FCC Passive Global</strong> — detect threats worldwide in our scan field. Lawful kick only. FCC rules rule the show.
       </p>
+      <div id="field-rf-fcc-banner" class="gov-merge-banner" style="border-color:#3a5080;background:rgba(20,36,56,0.55);margin-bottom:14px;">
+        <strong>FCC Part 15</strong> — passive receive-only scan. Lawful kick: disconnect <em>our</em> station from rogues, firewall block, 100% autokill on wire. <strong>No bursts · no jamming · no deauth floods.</strong>
+      </div>
       <div class="honor-grid">
         <div class="honor-card">
-          <h4 data-tip="Software field antenna status — scans, rfkill rows, USB IR proxies.">Antenna telemetry</h4>
+          <h4 data-tip="Passive global wireless field — all visible APs across 2.4/5/6 GHz bands.">Global antenna telemetry</h4>
           <div id="field-rf-antenna-meta" class="meta" style="font-size:0.68rem;margin-bottom:8px;">Sampling…</div>
+          <div id="field-rf-global-field" class="meta" style="font-size:0.66rem;margin-bottom:8px;"></div>
           <div id="field-rf-interfaces"></div>
           <div style="margin-top:10px;">
-            <button type="button" id="field-rf-cycle" data-tip="Force one scan cycle now.">Scan now</button>
+            <button type="button" id="field-rf-cycle" data-tip="Force one passive global scan cycle now (FCC receive-only).">Scan now</button>
             <span id="field-rf-shield-status" class="meta" style="margin-left:10px;font-size:0.68rem;"></span>
           </div>
           <div style="margin-top:10px;">
             <label class="toggle" style="font-size:0.72rem;">
               <input type="checkbox" id="field-rf-shield-enabled" checked />
-              <span><strong>RF shield</strong> — auto-protect on severe bursts</span>
+              <span><strong>Wireless watch</strong> — passive global threat detection</span>
             </label>
             <label class="toggle" style="font-size:0.72rem;margin-left:12px;">
-              <input type="checkbox" id="field-rf-auto-rfkill" checked />
-              <span><strong>Soft rfkill</strong> on wlan when burst spikes</span>
+              <input type="checkbox" id="field-rf-lawful-kick" checked />
+              <span><strong>Lawful kick</strong> — disconnect rogues + wire-kick hostiles</span>
+            </label>
+            <label class="toggle" style="font-size:0.72rem;margin-left:12px;">
+              <input type="checkbox" id="field-rf-auto-rfkill" />
+              <span><strong>Soft rfkill (advanced)</strong> — OUR radio only; off by default</span>
             </label>
           </div>
         </div>
         <div class="honor-card">
-          <h4 data-tip="Live and recent bursts — mapped to WIFI_INTERFERENCE, RF_BURST, FIELD_ANTENNA_ALERT vectors.">Burst detection</h4>
-          <div id="field-rf-bursts"><div class="empty">No bursts this cycle.</div></div>
+          <h4 data-tip="Wireless threats detected passively — evil twin, rogue open, hostile OUI, 100% correlated IP.">Global threat detection</h4>
+          <div id="field-rf-bursts"><div class="empty">No wireless threats this cycle — passive watch active.</div></div>
+          <div id="field-rf-kicks" style="margin-top:10px;font-size:0.68rem;"></div>
           <div id="field-rf-recent" style="margin-top:10px;font-size:0.68rem;"></div>
         </div>
         <div class="honor-card" style="grid-column: 1 / -1;">
@@ -3808,17 +3817,18 @@
       });
     }
 
-    function rfBurstChip(b) {
+    function rfThreatChip(b) {
       const sev = (b.severity || "medium").toLowerCase();
-      const kind = (b.kind || "burst").replace(/_/g, " ");
-      return `<span class="rf-burst-chip severity-${esc(sev)}">${esc(sev)} · ${esc(kind)} · ${esc(b.device || "—")}<br/><span class="meta">${esc(b.detail || "")}</span></span>`;
+      const kind = (b.kind || "threat").replace(/_/g, " ");
+      const who = b.bssid || b.ip || b.device || b.ssid || "—";
+      return `<span class="rf-burst-chip severity-${esc(sev)}">${esc(sev)} · ${esc(kind)} · ${esc(who)}<br/><span class="meta">${esc(b.detail || "")}</span></span>`;
     }
 
-    async function setFieldRfShield(enabled, autoRfkill) {
+    async function setFieldRfShield(enabled, autoRfkill, lawfulKick) {
       await fetch("/api/field-rf/shield", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled, auto_rfkill: autoRfkill }),
+        body: JSON.stringify({ enabled, auto_rfkill: autoRfkill, lawful_kick: lawfulKick }),
       });
       refresh();
     }
@@ -3833,10 +3843,12 @@
       const onShield = () => {
         const en = $("field-rf-shield-enabled")?.checked;
         const auto = $("field-rf-auto-rfkill")?.checked;
-        setFieldRfShield(en, auto);
+        const lawful = $("field-rf-lawful-kick")?.checked;
+        setFieldRfShield(en, auto, lawful);
       };
       $("field-rf-shield-enabled")?.addEventListener("change", onShield);
       $("field-rf-auto-rfkill")?.addEventListener("change", onShield);
+      $("field-rf-lawful-kick")?.addEventListener("change", onShield);
       $("police-category-filter")?.addEventListener("change", () => {
         if (policeAgencyCache) renderPoliceAgency(policeAgencyCache, true);
       });
@@ -3927,12 +3939,17 @@
       const meta = $("field-rf-antenna-meta");
       if (meta) {
         meta.textContent = [
-          ant.mode || "internal_field",
+          ant.mode || "fcc_passive_global",
           ant.wifi_device ? `wifi:${ant.wifi_device}` : "no wifi iface",
           `scan:${ant.scan_count ?? 0}`,
-          `rfkill:${ant.rfkill_count ?? 0}`,
-          ant.usb_ir_proxies ? `IR-proxy USB:${ant.usb_ir_proxies}` : "",
+          (ant.bands_seen || []).join("/") || "bands:—",
+          ant.active_connection?.ssid ? `connected:${ant.active_connection.ssid}` : "not connected",
         ].filter(Boolean).join(" · ");
+      }
+      const globalEl = $("field-rf-global-field");
+      if (globalEl) {
+        const gf = fr.global_field || {};
+        globalEl.textContent = gf.detail || "Passive global field watch active.";
       }
       const ifEl = $("field-rf-interfaces");
       if (ifEl) {
@@ -3948,27 +3965,37 @@
       const shieldEl = $("field-rf-shield-status");
       if (shieldEl) {
         const on = shield.enabled !== false;
+        const kicks = shield.kick_count ?? (fr.lawful_kicks || []).length;
         shieldEl.innerHTML = on
-          ? `<span class="rf-shield-on">Shield ON</span> · ${esc(shield.action || "watching")}`
-          : `<span class="rf-shield-off">Shield OFF</span>`;
+          ? `<span class="rf-shield-on">Watch ON</span> · ${esc(shield.action || "passive")}${kicks ? ` · ${kicks} lawful kick(s)` : ""}`
+          : `<span class="rf-shield-off">Watch OFF</span>`;
       }
       const enBox = $("field-rf-shield-enabled");
       const autoBox = $("field-rf-auto-rfkill");
+      const lawfulBox = $("field-rf-lawful-kick");
       if (enBox && document.activeElement !== enBox) enBox.checked = shield.enabled !== false;
-      if (autoBox && document.activeElement !== autoBox) autoBox.checked = shield.auto_rfkill !== false;
+      if (autoBox && document.activeElement !== autoBox) autoBox.checked = shield.auto_rfkill === true;
+      if (lawfulBox && document.activeElement !== lawfulBox) lawfulBox.checked = shield.lawful_kick !== false;
 
       const burstEl = $("field-rf-bursts");
-      const bursts = fr.bursts || [];
+      const threats = fr.threats || fr.bursts || [];
       if (burstEl) {
-        burstEl.innerHTML = bursts.length
-          ? bursts.map(rfBurstChip).join("")
-          : '<div class="empty">No bursts this cycle — antenna watching.</div>';
+        burstEl.innerHTML = threats.length
+          ? threats.map(rfThreatChip).join("")
+          : '<div class="empty">No wireless threats this cycle — passive global watch active.</div>';
+      }
+      const kicksEl = $("field-rf-kicks");
+      const kicks = fr.lawful_kicks || shield.kicks || [];
+      if (kicksEl) {
+        kicksEl.innerHTML = kicks.length
+          ? `<strong>Lawful kicks</strong> ${kicks.map((k) => `<span class="meta">${esc(k.action)} ${esc(k.ip || k.ssid || k.device || "")}</span>`).join(" · ")}`
+          : "";
       }
       const recentEl = $("field-rf-recent");
-      const recent = fr.recent_bursts || [];
+      const recent = fr.recent_threats || fr.recent_bursts || [];
       if (recentEl) {
         recentEl.innerHTML = recent.length
-          ? `<strong>Recent</strong> ${recent.slice(-6).reverse().map(rfBurstChip).join(" ")}`
+          ? `<strong>Recent</strong> ${recent.slice(-6).reverse().map(rfThreatChip).join(" ")}`
           : "";
       }
     }

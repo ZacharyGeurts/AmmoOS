@@ -1,0 +1,23 @@
+{
+  "schema": "nexus-fcc-wireless-v1",
+  "authority": "FCC Part 15 (unlicensed) + operator device control",
+  "motto": "Passive watch globally. Lawful kick on the wire. No bursts. No jamming.",
+  "allowed": [
+    "Passive WiFi beacon scan (receive-only correlation via nmcli)",
+    "Disconnect OUR station from rogue or hostile APs (nmcli dev disconnect)",
+    "Firewall block hostile IPs on the wire path (nftables)",
+    "Trust Strike autokill at 100% certainty on correlated network threats",
+    "Operator-initiated soft rfkill on OUR wlan only (optional, off by default)"
+  ],
+  "forbidden": [
+    "Intentional jamming or deauthentication floods",
+    "Overpower transmission or burst interference",
+    "Spoofed beacon frames or deceptive RF transmission",
+    "Automatic rfkill on heuristic burst spikes"
+  ],
+  "lawful_kick_actions": [
+    "disconnect_rogue_ap",
+    "firewall_block_correlated_ip",
+    "autokill_strike_certain"
+  ]
+}
