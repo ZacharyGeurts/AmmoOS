@@ -1,5 +1,6 @@
 #!/bin/bash
 # Threat Panel — Internet + Threat side-by-side state (AMOURANTHRTX field corroboration).
+# AMOURANTHRTX: GPL v3 or commercial (not MIT-free). NEXUS-Shield: MIT.
 
 NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 # shellcheck source=/dev/null

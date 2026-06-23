@@ -19,4 +19,7 @@
 - [AMOURANTHRTX Integration](AMOURANTHRTX-Integration)
 - [Windows Installation](Windows-Installation)
 
-**[License (MIT)](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE)**
+### Legal
+- [Licensing](Licensing) — NEXUS = MIT · AMOURANTHRTX = GPL/commercial
+
+**[NEXUS-Shield MIT License](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE)**

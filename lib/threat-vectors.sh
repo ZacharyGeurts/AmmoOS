@@ -1,5 +1,6 @@
 #!/bin/bash
 # Threat vectors — AMOURANTHRTX field catalog (TTP clustering, corroboration).
+# AMOURANTHRTX: GPL v3 or commercial (not MIT-free). NEXUS-Shield: MIT.
 
 NEXUS_THREAT_VECTORS_DB="${NEXUS_THREAT_VECTORS_DB:-${NEXUS_STATE_DIR}/threat-vectors.tsv}"
 NEXUS_FIELD_NOISE_RATIO="${NEXUS_FIELD_NOISE_RATIO:-0.94}"

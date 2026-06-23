@@ -1,5 +1,6 @@
 #!/bin/bash
 # AMOURANTHRTX field learnings — whitelist common devices and consumer processes.
+# AMOURANTHRTX: GPL v3 or commercial (not MIT-free). NEXUS-Shield: MIT.
 
 NEXUS_DEVICE_WHITELIST_COMM=(
   systemd

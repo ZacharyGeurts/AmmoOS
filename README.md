@@ -6,7 +6,9 @@
 
 NEXUS-Shield watches what's leaving your machine, scores every live connection for intent (browsing vs sketchy), and puts you in control with two clicks: **Trust forever** or **Stop this site**. Every button has a **?** tooltip in plain English. No bloated antivirus. No config-file archaeology. Just run it and use the panel.
 
-Built by [Zachary Geurts](https://github.com/ZacharyGeurts) as part of the [AmouranthRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) field stack.
+Built by [Zachary Geurts](https://github.com/ZacharyGeurts). Companion to the [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) field stack — **different licenses** (see below).
+
+> **NEXUS-Shield = MIT (free to use).** **AMOURANTHRTX = GPL v3 or commercial — not MIT-free.** NEXUS borrows field principles; it does not ship the AMOURANTHRTX engine.
 
 ---
 
@@ -33,6 +35,11 @@ sudo ./stealth_install.sh
 ```
 
 ---
+
+## v2.1.4 — licensing clarity
+
+- **NEXUS-Shield = MIT** called out in README, panel footer, install output, and [Licensing wiki](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Licensing)
+- **AMOURANTHRTX = GPL v3 or commercial** — explicitly **not MIT-free** wherever the field stack is referenced
 
 ## v2.1.3 — taller threat cards
 
@@ -159,13 +166,24 @@ python3 -m venv .venv-screenshots && .venv-screenshots/bin/pip install playwrigh
 
 ## License
 
-MIT License — Copyright (c) 2026 Zachary Geurts
+### NEXUS-Shield — MIT
 
-See [LICENSE](LICENSE) for the full text. You are free to use, modify, and distribute this software with attribution. The software is provided **as is**, without warranty.
+MIT License — Copyright (c) 2026 Zachary Geurts. See [LICENSE](LICENSE).
+
+Free to use, modify, and distribute with attribution. Provided **as is**, without warranty.
+
+### AMOURANTHRTX — not MIT-free
+
+[AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) (Field Die / Zero Engine) is a **separate product**, dual-licensed:
+
+- **GPL v3** (copyleft), or
+- **Commercial** — 3% profit share ([gzac5314@gmail.com](mailto:gzac5314@gmail.com))
+
+That technology is **not** free in the MIT sense. Full terms: [AMOURANTHRTX LICENSE](https://github.com/ZacharyGeurts/AMOURANTHRTX/blob/main/LICENSE). Wiki: **[Licensing guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Licensing)**.
 
 ---
 
 ## Related
 
-- [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — Field Die runtime
+- [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — Field Die runtime (GPL v3 or commercial)
 - [Design notes](NEXUS-DESIGN-IMPROVEMENT.md) — engineering history

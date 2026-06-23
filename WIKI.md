@@ -14,6 +14,7 @@
 | [Ultra-Stealth](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Ultra-Stealth) | cgroup + event-driven |
 | [Self-Defense](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Self-Defense) | Script signing |
 | [AMOURANTHRTX Integration](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/AMOURANTHRTX-Integration) | Device whitelist |
+| [Licensing](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Licensing) | NEXUS = MIT · AMOURANTHRTX = GPL/commercial |
 | [Windows Installation](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Windows-Installation) | `stealth.ps1` |
 
 ## Publish wiki from repo

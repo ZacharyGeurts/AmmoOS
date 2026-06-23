@@ -19,3 +19,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Related technology (separate product, separate license):
+
+  AMOURANTHRTX Field Die / Zero Engine
+  Copyright (c) 2025 Zachary Geurts <gzac5314@gmail.com>
+  Dual-licensed: GNU GPL v3.0 (or later) OR commercial (3% profit share).
+  https://github.com/ZacharyGeurts/AMOURANTHRTX/blob/main/LICENSE
+
+  AMOURANTHRTX is NOT MIT-licensed. NEXUS-Shield does not include the
+  AMOURANTHRTX engine; integration hooks reference field-stack principles only.

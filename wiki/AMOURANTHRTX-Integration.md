@@ -2,6 +2,20 @@
 
 > *Field Die learnings: silent daemon, whitelist common devices, user-just-use.*
 
+## Licensing — read this first
+
+**NEXUS-Shield** and **AMOURANTHRTX** are different products with different licenses.
+
+| | NEXUS-Shield | AMOURANTHRTX |
+|---|--------------|--------------|
+| **License** | MIT | GPL v3 **or** commercial |
+| **Free like MIT?** | Yes | **No** |
+| **Commercial terms** | None (MIT) | 3% profit share — [gzac5314@gmail.com](mailto:gzac5314@gmail.com) |
+
+NEXUS-Shield borrows **principles** from the AMOURANTHRTX field stack. It does **not** include the AMOURANTHRTX engine. Using AMOURANTHRTX itself is governed by its [separate LICENSE](https://github.com/ZacharyGeurts/AMOURANTHRTX/blob/main/LICENSE).
+
+→ Full guide: **[Licensing](Licensing)**
+
 ## Principles from AMOURANTHRTX
 
 | Learning | NEXUS implementation |
@@ -34,4 +48,4 @@ Edit `/usr/local/lib/nexus-shield/config/device-whitelist.conf` and restart the 
 
 ## Ecosystem link
 
-NEXUS-Shield is the endpoint security companion to [AMOURANTHRTX Field Die](https://github.com/ZacharyGeurts/AMOURANTHRTX) — same invisible-operation philosophy.
+NEXUS-Shield is the MIT-licensed endpoint security companion to [AMOURANTHRTX Field Die](https://github.com/ZacharyGeurts/AMOURANTHRTX) — same invisible-operation philosophy. AMOURANTHRTX itself remains **GPL v3 or commercial**; it is **not** free in the MIT sense.

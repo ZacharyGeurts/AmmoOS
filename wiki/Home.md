@@ -85,9 +85,16 @@ nexus test          # run tests
 
 ## License
 
-MIT — Copyright (c) 2026 Zachary Geurts. See [LICENSE](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE).
+| Project | License | Free like MIT? |
+|---------|---------|----------------|
+| **NEXUS-Shield** (this repo) | [MIT](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE) | Yes |
+| **AMOURANTHRTX** (Field Die) | [GPL v3 or commercial](https://github.com/ZacharyGeurts/AMOURANTHRTX/blob/main/LICENSE) | **No** |
+
+NEXUS-Shield is MIT — free to use with attribution. AMOURANTHRTX is a **separate product**: dual-licensed under **GPL v3** (copyleft) or **commercial** (3% profit share). That technology is **not MIT-free**.
+
+Full breakdown → **[Licensing](Licensing)**
 
 ## Related
 
-- [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — Field Die runtime
+- [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — Field Die runtime (GPL v3 or commercial — not MIT)
 - [GitHub README](https://github.com/ZacharyGeurts/NEXUS-Shield#readme) — screenshots and feature summary

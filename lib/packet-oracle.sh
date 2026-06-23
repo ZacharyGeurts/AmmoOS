@@ -1,5 +1,6 @@
 #!/bin/bash
 # Packet Oracle — AMOURANTHRTX field DPI (metadata + sampled frames, alert-only).
+# AMOURANTHRTX: GPL v3 or commercial (not MIT-free). NEXUS-Shield: MIT.
 
 NEXUS_PACKET_SNAPSHOT="${NEXUS_PACKET_SNAPSHOT:-${NEXUS_STATE_DIR}/packet.snapshot}"
 NEXUS_PACKET_ARP_SNAPSHOT="${NEXUS_PACKET_ARP_SNAPSHOT:-${NEXUS_STATE_DIR}/arp.snapshot}"
