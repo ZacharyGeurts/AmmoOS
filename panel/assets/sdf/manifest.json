@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "format": "r8",
+  "assets": {
+    "pin-hostile": {
+      "id": "pin-hostile",
+      "width": 96,
+      "height": 144,
+      "anchor": [
+        48,
+        143
+      ],
+      "pointy_tip": true,
+      "format": "r8",
+      "file": "/assets/sdf/pin-hostile.sdf.png",
+      "display_scale": 0.72
+    },
+    "pin-killed": {
+      "id": "pin-killed",
+      "width": 96,
+      "height": 144,
+      "anchor": [
+        48,
+        143
+      ],
+      "pointy_tip": true,
+      "format": "r8",
+      "file": "/assets/sdf/pin-killed.sdf.png",
+      "display_scale": 0.66
+    },
+    "pin-friendly": {
+      "id": "pin-friendly",
+      "width": 96,
+      "height": 144,
+      "anchor": [
+        48,
+        143
+      ],
+      "pointy_tip": true,
+      "format": "r8",
+      "file": "/assets/sdf/pin-friendly.sdf.png",
+      "display_scale": 0.66
+    },
+    "ring-pulse": {
+      "id": "ring-pulse",
+      "width": 64,
+      "height": 64,
+      "anchor": [
+        32,
+        32
+      ],
+      "format": "r8",
+      "file": "/assets/sdf/ring-pulse.sdf.png",
+      "display_scale": 1.0
+    },
+    "legend-dot": {
+      "id": "legend-dot",
+      "width": 32,
+      "height": 32,
+      "anchor": [
+        16,
+        16
+      ],
+      "format": "r8",
+      "file": "/assets/sdf/legend-dot.sdf.png",
+      "display_scale": 0.35
+    },
+    "globe-world": {
+      "id": "globe-world",
+      "width": 512,
+      "height": 256,
+      "anchor": [
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          -90,
+          -180
+        ],
+        [
+          90,
+          180
+        ]
+      ],
+      "format": "r8",
+      "file": "/assets/sdf/globe-world.sdf.png",
+      "equirectangular": true
+    }
+  }
+}

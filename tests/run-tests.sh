@@ -333,13 +333,20 @@ test_panel_host_attack_ui() {
   grep -q 'host-kill-dossier' "$panel"
   grep -q 'haTooltipText' "$panel"
   grep -q 'target_os' "$panel"
-  grep -q 'earth-satellite-2k.jpg' "$panel"
+  grep -q 'sdf-render.js' "$panel"
+  grep -q 'NexusSdf' "$panel"
+  grep -q 'hydrateHostSdfMarkers' "$panel"
+  grep -q 'pointy-tip' "$panel"
+  grep -q 'HA_SDF_PIN_ANCHOR' "$panel"
+  [[ -f "${ROOT}/panel/assets/sdf/manifest.json" ]]
+  [[ -f "${ROOT}/panel/assets/sdf/pin-hostile.sdf.png" ]]
+  [[ -f "${ROOT}/panel/assets/sdf/globe-world.sdf.png" ]]
   grep -q 'attackKitCheckOnline' "$panel"
   grep -q 'attackKitRekill' "$panel"
   grep -q 'Check Online' "$panel"
   grep -q 'RE-KILL' "$panel"
   grep -q 'same-host validation' "$panel"
-  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|[123]\.(0|1|3\.[01])))' "$panel" || grep -q 'v3.3.1' "$panel"
+  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|[123]\.(0|1|3\.[01])|4\.0))' "$panel" || grep -q 'v3.4.0' "$panel"
 }
 
 test_target_bleed_module() {
@@ -643,7 +650,16 @@ run_test "angel dossier module" test_angel_dossier_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
 run_test "fair ad guardian module" test_fair_ad_guardian_module
 run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
+test_sdf_assets_module() {
+  [[ -f "${ROOT}/lib/sdf-assets.py" ]]
+  [[ -f "${ROOT}/panel/assets/sdf-render.js" ]]
+  python3 "${ROOT}/lib/sdf-assets.py" | grep -q 'pin-hostile'
+  grep -q 'pointy_tip' "${ROOT}/panel/assets/sdf/pin-hostile.sdf.json"
+  grep -q 'renderGlobe' "${ROOT}/panel/assets/sdf-render.js"
+}
+
 run_test "host attack map module" test_host_attack_module
+run_test "sdf map assets module" test_sdf_assets_module
 run_test "target bleed module" test_target_bleed_module
 run_test "panel host attack UI" test_panel_host_attack_ui
 run_test "geo intel standards module" test_geo_intel_standards_module

@@ -561,7 +561,7 @@ def build_host_attacks() -> dict[str, Any]:
         "host_endpoint": host_endpoint_context(),
         "map_engine": "leaflet-esri-imagery",
         "map_layers": ["satellite", "street", "offline-globe"],
-        "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON", "Target-Bleed", "Friendly-Guard-Immutable"],
+        "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON", "Target-Bleed", "SDF-Map-Graphics", "Friendly-Guard-Immutable"],
         "friendly_guard": {"immutable": True, "fail_closed": True},
         "author": {
             "name": "Zachary Geurts",

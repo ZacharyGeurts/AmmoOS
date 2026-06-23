@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NEXUS-Shield — Threat Panel</title>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
-  <link rel="preload" href="/assets/earth-satellite-2k.jpg" as="image" />
+  <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
     :root {
       --bg: #080a10;
@@ -572,7 +572,7 @@
     }
     #host-earth-map {
       width: 100%; height: 520px; min-height: 340px; z-index: 1;
-      background: #060a14 url(/assets/earth-satellite-2k.jpg) center / cover no-repeat;
+      background: #060a14;
     }
     #host-earth-map.host-map-ready { background: #060a14; }
     #host-earth-map.host-map-booting::after {
@@ -584,6 +584,9 @@
       border-radius: 12px; box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.45);
     }
     .ha-marker-leaflet { background: transparent !important; border: none !important; }
+    .ha-sdf-pin { overflow: visible !important; }
+    .ha-sdf-mount { position: relative; overflow: visible; }
+    .ha-sdf-marker { position: relative; overflow: visible; pointer-events: none; }
     .host-map-hd-ready .leaflet-tile-pane { filter: saturate(1.08) contrast(1.04); }
     .leaflet-control-zoom a { background: rgba(8, 12, 20, 0.9) !important; color: var(--text) !important; border-color: var(--border) !important; }
     .leaflet-control-attribution { background: rgba(8, 12, 20, 0.75) !important; color: var(--muted) !important; font-size: 0.58rem !important; }
@@ -603,27 +606,8 @@
       padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
       pointer-events: none;
     }
-    .legend-swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-    .ha-marker-wrap { position: relative; width: 28px; height: 28px; }
-    .ha-marker-core {
-      position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px;
-      border-radius: 50%; background: var(--ha-color, #3dd68c);
-      box-shadow: 0 0 12px var(--ha-color, #3dd68c);
-      animation: ha-pulse var(--ha-pulse, 2s) ease-in-out infinite;
-    }
-    .ha-marker-ring {
-      position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
-      border-radius: 50%; border: 2px solid var(--ha-color, #3dd68c);
-      animation: ha-ring var(--ha-pulse, 2s) ease-out infinite;
-    }
-    @keyframes ha-pulse {
-      0%, 100% { transform: scale(0.7); opacity: 0.6; }
-      50% { transform: scale(1.2); opacity: 1; }
-    }
-    @keyframes ha-ring {
-      0% { transform: scale(0.5); opacity: 0.75; }
-      100% { transform: scale(1.8); opacity: 0; }
-    }
+    .legend-swatch { width: 10px; height: 10px; display: inline-block; margin-right: 4px; vertical-align: middle; }
+    .legend-swatch canvas { display: block; width: 10px; height: 10px; }
     .host-point-row { cursor: pointer; }
     .host-point-row:hover { background: rgba(77, 155, 255, 0.06); }
     .host-standards { font-size: 0.62rem; color: #7a9ab8; margin-top: 2px; }
@@ -748,7 +732,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.3.1</h1>
+        <h1>NEXUS-Shield v3.4.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -873,7 +857,7 @@
             <span><span class="legend-swatch" style="background:#3dd68c"></span>Calm</span>
             <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
             <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
-            <span>· Host→Target Bleed · OS · PTR · TLS</span>
+            <span>· SDF pointy-tip pins · Host→Target Bleed</span>
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
@@ -1083,6 +1067,7 @@
   </section>
 
   <script src="/assets/leaflet/leaflet.js"></script>
+  <script src="/assets/sdf-render.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let currentLog = "alerts";
@@ -2285,15 +2270,63 @@
       hostEarthMap.invalidateSize({ animate: false, pan: false });
     }
 
+    const HA_SDF_PIN_SIZE = [75, 112];
+    const HA_SDF_PIN_ANCHOR = [38, 111];
+
     function haMarkerIcon(p) {
-      const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
-      const pulse = (p.pulse_ms || 2000) + "ms";
       return L.divIcon({
-        className: "ha-marker-leaflet",
-        html: `<div class="ha-marker-wrap" style="--ha-color:${col};--ha-pulse:${pulse}"><span class="ha-marker-ring"></span><span class="ha-marker-core"></span></div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
+        className: "ha-marker-leaflet ha-sdf-pin",
+        html: `<div class="ha-sdf-mount" data-ha-id="${esc(p.id)}"></div>`,
+        iconSize: HA_SDF_PIN_SIZE,
+        iconAnchor: HA_SDF_PIN_ANCHOR,
       });
+    }
+
+    async function hydrateHostSdfMarkers() {
+      if (!hostMarkerLayer || typeof NexusSdf === "undefined") return;
+      const jobs = [];
+      hostMarkerLayer.eachLayer((layer) => {
+        const el = layer.getElement?.();
+        if (!el) return;
+        const mount = el.querySelector(".ha-sdf-mount");
+        if (!mount || mount.dataset.hydrated === "1") return;
+        const p = hostLastPoints.find((x) => x.id === mount.dataset.haId);
+        if (!p) return;
+        jobs.push(
+          NexusSdf.pinIcon(p).then(({ wrap }) => {
+            if (mount.dataset.hydrated === "1") return;
+            mount.innerHTML = "";
+            mount.appendChild(wrap);
+            mount.dataset.hydrated = "1";
+          })
+        );
+      });
+      await Promise.all(jobs);
+    }
+
+    let hostSdfGlobeUrl = null;
+    async function getSdfGlobeUrl() {
+      if (hostSdfGlobeUrl) return hostSdfGlobeUrl;
+      const canvas = document.createElement("canvas");
+      await NexusSdf.renderGlobe(canvas, 512, 256);
+      hostSdfGlobeUrl = canvas.toDataURL("image/png");
+      return hostSdfGlobeUrl;
+    }
+
+    async function paintLegendSdfSwatches() {
+      if (typeof NexusSdf === "undefined") return;
+      const colors = [
+        ["#3dd68c", document.querySelector(".host-map-legend .legend-swatch")],
+        ["#e8c547", document.querySelectorAll(".host-map-legend .legend-swatch")[1]],
+        ["#ff5c3a", document.querySelectorAll(".host-map-legend .legend-swatch")[2]],
+      ];
+      for (const [color, holder] of colors) {
+        if (!holder || holder.querySelector("canvas")) continue;
+        const canvas = document.createElement("canvas");
+        const pack = await NexusSdf.loadField("legend-dot");
+        NexusSdf.renderSdf(canvas, pack, color, { scale: 0.35, glow: true, edge: 0.05 });
+        holder.appendChild(canvas);
+      }
     }
 
     function haMonitorLine(m) {
@@ -2384,12 +2417,6 @@
         zoomAnimation: true,
       });
 
-      hostOfflineLayer = L.imageOverlay("/assets/earth-satellite-2k.jpg", [[-90, -180], [90, 180]], {
-        opacity: 1,
-        interactive: false,
-      });
-      hostOfflineLayer.addTo(hostEarthMap);
-
       hostSatelliteLayer = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         { attribution: "Esri, Maxar", maxZoom: 18, updateWhenIdle: false, keepBuffer: 6, crossOrigin: true }
@@ -2417,11 +2444,20 @@
       hostSatelliteLayer.once("load", enableHdTiles);
       setTimeout(enableHdTiles, 1200);
 
-      L.control.layers(
-        { "HD Satellite": hostSatelliteLayer, "Street": street, "NASA Globe": hostOfflineLayer },
-        { "Labels": labels },
-        { collapsed: true, position: "topright" }
-      ).addTo(hostEarthMap);
+      getSdfGlobeUrl().then((url) => {
+        if (!hostEarthMap) return;
+        hostOfflineLayer = L.imageOverlay(url, [[-90, -180], [90, 180]], {
+          opacity: 1,
+          interactive: false,
+        });
+        hostOfflineLayer.addTo(hostEarthMap);
+        el.classList.add("host-map-sdf-ready");
+        L.control.layers(
+          { "HD Satellite": hostSatelliteLayer, "Street": street, "SDF Globe": hostOfflineLayer },
+          { "Labels": labels },
+          { collapsed: true, position: "topright" }
+        ).addTo(hostEarthMap);
+      });
 
       hostMarkerLayer = L.layerGroup().addTo(hostEarthMap);
       el.classList.remove("host-map-booting");
@@ -2626,13 +2662,15 @@
           .bindTooltip(haTooltipText(p), {
             className: "ha-pin-tooltip",
             direction: "top",
-            offset: [0, -14],
+            offset: [0, -Math.round(HA_SDF_PIN_SIZE[1] * 0.85)],
             opacity: 0.95,
           })
           .on("click", () => selectHostTarget(p));
         m.addTo(hostMarkerLayer);
         hostMarkersById[p.id] = m;
       });
+      hydrateHostSdfMarkers();
+      paintLegendSdfSwatches();
       if ($("view-host-attack").classList.contains("active")) {
         setTimeout(() => map.invalidateSize(), 80);
       }
