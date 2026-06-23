@@ -126,6 +126,11 @@ while true; do
   nexus_firewall_verify
   nexus_firewall_ensure_self_access || true
   nexus_tamper_guard_cycle || true
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
+    nexus_friendly_guard_verify_seal || nexus_log "ALERT" "friendly-guard" "SEAL_VERIFY_FAIL"
+  fi
   nexus_threat_panel_publish
   if [[ "${NEXUS_ADBLOCK:-0}" == "1" ]]; then
     nexus_adblock_apply 2>/dev/null || true

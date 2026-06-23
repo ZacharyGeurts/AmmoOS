@@ -518,6 +518,29 @@ class Handler(BaseHTTPRequestHandler):
             if not ip:
                 self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
                 return
+            guard_script = INSTALL_ROOT / "lib" / "friendly-guard.py"
+            if guard_script.is_file():
+                import importlib.util
+
+                spec = importlib.util.spec_from_file_location("friendly_guard_http", guard_script)
+                fg_mod = importlib.util.module_from_spec(spec)
+                assert spec and spec.loader
+                spec.loader.exec_module(fg_mod)
+                monitor = body.get("monitor") if isinstance(body.get("monitor"), dict) else None
+                refuse, guard_reason = fg_mod.refuse_kill(ip, monitor=monitor)
+                if refuse:
+                    self._send(
+                        403,
+                        json.dumps({
+                            "ok": False,
+                            "friendly_refused": True,
+                            "immutable": True,
+                            "reason": guard_reason,
+                            "ip": ip,
+                        }),
+                        "application/json",
+                    )
+                    return
             script = INSTALL_ROOT / "lib" / "field-attack-kit.py"
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)

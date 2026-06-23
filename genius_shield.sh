@@ -43,9 +43,10 @@ cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/as
 chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/connection-gatekeeper.py" "${ROOT}/lib/vector-intel.py" "${ROOT}/lib/angel-dossier.py" \
   "${ROOT}/lib/fair-ad-guardian.py" "${ROOT}/lib/host-attack-map.py" "${ROOT}/lib/geo-intel-standards.py" \
-  "${ROOT}/lib/field-attack-kit.py" 2>/dev/null || true
+  "${ROOT}/lib/field-attack-kit.py" "${ROOT}/lib/friendly-guard.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
-  "${ROOT}/lib/host-attack.sh" "${ROOT}/lib/field-attack-kit.sh" 2>/dev/null || true
+  "${ROOT}/lib/host-attack.sh" "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" 2>/dev/null || true
+chmod 555 /usr/local/lib/nexus-shield/lib/friendly-guard.py /usr/local/lib/nexus-shield/lib/friendly-guard.sh 2>/dev/null || true
 chmod 755 /usr/local/lib/nexus-shield/lib/*.py 2>/dev/null || true
 chmod -R a+rX /usr/local/lib/nexus-shield/data 2>/dev/null || true
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/lib/nexus-shield/bin/nexus

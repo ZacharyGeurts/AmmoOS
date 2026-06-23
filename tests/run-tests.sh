@@ -217,7 +217,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|1\.0)' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|1\.(0|1))' "$panel"
 }
 
 test_self_access_script() {
@@ -282,7 +282,7 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|1\.0)' "$panel"
+  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|1\.(0|1))' "$panel"
 }
 
 test_host_attack_module() {
@@ -328,7 +328,34 @@ test_panel_host_attack_ui() {
   grep -q 'attackKitKill' "$panel"
   grep -q 'Our Monitor' "$panel"
   grep -q 'earth-satellite-2k.jpg' "$panel"
-  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|1\.0))' "$panel"
+  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|1\.(0|1)))' "$panel"
+}
+
+test_friendly_guard_module() {
+  [[ -f "${ROOT}/lib/friendly-guard.py" ]]
+  [[ -f "${ROOT}/lib/friendly-guard.sh" ]]
+  grep -q 'IMMUTABLE' "${ROOT}/lib/friendly-guard.py"
+  grep -q 'KILL_REFUSED_IMMUTABLE' "${ROOT}/lib/friendly-guard.sh"
+  grep -q 'nexus_friendly_guard_refuse_kill' "${ROOT}/lib/field-attack-kit.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/friendly-guard.py" check 127.0.0.1 | grep -q '"refuse": true'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/friendly-guard.py" check 185.199.108.153 | grep -q '"refuse": false'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 - <<'PY'
+import importlib.util
+from pathlib import Path
+root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
+spec = importlib.util.spec_from_file_location("fg", root / "lib" / "friendly-guard.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+refuse, reason = mod.refuse_kill("8.8.8.8")
+assert refuse and reason == "sacred_infrastructure"
+refuse, reason = mod.refuse_kill("185.199.108.155", {"verdict": "USER_OK", "trust_rank": 0})
+assert refuse and reason.startswith("friendly")
+refuse, _ = mod.refuse_kill("185.199.108.154", {"verdict": "HARM_CANDIDATE", "trust_rank": 4})
+assert not refuse
+PY
 }
 
 test_field_attack_kit_module() {
@@ -340,6 +367,8 @@ test_field_attack_kit_module() {
   grep -q 'nexus_field_attack_kill_target' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'nexus_target_dossier' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'kill_target' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'refuse_kill' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'killable' "${ROOT}/lib/host-attack-map.py"
   declare -f nexus_field_attack_json >/dev/null 2>&1
 }
 
@@ -349,9 +378,11 @@ test_panel_field_attack_kit_ui() {
   grep -q 'ak-crush-hot' "$panel"
   grep -q 'attack-kit/kill' "$panel"
   grep -q 'KILL' "$panel"
+  grep -q 'FRIENDLY' "$panel"
+  grep -q 'friendly_refused' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'NEXUS_ATTACK_KIT_AUTO_CRUSH' "$panel"
   grep -q 'God Bless' "$panel"
-  grep -qE 'v3\.(0\.(0|1)|1\.0)' "$panel"
+  grep -qE 'v3\.(0\.(0|1)|1\.(0|1))' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -502,6 +533,7 @@ run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
 run_test "host attack map module" test_host_attack_module
 run_test "panel host attack UI" test_panel_host_attack_ui
 run_test "geo intel standards module" test_geo_intel_standards_module
+run_test "friendly guard immutable module" test_friendly_guard_module
 run_test "field attack kit module" test_field_attack_kit_module
 run_test "panel field attack kit UI" test_panel_field_attack_kit_ui
 run_test "gatekeeper ipv6 direction fields" test_gatekeeper_ipv6_direction

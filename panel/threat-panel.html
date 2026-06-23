@@ -656,6 +656,8 @@
     }
     .ha-kill-btn:hover { filter: brightness(1.1); }
     .ha-killed-badge { font-size: 0.62rem; color: var(--murder); margin-top: 4px; font-weight: 700; letter-spacing: 0.04em; }
+    .ha-friendly-badge { font-size: 0.62rem; color: var(--ok); margin-top: 4px; font-weight: 700; letter-spacing: 0.04em; }
+    .host-point-row.target-friendly { border-left: 2px solid var(--ok); opacity: 0.88; }
     .host-map-popup .popup-monitor { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
     .host-map-popup .popup-path { font-size: 0.66rem; color: var(--muted); margin-top: 4px; }
     .attack-kit-bar {
@@ -696,7 +698,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.1.0</h1>
+        <h1>NEXUS-Shield v3.1.1</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -821,7 +823,7 @@
             <span><span class="legend-swatch" style="background:#3dd68c"></span>Calm</span>
             <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
             <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
-            <span>· Monitor · Dossier · KILL · Field Memory</span>
+            <span>· Friendly Guard · Immutable · Never kill trusted</span>
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
@@ -2069,7 +2071,8 @@
           body: JSON.stringify({ ip, vector, severity, reason: "target_kill" }),
         });
         const data = await res.json();
-        if (!data.ok) alert("KILL failed — target may be trusted or protected.");
+        if (data.friendly_refused) alert(`KILL refused — ${ip} is a friendly (immutable guard).`);
+        else if (!data.ok) alert("KILL failed — target may be trusted or protected.");
         else if (data.dossier_archived) alert(`KILL confirmed — ${ip} blocked. Dossier archived forever.`);
         refresh();
       } catch {
@@ -2369,8 +2372,9 @@
         const std = (p.standards || []).slice(0, 3).join(" · ");
         const loc = [p.city, p.region, p.country].filter(Boolean).join(", ") || p.label || "classified";
         const killed = p.target_status === "killed" || p.disabled_permanent;
-        const live = p.is_monitor_target && !killed;
-        const rowClass = killed ? " target-killed" : live ? " target-live" : "";
+        const friendly = p.killable === false && !killed;
+        const live = p.is_monitor_target && !killed && !friendly;
+        const rowClass = killed ? " target-killed" : friendly ? " target-friendly" : live ? " target-live" : "";
         const monLine = p.monitor ? `<div class="host-monitor-line">${haMonitorLine(p.monitor)}</div>` : "";
         const dosLine = p.dossier ? `<div class="host-dossier-line">${haDossierLine(p.dossier)}</div>` : "";
         return `<div class="host-point-row${rowClass}" data-ha-id="${esc(p.id)}">
@@ -2382,7 +2386,9 @@
             ${std ? `<div class="host-standards">${esc(std)}</div>` : ""}
             ${killed
               ? '<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>'
-              : `<button type="button" class="ha-kill-btn" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">KILL</button>`}
+              : friendly
+                ? `<div class="ha-friendly-badge">✓ FRIENDLY · immutable guard — never KILL</div>`
+                : `<button type="button" class="ha-kill-btn" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">KILL</button>`}
           </div>
         </div>`;
       }).join("");

@@ -129,6 +129,25 @@ nexus_field_attack_kill_target() {
   local ip="${1:-}" vector="${2:-HOSTILE}" severity="${3:-high}" reason="${4:-target_kill}"
   local source="${5:-attack-kit}" dossier="${6:-}"
   [[ -n "$ip" ]] || return 1
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
+  local monitor_json=""
+  if [[ -n "$dossier" ]]; then
+    monitor_json="$(DOSSIER_JSON="$dossier" python3 -c '
+import json, os
+try:
+    d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
+except Exception:
+    d = {}
+m = d.get("monitor")
+if m:
+    print(json.dumps(m, ensure_ascii=False))
+' 2>/dev/null)"
+  fi
+  if nexus_friendly_guard_refuse_kill "$ip" "$monitor_json"; then
+    nexus_log "ALERT" "field-attack-kit" "KILL_REFUSED_FRIENDLY ip=${ip}"
+    return 1
+  fi
   nexus_field_attack_disable_host "$ip" "$vector" "$severity" "$reason" "$source" "$dossier" || return 1
   if [[ -n "$dossier" && "$dossier" != "{}" ]]; then
     nexus_field_attack_record_dossier_forever "$ip" "$vector" "$severity" "$reason" "$source" "$dossier"
@@ -147,15 +166,23 @@ nexus_field_attack_disable_host() {
   [[ -n "$ip" ]] || return 1
   nexus_field_attack_is_ipv4 "$ip" || return 1
 
-  if declare -f nexus_firewall_refuse_block_self >/dev/null 2>&1; then
-    nexus_firewall_refuse_block_self "$ip" && return 1
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
+  local monitor_json=""
+  if [[ -n "$meta" ]]; then
+    monitor_json="$(META_JSON="$meta" python3 -c '
+import json, os
+try:
+    d = json.loads(os.environ.get("META_JSON", "") or "{}")
+except Exception:
+    d = {}
+m = d.get("monitor")
+if m:
+    print(json.dumps(m, ensure_ascii=False))
+' 2>/dev/null)"
   fi
-  if declare -f nexus_firewall_is_sacred_ip >/dev/null 2>&1 && nexus_firewall_is_sacred_ip "$ip"; then
-    nexus_log "WARN" "field-attack-kit" "DISABLE_REFUSED sacred ip=${ip}"
-    return 1
-  fi
-  if declare -f nexus_firewall_is_trusted >/dev/null 2>&1 && nexus_firewall_is_trusted "$ip" both; then
-    nexus_log "WARN" "field-attack-kit" "DISABLE_REFUSED trusted ip=${ip}"
+  if nexus_friendly_guard_refuse_kill "$ip" "$monitor_json"; then
+    nexus_log "ALERT" "field-attack-kit" "KILL_REFUSED_FRIENDLY ip=${ip}"
     return 1
   fi
 

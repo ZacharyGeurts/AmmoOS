@@ -16,6 +16,14 @@ HOST_ATTACKS = STATE / "host-attacks.json"
 HOSTILE_TSV = STATE / "field-hostile.tsv"
 DOSSIERS = STATE / "angel-dossiers.json"
 
+import importlib.util
+
+_fg_spec = importlib.util.spec_from_file_location("friendly_guard", INSTALL / "lib" / "friendly-guard.py")
+_fg = importlib.util.module_from_spec(_fg_spec)
+assert _fg_spec and _fg_spec.loader
+_fg_spec.loader.exec_module(_fg)
+refuse_kill = _fg.refuse_kill
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -106,6 +114,10 @@ def _run_kill(
     reason: str,
     dossier: dict[str, Any],
 ) -> bool:
+    monitor = dossier.get("monitor") if isinstance(dossier.get("monitor"), dict) else None
+    refuse, _guard_reason = refuse_kill(ip, monitor=monitor)
+    if refuse:
+        return False
     script = INSTALL / "lib" / "field-attack-kit.sh"
     if not script.is_file():
         return False
@@ -124,7 +136,9 @@ def _run_kill(
     cmd = (
         f"source {INSTALL}/lib/nexus-common.sh && "
         f"source {INSTALL}/lib/firewall-sentinel.sh && "
+        f"source {INSTALL}/lib/firewall-trust.sh && "
         f"source {INSTALL}/lib/self-access.sh && "
+        f"source {INSTALL}/lib/friendly-guard.sh && "
         f"source {script} && "
         f'DOSSIER_JSON="$(cat "{dossier_path}")" && '
         f"nexus_field_attack_kill_target '{safe_ip}' '{safe_vector}' '{severity}' '{safe_reason}' 'attack-kit' \"$DOSSIER_JSON\""
@@ -140,6 +154,21 @@ def kill_target(
     reason: str = "target_kill",
     extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    point = _point_for_ip(ip)
+    monitor = (extra or {}).get("monitor") or point.get("monitor")
+    monitor_dict = monitor if isinstance(monitor, dict) else None
+    refuse, guard_reason = refuse_kill(ip, monitor=monitor_dict)
+    if refuse:
+        return {
+            "ok": False,
+            "ip": ip,
+            "permanent": False,
+            "killed": False,
+            "dossier_archived": False,
+            "friendly_refused": True,
+            "reason": guard_reason,
+            "dossier": {},
+        }
     dossier = _full_dossier_for_ip(ip, extra)
     ok = _run_kill(ip, vector, severity, reason, dossier)
     return {
@@ -148,6 +177,7 @@ def kill_target(
         "permanent": ok,
         "killed": ok,
         "dossier_archived": ok,
+        "friendly_refused": False,
         "dossier": dossier if ok else {},
     }
 

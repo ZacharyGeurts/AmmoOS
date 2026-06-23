@@ -30,6 +30,12 @@ _spec.loader.exec_module(_geo)
 enrich_ip = _geo.enrich_ip
 to_geojson_feature = _geo.to_geojson_feature
 
+_fg_spec = importlib.util.spec_from_file_location("friendly_guard", INSTALL / "lib" / "friendly-guard.py")
+_fg = importlib.util.module_from_spec(_fg_spec)
+assert _fg_spec and _fg_spec.loader
+_fg_spec.loader.exec_module(_fg)
+refuse_kill = _fg.refuse_kill
+
 PRIVATE_RE = re.compile(
     r"^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|169\.254\.|::1|fe80:|fd)"
 )
@@ -380,6 +386,8 @@ def _collect_points() -> list[dict[str, Any]]:
         is_monitor_target = bool(
             monitor and monitor.get("verdict") not in ("USER_OK", "EPHEMERAL")
         )
+        friendly_refuse, friendly_reason = refuse_kill(ip, monitor=monitor)
+        killable = not friendly_refuse and target_status != "killed"
 
         points.append({
             "id": hashlib.sha256(r["key"].encode()).hexdigest()[:16],
@@ -397,6 +405,8 @@ def _collect_points() -> list[dict[str, Any]]:
             "dossier": dossier,
             "target_status": target_status,
             "is_monitor_target": is_monitor_target,
+            "killable": killable,
+            "friendly_reason": friendly_reason if friendly_refuse else "",
             "label": loc_label,
             "city": enriched.get("city") or "",
             "region": enriched.get("region") or "",
@@ -448,7 +458,8 @@ def build_host_attacks() -> dict[str, Any]:
         "tagline": "Full dossier. Permanent field memory. KILL on command — intelligence is a bullet.",
         "map_engine": "leaflet-esri-imagery",
         "map_layers": ["satellite", "street", "offline-globe"],
-        "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON"],
+        "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON", "Friendly-Guard-Immutable"],
+        "friendly_guard": {"immutable": True, "fail_closed": True},
         "author": {
             "name": "Zachary Geurts",
             "rank": "Army Specialist",
