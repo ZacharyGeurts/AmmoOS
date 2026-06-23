@@ -433,7 +433,35 @@ test_panel_host_attack_ui() {
   grep -q 'same-host validation' "$panel"
   grep -q 'checkNexusUpdate' "$panel"
   grep -q 'nexus-update-btn' "$panel"
-  grep -qE 'v4\.(0|1)\.0' "$panel"
+  grep -q 'distance_label' "$panel"
+  grep -qE 'v4\.(0|1|2)\.0' "$panel"
+}
+
+test_honorability_module() {
+  [[ -f "${ROOT}/lib/honorability-db.py" ]]
+  [[ -f "${ROOT}/lib/browser-awareness.py" ]]
+  [[ -f "${ROOT}/lib/geo-distance.py" ]]
+  [[ -f "${ROOT}/lib/operator-location.py" ]]
+  [[ -f "${ROOT}/data/honorability-seed.json" ]]
+  grep -q 'x.com' "${ROOT}/data/honorability-seed.json"
+  grep -q '/api/honorability/accept' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/operator/location' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_apply_honorability' "${ROOT}/lib/connection-gatekeeper.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/honorability-db.py" lookup x.com | grep -q '"stars": 5'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/geo-distance.py" 40.7 -74.0 51.5 -0.1 | grep -q distance_km
+}
+
+test_panel_honor_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'view-honor' "$panel"
+  grep -q 'renderHonorability' "$panel"
+  grep -q 'honorStarsHtml' "$panel"
+  grep -q 'honor-pending-banner' "$panel"
+  grep -q 'honor-loc-wireless' "$panel"
+  grep -q 'data-view-jump="honor"' "$panel"
+  grep -q 'distance from you' "$panel"
 }
 
 test_target_bleed_module() {
@@ -918,6 +946,8 @@ test_host_map_trash_module() {
   nexus_host_map_trash_json | grep -q 'test-pin-1'
 }
 
+run_test "honorability module" test_honorability_module
+run_test "panel honor UI" test_panel_honor_ui
 run_test "host attack map module" test_host_attack_module
 run_test "nexus update module" test_nexus_update_module
 run_test "host map trash module" test_host_map_trash_module

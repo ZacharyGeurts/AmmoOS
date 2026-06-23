@@ -17,6 +17,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/honorability.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/honorability.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -229,6 +230,18 @@ nexus_threat_panel_publish() {
       nexus_field_attack_json
     else
       printf '{"disabled_count":0,"hosts":[]}'
+    fi
+    printf ',"browser_awareness":'
+    if declare -f nexus_honorability_json >/dev/null 2>&1; then
+      nexus_honorability_json
+    else
+      printf '{"active_sites":[],"honorability":{"entries":[]}}'
+    fi
+    printf ',"operator_location":'
+    if declare -f nexus_operator_location_json >/dev/null 2>&1; then
+      nexus_operator_location_json
+    else
+      printf '{"lat":null,"lon":null,"source":"unset"}'
     fi
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'

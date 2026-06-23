@@ -62,6 +62,80 @@ TRUST_RANK = {
 # v4.0 packet permission: ranks 0–2 (USER_OK, EPHEMERAL, MONITOR) auto-permit at zero nft cost.
 MIN_ACCEPT_TRUST_RANK = 2
 
+SITE_IP_HINTS = {
+    "104.244.": "x.com",
+    "199.16.": "x.com",
+    "199.59.": "x.com",
+    "192.133.": "x.com",
+}
+HOST_ALIASES = {
+    "twitter.com": "x.com",
+    "t.co": "x.com",
+    "twimg.com": "x.com",
+}
+_honor_mod: Any = None
+
+
+def _honor_module():
+    global _honor_mod
+    if _honor_mod is not None:
+        return _honor_mod
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("honorability_db", INSTALL / "lib" / "honorability-db.py")
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    _honor_mod = mod
+    return mod
+
+
+def _infer_site_host(rip: str, intel: dict[str, Any]) -> str:
+    label = intel.get("hostname") or intel.get("label") or ""
+    host = ""
+    if label and "." in str(label):
+        host = str(label).split()[0].lower()
+    for prefix, site in SITE_IP_HINTS.items():
+        if rip.startswith(prefix):
+            return site
+    if host:
+        return HOST_ALIASES.get(host, host)
+    return ""
+
+
+def _apply_honorability(
+    proc: str,
+    rip: str,
+    intel: dict[str, Any],
+    verdict: str,
+    trust_rank: int,
+    scores: dict[str, Any],
+) -> tuple[str, int, dict[str, Any]]:
+    if proc.lower() not in BROWSER_PROCS:
+        return verdict, trust_rank, {}
+    host = _infer_site_host(rip, intel)
+    if not host:
+        return verdict, trust_rank, {}
+    try:
+        info = _honor_module().lookup(host)
+    except Exception:
+        return verdict, trust_rank, {}
+    meta = {
+        "active_site": host,
+        "honor_stars": info["stars"],
+        "honor_gold": info["gold"],
+        "honor_needs_acceptance": info["needs_acceptance"],
+        "honor_label": info["stars_label"],
+    }
+    if info["gold"]:
+        scores["user_browser"] = max(int(scores.get("user_browser") or 0), 10)
+        return "USER_OK", TRUST_RANK["USER_OK"], meta
+    if info["stars"] >= 4 and not info["needs_acceptance"]:
+        return verdict, min(trust_rank, TRUST_RANK["EPHEMERAL"]), meta
+    if info["needs_acceptance"]:
+        meta["honor_pending_accept"] = True
+    return verdict, trust_rank, meta
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -694,6 +768,9 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         )
 
         trust_rank = TRUST_RANK.get(verdict, 5)
+        verdict, trust_rank, honor_meta = _apply_honorability(proc, rip, intel, verdict, trust_rank, scores)
+        if honor_meta.get("honor_gold"):
+            reason = f"Honorability 5★ — {honor_meta.get('active_site', 'trusted site')} browser session"
         flow_policy = _flow_policy(verdict, trust_rank, rip, rport, proc, direction)
         intent = _flow_intent(proc, verdict, reason, intel, direction_label)
         results.append({
@@ -721,6 +798,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "suggestion": suggestion,
             "intent": intent,
             "flow_policy": flow_policy,
+            **honor_meta,
         })
 
     # decay history

@@ -172,6 +172,25 @@ def _nexus_update_check(force: bool = False) -> dict:
         return {"ok": False, "error": "update_check_failed", "detail": (proc.stderr or "")[:200]}
 
 
+def _nexus_py_json(script: Path, args: list[str], timeout: int = 25) -> dict:
+    if not script.is_file():
+        return {"ok": False, "error": "script_missing"}
+    env = os.environ.copy()
+    env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+    env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+    proc = subprocess.run(
+        [sys.executable, str(script), *args],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        env=env,
+    )
+    try:
+        return json.loads(proc.stdout or "{}")
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "script_failed", "detail": (proc.stderr or "")[:200]}
+
+
 def _nexus_host_map_trash_add(pin_id: str) -> bool:
     pin_id = str(pin_id or "").strip()
     if not pin_id:
@@ -356,6 +375,16 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/update/check":
             force = str(query.get("force", ["0"])[0]).strip() in ("1", "true", "yes")
             payload = _nexus_update_check(force=force)
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/operator/location":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "operator-location.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/honorability":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "browser-awareness.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -557,6 +586,71 @@ class Handler(BaseHTTPRequestHandler):
                         env=env,
                     )
             self._send(200 if ok else 500, json.dumps({"ok": ok, "id": pin_id}), "application/json")
+            return
+
+        if path == "/api/honorability/accept":
+            domain = str(body.get("domain", body.get("host", ""))).strip().lower()
+            if not domain:
+                self._send(400, json.dumps({"ok": False, "error": "missing domain"}), "application/json")
+                return
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "honorability-db.py", ["accept", domain])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/honorability/rate":
+            domain = str(body.get("domain", "")).strip().lower()
+            stars = body.get("stars")
+            if not domain or stars is None:
+                self._send(400, json.dumps({"ok": False, "error": "missing domain or stars"}), "application/json")
+                return
+            note = str(body.get("note", ""))[:200]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "honorability-db.py",
+                ["rate", domain, str(int(stars)), note],
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/operator/location":
+            mode = str(body.get("mode", "gps")).strip().lower()
+            loc_py = INSTALL_ROOT / "lib" / "operator-location.py"
+            if mode == "wireless":
+                payload = _nexus_py_json(loc_py, ["wireless"])
+            elif mode == "address":
+                address = str(body.get("address", "")).strip()
+                if not address:
+                    self._send(400, json.dumps({"ok": False, "error": "missing address"}), "application/json")
+                    return
+                payload = _nexus_py_json(loc_py, ["address", address])
+            elif mode == "gps":
+                lat = body.get("lat")
+                lon = body.get("lon")
+                if lat is None or lon is None:
+                    self._send(400, json.dumps({"ok": False, "error": "missing lat/lon"}), "application/json")
+                    return
+                label = str(body.get("label", ""))[:120]
+                args = ["gps", str(lat), str(lon)]
+                if label:
+                    args.append(label)
+                payload = _nexus_py_json(loc_py, args)
+            else:
+                self._send(400, json.dumps({"ok": False, "error": "invalid mode"}), "application/json")
+                return
+            if payload.get("ok") is False and payload.get("error"):
+                self._send(500, json.dumps(payload), "application/json")
+                return
+            map_py = INSTALL_ROOT / "lib" / "host-attack-map.py"
+            if map_py.is_file():
+                env = os.environ.copy()
+                env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+                env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+                subprocess.run(
+                    [sys.executable, str(map_py), "build-fast"],
+                    capture_output=True,
+                    timeout=45,
+                    env=env,
+                )
+            self._send(200, json.dumps({"ok": True, **payload}), "application/json")
             return
 
         if path == "/api/autosanitize/toggle":

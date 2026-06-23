@@ -70,6 +70,44 @@
     }
     #nexus-update-detail { font-size: 0.62rem; color: var(--muted); max-width: 220px; text-align: right; }
     #nexus-update-detail.update-ready { color: var(--gold); }
+    .honor-stars { display: inline-flex; gap: 1px; letter-spacing: 0; font-size: 0.72rem; }
+    .honor-stars .star-gold { color: var(--gold); text-shadow: 0 0 6px rgba(212, 175, 55, 0.45); }
+    .honor-stars .star-dim { color: #4a5060; }
+    .honor-wrap { padding: 16px 18px; }
+    .honor-motto { font-size: 0.82rem; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
+    .honor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .honor-card {
+      border: 1px solid var(--border); border-radius: 10px; background: var(--card);
+      padding: 12px 14px; min-height: 120px;
+    }
+    .honor-card h4 { margin: 0 0 8px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+    .honor-loc-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .honor-loc-form input {
+      flex: 1; min-width: 140px; background: #0d1524; border: 1px solid var(--border);
+      color: var(--text); padding: 7px 10px; border-radius: 6px; font-size: 0.78rem;
+    }
+    .honor-loc-form button {
+      background: #1a2840; border: 1px solid var(--internet); color: var(--text);
+      padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.72rem;
+    }
+    .honor-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+    .honor-table th, .honor-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    .honor-pending {
+      margin: 10px 18px 0; padding: 10px 14px; border-radius: 8px;
+      background: linear-gradient(90deg, #2a2010, #1a1520); border: 1px solid var(--gold);
+      font-size: 0.78rem;
+    }
+    .honor-pending button {
+      margin-left: 8px; background: var(--gold); color: #1a1008; border: none;
+      padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: 700; font-size: 0.68rem;
+    }
+    .honor-crossrefs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .honor-crossrefs button {
+      background: transparent; border: 1px solid var(--border); color: var(--internet);
+      padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.68rem;
+    }
+    .conn-honor-line { font-size: 0.62rem; color: var(--gold); margin-top: 2px; }
+    @media (max-width: 900px) { .honor-grid { grid-template-columns: 1fr; } }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
       width: 40px; height: 40px; border-radius: 10px;
@@ -988,7 +1026,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v4.1.0</h1>
+        <h1>NEXUS-Shield v4.2.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1008,7 +1046,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="Checks GitHub for a newer NEXUS-Shield release.">v4.1.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="Checks GitHub for a newer NEXUS-Shield release.">v4.2.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1017,7 +1055,7 @@
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
-    <strong>v4.0 Packet Permission — DPI knows who and intent on every flow. Good traffic passes at zero cost; only harmful sections get blocked. Trust email &amp; YouTube from the recommended list. CLI: <code>nexus trust &lt;ip&gt;</code></strong>
+    <strong>v4.2 Honorability — 5 gold stars pass silently (X.com, YouTube). Moderate default; we only ask when you visit rough sites. Set your location for threat distance. Right-click links for new tab. CLI: <code>nexus trust &lt;ip&gt;</code></strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
   </div>
 
@@ -1051,6 +1089,7 @@
   <nav class="menu" aria-label="Panel sections">
     <button type="button" class="active" data-view="us" data-tip="Page 1 — forensic identity of THIS machine. Every fact from ss, ip, proc, and NEXUS state on the field — zero external guesswork.">US</button>
     <button type="button" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">Monitor</button>
+    <button type="button" data-view="honor" data-tip="Honorability database — 5 gold-star sites (X.com, YouTube) pass silently. Moderate default. Acceptance only when you visit lower-trust sites. Low-level data researchers.">Honor</button>
     <button type="button" data-view="inspect" data-tip="Retro modem LEDs, deep packet inspection, English translation, exploit heuristics (high-confidence only — no false positives).">Inspect</button>
     <button type="button" data-view="host-attack" data-tip="Global host attack map — pulsing dots on Earth, green through red by threat. Built for Zachary Geurts and everyone defending their machine in 2026.">Host Attack</button>
     <button type="button" data-view="dossier" data-tip="Full attack-path dossiers — vector to peer to process to MAC to CVE. They look at us; we look back HARD.">Dossier</button>
@@ -1078,11 +1117,55 @@
         <button type="button" data-view-jump="monitor">Live connections →</button>
         <button type="button" data-view-jump="human-dossier">Human Dossier kill-orders →</button>
         <button type="button" data-view-jump="host-attack">Host Attack map →</button>
+        <button type="button" data-view-jump="honor">Honorability &amp; distance →</button>
       </div>
     </div>
   </section>
 
+  <section id="view-honor" class="view">
+    <div class="honor-wrap">
+      <p class="honor-motto" id="honor-motto" data-tip="Low-level data researchers — honorability seeded at install. 5★ gold passes without nagging. 4★ and below only prompt when you actively visit that site in a browser.">
+        <strong>Honorability · Field Researchers</strong> — 5 gold stars trust. Moderate default. Ask only on visit.
+      </p>
+      <div id="honor-pending-banner" class="honor-pending" style="display:none" role="status"></div>
+      <div class="honor-grid">
+        <div class="honor-card">
+          <h4 data-tip="Where YOU are — threats show distance from this point on Host Attack map. Wireless uses immediate egress geo.">Operator location</h4>
+          <div id="honor-loc-meta" class="meta" style="font-size:0.68rem;margin-bottom:8px;">Unset — distances hidden until you set location.</div>
+          <div class="honor-loc-form">
+            <input type="text" id="honor-address" placeholder="Address or city" data-tip="Geocoded via OpenStreetMap Nominatim — stored locally on field drive." />
+            <button type="button" id="honor-loc-address" data-tip="Set operator location from typed address.">Set address</button>
+          </div>
+          <div class="honor-loc-form" style="margin-top:8px;">
+            <input type="text" id="honor-gps" placeholder="lat, lon" data-tip="Paste GPS coordinates: 40.7128, -74.0060" />
+            <button type="button" id="honor-loc-gps" data-tip="Set operator location from GPS coordinates.">Set GPS</button>
+            <button type="button" id="honor-loc-wireless" data-tip="On Wi‑Fi: immediate egress geo lookup — fastest field fix.">Wireless now</button>
+            <button type="button" id="honor-loc-browser" data-tip="Use browser Geolocation API — most precise when you allow location in the panel.">Browser GPS</button>
+          </div>
+        </div>
+        <div class="honor-card">
+          <h4 data-tip="Sites your browser is talking to right now — X.com shows 5★ and passes at full trust.">Active browser sites</h4>
+          <div id="honor-active-sites"><div class="empty">No browser tab traffic detected yet.</div></div>
+        </div>
+        <div class="honor-card" style="grid-column: 1 / -1;">
+          <h4 data-tip="Honorability database at onset — seeded trustworthy domains. Stars 1–4 may require acceptance only when visited.">Honorability database</h4>
+          <div id="honor-db-table"><div class="empty">Loading honorability seed…</div></div>
+        </div>
+      </div>
+      <div class="honor-crossrefs">
+        <button type="button" data-view-jump="monitor" data-tip="Follow through to live connections — see honor stars on browser flows.">Monitor connections →</button>
+        <button type="button" data-view-jump="host-attack" data-tip="Follow through to map — distance from your location on every pin.">Threat distances on map →</button>
+        <button type="button" data-view-jump="research" data-tip="Low-level research tables — MAC, IP, CVE.">Research tables →</button>
+        <button type="button" data-view-jump="inspect" data-tip="Packet field researchers — DPI English translation.">Packet inspect →</button>
+      </div>
+      <p class="meta" style="margin-top:10px;font-size:0.62rem;" data-tip="Panel stays in one tab. Right-click any follow-through button or browser link → Open in new tab when you want a second window.">
+        Navigation stays in this tab unless you right-click → Open link in new tab.
+      </p>
+    </div>
+  </section>
+
   <section id="view-monitor" class="view">
+    <div id="honor-monitor-banner" class="honor-pending" style="display:none;margin:0;border-radius:0;border-left:none;border-right:none;" role="status"></div>
     <div id="intel-banner" class="intel-banner" role="status" aria-live="polite"></div>
     <div id="gatekeeper-banner" class="gatekeeper-banner"></div>
     <div class="grid">
@@ -1203,7 +1286,8 @@
             <span><span class="legend-swatch" style="background:#3dd68c"></span>Calm</span>
             <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
             <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
-            <span>· SDF wireframe borders · infinite zoom · GPS pushpins</span>
+            <span>· SDF wireframe · infinite zoom · GPS · distance from you</span>
+            <button type="button" data-view-jump="honor" style="margin-left:8px;font-size:0.62rem;padding:3px 8px;border:1px solid var(--border);background:transparent;color:var(--internet);border-radius:4px;cursor:pointer;" data-tip="Set operator location for threat distances.">Set my location →</button>
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
@@ -1701,6 +1785,7 @@
       }
       if (name === "library" && lastPanelData) renderLibraryShelf(lastPanelData.h7_library);
       if (name === "us" && lastPanelData) renderUSField(lastPanelData.us_field);
+      if (name === "honor" && lastPanelData) renderHonorability(lastPanelData);
       if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
     }
 
@@ -1905,6 +1990,33 @@
           refresh();
         } catch { alert("Could not save ad policy"); }
       });
+    });
+
+    $("honor-loc-address")?.addEventListener("click", () => {
+      const address = $("honor-address")?.value?.trim();
+      if (!address) return;
+      postOperatorLocation({ mode: "address", address });
+    });
+    $("honor-loc-gps")?.addEventListener("click", () => {
+      const raw = $("honor-gps")?.value?.trim();
+      if (!raw) return;
+      const parts = raw.split(/[,\s]+/).filter(Boolean);
+      if (parts.length < 2) { alert("Enter lat, lon"); return; }
+      postOperatorLocation({ mode: "gps", lat: parts[0], lon: parts[1] });
+    });
+    $("honor-loc-wireless")?.addEventListener("click", () => postOperatorLocation({ mode: "wireless" }));
+    $("honor-loc-browser")?.addEventListener("click", () => {
+      if (!navigator.geolocation) { alert("Browser geolocation unavailable"); return; }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => postOperatorLocation({
+          mode: "gps",
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          label: "browser GPS",
+        }),
+        () => alert("Geolocation denied — allow location for this panel or use Wireless now."),
+        { enableHighAccuracy: true, timeout: 12000 }
+      );
     });
 
     $("site-policy-add").addEventListener("click", async () => {
@@ -2609,6 +2721,9 @@
       }
       const intel = c.intel || {};
       const intelLabel = intel.label || c.notes?.intel_label || "";
+      const honorLine = c.active_site
+        ? `<div class="conn-honor-line">${honorStarsHtml(c.honor_stars ?? 3)} ${esc(c.active_site)}${c.honor_gold ? " · gold trust" : ""}${c.honor_needs_acceptance ? ' · <button type="button" data-honor-accept="' + esc(c.active_site) + '" data-tip="Accept this site — only asked because you are visiting it.">Accept visit</button>' : ""}</div>`
+        : "";
       const showPest = v === "HARM_CANDIDATE" || (c.block_recommended && !trustedRow);
       if (showPest) {
         actions += `<span class="has-tip has-tip-action"><button type="button" class="danger eradicate" data-eradicate="${ip}" data-pid="${c.pid || ""}" data-vector="${v}">Remove pest</button>${tipMarkup("Block peer, stop process, quarantine temp binary — full host pest removal.")}</span>`;
@@ -2621,12 +2736,16 @@
           <span class="meta intel-label">${c.intent?.who ? esc(c.intent.who) + " · " : ""}${intelLabel ? esc(intelLabel) : esc(c.ip_class || "classified peer")}${c.flow_policy?.block_scope && c.flow_policy.block_scope !== "none" ? ` · <strong>${esc(c.flow_policy.block_scope)} block</strong>` : c.flow_policy?.permit ? " · permit" : ""}${c.addr_version ? ` · ${esc(c.addr_version)}` : ""}${c.traffic_direction_label ? `<span class="dir-badge ${esc(c.traffic_direction || "from_us")}">${esc(c.traffic_direction === "at_us" ? "At us" : "From us")}</span>` : ""}${blockedRow ? " · blocked" : ""}</span>
         </div>
         ${renderSuggestionBox(sug, v, c.scores)}
+        ${honorLine}
         ${c.reason ? `<details class="axis-details"><summary>Technical notes</summary><div class="intent-reason">${esc(c.reason)}</div></details>` : ""}
         <div class="intent-actions">${actions}</div>
       </div>`;
     }
 
     function bindConnectionActions(root) {
+      root.querySelectorAll("[data-honor-accept]").forEach((btn) => {
+        btn.addEventListener("click", () => acceptHonorDomain(btn.dataset.honorAccept));
+      });
       root.querySelectorAll("[data-auth]").forEach((btn) => {
         btn.addEventListener("click", () => authorizeIp(btn.dataset.auth, btn.dataset.dir, btn.dataset.label, btn));
       });
@@ -2958,11 +3077,114 @@
     function haTooltipText(p) {
       const loc = [p.city, p.country].filter(Boolean).join(", ") || p.label || p.ip;
       const gps = typeof NexusSdf !== "undefined" ? NexusSdf.formatGps(p.lat, p.lon) : "";
+      const dist = p.distance_label && p.distance_label !== "—" ? `\n${p.distance_label} from you` : "";
       const os = p.target_os ? ` · ${p.target_os}` : "";
       const proc = p.our_process || p.monitor?.process || "";
       const verdict = p.monitor?.verdict || p.verdict || "";
       const heat = (p.heat ?? 0).toFixed(2);
-      return `${p.ip} · ${verdict} · heat ${heat}${os}\n${loc}${gps ? `\n${gps}` : ""}${proc ? `\nvia ${proc}` : ""}`;
+      return `${p.ip} · ${verdict} · heat ${heat}${os}\n${loc}${gps ? `\n${gps}` : ""}${dist}${proc ? `\nvia ${proc}` : ""}`;
+    }
+
+    function honorStarsHtml(stars, max = 5) {
+      const n = Math.max(0, Math.min(max, Number(stars) || 0));
+      let html = '<span class="honor-stars" aria-label="' + n + ' stars">';
+      for (let i = 1; i <= max; i++) {
+        html += `<span class="${i <= n ? "star-gold" : "star-dim"}">★</span>`;
+      }
+      return html + "</span>";
+    }
+
+    async function acceptHonorDomain(domain) {
+      const res = await fetch("/api/honorability/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain }),
+      });
+      const j = await res.json();
+      if (j.ok) refresh();
+      else alert("Could not accept " + domain);
+    }
+
+    async function postOperatorLocation(body) {
+      const res = await fetch("/api/operator/location", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const j = await res.json();
+      if (!j.ok && j.error) alert(j.error === "geocode_failed" ? "Address not found" : "Location update failed");
+      else refresh();
+      return j;
+    }
+
+    function renderHonorPending(pending) {
+      const honorBanner = $("honor-pending-banner");
+      const monBanner = $("honor-monitor-banner");
+      if (!pending?.length) {
+        if (honorBanner) honorBanner.style.display = "none";
+        if (monBanner) monBanner.style.display = "none";
+        return;
+      }
+      const html = pending.map((p) =>
+        `<span>${honorStarsHtml(p.stars)} <strong>${esc(p.host || p.domain)}</strong> — ${esc(p.honor_label || "accept to continue")}
+         <button type="button" data-honor-accept="${esc(p.host || p.domain)}" data-tip="Accept this site for this machine — stored on field drive.">Accept visit</button></span>`
+      ).join(" · ");
+      if (honorBanner) { honorBanner.innerHTML = html; honorBanner.style.display = "block"; }
+      if (monBanner) { monBanner.innerHTML = `<strong>Honorability</strong> — ${html}`; monBanner.style.display = "block"; }
+      document.querySelectorAll("[data-honor-accept]").forEach((btn) => {
+        btn.addEventListener("click", () => acceptHonorDomain(btn.dataset.honorAccept));
+      });
+    }
+
+    function renderHonorability(data) {
+      const ba = data?.browser_awareness || data || {};
+      const hon = ba.honorability || data?.honorability || {};
+      const op = data?.operator_location || lastPanelData?.operator_location || {};
+      const motto = $("honor-motto");
+      if (motto && hon.motto) {
+        motto.innerHTML = `<strong>Honorability · Field Researchers</strong> — ${esc(hon.motto)} ${esc(hon.tagline || "")}`;
+      }
+      const locMeta = $("honor-loc-meta");
+      if (locMeta) {
+        const src = op.source || "unset";
+        const wl = op.wireless ? " · Wi‑Fi" : "";
+        locMeta.textContent = op.gps_ready
+          ? `${op.label || "—"} · ${op.lat?.toFixed?.(5) ?? op.lat}°, ${op.lon?.toFixed?.(5) ?? op.lon}° · ${src}${wl}`
+          : "Unset — set address, GPS, or Wireless now for threat distances.";
+      }
+      const activeEl = $("honor-active-sites");
+      const sites = ba.active_sites || hon.active_browser_sites || [];
+      if (activeEl) {
+        if (!sites.length) activeEl.innerHTML = '<div class="empty">No browser tab traffic — open X.com or YouTube in Firefox/Chrome.</div>';
+        else {
+          activeEl.innerHTML = sites.map((s) =>
+            `<div style="margin-bottom:6px;">${honorStarsHtml(s.honor_stars ?? s.stars)}
+              <strong>${esc(s.host)}</strong> via ${esc(s.process || "browser")}
+              ${s.honor_gold || s.gold ? " · <em>gold — full trust</em>" : ""}
+              ${s.needs_acceptance ? ' · <button type="button" data-honor-accept="' + esc(s.host) + '">Accept</button>' : ""}
+            </div>`
+          ).join("");
+          activeEl.querySelectorAll("[data-honor-accept]").forEach((btn) => {
+            btn.addEventListener("click", () => acceptHonorDomain(btn.dataset.honorAccept));
+          });
+        }
+      }
+      const dbEl = $("honor-db-table");
+      const entries = hon.entries || [];
+      if (dbEl) {
+        if (!entries.length) dbEl.innerHTML = '<div class="empty">No honorability entries.</div>';
+        else {
+          dbEl.innerHTML = `<table class="honor-table"><thead><tr><th>Domain</th><th>Stars</th><th>Category</th><th>Note</th></tr></thead><tbody>
+            ${entries.map((e) => `<tr>
+              <td><strong>${esc(e.domain)}</strong></td>
+              <td>${honorStarsHtml(e.stars)}</td>
+              <td>${esc(e.category || "—")}</td>
+              <td>${esc(e.note || "")}${e.needs_acceptance ? " · needs visit accept" : ""}</td>
+            </tr>`).join("")}
+          </tbody></table>`;
+        }
+      }
+      renderHonorPending(hon.pending_acceptance || []);
     }
 
     function haBleedLine(p) {
@@ -3220,7 +3442,7 @@
           ${p.target_banner ? `<div class="host-kill-kv">Banner: ${esc(p.target_banner)}</div>` : ""}
         </div>
         <div class="host-kill-section"><strong>Geo / Intel</strong>
-          <div class="host-kill-kv">${esc([p.city, p.region, p.country].filter(Boolean).join(", ") || p.label || "—")}</div>
+          <div class="host-kill-kv">${esc([p.city, p.region, p.country].filter(Boolean).join(", ") || p.label || "—")}${p.distance_label && p.distance_label !== "—" ? ` · <strong>${esc(p.distance_label)} from you</strong>` : ""}</div>
           <div class="host-kill-kv">${esc(p.org || "—")} · ${esc(p.asn || "")} ${esc(p.asname || "")}</div>
           <div class="host-kill-kv">Registrar: ${esc(p.registrar || "—")} · MAC ${esc(p.mac_vendor || "—")}</div>
         </div>
@@ -4022,6 +4244,8 @@
           renderParanoia(data.paranoia);
           renderShutdown(data.shutdown);
         }
+        renderHonorability(data);
+        if ($("view-honor")?.classList.contains("active")) renderHonorability(data);
         const haUpdated = data.host_attacks?.updated || "";
         if (haUpdated !== lastHostAttackUpdated) {
           lastHostAttackUpdated = haUpdated;

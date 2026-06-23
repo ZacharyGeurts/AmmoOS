@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+"""Operator location — GPS, address geocode, wireless-fast egress geo."""
+from __future__ import annotations
+
+import json
+import os
+import re
+import subprocess
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
+LOC_FILE = STATE / "operator-location.json"
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _load() -> dict[str, Any]:
+    if LOC_FILE.is_file():
+        try:
+            return json.loads(LOC_FILE.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+    return {
+        "lat": None,
+        "lon": None,
+        "label": "",
+        "source": "unset",
+        "updated": None,
+        "wireless": False,
+    }
+
+
+def _save(doc: dict[str, Any]) -> None:
+    doc["updated"] = _now()
+    STATE.mkdir(parents=True, exist_ok=True)
+    tmp = LOC_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(LOC_FILE)
+
+
+def _default_route_iface() -> str:
+    try:
+        out = subprocess.check_output(["ip", "-4", "route", "show", "default"], text=True, timeout=3)
+        m = re.search(r"dev\s+(\S+)", out)
+        return m.group(1) if m else ""
+    except (subprocess.SubprocessError, OSError):
+        return ""
+
+
+def _is_wireless(iface: str) -> bool:
+    if not iface:
+        return False
+    if iface.startswith(("wlan", "wlp", "wl")):
+        return True
+    path = Path(f"/sys/class/net/{iface}/wireless")
+    return path.is_dir()
+
+
+def _fetch_egress_geo() -> dict[str, Any] | None:
+    req = urllib.request.Request(
+        "http://ip-api.com/json/?fields=status,lat,lon,city,regionName,country,query",
+        headers={"User-Agent": "NEXUS-Shield-Operator-Geo"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=4) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="replace"))
+    except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError):
+        return None
+    if data.get("status") != "success":
+        return None
+    return data
+
+
+def _geocode_address(address: str) -> dict[str, Any] | None:
+    q = urllib.parse.quote(address.strip())
+    if not q:
+        return None
+    url = f"https://nominatim.openstreetmap.org/search?format=json&limit=1&q={q}"
+    req = urllib.request.Request(url, headers={"User-Agent": "NEXUS-Shield/4.2"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            rows = json.loads(resp.read().decode("utf-8", errors="replace"))
+    except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError):
+        return None
+    if not rows:
+        return None
+    row = rows[0]
+    return {
+        "lat": float(row["lat"]),
+        "lon": float(row["lon"]),
+        "label": row.get("display_name", address)[:200],
+    }
+
+
+def set_gps(lat: float, lon: float, label: str = "") -> dict[str, Any]:
+    doc = _load()
+    doc.update({
+        "lat": round(float(lat), 6),
+        "lon": round(float(lon), 6),
+        "label": label or f"{lat:.5f}°, {lon:.5f}°",
+        "source": "gps",
+        "wireless": _is_wireless(_default_route_iface()),
+    })
+    _save(doc)
+    return {"ok": True, **doc}
+
+
+def set_address(address: str) -> dict[str, Any]:
+    geo = _geocode_address(address)
+    if not geo:
+        return {"ok": False, "error": "geocode_failed", "address": address}
+    doc = _load()
+    doc.update({
+        "lat": geo["lat"],
+        "lon": geo["lon"],
+        "label": geo["label"],
+        "source": "address",
+        "address": address,
+        "wireless": _is_wireless(_default_route_iface()),
+    })
+    _save(doc)
+    return {"ok": True, **doc}
+
+
+def wireless_immediate() -> dict[str, Any]:
+    iface = _default_route_iface()
+    wireless = _is_wireless(iface)
+    geo = _fetch_egress_geo()
+    if not geo:
+        return {"ok": False, "error": "egress_geo_failed", "wireless": wireless, "iface": iface}
+    label = ", ".join(
+        x for x in (geo.get("city"), geo.get("regionName"), geo.get("country")) if x
+    ) or geo.get("query", "")
+    doc = _load()
+    doc.update({
+        "lat": float(geo["lat"]),
+        "lon": float(geo["lon"]),
+        "label": label,
+        "source": "wireless_egress" if wireless else "egress_geo",
+        "wireless": wireless,
+        "iface": iface,
+        "egress_ip": geo.get("query"),
+    })
+    _save(doc)
+    return {"ok": True, **doc}
+
+
+def panel_json() -> dict[str, Any]:
+    doc = _load()
+    iface = _default_route_iface()
+    return {
+        "lat": doc.get("lat"),
+        "lon": doc.get("lon"),
+        "label": doc.get("label") or "",
+        "source": doc.get("source") or "unset",
+        "updated": doc.get("updated"),
+        "wireless": bool(doc.get("wireless")) or _is_wireless(iface),
+        "iface": iface,
+        "gps_ready": doc.get("lat") is not None and doc.get("lon") is not None,
+    }
+
+
+def main() -> int:
+    import sys
+
+    cmd = (sys.argv[1] if len(sys.argv) > 1 else "json").strip()
+    if cmd == "json":
+        print(json.dumps(panel_json(), ensure_ascii=False))
+        return 0
+    if cmd == "wireless":
+        print(json.dumps(wireless_immediate(), ensure_ascii=False))
+        return 0
+    if cmd == "gps" and len(sys.argv) >= 4:
+        print(json.dumps(set_gps(float(sys.argv[2]), float(sys.argv[3]), sys.argv[4] if len(sys.argv) > 4 else ""), ensure_ascii=False))
+        return 0
+    if cmd == "address" and len(sys.argv) >= 3:
+        print(json.dumps(set_address(" ".join(sys.argv[2:])), ensure_ascii=False))
+        return 0
+    print(json.dumps({"error": "usage: operator-location.py [json|wireless|gps LAT LON [label]|address TEXT]"}))
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

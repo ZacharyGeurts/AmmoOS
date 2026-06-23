@@ -48,6 +48,18 @@ _hi = importlib.util.module_from_spec(_hi_spec)
 assert _hi_spec and _hi_spec.loader
 _hi_spec.loader.exec_module(_hi)
 extract_identity_fingerprint = _hi.extract_identity_fingerprint
+
+_op_spec = importlib.util.spec_from_file_location("operator_location", INSTALL / "lib" / "operator-location.py")
+_op = importlib.util.module_from_spec(_op_spec)
+assert _op_spec and _op_spec.loader
+_op_spec.loader.exec_module(_op)
+operator_panel_json = _op.panel_json
+
+_gd_spec = importlib.util.spec_from_file_location("geo_distance", INSTALL / "lib" / "geo-distance.py")
+_gd = importlib.util.module_from_spec(_gd_spec)
+assert _gd_spec and _gd_spec.loader
+_gd_spec.loader.exec_module(_gd)
+distance_fields = _gd.distance_fields
 fingerprint_from_point_or_dossier = _hi.fingerprint_from_point_or_dossier
 load_archived_dossier = _hi.load_archived_dossier
 
@@ -533,6 +545,8 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
         if not resolved:
             continue
         lat, lon, geo_src = resolved
+        op_loc = operator_panel_json()
+        dist = distance_fields(op_loc.get("lat"), op_loc.get("lon"), lat, lon)
         loc_label = ", ".join(
             x for x in (enriched.get("city"), enriched.get("region"), enriched.get("country")) if x
         ) or enriched.get("org") or ip
@@ -554,6 +568,8 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
             "ip": ip,
             "lat": round(lat, 5),
             "lon": round(lon, 5),
+            "distance_km": dist.get("distance_km"),
+            "distance_label": dist.get("distance_label"),
             "vector": r["vector"],
             "severity": r["severity"],
             "verdict": r.get("verdict", ""),
@@ -671,6 +687,7 @@ def build_host_attacks(*, fast: bool = False) -> dict[str, Any]:
         "host_endpoint": host_endpoint_context(),
         "map_engine": "leaflet-sdf-wireframe-infinite",
         "map_layers": ["sdf-wireframe", "satellite", "street"],
+        "operator_location": operator_panel_json(),
         "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON", "Target-Bleed", "SDF-Map-Graphics", "Natural-Earth-110m", "Friendly-Guard-Immutable", "Trust-Strike-Engine"],
         "friendly_guard": {"immutable": True, "fail_closed": True},
         "trust_strike": trust_strike_summary(refresh=not fast),
