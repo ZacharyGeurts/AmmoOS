@@ -1,13 +1,13 @@
 {
   "id": "pin-hostile",
-  "width": 96,
-  "height": 144,
+  "width": 128,
+  "height": 192,
   "anchor": [
-    48,
-    143
+    64,
+    191
   ],
   "pointy_tip": true,
   "format": "r8",
   "file": "/assets/sdf/pin-hostile.sdf.png",
-  "display_scale": 0.72
+  "display_scale": 1.05
 }

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXUS Field</title>
+  <link rel="preload" href="/api/field" as="fetch" crossorigin />
+  <link rel="prefetch" href="/app" />
+  <style>
+    html, body { margin: 0; background: #080a10; color: #8b95a8; font: 14px system-ui, sans-serif; }
+    .field-boot {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      opacity: 1; transition: opacity 0.12s ease;
+    }
+    .field-boot.field-go { opacity: 0; pointer-events: none; }
+    .field-boot strong { color: #4d9bff; letter-spacing: 0.04em; }
+  </style>
+  <script src="/assets/field-foundation.js"></script>
+</head>
+<body>
+  <div id="field-foundation" hidden aria-hidden="true"></div>
+  <div class="field-boot" id="field-boot"><span><strong>Field</strong> · cache warm</span></div>
+  <script>
+    document.getElementById("field-boot").classList.add("field-go");
+    NexusField.boot("/app");
+  </script>
+</body>
+</html>

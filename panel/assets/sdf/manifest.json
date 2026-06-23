@@ -4,42 +4,42 @@
   "assets": {
     "pin-hostile": {
       "id": "pin-hostile",
-      "width": 96,
-      "height": 144,
+      "width": 128,
+      "height": 192,
       "anchor": [
-        48,
-        143
+        64,
+        191
       ],
       "pointy_tip": true,
       "format": "r8",
       "file": "/assets/sdf/pin-hostile.sdf.png",
-      "display_scale": 0.72
+      "display_scale": 1.05
     },
     "pin-killed": {
       "id": "pin-killed",
-      "width": 96,
-      "height": 144,
+      "width": 128,
+      "height": 192,
       "anchor": [
-        48,
-        143
+        64,
+        191
       ],
       "pointy_tip": true,
       "format": "r8",
       "file": "/assets/sdf/pin-killed.sdf.png",
-      "display_scale": 0.66
+      "display_scale": 0.95
     },
     "pin-friendly": {
       "id": "pin-friendly",
-      "width": 96,
-      "height": 144,
+      "width": 128,
+      "height": 192,
       "anchor": [
-        48,
-        143
+        64,
+        191
       ],
       "pointy_tip": true,
       "format": "r8",
       "file": "/assets/sdf/pin-friendly.sdf.png",
-      "display_scale": 0.66
+      "display_scale": 0.95
     },
     "ring-pulse": {
       "id": "ring-pulse",
@@ -67,8 +67,8 @@
     },
     "globe-world": {
       "id": "globe-world",
-      "width": 512,
-      "height": 256,
+      "width": 1024,
+      "height": 512,
       "anchor": [
         0,
         0
@@ -86,6 +86,30 @@
       "format": "r8",
       "file": "/assets/sdf/globe-world.sdf.png",
       "equirectangular": true
+    },
+    "globe-wireframe": {
+      "id": "globe-wireframe",
+      "width": 1024,
+      "height": 512,
+      "anchor": [
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          -90,
+          -180
+        ],
+        [
+          90,
+          180
+        ]
+      ],
+      "format": "r8",
+      "file": "/assets/sdf/globe-wireframe.sdf.png",
+      "equirectangular": true,
+      "wireframe": true,
+      "source": "Natural Earth 110m admin-0 + admin-1"
     }
   }
 }

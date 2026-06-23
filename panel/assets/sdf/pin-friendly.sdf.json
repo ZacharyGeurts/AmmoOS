@@ -1,13 +1,13 @@
 {
   "id": "pin-friendly",
-  "width": 96,
-  "height": 144,
+  "width": 128,
+  "height": 192,
   "anchor": [
-    48,
-    143
+    64,
+    191
   ],
   "pointy_tip": true,
   "format": "r8",
   "file": "/assets/sdf/pin-friendly.sdf.png",
-  "display_scale": 0.66
+  "display_scale": 0.95
 }
