@@ -51,6 +51,14 @@ extract_identity_fingerprint = _hi.extract_identity_fingerprint
 fingerprint_from_point_or_dossier = _hi.fingerprint_from_point_or_dossier
 load_archived_dossier = _hi.load_archived_dossier
 
+_ts_spec = importlib.util.spec_from_file_location("trust_strike", INSTALL / "lib" / "trust-strike-engine.py")
+_ts = importlib.util.module_from_spec(_ts_spec)
+assert _ts_spec and _ts_spec.loader
+_ts_spec.loader.exec_module(_ts)
+build_hostile_corpus = _ts.build_hostile_corpus
+score_strike = _ts.score_strike
+trust_strike_summary = _ts.trust_strike_summary
+
 PRIVATE_RE = re.compile(
     r"^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|169\.254\.|::1|fe80:|fd)"
 )
@@ -105,6 +113,21 @@ COUNTRY_CENTROIDS: dict[str, tuple[float, float]] = {
 
 RDAP_BUDGET = 18
 BLEED_BUDGET = 15
+RDAP_BUDGET_FAST = 0
+BLEED_BUDGET_FAST = 0
+FAST_BUILD = os.environ.get("NEXUS_HOST_ATTACK_FAST", "0") == "1"
+
+PANEL_POINT_KEYS = (
+    "id", "ip", "lat", "lon", "vector", "severity", "verdict", "heat", "hue", "sat", "light", "color",
+    "process", "direction", "source", "detail", "monitor", "monitor_sessions", "dossier", "globe_pin",
+    "target_status", "is_monitor_target", "nokill", "killable", "friendly_reason", "host_context",
+    "target_os", "target_os_family", "ptr_hostname", "our_process", "target_ports", "target_http_server",
+    "target_tls_subject", "target_banner", "label", "city", "region", "country", "org", "asn",
+    "identity_fingerprint", "archived_dossier", "last_online_check", "ip_class",
+    "strike_confidence", "pinpoint_confidence", "strike_ready", "strike_ready_manual", "strike_certain",
+    "wire_point", "consumer_collateral", "malware_evidence", "strike_signals", "disabled_permanent",
+    "standards",
+)
 
 
 def _now() -> str:
@@ -135,6 +158,12 @@ def _top_harm_vector(scores: dict[str, Any]) -> str:
     if ranked and ranked[0][1] > 0:
         return ranked[0][0].upper()
     return "CONNECTION_HARM"
+
+
+def _ip_class_from_monitor(monitor: dict[str, Any] | None) -> str:
+    if isinstance(monitor, dict):
+        return str(monitor.get("ip_class") or "")
+    return ""
 
 
 def _monitor_snapshot(conn: dict[str, Any]) -> dict[str, Any]:
@@ -273,6 +302,21 @@ def _disabled_ips() -> set[str]:
     return ips
 
 
+def _nokill_ips() -> set[str]:
+    ips: set[str] = set()
+    path = STATE / "field-nokill.tsv"
+    try:
+        if not path.is_file():
+            return ips
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[1:]:
+            parts = line.split("\t")
+            if len(parts) >= 2 and parts[1]:
+                ips.add(parts[1])
+    except OSError:
+        pass
+    return ips
+
+
 def _parse_threats_tsv() -> list[dict[str, str]]:
     path = STATE / "threat-vectors.tsv"
     rows: list[dict[str, str]] = []
@@ -299,7 +343,49 @@ def _parse_threats_tsv() -> list[dict[str, str]]:
     return rows[-60:]
 
 
-def _collect_points() -> list[dict[str, Any]]:
+def _slim_point(point: dict[str, Any]) -> dict[str, Any]:
+    slim = {k: point[k] for k in PANEL_POINT_KEYS if k in point}
+    bleed = point.get("target_bleed")
+    if isinstance(bleed, dict):
+        target = bleed.get("target") if isinstance(bleed.get("target"), dict) else {}
+        slim["target_bleed"] = {
+            "target_os": bleed.get("target_os") or target.get("os_guess") or "",
+            "ptr_hostname": bleed.get("ptr_hostname") or target.get("ptr_hostname") or "",
+            "bleed_ms": bleed.get("bleed_ms"),
+            "target": {
+                "os_guess": target.get("os_guess") or "",
+                "ptr_hostname": target.get("ptr_hostname") or "",
+                "ports_seen": (target.get("ports_seen") or [])[:6],
+            },
+        }
+    return slim
+
+
+def _load_trashed_ids() -> set[str]:
+    path = STATE / "host-map-trash.json"
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    return {str(x) for x in (doc.get("ids") or []) if x}
+
+
+def _slim_doc_for_panel(doc: dict[str, Any]) -> dict[str, Any]:
+    points = [_slim_point(p) for p in doc.get("points") or []]
+    return {
+        "updated": doc.get("updated"),
+        "motto": doc.get("motto"),
+        "tagline": doc.get("tagline"),
+        "author": doc.get("author"),
+        "stats": doc.get("stats"),
+        "standards": doc.get("standards"),
+        "friendly_guard": doc.get("friendly_guard"),
+        "trust_strike": doc.get("trust_strike"),
+        "points": points,
+    }
+
+
+def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
     conn_doc = _load_json(STATE / "connection-intent.json", {"connections": []})
     dossiers = _load_json(STATE / "angel-dossiers.json", {"dossiers": []})
     blocked = _load_json(STATE / "firewall-blocks.json", [])
@@ -412,8 +498,9 @@ def _collect_points() -> list[dict[str, Any]]:
     enriched_by_ip: dict[str, dict[str, Any]] = {}
     bleed_by_ip: dict[str, dict[str, Any]] = {}
     disabled_ips = _disabled_ips()
-    rdap_left = RDAP_BUDGET
-    bleed_left = BLEED_BUDGET
+    nokill_ips = _nokill_ips()
+    rdap_left = RDAP_BUDGET_FAST if fast else RDAP_BUDGET
+    bleed_left = BLEED_BUDGET_FAST if fast else BLEED_BUDGET
     for ip in unique_ips:
         killed = ip in disabled_ips
         do_rdap = rdap_left > 0 and not killed
@@ -431,6 +518,7 @@ def _collect_points() -> list[dict[str, Any]]:
             cache=bleed_cache,
         )
     online_check_cache = _load_json(STATE / "target-online-check.json", {"checks": {}})
+    strike_corpus = build_hostile_corpus()
     points: list[dict[str, Any]] = []
     for r in raw:
         ip = r["ip"]
@@ -456,7 +544,7 @@ def _collect_points() -> list[dict[str, Any]]:
         is_monitor_target = from_monitor
         globe_pin = from_monitor
         friendly_refuse, friendly_reason = refuse_kill(ip, monitor=monitor)
-        killable = not friendly_refuse and target_status != "killed"
+        nokill = ip in nokill_ips
         bleed = bleed_by_ip.get(ip) or {}
         target_intel = bleed.get("target") or {}
         bleed_standards = list(bleed.get("standards") or [])
@@ -479,7 +567,7 @@ def _collect_points() -> list[dict[str, Any]]:
             "globe_pin": globe_pin,
             "target_status": target_status,
             "is_monitor_target": is_monitor_target,
-            "killable": killable,
+            "nokill": nokill,
             "friendly_reason": friendly_reason if friendly_refuse else "",
             "host_context": host_ctx,
             "target_bleed": bleed,
@@ -514,6 +602,26 @@ def _collect_points() -> list[dict[str, Any]]:
             **style,
         }
         point_row["identity_fingerprint"] = fingerprint_from_point_or_dossier(ip, point_row)
+        strike = score_strike(point_row, corpus=strike_corpus)
+        point_row["ip_class"] = _ip_class_from_monitor(monitor)
+        point_row["strike_confidence"] = strike.get("strike_confidence")
+        point_row["pinpoint_confidence"] = strike.get("pinpoint_confidence")
+        point_row["strike_auto_confidence"] = strike.get("strike_auto_confidence")
+        point_row["strike_ready"] = strike.get("strike_ready")
+        point_row["strike_ready_manual"] = strike.get("strike_ready_manual")
+        point_row["strike_certain"] = strike.get("strike_certain")
+        point_row["wire_point"] = strike.get("wire_point")
+        point_row["consumer_collateral"] = strike.get("consumer_collateral")
+        point_row["malware_evidence"] = strike.get("malware_evidence")
+        point_row["strike_signals"] = strike.get("signals") or []
+        point_row["strike_corroborated"] = strike.get("corroborated")
+        killable = (
+            not friendly_refuse
+            and not nokill
+            and target_status != "killed"
+            and bool(strike.get("strike_ready_manual"))
+        )
+        point_row["killable"] = killable
         if target_status == "killed":
             archived = load_archived_dossier(ip)
             if archived:
@@ -525,9 +633,9 @@ def _collect_points() -> list[dict[str, Any]]:
                     "action": archived.get("action") or "KILL",
                     "identity_hash": point_row["identity_fingerprint"].get("identity_hash", ""),
                 }
-            cached_check = (online_check_cache.get("checks") or {}).get(ip)
-            if isinstance(cached_check, dict) and cached_check.get("ip") == ip:
-                point_row["last_online_check"] = cached_check
+        cached_check = (online_check_cache.get("checks") or {}).get(ip)
+        if isinstance(cached_check, dict) and cached_check.get("ip") == ip:
+            point_row["last_online_check"] = cached_check
         points.append(point_row)
 
     points.sort(
@@ -543,13 +651,15 @@ def _collect_points() -> list[dict[str, Any]]:
     return monitor_pins[:80] + [p for p in points if not p.get("globe_pin")][:40]
 
 
-def build_host_attacks() -> dict[str, Any]:
-    points = _collect_points()
+def build_host_attacks(*, fast: bool = False) -> dict[str, Any]:
+    trashed = _load_trashed_ids()
+    points = [p for p in _collect_points(fast=fast) if p.get("id") not in trashed]
     hot = sum(1 for p in points if p["heat"] >= 0.7)
     warm = sum(1 for p in points if 0.4 <= p["heat"] < 0.7)
     cool = len(points) - hot - warm
     monitor_targets = sum(1 for p in points if p.get("globe_pin"))
     killed = sum(1 for p in points if p.get("target_status") == "killed")
+    nokill = sum(1 for p in points if p.get("nokill"))
     geojson = {
         "type": "FeatureCollection",
         "features": [to_geojson_feature(p) for p in points if p.get("lat") is not None],
@@ -559,10 +669,11 @@ def build_host_attacks() -> dict[str, Any]:
         "motto": "Host to hostile — bleed OS, PTR, TTL, TLS, banners on a quick hit. End-to-end.",
         "tagline": "Our machine → their socket → their OS. Full dossier. KILL on command.",
         "host_endpoint": host_endpoint_context(),
-        "map_engine": "leaflet-esri-imagery",
-        "map_layers": ["satellite", "street", "offline-globe"],
-        "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON", "Target-Bleed", "SDF-Map-Graphics", "Friendly-Guard-Immutable"],
+        "map_engine": "leaflet-sdf-wireframe-infinite",
+        "map_layers": ["sdf-wireframe", "satellite", "street"],
+        "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON", "Target-Bleed", "SDF-Map-Graphics", "Natural-Earth-110m", "Friendly-Guard-Immutable", "Trust-Strike-Engine"],
         "friendly_guard": {"immutable": True, "fail_closed": True},
+        "trust_strike": trust_strike_summary(refresh=not fast),
         "author": {
             "name": "Zachary Geurts",
             "rank": "Army Specialist",
@@ -576,6 +687,7 @@ def build_host_attacks() -> dict[str, Any]:
             "cool": cool,
             "monitor_targets": monitor_targets,
             "killed": killed,
+            "nokill": nokill,
         },
         "geojson": geojson,
         "points": points,
@@ -584,20 +696,27 @@ def build_host_attacks() -> dict[str, Any]:
 
 def main() -> int:
     cmd = sys.argv[1] if len(sys.argv) > 1 else "build"
-    if cmd == "build":
-        doc = build_host_attacks()
+    fast = FAST_BUILD or cmd in ("build-fast", "json-panel")
+    if cmd in ("build", "build-fast"):
+        doc = build_host_attacks(fast=fast)
         _save_json(OUT_PATH, doc)
-        json.dump({"ok": True, "point_count": len(doc["points"]), "updated": doc["updated"]}, sys.stdout)
+        json.dump({"ok": True, "point_count": len(doc["points"]), "updated": doc["updated"], "fast": fast}, sys.stdout)
+        sys.stdout.write("\n")
+        return 0
+    if cmd == "json-panel":
+        doc = _load_json(OUT_PATH, {})
+        if doc.get("points"):
+            json.dump(_slim_doc_for_panel(doc), sys.stdout)
+        else:
+            json.dump({"points": [], "stats": {"total": 0, "hot": 0, "warm": 0, "cool": 0}}, sys.stdout)
         sys.stdout.write("\n")
         return 0
     if cmd == "json":
         doc = _load_json(OUT_PATH, {})
-        if not doc.get("points") or not doc.get("standards"):
-            doc = build_host_attacks()
-        json.dump(doc, sys.stdout)
+        json.dump(doc if doc.get("points") else {"points": [], "stats": {"total": 0}}, sys.stdout)
         sys.stdout.write("\n")
         return 0
-    print("usage: host-attack-map.py [build|json]", file=sys.stderr)
+    print("usage: host-attack-map.py [build|build-fast|json|json-panel]", file=sys.stderr)
     return 1
 
 

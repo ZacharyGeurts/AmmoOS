@@ -10,22 +10,28 @@ nexus_lockdown_first_apply() {
   declare -f nexus_firewall_is_sacred_ip >/dev/null 2>&1 || return 0
   declare -f nexus_firewall_is_trusted >/dev/null 2>&1 && nexus_firewall_trust_init
 
-  local line rip blocked=0
+  local cataloged=0 line rip rport proc
   while IFS= read -r line; do
     [[ "$line" =~ ESTAB ]] || continue
     rip="$(sed -n 's/.*[[:space:]]\([0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}\):[0-9]\+[[:space:]].*/\1/p' <<<"$line" | tail -1)"
+    rport="$(sed -n 's/.*[[:space:]][0-9.]*:\([0-9]\+\)[[:space:]].*/\1/p' <<<"$line" | tail -1)"
+    proc="$(sed -n 's/.*users:((\"\([^\"]*\)\".*/\1/p' <<<"$line")"
     [[ -n "$rip" ]] || continue
     [[ "$rip" =~ ^127\. ]] && continue
     nexus_firewall_is_private_ip "$rip" 2>/dev/null && continue
-    nexus_firewall_is_sacred_ip "$rip" 2>/dev/null && continue
-    if declare -f nexus_firewall_is_trusted >/dev/null 2>&1; then
-      nexus_firewall_is_trusted "$rip" out 2>/dev/null && continue
+    cataloged=$((cataloged + 1))
+    if declare -f nexus_firewall_permit_flow >/dev/null 2>&1 \
+      && [[ "$rport" =~ ^[0-9]+$ && "$rport" -gt 0 ]]; then
+      nexus_firewall_is_sacred_ip "$rip" 2>/dev/null && continue
+      if declare -f nexus_firewall_is_trusted >/dev/null 2>&1; then
+        nexus_firewall_is_trusted "$rip" both 2>/dev/null && continue
+      fi
+      nexus_firewall_permit_flow out "$rip" "$rport" "${NEXUS_FIREWALL_PERMIT_FLOW_DURATION:-7200}" "lockdown-first-catalog" || true
     fi
-    nexus_firewall_block_ip out "$rip" "${NEXUS_FIREWALL_BLOCK_DURATION:-86400}" "lockdown-first" && blocked=$((blocked + 1)) || true
   done < <(ss -H -tan state established 2>/dev/null | head -n 120)
 
-  printf 'applied=%s\nts=%s\n' "$blocked" "$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)" >"$marker"
+  printf 'applied=packet-permission\ncataloged=%s\nts=%s\n' "$cataloged" "$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)" >"$marker"
   chmod 640 "$marker" 2>/dev/null || true
-  nexus_log "ALERT" "lockdown-first" "LOCKDOWN_FIRST blocked=${blocked} — trust recommended connections in panel or: nexus trust <ip>"
+  nexus_log "INFO" "lockdown-first" "LOCKDOWN_FIRST v4.0 cataloged=${cataloged} flows — packet permission blocks harmful sections only"
   return 0
 }

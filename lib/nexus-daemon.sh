@@ -65,12 +65,16 @@ nexus_shutdown_startup_check
 source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/packet-oracle.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh"
+# shellcheck source=/dev/null
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/gatekeeper-enforce.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/gatekeeper-enforce.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/adblock-loader.sh"
 nexus_settings_init
@@ -132,6 +136,12 @@ while true; do
     nexus_friendly_guard_verify_seal || nexus_log "ALERT" "friendly-guard" "SEAL_VERIFY_FAIL"
   fi
   nexus_threat_panel_publish
+  if declare -f nexus_field_attack_publish_deep >/dev/null 2>&1; then
+    nexus_field_attack_publish_deep
+  fi
+  if declare -f nexus_host_attack_publish_deep >/dev/null 2>&1; then
+    nexus_host_attack_publish_deep
+  fi
   if [[ "${NEXUS_ADBLOCK:-0}" == "1" ]]; then
     nexus_adblock_apply 2>/dev/null || true
   fi
