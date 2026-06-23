@@ -156,6 +156,13 @@ tcp ESTAB 0 0 10.0.0.5:44444 104.18.29.234:443 users:(("firefox",pid=1,fd=3))
 EOF
 }
 
+test_gatekeeper_suggestions() {
+  command -v python3 >/dev/null 2>&1 || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"suggestion"'
+tcp ESTAB 0 0 10.0.0.5:44444 104.18.29.234:443 users:(("firefox",pid=1,fd=3))
+EOF
+}
+
 test_firewall_trust_roundtrip() {
   nexus_firewall_trust_init
   nexus_firewall_authorize_ip "203.0.113.50" out "test-peer" "run-tests"
@@ -231,6 +238,7 @@ run_test "dev install bypasses group gate" test_dev_install_bypasses_group
 run_test "threat vector catalog" test_threat_vector_catalog
 run_test "packet oracle parse" test_packet_parse_line
 run_test "connection gatekeeper json" test_gatekeeper_json
+run_test "connection gatekeeper suggestions" test_gatekeeper_suggestions
 run_test "firewall trust authorize" test_firewall_trust_roundtrip
 run_test "threat panel json publish" test_threat_panel_json
 run_test "nexus settings roundtrip" test_nexus_settings_roundtrip

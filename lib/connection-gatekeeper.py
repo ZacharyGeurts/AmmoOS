@@ -282,6 +282,125 @@ def _axis_auth(rip: str, trusted: set[str]) -> tuple[int, str]:
     return 0, "not_authorized"
 
 
+def _build_suggestion(
+    scores: dict[str, int],
+    notes: dict[str, str],
+    verdict: str,
+    reason: str,
+    proc: str,
+    rip: str,
+    rport: str,
+    ip_class: str,
+    harm_total: int,
+    user_total: int,
+    block_rec: bool,
+) -> dict[str, Any]:
+    friendly: list[str] = []
+    unfriendly: list[str] = []
+    proc_name = proc or "unknown app"
+
+    ub = int(scores.get("user_browser", 0))
+    if ub >= 7:
+        friendly.append(f"{proc_name} looks like a browser or media app you opened ({ub}/10).")
+    elif ub <= 3:
+        unfriendly.append(
+            f"{proc_name} is not a browser ({ub}/10) — background apps calling out deserve a closer look."
+        )
+
+    ms = int(scores.get("media_stream", 0))
+    if ms >= 6:
+        friendly.append(f"HTTPS/stream pattern matches normal video or web traffic ({ms}/10).")
+
+    se = int(scores.get("search_ephemeral", 0))
+    if se >= 6:
+        friendly.append(f"Short-lived tab-style traffic to a search or social CDN ({se}/10).")
+
+    ba = int(scores.get("bandwidth_abuse", 0))
+    if ba >= 6:
+        unfriendly.append(
+            f"Unusual outbound data volume for this app type ({ba}/10: {notes.get('bandwidth_abuse', '')})."
+        )
+    elif ba <= 2:
+        friendly.append(f"Data amount looks normal for this kind of connection ({ba}/10).")
+
+    st = int(scores.get("stream_theft_risk", 0))
+    if st >= 8:
+        unfriendly.append(
+            f"Non-browser path that could move video or large streams ({st}/10: {notes.get('stream_theft_risk', '')})."
+        )
+    elif st <= 1:
+        friendly.append("Not using suspicious stream-theft style ports.")
+
+    bp = int(scores.get("beacon_pattern", 0))
+    if bp >= 6:
+        unfriendly.append(
+            f"Repeating check-ins to the same server ({bp}/10: {notes.get('beacon_pattern', '')})."
+        )
+    elif bp <= 2:
+        friendly.append("Connects on demand — not a constant hidden beacon.")
+
+    pt = int(scores.get("process_trust", 0))
+    if pt >= 8:
+        friendly.append(f"App is on NEXUS consumer whitelist ({pt}/10: {notes.get('process_trust', '')}).")
+    elif pt <= 3:
+        unfriendly.append(
+            f"App is unidentified or from an untrusted location ({pt}/10: {notes.get('process_trust', '')})."
+        )
+
+    dc = int(scores.get("destination_class", 0))
+    cdn_labels = {
+        "stream_cdn": "Address is a major CDN (Cloudflare, GitHub, etc.) — everyday web traffic.",
+        "search_cdn": "Address is a Google/search CDN — typical when browsing or searching.",
+    }
+    if ip_class in cdn_labels and dc <= 3:
+        friendly.append(cdn_labels[ip_class])
+    elif ip_class == "public_unknown" and dc >= 6:
+        unfriendly.append(f"{rip} is an unknown public server, not a well-known CDN ({dc}/10).")
+    if rport in HARM_PORTS:
+        unfriendly.append(f"Port {rport} is commonly used by malware and remote-control tools.")
+
+    tl = int(scores.get("threat_linked", 0))
+    if tl >= 4:
+        unfriendly.append(f"Same IP triggered other warnings recently ({notes.get('threat_linked', '')}).")
+    elif tl == 0:
+        friendly.append("Not linked to any other warning on your machine right now.")
+
+    if int(scores.get("operator_auth", 0)) >= 10:
+        friendly.append("You already marked this address Trust forever.")
+
+    actions = {
+        "USER_OK": "No action needed. Use Trust forever only if it gets flagged again later.",
+        "EPHEMERAL": "Usually fine — quick tabs come and go. Trust forever if the same CDN keeps nagging you.",
+        "SUSPICIOUS": "Glance at the app name. If you recognize it (game launcher, updater), Trust forever. If not, keep watching.",
+        "HARM_CANDIDATE": "If you do not recognize the app, click Stop this site. If it is a game, VPN, or CDN you use, Trust forever.",
+        "MONITOR": "Routine traffic — no action unless the list keeps growing.",
+    }
+    summaries = {
+        "USER_OK": "Likely friendly — matches normal browsing or something you chose to open.",
+        "EPHEMERAL": "Likely friendly — looks like a short search or social tab.",
+        "SUSPICIOUS": "Mixed signals — some concern, but not enough to auto-block.",
+        "HARM_CANDIDATE": "Likely unfriendly until you prove otherwise — harm scores outweigh browser trust.",
+        "MONITOR": "Neutral — nothing strong either way yet.",
+    }
+    if block_rec:
+        action = actions["HARM_CANDIDATE"]
+        summary = summaries.get(verdict, reason) + " NEXUS suggests review before blocking."
+    else:
+        action = actions.get(verdict, "Watch the connection list; click ? on any row for detail.")
+        summary = summaries.get(verdict, reason)
+
+    return {
+        "summary": summary,
+        "action": action,
+        "friendly_signals": friendly[:6],
+        "unfriendly_signals": unfriendly[:6],
+        "trust_meter": min(100, user_total * 5),
+        "concern_meter": min(100, harm_total * 4),
+        "harm_total": harm_total,
+        "trust_total": user_total,
+    }
+
+
 def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str, bool]:
     harm = (
         scores["stream_theft_risk"] * 2
@@ -400,6 +519,10 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         user_total = sum(scores[k] for k in ("user_browser", "media_stream", "operator_auth", "process_trust"))
 
         verdict, reason, block_rec = _verdict(scores, proc, ip_class)
+        suggestion = _build_suggestion(
+            scores, notes, verdict, reason, proc, rip, rport, ip_class,
+            harm_total, user_total, block_rec,
+        )
 
         results.append({
             "remote_ip": rip,
@@ -416,6 +539,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "reason": reason,
             "block_recommended": block_rec,
             "direction": "out",
+            "suggestion": suggestion,
         })
 
     # decay history
@@ -439,8 +563,8 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         "connection_count": len(results),
         "harm_candidates": len(harm_candidates),
         "why_no_auto_block": (
-            "Paranoia block=OFF, firewall auto-block=OFF, meta vectors (C2/RST) never block CDN. "
-            "Only HARM_CANDIDATE peers are block-ready — you click Block or Authorize."
+            "Safe mode: NEXUS scores everything but only suggests actions. "
+            "CDNs and browsers are never crushed automatically — you pick Trust forever or Stop this site."
         ),
         "connections": results[:60],
     }

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate NEXUS-Shield 256x256 PNG icon (no external deps beyond zlib)."""
+import math
 import struct
 import zlib
 from pathlib import Path
@@ -13,27 +14,39 @@ def _chunk(tag: bytes, data: bytes) -> bytes:
 
 
 def _pixel(x: int, y: int) -> tuple[int, int, int, int]:
-    cx, cy = W // 2, H // 2
+    cx, cy = W // 2, H // 2 + 6
     dx, dy = x - cx, y - cy
-    dist = (dx * dx + dy * dy) ** 0.5
-    # shield shape
-    if dist > 118:
+    dist = math.hypot(dx, dy)
+    # Rounded shield silhouette
+    shield_h = max(0.0, 1.0 - (abs(dx) / 96.0) ** 1.1 - (dy + 20) / 130.0)
+    if shield_h <= 0 or dy > 95 or dy < -108:
         return (0, 0, 0, 0)
-    if dist > 108:
-        return (201, 162, 39, 255)  # gold ring
-    # gradient core
-    t = max(0, min(1, 1 - dist / 108))
-    r = int(11 + t * 20)
-    g = int(13 + t * 30)
-    b = int(18 + t * 80)
+    edge = 1.0 - min(1.0, max(0.0, (shield_h - 0.92) / 0.08))
+    if edge > 0.85:
+        return (212, 175, 55, int(255 * min(1.0, (edge - 0.85) / 0.15)))
+
+    t = max(0.0, min(1.0, shield_h))
+    r = int(14 + t * 28 + abs(dx) * 0.08)
+    g = int(20 + t * 45 + abs(dy) * 0.05)
+    b = int(40 + t * 110)
+    # Soft blue glow center
+    glow = max(0.0, 1.0 - math.hypot(dx * 0.7, dy * 0.9) / 70.0)
+    r = min(255, int(r + glow * 30))
+    g = min(255, int(g + glow * 50))
+    b = min(255, int(b + glow * 80))
+
     # N chevron
-    if abs(dx) < 28 and -70 < dy < 50:
-        lane = (dx + 28) // 14
-        if (dy + 70) // 20 % 2 == lane % 2:
-            return (61, 139, 253, 255)
-    # inner hex
-    if dist < 42 and abs(dy) < 20:
-        return (255, 77, 109, 220)
+    nx = dx + 0
+    if -62 < dy < 38 and -32 < nx < 32:
+        stripe = int((dy + 62) / 14) % 2
+        lane = int((nx + 32) / 16) % 2
+        if stripe == lane:
+            return (77, 155, 255, 255)
+
+    # Inner gem
+    if math.hypot(dx, dy - 8) < 22:
+        return (255, 92, 122, int(200 + 55 * glow))
+
     return (r, g, b, 255)
 
 
@@ -51,4 +64,7 @@ png += _chunk(b"IDAT", compressed)
 png += _chunk(b"IEND", b"")
 
 out.write_bytes(png)
+panel_out = out.parent.parent / "panel" / "assets" / "nexus-shield.png"
+panel_out.parent.mkdir(parents=True, exist_ok=True)
+panel_out.write_bytes(png)
 print(f"OK {out} ({len(png)} bytes)")

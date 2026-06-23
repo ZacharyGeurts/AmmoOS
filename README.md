@@ -34,6 +34,12 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.1.1 — scoring explained
+
+- **NEXUS suggests** box on every connection — trust vs concern meters, friendly/cautious bullet lists, specific what-to-do
+- **Warning cards** explain each threat type in plain English (LISTENER_SURGE, etc.)
+- **Polished UI** — card layout, gradients, collapsible score breakdown, refreshed icon
+
 ## v2.1 — help for everyone
 
 - **? flyouts everywhere** — hover or tap any question mark for a plain-English explanation

@@ -6,16 +6,19 @@
   <title>NEXUS-Shield — Threat Panel</title>
   <style>
     :root {
-      --bg: #0b0d12;
+      --bg: #080a10;
+      --bg-accent: #0d1220;
       --panel: #12151d;
+      --card: #141a26;
       --border: #2a3040;
       --text: #e8ecf4;
       --muted: #8b95a8;
-      --internet: #3d8bfd;
-      --threat: #ff4d6d;
-      --gold: #c9a227;
+      --internet: #4d9bff;
+      --threat: #ff5c7a;
+      --gold: #d4af37;
       --ok: #3dd68c;
       --murder: #ff0033;
+      --glow: rgba(61, 139, 253, 0.15);
     }
     .murder-banner {
       display: none;
@@ -32,12 +35,24 @@
     }
     .murder-actions button.ghost { background: transparent; border: 1px solid var(--murder); color: #ffd6de; }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    header {
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
-      padding: 10px 18px; border-bottom: 1px solid var(--border); background: #0e1118;
+    body {
+      margin: 0; font-family: "Segoe UI", system-ui, sans-serif; color: var(--text); min-height: 100vh;
+      background: radial-gradient(1200px 600px at 10% -10%, #152040 0%, transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, #2a1030 0%, transparent 50%), var(--bg);
     }
-    header h1 { margin: 0; font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    header.app-header {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+      padding: 12px 20px; border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #101624 0%, #0c1018 100%);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      box-shadow: 0 0 20px var(--glow); object-fit: cover;
+    }
+    header h1 { margin: 0; font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .brand-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
     .meta { font-size: 0.78rem; color: var(--muted); }
     .meta strong { color: var(--gold); }
     nav.menu {
@@ -47,8 +62,11 @@
       background: transparent; border: none; color: var(--muted); padding: 10px 14px; cursor: pointer;
       font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; border-bottom: 2px solid transparent;
     }
-    nav.menu button.active { color: var(--internet); border-bottom-color: var(--internet); }
-    nav.menu button:hover { color: var(--text); }
+    nav.menu button.active {
+      color: var(--internet); border-bottom-color: var(--internet);
+      background: linear-gradient(180deg, transparent 0%, rgba(77, 155, 255, 0.08) 100%);
+    }
+    nav.menu button:hover { color: var(--text); background: rgba(255, 255, 255, 0.03); }
     .view { display: none; min-height: calc(100vh - 96px); }
     .view.active { display: block; }
     .toolbar {
@@ -68,7 +86,8 @@
     .pane.threat .pane-head { color: var(--threat); background: #1a0d12; }
     .stats { display: flex; gap: 16px; padding: 10px 18px; font-size: 0.8rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
     .stat span { color: var(--muted); }
-    .list { flex: 1; overflow: auto; padding: 6px 0; font-family: ui-monospace, monospace; font-size: 0.72rem; line-height: 1.45; }
+    .list { flex: 1; overflow: auto; padding: 6px 0; font-size: 0.74rem; line-height: 1.45; }
+    .list.mono { font-family: ui-monospace, monospace; font-size: 0.72rem; }
     .row { padding: 6px 18px; border-bottom: 1px solid #1a1f2a; word-break: break-all; }
     .row:hover { background: #161b26; }
     .conn-row {
@@ -109,8 +128,45 @@
     .verdict-HARM_CANDIDATE { color: var(--threat); font-weight: 700; }
     .verdict-MONITOR { color: var(--muted); }
     .intent-row {
-      padding: 10px 18px; border-bottom: 1px solid #1a1f2a; font-size: 0.7rem;
+      margin: 8px 12px; padding: 12px 14px; border-radius: 10px; font-size: 0.74rem;
+      background: var(--card); border: 1px solid #1e2838;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
     }
+    .intent-row.verdict-USER_OK { border-left: 4px solid var(--ok); }
+    .intent-row.verdict-EPHEMERAL { border-left: 4px solid var(--internet); }
+    .intent-row.verdict-SUSPICIOUS { border-left: 4px solid var(--gold); }
+    .intent-row.verdict-HARM_CANDIDATE { border-left: 4px solid var(--threat); }
+    .intent-row.verdict-MONITOR { border-left: 4px solid var(--muted); }
+    .score-meters { display: flex; gap: 12px; margin: 8px 0; flex-wrap: wrap; }
+    .meter { flex: 1; min-width: 120px; }
+    .meter label { display: block; font-size: 0.62rem; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .meter bar { height: 6px; background: #1a2030; border-radius: 4px; overflow: hidden; }
+    .meter bar span { display: block; height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+    .meter.trust bar span { background: linear-gradient(90deg, #2a8050, var(--ok)); }
+    .meter.concern bar span { background: linear-gradient(90deg, #803040, var(--threat)); }
+    .meter .val { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+    .suggestion-box {
+      margin: 10px 0; padding: 10px 12px; border-radius: 8px;
+      background: #0e1420; border: 1px solid #243048;
+    }
+    .suggestion-box .summary { font-size: 0.8rem; color: var(--text); margin-bottom: 8px; line-height: 1.45; }
+    .suggestion-box .action {
+      font-size: 0.76rem; color: var(--gold); margin-bottom: 10px; padding: 8px 10px;
+      background: rgba(212, 175, 55, 0.08); border-radius: 6px; border-left: 3px solid var(--gold);
+    }
+    .signal-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .signal-col h4 { margin: 0 0 6px; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .signal-col.friendly h4 { color: var(--ok); }
+    .signal-col.unfriendly h4 { color: var(--threat); }
+    .signal-col ul { margin: 0; padding-left: 16px; font-size: 0.72rem; line-height: 1.45; color: #b8c4d8; }
+    .signal-col li { margin-bottom: 4px; }
+    .axis-details { margin-top: 8px; }
+    .axis-details summary {
+      cursor: pointer; font-size: 0.68rem; color: var(--muted); padding: 4px 0;
+      list-style: none; user-select: none;
+    }
+    .axis-details summary::-webkit-details-marker { display: none; }
+    .axis-details[open] summary { color: var(--internet); }
     .intent-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
     .intent-head .ip { font-family: ui-monospace, monospace; color: var(--internet); font-weight: 600; }
     .intent-head .proc { color: var(--muted); }
@@ -130,8 +186,16 @@
     }
     .intent-actions button.block { border-color: var(--threat); color: var(--threat); }
     .intent-actions button.auth { border-color: #2a5040; color: var(--ok); }
-    .threat-row { padding: 10px 18px; border-bottom: 1px solid #24161c; }
-    .threat-row .vector { font-weight: 700; color: var(--threat); }
+    .threat-row {
+      margin: 8px 12px; padding: 12px 14px; border-radius: 10px;
+      background: var(--card); border: 1px solid #2a2030; border-left: 4px solid var(--threat);
+    }
+    .threat-row .vector { font-weight: 700; color: var(--threat); font-size: 0.82rem; }
+    .threat-advice {
+      margin-top: 8px; padding: 8px 10px; border-radius: 6px; font-size: 0.74rem; line-height: 1.45;
+      background: rgba(255, 92, 122, 0.08); border-left: 3px solid var(--threat); color: #e8d0d6;
+    }
+    .threat-advice strong { color: var(--text); }
     .sev-critical { color: #ff2d55; }
     .sev-high { color: #ff6b6b; }
     .sev-medium { color: var(--gold); }
@@ -301,8 +365,14 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>NEXUS-Shield v2.1 · Your network helper</h1>
+  <header class="app-header">
+    <div class="brand">
+      <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
+      <div>
+        <h1>NEXUS-Shield v2.1.1</h1>
+        <div class="brand-sub">Your network helper</div>
+      </div>
+    </div>
     <div class="meta">
       <span data-tip="How alert NEXUS is right now: calm = quiet day, storm = lots going on.">Activity</span>
       <strong id="mode">—</strong> ·
@@ -606,6 +676,88 @@
     const TIP_TRUST = "Tell NEXUS this address is okay forever — use for sites that keep getting flagged by mistake (CDNs, games, work VPNs). Saved on your machine.";
     const TIP_STOP = "Stop your computer from sending data to this address for about a day. Only use when you don't recognize the app or the warning says might be harmful. Won't break normal browsing unless you click it.";
     const TIP_REVOKE = "Remove forever-trust. NEXUS will watch this address again like any other connection.";
+
+    const THREAT_VECTOR_HELP = {
+      LISTENER_SURGE: {
+        meaning: "A program opened a port and is waiting for inbound connections.",
+        likely: "Often normal for games, chat, or dev tools. Odd if you didn't open anything.",
+        action: "Check the app name in the detail. Unknown listener → investigate.",
+      },
+      MITM_LISTENER: {
+        meaning: "Something bound to a sensitive port like a proxy would.",
+        likely: "Could be VPN or dev server — unfriendly if you didn't start it.",
+        action: "Identify the process before trusting.",
+      },
+      PACKET_INJECTION: {
+        meaning: "Unusual packets on the network.",
+        likely: "Unfriendly — possible tampering.",
+        action: "Review logs; Stop this site on related connections if unsure.",
+      },
+      ARP_SPOOF: {
+        meaning: "A device on your LAN may be impersonating the router.",
+        likely: "Unfriendly — classic man-in-the-middle.",
+        action: "Check devices on your Wi‑Fi.",
+      },
+      DNS_POISON: {
+        meaning: "DNS answers may have been altered.",
+        likely: "Unfriendly — can redirect to fake sites.",
+        action: "Verify DNS settings.",
+      },
+      GATEWAY_SHIFT: {
+        meaning: "Your default gateway changed unexpectedly.",
+        likely: "Sometimes VPN connect; suspicious if you didn't change networks.",
+        action: "Confirm no new adapter or VPN.",
+      },
+      EGRESS_BEACON: {
+        meaning: "A background app keeps calling the same remote server.",
+        likely: "Normal heartbeats exist — unfriendly if process is unknown.",
+        action: "Match the process name.",
+      },
+      EGRESS_TMP_BINARY: {
+        meaning: "A temp-folder program is calling out.",
+        likely: "Unfriendly — malware often runs from /tmp.",
+        action: "Strong signal to Stop this site.",
+      },
+      C2_CORRELATION: {
+        meaning: "Several weak signals stacked (meta warning).",
+        likely: "Not a block alone — NEXUS connecting dots.",
+        action: "Read other warnings; don't panic on this alone.",
+      },
+      RST_FLOOD: {
+        meaning: "Many abrupt connection resets.",
+        likely: "Network noise or probing.",
+        action: "Usually log-only unless repeated.",
+      },
+      SHUTDOWN_ATTACK: {
+        meaning: "NEXUS was killed uncleanly.",
+        likely: "Unfriendly — guard stopped on purpose.",
+        action: "Use red banner → review → restart.",
+      },
+    };
+
+    function renderSuggestionBox(sug, verdict) {
+      if (!sug) return "";
+      const friendly = sug.friendly_signals || [];
+      const unfriendly = sug.unfriendly_signals || [];
+      const trustPct = sug.trust_meter ?? 0;
+      const concernPct = sug.concern_meter ?? 0;
+      let signals = "";
+      if (friendly.length || unfriendly.length) {
+        signals = `<div class="signal-cols">
+          <div class="signal-col friendly"><h4>Why it looks friendly</h4><ul>${friendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
+          <div class="signal-col unfriendly"><h4>Why we're cautious</h4><ul>${unfriendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
+        </div>`;
+      }
+      return `<div class="suggestion-box verdict-${verdict}">
+        <div class="score-meters">
+          <div class="meter trust"><label>Trust score</label><bar><span style="width:${trustPct}%"></span></bar><div class="val">${trustPct}% — higher = more like normal you</div></div>
+          <div class="meter concern"><label>Concern score</label><bar><span style="width:${concernPct}%"></span></bar><div class="val">${concernPct}% — higher = more reason to review</div></div>
+        </div>
+        <div class="summary"><strong>NEXUS suggests:</strong> ${esc(sug.summary || "")}</div>
+        <div class="action"><strong>What to do:</strong> ${esc(sug.action || "")}</div>
+        ${signals}
+      </div>`;
+    }
 
     function showView(name) {
       const btn = document.querySelector(`nav.menu button[data-view="${name}"]`);
@@ -1126,15 +1278,20 @@
           } else {
             actions.push(`<span style="color:var(--ok);font-size:0.65rem">✓ trusted</span>`);
           }
-          return `<div class="intent-row">
+          const sug = c.suggestion || null;
+          return `<div class="intent-row verdict-${v}">
             <div class="intent-head">
               <span class="verdict-${v} friendly-verdict"><span class="has-tip">${esc(vf.label)}${tipMarkup(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""))}</span></span>
               <span class="ip" title="Internet address">${c.remote_ip}:${c.remote_port || "?"}</span>
               <span class="proc" title="Program using this connection">${c.process || "unknown app"}</span>
               <span class="meta">${c.ip_class || ""}</span>
             </div>
-            <div class="intent-reason">${c.reason || ""}</div>
-            <div class="axis-grid">${renderAxisBars(c.scores)}</div>
+            ${renderSuggestionBox(sug, v)}
+            <details class="axis-details">
+              <summary>See score breakdown (10 checks per connection)</summary>
+              <div class="intent-reason">${c.reason || ""}</div>
+              <div class="axis-grid">${renderAxisBars(c.scores)}</div>
+            </details>
             <div class="intent-actions">${actions.join("")}</div>
           </div>`;
         }).join("");
@@ -1157,12 +1314,30 @@
         return;
       }
       $("threat-count").textContent = String(items.length);
-      el.innerHTML = items.map((t) => `
-        <div class="threat-row">
+      el.innerHTML = items.map((t) => {
+        const help = THREAT_VECTOR_HELP[t.vector] || {
+          meaning: "NEXUS spotted an automated threat pattern.",
+          likely: "Review the detail line — severity reflects how urgent it looks.",
+          action: "Check Activity log if unsure; use Settings for auto-block toggles.",
+        };
+        const sevTip = {
+          critical: "Treat immediately — high-confidence problem.",
+          high: "Important — review soon.",
+          medium: "Worth a look when you have a minute.",
+          low: "Informational — often noise or early signal.",
+        }[t.severity] || "";
+        return `<div class="threat-row">
           <div class="vector">${t.vector}</div>
-          <div class="sev-${t.severity}">${t.severity} · ${t.ts}</div>
+          <div class="sev-${t.severity}">${t.severity} · ${t.ts} <span class="has-tip">${tipMarkup(sevTip)}</span></div>
           <div>${t.detail}</div>
-        </div>`).join("");
+          <div class="threat-advice">
+            <strong>What it means:</strong> ${esc(help.meaning)}<br>
+            <strong>Likely friendly or not?</strong> ${esc(help.likely)}<br>
+            <strong>Suggested action:</strong> ${esc(help.action)}
+          </div>
+        </div>`;
+      }).join("");
+      el.querySelectorAll(".has-tip").forEach(bindTip);
     }
 
     function renderSanitize(as) {
