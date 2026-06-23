@@ -211,6 +211,28 @@ def _clamp_coords(lat: Any, lon: Any) -> tuple[float, float] | None:
     return round(la, 5), round(lo, 5)
 
 
+def _resolve_coords_for_globe(
+    ip: str,
+    enriched: dict[str, Any],
+    *,
+    from_monitor: bool = False,
+) -> tuple[float, float, str] | None:
+    resolved = _resolve_coords(ip, enriched)
+    if resolved:
+        return resolved
+    if not from_monitor:
+        return None
+    cc = str(enriched.get("country_code") or enriched.get("country") or "")
+    cc = cc if len(cc) == 2 and cc.upper() in COUNTRY_CENTROIDS else "US"
+    fp = _fingerprint(ip)
+    jitter = ((fp % 1000) - 500) / 400.0
+    base = COUNTRY_CENTROIDS[cc.upper()]
+    clamped = _clamp_coords(base[0] + jitter * 0.35, base[1] + jitter * 0.55)
+    if clamped:
+        return clamped[0], clamped[1], "monitor-globe-centroid"
+    return None
+
+
 def _resolve_coords(ip: str, enriched: dict[str, Any]) -> tuple[float, float, str] | None:
     lat, lon = enriched.get("lat"), enriched.get("lon")
     if lat is not None and lon is not None:
@@ -303,31 +325,34 @@ def _collect_points() -> list[dict[str, Any]]:
         })
 
     conn_by_ip: dict[str, dict[str, Any]] = {}
+    monitor_by_ip: dict[str, list[dict[str, Any]]] = {}
+    _VERDICT_SEV = {
+        "HARM_CANDIDATE": "high",
+        "BLOCK_RECOMMENDED": "high",
+        "SUSPICIOUS": "medium",
+        "MONITOR": "low",
+        "USER_OK": "low",
+        "EPHEMERAL": "low",
+    }
     for c in conn_doc.get("connections") or []:
         rip = str(c.get("remote_ip") or "")
-        if rip:
-            conn_by_ip[rip] = c
-        verdict = str(c.get("verdict") or "")
-        harm_total = int(c.get("harm_total") or 0)
-        if verdict in ("USER_OK", "EPHEMERAL") and c.get("trust_rank", 5) <= 2:
+        if not rip or PRIVATE_RE.match(rip):
             continue
-        if (
-            verdict in ("HARM_CANDIDATE", "BLOCK_RECOMMENDED", "MONITOR", "SUSPICIOUS")
-            or harm_total >= 3
-            or c.get("block_recommended")
-        ):
-            sev = "high" if verdict == "HARM_CANDIDATE" else "medium"
-            snap = _monitor_snapshot(c)
-            queue(
-                rip,
-                vector=snap["top_vector"],
-                severity=sev,
-                verdict=verdict,
-                process=str(c.get("process") or ""),
-                direction=str(c.get("traffic_direction") or "unknown"),
-                source="gatekeeper",
-                detail=str(c.get("reason") or ""),
-            )
+        conn_by_ip[rip] = c
+        snap = _monitor_snapshot(c)
+        monitor_by_ip.setdefault(rip, []).append(snap)
+        verdict = str(c.get("verdict") or "")
+        sev = _VERDICT_SEV.get(verdict, "medium")
+        queue(
+            rip,
+            vector=snap["top_vector"],
+            severity=sev,
+            verdict=verdict,
+            process=str(c.get("process") or ""),
+            direction=str(c.get("traffic_direction") or "unknown"),
+            source="gatekeeper",
+            detail=str(c.get("reason") or ""),
+        )
 
     for row in _parse_threats_tsv():
         if row.get("ip"):
@@ -360,7 +385,19 @@ def _collect_points() -> list[dict[str, Any]]:
         if peer and peer not in dossier_by_ip:
             dossier_by_ip[peer] = d
 
-    unique_ips = list(dict.fromkeys(r["ip"] for r in raw))
+    # One globe point per IP — monitor (gatekeeper) wins over passive intel.
+    merged: dict[str, dict[str, Any]] = {}
+    for r in raw:
+        ip = r["ip"]
+        prev = merged.get(ip)
+        if not prev:
+            merged[ip] = r
+            continue
+        rank = {"gatekeeper": 0, "dossier": 1, "threat_log": 2, "blocked": 3, "live": 4}
+        if rank.get(r["source"], 9) < rank.get(prev["source"], 9):
+            merged[ip] = r
+    raw = list(merged.values())
+    unique_ips = list(merged.keys())
     geo_cache = _load_json(STATE / "geo-intel-cache.json", {"ips": {}})
     bleed_cache = _load_json(STATE / "target-bleed-cache.json", {"ips": {}})
     host_ctx = host_endpoint_context()
@@ -394,7 +431,8 @@ def _collect_points() -> list[dict[str, Any]]:
             heat = max(heat, VERDICT_HEAT.get(r["verdict"], 0.0))
         fp = _fingerprint(ip, r["vector"], r.get("process", ""), r.get("verdict", ""), r.get("detail", ""))
         style = _heat_color(heat, fp)
-        resolved = _resolve_coords(ip, enriched)
+        from_monitor = r["source"] == "gatekeeper"
+        resolved = _resolve_coords_for_globe(ip, enriched, from_monitor=from_monitor)
         if not resolved:
             continue
         lat, lon, geo_src = resolved
@@ -403,11 +441,11 @@ def _collect_points() -> list[dict[str, Any]]:
         ) or enriched.get("org") or ip
 
         monitor = _monitor_snapshot(conn_by_ip[ip]) if ip in conn_by_ip else None
+        monitor_sessions = monitor_by_ip.get(ip) or []
         dossier = _dossier_snapshot(dossier_by_ip[ip]) if ip in dossier_by_ip else None
-        target_status = "killed" if ip in disabled_ips else ("live" if monitor else "intel")
-        is_monitor_target = bool(
-            monitor and monitor.get("verdict") not in ("USER_OK", "EPHEMERAL")
-        )
+        target_status = "killed" if ip in disabled_ips else ("live" if from_monitor else "intel")
+        is_monitor_target = from_monitor
+        globe_pin = from_monitor
         friendly_refuse, friendly_reason = refuse_kill(ip, monitor=monitor)
         killable = not friendly_refuse and target_status != "killed"
         bleed = bleed_by_ip.get(ip) or {}
@@ -427,7 +465,9 @@ def _collect_points() -> list[dict[str, Any]]:
             "source": r["source"],
             "detail": r.get("detail", "")[:200],
             "monitor": monitor,
+            "monitor_sessions": monitor_sessions,
             "dossier": dossier,
+            "globe_pin": globe_pin,
             "target_status": target_status,
             "is_monitor_target": is_monitor_target,
             "killable": killable,
@@ -467,14 +507,15 @@ def _collect_points() -> list[dict[str, Any]]:
 
     points.sort(
         key=lambda p: (
-            0 if p.get("is_monitor_target") else 1,
+            0 if p.get("globe_pin") else 1,
             0 if p.get("target_status") == "live" else 1 if p.get("target_status") == "killed" else 2,
             -p["heat"],
             p["vector"],
             p["ip"],
         )
     )
-    return points[:120]
+    monitor_pins = [p for p in points if p.get("globe_pin")]
+    return monitor_pins[:80] + [p for p in points if not p.get("globe_pin")][:40]
 
 
 def build_host_attacks() -> dict[str, Any]:
@@ -482,7 +523,7 @@ def build_host_attacks() -> dict[str, Any]:
     hot = sum(1 for p in points if p["heat"] >= 0.7)
     warm = sum(1 for p in points if 0.4 <= p["heat"] < 0.7)
     cool = len(points) - hot - warm
-    monitor_targets = sum(1 for p in points if p.get("is_monitor_target"))
+    monitor_targets = sum(1 for p in points if p.get("globe_pin"))
     killed = sum(1 for p in points if p.get("target_status") == "killed")
     geojson = {
         "type": "FeatureCollection",

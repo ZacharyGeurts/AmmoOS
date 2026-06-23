@@ -634,7 +634,38 @@
     .host-map-popup strong { color: #c8d8f0; }
     .host-point-list {
       border: 1px solid var(--border); border-radius: 10px; background: var(--card);
-      overflow: auto; max-height: 520px;
+      display: flex; flex-direction: column; min-height: 520px; max-height: 520px; overflow: hidden;
+    }
+    .host-target-strip {
+      flex: 0 0 auto; max-height: 140px; overflow: auto;
+      border-bottom: 1px solid var(--border);
+    }
+    .host-kill-dossier {
+      flex: 1 1 auto; overflow: auto; padding: 12px 14px;
+      font-size: 0.74rem; line-height: 1.5;
+    }
+    .host-kill-dossier.kill-mode-active {
+      border-top: 2px solid var(--murder);
+      background: linear-gradient(180deg, rgba(58, 0, 16, 0.25) 0%, var(--card) 40%);
+    }
+    .host-kill-dossier h3 {
+      margin: 0 0 8px; font-size: 0.82rem; color: var(--gold); letter-spacing: 0.04em;
+    }
+    .host-kill-dossier .kill-mode-banner {
+      font-size: 0.68rem; color: var(--murder); font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px;
+    }
+    .host-kill-section { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .host-kill-section:last-child { border-bottom: none; }
+    .host-kill-section strong { color: #9ab4d0; font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .host-kill-kv { margin-top: 4px; color: var(--text); }
+    .host-kill-path { margin: 6px 0 0; padding-left: 16px; font-size: 0.68rem; color: var(--muted); }
+    .host-kill-actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .host-point-row.host-target-selected { background: rgba(255, 0, 51, 0.08); outline: 1px solid var(--murder); }
+    .leaflet-tooltip.ha-pin-tooltip {
+      background: rgba(8, 12, 20, 0.94) !important; border: 1px solid var(--border) !important;
+      color: var(--text) !important; font-size: 0.68rem !important; padding: 6px 8px !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
     }
     .host-point-row {
       padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.76rem;
@@ -699,7 +730,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.2.0</h1>
+        <h1>NEXUS-Shield v3.2.1</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -828,7 +859,12 @@
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
-          <div class="empty">Scanning global host signals…</div>
+          <div class="host-target-strip" id="host-target-strip">
+            <div class="empty">Loading monitor targets…</div>
+          </div>
+          <div class="host-kill-dossier" id="host-kill-dossier">
+            <div class="empty">Click a pulsing pin — full dossier loads here. Review, then KILL.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -2125,6 +2161,7 @@
     let hostMarkerLayer = null;
     let hostMarkersById = {};
     let hostLastPoints = [];
+    let hostSelectedId = null;
     let hostOfflineLayer = null;
     let hostSatelliteLayer = null;
     const HOST_MAP_BOUNDS = [[-85, -180], [85, 180]];
@@ -2168,6 +2205,15 @@
       const cves = (d.exploit_intel?.cves || []).slice(0, 3).join(", ");
       const steps = d.attack_path_steps ?? (d.attack_path || []).length;
       return `${steps} path step(s)${mac ? ` · MAC ${esc(mac)}` : ""}${cves ? ` · CVE ${esc(cves)}` : ""}`;
+    }
+
+    function haTooltipText(p) {
+      const loc = [p.city, p.country].filter(Boolean).join(", ") || p.label || p.ip;
+      const os = p.target_os ? ` · ${p.target_os}` : "";
+      const proc = p.our_process || p.monitor?.process || "";
+      const verdict = p.monitor?.verdict || p.verdict || "";
+      const heat = (p.heat ?? 0).toFixed(2);
+      return `${p.ip} · ${verdict} · heat ${heat}${os}\n${loc}${proc ? `\nvia ${proc}` : ""}`;
     }
 
     function haBleedLine(p) {
@@ -2336,8 +2382,80 @@
       const ll = normalizeGeo(p.lat, p.lon);
       if (!ll) return;
       map.flyTo(ll, Math.max(map.getZoom(), 8), { duration: 0.65 });
-      const m = hostMarkersById[p.id];
-      if (m) m.openPopup();
+    }
+
+    function renderHostKillDossier(p) {
+      const el = $("host-kill-dossier");
+      if (!el) return;
+      if (!p) {
+        el.classList.remove("kill-mode-active");
+        el.innerHTML = '<div class="empty">Click a pulsing pin — full dossier loads here. Review, then KILL.</div>';
+        return;
+      }
+      el.classList.add("kill-mode-active");
+      const mon = p.monitor || {};
+      const dos = p.dossier || {};
+      const hc = p.host_context || {};
+      const bleed = p.target_bleed || {};
+      const tb = bleed.target || {};
+      const killed = p.target_status === "killed" || p.disabled_permanent;
+      const friendly = p.killable === false && !killed;
+      const sessions = (p.monitor_sessions || []).map((s) =>
+        `<li>${esc(s.verdict || "—")} · ${esc(s.process || "—")}:${esc(s.remote_port || "—")} · harm ${s.harm_total ?? 0}</li>`
+      ).join("");
+      const path = (dos.attack_path || []).map((s) =>
+        `<li><strong>${esc(s.type || "")}</strong> ${esc(s.label || "")} <span class="meta">(${esc(s.node || "")})</span></li>`
+      ).join("");
+      const axes = Object.entries(mon.axis_scores || {}).map(([k, v]) => `${esc(k)}:${v}`).join(" · ");
+      const cves = (dos.exploit_intel?.cves || []).join(", ") || "—";
+      el.innerHTML = `
+        <div class="kill-mode-banner">Kill mode — review dossier</div>
+        <h3>${esc(p.ip)} · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span></h3>
+        <div class="host-kill-section"><strong>Monitor</strong>
+          <div class="host-kill-kv">${esc(mon.verdict || p.verdict || "—")} · harm ${mon.harm_total ?? "—"} · trust ${mon.trust_rank ?? "—"}</div>
+          <div class="host-kill-kv">${esc(mon.suggestion_summary || p.detail || "")}</div>
+          ${axes ? `<div class="host-kill-kv">Axes: ${axes}</div>` : ""}
+          ${sessions ? `<ul class="host-kill-path">${sessions}</ul>` : ""}
+        </div>
+        <div class="host-kill-section"><strong>Host → Target bleed</strong>
+          <div class="host-kill-kv">Us: ${esc(hc.os || "—")} ${esc(hc.os_release || "")} · ${esc(hc.hostname || "")}</div>
+          <div class="host-kill-kv">Via: <strong>${esc(p.our_process || mon.process || "—")}</strong> · ports ${esc((p.target_ports || []).join(","))}</div>
+          <div class="host-kill-kv">Them OS: <strong>${esc(p.target_os || tb.os_guess || "—")}</strong> · PTR ${esc(p.ptr_hostname || "—")}</div>
+          ${p.target_http_server ? `<div class="host-kill-kv">HTTP Server: ${esc(p.target_http_server)}</div>` : ""}
+          ${p.target_tls_subject ? `<div class="host-kill-kv">TLS: ${esc(p.target_tls_subject)}</div>` : ""}
+          ${p.target_banner ? `<div class="host-kill-kv">Banner: ${esc(p.target_banner)}</div>` : ""}
+        </div>
+        <div class="host-kill-section"><strong>Geo / Intel</strong>
+          <div class="host-kill-kv">${esc([p.city, p.region, p.country].filter(Boolean).join(", ") || p.label || "—")}</div>
+          <div class="host-kill-kv">${esc(p.org || "—")} · ${esc(p.asn || "")} ${esc(p.asname || "")}</div>
+          <div class="host-kill-kv">Registrar: ${esc(p.registrar || "—")} · MAC ${esc(p.mac_vendor || "—")}</div>
+        </div>
+        ${dos.attack_path_steps ? `<div class="host-kill-section"><strong>Attack path</strong>
+          <div class="host-kill-kv">${dos.attack_path_steps} step(s) · CVE ${esc(cves)}</div>
+          <ul class="host-kill-path">${path || "<li>No path steps</li>"}</ul>
+        </div>` : ""}
+        <div class="host-kill-actions">
+          ${killed
+            ? '<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>'
+            : friendly
+              ? '<div class="ha-friendly-badge">✓ FRIENDLY — immutable guard</div>'
+              : `<button type="button" class="ha-kill-btn" id="ha-kill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">KILL TARGET</button>`}
+          <button type="button" class="ghost" id="ha-clear-selection" style="font-size:0.66rem;padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;cursor:pointer;">Clear</button>
+        </div>`;
+      $("ha-kill-selected")?.addEventListener("click", (e) => {
+        const btn = e.currentTarget;
+        attackKitKill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn);
+      });
+      $("ha-clear-selection")?.addEventListener("click", () => selectHostTarget(null));
+    }
+
+    function selectHostTarget(p) {
+      hostSelectedId = p?.id || null;
+      document.querySelectorAll(".host-point-row").forEach((row) => {
+        row.classList.toggle("host-target-selected", row.dataset.haId === hostSelectedId);
+      });
+      renderHostKillDossier(p);
+      if (p) flyToHostPoint(p);
     }
 
     function renderHostAttackMap(ha) {
@@ -2359,21 +2477,25 @@
           `${esc(author.service || "Iraq War Veteran")} · ${esc(author.discharge || "Honorable Discharge")}. ` +
           `<span id="host-attack-tagline">${esc(doc.tagline || "")}</span>`;
       }
-      const list = $("host-point-list");
+      const strip = $("host-target-strip");
+      const dossierEl = $("host-kill-dossier");
       if (!points.length) {
         hostMarkerLayer?.clearLayers();
         hostMarkersById = {};
-        list.innerHTML = '<div class="empty">No monitor targets on the globe — calm day. Our connections are still watched.</div>';
+        hostSelectedId = null;
+        if (strip) strip.innerHTML = '<div class="empty">No monitor targets — calm day.</div>';
+        if (dossierEl) renderHostKillDossier(null);
         return;
       }
       const map = ensureHostEarthMap();
       if (!map || !hostMarkerLayer) {
-        list.innerHTML = '<div class="empty">Map engine loading… refresh in a moment.</div>';
+        if (strip) strip.innerHTML = '<div class="empty">Map engine loading…</div>';
         return;
       }
       hostMarkerLayer.clearLayers();
       hostMarkersById = {};
-      const geoPoints = points
+      const pinPoints = points.filter((p) => p.globe_pin !== false);
+      const geoPoints = pinPoints
         .map((p) => {
           const ll = normalizeGeo(p.lat, p.lon);
           return ll ? { ...p, _ll: ll } : null;
@@ -2381,14 +2503,22 @@
         .filter(Boolean);
       geoPoints.forEach((p) => {
         const m = L.marker(p._ll, { icon: haMarkerIcon(p), riseOnHover: true })
-          .bindPopup(haPopupHtml(p), { maxWidth: 320 });
+          .bindTooltip(haTooltipText(p), {
+            className: "ha-pin-tooltip",
+            direction: "top",
+            offset: [0, -14],
+            opacity: 0.95,
+          })
+          .on("click", () => selectHostTarget(p));
         m.addTo(hostMarkerLayer);
         hostMarkersById[p.id] = m;
       });
       if ($("view-host-attack").classList.contains("active")) {
         setTimeout(() => map.invalidateSize(), 80);
       }
-      list.innerHTML = points.slice(0, 50).map((p) => {
+      const monitorPoints = points.filter((p) => p.globe_pin || p.is_monitor_target);
+      const stripPoints = (monitorPoints.length ? monitorPoints : points).slice(0, 50);
+      if (strip) strip.innerHTML = stripPoints.map((p) => {
         const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
         const std = (p.standards || []).slice(0, 3).join(" · ");
         const loc = [p.city, p.region, p.country].filter(Boolean).join(", ") || p.label || "classified";
@@ -2400,33 +2530,26 @@
         const bleedLine = haBleedLine(p);
         const bleedRow = bleedLine ? `<div class="host-bleed-line">${bleedLine}</div>` : "";
         const dosLine = p.dossier ? `<div class="host-dossier-line">${haDossierLine(p.dossier)}</div>` : "";
-        return `<div class="host-point-row${rowClass}" data-ha-id="${esc(p.id)}">
+        const sel = p.id === hostSelectedId ? " host-target-selected" : "";
+        return `<div class="host-point-row${rowClass}${sel}" data-ha-id="${esc(p.id)}">
           <span class="host-point-swatch" style="background:${killed ? "#556" : col}"></span>
           <div>
-            <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span>${live ? " · <em>shooting</em>" : ""}</div>
-            <div class="host-point-meta">${esc(loc)} · ${esc(p.registrar || p.org || "—")} · heat ${(p.heat ?? 0).toFixed(2)}</div>
-            ${monLine}${bleedRow}${dosLine}
-            ${std ? `<div class="host-standards">${esc(std)}</div>` : ""}
-            ${killed
-              ? '<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>'
-              : friendly
-                ? `<div class="ha-friendly-badge">✓ FRIENDLY · immutable guard — never KILL</div>`
-                : `<button type="button" class="ha-kill-btn" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">KILL</button>`}
+            <div><strong>${esc(p.ip)}</strong> · ${esc(p.monitor?.verdict || p.verdict || "—")} · heat ${(p.heat ?? 0).toFixed(2)}${live ? " · <em>live</em>" : ""}</div>
+            <div class="host-point-meta">${esc(p.our_process || p.monitor?.process || "—")} · ${esc(loc)}</div>
           </div>
         </div>`;
       }).join("");
-      list.querySelectorAll("[data-ha-kill]").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          attackKitKill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn);
-        });
-      });
-      list.querySelectorAll(".host-point-row[data-ha-id]").forEach((row) => {
+      strip.querySelectorAll(".host-point-row[data-ha-id]").forEach((row) => {
         row.addEventListener("click", () => {
           const pt = points.find((x) => x.id === row.dataset.haId);
-          flyToHostPoint(pt);
+          selectHostTarget(pt);
         });
       });
+      const selected = points.find((x) => x.id === hostSelectedId);
+      if (selected) renderHostKillDossier(selected);
+      else if (!hostSelectedId && stripPoints.length) {
+        /* keep dossier panel until user picks a pin */
+      }
     }
 
     function renderDossiers(ad) {

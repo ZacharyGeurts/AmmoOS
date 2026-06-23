@@ -292,6 +292,7 @@ test_host_attack_module() {
   grep -q '_clamp_coords' "${ROOT}/lib/host-attack-map.py"
   grep -q '_monitor_snapshot' "${ROOT}/lib/host-attack-map.py"
   grep -q 'is_monitor_target' "${ROOT}/lib/host-attack-map.py"
+  grep -q 'globe_pin' "${ROOT}/lib/host-attack-map.py"
   grep -q 'return None' "${ROOT}/lib/host-attack-map.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/host-attack-map.py" build | grep -q 'point_count'
@@ -327,9 +328,12 @@ test_panel_host_attack_ui() {
   grep -q 'warmHostEarthMap' "$panel"
   grep -q 'attackKitKill' "$panel"
   grep -q 'haBleedLine' "$panel"
+  grep -q 'selectHostTarget' "$panel"
+  grep -q 'host-kill-dossier' "$panel"
+  grep -q 'haTooltipText' "$panel"
   grep -q 'target_os' "$panel"
   grep -q 'earth-satellite-2k.jpg' "$panel"
-  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|[12]\.(0|1)))' "$panel"
+  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|[12]\.(0|1)))' "$panel" || grep -q 'v3.2.1' "$panel"
 }
 
 test_target_bleed_module() {
