@@ -137,6 +137,21 @@ def _resolve_coords(ip: str, enriched: dict[str, Any]) -> tuple[float, float, st
     return ((fp % 120) - 60) + ((fp >> 8) % 30) * 0.1, ((fp >> 4) % 360) - 180, "estimated"
 
 
+def _disabled_ips() -> set[str]:
+    ips: set[str] = set()
+    path = STATE / "field-hostile.tsv"
+    try:
+        if not path.is_file():
+            return ips
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[1:]:
+            parts = line.split("\t")
+            if len(parts) >= 2 and parts[1]:
+                ips.add(parts[1])
+    except OSError:
+        pass
+    return ips
+
+
 def _parse_threats_tsv() -> list[dict[str, str]]:
     path = STATE / "threat-vectors.tsv"
     rows: list[dict[str, str]] = []
@@ -249,6 +264,7 @@ def _collect_points() -> list[dict[str, Any]]:
             rdap_left -= 1
         enriched_by_ip[ip] = enrich_ip(ip, cache=geo_cache, online=do_rdap)
 
+    disabled_ips = _disabled_ips()
     points: list[dict[str, Any]] = []
     for r in raw:
         ip = r["ip"]
@@ -293,6 +309,7 @@ def _collect_points() -> list[dict[str, Any]]:
             "mac_oui": enriched.get("mac_oui") or "",
             "standards": enriched.get("standards") or [],
             "geo_source": geo_src,
+            "disabled_permanent": ip in disabled_ips,
             **style,
         })
 
@@ -311,8 +328,8 @@ def build_host_attacks() -> dict[str, Any]:
     }
     return {
         "updated": _now(),
-        "motto": "Real satellite zoom — standards-grade geo, registrar, and MAC intel on every pulse.",
-        "tagline": "They say we give these to even Grandmas now because it is 2026.",
+        "motto": "Field intelligence, precisely placed. Harmful hosts identified — disable permanently on your command.",
+        "tagline": "Intelligence is a bullet. Field drive remembers. Widely distributed — act with discipline.",
         "map_engine": "leaflet-esri-imagery",
         "map_layers": ["satellite", "street", "offline-globe"],
         "standards": ["IEEE-802-OUI", "RFC7483-RDAP", "GeoIP", "RFC7946-GeoJSON"],

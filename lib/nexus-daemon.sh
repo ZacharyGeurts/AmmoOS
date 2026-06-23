@@ -46,6 +46,10 @@ source "${NEXUS_INSTALL_ROOT}/lib/self-access.sh"
 nexus_firewall_trust_init
 nexus_firewall_trust_sync_from_memory
 # shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
+nexus_field_attack_sync_from_memory
+nexus_field_attack_apply_registry
+# shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/threat-vectors.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/threat-autosanitize.sh"

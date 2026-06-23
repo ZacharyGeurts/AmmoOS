@@ -65,6 +65,8 @@ source "${ROOT}/lib/nexus-settings.sh"
 source "${ROOT}/lib/adblock-loader.sh"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/host-attack.sh"
+# shellcheck source=/dev/null
+source "${ROOT}/lib/field-attack-kit.sh"
 
 nexus_ensure_dirs
 
@@ -215,7 +217,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.0\.0' "$panel"
 }
 
 test_self_access_script() {
@@ -280,7 +282,7 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -qE 'v2\.(7\.0|8\.0|9\.0)' "$panel"
+  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.0\.0' "$panel"
 }
 
 test_host_attack_module() {
@@ -302,7 +304,28 @@ test_panel_host_attack_ui() {
   grep -q 'leaflet.js' "$panel"
   grep -q 'World_Imagery' "$panel"
   grep -q 'Zachary Geurts' "$panel"
-  grep -q 'v2.9.0' "$panel"
+  grep -qE 'v(2\.(9\.0)|3\.0\.0)' "$panel"
+}
+
+test_field_attack_kit_module() {
+  [[ -f "${ROOT}/lib/field-attack-kit.sh" ]]
+  [[ -f "${ROOT}/lib/field-attack-kit.py" ]]
+  grep -q 'attack_kit' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/attack-kit/disable' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus_field_attack_disable_host' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'Intelligence is a bullet' "${ROOT}/lib/field-attack-kit.sh"
+  declare -f nexus_field_attack_json >/dev/null 2>&1
+}
+
+test_panel_field_attack_kit_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'Field Attack Kit' "$panel"
+  grep -q 'ak-crush-hot' "$panel"
+  grep -q 'attack-kit/disable' "$panel"
+  grep -q 'NEXUS_ATTACK_KIT_AUTO_CRUSH' "$panel"
+  grep -q 'God Bless' "$panel"
+  grep -q 'v3.0.0' "$panel"
+  ! grep -q 'Grandmas' "$panel"
 }
 
 test_geo_intel_standards_module() {
@@ -452,6 +475,8 @@ run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
 run_test "host attack map module" test_host_attack_module
 run_test "panel host attack UI" test_panel_host_attack_ui
 run_test "geo intel standards module" test_geo_intel_standards_module
+run_test "field attack kit module" test_field_attack_kit_module
+run_test "panel field attack kit UI" test_panel_field_attack_kit_ui
 run_test "gatekeeper ipv6 direction fields" test_gatekeeper_ipv6_direction
 run_test "gatekeeper trust rank" test_gatekeeper_trust_rank
 run_test "firewall temp allow helpers" test_firewall_temp_allow_fn

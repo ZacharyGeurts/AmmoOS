@@ -14,6 +14,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -188,6 +189,9 @@ nexus_threat_panel_publish() {
       printf '{}'
     fi
     printf ',"host_attacks":'
+    if declare -f nexus_field_attack_publish >/dev/null 2>&1; then
+      nexus_field_attack_publish
+    fi
     if declare -f nexus_host_attack_publish >/dev/null 2>&1; then
       nexus_host_attack_publish
     fi
@@ -195,6 +199,12 @@ nexus_threat_panel_publish() {
       nexus_host_attacks_json
     else
       printf '{"points":[],"stats":{"total":0,"hot":0,"warm":0,"cool":0}}'
+    fi
+    printf ',"attack_kit":'
+    if declare -f nexus_field_attack_json >/dev/null 2>&1; then
+      nexus_field_attack_json
+    else
+      printf '{"disabled_count":0,"hosts":[]}'
     fi
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'

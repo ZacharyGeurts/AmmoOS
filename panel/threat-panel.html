@@ -626,6 +626,32 @@
     .host-point-row:last-child { border-bottom: none; }
     .host-point-swatch { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
     .host-point-meta { color: var(--muted); font-size: 0.68rem; margin-top: 3px; }
+    .host-point-row.disabled-permanent { opacity: 0.55; }
+    .host-point-row.disabled-permanent .host-point-swatch { background: #556 !important; }
+    .attack-kit-bar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+      margin-bottom: 12px; padding: 10px 14px; border-radius: 8px;
+      border: 1px solid #3a2848; background: linear-gradient(135deg, rgba(30, 18, 40, 0.65), rgba(12, 20, 36, 0.55));
+      font-size: 0.76rem;
+    }
+    .attack-kit-bar strong { color: var(--gold); letter-spacing: 0.04em; }
+    .attack-kit-bar button {
+      background: #4a1020; border: 1px solid #7a2840; color: #ffd6de;
+      padding: 6px 12px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+    }
+    .attack-kit-bar button:hover { border-color: var(--murder); background: #5a1428; }
+    .attack-kit-bar button.ghost {
+      background: transparent; border-color: var(--border); color: var(--muted); font-weight: 500;
+    }
+    .attack-kit-bar button.ghost:hover { color: var(--text); border-color: var(--internet); }
+    .attack-kit-stat { color: var(--muted); }
+    .attack-kit-stat em { color: #c8d4e8; font-style: normal; }
+    .ha-disable-btn {
+      margin-top: 4px; background: transparent; border: 1px solid #5a3040; color: #ffb0b8;
+      padding: 2px 8px; border-radius: 4px; font-size: 0.64rem; cursor: pointer;
+    }
+    .ha-disable-btn:hover { border-color: var(--murder); }
+    .ha-disabled-badge { font-size: 0.62rem; color: #7a9a7a; margin-top: 3px; }
     @media (max-width: 900px) {
       .host-attack-layout { grid-template-columns: 1fr; }
       .pane { border-right: none; border-bottom: 1px solid var(--border); }
@@ -640,7 +666,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.9.0</h1>
+        <h1>NEXUS-Shield v3.0.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -733,13 +759,20 @@
   <section id="view-host-attack" class="view">
     <div class="host-attack-wrap">
       <p class="host-attack-motto" id="host-attack-motto">
-        <strong>Host Attack Map</strong> — every hostile signal earns its own pulse on the globe.
-        Green is calm, yellow is watch, red is act. Infinite variety per data point — no two dots share the same fingerprint.
+        <strong>Field Attack Kit</strong> — intelligence placed with precision on a live satellite globe.
+        Identify hostile hosts. Disable them permanently. Field drive carries the record across reboots.
       </p>
       <p class="host-attack-credit" id="host-attack-credit">
         <em>Zachary Geurts</em> · Army Specialist · Iraq War Veteran · Honorable Discharge.
-        <span id="host-attack-tagline">They say we give these to even Grandmas now because it is 2026.</span>
+        <span id="host-attack-tagline">Intelligence is a bullet. Field technology remembers what you crush.</span>
       </p>
+      <div class="attack-kit-bar" id="attack-kit-bar">
+        <strong>Field Attack Kit</strong>
+        <span class="attack-kit-stat">Permanently disabled: <em id="ak-disabled-count">0</em></span>
+        <span class="attack-kit-stat">Field paths: <em id="ak-field-paths">0</em></span>
+        <button type="button" id="ak-crush-hot" data-tip="Permanently disable every hot signal (heat ≥ 0.7) — firewall block + field memory.">Crush all hot</button>
+        <button type="button" id="ak-sync-field" class="ghost" data-tip="Pull hostile registry from field drive and re-apply firewall blocks.">Sync field drive</button>
+      </div>
       <div class="host-attack-stats" id="host-attack-stats">
         <span>Signals<strong id="ha-total">0</strong></span>
         <span>Hot<strong id="ha-hot">0</strong></span>
@@ -758,7 +791,7 @@
             <span><span class="legend-swatch" style="background:#3dd68c"></span>Calm</span>
             <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
             <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
-            <span>· Satellite zoom · IEEE OUI · RDAP · GeoIP</span>
+            <span>· Satellite · IEEE OUI · RDAP · GeoIP · Field Memory</span>
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
@@ -871,9 +904,16 @@
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_HOSTESS7_CORROBORATE" id="set-hostess7" />
-            <span><strong>Trust list backup</strong><span class="hint">Double-checks saved trust entries.</span></span>
+            <span><strong>Field drive corroboration</strong><span class="hint">Hostess7 field memory cross-check.</span></span>
           </label>
-          <span class="has-tip-row" data-tip="Cross-checks your Trust forever list against field memory storage. Helps trust survive reboots."></span>
+          <span class="has-tip-row" data-tip="Cross-checks integrity against Hostess7 field technology. Trust and hostile registries sync to field storage."></span>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_ATTACK_KIT_AUTO_CRUSH" id="set-auto-crush" />
+            <span><strong>Auto-crush hot hosts</strong><span class="hint">Permanently disable heat ≥ 0.7 automatically.</span></span>
+          </label>
+          <span class="has-tip-row" data-tip="Field Attack Kit automatically crushes high-heat hostile signals — firewall block forever + field memory. Use with discipline."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
@@ -1245,10 +1285,11 @@
       NEXUS_PRIVACY_GUARD: 0,
       NEXUS_SHUTDOWN_GUARD: 1,
       NEXUS_HOSTESS7_CORROBORATE: 0,
+      NEXUS_ATTACK_KIT_AUTO_CRUSH: 0,
     };
 
     const SETTING_GROUPS = {
-      protection: ["NEXUS_PARANOIA_BLOCK", "NEXUS_FIREWALL_AUTO_BLOCK", "NEXUS_AUTOSANITIZE", "NEXUS_SHUTDOWN_GUARD"],
+      protection: ["NEXUS_PARANOIA_BLOCK", "NEXUS_FIREWALL_AUTO_BLOCK", "NEXUS_AUTOSANITIZE", "NEXUS_SHUTDOWN_GUARD", "NEXUS_ATTACK_KIT_AUTO_CRUSH"],
       watchers: [
         "NEXUS_CONNECTION_GATEKEEPER", "NEXUS_PACKET_ORACLE", "NEXUS_SHADOW_WATCH",
         "NEXUS_ENTROPY_WATCH", "NEXUS_BEHAVIOR_WATCH", "NEXUS_PRIVACY_GUARD",
@@ -1984,6 +2025,63 @@
       root.querySelectorAll(".has-tip").forEach(bindTip);
     }
 
+    async function attackKitDisable(ip, vector, severity, btn) {
+      if (!ip || !confirm(`Permanently disable ${ip}? Firewall block + field drive record. This does not undo itself.`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/attack-kit/disable", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, vector, severity, reason: "operator_disable" }),
+        });
+        const data = await res.json();
+        if (!data.ok) alert("Disable failed — host may be trusted or protected.");
+        refresh();
+      } catch {
+        alert("Attack kit unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function attackKitCrushHot(btn) {
+      if (!confirm("Crush ALL hot signals (heat ≥ 0.7)? Each gets permanent firewall block + field memory.")) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/attack-kit/crush-hot", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        const data = await res.json();
+        alert(data.crushed_count != null ? `Crushed ${data.crushed_count} hostile host(s).` : (data.ok ? "Crush complete." : "Crush failed."));
+        refresh();
+      } catch {
+        alert("Attack kit unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function attackKitSyncField(btn) {
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/attack-kit/sync-field", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        const data = await res.json();
+        if (!data.ok) alert("Field sync failed.");
+        refresh();
+      } catch {
+        alert("Field sync unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function renderAttackKit(ak) {
+      const doc = ak || {};
+      $("ak-disabled-count").textContent = doc.disabled_count ?? 0;
+      $("ak-field-paths").textContent = doc.field_paths_ready ?? 0;
+    }
+
+    $("ak-crush-hot")?.addEventListener("click", (e) => attackKitCrushHot(e.currentTarget));
+    $("ak-sync-field")?.addEventListener("click", (e) => attackKitSyncField(e.currentTarget));
+
     let hostEarthMap = null;
     let hostMarkerLayer = null;
     let hostMarkersById = {};
@@ -2112,15 +2210,25 @@
         const col = p.color || `hsl(${p.hue || 40}, ${p.sat || 70}%, ${p.light || 50}%)`;
         const std = (p.standards || []).slice(0, 3).join(" · ");
         const loc = [p.city, p.region, p.country].filter(Boolean).join(", ") || p.label || "classified";
-        return `<div class="host-point-row" data-ha-id="${esc(p.id)}">
-          <span class="host-point-swatch" style="background:${col}"></span>
+        const crushed = p.disabled_permanent;
+        return `<div class="host-point-row${crushed ? " disabled-permanent" : ""}" data-ha-id="${esc(p.id)}">
+          <span class="host-point-swatch" style="background:${crushed ? "#556" : col}"></span>
           <div>
             <div><strong>${esc(p.ip)}</strong> · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span></div>
             <div class="host-point-meta">${esc(loc)} · ${esc(p.registrar || p.org || "—")} · heat ${(p.heat ?? 0).toFixed(2)}</div>
             ${std ? `<div class="host-standards">${esc(std)}</div>` : ""}
+            ${crushed
+              ? '<div class="ha-disabled-badge">✓ Permanently disabled · field registry</div>'
+              : `<button type="button" class="ha-disable-btn" data-ha-disable="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">Disable permanently</button>`}
           </div>
         </div>`;
       }).join("");
+      list.querySelectorAll("[data-ha-disable]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          attackKitDisable(btn.dataset.haDisable, btn.dataset.haVector, btn.dataset.haSeverity, btn);
+        });
+      });
       list.querySelectorAll(".host-point-row[data-ha-id]").forEach((row) => {
         row.addEventListener("click", () => {
           const pt = points.find((x) => x.id === row.dataset.haId);
@@ -2330,6 +2438,7 @@
         }
         renderIntelBanner(data.vector_intel);
         renderHostAttackMap(data.host_attacks);
+        renderAttackKit(data.attack_kit);
         renderDossiers(data.angel_dossiers);
         renderResearch(data.angel_research);
         renderGatekeeperBanner(gk);
@@ -2354,6 +2463,7 @@
   <footer class="app-footer" role="contentinfo">
     <strong>NEXUS-Shield</strong> — <a href="https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a> (free to use with attribution).
     <strong>AMOURANTHRTX</strong> Field Die is separate — <a href="https://github.com/ZacharyGeurts/AMOURANTHRTX/blob/main/LICENSE" target="_blank" rel="noopener">GPL v3 or commercial</a>; not MIT-free.
+    Built for operators worldwide — Zachary Geurts, U.S. Army Veteran. God Bless.
   </footer>
 </body>
 </html>

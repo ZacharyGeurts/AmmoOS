@@ -36,6 +36,14 @@ sudo ./stealth_install.sh
 
 ---
 
+## v3.0.0 — Field Attack Kit
+
+- **Permanent hostile disable** — firewall block forever (in + out) + field drive memory (`nexus-hostile.jsonl`)
+- **Field technology** — Hostess7 cache, team field drive, local field-storage mirror
+- **Crush all hot** — one action disables every heat ≥ 0.7 signal with full intel metadata
+- **Auto-crush** (optional setting) — disciplined automatic permanent disable for hot hosts
+- **Tone** — operational, widely distributed: *intelligence is a bullet*
+
 ## v2.9.0 — Host Attack Globe (real satellite zoom)
 
 - **Leaflet + Esri World Imagery** — Google Earth-style infinite zoom (street + offline NASA globe fallback)
@@ -47,7 +55,7 @@ sudo ./stealth_install.sh
 
 - **Global globe** — pulsing dots on Earth for every hostile host signal (green → yellow → red)
 - **Infinite variety** — each data point gets unique hue, pulse speed, and size from its threat fingerprint
-- **Zachary Geurts** — Army Specialist, Iraq War Veteran, Honorable Discharge — *they say we give these to even Grandmas now because it is 2026*
+- **Zachary Geurts** — Army Specialist, Iraq War Veteran, Honorable Discharge
 - **Sources** — gatekeeper harm candidates, threat log, dossier chains, firewall blocks + ip-api geo
 
 ## v2.7.0 — Fair Ad Guardian
