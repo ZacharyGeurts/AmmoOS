@@ -1,0 +1,184 @@
+#!/bin/bash
+# NEXUS-Shield operator CLI — read-only for nexus group; admin via install only.
+set -euo pipefail
+
+NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
+_script_root="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ -f "${_script_root}/lib/nexus-common.sh" ]]; then
+  NEXUS_INSTALL_ROOT="$_script_root"
+fi
+
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
+
+if ! nexus_operator_authorized; then
+  cat >&2 <<EOF
+nexus: access denied (not in group ${NEXUS_GROUP}).
+
+Run once:  sudo ./stealth_install.sh
+Then either log out/in, or use:  sg ${NEXUS_GROUP} -c 'nexus status'
+EOF
+  exit 1
+fi
+
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/eternal-vigil.sh"
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/shadow-reality.sh"
+
+nexus_load_config
+
+nexus_require_install_for_admin() {
+  cat >&2 <<EOF
+nexus ${1}: admin action — re-run the installer instead of sudo:
+
+  sudo ./stealth_install.sh
+EOF
+  exit 1
+}
+
+usage() {
+  cat <<'EOF'
+NEXUS-Shield CLI (read-only — no sudo after install)
+  nexus status          Show vigil mode and recent alert count
+  nexus verify          Verify script integrity manifest
+  nexus alerts          Tail unified alert log
+  nexus entropy <file>  Score file entropy
+  nexus test            Run test suite
+  nexus panel           Open Internet + Threat Panel (localhost)
+  nexus paranoia        Paranoia mode status (detect → log → disable → re-enable)
+  nexus shutdown        Shutdown guard — bloody murder if killed; restart block|permissive
+  nexus paranoia block on|off   Auto-disable after forensic log
+  nexus paranoia incidents      Recent paranoia incidents (full forensics)
+
+Admin actions run automatically during: sudo ./stealth_install.sh
+EOF
+}
+
+cmd="${1:-}"
+sub="${2:-}"
+
+case "$cmd" in
+  status)
+    [[ -r "$NEXUS_VIGIL_STATE" ]] || {
+      echo "nexus status: cannot read ${NEXUS_VIGIL_STATE} (is nexus-genius.service running?)" >&2
+      exit 1
+    }
+    echo "mode=$(nexus_vigil_get_mode)"
+    echo "scan_interval=$(nexus_vigil_scan_interval)s"
+    echo "entropy_threshold=$(nexus_vigil_entropy_threshold)"
+    echo "recent_alerts=$(nexus_vigil_count_recent 600)"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
+    nexus_firewall_status
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/panel-tls.sh"
+    if [[ "${NEXUS_PANEL_TLS:-1}" == "1" && -f "${NEXUS_PANEL_TLS_CERT:-}" ]]; then
+      echo "panel=https://127.0.0.1:${NEXUS_THREAT_PANEL_PORT:-9477}/"
+    else
+      echo "panel=http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT:-9477}/"
+    fi
+    ;;
+  shadow)
+    nexus_require_install_for_admin "shadow ${sub:-}"
+    ;;
+  sign)
+    nexus_require_install_for_admin "sign"
+    ;;
+  verify)
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/self-defense.sh"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/seal-vault.sh"
+    ok=0
+    nexus_verify_integrity && echo "integrity=OK" || { echo "integrity=FAIL"; ok=1; }
+    if [[ "$(id -u)" -eq 0 ]]; then
+      if nexus_seal_verify 2>/dev/null; then
+        echo "seal=OK"
+      else
+        echo "seal=missing_or_fail"
+        ok=1
+      fi
+    else
+      echo "seal=protected"
+    fi
+    [[ "$ok" -eq 0 ]]
+    ;;
+  entropy)
+    file="${sub:-}"
+    [[ -n "$file" && -f "$file" ]] || { echo "usage: nexus entropy <file>"; exit 1; }
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/entropy-oracle.sh"
+    echo "$(nexus_entropy_score "$file")"
+    ;;
+  test)
+    exec "${NEXUS_INSTALL_ROOT}/tests/run-tests.sh"
+    ;;
+  alerts)
+    tail -n 50 "$NEXUS_ALERT_LOG" 2>/dev/null || echo "No alerts yet."
+    ;;
+  shutdown)
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/shutdown-guard.sh"
+    case "${sub:-status}" in
+      status)
+        nexus_shutdown_status_json
+        echo ""
+        ;;
+      restart)
+        nexus_shutdown_restart "${3:-block}" "${4:-}"
+        ;;
+      incidents)
+        nexus_shutdown_recent_json "${3:-10}"
+        ;;
+      *)
+        echo "usage: nexus shutdown [status|restart block|permissive [offender_ip]|incidents]"
+        exit 1
+        ;;
+    esac
+    ;;
+  paranoia)
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/threat-vectors.sh"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/packet-oracle.sh"
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/paranoia-mode.sh"
+    case "${sub:-status}" in
+      status)
+        nexus_paranoia_status_json
+        echo ""
+        ;;
+      block)
+        case "${3:-off}" in
+          on|1|true) nexus_paranoia_set_block 1 ;;
+          *) nexus_paranoia_set_block 0 ;;
+        esac
+        nexus_paranoia_status_json
+        ;;
+      incidents)
+        nexus_paranoia_recent_json "${3:-15}"
+        ;;
+      *)
+        echo "usage: nexus paranoia [status|block on|block off|incidents [n]]"
+        exit 1
+        ;;
+    esac
+    ;;
+  panel)
+    port="${NEXUS_THREAT_PANEL_PORT:-9477}"
+    if [[ "${NEXUS_PANEL_TLS:-1}" == "1" ]]; then
+      url="https://127.0.0.1:${port}/"
+    else
+      url="http://127.0.0.1:${port}/"
+    fi
+    echo "Threat panel (secured): ${url}"
+    command -v xdg-open >/dev/null 2>&1 && xdg-open "$url" 2>/dev/null || true
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac

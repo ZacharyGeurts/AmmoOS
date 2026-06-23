@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXUS-Shield — Threat Panel</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --panel: #12151d;
+      --border: #2a3040;
+      --text: #e8ecf4;
+      --muted: #8b95a8;
+      --internet: #3d8bfd;
+      --threat: #ff4d6d;
+      --gold: #c9a227;
+      --ok: #3dd68c;
+      --murder: #ff0033;
+    }
+    .murder-banner {
+      display: none;
+      padding: 14px 18px;
+      background: linear-gradient(90deg, #3a0010, #1a0d12);
+      border-bottom: 2px solid var(--murder);
+      color: #ffd6de;
+    }
+    .murder-banner.active { display: block; }
+    .murder-banner h2 { margin: 0 0 8px; color: var(--murder); font-size: 1rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .murder-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .murder-actions button {
+      background: var(--murder); color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700;
+    }
+    .murder-actions button.ghost { background: transparent; border: 1px solid var(--murder); color: #ffd6de; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    header {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+      padding: 10px 18px; border-bottom: 1px solid var(--border); background: #0e1118;
+    }
+    header h1 { margin: 0; font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .meta { font-size: 0.78rem; color: var(--muted); }
+    .meta strong { color: var(--gold); }
+    nav.menu {
+      display: flex; gap: 4px; padding: 0 18px; border-bottom: 1px solid var(--border); background: #0c1018;
+    }
+    nav.menu button {
+      background: transparent; border: none; color: var(--muted); padding: 10px 14px; cursor: pointer;
+      font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; border-bottom: 2px solid transparent;
+    }
+    nav.menu button.active { color: var(--internet); border-bottom-color: var(--internet); }
+    nav.menu button:hover { color: var(--text); }
+    .view { display: none; min-height: calc(100vh - 96px); }
+    .view.active { display: block; }
+    .toolbar {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      padding: 10px 18px; border-bottom: 1px solid var(--border); font-size: 0.82rem;
+    }
+    .toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+    .toggle input { width: 16px; height: 16px; accent-color: var(--ok); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: calc(100vh - 140px); }
+    .pane { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+    .pane:last-child { border-right: none; }
+    .pane-head {
+      padding: 12px 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      font-size: 0.72rem; border-bottom: 1px solid var(--border);
+    }
+    .pane.internet .pane-head { color: var(--internet); background: #0d1524; }
+    .pane.threat .pane-head { color: var(--threat); background: #1a0d12; }
+    .stats { display: flex; gap: 16px; padding: 10px 18px; font-size: 0.8rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .stat span { color: var(--muted); }
+    .list { flex: 1; overflow: auto; padding: 6px 0; font-family: ui-monospace, monospace; font-size: 0.72rem; line-height: 1.45; }
+    .row { padding: 6px 18px; border-bottom: 1px solid #1a1f2a; word-break: break-all; }
+    .row:hover { background: #161b26; }
+    .conn-row {
+      display: flex; align-items: flex-start; gap: 8px; padding: 6px 18px;
+      border-bottom: 1px solid #1a1f2a; font-family: ui-monospace, monospace; font-size: 0.72rem;
+    }
+    .conn-row:hover { background: #161b26; }
+    .conn-row.trusted { border-left: 3px solid var(--ok); }
+    .conn-text { flex: 1; word-break: break-all; line-height: 1.45; }
+    .conn-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .conn-actions button {
+      background: #0d1a14; border: 1px solid #2a5040; color: var(--ok);
+      padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: 600;
+      white-space: nowrap;
+    }
+    .conn-actions button:hover { border-color: var(--ok); }
+    .conn-actions button.revoke {
+      background: transparent; border-color: #4a3040; color: #c9a0a8;
+    }
+    .trusted-head {
+      padding: 8px 18px; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--ok); border-top: 1px solid var(--border); background: #0d1512;
+    }
+    .trusted-row {
+      display: flex; align-items: center; gap: 8px; padding: 5px 18px;
+      border-bottom: 1px solid #1a2430; font-size: 0.7rem;
+    }
+    .trusted-row .ip { color: var(--ok); font-weight: 600; font-family: ui-monospace, monospace; }
+    .trusted-row .meta { color: var(--muted); flex: 1; }
+    .gatekeeper-banner {
+      padding: 10px 18px; font-size: 0.76rem; line-height: 1.45;
+      background: #0d1520; border-bottom: 1px solid var(--border); color: var(--muted);
+    }
+    .gatekeeper-banner strong { color: var(--gold); }
+    .verdict-USER_OK { color: var(--ok); }
+    .verdict-EPHEMERAL { color: var(--internet); }
+    .verdict-SUSPICIOUS { color: var(--gold); }
+    .verdict-HARM_CANDIDATE { color: var(--threat); font-weight: 700; }
+    .verdict-MONITOR { color: var(--muted); }
+    .intent-row {
+      padding: 10px 18px; border-bottom: 1px solid #1a1f2a; font-size: 0.7rem;
+    }
+    .intent-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+    .intent-head .ip { font-family: ui-monospace, monospace; color: var(--internet); font-weight: 600; }
+    .intent-head .proc { color: var(--muted); }
+    .intent-reason { color: #b8c0d0; margin-bottom: 6px; }
+    .axis-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px 12px; }
+    .axis { display: flex; align-items: center; gap: 6px; }
+    .axis label { width: 108px; color: var(--muted); font-size: 0.62rem; text-transform: uppercase; }
+    .axis bar { flex: 1; height: 5px; background: #1a2030; border-radius: 3px; overflow: hidden; }
+    .axis bar span { display: block; height: 100%; border-radius: 3px; }
+    .axis bar span.harm { background: var(--threat); }
+    .axis bar span.user { background: var(--ok); }
+    .axis bar span.neutral { background: var(--internet); }
+    .intent-actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .intent-actions button {
+      padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: 600;
+      border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    }
+    .intent-actions button.block { border-color: var(--threat); color: var(--threat); }
+    .intent-actions button.auth { border-color: #2a5040; color: var(--ok); }
+    .threat-row { padding: 10px 18px; border-bottom: 1px solid #24161c; }
+    .threat-row .vector { font-weight: 700; color: var(--threat); }
+    .sev-critical { color: #ff2d55; }
+    .sev-high { color: #ff6b6b; }
+    .sev-medium { color: var(--gold); }
+    .sev-low { color: var(--muted); }
+    .sanitize-row {
+      display: flex; align-items: flex-start; gap: 10px; padding: 8px 18px; border-bottom: 1px solid #1a2430;
+      font-size: 0.74rem;
+    }
+    .sanitize-row.undone { opacity: 0.45; }
+    .sanitize-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+    .sanitize-row input[type="checkbox"] { accent-color: var(--gold); }
+    .sanitize-meta { flex: 1; }
+    .sanitize-meta .id { color: var(--muted); font-size: 0.65rem; }
+    .vectors { padding: 10px 18px; border-top: 1px solid var(--border); font-size: 0.68rem; color: var(--muted); }
+    .vectors code {
+      display: inline-block; margin: 2px 4px 2px 0; padding: 2px 6px;
+      border: 1px solid var(--border); border-radius: 3px; color: #b8c0d0;
+    }
+    .empty { padding: 24px 18px; color: var(--muted); }
+    .data-grid, .logs-wrap { padding: 16px 18px; }
+    .data-card {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      padding: 10px 14px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel);
+    }
+    .data-card a { color: var(--internet); text-decoration: none; font-size: 0.82rem; }
+    .data-card a:hover { text-decoration: underline; }
+    .data-card .size { color: var(--muted); font-size: 0.72rem; }
+    .log-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+    .log-tabs button {
+      background: var(--panel); border: 1px solid var(--border); color: var(--text);
+      padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.78rem;
+    }
+    .log-tabs button.active { border-color: var(--internet); color: var(--internet); }
+    pre.log-view {
+      margin: 0; padding: 12px; background: #080a10; border: 1px solid var(--border); border-radius: 8px;
+      overflow: auto; max-height: calc(100vh - 180px); font-size: 0.7rem; line-height: 1.4; white-space: pre-wrap;
+    }
+    .safe-modal-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0, 0, 0, 0.72); align-items: center; justify-content: center; padding: 20px;
+    }
+    .safe-modal-backdrop.open { display: flex; }
+    .safe-modal {
+      width: min(520px, 100%); background: #141018; border: 2px solid var(--murder);
+      border-radius: 12px; padding: 22px 24px; box-shadow: 0 12px 48px rgba(255, 0, 51, 0.25);
+    }
+    .safe-modal h2 { margin: 0 0 10px; color: var(--murder); font-size: 1.05rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .safe-modal p { margin: 0 0 14px; font-size: 0.86rem; line-height: 1.5; color: #e8d0d6; }
+    .safe-modal .forensics {
+      margin: 0 0 16px; padding: 10px 12px; background: #0b0a10; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.74rem; line-height: 1.45; color: var(--muted); max-height: 220px; overflow: auto;
+    }
+    .safe-modal .forensics .verdict { color: #ffd6de; margin-bottom: 8px; }
+    .safe-modal .peer-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.68rem; }
+    .safe-modal .peer-table th, .safe-modal .peer-table td { text-align: left; padding: 3px 6px; border-bottom: 1px solid #2a2030; }
+    .safe-modal .peer-table th { color: var(--murder); }
+    .safe-modal select.offender-pick {
+      width: 100%; margin: 8px 0; padding: 8px; background: #0b0a10; color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px; font-size: 0.78rem;
+    }
+    .safe-modal .forensics strong { color: var(--text); }
+    .safe-modal-actions { display: flex; flex-direction: column; gap: 8px; }
+    .safe-modal-actions button {
+      width: 100%; text-align: left; padding: 11px 14px; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 600; border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    }
+    .safe-modal-actions button:hover { border-color: var(--internet); }
+    .safe-modal-actions button.recommended {
+      background: linear-gradient(90deg, #5a0018, #3a0010); border-color: var(--murder); color: #fff;
+    }
+    .safe-modal-actions button.recommended small { display: block; font-weight: 400; opacity: 0.85; margin-top: 2px; font-size: 0.72rem; }
+    .safe-modal-actions button.ghost { background: transparent; color: #ffd6de; border-color: #5a2030; }
+    .safe-modal-actions button.safe { color: var(--ok); border-color: #2a5040; }
+    .safe-modal-hint { margin-top: 12px; font-size: 0.68rem; color: var(--muted); }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .pane { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>NEXUS-Shield v2.0 · Gatekeeper</h1>
+    <div class="meta">
+      mode <strong id="mode">—</strong> ·
+      truth <strong id="signal">—</strong>% ·
+      updated <strong id="updated">—</strong>
+    </div>
+  </header>
+
+  <div id="murder-banner" class="murder-banner" role="alert">
+    <h2>Bloody murder — NEXUS was shut down</h2>
+    <div id="murder-detail">We were killed. Forensics captured. Review what hit us, then restart.</div>
+    <div class="murder-actions">
+      <button type="button" id="murder-open-modal">Choose restart action…</button>
+      <button type="button" id="restart-block">Restart + BLOCK offender (recommended)</button>
+      <button type="button" id="restart-permissive" class="ghost">Restart permissive (log only)</button>
+    </div>
+  </div>
+
+  <div id="murder-modal" class="safe-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="murder-modal-title">
+    <div class="safe-modal">
+      <h2 id="murder-modal-title">NEXUS was attacked — your call</h2>
+      <p>Small guard, loud when killed. Nothing happens until <strong>you</strong> pick a button. Default safe path: review first.</p>
+      <div id="murder-modal-forensics" class="forensics"></div>
+      <label for="offender-pick" class="meta" style="font-size:0.72rem;display:block;margin-bottom:4px;">Block target (remote peer — not your machine)</label>
+      <select id="offender-pick" class="offender-pick" aria-label="Suspect IP to block"></select>
+      <div class="safe-modal-actions">
+        <button type="button" id="modal-review" class="safe">Review forensics first <small>Opens Paranoia tab — no changes</small></button>
+        <button type="button" id="modal-block" class="recommended">Block offender &amp; restart <small>Recommended — crushes suspect IP, turns paranoia block ON</small></button>
+        <button type="button" id="modal-permissive" class="ghost">Restart — log only <small>No firewall block; detect &amp; record only</small></button>
+        <button type="button" id="modal-later" class="ghost">Not now <small>Keep protecting if up; banner stays</small></button>
+      </div>
+      <p class="safe-modal-hint">Local panel only (127.0.0.1). Block affects the suspect IP below — verify before crushing.</p>
+    </div>
+  </div>
+
+  <nav class="menu" aria-label="Panel sections">
+    <button type="button" class="active" data-view="monitor">Monitor</button>
+    <button type="button" class="view-paranoia" data-view="paranoia">Paranoia</button>
+    <button type="button" data-view="sanitize">Autosanitize</button>
+    <button type="button" data-view="data">Data</button>
+    <button type="button" data-view="logs">Logs</button>
+  </nav>
+
+  <section id="view-monitor" class="view active">
+    <div id="gatekeeper-banner" class="gatekeeper-banner"></div>
+    <div class="grid">
+      <section class="pane internet">
+        <div class="pane-head">Internet · Connection Gatekeeper</div>
+        <div class="stats">
+          <div class="stat"><span>egress</span> <strong id="egress">0</strong></div>
+          <div class="stat"><span>listeners</span> <strong id="listeners">0</strong></div>
+          <div class="stat"><span>dns</span> <strong id="dns">—</strong></div>
+          <div class="stat"><span>authorized</span> <strong id="trust-count">0</strong></div>
+        </div>
+        <div class="list" id="connections"><div class="empty">Awaiting packet oracle…</div></div>
+        <div class="trusted-head">Permanent authorizations (Hostess7 field memory)</div>
+        <div class="list" id="trusted-list"><div class="empty">Click Authorize on a connection to trust it forever</div></div>
+      </section>
+      <section class="pane threat">
+        <div class="pane-head">Threats</div>
+        <div class="stats">
+          <div class="stat"><span>correlation</span> <strong id="corr">0</strong></div>
+          <div class="stat"><span>active</span> <strong id="threat-count">0</strong></div>
+          <div class="stat"><span>firewall</span> <strong id="firewall">—</strong></div>
+          <div class="stat"><span>blocks</span> <strong id="fw-blocks">0</strong></div>
+        </div>
+        <div class="list" id="threats"><div class="empty">No vectors detected</div></div>
+        <div class="vectors" id="vector-catalog"></div>
+      </section>
+    </div>
+  </section>
+
+  <section id="view-paranoia" class="view">
+    <div class="toolbar">
+      <label class="toggle">
+        <input type="checkbox" id="paranoia-block-toggle" />
+        <span><strong>Auto-disable</strong> — OFF first: detect + log all forensics; enable to block after log</span>
+      </label>
+      <span id="paranoia-status" class="meta">Paranoia ON · log-only</span>
+    </div>
+    <div class="pane-head" style="color:var(--threat);background:#1a0d12;">Incidents — who / what / full forensics</div>
+    <div class="list" id="paranoia-list"><div class="empty">No paranoia incidents yet</div></div>
+  </section>
+
+  <section id="view-sanitize" class="view">
+    <div class="toolbar">
+      <label class="toggle">
+        <input type="checkbox" id="autosanitize-toggle" />
+        <span><strong>Autosanitize threats</strong> — legacy auto-block (use Paranoia tab instead)</span>
+      </label>
+      <span id="sanitize-status" class="meta"></span>
+    </div>
+    <div class="pane-head" style="color:var(--gold);background:#14120a;">Sanitize actions — check to undo</div>
+    <div class="list" id="sanitize-list"><div class="empty">No sanitize actions yet</div></div>
+  </section>
+
+  <section id="view-data" class="view">
+    <div class="data-grid" id="data-list"><div class="empty">Loading data files…</div></div>
+  </section>
+
+  <section id="view-logs" class="view">
+    <div class="logs-wrap">
+      <div class="log-tabs">
+        <button type="button" class="active" data-log="alerts">Alerts</button>
+        <button type="button" data-log="vigil">Vigil</button>
+        <button type="button" id="log-refresh">Refresh</button>
+      </div>
+      <pre class="log-view" id="log-content">Loading…</pre>
+    </div>
+  </section>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let currentLog = "alerts";
+
+    document.querySelectorAll("nav.menu button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("nav.menu button").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+        btn.classList.add("active");
+        $(`view-${btn.dataset.view}`).classList.add("active");
+        if (btn.dataset.view === "data") loadData();
+        if (btn.dataset.view === "logs") loadLog(currentLog);
+      });
+    });
+
+    document.querySelectorAll(".log-tabs button[data-log]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".log-tabs button[data-log]").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentLog = btn.dataset.log;
+        loadLog(currentLog);
+      });
+    });
+    $("log-refresh").addEventListener("click", () => loadLog(currentLog));
+
+    function closeMurderModal() {
+      $("murder-modal").classList.remove("open");
+    }
+
+    function openMurderModal() {
+      $("murder-modal").classList.add("open");
+    }
+
+    function pendingShutdownIncident(sd) {
+      const incidents = sd?.incidents || [];
+      for (let i = incidents.length - 1; i >= 0; i -= 1) {
+        if (!incidents[i].acknowledged) return incidents[i];
+      }
+      return incidents.length ? incidents[incidents.length - 1] : null;
+    }
+
+    function shutdownNeedsAttention(sd) {
+      if (!sd) return false;
+      if (sd.killed) return true;
+      return (sd.incidents || []).some((inc) => !inc.acknowledged);
+    }
+
+    async function nexusRestart(policy, opts = {}) {
+      const offender = (window._lastShutdownOffender || "").trim();
+      const skipConfirm = !!opts.skipConfirm;
+      const label = policy === "block" ? "BLOCK offender & restart" : "restart (log only)";
+      const warn = policy === "block" && offender
+        ? `This will firewall-block ${offender} and enable paranoia block.`
+        : policy === "block"
+          ? "No suspect IP — block mode enables paranoia block only."
+          : "Log-only restart — no new firewall blocks.";
+      if (!skipConfirm && !confirm(`${label}?\n\n${warn}\n\nProceed?`)) return;
+      closeMurderModal();
+      try {
+        const res = await fetch("/api/nexus/restart", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ policy, offender_ip: offender }),
+        });
+        const j = await res.json();
+        if (j.ok) {
+          $("murder-detail").textContent = "Restarting… NEXUS comes back to protect. Reloading panel in ~10s.";
+          sessionStorage.setItem("nexus_shutdown_dismissed", window._lastShutdownIncidentId || "");
+          setTimeout(() => location.reload(), 10000);
+        } else alert("Restart failed — check Logs tab or run: nexus shutdown restart " + policy);
+      } catch { alert("Restart failed — service may still be recovering."); }
+    }
+
+    $("restart-block").addEventListener("click", () => nexusRestart("block"));
+    $("restart-permissive").addEventListener("click", () => nexusRestart("permissive"));
+    $("murder-open-modal").addEventListener("click", openMurderModal);
+    $("modal-block").addEventListener("click", () => nexusRestart("block", { skipConfirm: true }));
+    $("modal-permissive").addEventListener("click", () => nexusRestart("permissive", { skipConfirm: true }));
+    $("modal-review").addEventListener("click", () => {
+      closeMurderModal();
+      document.querySelector('nav.menu button[data-view="paranoia"]').click();
+    });
+    $("modal-later").addEventListener("click", () => {
+      sessionStorage.setItem("nexus_shutdown_dismissed", window._lastShutdownIncidentId || "");
+      closeMurderModal();
+    });
+    $("murder-modal").addEventListener("click", (e) => {
+      if (e.target === $("murder-modal")) closeMurderModal();
+    });
+
+    function pickOffender(analysis, fore) {
+      const v4 = (analysis.egress_peers || []).find((p) => p.ip && p.ip.includes("."));
+      return (v4 && v4.ip) || analysis.primary_ip || (analysis.suspect_ips || [])[0] || fore.primary_ip || "";
+    }
+
+    function renderPeerTable(peers) {
+      if (!peers || !peers.length) return "<em>No public remote peers at last heartbeat.</em>";
+      let html = '<table class="peer-table"><tr><th>Remote IP</th><th>Conns</th><th>Ports</th></tr>';
+      peers.slice(0, 6).forEach((p) => {
+        html += `<tr><td>${p.ip}</td><td>${p.connections || 0}</td><td>${(p.ports || []).join(", ") || "—"}</td></tr>`;
+      });
+      return html + "</table>";
+    }
+
+    function fillOffenderPick(analysis, fore) {
+      const sel = $("offender-pick");
+      const peers = (analysis.egress_peers || []).filter((p) => p.ip && p.ip.includes("."));
+      const opts = peers.length ? peers : (analysis.suspect_ips || []).filter((ip) => ip.includes(".")).map((ip) => ({ ip }));
+      sel.innerHTML = "";
+      if (!opts.length) {
+        sel.innerHTML = '<option value="">No IPv4 remote peer — block enables paranoia only</option>';
+        window._lastShutdownOffender = "";
+        return;
+      }
+      opts.forEach((p, i) => {
+        const ip = p.ip || p;
+        const o = document.createElement("option");
+        o.value = ip;
+        o.textContent = `${ip} (${p.connections || "?"} conns)`;
+        sel.appendChild(o);
+        if (i === 0) window._lastShutdownOffender = ip;
+      });
+      sel.onchange = () => { window._lastShutdownOffender = sel.value; };
+    }
+
+    function renderShutdown(sd) {
+      const banner = $("murder-banner");
+      if (!shutdownNeedsAttention(sd)) {
+        banner.classList.remove("active");
+        closeMurderModal();
+        return;
+      }
+      banner.classList.add("active");
+      const last = pendingShutdownIncident(sd) || {};
+      const fore = last.forensics || {};
+      const analysis = last.analysis || fore.analysis || {};
+      const localIp = analysis.local_wan_ip || fore.local_wan_ip || (analysis.local_ips || [])[0] || "";
+      const killer = analysis.killer || fore.killer || {};
+      const suspect = pickOffender(analysis, fore);
+      window._lastShutdownOffender = suspect;
+      window._lastShutdownIncidentId = last.id || "";
+
+      const killerTxt = killer.source
+        ? `${killer.source} / ${killer.signal || "?"}${killer.process ? " (" + killer.process + ")" : ""}`
+        : "unknown";
+
+      $("murder-detail").innerHTML =
+        `<strong>Signal:</strong> ${last.signal || sd.signal || "?"} · ` +
+        `<strong>Killer:</strong> ${killerTxt} · ` +
+        `<strong>When:</strong> ${last.ts || "?"}<br>` +
+        `<strong>This machine:</strong> ${localIp || "?"} · ` +
+        `<strong>Gateway:</strong> ${analysis.gateway_ip || "—"} · ` +
+        `<strong>Connections:</strong> ${analysis.connection_count || (fore.connections || []).length}<br>` +
+        (suspect
+          ? `<strong>Top remote peer (block candidate):</strong> ${suspect} — <em>not</em> your local IP`
+          : "<strong>No remote IPv4 peer</strong> — likely systemd/local kill; review killer above.");
+
+      $("murder-modal-forensics").innerHTML =
+        `<div class="verdict">${analysis.verdict || "Forensics captured at last heartbeat."}</div>` +
+        `<strong>Incident:</strong> ${last.id || "—"}<br>` +
+        `<strong>This machine (WAN):</strong> ${localIp || "—"}<br>` +
+        `<strong>Gateway:</strong> ${analysis.gateway_ip || "—"}<br>` +
+        `<strong>Killer:</strong> ${killerTxt}<br>` +
+        `<strong>Confidence:</strong> ${analysis.confidence || "—"}<br>` +
+        `<strong>Remote peers at death:</strong>` + renderPeerTable(analysis.egress_peers);
+
+      fillOffenderPick(analysis, fore);
+
+      const dismissed = sessionStorage.getItem("nexus_shutdown_dismissed");
+      if (window._lastShutdownIncidentId && dismissed !== window._lastShutdownIncidentId) {
+        openMurderModal();
+      }
+    }
+
+    $("paranoia-block-toggle").addEventListener("change", async (e) => {
+      const block = e.target.checked;
+      try {
+        const res = await fetch("/api/paranoia/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ block }),
+        });
+        const j = await res.json();
+        $("paranoia-status").textContent = j.ok
+          ? (block ? "Paranoia ON · auto-disable after log" : "Paranoia ON · log-only (OFF first)")
+          : "Paranoia toggle failed";
+        if (!j.ok) e.target.checked = !block;
+      } catch {
+        $("paranoia-status").textContent = "Paranoia toggle failed";
+        e.target.checked = !block;
+      }
+    });
+
+    async function paranoiaDisable(id, btn) {
+      try {
+        const res = await fetch("/api/paranoia/disable", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        const j = await res.json();
+        if (j.ok) { btn.disabled = true; btn.textContent = "Disabled"; refresh(); }
+        else alert("Disable failed for " + id);
+      } catch { alert("Disable failed"); }
+    }
+
+    async function paranoiaReenable(id, btn) {
+      try {
+        const res = await fetch("/api/paranoia/reenable", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        const j = await res.json();
+        if (j.ok) { btn.disabled = true; refresh(); }
+        else alert("Re-enable failed for " + id);
+      } catch { alert("Re-enable failed"); }
+    }
+
+    function renderParanoia(p) {
+      const el = $("paranoia-list");
+      const toggle = $("paranoia-block-toggle");
+      if (!p) {
+        el.innerHTML = '<div class="empty">Paranoia mode not loaded</div>';
+        return;
+      }
+      toggle.checked = !!p.block;
+      $("paranoia-status").textContent = p.enabled
+        ? (p.block ? "Paranoia ON · auto-disable after log" : "Paranoia ON · log-only (OFF first)")
+        : "Paranoia OFF";
+      const items = p.incidents || [];
+      if (!items.length) {
+        el.innerHTML = '<div class="empty">No incidents — field calm or waiting for first detect</div>';
+        return;
+      }
+      el.innerHTML = items.slice().reverse().map((inc) => {
+        const f = inc.forensics || {};
+        const who = `${f.hostname || "?"} · user ${f.user || "?"}`;
+        const what = `IP ${f.primary_ip || inc.block_target || "—"} · procs ${(f.suspect_procs || []).join(", ") || "—"}`;
+        const conns = (f.connections || []).slice(0, 4).join("<br>") || "—";
+        const disabled = !!inc.disabled;
+        const reenabled = !!inc.reenabled;
+        return `<div class="threat-row">
+          <div class="vector">${inc.vector} · ${inc.severity}</div>
+          <div>${inc.ts} · ${inc.block_phase || "log_only"} · ${who}</div>
+          <div><strong>What:</strong> ${what}</div>
+          <div><strong>Detail:</strong> ${inc.detail || ""}</div>
+          <div style="margin-top:6px;font-size:0.68rem;color:var(--muted)"><strong>Connections:</strong><br>${conns}</div>
+          <div style="margin-top:8px;display:flex;gap:8px;">
+            ${!disabled ? `<button type="button" class="tool danger" data-disable="${inc.id}">Disable</button>` : ""}
+            ${disabled && !reenabled ? `<button type="button" class="tool" data-reenable="${inc.id}">Re-enable</button>` : ""}
+            ${reenabled ? '<span class="meta">Re-enabled</span>' : ""}
+            ${disabled ? '<span class="meta">Blocked: ' + (inc.block_target || "—") + '</span>' : ""}
+          </div>
+        </div>`;
+      }).join("");
+      el.querySelectorAll("[data-disable]").forEach((btn) => {
+        btn.addEventListener("click", () => paranoiaDisable(btn.dataset.disable, btn));
+      });
+      el.querySelectorAll("[data-reenable]").forEach((btn) => {
+        btn.addEventListener("click", () => paranoiaReenable(btn.dataset.reenable, btn));
+      });
+    }
+
+    $("autosanitize-toggle").addEventListener("change", async (e) => {
+      const enabled = e.target.checked;
+      try {
+        const res = await fetch("/api/autosanitize/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enabled }),
+        });
+        const j = await res.json();
+        $("sanitize-status").textContent = j.ok ? (enabled ? "Autosanitize ON" : "Autosanitize OFF") : "Toggle failed";
+      } catch {
+        $("sanitize-status").textContent = "Toggle failed";
+        e.target.checked = !enabled;
+      }
+    });
+
+    async function undoAction(id, checkbox) {
+      try {
+        const res = await fetch("/api/autosanitize/undo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        const j = await res.json();
+        if (j.ok) {
+          checkbox.closest(".sanitize-row")?.classList.add("undone");
+          checkbox.disabled = true;
+        } else {
+          checkbox.checked = false;
+          alert("Undo failed for " + id);
+        }
+      } catch {
+        checkbox.checked = false;
+      }
+    }
+
+    function ipFromAddr(addr) {
+      if (!addr || addr === "*:*") return "";
+      const h = addr.replace(/^\[|\]$/g, "");
+      const idx = h.lastIndexOf(":");
+      if (idx < 0) return h;
+      if (h.includes(":") && h.indexOf(":") !== idx) return h;
+      return h.slice(0, idx);
+    }
+
+    function parseSsLine(line) {
+      const parts = line.trim().split(/\s+/);
+      let state = parts[0] || "";
+      let local = parts[3] || "";
+      let remote = parts[4] || "";
+      if (["tcp", "udp", "tcp6", "udp6"].includes(parts[0])) {
+        state = parts[1] || state;
+        local = parts[4] || local;
+        remote = parts[5] || remote;
+      }
+      const remoteIp = ipFromAddr(remote);
+      const isPrivate = (ip) => /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|127\.|169\.254\.)/.test(ip);
+      let peerIp = "";
+      let direction = "out";
+      if (/ESTAB/i.test(state) && remoteIp && !isPrivate(remoteIp)) {
+        peerIp = remoteIp;
+        direction = "out";
+      } else if (/ESTAB/i.test(state) && remoteIp) {
+        peerIp = remoteIp;
+        direction = "in";
+      }
+      return { state, local, remote, peerIp, direction, line };
+    }
+
+    function isTrustedIp(ip, trusted, direction) {
+      if (!ip || !trusted?.length) return false;
+      return trusted.some((t) => t.ip === ip && (t.direction === direction || t.direction === "both"));
+    }
+
+    async function authorizeIp(ip, direction, label, btn) {
+      if (!ip) return;
+      const dirLabel = direction === "in" ? "inbound" : "outbound";
+      if (!confirm(`Permanently authorize ${dirLabel} traffic to ${ip}?\n\nStored in Hostess7 field memory. NEXUS will never block or alert on this peer.`)) return;
+      if (btn) { btn.disabled = true; btn.textContent = "…"; }
+      try {
+        const res = await fetch("/api/firewall/authorize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, direction, label: label || "" }),
+        });
+        const j = await res.json();
+        if (j.ok) refresh();
+        else alert("Authorize failed — check service logs");
+      } catch {
+        alert("Authorize failed — panel offline?");
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "Authorize"; }
+      }
+    }
+
+    async function revokeTrust(ip, direction, btn) {
+      if (!ip) return;
+      if (!confirm(`Revoke permanent authorization for ${ip} (${direction})?`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/firewall/revoke", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, direction }),
+        });
+        const j = await res.json();
+        if (j.ok) refresh();
+        else alert("Revoke failed");
+      } catch {
+        alert("Revoke failed");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function renderTrusted(trusted) {
+      const el = $("trusted-list");
+      const items = trusted || [];
+      $("trust-count").textContent = String(items.length);
+      if (!items.length) {
+        el.innerHTML = '<div class="empty">Click Authorize on a connection to trust it forever</div>';
+        return;
+      }
+      el.innerHTML = items.map((t) => `
+        <div class="trusted-row">
+          <span class="ip">${t.ip}</span>
+          <span class="meta">${t.direction} · ${t.label || "—"} · ${t.ts || ""}</span>
+          <button type="button" class="revoke" data-revoke="${t.ip}" data-dir="${t.direction}">Revoke</button>
+        </div>`).join("");
+      el.querySelectorAll("[data-revoke]").forEach((btn) => {
+        btn.addEventListener("click", () => revokeTrust(btn.dataset.revoke, btn.dataset.dir, btn));
+      });
+    }
+
+    const AXIS_LABELS = {
+      user_browser: "User browser",
+      media_stream: "Media/stream",
+      search_ephemeral: "Search/ephemeral",
+      bandwidth_abuse: "Bandwidth abuse",
+      stream_theft_risk: "Stream theft",
+      beacon_pattern: "Beacon pattern",
+      process_trust: "Process trust",
+      destination_class: "Destination risk",
+      threat_linked: "Threat linked",
+      operator_auth: "You authorized",
+    };
+    const HARM_AXES = new Set(["bandwidth_abuse", "stream_theft_risk", "destination_class", "threat_linked", "beacon_pattern"]);
+    const USER_AXES = new Set(["user_browser", "media_stream", "operator_auth", "process_trust"]);
+
+    function renderAxisBars(scores) {
+      return Object.entries(AXIS_LABELS).map(([key, label]) => {
+        const v = scores?.[key] ?? 0;
+        const cls = HARM_AXES.has(key) ? "harm" : USER_AXES.has(key) ? "user" : "neutral";
+        return `<div class="axis"><label>${label}</label><bar><span class="${cls}" style="width:${v * 10}%"></span></bar><span>${v}/10</span></div>`;
+      }).join("");
+    }
+
+    function renderGatekeeperBanner(gk) {
+      const el = $("gatekeeper-banner");
+      if (!gk) { el.innerHTML = ""; return; }
+      const harm = gk.harm_candidates || 0;
+      el.innerHTML =
+        `<strong>Gatekeeper</strong> — ${gk.connection_count || 0} connections scored · ` +
+        `<strong>${harm}</strong> harm candidate${harm === 1 ? "" : "s"} · ` +
+        `${gk.why_no_auto_block || ""}`;
+    }
+
+    async function blockHarmIp(ip, btn) {
+      if (!ip || !confirm(`Block outbound to ${ip}?\n\nFor harm candidates only — stops exfil/theft path.`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/firewall/block", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, direction: "out", reason: "harm_candidate" }),
+        });
+        const j = await res.json();
+        if (j.ok) refresh();
+        else alert("Block failed");
+      } catch { alert("Block failed"); }
+      finally { if (btn) btn.disabled = false; }
+    }
+
+    function renderConnections(gk, trusted) {
+      const el = $("connections");
+      const conns = gk?.connections || [];
+      if (!conns.length) {
+        const raw = gk?._fallback || [];
+        if (!raw.length) { el.innerHTML = '<div class="empty">No active flows</div>'; return; }
+      }
+      if (conns.length) {
+        el.innerHTML = conns.map((c) => {
+          const v = c.verdict || "MONITOR";
+          const trustedRow = isTrustedIp(c.remote_ip, trusted, c.direction) || c.scores?.operator_auth >= 10;
+          const actions = [];
+          if (c.block_recommended) {
+            actions.push(`<button type="button" class="block" data-block="${c.remote_ip}">Block harm</button>`);
+          }
+          if (!trustedRow) {
+            actions.push(`<button type="button" class="auth" data-auth="${c.remote_ip}" data-dir="${c.direction || "out"}" data-label="${c.process || ""}">Authorize</button>`);
+          } else {
+            actions.push('<span style="color:var(--ok);font-size:0.65rem">✓ authorized</span>');
+          }
+          return `<div class="intent-row">
+            <div class="intent-head">
+              <span class="verdict-${v}">${v}</span>
+              <span class="ip">${c.remote_ip}:${c.remote_port || "?"}</span>
+              <span class="proc">${c.process || "?"}</span>
+              <span class="meta">${c.ip_class || ""}</span>
+            </div>
+            <div class="intent-reason">${c.reason || ""}</div>
+            <div class="axis-grid">${renderAxisBars(c.scores)}</div>
+            <div class="intent-actions">${actions.join("")}</div>
+          </div>`;
+        }).join("");
+        el.querySelectorAll("[data-auth]").forEach((btn) => {
+          btn.addEventListener("click", () => authorizeIp(btn.dataset.auth, btn.dataset.dir, btn.dataset.label, btn));
+        });
+        el.querySelectorAll("[data-block]").forEach((btn) => {
+          btn.addEventListener("click", () => blockHarmIp(btn.dataset.block, btn));
+        });
+        return;
+      }
+    }
+
+    function renderThreats(items) {
+      const el = $("threats");
+      if (!items?.length) {
+        el.innerHTML = '<div class="empty">No vectors detected — field calm</div>';
+        $("threat-count").textContent = "0";
+        return;
+      }
+      $("threat-count").textContent = String(items.length);
+      el.innerHTML = items.map((t) => `
+        <div class="threat-row">
+          <div class="vector">${t.vector}</div>
+          <div class="sev-${t.severity}">${t.severity} · ${t.ts}</div>
+          <div>${t.detail}</div>
+        </div>`).join("");
+    }
+
+    function renderSanitize(as) {
+      const el = $("sanitize-list");
+      const toggle = $("autosanitize-toggle");
+      if (as) {
+        toggle.checked = !!as.enabled;
+        $("sanitize-status").textContent = as.enabled ? "Autosanitize ON" : "Autosanitize OFF";
+      }
+      const actions = as?.actions || [];
+      if (!actions.length) {
+        el.innerHTML = '<div class="empty">No sanitize actions — threats will auto-block when detected</div>';
+        return;
+      }
+      el.innerHTML = actions.map((a) => `
+        <div class="sanitize-row${a.undone ? " undone" : ""}">
+          <label title="Undo this sanitize">
+            <input type="checkbox" ${a.undone ? "checked disabled" : ""} data-id="${a.id}" />
+            Undo
+          </label>
+          <div class="sanitize-meta">
+            <div><strong>${a.vector}</strong> · ${a.severity} · ${a.action}</div>
+            <div>target: ${a.target || "—"} (${a.target_type})</div>
+            <div class="id">${a.id} · ${a.ts}</div>
+          </div>
+        </div>`).join("");
+      el.querySelectorAll('input[type="checkbox"][data-id]:not(:disabled)').forEach((cb) => {
+        cb.addEventListener("change", () => {
+          if (cb.checked) undoAction(cb.dataset.id, cb);
+        });
+      });
+    }
+
+    function renderVectors(list) {
+      $("vector-catalog").innerHTML = "Auto vectors: " +
+        (list || []).map((v) => `<code>${v}</code>`).join("");
+    }
+
+    async function loadData() {
+      const el = $("data-list");
+      try {
+        const res = await fetch("/api/data", { cache: "no-store" });
+        const j = await res.json();
+        el.innerHTML = (j.files || []).map((f) => `
+          <div class="data-card">
+            <div>
+              <strong>${f.id}</strong><br>
+              <span class="size">${f.exists ? f.size + " bytes" : "missing"} · ${f.path}</span>
+            </div>
+            ${f.exists ? `<a href="${f.url}" target="_blank" rel="noopener">Open</a>` : '<span class="size">—</span>'}
+          </div>`).join("") || '<div class="empty">No data files</div>';
+      } catch {
+        el.innerHTML = '<div class="empty">Data API offline</div>';
+      }
+    }
+
+    async function loadLog(name) {
+      const el = $("log-content");
+      el.textContent = "Loading…";
+      try {
+        const res = await fetch(`/api/logs/${name}?lines=150`, { cache: "no-store" });
+        el.textContent = await res.text() || "(empty log)";
+      } catch {
+        el.textContent = "Log unavailable — is nexus-genius.service running?";
+      }
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch("/api/status", { cache: "no-store" });
+        const data = await res.json();
+        $("mode").textContent = data.vigil_mode || "calm";
+        $("signal").textContent = data.truth_signal ?? "0";
+        $("updated").textContent = data.updated || "—";
+        $("egress").textContent = data.internet?.egress_count ?? 0;
+        $("listeners").textContent = data.internet?.listener_count ?? 0;
+        $("dns").textContent = (data.internet?.dns_hash || "—").slice(0, 12);
+        $("corr").textContent = data.correlation_score ?? 0;
+        $("firewall").textContent = data.firewall ?? "—";
+        $("fw-blocks").textContent = data.firewall_blocks ?? 0;
+        const gk = data.gatekeeper || {};
+        if (!gk.connections?.length && data.internet?.connections?.length) {
+          gk._fallback = data.internet.connections;
+        }
+        renderGatekeeperBanner(gk);
+        renderConnections(gk, data.trusted);
+        renderTrusted(data.trusted);
+        renderThreats(data.threats);
+        renderVectors(data.vectors);
+        renderSanitize(data.autosanitize);
+        renderParanoia(data.paranoia);
+        renderShutdown(data.shutdown);
+      } catch {
+        $("connections").innerHTML = '<div class="empty">Panel offline — is nexus-genius.service running?</div>';
+      }
+    }
+
+    refresh();
+    setInterval(refresh, 3000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+#!/bin/bash
+# Network lockdown — disable and remove local file sharing / broadcast services.
+
+NEXUS_SHARING_UNITS=(
+  smbd.service
+  nmbd.service
+  samba.service
+  samba-ad-dc.service
+  avahi-daemon.service
+  avahi-daemon.socket
+  nfs-server.service
+  nfs-kernel-server.service
+  rpcbind.service
+  rpcbind.socket
+  vsftpd.service
+  proftpd.service
+  netatalk.service
+  wsdd.service
+  minidlna.service
+  minidlnad.service
+  rpc-statd.service
+)
+
+# Server-only packages — never purge client/common libs (smbclient, samba-common, avahi-daemon).
+NEXUS_SHARING_PACKAGES_DEB=(
+  samba
+  samba-ad-dc
+  samba-vfs-modules
+  nfs-kernel-server
+  vsftpd
+  proftpd
+  netatalk
+  minidlna
+  wsdd
+)
+
+nexus_network_unit_exists() {
+  local unit="$1"
+  systemctl list-unit-files "${unit}" &>/dev/null \
+    || systemctl cat "${unit}" &>/dev/null
+}
+
+nexus_network_disable_unit() {
+  local unit="$1"
+  command -v systemctl >/dev/null 2>&1 || return 0
+  nexus_network_unit_exists "${unit}" || return 0
+  systemctl stop "${unit}" 2>/dev/null || true
+  systemctl disable "${unit}" 2>/dev/null || true
+  systemctl mask "${unit}" 2>/dev/null || true
+  nexus_log "INFO" "network-lockdown" "disabled ${unit}"
+}
+
+nexus_network_purge_packages() {
+  command -v apt-get >/dev/null 2>&1 || return 0
+  local pkg pkgs=()
+  for pkg in "${NEXUS_SHARING_PACKAGES_DEB[@]}"; do
+    dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q 'install ok installed' && pkgs+=("$pkg")
+  done
+  [[ ${#pkgs[@]} -eq 0 ]] && return 0
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get remove --purge -y -qq "${pkgs[@]}" 2>/dev/null || true
+  nexus_log "INFO" "network-lockdown" "purged packages: ${pkgs[*]}"
+}
+
+nexus_network_lockdown() {
+  [[ "${NEXUS_NETWORK_LOCKDOWN:-1}" == "1" ]] || return 0
+  local unit
+  for unit in "${NEXUS_SHARING_UNITS[@]}"; do
+    nexus_network_disable_unit "${unit}"
+  done
+  [[ "${NEXUS_NETWORK_LOCKDOWN_PURGE:-1}" == "1" ]] && nexus_network_purge_packages
+  [[ -f /etc/samba/smb.conf ]] && chmod 600 /etc/samba/smb.conf 2>/dev/null || true
+}
+
+nexus_network_lockdown_verify() {
+  [[ "${NEXUS_NETWORK_LOCKDOWN:-1}" == "1" ]] || return 0
+  command -v systemctl >/dev/null 2>&1 || return 0
+  local unit
+  for unit in smbd.service nmbd.service avahi-daemon.service avahi-daemon.socket \
+    nfs-server.service nfs-kernel-server.service; do
+    if systemctl is-active --quiet "${unit}" 2>/dev/null; then
+      nexus_alert "network-lockdown" "NETWORK_LOCKDOWN_ALERT unit=${unit} state=active"
+      nexus_network_disable_unit "${unit}"
+    fi
+  done
+  return 0
+}
