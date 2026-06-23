@@ -6,7 +6,7 @@
     (function () {
       try {
         if (localStorage.getItem("nexus_old_man") === "1") document.documentElement.classList.add("old-man");
-        var raw = sessionStorage.getItem("nexus-field-v3");
+        var raw = sessionStorage.getItem("nexus-field-v4") || sessionStorage.getItem("nexus-field-v3");
         if (raw) window.NEXUS_FIELD = JSON.parse(raw);
       } catch (_) {}
     })();
@@ -15,7 +15,7 @@
   <title>NEXUS-Shield — Threat Panel</title>
   <link rel="preload" href="/api/status" as="fetch" crossorigin />
   <link rel="preload" href="/api/field" as="fetch" crossorigin />
-  <script defer src="/assets/field-foundation.js"></script>
+  <script src="/assets/field-foundation.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
@@ -212,6 +212,33 @@
       padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600;
     }
     .panel-subnav button.active { color: var(--text); border-color: var(--internet); background: rgba(77, 155, 255, 0.1); }
+    nav.menu button { position: relative; }
+    nav.menu button .tab-load-pct,
+    .panel-subnav button .tab-load-pct {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: var(--text-xs);
+      font-weight: 700;
+      line-height: 1.3;
+      vertical-align: middle;
+      background: rgba(77, 155, 255, 0.15);
+      color: var(--internet);
+      border: 1px solid rgba(77, 155, 255, 0.35);
+    }
+    nav.menu button .tab-load-pct.ready,
+    .panel-subnav button .tab-load-pct.ready {
+      background: rgba(61, 214, 140, 0.12);
+      color: var(--ok);
+      border-color: rgba(61, 214, 140, 0.35);
+    }
+    nav.menu button .tab-load-pct.loading,
+    .panel-subnav button .tab-load-pct.loading {
+      background: rgba(212, 175, 55, 0.12);
+      color: var(--gold);
+      border-color: rgba(212, 175, 55, 0.35);
+    }
     .command-wrap { padding: 16px 24px 32px; width: 100%; }
     .command-motto { font-size: 1.05rem; color: var(--muted); margin: 0 0 16px; line-height: 1.6; }
     .command-motto strong { color: var(--gold); }
@@ -1230,7 +1257,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.8.3</h1>
+        <h1>NEXUS-Shield v5.8.4</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1250,7 +1277,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.3</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.4</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -2196,6 +2223,78 @@
     };
     let currentPanel = "command";
     let currentSubView = "command";
+    let lastPanelData = null;
+    let lastPanelUpdated = "";
+    let lastHostAttackUpdated = "";
+    let lastGatekeeperSig = "";
+    let panelFetchInFlight = false;
+
+    const TAB_LOAD_MODULES = {
+      command: { keys: ["field_command", "gatekeeper"], subs: { command: ["field_command"] } },
+      us: { keys: ["us_field"], subs: { us: ["us_field"] } },
+      packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
+      threats: { keys: ["host_attacks"], subs: { "host-attack": ["host_attacks"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
+      intel: { keys: ["field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
+      library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
+      system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
+    };
+
+    function moduleReady(data, key) {
+      if (!data || data[key] == null) return false;
+      const val = data[key];
+      if (key === "gatekeeper") return Array.isArray(val.connections);
+      if (key === "field_rf") return Boolean(val.updated || val.antenna?.mode);
+      if (key === "field_command") return Boolean(val.good_guy || val.pulse || val.motto);
+      if (key === "settings") return typeof val === "object" && Object.keys(val).length > 0;
+      if (Array.isArray(val)) return val.length > 0;
+      if (typeof val === "object") return Object.keys(val).length > 0;
+      return Boolean(val);
+    }
+
+    function tabLoadPercent(data, panel, sub) {
+      const spec = TAB_LOAD_MODULES[panel];
+      if (!spec) return panelFetchInFlight ? 0 : 100;
+      const keys = (sub && spec.subs?.[sub]) || spec.keys || [];
+      if (!keys.length) return data ? 100 : 0;
+      if (!data) return panelFetchInFlight ? 12 : 0;
+      const hit = keys.filter((k) => moduleReady(data, k)).length;
+      return Math.round((hit / keys.length) * 100);
+    }
+
+    function tabLoadBadgeHtml(pct, { fetching } = {}) {
+      const cls = pct >= 100 ? "ready" : (fetching || pct > 0 ? "loading" : "");
+      return `<span class="tab-load-pct ${cls}">${pct}%</span>`;
+    }
+
+    function updateTabLoadProgress(data, opts = {}) {
+      const fetching = opts.fetching ?? panelFetchInFlight;
+      document.querySelectorAll("nav.menu button[data-view]").forEach((btn) => {
+        const panel = btn.dataset.view;
+        const pct = tabLoadPercent(data, panel);
+        let badge = btn.querySelector(".tab-load-pct");
+        if (!badge) {
+          badge = document.createElement("span");
+          badge.className = "tab-load-pct";
+          btn.appendChild(badge);
+        }
+        badge.className = `tab-load-pct ${pct >= 100 ? "ready" : (fetching ? "loading" : "")}`;
+        badge.textContent = `${pct}%`;
+      });
+      const subnav = $("panel-subnav");
+      if (subnav) {
+        subnav.querySelectorAll("button[data-sub]").forEach((btn) => {
+          const pct = tabLoadPercent(data, currentPanel, btn.dataset.sub);
+          let badge = btn.querySelector(".tab-load-pct");
+          if (!badge) {
+            badge = document.createElement("span");
+            badge.className = "tab-load-pct";
+            btn.appendChild(badge);
+          }
+          badge.className = `tab-load-pct ${pct >= 100 ? "ready" : (fetching ? "loading" : "")}`;
+          badge.textContent = `${pct}%`;
+        });
+      }
+    }
 
     function resolveViewRoute(raw) {
       const parts = (raw || "command").split("/");
@@ -2286,9 +2385,10 @@
         return;
       }
       subnav.hidden = false;
-      subnav.innerHTML = keys.map((k) =>
-        `<button type="button" data-sub="${esc(k)}" class="${k === sub ? "active" : ""}">${esc(group.subs[k])}</button>`
-      ).join("");
+      subnav.innerHTML = keys.map((k) => {
+        const pct = tabLoadPercent(lastPanelData, panel, k);
+        return `<button type="button" data-sub="${esc(k)}" class="${k === sub ? "active" : ""}">${esc(group.subs[k])}${tabLoadBadgeHtml(pct, { fetching: panelFetchInFlight })}</button>`;
+      }).join("");
       subnav.querySelectorAll("button").forEach((btn) => {
         btn.addEventListener("click", () => showView(`${panel}/${btn.dataset.sub}`));
       });
@@ -2298,6 +2398,70 @@
       document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
       const el = $(`view-${sub}`);
       if (el) el.classList.add("active");
+    }
+
+    function paintPanelFromCache(data) {
+      if (!data) return;
+      lastPanelData = data;
+      lastPanelUpdated = data.updated || "";
+      $("mode").textContent = data.vigil_mode || "calm";
+      $("signal").textContent = data.truth_signal ?? "0";
+      $("updated").textContent = data.updated || "—";
+      $("egress").textContent = data.internet?.egress_count ?? 0;
+      $("listeners").textContent = data.internet?.listener_count ?? 0;
+      $("dns").textContent = (data.internet?.dns_hash || "—").slice(0, 12);
+      $("corr").textContent = data.correlation_score ?? 0;
+      $("firewall").textContent = data.firewall ?? "—";
+      $("fw-blocks").textContent = data.firewall_blocks ?? 0;
+      fieldLiveCount(data);
+      if (data.vector_intel) renderIntelBanner(data.vector_intel);
+      if (data.attack_kit) renderAttackKit(data.attack_kit);
+      if (data.trusted) renderTrusted(data.trusted);
+      if (data.threats) renderThreats(data.threats);
+      if (data.vectors) renderVectors(data.vectors);
+      if (data.settings) renderSettings(data.settings);
+      if (data.adblock_guardian) renderGuardianFeed(data.adblock_guardian, data.settings);
+      if (data.autosanitize) renderSanitize(data.autosanitize);
+      if (data.paranoia) renderParanoia(data.paranoia);
+      if (data.shutdown) renderShutdown(data.shutdown);
+      renderHonorability(data);
+      renderCommandCenter(data);
+      renderFieldProtect(data);
+      const gk = data.gatekeeper || {};
+      if (!gk.connections?.length && data.internet?.connections?.length) {
+        gk._fallback = data.internet.connections;
+      }
+      if (gk.connections?.length || gk._fallback?.length) {
+        renderGatekeeperBanner(gk);
+        renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
+        lastGatekeeperSig = gatekeeperSig(gk);
+      }
+      if (data.host_attacks) {
+        renderHostAttackMap(data.host_attacks);
+        lastHostAttackUpdated = data.host_attacks.updated || "";
+      }
+      if (data.us_field) renderUSField(data.us_field);
+      if (data.angel_dossiers) renderDossiers(data.angel_dossiers);
+      if (data.human_dossier) renderHumanDossiers(data.human_dossier);
+      if (data.angel_research) renderResearch(data.angel_research);
+      if (data.packet_field) {
+        renderPacketField(data.packet_field);
+        renderInspect(data.packet_field);
+      }
+      if (data.h7_library) renderLibraryShelf(data.h7_library);
+      updateTabLoadProgress(data);
+      onSubViewActivated(currentSubView);
+    }
+
+    function bootstrapPanelCache() {
+      const data = window.NEXUS_FIELD || (window.NexusField && NexusField.load && NexusField.load());
+      if (data) {
+        window.NEXUS_FIELD = data;
+        paintPanelFromCache(data);
+        return true;
+      }
+      updateTabLoadProgress(null, { fetching: true });
+      return false;
     }
 
     function onSubViewActivated(sub) {
@@ -2356,6 +2520,7 @@
       showView(raw);
     }
     window.addEventListener("hashchange", applyHashView);
+    bootstrapPanelCache();
     applyHashView();
 
     function applyOldManMode(on) {
@@ -3605,10 +3770,6 @@
     let hostMarkersById = {};
     let hostLastPoints = [];
     let hostSelectedId = null;
-    let lastPanelUpdated = "";
-    let lastHostAttackUpdated = "";
-    let lastGatekeeperSig = "";
-    let lastPanelData = null;
     let hostSdfBaseLayer = null;
     let hostSatelliteLayer = null;
     let hostTrashCount = 0;
@@ -5312,36 +5473,7 @@
     }
 
     function fieldPaintInstant(field) {
-      if (!field) return;
-      $("mode").textContent = field.vigil_mode || "calm";
-      $("signal").textContent = field.truth_signal ?? "0";
-      $("updated").textContent = field.updated || "—";
-      $("egress").textContent = field.internet?.egress_count ?? 0;
-      $("listeners").textContent = field.internet?.listener_count ?? 0;
-      $("dns").textContent = (field.internet?.dns_hash || "—").slice(0, 12);
-      $("corr").textContent = field.correlation_score ?? 0;
-      $("firewall").textContent = field.firewall ?? "—";
-      $("fw-blocks").textContent = field.firewall_blocks ?? 0;
-      fieldLiveCount(field);
-      if (field.vector_intel) renderIntelBanner(field.vector_intel);
-      if (field.attack_kit) renderAttackKit(field.attack_kit);
-      if (field.trusted) renderTrusted(field.trusted);
-      if (field.threats) renderThreats(field.threats);
-      if (field.vectors) renderVectors(field.vectors);
-      const gk = field.gatekeeper || {};
-      if (!gk.connections?.length && field.internet?.connections?.length) {
-        gk._fallback = field.internet.connections;
-      }
-      if (gk.connections?.length || gk._fallback?.length) {
-        renderGatekeeperBanner(gk);
-        renderConnections(gk, field.trusted, field.blocked, field.lockdown_first);
-        lastGatekeeperSig = gatekeeperSig(gk);
-      }
-      if (field.host_attacks) {
-        renderHostAttackMap(field.host_attacks);
-        lastHostAttackUpdated = field.host_attacks.updated || "";
-      }
-      if (field.us_field) renderUSField(field.us_field);
+      paintPanelFromCache(field);
     }
 
     function onLeafletReady(fn) {
@@ -5539,9 +5671,12 @@
     });
 
     async function refresh() {
+      panelFetchInFlight = true;
+      updateTabLoadProgress(lastPanelData, { fetching: true });
       try {
         const res = await fetch("/api/status", { cache: "no-store" });
         const data = await res.json();
+        panelFetchInFlight = false;
         const panelChanged = data.updated !== lastPanelUpdated;
         if (panelChanged) lastPanelUpdated = data.updated || "";
         $("mode").textContent = data.vigil_mode || "calm";
@@ -5596,8 +5731,12 @@
         }
         if (currentSubView === "library") renderLibraryShelf(data.h7_library);
         lastPanelData = data;
+        updateTabLoadProgress(data);
+        renderSubnav(currentPanel, currentSubView);
         if (window.NexusField && data.updated) NexusField.persist(data);
       } catch {
+        panelFetchInFlight = false;
+        updateTabLoadProgress(lastPanelData, { fetching: false });
         const conns = $("connections");
         const stale = conns?.querySelector(".conn-row, .conn-row.trusted");
         if (!stale && lastPanelData?.gatekeeper?.connections?.length) {
@@ -5608,18 +5747,11 @@
       }
     }
 
-    const fieldWarm = window.NEXUS_FIELD || (window.NexusField && NexusField.load());
-    if (fieldWarm) {
-      window.NEXUS_FIELD = fieldWarm;
-      fieldPaintInstant(fieldWarm);
-      lastPanelData = fieldWarm;
-      lastPanelUpdated = fieldWarm.updated || "";
-    }
     if (window.NexusField) {
       NexusField.fetchField().then((d) => {
         if (!d) return;
         NexusField.persist(d);
-        if (!lastPanelUpdated) fieldPaintInstant(d);
+        if (!lastPanelUpdated || d.updated !== lastPanelUpdated) paintPanelFromCache(d);
       });
     }
     bindHumanDossierFilters();

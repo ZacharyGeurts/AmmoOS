@@ -400,6 +400,21 @@ slim = {
         "summary": (doc.get("human_dossier") or {}).get("summary"),
         "malware_counts": (doc.get("human_dossier") or {}).get("malware_counts") or {},
     },
+    "field_rf": doc.get("field_rf") or {},
+    "field_command": doc.get("field_command") or {},
+    "police_agency": doc.get("police_agency") or {},
+    "program_tags": doc.get("program_tags") or {},
+    "gov_intel": doc.get("gov_intel") or {},
+    "browser_awareness": doc.get("browser_awareness") or {},
+    "operator_location": doc.get("operator_location") or {},
+    "packet_field": doc.get("packet_field") or {},
+    "angel_dossiers": doc.get("angel_dossiers") or {},
+    "angel_research": doc.get("angel_research") or {},
+    "h7_library": doc.get("h7_library") or {},
+    "adblock_guardian": doc.get("adblock_guardian") or {},
+    "autosanitize": doc.get("autosanitize") or {},
+    "paranoia": doc.get("paranoia") or {},
+    "shutdown": doc.get("shutdown") or {},
 }
 tmp = dst.with_suffix(".tmp")
 tmp.write_text(json.dumps(slim, ensure_ascii=False) + "\n", encoding="utf-8")

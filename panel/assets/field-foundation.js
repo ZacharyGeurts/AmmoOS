@@ -1,8 +1,10 @@
-/* NEXUS Field Foundation — invisible warmed cache for instant panel paint. */
+/* NEXUS Field Foundation — full panel cache for instant paint (/api/status). */
 (function (global) {
-  const KEY = "nexus-field-v3";
+  const KEY = "nexus-field-v4";
+  const LEGACY_KEYS = ["nexus-field-v3", "nexus-field-v2"];
 
   function persist(data) {
+    if (!data) return;
     try {
       global.sessionStorage.setItem(KEY, JSON.stringify(data));
     } catch (_e) {
@@ -21,6 +23,14 @@
     try {
       const raw = global.sessionStorage.getItem(KEY);
       if (raw) return JSON.parse(raw);
+      for (const legacy of LEGACY_KEYS) {
+        const old = global.sessionStorage.getItem(legacy);
+        if (old) {
+          const doc = JSON.parse(old);
+          persist(doc);
+          return doc;
+        }
+      }
     } catch (_e) {
       return null;
     }
@@ -28,7 +38,7 @@
   }
 
   function fetchField() {
-    return global.fetch("/api/field", { cache: "no-store" })
+    return global.fetch("/api/status", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null);
   }
@@ -44,7 +54,6 @@
     fetchField().then((d) => {
       if (d) persist(d);
       if (dest) global.location.replace(dest);
-      else if (!d && dest) global.location.replace(dest);
     });
   }
 

@@ -460,7 +460,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.8\.3' "$panel"
+  grep -q 'v5\.8\.4' "$panel"
 }
 
 test_field_rf_module() {
@@ -800,7 +800,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.8.3' "$panel"
+  grep -q 'v5.8.4' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -809,7 +809,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.8.3' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.8.4' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
@@ -953,7 +953,10 @@ test_panel_browser_helpers() {
   [[ -f "${ROOT}/panel/assets/field-foundation.js" ]]
   grep -q '/api/field' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'field-snapshot' "${ROOT}/lib/threat-panel.sh"
-  grep -q 'fieldPaintInstant' "${ROOT}/panel/threat-panel.html"
+  grep -q 'paintPanelFromCache' "${ROOT}/panel/threat-panel.html"
+  grep -q 'tab-load-pct' "${ROOT}/panel/threat-panel.html"
+  grep -q 'nexus-field-v4' "${ROOT}/panel/assets/field-foundation.js"
+  grep -q '/api/status' "${ROOT}/panel/assets/field-foundation.js"
   grep -q 'field-live' "${ROOT}/panel/threat-panel.html"
   grep -q 'NexusField' "${ROOT}/panel/threat-panel.html"
   grep -q '_inject_field_bootstrap' "${ROOT}/lib/threat-panel-http.py"
