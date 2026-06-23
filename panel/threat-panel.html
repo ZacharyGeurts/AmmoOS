@@ -1339,7 +1339,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.8.8</h1>
+        <h1>NEXUS-Shield v5.8.9</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1359,7 +1359,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.8</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.9</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1519,8 +1519,9 @@
       <div id="field-rf-permitted-bands" class="meta" style="margin-bottom:10px;"></div>
       <div class="honor-grid">
         <div class="honor-card">
-          <h4 data-tip="Passive global wireless field — all visible APs across 2.4/5/6 GHz bands.">Global antenna telemetry</h4>
+          <h4 data-tip="Passive global wireless field — all visible APs across 2.4/5/6 GHz bands. Additional antenna fields fuse scans for higher resolution.">Global antenna telemetry</h4>
           <div id="field-rf-antenna-meta" class="meta" style="margin-bottom:8px;">Sampling…</div>
+          <div id="field-rf-antenna-fields" class="meta" style="margin-bottom:8px;"></div>
           <div id="field-rf-global-field" class="meta" style="margin-bottom:8px;"></div>
           <div id="field-rf-interfaces"></div>
           <div style="margin-top:10px;">
@@ -4279,12 +4280,18 @@
           : '<div class="empty">Operations log populates after first scan cycle.</div>';
       }
       const ant = fr.antenna || {};
+      const res = ant.resolution || {};
+      const resTier = res.tier || ant.resolution_tier;
+      const resScore = res.score ?? ant.resolution_score;
       const meta = $("field-rf-antenna-meta");
       if (meta) {
         meta.textContent = [
           ant.mode || "global_passive_pollution_cleanup",
-          ant.wifi_device ? `wifi:${ant.wifi_device}` : "no wifi iface",
-          `scan:${ant.scan_count ?? 0}`,
+          ant.wifi_devices?.length ? `${ant.wifi_devices.length} antenna field(s)` : (ant.wifi_device ? `wifi:${ant.wifi_device}` : "no wifi iface"),
+          resTier ? `resolution:${resTier}` : "",
+          resScore != null ? `resolution_score:${resScore}` : "",
+          `scan:${ant.scan_count ?? 0}${ant.raw_scan_total && ant.raw_scan_total !== ant.scan_count ? ` (${ant.raw_scan_total} raw)` : ""}`,
+          ant.multi_antenna_sightings ? `multi:${ant.multi_antenna_sightings}` : "",
           `permitted:${ant.permitted_count ?? "—"}`,
           `pollution:${ant.pollution_count ?? ant.unpermitted_count ?? 0}`,
           `horizon:${Number(ant.cumulative_horizon_km ?? 0).toFixed(1)}km`,
@@ -4293,6 +4300,25 @@
           (ant.bands_seen || []).join("/") || "bands:—",
           ant.active_connection?.ssid ? `connected:${ant.active_connection.ssid}` : "not connected",
         ].filter(Boolean).join(" · ");
+      }
+      const fieldsEl = $("field-rf-antenna-fields");
+      if (fieldsEl) {
+        const fields = ant.antenna_fields || [];
+        if (!fields.length) {
+          fieldsEl.innerHTML = '<div class="empty">No wifi antenna fields detected.</div>';
+        } else {
+          fieldsEl.innerHTML = `<table class="honor-table"><thead><tr><th>Antenna</th><th>PHY</th><th>State</th><th>Scan</th><th>Bands</th><th>Signal</th><th>Tuned</th></tr></thead><tbody>
+            ${fields.map((f) => `<tr>
+              <td>${esc(f.device || "?")}${f.connected ? " · <span class=\"severity-ok\">connected</span>" : ""}</td>
+              <td>${esc(f.phy ? `phy${f.phy}` : "—")}${f.mac ? ` · ${esc(f.mac)}` : ""}</td>
+              <td>${esc(f.state || "—")}</td>
+              <td>${f.scan_count ?? 0} APs</td>
+              <td>${esc((f.bands_seen || []).join("/") || "—")}</td>
+              <td>${f.signal_max ? `max ${f.signal_max}%` : "—"}${f.signal_avg ? ` · avg ${f.signal_avg}%` : ""}</td>
+              <td>${f.tuned_band ? esc(`${f.tuned_band} ch${f.tuned_channel || "?"}`) : "—"}</td>
+            </tr>`).join("")}
+          </tbody></table>`;
+        }
       }
       const globalEl = $("field-rf-global-field");
       if (globalEl) {

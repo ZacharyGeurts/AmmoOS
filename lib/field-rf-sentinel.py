@@ -239,6 +239,202 @@ def _nmcli_devices() -> list[dict[str, str]]:
     return rows
 
 
+def _wifi_device_rows(devices: list[dict[str, str]] | None = None) -> list[dict[str, str]]:
+    devices = devices or _nmcli_devices()
+    return [r for r in devices if r.get("type") == "wifi" and r.get("device")]
+
+
+def _iw_wifi_phy_map() -> dict[str, dict[str, Any]]:
+    """Map wifi interface names to PHY metadata from iw dev (receive-only introspection)."""
+    text = _run(["iw", "dev"], timeout=6)
+    out: dict[str, dict[str, Any]] = {}
+    if not text.strip():
+        return out
+
+    phy_id = ""
+    phy_block: dict[str, Any] = {}
+    iface = ""
+
+    def _flush_iface() -> None:
+        nonlocal iface, phy_block, phy_id
+        if iface:
+            out[iface] = {
+                "phy": phy_id,
+                "iface": iface,
+                "addr": phy_block.get("addr", ""),
+                "iface_type": phy_block.get("type", ""),
+                "channel": phy_block.get("channel"),
+                "freq_mhz": phy_block.get("freq_mhz"),
+                "width_mhz": phy_block.get("width_mhz"),
+                "band": phy_block.get("band", ""),
+            }
+        iface = ""
+        phy_block = {}
+
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        m_phy = re.match(r"^phy#(\d+)", line)
+        if m_phy:
+            _flush_iface()
+            phy_id = m_phy.group(1)
+            continue
+        m_if = re.match(r"^Interface\s+(\S+)", line)
+        if m_if:
+            _flush_iface()
+            iface = m_if.group(1)
+            continue
+        if not iface:
+            continue
+        if line.startswith("addr "):
+            phy_block["addr"] = line.split(None, 1)[-1].strip()
+        elif line.startswith("type "):
+            phy_block["type"] = line.split(None, 1)[-1].strip()
+        elif line.startswith("channel "):
+            phy_block["channel_raw"] = line.split(None, 1)[-1].strip()
+            ch_m = re.search(r"(\d+)\s*\((\d+(?:\.\d+)?)\s*MHz\)", line)
+            if ch_m:
+                phy_block["channel"] = ch_m.group(1)
+                phy_block["freq_mhz"] = ch_m.group(2)
+                phy_block["band"] = _band_label(ch_m.group(2))
+            w_m = re.search(r"width:\s*(\d+)\s*MHz", line)
+            if w_m:
+                phy_block["width_mhz"] = int(w_m.group(1))
+    _flush_iface()
+    return out
+
+
+def _antenna_field_descriptor(
+    row: dict[str, str],
+    phy: dict[str, Any] | None,
+    scan: list[dict[str, Any]],
+    active: dict[str, Any] | None,
+) -> dict[str, Any]:
+    dev = str(row.get("device") or "")
+    bands = sorted({str(s.get("band") or "") for s in scan if s.get("band")} - {""})
+    signals = [int(s.get("signal_dbm") or 0) for s in scan if s.get("signal_dbm") is not None]
+    return {
+        "device": dev,
+        "state": row.get("state") or "",
+        "connection": row.get("connection") or "",
+        "phy": (phy or {}).get("phy") or "",
+        "mac": (phy or {}).get("addr") or "",
+        "iface_type": (phy or {}).get("iface_type") or "",
+        "tuned_channel": (phy or {}).get("channel") or "",
+        "tuned_freq_mhz": (phy or {}).get("freq_mhz") or "",
+        "tuned_band": (phy or {}).get("band") or "",
+        "width_mhz": (phy or {}).get("width_mhz"),
+        "scanned": bool(scan),
+        "scan_count": len(scan),
+        "bands_seen": bands,
+        "signal_max": max(signals) if signals else 0,
+        "signal_avg": round(sum(signals) / len(signals), 1) if signals else 0,
+        "active_connection": active,
+        "connected": bool(active),
+    }
+
+
+def _merge_multi_antenna_scans(
+    per_scans: dict[str, list[dict[str, Any]]],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Fuse passive scans from every antenna field — best signal wins, sightings accumulate."""
+    merged: dict[str, dict[str, Any]] = {}
+    raw_total = 0
+    band_union: set[str] = set()
+
+    for dev, rows in per_scans.items():
+        raw_total += len(rows)
+        for ap in rows:
+            bnorm = _norm_mac(str(ap.get("bssid") or ""))
+            if not bnorm:
+                continue
+            band = str(ap.get("band") or "")
+            if band:
+                band_union.add(band)
+            sig = int(ap.get("signal_dbm") or 0)
+            existing = merged.get(bnorm)
+            if not existing:
+                merged[bnorm] = {
+                    **ap,
+                    "antenna_sources": [dev],
+                    "antenna_count": 1,
+                    "antenna_signals": {dev: sig},
+                    "sightings": 1,
+                }
+                continue
+            existing["sightings"] = int(existing.get("sightings") or 0) + 1
+            if dev not in existing["antenna_sources"]:
+                existing["antenna_sources"].append(dev)
+                existing["antenna_count"] = len(existing["antenna_sources"])
+            existing["antenna_signals"][dev] = max(
+                int(existing["antenna_signals"].get(dev) or 0), sig,
+            )
+            if sig > int(existing.get("signal_dbm") or 0):
+                for key in ("ssid", "channel", "freq_mhz", "band", "security", "open", "bssid_oui"):
+                    if ap.get(key) is not None:
+                        existing[key] = ap[key]
+                existing["signal_dbm"] = sig
+                existing["source_antenna"] = dev
+
+    unique = list(merged.values())
+    multi_sight = sum(1 for ap in unique if int(ap.get("antenna_count") or 0) >= 2)
+    return unique, {
+        "raw_scan_total": raw_total,
+        "unique_bssid_count": len(unique),
+        "dedupe_removed": max(0, raw_total - len(unique)),
+        "multi_antenna_sightings": multi_sight,
+        "band_union": sorted(band_union),
+        "antenna_field_count": len(per_scans),
+    }
+
+
+def _resolution_from_antenna_fields(
+    antenna_fields: list[dict[str, Any]],
+    merge_stats: dict[str, Any],
+) -> dict[str, Any]:
+    active_fields = [f for f in antenna_fields if f.get("scanned")]
+    n_active = len(active_fields)
+    n_total = len(antenna_fields)
+    raw_total = int(merge_stats.get("raw_scan_total") or 0)
+    unique = int(merge_stats.get("unique_bssid_count") or 0)
+    multi = int(merge_stats.get("multi_antenna_sightings") or 0)
+    bands = merge_stats.get("band_union") or []
+
+    if n_active >= 3:
+        tier = "high"
+    elif n_active == 2:
+        tier = "dual"
+    elif n_active == 1:
+        tier = "single"
+    else:
+        tier = "none"
+
+    score = 0.0
+    score += min(42.0, n_active * 14.0)
+    score += min(24.0, len(bands) * 8.0)
+    if raw_total > 0 and unique > 0:
+        gain = (raw_total - unique) / raw_total
+        score += min(18.0, gain * 18.0)
+    if unique > 0:
+        score += min(16.0, (multi / unique) * 16.0)
+
+    return {
+        "tier": tier,
+        "score": round(min(100.0, score), 1),
+        "antenna_field_count": n_total,
+        "active_antenna_fields": n_active,
+        "multi_antenna_sightings": multi,
+        "dedupe_gain": max(0, raw_total - unique),
+        "band_coverage": bands,
+        "detail": (
+            f"{n_active}/{n_total} antenna fields · tier {tier} · "
+            f"score {round(min(100.0, score), 1)} · "
+            f"{unique} unique BSSIDs ({multi} multi-antenna)"
+        ),
+    }
+
+
 def _wifi_scan(dev: str) -> list[dict[str, Any]]:
     text = _run(["nmcli", "-t", "-f", "SSID,BSSID,CHAN,FREQ,SIGNAL,SECURITY", "dev", "wifi", "list", "ifname", dev])
     rows: list[dict[str, Any]] = []
@@ -262,6 +458,7 @@ def _wifi_scan(dev: str) -> list[dict[str, Any]]:
             "signal_dbm": signal,
             "security": sec,
             "open": sec in WEAK_SECURITY,
+            "source_antenna": dev,
         })
     return rows
 
@@ -985,6 +1182,9 @@ def _detect_wireless_threats(
         max_reach = max(reach_vals) if reach_vals else 0.0
         ledger = _pollution_ledger()
         lstats = ledger.get("stats") or {}
+        res = hist.get("last_resolution") or {}
+        ant_n = int(res.get("active_antenna_fields") or hist.get("last_antenna_field_count") or 1)
+        tier = res.get("tier") or ("single" if ant_n <= 1 else "multi")
         threats.append({
             "ts": ts,
             "kind": "global_wireless_field",
@@ -992,6 +1192,8 @@ def _detect_wireless_threats(
             "detail": (
                 f"Passive global field — {len(scan)} APs "
                 f"({permitted_n} permitted / {len(unpermitted_aps)} pollution) · "
+                f"{ant_n} antenna field(s) · resolution {tier} "
+                f"({res.get('score', '—')}) · "
                 f"horizon {max(lstats.get('cumulative_horizon_km', 0), max_reach):.1f} km · "
                 f"{lstats.get('total_cleaned_forever', 0)} cleaned forever"
             ),
@@ -1002,6 +1204,9 @@ def _detect_wireless_threats(
             "cumulative_horizon_km": lstats.get("cumulative_horizon_km", 0),
             "pollution_lifetime_seen": lstats.get("total_pollution_seen", 0),
             "pollution_lifetime_cleaned": lstats.get("total_cleaned_forever", 0),
+            "resolution_tier": tier,
+            "resolution_score": res.get("score"),
+            "antenna_field_count": ant_n,
             "near_infinite_passive": True,
             "fcc_safe": True,
             "global": True,
@@ -1350,18 +1555,34 @@ def sample_cycle() -> dict[str, Any]:
     hist = _history()
     devices = _nmcli_devices()
     rfkill = _rfkill_rows()
-    wifi_dev = None
-    for row in devices:
-        if row.get("type") == "wifi":
-            wifi_dev = row.get("device")
-            break
+    wifi_rows = _wifi_device_rows(devices)
+    phy_map = _iw_wifi_phy_map()
 
-    scan: list[dict[str, Any]] = []
-    active = None
-    if wifi_dev:
-        _run(["nmcli", "dev", "wifi", "rescan", "ifname", wifi_dev], timeout=12)
-        scan = _wifi_scan(wifi_dev)
-        active = _active_wifi_connection(wifi_dev)
+    per_scans: dict[str, list[dict[str, Any]]] = {}
+    antenna_fields: list[dict[str, Any]] = []
+    active: dict[str, Any] | None = None
+    wifi_dev: str | None = None
+
+    for row in wifi_rows:
+        dev = str(row.get("device") or "")
+        if not dev:
+            continue
+        if wifi_dev is None or "connected" in str(row.get("state") or "").lower():
+            wifi_dev = dev
+        _run(["nmcli", "dev", "wifi", "rescan", "ifname", dev], timeout=12)
+        dev_scan = _wifi_scan(dev)
+        per_scans[dev] = dev_scan
+        conn = _active_wifi_connection(dev)
+        if conn and (active is None or "connected" in str(row.get("state") or "").lower()):
+            active = conn
+        antenna_fields.append(_antenna_field_descriptor(row, phy_map.get(dev), dev_scan, conn))
+
+    scan, merge_stats = _merge_multi_antenna_scans(per_scans)
+    resolution = _resolution_from_antenna_fields(antenna_fields, merge_stats)
+    hist["last_resolution"] = resolution
+    hist["last_antenna_field_count"] = resolution.get("active_antenna_fields", 0)
+
+    kick_dev = (active or {}).get("device") or wifi_dev
 
     if active and scan:
         active_bssid = _norm_mac(str(active.get("bssid") or ""))
@@ -1370,9 +1591,11 @@ def sample_cycle() -> dict[str, Any]:
                 active["channel"] = ap.get("channel")
                 active["freq_mhz"] = ap.get("freq_mhz")
                 active["permitted"] = ap.get("permitted")
+                active["antenna_count"] = ap.get("antenna_count")
+                active["antenna_sources"] = ap.get("antenna_sources")
                 break
 
-    forever_enforce = _forever_rf_enforce(wifi_dev, active, scan)
+    forever_enforce = _forever_rf_enforce(kick_dev, active, scan)
 
     threats = _detect_wireless_threats(scan, active, hist)
     for t in threats:
@@ -1385,15 +1608,17 @@ def sample_cycle() -> dict[str, Any]:
                 t["disabled_forever"] = True
             _append_threat(t)
 
-    kick_result = _lawful_kick(threats, wifi_dev, active)
+    kick_result = _lawful_kick(threats, kick_dev, active)
     kick_result["forever_enforce"] = forever_enforce
     pollution_cleanup = _global_pollution_cleanup(scan, threats, kick_result)
     kick_result["global_pollution_cleanup"] = pollution_cleanup
 
-    if wifi_dev:
+    if per_scans:
         scans = hist.get("scans") or {}
-        scans[wifi_dev] = scan[:60]
+        for dev, dev_scan in per_scans.items():
+            scans[dev] = dev_scan[:60]
         hist["scans"] = scans
+        hist["antenna_fields"] = antenna_fields
     hist["rfkill"] = rfkill
     hist.setdefault("samples", []).append({
         "ts": _now(),
@@ -1410,12 +1635,20 @@ def sample_cycle() -> dict[str, Any]:
         "permitted_bands": _permitted_bands().get("bands") or [],
         "antenna": {
             "mode": "global_passive_pollution_cleanup",
-            "description": "Near-infinite passive reach — global pollution cleanup on the wire, FCC safe",
+            "description": "Near-infinite passive reach — multi-antenna fusion improves resolution, FCC safe",
             "wifi_device": wifi_dev,
+            "wifi_devices": [f.get("device") for f in antenna_fields if f.get("device")],
+            "antenna_fields": antenna_fields,
+            "merge_stats": merge_stats,
+            "resolution": resolution,
+            "resolution_tier": resolution.get("tier"),
+            "resolution_score": resolution.get("score"),
             "scan_count": len(scan),
+            "raw_scan_total": merge_stats.get("raw_scan_total", len(scan)),
             "permitted_count": sum(1 for s in scan if s.get("permitted")),
             "unpermitted_count": len(unpermitted),
             "pollution_count": len(unpermitted),
+            "multi_antenna_sightings": merge_stats.get("multi_antenna_sightings", 0),
             "passive_reach_km_max": max((s.get("passive_reach_km") or 0) for s in scan) if scan else 0,
             "cumulative_horizon_km": (pollution_cleanup.get("effective_horizon_km") or 0),
             "near_infinite_passive": True,
@@ -1525,14 +1758,23 @@ def main() -> int:
         print(json.dumps({"permitted": ok, "reason": reason}, ensure_ascii=False))
         return 0
     if cmd == "forever-enforce":
+        wifi_rows = _wifi_device_rows()
+        per_scans: dict[str, list[dict[str, Any]]] = {}
+        active = None
         wifi_dev = None
-        for row in _nmcli_devices():
-            if row.get("type") == "wifi":
-                wifi_dev = row.get("device")
-                break
-        active = _active_wifi_connection(wifi_dev) if wifi_dev else None
-        scan = _wifi_scan(wifi_dev) if wifi_dev else []
-        result = _forever_rf_enforce(wifi_dev, active, scan)
+        for row in wifi_rows:
+            dev = str(row.get("device") or "")
+            if not dev:
+                continue
+            if wifi_dev is None or "connected" in str(row.get("state") or "").lower():
+                wifi_dev = dev
+            per_scans[dev] = _wifi_scan(dev)
+            conn = _active_wifi_connection(dev)
+            if conn and (active is None or "connected" in str(row.get("state") or "").lower()):
+                active = conn
+        scan, _ = _merge_multi_antenna_scans(per_scans)
+        kick_dev = (active or {}).get("device") or wifi_dev
+        result = _forever_rf_enforce(kick_dev, active, scan)
         print(json.dumps({"ok": True, **result}, ensure_ascii=False))
         return 0
     print(json.dumps({"error": "usage: field-rf-sentinel.py [json|cycle|forever-enforce|shield on|off [auto_rfkill] [lawful_kick] [shoot_to_kill]|permitted-check FREQ CHAN]"}))

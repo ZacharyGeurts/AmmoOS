@@ -511,8 +511,14 @@ test_field_rf_module() {
   grep -q '_pollution_ledger' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'global_pollution_cleanup' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'fcc_passive_only' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q '_wifi_device_rows' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q '_merge_multi_antenna_scans' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'antenna_fields' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'resolution_tier' "${ROOT}/lib/field-rf-sentinel.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'permitted_bands'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'resolution'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-rf-sentinel.py" permitted-check 2437 6 | grep -q '"permitted": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -606,6 +612,8 @@ test_panel_field_rf_ui() {
   grep -q 'disabled forever' "$panel"
   grep -q 'field-rf-pollution' "$panel"
   grep -q 'field-rf-operations' "$panel"
+  grep -q 'field-rf-antenna-fields' "$panel"
+  grep -q 'resolution_score' "$panel"
   grep -q 'NEAR-INFINITE' "$panel"
   grep -q 'Permitted spectrum' "$panel"
   grep -q 'WIFI_THREAT' "$panel" || grep -q 'Lawful kick' "$panel"
@@ -826,7 +834,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.8.8' "$panel"
+  grep -q 'v5.8.9' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -835,7 +843,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.8.8' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.8.9' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
