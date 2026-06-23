@@ -454,7 +454,7 @@ def panel_json() -> dict[str, Any]:
     records = gdoc.get("records") or {}
     recent = list((gdoc.get("import_log") or [])[-15:])
     return {
-        "motto": "Government · law · police databases — merge-only dossier updates, never harm existing data.",
+        "motto": "Government · law · intelligence databases — merge-only dossier updates, never harm existing data.",
         "merge_only": True,
         "record_count": len(records) if isinstance(records, dict) else 0,
         "human_override_count": len((overrides.get("ips") or {})),

@@ -54,7 +54,7 @@ def _seed_doc() -> dict[str, Any]:
     categories = list(gov.get("categories") or [])
     return {
         "schema": "nexus-gov-agency-v2",
-        "motto": "Police, law enforcement, and government informational databases — merge-only updates.",
+        "motto": "Police, law, intelligence, and government informational databases — merge-only updates.",
         "default_region": police.get("default_region") or "us",
         "regions": regions,
         "categories": categories,

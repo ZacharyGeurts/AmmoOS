@@ -460,7 +460,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.1\.0' "$panel"
+  grep -q 'v5\.2\.0' "$panel"
 }
 
 test_field_rf_module() {
@@ -477,6 +477,9 @@ test_gov_intel_module() {
   [[ -f "${ROOT}/lib/gov-intel-db.py" ]]
   [[ -f "${ROOT}/data/gov-databases-seed.json" ]]
   grep -q 'us_fbi' "${ROOT}/data/gov-databases-seed.json"
+  grep -q 'ru_kgb' "${ROOT}/data/gov-databases-seed.json"
+  grep -q 'il_mossad' "${ROOT}/data/gov-databases-seed.json"
+  grep -q '"intelligence"' "${ROOT}/data/gov-databases-seed.json"
   grep -q '/api/gov-intel' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'gov_intel' "${ROOT}/lib/threat-panel.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -487,6 +490,11 @@ test_gov_intel_module() {
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"us_fbi","format_id":"fbi_ori","payload":"ori,agency,state\nMI0000001,Test Agency Updated,MI","filename":"test2.csv"}')" \
     | grep -q '"merged":'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"ru_kgb","format_id":"kgb_archive","payload":"record_id,name,directorate\nKGB-001,Test Subject,First Chief","filename":"kgb.csv"}')" \
+    | grep -q '"ok": true'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/police-agency-db.py" json | grep -q 'il_mossad'
   [[ -f "${NEXUS_STATE_DIR}/gov-dossiers.json" ]]
 }
 
@@ -520,6 +528,7 @@ test_panel_field_rf_ui() {
   grep -q 'police-import-file' "$panel"
   grep -q 'police-import-images' "$panel"
   grep -q 'gov-merge-banner' "$panel"
+  grep -q 'intelligence databases' "$panel"
   grep -q 'location.reload' "$panel"
   grep -q 'field-rf-shield-enabled' "$panel"
   grep -q 'view-field-rf' "$panel"
