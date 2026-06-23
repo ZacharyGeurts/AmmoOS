@@ -581,6 +581,75 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200 if ok else 500, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/attack-kit/check-online":
+            ip = str(body.get("ip", "")).strip()
+            if not ip:
+                self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
+                return
+            script = INSTALL_ROOT / "lib" / "field-attack-kit.py"
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            proc = subprocess.run(
+                [sys.executable, str(script), "check-online", ip],
+                capture_output=True,
+                text=True,
+                timeout=45,
+                env=env,
+            )
+            try:
+                payload = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                payload = {"ok": False, "ip": ip}
+            self._send(200 if proc.returncode == 0 else 500, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/attack-kit/rekill":
+            ip = str(body.get("ip", "")).strip()
+            vector = str(body.get("vector", "HOSTILE")).strip() or "HOSTILE"
+            severity = str(body.get("severity", "high")).strip() or "high"
+            if not ip:
+                self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
+                return
+            guard_script = INSTALL_ROOT / "lib" / "friendly-guard.py"
+            if guard_script.is_file():
+                import importlib.util
+
+                spec = importlib.util.spec_from_file_location("friendly_guard_rekill", guard_script)
+                fg_mod = importlib.util.module_from_spec(spec)
+                assert spec and spec.loader
+                spec.loader.exec_module(fg_mod)
+                refuse, guard_reason = fg_mod.refuse_kill(ip)
+                if refuse:
+                    self._send(
+                        403,
+                        json.dumps({
+                            "ok": False,
+                            "friendly_refused": True,
+                            "reason": guard_reason,
+                            "ip": ip,
+                        }),
+                        "application/json",
+                    )
+                    return
+            script = INSTALL_ROOT / "lib" / "field-attack-kit.py"
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            proc = subprocess.run(
+                [sys.executable, str(script), "rekill", ip, vector, severity],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                env=env,
+            )
+            try:
+                payload = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                payload = {"ok": proc.returncode == 0, "ip": ip}
+            self._send(200 if proc.returncode == 0 else 500, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/attack-kit/sync-field":
             kit = INSTALL_ROOT / "lib" / "field-attack-kit.sh"
             ok = _run_nexus_bash(

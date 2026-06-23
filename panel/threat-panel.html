@@ -688,6 +688,24 @@
     }
     .ha-kill-btn:hover { filter: brightness(1.1); }
     .ha-killed-badge { font-size: 0.62rem; color: var(--murder); margin-top: 4px; font-weight: 700; letter-spacing: 0.04em; }
+    .ha-online-status { font-size: 0.68rem; margin-top: 6px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(8, 14, 24, 0.55); }
+    .ha-online-status.online { border-color: #3a6a4a; background: rgba(20, 48, 32, 0.45); }
+    .ha-online-status.offline { border-color: #3a4048; color: var(--muted); }
+    .ha-online-status.mismatch { border-color: #6a3040; background: rgba(48, 16, 24, 0.4); }
+    .ha-online-status.validated { border-color: #5a2840; background: rgba(58, 12, 28, 0.45); }
+    .ha-identity-line { font-size: 0.62rem; color: #9ab4c8; margin-top: 4px; font-family: ui-monospace, monospace; }
+    .ha-rekill-btn {
+      background: #6a1028; border: 1px solid var(--murder); color: #ffd6de;
+      padding: 5px 10px; border-radius: 5px; font-size: 0.66rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .ha-rekill-btn:hover { filter: brightness(1.12); }
+    .ha-rekill-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .ha-check-online-btn {
+      background: transparent; border: 1px solid #3a5068; color: #9ab8d8;
+      padding: 5px 10px; border-radius: 5px; font-size: 0.66rem; font-weight: 600; cursor: pointer;
+    }
+    .ha-check-online-btn:hover { border-color: var(--internet); color: var(--text); }
     .ha-friendly-badge { font-size: 0.62rem; color: var(--ok); margin-top: 4px; font-weight: 700; letter-spacing: 0.04em; }
     .host-point-row.target-friendly { border-left: 2px solid var(--ok); opacity: 0.88; }
     .host-map-popup .popup-monitor { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
@@ -730,7 +748,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.2.1</h1>
+        <h1>NEXUS-Shield v3.3.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -2148,6 +2166,91 @@
       }
     }
 
+    const hostOnlineCheckByIp = {};
+
+    function haIdentityCheckHtml(p, check) {
+      if (!check) return "";
+      const online = !!check.online;
+      const val = check.validation || {};
+      const same = !!check.same_host;
+      const eligible = !!check.rekill_eligible;
+      const cls = online ? (same ? "validated" : "mismatch") : "offline";
+      const status = online ? "ONLINE" : "OFFLINE";
+      const matchLine = val.matches?.length
+        ? val.matches.map((m) => `${esc(m.marker)}=${esc((m.value || "").slice(0, 48))}`).join(" · ")
+        : "—";
+      const missLine = val.mismatches?.length
+        ? val.mismatches.map((m) => `${esc(m.marker)}: archived ${esc((m.archived || "").slice(0, 32))} ≠ live ${esc((m.live || "").slice(0, 32))}`).join("<br>")
+        : "";
+      const hash = check.archived_fingerprint?.identity_hash || p.identity_fingerprint?.identity_hash || "—";
+      const probe = check.live_probe || {};
+      const probes = [
+        probe.ping ? "ping" : null,
+        probe.ss_active ? "ss" : null,
+        ...Object.entries(probe.tcp_ports || {}).filter(([, v]) => v).map(([port]) => `tcp:${port}`),
+      ].filter(Boolean).join(" · ") || "none";
+      return `<div class="host-kill-section"><strong>Online check · same-host validation</strong>
+        <div class="ha-online-status ${cls}">
+          <div><strong>${status}</strong>${online ? ` · probes: ${esc(probes)}` : ""} · checked ${esc((check.checked || "").replace("T", " ").replace("Z", " UTC"))}</div>
+          <div class="ha-identity-line">Identity hash: ${esc(hash)} · score ${val.score ?? 0} · strong ${val.strong_hits ?? 0}${same ? " · SAME HOST ✓" : ` · ${esc(val.reason || "not validated")}`}</div>
+          ${matchLine !== "—" ? `<div class="ha-identity-line">Matches: ${matchLine}</div>` : ""}
+          ${missLine ? `<div class="ha-identity-line" style="color:#c87888">Mismatches:<br>${missLine}</div>` : ""}
+          ${eligible ? '<div class="ha-identity-line" style="color:var(--murder)">RE-KILL eligible — same host confirmed at this IP.</div>' : ""}
+        </div>
+      </div>`;
+    }
+
+    async function attackKitCheckOnline(ip, btn) {
+      if (!ip) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/attack-kit/check-online", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip }),
+        });
+        const data = await res.json();
+        hostOnlineCheckByIp[ip] = data;
+        const selected = hostLastPoints.find((x) => x.ip === ip);
+        if (selected && hostSelectedId === selected.id) renderHostKillDossier(selected);
+        if (!data.ok) alert(`Online check failed for ${ip}.`);
+      } catch {
+        alert("Online check unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function attackKitRekill(ip, vector, severity, btn) {
+      const check = hostOnlineCheckByIp[ip];
+      if (!check?.rekill_eligible) {
+        alert("RE-KILL refused — run Check Online first; target must be online and pass same-host validation.");
+        return;
+      }
+      const score = check.validation?.score ?? 0;
+      if (!confirm(`RE-KILL ${ip}?\n\nSame-host validated (score ${score}).\nPermanent firewall block re-applied in+out.\nNew dossier archived on field drive.`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/attack-kit/rekill", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, vector, severity }),
+        });
+        const data = await res.json();
+        if (data.friendly_refused) alert(`RE-KILL refused — ${ip} is a friendly (immutable guard).`);
+        else if (!data.ok || !data.rekill) {
+          const reason = data.reason || data.online_check?.validation?.reason || "validation_failed";
+          alert(`RE-KILL refused — ${reason}.`);
+        } else alert(`RE-KILL confirmed — ${ip} blocked again. Dossier archived.`);
+        delete hostOnlineCheckByIp[ip];
+        refresh();
+      } catch {
+        alert("RE-KILL unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
     function renderAttackKit(ak) {
       const doc = ak || {};
       $("ak-disabled-count").textContent = doc.disabled_count ?? 0;
@@ -2408,6 +2511,10 @@
       ).join("");
       const axes = Object.entries(mon.axis_scores || {}).map(([k, v]) => `${esc(k)}:${v}`).join(" · ");
       const cves = (dos.exploit_intel?.cves || []).join(", ") || "—";
+      const fp = p.identity_fingerprint || {};
+      const fpMarkers = Object.entries(fp.markers || {}).slice(0, 6).map(([k, v]) => `${esc(k)}=${esc(String(v).slice(0, 40))}`).join(" · ");
+      const onlineCheck = hostOnlineCheckByIp[p.ip] || p.last_online_check || null;
+      const rekillEligible = !!(onlineCheck?.rekill_eligible);
       el.innerHTML = `
         <div class="kill-mode-banner">Kill mode — review dossier</div>
         <h3>${esc(p.ip)} · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span></h3>
@@ -2434,9 +2541,17 @@
           <div class="host-kill-kv">${dos.attack_path_steps} step(s) · CVE ${esc(cves)}</div>
           <ul class="host-kill-path">${path || "<li>No path steps</li>"}</ul>
         </div>` : ""}
+        ${killed && fp.identity_hash ? `<div class="host-kill-section"><strong>Archived identity</strong>
+          <div class="host-kill-kv">Hash ${esc(fp.identity_hash)} · ${fp.marker_count ?? 0} marker(s)</div>
+          ${fpMarkers ? `<div class="ha-identity-line">${fpMarkers}</div>` : ""}
+          ${p.archived_dossier?.archived ? `<div class="host-kill-kv">Killed ${esc(p.archived_dossier.archived)}</div>` : ""}
+        </div>` : ""}
+        ${killed ? haIdentityCheckHtml(p, onlineCheck) : ""}
         <div class="host-kill-actions">
           ${killed
-            ? '<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>'
+            ? `<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>
+               <button type="button" class="ha-check-online-btn" id="ha-check-online">Check Online</button>
+               ${rekillEligible ? `<button type="button" class="ha-rekill-btn" id="ha-rekill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">RE-KILL</button>` : ""}`
             : friendly
               ? '<div class="ha-friendly-badge">✓ FRIENDLY — immutable guard</div>'
               : `<button type="button" class="ha-kill-btn" id="ha-kill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">KILL TARGET</button>`}
@@ -2445,6 +2560,11 @@
       $("ha-kill-selected")?.addEventListener("click", (e) => {
         const btn = e.currentTarget;
         attackKitKill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn);
+      });
+      $("ha-check-online")?.addEventListener("click", (e) => attackKitCheckOnline(p.ip, e.currentTarget));
+      $("ha-rekill-selected")?.addEventListener("click", (e) => {
+        const btn = e.currentTarget;
+        attackKitRekill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn);
       });
       $("ha-clear-selection")?.addEventListener("click", () => selectHostTarget(null));
     }

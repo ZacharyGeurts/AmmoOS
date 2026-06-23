@@ -156,6 +156,48 @@ if m:
   return 0
 }
 
+nexus_field_attack_rekill_target() {
+  local ip="${1:-}" vector="${2:-HOSTILE}" severity="${3:-high}" reason="${4:-rekill_validated}"
+  local source="${5:-attack-kit}" dossier="${6:-}"
+  [[ -n "$ip" ]] || return 1
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
+  local monitor_json=""
+  if [[ -n "$dossier" ]]; then
+    monitor_json="$(DOSSIER_JSON="$dossier" python3 -c '
+import json, os
+try:
+    d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
+except Exception:
+    d = {}
+m = d.get("monitor")
+if m:
+    print(json.dumps(m, ensure_ascii=False))
+' 2>/dev/null)"
+  fi
+  if nexus_friendly_guard_refuse_kill "$ip" "$monitor_json"; then
+    nexus_log "ALERT" "field-attack-kit" "REKILL_REFUSED_FRIENDLY ip=${ip}"
+    return 1
+  fi
+  nexus_field_attack_init
+  if declare -f nexus_firewall_block_ip_forever >/dev/null 2>&1; then
+    nexus_firewall_block_ip_forever out "$ip" "${reason}" || true
+    nexus_firewall_block_ip_forever in "$ip" "${reason}" || true
+  fi
+  local ts
+  ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
+  if ! nexus_field_attack_is_disabled "$ip"; then
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$ts" "$ip" "$vector" "$severity" "$reason" "$source" \
+      >>"$NEXUS_FIELD_HOSTILE"
+  fi
+  nexus_field_attack_record_field "$ip" "$vector" "$severity" "$reason" "$source" "$dossier"
+  if [[ -n "$dossier" && "$dossier" != "{}" ]]; then
+    nexus_field_attack_record_dossier_forever "$ip" "$vector" "$severity" "$reason" "$source" "$dossier"
+  fi
+  nexus_log "ALERT" "field-attack-kit" "TARGET_REKILLED ip=${ip} vector=${vector} reason=${reason}"
+  return 0
+}
+
 nexus_field_attack_disable_host() {
   local ip="${1:-}" vector="${2:-HOSTILE}" severity="${3:-high}" reason="${4:-field_attack_kit}"
   local source="${5:-attack-kit}" meta="${6:-}"

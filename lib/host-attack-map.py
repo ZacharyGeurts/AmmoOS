@@ -43,6 +43,14 @@ _tb_spec.loader.exec_module(_tb)
 bleed_target = _tb.bleed_target
 host_endpoint_context = _tb.host_endpoint_context
 
+_hi_spec = importlib.util.spec_from_file_location("host_identity", INSTALL / "lib" / "host-identity.py")
+_hi = importlib.util.module_from_spec(_hi_spec)
+assert _hi_spec and _hi_spec.loader
+_hi_spec.loader.exec_module(_hi)
+extract_identity_fingerprint = _hi.extract_identity_fingerprint
+fingerprint_from_point_or_dossier = _hi.fingerprint_from_point_or_dossier
+load_archived_dossier = _hi.load_archived_dossier
+
 PRIVATE_RE = re.compile(
     r"^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|169\.254\.|::1|fe80:|fd)"
 )
@@ -422,6 +430,7 @@ def _collect_points() -> list[dict[str, Any]]:
         )
 
     disabled_ips = _disabled_ips()
+    online_check_cache = _load_json(STATE / "target-online-check.json", {"checks": {}})
     points: list[dict[str, Any]] = []
     for r in raw:
         ip = r["ip"]
@@ -452,7 +461,7 @@ def _collect_points() -> list[dict[str, Any]]:
         target_intel = bleed.get("target") or {}
         bleed_standards = list(bleed.get("standards") or [])
 
-        points.append({
+        point_row: dict[str, Any] = {
             "id": hashlib.sha256(r["key"].encode()).hexdigest()[:16],
             "ip": ip,
             "lat": round(lat, 5),
@@ -503,7 +512,23 @@ def _collect_points() -> list[dict[str, Any]]:
             "geo_source": geo_src,
             "disabled_permanent": ip in disabled_ips,
             **style,
-        })
+        }
+        point_row["identity_fingerprint"] = fingerprint_from_point_or_dossier(ip, point_row)
+        if target_status == "killed":
+            archived = load_archived_dossier(ip)
+            if archived:
+                archived_fp = archived.get("identity_fingerprint")
+                if isinstance(archived_fp, dict) and archived_fp.get("identity_hash"):
+                    point_row["identity_fingerprint"] = archived_fp
+                point_row["archived_dossier"] = {
+                    "archived": archived.get("archived") or archived.get("rekill_ts"),
+                    "action": archived.get("action") or "KILL",
+                    "identity_hash": point_row["identity_fingerprint"].get("identity_hash", ""),
+                }
+            cached_check = (online_check_cache.get("checks") or {}).get(ip)
+            if isinstance(cached_check, dict) and cached_check.get("ip") == ip:
+                point_row["last_online_check"] = cached_check
+        points.append(point_row)
 
     points.sort(
         key=lambda p: (
