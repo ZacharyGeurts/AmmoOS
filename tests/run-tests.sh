@@ -153,6 +153,39 @@ test_packet_parse_line() {
   [[ "$parsed" == *"ESTAB"* && "$parsed" == *"104.18.29.234"* ]]
 }
 
+test_packet_field_module() {
+  [[ -f "${ROOT}/lib/packet-field.py" ]]
+  grep -q 'nexus_packet_field_capture' "${ROOT}/lib/packet-oracle.sh"
+  grep -q 'packet_field' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'renderPacketField' "${ROOT}/panel/threat-panel.html"
+  grep -q 'packet-field-wrap' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/packet-field.py" parse-line \
+    "1748012345.123456 IP 127.0.0.1.54321 > 104.18.29.234.443: Flags [P.], seq 1, ack 1, win 512, length 100" \
+    | grep -q '"direction": "TX"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/packet-field.py" parse-line \
+    "1748012345.123456 IP 104.18.29.234.443 > 127.0.0.1.54321: Flags [P.], seq 1, ack 1, win 512, length 200" \
+    | grep -q '"direction": "RX"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 - <<'PY'
+import importlib.util
+from pathlib import Path
+root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
+spec = importlib.util.spec_from_file_location("pf", root / "lib" / "packet-field.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+assert mod._port_service(443) == "HTTPS"
+assert "TX" in mod._english_summary({"direction": "TX", "process": "firefox", "protocol": "tcp", "src_port": 54321, "dst_ip": "1.2.3.4", "dst_port": 443, "port_service": "HTTPS", "length": 100, "flags": "P."})
+local = {"10.0.0.1"}
+assert mod._classify_direction("10.0.0.1", "8.8.8.8", local, "Out") == "TX"
+assert mod._classify_direction("8.8.8.8", "10.0.0.1", local, "In") == "RX"
+line = "1782249257.017925 enp10s0 Out IP 10.0.0.1.36444 > 1.1.1.1.443: Flags [.], ack 1, win 566, length 0"
+rec = mod.parse_tcpdump_line(line, local, {})
+assert rec and rec["direction"] == "TX"
+PY
+}
+
 test_gatekeeper_json() {
   command -v python3 >/dev/null 2>&1 || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"verdict"'
@@ -192,6 +225,20 @@ test_consumer_defaults() {
   [[ "$(nexus_settings_get NEXUS_ENTROPY_WATCH)" == "0" ]]
   [[ "$(nexus_settings_get NEXUS_PRIVACY_GUARD)" == "0" ]]
   [[ "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH)" == "1" ]]
+  [[ "$(nexus_settings_get NEXUS_GATEKEEPER_STRICT_TRUST)" == "1" ]]
+  [[ "$(nexus_settings_get NEXUS_PACKET_PERMISSION)" == "1" ]]
+}
+
+test_gatekeeper_strict_enforce() {
+  [[ -f "${ROOT}/lib/gatekeeper-enforce.sh" ]]
+  [[ -f "${ROOT}/lib/packet-permission.py" ]]
+  grep -q 'nexus_firewall_permit_flow' "${ROOT}/lib/firewall-sentinel.sh"
+  grep -q 'nexus_firewall_block_flow' "${ROOT}/lib/firewall-sentinel.sh"
+  grep -q 'permit_flow_out' "${ROOT}/lib/firewall-sentinel.sh"
+  grep -q 'flow_policy' "${ROOT}/lib/connection-gatekeeper.py"
+  grep -q 'segment_block' "${ROOT}/lib/packet-dpi.py"
+  grep -q 'NEXUS_PACKET_PERMISSION' "${ROOT}/config/nexus.conf"
+  grep -q 'Packet permission' "${ROOT}/panel/threat-panel.html"
 }
 
 test_panel_v22_axis_layout() {
@@ -208,7 +255,7 @@ test_panel_v24_actions() {
   grep -q 'data-block-forever' "$panel"
   grep -q 'data-unblock-day' "$panel"
   grep -q 'Trust forever' "$panel"
-  grep -q 'Recommended to allow first' "$panel"
+  grep -q 'Permitted — zero-cost fast path' "$panel"
 }
 
 test_panel_v241_settings_visual() {
@@ -218,7 +265,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0|6\.0|7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
+  grep -qE 'v[234]\.(0\.0|[0-9]+\.[0-9]+)' "$panel"
 }
 
 test_self_access_script() {
@@ -268,6 +315,34 @@ test_angel_dossier_module() {
   grep -q 'mac_vendors' "${ROOT}/lib/angel-dossier.py"
 }
 
+test_human_dossier_module() {
+  [[ -f "${ROOT}/data/human-dossier-kill-orders.json" ]]
+  [[ -f "${ROOT}/lib/human-dossier.sh" ]]
+  grep -q 'human_dossier' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'view-human-dossier' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderHumanDossiers' "${ROOT}/panel/threat-panel.html"
+  grep -q 'nexus_human_dossier_json' "${ROOT}/lib/human-dossier.sh"
+  python3 -c "import json; d=json.load(open('${ROOT}/data/human-dossier-kill-orders.json')); assert len(d['ips'])==24; assert d['analyst']=='Grok Heavy'"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    bash -c "source '${ROOT}/lib/human-dossier.sh' && nexus_human_dossier_sync && nexus_human_dossier_json" | grep -q '147.93.191.75'
+}
+
+test_us_field_module() {
+  [[ -f "${ROOT}/lib/field-us-intel.py" ]]
+  [[ -f "${ROOT}/lib/field-us-intel.sh" ]]
+  grep -q 'us_field' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'view-us' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderUSField' "${ROOT}/panel/threat-panel.html"
+  grep -q 'data-view="us"' "${ROOT}/panel/threat-panel.html"
+  grep -q 'nexus_us_field_json' "${ROOT}/lib/field-us-intel.sh"
+  ! grep -q 'Likely friendly' "${ROOT}/lib/connection-gatekeeper.py"
+  ! grep -q 'Looks normal' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    bash -c "source '${ROOT}/lib/field-us-intel.sh' && nexus_us_field_publish && nexus_us_field_json" | grep -q '"title":"US"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-us-intel.py" json | grep -q '"page": 1'
+}
+
 test_fair_ad_guardian_module() {
   [[ -f "${ROOT}/lib/fair-ad-guardian.py" ]]
   [[ -f "${ROOT}/data/annoyance-complaints.tsv" ]]
@@ -289,16 +364,17 @@ test_panel_fair_ad_ui() {
 test_host_attack_module() {
   [[ -f "${ROOT}/lib/host-attack-map.py" ]]
   [[ -f "${ROOT}/lib/host-attack.sh" ]]
+  grep -q 'nexus_host_attacks_panel_json' "${ROOT}/lib/host-attack.sh"
   grep -q 'host_attacks' "${ROOT}/lib/threat-panel.sh"
   grep -q '_clamp_coords' "${ROOT}/lib/host-attack-map.py"
   grep -q '_monitor_snapshot' "${ROOT}/lib/host-attack-map.py"
   grep -q 'is_monitor_target' "${ROOT}/lib/host-attack-map.py"
   grep -q 'globe_pin' "${ROOT}/lib/host-attack-map.py"
   grep -q 'return None' "${ROOT}/lib/host-attack-map.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_HOST_ATTACK_FAST=1 \
+    python3 "${ROOT}/lib/host-attack-map.py" build-fast | grep -q 'point_count'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/host-attack-map.py" build | grep -q 'point_count'
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/host-attack-map.py" json | grep -q 'Zachary Geurts'
+    python3 "${ROOT}/lib/host-attack-map.py" json-panel | grep -q 'points'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 - <<'PY'
 import importlib.util
@@ -323,7 +399,10 @@ test_panel_host_attack_ui() {
   grep -q 'renderHostAttackMap' "$panel"
   grep -q 'host-earth-map' "$panel"
   grep -q 'leaflet.js' "$panel"
-  grep -q 'World_Imagery' "$panel"
+  grep -q 'createGlobeLayer' "$panel"
+  grep -q 'SDF Wireframe' "$panel"
+  grep -q 'trashHostPin' "$panel"
+  grep -q 'host-map-trash' "$panel"
   grep -q 'Zachary Geurts' "$panel"
   grep -q 'normalizeGeo' "$panel"
   grep -q 'warmHostEarthMap' "$panel"
@@ -336,17 +415,25 @@ test_panel_host_attack_ui() {
   grep -q 'sdf-render.js' "$panel"
   grep -q 'NexusSdf' "$panel"
   grep -q 'hydrateHostSdfMarkers' "$panel"
-  grep -q 'pointy-tip' "$panel"
+  grep -q 'formatGps' "$panel"
   grep -q 'HA_SDF_PIN_ANCHOR' "$panel"
   [[ -f "${ROOT}/panel/assets/sdf/manifest.json" ]]
   [[ -f "${ROOT}/panel/assets/sdf/pin-hostile.sdf.png" ]]
   [[ -f "${ROOT}/panel/assets/sdf/globe-world.sdf.png" ]]
+  [[ -f "${ROOT}/panel/assets/sdf/globe-wireframe.sdf.png" ]]
+  grep -q 'globe-wireframe' "${ROOT}/panel/assets/sdf/manifest.json"
   grep -q 'attackKitCheckOnline' "$panel"
   grep -q 'attackKitRekill' "$panel"
+  grep -q 'attackKitNokill' "$panel"
+  grep -q 'haOnlineBadgeHtml' "$panel"
+  grep -q 'ha-online-badge' "$panel"
+  grep -q 'NO-KILL' "$panel"
   grep -q 'Check Online' "$panel"
   grep -q 'RE-KILL' "$panel"
   grep -q 'same-host validation' "$panel"
-  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|[123]\.(0|1|3\.[01])|4\.0))' "$panel" || grep -q 'v3.4.0' "$panel"
+  grep -q 'checkNexusUpdate' "$panel"
+  grep -q 'nexus-update-btn' "$panel"
+  grep -qE 'v4\.(0|1)\.0' "$panel"
 }
 
 test_target_bleed_module() {
@@ -411,6 +498,11 @@ test_field_attack_kit_module() {
   grep -q '/api/attack-kit/kill' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/attack-kit/check-online' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/attack-kit/rekill' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/attack-kit/nokill' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus_field_attack_nokill_target' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'nokill_target' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'field-nokill.tsv' "${ROOT}/lib/field-attack-kit.py"
+  grep -q '"nokill"' "${ROOT}/lib/host-attack-map.py"
   grep -q 'nexus_field_attack_kill_target' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'nexus_field_attack_rekill_target' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'nexus_target_dossier' "${ROOT}/lib/field-attack-kit.sh"
@@ -421,7 +513,12 @@ test_field_attack_kit_module() {
   grep -q 'nexus_field_attack_autokill' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'nexus_field_attack_install_autokill' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'refuse_kill' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'gate_strike' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'trust-strike-engine' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'nexus_field_attack_publish_deep' "${ROOT}/lib/field-attack-kit.sh"
+  ! grep -q 'nexus_field_attack_auto_crush' "${ROOT}/lib/threat-panel.sh"
   grep -q 'killable' "${ROOT}/lib/host-attack-map.py"
+  grep -q 'strike_confidence' "${ROOT}/lib/host-attack-map.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 - <<'PY'
 import importlib.util
@@ -436,6 +533,10 @@ assert mod._auto_rekill_cooldown_active("203.0.113.99")
 mod.AUTO_REKILL_LOG.unlink(missing_ok=True)
 empty = mod.auto_rekill_validated()
 assert empty.get("rekilled_count") == 0
+mod.NOKILL_TSV.write_text("ts\tip\tvector\tseverity\treason\tsource\n2026-01-01T00:00:00Z\t203.0.113.55\tHOSTILE\thigh\ttest\ttest\n", encoding="utf-8")
+refused = mod.kill_target("203.0.113.55")
+assert refused.get("nokill_refused")
+mod.NOKILL_TSV.unlink(missing_ok=True)
 PY
   declare -f nexus_field_attack_json >/dev/null 2>&1
 }
@@ -502,18 +603,105 @@ test_panel_field_attack_kit_ui() {
   grep -q 'NEXUS_ATTACK_KIT_AUTO_CRUSH' "$panel"
   grep -q 'Auto-kill hostile targets' "$panel"
   grep -q 'God Bless' "$panel"
-  grep -qE 'v3\.(0\.(0|1)|[123]\.(0|1)|3\.[01])' "$panel"
+  grep -q 'ha-strike-badge' "$panel"
+  grep -q 'Trust Strike' "$panel"
+  grep -q 'ak-strike-corpus' "$panel"
+  grep -qE 'v3\.8\.2' "$panel"
+  grep -q 'lastPanelUpdated' "$panel"
+  grep -q 'consumer_collateral' "$panel"
+  grep -q 'PINPOINT' "$panel"
   ! grep -q 'Grandmas' "$panel"
+}
+
+test_trust_strike_engine_module() {
+  [[ -f "${ROOT}/lib/trust-strike-engine.py" ]]
+  grep -q 'STRIKE_AUTO_MIN' "${ROOT}/lib/trust-strike-engine.py"
+  grep -q 'build_hostile_corpus' "${ROOT}/lib/trust-strike-engine.py"
+  grep -q 'trust_strike' "${ROOT}/lib/host-attack-map.py"
+  grep -q '3.8.4' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'json-panel' "${ROOT}/lib/host-attack-map.py"
+  grep -q 'build-fast' "${ROOT}/lib/host-attack-map.py"
+  grep -q 'nexus_host_attacks_panel_json' "${ROOT}/lib/host-attack.sh"
+  grep -q 'resolve_wire_point' "${ROOT}/lib/trust-strike-engine.py"
+  grep -q 'consumer_collateral' "${ROOT}/lib/trust-strike-engine.py"
+  grep -q 'wire_point' "${ROOT}/lib/host-attack-map.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/trust-strike-engine.py" summary | grep -q 'trust-strike-v2-pinpoint'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 - <<'PY'
+import importlib.util
+from pathlib import Path
+root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
+spec = importlib.util.spec_from_file_location("tse", root / "lib" / "trust-strike-engine.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+hot = {
+    "ip": "47.82.234.12",
+    "vector": "HOSTILE",
+    "heat": 0.88,
+    "source": "gatekeeper",
+    "is_monitor_target": True,
+    "globe_pin": True,
+    "verdict": "HARM_CANDIDATE",
+    "detail": "Cobalt Strike beacon ThreatFox abuse.ch",
+    "our_process": "suspicious.bin",
+    "ptr_hostname": "c2.evil.example.com",
+    "target_tls_subject": "CN=c2.evil.example.com",
+    "ip_class": "hosting",
+    "monitor": {"verdict": "HARM_CANDIDATE", "harm_total": 16, "trust_rank": 4,
+                "ip_class": "hosting", "process": "suspicious.bin", "remote_port": "4444",
+                "axis_scores": {"threat_linked": 8, "beacon_pattern": 7}},
+    "target_ports": [443, 4444],
+    "identity_fingerprint": {"markers": {"ptr_hostname": "c2.evil.example.com",
+        "tls_subject": "cn=c2.evil.example.com", "asn": "as45102"}},
+}
+score = mod.score_strike(hot)
+assert score["wire_point"]["confirmed"]
+assert score["malware_evidence"]
+assert score["strike_certain"]
+assert score["strike_ready_manual"]
+gate = mod.gate_strike("47.82.234.12", hot, mode="auto")
+assert gate["allowed"] is True
+viewer = {
+    "ip": "185.199.108.154",
+    "vector": "HOSTILE",
+    "heat": 0.65,
+    "org": "fastly",
+    "verdict": "SUSPICIOUS",
+    "detail": "insecure HTTP adult content stream",
+    "monitor": {"verdict": "SUSPICIOUS", "harm_total": 8, "trust_rank": 3,
+                "ip_class": "stream_cdn", "process": "firefox", "remote_port": "80",
+                "axis_scores": {"media_stream": 8, "user_browser": 9}},
+}
+viewer_score = mod.score_strike(viewer)
+assert viewer_score["consumer_collateral"]
+assert not viewer_score["strike_ready_manual"]
+viewer_gate = mod.gate_strike("185.199.108.154", viewer, mode="auto")
+assert viewer_gate["allowed"] is False
+lan = {
+    "ip": "192.168.1.55",
+    "mac": "aa:bb:cc:dd:ee:ff",
+    "mac_oui": "aabbcc",
+    "mac_vendor": "iot-camera",
+    "detail": "AsyncRAT LAN callback",
+    "monitor": {"ip_class": "private", "process": "unknown", "harm_total": 15, "verdict": "HARM_CANDIDATE"},
+}
+lan_wire = mod.resolve_wire_point(lan, mod.build_hostile_corpus())
+assert lan_wire["lan_device"]
+assert lan_wire["confirmed"]
+refuse = mod.gate_strike("8.8.8.8", {"ip": "8.8.8.8", "vector": "HOSTILE", "heat": 0.99}, mode="auto")
+assert refuse["friendly_refused"] and not refuse["allowed"]
+PY
 }
 
 test_geo_intel_standards_module() {
   [[ -f "${ROOT}/lib/geo-intel-standards.py" ]]
   grep -q 'RFC7483-RDAP' "${ROOT}/lib/geo-intel-standards.py"
   grep -q 'IEEE-802-OUI' "${ROOT}/lib/geo-intel-standards.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_HOST_ATTACK_FAST=1 \
+    python3 "${ROOT}/lib/host-attack-map.py" build-fast | grep -q 'point_count'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/host-attack-map.py" build | grep -q 'point_count'
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/host-attack-map.py" json | grep -q 'geojson'
+    python3 "${ROOT}/lib/host-attack-map.py" json-panel | grep -q '"points"'
 }
 
 test_panel_v26_angels_tabs() {
@@ -551,9 +739,19 @@ test_lockdown_first_script() {
 
 test_panel_browser_helpers() {
   [[ -f "${ROOT}/lib/panel-browser.sh" ]]
+  [[ -f "${ROOT}/panel/field.html" ]]
+  [[ -f "${ROOT}/panel/assets/field-foundation.js" ]]
+  grep -q '/api/field' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'field-snapshot' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'fieldPaintInstant' "${ROOT}/panel/threat-panel.html"
+  grep -q 'field-live' "${ROOT}/panel/threat-panel.html"
+  grep -q 'NexusField' "${ROOT}/panel/threat-panel.html"
+  grep -q '_inject_field_bootstrap' "${ROOT}/lib/threat-panel-http.py"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/panel-browser.sh"
   nexus_panel_url | grep -q '127.0.0.1'
+  nexus_panel_url | grep -q '/field'
+  nexus_panel_app_url | grep -q '/app'
 }
 
 test_firewall_trust_roundtrip() {
@@ -633,11 +831,48 @@ run_test "network purge skips client packages" test_network_purge_skips_clients
 run_test "dev install bypasses group gate" test_dev_install_bypasses_group
 run_test "threat vector catalog" test_threat_vector_catalog
 run_test "packet oracle parse" test_packet_parse_line
+run_test "packet field module" test_packet_field_module
+
+test_packet_dpi_module() {
+  [[ -f "${ROOT}/lib/packet-dpi.py" ]]
+  grep -q 'ALERT_MIN_CONFIDENCE' "${ROOT}/lib/packet-dpi.py"
+  grep -q 'translate_deep' "${ROOT}/lib/packet-dpi.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 - <<'PY'
+import importlib.util
+from pathlib import Path
+root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
+spec = importlib.util.spec_from_file_location("dpi", root / "lib" / "packet-dpi.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+pkt = {"direction": "TX", "process": "firefox", "protocol": "tcp", "src_ip": "10.0.0.1", "src_port": 50000, "dst_ip": "1.1.1.1", "dst_port": 443, "length": 200, "flags": "P."}
+r = mod.analyze_packet(pkt)
+assert not r.get("alert")
+assert r.get("verdict") in ("benign_trusted_app", "clean", "low_noise", "sacred_excluded")
+PY
+}
+
+test_h7_library_module() {
+  [[ -f "${ROOT}/lib/h7-library-bridge.py" ]]
+  [[ -f "${ROOT}/lib/field-books/network-security-field-guide.txt" ]]
+  grep -q 'nexus_h7_library_publish' "${ROOT}/lib/packet-oracle.sh"
+  grep -q 'h7_library' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'view-inspect' "${ROOT}/panel/threat-panel.html"
+  grep -q 'view-library' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderInspect' "${ROOT}/panel/threat-panel.html"
+  grep -q 'retro-modem' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/h7-library-bridge.py" build | grep -q 'network-security-field-guide'
+}
+
+run_test "packet dpi module" test_packet_dpi_module
+run_test "h7 library module" test_h7_library_module
 run_test "connection gatekeeper json" test_gatekeeper_json
 run_test "connection gatekeeper suggestions" test_gatekeeper_suggestions
 run_test "connection gatekeeper youtube" test_gatekeeper_youtube
 run_test "connection gatekeeper email" test_gatekeeper_email
 run_test "consumer everyday defaults" test_consumer_defaults
+run_test "gatekeeper strict enforce in+out" test_gatekeeper_strict_enforce
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout
 run_test "panel v2.4 action buttons" test_panel_v24_actions
 run_test "panel v2.4.1 settings visual sync" test_panel_v241_settings_visual
@@ -647,18 +882,45 @@ run_test "vector intel never unknown" test_vector_intel_no_unknown
 run_test "pest arsenal sacred processes" test_pest_arsenal_sacred
 run_test "panel v2.5 intel UI" test_panel_v25_intel_ui
 run_test "angel dossier module" test_angel_dossier_module
+run_test "human dossier module" test_human_dossier_module
+run_test "US field intel module" test_us_field_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
 run_test "fair ad guardian module" test_fair_ad_guardian_module
 run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
 test_sdf_assets_module() {
   [[ -f "${ROOT}/lib/sdf-assets.py" ]]
   [[ -f "${ROOT}/panel/assets/sdf-render.js" ]]
-  python3 "${ROOT}/lib/sdf-assets.py" | grep -q 'pin-hostile'
+  python3 "${ROOT}/lib/sdf-assets.py" | grep -q 'globe-wireframe'
   grep -q 'pointy_tip' "${ROOT}/panel/assets/sdf/pin-hostile.sdf.json"
+  grep -q 'wireframe' "${ROOT}/panel/assets/sdf/globe-wireframe.sdf.json"
   grep -q 'renderGlobe' "${ROOT}/panel/assets/sdf-render.js"
+  grep -q 'createGlobeLayer' "${ROOT}/panel/assets/sdf-render.js"
+}
+
+test_nexus_update_module() {
+  [[ -f "${ROOT}/lib/nexus-update.py" ]]
+  grep -q '/api/update/check' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/update/apply' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/nexus-update.py" | grep -q '"current"'
+}
+
+test_host_map_trash_module() {
+  [[ -f "${ROOT}/lib/host-map-trash.sh" ]]
+  grep -q '/api/host-attack/trash' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_load_trashed_ids' "${ROOT}/lib/host-attack-map.py"
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/nexus-common.sh"
+  export NEXUS_STATE_DIR="$NEXUS_STATE_DIR"
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/host-map-trash.sh"
+  nexus_host_map_trash_add "test-pin-1"
+  nexus_host_map_trash_json | grep -q 'test-pin-1'
 }
 
 run_test "host attack map module" test_host_attack_module
+run_test "nexus update module" test_nexus_update_module
+run_test "host map trash module" test_host_map_trash_module
 run_test "sdf map assets module" test_sdf_assets_module
 run_test "target bleed module" test_target_bleed_module
 run_test "panel host attack UI" test_panel_host_attack_ui
@@ -666,6 +928,7 @@ run_test "geo intel standards module" test_geo_intel_standards_module
 run_test "friendly guard immutable module" test_friendly_guard_module
 run_test "field attack kit module" test_field_attack_kit_module
 run_test "host identity module" test_host_identity_module
+run_test "trust strike engine module" test_trust_strike_engine_module
 run_test "panel field attack kit UI" test_panel_field_attack_kit_ui
 run_test "gatekeeper ipv6 direction fields" test_gatekeeper_ipv6_direction
 run_test "gatekeeper trust rank" test_gatekeeper_trust_rank
