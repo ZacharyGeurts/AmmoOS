@@ -411,15 +411,17 @@ def _collect_points() -> list[dict[str, Any]]:
     host_ctx = host_endpoint_context()
     enriched_by_ip: dict[str, dict[str, Any]] = {}
     bleed_by_ip: dict[str, dict[str, Any]] = {}
+    disabled_ips = _disabled_ips()
     rdap_left = RDAP_BUDGET
     bleed_left = BLEED_BUDGET
     for ip in unique_ips:
-        do_rdap = rdap_left > 0
+        killed = ip in disabled_ips
+        do_rdap = rdap_left > 0 and not killed
         if do_rdap:
             rdap_left -= 1
         enriched_by_ip[ip] = enrich_ip(ip, cache=geo_cache, online=do_rdap)
         refuse, _ = refuse_kill(ip, monitor=_monitor_snapshot(conn_by_ip[ip]) if ip in conn_by_ip else None)
-        do_bleed = bleed_left > 0 and not refuse
+        do_bleed = bleed_left > 0 and not refuse and not killed
         if do_bleed:
             bleed_left -= 1
         bleed_by_ip[ip] = bleed_target(
@@ -428,8 +430,6 @@ def _collect_points() -> list[dict[str, Any]]:
             online=do_bleed,
             cache=bleed_cache,
         )
-
-    disabled_ips = _disabled_ips()
     online_check_cache = _load_json(STATE / "target-online-check.json", {"checks": {}})
     points: list[dict[str, Any]] = []
     for r in raw:

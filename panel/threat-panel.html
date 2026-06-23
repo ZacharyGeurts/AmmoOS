@@ -587,6 +587,11 @@
     .ha-sdf-pin { overflow: visible !important; }
     .ha-sdf-mount { position: relative; overflow: visible; }
     .ha-sdf-marker { position: relative; overflow: visible; pointer-events: none; }
+    @keyframes ha-sdf-ring-pulse {
+      0% { transform: scale(0.55); opacity: 0.75; }
+      100% { transform: scale(1.75); opacity: 0; }
+    }
+    .ha-sdf-ring { will-change: transform, opacity; }
     .host-map-hd-ready .leaflet-tile-pane { filter: saturate(1.08) contrast(1.04); }
     .leaflet-control-zoom a { background: rgba(8, 12, 20, 0.9) !important; color: var(--text) !important; border-color: var(--border) !important; }
     .leaflet-control-attribution { background: rgba(8, 12, 20, 0.75) !important; color: var(--muted) !important; font-size: 0.58rem !important; }
@@ -732,7 +737,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.4.0</h1>
+        <h1>NEXUS-Shield v3.4.1</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -2282,8 +2287,18 @@
       });
     }
 
+    function cleanupHostSdfMarkers() {
+      if (!hostMarkerLayer || typeof NexusSdf === "undefined") return;
+      hostMarkerLayer.eachLayer((layer) => {
+        const mount = layer.getElement?.()?.querySelector(".ha-sdf-mount");
+        const wrap = mount?.firstElementChild;
+        if (wrap?._sdfCleanup) wrap._sdfCleanup();
+      });
+    }
+
     async function hydrateHostSdfMarkers() {
       if (!hostMarkerLayer || typeof NexusSdf === "undefined") return;
+      if (!$("view-host-attack")?.classList.contains("active")) return;
       const jobs = [];
       hostMarkerLayer.eachLayer((layer) => {
         const el = layer.getElement?.();
@@ -2295,6 +2310,8 @@
         jobs.push(
           NexusSdf.pinIcon(p).then(({ wrap }) => {
             if (mount.dataset.hydrated === "1") return;
+            const old = mount.firstElementChild;
+            if (old?._sdfCleanup) old._sdfCleanup();
             mount.innerHTML = "";
             mount.appendChild(wrap);
             mount.dataset.hydrated = "1";
@@ -2433,6 +2450,7 @@
       let hdEnabled = false;
       const enableHdTiles = () => {
         if (hdEnabled || !hostEarthMap) return;
+        if (!$("view-host-attack")?.classList.contains("active")) return;
         hdEnabled = true;
         hostSatelliteLayer.addTo(hostEarthMap);
         labels.addTo(hostEarthMap);
@@ -2440,9 +2458,9 @@
         el.classList.add("host-map-hd-ready");
         invalidateHostMapSize();
       };
-      hostSatelliteLayer.once("tileload", enableHdTiles);
-      hostSatelliteLayer.once("load", enableHdTiles);
-      setTimeout(enableHdTiles, 1200);
+      hostEarthMap.on("baselayerchange", (e) => {
+        if (e.name === "HD Satellite") enableHdTiles();
+      });
 
       getSdfGlobeUrl().then((url) => {
         if (!hostEarthMap) return;
@@ -2648,6 +2666,7 @@
         if (strip) strip.innerHTML = '<div class="empty">Map engine loading…</div>';
         return;
       }
+      cleanupHostSdfMarkers();
       hostMarkerLayer.clearLayers();
       hostMarkersById = {};
       const pinPoints = points.filter((p) => p.globe_pin !== false);

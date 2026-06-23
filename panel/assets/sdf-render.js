@@ -6,6 +6,7 @@
   "use strict";
 
   const cache = new Map();
+  const activePulses = new WeakMap();
   let manifest = null;
 
   function clamp(v, a, b) {
@@ -45,6 +46,12 @@
       ];
     }
     return [61, 214, 140, 255];
+  }
+
+  function stopPulse(wrap) {
+    const id = activePulses.get(wrap);
+    if (id) cancelAnimationFrame(id);
+    activePulses.delete(wrap);
   }
 
   async function loadManifest() {
@@ -150,13 +157,12 @@
 
   async function renderRing(canvas, color, scale, phase) {
     const pack = await loadField("ring-pulse");
-    const out = renderSdf(canvas, pack, color, {
+    return renderSdf(canvas, pack, color, {
       scale: (scale || 1) * (1 + (phase || 0) * 0.35),
       glow: true,
       edge: 0.06,
       alphaBoost: 0.55 * (1 - (phase || 0)),
     });
-    return out;
   }
 
   async function renderGlobe(canvas, w, h) {
@@ -194,6 +200,7 @@
     wrap.className = "ha-sdf-marker";
     const pinCanvas = document.createElement("canvas");
     const ringCanvas = document.createElement("canvas");
+    ringCanvas.className = "ha-sdf-ring";
     wrap.appendChild(ringCanvas);
     wrap.appendChild(pinCanvas);
     const pin = await renderPin(pinCanvas, {
@@ -210,16 +217,14 @@
     wrap.style.width = pin.width + "px";
     wrap.style.height = pin.height + "px";
     if (!killed && !friendly) {
-      let phase = 0;
-      const pulse = () => {
-        phase = (phase + 0.04) % 1;
-        renderRing(ringCanvas, col, 1.1, phase);
-        ringCanvas.style.left = (ax - ringCanvas.width / 2) + "px";
-        ringCanvas.style.top = (ay - ringCanvas.height / 2) + "px";
-        wrap._pulseId = requestAnimationFrame(pulse);
-      };
-      pulse();
+      const pack = await loadField("ring-pulse");
+      renderSdf(ringCanvas, pack, col, { scale: 1.0, glow: true, edge: 0.06, alphaBoost: 0.45 });
+      ringCanvas.style.left = (ax - ringCanvas.width / 2) + "px";
+      ringCanvas.style.top = (ay - ringCanvas.height / 2) + "px";
+      ringCanvas.style.animation = "ha-sdf-ring-pulse 2s ease-out infinite";
+      ringCanvas.style.transformOrigin = `${ringCanvas.width / 2}px ${ringCanvas.height / 2}px`;
     }
+    wrap._sdfCleanup = () => stopPulse(wrap);
     return {
       wrap,
       iconSize: [pin.width, pin.height],
@@ -236,6 +241,7 @@
     renderGlobe,
     pinIcon,
     parseColor,
+    stopPulse,
   };
 
   global.NexusSdf = NexusSdf;
