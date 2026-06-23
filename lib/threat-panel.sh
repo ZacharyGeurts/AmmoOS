@@ -12,6 +12,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/shutdown-guard.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/shutdown-guard.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -166,6 +167,18 @@ nexus_threat_panel_publish() {
       nexus_pest_actions_json 15
     else
       printf '[]'
+    fi
+    printf ',"angel_dossiers":'
+    if declare -f nexus_angel_dossiers_json >/dev/null 2>&1; then
+      nexus_angel_dossiers_json
+    else
+      printf '{"dossier_count":0,"dossiers":[],"motto":"Let'\''s Be Angels"}'
+    fi
+    printf ',"angel_research":'
+    if declare -f nexus_angel_research_json >/dev/null 2>&1; then
+      nexus_angel_research_json
+    else
+      printf '{"tables":{"mac_vendors":[],"exploit_cve_map":[]}}'
     fi
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'

@@ -36,6 +36,13 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.6.0 — Let's Be Angels (dossiers & research)
+
+- **Dossier tab** — full attack-path chains: vector → peer (IPv4/IPv6) → process → MAC vendor → CVE/MITRE
+- **Research tab** — MAC OUI table, IP intel cache, CVE/exploit map (legacy, recent, zero-day watch)
+- **Direction aware** — **At us** (inbound/listening) vs **From us** (outbound) — we look back HARD
+- **CLI** — `nexus dossier`, `nexus research`
+
 ## v2.5.0 — vector intelligence (never unknown)
 
 - **Never unknown** — every peer gets a classified label (CDN, org, PTR, or inferred remote peer)

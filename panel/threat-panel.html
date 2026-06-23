@@ -145,6 +145,35 @@
       font-size: 0.62rem; border: 1px solid #4a2030; color: var(--threat); background: rgba(255, 80, 100, 0.08);
     }
     .intel-label { color: var(--internet); font-size: 0.68rem; }
+    .dir-badge {
+      display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 0.58rem;
+      letter-spacing: 0.04em; margin-left: 6px; vertical-align: middle;
+    }
+    .dir-badge.from_us { color: var(--internet); border: 1px solid #2a4060; background: rgba(61, 140, 255, 0.08); }
+    .dir-badge.at_us { color: var(--threat); border: 1px solid #4a2030; background: rgba(255, 90, 110, 0.1); }
+    .angels-wrap { padding: 14px 18px 24px; max-width: 1200px; }
+    .angels-motto {
+      margin: 0 0 16px; padding: 12px 16px; border-radius: 10px;
+      background: linear-gradient(135deg, #0e1a2e 0%, #12182a 50%, #1a1020 100%);
+      border: 1px solid #3a5070; font-size: 0.8rem; line-height: 1.55; color: #c8d8f0;
+    }
+    .angels-motto strong { color: #9ec5ff; }
+    .dossier-card, .research-table-wrap {
+      margin-bottom: 14px; padding: 12px 14px; border-radius: 8px;
+      background: #0e1218; border: 1px solid #1e2838;
+    }
+    .dossier-card h4 { margin: 0 0 8px; font-size: 0.82rem; color: var(--text); }
+    .attack-path { margin: 8px 0 0; padding: 0; list-style: none; font-size: 0.72rem; }
+    .attack-path li { padding: 4px 0; border-left: 2px solid #2a4060; padding-left: 10px; margin-bottom: 4px; color: var(--muted); }
+    .attack-path li strong { color: var(--internet); }
+    .attack-path li.type-vector { border-left-color: var(--threat); }
+    .attack-path li.type-cve { border-left-color: var(--gold); }
+    .research-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+    .research-table th, .research-table td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #1a2430; }
+    .research-table th { color: var(--internet); font-weight: 600; }
+    .exploit-zero_day_watch { color: var(--threat); }
+    .exploit-recent { color: var(--gold); }
+    .exploit-legacy { color: var(--muted); }
     .gatekeeper-banner {
       display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline;
       padding: 10px 18px; font-size: 0.76rem; line-height: 1.45;
@@ -503,7 +532,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.5.0</h1>
+        <h1>NEXUS-Shield v2.6.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -556,6 +585,8 @@
 
   <nav class="menu" aria-label="Panel sections">
     <button type="button" class="active" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">Monitor</button>
+    <button type="button" data-view="dossier" data-tip="Full attack-path dossiers — vector to peer to process to MAC to CVE. They look at us; we look back HARD.">Dossier</button>
+    <button type="button" data-view="research" data-tip="Research tables — MAC vendors, IP intel, CVE/exploit maps, zero-day watch list.">Research</button>
     <button type="button" data-view="settings" data-tip="Turn features on/off, load ad block lists, and review past incidents. No terminal needed.">Settings</button>
     <button type="button" data-view="logs" data-tip="A diary of everything NEXUS noticed — useful when something feels wrong.">Logs</button>
   </nav>
@@ -587,6 +618,21 @@
         <div class="list" id="threats"><div class="empty">No vectors detected</div></div>
         <div class="vectors" id="vector-catalog"></div>
       </section>
+    </div>
+  </section>
+
+  <section id="view-dossier" class="view">
+    <div class="angels-wrap">
+      <p class="angels-motto" id="dossier-motto"><strong>Let's Be Angels</strong> — full dossiers trace every warning back through peers, processes, MAC vendors, and CVE chains. IPv4 and IPv6. From us or at us — we look back HARD.</p>
+      <div id="dossier-stats" class="meta" style="margin-bottom:12px;font-size:0.72rem;">Loading dossiers…</div>
+      <div id="dossier-list"><div class="empty">Building attack-path dossiers…</div></div>
+    </div>
+  </section>
+
+  <section id="view-research" class="view">
+    <div class="angels-wrap">
+      <p class="angels-motto"><strong>Research tables</strong> — MAC OUI vendors, IP intelligence cache, CVE ↔ vector mapping (legacy, recent, zero-day watch). Never unknown.</p>
+      <div id="research-content"><div class="empty">Loading research tables…</div></div>
     </div>
   </section>
 
@@ -1669,7 +1715,7 @@
           <span class="verdict-${v} friendly-verdict"><span class="has-tip">${esc(vf.label)}${tipMarkup(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""))}</span></span>
           <span class="ip" title="Internet address">${ip}:${c.remote_port || "?"}</span>
           <span class="proc" title="Program using this connection">${c.process || "background app"}</span>
-          <span class="meta intel-label">${intelLabel ? esc(intelLabel) : esc(c.ip_class || "classified peer")}${blockedRow ? " · blocked" : ""}</span>
+          <span class="meta intel-label">${intelLabel ? esc(intelLabel) : esc(c.ip_class || "classified peer")}${c.addr_version ? ` · ${esc(c.addr_version)}` : ""}${c.traffic_direction_label ? `<span class="dir-badge ${esc(c.traffic_direction || "from_us")}">${esc(c.traffic_direction === "at_us" ? "At us" : "From us")}</span>` : ""}${blockedRow ? " · blocked" : ""}</span>
         </div>
         ${renderSuggestionBox(sug, v, c.scores)}
         ${c.reason ? `<details class="axis-details"><summary>Technical notes</summary><div class="intent-reason">${esc(c.reason)}</div></details>` : ""}
@@ -1694,6 +1740,56 @@
         btn.addEventListener("click", () => pestEradicate(btn.dataset.eradicate, btn.dataset.pid, btn.dataset.vector, "", btn));
       });
       root.querySelectorAll(".has-tip").forEach(bindTip);
+    }
+
+    function renderDossiers(ad) {
+      const list = $("dossier-list");
+      const stats = $("dossier-stats");
+      if (!ad?.dossiers?.length) {
+        stats.textContent = "No dossiers yet — quiet is good. Warnings and suspicious connections build paths automatically.";
+        list.innerHTML = '<div class="empty">No attack-path dossiers — NEXUS is watching.</div>';
+        return;
+      }
+      if ($("dossier-motto") && ad.motto) {
+        $("dossier-motto").innerHTML = `<strong>${esc(ad.motto)}</strong> — ${ad.at_us_count || 0} at us · ${ad.from_us_count || 0} from us · ${ad.ipv4_count || 0} IPv4 · ${ad.ipv6_count || 0} IPv6`;
+      }
+      stats.textContent = `${ad.dossier_count} dossier(s) · updated ${ad.updated || "—"}`;
+      list.innerHTML = ad.dossiers.map((d) => {
+        const path = (d.attack_path || []).map((s) =>
+          `<li class="type-${esc(s.type)}"><strong>Step ${s.step}</strong> ${esc(s.type)}: ${esc(s.label)} <span class="meta">(${esc(s.node)})</span></li>`
+        ).join("");
+        const mac = d.mac_intel?.vendor || "—";
+        const cves = (d.exploit_intel?.cves || []).join(", ") || "—";
+        return `<div class="dossier-card">
+          <h4>${esc(d.vector)} · ${esc(d.peer)} <span class="dir-badge ${esc(d.direction)}">${esc(d.direction === "at_us" ? "At us" : "From us")}</span> <span class="meta">${esc(d.addr_version || "")}</span></h4>
+          <div class="meta">${esc(d.direction_label || "")} · ${esc(d.severity || "")} · ${esc(d.ts || "")}</div>
+          <div style="margin-top:6px;font-size:0.72rem;">${esc(d.lookback || "")}</div>
+          <div style="margin-top:6px;font-size:0.7rem;color:var(--muted)">Process: <strong>${esc(d.process || "—")}</strong> · MAC: <strong>${esc(mac)}</strong> · CVEs: ${esc(cves)}</div>
+          <ul class="attack-path">${path || "<li>No path steps</li>"}</ul>
+        </div>`;
+      }).join("");
+    }
+
+    function renderResearch(ar) {
+      const el = $("research-content");
+      const t = ar?.tables || {};
+      const macRows = (t.mac_vendors || []).map((m) =>
+        `<tr><td>${esc(m.ip)}</td><td>${esc(m.mac)}</td><td>${esc(m.vendor)}</td><td>${esc(m.category)}</td><td>${esc(m.source)}</td></tr>`
+      ).join("") || "<tr><td colspan='5'>No ARP/MAC entries yet</td></tr>";
+      const ipRows = (t.ip_intel || []).map((i) =>
+        `<tr><td>${esc(i.ip)}</td><td>${esc(i.addr_version)}</td><td>${esc(i.label)}</td><td>${esc(i.org)}</td><td>${esc(i.ip_class)}</td></tr>`
+      ).join("") || "<tr><td colspan='5'>Intel cache warming up</td></tr>";
+      const cveRows = (t.exploit_cve_map || []).map((e) =>
+        `<tr class="exploit-${esc(e.exploit_class)}"><td>${esc(e.vector)}</td><td>${esc((e.cves || []).join(", "))}</td><td>${esc((e.mitre || []).join(", "))}</td><td>${esc(e.exploit_class)}</td><td>${esc(e.summary)}</td></tr>`
+      ).join("");
+      el.innerHTML = `
+        <div class="research-table-wrap"><h4>MAC vendor table (OUI)</h4>
+          <table class="research-table"><tr><th>IP</th><th>MAC</th><th>Vendor</th><th>Category</th><th>Source</th></tr>${macRows}</table></div>
+        <div class="research-table-wrap"><h4>IP intelligence cache</h4>
+          <table class="research-table"><tr><th>Address</th><th>Ver</th><th>Label</th><th>Org</th><th>Class</th></tr>${ipRows}</table></div>
+        <div class="research-table-wrap"><h4>CVE / vector / exploit class map</h4>
+          <table class="research-table"><tr><th>Vector</th><th>CVEs</th><th>MITRE</th><th>Class</th><th>Summary</th></tr>${cveRows}</table></div>
+        <p class="meta" style="margin-top:8px;">OUI entries: ${t.oui_entries_loaded ?? 0} · CVE vectors mapped: ${t.cve_vectors_mapped ?? 0} · ${ar.online ? "online lookups enabled" : "offline tables"}</p>`;
     }
 
     function renderIntelBanner(vi) {
@@ -1846,6 +1942,8 @@
           gk._fallback = data.internet.connections;
         }
         renderIntelBanner(data.vector_intel);
+        renderDossiers(data.angel_dossiers);
+        renderResearch(data.angel_research);
         renderGatekeeperBanner(gk);
         renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
         renderTrusted(data.trusted);

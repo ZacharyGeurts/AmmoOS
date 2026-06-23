@@ -6,6 +6,7 @@ bandwidth abuse, and stream-theft / harm candidates.
 """
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import re
@@ -89,6 +90,33 @@ def _load_trusted() -> set[str]:
     return ips
 
 
+def _is_private_ip(addr: str) -> bool:
+    if not addr:
+        return True
+    try:
+        ip = ipaddress.ip_address(addr.split("%")[0])
+        return ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
+    except ValueError:
+        return PRIVATE_RE.match(addr) is not None
+
+
+def _addr_version(addr: str) -> str:
+    if not addr:
+        return "unknown"
+    try:
+        return "ipv6" if isinstance(ipaddress.ip_address(addr.split("%")[0]), ipaddress.IPv6Address) else "ipv4"
+    except ValueError:
+        return "ipv6" if ":" in addr else "ipv4"
+
+
+def _connection_direction(state: str) -> tuple[str, str]:
+    if state in ("LISTEN", "LISTENING"):
+        return "at_us", "At us — listening"
+    if state in ("SYN-RECV", "SYN_RECV"):
+        return "at_us", "At us — inbound"
+    return "from_us", "From us → outbound"
+
+
 def _recent_threat_ips(limit: int = 80) -> dict[str, list[str]]:
     out: dict[str, list[str]] = {}
     if not THREATS_TSV.is_file():
@@ -100,9 +128,16 @@ def _recent_threat_ips(limit: int = 80) -> dict[str, list[str]]:
             continue
         vector, detail = parts[1], parts[3]
         for key in ("dst=", "ip="):
-            m = re.search(rf"{re.escape(key)}([0-9]{{7,15}})", detail)
+            m = re.search(rf"{re.escape(key)}([^\s;]+)", detail)
             if m:
-                ip = m.group(1)
+                ip = m.group(1).strip()
+                if ip and not _is_private_ip(ip):
+                    out.setdefault(ip, []).append(vector)
+        for ip in re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", detail):
+            if not _is_private_ip(ip):
+                out.setdefault(ip, []).append(vector)
+        for ip in re.findall(r"(?:[0-9a-fA-F]{0,4}:){2,}[0-9a-fA-F]{0,4}", detail):
+            if ip not in ("::", "::1") and not _is_private_ip(ip):
                 out.setdefault(ip, []).append(vector)
     return out
 
@@ -540,9 +575,10 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         if state not in ("ESTAB", "ESTABLISHED", "SYN-SENT", "SYN-RECV"):
             continue
         rip, rport = p["remote_ip"], p["remote_port"]
-        if not rip or PRIVATE_RE.match(rip):
+        if not rip or _is_private_ip(rip):
             continue
         proc = p["proc"]
+        direction, direction_label = _connection_direction(state)
         intel = _intel_for_ip(rip, intel_cache)
         ip_class = intel["ip_class"]
         key = f"{rip}:{rport}:{proc}"
@@ -617,6 +653,9 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "state": state,
             "ip_class": ip_class,
             "intel": intel,
+            "addr_version": _addr_version(rip),
+            "traffic_direction": direction,
+            "traffic_direction_label": direction_label,
             "line": line,
             "scores": scores,
             "notes": notes,

@@ -60,6 +60,8 @@ nexus_shutdown_startup_check
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
 # shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
+# shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/packet-oracle.sh"

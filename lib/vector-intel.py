@@ -6,6 +6,7 @@ Offline: CDN heuristics, PTR, and inferred labels — always a named classificat
 """
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import re
@@ -170,17 +171,26 @@ def lookup_ip_online(ip: str, timeout: float = 4.0) -> dict[str, Any]:
     }
 
 
+def _addr_version(ip: str) -> str:
+    try:
+        return "ipv6" if isinstance(ipaddress.ip_address(ip.split("%")[0]), ipaddress.IPv6Address) else "ipv4"
+    except ValueError:
+        return "ipv6" if ":" in ip else "ipv4"
+
+
 def classify_ip(ip: str, cache: dict[str, Any], online: bool | None = None) -> dict[str, Any]:
     if not ip:
         return {
             "ip": "",
             "ip_class": "unresolved",
             "label": "No remote address",
+            "addr_version": "unknown",
             "confidence": "high",
             "source": "local",
             "updated": _now(),
         }
 
+    ver = _addr_version(ip)
     cached = cache.get("ips", {}).get(ip)
     if cached:
         age = time.time() - float(cached.get("_ts", 0))
@@ -188,12 +198,16 @@ def classify_ip(ip: str, cache: dict[str, Any], online: bool | None = None) -> d
         if age < ttl:
             return cached
 
-    ip_class, label = _prefix_class(ip)
-    hostname = reverse_ptr(ip)
+    if ver == "ipv6":
+        ip_class, label = "ipv6_global", "IPv6 global peer"
+    else:
+        ip_class, label = _prefix_class(ip)
+    hostname = reverse_ptr(ip) if ver == "ipv4" else ""
     entry: dict[str, Any] = {
         "ip": ip,
         "ip_class": ip_class,
         "label": label,
+        "addr_version": ver,
         "hostname": hostname,
         "org": "",
         "confidence": "inferred",
@@ -314,7 +328,9 @@ def _load_threats(limit: int = 120) -> list[dict[str, str]]:
 
 
 def _extract_ips(text: str) -> list[str]:
-    return re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", text)
+    found = re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", text)
+    found += [x for x in re.findall(r"(?:[0-9a-fA-F]{0,4}:){2,}[0-9a-fA-F]{0,4}", text) if x not in ("::", "::1")]
+    return found
 
 
 def scour_active_vectors(max_online_lookups: int = 12) -> dict[str, Any]:
@@ -344,12 +360,20 @@ def scour_active_vectors(max_online_lookups: int = 12) -> dict[str, Any]:
         elif len(parts) > 4:
             remote_idx = 4
         remote = parts[remote_idx] if len(parts) > remote_idx else ""
-        rip_m = re.match(r"(\d{1,3}(?:\.\d{1,3}){3}):(\d+)", remote.strip("[]"))
-        if not rip_m:
-            rip_m = re.search(r"\[?(\d{1,3}(?:\.\d{1,3}){3})\]?:(\d+)", remote)
-        if not rip_m:
+        rip, rport = "", ""
+        if remote.startswith("["):
+            m6 = re.match(r"\[([^\]]+)\]:(\d+)", remote)
+            if m6:
+                rip, rport = m6.group(1), m6.group(2)
+        elif remote.count(":") > 1:
+            idx = remote.rfind(":")
+            rip, rport = remote[:idx], remote[idx + 1 :]
+        else:
+            rip_m = re.match(r"(\d{1,3}(?:\.\d{1,3}){3}):(\d+)", remote)
+            if rip_m:
+                rip, rport = rip_m.group(1), rip_m.group(2)
+        if not rip:
             continue
-        rip, rport = rip_m.group(1), rip_m.group(2)
         if PRIVATE_RE.match(rip) or rip in seen_peers:
             continue
         seen_peers.add(rip)
@@ -379,9 +403,18 @@ def scour_active_vectors(max_online_lookups: int = 12) -> dict[str, Any]:
         if proc_intel.get("exe") and ("/tmp/" in proc_intel["exe"] or "/dev/shm/" in proc_intel["exe"]):
             arsenal.append({"action": "quarantine_file", "target": proc_intel["exe"], "label": "Quarantine temp binary"})
 
+        direction = "from_us"
+        if "LISTEN" in line:
+            direction = "at_us"
+        elif "SYN-RECV" in line:
+            direction = "at_us"
+
         active.append({
             "remote_ip": rip,
             "remote_port": rport,
+            "addr_version": _addr_version(rip),
+            "direction": direction,
+            "direction_label": "At us" if direction == "at_us" else "From us",
             "process": proc_intel.get("proc", "network-peer"),
             "process_intel": proc_intel,
             "ip_intel": {k: v for k, v in ip_intel.items() if k != "_ts"},

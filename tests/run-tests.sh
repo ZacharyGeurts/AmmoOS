@@ -213,7 +213,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v2\.(4\.1|5\.0)' "$panel"
+  grep -qE 'v2\.(4\.1|5\.0|6\.0)' "$panel"
 }
 
 test_self_access_script() {
@@ -251,8 +251,31 @@ test_panel_v25_intel_ui() {
   local panel="${ROOT}/panel/threat-panel.html"
   grep -q 'renderIntelBanner' "$panel"
   grep -q 'Remove pest' "$panel"
-  grep -q 'v2.5.0' "$panel"
+  grep -qE 'v2\.(5\.0|6\.0)' "$panel"
   grep -q '/api/pest/eradicate' "${ROOT}/lib/threat-panel-http.py"
+}
+
+test_angel_dossier_module() {
+  [[ -f "${ROOT}/lib/angel-dossier.py" ]]
+  [[ -f "${ROOT}/data/cve-vector-map.json" ]]
+  [[ -f "${ROOT}/data/oui-vendors.tsv" ]]
+  grep -q 'attack_path' "${ROOT}/lib/angel-dossier.py"
+  grep -q 'mac_vendors' "${ROOT}/lib/angel-dossier.py"
+}
+
+test_panel_v26_angels_tabs() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'view-dossier' "$panel"
+  grep -q 'view-research' "$panel"
+  grep -q 'renderDossiers' "$panel"
+  grep -q 'Let'\''s Be Angels' "$panel"
+  grep -q 'angel_dossiers' "${ROOT}/lib/threat-panel.sh"
+}
+
+test_gatekeeper_ipv6_direction() {
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q 'traffic_direction'
+tcp6 ESTAB 0 0 [fe80::1]:443 [2001:4860:4860::8888]:443 users:(("firefox",pid=1,fd=3))
+EOF
 }
 
 test_gatekeeper_trust_rank() {
@@ -367,6 +390,9 @@ run_test "localhost block refused" test_localhost_block_refused
 run_test "vector intel never unknown" test_vector_intel_no_unknown
 run_test "pest arsenal sacred processes" test_pest_arsenal_sacred
 run_test "panel v2.5 intel UI" test_panel_v25_intel_ui
+run_test "angel dossier module" test_angel_dossier_module
+run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
+run_test "gatekeeper ipv6 direction fields" test_gatekeeper_ipv6_direction
 run_test "gatekeeper trust rank" test_gatekeeper_trust_rank
 run_test "firewall temp allow helpers" test_firewall_temp_allow_fn
 run_test "lockdown-first script" test_lockdown_first_script

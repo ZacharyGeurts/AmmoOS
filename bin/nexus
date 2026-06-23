@@ -57,6 +57,8 @@ NEXUS-Shield CLI — full control if the browser won't open
   nexus scour               Classify active vectors (never unknown)
   nexus intel <ip>          Look up peer intelligence
   nexus eradicate <ip> [pid]  Remove host pest (block + stop + quarantine)
+  nexus dossier             Angel dossiers — attack paths (JSON)
+  nexus research            Research tables — MAC/CVE/MITRE (JSON)
   nexus paranoia            Paranoia mode status
   nexus shutdown            Shutdown guard / restart
 
@@ -257,6 +259,18 @@ case "$cmd" in
     [[ -f "$script" ]] || { echo "vector-intel missing"; exit 1; }
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
       python3 "$script" lookup "$ip"
+    ;;
+  dossier)
+    script="${NEXUS_INSTALL_ROOT}/lib/angel-dossier.py"
+    [[ -f "$script" ]] || { echo '{"dossiers":[]}'; exit 0; }
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "$script" dossiers
+    ;;
+  research)
+    script="${NEXUS_INSTALL_ROOT}/lib/angel-dossier.py"
+    [[ -f "$script" ]] || { echo '{"tables":{}}'; exit 0; }
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "$script" research
     ;;
   eradicate)
     ip="${sub:-}"
