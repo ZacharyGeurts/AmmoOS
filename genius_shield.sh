@@ -46,11 +46,12 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/field-attack-kit.py" "${ROOT}/lib/friendly-guard.py" "${ROOT}/lib/target-bleed.py" \
   "${ROOT}/lib/host-identity.py" "${ROOT}/lib/sdf-assets.py" "${ROOT}/lib/field-us-intel.py" "${ROOT}/lib/packet-permission.py" \
   "${ROOT}/lib/nexus-update.py" "${ROOT}/lib/honorability-db.py" "${ROOT}/lib/browser-awareness.py" \
-  "${ROOT}/lib/geo-distance.py" "${ROOT}/lib/operator-location.py" 2>/dev/null || true
+  "${ROOT}/lib/geo-distance.py" "${ROOT}/lib/operator-location.py" \
+  "${ROOT}/lib/field-rf-sentinel.py" "${ROOT}/lib/police-agency-db.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
   "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
-  "${ROOT}/lib/honorability.sh" 2>/dev/null || true
+  "${ROOT}/lib/honorability.sh" "${ROOT}/lib/field-rf-sentinel.sh" "${ROOT}/lib/police-agency.sh" 2>/dev/null || true
 chmod 555 /usr/local/lib/nexus-shield/lib/friendly-guard.py /usr/local/lib/nexus-shield/lib/friendly-guard.sh 2>/dev/null || true
 chmod 755 /usr/local/lib/nexus-shield/lib/*.py 2>/dev/null || true
 chmod -R a+rX /usr/local/lib/nexus-shield/data 2>/dev/null || true

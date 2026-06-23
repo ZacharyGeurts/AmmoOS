@@ -434,7 +434,44 @@ test_panel_host_attack_ui() {
   grep -q 'checkNexusUpdate' "$panel"
   grep -q 'nexus-update-btn' "$panel"
   grep -q 'distance_label' "$panel"
-  grep -qE 'v4\.(0|1|2)\.0' "$panel"
+  grep -qE 'v4\.(0|1|2|3)\.0' "$panel"
+}
+
+test_field_rf_module() {
+  [[ -f "${ROOT}/lib/field-rf-sentinel.py" ]]
+  [[ -f "${ROOT}/lib/field-rf-sentinel.sh" ]]
+  grep -q 'field_rf' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/field-rf' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'RF_BURST' "${ROOT}/lib/threat-vectors.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'internal_field'
+}
+
+test_police_agency_module() {
+  [[ -f "${ROOT}/lib/police-agency-db.py" ]]
+  [[ -f "${ROOT}/data/police-agencies-seed.json" ]]
+  grep -q 'us_mi_tri_county' "${ROOT}/data/police-agencies-seed.json"
+  grep -q 'us_mi_quad_state' "${ROOT}/data/police-agencies-seed.json"
+  grep -q '/api/police-agencies' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'police_agency' "${ROOT}/lib/threat-panel.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/police-agency-db.py" select us_mi_mpscs
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/police-agency-db.py" json | grep -q 'us_mi_mpscs'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/police-agency-db.py" import us_mi_tri_county tri_county_channel "channel,rx_mhz,tx_mhz,mode,notes
+1,460.100,460.100,FM,test" test.csv | grep -q '"ok": true'
+}
+
+test_panel_field_rf_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'view-field-rf' "$panel"
+  grep -q 'renderFieldRF' "$panel"
+  grep -q 'renderPoliceAgency' "$panel"
+  grep -q 'police-agency-select' "$panel"
+  grep -q 'field-rf-shield-enabled' "$panel"
+  grep -q 'data-view="field-rf"' "$panel"
+  grep -q 'RF_BURST' "$panel"
 }
 
 test_honorability_module() {
@@ -948,6 +985,9 @@ test_host_map_trash_module() {
 
 run_test "honorability module" test_honorability_module
 run_test "panel honor UI" test_panel_honor_ui
+run_test "field rf sentinel module" test_field_rf_module
+run_test "police agency module" test_police_agency_module
+run_test "panel field rf UI" test_panel_field_rf_ui
 run_test "host attack map module" test_host_attack_module
 run_test "nexus update module" test_nexus_update_module
 run_test "host map trash module" test_host_map_trash_module

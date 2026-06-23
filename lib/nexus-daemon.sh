@@ -67,6 +67,8 @@ source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
 source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/police-agency.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/police-agency.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
 # shellcheck source=/dev/null

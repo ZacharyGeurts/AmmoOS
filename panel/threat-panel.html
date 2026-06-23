@@ -108,6 +108,29 @@
     }
     .conn-honor-line { font-size: 0.62rem; color: var(--gold); margin-top: 2px; }
     @media (max-width: 900px) { .honor-grid { grid-template-columns: 1fr; } }
+    .field-rf-wrap { padding: 16px 18px; max-width: 1280px; }
+    .field-rf-motto { font-size: 0.82rem; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
+    .rf-burst-chip {
+      display: inline-flex; align-items: center; gap: 4px; margin: 0 6px 6px 0;
+      padding: 3px 10px; border-radius: 999px; font-size: 0.64rem; font-weight: 600;
+      border: 1px solid #4a3040; background: rgba(255, 92, 58, 0.1); color: #ffb8a0;
+    }
+    .rf-burst-chip.severity-high, .rf-burst-chip.severity-critical { border-color: var(--threat); color: #ff8a9a; }
+    .rf-shield-on { color: var(--ok); font-weight: 700; }
+    .rf-shield-off { color: var(--threat); font-weight: 700; }
+    .police-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+    .police-toolbar select, .police-toolbar textarea {
+      background: #0d1524; border: 1px solid var(--border); color: var(--text);
+      padding: 7px 10px; border-radius: 6px; font-size: 0.74rem;
+    }
+    .police-import-area {
+      width: 100%; min-height: 88px; font-family: ui-monospace, monospace; font-size: 0.68rem;
+    }
+    .surrounding-chip {
+      display: inline-block; margin: 0 6px 6px 0; padding: 4px 10px; border-radius: 6px;
+      font-size: 0.66rem; border: 1px solid #2a4060; color: var(--internet); cursor: pointer;
+      background: rgba(61, 140, 255, 0.06);
+    }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
       width: 40px; height: 40px; border-radius: 10px;
@@ -1026,7 +1049,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v4.2.0</h1>
+        <h1>NEXUS-Shield v4.3.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1046,7 +1069,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="Checks GitHub for a newer NEXUS-Shield release.">v4.2.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="Checks GitHub for a newer NEXUS-Shield release.">v4.3.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1055,7 +1078,7 @@
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
-    <strong>v4.2 Honorability — 5 gold stars pass silently (X.com, YouTube). Moderate default; we only ask when you visit rough sites. Set your location for threat distance. Right-click links for new tab. CLI: <code>nexus trust &lt;ip&gt;</code></strong>
+    <strong>v4.3 Field RF — internal software antenna detects WiFi/RF/dog-collar/IR-proxy bursts and shields you. Police interop dropdown imports Michigan Tri/Quad-State and global agency formats. Right-click links for new tab.</strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
   </div>
 
@@ -1090,6 +1113,7 @@
     <button type="button" class="active" data-view="us" data-tip="Page 1 — forensic identity of THIS machine. Every fact from ss, ip, proc, and NEXUS state on the field — zero external guesswork.">US</button>
     <button type="button" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">Monitor</button>
     <button type="button" data-view="honor" data-tip="Honorability database — 5 gold-star sites (X.com, YouTube) pass silently. Moderate default. Acceptance only when you visit lower-trust sites. Low-level data researchers.">Honor</button>
+    <button type="button" data-view="field-rf" data-tip="Internal field antenna — RF, WiFi, dog-collar, and IR-proxy burst detection with auto-shield. Global police interop import (Michigan MPSCS, Tri/Quad-State, P25, TETRA).">Field RF</button>
     <button type="button" data-view="inspect" data-tip="Retro modem LEDs, deep packet inspection, English translation, exploit heuristics (high-confidence only — no false positives).">Inspect</button>
     <button type="button" data-view="host-attack" data-tip="Global host attack map — pulsing dots on Earth, green through red by threat. Built for Zachary Geurts and everyone defending their machine in 2026.">Host Attack</button>
     <button type="button" data-view="dossier" data-tip="Full attack-path dossiers — vector to peer to process to MAC to CVE. They look at us; we look back HARD.">Dossier</button>
@@ -1118,6 +1142,7 @@
         <button type="button" data-view-jump="human-dossier">Human Dossier kill-orders →</button>
         <button type="button" data-view-jump="host-attack">Host Attack map →</button>
         <button type="button" data-view-jump="honor">Honorability &amp; distance →</button>
+        <button type="button" data-view-jump="field-rf">Field RF &amp; police interop →</button>
       </div>
     </div>
   </section>
@@ -1161,6 +1186,70 @@
       <p class="meta" style="margin-top:10px;font-size:0.62rem;" data-tip="Panel stays in one tab. Right-click any follow-through button or browser link → Open in new tab when you want a second window.">
         Navigation stays in this tab unless you right-click → Open link in new tab.
       </p>
+    </div>
+  </section>
+
+  <section id="view-field-rf" class="view">
+    <div class="field-rf-wrap">
+      <p class="field-rf-motto" id="field-rf-motto" data-tip="We synthesize a software field antenna from nmcli, rfkill, and sysfs — no external SDR required. Bursts trigger shield and threat vectors.">
+        <strong>Field RF · Internal Antenna</strong> — WiFi interference, RF bursts, dog-collar 2.4GHz chatter, IR-proxy correlation. Shield protects the operator.
+      </p>
+      <div class="honor-grid">
+        <div class="honor-card">
+          <h4 data-tip="Software field antenna status — scans, rfkill rows, USB IR proxies.">Antenna telemetry</h4>
+          <div id="field-rf-antenna-meta" class="meta" style="font-size:0.68rem;margin-bottom:8px;">Sampling…</div>
+          <div id="field-rf-interfaces"></div>
+          <div style="margin-top:10px;">
+            <button type="button" id="field-rf-cycle" data-tip="Force one scan cycle now.">Scan now</button>
+            <span id="field-rf-shield-status" class="meta" style="margin-left:10px;font-size:0.68rem;"></span>
+          </div>
+          <div style="margin-top:10px;">
+            <label class="toggle" style="font-size:0.72rem;">
+              <input type="checkbox" id="field-rf-shield-enabled" checked />
+              <span><strong>RF shield</strong> — auto-protect on severe bursts</span>
+            </label>
+            <label class="toggle" style="font-size:0.72rem;margin-left:12px;">
+              <input type="checkbox" id="field-rf-auto-rfkill" checked />
+              <span><strong>Soft rfkill</strong> on wlan when burst spikes</span>
+            </label>
+          </div>
+        </div>
+        <div class="honor-card">
+          <h4 data-tip="Live and recent bursts — mapped to WIFI_INTERFERENCE, RF_BURST, FIELD_ANTENNA_ALERT vectors.">Burst detection</h4>
+          <div id="field-rf-bursts"><div class="empty">No bursts this cycle.</div></div>
+          <div id="field-rf-recent" style="margin-top:10px;font-size:0.68rem;"></div>
+        </div>
+        <div class="honor-card" style="grid-column: 1 / -1;">
+          <h4 data-tip="Major police protection systems worldwide — select agency, import local format packs (CSV, ICS-205, JSON). Michigan: MPSCS, Tri-County, Quad-State.">Police interop · global agencies</h4>
+          <div class="police-toolbar">
+            <label>Region
+              <select id="police-region-filter" data-tip="Filter agencies by region — US includes Michigan Tri/Quad-State packs.">
+                <option value="">All regions</option>
+              </select>
+            </label>
+            <label>Agency
+              <select id="police-agency-select" data-tip="Select your primary agency — surrounding mutual-aid systems load automatically.">
+                <option value="">— select agency —</option>
+              </select>
+            </label>
+            <label>Format
+              <select id="police-format-select" data-tip="Known import format for the selected agency.">
+                <option value="">— format —</option>
+              </select>
+            </label>
+            <button type="button" id="police-import-btn" data-tip="Import pasted CSV/ICS-205/JSON into field drive.">Import format</button>
+          </div>
+          <div id="police-selected-meta" class="meta" style="font-size:0.68rem;margin-bottom:8px;"></div>
+          <div id="police-surrounding" style="margin-bottom:10px;"></div>
+          <textarea id="police-import-payload" class="police-import-area" placeholder="Paste talkgroup CSV, ICS-205 radio plan, or JSON interop matrix…" data-tip="Example: channel,rx,tx,mode for ICS-205 or tg_decimal,alias,agency for MPSCS."></textarea>
+          <div id="police-imports-list" style="margin-top:10px;font-size:0.68rem;"></div>
+        </div>
+      </div>
+      <div class="honor-crossrefs">
+        <button type="button" data-view-jump="monitor" data-tip="See RF vectors in Warnings when bursts fire.">Monitor warnings →</button>
+        <button type="button" data-view-jump="us" data-tip="US Page 1 — local machine field identity.">US field →</button>
+        <button type="button" data-view-jump="research" data-tip="Research tables — CVE, MAC, IP intel.">Research →</button>
+      </div>
     </div>
   </section>
 
@@ -1729,6 +1818,21 @@
         likely: "Unfriendly — guard stopped on purpose.",
         action: "Use red banner → review → restart.",
       },
+      RF_BURST: {
+        meaning: "Radio-frequency or rfkill state burst on a wireless interface.",
+        likely: "Nearby transmitter, jammer, or dog-collar/remote 2.4GHz chatter.",
+        action: "Open Field RF tab — enable shield; review burst detail.",
+      },
+      WIFI_INTERFERENCE: {
+        meaning: "WiFi scan or signal level swung sharply in a short window.",
+        likely: "Microwave, collar shocker, drone control, or crowded 2.4/5GHz field.",
+        action: "Field RF shield may soft-block wlan; move or disable offending device.",
+      },
+      FIELD_ANTENNA_ALERT: {
+        meaning: "Internal field antenna correlated an interference pattern.",
+        likely: "Dog-collar RF, IR-proxy (USB camera) during RF noise, or scan churn.",
+        action: "Review Field RF bursts; import local police interop if coordinating response.",
+      },
     };
 
     function renderSuggestionBox(sug, verdict, scores) {
@@ -1786,6 +1890,7 @@
       if (name === "library" && lastPanelData) renderLibraryShelf(lastPanelData.h7_library);
       if (name === "us" && lastPanelData) renderUSField(lastPanelData.us_field);
       if (name === "honor" && lastPanelData) renderHonorability(lastPanelData);
+      if (name === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
       if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
     }
 
@@ -3187,6 +3292,204 @@
       renderHonorPending(hon.pending_acceptance || []);
     }
 
+    let policeAgencyCache = null;
+    let fieldRfBound = false;
+
+    function rfBurstChip(b) {
+      const sev = (b.severity || "medium").toLowerCase();
+      const kind = (b.kind || "burst").replace(/_/g, " ");
+      return `<span class="rf-burst-chip severity-${esc(sev)}">${esc(sev)} · ${esc(kind)} · ${esc(b.device || "—")}<br/><span class="meta">${esc(b.detail || "")}</span></span>`;
+    }
+
+    async function setFieldRfShield(enabled, autoRfkill) {
+      await fetch("/api/field-rf/shield", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled, auto_rfkill: autoRfkill }),
+      });
+      refresh();
+    }
+
+    function bindFieldRfControls() {
+      if (fieldRfBound) return;
+      fieldRfBound = true;
+      $("field-rf-cycle")?.addEventListener("click", async () => {
+        await fetch("/api/field-rf/cycle", { method: "POST" });
+        refresh();
+      });
+      const onShield = () => {
+        const en = $("field-rf-shield-enabled")?.checked;
+        const auto = $("field-rf-auto-rfkill")?.checked;
+        setFieldRfShield(en, auto);
+      };
+      $("field-rf-shield-enabled")?.addEventListener("change", onShield);
+      $("field-rf-auto-rfkill")?.addEventListener("change", onShield);
+      $("police-region-filter")?.addEventListener("change", () => {
+        if (policeAgencyCache) renderPoliceAgency(policeAgencyCache, true);
+      });
+      $("police-agency-select")?.addEventListener("change", async (ev) => {
+        const id = ev.target.value;
+        if (!id) return;
+        await fetch("/api/police-agencies/select", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ agency_id: id }),
+        });
+        refresh();
+      });
+      $("police-import-btn")?.addEventListener("click", async () => {
+        const agency_id = $("police-agency-select")?.value;
+        const format_id = $("police-format-select")?.value;
+        const payload = $("police-import-payload")?.value || "";
+        if (!agency_id || !format_id || !payload.trim()) {
+          alert("Select agency, format, and paste data.");
+          return;
+        }
+        const res = await fetch("/api/police-agencies/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ agency_id, format_id, payload }),
+        });
+        const j = await res.json();
+        if (j.ok) {
+          $("police-import-payload").value = "";
+          refresh();
+        } else alert(j.error || "Import failed");
+      });
+    }
+
+    function renderFieldRF(fr) {
+      if (!fr) return;
+      bindFieldRfControls();
+      const motto = $("field-rf-motto");
+      if (motto && fr.motto) {
+        motto.innerHTML = `<strong>Field RF · Internal Antenna</strong> — ${esc(fr.motto)} ${esc(fr.tagline || "")}`;
+      }
+      const ant = fr.antenna || {};
+      const meta = $("field-rf-antenna-meta");
+      if (meta) {
+        meta.textContent = [
+          ant.mode || "internal_field",
+          ant.wifi_device ? `wifi:${ant.wifi_device}` : "no wifi iface",
+          `scan:${ant.scan_count ?? 0}`,
+          `rfkill:${ant.rfkill_count ?? 0}`,
+          ant.usb_ir_proxies ? `IR-proxy USB:${ant.usb_ir_proxies}` : "",
+        ].filter(Boolean).join(" · ");
+      }
+      const ifEl = $("field-rf-interfaces");
+      if (ifEl) {
+        const rows = fr.interfaces || [];
+        if (!rows.length) ifEl.innerHTML = '<div class="empty">No network interfaces from nmcli.</div>';
+        else {
+          ifEl.innerHTML = `<table class="honor-table"><thead><tr><th>Device</th><th>Type</th><th>State</th></tr></thead><tbody>
+            ${rows.map((r) => `<tr><td>${esc(r.device)}</td><td>${esc(r.type)}</td><td>${esc(r.state)}</td></tr>`).join("")}
+          </tbody></table>`;
+        }
+      }
+      const shield = fr.shield || {};
+      const shieldEl = $("field-rf-shield-status");
+      if (shieldEl) {
+        const on = shield.enabled !== false;
+        shieldEl.innerHTML = on
+          ? `<span class="rf-shield-on">Shield ON</span> · ${esc(shield.action || "watching")}`
+          : `<span class="rf-shield-off">Shield OFF</span>`;
+      }
+      const enBox = $("field-rf-shield-enabled");
+      const autoBox = $("field-rf-auto-rfkill");
+      if (enBox && document.activeElement !== enBox) enBox.checked = shield.enabled !== false;
+      if (autoBox && document.activeElement !== autoBox) autoBox.checked = shield.auto_rfkill !== false;
+
+      const burstEl = $("field-rf-bursts");
+      const bursts = fr.bursts || [];
+      if (burstEl) {
+        burstEl.innerHTML = bursts.length
+          ? bursts.map(rfBurstChip).join("")
+          : '<div class="empty">No bursts this cycle — antenna watching.</div>';
+      }
+      const recentEl = $("field-rf-recent");
+      const recent = fr.recent_bursts || [];
+      if (recentEl) {
+        recentEl.innerHTML = recent.length
+          ? `<strong>Recent</strong> ${recent.slice(-6).reverse().map(rfBurstChip).join(" ")}`
+          : "";
+      }
+    }
+
+    function renderPoliceAgency(pa, regionOnly) {
+      if (!pa) return;
+      policeAgencyCache = pa;
+      bindFieldRfControls();
+      const regionFilter = $("police-region-filter")?.value || "";
+      const regEl = $("police-region-filter");
+      if (regEl && !regEl.dataset.filled) {
+        regEl.dataset.filled = "1";
+        (pa.regions || []).forEach((r) => {
+          const opt = document.createElement("option");
+          opt.value = r.id;
+          opt.textContent = r.label || r.id;
+          regEl.appendChild(opt);
+        });
+      }
+      const agencies = (pa.agencies || []).filter((a) => !regionFilter || a.region === regionFilter);
+      const selEl = $("police-agency-select");
+      const prev = pa.selected_id || selEl?.value || "";
+      if (selEl) {
+        selEl.innerHTML = '<option value="">— select agency —</option>' +
+          agencies.map((a) => `<option value="${esc(a.id)}"${a.id === prev ? " selected" : ""}>${esc(a.name)} (${esc(a.country || "")})</option>`).join("");
+      }
+      const selected = pa.selected || agencies.find((a) => a.id === prev);
+      const fmtEl = $("police-format-select");
+      if (fmtEl && selected) {
+        const formats = selected.formats || [];
+        fmtEl.innerHTML = '<option value="">— format —</option>' +
+          formats.map((f) => `<option value="${esc(f.id)}">${esc(f.name)} (.${esc(f.ext || "csv")})</option>`).join("");
+      } else if (fmtEl) fmtEl.innerHTML = '<option value="">— format —</option>';
+
+      const meta = $("police-selected-meta");
+      if (meta) {
+        meta.textContent = selected
+          ? `${selected.name} · ${selected.system || "—"} · ${selected.coverage || ""}`
+          : `${pa.agency_count || 0} agencies loaded — select yours for local/surrounding import.`;
+      }
+      const surEl = $("police-surrounding");
+      const surrounding = pa.surrounding || [];
+      if (surEl) {
+        surEl.innerHTML = surrounding.length
+          ? `<span class="meta">Surrounding mutual aid:</span> ` +
+            surrounding.map((s) =>
+              `<button type="button" class="surrounding-chip" data-police-pick="${esc(s.id)}" data-tip="${esc(s.coverage || s.name)}">${esc(s.name)}</button>`
+            ).join("")
+          : "";
+        surEl.querySelectorAll("[data-police-pick]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const id = btn.dataset.policePick;
+            if (selEl) selEl.value = id;
+            await fetch("/api/police-agencies/select", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ agency_id: id }),
+            });
+            refresh();
+          });
+        });
+      }
+      const impEl = $("police-imports-list");
+      const imports = pa.imports || [];
+      if (impEl) {
+        impEl.innerHTML = imports.length
+          ? `<strong>Imports</strong><ul style="margin:6px 0;padding-left:1.2rem;">${imports.slice().reverse().map((i) =>
+              `<li>${esc(i.agency_id)} · ${esc(i.format_id)} · ${i.row_count} rows · ${esc(i.imported_at || "")}</li>`
+            ).join("")}</ul>`
+          : '<span class="meta">No imports yet — paste a format above.</span>';
+      }
+      if (regionOnly) return;
+    }
+
+    function renderFieldProtect(data) {
+      renderFieldRF(data?.field_rf);
+      renderPoliceAgency(data?.police_agency);
+    }
+
     function haBleedLine(p) {
       const hc = p.host_context || {};
       const parts = [];
@@ -4246,6 +4549,7 @@
         }
         renderHonorability(data);
         if ($("view-honor")?.classList.contains("active")) renderHonorability(data);
+        if ($("view-field-rf")?.classList.contains("active")) renderFieldProtect(data);
         const haUpdated = data.host_attacks?.updated || "";
         if (haUpdated !== lastHostAttackUpdated) {
           lastHostAttackUpdated = haUpdated;

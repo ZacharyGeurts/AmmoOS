@@ -388,6 +388,21 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/field-rf":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-rf-sentinel.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/police-agencies":
+            region = str(query.get("region", [""])[0]).strip() or None
+            script = INSTALL_ROOT / "lib" / "police-agency-db.py"
+            if region:
+                payload = _nexus_py_json(script, ["list", region])
+            else:
+                payload = _nexus_py_json(script, ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/field":
             field_path = STATE_DIR / "field-snapshot.json"
             if field_path.is_file():
@@ -609,6 +624,50 @@ class Handler(BaseHTTPRequestHandler):
                 ["rate", domain, str(int(stars)), note],
             )
             self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-rf/shield":
+            enabled = body.get("enabled")
+            auto_rfkill = body.get("auto_rfkill")
+            if enabled is None:
+                self._send(400, json.dumps({"ok": False, "error": "missing enabled"}), "application/json")
+                return
+            flag = "on" if enabled in (True, 1, "1", "true", "yes", "on") else "off"
+            auto_flag = "on" if auto_rfkill in (True, 1, "1", "true", "yes", "on", None) else "off"
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-rf-sentinel.py",
+                ["shield", flag, auto_flag],
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-rf/cycle":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-rf-sentinel.py", ["cycle"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/police-agencies/select":
+            agency_id = str(body.get("agency_id", body.get("id", ""))).strip()
+            if not agency_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing agency_id"}), "application/json")
+                return
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "police-agency-db.py", ["select", agency_id])
+            self._send(200 if payload.get("ok") else 404, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/police-agencies/import":
+            agency_id = str(body.get("agency_id", "")).strip()
+            format_id = str(body.get("format_id", "")).strip()
+            payload_text = str(body.get("payload", body.get("data", "")))
+            filename = str(body.get("filename", ""))[:120]
+            if not agency_id or not format_id or not payload_text:
+                self._send(400, json.dumps({"ok": False, "error": "missing agency_id, format_id, or payload"}), "application/json")
+                return
+            args = ["import", agency_id, format_id, payload_text]
+            if filename:
+                args.append(filename)
+            result = _nexus_py_json(INSTALL_ROOT / "lib" / "police-agency-db.py", args)
+            self._send(200 if result.get("ok") else 400, json.dumps(result), "application/json")
             return
 
         if path == "/api/operator/location":

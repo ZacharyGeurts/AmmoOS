@@ -18,6 +18,8 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/honorability.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/honorability.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/police-agency.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/police-agency.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -27,6 +29,9 @@ nexus_threat_panel_publish() {
   local lock="${NEXUS_STATE_DIR}/threat-panel.publish.lock"
   exec 9>"$lock" 2>/dev/null || return 0
   flock -w 5 9 2>/dev/null || return 0
+  if declare -f nexus_field_rf_cycle >/dev/null 2>&1; then
+    nexus_field_rf_cycle
+  fi
   local ts mode conn arp egress listeners threats corr signal dns
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
   mode="$(nexus_vigil_get_mode 2>/dev/null || echo calm)"
@@ -242,6 +247,18 @@ nexus_threat_panel_publish() {
       nexus_operator_location_json
     else
       printf '{"lat":null,"lon":null,"source":"unset"}'
+    fi
+    printf ',"field_rf":'
+    if declare -f nexus_field_rf_json >/dev/null 2>&1; then
+      nexus_field_rf_json
+    else
+      printf '{"antenna":{"mode":"unavailable"},"bursts":[],"shield":{"enabled":true}}'
+    fi
+    printf ',"police_agency":'
+    if declare -f nexus_police_agency_json >/dev/null 2>&1; then
+      nexus_police_agency_json
+    else
+      printf '{"agencies":[],"selected":null}'
     fi
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'
