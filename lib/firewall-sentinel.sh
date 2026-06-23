@@ -158,12 +158,14 @@ nexus_firewall_local_gateway_ip() {
 nexus_firewall_is_sacred_ip() {
   local ip="$1" wan gw
   [[ -z "$ip" ]] && return 1
+  [[ "$ip" =~ ^127\. ]] && return 0
+  [[ "$ip" == "0.0.0.0" ]] && return 0
   wan="$(nexus_firewall_local_wan_ip 2>/dev/null)"
   gw="$(nexus_firewall_local_gateway_ip 2>/dev/null)"
   [[ -n "$wan" && "$ip" == "$wan" ]] && return 0
   [[ -n "$gw" && "$ip" == "$gw" ]] && return 0
   case "$ip" in
-    1.1.1.1|1.0.0.1|8.8.8.8|8.8.4.4) return 0 ;;
+    1.1.1.1|1.0.0.1|8.8.8.8|8.8.4.4|9.9.9.9|149.112.112.112) return 0 ;;
   esac
   return 1
 }
@@ -186,6 +188,10 @@ nexus_firewall_block_ip() {
   nexus_firewall_available || return 0
   [[ -n "$ip" ]] || return 0
   [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 0
+  [[ "$ip" =~ ^127\. ]] && {
+    nexus_log "WARN" "firewall-sentinel" "BLOCK_REFUSED localhost ip=${ip} reason=${reason}"
+    return 0
+  }
   if declare -f nexus_firewall_is_trusted >/dev/null 2>&1; then
     nexus_firewall_is_trusted "$ip" "$direction" && {
       nexus_log "INFO" "firewall-sentinel" "BLOCK_SKIP trusted ip=${ip} dir=${direction}"

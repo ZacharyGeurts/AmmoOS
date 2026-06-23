@@ -371,6 +371,47 @@
       border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.78rem;
     }
     .adblock-status { padding: 0 16px 12px; font-size: 0.74rem; color: var(--muted); }
+    .settings-profile-card {
+      margin-bottom: 18px; padding: 14px 16px; border-radius: 10px;
+      background: linear-gradient(135deg, #0d1524 0%, #101820 100%);
+      border: 1px solid #2a4060; box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
+    }
+    .settings-profile-card h2 {
+      margin: 0 0 6px; font-size: 0.88rem; color: var(--text); font-weight: 600; letter-spacing: 0.02em;
+    }
+    .settings-profile-card p { margin: 0 0 10px; font-size: 0.76rem; line-height: 1.5; color: var(--muted); }
+    .settings-profile-stats { display: flex; flex-wrap: wrap; gap: 8px; }
+    .settings-profile-stats .chip {
+      padding: 4px 10px; border-radius: 999px; font-size: 0.68rem; letter-spacing: 0.03em;
+      border: 1px solid var(--border); background: rgba(0, 0, 0, 0.2);
+    }
+    .settings-profile-stats .chip.on { color: var(--ok); border-color: #2a5040; background: rgba(61, 214, 140, 0.1); }
+    .settings-profile-stats .chip.off { color: var(--muted); }
+    .settings-profile-stats .chip.profile { color: var(--internet); border-color: #3a5070; }
+    .setting-row { transition: background 0.2s ease, border-color 0.2s ease; }
+    .setting-row.setting-on {
+      background: linear-gradient(90deg, rgba(61, 214, 140, 0.07) 0%, transparent 100%);
+      border-left: 3px solid var(--ok);
+      padding-left: 13px;
+    }
+    .setting-row.setting-off {
+      background: rgba(0, 0, 0, 0.12);
+      border-left: 3px solid #2a3040;
+      padding-left: 13px;
+    }
+    .setting-row.setting-on .toggle strong { color: #d8f4e4; }
+    .setting-row.setting-off .toggle strong { color: #9aa4b8; }
+    .setting-state-badge {
+      display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em; vertical-align: middle;
+    }
+    .setting-state-badge.on { color: var(--ok); background: rgba(61, 214, 140, 0.15); border: 1px solid #2a5040; }
+    .setting-state-badge.off { color: var(--muted); background: rgba(0, 0, 0, 0.2); border: 1px solid #2a3040; }
+    .settings-group .group-summary {
+      padding: 6px 16px 10px; font-size: 0.68rem; color: var(--muted); border-bottom: 1px solid #1a1f2a;
+      background: #0c1018;
+    }
+    .settings-group .group-summary strong { color: var(--internet); }
     .settings-subhead {
       padding: 10px 16px; font-size: 0.68rem; letter-spacing: 0.08em;
       text-transform: uppercase; color: var(--threat); background: #1a0d12;
@@ -451,7 +492,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v2.4.0</h1>
+        <h1>NEXUS-Shield v2.4.1</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -539,8 +580,14 @@
 
   <section id="view-settings" class="view">
     <div class="settings-wrap">
-      <div class="settings-group">
+      <div id="settings-profile" class="settings-profile-card" role="status" aria-live="polite">
+        <h2>Your settings</h2>
+        <p id="settings-profile-desc">Loading current choices…</p>
+        <div id="settings-profile-stats" class="settings-profile-stats"></div>
+      </div>
+      <div class="settings-group" data-settings-group="protection">
         <h3><span>Protection</span><span data-tip="These control how aggressive NEXUS is. Safe default: everything that auto-blocks stays OFF — you click buttons on the Monitor tab instead."></span></h3>
+        <div class="group-summary" id="summary-protection">—</div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_PARANOIA_BLOCK" id="set-paranoia-block" />
@@ -571,8 +618,9 @@
         </div>
       </div>
 
-      <div class="settings-group">
+      <div class="settings-group" data-settings-group="watchers">
         <h3><span>Watchers</span><span data-tip="Background helpers that run quietly. Turning one OFF reduces work — only do that if you know you don't need it."></span></h3>
+        <div class="group-summary" id="summary-watchers">—</div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_CONNECTION_GATEKEEPER" id="set-gatekeeper" />
@@ -632,8 +680,9 @@
         <p class="meta" style="padding:8px 16px 12px;margin:0;font-size:0.7rem;">Checkboxes save right away. If something still looks wrong after toggling, restart: <code>sudo systemctl restart nexus-genius.service</code></p>
       </div>
 
-      <div class="settings-group">
+      <div class="settings-group" data-settings-group="adblock">
         <h3><span>Ad blocking</span><span data-tip="Optional: download popular block lists and stop ads/trackers at the network level. Load a list first, then turn ON, then click Apply."></span></h3>
+        <div class="group-summary" id="summary-adblock">—</div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_ADBLOCK" id="set-adblock" />
@@ -947,15 +996,133 @@
       return j;
     }
 
+    const CONSUMER_DEFAULTS = {
+      NEXUS_PARANOIA_BLOCK: 0,
+      NEXUS_PARANOIA_MODE: 1,
+      NEXUS_FIREWALL_AUTO_BLOCK: 0,
+      NEXUS_AUTOSANITIZE: 0,
+      NEXUS_ADBLOCK: 0,
+      NEXUS_PANEL_AUTO_OPEN: 1,
+      NEXUS_CONNECTION_GATEKEEPER: 1,
+      NEXUS_PACKET_ORACLE: 1,
+      NEXUS_SHADOW_WATCH: 0,
+      NEXUS_ENTROPY_WATCH: 0,
+      NEXUS_BEHAVIOR_WATCH: 1,
+      NEXUS_PRIVACY_GUARD: 0,
+      NEXUS_SHUTDOWN_GUARD: 1,
+      NEXUS_HOSTESS7_CORROBORATE: 0,
+    };
+
+    const SETTING_GROUPS = {
+      protection: ["NEXUS_PARANOIA_BLOCK", "NEXUS_FIREWALL_AUTO_BLOCK", "NEXUS_AUTOSANITIZE", "NEXUS_SHUTDOWN_GUARD"],
+      watchers: [
+        "NEXUS_CONNECTION_GATEKEEPER", "NEXUS_PACKET_ORACLE", "NEXUS_SHADOW_WATCH",
+        "NEXUS_ENTROPY_WATCH", "NEXUS_BEHAVIOR_WATCH", "NEXUS_PRIVACY_GUARD",
+        "NEXUS_HOSTESS7_CORROBORATE", "NEXUS_PANEL_AUTO_OPEN",
+      ],
+      adblock: ["NEXUS_ADBLOCK"],
+    };
+
+    function settingIsOn(val) {
+      return val === 1 || val === "1" || val === true;
+    }
+
+    function settingsFromDom() {
+      const s = {};
+      document.querySelectorAll("[data-setting]").forEach((cb) => {
+        s[cb.dataset.setting] = cb.checked ? 1 : 0;
+      });
+      return s;
+    }
+
+    function applySettingRowVisual(row, on) {
+      if (!row) return;
+      row.classList.remove("setting-on", "setting-off");
+      row.classList.add(on ? "setting-on" : "setting-off");
+      const strong = row.querySelector(".toggle strong");
+      if (!strong) return;
+      let badge = strong.querySelector(".setting-state-badge");
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "setting-state-badge";
+        strong.appendChild(badge);
+      }
+      badge.textContent = on ? "ON" : "OFF";
+      badge.classList.remove("on", "off");
+      badge.classList.add(on ? "on" : "off");
+    }
+
+    function countGroupOn(s, keys) {
+      let on = 0;
+      keys.forEach((k) => { if (settingIsOn(s[k])) on += 1; });
+      return on;
+    }
+
+    function isEverydayProfile(s) {
+      return Object.keys(CONSUMER_DEFAULTS).every((k) => {
+        const want = CONSUMER_DEFAULTS[k];
+        const have = s[k] !== undefined ? (settingIsOn(s[k]) ? 1 : 0) : want;
+        return have === want;
+      });
+    }
+
+    function renderGroupSummaries(s) {
+      const prot = countGroupOn(s, SETTING_GROUPS.protection);
+      const watch = countGroupOn(s, SETTING_GROUPS.watchers);
+      const abOn = settingIsOn(s.NEXUS_ADBLOCK);
+      const ab = s.adblock || {};
+      const elProt = $("summary-protection");
+      const elWatch = $("summary-watchers");
+      const elAb = $("summary-adblock");
+      if (elProt) {
+        elProt.innerHTML = `<strong>${prot}</strong> of ${SETTING_GROUPS.protection.length} protection features ON` +
+          (prot === 0 ? " — safe everyday default (auto-block stays off)" : prot === SETTING_GROUPS.protection.length ? " — full auto-protection" : "");
+      }
+      if (elWatch) {
+        elWatch.innerHTML = `<strong>${watch}</strong> of ${SETTING_GROUPS.watchers.length} watchers ON` +
+          (watch >= 4 && watch <= 5 ? " — everyday profile (core helpers on)" : "");
+      }
+      if (elAb) {
+        elAb.innerHTML = abOn
+          ? `<strong>ON</strong> · ${ab.domains ?? 0} domains · ${ab.ips ?? 0} IPs blocked`
+          : `<strong>OFF</strong> · load a list below, then turn ON and Apply`;
+      }
+    }
+
+    function renderSettingsProfile(s) {
+      const everyday = isEverydayProfile(s);
+      const prot = countGroupOn(s, SETTING_GROUPS.protection);
+      const watch = countGroupOn(s, SETTING_GROUPS.watchers);
+      const abOn = settingIsOn(s.NEXUS_ADBLOCK);
+      $("settings-profile-desc").textContent = everyday
+        ? "Everyday profile — email, YouTube, and browsing. Auto-block stays OFF; you choose Trust forever on the Monitor tab."
+        : "Custom profile — your choices are saved on this machine. Rows below show ON (green edge) vs OFF (muted).";
+      const chips = [
+        `<span class="chip profile">${everyday ? "Everyday profile" : "Custom profile"}</span>`,
+        `<span class="chip ${prot ? "on" : "off"}">Protection ${prot}/${SETTING_GROUPS.protection.length}</span>`,
+        `<span class="chip ${watch ? "on" : "off"}">Watchers ${watch}/${SETTING_GROUPS.watchers.length}</span>`,
+        `<span class="chip ${abOn ? "on" : "off"}">Adblock ${abOn ? "ON" : "OFF"}</span>`,
+      ];
+      $("settings-profile-stats").innerHTML = chips.join("");
+    }
+
     document.querySelectorAll("[data-setting]").forEach((cb) => {
       cb.addEventListener("change", async (e) => {
         const key = cb.dataset.setting;
         const on = e.target.checked;
+        applySettingRowVisual(cb.closest(".setting-row"), on);
+        const partial = settingsFromDom();
+        renderSettingsProfile(partial);
+        renderGroupSummaries(partial);
         try {
           await setSetting(key, on);
           refresh();
         } catch {
           e.target.checked = !on;
+          applySettingRowVisual(cb.closest(".setting-row"), !on);
+          const reverted = settingsFromDom();
+          renderSettingsProfile(reverted);
+          renderGroupSummaries(reverted);
           alert("Could not save setting: " + key);
         }
       });
@@ -1191,8 +1358,13 @@
       if (!s) return;
       document.querySelectorAll("[data-setting]").forEach((cb) => {
         const key = cb.dataset.setting;
-        if (s[key] !== undefined) cb.checked = s[key] === 1 || s[key] === "1";
+        if (s[key] === undefined) return;
+        const on = settingIsOn(s[key]);
+        cb.checked = on;
+        applySettingRowVisual(cb.closest(".setting-row"), on);
       });
+      renderSettingsProfile(s);
+      renderGroupSummaries(s);
       const ab = s.adblock || {};
       $("adblock-status").textContent =
         `Adblock ${ab.enabled ? "ON" : "OFF"} · Domains: ${ab.domains ?? 0} · IPs blocked: ${ab.ips ?? 0}`;

@@ -206,6 +206,30 @@ test_panel_v24_actions() {
   grep -q 'Recommended to allow first' "$panel"
 }
 
+test_panel_v241_settings_visual() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'settings-profile-card' "$panel"
+  grep -q 'setting-state-badge' "$panel"
+  grep -q 'applySettingRowVisual' "$panel"
+  grep -q 'renderSettingsProfile' "$panel"
+  grep -q 'summary-protection' "$panel"
+  grep -q 'v2.4.1' "$panel"
+}
+
+test_self_access_script() {
+  [[ -f "${ROOT}/lib/self-access.sh" ]]
+  grep -q 'nexus_firewall_ensure_self_access' "${ROOT}/lib/self-access.sh"
+  grep -q 'nexus_firewall_ensure_self_access' "${ROOT}/lib/nexus-daemon.sh"
+}
+
+test_localhost_block_refused() {
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/self-access.sh"
+  nexus_firewall_refuse_block_self "127.0.0.1"
+  nexus_firewall_refuse_block_self "127.0.0.2"
+  ! nexus_firewall_refuse_block_self "203.0.113.1"
+}
+
 test_gatekeeper_trust_rank() {
   command -v python3 >/dev/null 2>&1 || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"trust_rank": 0'
@@ -312,6 +336,9 @@ run_test "connection gatekeeper email" test_gatekeeper_email
 run_test "consumer everyday defaults" test_consumer_defaults
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout
 run_test "panel v2.4 action buttons" test_panel_v24_actions
+run_test "panel v2.4.1 settings visual sync" test_panel_v241_settings_visual
+run_test "self-access script wired" test_self_access_script
+run_test "localhost block refused" test_localhost_block_refused
 run_test "gatekeeper trust rank" test_gatekeeper_trust_rank
 run_test "firewall temp allow helpers" test_firewall_temp_allow_fn
 run_test "lockdown-first script" test_lockdown_first_script

@@ -36,6 +36,12 @@ sudo ./stealth_install.sh
 
 ---
 
+## v2.4.1 — settings you can see
+
+- **Settings mirror reality** — each row shows ON/OFF badges and green (on) vs muted (off) styling that matches saved choices
+- **Profile banner** — Everyday vs Custom profile with group counts (Protection, Watchers, Adblock)
+- **Self-access guard** — localhost and the panel (`127.0.0.1:9477`) are never firewall-blocked; the operator always keeps access
+
 ## v2.4.0 — full control on every connection
 
 - **Three actions on every row** — Trust forever · Block 1 day · Block forever · Unblock 1 day (when blocked)

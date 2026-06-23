@@ -81,6 +81,11 @@ nexus_firewall_takeover || {
   echo 'NEXUS firewall takeover failed — check nftables.' >&2
   exit 1
 }
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/self-access.sh"
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/firewall-trust.sh"
+nexus_firewall_ensure_self_access || true
 # Clear false-positive CDN blocks that can kill normal internet egress
 declare -f nexus_firewall_flush_blocks >/dev/null 2>&1 && nexus_firewall_flush_blocks
 # shellcheck source=/dev/null

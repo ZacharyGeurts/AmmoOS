@@ -15,6 +15,7 @@ nexus_lockdown_first_apply() {
     [[ "$line" =~ ESTAB ]] || continue
     rip="$(sed -n 's/.*[[:space:]]\([0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}\):[0-9]\+[[:space:]].*/\1/p' <<<"$line" | tail -1)"
     [[ -n "$rip" ]] || continue
+    [[ "$rip" =~ ^127\. ]] && continue
     nexus_firewall_is_private_ip "$rip" 2>/dev/null && continue
     nexus_firewall_is_sacred_ip "$rip" 2>/dev/null && continue
     if declare -f nexus_firewall_is_trusted >/dev/null 2>&1; then

@@ -41,6 +41,8 @@ source "${NEXUS_INSTALL_ROOT}/lib/panel-tls.sh"
 source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/firewall-trust.sh"
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/self-access.sh"
 nexus_firewall_trust_init
 nexus_firewall_trust_sync_from_memory
 # shellcheck source=/dev/null
@@ -73,6 +75,7 @@ nexus_shadow_init
 nexus_privacy_harden
 nexus_network_lockdown
 nexus_firewall_takeover
+nexus_firewall_ensure_self_access || true
 nexus_panel_tls_ensure
 nexus_hostess7_corroborate_integrity || true
 
@@ -111,6 +114,7 @@ while true; do
   nexus_predictive_decay
   nexus_network_lockdown_verify
   nexus_firewall_verify
+  nexus_firewall_ensure_self_access || true
   nexus_tamper_guard_cycle || true
   nexus_threat_panel_publish
   if [[ "${NEXUS_ADBLOCK:-0}" == "1" ]]; then
