@@ -53,6 +53,17 @@ nexus_gatekeeper_enforce_strict() {
   local py="${NEXUS_INSTALL_ROOT}/lib/packet-permission.py"
   [[ -f "$py" ]] || return 0
 
+  local intent="${NEXUS_STATE_DIR}/connection-intent.json"
+  local sig_file="${NEXUS_STATE_DIR}/gatekeeper-enforce.sig"
+  local sig=""
+  if [[ -s "$intent" ]]; then
+    sig="$(python3 -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest()[:20])" "$intent" 2>/dev/null || true)"
+  fi
+  if [[ -n "$sig" && -f "$sig_file" && "$(cat "$sig_file" 2>/dev/null)" == "$sig" ]]; then
+    return 0
+  fi
+  [[ -n "$sig" ]] && printf '%s' "$sig" >"$sig_file" 2>/dev/null || true
+
   local permits=0 segments=0 ips=0 line action direction ip port reason scope
   while IFS=$'\t' read -r action direction ip port reason scope; do
     [[ -n "$action" ]] || continue

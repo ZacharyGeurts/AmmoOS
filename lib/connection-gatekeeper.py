@@ -48,7 +48,14 @@ STREAM_CDN_PREFIXES = (
     "151.101.", "23.", "34.120.",  # Akamai/Fastly
     "13.32.", "13.33.", "13.35.",  # CloudFront
 )
-HARM_PORTS = frozenset({"4444", "5555", "1337", "31337", "6666", "9001", "9050", "1080", "3128"})
+HARM_PORTS = frozenset({
+    "4444", "5555", "1337", "31337", "6666", "6667", "9001", "9050", "1080", "3128",
+    "4443", "8080", "8443", "3004", "3005", "6006", "6606", "8808",
+})
+KILL_VECTORS = frozenset({
+    "C2_BEACON", "PACKET_INJECTION", "DNS_TUNNEL", "DNS_POISON", "RAW_SOCKET_INJECTION",
+    "RST_FLOOD", "EGRESS_BEACON", "CONN_HARM",
+})
 PRIVATE_RE = re.compile(
     r"^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|169\.254\.|::1|fe80:|fd)"
 )
@@ -632,6 +639,40 @@ def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str
     return "MONITOR", "Routine connection — no harm signal", False
 
 
+def _kill_signal(
+    verdict: str,
+    block_rec: bool,
+    scores: dict[str, int],
+    rip: str,
+    rport: str,
+    proc: str,
+    threats: dict[str, list[str]],
+    peer_history: dict[str, Any],
+) -> tuple[bool, str, str]:
+    """Return kill_eligible, kill_reason, kill_tier (block|eradicate|strike)."""
+    vecs = [v for v in threats.get(rip, []) if v in KILL_VECTORS]
+    if vecs:
+        tier = "strike" if verdict == "HARM_CANDIDATE" else "eradicate"
+        return True, f"threat_vector:{vecs[0]}", tier
+    if rport in HARM_PORTS and int(scores.get("process_trust", 0)) <= 3:
+        tier = "eradicate" if proc not in BROWSER_PROCS else "block"
+        return True, f"shell_port:{rport}", tier
+    if verdict == "HARM_CANDIDATE" and block_rec:
+        if int(scores.get("threat_linked", 0)) >= 6:
+            return True, "threat_correlated_harm", "block"
+        if int(scores.get("stream_theft_risk", 0)) >= 9:
+            return True, "stream_theft_daemon", "eradicate"
+        if int(scores.get("beacon_pattern", 0)) >= 7 and proc not in BROWSER_PROCS:
+            return True, "persistent_beacon", "eradicate"
+        return True, "harm_candidate", "block"
+    if verdict == "SUSPICIOUS" and rport in HARM_PORTS:
+        return True, f"suspicious_shell:{rport}", "block"
+    seen = int(peer_history.get("seen_count", 0))
+    if seen >= 24 and rport in HARM_PORTS and proc not in CONSUMER_PROCS:
+        return True, f"beacon_burst:{seen}", "eradicate"
+    return False, "", "none"
+
+
 def _flow_intent(proc: str, verdict: str, reason: str, intel: dict[str, Any], direction_label: str) -> dict[str, str]:
     return {
         "who": proc or "unknown process",
@@ -773,6 +814,9 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             reason = f"Honorability 5★ — {honor_meta.get('active_site', 'trusted site')} browser session"
         flow_policy = _flow_policy(verdict, trust_rank, rip, rport, proc, direction)
         intent = _flow_intent(proc, verdict, reason, intel, direction_label)
+        kill_ok, kill_reason, kill_tier = _kill_signal(
+            verdict, block_rec, scores, rip, rport, proc, threats, peer_hist,
+        )
         results.append({
             "remote_ip": rip,
             "remote_port": rport,
@@ -798,6 +842,9 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "suggestion": suggestion,
             "intent": intent,
             "flow_policy": flow_policy,
+            "kill_eligible": kill_ok,
+            "kill_reason": kill_reason,
+            "kill_tier": kill_tier,
             **honor_meta,
         })
 
@@ -824,6 +871,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         )
     )
     harm_candidates = [r for r in results if r["block_recommended"]]
+    kill_targets = [r for r in results if r.get("kill_eligible")]
     packet_permission = (
         os.environ.get("NEXUS_PACKET_PERMISSION", "") == "1"
         or os.environ.get("NEXUS_GATEKEEPER_STRICT_TRUST", "1") == "1"
@@ -847,6 +895,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         "updated": _now(),
         "connection_count": len(results),
         "harm_candidates": len(harm_candidates),
+        "kill_targets": len(kill_targets),
         "pending_trust_count": len(pending_trust),
         "permitted_flow_count": len(permitted),
         "segment_block_count": len(segment_blocks),

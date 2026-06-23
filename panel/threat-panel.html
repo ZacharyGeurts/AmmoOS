@@ -464,12 +464,12 @@
     .us-table th { color: var(--muted); font-weight: 600; }
     .us-net-conns { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
     .us-net-head {
-      display: grid; grid-template-columns: 1fr 80px 80px; gap: 8px;
+      display: grid; grid-template-columns: 1fr 108px 108px; gap: 8px;
       font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
       color: var(--muted); padding-bottom: 4px; border-bottom: 1px solid #1a2430;
     }
     .us-net-conn {
-      display: grid; grid-template-columns: 1fr 80px 80px; gap: 8px; align-items: stretch;
+      display: grid; grid-template-columns: 1fr 108px 108px; gap: 8px; align-items: stretch;
       min-width: 0;
     }
     .us-net-label {
@@ -478,11 +478,60 @@
       word-break: break-word; font-family: ui-monospace, monospace; color: var(--text);
     }
     .us-net-win {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 8px 6px; border-radius: 6px; font-family: ui-monospace, monospace;
-      font-size: 0.78rem; font-weight: 600; line-height: 1.2; min-height: 44px;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      gap: 4px; padding: 8px 6px 6px; border-radius: 6px; min-height: 72px;
     }
-    .us-net-win span { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 2px; }
+    .us-net-graph {
+      display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%;
+    }
+    .us-net-led {
+      width: 9px; height: 9px; border-radius: 50%; background: #1a2028;
+      border: 1px solid #2a3040; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+    .us-net-win.active .us-net-led {
+      box-shadow: 0 0 7px currentColor, inset 0 0 2px rgba(255, 255, 255, 0.3);
+    }
+    .us-net-tx.active .us-net-led { background: #4d9bff; color: #4d9bff; animation: modem-blink 0.4s ease-in-out infinite; }
+    .us-net-rx.active .us-net-led { background: #8ee8a8; color: #8ee8a8; animation: modem-blink 0.5s ease-in-out infinite; }
+    .us-net-wave-svg {
+      width: 100%; height: 36px; display: block; overflow: hidden; border-radius: 4px;
+    }
+    .us-net-wave-track {
+      animation-duration: 10s; animation-timing-function: linear; animation-iteration-count: infinite;
+    }
+    .us-net-tx .us-net-wave-track { animation-name: us-net-scroll-tx; }
+    .us-net-rx .us-net-wave-track { animation-name: us-net-scroll-rx; }
+    @keyframes us-net-scroll-tx {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-80px, -0.8px, 0); }
+    }
+    @keyframes us-net-scroll-rx {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-80px, 0.8px, 0); }
+    }
+    .us-net-wave-line {
+      stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke;
+    }
+    .us-net-tx .us-net-wave-line { stroke: #8ec8ff; }
+    .us-net-rx .us-net-wave-line { stroke: #9ee8b0; }
+    .us-net-tx .us-net-wave-fill { fill: rgba(77, 155, 255, 0.16); }
+    .us-net-rx .us-net-wave-fill { fill: rgba(61, 220, 104, 0.12); }
+    .us-net-win.hot .us-net-wave-line { filter: brightness(1.12); }
+    @media (prefers-reduced-motion: reduce) {
+      .us-net-wave-track { animation: none !important; }
+    }
+    .us-net-arrow {
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; line-height: 1;
+      opacity: 0.85;
+    }
+    .us-net-tx .us-net-arrow { color: #9ac8ff; }
+    .us-net-rx .us-net-arrow { color: #8ee8a8; }
+    .us-net-tag {
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .us-net-bytes {
+      font-family: ui-monospace, monospace; font-size: 0.68rem; font-weight: 600; line-height: 1;
+    }
     .us-net-tx { background: rgba(77, 155, 255, 0.1); border: 1px solid #2a4060; color: #9ac8ff; }
     .us-net-rx { background: rgba(61, 220, 104, 0.08); border: 1px solid #2a5040; color: #8ee8a8; }
     .us-card.us-net-wide { grid-column: 1 / -1; }
@@ -1281,7 +1330,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.8.6</h1>
+        <h1>NEXUS-Shield v5.8.7</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1301,7 +1350,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.6</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.7</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -5014,17 +5063,106 @@
       return `${(v / (1024 * 1024 * 1024)).toFixed(2)} GiB`;
     }
 
+    function usNetWavePath(kind, amp) {
+      const pts = 12;
+      const w = 80;
+      const step = w / pts;
+      const bias = kind === "tx" ? -1 : 1;
+      const yBase = kind === "tx" ? 24 : 10;
+      let d = "";
+      for (let i = 0; i <= pts; i += 1) {
+        const x = +(i * step).toFixed(2);
+        const drift = (i / pts) * 2.1 * bias;
+        const jag = Math.sin(i * 1.28 + amp * 0.17) * amp * 0.52 + (((i * 11 + amp) % 7) - 3) * 0.35;
+        const y = +(yBase + drift + jag).toFixed(2);
+        if (i === 0) d = `M0,${y}`;
+        else {
+          const px = +((i - 1) * step).toFixed(2);
+          const cx = +(px + step * 0.5).toFixed(2);
+          const py = +(yBase + ((i - 1) / pts) * 2.1 * bias
+            + Math.sin((i - 1) * 1.28 + amp * 0.17) * amp * 0.52
+            + ((((i - 1) * 11 + amp) % 7) - 3) * 0.35).toFixed(2);
+          d += ` Q${cx},${py} ${x},${y}`;
+        }
+      }
+      return `${d} L80,34 L0,34 Z`;
+    }
+
+    function usNetWaveLine(kind, amp) {
+      const pts = 12;
+      const w = 80;
+      const step = w / pts;
+      const bias = kind === "tx" ? -1 : 1;
+      const yBase = kind === "tx" ? 24 : 10;
+      let d = "";
+      for (let i = 0; i <= pts; i += 1) {
+        const x = +(i * step).toFixed(2);
+        const drift = (i / pts) * 2.1 * bias;
+        const jag = Math.sin(i * 1.28 + amp * 0.17) * amp * 0.52 + (((i * 11 + amp) % 7) - 3) * 0.35;
+        const y = +(yBase + drift + jag).toFixed(2);
+        if (i === 0) d = `M0,${y}`;
+        else {
+          const px = +((i - 1) * step).toFixed(2);
+          const cx = +(px + step * 0.5).toFixed(2);
+          const py = +(yBase + ((i - 1) / pts) * 2.1 * bias
+            + Math.sin((i - 1) * 1.28 + amp * 0.17) * amp * 0.52
+            + ((((i - 1) * 11 + amp) % 7) - 3) * 0.35).toFixed(2);
+          d += ` Q${cx},${py} ${x},${y}`;
+        }
+      }
+      return d;
+    }
+
+    function usNetWaveSvg(bytes, kind) {
+      const v = Number(bytes) || 0;
+      const amp = v > 0 ? Math.max(5, Math.min(15, Math.round(5 + 10 * Math.log10(1 + v) / 6))) : 4;
+      const fill = usNetWavePath(kind, amp);
+      const line = usNetWaveLine(kind, amp);
+      return `<svg class="us-net-wave-svg" viewBox="0 0 80 34" preserveAspectRatio="none" aria-hidden="true">` +
+        `<g class="us-net-wave-track">` +
+        `<path class="us-net-wave-fill" d="${fill}"/>` +
+        `<path class="us-net-wave-line" d="${line}"/>` +
+        `<g transform="translate(80,0)">` +
+        `<path class="us-net-wave-fill" d="${fill}"/>` +
+        `<path class="us-net-wave-line" d="${line}"/>` +
+        `</g></g></svg>`;
+    }
+
+    function usNetMeterGraphic(bytes, kind, maxBytes) {
+      const v = Number(bytes) || 0;
+      const active = v > 0 ? " active" : "";
+      const hot = v > maxBytes * 0.65 ? " hot" : "";
+      const arrow = kind === "tx" ? "▲" : "▼";
+      const tag = kind === "tx" ? "TX" : "RX";
+      const cls = kind === "tx" ? "us-net-tx" : "us-net-rx";
+      return `<div class="us-net-win ${cls}${active}${hot}">` +
+        `<div class="us-net-graph">` +
+        `<div class="us-net-led" aria-hidden="true"></div>` +
+        usNetWaveSvg(v, kind) +
+        `<div class="us-net-arrow" aria-hidden="true">${arrow}</div>` +
+        `</div>` +
+        `<span class="us-net-tag">${tag}</span>` +
+        `<span class="us-net-bytes">${esc(usFormatBytes(v))}</span>` +
+        `</div>`;
+    }
+
     function usNetConnectionsHtml(conns) {
       const rows = conns || [];
       if (!rows.length) {
         return '<div class="empty">No established connections detected.</div>';
       }
+      let maxTx = 0;
+      let maxRx = 0;
+      rows.forEach((c) => {
+        maxTx = Math.max(maxTx, Number(c.tx_bytes) || 0);
+        maxRx = Math.max(maxRx, Number(c.rx_bytes) || 0);
+      });
       const body = rows.map((c) => {
         const label = c.label || `${c.process || "unknown"} · ${c.local || "—"} → ${c.remote || "—"}`;
         return `<div class="us-net-conn">` +
           `<div class="us-net-label">${esc(label)}</div>` +
-          `<div class="us-net-win us-net-tx"><span>TX</span>${esc(usFormatBytes(c.tx_bytes))}</div>` +
-          `<div class="us-net-win us-net-rx"><span>RX</span>${esc(usFormatBytes(c.rx_bytes))}</div>` +
+          usNetMeterGraphic(c.tx_bytes, "tx", maxTx) +
+          usNetMeterGraphic(c.rx_bytes, "rx", maxRx) +
           `</div>`;
       }).join("");
       return `<div class="us-net-conns">` +

@@ -235,6 +235,23 @@ nexus_packet_evaluate() {
 nexus_connection_gatekeeper_publish() {
   [[ "${NEXUS_CONNECTION_GATEKEEPER:-1}" == "1" ]] || return 0
   command -v python3 >/dev/null 2>&1 || return 0
+  local out="${NEXUS_STATE_DIR}/connection-intent.json"
+  local sig_file="${NEXUS_STATE_DIR}/gatekeeper-conn.sig"
+  local snap="${NEXUS_PACKET_SNAPSHOT}"
+  local sig=""
+  if [[ -s "$snap" ]]; then
+    sig="$(sha256sum "$snap" 2>/dev/null | awk '{print $1}')"
+  fi
+  if [[ -n "$sig" && -f "$sig_file" && "$(cat "$sig_file" 2>/dev/null)" == "$sig" ]]; then
+    if declare -f nexus_gatekeeper_enforce_strict >/dev/null 2>&1; then
+      nexus_gatekeeper_enforce_strict
+    fi
+    if declare -f nexus_kill_detect_execute >/dev/null 2>&1; then
+      nexus_kill_detect_execute
+    fi
+    return 0
+  fi
+  [[ -n "$sig" ]] && printf '%s' "$sig" >"$sig_file" 2>/dev/null || true
   if declare -f nexus_vector_scour_publish >/dev/null 2>&1; then
     nexus_vector_scour_publish
   elif [[ -f "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh" ]]; then
@@ -242,18 +259,27 @@ nexus_connection_gatekeeper_publish() {
     source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
     nexus_vector_scour_publish
   fi
-  local out="${NEXUS_STATE_DIR}/connection-intent.json"
   local strict_val pp_val
   strict_val="$(nexus_settings_get NEXUS_GATEKEEPER_STRICT_TRUST 2>/dev/null || echo "${NEXUS_GATEKEEPER_STRICT_TRUST:-1}")"
   pp_val="$(nexus_settings_get NEXUS_PACKET_PERMISSION 2>/dev/null || echo "${NEXUS_PACKET_PERMISSION:-1}")"
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_GATEKEEPER_STRICT_TRUST="$strict_val" NEXUS_PACKET_PERMISSION="$pp_val" \
-    python3 "${NEXUS_INSTALL_ROOT}/lib/connection-gatekeeper.py" \
-    >"${out}.tmp" 2>/dev/null \
-    && mv -f "${out}.tmp" "$out"
+  if [[ -s "$snap" ]]; then
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_GATEKEEPER_STRICT_TRUST="$strict_val" NEXUS_PACKET_PERMISSION="$pp_val" \
+      python3 "${NEXUS_INSTALL_ROOT}/lib/connection-gatekeeper.py" --stdin \
+      <"$snap" >"${out}.tmp" 2>/dev/null \
+      && mv -f "${out}.tmp" "$out"
+  else
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_GATEKEEPER_STRICT_TRUST="$strict_val" NEXUS_PACKET_PERMISSION="$pp_val" \
+      python3 "${NEXUS_INSTALL_ROOT}/lib/connection-gatekeeper.py" \
+      >"${out}.tmp" 2>/dev/null \
+      && mv -f "${out}.tmp" "$out"
+  fi
   chmod 640 "$out" 2>/dev/null || true
   chown root:nexus "$out" 2>/dev/null || true
   if declare -f nexus_gatekeeper_enforce_strict >/dev/null 2>&1; then
     nexus_gatekeeper_enforce_strict
+  fi
+  if declare -f nexus_kill_detect_execute >/dev/null 2>&1; then
+    nexus_kill_detect_execute
   fi
 }
 
@@ -261,6 +287,7 @@ nexus_packet_loop() {
   [[ "${NEXUS_PACKET_ORACLE:-1}" == "1" ]] || return 0
   nexus_packet_init
   nexus_threat_vector_init
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/kill-detect.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/kill-detect.sh"
   while true; do
     nexus_cpu_budget_ok || { sleep 15; continue; }
     nexus_packet_evaluate
