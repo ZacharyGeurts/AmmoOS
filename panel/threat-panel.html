@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NEXUS-Shield — Threat Panel</title>
+  <link rel="preload" href="/api/field" as="fetch" crossorigin />
+  <script src="/assets/field-foundation.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
@@ -48,6 +50,26 @@
       background: linear-gradient(180deg, #101624 0%, #0c1018 100%);
       box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
     }
+    .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-left: auto; }
+    .nexus-update-chip { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    #nexus-update-btn {
+      background: #0d1828; border: 1px solid #2a4060; color: var(--muted);
+      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.04em; white-space: nowrap; transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+    }
+    #nexus-update-btn:hover { border-color: var(--internet); color: var(--text); }
+    #nexus-update-btn.update-ready {
+      background: linear-gradient(135deg, #1a2840, #2a1848);
+      border-color: var(--gold); color: #ffe8a8;
+      box-shadow: 0 0 18px rgba(212, 175, 55, 0.45);
+      animation: update-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes update-pulse {
+      0%, 100% { box-shadow: 0 0 12px rgba(212, 175, 55, 0.35); }
+      50% { box-shadow: 0 0 22px rgba(212, 175, 55, 0.65); }
+    }
+    #nexus-update-detail { font-size: 0.62rem; color: var(--muted); max-width: 220px; text-align: right; }
+    #nexus-update-detail.update-ready { color: var(--gold); }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
       width: 40px; height: 40px; border-radius: 10px;
@@ -61,6 +83,8 @@
     }
     .meta strong { color: var(--gold); }
     .meta-chip { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .meta-chip.field-live strong { color: var(--ok); }
+    .meta-chip.field-live.field-warm strong { color: var(--internet); }
     nav.menu {
       display: flex; gap: 2px; padding: 0 18px; border-bottom: 1px solid var(--border); background: #0c1018;
     }
@@ -176,12 +200,186 @@
     .exploit-zero_day_watch { color: var(--threat); }
     .exploit-recent { color: var(--gold); }
     .exploit-legacy { color: var(--muted); }
+    .human-dossier-toolbar {
+      display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center;
+      margin-bottom: 14px; font-size: 0.76rem;
+    }
+    .human-dossier-toolbar input, .human-dossier-toolbar select {
+      background: #0c1018; border: 1px solid var(--border); color: var(--text);
+      padding: 6px 10px; border-radius: 6px; font-size: 0.74rem; min-width: 180px;
+    }
+    .human-dossier-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .human-malware-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 999px; font-size: 0.64rem; font-weight: 600;
+      border: 1px solid #3a3040; background: rgba(255, 80, 100, 0.08); color: #ffb8c8;
+    }
+    .human-malware-chip.cobalt { border-color: #6a2030; color: #ff8a9a; }
+    .human-malware-chip.asyncrat { border-color: #5a4020; color: #ffc878; }
+    .human-malware-chip.havoc { border-color: #4a2060; color: #d8b0ff; }
+    .human-malware-chip.remcos { border-color: #503040; color: #ffb0d0; }
+    .us-wrap { padding: 14px 18px 28px; max-width: 1280px; }
+    .us-motto {
+      margin: 0 0 14px; padding: 12px 16px; border-radius: 10px;
+      background: linear-gradient(135deg, #0a1424 0%, #101828 55%, #14102a 100%);
+      border: 1px solid #2a4868; font-size: 0.8rem; line-height: 1.55; color: #c0d4f0;
+    }
+    .us-motto strong { color: #7ec8ff; letter-spacing: 0.04em; }
+    .us-observations {
+      margin: 0 0 16px; padding: 12px 14px; border-radius: 8px;
+      background: #0c121c; border: 1px solid #1e3048; font-size: 0.74rem; line-height: 1.55;
+    }
+    .us-observations h3 { margin: 0 0 8px; font-size: 0.72rem; color: var(--internet); letter-spacing: 0.08em; text-transform: uppercase; }
+    .us-observations ol { margin: 0; padding-left: 1.2rem; color: var(--text); }
+    .us-observations li { margin-bottom: 6px; }
+    .us-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px;
+    }
+    .us-card {
+      padding: 12px 14px; border-radius: 8px; background: #0e1218; border: 1px solid #1e2838;
+      font-size: 0.72rem; line-height: 1.5; min-width: 0;
+    }
+    .us-card h4 {
+      margin: 0 0 8px; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--internet); border-bottom: 1px solid #1a2430; padding-bottom: 6px;
+    }
+    .us-kv { display: grid; grid-template-columns: minmax(88px, 34%) 1fr; gap: 4px 10px; }
+    .us-kv dt { color: var(--muted); margin: 0; }
+    .us-kv dd { margin: 0; word-break: break-word; font-family: ui-monospace, monospace; font-size: 0.68rem; }
+    .us-table { width: 100%; border-collapse: collapse; font-size: 0.66rem; margin-top: 6px; }
+    .us-table th, .us-table td { padding: 4px 6px; text-align: left; border-bottom: 1px solid #1a2430; }
+    .us-table th { color: var(--muted); font-weight: 600; }
+    .us-crossrefs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .us-crossrefs button {
+      background: #0d1828; border: 1px solid #2a4060; color: var(--internet);
+      padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.72rem; font-weight: 600;
+    }
+    .us-crossrefs button:hover { border-color: var(--internet); background: rgba(77, 155, 255, 0.1); }
+    .us-histogram { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .us-hist-chip {
+      padding: 2px 8px; border-radius: 999px; font-size: 0.62rem; font-weight: 600;
+      border: 1px solid #2a3040; background: rgba(0, 0, 0, 0.2);
+    }
+    .us-hist-chip.USER_OK { border-color: #2a5040; color: var(--ok); }
+    .us-hist-chip.EPHEMERAL { border-color: #2a4060; color: var(--internet); }
+    .us-hist-chip.MONITOR { border-color: #4a4050; color: #b8b0c8; }
+    .us-hist-chip.SUSPICIOUS { border-color: #5a4030; color: var(--gold); }
+    .us-hist-chip.HARM_CANDIDATE { border-color: #5a2030; color: var(--threat); }
+    .human-malware-chip.adaptix { border-color: #304060; color: #a8c8ff; }
+    .human-dossier-card {
+      margin-bottom: 14px; padding: 14px 16px; border-radius: 10px;
+      background: linear-gradient(135deg, #0e1218 0%, #12101a 100%);
+      border: 1px solid #2a3040;
+    }
+    .human-dossier-card h4 {
+      margin: 0 0 8px; font-size: 0.92rem; font-family: ui-monospace, monospace;
+      color: var(--murder); letter-spacing: 0.02em;
+    }
+    .human-dossier-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px 16px; font-size: 0.72rem; color: var(--muted); margin: 8px 0;
+    }
+    .human-dossier-grid strong { color: var(--text); font-weight: 600; }
+    .human-dossier-notes {
+      margin-top: 8px; padding: 8px 10px; border-radius: 6px;
+      background: rgba(0, 0, 0, 0.22); border-left: 3px solid var(--gold);
+      font-size: 0.72rem; line-height: 1.5; color: #c8d0e0;
+    }
+    .human-dossier-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .human-dossier-actions button {
+      background: #4a1020; border: 1px solid #7a2840; color: #ffd6de;
+      padding: 5px 12px; border-radius: 6px; font-size: 0.68rem; font-weight: 600; cursor: pointer;
+    }
+    .human-dossier-actions button:hover { border-color: var(--murder); }
+    .human-dossier-actions button.ghost {
+      background: transparent; border-color: var(--border); color: var(--muted); font-weight: 500;
+    }
+    .human-hosting-high { color: var(--threat); font-weight: 600; }
     .gatekeeper-banner {
       display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline;
       padding: 10px 18px; font-size: 0.76rem; line-height: 1.45;
       background: #0d1520; border-bottom: 1px solid var(--border); color: var(--muted);
     }
     .gatekeeper-banner strong { color: var(--gold); }
+    .packet-field-wrap {
+      margin: 0 18px 16px; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid #1e3048; background: linear-gradient(180deg, rgba(10, 18, 30, 0.9), rgba(8, 12, 20, 0.85));
+    }
+    .packet-field-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; margin-bottom: 10px; font-size: 0.76rem; }
+    .packet-field-head strong { color: var(--gold); letter-spacing: 0.04em; }
+    .packet-field-stats { color: var(--muted); font-size: 0.68rem; }
+    .packet-field-stats em { color: #9ab8d8; font-style: normal; }
+    .packet-ports-table { width: 100%; border-collapse: collapse; font-size: 0.64rem; margin-bottom: 10px; }
+    .packet-ports-table th, .packet-ports-table td { padding: 4px 6px; text-align: left; border-bottom: 1px solid #1a2430; }
+    .packet-ports-table th { color: var(--internet); }
+    .packet-stream {
+      max-height: 260px; overflow-y: auto; font-family: ui-monospace, monospace; font-size: 0.64rem;
+      border: 1px solid var(--border); border-radius: 8px; background: rgba(4, 8, 14, 0.65);
+    }
+    .packet-line {
+      padding: 6px 10px; border-bottom: 1px solid rgba(30, 40, 56, 0.55); line-height: 1.45;
+    }
+    .packet-line:last-child { border-bottom: none; }
+    .packet-line.pkt-tx { border-left: 3px solid #3ddc68; }
+    .packet-line.pkt-rx { border-left: 3px solid #4d9bff; }
+    .packet-line.pkt-lan { border-left: 3px solid #9ab4c8; }
+    .packet-line.pkt-transit { border-left: 3px solid #556; opacity: 0.7; }
+    .packet-line .pkt-dir { font-weight: 700; letter-spacing: 0.06em; margin-right: 6px; }
+    .packet-line.pkt-tx .pkt-dir { color: #8ee8a8; }
+    .packet-line.pkt-rx .pkt-dir { color: #9ac8ff; }
+    .packet-line .pkt-ts { color: #6a8098; margin-right: 8px; }
+    .retro-modem {
+      display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 14px;
+      border-radius: 10px; border: 2px solid #3a4048; background: linear-gradient(180deg, #1a1e24, #0e1014);
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.35);
+    }
+    .retro-modem-body { flex: 1; }
+    .retro-modem-label { font-size: 0.62rem; letter-spacing: 0.14em; color: #6a8098; text-transform: uppercase; margin-bottom: 8px; }
+    .retro-modem-brand { font-size: 0.82rem; font-weight: 700; color: #c8d4e8; letter-spacing: 0.08em; }
+    .modem-led-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+    .modem-led { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 36px; }
+    .modem-led-bulb {
+      width: 11px; height: 11px; border-radius: 50%; background: #1a2028;
+      border: 1px solid #2a3040; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .modem-led.on .modem-led-bulb { box-shadow: 0 0 8px currentColor, inset 0 0 2px rgba(255,255,255,0.35); }
+    .modem-led.pwr.on .modem-led-bulb { background: #3ddc68; color: #3ddc68; }
+    .modem-led.cd.on .modem-led-bulb { background: #e8c030; color: #e8c030; animation: modem-blink 1.2s ease-in-out infinite; }
+    .modem-led.tx.on .modem-led-bulb { background: #4d9bff; color: #4d9bff; animation: modem-blink 0.35s ease-in-out infinite; }
+    .modem-led.rx.on .modem-led-bulb { background: #8ee8a8; color: #8ee8a8; animation: modem-blink 0.45s ease-in-out infinite; }
+    .modem-led.lan.on .modem-led-bulb { background: #9ab4c8; color: #9ab4c8; }
+    .modem-led.alert.on .modem-led-bulb { background: #ff3355; color: #ff3355; animation: modem-blink 0.25s ease-in-out infinite; }
+    .modem-led span { font-size: 0.52rem; color: #6a8098; letter-spacing: 0.06em; }
+    @keyframes modem-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    .inspect-dpi-alert {
+      padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.72rem;
+      border: 1px solid #6a2830; background: rgba(48, 16, 24, 0.55); color: #ffb0b8;
+    }
+    .inspect-dpi-clean {
+      padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.72rem;
+      border: 1px solid #2a4a38; background: rgba(16, 40, 28, 0.45); color: #8ee8a8;
+    }
+    .inspect-table { width: 100%; border-collapse: collapse; font-size: 0.62rem; }
+    .inspect-table th, .inspect-table td { padding: 5px 6px; text-align: left; border-bottom: 1px solid #1a2430; vertical-align: top; }
+    .inspect-table th { color: var(--internet); position: sticky; top: 0; background: #0d1520; }
+    .inspect-scroll { max-height: 420px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+    .inspect-verdict-alert { color: var(--murder); font-weight: 700; }
+    .inspect-verdict-clean { color: var(--ok); }
+    .library-layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; padding: 16px 18px; min-height: 480px; }
+    .library-shelf { border: 1px solid var(--border); border-radius: 10px; padding: 12px; background: rgba(8,14,24,0.6); }
+    .library-book-btn {
+      display: block; width: 100%; text-align: left; margin-bottom: 8px; padding: 10px 12px;
+      border-radius: 8px; border: 1px solid #2a3848; background: rgba(12,20,32,0.8); color: var(--text);
+      cursor: pointer; font-size: 0.72rem;
+    }
+    .library-book-btn:hover, .library-book-btn.active { border-color: var(--gold); background: rgba(30,24,12,0.35); }
+    .library-book-btn em { display: block; color: var(--muted); font-size: 0.62rem; margin-top: 4px; font-style: normal; }
+    .library-reader { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: rgba(8,12,20,0.75); }
+    .library-reader pre { white-space: pre-wrap; font-family: Georgia, serif; font-size: 0.82rem; line-height: 1.55; color: #d8e0ec; margin: 0; }
+    .library-nav { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
+    .library-nav button { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: #1a2430; color: var(--text); cursor: pointer; font-size: 0.72rem; }
+    .library-nav button:disabled { opacity: 0.4; cursor: not-allowed; }
+    @media (max-width: 900px) { .library-layout { grid-template-columns: 1fr; } }
     .verdict-USER_OK { color: var(--ok); }
     .verdict-EPHEMERAL { color: var(--internet); }
     .verdict-SUSPICIOUS { color: var(--gold); }
@@ -587,6 +785,29 @@
     .ha-sdf-pin { overflow: visible !important; }
     .ha-sdf-mount { position: relative; overflow: visible; }
     .ha-sdf-marker { position: relative; overflow: visible; pointer-events: none; }
+    .ha-sdf-gps {
+      position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
+      margin-top: 2px; padding: 2px 6px; border-radius: 4px;
+      background: rgba(6, 10, 20, 0.92); border: 1px solid #2a4060;
+      font-size: 0.58rem; font-family: ui-monospace, monospace; color: #9ec5ff;
+      white-space: nowrap; pointer-events: none;
+    }
+    .ha-sdf-tile-layer { filter: saturate(1.05) contrast(1.02); }
+    .host-map-trash {
+      position: absolute; right: 14px; bottom: 14px; z-index: 650;
+      width: 52px; height: 52px; border-radius: 10px;
+      background: rgba(8, 12, 20, 0.88); border: 2px dashed #4a3040;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    }
+    .host-map-trash:hover, .host-map-trash.trash-hot { border-color: var(--murder); background: rgba(48, 12, 20, 0.75); }
+    .host-map-trash .trash-count {
+      position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px;
+      border-radius: 999px; background: var(--murder); color: #fff;
+      font-size: 0.58rem; font-weight: 700; display: none; align-items: center; justify-content: center;
+    }
+    .host-map-trash.has-items .trash-count { display: flex; }
+    .host-map-panel { position: relative; }
     @keyframes ha-sdf-ring-pulse {
       0% { transform: scale(0.55); opacity: 0.75; }
       100% { transform: scale(1.75); opacity: 0; }
@@ -677,6 +898,18 @@
     }
     .ha-kill-btn:hover { filter: brightness(1.1); }
     .ha-killed-badge { font-size: 0.62rem; color: var(--murder); margin-top: 4px; font-weight: 700; letter-spacing: 0.04em; }
+    .ha-online-badge {
+      display: inline-flex; align-items: center; gap: 8px; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 12px; border-radius: 6px;
+      border: 1px solid var(--border); margin-bottom: 10px;
+    }
+    .ha-online-badge .ha-online-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .ha-online-badge.online { border-color: #2a6a3a; background: rgba(16, 56, 32, 0.55); color: #8ee8a8; }
+    .ha-online-badge.online .ha-online-dot { background: #3ddc68; box-shadow: 0 0 8px rgba(61, 220, 104, 0.65); }
+    .ha-online-badge.offline { border-color: #6a2830; background: rgba(48, 16, 20, 0.5); color: #ffb0b8; }
+    .ha-online-badge.offline .ha-online-dot { background: #ff3355; box-shadow: 0 0 8px rgba(255, 51, 85, 0.55); }
+    .ha-online-badge.unchecked { border-color: #6a5a20; background: rgba(48, 40, 12, 0.45); color: #f0d878; }
+    .ha-online-badge.unchecked .ha-online-dot { background: #e8c030; box-shadow: 0 0 8px rgba(232, 192, 48, 0.55); }
     .ha-online-status { font-size: 0.68rem; margin-top: 6px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(8, 14, 24, 0.55); }
     .ha-online-status.online { border-color: #3a6a4a; background: rgba(20, 48, 32, 0.45); }
     .ha-online-status.offline { border-color: #3a4048; color: var(--muted); }
@@ -695,8 +928,26 @@
       padding: 5px 10px; border-radius: 5px; font-size: 0.66rem; font-weight: 600; cursor: pointer;
     }
     .ha-check-online-btn:hover { border-color: var(--internet); color: var(--text); }
+    .ha-nokill-btn {
+      background: #1a3048; border: 1px solid #3a6080; color: #9ac8e8;
+      padding: 5px 10px; border-radius: 5px; font-size: 0.66rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .ha-nokill-btn:hover { border-color: var(--internet); color: var(--text); }
+    .ha-nokill-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .ha-kill-btn:disabled, .ha-rekill-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .ha-nokill-badge { font-size: 0.62rem; color: #7ab8d8; margin-top: 4px; font-weight: 700; letter-spacing: 0.04em; }
     .ha-friendly-badge { font-size: 0.62rem; color: var(--ok); margin-top: 4px; font-weight: 700; letter-spacing: 0.04em; }
+    .ha-strike-badge {
+      display: inline-block; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em;
+      padding: 3px 8px; border-radius: 4px; margin: 6px 0 4px;
+    }
+    .ha-strike-badge.strike-ready { background: rgba(255, 0, 51, 0.18); color: var(--murder); border: 1px solid var(--murder); }
+    .ha-strike-badge.strike-warm { background: rgba(255, 180, 0, 0.12); color: #e8b040; border: 1px solid #a87820; }
+    .ha-strike-badge.strike-cold { background: rgba(80, 100, 130, 0.15); color: #8aa0b8; border: 1px solid var(--border); }
+    .ha-strike-signals { font-size: 0.6rem; color: var(--muted); margin-top: 2px; font-family: ui-monospace, monospace; }
     .host-point-row.target-friendly { border-left: 2px solid var(--ok); opacity: 0.88; }
+    .host-point-row.target-nokill { border-left: 2px solid #3a6080; opacity: 0.82; }
     .host-map-popup .popup-monitor { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
     .host-map-popup .popup-path { font-size: 0.66rem; color: var(--muted); margin-top: 4px; }
     .attack-kit-bar {
@@ -737,27 +988,36 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.4.1</h1>
+        <h1>NEXUS-Shield v4.1.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
-    <div class="meta">
-      <span class="meta-chip" data-tip="How alert NEXUS is right now: calm = quiet day, storm = lots going on.">
-        <span>Activity</span> <strong id="mode">—</strong>
-      </span>
-      <span class="meta-chip" data-tip="Roughly how confident NEXUS is that recent warnings are real — not a grade on you.">
-        <span>Signal</span> <strong id="signal">—</strong>%
-      </span>
-      <span class="meta-chip" data-tip="When this screen last refreshed. Updates every few seconds.">
-        <span>Updated</span> <strong id="updated">—</strong>
-      </span>
+    <div class="header-right">
+      <div class="meta">
+        <span class="meta-chip" data-tip="How alert NEXUS is right now: calm = quiet day, storm = lots going on.">
+          <span>Activity</span> <strong id="mode">—</strong>
+        </span>
+        <span class="meta-chip" data-tip="Roughly how confident NEXUS is that recent warnings are real — not a grade on you.">
+          <span>Signal</span> <strong id="signal">—</strong>%
+        </span>
+        <span class="meta-chip" data-tip="When this screen last refreshed. Updates every few seconds.">
+          <span>Updated</span> <strong id="updated">—</strong>
+        </span>
+        <span class="meta-chip field-live field-warm" id="field-live-chip" data-tip="Live connections painted from field cache — no fetch wait on first paint.">
+          <span>Live</span> <strong id="field-live">—</strong>
+        </span>
+      </div>
+      <div class="nexus-update-chip">
+        <button type="button" id="nexus-update-btn" data-tip="Checks GitHub for a newer NEXUS-Shield release.">v4.1.0</button>
+        <span id="nexus-update-detail">Checking GitHub…</span>
+      </div>
     </div>
   </header>
 
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
-    <strong>First run blocks unknown sites — trust email &amp; YouTube from the recommended list. CLI: <code>nexus trust &lt;ip&gt;</code> if the browser won't open.</strong>
+    <strong>v4.0 Packet Permission — DPI knows who and intent on every flow. Good traffic passes at zero cost; only harmful sections get blocked. Trust email &amp; YouTube from the recommended list. CLI: <code>nexus trust &lt;ip&gt;</code></strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
   </div>
 
@@ -789,15 +1049,40 @@
   </div>
 
   <nav class="menu" aria-label="Panel sections">
-    <button type="button" class="active" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">Monitor</button>
+    <button type="button" class="active" data-view="us" data-tip="Page 1 — forensic identity of THIS machine. Every fact from ss, ip, proc, and NEXUS state on the field — zero external guesswork.">US</button>
+    <button type="button" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">Monitor</button>
+    <button type="button" data-view="inspect" data-tip="Retro modem LEDs, deep packet inspection, English translation, exploit heuristics (high-confidence only — no false positives).">Inspect</button>
     <button type="button" data-view="host-attack" data-tip="Global host attack map — pulsing dots on Earth, green through red by threat. Built for Zachary Geurts and everyone defending their machine in 2026.">Host Attack</button>
     <button type="button" data-view="dossier" data-tip="Full attack-path dossiers — vector to peer to process to MAC to CVE. They look at us; we look back HARD.">Dossier</button>
+    <button type="button" data-view="human-dossier" data-tip="Grok Heavy human-readable kill-order dossiers — ThreatFox C2 intel, geo/ASN, malware, RE-KILL notes. One-click KILL.">Human Dossier</button>
     <button type="button" data-view="research" data-tip="Research tables — MAC vendors, IP intel, CVE/exploit maps, zero-day watch list.">Research</button>
+    <button type="button" data-view="library" data-tip="Hostess7 H7 field books — network security, NEXUS manual, AMOURANTHRTX biography. Field-expandable to hundreds of pages.">Library</button>
     <button type="button" data-view="settings" data-tip="Turn features on/off, load ad block lists, and review past incidents. No terminal needed.">Settings</button>
     <button type="button" data-view="logs" data-tip="A diary of everything NEXUS noticed — useful when something feels wrong.">Logs</button>
   </nav>
 
-  <section id="view-monitor" class="view active">
+  <section id="view-us" class="view active">
+    <div class="us-wrap">
+      <p class="us-motto" id="us-motto"><strong>US · Page 1</strong> — This machine, known personally. v4.0 packet permission: DPI knows who and intent; harmful sections blocked, good flows pass at zero nft cost.</p>
+      <div id="us-meta" class="meta" style="margin-bottom:12px;font-size:0.72rem;">Sampling local field…</div>
+      <div id="us-observations" class="us-observations"><h3>Field observations</h3><ol><li>Gathering ss · ip · proc · NEXUS state…</li></ol></div>
+      <div class="us-grid" id="us-grid">
+        <div class="us-card"><h4>Identity</h4><dl class="us-kv" id="us-identity"><dt>—</dt><dd>Loading</dd></dl></div>
+        <div class="us-card"><h4>Network</h4><div id="us-network">Loading…</div></div>
+        <div class="us-card"><h4>Socket posture</h4><div id="us-sockets">Loading…</div></div>
+        <div class="us-card"><h4>Gatekeeper</h4><div id="us-gatekeeper">Loading…</div></div>
+        <div class="us-card"><h4>Trust posture</h4><div id="us-trust">Loading…</div></div>
+        <div class="us-card"><h4>Field storage</h4><div id="us-storage">Loading…</div></div>
+      </div>
+      <div class="us-crossrefs">
+        <button type="button" data-view-jump="monitor">Live connections →</button>
+        <button type="button" data-view-jump="human-dossier">Human Dossier kill-orders →</button>
+        <button type="button" data-view-jump="host-attack">Host Attack map →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-monitor" class="view">
     <div id="intel-banner" class="intel-banner" role="status" aria-live="polite"></div>
     <div id="gatekeeper-banner" class="gatekeeper-banner"></div>
     <div class="grid">
@@ -825,6 +1110,58 @@
         <div class="vectors" id="vector-catalog"></div>
       </section>
     </div>
+    <div class="packet-field-wrap" id="packet-field-wrap">
+      <div class="packet-field-head">
+        <strong>Packet field · TX/RX</strong>
+        <span class="packet-field-stats" id="packet-field-stats">Capturing…</span>
+      </div>
+      <div id="packet-ports"></div>
+      <div class="packet-stream" id="packet-stream"><div class="empty">Packet capture warming up — tcpdump → field drive → English here.</div></div>
+    </div>
+  </section>
+
+  <section id="view-inspect" class="view">
+    <div style="padding:16px 18px;">
+      <div class="retro-modem" id="retro-modem" aria-label="Connection modem status">
+        <div class="retro-modem-body">
+          <div class="retro-modem-brand">NEXUS Field Modem</div>
+          <div class="retro-modem-label">Carrier · TX · RX · Deep inspection</div>
+          <div class="modem-led-row">
+            <div class="modem-led pwr" id="led-pwr"><div class="modem-led-bulb"></div><span>PWR</span></div>
+            <div class="modem-led cd" id="led-cd"><div class="modem-led-bulb"></div><span>CD</span></div>
+            <div class="modem-led tx" id="led-tx"><div class="modem-led-bulb"></div><span>TX</span></div>
+            <div class="modem-led rx" id="led-rx"><div class="modem-led-bulb"></div><span>RX</span></div>
+            <div class="modem-led lan" id="led-lan"><div class="modem-led-bulb"></div><span>LAN</span></div>
+            <div class="modem-led alert" id="led-alert"><div class="modem-led-bulb"></div><span>ALERT</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="inspect-banner"></div>
+      <div class="inspect-scroll">
+        <table class="inspect-table">
+          <thead><tr>
+            <th>Time</th><th>Dir</th><th>Process</th><th>Endpoints</th><th>Service</th><th>DPI</th><th>Translation</th>
+          </tr></thead>
+          <tbody id="inspect-body"><tr><td colspan="7" class="empty">Deep packet inspection warming up…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-library" class="view">
+    <div class="library-layout">
+      <div class="library-shelf" id="library-shelf"><div class="empty">Loading H7 shelf…</div></div>
+      <div class="library-reader">
+        <h3 id="library-title" style="margin:0 0 8px;font-size:0.9rem;color:var(--gold);">Select a book</h3>
+        <div id="library-meta" class="meta" style="font-size:0.68rem;margin-bottom:12px;"></div>
+        <pre id="library-text">Hostess7 field books — network security, operator manual, AMOURANTHRTX biography. Expand on field drive.</pre>
+        <div class="library-nav">
+          <button type="button" id="library-prev" disabled>← Prev</button>
+          <span id="library-page-label" style="font-size:0.72rem;color:var(--muted);">—</span>
+          <button type="button" id="library-next" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section id="view-host-attack" class="view">
@@ -841,7 +1178,8 @@
         <strong>Field Attack Kit</strong>
         <span class="attack-kit-stat">Killed: <em id="ak-disabled-count">0</em></span>
         <span class="attack-kit-stat">Field paths: <em id="ak-field-paths">0</em></span>
-        <button type="button" id="ak-crush-hot" data-tip="KILL every hot monitor target (heat ≥ 0.7) — firewall block + full dossier archived forever.">KILL all hot</button>
+        <span class="attack-kit-stat">Strike corpus: <em id="ak-strike-corpus">0</em></span>
+        <button type="button" id="ak-crush-hot" data-tip="Trust Strike autokill — only hot monitor targets with dossier-backed confidence ≥ 78% and corroboration. Permanent block + archived dossier.">KILL all hot</button>
         <button type="button" id="ak-sync-field" class="ghost" data-tip="Pull hostile registry from field drive and re-apply firewall blocks.">Sync field drive</button>
       </div>
       <div class="host-attack-stats" id="host-attack-stats">
@@ -857,12 +1195,15 @@
             <button type="button" id="ha-fit-all" data-tip="Zoom map to fit all threat dots.">Fit all</button>
             <button type="button" id="ha-reset-globe" data-tip="Reset to full-world view.">World view</button>
           </div>
-          <div id="host-earth-map" role="application" aria-label="Zoomable satellite world map with host attack markers"></div>
+          <div id="host-earth-map" role="application" aria-label="SDF wireframe world map with infinite zoom and GPS pushpins"></div>
+          <div class="host-map-trash" id="host-map-trash" title="Close a pin dossier — it flies here. Empties dismissed targets from the map.">
+            🗑️<span class="trash-count" id="host-trash-count">0</span>
+          </div>
           <div class="host-map-legend">
             <span><span class="legend-swatch" style="background:#3dd68c"></span>Calm</span>
             <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
             <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
-            <span>· SDF pointy-tip pins · Host→Target Bleed</span>
+            <span>· SDF wireframe borders · infinite zoom · GPS pushpins</span>
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
@@ -885,6 +1226,20 @@
     </div>
   </section>
 
+  <section id="view-human-dossier" class="view">
+    <div class="angels-wrap">
+      <p class="angels-motto" id="human-dossier-motto"><strong>Human Dossier</strong> — Grok Heavy kill-order intel in plain English. ThreatFox live C2 exports, hosting likelihood, geo/ASN, malware family, RE-KILL markers. High-confidence only — no sacred or private ranges.</p>
+      <div id="human-dossier-meta" class="meta" style="margin-bottom:10px;font-size:0.72rem;">Loading human dossiers…</div>
+      <div class="human-dossier-toolbar">
+        <label>Search <input type="search" id="human-dossier-filter" placeholder="IP, city, ASN, malware…" autocomplete="off" /></label>
+        <label>Malware <select id="human-dossier-malware"><option value="">All families</option></select></label>
+        <span id="human-dossier-visible" class="meta"></span>
+      </div>
+      <div id="human-dossier-chips" class="human-dossier-stats"></div>
+      <div id="human-dossier-list"><div class="empty">Loading Grok Heavy dossiers…</div></div>
+    </div>
+  </section>
+
   <section id="view-research" class="view">
     <div class="angels-wrap">
       <p class="angels-motto"><strong>Research tables</strong> — MAC OUI vendors, IP intelligence cache, CVE ↔ vector mapping (legacy, recent, zero-day watch). Never unknown.</p>
@@ -900,7 +1255,7 @@
         <div id="settings-profile-stats" class="settings-profile-stats"></div>
       </div>
       <div class="settings-group" data-settings-group="protection">
-        <h3><span>Protection</span><span data-tip="These control how aggressive NEXUS is. Safe default: everything that auto-blocks stays OFF — you click buttons on the Monitor tab instead."></span></h3>
+        <h3><span>Protection</span><span data-tip="v4.0 Packet Permission: DPI classifies every flow. Good traffic passes at zero nft cost; only harmful packet sections are blocked."></span></h3>
         <div class="group-summary" id="summary-protection">—</div>
         <div class="setting-row">
           <label class="toggle">
@@ -945,9 +1300,9 @@
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_PACKET_ORACLE" id="set-packet" />
-            <span><strong>Network snapshot</strong><span class="hint">Feeds connection lists to the panel.</span></span>
+            <span><strong>Network snapshot + packet field</strong><span class="hint">Connections, tcpdump TX/RX, field jsonl archive.</span></span>
           </label>
-          <span class="has-tip-row" data-tip="Collects the list of open connections you see on the main tab. Leave ON unless troubleshooting."></span>
+          <span class="has-tip-row" data-tip="Captures packets with tcpdump, writes program-readable jsonl to field storage, and shows English TX/RX lines here in realtime. Leave ON unless troubleshooting."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
@@ -983,6 +1338,13 @@
             <span><strong>Field drive corroboration</strong><span class="hint">Hostess7 field memory cross-check.</span></span>
           </label>
           <span class="has-tip-row" data-tip="Cross-checks integrity against Hostess7 field technology. Trust and hostile registries sync to field storage."></span>
+        </div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" data-setting="NEXUS_PACKET_PERMISSION" id="set-packet-permission" />
+            <span><strong>Packet permission (v4.0)</strong><span class="hint">DPI knows who and intent. Block harmful sections only — good flows pass at zero nft overhead.</span></span>
+          </label>
+          <span class="has-tip-row" data-tip="Recommended ON. Friendly, Ephemeral, and Monitor flows auto-permit. Suspicious flows get segment blocks (ip:port). Harm candidates get IP blocks. DPI alerts block only the offending segment."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
@@ -1071,8 +1433,8 @@
     </div>
   </section>
 
-  <script src="/assets/leaflet/leaflet.js"></script>
-  <script src="/assets/sdf-render.js"></script>
+  <script defer src="/assets/leaflet/leaflet.js" id="leaflet-js"></script>
+  <script defer src="/assets/sdf-render.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let currentLog = "alerts";
@@ -1201,11 +1563,11 @@
     }
 
     const VERDICT_FRIENDLY = {
-      USER_OK: { label: "Looks normal", tip: "Behaves like everyday browsing or streaming. No action needed." },
-      EPHEMERAL: { label: "Quick lookup", tip: "Short-lived traffic — often a search or one-off request." },
-      SUSPICIOUS: { label: "Keep an eye on", tip: "A bit unusual. NEXUS won't block this on its own — glance at the app name." },
-      HARM_CANDIDATE: { label: "Might be harmful", tip: "Could be heavy data leaving or a risky destination. Use Stop this site only if you don't recognize it." },
-      MONITOR: { label: "Watching", tip: "NEXUS is still gathering info about this connection." },
+      USER_OK: { label: "USER_OK", tip: "user_browser≥7, stream_theft_risk≤2 — operator-initiated browser or media egress." },
+      EPHEMERAL: { label: "EPHEMERAL", tip: "search_ephemeral≥6 — short-lived CDN tab; dies and returns." },
+      SUSPICIOUS: { label: "SUSPICIOUS", tip: "Harm and trust scores diverge; destination_class elevated." },
+      HARM_CANDIDATE: { label: "HARM_CANDIDATE", tip: "harm_total exceeds trust_total — non-browser stream or beacon pattern." },
+      MONITOR: { label: "MONITOR", tip: "Routine egress — permitted under packet permission v4.0 at zero nft cost." },
     };
 
     const AXIS_TIPS = {
@@ -1294,8 +1656,8 @@
       let signals = "";
       if (friendly.length || unfriendly.length) {
         signals = `<div class="signal-cols">
-          <div class="signal-col friendly"><h4>Why it looks friendly</h4><ul>${friendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
-          <div class="signal-col unfriendly"><h4>Why we're cautious</h4><ul>${unfriendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
+          <div class="signal-col friendly"><h4>Corroborating signals</h4><ul>${friendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
+          <div class="signal-col unfriendly"><h4>Caution signals</h4><ul>${unfriendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
         </div>`;
       }
       const axisBars = scores
@@ -1324,18 +1686,34 @@
         requestAnimationFrame(invalidateHostMapSize);
         setTimeout(invalidateHostMapSize, 80);
         setTimeout(invalidateHostMapSize, 320);
-        if (hostLastPoints.length) renderHostAttackMap({ points: hostLastPoints, stats: {}, author: {} });
+        if (lastPanelData?.host_attacks) renderHostAttackMap(lastPanelData.host_attacks);
+        else if (hostLastPoints.length) renderHostAttackMap({ points: hostLastPoints, stats: {}, author: {} });
       }
+      if (name === "dossier" && lastPanelData) renderDossiers(lastPanelData.angel_dossiers);
+      if (name === "human-dossier" && lastPanelData) {
+        bindHumanDossierFilters();
+        renderHumanDossiers(lastPanelData.human_dossier);
+      }
+      if (name === "research" && lastPanelData) renderResearch(lastPanelData.angel_research);
+      if (name === "inspect" && lastPanelData) {
+        renderPacketField(lastPanelData.packet_field);
+        renderInspect(lastPanelData.packet_field);
+      }
+      if (name === "library" && lastPanelData) renderLibraryShelf(lastPanelData.h7_library);
+      if (name === "us" && lastPanelData) renderUSField(lastPanelData.us_field);
       if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
     }
 
     document.querySelectorAll("nav.menu button").forEach((btn) => {
       btn.addEventListener("click", () => showView(btn.dataset.view));
     });
+    document.querySelectorAll("[data-view-jump]").forEach((btn) => {
+      btn.addEventListener("click", () => showView(btn.dataset.viewJump));
+    });
 
     function applyHashView() {
-      const name = (location.hash || "#monitor").replace("#", "");
-      if (name && name !== "monitor") showView(name);
+      const name = (location.hash || "#us").replace("#", "") || "us";
+      if (name) showView(name);
     }
     window.addEventListener("hashchange", applyHashView);
     applyHashView();
@@ -1367,10 +1745,12 @@
       NEXUS_SHUTDOWN_GUARD: 1,
       NEXUS_HOSTESS7_CORROBORATE: 0,
       NEXUS_ATTACK_KIT_AUTO_CRUSH: 1,
+      NEXUS_GATEKEEPER_STRICT_TRUST: 1,
+      NEXUS_PACKET_PERMISSION: 1,
     };
 
     const SETTING_GROUPS = {
-      protection: ["NEXUS_PARANOIA_BLOCK", "NEXUS_FIREWALL_AUTO_BLOCK", "NEXUS_AUTOSANITIZE", "NEXUS_SHUTDOWN_GUARD", "NEXUS_ATTACK_KIT_AUTO_CRUSH"],
+      protection: ["NEXUS_PACKET_PERMISSION", "NEXUS_PARANOIA_BLOCK", "NEXUS_FIREWALL_AUTO_BLOCK", "NEXUS_AUTOSANITIZE", "NEXUS_SHUTDOWN_GUARD", "NEXUS_ATTACK_KIT_AUTO_CRUSH"],
       watchers: [
         "NEXUS_CONNECTION_GATEKEEPER", "NEXUS_PACKET_ORACLE", "NEXUS_SHADOW_WATCH",
         "NEXUS_ENTROPY_WATCH", "NEXUS_BEHAVIOR_WATCH", "NEXUS_PRIVACY_GUARD",
@@ -1431,8 +1811,9 @@
       const elWatch = $("summary-watchers");
       const elAb = $("summary-adblock");
       if (elProt) {
+        const ppOn = settingIsOn(s.NEXUS_PACKET_PERMISSION);
         elProt.innerHTML = `<strong>${prot}</strong> of ${SETTING_GROUPS.protection.length} protection features ON` +
-          (prot === 0 ? " — safe everyday default (auto-block stays off)" : prot === SETTING_GROUPS.protection.length ? " — full auto-protection" : "");
+          (ppOn ? " — packet permission: harmful sections blocked, good flows pass" : prot === 0 ? " — advisory only (no auto segment blocks)" : prot === SETTING_GROUPS.protection.length ? " — full auto-protection" : "");
       }
       if (elWatch) {
         elWatch.innerHTML = `<strong>${watch}</strong> of ${SETTING_GROUPS.watchers.length} watchers ON` +
@@ -1452,7 +1833,7 @@
       const watch = countGroupOn(s, SETTING_GROUPS.watchers);
       const abOn = settingIsOn(s.NEXUS_ADBLOCK);
       $("settings-profile-desc").textContent = everyday
-        ? "Everyday profile — email, YouTube, and browsing. Auto-block stays OFF; you choose Trust forever on the Monitor tab."
+        ? "Packet permission v4.0 — DPI knows who and intent on every flow. Good traffic passes at zero nft cost; only harmful sections get blocked."
         : "Custom profile — your choices are saved on this machine. Rows below show ON (green edge) vs OFF (muted).";
       const chips = [
         `<span class="chip profile">${everyday ? "Everyday profile" : "Custom profile"}</span>`,
@@ -1891,10 +2272,20 @@
       return trusted.some((t) => t.ip === ip && (t.direction === direction || t.direction === "both"));
     }
 
+    function strictTrustDirection(c) {
+      const rank = c?.trust_rank ?? 5;
+      const scope = c?.flow_policy?.block_scope;
+      if (scope === "ip" || rank >= 4) return "both";
+      if (scope === "segment" || rank === 3) return c?.flow_policy?.block_direction || "out";
+      if (c?.traffic_direction === "at_us") return "in";
+      return c?.direction || "out";
+    }
+
     async function authorizeIp(ip, direction, label, btn) {
       if (!ip) return;
-      const dirLabel = direction === "in" ? "inbound" : "outbound";
-      if (!confirm(`Trust ${ip} forever?\n\n${dirLabel} traffic to this address will always be allowed. Use when a normal site keeps getting flagged.`)) return;
+      const dirLabel = direction === "both" ? "inbound and outbound"
+        : direction === "in" ? "inbound" : "outbound";
+      if (!confirm(`Trust ${ip} forever?\n\n${dirLabel} traffic will be allowed. Review dossier first — you pick trust for Neutral and below.`)) return;
       if (btn) { btn.disabled = true; btn.textContent = "…"; }
       try {
         const res = await fetch("/api/firewall/authorize", {
@@ -1979,19 +2370,165 @@
       }).join("");
     }
 
+    let libraryBookId = null;
+    let libraryPage = 1;
+
+    function renderModemLights(modem) {
+      const m = modem || {};
+      const set = (id, on) => $(id)?.classList.toggle("on", !!on);
+      set("led-pwr", m.pwr !== false);
+      set("led-cd", m.cd);
+      set("led-tx", m.tx);
+      set("led-rx", m.rx);
+      set("led-lan", m.lan);
+      set("led-alert", m.alert);
+    }
+
+    function renderInspect(pf) {
+      const banner = $("inspect-banner");
+      const body = $("inspect-body");
+      if (!body) return;
+      const doc = pf || {};
+      renderModemLights(doc.modem);
+      const inspect = doc.inspect || {};
+      if (inspect.alert_count > 0) {
+        banner.innerHTML = `<div class="inspect-dpi-alert"><strong>${inspect.alert_count} high-confidence DPI alert(s)</strong> — corroborated heuristics only (≥0.92). Vectors: ${esc((inspect.vectors_seen || []).join(", ") || "—")}</div>`;
+      } else {
+        banner.innerHTML = `<div class="inspect-dpi-clean"><strong>Packet permission active</strong> — ${inspect.packet_count || 0} frames inspected; who + intent on every row. Good segments pass at zero cost; harmful sections blocked only.</div>`;
+      }
+      const rows = (doc.recent || []).slice().reverse();
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="7" class="empty">Waiting for tcpdump cycle…</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map((p) => {
+        const dpi = p.dpi || {};
+        const verdictCls = dpi.alert ? "inspect-verdict-alert" : "inspect-verdict-clean";
+        const intent = p.flow_intent || dpi.intent || {};
+        const verdict = dpi.alert ? `SEGMENT ${Math.round((dpi.confidence || 0) * 100)}%` : (dpi.permit_fast ? "permit" : (dpi.verdict || "clean"));
+        const eps = `${p.src_ip}:${p.src_port} → ${p.dst_ip}:${p.dst_port}`;
+        const who = intent.who || p.process || "—";
+        const purpose = intent.purpose || dpi.translation || p.translation || p.english || "—";
+        return `<tr>
+          <td>${esc((p.ts || "").replace("T", " ").replace("Z", ""))}</td>
+          <td><strong>${esc(p.direction || "?")}</strong></td>
+          <td>${esc(who)}</td>
+          <td>${esc(eps)}</td>
+          <td>${esc(p.port_service || "—")}</td>
+          <td class="${verdictCls}">${esc(verdict)}</td>
+          <td>${esc(purpose)}</td>
+        </tr>`;
+      }).join("");
+    }
+
+    function renderLibraryShelf(lib) {
+      const shelf = $("library-shelf");
+      if (!shelf) return;
+      const books = lib?.books || [];
+      if (!books.length) {
+        shelf.innerHTML = '<div class="empty">Library warming up…</div>';
+        return;
+      }
+      shelf.innerHTML = books.map((b) =>
+        `<button type="button" class="library-book-btn${libraryBookId === b.id ? " active" : ""}" data-book-id="${esc(b.id)}">
+          <strong>${esc(b.title)}</strong>
+          <em>${esc(b.author || "")} · ${b.page_count || 0} pg · ${esc(b.category || "")}</em>
+        </button>`
+      ).join("");
+      shelf.querySelectorAll("[data-book-id]").forEach((btn) => {
+        btn.addEventListener("click", () => loadLibraryBook(btn.dataset.bookId, 1));
+      });
+      if (!libraryBookId && books[0]) loadLibraryBook(books[0].id, 1);
+    }
+
+    async function loadLibraryBook(bookId, page) {
+      libraryBookId = bookId;
+      libraryPage = page;
+      document.querySelectorAll(".library-book-btn").forEach((b) => {
+        b.classList.toggle("active", b.dataset.bookId === bookId);
+      });
+      try {
+        const res = await fetch(`/api/library/page?book=${encodeURIComponent(bookId)}&page=${page}`, { cache: "no-store" });
+        const data = await res.json();
+        if (!data.ok) {
+          $("library-text").textContent = "Could not load book page.";
+          return;
+        }
+        $("library-title").textContent = data.book?.title || bookId;
+        $("library-meta").textContent = `${data.book?.author || ""} · page ${data.page} of ${data.page_count} · target ${data.book?.pages_target || "?"} pages`;
+        $("library-text").textContent = data.text || "";
+        $("library-page-label").textContent = `Page ${data.page} / ${data.page_count}`;
+        $("library-prev").disabled = !data.has_prev;
+        $("library-next").disabled = !data.has_next;
+      } catch {
+        $("library-text").textContent = "Library API unreachable.";
+      }
+    }
+
+    $("library-prev")?.addEventListener("click", () => {
+      if (libraryBookId && libraryPage > 1) loadLibraryBook(libraryBookId, libraryPage - 1);
+    });
+    $("library-next")?.addEventListener("click", () => {
+      if (libraryBookId) loadLibraryBook(libraryBookId, libraryPage + 1);
+    });
+
+    function renderPacketField(pf) {
+      const statsEl = $("packet-field-stats");
+      const portsEl = $("packet-ports");
+      const streamEl = $("packet-stream");
+      if (!statsEl || !portsEl || !streamEl) return;
+      const doc = pf || {};
+      const recent = doc.recent || [];
+      if (!recent.length && !doc.ports?.length) {
+        statsEl.textContent = "Waiting for packet oracle cycle…";
+        portsEl.innerHTML = "";
+        streamEl.innerHTML = '<div class="empty">No packets yet — traffic will appear as TX (sent) or RX (received).</div>';
+        return;
+      }
+      statsEl.innerHTML =
+        `Updated <em>${esc((doc.updated || "—").replace("T", " ").replace("Z", " UTC"))}</em> · ` +
+        `TX <em>${doc.tx_count ?? 0}</em> · RX <em>${doc.rx_count ?? 0}</em> · ` +
+        `Ports tracked <em>${(doc.ports || []).length}</em>`;
+      const topPorts = (doc.ports || []).slice(0, 12);
+      portsEl.innerHTML = topPorts.length
+        ? `<table class="packet-ports-table"><thead><tr><th>Port</th><th>Service</th><th>TX pkts</th><th>RX pkts</th><th>Apps</th></tr></thead><tbody>${
+            topPorts.map((p) =>
+              `<tr><td>${esc(String(p.port))}/${esc(p.proto || "tcp")}</td><td>${esc(p.service || "—")}</td>` +
+              `<td>${p.tx_packets ?? 0}</td><td>${p.rx_packets ?? 0}</td>` +
+              `<td>${esc((p.processes || []).join(", ") || "—")}</td></tr>`
+            ).join("")
+          }</tbody></table>`
+        : "";
+      streamEl.innerHTML = recent.slice().reverse().map((pkt) => {
+        const dir = (pkt.direction || "?").toLowerCase();
+        const cls = dir === "tx" ? "pkt-tx" : dir === "rx" ? "pkt-rx" : dir === "lan" ? "pkt-lan" : "pkt-transit";
+        const ts = (pkt.ts || "").replace("T", " ").replace("Z", "");
+        return `<div class="packet-line ${cls}"><span class="pkt-ts">${esc(ts)}</span>` +
+          `<span class="pkt-dir">${esc(pkt.direction || "?")}</span>${esc(pkt.english || pkt.raw || "—")}</div>`;
+      }).join("") || '<div class="empty">No recent packets in ring buffer.</div>';
+    }
+
     function renderGatekeeperBanner(gk) {
       const el = $("gatekeeper-banner");
       if (!gk) { el.innerHTML = ""; return; }
       const harm = gk.harm_candidates || 0;
+      const pending = gk.pending_trust_count || 0;
+      const permitted = gk.permitted_flow_count ?? 0;
+      const segments = gk.segment_block_count ?? 0;
       el.innerHTML =
-        `<span class="has-tip"><strong>Connection checker</strong>${tipMarkup("Sorted by what to allow first. Every row has Trust forever, Block 1 day, Block forever, and Unblock 1 day when blocked.")}</span> — ` +
-        `${gk.connection_count || 0} checked · ` +
-        `<strong>${harm}</strong> might need review${harm === 1 ? "" : "s"} · ` +
-        `${gk.why_no_auto_block || "Safe mode: nothing blocked without your click."}`;
+        `<span class="has-tip"><strong>Packet permission</strong>${tipMarkup("v4.0: DPI + gatekeeper know who and intent. Good flows permit at zero nft cost; harmful sections blocked only.")}</span> — ` +
+        `${gk.connection_count || 0} flows · <strong>${permitted}</strong> permitted · ` +
+        (segments ? `<strong>${segments}</strong> segment hold${segments === 1 ? "" : "s"} · ` : "") +
+        (pending ? `<strong>${pending}</strong> need review · ` : "") +
+        `<strong>${harm}</strong> harm candidate${harm === 1 ? "" : "s"} · ` +
+        `${gk.why_no_auto_block || "Packet permission v4.0 active."}`;
     }
 
     function isBlockedIp(ip, blocked, direction) {
       if (!ip || !blocked?.length) return false;
+      if (direction === "both") {
+        return isBlockedIp(ip, blocked, "in") || isBlockedIp(ip, blocked, "out");
+      }
       return blocked.some((b) => b.ip === ip && (!b.direction || b.direction === direction || b.direction === "both"));
     }
 
@@ -2051,12 +2588,14 @@
 
     function renderConnectionCard(c, trusted, blocked) {
       const v = c.verdict || "MONITOR";
-      const vf = VERDICT_FRIENDLY[v] || { label: v, tip: "NEXUS is classifying this connection." };
+      const vf = VERDICT_FRIENDLY[v] || { label: v, tip: "Gatekeeper classifying this connection." };
       const ip = c.remote_ip;
-      const dir = c.direction || "out";
-      const trustedRow = isTrustedIp(ip, trusted, dir) || c.scores?.operator_auth >= 10;
-      const blockedRow = isBlockedIp(ip, blocked, dir);
       const sug = c.suggestion || null;
+      const verdictLabel = sug?.summary ? esc(sug.summary) : esc(vf.label);
+      const verdictTip = sug?.summary ? esc(sug.summary + (c.reason ? ` · ${c.reason}` : "")) : esc(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""));
+      const dir = strictTrustDirection(c);
+      const trustedRow = isTrustedIp(ip, trusted, dir) || isTrustedIp(ip, trusted, "both") || c.scores?.operator_auth >= 10;
+      const blockedRow = isBlockedIp(ip, blocked, dir);
       let actions = "";
       if (!trustedRow) {
         actions += `<span class="has-tip has-tip-action"><button type="button" class="auth" data-auth="${ip}" data-dir="${dir}" data-label="${c.process || ""}">Trust forever</button>${tipMarkup(TIP_TRUST)}</span>`;
@@ -2076,10 +2615,10 @@
       }
       return `<div class="intent-row verdict-${v}${blockedRow ? " is-blocked" : ""}">
         <div class="intent-head">
-          <span class="verdict-${v} friendly-verdict"><span class="has-tip">${esc(vf.label)}${tipMarkup(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""))}</span></span>
+          <span class="verdict-${v} friendly-verdict"><span class="has-tip">${verdictLabel}${tipMarkup(verdictTip)}</span></span>
           <span class="ip" title="Internet address">${ip}:${c.remote_port || "?"}</span>
           <span class="proc" title="Program using this connection">${c.process || "background app"}</span>
-          <span class="meta intel-label">${intelLabel ? esc(intelLabel) : esc(c.ip_class || "classified peer")}${c.addr_version ? ` · ${esc(c.addr_version)}` : ""}${c.traffic_direction_label ? `<span class="dir-badge ${esc(c.traffic_direction || "from_us")}">${esc(c.traffic_direction === "at_us" ? "At us" : "From us")}</span>` : ""}${blockedRow ? " · blocked" : ""}</span>
+          <span class="meta intel-label">${c.intent?.who ? esc(c.intent.who) + " · " : ""}${intelLabel ? esc(intelLabel) : esc(c.ip_class || "classified peer")}${c.flow_policy?.block_scope && c.flow_policy.block_scope !== "none" ? ` · <strong>${esc(c.flow_policy.block_scope)} block</strong>` : c.flow_policy?.permit ? " · permit" : ""}${c.addr_version ? ` · ${esc(c.addr_version)}` : ""}${c.traffic_direction_label ? `<span class="dir-badge ${esc(c.traffic_direction || "from_us")}">${esc(c.traffic_direction === "at_us" ? "At us" : "From us")}</span>` : ""}${blockedRow ? " · blocked" : ""}</span>
         </div>
         ${renderSuggestionBox(sug, v, c.scores)}
         ${c.reason ? `<details class="axis-details"><summary>Technical notes</summary><div class="intent-reason">${esc(c.reason)}</div></details>` : ""}
@@ -2117,6 +2656,12 @@
         });
         const data = await res.json();
         if (data.friendly_refused) alert(`KILL refused — ${ip} is a friendly (immutable guard).`);
+        else if (data.nokill_refused) alert(`KILL refused — ${ip} is on NO-KILL exempt list.`);
+        else if (data.strike_refused || data.consumer_collateral) {
+          const conf = data.strike_confidence != null ? `${Math.round(data.strike_confidence * 100)}%` : "low";
+          const why = data.reason || data.score?.consumer_collateral_reason || "collateral or wire unconfirmed";
+          alert(`KILL refused — ${why} (${conf}). Pinpoint the actual end wire host, not CDN collateral or insecure viewers.`);
+        }
         else if (!data.ok) alert("KILL failed — target may be trusted or protected.");
         else if (data.dossier_archived) alert(`KILL confirmed — ${ip} blocked. Dossier archived forever.`);
         refresh();
@@ -2128,7 +2673,7 @@
     }
 
     async function attackKitCrushHot(btn) {
-      if (!confirm("KILL ALL hot monitor targets (heat ≥ 0.7)?\nEach gets permanent block + full dossier archived forever.")) return;
+      if (!confirm("KILL ALL hot monitor targets?\nPinpoint Strike: wire-locked end host + malware campaign + 99% certainty.\nNever CDN edges or insecure browser viewers.\nEach strike gets permanent block + full dossier archived forever.")) return;
       if (btn) btn.disabled = true;
       try {
         const res = await fetch("/api/attack-kit/crush-hot", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
@@ -2157,6 +2702,22 @@
     }
 
     const hostOnlineCheckByIp = {};
+
+    function haOnlineBadgeHtml(check) {
+      if (!check || (check.online !== true && check.online !== false)) {
+        return '<div class="ha-online-badge unchecked"><span class="ha-online-dot"></span>Unchecked — activity not verified</div>';
+      }
+      if (check.online === true) {
+        const probes = [
+          check.live_probe?.ping ? "ping" : null,
+          check.live_probe?.ss_active ? "ss" : null,
+        ].filter(Boolean).join(" · ");
+        const when = (check.checked || "").replace("T", " ").replace("Z", " UTC");
+        return `<div class="ha-online-badge online"><span class="ha-online-dot"></span>Online${probes ? ` · ${esc(probes)}` : ""}${when ? ` · ${esc(when)}` : ""}</div>`;
+      }
+      const when = (check.checked || "").replace("T", " ").replace("Z", " UTC");
+      return `<div class="ha-online-badge offline"><span class="ha-online-dot"></span>Offline${when ? ` · checked ${esc(when)}` : ""}</div>`;
+    }
 
     function haIdentityCheckHtml(p, check) {
       if (!check) return "";
@@ -2211,6 +2772,26 @@
       }
     }
 
+    async function attackKitNokill(ip, vector, severity, btn) {
+      if (!ip || !confirm(`NO-KILL ${ip}?\n\nExempt from autokill, crush-hot, KILL, and RE-KILL.\nTarget stays on the map for monitoring.`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/attack-kit/nokill", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, vector, severity, reason: "operator_nokill" }),
+        });
+        const data = await res.json();
+        if (!data.ok) alert(`NO-KILL failed for ${ip}.`);
+        else alert(data.already ? `${ip} already on NO-KILL list.` : `NO-KILL confirmed — ${ip} exempt from kill actions.`);
+        refresh();
+      } catch {
+        alert("NO-KILL unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
     async function attackKitRekill(ip, vector, severity, btn) {
       const check = hostOnlineCheckByIp[ip];
       if (!check?.rekill_eligible) {
@@ -2241,10 +2822,28 @@
       }
     }
 
+    function haStrikeBadgeHtml(p) {
+      if (!p || p.target_status === "killed" || p.nokill) return "";
+      if (p.consumer_collateral) {
+        return `<div class="ha-strike-badge strike-cold">COLLATERAL SHIELD · not wire endpoint</div>
+          <div class="ha-strike-signals">${esc(p.wire_point?.label || "Consumer/CDN — not the actual hostile host")}</div>`;
+      }
+      const conf = Number(p.pinpoint_confidence ?? p.strike_confidence ?? 0);
+      const pct = Math.round(conf * 100);
+      const wire = p.wire_point || {};
+      const cls = p.strike_certain ? "strike-ready" : p.strike_ready_manual ? "strike-ready" : conf >= 0.35 ? "strike-warm" : "strike-cold";
+      const label = p.strike_certain ? "PINPOINT CERTAIN · 100%" : p.strike_ready ? "STRIKE READY · autokill" : p.strike_ready_manual ? "KILL READY" : wire.confirmed ? "WIRE LOCKED · low malware proof" : "WIRE UNCONFIRMED";
+      const sigs = (p.strike_signals || []).slice(0, 4).map((s) => s.id).join(" · ");
+      const wireLine = wire.label ? `<div class="ha-strike-signals">Wire: ${esc(wire.label)}${wire.lan_device ? " · LAN" : ""}</div>` : "";
+      return `<div class="ha-strike-badge ${cls}">${label} · ${pct}%</div>${wireLine}${sigs ? `<div class="ha-strike-signals">${esc(sigs)}</div>` : ""}`;
+    }
+
     function renderAttackKit(ak) {
       const doc = ak || {};
       $("ak-disabled-count").textContent = doc.disabled_count ?? 0;
       $("ak-field-paths").textContent = doc.field_paths_ready ?? 0;
+      const corpus = doc.trust_strike?.corpus?.dossier_count ?? doc.trust_strike?.corpus?.registry_count ?? 0;
+      if ($("ak-strike-corpus")) $("ak-strike-corpus").textContent = corpus;
     }
 
     $("ak-crush-hot")?.addEventListener("click", (e) => attackKitCrushHot(e.currentTarget));
@@ -2255,8 +2854,13 @@
     let hostMarkersById = {};
     let hostLastPoints = [];
     let hostSelectedId = null;
-    let hostOfflineLayer = null;
+    let lastPanelUpdated = "";
+    let lastHostAttackUpdated = "";
+    let lastGatekeeperSig = "";
+    let lastPanelData = null;
+    let hostSdfBaseLayer = null;
     let hostSatelliteLayer = null;
+    let hostTrashCount = 0;
     const HOST_MAP_BOUNDS = [[-85, -180], [85, 180]];
 
     function normalizeGeo(lat, lon) {
@@ -2275,8 +2879,8 @@
       hostEarthMap.invalidateSize({ animate: false, pan: false });
     }
 
-    const HA_SDF_PIN_SIZE = [75, 112];
-    const HA_SDF_PIN_ANCHOR = [38, 111];
+    const HA_SDF_PIN_SIZE = [134, 201];
+    const HA_SDF_PIN_ANCHOR = [67, 200];
 
     function haMarkerIcon(p) {
       return L.divIcon({
@@ -2321,15 +2925,6 @@
       await Promise.all(jobs);
     }
 
-    let hostSdfGlobeUrl = null;
-    async function getSdfGlobeUrl() {
-      if (hostSdfGlobeUrl) return hostSdfGlobeUrl;
-      const canvas = document.createElement("canvas");
-      await NexusSdf.renderGlobe(canvas, 512, 256);
-      hostSdfGlobeUrl = canvas.toDataURL("image/png");
-      return hostSdfGlobeUrl;
-    }
-
     async function paintLegendSdfSwatches() {
       if (typeof NexusSdf === "undefined") return;
       const colors = [
@@ -2362,11 +2957,12 @@
 
     function haTooltipText(p) {
       const loc = [p.city, p.country].filter(Boolean).join(", ") || p.label || p.ip;
+      const gps = typeof NexusSdf !== "undefined" ? NexusSdf.formatGps(p.lat, p.lon) : "";
       const os = p.target_os ? ` · ${p.target_os}` : "";
       const proc = p.our_process || p.monitor?.process || "";
       const verdict = p.monitor?.verdict || p.verdict || "";
       const heat = (p.heat ?? 0).toFixed(2);
-      return `${p.ip} · ${verdict} · heat ${heat}${os}\n${loc}${proc ? `\nvia ${proc}` : ""}`;
+      return `${p.ip} · ${verdict} · heat ${heat}${os}\n${loc}${gps ? `\n${gps}` : ""}${proc ? `\nvia ${proc}` : ""}`;
     }
 
     function haBleedLine(p) {
@@ -2410,6 +3006,53 @@
       </div>`;
     }
 
+    function updateHostTrashUi() {
+      const trash = $("host-map-trash");
+      const countEl = $("host-trash-count");
+      if (countEl) countEl.textContent = String(hostTrashCount);
+      trash?.classList.toggle("has-items", hostTrashCount > 0);
+    }
+
+    async function trashHostPin(pinId) {
+      if (!pinId) return;
+      const marker = hostMarkersById[pinId];
+      const trash = $("host-map-trash");
+      if (marker && trash) {
+        const markerEl = marker.getElement?.();
+        if (markerEl) {
+          markerEl.style.transition = "transform 0.45s ease-in, opacity 0.45s ease-in";
+          const mRect = markerEl.getBoundingClientRect();
+          const tRect = trash.getBoundingClientRect();
+          const dx = tRect.left + tRect.width / 2 - (mRect.left + mRect.width / 2);
+          const dy = tRect.top + tRect.height / 2 - (mRect.top + mRect.height / 2);
+          markerEl.style.transform = `translate(${dx}px, ${dy}px) scale(0.15)`;
+          markerEl.style.opacity = "0";
+          trash.classList.add("trash-hot");
+          setTimeout(() => trash.classList.remove("trash-hot"), 520);
+        }
+      }
+      try {
+        const res = await fetch("/api/host-attack/trash", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: pinId }),
+        });
+        const data = await res.json();
+        if (!data.ok) return;
+        hostTrashCount += 1;
+        updateHostTrashUi();
+        if (hostMarkerLayer && marker) {
+          hostMarkerLayer.removeLayer(marker);
+          delete hostMarkersById[pinId];
+        }
+        hostLastPoints = hostLastPoints.filter((p) => p.id !== pinId);
+        lastHostAttackUpdated = "";
+        refresh();
+      } catch {
+        /* panel offline */
+      }
+    }
+
     function ensureHostEarthMap() {
       if (hostEarthMap) {
         invalidateHostMapSize();
@@ -2423,63 +3066,46 @@
       hostEarthMap = L.map(el, {
         center: [22, 0],
         zoom: 2,
-        minZoom: 2,
-        maxZoom: 18,
+        minZoom: 0,
+        maxZoom: 22,
         maxBounds: HOST_MAP_BOUNDS,
-        maxBoundsViscosity: 0.9,
-        worldCopyJump: false,
+        maxBoundsViscosity: 0.85,
+        worldCopyJump: true,
         zoomControl: true,
         attributionControl: true,
         fadeAnimation: true,
         zoomAnimation: true,
       });
 
+      if (typeof NexusSdf !== "undefined") {
+        hostSdfBaseLayer = NexusSdf.createGlobeLayer(L);
+        hostSdfBaseLayer.addTo(hostEarthMap);
+        el.classList.add("host-map-sdf-ready");
+      }
+
       hostSatelliteLayer = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { attribution: "Esri, Maxar", maxZoom: 18, updateWhenIdle: false, keepBuffer: 6, crossOrigin: true }
+        { attribution: "Esri, Maxar", maxZoom: 22, updateWhenIdle: false, keepBuffer: 6, crossOrigin: true }
       );
       const street = L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        { attribution: "© OpenStreetMap", maxZoom: 19, crossOrigin: true }
+        { attribution: "© OpenStreetMap", maxZoom: 22, crossOrigin: true }
       );
       const labels = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-        { attribution: "", maxZoom: 18, opacity: 0.88, crossOrigin: true }
+        { attribution: "", maxZoom: 22, opacity: 0.88, crossOrigin: true }
       );
 
-      let hdEnabled = false;
-      const enableHdTiles = () => {
-        if (hdEnabled || !hostEarthMap) return;
-        if (!$("view-host-attack")?.classList.contains("active")) return;
-        hdEnabled = true;
-        hostSatelliteLayer.addTo(hostEarthMap);
-        labels.addTo(hostEarthMap);
-        if (hostOfflineLayer) hostOfflineLayer.setOpacity(0.15);
-        el.classList.add("host-map-hd-ready");
-        invalidateHostMapSize();
-      };
-      hostEarthMap.on("baselayerchange", (e) => {
-        if (e.name === "HD Satellite") enableHdTiles();
-      });
-
-      getSdfGlobeUrl().then((url) => {
-        if (!hostEarthMap) return;
-        hostOfflineLayer = L.imageOverlay(url, [[-90, -180], [90, 180]], {
-          opacity: 1,
-          interactive: false,
-        });
-        hostOfflineLayer.addTo(hostEarthMap);
-        el.classList.add("host-map-sdf-ready");
-        L.control.layers(
-          { "HD Satellite": hostSatelliteLayer, "Street": street, "SDF Globe": hostOfflineLayer },
-          { "Labels": labels },
-          { collapsed: true, position: "topright" }
-        ).addTo(hostEarthMap);
-      });
+      const baseLayers = hostSdfBaseLayer
+        ? { "SDF Wireframe": hostSdfBaseLayer, "HD Satellite": hostSatelliteLayer, "Street": street }
+        : { "HD Satellite": hostSatelliteLayer, "Street": street };
+      if (!hostSdfBaseLayer) hostSatelliteLayer.addTo(hostEarthMap);
+      L.control.layers(baseLayers, { "Labels": labels }, { collapsed: true, position: "topright" }).addTo(hostEarthMap);
 
       hostMarkerLayer = L.layerGroup().addTo(hostEarthMap);
       el.classList.remove("host-map-booting");
       el.classList.add("host-map-ready");
+      updateHostTrashUi();
 
       if (!$("ha-fit-all")?.dataset.bound) {
         $("ha-fit-all")?.addEventListener("click", () => {
@@ -2487,7 +3113,7 @@
           const bounds = L.latLngBounds(
             hostLastPoints.map((p) => normalizeGeo(p.lat, p.lon)).filter(Boolean)
           );
-          if (bounds.isValid()) hostEarthMap.fitBounds(bounds.pad(0.35), { maxZoom: 10, animate: true });
+          if (bounds.isValid()) hostEarthMap.fitBounds(bounds.pad(0.35), { maxZoom: 14, animate: true });
         });
         $("ha-reset-globe")?.addEventListener("click", () => hostEarthMap?.setView([22, 0], 2, { animate: true }));
         $("ha-fit-all").dataset.bound = "1";
@@ -2569,9 +3195,16 @@
       const fpMarkers = Object.entries(fp.markers || {}).slice(0, 6).map(([k, v]) => `${esc(k)}=${esc(String(v).slice(0, 40))}`).join(" · ");
       const onlineCheck = hostOnlineCheckByIp[p.ip] || p.last_online_check || null;
       const rekillEligible = !!(onlineCheck?.rekill_eligible);
+      const nokill = !!p.nokill;
+      const killDisabled = killed || nokill || friendly || !p.killable;
+      const rekillDisabled = !killed || !rekillEligible || nokill;
+      const nokillDisabled = killed || nokill || friendly;
+      const strikeBadge = friendly ? "" : haStrikeBadgeHtml(p);
       el.innerHTML = `
-        <div class="kill-mode-banner">Kill mode — review dossier</div>
+        <div class="kill-mode-banner">Kill mode — pinpoint end wire host · Trust Strike v2</div>
         <h3>${esc(p.ip)} · ${esc(p.vector)} · <span class="sev-${esc(p.severity)}">${esc(p.severity)}</span></h3>
+        ${strikeBadge}
+        ${haOnlineBadgeHtml(onlineCheck)}
         <div class="host-kill-section"><strong>Monitor</strong>
           <div class="host-kill-kv">${esc(mon.verdict || p.verdict || "—")} · harm ${mon.harm_total ?? "—"} · trust ${mon.trust_rank ?? "—"}</div>
           <div class="host-kill-kv">${esc(mon.suggestion_summary || p.detail || "")}</div>
@@ -2600,36 +3233,47 @@
           ${fpMarkers ? `<div class="ha-identity-line">${fpMarkers}</div>` : ""}
           ${p.archived_dossier?.archived ? `<div class="host-kill-kv">Killed ${esc(p.archived_dossier.archived)}</div>` : ""}
         </div>` : ""}
-        ${killed ? haIdentityCheckHtml(p, onlineCheck) : ""}
+        ${onlineCheck ? haIdentityCheckHtml(p, onlineCheck) : ""}
         <div class="host-kill-actions">
-          ${killed
-            ? `<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>
+          ${friendly
+            ? '<div class="ha-friendly-badge">✓ FRIENDLY — immutable guard</div>'
+            : `<button type="button" class="ha-kill-btn" id="ha-kill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}"${killDisabled ? " disabled" : ""}>KILL</button>
+               <button type="button" class="ha-rekill-btn" id="ha-rekill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}"${rekillDisabled ? " disabled" : ""}>RE-KILL</button>
+               <button type="button" class="ha-nokill-btn" id="ha-nokill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}"${nokillDisabled ? " disabled" : ""}>NO-KILL</button>
                <button type="button" class="ha-check-online-btn" id="ha-check-online">Check Online</button>
-               ${rekillEligible ? `<button type="button" class="ha-rekill-btn" id="ha-rekill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">RE-KILL</button>` : ""}`
-            : friendly
-              ? '<div class="ha-friendly-badge">✓ FRIENDLY — immutable guard</div>'
-              : `<button type="button" class="ha-kill-btn" id="ha-kill-selected" data-ha-kill="${esc(p.ip)}" data-ha-vector="${esc(p.vector)}" data-ha-severity="${esc(p.severity)}">KILL TARGET</button>`}
+               ${killed ? '<div class="ha-killed-badge">✓ KILLED · dossier archived forever</div>' : ""}
+               ${nokill ? '<div class="ha-nokill-badge">✓ NO-KILL — exempt from autokill &amp; crush</div>' : ""}`}
           <button type="button" class="ghost" id="ha-clear-selection" style="font-size:0.66rem;padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;cursor:pointer;">Clear</button>
         </div>`;
       $("ha-kill-selected")?.addEventListener("click", (e) => {
         const btn = e.currentTarget;
+        if (btn.disabled) return;
         attackKitKill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn);
       });
       $("ha-check-online")?.addEventListener("click", (e) => attackKitCheckOnline(p.ip, e.currentTarget));
       $("ha-rekill-selected")?.addEventListener("click", (e) => {
         const btn = e.currentTarget;
+        if (btn.disabled) return;
         attackKitRekill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn);
+      });
+      $("ha-nokill-selected")?.addEventListener("click", (e) => {
+        const btn = e.currentTarget;
+        if (btn.disabled) return;
+        attackKitNokill(btn.dataset.haKill, btn.dataset.haVector, btn.dataset.haSeverity, btn);
       });
       $("ha-clear-selection")?.addEventListener("click", () => selectHostTarget(null));
     }
 
     function selectHostTarget(p) {
+      const prevId = hostSelectedId;
+      const closing = !p && prevId;
       hostSelectedId = p?.id || null;
       document.querySelectorAll(".host-point-row").forEach((row) => {
         row.classList.toggle("host-target-selected", row.dataset.haId === hostSelectedId);
       });
       renderHostKillDossier(p);
       if (p) flyToHostPoint(p);
+      else if (closing) trashHostPin(prevId);
     }
 
     function renderHostAttackMap(ha) {
@@ -2666,9 +3310,6 @@
         if (strip) strip.innerHTML = '<div class="empty">Map engine loading…</div>';
         return;
       }
-      cleanupHostSdfMarkers();
-      hostMarkerLayer.clearLayers();
-      hostMarkersById = {};
       const pinPoints = points.filter((p) => p.globe_pin !== false);
       const geoPoints = pinPoints
         .map((p) => {
@@ -2676,7 +3317,15 @@
           return ll ? { ...p, _ll: ll } : null;
         })
         .filter(Boolean);
+      const nextIds = new Set(geoPoints.map((p) => p.id));
+      Object.keys(hostMarkersById).forEach((id) => {
+        if (!nextIds.has(id)) {
+          hostMarkerLayer.removeLayer(hostMarkersById[id]);
+          delete hostMarkersById[id];
+        }
+      });
       geoPoints.forEach((p) => {
+        if (hostMarkersById[p.id]) return;
         const m = L.marker(p._ll, { icon: haMarkerIcon(p), riseOnHover: true })
           .bindTooltip(haTooltipText(p), {
             className: "ha-pin-tooltip",
@@ -2688,8 +3337,10 @@
         m.addTo(hostMarkerLayer);
         hostMarkersById[p.id] = m;
       });
-      hydrateHostSdfMarkers();
-      paintLegendSdfSwatches();
+      if (Object.keys(hostMarkersById).length) {
+        hydrateHostSdfMarkers();
+        paintLegendSdfSwatches();
+      }
       if ($("view-host-attack").classList.contains("active")) {
         setTimeout(() => map.invalidateSize(), 80);
       }
@@ -2700,9 +3351,10 @@
         const std = (p.standards || []).slice(0, 3).join(" · ");
         const loc = [p.city, p.region, p.country].filter(Boolean).join(", ") || p.label || "classified";
         const killed = p.target_status === "killed" || p.disabled_permanent;
-        const friendly = p.killable === false && !killed;
-        const live = p.is_monitor_target && !killed && !friendly;
-        const rowClass = killed ? " target-killed" : friendly ? " target-friendly" : live ? " target-live" : "";
+        const friendly = p.killable === false && !killed && !p.nokill;
+        const nokill = !!p.nokill && !killed;
+        const live = p.is_monitor_target && !killed && !friendly && !nokill;
+        const rowClass = killed ? " target-killed" : friendly ? " target-friendly" : nokill ? " target-nokill" : live ? " target-live" : "";
         const monLine = p.monitor ? `<div class="host-monitor-line">${haMonitorLine(p.monitor)}</div>` : "";
         const bleedLine = haBleedLine(p);
         const bleedRow = bleedLine ? `<div class="host-bleed-line">${bleedLine}</div>` : "";
@@ -2711,7 +3363,7 @@
         return `<div class="host-point-row${rowClass}${sel}" data-ha-id="${esc(p.id)}">
           <span class="host-point-swatch" style="background:${killed ? "#556" : col}"></span>
           <div>
-            <div><strong>${esc(p.ip)}</strong> · ${esc(p.monitor?.verdict || p.verdict || "—")} · heat ${(p.heat ?? 0).toFixed(2)}${live ? " · <em>live</em>" : ""}</div>
+            <div><strong>${esc(p.ip)}</strong> · ${esc(p.monitor?.verdict || p.verdict || "—")} · heat ${(p.heat ?? 0).toFixed(2)} · strike ${Math.round((p.strike_confidence ?? 0) * 100)}%${live ? " · <em>live</em>" : ""}</div>
             <div class="host-point-meta">${esc(p.our_process || p.monitor?.process || "—")} · ${esc(loc)}</div>
           </div>
         </div>`;
@@ -2726,6 +3378,285 @@
       if (selected) renderHostKillDossier(selected);
       else if (!hostSelectedId && stripPoints.length) {
         /* keep dossier panel until user picks a pin */
+      }
+    }
+
+    function usKv(rows) {
+      return `<dl class="us-kv">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v ?? "—")}</dd>`).join("")}</dl>`;
+    }
+
+    function renderUSField(us) {
+      if (!us) return;
+      const motto = $("us-motto");
+      if (motto) {
+        motto.innerHTML = `<strong>${esc(us.title || "US")} · Page ${us.page || 1}</strong> — ${esc(us.subtitle || "This machine — field-gleaned forensic identity")}. ${esc(us.motto || "")}`;
+      }
+      const meta = $("us-meta");
+      const ident = us.identity || {};
+      if (meta) {
+        meta.textContent = `${ident.hostname || "—"} · NEXUS ${ident.nexus_version || "—"} · vigil ${ident.vigil_mode || "—"} · sampled ${us.generated_at || "—"}`;
+      }
+      const obsEl = $("us-observations");
+      const obs = us.observations || [];
+      if (obsEl) {
+        obsEl.innerHTML = `<h3>Field observations</h3><ol>${obs.length ? obs.map((o) => `<li>${esc(o)}</li>`).join("") : "<li>No observations yet — field intel warming up.</li>"}</ol>`;
+      }
+      const mem = ident.memory || {};
+      const disk = ident.disk_root || {};
+      const idEl = $("us-identity");
+      if (idEl) {
+        idEl.innerHTML = usKv([
+          ["Hostname", ident.hostname],
+          ["FQDN", ident.fqdn],
+          ["OS", `${ident.os || "—"} ${ident.os_release || ""}`.trim()],
+          ["Kernel", ident.kernel],
+          ["Arch", ident.arch],
+          ["CPU", ident.cpu_model],
+          ["Cores", ident.cpu_count],
+          ["RAM", mem.MemTotal_kB ? `${Math.round(mem.MemTotal_kB / 1024)} MiB` : "—"],
+          ["Avail", mem.MemAvailable_kB ? `${Math.round(mem.MemAvailable_kB / 1024)} MiB` : "—"],
+          ["Disk /", disk.pct_used != null ? `${disk.used_gb} / ${disk.total_gb} GB (${disk.pct_used}%)` : "—"],
+          ["Uptime", ident.uptime_human],
+          ["Operator", ident.operator_user],
+        ]);
+      }
+      const net = us.network || {};
+      const route = net.default_route || {};
+      const dns = net.dns || {};
+      const ifaces = net.interfaces || [];
+      const netEl = $("us-network");
+      if (netEl) {
+        let ifaceRows = "";
+        if (ifaces.length && ifaces[0].name) {
+          ifaceRows = `<table class="us-table"><thead><tr><th>iface</th><th>state</th><th>addresses</th></tr></thead><tbody>${
+            ifaces.map((i) => {
+              const addrs = (i.addresses || []).map((a) => `${a.local}/${a.prefixlen || ""}`).join(", ") || "—";
+              return `<tr><td>${esc(i.name)}</td><td>${esc(i.state)}</td><td>${esc(addrs)}</td></tr>`;
+            }).join("")
+          }</tbody></table>`;
+        } else if (ifaces.length) {
+          ifaceRows = `<pre style="margin:6px 0 0;font-size:0.64rem;white-space:pre-wrap">${esc(ifaces.map((i) => i.raw || i.line || "").filter(Boolean).join("\n"))}</pre>`;
+        }
+        netEl.innerHTML = usKv([
+          ["Gateway", route.gateway ? `${route.gateway} dev ${route.device || "—"}` : (route.raw || "—")],
+          ["DNS", (dns.nameservers || []).join(", ") || "—"],
+          ["Search", (dns.search_domains || []).join(", ") || "—"],
+          ["DNS hash", dns.dns_hash ? dns.dns_hash.slice(0, 16) : "—"],
+        ]) + ifaceRows;
+      }
+      const sock = us.sockets || {};
+      const sockEl = $("us-sockets");
+      if (sockEl) {
+        const procs = (sock.top_processes || []).map((p) => `${p.process} (${p.socket_count})`).join(", ") || "—";
+        const peers = (sock.top_remote_peers || []).map((p) => `${p.ip} (${p.socket_count})`).join(", ") || "—";
+        sockEl.innerHTML = usKv([
+          ["Established", sock.established],
+          ["Listening", sock.listening],
+          ["SYN-state", sock.syn_state],
+          ["Top processes", procs],
+          ["Top remotes", peers],
+        ]);
+      }
+      const gk = us.gatekeeper || {};
+      const gkEl = $("us-gatekeeper");
+      if (gkEl) {
+        const hist = gk.verdict_histogram || {};
+        const chips = Object.keys(hist).length
+          ? Object.entries(hist).map(([k, v]) => `<span class="us-hist-chip ${esc(k)}">${esc(k)}=${v}</span>`).join("")
+          : "<span class='meta'>No active connections in gatekeeper slice.</span>";
+        gkEl.innerHTML = usKv([
+          ["Strict trust", gk.strict_trust ? "in+out enforced" : "off"],
+          ["Pending trust", gk.pending_trust_count],
+          ["Harm candidates", gk.harm_candidates],
+          ["Updated", gk.updated || "—"],
+        ]) + `<div class="us-histogram">${chips}</div>`;
+      }
+      const trust = us.trust_posture || {};
+      const trustEl = $("us-trust");
+      if (trustEl) {
+        trustEl.innerHTML = usKv([
+          ["Trusted entries", trust.trusted_entries],
+          ["Active blocks", trust.active_blocks],
+          ["Lockdown-first", trust.lockdown_first_complete ? "complete" : "pending"],
+          ["Strict trust setting", trust.strict_trust_setting],
+          ["Paranoia block", trust.paranoia_block === "1" ? "ON" : "OFF"],
+          ["Auto crush", trust.auto_crush === "1" ? "ON" : "OFF"],
+        ]);
+      }
+      const storage = us.field_storage || {};
+      const storEl = $("us-storage");
+      if (storEl) {
+        const arts = storage.artifacts || [];
+        if (arts.length) {
+          storEl.innerHTML = `<table class="us-table"><thead><tr><th>artifact</th><th>size</th></tr></thead><tbody>${
+            arts.map((a) => `<tr><td>${esc((a.path || "").split("/").pop())}</td><td>${a.exists ? esc(String(a.size)) : "missing"}</td></tr>`).join("")
+          }</tbody></table>` + (storage.packet_ring_lines ? `<div class="meta" style="margin-top:6px">packet ring: ${storage.packet_ring_lines} lines</div>` : "");
+        } else {
+          storEl.innerHTML = '<span class="meta">Field storage catalog not in slim snapshot — full publish on /api/status.</span>';
+        }
+      }
+    }
+
+    let humanDossierCache = null;
+    let humanDossierFilter = "";
+    let humanDossierMalware = "";
+
+    function humanMalwareClass(name) {
+      const n = String(name || "").toLowerCase();
+      if (n.includes("cobalt")) return "cobalt";
+      if (n.includes("async")) return "asyncrat";
+      if (n.includes("havoc") || n.includes("havok")) return "havoc";
+      if (n.includes("remcos")) return "remcos";
+      if (n.includes("adaptix")) return "adaptix";
+      return "";
+    }
+
+    function humanMalwareChip(name, count) {
+      const cls = humanMalwareClass(name);
+      return `<span class="human-malware-chip ${cls}">${esc(name)} <strong>${count}</strong></span>`;
+    }
+
+    function humanDossierMatches(row, q, malware) {
+      if (malware && (row.associated_malware || "") !== malware) return false;
+      if (!q) return true;
+      const hay = [
+        row.ip, row.associated_malware, row.asn_org, row.hosting_likelihood,
+        row.last_known_appearance, row.notes, row.geo?.city, row.geo?.country_code,
+      ].join(" ").toLowerCase();
+      return hay.includes(q);
+    }
+
+    function renderHumanDossierCards(hd) {
+      const list = $("human-dossier-list");
+      const q = humanDossierFilter.trim().toLowerCase();
+      const malware = humanDossierMalware;
+      const rows = (hd?.ips || []).filter((r) => humanDossierMatches(r, q, malware));
+      $("human-dossier-visible").textContent = rows.length
+        ? `${rows.length} of ${hd.ip_count || hd.ips.length} shown`
+        : "No matches";
+      if (!rows.length) {
+        list.innerHTML = '<div class="empty">No dossiers match your filter.</div>';
+        return;
+      }
+      list.innerHTML = rows.map((r) => {
+        const geo = r.geo || {};
+        const loc = [geo.city, geo.country_code].filter(Boolean).join(", ") || "—";
+        const coords = geo.lat != null && geo.lon != null ? `${geo.lat}, ${geo.lon}` : "—";
+        const mal = r.associated_malware || "unknown";
+        const malCls = humanMalwareClass(mal);
+        const hostingCls = String(r.hosting_likelihood || "").toLowerCase().startsWith("high") ? "human-hosting-high" : "";
+        return `<div class="human-dossier-card" data-ip="${esc(r.ip)}">
+          <h4>${esc(r.ip)} <span class="human-malware-chip ${malCls}">${esc(mal)}</span></h4>
+          <div class="human-dossier-grid">
+            <div><span>Geo</span> <strong>${esc(loc)}</strong> · ${esc(coords)}</div>
+            <div><span>ASN</span> <strong>${esc(r.asn_org || "—")}</strong></div>
+            <div><span>First seen</span> <strong>${esc(r.first_seen || "—")}</strong></div>
+            <div><span>Last seen</span> <strong>${esc(r.last_seen || "—")}</strong></div>
+            <div><span>Hosting</span> <strong class="${hostingCls}">${esc(r.hosting_likelihood || "—")}</strong></div>
+            <div><span>Last appearance</span> <strong>${esc(r.last_known_appearance || "—")}</strong></div>
+          </div>
+          <div class="human-dossier-notes">${esc(r.notes || "")}</div>
+          <div class="human-dossier-actions">
+            <button type="button" class="hd-kill" data-hd-kill="${esc(r.ip)}" data-hd-malware="${esc(mal)}">KILL</button>
+            <button type="button" class="ghost hd-block" data-hd-block="${esc(r.ip)}">Block forever</button>
+            <button type="button" class="ghost hd-check" data-hd-check="${esc(r.ip)}">Check Online</button>
+          </div>
+        </div>`;
+      }).join("");
+      list.querySelectorAll(".hd-kill").forEach((btn) => {
+        btn.addEventListener("click", () => attackKitKill(btn.dataset.hdKill, "HOSTILE", "high", btn));
+      });
+      list.querySelectorAll(".hd-block").forEach((btn) => {
+        btn.addEventListener("click", () => blockIpForever(btn.dataset.hdBlock, btn));
+      });
+      list.querySelectorAll(".hd-check").forEach((btn) => {
+        btn.addEventListener("click", () => attackKitCheckOnline(btn.dataset.hdCheck, btn));
+      });
+    }
+
+    function renderHumanDossiers(hd) {
+      humanDossierCache = hd || humanDossierCache;
+      const doc = humanDossierCache;
+      const meta = $("human-dossier-meta");
+      const chips = $("human-dossier-chips");
+      const malSelect = $("human-dossier-malware");
+      if (!doc?.ips?.length) {
+        if (meta) meta.textContent = "No human dossiers loaded — paste Grok Heavy kill-order JSON into data/human-dossier-kill-orders.json and redeploy.";
+        if (chips) chips.innerHTML = "";
+        $("human-dossier-list").innerHTML = '<div class="empty">No kill-order dossiers yet.</div>';
+        return;
+      }
+      if (meta) {
+        meta.textContent = `${doc.ip_count || doc.ips.length} IPs · analyst ${doc.analyst || "—"} · generated ${(doc.generated_at || "—").replace("T", " ").replace("Z", " UTC")} · v${doc.dossier_version || "1.0"}`;
+      }
+      if ($("human-dossier-motto") && doc.summary) {
+        $("human-dossier-motto").innerHTML = `<strong>Human Dossier</strong> — ${esc(doc.summary)}`;
+      }
+      const counts = doc.malware_counts || {};
+      const malKeys = Object.keys(counts).sort();
+      if (chips) chips.innerHTML = malKeys.map((m) => humanMalwareChip(m, counts[m])).join("");
+      if (malSelect && !malSelect.dataset.bound) {
+        malSelect.innerHTML = '<option value="">All families</option>' +
+          malKeys.map((m) => `<option value="${esc(m)}">${esc(m)} (${counts[m]})</option>`).join("");
+        malSelect.dataset.bound = "1";
+      }
+      renderHumanDossierCards(doc);
+    }
+
+    function bindHumanDossierFilters() {
+      const filter = $("human-dossier-filter");
+      const mal = $("human-dossier-malware");
+      if (filter && !filter.dataset.bound) {
+        filter.addEventListener("input", () => {
+          humanDossierFilter = filter.value || "";
+          if (humanDossierCache) renderHumanDossierCards(humanDossierCache);
+        });
+        filter.dataset.bound = "1";
+      }
+      if (mal && !mal.dataset.bound) {
+        mal.addEventListener("change", () => {
+          humanDossierMalware = mal.value || "";
+          if (humanDossierCache) renderHumanDossierCards(humanDossierCache);
+        });
+        mal.dataset.bound = "1";
+      }
+    }
+
+    async function blockIpForever(ip, btn) {
+      if (!ip || !confirm(`Block ${ip} forever?\n\nPermanent firewall block in+out.`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/firewall/block", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, direction: "both", duration: "forever", reason: "human_dossier_kill_order" }),
+        });
+        const data = await res.json();
+        alert(data.ok ? `Blocked ${ip} forever.` : `Block failed for ${ip}.`);
+        refresh();
+      } catch {
+        alert("Firewall API unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function attackKitCheckOnline(ip, btn) {
+      if (!ip) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/attack-kit/check-online", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip }),
+        });
+        const data = await res.json();
+        const status = data.online ? "ONLINE" : "OFFLINE";
+        alert(`${ip}: ${status}${data.same_host ? " · same-host validated" : ""}`);
+      } catch {
+        alert("Check Online unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
       }
     }
 
@@ -2812,19 +3743,21 @@
         if (ra !== rb) return ra - rb;
         return (b.suggestion?.trust_meter ?? 0) - (a.suggestion?.trust_meter ?? 0);
       });
-      const recommended = sorted.filter((c) => (c.trust_rank ?? 5) <= 1);
-      const review = sorted.filter((c) => (c.trust_rank ?? 5) === 2 || (c.trust_rank ?? 5) === 3);
+      const recommended = sorted.filter((c) => (c.trust_rank ?? 5) <= 2);
+      const review = sorted.filter((c) => (c.trust_rank ?? 5) === 3);
       const risky = sorted.filter((c) => (c.trust_rank ?? 5) >= 4);
       let html = "";
       if (lockdownFirst) {
-        html += `<div class="lockdown-banner" role="note"><strong>First-run lockdown</strong> — unknown addresses start blocked. Work top-down: trust the <em>Recommended</em> connections first (email, YouTube, browsers). CLI fallback: <code>nexus trust &lt;ip&gt;</code></div>`;
+        html += `<div class="lockdown-banner" role="note"><strong>First-run catalog</strong> — v4.0 packet permission cataloged live flows. Good traffic passes; trust <em>Recommended</em> peers (email, YouTube, browsers) for permanent permit. CLI: <code>nexus trust &lt;ip&gt;</code></div>`;
+      } else if (gk?.packet_permission || gk?.strict_trust) {
+        html += `<div class="lockdown-banner" role="note"><strong>Packet permission v4.0</strong> — DPI knows who and intent on every flow. Friendly, Ephemeral, and Monitor pass at zero cost. Suspicious flows get segment blocks; harm candidates get IP blocks.</div>`;
       }
       if (recommended.length) {
-        html += `<div class="conn-section-head rec">Recommended to allow first (${recommended.length})</div>`;
+        html += `<div class="conn-section-head rec">Permitted — zero-cost fast path (${recommended.length})</div>`;
         html += recommended.map((c) => renderConnectionCard(c, trusted, blocked)).join("");
       }
       if (review.length) {
-        html += `<div class="conn-section-head review">Review when you have a minute (${review.length})</div>`;
+        html += `<div class="conn-section-head review">Segment held — suspicious flow only (${review.length})</div>`;
         html += review.map((c) => renderConnectionCard(c, trusted, blocked)).join("");
       }
       if (risky.length) {
@@ -2861,7 +3794,7 @@
           <div class="threat-detail">${esc(t.detail)}</div>
           <div class="threat-advice">
             <strong>What it means:</strong> ${esc(help.meaning)}<br>
-            <strong>Likely friendly or not?</strong> ${esc(help.likely)}<br>
+            <strong>Field assessment:</strong> ${esc(help.likely || help.assessment || "—")}<br>
             <strong>Suggested action:</strong> ${esc(help.action)}
           </div>
         </div>`;
@@ -2911,10 +3844,152 @@
       }
     }
 
+    function gatekeeperSig(gk) {
+      const rows = gk?.connections || [];
+      return `${rows.length}:${rows[0]?.remote_ip || ""}:${rows[0]?.verdict || ""}:${gk?.harm_candidates ?? 0}`;
+    }
+
+    function fieldLiveCount(field) {
+      const gk = field?.gatekeeper || {};
+      const n = gk.connections?.length || field?.internet?.connections?.length || 0;
+      const chip = $("field-live-chip");
+      const el = $("field-live");
+      if (el) el.textContent = n ? String(n) : "—";
+      if (chip) chip.classList.toggle("field-warm", !n);
+    }
+
+    function fieldPaintInstant(field) {
+      if (!field) return;
+      $("mode").textContent = field.vigil_mode || "calm";
+      $("signal").textContent = field.truth_signal ?? "0";
+      $("updated").textContent = field.updated || "—";
+      $("egress").textContent = field.internet?.egress_count ?? 0;
+      $("listeners").textContent = field.internet?.listener_count ?? 0;
+      $("dns").textContent = (field.internet?.dns_hash || "—").slice(0, 12);
+      $("corr").textContent = field.correlation_score ?? 0;
+      $("firewall").textContent = field.firewall ?? "—";
+      $("fw-blocks").textContent = field.firewall_blocks ?? 0;
+      fieldLiveCount(field);
+      if (field.vector_intel) renderIntelBanner(field.vector_intel);
+      if (field.attack_kit) renderAttackKit(field.attack_kit);
+      if (field.trusted) renderTrusted(field.trusted);
+      if (field.threats) renderThreats(field.threats);
+      if (field.vectors) renderVectors(field.vectors);
+      const gk = field.gatekeeper || {};
+      if (!gk.connections?.length && field.internet?.connections?.length) {
+        gk._fallback = field.internet.connections;
+      }
+      if (gk.connections?.length || gk._fallback?.length) {
+        renderGatekeeperBanner(gk);
+        renderConnections(gk, field.trusted, field.blocked, field.lockdown_first);
+        lastGatekeeperSig = gatekeeperSig(gk);
+      }
+      if (field.host_attacks) {
+        renderHostAttackMap(field.host_attacks);
+        lastHostAttackUpdated = field.host_attacks.updated || "";
+      }
+      if (field.us_field) renderUSField(field.us_field);
+    }
+
+    function onLeafletReady(fn) {
+      if (typeof L !== "undefined") {
+        fn();
+        return;
+      }
+      const tag = document.getElementById("leaflet-js");
+      if (tag) {
+        tag.addEventListener("load", fn, { once: true });
+        return;
+      }
+      setTimeout(() => onLeafletReady(fn), 40);
+    }
+
+    let nexusUpdateState = null;
+
+    async function checkNexusUpdate(force = false) {
+      const btn = $("nexus-update-btn");
+      const detail = $("nexus-update-detail");
+      if (!btn || !detail) return;
+      if (!force && nexusUpdateState && !nexusUpdateState.update_available) {
+        btn.textContent = `v${nexusUpdateState.current}`;
+        detail.textContent = `Current · checked ${(nexusUpdateState.checked_at || "").replace("T", " ").replace("Z", " UTC")}`;
+        return;
+      }
+      if (force) detail.textContent = "Checking GitHub…";
+      try {
+        const res = await fetch(`/api/update/check?force=${force ? 1 : 0}`, { cache: "no-store" });
+        const data = await res.json();
+        nexusUpdateState = data;
+        if (!data.ok) {
+          btn.classList.remove("update-ready");
+          detail.classList.remove("update-ready");
+          btn.textContent = data.current ? `v${data.current}` : "v?";
+          detail.textContent = data.error || "Update check failed";
+          return;
+        }
+        if (data.update_available) {
+          btn.classList.add("update-ready");
+          detail.classList.add("update-ready");
+          btn.textContent = "UPDATE NOW";
+          detail.textContent = `${data.previous} → ${data.latest}`;
+        } else {
+          btn.classList.remove("update-ready");
+          detail.classList.remove("update-ready");
+          btn.textContent = `v${data.current}`;
+          detail.textContent = `Current · GitHub ${data.latest || data.current}`;
+        }
+      } catch {
+        btn.classList.remove("update-ready");
+        detail.classList.remove("update-ready");
+        detail.textContent = "GitHub unreachable";
+      }
+    }
+
+    async function applyNexusUpdate() {
+      if (!nexusUpdateState?.update_available) {
+        await checkNexusUpdate(true);
+        return;
+      }
+      const btn = $("nexus-update-btn");
+      const detail = $("nexus-update-detail");
+      if (btn) btn.disabled = true;
+      detail.textContent = `Updating ${nexusUpdateState.previous} → ${nexusUpdateState.latest}…`;
+      try {
+        const res = await fetch("/api/update/apply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        });
+        const data = await res.json();
+        if (data.applied) {
+          detail.textContent = `Updated ${data.previous} → ${data.latest}. Reloading…`;
+          setTimeout(() => location.reload(), 1800);
+        } else if (data.release_url) {
+          window.open(data.release_url, "_blank", "noopener");
+          detail.textContent = `Release opened · ${data.previous} → ${data.latest}`;
+        } else if (data.already_current) {
+          await checkNexusUpdate(true);
+        } else {
+          detail.textContent = "Update not applied — open GitHub release";
+        }
+      } catch {
+        detail.textContent = "Update apply failed";
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    $("nexus-update-btn")?.addEventListener("click", () => {
+      if (nexusUpdateState?.update_available) applyNexusUpdate();
+      else checkNexusUpdate(true);
+    });
+
     async function refresh() {
       try {
         const res = await fetch("/api/status", { cache: "no-store" });
         const data = await res.json();
+        const panelChanged = data.updated !== lastPanelUpdated;
+        if (panelChanged) lastPanelUpdated = data.updated || "";
         $("mode").textContent = data.vigil_mode || "calm";
         $("signal").textContent = data.truth_signal ?? "0";
         $("updated").textContent = data.updated || "—";
@@ -2928,30 +4003,80 @@
         if (!gk.connections?.length && data.internet?.connections?.length) {
           gk._fallback = data.internet.connections;
         }
-        renderIntelBanner(data.vector_intel);
-        renderHostAttackMap(data.host_attacks);
-        renderAttackKit(data.attack_kit);
-        renderDossiers(data.angel_dossiers);
-        renderResearch(data.angel_research);
-        renderGatekeeperBanner(gk);
-        renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
-        renderTrusted(data.trusted);
-        renderThreats(data.threats);
-        renderVectors(data.vectors);
-        renderSettings(data.settings);
-        renderGuardianFeed(data.adblock_guardian, data.settings);
-        renderSanitize(data.autosanitize);
-        renderParanoia(data.paranoia);
-        renderShutdown(data.shutdown);
+        fieldLiveCount(data);
+        const gkSig = gatekeeperSig(gk);
+        if (gkSig !== lastGatekeeperSig) {
+          lastGatekeeperSig = gkSig;
+          renderGatekeeperBanner(gk);
+          renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
+        }
+        if (panelChanged) {
+          renderIntelBanner(data.vector_intel);
+          renderAttackKit(data.attack_kit);
+          renderTrusted(data.trusted);
+          renderThreats(data.threats);
+          renderVectors(data.vectors);
+          renderSettings(data.settings);
+          renderGuardianFeed(data.adblock_guardian, data.settings);
+          renderSanitize(data.autosanitize);
+          renderParanoia(data.paranoia);
+          renderShutdown(data.shutdown);
+        }
+        const haUpdated = data.host_attacks?.updated || "";
+        if (haUpdated !== lastHostAttackUpdated) {
+          lastHostAttackUpdated = haUpdated;
+          renderHostAttackMap(data.host_attacks);
+        }
+        if ($("view-dossier")?.classList.contains("active")) renderDossiers(data.angel_dossiers);
+        if ($("view-us")?.classList.contains("active")) renderUSField(data.us_field);
+        if ($("view-human-dossier")?.classList.contains("active")) renderHumanDossiers(data.human_dossier);
+        if ($("view-research")?.classList.contains("active")) renderResearch(data.angel_research);
+        if ($("view-inspect")?.classList.contains("active")) {
+          renderPacketField(data.packet_field);
+          renderInspect(data.packet_field);
+        }
+        if ($("view-library")?.classList.contains("active")) renderLibraryShelf(data.h7_library);
+        if ($("view-inspect")?.classList.contains("active")) {
+          renderPacketField(data.packet_field);
+          renderInspect(data.packet_field);
+        }
+        lastPanelData = data;
+        if (window.NexusField && data.updated) NexusField.persist(data);
       } catch {
-        $("connections").innerHTML = '<div class="empty">Can\'t reach NEXUS — try running <strong>./nexus.sh</strong> or click the desktop icon.</div>';
+        const conns = $("connections");
+        const stale = conns?.querySelector(".conn-row, .conn-row.trusted");
+        if (!stale && lastPanelData?.gatekeeper?.connections?.length) {
+          fieldPaintInstant(lastPanelData);
+        } else if (!stale) {
+          conns.innerHTML = '<div class="empty">Can\'t reach NEXUS — try running <strong>./nexus.sh</strong> or click the desktop icon.</div>';
+        }
       }
     }
 
+    const fieldWarm = window.NEXUS_FIELD || (window.NexusField && NexusField.load());
+    if (fieldWarm) {
+      window.NEXUS_FIELD = fieldWarm;
+      fieldPaintInstant(fieldWarm);
+      lastPanelData = fieldWarm;
+      lastPanelUpdated = fieldWarm.updated || "";
+    }
+    if (window.NexusField) {
+      NexusField.fetchField().then((d) => {
+        if (!d) return;
+        NexusField.persist(d);
+        if (!lastPanelUpdated) fieldPaintInstant(d);
+      });
+    }
+    bindHumanDossierFilters();
     initTips();
-    warmHostEarthMap();
+    onLeafletReady(() => {
+      warmHostEarthMap();
+      if (lastPanelData?.host_attacks) renderHostAttackMap(lastPanelData.host_attacks);
+    });
+    checkNexusUpdate(false);
+    setInterval(() => checkNexusUpdate(false), 3600000);
     refresh();
-    setInterval(refresh, 3000);
+    setInterval(refresh, 2000);
   </script>
   <footer class="app-footer" role="contentinfo">
     <strong>NEXUS-Shield</strong> — <a href="https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a> (free to use with attribution).
