@@ -376,6 +376,9 @@ test_friendly_guard_module() {
     python3 "${ROOT}/lib/friendly-guard.py" check 127.0.0.1 | grep -q '"refuse": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/friendly-guard.py" check 185.199.108.153 | grep -q '"refuse": false'
+  grep -q '|| true' "${ROOT}/lib/friendly-guard.sh"
+  source "${ROOT}/lib/friendly-guard.sh"
+  nexus_friendly_guard_refuse_kill "147.93.191.75" && exit 1 || true
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 - <<'PY'
 import importlib.util
