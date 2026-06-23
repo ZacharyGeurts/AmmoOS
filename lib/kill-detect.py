@@ -88,6 +88,8 @@ def scan(doc: dict[str, Any] | None = None) -> dict[str, Any]:
                 "verdict": row.get("verdict"),
                 "kill_reason": row.get("kill_reason"),
                 "kill_tier": row.get("kill_tier") or "block",
+                "hell_chosen": row.get("hell_chosen"),
+                "soul_side": row.get("soul_side"),
                 "harm_total": row.get("harm_total"),
             }
         )
@@ -136,9 +138,11 @@ def execute(doc: dict[str, Any] | None = None, dry_run: bool = False) -> dict[st
             },
         )
         if refuse:
-            skipped.append({"ip": ip, "reason": reason})
+            skipped.append({"ip": ip, "reason": reason, "heaven_protected": True})
             continue
         tier = t.get("kill_tier") or "block"
+        if t.get("hell_chosen"):
+            tier = "strike"
         entry: dict[str, Any] = {"ip": ip, "tier": tier, "kill_reason": t.get("kill_reason"), "ok": False}
         if dry_run:
             entry["ok"] = True
@@ -165,8 +169,8 @@ def execute(doc: dict[str, Any] | None = None, dry_run: bool = False) -> dict[st
                     (
                         f"source '{INSTALL}/lib/nexus-common.sh'; "
                         f"source '{block_script}'; "
-                        f"nexus_firewall_block_ip out '{ip}' 86400 'kill_detect:{t.get('kill_reason', '')}' || true; "
-                        f"nexus_firewall_block_ip in '{ip}' 86400 'kill_detect:{t.get('kill_reason', '')}' || true"
+                        f"nexus_firewall_block_ip_forever out '{ip}' 'kill_detect:{t.get('kill_reason', '')}' || true; "
+                        f"nexus_firewall_block_ip_forever in '{ip}' 'kill_detect:{t.get('kill_reason', '')}' || true"
                     ),
                 ],
                 env={**os.environ, "NEXUS_STATE_DIR": str(STATE), "NEXUS_INSTALL_ROOT": str(INSTALL)},

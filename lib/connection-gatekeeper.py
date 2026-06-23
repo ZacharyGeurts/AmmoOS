@@ -639,6 +639,23 @@ def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str
     return "MONITOR", "Routine connection — no harm signal", False
 
 
+def _soul_side(
+    verdict: str,
+    trust_rank: int,
+    scores: dict[str, int],
+    kill_ok: bool,
+) -> tuple[str, bool]:
+    if int(scores.get("operator_auth", 0)) >= 10:
+        return "heaven", False
+    if trust_rank <= MIN_ACCEPT_TRUST_RANK and verdict in ("USER_OK", "EPHEMERAL", "MONITOR"):
+        return "heaven", False
+    if kill_ok or verdict == "HARM_CANDIDATE":
+        return "hell", True
+    if verdict == "SUSPICIOUS" and int(scores.get("process_trust", 0)) <= 3 and kill_ok:
+        return "hell", True
+    return "limbo", False
+
+
 def _kill_signal(
     verdict: str,
     block_rec: bool,
@@ -652,8 +669,7 @@ def _kill_signal(
     """Return kill_eligible, kill_reason, kill_tier (block|eradicate|strike)."""
     vecs = [v for v in threats.get(rip, []) if v in KILL_VECTORS]
     if vecs:
-        tier = "strike" if verdict == "HARM_CANDIDATE" else "eradicate"
-        return True, f"threat_vector:{vecs[0]}", tier
+        return True, f"threat_vector:{vecs[0]}", "strike"
     if rport in HARM_PORTS and int(scores.get("process_trust", 0)) <= 3:
         tier = "eradicate" if proc not in BROWSER_PROCS else "block"
         return True, f"shell_port:{rport}", tier
@@ -664,7 +680,7 @@ def _kill_signal(
             return True, "stream_theft_daemon", "eradicate"
         if int(scores.get("beacon_pattern", 0)) >= 7 and proc not in BROWSER_PROCS:
             return True, "persistent_beacon", "eradicate"
-        return True, "harm_candidate", "block"
+        return True, "harm_candidate", "strike"
     if verdict == "SUSPICIOUS" and rport in HARM_PORTS:
         return True, f"suspicious_shell:{rport}", "block"
     seen = int(peer_history.get("seen_count", 0))
@@ -817,6 +833,9 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         kill_ok, kill_reason, kill_tier = _kill_signal(
             verdict, block_rec, scores, rip, rport, proc, threats, peer_hist,
         )
+        soul_side, hell_chosen = _soul_side(verdict, trust_rank, scores, kill_ok)
+        if hell_chosen and kill_tier == "block":
+            kill_tier = "strike"
         results.append({
             "remote_ip": rip,
             "remote_port": rport,
@@ -845,6 +864,8 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "kill_eligible": kill_ok,
             "kill_reason": kill_reason,
             "kill_tier": kill_tier,
+            "soul_side": soul_side,
+            "hell_chosen": hell_chosen,
             **honor_meta,
         })
 
@@ -872,6 +893,8 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
     )
     harm_candidates = [r for r in results if r["block_recommended"]]
     kill_targets = [r for r in results if r.get("kill_eligible")]
+    hell_chosen = [r for r in results if r.get("hell_chosen")]
+    heaven_flows = [r for r in results if r.get("soul_side") == "heaven"]
     packet_permission = (
         os.environ.get("NEXUS_PACKET_PERMISSION", "") == "1"
         or os.environ.get("NEXUS_GATEKEEPER_STRICT_TRUST", "1") == "1"
@@ -896,6 +919,12 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         "connection_count": len(results),
         "harm_candidates": len(harm_candidates),
         "kill_targets": len(kill_targets),
+        "hell_chosen_count": len(hell_chosen),
+        "heaven_flow_count": len(heaven_flows),
+        "heaven_hell_motto": (
+            "We know Heaven from Hell. To those who chose Hell, we also choose it for them. "
+            "No mercy. No friendly fire. God Bless."
+        ),
         "pending_trust_count": len(pending_trust),
         "permitted_flow_count": len(permitted),
         "segment_block_count": len(segment_blocks),

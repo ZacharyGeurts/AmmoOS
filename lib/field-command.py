@@ -66,9 +66,28 @@ def build_command(panel: dict[str, Any] | None = None) -> dict[str, Any]:
     good_pct = round(100 * len(good) / total)
     bad_pct = round(100 * len(bad) / total)
 
+    heaven = [c for c in conns if str(c.get("soul_side") or "") == "heaven"]
+    hell = [c for c in conns if str(c.get("soul_side") or "") == "hell"]
+    hell_chosen = [c for c in conns if c.get("hell_chosen")]
+
     return {
-        "motto": "Good Guy vs Bad Guy — packet permission knows intent on every flow.",
-        "tagline": "Good passes at zero nft cost. Bad gets segment hold or IP block. Know everything from one command deck.",
+        "motto": (
+            "We know Heaven from Hell. To those who chose Hell, we also choose it for them. "
+            "No mercy. No friendly fire. God Bless."
+        ),
+        "tagline": (
+            "Heaven passes at zero nft cost — no friendly fire. "
+            "Hell gets ripped: forever block, eradicate, strike."
+        ),
+        "heaven_hell": {
+            "heaven_count": len(heaven),
+            "hell_count": len(hell),
+            "hell_chosen_count": len(hell_chosen),
+            "heaven_flows": [_slim_flow(c) for c in heaven[:10]],
+            "hell_flows": [_slim_flow(c) for c in hell[:10]],
+            "no_mercy": True,
+            "no_friendly_fire": True,
+        },
         "updated": panel.get("updated") or _now(),
         "version": panel.get("version"),
         "vigil_mode": panel.get("vigil_mode"),

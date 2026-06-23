@@ -288,6 +288,7 @@ nexus_packet_loop() {
   nexus_packet_init
   nexus_threat_vector_init
   [[ -f "${NEXUS_INSTALL_ROOT}/lib/kill-detect.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/kill-detect.sh"
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/heaven-hell.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/heaven-hell.sh"
   while true; do
     nexus_cpu_budget_ok || { sleep 15; continue; }
     nexus_packet_evaluate

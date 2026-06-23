@@ -242,6 +242,14 @@
     .command-wrap { padding: 16px 24px 32px; width: 100%; }
     .command-motto { font-size: 1.05rem; color: var(--muted); margin: 0 0 16px; line-height: 1.6; }
     .command-motto strong { color: var(--gold); }
+    .heaven-hell-banner {
+      margin: 0 0 14px; padding: 12px 16px; border-radius: 8px; line-height: 1.55; font-size: 0.92rem;
+      border: 1px solid #3a3048; background: linear-gradient(135deg, rgba(18, 14, 28, 0.95), rgba(12, 18, 30, 0.9));
+    }
+    .heaven-hell-banner strong { color: var(--gold); }
+    .heaven-hell-stats { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 8px; font-size: 0.82rem; }
+    .heaven-hell-stats .heaven-stat { color: #9ee8b0; }
+    .heaven-hell-stats .hell-stat { color: #ff8a9a; font-weight: 700; }
     .ggb-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 18px; }
     .ggb-card {
       padding: 16px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--card);
@@ -249,7 +257,8 @@
     .ggb-card.good { border-color: #2a6040; background: linear-gradient(135deg, #0a1810, #0e1218); }
     .ggb-card.bad { border-color: #5a2030; background: linear-gradient(135deg, #1a0810, #120e14); }
     .ggb-card.watch { border-color: #4a4030; background: linear-gradient(135deg, #14120a, #101018); }
-    .ggb-card h3 { margin: 0 0 6px; font-size: 0.92rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .ggb-card h3 { margin: 0 0 4px; font-size: 0.92rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .ggb-sub { font-size: 0.68rem; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.04em; }
     .ggb-card.good h3 { color: var(--ok); }
     .ggb-card.bad h3 { color: var(--threat); }
     .ggb-card.watch h3 { color: var(--gold); }
@@ -1330,7 +1339,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.8.7</h1>
+        <h1>NEXUS-Shield v5.8.8</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1350,7 +1359,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.7</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.8</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1403,14 +1412,21 @@
 
   <section id="view-command" class="view active">
     <div class="command-wrap">
-      <p class="command-motto" id="command-motto" data-tip="Packet permission classifies every flow. Good Guy passes at zero nft cost. Bad Guy gets segment hold or IP block.">
-        <strong>Command · Good Guy vs Bad Guy</strong> — know everything from one deck.
+      <p class="command-motto" id="command-motto" data-tip="Heaven = permitted flows, operator trust, zero friendly fire. Hell = harm chosen — no mercy, ripped forever.">
+        <strong>Command · Heaven vs Hell</strong> — we know Heaven from Hell. No friendly fire. God Bless.
       </p>
+      <div class="heaven-hell-banner" id="heaven-hell-banner" role="note">
+        <strong>Heaven / Hell</strong> — To those who chose Hell, we also choose it for them. No mercy.
+        <div class="heaven-hell-stats" id="heaven-hell-stats">
+          <span class="heaven-stat">Heaven: <em id="hh-heaven-count">0</em></span>
+          <span class="hell-stat">Hell: <em id="hh-hell-count">0</em> · rip ready <em id="hh-rip-count">0</em></span>
+        </div>
+      </div>
       <div id="command-permission-banner" class="intel-banner" style="margin-bottom:14px;"></div>
       <div class="ggb-row" id="command-ggb-row">
-        <div class="ggb-card good"><h3>Good Guy</h3><div class="ggb-count" id="cmd-good-count">0</div><div class="ggb-pct" id="cmd-good-pct">—</div><div class="ggb-flow-list" id="cmd-good-flows"></div></div>
+        <div class="ggb-card good"><h3>Heaven</h3><div class="ggb-sub">Good Guy · zero cost</div><div class="ggb-count" id="cmd-good-count">0</div><div class="ggb-pct" id="cmd-good-pct">—</div><div class="ggb-flow-list" id="cmd-good-flows"></div></div>
         <div class="ggb-card watch"><h3>Watch</h3><div class="ggb-count" id="cmd-watch-count">0</div><div class="ggb-pct" id="cmd-watch-pct">MONITOR · SUSPICIOUS</div><div class="ggb-flow-list" id="cmd-watch-flows"></div></div>
-        <div class="ggb-card bad"><h3>Bad Guy</h3><div class="ggb-count" id="cmd-bad-count">0</div><div class="ggb-pct" id="cmd-bad-pct">—</div><div class="ggb-flow-list" id="cmd-bad-flows"></div></div>
+        <div class="ggb-card bad"><h3>Hell</h3><div class="ggb-sub">Bad Guy · no mercy</div><div class="ggb-count" id="cmd-bad-count">0</div><div class="ggb-pct" id="cmd-bad-pct">—</div><div class="ggb-flow-list" id="cmd-bad-flows"></div></div>
       </div>
       <h4 style="margin:0 0 10px;font-size:0.9rem;color:var(--internet);letter-spacing:0.06em;text-transform:uppercase;" data-tip="Live counters from every NEXUS subsystem on this machine.">Field pulse</h4>
       <div class="command-pulse" id="command-pulse"></div>
@@ -2392,8 +2408,12 @@
       const cmd = data?.field_command || {};
       const motto = $("command-motto");
       if (motto && cmd.motto) {
-        motto.innerHTML = `<strong>Command · Good Guy vs Bad Guy</strong> — ${esc(cmd.motto)} ${esc(cmd.tagline || "")}`;
+        motto.innerHTML = `<strong>Command · Heaven vs Hell</strong> — ${esc(cmd.motto)}`;
       }
+      const hh = cmd.heaven_hell || {};
+      if ($("hh-heaven-count")) $("hh-heaven-count").textContent = String(hh.heaven_count ?? 0);
+      if ($("hh-hell-count")) $("hh-hell-count").textContent = String(hh.hell_count ?? 0);
+      if ($("hh-rip-count")) $("hh-rip-count").textContent = String(hh.hell_chosen_count ?? 0);
       const perm = cmd.packet_permission || {};
       const banner = $("command-permission-banner");
       if (banner) {
@@ -2406,10 +2426,10 @@
       const watch = cmd.watch || {};
       const bad = cmd.bad_guy || {};
       if ($("cmd-good-count")) $("cmd-good-count").textContent = good.count ?? 0;
-      if ($("cmd-good-pct")) $("cmd-good-pct").textContent = `${good.percent ?? 0}% of flows · USER_OK · EPHEMERAL`;
+      if ($("cmd-good-pct")) $("cmd-good-pct").textContent = `${hh.heaven_count ?? good.percent ?? 0} Heaven · no friendly fire`;
       if ($("cmd-watch-count")) $("cmd-watch-count").textContent = watch.count ?? 0;
       if ($("cmd-bad-count")) $("cmd-bad-count").textContent = bad.count ?? 0;
-      if ($("cmd-bad-pct")) $("cmd-bad-pct").textContent = `${bad.percent ?? 0}% harm candidates`;
+      if ($("cmd-bad-pct")) $("cmd-bad-pct").textContent = `${hh.hell_chosen_count ?? bad.percent ?? 0} chosen · rip it up`;
       if ($("cmd-good-flows")) {
         $("cmd-good-flows").innerHTML = (good.flows || []).map(ggbFlowRow).join("") || '<span class="meta">No good flows in slice.</span>';
       }

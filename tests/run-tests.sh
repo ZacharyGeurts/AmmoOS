@@ -274,6 +274,18 @@ test_self_access_script() {
   grep -q 'nexus_firewall_ensure_self_access' "${ROOT}/lib/nexus-daemon.sh"
 }
 
+test_heaven_hell_module() {
+  [[ -f "${ROOT}/lib/heaven-hell.py" ]]
+  [[ -f "${ROOT}/lib/heaven-hell.sh" ]]
+  grep -q 'soul_side' "${ROOT}/lib/connection-gatekeeper.py"
+  grep -q 'hell_chosen' "${ROOT}/lib/connection-gatekeeper.py"
+  grep -q 'heaven_hell' "${ROOT}/lib/field-command.py"
+  grep -q 'heaven-hell-banner' "${ROOT}/panel/threat-panel.html"
+  grep -q 'nexus_heaven_hell_rip' "${ROOT}/lib/heaven-hell.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/heaven-hell.py" json | grep -q 'no_friendly_fire'
+}
+
 test_kill_detect_module() {
   [[ -f "${ROOT}/lib/kill-detect.py" ]]
   [[ -f "${ROOT}/lib/kill-detect.sh" ]]
@@ -814,7 +826,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.8.7' "$panel"
+  grep -q 'v5.8.8' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -823,7 +835,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.8.7' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.8.8' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
@@ -1112,6 +1124,7 @@ run_test "angel dossier module" test_angel_dossier_module
 run_test "human dossier module" test_human_dossier_module
 run_test "US field intel module" test_us_field_module
 run_test "kill detect module" test_kill_detect_module
+run_test "heaven hell module" test_heaven_hell_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
 run_test "fair ad guardian module" test_fair_ad_guardian_module
 run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
