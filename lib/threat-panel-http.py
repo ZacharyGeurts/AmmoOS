@@ -563,17 +563,24 @@ class Handler(BaseHTTPRequestHandler):
             git_dir = install_sh.parent if install_sh.is_file() else None
             applied = False
             detail = ""
+            install_inner = f"bash '{install_sh}'"
+            if os.geteuid() != 0:
+                install_inner = f"sudo -n bash '{install_sh}'"
             if git_dir and (git_dir / ".git").is_dir() and install_sh.is_file():
                 inner = (
                     f"cd '{git_dir}' && git fetch --tags origin 2>/dev/null && "
                     f"git pull --ff-only origin main 2>/dev/null && "
-                    f"sudo bash '{install_sh}'"
+                    f"{install_inner}"
                 )
                 applied = _run_nexus_bash(inner, timeout=300)
                 detail = "git_pull_stealth_install"
+            elif install_sh.is_file():
+                applied = _run_nexus_bash(install_inner, timeout=300)
+                detail = "stealth_install_only"
             payload = {
                 "ok": True,
                 "applied": applied,
+                "reload_panel": applied,
                 "detail": detail,
                 "release_url": upd.get("release_url"),
                 "previous": upd.get("previous"),

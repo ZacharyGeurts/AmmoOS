@@ -41,6 +41,7 @@
     * { box-sizing: border-box; }
     body {
       margin: 0; font-family: "Segoe UI", system-ui, sans-serif; color: var(--text); min-height: 100vh;
+      font-size: 17px; line-height: 1.55;
       background: radial-gradient(1200px 600px at 10% -10%, #152040 0%, transparent 55%),
         radial-gradient(900px 500px at 90% 0%, #2a1030 0%, transparent 50%), var(--bg);
     }
@@ -73,7 +74,7 @@
     .honor-stars { display: inline-flex; gap: 1px; letter-spacing: 0; font-size: 0.72rem; }
     .honor-stars .star-gold { color: var(--gold); text-shadow: 0 0 6px rgba(212, 175, 55, 0.45); }
     .honor-stars .star-dim { color: #4a5060; }
-    .honor-wrap { padding: 16px 18px; }
+
     .honor-motto { font-size: 0.82rem; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
     .honor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .honor-card {
@@ -108,7 +109,8 @@
     }
     .conn-honor-line { font-size: 0.62rem; color: var(--gold); margin-top: 2px; }
     @media (max-width: 900px) { .honor-grid { grid-template-columns: 1fr; } }
-    .field-rf-wrap { padding: 16px 18px; max-width: 1280px; }
+    .field-rf-wrap { padding: 16px 24px; width: 100%; max-width: none; }
+    .honor-wrap { padding: 16px 24px; width: 100%; max-width: none; }
     .field-rf-motto { font-size: 0.82rem; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
     .rf-burst-chip {
       display: inline-flex; align-items: center; gap: 4px; margin: 0 6px 6px 0;
@@ -238,7 +240,7 @@
     }
     .dir-badge.from_us { color: var(--internet); border: 1px solid #2a4060; background: rgba(61, 140, 255, 0.08); }
     .dir-badge.at_us { color: var(--threat); border: 1px solid #4a2030; background: rgba(255, 90, 110, 0.1); }
-    .angels-wrap { padding: 14px 18px 24px; max-width: 1200px; }
+    .angels-wrap { padding: 16px 24px 28px; width: 100%; max-width: none; }
     .angels-motto {
       margin: 0 0 16px; padding: 12px 16px; border-radius: 10px;
       background: linear-gradient(135deg, #0e1a2e 0%, #12182a 50%, #1a1020 100%);
@@ -279,41 +281,54 @@
     .human-malware-chip.asyncrat { border-color: #5a4020; color: #ffc878; }
     .human-malware-chip.havoc { border-color: #4a2060; color: #d8b0ff; }
     .human-malware-chip.remcos { border-color: #503040; color: #ffb0d0; }
-    .us-wrap { padding: 14px 18px 28px; max-width: 1280px; }
+    .us-wrap { padding: 16px 24px 32px; width: 100%; max-width: none; }
     .us-motto {
-      margin: 0 0 14px; padding: 12px 16px; border-radius: 10px;
+      margin: 0 0 16px; padding: 16px 20px; border-radius: 10px;
       background: linear-gradient(135deg, #0a1424 0%, #101828 55%, #14102a 100%);
-      border: 1px solid #2a4868; font-size: 0.8rem; line-height: 1.55; color: #c0d4f0;
+      border: 1px solid #2a4868; font-size: 1.05rem; line-height: 1.65; color: #d0e4ff;
     }
-    .us-motto strong { color: #7ec8ff; letter-spacing: 0.04em; }
+    .us-motto .us-lead { margin: 8px 0 0; font-size: 1rem; color: #b8cce8; }
+    .us-motto strong { color: #7ec8ff; letter-spacing: 0.04em; font-size: 1.12rem; }
+    .us-meta-line { font-size: 0.95rem !important; margin-bottom: 14px !important; }
     .us-observations {
-      margin: 0 0 16px; padding: 12px 14px; border-radius: 8px;
-      background: #0c121c; border: 1px solid #1e3048; font-size: 0.74rem; line-height: 1.55;
+      margin: 0 0 20px; padding: 16px 18px; border-radius: 10px;
+      background: #0c121c; border: 1px solid #1e3048; font-size: 1rem; line-height: 1.65;
     }
-    .us-observations h3 { margin: 0 0 8px; font-size: 0.72rem; color: var(--internet); letter-spacing: 0.08em; text-transform: uppercase; }
-    .us-observations ol { margin: 0; padding-left: 1.2rem; color: var(--text); }
-    .us-observations li { margin-bottom: 6px; }
+    .us-observations h3 {
+      margin: 0 0 14px; font-size: 0.95rem; color: var(--internet);
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .us-rundown { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px 16px; }
+    .us-rundown-item {
+      padding: 12px 14px; border-radius: 8px; background: #0a1018;
+      border: 1px solid #1a2838; min-width: 0;
+    }
+    .us-rundown-item h4 {
+      margin: 0 0 6px; font-size: 0.88rem; color: var(--gold); font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .us-rundown-item p { margin: 0; font-size: 1rem; color: var(--text); line-height: 1.6; }
     .us-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; margin-bottom: 18px;
     }
     .us-card {
-      padding: 12px 14px; border-radius: 8px; background: #0e1218; border: 1px solid #1e2838;
-      font-size: 0.72rem; line-height: 1.5; min-width: 0;
+      padding: 14px 16px; border-radius: 8px; background: #0e1218; border: 1px solid #1e2838;
+      font-size: 0.95rem; line-height: 1.55; min-width: 0;
     }
     .us-card h4 {
-      margin: 0 0 8px; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--internet); border-bottom: 1px solid #1a2430; padding-bottom: 6px;
+      margin: 0 0 10px; font-size: 0.88rem; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--internet); border-bottom: 1px solid #1a2430; padding-bottom: 8px;
     }
-    .us-kv { display: grid; grid-template-columns: minmax(88px, 34%) 1fr; gap: 4px 10px; }
-    .us-kv dt { color: var(--muted); margin: 0; }
-    .us-kv dd { margin: 0; word-break: break-word; font-family: ui-monospace, monospace; font-size: 0.68rem; }
-    .us-table { width: 100%; border-collapse: collapse; font-size: 0.66rem; margin-top: 6px; }
-    .us-table th, .us-table td { padding: 4px 6px; text-align: left; border-bottom: 1px solid #1a2430; }
+    .us-kv { display: grid; grid-template-columns: minmax(110px, 32%) 1fr; gap: 6px 12px; }
+    .us-kv dt { color: var(--muted); margin: 0; font-size: 0.92rem; }
+    .us-kv dd { margin: 0; word-break: break-word; font-family: ui-monospace, monospace; font-size: 0.9rem; }
+    .us-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 8px; }
+    .us-table th, .us-table td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #1a2430; }
     .us-table th { color: var(--muted); font-weight: 600; }
     .us-crossrefs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .us-crossrefs button {
       background: #0d1828; border: 1px solid #2a4060; color: var(--internet);
-      padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.72rem; font-weight: 600;
+      padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 0.92rem; font-weight: 600;
     }
     .us-crossrefs button:hover { border-color: var(--internet); background: rgba(77, 155, 255, 0.1); }
     .us-histogram { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
@@ -639,7 +654,7 @@
     .safe-modal-actions button.ghost { background: transparent; color: #ffd6de; border-color: #5a2030; }
     .safe-modal-actions button.safe { color: var(--ok); border-color: #2a5040; }
     .safe-modal-hint { margin-top: 12px; font-size: 0.68rem; color: var(--muted); }
-    .settings-wrap { padding: 16px 18px; max-width: 920px; }
+    .settings-wrap { padding: 16px 24px; width: 100%; max-width: none; }
     .settings-group {
       margin-bottom: 20px; border: 1px solid var(--border); border-radius: 10px;
       background: var(--panel); overflow: hidden;
@@ -1069,7 +1084,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="Checks GitHub for a newer NEXUS-Shield release.">v4.3.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub, runs stealth_install (restarts nexus-genius), then reloads this browser tab automatically.">v4.3.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1126,9 +1141,9 @@
 
   <section id="view-us" class="view active">
     <div class="us-wrap">
-      <p class="us-motto" id="us-motto"><strong>US · Page 1</strong> — This machine, known personally. v4.0 packet permission: DPI knows who and intent; harmful sections blocked, good flows pass at zero nft cost.</p>
-      <div id="us-meta" class="meta" style="margin-bottom:12px;font-size:0.72rem;">Sampling local field…</div>
-      <div id="us-observations" class="us-observations"><h3>Field observations</h3><ol><li>Gathering ss · ip · proc · NEXUS state…</li></ol></div>
+      <p class="us-motto" id="us-motto"><strong>US · Page 1</strong><span class="us-lead">This machine, known personally — every fact from local field tools only.</span></p>
+      <div id="us-meta" class="meta us-meta-line">Sampling local field…</div>
+      <div id="us-observations" class="us-observations"><h3>Plain-English rundown</h3><div class="us-rundown"><div class="us-rundown-item"><p>Gathering ss · ip · proc · NEXUS state…</p></div></div></div>
       <div class="us-grid" id="us-grid">
         <div class="us-card"><h4>Identity</h4><dl class="us-kv" id="us-identity"><dt>—</dt><dd>Loading</dd></dl></div>
         <div class="us-card"><h4>Network</h4><div id="us-network">Loading…</div></div>
@@ -3910,11 +3925,28 @@
       return `<dl class="us-kv">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v ?? "—")}</dd>`).join("")}</dl>`;
     }
 
+    function usRundownHtml(obs) {
+      if (!obs?.length) {
+        return '<div class="us-rundown-item"><p>No observations yet — field intel warming up.</p></div>';
+      }
+      return obs.map((o) => {
+        if (typeof o === "string") {
+          return `<div class="us-rundown-item"><p>${esc(o)}</p></div>`;
+        }
+        return `<div class="us-rundown-item"><h4>${esc(o.label || "Fact")}</h4><p>${esc(o.text || "")}</p></div>`;
+      }).join("");
+    }
+
     function renderUSField(us) {
       if (!us) return;
       const motto = $("us-motto");
       if (motto) {
-        motto.innerHTML = `<strong>${esc(us.title || "US")} · Page ${us.page || 1}</strong> — ${esc(us.subtitle || "This machine — field-gleaned forensic identity")}. ${esc(us.motto || "")}`;
+        const subtitle = us.subtitle || "This machine — field-gleaned forensic identity";
+        const extra = us.motto && us.motto !== subtitle
+          ? `<span class="us-lead">${esc(us.motto)}</span>` : "";
+        motto.innerHTML =
+          `<strong>${esc(us.title || "US")} · Page ${us.page || 1}</strong>` +
+          `<span class="us-lead">${esc(subtitle)}</span>${extra}`;
       }
       const meta = $("us-meta");
       const ident = us.identity || {};
@@ -3924,7 +3956,7 @@
       const obsEl = $("us-observations");
       const obs = us.observations || [];
       if (obsEl) {
-        obsEl.innerHTML = `<h3>Field observations</h3><ol>${obs.length ? obs.map((o) => `<li>${esc(o)}</li>`).join("") : "<li>No observations yet — field intel warming up.</li>"}</ol>`;
+        obsEl.innerHTML = `<h3>Plain-English rundown</h3><div class="us-rundown">${usRundownHtml(obs)}</div>`;
       }
       const mem = ident.memory || {};
       const disk = ident.disk_root || {};
@@ -4470,6 +4502,31 @@
       }
     }
 
+    async function waitForPanelRestart(targetVersion, maxMs = 120000) {
+      const start = Date.now();
+      while (Date.now() - start < maxMs) {
+        try {
+          const res = await fetch("/api/status", { cache: "no-store" });
+          const data = await res.json();
+          if (targetVersion && data.version === targetVersion) return data;
+          if (!targetVersion && data.updated) return data;
+        } catch {
+          /* panel restarting after stealth_install */
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+      return null;
+    }
+
+    async function reloadPanelAfterUpdate(targetVersion) {
+      const detail = $("nexus-update-detail");
+      if (detail) detail.textContent = "NEXUS restarting — reloading this window when panel is back…";
+      await waitForPanelRestart(targetVersion);
+      const hash = location.hash || "#us";
+      location.href = location.pathname + hash;
+      location.reload();
+    }
+
     async function applyNexusUpdate() {
       if (!nexusUpdateState?.update_available) {
         await checkNexusUpdate(true);
@@ -4477,31 +4534,36 @@
       }
       const btn = $("nexus-update-btn");
       const detail = $("nexus-update-detail");
+      const targetVersion = nexusUpdateState.latest;
       if (btn) btn.disabled = true;
-      detail.textContent = `Updating ${nexusUpdateState.previous} → ${nexusUpdateState.latest}…`;
+      if (detail) {
+        detail.textContent = `Installing ${nexusUpdateState.previous} → ${targetVersion} — service restarts, then this tab reloads…`;
+      }
+      let data = null;
       try {
         const res = await fetch("/api/update/apply", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: "{}",
         });
-        const data = await res.json();
-        if (data.applied) {
-          detail.textContent = `Updated ${data.previous} → ${data.latest}. Reloading…`;
-          setTimeout(() => location.reload(), 1800);
-        } else if (data.release_url) {
-          window.open(data.release_url, "_blank", "noopener");
-          detail.textContent = `Release opened · ${data.previous} → ${data.latest}`;
-        } else if (data.already_current) {
-          await checkNexusUpdate(true);
-        } else {
-          detail.textContent = "Update not applied — open GitHub release";
-        }
+        data = await res.json();
       } catch {
-        detail.textContent = "Update apply failed";
-      } finally {
-        if (btn) btn.disabled = false;
+        /* stealth_install kills the panel HTTP server — response may drop; still wait for restart */
+        data = { applied: true, latest: targetVersion };
       }
+      if (data?.applied || data?.reload_panel) {
+        await reloadPanelAfterUpdate(targetVersion);
+        return;
+      }
+      if (data?.already_current) {
+        await checkNexusUpdate(true);
+      } else if (data?.release_url) {
+        window.open(data.release_url, "_blank", "noopener");
+        if (detail) detail.textContent = `Auto-install unavailable — opened GitHub release ${data.previous} → ${data.latest}`;
+      } else if (detail) {
+        detail.textContent = data?.error || "Update not applied — try: sudo bash stealth_install.sh";
+      }
+      if (btn) btn.disabled = false;
     }
 
     $("nexus-update-btn")?.addEventListener("click", () => {

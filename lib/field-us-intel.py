@@ -284,48 +284,85 @@ def _vigil_mode() -> str:
     return "unknown"
 
 
-def _observations(doc: dict[str, Any]) -> list[str]:
-    obs: list[str] = []
+def _observations(doc: dict[str, Any]) -> list[dict[str, str]]:
+    """Plain-English rundown blocks — one headline per fact, readable at a glance."""
+    blocks: list[dict[str, str]] = []
     ident = doc.get("identity") or {}
     net = doc.get("network") or {}
     sock = doc.get("sockets") or {}
     gk = doc.get("gatekeeper") or {}
     trust = doc.get("trust_posture") or {}
-    obs.append(
-        f"Host {ident.get('hostname')} runs {ident.get('os')} {ident.get('os_release')} "
-        f"({ident.get('arch')}) — kernel {ident.get('kernel', '')[:60]}."
-    )
+
+    host = ident.get("hostname") or "this machine"
+    os_line = f"{ident.get('os') or 'Linux'} {ident.get('os_release') or ''}".strip()
+    blocks.append({
+        "label": "Who you are on this network",
+        "text": (
+            f"{host} is running {os_line} on {ident.get('arch') or 'unknown'} hardware. "
+            f"Kernel: {(ident.get('kernel') or '—')[:80]}. "
+            f"Uptime: {ident.get('uptime_human') or '—'}."
+        ),
+    })
     if ident.get("cpu_model"):
-        obs.append(f"CPU: {ident['cpu_model']}.")
-    mem = ident.get("memory") or {}
-    if mem.get("MemTotal_kB"):
-        obs.append(f"RAM: {mem['MemTotal_kB'] // 1024} MiB total; uptime {ident.get('uptime_human', '—')}.")
+        mem = ident.get("memory") or {}
+        ram = f"{mem['MemTotal_kB'] // 1024} MiB RAM" if mem.get("MemTotal_kB") else "RAM unknown"
+        blocks.append({"label": "Hardware", "text": f"{ident['cpu_model']}. {ram}."})
+
     route = net.get("default_route") or {}
     if route.get("gateway"):
-        obs.append(f"Default route: via {route['gateway']} dev {route.get('device', '—')}.")
+        blocks.append({
+            "label": "Default gateway",
+            "text": f"Traffic leaves through {route['gateway']} on interface {route.get('device') or '—'}.",
+        })
     dns = net.get("dns") or {}
     if dns.get("nameservers"):
-        obs.append(f"DNS resolvers (local): {', '.join(dns['nameservers'][:4])}.")
-    obs.append(
-        f"Socket posture: {sock.get('established', 0)} established, "
-        f"{sock.get('listening', 0)} listening, {sock.get('syn_state', 0)} SYN-state."
-    )
+        blocks.append({
+            "label": "DNS (local resolv.conf)",
+            "text": f"Resolvers: {', '.join(dns['nameservers'][:4])}.",
+        })
+
+    blocks.append({
+        "label": "Live socket posture",
+        "text": (
+            f"{sock.get('established', 0)} established connections, "
+            f"{sock.get('listening', 0)} listening ports, "
+            f"{sock.get('syn_state', 0)} half-open (SYN) sockets."
+        ),
+    })
+
     hist = gk.get("verdict_histogram") or {}
     if hist:
-        parts = [f"{k}={v}" for k, v in sorted(hist.items())]
-        obs.append(f"Gatekeeper verdict histogram: {', '.join(parts)}.")
+        parts = [f"{k}: {v}" for k, v in sorted(hist.items())]
+        blocks.append({
+            "label": "Gatekeeper verdicts (right now)",
+            "text": " · ".join(parts) + ".",
+        })
     if gk.get("packet_permission") or gk.get("strict_trust"):
-        obs.append(
-            f"Packet permission v4.0 — {gk.get('permitted_flow_count', 0)} flow(s) permitted, "
-            f"{gk.get('segment_block_count', 0)} segment hold(s), "
-            f"{gk.get('pending_trust_count', 0)} await operator review."
-        )
-    obs.append(
-        f"Trust registry: {trust.get('trusted_entries', 0)} permanent, "
-        f"{trust.get('active_blocks', 0)} active block(s)."
-    )
-    obs.append(f"NEXUS {ident.get('nexus_version')} · vigil {ident.get('vigil_mode')} · field snapshot {_now()}.")
-    return obs
+        blocks.append({
+            "label": "Packet permission v4.0",
+            "text": (
+                f"{gk.get('permitted_flow_count', 0)} good flow(s) pass at zero nft cost. "
+                f"{gk.get('segment_block_count', 0)} harmful segment hold(s). "
+                f"{gk.get('pending_trust_count', 0)} connection(s) await your review."
+            ),
+        })
+
+    blocks.append({
+        "label": "Trust & blocks",
+        "text": (
+            f"{trust.get('trusted_entries', 0)} address(es) trusted forever. "
+            f"{trust.get('active_blocks', 0)} active firewall block(s)."
+        ),
+    })
+    blocks.append({
+        "label": "NEXUS field status",
+        "text": (
+            f"Version {ident.get('nexus_version') or '—'}. "
+            f"Vigil mode: {ident.get('vigil_mode') or '—'}. "
+            f"Snapshot: {_now()}."
+        ),
+    })
+    return blocks
 
 
 def build_us_field() -> dict[str, Any]:
@@ -374,7 +411,7 @@ def build_us_field() -> dict[str, Any]:
         "page": 1,
         "title": "US",
         "subtitle": "This machine — field-gleaned forensic identity",
-        "motto": "Sherlock on localhost. Every line sourced from ss, ip, proc, and NEXUS state — zero external guesswork.",
+        "motto": "Sherlock on localhost. Every fact from ss, ip, proc, and NEXUS state on this box — no external guesswork.",
         "generated_at": _now(),
         "identity": identity,
         "network": {
