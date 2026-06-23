@@ -165,9 +165,53 @@
     });
   }
 
+  function tileLonLatBounds(x, y, z) {
+    const n = Math.pow(2, z);
+    const lonMin = (x / n) * 360 - 180;
+    const lonMax = ((x + 1) / n) * 360 - 180;
+    const latRad1 = Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / n)));
+    const latRad2 = Math.atan(Math.sinh(Math.PI * (1 - (2 * (y + 1)) / n)));
+    const latMax = (latRad1 * 180) / Math.PI;
+    const latMin = (latRad2 * 180) / Math.PI;
+    return { lonMin, lonMax, latMin, latMax };
+  }
+
+  async function renderGlobeTile(canvas, size, x, y, z) {
+    const landPack = await loadField("globe-world");
+    const wirePack = await loadField("globe-wireframe");
+    const lw = landPack.meta.width;
+    const lh = landPack.meta.height;
+    const ww = wirePack.meta.width;
+    const wh = wirePack.meta.height;
+    const b = tileLonLatBounds(x, y, z);
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    const img = ctx.createImageData(size, size);
+    for (let py = 0; py < size; py++) {
+      for (let px = 0; px < size; px++) {
+        const lon = b.lonMin + ((px + 0.5) / size) * (b.lonMax - b.lonMin);
+        const lat = b.latMax - ((py + 0.5) / size) * (b.latMax - b.latMin);
+        const u = (lon + 180) / 360;
+        const v = (90 - lat) / 180;
+        const dLand = sampleField(landPack.field, lw, lh, u, v);
+        const dWire = sampleField(wirePack.field, ww, wh, u, v);
+        const land = clamp(0.5 - dLand * 1.6, 0, 1);
+        const border = clamp(0.42 - Math.abs(dWire) * 3.2, 0, 1);
+        const idx = (py * size + px) * 4;
+        img.data[idx] = Math.round(6 + land * 18 + border * 40);
+        img.data[idx + 1] = Math.round(12 + land * 32 + border * 95);
+        img.data[idx + 2] = Math.round(22 + land * 48 + border * 120);
+        img.data[idx + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return canvas;
+  }
+
   async function renderGlobe(canvas, w, h) {
-    const pack = await loadField("globe-world");
-    const meta = pack.meta;
+    const landPack = await loadField("globe-world");
+    const wirePack = await loadField("globe-wireframe");
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d");
@@ -178,18 +222,46 @@
       for (let x = 0; x < w; x++) {
         const u = (x + 0.5) / w;
         const v = (y + 0.5) / h;
-        const d = sampleField(pack.field, meta.width, meta.height, u, v);
-        const land = clamp(0.55 - d * 1.8, 0, 1);
-        const coast = clamp(0.35 - Math.abs(d) * 2.2, 0, 1);
+        const dLand = sampleField(landPack.field, landPack.meta.width, landPack.meta.height, u, v);
+        const dWire = sampleField(wirePack.field, wirePack.meta.width, wirePack.meta.height, u, v);
+        const land = clamp(0.55 - dLand * 1.8, 0, 1);
+        const border = clamp(0.38 - Math.abs(dWire) * 3.0, 0, 1);
         const idx = (y * w + x) * 4;
-        img.data[idx] = Math.round(8 + land * 28 + coast * 18);
-        img.data[idx + 1] = Math.round(14 + land * 42 + coast * 22);
-        img.data[idx + 2] = Math.round(24 + land * 58 + coast * 35);
+        img.data[idx] = Math.round(6 + land * 22 + border * 35);
+        img.data[idx + 1] = Math.round(12 + land * 38 + border * 88);
+        img.data[idx + 2] = Math.round(20 + land * 52 + border * 110);
         img.data[idx + 3] = 255;
       }
     }
     ctx.putImageData(img, 0, 0);
     return canvas;
+  }
+
+  function createGlobeLayer(Lref) {
+    const GridLayer = Lref.GridLayer.extend({
+      createTile(coords, done) {
+        const tile = document.createElement("canvas");
+        const size = this.getTileSize().x;
+        renderGlobeTile(tile, size, coords.x, coords.y, coords.z)
+          .then(() => done(null, tile))
+          .catch((err) => done(err, tile));
+        return tile;
+      },
+    });
+    return new GridLayer({
+      tileSize: 256,
+      minZoom: 0,
+      maxZoom: 22,
+      noWrap: false,
+      className: "ha-sdf-tile-layer",
+    });
+  }
+
+  function formatGps(lat, lon) {
+    const la = Number(lat);
+    const lo = Number(lon);
+    if (!Number.isFinite(la) || !Number.isFinite(lo)) return "";
+    return `${la.toFixed(5)}°, ${lo.toFixed(5)}°`;
   }
 
   async function pinIcon(point) {
@@ -203,12 +275,19 @@
     ringCanvas.className = "ha-sdf-ring";
     wrap.appendChild(ringCanvas);
     wrap.appendChild(pinCanvas);
+    const gps = formatGps(point.lat, point.lon);
+    if (gps) {
+      const label = document.createElement("div");
+      label.className = "ha-sdf-gps";
+      label.textContent = gps;
+      wrap.appendChild(label);
+    }
     const pin = await renderPin(pinCanvas, {
       color: col,
       killed,
       friendly,
       heat: point.heat,
-      scale: killed ? 0.66 : 0.78,
+      scale: killed ? 0.88 : 1.12,
     });
     ringCanvas.style.cssText = "position:absolute;left:0;top:0;pointer-events:none;";
     pinCanvas.style.cssText = "position:absolute;left:0;top:0;";
@@ -239,9 +318,13 @@
     renderPin,
     renderRing,
     renderGlobe,
+    renderGlobeTile,
+    createGlobeLayer,
+    formatGps,
     pinIcon,
     parseColor,
     stopPulse,
+    tileLonLatBounds,
   };
 
   global.NexusSdf = NexusSdf;
