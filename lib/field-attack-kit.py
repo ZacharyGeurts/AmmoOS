@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,9 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield
 HOST_ATTACKS = STATE / "host-attacks.json"
 HOSTILE_TSV = STATE / "field-hostile.tsv"
 DOSSIERS = STATE / "angel-dossiers.json"
+AUTO_REKILL_LOG = STATE / "auto-rekill-log.json"
+AUTO_REKILL_COOLDOWN_SEC = 3600
+AUTO_REKILL_MAX_IPS = 24
 
 import importlib.util
 
@@ -279,6 +283,75 @@ def check_online(ip: str) -> dict[str, Any]:
     return doc
 
 
+def _record_auto_rekill(ip: str) -> None:
+    log = _load_json(AUTO_REKILL_LOG, {"entries": {}})
+    entries = log.get("entries")
+    if not isinstance(entries, dict):
+        entries = {}
+    entries[ip] = {"ts": time.time(), "at": _now()}
+    log["entries"] = entries
+    log["updated"] = _now()
+    try:
+        AUTO_REKILL_LOG.write_text(json.dumps(log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _auto_rekill_cooldown_active(ip: str, seconds: int = AUTO_REKILL_COOLDOWN_SEC) -> bool:
+    log = _load_json(AUTO_REKILL_LOG, {"entries": {}})
+    entry = (log.get("entries") or {}).get(ip)
+    if not isinstance(entry, dict):
+        return False
+    try:
+        return (time.time() - float(entry.get("ts") or 0)) < seconds
+    except (TypeError, ValueError):
+        return False
+
+
+def auto_rekill_validated(max_ips: int = AUTO_REKILL_MAX_IPS) -> dict[str, Any]:
+    """RE-KILL killed hosts that are back online with same-host identity validation."""
+    disabled = sorted(_disabled_ips())
+    if not disabled:
+        return {"ok": True, "rekilled": [], "rekilled_count": 0, "checked": 0, "skipped": 0}
+
+    doc = _load_json(HOST_ATTACKS, {})
+    points_by_ip = {
+        str(p.get("ip") or ""): p for p in doc.get("points") or [] if p.get("ip")
+    }
+    rekilled: list[str] = []
+    skipped: list[str] = []
+    checked = 0
+
+    for ip in disabled[:max_ips]:
+        if _auto_rekill_cooldown_active(ip):
+            skipped.append(ip)
+            continue
+        point = points_by_ip.get(ip) or {"ip": ip}
+        checked += 1
+        online_doc = check_target_online(ip, point)
+        if online_doc.get("ok"):
+            _save_online_check(ip, online_doc)
+        if not online_doc.get("rekill_eligible"):
+            skipped.append(ip)
+            continue
+        vector = str(point.get("vector") or "HOSTILE")
+        severity = str(point.get("severity") or "high")
+        result = rekill_target(ip, vector, severity)
+        if result.get("rekill"):
+            _record_auto_rekill(ip)
+            rekilled.append(ip)
+        else:
+            skipped.append(ip)
+
+    return {
+        "ok": True,
+        "rekilled": rekilled,
+        "rekilled_count": len(rekilled),
+        "checked": checked,
+        "skipped": len(skipped),
+    }
+
+
 def _run_rekill(
     ip: str,
     vector: str,
@@ -355,9 +428,16 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
 
 def main() -> int:
     if len(sys.argv) < 2:
-        print("usage: field-attack-kit.py [crush-hot|kill|disable|check-online|rekill <ip> ...]", file=sys.stderr)
+        print(
+            "usage: field-attack-kit.py [crush-hot|auto-rekill|kill|disable|check-online|rekill <ip> ...]",
+            file=sys.stderr,
+        )
         return 1
     cmd = sys.argv[1]
+    if cmd == "auto-rekill":
+        json.dump(auto_rekill_validated(), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
     if cmd == "check-online" and len(sys.argv) >= 3:
         json.dump(check_online(sys.argv[2]), sys.stdout, indent=2)
         sys.stdout.write("\n")

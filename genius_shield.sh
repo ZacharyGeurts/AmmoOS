@@ -43,7 +43,8 @@ cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/as
 chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/connection-gatekeeper.py" "${ROOT}/lib/vector-intel.py" "${ROOT}/lib/angel-dossier.py" \
   "${ROOT}/lib/fair-ad-guardian.py" "${ROOT}/lib/host-attack-map.py" "${ROOT}/lib/geo-intel-standards.py" \
-  "${ROOT}/lib/field-attack-kit.py" "${ROOT}/lib/friendly-guard.py" "${ROOT}/lib/target-bleed.py" 2>/dev/null || true
+  "${ROOT}/lib/field-attack-kit.py" "${ROOT}/lib/friendly-guard.py" "${ROOT}/lib/target-bleed.py" \
+  "${ROOT}/lib/host-identity.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
   "${ROOT}/lib/host-attack.sh" "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" 2>/dev/null || true
 chmod 555 /usr/local/lib/nexus-shield/lib/friendly-guard.py /usr/local/lib/nexus-shield/lib/friendly-guard.sh 2>/dev/null || true
@@ -149,6 +150,13 @@ source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/lockdown-first.sh"
 nexus_lockdown_first_apply || true
+
+# Auto-kill on install — sync field hostile registry, crush hot, RE-KILL validated same-host attackers
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" 2>/dev/null || true
+# shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
+nexus_field_attack_install_autokill || true
 
 if ! systemctl is-active --quiet nexus-genius.service; then
   echo 'NEXUS-Shield install finished, but nexus-genius.service failed to start.' >&2

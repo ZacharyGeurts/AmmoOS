@@ -748,7 +748,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v3.3.0</h1>
+        <h1>NEXUS-Shield v3.3.1</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -998,9 +998,9 @@
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_ATTACK_KIT_AUTO_CRUSH" id="set-auto-crush" />
-            <span><strong>Auto-crush hot hosts</strong><span class="hint">Permanently disable heat ≥ 0.7 automatically.</span></span>
+            <span><strong>Auto-kill hostile targets</strong><span class="hint">KILL hot monitor targets + RE-KILL validated same-host attackers.</span></span>
           </label>
-          <span class="has-tip-row" data-tip="Field Attack Kit automatically crushes high-heat hostile signals — firewall block forever + field memory. Use with discipline."></span>
+          <span class="has-tip-row" data-tip="ON by default. Crushes heat ≥ 0.7 automatically. When a KILLED attacker returns online and same-host identity validates (PTR, TLS, ASN, MAC OUI), NEXUS RE-KILLs without waiting for you."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
@@ -1376,7 +1376,7 @@
       NEXUS_PRIVACY_GUARD: 0,
       NEXUS_SHUTDOWN_GUARD: 1,
       NEXUS_HOSTESS7_CORROBORATE: 0,
-      NEXUS_ATTACK_KIT_AUTO_CRUSH: 0,
+      NEXUS_ATTACK_KIT_AUTO_CRUSH: 1,
     };
 
     const SETTING_GROUPS = {

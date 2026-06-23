@@ -191,6 +191,7 @@ test_consumer_defaults() {
   [[ "$(nexus_settings_get NEXUS_SHADOW_WATCH)" == "0" ]]
   [[ "$(nexus_settings_get NEXUS_ENTROPY_WATCH)" == "0" ]]
   [[ "$(nexus_settings_get NEXUS_PRIVACY_GUARD)" == "0" ]]
+  [[ "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH)" == "1" ]]
 }
 
 test_panel_v22_axis_layout() {
@@ -338,7 +339,7 @@ test_panel_host_attack_ui() {
   grep -q 'Check Online' "$panel"
   grep -q 'RE-KILL' "$panel"
   grep -q 'same-host validation' "$panel"
-  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|[12]\.(0|1)|3\.0))' "$panel" || grep -q 'v3.3.0' "$panel"
+  grep -qE 'v(2\.(9\.0)|3\.(0\.(0|1)|[123]\.(0|1|3\.[01])))' "$panel" || grep -q 'v3.3.1' "$panel"
 }
 
 test_target_bleed_module() {
@@ -406,8 +407,26 @@ test_field_attack_kit_module() {
   grep -q 'kill_target' "${ROOT}/lib/field-attack-kit.py"
   grep -q 'check_online' "${ROOT}/lib/field-attack-kit.py"
   grep -q 'rekill_target' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'auto_rekill_validated' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'nexus_field_attack_autokill' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'nexus_field_attack_install_autokill' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'refuse_kill' "${ROOT}/lib/field-attack-kit.py"
   grep -q 'killable' "${ROOT}/lib/host-attack-map.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 - <<'PY'
+import importlib.util
+import time
+from pathlib import Path
+root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
+spec = importlib.util.spec_from_file_location("fak", root / "lib" / "field-attack-kit.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+mod._record_auto_rekill("203.0.113.99")
+assert mod._auto_rekill_cooldown_active("203.0.113.99")
+mod.AUTO_REKILL_LOG.unlink(missing_ok=True)
+empty = mod.auto_rekill_validated()
+assert empty.get("rekilled_count") == 0
+PY
   declare -f nexus_field_attack_json >/dev/null 2>&1
 }
 
@@ -471,8 +490,9 @@ test_panel_field_attack_kit_ui() {
   grep -q 'FRIENDLY' "$panel"
   grep -q 'friendly_refused' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'NEXUS_ATTACK_KIT_AUTO_CRUSH' "$panel"
+  grep -q 'Auto-kill hostile targets' "$panel"
   grep -q 'God Bless' "$panel"
-  grep -qE 'v3\.(0\.(0|1)|[12]\.(0|1)|3\.0)' "$panel"
+  grep -qE 'v3\.(0\.(0|1)|[123]\.(0|1)|3\.[01])' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 

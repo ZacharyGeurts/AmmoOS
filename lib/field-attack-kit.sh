@@ -310,9 +310,38 @@ nexus_field_attack_crush_hot() {
     python3 "$script" crush-hot 2>/dev/null
 }
 
-nexus_field_attack_auto_crush() {
-  [[ "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH 2>/dev/null || echo "${NEXUS_ATTACK_KIT_AUTO_CRUSH:-0}")" == "1" ]] || return 0
+nexus_field_attack_auto_rekill() {
+  command -v python3 >/dev/null 2>&1 || return 1
+  local script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
+  [[ -f "$script" ]] || return 1
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    python3 "$script" auto-rekill 2>/dev/null
+}
+
+nexus_field_attack_autokill() {
+  [[ "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH 2>/dev/null || echo "${NEXUS_ATTACK_KIT_AUTO_CRUSH:-1}")" == "1" ]] || return 0
   nexus_field_attack_crush_hot >/dev/null 2>&1 || true
+  nexus_field_attack_auto_rekill >/dev/null 2>&1 || true
+}
+
+# Back-compat alias
+nexus_field_attack_auto_crush() {
+  nexus_field_attack_autokill
+}
+
+nexus_field_attack_install_autokill() {
+  [[ "${NEXUS_FIELD_ATTACK_KIT:-1}" == "1" ]] || return 0
+  nexus_field_attack_init
+  if declare -f nexus_host_attack_publish >/dev/null 2>&1; then
+    nexus_host_attack_publish >/dev/null 2>&1 || true
+  elif [[ -f "${NEXUS_INSTALL_ROOT}/lib/host-attack-map.py" ]]; then
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "${NEXUS_INSTALL_ROOT}/lib/host-attack-map.py" build >/dev/null 2>&1 || true
+  fi
+  nexus_field_attack_sync_from_memory || true
+  nexus_field_attack_apply_registry || true
+  nexus_field_attack_autokill || true
+  nexus_log "ALERT" "field-attack-kit" "INSTALL_AUTOKILL complete"
 }
 
 nexus_field_attack_publish() {

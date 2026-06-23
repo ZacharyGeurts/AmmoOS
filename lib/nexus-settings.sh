@@ -118,7 +118,7 @@ nexus_settings_apply_consumer_defaults() {
     NEXUS_PRIVACY_GUARD=0 \
     NEXUS_SHUTDOWN_GUARD=1 \
     NEXUS_HOSTESS7_CORROBORATE=0 \
-    NEXUS_ATTACK_KIT_AUTO_CRUSH=0
+    NEXUS_ATTACK_KIT_AUTO_CRUSH=1
   do
     key="${kv%%=*}"
     val="${kv#*=}"
