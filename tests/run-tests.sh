@@ -265,7 +265,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v[234]\.(0\.0|[0-9]+\.[0-9]+)' "$panel"
+  grep -qE 'v[2-5]\.[0-9]+\.[0-9]+' "$panel"
 }
 
 test_self_access_script() {
@@ -434,7 +434,33 @@ test_panel_host_attack_ui() {
   grep -q 'checkNexusUpdate' "$panel"
   grep -q 'nexus-update-btn' "$panel"
   grep -q 'distance_label' "$panel"
-  grep -qE 'v4\.(0|1|2|3)\.0' "$panel"
+  grep -qE 'v(4|5)\.[0-9]+\.0' "$panel"
+}
+
+test_field_command_module() {
+  [[ -f "${ROOT}/lib/field-command.py" ]]
+  [[ -f "${ROOT}/lib/field-command.sh" ]]
+  grep -q 'field_command' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'nexus_field_command_json' "${ROOT}/lib/field-command.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-command.py" json | grep -q 'good_guy'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-command.py" json | grep -q 'know_everything'
+}
+
+test_panel_command_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'view-command' "$panel"
+  grep -q 'renderCommandCenter' "$panel"
+  grep -q 'TAB_GROUPS' "$panel"
+  grep -q 'data-view="command"' "$panel"
+  grep -q 'data-view="packets"' "$panel"
+  grep -q 'data-view="threats"' "$panel"
+  grep -q 'data-view="intel"' "$panel"
+  grep -q 'data-view="system"' "$panel"
+  grep -q 'panel-subnav' "$panel"
+  grep -q 'Good Guy' "$panel"
+  grep -q 'v5\.0\.0' "$panel"
 }
 
 test_field_rf_module() {
@@ -470,7 +496,7 @@ test_panel_field_rf_ui() {
   grep -q 'renderPoliceAgency' "$panel"
   grep -q 'police-agency-select' "$panel"
   grep -q 'field-rf-shield-enabled' "$panel"
-  grep -q 'data-view="field-rf"' "$panel"
+  grep -q 'view-field-rf' "$panel"
   grep -q 'RF_BURST' "$panel"
 }
 
@@ -497,7 +523,7 @@ test_panel_honor_ui() {
   grep -q 'honorStarsHtml' "$panel"
   grep -q 'honor-pending-banner' "$panel"
   grep -q 'honor-loc-wireless' "$panel"
-  grep -q 'data-view-jump="honor"' "$panel"
+  grep -q 'data-view-jump="intel/trust"' "$panel"
   grep -q 'distance from you' "$panel"
 }
 
@@ -988,6 +1014,8 @@ run_test "panel honor UI" test_panel_honor_ui
 run_test "field rf sentinel module" test_field_rf_module
 run_test "police agency module" test_police_agency_module
 run_test "panel field rf UI" test_panel_field_rf_ui
+run_test "field command module" test_field_command_module
+run_test "panel command UI" test_panel_command_ui
 run_test "host attack map module" test_host_attack_module
 run_test "nexus update module" test_nexus_update_module
 run_test "host map trash module" test_host_map_trash_module

@@ -133,6 +133,47 @@
       font-size: 0.66rem; border: 1px solid #2a4060; color: var(--internet); cursor: pointer;
       background: rgba(61, 140, 255, 0.06);
     }
+    .panel-subnav {
+      display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 20px;
+      border-bottom: 1px solid var(--border); background: #0c1018;
+    }
+    .panel-subnav[hidden] { display: none !important; }
+    .panel-subnav button {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600;
+    }
+    .panel-subnav button.active { color: var(--text); border-color: var(--internet); background: rgba(77, 155, 255, 0.1); }
+    .command-wrap { padding: 16px 24px 32px; width: 100%; }
+    .command-motto { font-size: 1.05rem; color: var(--muted); margin: 0 0 16px; line-height: 1.6; }
+    .command-motto strong { color: var(--gold); }
+    .ggb-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .ggb-card {
+      padding: 16px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--card);
+    }
+    .ggb-card.good { border-color: #2a6040; background: linear-gradient(135deg, #0a1810, #0e1218); }
+    .ggb-card.bad { border-color: #5a2030; background: linear-gradient(135deg, #1a0810, #120e14); }
+    .ggb-card.watch { border-color: #4a4030; background: linear-gradient(135deg, #14120a, #101018); }
+    .ggb-card h3 { margin: 0 0 6px; font-size: 0.92rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .ggb-card.good h3 { color: var(--ok); }
+    .ggb-card.bad h3 { color: var(--threat); }
+    .ggb-card.watch h3 { color: var(--gold); }
+    .ggb-count { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+    .ggb-pct { font-size: 0.88rem; color: var(--muted); }
+    .command-pulse { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .pulse-chip {
+      padding: 10px 12px; border-radius: 8px; border: 1px solid #1e2838; background: #0a1018;
+      font-size: 0.88rem;
+    }
+    .pulse-chip strong { display: block; font-size: 1.2rem; color: var(--internet); margin-top: 4px; }
+    .know-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .know-card {
+      text-align: left; padding: 12px 14px; border-radius: 8px; border: 1px solid #2a4060;
+      background: rgba(61, 140, 255, 0.05); cursor: pointer; color: var(--text); font-size: 0.92rem;
+    }
+    .know-card:hover { border-color: var(--internet); }
+    .know-card em { display: block; font-style: normal; font-size: 1.1rem; color: var(--gold); margin-top: 4px; }
+    .ggb-flow-list { font-size: 0.88rem; margin-top: 10px; max-height: 200px; overflow: auto; }
+    .ggb-flow-row { padding: 6px 0; border-bottom: 1px solid #1a2430; }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
       width: 40px; height: 40px; border-radius: 10px;
@@ -1064,7 +1105,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v4.3.0</h1>
+        <h1>NEXUS-Shield v5.0.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1084,7 +1125,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub, runs stealth_install (restarts nexus-genius), then reloads this browser tab automatically.">v4.3.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub, runs stealth_install (restarts nexus-genius), then reloads this browser tab automatically.">v5.0.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1093,7 +1134,7 @@
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
-    <strong>v4.3 Field RF — internal software antenna detects WiFi/RF/dog-collar/IR-proxy bursts and shields you. Police interop dropdown imports Michigan Tri/Quad-State and global agency formats. Right-click links for new tab.</strong>
+    <strong>v5.0 Command deck — Good Guy vs Bad Guy on every packet. Seven integrated tabs: Command · US · Packets · Threats · Intel · Library · System. Know everything.</strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
   </div>
 
@@ -1125,21 +1166,41 @@
   </div>
 
   <nav class="menu" aria-label="Panel sections">
-    <button type="button" class="active" data-view="us" data-tip="Page 1 — forensic identity of THIS machine. Every fact from ss, ip, proc, and NEXUS state on the field — zero external guesswork.">US</button>
-    <button type="button" data-view="monitor" data-tip="See what your computer is talking to on the internet right now — and fix false alarms.">Monitor</button>
-    <button type="button" data-view="honor" data-tip="Honorability database — 5 gold-star sites (X.com, YouTube) pass silently. Moderate default. Acceptance only when you visit lower-trust sites. Low-level data researchers.">Honor</button>
-    <button type="button" data-view="field-rf" data-tip="Internal field antenna — RF, WiFi, dog-collar, and IR-proxy burst detection with auto-shield. Global police interop import (Michigan MPSCS, Tri/Quad-State, P25, TETRA).">Field RF</button>
-    <button type="button" data-view="inspect" data-tip="Retro modem LEDs, deep packet inspection, English translation, exploit heuristics (high-confidence only — no false positives).">Inspect</button>
-    <button type="button" data-view="host-attack" data-tip="Global host attack map — pulsing dots on Earth, green through red by threat. Built for Zachary Geurts and everyone defending their machine in 2026.">Host Attack</button>
-    <button type="button" data-view="dossier" data-tip="Full attack-path dossiers — vector to peer to process to MAC to CVE. They look at us; we look back HARD.">Dossier</button>
-    <button type="button" data-view="human-dossier" data-tip="Grok Heavy human-readable kill-order dossiers — ThreatFox C2 intel, geo/ASN, malware, RE-KILL notes. One-click KILL.">Human Dossier</button>
-    <button type="button" data-view="research" data-tip="Research tables — MAC vendors, IP intel, CVE/exploit maps, zero-day watch list.">Research</button>
-    <button type="button" data-view="library" data-tip="Hostess7 H7 field books — network security, NEXUS manual, AMOURANTHRTX biography. Field-expandable to hundreds of pages.">Library</button>
-    <button type="button" data-view="settings" data-tip="Turn features on/off, load ad block lists, and review past incidents. No terminal needed.">Settings</button>
-    <button type="button" data-view="logs" data-tip="A diary of everything NEXUS noticed — useful when something feels wrong.">Logs</button>
+    <button type="button" class="active" data-view="command" data-tip="Command deck — Good Guy vs Bad Guy scoreboard, field pulse, know-everything index. Start here.">Command</button>
+    <button type="button" data-view="us" data-tip="Page 1 — forensic identity of THIS machine. Every fact from ss, ip, proc, and NEXUS state — zero external guesswork.">US</button>
+    <button type="button" data-view="packets" data-tip="Packets — live connections scored Good/Bad plus deep DPI inspect. Packet permission v4.0.">Packets</button>
+    <button type="button" data-view="threats" data-tip="Threats — globe map, attack-path dossiers, Grok Heavy kill-orders. Identify. Record. KILL.">Threats</button>
+    <button type="button" data-view="intel" data-tip="Intel — honorability, field RF antenna, police interop, research tables.">Intel</button>
+    <button type="button" data-view="library" data-tip="Hostess7 H7 field books — network security, NEXUS manual, AMOURANTHRTX biography.">Library</button>
+    <button type="button" data-view="system" data-tip="System — settings, logs, protection toggles.">System</button>
   </nav>
+  <nav id="panel-subnav" class="panel-subnav" aria-label="Section views" hidden></nav>
 
-  <section id="view-us" class="view active">
+  <section id="view-command" class="view active">
+    <div class="command-wrap">
+      <p class="command-motto" id="command-motto" data-tip="Packet permission classifies every flow. Good Guy passes at zero nft cost. Bad Guy gets segment hold or IP block.">
+        <strong>Command · Good Guy vs Bad Guy</strong> — know everything from one deck.
+      </p>
+      <div id="command-permission-banner" class="intel-banner" style="margin-bottom:14px;"></div>
+      <div class="ggb-row" id="command-ggb-row">
+        <div class="ggb-card good"><h3>Good Guy</h3><div class="ggb-count" id="cmd-good-count">0</div><div class="ggb-pct" id="cmd-good-pct">—</div><div class="ggb-flow-list" id="cmd-good-flows"></div></div>
+        <div class="ggb-card watch"><h3>Watch</h3><div class="ggb-count" id="cmd-watch-count">0</div><div class="ggb-pct" id="cmd-watch-pct">MONITOR · SUSPICIOUS</div><div class="ggb-flow-list" id="cmd-watch-flows"></div></div>
+        <div class="ggb-card bad"><h3>Bad Guy</h3><div class="ggb-count" id="cmd-bad-count">0</div><div class="ggb-pct" id="cmd-bad-pct">—</div><div class="ggb-flow-list" id="cmd-bad-flows"></div></div>
+      </div>
+      <h4 style="margin:0 0 10px;font-size:0.9rem;color:var(--internet);letter-spacing:0.06em;text-transform:uppercase;" data-tip="Live counters from every NEXUS subsystem on this machine.">Field pulse</h4>
+      <div class="command-pulse" id="command-pulse"></div>
+      <h4 style="margin:0 0 10px;font-size:0.9rem;color:var(--internet);letter-spacing:0.06em;text-transform:uppercase;" data-tip="Jump to any integrated section — seven tabs, full picture.">Know everything</h4>
+      <div class="know-grid" id="command-know"></div>
+      <div class="us-crossrefs">
+        <button type="button" data-view-jump="packets/live">Packets · live →</button>
+        <button type="button" data-view-jump="threats/map">Threat map →</button>
+        <button type="button" data-view-jump="us">US field →</button>
+        <button type="button" data-view-jump="intel/trust">Honorability →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-us" class="view">
     <div class="us-wrap">
       <p class="us-motto" id="us-motto"><strong>US · Page 1</strong><span class="us-lead">This machine, known personally — every fact from local field tools only.</span></p>
       <div id="us-meta" class="meta us-meta-line">Sampling local field…</div>
@@ -1153,11 +1214,12 @@
         <div class="us-card"><h4>Field storage</h4><div id="us-storage">Loading…</div></div>
       </div>
       <div class="us-crossrefs">
-        <button type="button" data-view-jump="monitor">Live connections →</button>
-        <button type="button" data-view-jump="human-dossier">Human Dossier kill-orders →</button>
-        <button type="button" data-view-jump="host-attack">Host Attack map →</button>
-        <button type="button" data-view-jump="honor">Honorability &amp; distance →</button>
-        <button type="button" data-view-jump="field-rf">Field RF &amp; police interop →</button>
+        <button type="button" data-view-jump="command">Command deck →</button>
+        <button type="button" data-view-jump="packets/live">Live connections →</button>
+        <button type="button" data-view-jump="threats/kill">Kill orders →</button>
+        <button type="button" data-view-jump="threats/map">Threat map →</button>
+        <button type="button" data-view-jump="intel/trust">Honorability →</button>
+        <button type="button" data-view-jump="intel/rf">Field RF →</button>
       </div>
     </div>
   </section>
@@ -1193,10 +1255,10 @@
         </div>
       </div>
       <div class="honor-crossrefs">
-        <button type="button" data-view-jump="monitor" data-tip="Follow through to live connections — see honor stars on browser flows.">Monitor connections →</button>
-        <button type="button" data-view-jump="host-attack" data-tip="Follow through to map — distance from your location on every pin.">Threat distances on map →</button>
-        <button type="button" data-view-jump="research" data-tip="Low-level research tables — MAC, IP, CVE.">Research tables →</button>
-        <button type="button" data-view-jump="inspect" data-tip="Packet field researchers — DPI English translation.">Packet inspect →</button>
+        <button type="button" data-view-jump="packets/live" data-tip="Follow through to live connections — see honor stars on browser flows.">Live connections →</button>
+        <button type="button" data-view-jump="threats/map" data-tip="Follow through to map — distance from your location on every pin.">Threat distances on map →</button>
+        <button type="button" data-view-jump="intel/research" data-tip="Low-level research tables — MAC, IP, CVE.">Research tables →</button>
+        <button type="button" data-view-jump="packets/dpi" data-tip="Packet field researchers — DPI English translation.">Packet DPI →</button>
       </div>
       <p class="meta" style="margin-top:10px;font-size:0.62rem;" data-tip="Panel stays in one tab. Right-click any follow-through button or browser link → Open in new tab when you want a second window.">
         Navigation stays in this tab unless you right-click → Open link in new tab.
@@ -1261,9 +1323,9 @@
         </div>
       </div>
       <div class="honor-crossrefs">
-        <button type="button" data-view-jump="monitor" data-tip="See RF vectors in Warnings when bursts fire.">Monitor warnings →</button>
+        <button type="button" data-view-jump="packets/live" data-tip="See RF vectors in Warnings when bursts fire.">Packet warnings →</button>
         <button type="button" data-view-jump="us" data-tip="US Page 1 — local machine field identity.">US field →</button>
-        <button type="button" data-view-jump="research" data-tip="Research tables — CVE, MAC, IP intel.">Research →</button>
+        <button type="button" data-view-jump="intel/research" data-tip="Research tables — CVE, MAC, IP intel.">Research →</button>
       </div>
     </div>
   </section>
@@ -1391,7 +1453,7 @@
             <span><span class="legend-swatch" style="background:#e8c547"></span>Watch</span>
             <span><span class="legend-swatch" style="background:#ff5c3a"></span>Hot</span>
             <span>· SDF wireframe · infinite zoom · GPS · distance from you</span>
-            <button type="button" data-view-jump="honor" style="margin-left:8px;font-size:0.62rem;padding:3px 8px;border:1px solid var(--border);background:transparent;color:var(--internet);border-radius:4px;cursor:pointer;" data-tip="Set operator location for threat distances.">Set my location →</button>
+            <button type="button" data-view-jump="intel/trust" style="margin-left:8px;font-size:0.62rem;padding:3px 8px;border:1px solid var(--border);background:transparent;color:var(--internet);border-radius:4px;cursor:pointer;" data-tip="Set operator location for threat distances.">Set my location →</button>
           </div>
         </div>
         <div class="host-point-list" id="host-point-list">
@@ -1875,15 +1937,130 @@
       </div>`;
     }
 
-    function showView(name) {
-      const btn = document.querySelector(`nav.menu button[data-view="${name}"]`);
-      if (!btn) return;
-      document.querySelectorAll("nav.menu button").forEach((b) => b.classList.remove("active"));
+    const TAB_GROUPS = {
+      command: { panel: "command", default: "command", subs: { command: "Command" } },
+      us: { panel: "us", default: "us", subs: { us: "US" } },
+      packets: { panel: "packets", default: "monitor", subs: { monitor: "Live · Good/Bad", inspect: "DPI · Deep inspect" } },
+      threats: { panel: "threats", default: "host-attack", subs: { "host-attack": "Map · Globe", dossier: "Attack paths", "human-dossier": "Kill orders" } },
+      intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", "field-rf": "Field RF", research: "Research" } },
+      library: { panel: "library", default: "library", subs: { library: "Library" } },
+      system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
+    };
+    const LEGACY_VIEW_MAP = {
+      monitor: ["packets", "monitor"], inspect: ["packets", "inspect"],
+      honor: ["intel", "honor"], "field-rf": ["intel", "field-rf"], research: ["intel", "research"],
+      "host-attack": ["threats", "host-attack"], dossier: ["threats", "dossier"], "human-dossier": ["threats", "human-dossier"],
+      settings: ["system", "settings"], logs: ["system", "logs"],
+    };
+    let currentPanel = "command";
+    let currentSubView = "command";
+
+    function resolveViewRoute(raw) {
+      const parts = (raw || "command").split("/");
+      let panel = parts[0];
+      let sub = parts[1] || null;
+      if (LEGACY_VIEW_MAP[panel]) {
+        [panel, sub] = LEGACY_VIEW_MAP[panel];
+      }
+      const group = TAB_GROUPS[panel];
+      if (!group) return { panel: "command", sub: "command" };
+      if (!sub) sub = group.default;
+      if (!group.subs[sub]) sub = group.default;
+      return { panel, sub };
+    }
+
+    function ggbFlowRow(f) {
+      return `<div class="ggb-flow-row"><strong>${esc(f.process)}</strong> → ${esc(f.remote_ip)}${f.remote_port ? ":" + esc(f.remote_port) : ""}
+        <span class="meta"> · ${esc(f.verdict)}${f.trust_meter != null ? " · trust " + f.trust_meter + "%" : ""}</span></div>`;
+    }
+
+    function renderCommandCenter(data) {
+      const cmd = data?.field_command || {};
+      const motto = $("command-motto");
+      if (motto && cmd.motto) {
+        motto.innerHTML = `<strong>Command · Good Guy vs Bad Guy</strong> — ${esc(cmd.motto)} ${esc(cmd.tagline || "")}`;
+      }
+      const perm = cmd.packet_permission || {};
+      const banner = $("command-permission-banner");
+      if (banner) {
+        banner.innerHTML = perm.why
+          ? `<strong>Packet permission</strong> — ${esc(perm.why)}`
+          : "";
+        banner.style.display = perm.why ? "block" : "none";
+      }
+      const good = cmd.good_guy || {};
+      const watch = cmd.watch || {};
+      const bad = cmd.bad_guy || {};
+      if ($("cmd-good-count")) $("cmd-good-count").textContent = good.count ?? 0;
+      if ($("cmd-good-pct")) $("cmd-good-pct").textContent = `${good.percent ?? 0}% of flows · USER_OK · EPHEMERAL`;
+      if ($("cmd-watch-count")) $("cmd-watch-count").textContent = watch.count ?? 0;
+      if ($("cmd-bad-count")) $("cmd-bad-count").textContent = bad.count ?? 0;
+      if ($("cmd-bad-pct")) $("cmd-bad-pct").textContent = `${bad.percent ?? 0}% harm candidates`;
+      if ($("cmd-good-flows")) {
+        $("cmd-good-flows").innerHTML = (good.flows || []).map(ggbFlowRow).join("") || '<span class="meta">No good flows in slice.</span>';
+      }
+      if ($("cmd-watch-flows")) {
+        $("cmd-watch-flows").innerHTML = (watch.flows || []).map(ggbFlowRow).join("") || '<span class="meta">Nothing on watch.</span>';
+      }
+      if ($("cmd-bad-flows")) {
+        $("cmd-bad-flows").innerHTML = (bad.flows || []).map(ggbFlowRow).join("") || '<span class="meta">No bad guys — good day.</span>';
+      }
+      const pulse = cmd.pulse || {};
+      const pulseEl = $("command-pulse");
+      if (pulseEl) {
+        const chips = [
+          ["Signal", `${data?.truth_signal ?? cmd.truth_signal ?? 0}%`],
+          ["Warnings", pulse.threat_warnings ?? 0],
+          ["Blocked", pulse.firewall_blocks ?? 0],
+          ["Trusted", pulse.trusted_count ?? 0],
+          ["Hot targets", pulse.host_hot ?? 0],
+          ["RF bursts", pulse.rf_recent_bursts ?? 0],
+          ["Kill dossiers", pulse.human_dossier_ips ?? 0],
+          ["Killed", pulse.attack_kit_killed ?? 0],
+        ];
+        pulseEl.innerHTML = chips.map(([k, v]) =>
+          `<div class="pulse-chip">${esc(k)}<strong>${esc(String(v))}</strong></div>`
+        ).join("");
+      }
+      const knowEl = $("command-know");
+      if (knowEl) {
+        knowEl.innerHTML = (cmd.know_everything || []).map((k) =>
+          `<button type="button" class="know-card" data-view-jump="${esc(k.jump)}">${esc(k.label)}<em>${esc(String(k.stat ?? "—"))}</em></button>`
+        ).join("");
+        knowEl.querySelectorAll("[data-view-jump]").forEach((btn) => {
+          btn.addEventListener("click", () => showView(btn.dataset.viewJump));
+        });
+      }
+    }
+
+    function renderSubnav(panel, sub) {
+      const subnav = $("panel-subnav");
+      const group = TAB_GROUPS[panel];
+      if (!subnav || !group) return;
+      const keys = Object.keys(group.subs);
+      if (keys.length <= 1) {
+        subnav.hidden = true;
+        subnav.innerHTML = "";
+        return;
+      }
+      subnav.hidden = false;
+      subnav.innerHTML = keys.map((k) =>
+        `<button type="button" data-sub="${esc(k)}" class="${k === sub ? "active" : ""}">${esc(group.subs[k])}</button>`
+      ).join("");
+      subnav.querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => showView(`${panel}/${btn.dataset.sub}`));
+      });
+    }
+
+    function activateSubView(sub) {
       document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
-      btn.classList.add("active");
-      $(`view-${name}`).classList.add("active");
-      if (name === "logs") loadLog(currentLog);
-      if (name === "host-attack") {
+      const el = $(`view-${sub}`);
+      if (el) el.classList.add("active");
+    }
+
+    function onSubViewActivated(sub) {
+      if (sub === "logs") loadLog(currentLog);
+      if (sub === "host-attack") {
         ensureHostEarthMap();
         invalidateHostMapSize();
         requestAnimationFrame(invalidateHostMapSize);
@@ -1892,33 +2069,49 @@
         if (lastPanelData?.host_attacks) renderHostAttackMap(lastPanelData.host_attacks);
         else if (hostLastPoints.length) renderHostAttackMap({ points: hostLastPoints, stats: {}, author: {} });
       }
-      if (name === "dossier" && lastPanelData) renderDossiers(lastPanelData.angel_dossiers);
-      if (name === "human-dossier" && lastPanelData) {
+      if (sub === "dossier" && lastPanelData) renderDossiers(lastPanelData.angel_dossiers);
+      if (sub === "human-dossier" && lastPanelData) {
         bindHumanDossierFilters();
         renderHumanDossiers(lastPanelData.human_dossier);
       }
-      if (name === "research" && lastPanelData) renderResearch(lastPanelData.angel_research);
-      if (name === "inspect" && lastPanelData) {
+      if (sub === "research" && lastPanelData) renderResearch(lastPanelData.angel_research);
+      if (sub === "inspect" && lastPanelData) {
         renderPacketField(lastPanelData.packet_field);
         renderInspect(lastPanelData.packet_field);
       }
-      if (name === "library" && lastPanelData) renderLibraryShelf(lastPanelData.h7_library);
-      if (name === "us" && lastPanelData) renderUSField(lastPanelData.us_field);
-      if (name === "honor" && lastPanelData) renderHonorability(lastPanelData);
-      if (name === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
-      if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
+      if (sub === "library" && lastPanelData) renderLibraryShelf(lastPanelData.h7_library);
+      if (sub === "us" && lastPanelData) renderUSField(lastPanelData.us_field);
+      if (sub === "command" && lastPanelData) renderCommandCenter(lastPanelData);
+      if (sub === "honor" && lastPanelData) renderHonorability(lastPanelData);
+      if (sub === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
+    }
+
+    function showView(route) {
+      const { panel, sub } = resolveViewRoute(route);
+      const btn = document.querySelector(`nav.menu button[data-view="${panel}"]`);
+      if (!btn) return;
+      currentPanel = panel;
+      currentSubView = sub;
+      document.querySelectorAll("nav.menu button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderSubnav(panel, sub);
+      activateSubView(sub);
+      onSubViewActivated(sub);
+      const hash = panel === sub ? panel : `${panel}/${sub}`;
+      if (location.hash !== `#${hash}`) history.replaceState(null, "", `#${hash}`);
     }
 
     document.querySelectorAll("nav.menu button").forEach((btn) => {
       btn.addEventListener("click", () => showView(btn.dataset.view));
     });
-    document.querySelectorAll("[data-view-jump]").forEach((btn) => {
-      btn.addEventListener("click", () => showView(btn.dataset.viewJump));
+    document.body.addEventListener("click", (ev) => {
+      const jump = ev.target.closest?.("[data-view-jump]");
+      if (jump) showView(jump.dataset.viewJump);
     });
 
     function applyHashView() {
-      const name = (location.hash || "#us").replace("#", "") || "us";
-      if (name) showView(name);
+      const raw = (location.hash || "#command").replace("#", "") || "command";
+      showView(raw);
     }
     window.addEventListener("hashchange", applyHashView);
     applyHashView();
@@ -2242,7 +2435,7 @@
     $("modal-permissive").addEventListener("click", () => nexusRestart("permissive", { skipConfirm: true }));
     $("modal-review").addEventListener("click", () => {
       closeMurderModal();
-      document.querySelector('nav.menu button[data-view="settings"]').click();
+      showView("system/settings");
     });
     $("modal-later").addEventListener("click", () => {
       sessionStorage.setItem("nexus_shutdown_dismissed", window._lastShutdownIncidentId || "");
@@ -4610,26 +4803,24 @@
           renderShutdown(data.shutdown);
         }
         renderHonorability(data);
-        if ($("view-honor")?.classList.contains("active")) renderHonorability(data);
-        if ($("view-field-rf")?.classList.contains("active")) renderFieldProtect(data);
+        renderCommandCenter(data);
+        if (currentSubView === "honor") renderHonorability(data);
+        if (currentSubView === "field-rf") renderFieldProtect(data);
+        if (currentSubView === "command") renderCommandCenter(data);
         const haUpdated = data.host_attacks?.updated || "";
         if (haUpdated !== lastHostAttackUpdated) {
           lastHostAttackUpdated = haUpdated;
           renderHostAttackMap(data.host_attacks);
         }
-        if ($("view-dossier")?.classList.contains("active")) renderDossiers(data.angel_dossiers);
-        if ($("view-us")?.classList.contains("active")) renderUSField(data.us_field);
-        if ($("view-human-dossier")?.classList.contains("active")) renderHumanDossiers(data.human_dossier);
-        if ($("view-research")?.classList.contains("active")) renderResearch(data.angel_research);
-        if ($("view-inspect")?.classList.contains("active")) {
+        if (currentSubView === "dossier") renderDossiers(data.angel_dossiers);
+        if (currentSubView === "us") renderUSField(data.us_field);
+        if (currentSubView === "human-dossier") renderHumanDossiers(data.human_dossier);
+        if (currentSubView === "research") renderResearch(data.angel_research);
+        if (currentSubView === "inspect") {
           renderPacketField(data.packet_field);
           renderInspect(data.packet_field);
         }
-        if ($("view-library")?.classList.contains("active")) renderLibraryShelf(data.h7_library);
-        if ($("view-inspect")?.classList.contains("active")) {
-          renderPacketField(data.packet_field);
-          renderInspect(data.packet_field);
-        }
+        if (currentSubView === "library") renderLibraryShelf(data.h7_library);
         lastPanelData = data;
         if (window.NexusField && data.updated) NexusField.persist(data);
       } catch {

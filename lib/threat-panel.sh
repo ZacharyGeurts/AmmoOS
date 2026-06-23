@@ -20,6 +20,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/honorability.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/honorability.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/police-agency.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/police-agency.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-command.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-command.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -259,6 +260,12 @@ nexus_threat_panel_publish() {
       nexus_police_agency_json
     else
       printf '{"agencies":[],"selected":null}'
+    fi
+    printf ',"field_command":'
+    if declare -f nexus_field_command_json >/dev/null 2>&1; then
+      nexus_field_command_json
+    else
+      printf '{"good_guy":{"count":0},"bad_guy":{"count":0},"pulse":{}}'
     fi
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'
