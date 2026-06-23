@@ -460,7 +460,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.3\.0' "$panel"
+  grep -q 'v5\.4\.0' "$panel"
 }
 
 test_field_rf_module() {
@@ -753,6 +753,9 @@ test_panel_field_attack_kit_ui() {
   grep -q 'ha-strike-badge' "$panel"
   grep -q 'Trust Strike' "$panel"
   grep -q 'ak-strike-corpus' "$panel"
+  grep -q 'field-toolkit-panel' "$panel"
+  grep -q 'ft-attack-select' "$panel"
+  grep -q 'update-busy' "$panel"
   grep -qE 'v3\.8\.2' "$panel"
   grep -q 'lastPanelUpdated' "$panel"
   grep -q 'consumer_collateral' "$panel"
@@ -1044,6 +1047,33 @@ test_sdf_assets_module() {
   grep -q 'createGlobeLayer' "${ROOT}/panel/assets/sdf-render.js"
 }
 
+test_nexus_update_lock_module() {
+  [[ -f "${ROOT}/lib/nexus-update-lock.py" ]]
+  [[ -f "${ROOT}/data/github-update-lock.schema.json" ]]
+  grep -q '/api/update/status' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'github-update.lock' "${ROOT}/data/github-update-lock.schema.json"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/nexus-update-lock.py" status | grep -q '"locked": false'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/nexus-update-lock.py" acquire --holder=test --target=9.9.9 --previous=9.9.8 | grep -q '"ok": true'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/nexus-update-lock.py" acquire --holder=test2 | grep -q 'update_in_progress'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/nexus-update-lock.py" release --force | grep -q '"released": true'
+}
+
+test_field_toolkit_module() {
+  [[ -f "${ROOT}/lib/field-toolkit-db.py" ]]
+  [[ -f "${ROOT}/data/field-toolkit-seed.json" ]]
+  grep -q 'port_scan' "${ROOT}/data/field-toolkit-seed.json"
+  grep -q '/api/field-toolkit' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'field_toolkit' "${ROOT}/lib/field-attack-kit.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-toolkit-db.py" json | grep -q 'auto_crush_hot'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-toolkit-db.py" toggle auto_crush_hot on | grep -q '"enabled": true'
+}
+
 test_nexus_update_module() {
   [[ -f "${ROOT}/lib/nexus-update.py" ]]
   grep -q '/api/update/check' "${ROOT}/lib/threat-panel-http.py"
@@ -1075,6 +1105,8 @@ run_test "panel field rf UI" test_panel_field_rf_ui
 run_test "field command module" test_field_command_module
 run_test "panel command UI" test_panel_command_ui
 run_test "host attack map module" test_host_attack_module
+run_test "nexus update lock module" test_nexus_update_lock_module
+run_test "field toolkit module" test_field_toolkit_module
 run_test "nexus update module" test_nexus_update_module
 run_test "host map trash module" test_host_map_trash_module
 run_test "sdf map assets module" test_sdf_assets_module

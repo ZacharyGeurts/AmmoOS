@@ -101,6 +101,24 @@ def _github_latest() -> dict[str, Any]:
     return out
 
 
+def _lock_status() -> dict[str, Any]:
+    lock_py = INSTALL / "lib" / "nexus-update-lock.py"
+    if not lock_py.is_file():
+        return {"locked": False}
+    import subprocess
+    proc = subprocess.run(
+        [sys.executable, str(lock_py), "status"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        env={**os.environ, "NEXUS_STATE_DIR": str(STATE), "NEXUS_INSTALL_ROOT": str(INSTALL)},
+    )
+    try:
+        return json.loads(proc.stdout or "{}")
+    except json.JSONDecodeError:
+        return {"locked": False}
+
+
 def check_update(force: bool = False) -> dict[str, Any]:
     current = _read_local_version()
     cached: dict[str, Any] | None = None
@@ -137,6 +155,13 @@ def check_update(force: bool = False) -> dict[str, Any]:
         doc["label"] = f"{current} → {latest}"
     else:
         doc["label"] = f"v{current}"
+
+    lock = _lock_status()
+    doc["update_lock"] = lock
+    doc["update_in_progress"] = bool(lock.get("locked"))
+    if lock.get("locked"):
+        doc["update_available"] = False
+        doc["label"] = lock.get("message") or "Update in progress"
 
     try:
         CACHE.parent.mkdir(parents=True, exist_ok=True)

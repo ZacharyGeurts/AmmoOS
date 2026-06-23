@@ -15,7 +15,18 @@ INSTALL_USER="${SUDO_USER:-${USER:-}}"
 export NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-common.sh"
+# shellcheck source=/dev/null
+[[ -f "${ROOT}/lib/nexus-update-lock.sh" ]] && source "${ROOT}/lib/nexus-update-lock.sh"
 nexus_ensure_group
+
+if declare -f nexus_update_lock_ensure >/dev/null 2>&1; then
+  if ! nexus_update_lock_ensure; then
+    echo 'NEXUS-Shield update already in progress — github-update.lock held. Wait for panel UPDATE to finish.' >&2
+    nexus_update_lock_status >&2 || true
+    exit 2
+  fi
+  trap 'nexus_update_lock_release' EXIT
+fi
 
 if command -v apt-get >/dev/null 2>&1; then
   export DEBIAN_FRONTEND=noninteractive
@@ -23,6 +34,7 @@ if command -v apt-get >/dev/null 2>&1; then
   apt-get install -y -qq inotify-tools tcpdump iproute2 nftables openssl e2fsprogs
 fi
 
+declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase stopping_services
 systemctl stop nexus-genius.service 2>/dev/null || true
 pkill -9 -f 'nexus-daemon.sh' 2>/dev/null || true
 pkill -9 -f 'threat-panel-http.py' 2>/dev/null || true
@@ -38,6 +50,7 @@ printf 'status=clean_install\nts=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
 printf 'mode=1\nblock=0\nautosanitize_override=0\nupdated=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
   >/var/lib/nexus-shield/paranoia.state 2>/dev/null || true
 
+declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase copying_files
 install -d -m 750 -o root -g nexus /usr/local/lib/nexus-shield /usr/local/lib/nexus-shield/bin /usr/local/bin
 cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/assets" "${ROOT}/data" /usr/local/lib/nexus-shield/
 chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
@@ -48,12 +61,14 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/nexus-update.py" "${ROOT}/lib/honorability-db.py" "${ROOT}/lib/browser-awareness.py" \
   "${ROOT}/lib/geo-distance.py" "${ROOT}/lib/operator-location.py" \
   "${ROOT}/lib/field-rf-sentinel.py" "${ROOT}/lib/police-agency-db.py" \
-  "${ROOT}/lib/field-command.py" "${ROOT}/lib/gov-intel-db.py" "${ROOT}/lib/program-tags-db.py" 2>/dev/null || true
+  "${ROOT}/lib/field-command.py" "${ROOT}/lib/gov-intel-db.py" "${ROOT}/lib/program-tags-db.py" \
+  "${ROOT}/lib/nexus-update-lock.py" "${ROOT}/lib/field-toolkit-db.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
   "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
   "${ROOT}/lib/honorability.sh" "${ROOT}/lib/field-rf-sentinel.sh" "${ROOT}/lib/police-agency.sh" \
-  "${ROOT}/lib/field-command.sh" "${ROOT}/lib/gov-intel.sh" "${ROOT}/lib/program-tags.sh" 2>/dev/null || true
+  "${ROOT}/lib/field-command.sh" "${ROOT}/lib/gov-intel.sh" "${ROOT}/lib/program-tags.sh" \
+  "${ROOT}/lib/nexus-update-lock.sh" "${ROOT}/lib/field-toolkit.sh" 2>/dev/null || true
 chmod 555 /usr/local/lib/nexus-shield/lib/friendly-guard.py /usr/local/lib/nexus-shield/lib/friendly-guard.sh 2>/dev/null || true
 chmod 755 /usr/local/lib/nexus-shield/lib/*.py 2>/dev/null || true
 chmod -R a+rX /usr/local/lib/nexus-shield/data 2>/dev/null || true
@@ -71,6 +86,7 @@ cp "${ROOT}/config/device-whitelist.conf" /usr/local/lib/nexus-shield/config/
 
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/self-defense.sh"
+declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase signing
 nexus_sign_manifest /usr/local/lib/nexus-shield/MANIFEST.sha256
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/seal-vault.sh"
@@ -165,6 +181,7 @@ source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" 2>/dev/null || true
 source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
 nexus_field_attack_install_autokill || true
 
+declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase starting_service
 if ! systemctl is-active --quiet nexus-genius.service; then
   echo 'NEXUS-Shield install finished, but nexus-genius.service failed to start.' >&2
   echo 'Check: systemctl status nexus-genius.service' >&2

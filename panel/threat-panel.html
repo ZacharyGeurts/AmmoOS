@@ -71,6 +71,21 @@
     }
     #nexus-update-detail { font-size: 0.62rem; color: var(--muted); max-width: 220px; text-align: right; }
     #nexus-update-detail.update-ready { color: var(--gold); }
+    #nexus-update-btn.update-busy {
+      border-color: var(--internet); color: var(--internet);
+      animation: none; cursor: wait; opacity: 0.85;
+    }
+    .field-toolkit-panel {
+      margin: 12px 0 0; padding: 12px 14px; border: 1px solid var(--border);
+      border-radius: 10px; background: rgba(12, 18, 28, 0.85);
+    }
+    .field-toolkit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 900px) { .field-toolkit-grid { grid-template-columns: 1fr; } }
+    .ft-attack-desc, .ft-defense-row {
+      font-size: 0.66rem; line-height: 1.45; padding: 8px 10px; border-radius: 6px;
+      border: 1px solid #2a3548; background: #0d1520; min-height: 52px;
+    }
+    .ft-defense-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
     .honor-stars { display: inline-flex; gap: 1px; letter-spacing: 0; font-size: 0.72rem; }
     .honor-stars .star-gold { color: var(--gold); text-shadow: 0 0 6px rgba(212, 175, 55, 0.45); }
     .honor-stars .star-dim { color: #4a5060; }
@@ -1138,7 +1153,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.3.0</h1>
+        <h1>NEXUS-Shield v5.4.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1158,7 +1173,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub, runs stealth_install (restarts nexus-genius), then reloads this browser tab automatically.">v5.3.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.4.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1528,6 +1543,23 @@
         <span class="attack-kit-stat">Strike corpus: <em id="ak-strike-corpus">0</em></span>
         <button type="button" id="ak-crush-hot" data-tip="Trust Strike autokill — only hot monitor targets with dossier-backed confidence ≥ 78% and corroboration. Permanent block + archived dossier.">KILL all hot</button>
         <button type="button" id="ak-sync-field" class="ghost" data-tip="Pull hostile registry from field drive and re-apply firewall blocks.">Sync field drive</button>
+      </div>
+      <div class="field-toolkit-panel" id="field-toolkit-panel">
+        <strong style="font-size:0.72rem;color:var(--gold);">Field toolkit — attack study &amp; automated defenses</strong>
+        <div class="field-toolkit-grid" style="margin-top:10px;">
+          <div>
+            <label style="font-size:0.64rem;">Attack pattern
+              <select id="ft-attack-select" style="width:100%;margin-top:4px;font-size:0.68rem;">
+                <option value="">— study pattern —</option>
+              </select>
+            </label>
+            <div id="ft-attack-desc" class="ft-attack-desc" style="margin-top:8px;">Select an attack to study indicators and linked defenses.</div>
+          </div>
+          <div>
+            <div style="font-size:0.64rem;margin-bottom:6px;">Automated defenses <span id="ft-defense-count" class="meta"></span></div>
+            <div id="ft-defense-list"></div>
+          </div>
+        </div>
       </div>
       <div class="host-attack-stats" id="host-attack-stats">
         <span>Targets<strong id="ha-total">0</strong></span>
@@ -3374,6 +3406,66 @@
       $("ak-field-paths").textContent = doc.field_paths_ready ?? 0;
       const corpus = doc.trust_strike?.corpus?.dossier_count ?? doc.trust_strike?.corpus?.registry_count ?? 0;
       if ($("ak-strike-corpus")) $("ak-strike-corpus").textContent = corpus;
+      renderFieldToolkit(doc.field_toolkit);
+    }
+
+    let fieldToolkitCache = null;
+    let ftBound = false;
+
+    function renderFieldToolkit(ft) {
+      if (!ft) return;
+      fieldToolkitCache = ft;
+      const sel = $("ft-attack-select");
+      const prev = sel?.value || "";
+      if (sel && !sel.dataset.filled) {
+        sel.dataset.filled = "1";
+        (ft.attacks || []).forEach((a) => {
+          const opt = document.createElement("option");
+          opt.value = a.id;
+          opt.textContent = `${a.label} (${a.vector || a.category})`;
+          sel.appendChild(opt);
+        });
+        sel.addEventListener("change", () => showFtAttack(sel.value));
+      }
+      if (prev) showFtAttack(prev);
+      const dc = $("ft-defense-count");
+      if (dc) dc.textContent = `· ${ft.defenses_enabled ?? 0}/${ft.defense_count ?? 0} on`;
+      const list = $("ft-defense-list");
+      if (list) {
+        list.innerHTML = (ft.defenses || []).map((d) =>
+          `<label class="ft-defense-row"><span><strong>${esc(d.label)}</strong><br/><span class="meta">${esc(d.description || "")}</span></span>` +
+          `<input type="checkbox" data-ft-defense="${esc(d.id)}" ${d.enabled ? "checked" : ""} /></label>`
+        ).join("");
+        if (!ftBound) {
+          ftBound = true;
+          list.addEventListener("change", async (ev) => {
+            const box = ev.target;
+            if (!box?.dataset?.ftDefense) return;
+            await fetch("/api/field-toolkit/defense", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ defense_id: box.dataset.ftDefense, enabled: box.checked }),
+            });
+            refresh();
+          });
+        }
+      }
+    }
+
+    function showFtAttack(id) {
+      const desc = $("ft-attack-desc");
+      const atk = (fieldToolkitCache?.attacks || []).find((a) => a.id === id);
+      if (!desc) return;
+      if (!atk) {
+        desc.textContent = "Select an attack to study indicators and linked defenses.";
+        return;
+      }
+      const ind = (atk.indicators || []).map((i) => `• ${i}`).join("\n");
+      const defs = (atk.defenses || []).join(", ");
+      desc.innerHTML = `<strong>${esc(atk.label)}</strong> · ${esc(atk.vector)} · ${esc(atk.severity)}<br/>` +
+        `${esc(atk.study || "")}<br/>` +
+        (ind ? `<span class="meta">${esc(ind)}</span><br/>` : "") +
+        (defs ? `<span class="meta">Defenses: ${esc(defs)}</span>` : "");
     }
 
     $("ak-crush-hot")?.addEventListener("click", (e) => attackKitCrushHot(e.currentTarget));
@@ -5038,21 +5130,79 @@
     }
 
     let nexusUpdateState = null;
+    let nexusUpdateApplying = false;
+    let nexusUpdatePollTimer = null;
+
+    function setUpdateBusy(busy, message) {
+      const btn = $("nexus-update-btn");
+      const detail = $("nexus-update-detail");
+      if (btn) {
+        btn.disabled = !!busy;
+        btn.classList.toggle("update-busy", !!busy);
+        if (busy) btn.textContent = "UPDATING…";
+      }
+      if (detail && message) {
+        detail.textContent = message;
+        detail.classList.add("update-ready");
+      }
+    }
+
+    async function pollUpdateStatus() {
+      try {
+        const res = await fetch("/api/update/status", { cache: "no-store" });
+        const data = await res.json();
+        nexusUpdateState = data;
+        if (data.update_in_progress) {
+          setUpdateBusy(true, data.message || data.update_lock?.message || "Update in progress…");
+          return true;
+        }
+        setUpdateBusy(false);
+        await checkNexusUpdate(true);
+        return false;
+      } catch {
+        return nexusUpdateApplying;
+      }
+    }
 
     async function checkNexusUpdate(force = false) {
       const btn = $("nexus-update-btn");
       const detail = $("nexus-update-detail");
       if (!btn || !detail) return;
-      if (!force && nexusUpdateState && !nexusUpdateState.update_available) {
+      if (nexusUpdateApplying) return;
+      if (!force && nexusUpdateState && !nexusUpdateState.update_available && !nexusUpdateState.update_in_progress) {
         btn.textContent = `v${nexusUpdateState.current}`;
         detail.textContent = `Current · checked ${(nexusUpdateState.checked_at || "").replace("T", " ").replace("Z", " UTC")}`;
         return;
       }
       if (force) detail.textContent = "Checking GitHub…";
       try {
-        const res = await fetch(`/api/update/check?force=${force ? 1 : 0}`, { cache: "no-store" });
+        const res = await fetch(`/api/update/status?force=${force ? 1 : 0}`, { cache: "no-store" });
         const data = await res.json();
         nexusUpdateState = data;
+        if (data.update_in_progress) {
+          btn.classList.remove("update-ready");
+          btn.classList.add("update-busy");
+          btn.disabled = true;
+          btn.textContent = "UPDATING…";
+          detail.classList.add("update-ready");
+          detail.textContent = data.message || data.update_lock?.message || "Update in progress — lock held";
+          if (!nexusUpdatePollTimer) {
+            nexusUpdatePollTimer = setInterval(async () => {
+              const busy = await pollUpdateStatus();
+              if (!busy) {
+                clearInterval(nexusUpdatePollTimer);
+                nexusUpdatePollTimer = null;
+                nexusUpdateApplying = false;
+                if (nexusUpdateState?.latest && nexusUpdateState.latest !== nexusUpdateState.current) {
+                  location.reload();
+                }
+              }
+            }, 2500);
+          }
+          return;
+        }
+        btn.classList.remove("update-busy");
+        btn.disabled = false;
         if (!data.ok) {
           btn.classList.remove("update-ready");
           detail.classList.remove("update-ready");
@@ -5104,17 +5254,19 @@
     }
 
     async function applyNexusUpdate() {
+      if (nexusUpdateApplying || nexusUpdateState?.update_in_progress) {
+        await pollUpdateStatus();
+        return;
+      }
       if (!nexusUpdateState?.update_available) {
         await checkNexusUpdate(true);
         return;
       }
+      nexusUpdateApplying = true;
       const btn = $("nexus-update-btn");
       const detail = $("nexus-update-detail");
       const targetVersion = nexusUpdateState.latest;
-      if (btn) btn.disabled = true;
-      if (detail) {
-        detail.textContent = `Installing ${nexusUpdateState.previous} → ${targetVersion} — service restarts, then this tab reloads…`;
-      }
+      setUpdateBusy(true, `Installing ${nexusUpdateState.previous} → ${targetVersion} — github-update.lock held…`);
       let data = null;
       try {
         const res = await fetch("/api/update/apply", {
@@ -5123,26 +5275,37 @@
           body: "{}",
         });
         data = await res.json();
+        if (res.status === 409 && data?.update_in_progress) {
+          setUpdateBusy(true, data.message || "Update already in progress");
+          await pollUpdateStatus();
+          return;
+        }
       } catch {
         /* stealth_install kills the panel HTTP server — response may drop; still wait for restart */
-        data = { applied: true, latest: targetVersion };
+        data = { applied: true, latest: targetVersion, reload_panel: true };
       }
       if (data?.applied || data?.reload_panel) {
+        setUpdateBusy(true, "NEXUS restarting — waiting for panel…");
         await reloadPanelAfterUpdate(targetVersion);
         return;
       }
+      nexusUpdateApplying = false;
       if (data?.already_current) {
         await checkNexusUpdate(true);
       } else if (data?.release_url) {
         window.open(data.release_url, "_blank", "noopener");
         if (detail) detail.textContent = `Auto-install unavailable — opened GitHub release ${data.previous} → ${data.latest}`;
       } else if (detail) {
-        detail.textContent = data?.error || "Update not applied — try: sudo bash stealth_install.sh";
+        detail.textContent = data?.error || data?.message || "Update not applied — try: sudo bash stealth_install.sh";
       }
-      if (btn) btn.disabled = false;
+      if (btn) { btn.disabled = false; btn.classList.remove("update-busy"); }
     }
 
     $("nexus-update-btn")?.addEventListener("click", () => {
+      if (nexusUpdateApplying || nexusUpdateState?.update_in_progress) {
+        pollUpdateStatus();
+        return;
+      }
       if (nexusUpdateState?.update_available) applyNexusUpdate();
       else checkNexusUpdate(true);
     });

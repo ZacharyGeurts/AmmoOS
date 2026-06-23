@@ -2,6 +2,8 @@
 # NEXUS Field Attack Kit — permanent hostile-host disable + field drive memory.
 # Intelligence is a bullet: identify, record, crush. Survives reboot via field storage.
 
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-toolkit.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-toolkit.sh"
+
 NEXUS_FIELD_HOSTILE="${NEXUS_FIELD_HOSTILE:-${NEXUS_STATE_DIR}/field-hostile.tsv}"
 NEXUS_FIELD_NOKILL="${NEXUS_FIELD_NOKILL:-${NEXUS_STATE_DIR}/field-nokill.tsv}"
 NEXUS_HOSTILE_MEMORY_FILE="${NEXUS_HOSTILE_MEMORY_FILE:-nexus-hostile.jsonl}"
@@ -442,5 +444,12 @@ nexus_field_attack_json() {
     printf '{"ts":"%s","ip":"%s","vector":"%s","severity":"%s","reason":"%s","source":"%s","permanent":true}' \
       "$ts" "$ip" "$vector" "$severity" "${reason:-}" "${source:-}"
   done < <(tail -n +2 "$NEXUS_FIELD_HOSTILE" 2>/dev/null | tail -n 40)
-  printf ']}'
+  printf '],'
+  printf '"field_toolkit":'
+  if declare -f nexus_field_toolkit_json >/dev/null 2>&1; then
+    nexus_field_toolkit_json
+  else
+    printf '{}'
+  fi
+  printf '}'
 }

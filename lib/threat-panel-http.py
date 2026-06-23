@@ -172,6 +172,10 @@ def _nexus_update_check(force: bool = False) -> dict:
         return {"ok": False, "error": "update_check_failed", "detail": (proc.stderr or "")[:200]}
 
 
+def _nexus_update_lock(args: list[str], timeout: int = 15) -> dict:
+    return _nexus_py_json(INSTALL_ROOT / "lib" / "nexus-update-lock.py", args, timeout=timeout)
+
+
 def _nexus_py_json(script: Path, args: list[str], timeout: int = 25) -> dict:
     if not script.is_file():
         return {"ok": False, "error": "script_missing"}
@@ -372,9 +376,25 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, "{}", "application/json")
             return
 
-        if path == "/api/update/check":
+        if path in ("/api/update/check", "/api/update/status"):
             force = str(query.get("force", ["0"])[0]).strip() in ("1", "true", "yes")
             payload = _nexus_update_check(force=force)
+            lock = _nexus_update_lock(["status"])
+            payload["update_lock"] = lock
+            payload["update_in_progress"] = bool(lock.get("locked"))
+            if lock.get("locked"):
+                payload["update_available"] = False
+                payload["message"] = lock.get("message") or "Update in progress"
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-toolkit":
+            attack_id = str(query.get("id", [""])[0]).strip()
+            script = INSTALL_ROOT / "lib" / "field-toolkit-db.py"
+            if attack_id:
+                payload = _nexus_py_json(script, ["get", attack_id])
+            else:
+                payload = _nexus_py_json(script, ["json"])
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -583,10 +603,59 @@ class Handler(BaseHTTPRequestHandler):
         body = self._read_json_body()
 
         if path == "/api/update/apply":
+            lock = _nexus_update_lock(["status"])
+            if lock.get("locked"):
+                self._send(
+                    409,
+                    json.dumps({
+                        "ok": False,
+                        "error": "update_in_progress",
+                        "update_in_progress": True,
+                        "message": lock.get("message") or "Update already running",
+                        "update_lock": lock,
+                    }),
+                    "application/json",
+                )
+                return
             upd = _nexus_update_check(force=True)
+            if upd.get("update_in_progress"):
+                self._send(
+                    409,
+                    json.dumps({
+                        "ok": False,
+                        "error": "update_in_progress",
+                        "update_in_progress": True,
+                        "message": upd.get("label") or "Update in progress",
+                        "update_lock": upd.get("update_lock"),
+                    }),
+                    "application/json",
+                )
+                return
             if not upd.get("update_available"):
                 self._send(200, json.dumps({"ok": True, "already_current": True, **upd}), "application/json")
                 return
+            target = str(upd.get("latest") or "")
+            previous = str(upd.get("previous") or upd.get("current") or "")
+            acq = _nexus_update_lock([
+                "acquire",
+                "--holder=panel",
+                "--phase=git_fetch",
+                f"--target={target}",
+                f"--previous={previous}",
+            ])
+            if not acq.get("ok"):
+                self._send(
+                    409,
+                    json.dumps({
+                        "ok": False,
+                        "error": acq.get("error") or "update_in_progress",
+                        "update_in_progress": True,
+                        "message": acq.get("message") or "Could not acquire update lock",
+                    }),
+                    "application/json",
+                )
+                return
+            token = str(acq.get("token") or "")
             install_sh = INSTALL_ROOT.parent / "stealth_install.sh"
             if not install_sh.is_file():
                 for candidate in (
@@ -599,30 +668,50 @@ class Handler(BaseHTTPRequestHandler):
             git_dir = install_sh.parent if install_sh.is_file() else None
             applied = False
             detail = ""
-            install_inner = f"bash '{install_sh}'"
-            if os.geteuid() != 0:
-                install_inner = f"sudo -n bash '{install_sh}'"
-            if git_dir and (git_dir / ".git").is_dir() and install_sh.is_file():
-                inner = (
-                    f"cd '{git_dir}' && git fetch --tags origin 2>/dev/null && "
-                    f"git pull --ff-only origin main 2>/dev/null && "
-                    f"{install_inner}"
-                )
-                applied = _run_nexus_bash(inner, timeout=300)
-                detail = "git_pull_stealth_install"
-            elif install_sh.is_file():
-                applied = _run_nexus_bash(install_inner, timeout=300)
-                detail = "stealth_install_only"
+            try:
+                _nexus_update_lock(["phase", "git_fetch", f"--token={token}"])
+                install_inner = f"export NEXUS_UPDATE_LOCK_TOKEN='{token}'; export NEXUS_UPDATE_PREVIOUS_VERSION='{previous}'; bash '{install_sh}'"
+                if os.geteuid() != 0:
+                    install_inner = f"export NEXUS_UPDATE_LOCK_TOKEN='{token}'; export NEXUS_UPDATE_PREVIOUS_VERSION='{previous}'; sudo -n bash '{install_sh}'"
+                if git_dir and (git_dir / ".git").is_dir() and install_sh.is_file():
+                    _nexus_update_lock(["phase", "git_pull", f"--token={token}"])
+                    inner = (
+                        f"cd '{git_dir}' && git fetch --tags origin 2>/dev/null && "
+                        f"git pull --ff-only origin main 2>/dev/null && "
+                        f"{install_inner}"
+                    )
+                    _nexus_update_lock(["phase", "stealth_install", f"--token={token}"])
+                    applied = _run_nexus_bash(inner, timeout=300)
+                    detail = "git_pull_stealth_install"
+                elif install_sh.is_file():
+                    _nexus_update_lock(["phase", "stealth_install", f"--token={token}"])
+                    applied = _run_nexus_bash(install_inner, timeout=300)
+                    detail = "stealth_install_only"
+            finally:
+                _nexus_update_lock(["release", f"--token={token}"])
             payload = {
                 "ok": True,
                 "applied": applied,
                 "reload_panel": applied,
                 "detail": detail,
                 "release_url": upd.get("release_url"),
-                "previous": upd.get("previous"),
-                "latest": upd.get("latest"),
+                "previous": previous,
+                "latest": target,
             }
             self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-toolkit/defense":
+            defense_id = str(body.get("defense_id", body.get("id", ""))).strip()
+            if not defense_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing defense_id"}), "application/json")
+                return
+            enabled = body.get("enabled")
+            args = ["toggle", defense_id]
+            if enabled is not None:
+                args.append("on" if enabled else "off")
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-toolkit-db.py", args)
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
             return
 
         if path == "/api/host-attack/trash":
