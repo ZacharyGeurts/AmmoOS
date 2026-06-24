@@ -663,10 +663,25 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
                 archived_fp = archived.get("identity_fingerprint")
                 if isinstance(archived_fp, dict) and archived_fp.get("identity_hash"):
                     point_row["identity_fingerprint"] = archived_fp
+                why: dict[str, str] = {}
+                try:
+                    _kr_spec = importlib.util.spec_from_file_location(
+                        "kill_reason_plain_map", INSTALL / "lib" / "kill-reason-plain.py",
+                    )
+                    if _kr_spec and _kr_spec.loader:
+                        _kr_mod = importlib.util.module_from_spec(_kr_spec)
+                        _kr_spec.loader.exec_module(_kr_mod)
+                        why = _kr_mod.explain_from_archived(archived)
+                except Exception:
+                    why = {}
+                if why.get("why_killed_plain"):
+                    point_row["why_killed_plain"] = why["why_killed_plain"]
                 point_row["archived_dossier"] = {
                     "archived": archived.get("archived") or archived.get("rekill_ts"),
                     "action": archived.get("action") or "KILL",
                     "identity_hash": point_row["identity_fingerprint"].get("identity_hash", ""),
+                    "why_killed_plain": point_row.get("why_killed_plain") or archived.get("why_killed_plain"),
+                    "reason": archived.get("reason") or archived.get("kill_reason"),
                 }
         cached_check = (online_check_cache.get("checks") or {}).get(ip)
         if isinstance(cached_check, dict) and cached_check.get("ip") == ip:

@@ -1080,6 +1080,11 @@ test_planetary_observer_module() {
   grep -q 'nexus_field_attack_autokill_needs_die' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'autokill_needs_die' "${ROOT}/lib/planetary-observer.py"
   grep -q 'NEXUS_PLANETARY_AUTOKILL_MAX' "${ROOT}/config/nexus.conf"
+  [[ -f "${ROOT}/lib/kill-reason-plain.py" ]]
+  grep -q 'why_killed_plain' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/kill-reason-plain.py" explain '{"ip":"203.0.113.50","reason":"autokill_needs_die:strike_certain=1.0","action":"KILL","vector":"HOSTILE","process":"curl"}' \
+    | grep -q 'why_killed_plain'
 }
 
 test_host_identity_module() {

@@ -147,21 +147,56 @@ def _top_hostile_region(obs: dict[str, Any]) -> tuple[str, str, int] | None:
     return None
 
 
+def _collect_kill_explanations(out: dict[str, Any]) -> list[dict[str, Any]]:
+    """Gather plain-English why-killed rows from any action payload shape."""
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for key in ("results", "executed", "rekilled_detail", "enforced_detail"):
+        for item in out.get(key) or []:
+            if not isinstance(item, dict):
+                continue
+            plain = item.get("why_killed_plain")
+            ip = str(item.get("ip") or "").strip()
+            if not ip or not plain:
+                continue
+            dedupe = f"{ip}:{plain[:48]}"
+            if dedupe in seen:
+                continue
+            seen.add(dedupe)
+            rows.append({
+                "ip": ip,
+                "threat_id": item.get("threat_id"),
+                "why_killed_plain": plain,
+                "action": item.get("action") or out.get("step"),
+            })
+    return rows
+
+
 def _record_action(results: dict[str, Any], step: str, out: dict[str, Any]) -> None:
+    out = {**out, "step": step}
+    explained = _collect_kill_explanations(out)
+    if explained:
+        out["kills_explained"] = explained
+        results.setdefault("kills_explained", []).extend(explained)
     results["actions"].append({"step": step, **out})
     killed = (
         out.get("killed_count")
         or out.get("destroyed_count")
         or out.get("rekilled_count")
         or out.get("enforced_count")
+        or out.get("executed_count")
         or out.get("kill_count")
         or 0
     )
-    if killed:
-        _log_op({"step": step, **{k: out.get(k) for k in (
-            "killed_count", "destroyed_count", "rekilled_count", "enforced_count", "kill_count",
-            "certain_killed_count", "killable_killed_count", "attempted",
-        ) if out.get(k) is not None}})
+    if killed or explained:
+        _log_op({
+            "step": step,
+            **{k: out.get(k) for k in (
+                "killed_count", "destroyed_count", "rekilled_count", "enforced_count", "kill_count",
+                "executed_count", "certain_killed_count", "killable_killed_count", "attempted",
+            ) if out.get(k) is not None},
+            "kills_explained": explained[:24],
+        })
 
 
 def proactive_cycle(*, force: bool = False) -> dict[str, Any]:

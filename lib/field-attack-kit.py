@@ -46,6 +46,14 @@ assert _ts_spec and _ts_spec.loader
 _ts_spec.loader.exec_module(_ts)
 gate_strike = _ts.gate_strike
 
+_kr_spec = importlib.util.spec_from_file_location("kill_reason_plain", INSTALL / "lib" / "kill-reason-plain.py")
+_kr = importlib.util.module_from_spec(_kr_spec)
+assert _kr_spec and _kr_spec.loader
+_kr_spec.loader.exec_module(_kr)
+explain_kill = _kr.explain_kill
+attach_to_dossier = _kr.attach_to_dossier
+explain_from_archived = _kr.explain_from_archived
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -321,7 +329,30 @@ def kill_target(
         "strike_confidence": strike_gate.get("strike_confidence"),
         "certainty": strike_gate.get("certainty"),
     }
+    dossier["reason"] = reason
+    dossier["kill_reason"] = reason
+    dossier["source"] = (extra or {}).get("source") or "attack-kit"
+    action = "HARDWARE DESTROY" if hardware_destroy else "KILL"
+    attach_to_dossier(
+        dossier,
+        explain_kill(
+            ip=ip,
+            reason=reason,
+            action=action,
+            point=point,
+            strike_gate=strike_gate,
+            vector=vector,
+            process=str(point.get("our_process") or point.get("process") or ""),
+            source=str(dossier.get("source") or ""),
+            hostile=(extra or {}).get("hostile"),
+        ),
+    )
     ok = _run_kill(ip, vector, severity, reason, dossier)
+    why = {
+        "why_killed_plain": dossier.get("why_killed_plain"),
+        "why_killed_short": dossier.get("why_killed_short"),
+        "why_killed_code": dossier.get("why_killed_code"),
+    }
     return {
         "ok": ok,
         "ip": ip,
@@ -334,6 +365,7 @@ def kill_target(
         "certainty": 1.0 if hardware_destroy else strike_gate.get("strike_confidence"),
         "strike_gate": strike_gate,
         "dossier": dossier if ok else {},
+        **(why if ok else {}),
     }
 
 
@@ -441,7 +473,12 @@ def autokill_needs_die(max_targets: int | None = None) -> dict[str, Any]:
                 certain_killed.append(ip)
             else:
                 killable_killed.append(ip)
-            results.append({"ip": ip, "hardware_destroy": result.get("hardware_destroy"), "ok": True})
+            results.append({
+                "ip": ip,
+                "hardware_destroy": result.get("hardware_destroy"),
+                "ok": True,
+                "why_killed_plain": result.get("why_killed_plain"),
+            })
         elif result:
             skipped.append(ip)
             results.append({"ip": ip, "ok": False, "reason": result.get("reason")})
@@ -538,14 +575,15 @@ def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
 
 
 def forever_kill_enforce(max_ips: int | None = None) -> dict[str, Any]:
+    """Re-apply forever kill + hardware destroy for archived HARDWARE_DESTROY registry entries."""
     if max_ips is None:
         max_ips = FOREVER_KILL_MAX_IPS
-    """Re-apply forever kill + hardware destroy for archived HARDWARE_DESTROY registry entries."""
     disabled = sorted(_disabled_ips())[:max_ips]
     if not disabled:
-        return {"ok": True, "enforced": [], "enforced_count": 0}
+        return {"ok": True, "enforced": [], "enforced_count": 0, "enforced_detail": []}
 
     enforced: list[str] = []
+    enforced_detail: list[dict[str, Any]] = []
     skipped: list[str] = []
     script = INSTALL / "lib" / "field-attack-kit.sh"
 
@@ -586,6 +624,14 @@ def forever_kill_enforce(max_ips: int | None = None) -> dict[str, Any]:
         proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=45, env=env)
         if proc.returncode == 0:
             enforced.append(ip)
+            why = explain_kill(
+                ip=ip,
+                reason="forever_kill_enforce",
+                action="HARDWARE DESTROY",
+                point=dossier,
+                vector=str(dossier.get("vector") or "HOSTILE"),
+            )
+            enforced_detail.append({"ip": ip, **why})
         else:
             skipped.append(ip)
 
@@ -594,6 +640,7 @@ def forever_kill_enforce(max_ips: int | None = None) -> dict[str, Any]:
         "forever_kill": True,
         "enforced": enforced,
         "enforced_count": len(enforced),
+        "enforced_detail": enforced_detail,
         "skipped": len(skipped),
     }
 
@@ -674,6 +721,7 @@ def auto_rekill_validated(max_ips: int = AUTO_REKILL_MAX_IPS) -> dict[str, Any]:
         str(p.get("ip") or ""): p for p in doc.get("points") or [] if p.get("ip")
     }
     rekilled: list[str] = []
+    rekilled_detail: list[dict[str, Any]] = []
     skipped: list[str] = []
     checked = 0
 
@@ -699,6 +747,10 @@ def auto_rekill_validated(max_ips: int = AUTO_REKILL_MAX_IPS) -> dict[str, Any]:
         if result.get("rekill"):
             _record_auto_rekill(ip)
             rekilled.append(ip)
+            rekilled_detail.append({
+                "ip": ip,
+                "why_killed_plain": result.get("why_killed_plain"),
+            })
         else:
             skipped.append(ip)
 
@@ -706,6 +758,7 @@ def auto_rekill_validated(max_ips: int = AUTO_REKILL_MAX_IPS) -> dict[str, Any]:
         "ok": True,
         "rekilled": rekilled,
         "rekilled_count": len(rekilled),
+        "rekilled_detail": rekilled_detail,
         "checked": checked,
         "skipped": len(skipped),
     }
@@ -786,6 +839,21 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
         "wire_point": strike_gate.get("wire_point"),
     })
     reason = "rekill_same_host_validated"
+    dossier["reason"] = reason
+    dossier["kill_reason"] = reason
+    attach_to_dossier(
+        dossier,
+        explain_kill(
+            ip=ip,
+            reason=reason,
+            action="REKILL",
+            point=point,
+            strike_gate=strike_gate,
+            vector=vector,
+            process=str(point.get("our_process") or point.get("process") or ""),
+            extra_detail="Same-host identity matched archived kill dossier while target was back online.",
+        ),
+    )
     ok = _run_rekill(ip, vector, severity, reason, dossier)
     return {
         "ok": ok,
@@ -798,6 +866,8 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
         "online_check": online_doc,
         "dossier_archived": ok,
         "certainty": 1.0 if hardware_destroy else strike_gate.get("certainty"),
+        "why_killed_plain": dossier.get("why_killed_plain") if ok else None,
+        "why_killed_short": dossier.get("why_killed_short") if ok else None,
     }
 
 

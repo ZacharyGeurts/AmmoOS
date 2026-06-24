@@ -447,8 +447,9 @@ def destroy_targets(
             continue
         action = str(t.get("destroy_action") or "sever_wire")
         vector = str(t.get("vector") or "AI_HOSTILE")
+        why_plain = t.get("clarity") or t.get("category_title") or "Hostile AI threat at destroy certainty."
         if action == "forever_kill":
-            extra = {"force": force, "strike_mode": "hostile_ai"}
+            extra = {"force": force, "strike_mode": "hostile_ai", "hostile": t, "source": "hostile-ai-destroy"}
             out = ak.kill_target(
                 tip,
                 vector=vector,
@@ -456,7 +457,12 @@ def destroy_targets(
                 reason=f"hostile_ai_destroy:{t.get('category_id')}",
                 extra=extra,
             )
-            results.append({**out, "threat_id": t.get("id"), "action": "forever_kill"})
+            results.append({
+                **out,
+                "threat_id": t.get("id"),
+                "action": "forever_kill",
+                "why_killed_plain": out.get("why_killed_plain") or why_plain,
+            })
         else:
             out = ft.sever_target(
                 tip,
@@ -464,7 +470,15 @@ def destroy_targets(
                 severity=str(t.get("severity") or "high"),
                 reason=f"hostile_ai_sever:{t.get('category_id')}",
             )
-            results.append({**out, "threat_id": t.get("id"), "action": "sever_wire"})
+            results.append({
+                **out,
+                "threat_id": t.get("id"),
+                "action": "sever_wire",
+                "why_killed_plain": (
+                    f"We severed the wire to {tip} because {why_plain} "
+                    "Friendly guard was honored — no friendly fire on Heaven flows."
+                ),
+            })
 
     killed = sum(1 for r in results if r.get("killed") or r.get("ok"))
     return {

@@ -23,6 +23,21 @@ STATE_JSON = STATE / "kill-detect-state.json"
 LOG_JSONL = STATE / "kill-detect-log.jsonl"
 
 _fg = None
+_kr = None
+
+
+def _kill_reason_plain() -> Any:
+    global _kr
+    if _kr is not None:
+        return _kr
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("kill_reason_plain", INSTALL / "lib" / "kill-reason-plain.py")
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    _kr = mod
+    return mod
 
 
 def _now() -> str:
@@ -212,12 +227,29 @@ def execute(doc: dict[str, Any] | None = None, dry_run: bool = False) -> dict[st
                 )
                 entry["strike"] = True
         entry["ok"] = True
+        why = _kill_reason_plain().explain_kill(
+            ip=ip,
+            reason=f"kill_detect:{t.get('kill_reason') or 'gatekeeper_harm'}",
+            action="KILL",
+            conn=t,
+            vector="KILL_DETECT",
+            process=str(t.get("process") or ""),
+            source="kill-detect",
+        )
+        entry.update(why)
         executed.append(entry)
         try:
             with LOG_JSONL.open("a", encoding="utf-8") as fh:
                 fh.write(
                     json.dumps(
-                        {"ts": _now(), "ip": ip, "tier": tier, "reason": t.get("kill_reason"), "pid": t.get("pid")},
+                        {
+                            "ts": _now(),
+                            "ip": ip,
+                            "tier": tier,
+                            "reason": t.get("kill_reason"),
+                            "pid": t.get("pid"),
+                            **why,
+                        },
                         ensure_ascii=False,
                     )
                     + "\n"
