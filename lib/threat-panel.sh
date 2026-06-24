@@ -25,6 +25,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/program-tags.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/program-tags.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-plugins.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/nexus-plugins.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/terror-spiderweb.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/terror-spiderweb.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/precision-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/precision-field.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -39,6 +40,9 @@ nexus_threat_panel_publish() {
   fi
   if declare -f nexus_terror_spiderweb_publish >/dev/null 2>&1; then
     nexus_terror_spiderweb_publish
+  fi
+  if declare -f nexus_precision_field_publish >/dev/null 2>&1; then
+    nexus_precision_field_publish
   fi
   local ts mode conn arp egress listeners threats corr signal dns
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
@@ -291,6 +295,12 @@ nexus_threat_panel_publish() {
       nexus_terror_spiderweb_json
     else
       printf '{"nodes":[],"edges":[],"focus":{}}'
+    fi
+    printf ',"precision_field":'
+    if declare -f nexus_precision_field_json >/dev/null 2>&1; then
+      nexus_precision_field_json
+    else
+      printf '{"entities":[],"edges":[],"stats":{}}'
     fi
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'

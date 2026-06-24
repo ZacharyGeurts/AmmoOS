@@ -20,6 +20,8 @@
   <script defer src="/assets/plugins/tab-beacon.js"></script>
   <script defer src="/assets/terror-spiderweb.js"></script>
   <script defer src="/assets/thermal-earth.js"></script>
+  <script defer src="/assets/precision-map.js"></script>
+  <script defer src="/assets/precision-spiderweb.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
@@ -215,6 +217,17 @@
     .thermal-globe-wrap.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
     #thermal-globe-3d { width: 100%; height: calc(100% - 28px); display: block; }
     .thermal-globe-caption { padding: 6px 12px; font-size: 0.65rem; text-align: center; width: 100%; }
+    .precision-wrap { padding: 16px 24px; width: 100%; max-width: none; }
+    .precision-motto { font-size: 0.82rem; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
+    .pf-map-tab, .pf-web-tab { font-size: 0.68rem; padding: 6px 12px; margin-right: 6px; border: 1px solid var(--border); border-radius: 6px; background: #0d1524; color: var(--muted); cursor: pointer; }
+    .pf-map-tab.active, .pf-web-tab.active { border-color: var(--gold); color: var(--gold); }
+    .pf-map-panel { display: none; width: 100%; height: min(52vh, 520px); min-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); background: #060a14; position: relative; }
+    .pf-map-panel.active { display: block; }
+    #precision-web-canvas-wrap { display: none; width: 100%; height: min(48vh, 480px); min-height: 280px; border-radius: var(--radius); border: 1px solid var(--border); background: #060a14; position: relative; }
+    #precision-web-canvas-wrap.active { display: block; }
+    #precision-web-canvas { width: 100%; height: 100%; display: block; }
+    .pf-popup code { font-size: 0.62rem; word-break: break-all; }
+    #precision-place-toggle.active { border-color: var(--gold); color: var(--gold); }
     .sw-registry-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0 10px; }
     .sw-registry-toolbar input, .sw-registry-toolbar select {
       background: #0d1524; border: 1px solid var(--border); color: var(--text);
@@ -1410,7 +1423,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.9.6</h1>
+        <h1>NEXUS-Shield v5.9.7</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1430,7 +1443,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.6</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.7</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1944,6 +1957,44 @@
     </div>
   </section>
 
+  <section id="view-precision-map" class="view">
+    <div class="precision-wrap">
+      <p class="precision-motto" id="precision-map-motto">
+        <strong>Precision · Map</strong> — sub-micron detected GPS. Fixed-point 1e15°⁻¹ (~0.11 nm LSB). Global WGS84 to 15 decimals + local ENU nanometer patch ±20 mm.
+      </p>
+      <div id="precision-map-meta" class="meta" style="margin-bottom:8px;">Loading precision map…</div>
+      <div id="precision-map-stats" class="spiderweb-stats"></div>
+      <div style="margin-bottom:8px;">
+        <button type="button" class="pf-map-tab active" data-pf-map="global">Global · 15dp WGS84</button>
+        <button type="button" class="pf-map-tab" data-pf-map="local">Local · ENU nm (sub-µm)</button>
+        <button type="button" id="precision-map-rebuild" class="ghost" style="margin-left:8px;">Rebuild</button>
+        <button type="button" id="precision-map-refocus" class="ghost">Zoom anchor</button>
+        <button type="button" id="precision-place-toggle" class="ghost" data-tip="Click local map to place entity at sub-micron ENU offset.">Place mode</button>
+      </div>
+      <div id="precision-global-map" class="pf-map-panel active" role="application" aria-label="Precision global map"></div>
+      <div id="precision-local-map" class="pf-map-panel" role="application" aria-label="Precision local ENU nanometer map"></div>
+    </div>
+  </section>
+
+  <section id="view-precision-web" class="view">
+    <div class="precision-wrap">
+      <p class="precision-motto" id="precision-web-motto">
+        <strong>Precision · Spiderweb</strong> — edges drawn at detected sub-micron GPS. Every node carries lat_str/lon_str + ENU E/N/U nanometers.
+      </p>
+      <div id="precision-web-meta" class="meta" style="margin-bottom:8px;">Loading precision spiderweb…</div>
+      <div style="margin-bottom:8px;">
+        <button type="button" class="pf-web-tab active" data-pf-web="global">Global web</button>
+        <button type="button" class="pf-web-tab" data-pf-web="local">Local ENU web</button>
+        <button type="button" id="precision-web-rebuild" class="ghost" style="margin-left:8px;">Rebuild</button>
+      </div>
+      <div id="precision-web-canvas-wrap" class="active">
+        <canvas id="precision-web-canvas"></canvas>
+      </div>
+      <h4 style="margin:14px 0 6px;font-size:0.82rem;color:var(--gold);">Sub-micron placement table</h4>
+      <div id="precision-web-table" class="sw-registry-scroll meta"></div>
+    </div>
+  </section>
+
   <section id="view-dossier" class="view">
     <div class="angels-wrap">
       <p class="angels-motto" id="dossier-motto"><strong>Let's Be Angels</strong> — full dossiers trace every warning back through peers, processes, MAC vendors, and CVE chains. IPv4 and IPv6. From us or at us — we look back HARD.</p>
@@ -2433,7 +2484,7 @@
       command: { panel: "command", default: "command", subs: { command: "Command" } },
       us: { panel: "us", default: "us", subs: { us: "US" } },
       packets: { panel: "packets", default: "monitor", subs: { monitor: "Live · Good/Bad", inspect: "DPI · Deep inspect" } },
-      threats: { panel: "threats", default: "host-attack", subs: { "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", dossier: "Attack paths", "human-dossier": "Kill orders" } },
+      threats: { panel: "threats", default: "host-attack", subs: { "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", "precision-map": "Precision · Map", "precision-web": "Precision · Web", dossier: "Attack paths", "human-dossier": "Kill orders" } },
       intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", "field-rf": "Field RF", research: "Research" } },
       library: { panel: "library", default: "library", subs: { library: "Library" } },
       system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
@@ -2441,7 +2492,7 @@
     const LEGACY_VIEW_MAP = {
       monitor: ["packets", "monitor"], inspect: ["packets", "inspect"],
       honor: ["intel", "honor"], "field-rf": ["intel", "field-rf"], research: ["intel", "research"],
-      "host-attack": ["threats", "host-attack"], spiderweb: ["threats", "spiderweb"], dossier: ["threats", "dossier"], "human-dossier": ["threats", "human-dossier"],
+      "host-attack": ["threats", "host-attack"], spiderweb: ["threats", "spiderweb"], "precision-map": ["threats", "precision-map"], "precision-web": ["threats", "precision-web"], dossier: ["threats", "dossier"], "human-dossier": ["threats", "human-dossier"],
       map: ["threats", "host-attack"], kill: ["threats", "human-dossier"],
       settings: ["system", "settings"], logs: ["system", "logs"],
     };
@@ -2457,7 +2508,7 @@
       command: { keys: ["field_command", "gatekeeper"], subs: { command: ["field_command"] } },
       us: { keys: ["us_field"], subs: { us: ["us_field"] } },
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
-      threats: { keys: ["host_attacks", "terror_spiderweb"], subs: { "host-attack": ["host_attacks"], spiderweb: ["terror_spiderweb"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
+      threats: { keys: ["host_attacks", "terror_spiderweb", "precision_field"], subs: { "host-attack": ["host_attacks"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
       library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
@@ -2469,6 +2520,7 @@
       if (key === "gatekeeper") return Array.isArray(val.connections);
       if (key === "field_rf") return Boolean(val.updated || val.antenna?.mode);
       if (key === "terror_spiderweb") return Boolean(val.updated || val.nodes?.length || val.focus);
+      if (key === "precision_field") return Boolean(val.updated || val.entities?.length);
       if (key === "field_command") return Boolean(val.good_guy || val.pulse || val.motto);
       if (key === "settings") return typeof val === "object" && Object.keys(val).length > 0;
       if (Array.isArray(val)) return val.length > 0;
@@ -2670,6 +2722,13 @@
         lastHostAttackUpdated = data.host_attacks.updated || "";
       }
       if (data.terror_spiderweb) renderTerrorSpiderweb(data.terror_spiderweb);
+      {
+        const pf = data.precision_field || data.terror_spiderweb?.precision_field;
+        if (pf) {
+          if (global.renderPrecisionMap) renderPrecisionMap(pf);
+          if (global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
+        }
+      }
       if (data.us_field) renderUSField(data.us_field);
       if (data.angel_dossiers) renderDossiers(data.angel_dossiers);
       if (data.human_dossier) renderHumanDossiers(data.human_dossier);
@@ -2710,6 +2769,17 @@
         renderTerrorSpiderweb(lastPanelData.terror_spiderweb);
         setTimeout(invalidateSpiderwebMap, 80);
         setTimeout(invalidateSpiderwebMap, 320);
+      }
+      if (sub === "precision-map") {
+        const pf = lastPanelData?.precision_field || lastPanelData?.terror_spiderweb?.precision_field;
+        if (pf && global.renderPrecisionMap) renderPrecisionMap(pf);
+        setTimeout(invalidatePrecisionMap, 80);
+        setTimeout(invalidatePrecisionMap, 320);
+      }
+      if (sub === "precision-web") {
+        const pf = lastPanelData?.precision_field || lastPanelData?.terror_spiderweb?.precision_field;
+        if (pf && global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
+        setTimeout(invalidatePrecisionSpiderweb, 80);
       }
       if (sub === "dossier" && lastPanelData) renderDossiers(lastPanelData.angel_dossiers);
       if (sub === "human-dossier" && lastPanelData) {
@@ -6099,6 +6169,16 @@
           renderHostAttackMap(data.host_attacks);
         }
         if (data.terror_spiderweb) renderTerrorSpiderweb(data.terror_spiderweb);
+        if (currentSubView === "precision-map") {
+          const pf = data.precision_field || data.terror_spiderweb?.precision_field;
+          if (pf && global.renderPrecisionMap) renderPrecisionMap(pf);
+          setTimeout(invalidatePrecisionMap, 80);
+        }
+        if (currentSubView === "precision-web") {
+          const pf = data.precision_field || data.terror_spiderweb?.precision_field;
+          if (pf && global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
+          setTimeout(invalidatePrecisionSpiderweb, 80);
+        }
         if (currentSubView === "dossier") renderDossiers(data.angel_dossiers);
         if (currentSubView === "us") renderUSField(data.us_field);
         if (currentSubView === "human-dossier") renderHumanDossiers(data.human_dossier);

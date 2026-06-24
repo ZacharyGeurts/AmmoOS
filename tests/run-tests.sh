@@ -620,6 +620,44 @@ test_thermal_earth_module() {
     python3 "${ROOT}/lib/thermal-earth-field.py" json | grep -q 'thermal-earth-field'
 }
 
+test_gps_precision_module() {
+  [[ -f "${ROOT}/lib/gps-precision.py" ]]
+  grep -q 'FIXED_SCALE = 10\*\*15' "${ROOT}/lib/gps-precision.py"
+  grep -q 'sub_micron' "${ROOT}/lib/gps-precision.py"
+  grep -q '/api/gps-precision' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/gps-precision.py" json | grep -q 'sub-micron'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/gps-precision.py" place 42.9709 -82.4249 test | grep -q 'lat_i'
+}
+
+test_precision_field_module() {
+  [[ -f "${ROOT}/lib/precision-field.py" ]]
+  [[ -f "${ROOT}/lib/precision-field.sh" ]]
+  [[ -f "${ROOT}/panel/assets/precision-map.js" ]]
+  [[ -f "${ROOT}/panel/assets/precision-spiderweb.js" ]]
+  grep -q 'precision_field' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'nexus_precision_field_json' "${ROOT}/lib/precision-field.sh"
+  grep -q '/api/precision-field' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'precision_field' "${ROOT}/lib/terror-spiderweb.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/precision-field.py" build | grep -q 'precision-field/v1'
+}
+
+test_panel_precision_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'view-precision-map' "$panel"
+  grep -q 'view-precision-web' "$panel"
+  grep -q 'precision-map.js' "$panel"
+  grep -q 'precision-spiderweb.js' "$panel"
+  grep -q 'renderPrecisionMap' "$panel"
+  grep -q 'renderPrecisionSpiderweb' "$panel"
+  grep -q 'Precision · Map' "$panel"
+  grep -q 'Precision · Web' "$panel"
+  grep -q 'precision-place-toggle' "$panel"
+  grep -q 'precision-web-canvas' "$panel"
+}
+
 test_census_field_populate_module() {
   [[ -f "${ROOT}/lib/census-field-populate.py" ]]
   [[ -f "${ROOT}/data/census-sources-seed.json" ]]
@@ -954,7 +992,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.9.6' "$panel"
+  grep -q 'v5.9.7' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -963,7 +1001,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.9.6' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.9.7' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
@@ -1322,6 +1360,9 @@ run_test "gov intel module" test_gov_intel_module
 run_test "police agency module" test_police_agency_module
 run_test "panel field rf UI" test_panel_field_rf_ui
 run_test "thermal earth field module" test_thermal_earth_module
+run_test "gps precision module" test_gps_precision_module
+run_test "precision field module" test_precision_field_module
+run_test "panel precision UI" test_panel_precision_ui
 run_test "hostility priority module" test_hostility_priority_module
 run_test "census field populate module" test_census_field_populate_module
 run_test "terror spiderweb module" test_terror_spiderweb_module

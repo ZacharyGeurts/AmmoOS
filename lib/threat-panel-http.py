@@ -458,6 +458,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/precision-field":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "precision-field.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/gps-precision":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "gps-precision.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/existence-identity":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "existence-identity.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
@@ -1003,6 +1013,19 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/thermal-earth/rebuild":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "thermal-earth-field.py", ["build"])
             self._send(200 if payload.get("schema") else 500, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/precision-field/rebuild":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "precision-field.py", ["build"])
+            self._send(200 if payload.get("schema") else 500, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/precision-field/place":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "precision-field.py",
+                ["place", json.dumps(body)],
+            )
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
             return
 
         if path == "/api/autosanitize/toggle":

@@ -111,7 +111,21 @@ def _clamp_coords(lat: float, lon: float) -> tuple[float, float] | None:
         lon -= 360
     while lon < -180:
         lon += 360
-    return round(lat, 6), round(lon, 6)
+    try:
+        gp = _mod("gps_precision", "gps-precision.py")
+        return float(gp.format_deg(lat)), float(gp.format_deg(lon))
+    except Exception:
+        return round(lat, 6), round(lon, 6)
+
+
+def _precision_enrich(row: dict[str, Any]) -> dict[str, Any]:
+    if row.get("lat") is None or row.get("lon") is None:
+        return row
+    try:
+        gp = _mod("gps_precision", "gps-precision.py")
+        return gp.enrich_entity(row)
+    except Exception:
+        return row
 
 
 def _extract_ips(text: str) -> list[str]:
@@ -468,7 +482,7 @@ def _internet_registry(catalog: dict[str, dict[str, Any]], geo_map: dict[str, di
         if coords is None:
             coords = _coords_from_geo(entry.get("meta") or {})
         kind = _classify_internet(ip, entry, geo)
-        rows.append({
+        row = {
             "id": f"inet:{ip}",
             "kind": kind,
             "ip": ip,
@@ -482,7 +496,10 @@ def _internet_registry(catalog: dict[str, dict[str, Any]], geo_map: dict[str, di
             "city": geo.get("city") or entry.get("meta", {}).get("city") or "",
             "country": geo.get("country") or geo.get("country_code") or "",
             "meta": entry.get("meta") or {},
-        })
+        }
+        if coords:
+            row = _precision_enrich(row)
+        rows.append(row)
     return rows
 
 
@@ -494,7 +511,7 @@ def _home_registry(homes: list[dict[str, Any]]) -> list[dict[str, Any]]:
         coords = _clamp_coords(lat, lon) if lat is not None and lon is not None else None
         role = h.get("role") or "home"
         kind = "home" if role == "home" else ("neighbor" if role in ("neighbor", "lan") else role)
-        rows.append({
+        row = {
             **h,
             "kind": kind,
             "placed": coords is not None,
@@ -502,7 +519,10 @@ def _home_registry(homes: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "lon": coords[1] if coords else None,
             "color": NODE_COLORS.get(kind, NODE_COLORS["home"]),
             "pushpin": True,
-        })
+        }
+        if coords:
+            row = _precision_enrich(row)
+        rows.append(row)
     return rows
 
 
@@ -1184,6 +1204,14 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
     }
     _save_json(UNIVERSAL_REGISTRY, registry_doc)
 
+    precision_doc: dict[str, Any] = {}
+    try:
+        precision_doc = _mod("precision_field", "precision-field.py").build_precision_field()
+        stats["precision_placed"] = (precision_doc.get("stats") or {}).get("placed", 0)
+        stats["precision_sub_micron"] = (precision_doc.get("stats") or {}).get("sub_micron", 0)
+    except Exception:
+        pass
+
     existence_doc: dict[str, Any] = {}
     try:
         ex_mod = _mod("existence_identity", "existence-identity.py")
@@ -1233,6 +1261,7 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "hostility": hostility_doc,
         "census_field": census_doc if census_doc.get("ok") else panel_doc.get("census_field") or {},
         "thermal_earth": thermal_doc,
+        "precision_field": precision_doc,
     }
 
 
