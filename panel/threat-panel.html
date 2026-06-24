@@ -2070,6 +2070,10 @@
         <div id="us-traffic-bars" style="margin-top:14px;"></div>
       </section>
       <section id="us-observations" class="us-rundown-panel"><h3>Plain-English rundown</h3><div class="us-rundown"><div class="us-rundown-item"><p>Gathering ss · ip · proc · NEXUS state…</p></div></div></section>
+      <section class="us-card us-card--gateway" style="margin-bottom:18px;">
+        <h4 style="margin:0 0 12px;color:var(--dust-gold,#d4b86a);">Default gateway · full field picture</h4>
+        <div id="us-gateway"><div class="meta">Sampling ip route · ARP · DHCP · gatekeeper · threat vectors…</div></div>
+      </section>
       <section class="us-card us-card--network" style="margin-bottom:18px;">
         <h4 style="margin:0 0 12px;color:var(--dust-gold,#d4b86a);">Local network · learned tables</h4>
         <div id="us-local-network"><div class="meta">Sampling ARP · DHCP · home protector · gatekeeper…</div></div>
@@ -7931,7 +7935,10 @@
         const connCount = (net.connections || []).length;
         const strict = gk.strict_trust ? "us-pill--ok" : "us-pill--warn";
         const lock = trust.lockdown_first_complete ? "us-pill--ok" : "us-pill--warn";
+        const gw = us.gateway?.ipv4 || us.network?.gateway?.ipv4 || {};
+        const gwIp = gw.gateway || us.network?.default_route?.gateway || "—";
         pills.innerHTML = [
+          `<span class="us-pill"><span class="us-pill-label">Gateway</span>${esc(gwIp)}</span>`,
           `<span class="us-pill ${strict}"><span class="us-pill-label">Trust</span>${gk.strict_trust ? "strict" : "moderate"}</span>`,
           `<span class="us-pill ${lock}"><span class="us-pill-label">Lockdown</span>${trust.lockdown_first_complete ? "ready" : "pending"}</span>`,
           `<span class="us-pill"><span class="us-pill-label">Conns</span>${connCount}</span>`,
@@ -8046,6 +8053,7 @@
         const profileMounted = !!$("hostess-name");
         renderUSDashboard(us, { trafficOnly: profileMounted });
       }
+      if (global.renderGatewayProfile) global.renderGatewayProfile(us);
     }
 
     let humanDossierCache = null;

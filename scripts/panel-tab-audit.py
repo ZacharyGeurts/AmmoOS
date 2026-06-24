@@ -20,7 +20,7 @@ PANEL_URL = os.environ.get("NEXUS_PANEL_URL", f"https://127.0.0.1:{PANEL_PORT}")
 
 TAB_SPECS: dict[str, dict[str, Any]] = {
     "command": {"keys": ["field_command", "gatekeeper"], "dom": ["command-motto", "command-know"]},
-    "us": {"keys": ["us_field"], "dom": ["us-motto", "us-hostess-profile"]},
+    "us": {"keys": ["us_field"], "dom": ["us-motto", "us-gateway", "us-hostess-profile"]},
     "packets": {"keys": ["gatekeeper"], "dom": ["connections"]},
     "threats": {"keys": ["home_protector", "host_attacks"], "dom": ["home-protector-stats"]},
     "intel": {"keys": ["audio_train", "field_rf"], "dom": ["audio-train-motto"]},

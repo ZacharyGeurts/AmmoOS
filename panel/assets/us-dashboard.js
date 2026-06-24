@@ -220,6 +220,113 @@
     paintTrafficCanvas($("us-traffic-canvas"), us.network?.connections);
   }
 
+  function gwKv(rows) {
+    return `<dl class="us-kv">${rows.map(([k, v]) =>
+      `<dt>${esc(k)}</dt><dd>${esc(v ?? "—")}</dd>`).join("")}</dl>`;
+  }
+
+  function renderGatewayProfile(us) {
+    const el = $("us-gateway");
+    if (!el) return;
+    const gw = us?.gateway || us?.network?.gateway;
+    if (!gw) {
+      el.innerHTML = '<div class="meta">Gateway profile populates when US field publishes.</div>';
+      return;
+    }
+    const v4 = gw.ipv4 || {};
+    const neigh = v4.neighbor || {};
+    const link = v4.link || {};
+    const subnet = v4.subnet || {};
+    const dns = gw.dns || {};
+    const dhcp = gw.dhcp || {};
+    const trust = gw.trust || {};
+    const flows = gw.gatekeeper_flows || [];
+    const threats = gw.threat_events || [];
+    const points = gw.knowledge_points || [];
+    const v6 = gw.ipv6 || {};
+    const gwIp = v4.gateway || "—";
+    const badges = [
+      link.wireless ? '<span class="us-pill us-pill--ok">wireless</span>' : '<span class="us-pill">wired</span>',
+      v4.is_private ? '<span class="us-pill">private LAN</span>' : '<span class="us-pill us-pill--warn">upstream</span>',
+      trust.sacred ? '<span class="us-pill us-pill--ok">sacred</span>' : "",
+      trust.blocked ? '<span class="us-pill us-pill--warn">blocked</span>' : "",
+      trust.trusted ? '<span class="us-pill us-pill--ok">trusted</span>' : "",
+    ].filter(Boolean).join(" ");
+
+    const hostAddrs = (v4.host_addresses || [])
+      .map((a) => `${a.local}/${a.prefixlen || ""}`)
+      .join(", ") || "—";
+
+    const knowledgeHtml = points.length
+      ? `<div class="us-rundown" style="margin-top:12px;">${points.map((p) =>
+        `<div class="us-rundown-item"><h4>${esc(p.label || "Fact")}</h4><p>${esc(p.text || "")}</p></div>`
+      ).join("")}</div>`
+      : "";
+
+    const flowsHtml = flows.length
+      ? `<table class="us-table" style="margin-top:10px;"><thead><tr>
+          <th>Local</th><th>Remote</th><th>Process</th><th>Verdict</th>
+        </tr></thead><tbody>${flows.map((f) => `<tr>
+          <td class="meta">${esc(f.local || "—")}</td>
+          <td><code>${esc(f.remote || "—")}</code></td>
+          <td>${esc(f.process || "—")}</td>
+          <td>${esc(f.verdict || "—")}</td>
+        </tr>`).join("")}</tbody></table>`
+      : '<div class="meta" style="margin-top:8px;">No live gatekeeper flows involving the gateway.</div>';
+
+    const threatsHtml = threats.length
+      ? `<table class="us-table" style="margin-top:10px;"><thead><tr>
+          <th>When</th><th>Vector</th><th>Severity</th><th>Detail</th>
+        </tr></thead><tbody>${threats.map((t) => `<tr>
+          <td class="meta">${esc(t.ts || "—")}</td>
+          <td>${esc(t.vector || "—")}</td>
+          <td>${esc(t.severity || "—")}</td>
+          <td class="meta">${esc(t.detail || "—")}</td>
+        </tr>`).join("")}</tbody></table>`
+      : "";
+
+    const routesHtml = (gw.all_routes || []).length > 1
+      ? `<div class="meta" style="margin-top:8px;">Routes: ${(gw.all_routes || []).map((r) =>
+        `<code>${esc(r.gateway || "on-link")} dev ${esc(r.device || "—")} m=${esc(String(r.metric ?? "—"))}</code>`
+      ).join(" · ")}</div>`
+      : "";
+
+    el.innerHTML = `<div class="host-machine-banner" style="margin-bottom:12px;">
+      <div>
+        <strong style="font-size:1.2rem;color:var(--dust-gold,#d4b86a);">${esc(gwIp)}</strong>
+        <span class="meta" style="margin-left:10px;">${esc(v4.role || "router")}</span>
+        <div style="margin-top:8px;">${badges}</div>
+        <div class="meta" style="margin-top:8px;">
+          MAC <code>${esc(neigh.mac || "—")}</code> · neighbor ${esc(neigh.state || "—")} ·
+          iface <code>${esc(v4.device || "—")}</code> · ${esc(link.operstate || "—")} · MTU ${esc(String(link.mtu || v4.egress_probe?.mtu || "—"))}
+        </div>
+      </div>
+    </div>
+    ${gwKv([
+      ["WAN / src IP", v4.wan_ip],
+      ["Egress probe", v4.egress_probe?.raw || "—"],
+      ["Host on iface", hostAddrs],
+      ["Subnet", subnet.cidr || "—"],
+      ["Route proto", v4.proto || "—"],
+      ["Route metric", v4.metric != null ? String(v4.metric) : "—"],
+      ["DNS resolvers", (dns.nameservers || []).join(", ") || "—"],
+      ["Gateway is resolver", dns.gateway_is_resolver ? "yes" : "no"],
+      ["NEXUS DHCP", dhcp.server_running ? `active · ${dhcp.lease_count ?? 0} leases` : "off"],
+      ["DHCP DNS offered", (dhcp.dns_servers || []).join(", ") || "—"],
+      ["IPv6 default", v6.gateway ? `${v6.gateway} via ${v6.device || "—"}` : (v6.device ? `on-link ${v6.device}` : "—")],
+      ["IPv6 egress", v6.egress_probe?.raw || "—"],
+      ["LAN inventory match", gw.lan_device?.role || gw.lan_device?.label || "—"],
+      ["Threat events", threats.length ? String(threats.length) : "0"],
+      ["Sampled", gw.updated || us.generated_at || "—"],
+    ])}
+    ${routesHtml}
+    <h5 style="margin:14px 0 8px;color:var(--muted);font-size:0.85rem;letter-spacing:0.06em;text-transform:uppercase;">Knowledge points</h5>
+    ${knowledgeHtml || '<div class="meta">No gateway knowledge synthesized yet.</div>'}
+    <h5 style="margin:14px 0 8px;color:var(--muted);font-size:0.85rem;letter-spacing:0.06em;text-transform:uppercase;">Gatekeeper flows</h5>
+    ${flowsHtml}
+    ${threatsHtml ? `<h5 style="margin:14px 0 8px;color:var(--muted);font-size:0.85rem;letter-spacing:0.06em;text-transform:uppercase;">Threat vectors</h5>${threatsHtml}` : ""}`;
+  }
+
   function renderLocalNetwork(us) {
     const el = $("us-local-network");
     if (!el) return;
@@ -255,12 +362,14 @@
     if (!us) return;
     const trafficOnly = opts && opts.trafficOnly;
     refreshUSTraffic(us);
+    renderGatewayProfile(us);
     renderLocalNetwork(us);
     if (trafficOnly || $("hostess-name")) return;
     loadHostessProfile().then(renderHostessProfileForm);
   }
 
   global.renderUSDashboard = renderUSDashboard;
+  global.renderGatewayProfile = renderGatewayProfile;
   global.renderLocalNetwork = renderLocalNetwork;
   global.paintUSTraffic = refreshUSTraffic;
 })(window);
