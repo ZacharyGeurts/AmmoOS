@@ -2,8 +2,13 @@
 # NEXUS-Shield shared runtime — invisible to consumers, root-only state.
 # shellcheck disable=SC2034
 
-NEXUS_VERSION="9.0.2"
+NEXUS_VERSION="9.0.3"
 HOSTESS_VERSION="7"
+
+# Single version read — all shell callers should use this after sourcing nexus-common.sh.
+nexus_read_version() {
+  printf '%s' "${NEXUS_VERSION:-unknown}"
+}
 _NEXUS_COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _NEXUS_TREE_ROOT="$(cd "${_NEXUS_COMMON_DIR}/.." && pwd)"
 NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"

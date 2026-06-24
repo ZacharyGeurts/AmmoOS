@@ -91,11 +91,16 @@ def _http_json(url: str, timeout: float = 14.0) -> Any:
 
 
 def _local_version() -> str:
-    common = INSTALL / "lib" / "nexus-common.sh"
-    if common.is_file():
-        m = re.search(r'NEXUS_VERSION="([^"]+)"', common.read_text(encoding="utf-8", errors="replace"))
-        if m:
-            return m.group(1)
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("nexus_version", INSTALL / "lib" / "nexus_version.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.read_version(str(INSTALL))
+    except Exception:
+        pass
     return os.environ.get("NEXUS_VERSION", "unknown")
 
 

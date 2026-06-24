@@ -20,9 +20,15 @@ nexus_panel_app_url() {
 }
 
 nexus_panel_desired_version() {
+  if declare -F nexus_read_version >/dev/null 2>&1; then
+    nexus_read_version
+    return 0
+  fi
   local common="${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
   [[ -f "$common" ]] || return 1
-  grep -o 'NEXUS_VERSION="[^"]*"' "$common" 2>/dev/null | head -1 | cut -d'"' -f2
+  # shellcheck source=/dev/null
+  source "$common" 2>/dev/null || true
+  nexus_read_version 2>/dev/null || grep -o 'NEXUS_VERSION="[^"]*"' "$common" 2>/dev/null | head -1 | cut -d'"' -f2
 }
 
 nexus_panel_served_version() {

@@ -13,7 +13,7 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NEXUS-Shield v8.3.0 — Military C2 Panel</title>
+  <title>NEXUS-Shield — Military C2 Panel</title>
   <link rel="preload" href="/api/nexus-field" as="fetch" crossorigin />
   <script src="/assets/field-foundation.js"></script>
   <script src="/assets/h7-reader.js"></script>
@@ -1782,7 +1782,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1 id="nexus-version-title">NEXUS-Shield v8.2.0</h1>
+        <h1 id="nexus-version-title">NEXUS-Shield</h1>
         <div class="brand-sub" id="nexus-brand-sub" data-i18n="brand.sub">Military Grade C2 · Field Green · Hostess 7</div>
       </div>
     </div>
@@ -1822,7 +1822,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: acquires github-update.lock, git pull from GitHub, runs stealth_install (asks sudo if needed), restarts NEXUS, reloads this tab. Blocked while lock held.">v8.3.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: acquires github-update.lock, git pull from GitHub, runs stealth_install (asks sudo if needed), restarts NEXUS, reloads this tab. Blocked while lock held.">…</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -3583,7 +3583,14 @@
       if (key === "signals_field") return typeof val === "object" && (val.schema === "signals-field/v1" || val.stats != null) && ((val.stats || {}).pulse_channels > 0 || (val.antennas || []).length > 0 || (val.field_radio || {}).station_menu?.length > 0);
       if (key === "field_antenna") return typeof val === "object" && (val.schema === "field-antenna/v1" || (val.readiness || {}).score != null);
       if (key === "field_radio") return typeof val === "object" && (val.schema === "field-radio-catcher/v1" || (val.station_menu || []).length > 0);
-      if (key === "field_dns") return typeof val === "object" && (val.schema === "field-dns/v1" || val.rfc_matrix != null);
+      if (key === "field_dns") {
+        return typeof val === "object" && (
+          val.schema === "field-dns/v1"
+          || val.rfc_matrix != null
+          || val.threat_model != null
+          || val.traffic_patterns != null
+        );
+      }
       if (key === "field_outside_talk") return typeof val === "object" && (val.schema === "field-outside-talk/v1" || val.tools != null);
       if (key === "field_drive") return typeof val === "object" && (val.schema === "field-drive-system/v1" || val.drives != null);
       if (key === "field_rf") return typeof val === "object" && (val.updated != null || val.antenna?.mode != null);
@@ -3966,7 +3973,7 @@
       } else if (currentPanel !== "signals" && global.onSignalsViewDeactivated) {
         onSignalsViewDeactivated();
       }
-      if (sub === "dns" && lastPanelData?.field_dns && global.renderDnsField) {
+      if (currentPanel === "dns" && lastPanelData?.field_dns && global.renderDnsField) {
         renderDnsField(lastPanelData.field_dns, lastPanelData);
       }
       if (sub === "outside") ensureOutsideFieldRendered();
@@ -4140,7 +4147,10 @@
       try {
         const res = await fetch("/api/field-dns", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
         const j = await res.json();
-        if (global.renderDnsField) renderDnsField(j, { field_dns: j, dns_admin_portal: j.dns_admin_portal });
+        if (global.renderDnsField) {
+          renderDnsField(j, { ...(lastPanelData || {}), field_dns: j, dns_admin_portal: j.dns_admin_portal });
+          if (lastPanelData) lastPanelData.field_dns = j;
+        }
         refresh();
       } catch {
         alert("DNS field rebuild failed");

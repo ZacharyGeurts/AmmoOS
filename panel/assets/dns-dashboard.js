@@ -45,6 +45,14 @@
     return `<span class="dns-threat-lvl ${threatLevelClass(level)}">${esc(level)}</span>`;
   }
 
+  function trafficData(fd) {
+    return fd.traffic_patterns || synthesizeTraffic(fd);
+  }
+
+  function threatModelData(fd) {
+    return fd.threat_model || synthesizeThreatModel(fd);
+  }
+
   function synthesizeTraffic(fd) {
     if (fd.traffic_patterns) return fd.traffic_patterns;
     const st = fd.stats || {};
@@ -87,7 +95,7 @@
   }
 
   function synthesizeThreatModel(fd) {
-    if (fd.threat_model) return fd.threat_model;
+    if (fd.threat_model) return fd.threat_model; // used only when building fallback
     const pol = fd.resolver_policy || {};
     const tg = fd.threat_guard || {};
     const to = fd.takeover || {};
@@ -172,7 +180,7 @@
     }
     if (status) {
       const listeners = (fd.listeners || qf.listeners || []).map((l) => `<code>${esc(l)}</code>`).join(" ");
-      const tm = synthesizeThreatModel(fd);
+      const tm = threatModelData(fd);
       status.innerHTML = [
         `<div class="dns-hero-pill ${run ? "dns-hero-pill--ok" : "dns-hero-pill--bad"}"><span>DNS</span><strong>${run ? "LIVE" : "DOWN"}</strong></div>`,
         `<div class="dns-hero-pill ${dhcpRun ? "dns-hero-pill--ok" : ""}"><span>DHCP</span><strong>${dhcpRun ? "LIVE" : dhcp.may_serve === false ? "OBSERVE" : "IDLE"}</strong></div>`,
@@ -188,8 +196,8 @@
     const el = $("dns-posture-strip");
     if (!el) return;
     const qf = fd.engineer_briefing?.quick_facts || {};
-    const tm = synthesizeThreatModel(fd);
-    const traffic = synthesizeTraffic(fd);
+    const tm = threatModelData(fd);
+    const traffic = trafficData(fd);
     const concerns = (fd.engineer_briefing?.alerts || []).length;
     const items = [
       ["Planetary security", fd.planetary_security_level || qf.planetary_level || "—", fd.planetary_security_level === "extreme" ? "extreme" : "info"],
@@ -212,7 +220,7 @@
     const el = $("dns-threat-posture");
     if (!el) return;
     const alerts = fd.engineer_briefing?.alerts || [];
-    const tm = synthesizeThreatModel(fd);
+    const tm = threatModelData(fd);
     const zones = fd.zones || fd.planetary?.zones || [];
     const extremeZones = zones.filter((z) => z.security_level === "extreme" || z.extreme_active).length;
     el.innerHTML = `<div class="dns-threat-summary">
@@ -240,7 +248,7 @@
   function renderTrafficPatterns(fd) {
     const el = $("dns-traffic-patterns");
     if (!el) return;
-    const traffic = synthesizeTraffic(fd);
+    const traffic = trafficData(fd);
     const maxVal = Math.max(...traffic.channels.map((c) => c.value), 1);
     el.innerHTML = `<div class="dns-traffic-dns">
       <div class="dns-traffic-head"><strong>DNS</strong><span class="meta">${esc(String(traffic.dns.queries))} queries · ${esc(String(traffic.dns.hit_rate_pct))}% cache · ${esc(String(traffic.dns.egress_verified))} egress verified</span></div>
@@ -265,7 +273,7 @@
   function renderThreatModel(fd) {
     const el = $("dns-threat-model");
     if (!el) return;
-    const tm = synthesizeThreatModel(fd);
+    const tm = threatModelData(fd);
     const allVectors = [...(tm.dns_vectors || []), ...(tm.dhcp_vectors || [])];
     el.innerHTML = `<div class="dns-model-meta">
       <span class="dns-chip dns-chip-meta">${esc(tm.framework || "STRIDE")}</span>
@@ -667,7 +675,14 @@
   function renderForeignBlocked(fd) {
     const el = $("dns-foreign-blocked");
     if (!el) return;
-    const rows = fd.planetary?.foreign_resolvers_blocked || fd.foreign_resolvers_blocked || [];
+    const rows = fd.planetary?.foreign_resolvers_blocked
+      || fd.foreign_resolvers_blocked
+      || (fd.planetary?.foreign_resolver_ipv4 || fd.foreign_resolver_ipv4 || []).map((ip) => ({
+        name: "Foreign resolver",
+        ipv4: [ip],
+        ipv6: [],
+        reason: "Blocked under planetary policy",
+      }));
     if (!rows.length) {
       el.innerHTML = '<div class="meta">No foreign resolver list.</div>';
       return;
@@ -693,7 +708,7 @@
       const hint = mnemonic[String(p)] || String(p);
       return `<a class="dns-admin-port-link" href="http://${host}:${p}/" target="_blank" rel="noopener" title="${esc(hint)}">:${esc(p)}</a>`;
     }).join("");
-    const dap = panel?.dns_admin_portal;
+    const dap = fd.dns_admin_portal || panel?.dns_admin_portal;
     el.innerHTML = `<div class="dns-admin-engineer-grid">
       <div>
         <span class="dns-chip dns-chip-ok">information only</span>
@@ -708,7 +723,7 @@
           <li><code>hostess</code> / <code>lucky7</code> on any port</li>
           <li><code>field</code> / <code>777</code> on port 777</li>
         </ul>
-        ${dap?.running ? '<span class="dns-chip dns-chip-ok">admin portal live</span>' : '<span class="dns-chip dns-chip-meta">portal starts with daemon</span>'}
+        ${dap?.running ? `<span class="dns-chip dns-chip-ok">admin portal live</span> <span class="meta">ports ${(dap.live_ports || dap.ports || []).map((p) => `<code>:${esc(String(p))}</code>`).join(" ")}</span>` : '<span class="dns-chip dns-chip-meta">portal starts with daemon</span>'}
       </div>
     </div>`;
   }

@@ -1,6 +1,8 @@
 /* NEXUS-Shield v8.2 — QOL experience smoothing */
 (function (global) {
-  const VERSION = "8.2.0";
+  function panelVersion() {
+    return global.lastPanelData?.version || global.NEXUS_FIELD?.version || null;
+  }
   const BUILD = "military-v82";
 
   function ensureChrome() {
@@ -103,6 +105,7 @@
     global.paintPanel = function nexusPaintV82(data) {
       const out = orig.apply(this, arguments);
       updateKillChainBadge(data);
+      stampV82();
       document.documentElement.classList.remove("panel-instant-cache");
       return out;
     };
@@ -136,12 +139,13 @@
   }
 
   function stampV82() {
-    if (global.NexusMilitaryV8?.stampVersion) global.NexusMilitaryV8.stampVersion(VERSION);
+    const ver = panelVersion();
+    if (ver && global.NexusMilitaryV8?.stampVersion) global.NexusMilitaryV8.stampVersion(ver);
     const status = document.getElementById("nexus-ops-status");
-    if (status && !status.dataset.v82) {
+    if (status && ver && !status.dataset.v82) {
       status.dataset.v82 = "1";
       const base = status.textContent || "";
-      if (!base.includes("v8.2")) status.textContent = `${base} · v8.2 QOL`;
+      if (!base.includes(`v${ver}`)) status.textContent = `${base} · v${ver}`;
     }
   }
 
@@ -156,7 +160,7 @@
   }
 
   global.NexusMilitaryV82 = {
-    VERSION,
+    panelVersion,
     BUILD,
     boot,
     toast,

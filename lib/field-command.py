@@ -147,7 +147,7 @@ def build_command(panel: dict[str, Any] | None = None) -> dict[str, Any]:
             {"id": "threats-kill", "label": "Kill orders", "stat": f"{hd.get('ip_count', 0)} IPs", "jump": "threats/kill"},
             {"id": "intel-trust", "label": "Honorability", "stat": f"{panel.get('trust_count', 0)} trusted", "jump": "intel/trust"},
             {"id": "intel-rf", "label": "Field RF", "stat": f"{len(rf.get('recent_bursts') or [])} bursts", "jump": "intel/rf"},
-            {"id": "dns", "label": "Truth DNS", "stat": (panel.get("field_dns") or {}).get("planetary_security_level") or "—", "jump": "dns"},
+            {"id": "dns", "label": "DNS & DHCP", "stat": (panel.get("field_dns") or {}).get("planetary_security_level") or "—", "jump": "dns"},
             {"id": "intel-research", "label": "Research", "stat": f"{vi.get('active_count', 0)} vectors", "jump": "intel/research"},
             {"id": "system", "label": "System", "stat": panel.get("version") or "—", "jump": "system/settings"},
         ],

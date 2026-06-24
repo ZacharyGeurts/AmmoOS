@@ -1,20 +1,26 @@
 /* NEXUS-Shield v8.0 — Military Grade C2 layer */
 (function (global) {
   const MISSION = {
-    command: { code: "OP-CMD", title: "Command · Situation", flow: ["command", "packets/monitor", "threats/host-attack", "intel/field-rf"] },
+    command: { code: "OP-H7", title: "Hostess 7 · Super Intelligence", flow: ["command", "threats/map", "packets/inspect", "threats/local-holes"] },
     us: { code: "OP-US", title: "US · Host Identity", flow: ["us", "packets/monitor", "intel/honor", "threats/kill"] },
     packets: { code: "OP-PKT", title: "Packets · Gatekeeper", flow: ["packets/monitor", "packets/inspect", "command", "dns"] },
-    threats: { code: "OP-THR", title: "Threats · Kill Chain", flow: ["threats/home-protector", "threats/host-attack", "threats/human-dossier", "intel/field-rf"] },
-    intel: { code: "OP-INT", title: "Intel · Trust & RF", flow: ["intel/honor", "intel/field-rf", "intel/research", "packets/inspect"] },
+    threats: { code: "OP-THR", title: "Threats · Kill Chain", flow: ["threats/home-protector", "threats/local-holes", "threats/host-attack", "threats/human-dossier", "intel/field-rf"] },
+    intel: { code: "OP-INT", title: "Intel · Trust & People", flow: ["intel/honor", "intel/people", "intel/field-rf", "intel/research"] },
     signals: { code: "OP-SIG", title: "Signals · Antenna", flow: ["signals", "intel/field-rf", "packets/monitor", "dns"] },
-    dns: { code: "OP-DNS", title: "DNS · Truth Resolver", flow: ["dns", "packets/monitor", "outside", "us"] },
+    dns: { code: "OP-DNS", title: "DNS & DHCP · Planetary", flow: ["dns", "packets/monitor", "outside", "us"] },
     outside: { code: "OP-OUT", title: "Outside · Egress Gate", flow: ["outside", "library", "dns", "packets/monitor"] },
     library: { code: "OP-LIB", title: "Library · Field Books", flow: ["library", "outside", "intel/research", "command"] },
     system: { code: "OP-SYS", title: "System · Settings & Logs", flow: ["system/settings", "system/logs", "command", "packets/monitor"] },
   };
 
+  function resolveVersion(fallback) {
+    const cached = global.NEXUS_FIELD?.version || global.lastPanelData?.version;
+    if (cached) return String(cached);
+    return fallback || "…";
+  }
+
   function stampVersion(ver) {
-    const v = ver || "8.2.0";
+    const v = ver || resolveVersion("…");
     const title = document.getElementById("nexus-version-title");
     const btn = document.getElementById("nexus-update-btn");
     if (title) title.textContent = `NEXUS-Shield v${v}`;
@@ -31,7 +37,7 @@
     const bar = document.createElement("div");
     bar.id = "nexus-ops-bar";
     bar.className = "nexus-ops-bar";
-    bar.innerHTML = '<span class="ops-label">OPS FLOW</span><div class="ops-chain" id="nexus-ops-chain"></div><span class="ops-status" id="nexus-ops-status">MILITARY v8.2</span>';
+    bar.innerHTML = '<span class="ops-label">OPS FLOW</span><div class="ops-chain" id="nexus-ops-chain"></div><span class="ops-status" id="nexus-ops-status">MILITARY C2</span>';
     nav.parentNode.insertBefore(bar, nav.nextSibling);
   }
 
@@ -95,7 +101,10 @@
   }
 
   function boot() {
-    stampVersion("8.2.0");
+    stampVersion(resolveVersion());
+    global.NexusField?.fetchField?.().then((d) => {
+      if (d?.version) stampVersion(d.version);
+    });
     ensureOpsBar();
     onViewChange(location.hash);
     if (!hookShowView()) {

@@ -552,6 +552,26 @@ def _engineer_briefing(
     }
 
 
+def _dns_admin_portal_status() -> dict[str, Any]:
+    ports = [7, 77, 777]
+    live: list[int] = []
+    for port in ports:
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.35):
+                live.append(port)
+        except OSError:
+            continue
+    return {
+        "schema": "dns-admin-portal/v1",
+        "updated": _now(),
+        "ports": ports,
+        "live_ports": live,
+        "running": bool(live),
+        "asset": "/assets/dns-admin-portal.html",
+        "motto": "Information only — tired engineer ports 7 · 77 · 777.",
+    }
+
+
 def _build_traffic_patterns(
     srv: dict[str, Any],
     dhcp: dict[str, Any],
@@ -839,6 +859,7 @@ def build_panel() -> dict[str, Any]:
         "engineer_briefing": briefing,
         "traffic_patterns": traffic_patterns,
         "threat_model": threat_model,
+        "dns_admin_portal": _dns_admin_portal_status(),
         "legacy_dns_equipment": (_load_json(INSTALL / "data" / "dns-admin-seed.json", {}).get("legacy_dns_equipment") or []),
         "identity": planetary.get("identity") or {},
         "egress_integrity": egress,

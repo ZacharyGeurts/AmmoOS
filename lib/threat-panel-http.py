@@ -106,20 +106,19 @@ PANEL_PARALLEL_KEYS = frozenset({
 
 
 def _read_install_version() -> str:
-    common = INSTALL_ROOT / "lib" / "nexus-common.sh"
-    if common.is_file():
-        try:
-            import re
+    try:
+        import importlib.util
 
-            m = re.search(
-                r'NEXUS_VERSION="([^"]+)"',
-                common.read_text(encoding="utf-8", errors="replace"),
-            )
-            if m:
-                return m.group(1)
-        except OSError:
-            pass
-    return os.environ.get("NEXUS_VERSION", "8.2.0")
+        spec = importlib.util.spec_from_file_location(
+            "nexus_version", INSTALL_ROOT / "lib" / "nexus_version.py",
+        )
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.read_version(str(INSTALL_ROOT))
+    except Exception:
+        pass
+    return os.environ.get("NEXUS_VERSION", "unknown")
 
 
 def _read_status_json(*, full: bool = False) -> str:
