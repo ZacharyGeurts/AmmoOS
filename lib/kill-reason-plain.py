@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plain-English explanations for every kill — why they were killed, in operator language."""
+"""Plain-English explanations — what triggered threat classification and why they were killed."""
 from __future__ import annotations
 
 import re
@@ -140,6 +140,229 @@ def _strike_signals_plain(strike_gate: dict[str, Any] | None) -> str:
     return "; ".join(bits)
 
 
+_KILL_REASON_PLAIN: dict[str, str] = {
+    "threat_vector": "An active threat-vector event matched this IP on the live wire.",
+    "shell_port": "Traffic used a shell or admin-class port from an untrusted local process.",
+    "suspicious_shell": "A suspicious process opened a shell-class port toward this remote host.",
+    "beacon_burst": "Repeated beacon bursts to this host — not normal consumer browsing.",
+    "harm_candidate": "Gatekeeper scored the live flow as HARM_CANDIDATE — hostile intent on the wire.",
+    "threat_correlated_harm": "Harm on the wire correlated with threat intelligence already on this IP.",
+    "stream_theft_daemon": "A background daemon showed stream-theft or bandwidth-abuse shape toward this host.",
+    "persistent_beacon": "Persistent beaconing from an untrusted process — classic C2 keepalive shape.",
+    "gatekeeper_harm": "Connection gatekeeper flagged kill-eligible harm on this flow.",
+}
+
+
+_SIGNAL_PLAIN: dict[str, str] = {
+    "wire_point_locked": "Trust Strike locked the actual end wire host — not CDN collateral.",
+    "prior_kill_registry": "IP is in our permanent hostile registry from a prior kill on field drive.",
+    "archived_dossier_strong": "Strong archived kill dossier with multiple identity markers matched.",
+    "archived_dossier": "Prior archived dossier identity markers matched this host.",
+    "hostile_asn_corpus": "ASN matches our prior KILL corpus — same bad neighborhood as past strikes.",
+    "hostile_org_corpus": "Organization matches our prior KILL corpus.",
+    "harm_verdict": "Live monitor returned a hostile verdict on this flow.",
+    "harm_critical": "Monitor harm score crossed the critical threshold.",
+    "harm_high": "Elevated monitor harm score on a non-consumer process.",
+    "hostile_vector": "Threat vector plus malware campaign corroboration.",
+    "heat_critical": "Map heat plus campaign intel — hot target on the globe.",
+    "c2_ports": "C2-class destination ports observed on this connection.",
+    "threat_linked_axis": "threat_linked axis scored high — tied to known threat events.",
+    "beacon_axis": "beacon_pattern axis scored high — timed callback shape.",
+    "dpi_high_alert": "Packet DPI raised a high-confidence alert on this flow.",
+    "live_monitor_target": "Active live monitor target with malware campaign overlap.",
+}
+
+
+def _signal_plain(sig: dict[str, Any]) -> str:
+    sid = _clean(str(sig.get("id") or ""))
+    detail = _clean(str(sig.get("detail") or ""))
+    base = _SIGNAL_PLAIN.get(sid, sid.replace("_", " ") if sid else "field signal")
+    return f"{base} ({detail})" if detail and detail.lower() not in base.lower() else base
+
+
+def _gatekeeper_trigger_plain(conn: dict[str, Any]) -> list[str]:
+    if not isinstance(conn, dict):
+        return []
+    lines: list[str] = []
+    kill_reason = _clean(str(conn.get("kill_reason") or ""))
+    if kill_reason:
+        base, _ = _parse_reason_code(kill_reason)
+        lines.append(_KILL_REASON_PLAIN.get(base, f"Gatekeeper kill reason: {kill_reason}."))
+    scores = conn.get("scores") if isinstance(conn.get("scores"), dict) else {}
+    if scores:
+        bits: list[str] = []
+        for key, label in (
+            ("beacon_pattern", "beacon pattern"),
+            ("stream_theft_risk", "stream theft risk"),
+            ("bandwidth_abuse", "bandwidth abuse"),
+            ("threat_linked", "threat linkage"),
+            ("process_trust", "process trust"),
+        ):
+            val = scores.get(key)
+            if val is not None and int(val) >= 4:
+                bits.append(f"{label} {val}/10")
+        if bits:
+            lines.append(f"Gatekeeper axis scores: {', '.join(bits)}.")
+    if conn.get("kill_eligible"):
+        lines.append("Gatekeeper marked this connection kill-eligible — harm signature on the wire.")
+    if conn.get("hell_chosen"):
+        lines.append("Heaven/Hell engine chose Hell for this flow — no mercy path.")
+    verdict = _clean(str(conn.get("verdict") or ""))
+    if verdict in ("HARM_CANDIDATE", "SUSPICIOUS", "BLOCK_RECOMMENDED"):
+        lines.append(f"Live verdict was {verdict}.")
+    return lines
+
+
+def explain_threat_trigger(
+    *,
+    ip: str = "",
+    point: dict[str, Any] | None = None,
+    conn: dict[str, Any] | None = None,
+    hostile: dict[str, Any] | None = None,
+    strike: dict[str, Any] | None = None,
+    strike_gate: dict[str, Any] | None = None,
+    vector: str = "",
+) -> dict[str, Any]:
+    """Long plain English — what triggered us to call this a threat."""
+    point = point or {}
+    conn = conn or {}
+    hostile = hostile or {}
+    ip = _ip_label(ip or point.get("ip") or conn.get("remote_ip") or hostile.get("ip"))
+    vector = _clean(vector or point.get("vector") or hostile.get("vector") or conn.get("vector") or "")
+
+    triggers: list[dict[str, str]] = []
+    sentences: list[str] = [
+        f"We classified {ip} as a threat because our field sensors stacked the following triggers — not guesswork, live wire + intel corroboration.",
+    ]
+
+    strike_doc = strike if isinstance(strike, dict) else {}
+    if not strike_doc and isinstance(strike_gate, dict):
+        strike_doc = strike_gate.get("score") if isinstance(strike_gate.get("score"), dict) else {}
+    signals = (
+        strike_doc.get("signals")
+        or point.get("strike_signals")
+        or []
+    )
+    for sig in signals[:8]:
+        if not isinstance(sig, dict):
+            continue
+        plain = _signal_plain(sig)
+        triggers.append({"id": str(sig.get("id") or ""), "plain": plain})
+        sentences.append(plain)
+
+    wire = strike_doc.get("wire_point") or point.get("wire_point") or {}
+    if isinstance(wire, dict) and wire.get("confirmed"):
+        ev = "; ".join(_clean(str(e)) for e in (wire.get("evidence") or [])[:4])
+        wire_line = f"Wire-point lock: {_clean(str(wire.get('label') or ip))} confirmed as the actual hostile endpoint."
+        if ev:
+            wire_line += f" Evidence: {ev}."
+        triggers.append({"id": "wire_point", "plain": wire_line})
+        sentences.append(wire_line)
+
+    if point.get("malware_evidence") or strike_doc.get("malware_evidence"):
+        line = "Malware-evidence gate passed — campaigns, DPI, C2 ports, or prior kill registry corroborated."
+        triggers.append({"id": "malware_evidence", "plain": line})
+        sentences.append(line)
+
+    for gk_line in _gatekeeper_trigger_plain(conn):
+        triggers.append({"id": "gatekeeper", "plain": gk_line})
+        sentences.append(gk_line)
+
+    monitor = point.get("monitor") if isinstance(point.get("monitor"), dict) else conn
+    if isinstance(monitor, dict):
+        mon_sum = _monitor_summary(monitor)
+        if mon_sum:
+            line = f"Connection monitor trigger: {mon_sum}."
+            triggers.append({"id": "monitor", "plain": line})
+            sentences.append(line)
+
+    detail = _clean(str(point.get("detail") or conn.get("reason") or ""))
+    if detail:
+        line = f"Threat intel detail: {detail}."
+        triggers.append({"id": "intel_detail", "plain": line})
+        sentences.append(line)
+
+    indicators = hostile.get("indicators") or point.get("indicators") or []
+    if isinstance(indicators, list) and indicators:
+        ind_line = f"Hostile automation indicators fired: {'; '.join(_clean(str(i)) for i in indicators[:6])}."
+        triggers.append({"id": "hostile_ai_indicators", "plain": ind_line})
+        sentences.append(ind_line)
+
+    if hostile.get("category_title"):
+        line = f"Hostile AI category match: {hostile['category_title']}."
+        triggers.append({"id": "hostile_ai_category", "plain": line})
+        sentences.append(line)
+
+    if vector and vector not in ("HOSTILE", ""):
+        line = f"Threat vector label: {_threat_vector_plain(vector)}."
+        triggers.append({"id": "vector", "plain": line})
+        sentences.append(line)
+
+    if point.get("strike_certain"):
+        line = "Trust Strike reached PINPOINT CERTAIN — malware on the actual wire host."
+        triggers.append({"id": "strike_certain", "plain": line})
+        sentences.append(line)
+    elif point.get("killable"):
+        line = "Trust Strike reached manual kill floor — killable on the globe map."
+        triggers.append({"id": "killable", "plain": line})
+        sentences.append(line)
+
+    if not triggers:
+        fallback = (
+            f"Baseline threat classification from vector {vector or 'HOSTILE'} "
+            f"and live field posture — awaiting stronger corroboration."
+        )
+        triggers.append({"id": "baseline", "plain": fallback})
+        sentences.append(fallback)
+
+    plain = _clean(" ".join(sentences))
+    return {
+        "threat_trigger_plain": plain,
+        "threat_triggers": triggers,
+    }
+
+
+def explain_full(
+    *,
+    ip: str = "",
+    reason: str = "",
+    action: str = "KILL",
+    point: dict[str, Any] | None = None,
+    strike_gate: dict[str, Any] | None = None,
+    conn: dict[str, Any] | None = None,
+    hostile: dict[str, Any] | None = None,
+    strike: dict[str, Any] | None = None,
+    vector: str = "",
+    process: str = "",
+    source: str = "",
+    extra_detail: str = "",
+) -> dict[str, Any]:
+    """Kill reason + threat trigger in one payload for dossiers and panel."""
+    kill = explain_kill(
+        ip=ip,
+        reason=reason,
+        action=action,
+        point=point,
+        strike_gate=strike_gate,
+        conn=conn,
+        hostile=hostile,
+        vector=vector,
+        process=process,
+        source=source,
+        extra_detail=extra_detail,
+    )
+    threat = explain_threat_trigger(
+        ip=ip,
+        point=point,
+        conn=conn,
+        hostile=hostile,
+        strike=strike,
+        strike_gate=strike_gate,
+        vector=vector,
+    )
+    return {**kill, **threat}
+
+
 def explain_kill(
     *,
     ip: str,
@@ -252,21 +475,23 @@ def explain_kill(
     }
 
 
-def explain_from_archived(archived: dict[str, Any]) -> dict[str, str]:
+def explain_from_archived(archived: dict[str, Any]) -> dict[str, Any]:
     """Retroactive plain English from an archived dossier (older kills without why_* fields)."""
     if not isinstance(archived, dict):
-        return explain_kill(ip="", reason="target_kill")
-    if archived.get("why_killed_plain"):
+        return explain_full(ip="", reason="target_kill")
+    if archived.get("why_killed_plain") and archived.get("threat_trigger_plain"):
         return {
             "why_killed_plain": _clean(archived["why_killed_plain"]),
             "why_killed_short": _clean(archived.get("why_killed_short") or ""),
             "why_killed_code": _clean(archived.get("why_killed_code") or archived.get("reason") or ""),
             "why_killed_action": _clean(archived.get("action") or "KILL"),
+            "threat_trigger_plain": _clean(archived["threat_trigger_plain"]),
+            "threat_triggers": archived.get("threat_triggers") or [],
         }
     action = "REKILL" if str(archived.get("action") or "").upper() == "REKILL" else (
         "HARDWARE DESTROY" if archived.get("hardware_destroy") else "KILL"
     )
-    return explain_kill(
+    return explain_full(
         ip=str(archived.get("ip") or ""),
         reason=str(archived.get("reason") or archived.get("kill_reason") or "target_kill"),
         action=action,
@@ -287,10 +512,16 @@ def main() -> int:
     import sys
 
     if len(sys.argv) < 2:
-        print(json.dumps({"error": "usage: kill-reason-plain.py explain JSON"}))
+        print(json.dumps({"error": "usage: kill-reason-plain.py [explain|threat|full] JSON"}))
         return 1
+    cmd = sys.argv[1].strip().lower()
     payload = json.loads(sys.argv[2] if len(sys.argv) > 2 else sys.argv[1])
-    print(json.dumps(explain_kill(**payload), ensure_ascii=False))
+    if cmd == "threat":
+        print(json.dumps(explain_threat_trigger(**payload), ensure_ascii=False))
+    elif cmd == "full":
+        print(json.dumps(explain_full(**payload), ensure_ascii=False))
+    else:
+        print(json.dumps(explain_kill(**payload), ensure_ascii=False))
     return 0
 
 

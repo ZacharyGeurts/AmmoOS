@@ -51,6 +51,8 @@ _kr = importlib.util.module_from_spec(_kr_spec)
 assert _kr_spec and _kr_spec.loader
 _kr_spec.loader.exec_module(_kr)
 explain_kill = _kr.explain_kill
+explain_full = _kr.explain_full
+explain_threat_trigger = _kr.explain_threat_trigger
 attach_to_dossier = _kr.attach_to_dossier
 explain_from_archived = _kr.explain_from_archived
 
@@ -333,14 +335,20 @@ def kill_target(
     dossier["kill_reason"] = reason
     dossier["source"] = (extra or {}).get("source") or "attack-kit"
     action = "HARDWARE DESTROY" if hardware_destroy else "KILL"
+    conn_row = _load_json(STATE / "connection-intent.json", {}).get("connections") or []
+    conn_match = next(
+        (c for c in conn_row if isinstance(c, dict) and str(c.get("remote_ip") or "") == ip),
+        {},
+    )
     attach_to_dossier(
         dossier,
-        explain_kill(
+        explain_full(
             ip=ip,
             reason=reason,
             action=action,
             point=point,
             strike_gate=strike_gate,
+            conn=conn_match if isinstance(conn_match, dict) else {},
             vector=vector,
             process=str(point.get("our_process") or point.get("process") or ""),
             source=str(dossier.get("source") or ""),
@@ -352,6 +360,8 @@ def kill_target(
         "why_killed_plain": dossier.get("why_killed_plain"),
         "why_killed_short": dossier.get("why_killed_short"),
         "why_killed_code": dossier.get("why_killed_code"),
+        "threat_trigger_plain": dossier.get("threat_trigger_plain"),
+        "threat_triggers": dossier.get("threat_triggers"),
     }
     return {
         "ok": ok,
@@ -366,6 +376,7 @@ def kill_target(
         "strike_gate": strike_gate,
         "dossier": dossier if ok else {},
         **(why if ok else {}),
+        "threat_trigger_plain": dossier.get("threat_trigger_plain") if ok else None,
     }
 
 
@@ -478,6 +489,7 @@ def autokill_needs_die(max_targets: int | None = None) -> dict[str, Any]:
                 "hardware_destroy": result.get("hardware_destroy"),
                 "ok": True,
                 "why_killed_plain": result.get("why_killed_plain"),
+                "threat_trigger_plain": result.get("threat_trigger_plain"),
             })
         elif result:
             skipped.append(ip)
@@ -750,6 +762,7 @@ def auto_rekill_validated(max_ips: int = AUTO_REKILL_MAX_IPS) -> dict[str, Any]:
             rekilled_detail.append({
                 "ip": ip,
                 "why_killed_plain": result.get("why_killed_plain"),
+                "threat_trigger_plain": result.get("threat_trigger_plain"),
             })
         else:
             skipped.append(ip)
@@ -843,7 +856,7 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
     dossier["kill_reason"] = reason
     attach_to_dossier(
         dossier,
-        explain_kill(
+        explain_full(
             ip=ip,
             reason=reason,
             action="REKILL",
@@ -868,6 +881,7 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
         "certainty": 1.0 if hardware_destroy else strike_gate.get("certainty"),
         "why_killed_plain": dossier.get("why_killed_plain") if ok else None,
         "why_killed_short": dossier.get("why_killed_short") if ok else None,
+        "threat_trigger_plain": dossier.get("threat_trigger_plain") if ok else None,
     }
 
 

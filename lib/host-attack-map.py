@@ -657,6 +657,25 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
             and bool(strike.get("strike_ready_manual"))
         )
         point_row["killable"] = killable
+        try:
+            _kr_spec = importlib.util.spec_from_file_location(
+                "kill_reason_plain_map", INSTALL / "lib" / "kill-reason-plain.py",
+            )
+            if _kr_spec and _kr_spec.loader:
+                _kr_mod = importlib.util.module_from_spec(_kr_spec)
+                _kr_spec.loader.exec_module(_kr_mod)
+                conn_row = conn_by_ip.get(ip) if isinstance(conn_by_ip.get(ip), dict) else {}
+                trig = _kr_mod.explain_threat_trigger(
+                    ip=ip,
+                    point=point_row,
+                    conn=conn_row,
+                    strike=strike,
+                    vector=str(r.get("vector") or ""),
+                )
+                point_row["threat_trigger_plain"] = trig.get("threat_trigger_plain")
+                point_row["threat_triggers"] = trig.get("threat_triggers") or []
+        except Exception:
+            pass
         if target_status == "killed":
             archived = load_archived_dossier(ip)
             if archived:
@@ -676,11 +695,15 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
                     why = {}
                 if why.get("why_killed_plain"):
                     point_row["why_killed_plain"] = why["why_killed_plain"]
+                if why.get("threat_trigger_plain"):
+                    point_row["threat_trigger_plain"] = why["threat_trigger_plain"]
+                    point_row["threat_triggers"] = why.get("threat_triggers") or point_row.get("threat_triggers") or []
                 point_row["archived_dossier"] = {
                     "archived": archived.get("archived") or archived.get("rekill_ts"),
                     "action": archived.get("action") or "KILL",
                     "identity_hash": point_row["identity_fingerprint"].get("identity_hash", ""),
                     "why_killed_plain": point_row.get("why_killed_plain") or archived.get("why_killed_plain"),
+                    "threat_trigger_plain": point_row.get("threat_trigger_plain") or archived.get("threat_trigger_plain"),
                     "reason": archived.get("reason") or archived.get("kill_reason"),
                 }
         cached_check = (online_check_cache.get("checks") or {}).get(ip)

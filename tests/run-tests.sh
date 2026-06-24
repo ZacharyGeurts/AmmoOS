@@ -1085,6 +1085,10 @@ test_planetary_observer_module() {
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/kill-reason-plain.py" explain '{"ip":"203.0.113.50","reason":"autokill_needs_die:strike_certain=1.0","action":"KILL","vector":"HOSTILE","process":"curl"}' \
     | grep -q 'why_killed_plain'
+  grep -q 'threat_trigger_plain' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/kill-reason-plain.py" threat '{"ip":"203.0.113.50","point":{"strike_signals":[{"id":"beacon_axis","detail":"beacon_pattern axis 8/10"}],"malware_evidence":true},"vector":"HOSTILE"}' \
+    | grep -q 'threat_trigger_plain'
 }
 
 test_host_identity_module() {

@@ -94,20 +94,30 @@ def scan(doc: dict[str, Any] | None = None) -> dict[str, Any]:
     for row in doc.get("connections") or []:
         if not row.get("kill_eligible"):
             continue
-        targets.append(
-            {
-                "ip": row.get("remote_ip"),
-                "port": row.get("remote_port"),
-                "process": row.get("process"),
-                "pid": row.get("pid"),
-                "verdict": row.get("verdict"),
-                "kill_reason": row.get("kill_reason"),
-                "kill_tier": row.get("kill_tier") or "block",
-                "hell_chosen": row.get("hell_chosen"),
-                "soul_side": row.get("soul_side"),
-                "harm_total": row.get("harm_total"),
-            }
-        )
+        entry = {
+            "ip": row.get("remote_ip"),
+            "port": row.get("remote_port"),
+            "process": row.get("process"),
+            "pid": row.get("pid"),
+            "verdict": row.get("verdict"),
+            "kill_reason": row.get("kill_reason"),
+            "kill_tier": row.get("kill_tier") or "block",
+            "hell_chosen": row.get("hell_chosen"),
+            "soul_side": row.get("soul_side"),
+            "harm_total": row.get("harm_total"),
+            "scores": row.get("scores"),
+        }
+        try:
+            entry.update(
+                _kill_reason_plain().explain_threat_trigger(
+                    ip=str(row.get("remote_ip") or ""),
+                    conn=row,
+                    vector="KILL_DETECT",
+                )
+            )
+        except Exception:
+            pass
+        targets.append(entry)
     return {
         "updated": _now(),
         "signature": _intent_signature(doc),

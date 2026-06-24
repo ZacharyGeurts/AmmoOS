@@ -615,12 +615,18 @@
       background: rgba(15, 35, 60, 0.35);
     }
     .planetary-host-strip strong { color: #7ec8ff; }
-    .why-killed-block {
+    .why-killed-block, .threat-trigger-block {
       margin: 10px 0 0; padding: 10px 12px; border-radius: 8px; line-height: 1.55;
-      background: rgba(40, 15, 25, 0.45); border: 1px solid rgba(180, 60, 80, 0.35);
       font-size: 0.95rem;
     }
+    .why-killed-block {
+      background: rgba(40, 15, 25, 0.45); border: 1px solid rgba(180, 60, 80, 0.35);
+    }
     .why-killed-block strong { color: #f0a0a8; }
+    .threat-trigger-block {
+      background: rgba(15, 35, 55, 0.45); border: 1px solid rgba(80, 140, 200, 0.35);
+    }
+    .threat-trigger-block strong { color: #7ec8ff; }
     .planetary-kills-ledger {
       margin: 10px 0 0; padding: 10px 12px; border-radius: 8px; max-height: 220px; overflow: auto;
       background: rgba(10, 20, 35, 0.55); border: 1px solid var(--border); font-size: 0.9rem;
@@ -3879,9 +3885,11 @@
         } else {
           ledger.hidden = false;
           ledger.innerHTML =
-            `<strong style="color:#7ec8ff;">Why they were killed</strong>` +
+            `<strong style="color:#7ec8ff;">Threat triggers &amp; kills</strong>` +
             explained.slice(0, 16).map((row) =>
-              `<div class="kill-why-row"><strong>${esc(row.ip || "—")}</strong> — ${esc(row.why_killed_plain || "Killed at field certainty — full dossier archived on field drive.")}</div>`
+              `<div class="kill-why-row"><strong>${esc(row.ip || "—")}</strong>` +
+              (row.threat_trigger_plain ? `<div class="meta" style="margin:4px 0;color:#9ec8e8;">Triggered: ${esc(row.threat_trigger_plain)}</div>` : "") +
+              `<div>${esc(row.why_killed_plain || "Killed at field certainty — full dossier archived on field drive.")}</div></div>`
             ).join("");
         }
       }
@@ -6056,16 +6064,18 @@
         return;
       }
       list.innerHTML = `<table class="us-table"><thead><tr>
-        <th>Certainty</th><th>Category</th><th>Target</th><th>Clarity</th><th></th>
+        <th>Certainty</th><th>Category</th><th>Target</th><th>What triggered threat</th><th>Clarity</th><th></th>
       </tr></thead><tbody>${threats.map((t) => {
         const pct = Number(t.certainty_pct) || 0;
         const cls = pct >= 88 ? "kill" : pct >= 75 ? "warn" : "";
         const ready = t.destroy_ready ? "" : " disabled";
+        const trigger = t.threat_trigger_plain || t.clarity || "";
         return `<tr>
           <td><strong class="${cls}" style="color:${pct >= 88 ? "var(--murder)" : "var(--gold)"}">${pct}%</strong></td>
           <td>${esc(t.category_title || t.vector || "—")}</td>
           <td><code>${esc(t.ip || "—")}</code><div class="meta">${esc(t.process || "")}</div></td>
-          <td class="meta" style="max-width:420px;">${esc(t.clarity || "")}</td>
+          <td class="meta" style="max-width:480px;line-height:1.5;">${esc(trigger)}</td>
+          <td class="meta" style="max-width:320px;">${esc(t.clarity || "")}</td>
           <td><button type="button" class="hostile-ai-kill-btn" data-threat-id="${esc(t.id)}" data-ip="${esc(t.ip)}"${ready}>${esc(t.destroy_label || "Destroy")}</button></td>
         </tr>`;
       }).join("")}</tbody></table>`;
@@ -7642,10 +7652,14 @@
       const std = (p.standards || []).map((s) => `<code>${esc(s)}</code>`).join(" ");
       const mon = p.monitor;
       const dos = p.dossier;
+      const triggerPlain = p.threat_trigger_plain || p.archived_dossier?.threat_trigger_plain || "";
       const whyPlain = p.why_killed_plain || p.archived_dossier?.why_killed_plain || "";
-      const status = p.target_status === "killed"
-        ? `<div class="ha-killed-badge">✓ KILLED · dossier archived</div>${whyPlain ? `<div class="host-why-killed">${esc(whyPlain)}</div>` : ""}`
+      const triggerBlock = triggerPlain
+        ? `<div class="host-why-killed" style="color:#9ec8e8;margin-top:6px;"><strong>Triggered:</strong> ${esc(triggerPlain)}</div>`
         : "";
+      const status = p.target_status === "killed"
+        ? `<div class="ha-killed-badge">✓ KILLED · dossier archived</div>${triggerBlock}${whyPlain ? `<div class="host-why-killed">${esc(whyPlain)}</div>` : ""}`
+        : (triggerPlain ? triggerBlock : "");
       const monBlock = mon ? `<div class="popup-monitor"><strong>Monitor</strong><div>${haMonitorLine(mon)}</div>${mon.suggestion_summary ? `<div class="popup-path">${esc(mon.suggestion_summary)}</div>` : ""}</div>` : "";
       const dosBlock = dos ? `<div class="popup-monitor"><strong>Dossier</strong><div class="popup-path">${haDossierLine(dos)}</div></div>` : "";
       const bleedLine = haBleedLine(p);
@@ -7879,6 +7893,9 @@
           <div class="host-kill-kv">${dos.attack_path_steps} step(s) · CVE ${esc(cves)}</div>
           <ul class="host-kill-path">${path || "<li>No path steps</li>"}</ul>
         </div>` : ""}
+        ${(p.threat_trigger_plain || p.archived_dossier?.threat_trigger_plain) ? `<div class="host-kill-section threat-trigger-block"><strong>What triggered threat classification</strong>
+          <div class="host-kill-kv">${esc(p.threat_trigger_plain || p.archived_dossier?.threat_trigger_plain)}</div>
+        </div>` : ""}
         ${killed ? `<div class="host-kill-section why-killed-block"><strong>Why they were killed</strong>
           <div class="host-kill-kv">${esc(p.why_killed_plain || p.archived_dossier?.why_killed_plain || "Killed and archived on field drive — open dossier on field storage for full forensics.")}</div>
           ${p.archived_dossier?.archived ? `<div class="host-kill-kv meta">Archived ${esc(p.archived_dossier.archived)}</div>` : ""}
@@ -8023,6 +8040,9 @@
         const bleedRow = bleedLine ? `<div class="host-bleed-line">${bleedLine}</div>` : "";
         const dosLine = p.dossier ? `<div class="host-dossier-line">${haDossierLine(p.dossier)}</div>` : "";
         const sel = p.id === hostSelectedId ? " host-target-selected" : "";
+        const triggerLine = (p.threat_trigger_plain || p.archived_dossier?.threat_trigger_plain)
+          ? `<div class="host-why-killed" style="color:#9ec8e8;">${esc(p.threat_trigger_plain || p.archived_dossier?.threat_trigger_plain)}</div>`
+          : "";
         const whyLine = killed && (p.why_killed_plain || p.archived_dossier?.why_killed_plain)
           ? `<div class="host-why-killed">${esc(p.why_killed_plain || p.archived_dossier?.why_killed_plain)}</div>`
           : "";
@@ -8031,6 +8051,7 @@
           <div>
             <div><strong>${esc(p.ip)}</strong> · ${esc(p.monitor?.verdict || p.verdict || "—")} · heat ${(p.heat ?? 0).toFixed(2)} · strike ${Math.round((p.strike_confidence ?? 0) * 100)}%${live ? " · <em>live</em>" : ""}${killed ? " · <em>killed</em>" : ""}</div>
             <div class="host-point-meta">${esc(p.our_process || p.monitor?.process || "—")} · ${esc(loc)}</div>
+            ${triggerLine}
             ${whyLine}
           </div>
         </div>`;

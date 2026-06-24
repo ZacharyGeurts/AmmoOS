@@ -166,6 +166,7 @@ def _collect_kill_explanations(out: dict[str, Any]) -> list[dict[str, Any]]:
             rows.append({
                 "ip": ip,
                 "threat_id": item.get("threat_id"),
+                "threat_trigger_plain": item.get("threat_trigger_plain"),
                 "why_killed_plain": plain,
                 "action": item.get("action") or out.get("step"),
             })

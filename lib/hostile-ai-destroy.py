@@ -376,6 +376,15 @@ def scan_threats(*, record: bool = False) -> list[dict[str, Any]]:
         if key in seen_ip_cat:
             continue
         seen_ip_cat.add(key)
+        try:
+            kr = _mod("kill_reason_plain", "kill-reason-plain.py")
+            row.update(kr.explain_threat_trigger(
+                ip=str(row.get("ip") or ""),
+                hostile=row,
+                vector=str(row.get("vector") or ""),
+            ))
+        except Exception:
+            pass
         deduped.append(row)
         if record and row.get("destroy_ready") and row.get("vector") in AI_VECTORS:
             ip = row.get("ip") or "infra"
