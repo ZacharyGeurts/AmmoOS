@@ -25,7 +25,7 @@ TAB_SPECS: dict[str, dict[str, Any]] = {
     "threats": {"keys": ["home_protector", "host_attacks"], "dom": ["home-protector-stats"]},
     "intel": {"keys": ["audio_train", "field_rf"], "dom": ["audio-train-motto"]},
     "signals": {"keys": ["signals_field", "field_antenna", "field_radio"], "dom": ["signals-operator", "signals-antenna-banner", "signals-radio-menu"]},
-    "dns": {"keys": ["field_dns"], "dom": ["dns-hero-title", "dns-reality-model"]},
+    "dns": {"keys": ["field_dns"], "dom": ["dns-hero-title", "dns-posture-strip"]},
     "outside": {"keys": ["field_outside_talk"], "dom": ["outside-hero-title"]},
     "library": {"keys": ["h7_library"], "dom": ["library-search"]},
     "system": {"keys": ["settings"], "dom": ["settings-profile"]},

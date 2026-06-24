@@ -259,15 +259,72 @@
     return `<span class="h7-msg__truth h7-msg__truth--${cls}" title="Truth assurance on Hostess 7's own claims">${n}% truth</span>`;
   }
 
+  function renderLongThoughts(doc) {
+    const body = $("h7-long-thoughts");
+    const meta = $("h7-thoughts-meta");
+    const lf = doc.long_form_thoughts || {};
+    if (!body) return;
+    const sections = lf.sections || [];
+    if (!sections.length && lf.narrative) {
+      body.textContent = lf.narrative;
+    } else if (sections.length) {
+      body.innerHTML = sections.map((s) =>
+        `<article class="h7-thoughts__section"><h4>${esc(s.title || "Thought")}</h4><p>${esc(s.body || "")}</p></article>`
+      ).join("");
+    } else {
+      body.textContent = "Hostess 7 is gathering inner monologue from Angel cycles, growth ledger, and brain thoughts…";
+    }
+    if (meta) {
+      const wc = lf.word_count || 0;
+      const ts = (lf.updated || "").replace("T", " ").slice(0, 19);
+      meta.textContent = `${wc} words · updated ${ts || "—"}`;
+    }
+  }
+
+  function renderIqPanel(doc) {
+    const scoreEl = $("h7-iq-score");
+    const detailEl = $("h7-iq-detail");
+    if (!scoreEl) return;
+    const tr = doc.truth_rating || {};
+    const iq = tr.iq_test || {};
+    const lastIq = tr.last_iq_test;
+    const lastQ = tr.last_questionnaire || tr.questionnaire?.score;
+    const qPerfect = tr.questionnaire_perfect || tr.questionnaire?.perfect;
+
+    if (iq.results?.length) {
+      const pass = iq.iq_pass;
+      scoreEl.className = `h7-iq-panel__score ${pass ? "pass" : "fail"}`;
+      scoreEl.textContent = `IQ ${iq.score} · ${iq.estimated_iq_band || ""}`;
+      if (detailEl) {
+        const fails = (iq.results || []).filter((r) => !r.passed).map((r) => `#${r.id} ${r.category}`).join(", ");
+        detailEl.innerHTML = `${pass ? "PASS" : "Below threshold"} · ${iq.pass_rate}% · Turing ${lastQ || "—"}${qPerfect ? " ✓" : ""}${fails ? `<br><span class="meta">Missed: ${esc(fails)}</span>` : ""}`;
+      }
+    } else if (lastIq) {
+      scoreEl.className = `h7-iq-panel__score ${tr.iq_pass ? "pass" : "fail"}`;
+      scoreEl.textContent = `IQ ${lastIq} · ${tr.estimated_iq_band || ""}`;
+      if (detailEl) {
+        detailEl.textContent = `Turing ${lastQ || "not run"}${qPerfect ? " · TURING PASS" : ""}`;
+      }
+    } else {
+      scoreEl.className = "h7-iq-panel__score";
+      scoreEl.textContent = "Run IQ test or Turing battery";
+      if (detailEl) detailEl.textContent = "";
+    }
+  }
+
   function renderTruth(doc) {
     const el = $("h7-truth-status");
     const tr = doc.truth_rating || {};
     if (!el) return;
     const q = tr.last_questionnaire || tr.questionnaire?.score;
     const perfect = tr.questionnaire_perfect || tr.questionnaire?.perfect;
-    el.innerHTML = q
-      ? `Truth on every reply · Questionnaire <strong>${esc(q)}</strong>${perfect ? " · <strong>TURING PASS</strong>" : ""}`
-      : "Truth assurance 0-100% on every Hostess 7 reply — deception risk included";
+    const iq = tr.last_iq_test;
+    el.innerHTML = [
+      "Truth 0–100% on every reply",
+      q ? `· Turing <strong>${esc(q)}</strong>${perfect ? " ✓" : ""}` : "",
+      iq ? `· IQ <strong>${esc(iq)}</strong>` : "",
+    ].filter(Boolean).join(" ");
+    renderIqPanel(doc);
   }
 
   function renderTranscript(rows) {
@@ -687,9 +744,10 @@
   function renderHostess7Command(doc) {
     if (!doc || doc.schema !== "hostess7-command/v1") return;
     const title = $("h7-superintel-title");
-    if (title) title.textContent = doc.title || "Hostess 7 · Super Intelligence";
+    if (title) title.textContent = (doc.title || "Hostess 7").replace(/ · Super Intelligence.*/, "") || "Hostess 7";
     const tag = $("h7-superintel-tagline");
     if (tag && doc.motto) tag.textContent = doc.motto;
+    renderLongThoughts(doc);
     renderTruth(doc);
     renderWartime(doc);
     renderIdleGrow(doc);
@@ -711,13 +769,66 @@
 
   global.dispatchHostess7 = dispatch;
 
+  async function refreshThoughts() {
+    const btn = $("h7-thoughts-refresh");
+    if (btn) btn.disabled = true;
+    try {
+      const j = await dispatch({ action: "refresh_thoughts" });
+      if (j.long_form_thoughts) {
+        const base = global.lastPanelData?.hostess7_command || {};
+        const merged = { ...base, long_form_thoughts: j.long_form_thoughts };
+        updateLocalSlice(merged);
+        renderLongThoughts(merged);
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function runIqTest() {
+    const btn = $("h7-iq-test");
+    if (btn) { btn.disabled = true; btn.textContent = "IQ test running…"; }
+    const scoreEl = $("h7-iq-score");
+    if (scoreEl) scoreEl.textContent = "Running 12-question IQ battery…";
+    try {
+      const j = await dispatch({ action: "iq_test" });
+      const panel = await fetch(API, { cache: "no-store" }).then((r) => r.json());
+      if (docReady(panel)) {
+        const merged = {
+          ...panel,
+          truth_rating: {
+            ...(panel.truth_rating || {}),
+            iq_test: j,
+            last_iq_test: j.score,
+            last_iq_pass_rate: j.pass_rate,
+            iq_pass: j.iq_pass,
+            estimated_iq_band: j.estimated_iq_band,
+          },
+        };
+        updateLocalSlice(merged);
+        renderHostess7Command(merged);
+      }
+      speak(
+        j.iq_pass
+          ? `IQ test passed. Score ${j.score}. Estimated band ${j.estimated_iq_band}.`
+          : `IQ test score ${j.score}. Band ${j.estimated_iq_band}. Keep training.`
+      );
+    } catch (e) {
+      alert(`IQ test failed: ${e.message}`);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "IQ test"; }
+    }
+  }
+
   function bindHostess7Command() {
     $("h7-command-send")?.addEventListener("click", () => sendMessage());
+    $("h7-thoughts-refresh")?.addEventListener("click", refreshThoughts);
+    $("h7-iq-test")?.addEventListener("click", runIqTest);
     $("h7-command-input")?.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) {
-        ev.preventDefault();
-        sendMessage();
-      }
+      if (ev.key !== "Enter") return;
+      if (ev.shiftKey) return;
+      ev.preventDefault();
+      sendMessage();
     });
     $("h7-command-mic")?.addEventListener("click", toggleListen);
     $("h7-command-voice")?.addEventListener("click", () => {
@@ -932,7 +1043,10 @@
     const doc = global.lastPanelData?.hostess7_command;
     if (docReady(doc)) {
       renderHostess7Command(doc);
-      setTimeout(() => h7MiniMap?.invalidateSize?.({ animate: false }), 120);
+      setTimeout(() => {
+        h7MiniMap?.invalidateSize?.({ animate: false });
+        $("h7-command-input")?.focus?.();
+      }, 120);
       return;
     }
     fetch(API, { cache: "no-store" })

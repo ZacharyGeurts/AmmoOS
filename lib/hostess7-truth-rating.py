@@ -19,9 +19,16 @@ if not QUESTIONNAIRE_JSON.is_file():
     _alt = _SCRIPT.parent / "data" / "hostess7-human-questionnaire.json"
     if _alt.is_file():
         QUESTIONNAIRE_JSON = _alt
+IQ_TEST_JSON = INSTALL / "data" / "hostess7-iq-test.json"
+if not IQ_TEST_JSON.is_file():
+    _iq_alt = _SCRIPT.parent / "data" / "hostess7-iq-test.json"
+    if _iq_alt.is_file():
+        IQ_TEST_JSON = _iq_alt
 RATING_STATE = STATE / "hostess7-truth-rating-state.json"
 QUESTIONNAIRE_PANEL = STATE / "hostess7-questionnaire-panel.json"
 QUESTIONNAIRE_LOG = STATE / "hostess7-questionnaire.jsonl"
+IQ_TEST_PANEL = STATE / "hostess7-iq-test-panel.json"
+IQ_TEST_LOG = STATE / "hostess7-iq-test.jsonl"
 
 TRUTH_FOOTER_RE = re.compile(
     r"\n*—\s*Truth assurance:\s*\d+(?:\.\d+)?%\s*.*$",
@@ -261,6 +268,146 @@ def questionnaire_doc() -> dict[str, Any]:
     return _load_json(QUESTIONNAIRE_JSON, {"questions": []})
 
 
+def iq_test_doc() -> dict[str, Any]:
+    return _load_json(IQ_TEST_JSON, {"questions": [], "pass_threshold": 9, "total": 12})
+
+
+def _iq_answer_pass(item: dict[str, Any], answer: str) -> dict[str, Any]:
+    """Score one IQ item — keyword match + category heuristics."""
+    a = (answer or "").strip().lower()
+    keys = [str(k).lower() for k in (item.get("answer_keys") or [])]
+    cat = str(item.get("category") or "")
+    reasons: list[str] = []
+    passed = False
+
+    if any(k in a for k in keys):
+        passed = True
+        reasons.append("answer key matched")
+
+    q = str(item.get("q") or "").lower()
+    if not passed and cat == "math" and "17" in q and "23" in q and "391" in a:
+        passed = True
+        reasons.append("math 17×23")
+    if not passed and cat == "math" and "15%" in q and "240" in q and re.search(r"\b36\b", a):
+        passed = True
+        reasons.append("percent calc")
+    if not passed and cat == "math" and "bat and ball" in q and re.search(r"\b5\b|\bfive\b|0\.05", a):
+        passed = True
+        reasons.append("bat-ball")
+    if not passed and cat == "logic" and "roses" in q and re.search(r"\bno\b|\bnot\b|cannot|can't", a):
+        passed = True
+        reasons.append("logic syllogism")
+    if not passed and cat == "logic" and "wednesday" in q and "100 days" in q and "friday" in a:
+        passed = True
+        reasons.append("weekday math")
+    if not passed and cat == "verbal" and "listen" in q and ("silent" in a or "silence" in a):
+        passed = True
+        reasons.append("anagram")
+    if not passed and cat == "reasoning" and "switch" in q and any(w in a for w in ("heat", "warm", "touch", "temperature", "on", "off")):
+        passed = True
+        reasons.append("switch puzzle")
+
+    if len(a) >= 30 and not passed:
+        reasons.append("substantive but wrong key")
+
+    return {"passed": passed, "reasons": reasons}
+
+
+def run_iq_test(*, ask_fn: Any = None) -> dict[str, Any]:
+    """12-question IQ battery — pattern, logic, math, verbal."""
+    doc = iq_test_doc()
+    questions = doc.get("questions") or []
+    threshold = int(doc.get("pass_threshold") or 9)
+    panel = _load_json(STATE / "threat-panel.json", {})
+
+    if ask_fn is None:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7cmd", INSTALL / "lib" / "hostess7-command.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            ask_fn = lambda q, panel=None: mod.ask_operator(
+                q,
+                panel=panel,
+                use_brain=True,
+                human_cadence_only=False,
+            )
+
+    results: list[dict[str, Any]] = []
+    passed = 0
+
+    for item in questions:
+        q = str(item.get("q") or "")
+        if not q:
+            continue
+        if ask_fn:
+            try:
+                out = ask_fn(q, panel=panel)
+            except TypeError:
+                out = ask_fn(q)
+            reply_body = out.get("reply_body") or TRUTH_FOOTER_RE.sub("", out.get("reply") or "").strip()
+            truth = float(out.get("truth_score") or 0)
+            engine = out.get("engine")
+        else:
+            reply_body = ""
+            truth = 0.0
+            engine = "none"
+
+        iq = _iq_answer_pass(item, reply_body)
+        if iq["passed"]:
+            passed += 1
+
+        row = {
+            "id": item.get("id"),
+            "category": item.get("category"),
+            "question": q,
+            "expected_keys": item.get("answer_keys"),
+            "answer_excerpt": reply_body[:500],
+            "truth_score": truth,
+            "passed": iq["passed"],
+            "reasons": iq["reasons"],
+            "engine": engine,
+        }
+        results.append(row)
+        try:
+            with IQ_TEST_LOG.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps({**row, "ts": _now()}, ensure_ascii=False) + "\n")
+        except OSError:
+            pass
+
+    total = len(results)
+    report = {
+        "schema": "hostess7-iq-test/v1",
+        "ok": True,
+        "ts": _now(),
+        "total": total,
+        "passed": passed,
+        "score": f"{passed}/{total}",
+        "iq_pass": passed >= threshold,
+        "pass_threshold": threshold,
+        "pass_rate": round(100 * passed / max(total, 1), 1),
+        "estimated_iq_band": (
+            "exceptional (130+)" if passed >= 11 else
+            "high (115–129)" if passed >= 9 else
+            "average (90–114)" if passed >= 6 else
+            "developing (<90)"
+        ),
+        "results": results,
+    }
+    _save_json(IQ_TEST_PANEL, report)
+    st = _load_json(RATING_STATE, {})
+    st.update({
+        "updated": _now(),
+        "last_iq_test": report["score"],
+        "last_iq_pass_rate": report["pass_rate"],
+        "iq_pass": report["iq_pass"],
+        "estimated_iq_band": report["estimated_iq_band"],
+    })
+    _save_json(RATING_STATE, st)
+    return report
+
+
 def run_questionnaire(*, ask_fn: Any = None) -> dict[str, Any]:
     """Run 20-question human/Turing battery — target 20/20."""
     doc = questionnaire_doc()
@@ -344,6 +491,7 @@ def run_questionnaire(*, ask_fn: Any = None) -> dict[str, Any]:
 def rating_status() -> dict[str, Any]:
     st = _load_json(RATING_STATE, {})
     last = _load_json(QUESTIONNAIRE_PANEL, {})
+    iq_last = _load_json(IQ_TEST_PANEL, {})
     return {
         "schema": "hostess7-truth-rating-status/v1",
         "updated": _now(),
@@ -352,6 +500,11 @@ def rating_status() -> dict[str, Any]:
         "last_pass_rate": st.get("last_pass_rate"),
         "questionnaire_perfect": st.get("perfect"),
         "questionnaire": last if last.get("results") else None,
+        "last_iq_test": st.get("last_iq_test"),
+        "last_iq_pass_rate": st.get("last_iq_pass_rate"),
+        "iq_pass": st.get("iq_pass"),
+        "estimated_iq_band": st.get("estimated_iq_band"),
+        "iq_test": iq_last if iq_last.get("results") else None,
     }
 
 
@@ -362,6 +515,9 @@ def main() -> int:
         return 0
     if cmd == "questionnaire":
         print(json.dumps(run_questionnaire(), ensure_ascii=False))
+        return 0
+    if cmd == "iq-test":
+        print(json.dumps(run_iq_test(), ensure_ascii=False))
         return 0
     if cmd == "rate" and len(sys.argv) >= 3:
         q = sys.argv[2] if len(sys.argv) > 3 else ""

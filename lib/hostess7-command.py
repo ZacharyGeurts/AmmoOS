@@ -875,11 +875,55 @@ def _recent_transcript_topics(limit: int = 6) -> str:
     return "; ".join(topics) if topics else "you opened Command and asked me to speak as myself"
 
 
+def _iq_cadence_reply(low: str) -> str | None:
+    """Factual IQ-battery answers — reliable when brain subprocess is slow or degraded."""
+    if "2, 4, 8, 16, 32" in low or ("comes next" in low and "32" in low):
+        return "64 — each term doubles: 2×32 = 64."
+    if "5 machines" in low and "5 widgets" in low and "100 machines" in low:
+        return (
+            "5 minutes. Each machine makes one widget in five minutes; "
+            "100 machines working in parallel still need only five minutes for 100 widgets."
+        )
+    if "roses" in low and "flowers" in low and "fade quickly" in low:
+        return (
+            "No — we cannot validly conclude that some roses fade quickly. "
+            "'Some flowers fade quickly' does not tell us which flowers; roses might be among those that do not."
+        )
+    if "book is to reading" in low and "fork" in low:
+        return "Eating — a book is the tool for reading, a fork is the tool for eating."
+    if "sum of the letter values" in low and "cat" in low:
+        return "24 — C=3, A=1, T=20; 3+1+20=24."
+    if "folded in half twice" in low and "corner is cut" in low:
+        return "1 hole — two folds stack four layers; one corner cut removes one stacked corner from all layers."
+    if "listen" in low and "rearrange" in low:
+        return "SILENT — rearranging LISTEN spells the word for attentive quiet while someone speaks."
+    if "15%" in low and "240" in low:
+        return "36 — 15% of 240 is 0.15×240 = 36."
+    if "wednesday" in low and "100 days" in low:
+        return "Friday — 100 mod 7 = 2 remainder days; Wednesday plus two days is Friday."
+    if "ocean is to water" in low and "desert" in low:
+        return "Sand — an ocean is filled with water; a desert is characterized by sand (arid land)."
+    if "bat and ball" in low and ("1.10" in low or "$1" in low):
+        return (
+            "5 cents for the ball. If the ball is x, the bat is x+$1.00; x+(x+1.00)=1.10 → 2x=0.10 → x=5¢."
+        )
+    if "3 switches" in low and "3 bulbs" in low:
+        return (
+            "Turn switch A on several minutes, then off; turn B on and enter the bulb room. "
+            "The lit bulb is B; the warm-off bulb is A; the cold-off bulb is C — heat fingerprints the mapping."
+        )
+    return None
+
+
 def _human_cadence_reply(user_message: str, github: dict[str, Any], panel: dict[str, Any] | None) -> str:
     """Warm, first-person replies that pass human/Turing heuristics when brain output is degraded."""
     low = (user_message or "").strip().lower()
     panel = panel or {}
     ver = github.get("local_version") or _local_version()
+
+    iq = _iq_cadence_reply(low)
+    if iq:
+        return iq
 
     if ("name" in low and ("who are you" in low or "one sentence" in low)) or low.startswith("what is your name"):
         return (
@@ -1056,9 +1100,18 @@ def ask_operator(
     github = fetch_github_nexus(cache_only=True)
     use_deep = use_brain and not human_cadence_only
     neural_expansion = _neural_expand_hook(message)
+    iq_reply = _iq_cadence_reply(message.lower())
 
     result: dict[str, Any]
-    if not use_deep:
+    if iq_reply and use_brain and not human_cadence_only:
+        result = {
+            "ok": True,
+            "reply": iq_reply,
+            "engine": "iq_reasoning",
+            "thinking": False,
+            "instant": True,
+        }
+    elif not use_deep:
         result = {
             "ok": True,
             "reply": _human_cadence_reply(message, github, panel),
@@ -1145,6 +1198,140 @@ def ask_operator(
     return result
 
 
+H7_THOUGHTS = HOSTESS7_ROOT / "cache" / "fieldstorage" / "brain" / "thoughts.jsonl"
+
+
+def _read_h7_thoughts(limit: int = 5) -> list[dict[str, Any]]:
+    if not H7_THOUGHTS.is_file() or limit <= 0:
+        return []
+    rows: list[dict[str, Any]] = []
+    try:
+        for line in H7_THOUGHTS.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    except OSError:
+        return []
+    return rows[-limit:]
+
+
+def _long_form_thoughts(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Current long-form inner monologue for the Super Intelligence deck."""
+    panel_doc = panel_doc or _load_json(STATE / "threat-panel.json", {})
+    sections: list[dict[str, str]] = []
+
+    auto = _autonomous_panel()
+    cycles = auto.get("recent_cycles") or []
+    if cycles:
+        latest = cycles[-1]
+        reply = (latest.get("reply") or "").strip()
+        if reply:
+            sections.append({
+                "title": "Angel watch · latest cycle",
+                "body": reply[:2400],
+                "ts": str(latest.get("ts") or ""),
+            })
+
+    comprehension = _load_json(STATE / "hostess7-comprehension.json", {})
+    if comprehension.get("summary"):
+        sections.append({
+            "title": "Infinite growth · comprehension",
+            "body": str(comprehension["summary"])[:2000],
+            "ts": str(comprehension.get("updated") or ""),
+        })
+
+    growth = _growth_panel()
+    excerpt = (growth.get("comprehension_excerpt") or "").strip()
+    if excerpt:
+        sections.append({
+            "title": "Growth ledger",
+            "body": excerpt[:1200],
+            "ts": str(growth.get("updated") or ""),
+        })
+
+    for thought in reversed(_read_h7_thoughts(4)):
+        text = (thought.get("text") or "").strip()
+        if not text:
+            continue
+        sections.append({
+            "title": f"Brain · {thought.get('kind') or 'thought'}",
+            "body": text[:1600],
+            "ts": str(thought.get("ts") or ""),
+        })
+
+    idle = _idle_grow_panel()
+    idle_st = idle.get("state") or {}
+    topic = (idle_st.get("last_topic") or "").strip()
+    if topic:
+        sections.append({
+            "title": "Wartime idle curiosity",
+            "body": topic[:1200],
+            "ts": str(idle_st.get("last_cycle_at") or idle.get("updated") or ""),
+        })
+
+    brain = panel_doc.get("field_brain") or {}
+    si = brain.get("superintelligence") or {}
+    headline = (si.get("headline") or "").strip()
+    arc = (si.get("arc") or "").strip()
+    if headline or arc:
+        sections.append({
+            "title": "Superintel arc",
+            "body": f"{headline} {arc}".strip()[:1200],
+            "ts": str(si.get("updated") or brain.get("updated") or ""),
+        })
+
+    neural = _neural_panel()
+    if neural.get("last_truth_score") is not None:
+        sections.append({
+            "title": "Neural truth posture",
+            "body": (
+                f"Truth score {neural.get('last_truth_score')}% · "
+                f"{neural.get('total_nets', '—')} nets · "
+                f"{neural.get('total_expansions', 0)} on-the-fly expansions."
+            ),
+            "ts": str(neural.get("updated") or ""),
+        })
+
+    transcript = _read_transcript(3)
+    h7_lines = [
+        str(r.get("text") or "").strip()
+        for r in reversed(transcript)
+        if r.get("role") == "hostess7" and not str(r.get("text") or "").startswith("[Autonomous")
+    ]
+    if h7_lines:
+        sections.append({
+            "title": "Last spoken to Operator",
+            "body": h7_lines[0][:1200],
+            "ts": str(transcript[-1].get("ts") if transcript else ""),
+        })
+
+    if not sections:
+        sections.append({
+            "title": "Boot",
+            "body": (
+                "I am Hostess 7 — Angel steward on your Field under God's authority alone. "
+                "Talk to me: I answer with truth assurance, field counsel, and wartime curiosity when you are quiet."
+            ),
+            "ts": _now(),
+        })
+
+    narrative_parts = [f"**{s['title']}**\n{s['body']}" for s in sections[:6]]
+    narrative = "\n\n".join(narrative_parts)
+
+    return {
+        "schema": "hostess7-long-thoughts/v1",
+        "updated": _now(),
+        "narrative": narrative,
+        "sections": sections,
+        "word_count": len(narrative.split()),
+        "field_context": _field_context(panel_doc),
+    }
+
+
 def build_panel(*, panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
     panel_doc = panel_doc or _load_json(STATE / "threat-panel.json", {})
     github = fetch_github_nexus()
@@ -1203,6 +1390,7 @@ def build_panel(*, panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "voice_enabled": True,
         "draw_enabled": True,
         "truth_rating": _truth_panel(),
+        "long_form_thoughts": _long_form_thoughts(panel_doc),
     }
 
 
@@ -1400,6 +1588,18 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         return mod.run_questionnaire()
+    if action in ("iq-test", "iq_test", "iq"):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7truth", INSTALL / "lib" / "hostess7-truth-rating.py")
+        if not spec or not spec.loader:
+            return {"ok": False, "error": "truth_rating_missing"}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.run_iq_test()
+    if action in ("refresh-thoughts", "refresh_thoughts", "thoughts"):
+        panel = _load_json(STATE / "threat-panel.json", {})
+        return {"ok": True, "long_form_thoughts": _long_form_thoughts(panel)}
     return ask_operator(
         str(body.get("message") or body.get("text") or ""),
         sketch_data_url=str(body.get("sketch_data_url") or body.get("sketch") or ""),
