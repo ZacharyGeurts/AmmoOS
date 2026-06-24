@@ -65,6 +65,32 @@
       "file": "/assets/sdf/legend-dot.sdf.png",
       "display_scale": 0.35
     },
+    "antenna-bloom": {
+      "id": "antenna-bloom",
+      "width": 128,
+      "height": 128,
+      "anchor": [
+        64,
+        64
+      ],
+      "format": "r8",
+      "file": "/assets/sdf/antenna-bloom.sdf.png",
+      "display_scale": 1.2,
+      "animated": true
+    },
+    "field-wave": {
+      "id": "field-wave",
+      "width": 96,
+      "height": 96,
+      "anchor": [
+        48,
+        48
+      ],
+      "format": "r8",
+      "file": "/assets/sdf/field-wave.sdf.png",
+      "display_scale": 1.0,
+      "animated": true
+    },
     "globe-world": {
       "id": "globe-world",
       "width": 1024,
@@ -133,9 +159,9 @@
       "file": "/assets/sdf/earth-thermal.sdf.png",
       "equirectangular": true,
       "thermal": true,
-      "temp_min_c": -13.8,
-      "temp_max_c": 31.6,
-      "updated": "2026-06-24T01:30:52Z"
+      "temp_min_c": -13.7,
+      "temp_max_c": 31.3,
+      "updated": "2026-06-24T01:58:22Z"
     }
   }
 }

@@ -84,6 +84,25 @@ def _ring_sdf(size: int) -> np.ndarray:
     return (np.abs(dist - r) - w / 2.0).astype(np.float32)
 
 
+def _antenna_bloom_sdf(size: int) -> np.ndarray:
+    """Soft radial bloom for antenna field pulses."""
+    cx = cy = (size - 1) / 2.0
+    ys, xs = np.mgrid[0:size, 0:size]
+    dist = np.sqrt((xs - cx) ** 2 + (ys - cy) ** 2).astype(np.float32)
+    r = size * 0.42
+    soft = r * (1.0 - np.exp(-dist / max(size * 0.18, 1.0)))
+    return (dist - soft).astype(np.float32)
+
+
+def _field_wave_sdf(size: int) -> np.ndarray:
+    """Concentric wave interference pattern for signal fields."""
+    cx = cy = (size - 1) / 2.0
+    ys, xs = np.mgrid[0:size, 0:size]
+    dist = np.sqrt((xs - cx) ** 2 + (ys - cy) ** 2).astype(np.float32)
+    wave = np.sin(dist / max(size, 1) * 22.0) * 0.55
+    return (dist / max(size, 1) * 0.82 + wave - 0.32).astype(np.float32)
+
+
 def _dot_sdf(size: int) -> np.ndarray:
     cx = cy = (size - 1) / 2.0
     r = size * 0.38
@@ -254,6 +273,38 @@ def build_assets() -> dict:
     }
     _save_meta(OUT / "legend-dot.sdf.json", dot_meta)
     manifest["assets"]["legend-dot"] = dot_meta
+
+    bloom_size = 128
+    bloom_field = _antenna_bloom_sdf(bloom_size)
+    _save_r8_png(OUT / "antenna-bloom.sdf.png", bloom_field)
+    bloom_meta = {
+        "id": "antenna-bloom",
+        "width": bloom_size,
+        "height": bloom_size,
+        "anchor": [bloom_size // 2, bloom_size // 2],
+        "format": "r8",
+        "file": "/assets/sdf/antenna-bloom.sdf.png",
+        "display_scale": 1.2,
+        "animated": True,
+    }
+    _save_meta(OUT / "antenna-bloom.sdf.json", bloom_meta)
+    manifest["assets"]["antenna-bloom"] = bloom_meta
+
+    wave_size = 96
+    wave_field = _field_wave_sdf(wave_size)
+    _save_r8_png(OUT / "field-wave.sdf.png", wave_field)
+    wave_meta = {
+        "id": "field-wave",
+        "width": wave_size,
+        "height": wave_size,
+        "anchor": [wave_size // 2, wave_size // 2],
+        "format": "r8",
+        "file": "/assets/sdf/field-wave.sdf.png",
+        "display_scale": 1.0,
+        "animated": True,
+    }
+    _save_meta(OUT / "field-wave.sdf.json", wave_meta)
+    manifest["assets"]["field-wave"] = wave_meta
 
     gw, gh = 1024, 512
     globe_field = _globe_sdf_from_jpg(gw, gh)

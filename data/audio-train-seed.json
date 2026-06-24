@@ -1,7 +1,7 @@
 {
   "schema": "audio-train/v1",
   "motto": "Train learns acceptable audio ranges from live sources — push outside = hostile intent.",
-  "hostess_version": "6.9",
+  "hostess_version": "7",
   "warmup_samples": 3,
   "hostility_margin_pct": 0.12,
   "learn_margin_pct": 0.06,

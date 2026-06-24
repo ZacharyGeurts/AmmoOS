@@ -81,3 +81,22 @@ nexus_human_dossier_json() {
   fi
   printf '{"dossier_version":"1.0","ip_count":0,"ips":[],"analyst":"Grok Heavy","summary":"No human dossier loaded yet."}'
 }
+
+# HeavyBoi v7.0 — ingest nexus-kill-intel JSON (paste file or stdin path).
+nexus_heavyboi_ingest() {
+  [[ "${NEXUS_HEAVYBOI:-1}" == "1" ]] || return 1
+  command -v python3 >/dev/null 2>&1 || return 1
+  local py="${NEXUS_INSTALL_ROOT}/lib/heavyboi-importer.py"
+  [[ -f "$py" ]] || return 1
+  local intel="${1:-/tmp/nexus-kill-intel.json}"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    NEXUS_SHIELD_SOURCE="${NEXUS_SHIELD_SOURCE:-}" \
+    python3 "$py" ingest "$intel"
+}
+
+nexus_heavyboi_pending() {
+  [[ "${NEXUS_HEAVYBOI:-1}" == "1" ]] || return 0
+  local pending="${NEXUS_STATE_DIR}/nexus-kill-intel-pending.json"
+  [[ -f "$pending" ]] || return 0
+  nexus_heavyboi_ingest "$pending"
+}

@@ -1584,8 +1584,8 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v6.9.0</h1>
-        <div class="brand-sub">Hostess 6.9 · Audio Train · MIT licensed</div>
+        <h1>NEXUS-Shield v7.0.0</h1>
+        <div class="brand-sub">Hostess 7 · HeavyBoi · MIT licensed</div>
       </div>
     </div>
     <div class="header-right">
@@ -1604,7 +1604,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v6.9.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.0.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -2259,11 +2259,12 @@
 
   <section id="view-human-dossier" class="view">
     <div class="angels-wrap">
-      <p class="angels-motto" id="human-dossier-motto"><strong>Human Dossier</strong> — Grok Heavy kill-order intel in plain English. ThreatFox live C2 exports, hosting likelihood, geo/ASN, malware family, RE-KILL markers. High-confidence only — no sacred or private ranges.</p>
+      <p class="angels-motto" id="human-dossier-motto"><strong>Human Dossier · HeavyBoi v7</strong> — Grok Heavy kill-order intel in plain English. Paste nexus-kill-intel JSON — friendly-guard validates, globe pins, autokill ON. RE-KILL tracking live.</p>
       <div id="human-dossier-meta" class="meta" style="margin-bottom:10px;font-size:0.72rem;">Loading human dossiers…</div>
       <div class="human-dossier-toolbar">
         <label>Search <input type="search" id="human-dossier-filter" placeholder="IP, city, ASN, malware…" autocomplete="off" /></label>
         <label>Malware <select id="human-dossier-malware"><option value="">All families</option></select></label>
+        <button type="button" id="heavyboi-ingest-btn" data-tip="Paste nexus-kill-intel JSON — HeavyBoi validates via friendly-guard, merges dossier, pins globe, autokill ON.">HeavyBoi ingest</button>
         <span id="human-dossier-visible" class="meta"></span>
       </div>
       <div id="human-dossier-chips" class="human-dossier-stats"></div>
@@ -3132,10 +3133,10 @@
       if (sub === "honor" && lastPanelData) renderHonorability(lastPanelData);
       if (sub === "audio-train" && lastPanelData) renderAudioTrain(lastPanelData.audio_train);
       if (sub === "home-protector" && lastPanelData) renderHomeProtector(lastPanelData.home_protector);
-      if (sub === "signals" && lastPanelData && global.renderSignalsField) {
+      if (currentPanel === "signals" && lastPanelData && global.renderSignalsField) {
         renderSignalsField(lastPanelData.signals_field);
         if (global.onSignalsViewActivated) onSignalsViewActivated();
-      } else if (global.onSignalsViewDeactivated) {
+      } else if (currentPanel !== "signals" && global.onSignalsViewDeactivated) {
         onSignalsViewDeactivated();
       }
       if (sub === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
@@ -7146,6 +7147,47 @@
     onLeafletReady(() => {
       warmHostEarthMap();
       if (lastPanelData?.host_attacks) renderHostAttackMap(lastPanelData.host_attacks);
+    });
+    window.addEventListener("nexus-globe-refresh", (ev) => {
+      const pts = ev.detail?.points;
+      if (pts?.length && global.NexusMap?.refreshGlobePins) {
+        NexusMap.refreshGlobePins(pts, { fit: ev.detail?.fit, source: ev.detail?.source });
+      }
+      if (lastPanelData?.host_attacks) {
+        hostMapNeedsFit = true;
+        renderHostAttackMap(lastPanelData.host_attacks);
+      }
+      refresh();
+    });
+    $("heavyboi-ingest-btn")?.addEventListener("click", async () => {
+      const raw = prompt("Paste nexus-kill-intel JSON (kill_orders array):");
+      if (!raw) return;
+      const btn = $("heavyboi-ingest-btn");
+      if (btn) btn.disabled = true;
+      try {
+        const intel = JSON.parse(raw);
+        const res = await fetch("/api/heavyboi/ingest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(intel),
+        });
+        const j = await res.json();
+        if (!j.ok) {
+          alert(j.error || `Ingest failed — refused ${j.refused_count || 0}`);
+          return;
+        }
+        alert(`HeavyBoi: ${j.ingested_count} ingested · ${j.killed_count || 0} killed · globe refreshed`);
+        if (j.host_attacks || lastPanelData?.host_attacks) {
+          window.dispatchEvent(new CustomEvent("nexus-globe-refresh", {
+            detail: { points: (lastPanelData?.host_attacks?.points) || [], fit: true, source: "heavyboi" },
+          }));
+        }
+        refresh();
+      } catch (e) {
+        alert("Invalid JSON or API unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     });
     checkNexusUpdate(false);
     setInterval(() => checkNexusUpdate(false), 3600000);

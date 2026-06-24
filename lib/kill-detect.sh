@@ -3,6 +3,9 @@
 
 nexus_kill_detect_execute() {
   [[ "${NEXUS_KILL_DETECT:-1}" == "1" ]] || return 0
+  if declare -f nexus_heavyboi_pending >/dev/null 2>&1; then
+    nexus_heavyboi_pending >/dev/null 2>&1 || true
+  fi
   command -v python3 >/dev/null 2>&1 || return 0
   local py="${NEXUS_INSTALL_ROOT}/lib/kill-detect.py"
   [[ -f "$py" ]] || return 0

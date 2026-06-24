@@ -280,6 +280,16 @@
     watchResize(el, map);
   }
 
+  function refreshGlobePins(points, options) {
+    const pins = (points || []).filter((p) => p && p.globe_pin !== false && p.lat != null && p.lon != null);
+    window.dispatchEvent(
+      new CustomEvent("nexus-globe-refresh", {
+        detail: { points: pins, fit: options?.fit !== false, source: options?.source || "heavyboi" },
+      })
+    );
+    return pins.length;
+  }
+
   global.NexusMap = {
     create,
     darkTileLayer,
@@ -292,5 +302,6 @@
     flyToAnchor,
     watchResize,
     primeMapPanel,
+    refreshGlobePins,
   };
 })(window);

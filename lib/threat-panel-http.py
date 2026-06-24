@@ -450,6 +450,35 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/signals-field":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "signals-field.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/fcc-signal-lookup":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "fcc-signal-lookup.py", ["identify"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/heavyboi/status":
+            pending = STATE_DIR / "nexus-kill-intel-pending.json"
+            log_path = STATE_DIR / "heavyboi-ingest-log.jsonl"
+            lines = 0
+            try:
+                if log_path.is_file():
+                    lines = sum(1 for _ in log_path.open(encoding="utf-8"))
+            except OSError:
+                lines = 0
+            payload = {
+                "ok": True,
+                "version": "7.0.0",
+                "hostess_version": "7",
+                "pending": pending.is_file(),
+                "ingest_log_lines": lines,
+            }
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path.startswith("/api/human-registry/resolve"):
             ip = str(query.get("ip", [""])[0]).strip()
             if not ip:
@@ -889,6 +918,32 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/home-protector/block-all":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "home-protector.py", ["block-all"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/heavyboi/ingest":
+            intel = body if isinstance(body, dict) else {}
+            if not intel.get("kill_orders") and not intel.get("orders"):
+                self._send(400, json.dumps({"ok": False, "error": "missing kill_orders"}), "application/json")
+                return
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "heavyboi-importer.py",
+                ["ingest", "--json", json.dumps(intel)],
+            )
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/heavyboi/pending":
+            intel = body if isinstance(body, dict) else {}
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "heavyboi-importer.py",
+                ["pending", json.dumps(intel)],
+            )
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/signals-field":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "signals-field.py", ["build"])
             self._send(200, json.dumps(payload), "application/json")
             return
 

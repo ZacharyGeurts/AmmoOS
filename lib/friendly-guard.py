@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""NEXUS Friendly Guard — IMMUTABLE. Never KILL friendlies.
+"""NEXUS Friendly Guard v3.3.2 — IMMUTABLE. Never KILL friendlies.
 
 Tamper-sealed via MANIFEST.sha256. Fail-closed: if this module cannot run,
 every KILL is refused. Cannot be disabled by environment variables.
+HeavyBoi v7 validates pasted kill-order blocks before ingest.
 """
 from __future__ import annotations
 
@@ -14,6 +15,8 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+
+GUARD_VERSION = "3.3.2"
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
@@ -187,12 +190,48 @@ def check_payload(ip: str, monitor: dict[str, Any] | None = None) -> dict[str, A
         "ip": ip,
         "immutable": True,
         "fail_closed": True,
+        "version": GUARD_VERSION,
+    }
+
+
+def validate_kill_block(orders: list[dict[str, Any]]) -> dict[str, Any]:
+    """HeavyBoi v7 — validate a pasted kill_orders block before ingest."""
+    validated: list[dict[str, Any]] = []
+    refused: list[dict[str, Any]] = []
+    for order in orders:
+        ip = str(order.get("ip") or "").strip()
+        if not ip:
+            refused.append({"ip": "", "reason": "empty_ip"})
+            continue
+        refuse, reason = refuse_kill(ip)
+        if refuse:
+            refused.append({"ip": ip, "reason": reason})
+        else:
+            validated.append(order)
+    return {
+        "version": GUARD_VERSION,
+        "validated": validated,
+        "refused": refused,
+        "validated_count": len(validated),
+        "refused_count": len(refused),
+        "immutable": True,
+        "fail_closed": True,
     }
 
 
 def main() -> int:
+    if len(sys.argv) >= 2 and sys.argv[1] == "validate-block":
+        raw = sys.argv[2] if len(sys.argv) > 2 else "{}"
+        try:
+            body = json.loads(raw)
+        except json.JSONDecodeError:
+            return 2
+        orders = list(body.get("kill_orders") or body.get("orders") or [])
+        json.dump(validate_kill_block(orders), sys.stdout)
+        sys.stdout.write("\n")
+        return 0
     if len(sys.argv) < 3 or sys.argv[1] != "check":
-        print("usage: friendly-guard.py check <ip> [monitor_json]", file=sys.stderr)
+        print("usage: friendly-guard.py [check <ip> [monitor_json]|validate-block JSON]", file=sys.stderr)
         return 2
     ip = sys.argv[2]
     monitor = None

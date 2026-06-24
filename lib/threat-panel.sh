@@ -31,8 +31,20 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
+
+nexus_threat_panel_refresh_globe() {
+  if declare -f nexus_host_attack_publish_deep >/dev/null 2>&1; then
+    nexus_host_attack_publish_deep
+  elif declare -f nexus_host_attack_publish >/dev/null 2>&1; then
+    nexus_host_attack_publish
+  fi
+  if declare -f nexus_human_dossier_sync >/dev/null 2>&1; then
+    nexus_human_dossier_sync
+  fi
+}
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
 
 nexus_threat_panel_publish() {
@@ -60,6 +72,9 @@ nexus_threat_panel_publish() {
   fi
   if declare -f nexus_home_protector_publish >/dev/null 2>&1; then
     nexus_home_protector_publish
+  fi
+  if declare -f nexus_signals_field_publish >/dev/null 2>&1; then
+    nexus_signals_field_publish
   fi
   local ts mode conn arp egress listeners threats corr signal dns
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
@@ -252,7 +267,7 @@ nexus_threat_panel_publish() {
     if declare -f nexus_audio_train_json >/dev/null 2>&1; then
       nexus_audio_train_json
     else
-      printf '{"schema":"audio-train/v1","hostess_version":"6.9","stats":{"sources":0},"sources":{},"table":[]}'
+      printf '{"schema":"audio-train/v1","hostess_version":"7","stats":{"sources":0},"sources":{},"table":[]}'
     fi
     printf ',"home_protector":'
     if declare -f nexus_home_protector_json >/dev/null 2>&1; then
@@ -264,7 +279,13 @@ nexus_threat_panel_publish() {
     if declare -f nexus_human_dossier_json >/dev/null 2>&1; then
       nexus_human_dossier_json
     else
-      printf '{"dossier_version":"1.0","ip_count":0,"ips":[],"analyst":"Grok Heavy"}'
+      printf '{"dossier_version":"7.0","ip_count":0,"ips":[],"analyst":"Grok Heavy"}'
+    fi
+    printf ',"signals_field":'
+    if declare -f nexus_signals_field_json >/dev/null 2>&1; then
+      nexus_signals_field_json
+    else
+      printf '{"schema":"signals-field/v1","stats":{"antenna_fields":0},"antennas":[],"pulse_channels":[]}'
     fi
     printf ',"adblock_guardian":'
     if declare -f nexus_adblock_guardian_json >/dev/null 2>&1; then

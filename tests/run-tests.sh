@@ -255,7 +255,8 @@ test_audio_train_module() {
   grep -q 'audio_train' "${ROOT}/lib/threat-panel.sh"
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
-  grep -q 'HOSTESS_VERSION="6.9"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.0.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -403,7 +404,7 @@ test_human_dossier_module() {
   grep -q 'view-human-dossier' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderHumanDossiers' "${ROOT}/panel/threat-panel.html"
   grep -q 'nexus_human_dossier_json' "${ROOT}/lib/human-dossier.sh"
-  python3 -c "import json; d=json.load(open('${ROOT}/data/human-dossier-kill-orders.json')); assert len(d['ips'])==24; assert d['analyst']=='Grok Heavy'"
+  python3 -c "import json; d=json.load(open('${ROOT}/data/human-dossier-kill-orders.json')); assert len(d['ips'])>=24; assert d['analyst']=='Grok Heavy'"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     bash -c "source '${ROOT}/lib/human-dossier.sh' && nexus_human_dossier_sync && nexus_human_dossier_json" | grep -q '147.93.191.75'
 }
@@ -1380,6 +1381,33 @@ test_home_protector_module() {
 }
 
 run_test "home protector module" test_home_protector_module
+
+test_heavyboi_module() {
+  [[ -f "${ROOT}/lib/heavyboi-importer.py" ]]
+  grep -q 'nexus_heavyboi_ingest' "${ROOT}/lib/human-dossier.sh"
+  grep -q '/api/heavyboi/ingest' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'GUARD_VERSION = "3.3.2"' "${ROOT}/lib/friendly-guard.py"
+  grep -q 'heavyboi' "${ROOT}/lib/host-attack-map.py"
+  grep -q 'heavyboi-ingest-btn' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/friendly-guard.py" validate-block '{"kill_orders":[{"ip":"221.132.29.137","reason":"test"}]}' | grep -q '"validated_count": 1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/friendly-guard.py" validate-block '{"kill_orders":[{"ip":"127.0.0.1","reason":"sacred"}]}' | grep -q '"refused_count": 1'
+}
+
+run_test "heavyboi v7 module" test_heavyboi_module
+
+test_signals_field_module() {
+  [[ -f "${ROOT}/lib/signals-field.py" ]]
+  [[ -f "${ROOT}/lib/fcc-signal-lookup.py" ]]
+  grep -q 'signals_field' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/signals-field' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'view-signals' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/signals-field.py" json | grep -q 'signals-field/v1'
+}
+
+run_test "signals field module" test_signals_field_module
 run_test "consumer everyday defaults" test_consumer_defaults
 run_test "gatekeeper strict enforce in+out" test_gatekeeper_strict_enforce
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout

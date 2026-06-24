@@ -15,6 +15,14 @@
     "6GHz": [232, 200, 120],
   };
 
+  const THREAT_COLORS = {
+    none: "#3dd68c",
+    watch: "#e8c878",
+    critical: "#ff5c7a",
+  };
+
+  let refreshBound = false;
+
   function esc(s) {
     return String(s ?? "")
       .replace(/&/g, "&amp;")
@@ -185,10 +193,11 @@
       const dx = cx + Math.cos(ang) * rd;
       const dy = cy + Math.sin(ang) * rd;
       const flicker = 0.6 + Math.sin(t * 3 + i) * 0.4;
+      const tl = dot.threat_level || "none";
       ctx.beginPath();
       ctx.arc(dx, dy, 3 + sig * 2, 0, Math.PI * 2);
-      ctx.fillStyle = dot.color || "#7a9ab8";
-      ctx.globalAlpha = flicker * sig;
+      ctx.fillStyle = dot.color || THREAT_COLORS[tl] || "#7a9ab8";
+      ctx.globalAlpha = flicker * sig * (tl === "critical" ? 1.15 : 1);
       ctx.fill();
       ctx.globalAlpha = 1;
     });
@@ -252,9 +261,40 @@
           <em>${esc(c.kind || "rf")}</em>
         </div>
         <div class="signals-channel-bar"><span style="width:${pct}%"></span></div>
-        <div class="signals-channel-meta">${c.source_count != null ? esc(String(c.source_count)) + " sources" : esc(c.acceptable === false ? "hostile" : "live")}</div>
+        <div class="signals-channel-meta">${c.source_count != null ? esc(String(c.source_count)) + " sources" : esc(c.acceptable === false ? "hostile" : "live")}${c.fcc_id ? ` · <span class="fcc-id-chip">${esc(c.fcc_id)}</span>` : ""}${c.threat_tag && c.threat_tag !== "none" ? ` <span class="fcc-threat-tag level-${esc(c.threat_level || "watch")}">${esc(c.threat_tag)}</span>` : ""}</div>
       </div>`;
     }).join("");
+  }
+
+  function threatTagHtml(tag, level, label) {
+    if (!tag || tag === "none") return '<span class="fcc-threat-tag level-none">permitted</span>';
+    return `<span class="fcc-threat-tag level-${esc(level || "watch")}">${esc(label || tag)}</span>`;
+  }
+
+  function renderFccBanner(fcc) {
+    const el = document.getElementById("signals-fcc-banner");
+    if (!el) return;
+    const st = fcc?.stats || {};
+    el.innerHTML = `<strong>FCC identified</strong> — ${esc(String(st.total ?? 0))} signals · ${esc(String(st.permitted ?? 0))} permitted · <span style="color:#ff8a9a">${esc(String(st.threats ?? 0))} threats</span> · authority ${esc(fcc?.authority || "FCC Part 15")}`;
+  }
+
+  function renderFccTable(fcc) {
+    const el = document.getElementById("signals-fcc-table");
+    if (!el) return;
+    const rows = (fcc?.identified || []).slice(0, 48);
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty">Scanning — FCC lookups populate after first RF cycle…</div>';
+      return;
+    }
+    el.innerHTML = `<table class="honor-table"><thead><tr>
+      <th>Signal</th><th>FCC ID</th><th>Rule</th><th>Threat</th><th>Level</th>
+    </tr></thead><tbody>${rows.map((r) => `<tr>
+      <td><strong>${esc(r.label || r.ssid || r.ip || r.kind || "—")}</strong>${r.bssid ? `<div class="meta">${esc(r.bssid)}</div>` : ""}</td>
+      <td><span class="fcc-id-chip">${esc(r.fcc_id || "—")}</span></td>
+      <td class="meta">${esc(r.fcc_rule || r.fcc_label || "—")}</td>
+      <td>${threatTagHtml(r.threat_tag, r.level, r.label)}</td>
+      <td>${esc(r.level || "none")}</td>
+    </tr>`).join("")}</tbody></table>`;
   }
 
   function renderAntennaCards(doc, t) {
@@ -297,8 +337,32 @@
         ["Resolution", ant.score != null ? `${ant.score}%` : "—"],
         ["Tier", ant.tier || "—"],
         ["FCC safe", ant.fcc_safe ? "✓" : "—"],
+        ["FCC IDs", st.fcc_identified ?? 0],
+        ["Threats", st.fcc_threats ?? 0],
       ].map(([k, v]) => `<span class="signals-stat"><span class="signals-stat-label">${esc(k)}</span><strong>${esc(String(v))}</strong></span>`).join("");
     }
+    renderFccBanner(doc.fcc);
+    renderFccTable(doc.fcc);
+  }
+
+  function bindSignalsRefresh() {
+    if (refreshBound) return;
+    refreshBound = true;
+    document.getElementById("signals-refresh")?.addEventListener("click", async () => {
+      const btn = document.getElementById("signals-refresh");
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/signals-field", { method: "POST", cache: "no-store" });
+        const doc = await res.json();
+        renderSignalsField(doc);
+        if (global.refresh) global.refresh();
+      } catch (_) {
+        /* panel refresh fallback */
+        if (global.refresh) global.refresh();
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
   }
 
   function tick() {
@@ -332,6 +396,7 @@
         if (lastDoc && isSignalsActive()) paintHero(document.getElementById("signals-field-hero"), lastDoc, phase);
       });
     }
+    bindSignalsRefresh();
     startAnimation();
   }
 

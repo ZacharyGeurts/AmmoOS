@@ -486,6 +486,21 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
         elif isinstance(b, str):
             queue(b, vector="FIREWALL_BLOCK", severity="high", source="blocked")
 
+    human_doc = _load_json(STATE / "human-dossier.json", {})
+    if not human_doc.get("ips"):
+        human_doc = _load_json(INSTALL / "data" / "human-dossier-kill-orders.json", {})
+    for row in human_doc.get("ips") or []:
+        ip = str(row.get("ip") or "")
+        if not ip:
+            continue
+        queue(
+            ip,
+            vector="HEAVYBOI_KILL_ORDER",
+            severity="critical",
+            source="heavyboi",
+            detail=str(row.get("notes") or row.get("associated_malware") or "kill-order dossier"),
+        )
+
     dossier_by_ip: dict[str, dict[str, Any]] = {}
     for d in dossiers.get("dossiers") or []:
         peer = str(d.get("peer") or d.get("remote_ip") or "")
@@ -500,7 +515,7 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
         if not prev:
             merged[ip] = r
             continue
-        rank = {"gatekeeper": 0, "dossier": 1, "threat_log": 2, "blocked": 3, "live": 4}
+        rank = {"gatekeeper": 0, "heavyboi": 1, "dossier": 2, "threat_log": 3, "blocked": 4, "live": 5}
         if rank.get(r["source"], 9) < rank.get(prev["source"], 9):
             merged[ip] = r
     raw = list(merged.values())
@@ -542,7 +557,8 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
         fp = _fingerprint(ip, r["vector"], r.get("process", ""), r.get("verdict", ""), r.get("detail", ""))
         style = _heat_color(heat, fp)
         from_monitor = r["source"] == "gatekeeper"
-        resolved = _resolve_coords_for_globe(ip, enriched, from_monitor=from_monitor)
+        from_heavyboi = r["source"] == "heavyboi"
+        resolved = _resolve_coords_for_globe(ip, enriched, from_monitor=from_monitor or from_heavyboi)
         if not resolved:
             continue
         lat, lon, geo_src = resolved
@@ -557,7 +573,7 @@ def _collect_points(*, fast: bool = False) -> list[dict[str, Any]]:
         dossier = _dossier_snapshot(dossier_by_ip[ip]) if ip in dossier_by_ip else None
         target_status = "killed" if ip in disabled_ips else ("live" if from_monitor else "intel")
         is_monitor_target = from_monitor
-        globe_pin = from_monitor
+        globe_pin = from_monitor or from_heavyboi
         friendly_refuse, friendly_reason = refuse_kill(ip, monitor=monitor)
         nokill = ip in nokill_ips
         bleed = bleed_by_ip.get(ip) or {}
