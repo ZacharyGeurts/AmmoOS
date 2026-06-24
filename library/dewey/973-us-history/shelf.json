@@ -1,0 +1,14 @@
+{
+  "code": "973",
+  "title": "History of United States",
+  "parent": "900",
+  "count": 1,
+  "updated": "2026-06-24T03:12:05Z",
+  "books": [
+    {
+      "id": "openstax_us_history",
+      "title": "OpenStax U.S. History",
+      "dewey": "973"
+    }
+  ]
+}

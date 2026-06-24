@@ -36,7 +36,7 @@ nexus_shutdown_journal_hint() {
 }
 
 nexus_shutdown_analyze() {
-  local forensics="${1:-{}}"
+  local forensics="${1:-"{}"}"
   local who="${2:-}"
   local journal="${3:-}"
   local signal="${4:-}"
@@ -56,7 +56,7 @@ nexus_shutdown_analyze() {
 }
 
 nexus_shutdown_merge_forensics() {
-  local raw="${1:-{}}"
+  local raw="${1:-"{}"}"
   local who="${2:-}"
   local journal="${3:-}"
   local signal="${4:-}"

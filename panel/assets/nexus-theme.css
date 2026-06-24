@@ -339,10 +339,45 @@ header.app-header {
   gap: 8px;
   margin-top: 18px;
 }
+/* Black buttons, white text, black inputs — global form theme */
+button:not(nav.menu button):not(.panel-subnav button) {
+  background: #000;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:not(nav.menu button):not(.panel-subnav button):hover {
+  border-color: #666;
+  background: #0a0a0a;
+}
+button:not(nav.menu button):not(.panel-subnav button):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea,
+select,
+select option {
+  background: #000;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #888;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 1px solid #666;
+}
+
 .us-crossrefs button {
-  background: var(--bg-accent);
-  border: 1px solid var(--border);
-  color: var(--internet);
+  background: #000;
+  border: 1px solid #333;
+  color: #fff;
   padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -350,8 +385,8 @@ header.app-header {
   font-weight: 600;
 }
 .us-crossrefs button:hover {
-  border-color: var(--internet);
-  background: rgba(114, 184, 255, 0.12);
+  border-color: #666;
+  background: #0a0a0a;
 }
 @media (max-width: 1100px) {
   .us-sidebar { grid-template-columns: 1fr; }

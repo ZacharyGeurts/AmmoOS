@@ -86,6 +86,19 @@ def _wifi_fcc_band(freq_mhz: Any, channel: Any) -> dict[str, Any]:
     }
 
 
+def _master_record(row: dict[str, Any], *, source: str = "lookup") -> None:
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "fcc_master_record", INSTALL / "lib" / "fcc-master-record.py",
+        )
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            mod.record_lookup(row, source=source)
+    except Exception:
+        pass
+
+
 def lookup_signal(
     *,
     kind: str = "wifi",
@@ -121,6 +134,7 @@ def lookup_signal(
         meta = _threat_tag_meta(threat_kind if threat_kind else "none")
         base.update(meta)
         base["identified_by"] = "fcc_frequency_lookup"
+        _master_record(base, source="fcc_lookup")
         return base
 
     if kind == "audio":
@@ -136,6 +150,7 @@ def lookup_signal(
         tag = "audio_hostile" if hostile_intent else "none"
         base.update(_threat_tag_meta(tag))
         base["identified_by"] = "fcc_audio_registry"
+        _master_record(base, source="fcc_lookup")
         return base
 
     if kind in ("lan", "arp", "wired"):
@@ -151,6 +166,60 @@ def lookup_signal(
         tag = "airspace_unauthorized" if permission == "unauthorized" else "none"
         base.update(_threat_tag_meta(tag))
         base["identified_by"] = "fcc_wired_registry"
+        _master_record(base, source="fcc_lookup")
+        return base
+
+    if kind == "laser":
+        laser = reg.get("laser") or {}
+        base.update({
+            "fcc_id": laser.get("id", "fcc_laser_part15"),
+            "fcc_label": laser.get("label", "Laser / optical"),
+            "fcc_rule": laser.get("rule", "47 CFR §15.101"),
+            "permitted": True,
+            "authority": "FCC Part 15",
+            "service": laser.get("service", "Optical corridor"),
+        })
+        base.update(_threat_tag_meta("none"))
+        base["identified_by"] = "fcc_laser_registry"
+        _master_record(base, source="fcc_lookup")
+        return base
+
+    if kind == "ble":
+        ble = reg.get("ble") or {}
+        base.update({
+            "fcc_id": ble.get("id", "fcc_ble_part15"),
+            "fcc_label": ble.get("label", "Bluetooth LE"),
+            "fcc_rule": ble.get("rule", "47 CFR Part 15"),
+            "permitted": True,
+            "authority": "FCC Part 15",
+            "service": ble.get("service", "BLE"),
+            "freq_mhz": ble.get("frequency_mhz"),
+        })
+        base.update(_threat_tag_meta("none"))
+        base["identified_by"] = "fcc_ble_registry"
+        _master_record(base, source="fcc_lookup")
+        return base
+
+    if kind in ("broadcast", "radio", "am", "sw", "lw", "fm"):
+        pirate = permission == "unlicensed" or hostile_intent
+        if kind == "fm" and not pirate:
+            entry = reg.get("broadcast_fm") or reg.get("broadcast") or {}
+        else:
+            entry = reg.get("broadcast_pirate" if pirate else "broadcast") or {}
+        base.update({
+            "fcc_id": entry.get("id", "fcc_broadcast_part73"),
+            "fcc_label": entry.get("label", "Broadcast"),
+            "fcc_rule": entry.get("rule", "47 CFR Part 73"),
+            "permitted": not pirate,
+            "authority": "FCC Part 73",
+            "service": entry.get("service", "Broadcast"),
+            "freq_mhz": freq_mhz,
+            "band": band or kind,
+        })
+        tag = "unpermitted_spectrum" if pirate else "none"
+        base.update(_threat_tag_meta(tag))
+        base["identified_by"] = "fcc_broadcast_registry"
+        _master_record(base, source="fcc_lookup")
         return base
 
     base.update({
@@ -163,6 +232,7 @@ def lookup_signal(
     })
     base.update(_threat_tag_meta("watch"))
     base["identified_by"] = "fcc_fallback"
+    _master_record(base, source="fcc_lookup")
     return base
 
 

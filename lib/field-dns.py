@@ -35,7 +35,8 @@ PORT = int(os.environ.get("NEXUS_FIELD_DNS_PORT", "53"))
 
 
 def _bind_hosts_v4() -> list[str]:
-    raw = os.environ.get("NEXUS_FIELD_DNS_BINDS_IPV4", "127.0.0.1,127.0.0.53")
+    # 127.0.0.53 is systemd-resolved — binding there conflicts; redirect via resolv instead.
+    raw = os.environ.get("NEXUS_FIELD_DNS_BINDS_IPV4", "127.0.0.1")
     hosts = [h.strip() for h in raw.split(",") if h.strip()]
     return hosts or [IPV4]
 
@@ -54,6 +55,13 @@ _stats = {"queries": 0, "blocked": 0, "cache_hits": 0, "errors": 0, "started_at"
 
 def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _load_json(path: Path, default: Any) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return default
 
 
 def _load_blocklist() -> set[str]:
@@ -88,7 +96,10 @@ def _is_blocked(qname: str, blocked: set[str]) -> bool:
 def _encode_name(name: str) -> bytes:
     out = bytearray()
     for label in name.rstrip(".").split("."):
-        raw = label.encode("idna", errors="replace")[:63]
+        try:
+            raw = label.encode("ascii")[:63]
+        except UnicodeEncodeError:
+            raw = label.encode("idna")[:63]
         out.append(len(raw))
         out.extend(raw)
     out.append(0)
@@ -116,7 +127,7 @@ def _read_name(data: bytes, offset: int) -> tuple[str, int]:
             jumped = True
             continue
         offset += 1
-        labels.append(data[offset : offset + length].decode("idna", errors="replace"))
+        labels.append(data[offset : offset + length].decode("ascii", errors="replace"))
         offset += length
     return ".".join(labels), end
 
@@ -170,7 +181,30 @@ def _build_response(
     return header + question + bytes(body)
 
 
+def _guard_mod() -> Any:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("dns_threat_guard", INSTALL / "lib" / "dns-threat-guard.py")
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _integrity_mod() -> Any:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("dns_egress_integrity", INSTALL / "lib" / "dns-egress-integrity.py")
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _resolve_trace(qname: str, qtype_name: str) -> list[str]:
+    guard = _guard_mod()
+    if not guard.acquire_dig_slot():
+        return []
     try:
         proc = subprocess.run(
             [
@@ -189,7 +223,10 @@ def _resolve_trace(qname: str, qtype_name: str) -> list[str]:
             check=False,
         )
     except (OSError, subprocess.SubprocessError):
+        guard.release_dig_slot()
         return []
+    finally:
+        guard.release_dig_slot()
     out: list[str] = []
     for line in (proc.stdout or "").splitlines():
         parts = line.split()
@@ -215,6 +252,22 @@ def _resolve(qname: str, qtype: int, blocked: set[str]) -> tuple[list[str], str]
     if answers:
         with _cache_lock:
             _cache[key] = (now + CACHE_TTL, answers)
+        try:
+            _integrity_mod().verify_dns_answer(qname, qtype_name, answers)
+        except Exception:
+            pass
+        try:
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location(
+                "dns_internet_field", INSTALL / "lib" / "dns-internet-field.py",
+            )
+            if spec and spec.loader:
+                _inf = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(_inf)
+                _inf.record_query(qname, answers)
+        except Exception:
+            pass
         return answers, "trace"
     return [], "miss"
 
@@ -254,7 +307,26 @@ def _udp_loop(family: int, host: str) -> None:
             data, addr = sock.recvfrom(4096)
         except OSError:
             continue
-        resp = _handle_query(data, blocked)
+        client = f"{addr[0]}:{addr[1]}"
+        try:
+            guard = _guard_mod()
+            if guard.is_permanently_blocked(client):
+                continue
+            parsed_peek = _parse_query(data)
+            qtype_peek = parsed_peek[2] if parsed_peek else None
+            ok, reason = guard.listen_before_reject(
+                client_key=client, packet_len=len(data), qtype=qtype_peek,
+            )
+            if not ok:
+                guard.eradicate_threat(client_key=client, reason=reason, vector="DDOS_FLOOD")
+                continue
+        except Exception:
+            pass
+        try:
+            resp = _handle_query(data, blocked)
+        except Exception:
+            _stats["errors"] += 1
+            continue
         if resp:
             try:
                 sock.sendto(resp, addr)
@@ -296,7 +368,22 @@ def _multipoint_mod() -> Any:
     return mod
 
 
+def _acquire_serve_lock() -> bool:
+    """Single resolver instance — duplicate binds cause silent query loss."""
+    if PID_FILE.is_file():
+        try:
+            old = int(PID_FILE.read_text(encoding="utf-8").strip().split()[0])
+            os.kill(old, 0)
+            return False
+        except (OSError, ValueError):
+            pass
+    return True
+
+
 def serve() -> int:
+    if not _acquire_serve_lock():
+        time.sleep(10)
+        return 0
     _stats["started_at"] = _now()
     listeners: list[str] = []
     threads: list[threading.Thread] = []
@@ -350,14 +437,181 @@ def _planetary_mod() -> Any:
     return mod
 
 
+def _recent_queries(limit: int = 48) -> list[dict[str, Any]]:
+    hints = STATE / "field-dns-cache-hints.jsonl"
+    rows: list[dict[str, Any]] = []
+    if not hints.is_file():
+        return rows
+    try:
+        lines = hints.read_text(encoding="utf-8", errors="replace").splitlines()
+        for line in lines[-limit:]:
+            if not line.strip():
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    except OSError:
+        pass
+    return list(reversed(rows[-limit:]))
+
+
+def _engineer_briefing(
+    srv: dict[str, Any],
+    planetary: dict[str, Any],
+    multipoint: dict[str, Any],
+    internet_field: dict[str, Any],
+    takeover: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    seed = _load_json(INSTALL / "data" / "dns-admin-seed.json", {})
+    welcome = seed.get("welcome") or {}
+    resolv = planetary.get("resolv") or {}
+    stats = srv.get("stats") or {}
+    alerts: list[dict[str, Any]] = []
+
+    if not srv.get("running"):
+        alerts.append({
+            "level": "critical",
+            "code": "resolver_down",
+            "title": "Truth Resolver not running",
+            "detail": "UDP listener offline — restart nexus-genius or field-dns serve.",
+            "action": "sudo systemctl restart nexus-genius",
+        })
+    takeover_phase = (takeover or {}).get("phase") or "observing"
+    if takeover_phase in ("observing", "ready"):
+        alerts.append({
+            "level": "info",
+            "code": "takeover_pending",
+            "title": f"Graceful takeover — phase {takeover_phase}",
+            "detail": "Incumbent DNS/DHCP left running until NEXUS Truth Resolver is healthy.",
+            "action": "Wait for primary phase — no resolv interrupt",
+        })
+    elif not resolv.get("nexus_truth_enforced"):
+        alerts.append({
+            "level": "high",
+            "code": "resolv_foreign",
+            "title": "resolv.conf not steered to NEXUS",
+            "detail": f"Nameservers: {', '.join(resolv.get('nameservers') or ['—'])} — enforce cycle pending or needs root.",
+            "action": "nexus_field_dns_enforce_resolv (daemon cycle or sudo)",
+        })
+    if int(stats.get("errors") or 0) > int(stats.get("queries") or 0) * 0.25 and int(stats.get("queries") or 0) > 3:
+        alerts.append({
+            "level": "medium",
+            "code": "high_error_rate",
+            "title": "Elevated SERVFAIL rate",
+            "detail": f"{stats.get('errors', 0)} errors on {stats.get('queries', 0)} queries — check dig +trace path.",
+            "action": "Inspect field-dns.json stats; verify root reachability",
+        })
+    if (internet_field.get("total_slots") or 0) and (internet_field.get("recognized_slots") or 0) == 0:
+        alerts.append({
+            "level": "info",
+            "code": "internet_silent",
+            "title": "Internet field all silent",
+            "detail": "WHOLE slots loaded — run pull cycle or resolve domains to light LOCAL NOW.",
+            "action": "python3 lib/dns-internet-field.py pull",
+        })
+
+    enforced = sum(1 for r in (planetary.get("rfc_matrix") or []) if r.get("compliance") == "enforced")
+    return {
+        "headline": welcome.get("headline") or "Engineer briefing — everything DNS upfront",
+        "lead": welcome.get("lead") or "Truth Resolver on loopback. Trace-only. No foreign shortcut.",
+        "upfront": list(welcome.get("dns_upfront") or []),
+        "love_note": welcome.get("love_note") or "",
+        "alerts": alerts,
+        "healthy": not any(a.get("level") in ("critical", "high") for a in alerts),
+        "quick_facts": {
+            "running": bool(srv.get("running")),
+            "pid": srv.get("pid"),
+            "started_at": stats.get("started_at"),
+            "listeners": srv.get("listeners") or [],
+            "planetary_level": planetary.get("planetary_security_level"),
+            "host_level": planetary.get("host_security_level"),
+            "rfc_enforced": enforced,
+            "rfc_total": len(planetary.get("rfc_matrix") or []),
+            "root_servers": len(planetary.get("root_servers") or []),
+            "multipoint_points": multipoint.get("point_count") or len(multipoint.get("identification_points") or []),
+            "internet_slots": internet_field.get("total_slots", 0),
+            "internet_recognized": internet_field.get("recognized_slots", 0),
+            "foreign_blocked": len(planetary.get("foreign_resolvers_blocked") or []),
+            "blocklist_domains": srv.get("blocklist_domains", 0),
+            "cache_entries": srv.get("cache_entries", 0),
+        },
+        "admin_ports": seed.get("admin_ports") or [7, 77, 777],
+        "port_mnemonic": seed.get("port_mnemonic") or {},
+    }
+
+
+def _internet_field_mod() -> Any:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "dns_internet_field", INSTALL / "lib" / "dns-internet-field.py",
+    )
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def build_panel() -> dict[str, Any]:
     srv = status()
     planetary = _planetary_mod().build_planetary_dns(extra={"server": srv})
     multipoint: dict[str, Any] = {}
+    internet_field: dict[str, Any] = {}
     try:
         multipoint = _multipoint_mod().build_identity(running=bool(srv.get("running")))
     except Exception:
         multipoint = {}
+    try:
+        internet_field = _internet_field_mod().build_internet_field(pull_live=bool(srv.get("running")))
+    except Exception:
+        internet_field = {}
+    egress: dict[str, Any] = {}
+    threat_guard: dict[str, Any] = {}
+    dhcp: dict[str, Any] = {}
+    takeover: dict[str, Any] = {}
+    try:
+        egress = _integrity_mod().build_panel()
+    except Exception:
+        egress = {}
+    try:
+        threat_guard = _guard_mod().build_panel()
+    except Exception:
+        threat_guard = {}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("field_dhcp", INSTALL / "lib" / "field-dhcp.py")
+        if spec and spec.loader:
+            _dhcp = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_dhcp)
+            dhcp = _dhcp.build_panel()
+    except Exception:
+        dhcp = {}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "dns_service_takeover", INSTALL / "lib" / "dns-service-takeover.py",
+        )
+        if spec and spec.loader:
+            _to = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_to)
+            takeover = _to.build_panel()
+    except Exception:
+        takeover = {}
+    hostess7 = takeover.get("hostess7") or {
+        "inside": {
+            "dns": f"{IPV4}:{PORT} loopback Truth Resolver",
+            "dhcp": dhcp.get("bind") or "67/udp LAN pool",
+            "movement": "none — issue/listen only",
+        },
+        "outside": {
+            "dns_admin": "ports 7 · 77 · 777 read-only",
+            "dhcp": "disabled on WAN",
+            "movement": "none — information only",
+        },
+    }
     doc: dict[str, Any] = {
         "schema": "field-dns/v1",
         "updated": _now(),
@@ -387,6 +641,33 @@ def build_panel() -> dict[str, Any]:
         "multipoint_identity": multipoint,
         "identification_points": multipoint.get("identification_points") or [],
         "dns_override_active": (multipoint.get("override") or {}).get("resolv", {}).get("nexus_override_active"),
+        "internet_field": internet_field,
+        "internet_slots": internet_field.get("total_slots", 0),
+        "internet_recognized": internet_field.get("recognized_slots", 0),
+        "internet_coverage_pct": internet_field.get("coverage_pct", 0),
+        "recent_queries": _recent_queries(),
+        "engineer_briefing": _engineer_briefing(srv, planetary, multipoint, internet_field, takeover),
+        "legacy_dns_equipment": (_load_json(INSTALL / "data" / "dns-admin-seed.json", {}).get("legacy_dns_equipment") or []),
+        "identity": planetary.get("identity") or {},
+        "egress_integrity": egress,
+        "threat_guard": threat_guard,
+        "takeover": takeover,
+        "dhcp_server": dhcp,
+        "hostess7_service": hostess7,
+        "servers": {
+            "dns": {
+                "running": bool(srv.get("running")),
+                "listeners": srv.get("listeners") or [],
+                "port": PORT,
+                "pid": srv.get("pid"),
+            },
+            "dhcp": {
+                "running": bool(dhcp.get("running")),
+                "bind": dhcp.get("bind"),
+                "lease_count": dhcp.get("lease_count", 0),
+                "dns_option": dhcp.get("dns_option") or ["127.0.0.1"],
+            },
+        },
     }
     tmp = PANEL_CACHE.with_suffix(".tmp")
     tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

@@ -1,0 +1,29 @@
+{
+  "code": "900",
+  "title": "History & geography",
+  "slug": "900-history",
+  "count": 2,
+  "updated": "2026-06-24T03:12:05Z",
+  "books": [
+    {
+      "id": "openstax_world_history_2",
+      "title": "OpenStax World History Volume 2",
+      "author": "",
+      "dewey": "900",
+      "ein": "H7-FIELD-25a2e30f139c",
+      "format": "H7",
+      "ready": true,
+      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/openstax_world_history_2.h7"
+    },
+    {
+      "id": "wikibooks_us_history",
+      "title": "Wikibooks US History",
+      "author": "",
+      "dewey": "900",
+      "ein": "H7-FIELD-773014cf7121",
+      "format": "H7",
+      "ready": true,
+      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/wikibooks_us_history.h7"
+    }
+  ]
+}

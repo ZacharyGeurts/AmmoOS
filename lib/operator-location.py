@@ -22,12 +22,35 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _seed_from_default() -> dict[str, Any] | None:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "operator_default", INSTALL / "lib" / "operator-default.py",
+        )
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        doc = mod.seed_operator_location()
+        return doc if doc.get("lat") is not None else None
+    except Exception:
+        return None
+
+
 def _load() -> dict[str, Any]:
     if LOC_FILE.is_file():
         try:
-            return json.loads(LOC_FILE.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+            doc = json.loads(LOC_FILE.read_text(encoding="utf-8"))
+            lat, lon = doc.get("lat"), doc.get("lon")
+            if lat is not None and lon is not None and not (float(lat) == 0.0 and float(lon) == 0.0):
+                return doc
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
             pass
+    seeded = _seed_from_default()
+    if seeded:
+        return seeded
     return {
         "lat": None,
         "lon": None,
@@ -211,13 +234,31 @@ def wireless_immediate() -> dict[str, Any]:
 def panel_json() -> dict[str, Any]:
     doc = _load()
     iface = _default_route_iface()
+    profile: dict[str, Any] = {}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "operator_default", INSTALL / "lib" / "operator-default.py",
+        )
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            profile = mod.panel_operator()
+    except Exception:
+        profile = {}
     return {
         "lat": doc.get("lat"),
         "lon": doc.get("lon"),
-        "label": doc.get("label") or "",
+        "label": doc.get("label") or profile.get("label") or "",
         "source": doc.get("source") or "unset",
         "updated": doc.get("updated"),
-        "address": doc.get("address") or "",
+        "address": doc.get("address") or profile.get("address") or "",
+        "display_name": doc.get("display_name") or profile.get("display_name") or "",
+        "urls": doc.get("urls") or profile.get("urls") or [],
+        "github": doc.get("github") or profile.get("github") or "",
+        "x": doc.get("x") or profile.get("x") or "",
+        "remember": bool(doc.get("remember", profile.get("remember", True))),
         "wireless": bool(doc.get("wireless")) or _is_wireless(iface),
         "iface": iface,
         "gps_ready": doc.get("lat") is not None and doc.get("lon") is not None,

@@ -57,6 +57,14 @@ NEXUS-Shield CLI — full control if the browser won't open
   nexus scour               Classify active vectors (never unknown)
   nexus intel <ip>          Look up peer intelligence
   nexus eradicate <ip> [pid]  Remove host pest (block + stop + quarantine)
+  nexus field status          Whole system on field drive — status JSON
+  nexus field publish         Copy whole NEXUS install + state to field drive
+  nexus field talk <json>     Talk to field drive (connect/probe/publish)
+  nexus field panel           Full GUI URL (/field) — field-talk redirects here
+  nexus antenna status        Field antenna blaster readiness JSON
+  nexus antenna cycle         Full detect cycle (RF, audio, laser, BLE, sub-µm)
+  nexus antenna test          Blaster readiness test
+  nexus antenna launch [N]    Restart cycles until blaster_ready (default 12)
   nexus dossier             Angel dossiers — attack paths (JSON)
   nexus research            Research tables — MAC/CVE/MITRE (JSON)
   nexus paranoia            Paranoia mode status
@@ -271,6 +279,73 @@ case "$cmd" in
     [[ -f "$script" ]] || { echo '{"tables":{}}'; exit 0; }
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
       python3 "$script" research
+    ;;
+  antenna)
+    action="${sub:-status}"
+    apy="${NEXUS_INSTALL_ROOT}/lib/field-antenna-orchestrator.py"
+    launcher="${NEXUS_INSTALL_ROOT}/lib/field-antenna-launcher.sh"
+    [[ -f "$apy" ]] || { echo "field-antenna-orchestrator missing"; exit 1; }
+    case "$action" in
+      status)
+        NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+          python3 "$apy" json
+        ;;
+      cycle)
+        NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+          python3 "$apy" cycle
+        ;;
+      test)
+        NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+          python3 "$apy" test
+        ;;
+      launch|blaster)
+        max="${3:-12}"
+        if [[ -x "$launcher" ]]; then
+          NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+            "$launcher" launch "$max"
+        else
+          NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+            python3 "$apy" launch "$max"
+        fi
+        ;;
+      *)
+        echo "usage: nexus antenna [status|cycle|test|launch [max_rounds]]"
+        exit 1
+        ;;
+    esac
+    ;;
+  field)
+    action="${sub:-status}"
+    fpy="${NEXUS_INSTALL_ROOT}/lib/field-drive-system.py"
+    [[ -f "$fpy" ]] || { echo "field-drive-system missing"; exit 1; }
+    case "$action" in
+      status)
+        NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+          python3 "$fpy" status
+        ;;
+      publish)
+        NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+          python3 "$fpy" publish
+        ;;
+      sync)
+        NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+          python3 "$fpy" sync
+        ;;
+      talk)
+        payload="${3:-"{}"}"
+        [[ -n "$payload" ]] || payload='{"op":"status"}'
+        NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+          python3 "$fpy" talk "$payload"
+        ;;
+      panel)
+        port="${NEXUS_THREAT_PANEL_PORT:-9477}"
+        echo "https://127.0.0.1:${port}/field"
+        ;;
+      *)
+        echo "usage: nexus field [status|publish|sync|talk JSON|panel]"
+        exit 1
+        ;;
+    esac
     ;;
   eradicate)
     ip="${sub:-}"

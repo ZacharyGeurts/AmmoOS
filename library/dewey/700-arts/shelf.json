@@ -1,0 +1,19 @@
+{
+  "code": "700",
+  "title": "Arts & recreation",
+  "slug": "700-arts",
+  "count": 1,
+  "updated": "2026-06-24T03:12:05Z",
+  "books": [
+    {
+      "id": "h7-imagine-field-corpus",
+      "title": "Hostess7 Imagine Field Corpus",
+      "author": "Hostess7",
+      "dewey": "700",
+      "ein": "H7-FIELD-bc069fa2981d",
+      "format": "field-corpus",
+      "ready": true,
+      "path": ""
+    }
+  ]
+}

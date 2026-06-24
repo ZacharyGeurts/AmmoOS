@@ -205,7 +205,7 @@ if m:
 
   local meta mac ports_blob conn_killed proc_killed flow_blocks lan_actions manifest
   meta="$(
-    DOSSIER_JSON="${dossier:-{}}" IP="$ip" python3 -c '
+    DOSSIER_JSON="${dossier:-"{}"}" IP="$ip" python3 -c '
 import json, os
 try:
     d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")

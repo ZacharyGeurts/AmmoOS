@@ -238,7 +238,7 @@
         variance_u_nm: ex.varU,
       };
     }
-    return { lat: 45.854, lon: -87.023, label: "Field default", alt_m: 0, dominant_axis: "u" };
+    return { lat: 45.845976, lon: -87.055759, label: "Gladstone MI · operator", alt_m: 0, dominant_axis: "u" };
   }
 
   function fitLatLngs(map, latlngs, options) {

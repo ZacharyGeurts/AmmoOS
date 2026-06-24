@@ -8,9 +8,35 @@ nexus_field_dns_publish() {
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     python3 "$py" build >/dev/null 2>&1 || true
+  local eg="${NEXUS_INSTALL_ROOT}/lib/dns-egress-integrity.py"
+  [[ -f "$eg" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    python3 "$eg" build >/dev/null 2>&1 || true
+  local tg="${NEXUS_INSTALL_ROOT}/lib/dns-threat-guard.py"
+  [[ -f "$tg" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    python3 "$tg" build >/dev/null 2>&1 || true
+  local dh="${NEXUS_INSTALL_ROOT}/lib/field-dhcp.py"
+  [[ -f "$dh" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    python3 "$dh" build >/dev/null 2>&1 || true
+  local to="${NEXUS_INSTALL_ROOT}/lib/dns-service-takeover.py"
+  [[ -f "$to" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    python3 "$to" build >/dev/null 2>&1 || true
   local mid="${NEXUS_INSTALL_ROOT}/lib/dns-multipoint-identity.py"
   [[ -f "$mid" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     python3 "$mid" build >/dev/null 2>&1 || true
+  local inf="${NEXUS_INSTALL_ROOT}/lib/dns-internet-field.py"
+  [[ -f "$inf" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    python3 "$inf" build >/dev/null 2>&1 || true
+}
+
+nexus_dns_internet_pull_loop() {
+  [[ "${NEXUS_DNS_INTERNET_PULL:-1}" == "1" ]] || return 0
+  local py="${NEXUS_INSTALL_ROOT}/lib/dns-internet-field.py"
+  [[ -f "$py" ]] || return 0
+  while true; do
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "$py" pull >/dev/null 2>&1 || true
+    sleep "${NEXUS_DNS_INTERNET_PULL_INTERVAL:-3600}"
+  done
 }
 
 nexus_field_dns_json() {
@@ -30,15 +56,29 @@ nexus_field_dns_json() {
   printf '{"schema":"field-dns/v1","running":false,"rfc_matrix":[],"legal_framework":[],"zones":[]}'
 }
 
+nexus_field_dns_takeover_cycle() {
+  [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
+  local py="${NEXUS_INSTALL_ROOT}/lib/dns-service-takeover.py"
+  [[ -f "$py" ]] || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    python3 "$py" evaluate >/dev/null 2>&1 || true
+  local phase
+  phase="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    python3 "$py" phase 2>/dev/null || echo observing)"
+  if [[ "$phase" == "primary" ]]; then
+    declare -f nexus_field_dns_enforce_resolv >/dev/null 2>&1 && nexus_field_dns_enforce_resolv || true
+    declare -f nexus_field_dns_local_capture >/dev/null 2>&1 && nexus_field_dns_local_capture || true
+  fi
+}
+
 nexus_field_dns_serve_loop() {
   [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
   local py="${NEXUS_INSTALL_ROOT}/lib/field-dns.py"
   [[ -f "$py" ]] || return 0
-  declare -f nexus_field_dns_enforce_resolv >/dev/null 2>&1 && nexus_field_dns_enforce_resolv || true
-  declare -f nexus_field_dns_local_capture >/dev/null 2>&1 && nexus_field_dns_local_capture || true
+  declare -f nexus_field_dns_takeover_cycle >/dev/null 2>&1 && nexus_field_dns_takeover_cycle || true
   while true; do
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      NEXUS_FIELD_DNS_BINDS_IPV4="${NEXUS_FIELD_DNS_BINDS_IPV4:-127.0.0.1,127.0.0.53}" \
+      NEXUS_FIELD_DNS_BINDS_IPV4="${NEXUS_FIELD_DNS_BINDS_IPV4:-127.0.0.1}" \
       NEXUS_FIELD_DNS_BINDS_IPV6="${NEXUS_FIELD_DNS_BINDS_IPV6:-::1}" \
       python3 "$py" serve 2>/dev/null || true
     sleep 5
@@ -47,6 +87,13 @@ nexus_field_dns_serve_loop() {
 
 nexus_field_dns_enforce_resolv() {
   [[ "${NEXUS_FIELD_DNS_ENFORCE_RESOLV:-1}" == "1" ]] || return 0
+  local to="${NEXUS_INSTALL_ROOT}/lib/dns-service-takeover.py"
+  if [[ -f "$to" ]]; then
+    local ok
+    ok="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "$to" can-enforce-resolv 2>/dev/null || echo 0)"
+    [[ "$ok" == "1" ]] || return 0
+  fi
   local port="${NEXUS_FIELD_DNS_PORT:-53}"
   local stub="${NEXUS_STATE_DIR}/resolv.conf.nexus-stub"
   local backup="${NEXUS_STATE_DIR}/resolv.conf.nexus-backup"
@@ -90,12 +137,39 @@ nexus_field_dns_local_capture() {
     ip daddr "{ ${foreign} }" tcp dport "${port}" drop comment "nexus-dns-local" 2>/dev/null || true
   nft add rule inet "$table" output \
     udp dport 853 drop comment "nexus-dns-local-dot" 2>/dev/null || true
-  nexus_log "INFO" "field-dns" "local DNS capture — foreign resolver egress blocked"
+  # DDoS immunity — rate-limit DNS ingress to loopback resolver
+  nft add rule inet "$table" input \
+    ip daddr 127.0.0.1 udp dport "${port}" limit rate 120/second burst 60 packets accept comment "nexus-dns-ddos-in" 2>/dev/null || true
+  nft add rule inet "$table" input \
+    ip daddr 127.0.0.1 udp dport "${port}" drop comment "nexus-dns-ddos-drop" 2>/dev/null || true
+  nexus_log "INFO" "field-dns" "local DNS capture — foreign resolver egress blocked · DDoS rate limit active"
+}
+
+nexus_field_dhcp_serve_loop() {
+  [[ "${NEXUS_FIELD_DHCP:-1}" == "1" ]] || return 0
+  local py="${NEXUS_INSTALL_ROOT}/lib/field-dhcp.py"
+  [[ -f "$py" ]] || return 0
+  while true; do
+    local ok=1
+    local to="${NEXUS_INSTALL_ROOT}/lib/dns-service-takeover.py"
+    if [[ -f "$to" ]]; then
+      ok="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+        python3 "$to" can-serve-dhcp 2>/dev/null || echo 0)"
+    fi
+    if [[ "$ok" == "1" ]]; then
+      NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+        python3 "$py" serve 2>/dev/null || true
+    else
+      NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+        python3 "$py" build >/dev/null 2>&1 || true
+      sleep 15
+    fi
+    sleep 5
+  done
 }
 
 nexus_field_dns_enforce_cycle() {
   [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
-  declare -f nexus_field_dns_enforce_resolv >/dev/null 2>&1 && nexus_field_dns_enforce_resolv || true
-  declare -f nexus_field_dns_local_capture >/dev/null 2>&1 && nexus_field_dns_local_capture || true
+  declare -f nexus_field_dns_takeover_cycle >/dev/null 2>&1 && nexus_field_dns_takeover_cycle || true
   declare -f nexus_field_dns_publish >/dev/null 2>&1 && nexus_field_dns_publish || true
 }

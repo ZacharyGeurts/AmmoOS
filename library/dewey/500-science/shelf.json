@@ -1,0 +1,69 @@
+{
+  "code": "500",
+  "title": "Science",
+  "slug": "500-science",
+  "count": 6,
+  "updated": "2026-06-24T03:12:05Z",
+  "books": [
+    {
+      "id": "gutenberg_origin_species",
+      "title": "On the Origin of Species",
+      "author": "Charles Darwin",
+      "dewey": "500",
+      "ein": "H7-FIELD-ffdae2544f7a",
+      "format": "H7",
+      "ready": true,
+      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/gutenberg_origin_species.h7"
+    },
+    {
+      "id": "openstax_biology_ap",
+      "title": "OpenStax Biology for AP Courses",
+      "author": "",
+      "dewey": "500",
+      "ein": "H7-FIELD-d466cdf4cce1",
+      "format": "H7",
+      "ready": true,
+      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/openstax_biology_ap.h7"
+    },
+    {
+      "id": "openstax_microbiology",
+      "title": "OpenStax Microbiology",
+      "author": "",
+      "dewey": "500",
+      "ein": "H7-FIELD-764b072da6f2",
+      "format": "H7",
+      "ready": true,
+      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/openstax_microbiology.h7"
+    },
+    {
+      "id": "gutenberg_geology_school",
+      "title": "Text-Book of Geology (Gutenberg)",
+      "author": "",
+      "dewey": "500",
+      "ein": "H7-FIELD-7aca5349f046",
+      "format": "H7",
+      "ready": true,
+      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/gutenberg_geology_school.h7"
+    },
+    {
+      "id": "wikibooks_hs_chemistry",
+      "title": "Wikibooks High School Chemistry",
+      "author": "",
+      "dewey": "500",
+      "ein": "H7-FIELD-5e043bf54c23",
+      "format": "H7",
+      "ready": true,
+      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/wikibooks_hs_chemistry.h7"
+    },
+    {
+      "id": "wikibooks_hs_physics",
+      "title": "Wikibooks High School Physics",
+      "author": "",
+      "dewey": "500",
+      "ein": "H7-FIELD-5850f904504b",
+      "format": "H7",
+      "ready": true,
+      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/wikibooks_hs_physics.h7"
+    }
+  ]
+}

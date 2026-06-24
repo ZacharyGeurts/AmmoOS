@@ -360,6 +360,26 @@ def _observations(doc: dict[str, Any]) -> list[dict[str, str]]:
             "text": f"Resolvers: {', '.join(dns['nameservers'][:4])}.",
         })
 
+    lan = doc.get("local_network") or {}
+    devices = lan.get("devices") or net.get("lan_devices") or []
+    tables = lan.get("tables_learned") or net.get("tables_learned") or {}
+    if devices or tables:
+        table_bits = ", ".join(f"{k}: {v}" for k, v in sorted(tables.items()) if v)
+        blocks.append({
+            "label": "Local network (learned tables)",
+            "text": (
+                f"{len(devices)} device(s) on your LAN from existing NEXUS tables"
+                + (f" ({table_bits})" if table_bits else "")
+                + ". See Local network panel below."
+            ),
+        })
+    subs = net.get("subnets") or lan.get("subnets") or []
+    if subs:
+        blocks.append({
+            "label": "Your subnets",
+            "text": ", ".join(s.get("cidr") or s.get("host_ip") or "—" for s in subs[:6]),
+        })
+
     blocks.append({
         "label": "Live socket posture",
         "text": (
@@ -446,6 +466,21 @@ def build_us_field() -> dict[str, Any]:
     except OSError:
         pass
 
+    ifaces = _interfaces()
+    local_net: dict[str, Any] = {}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "us_local_network", INSTALL / "lib" / "us-local-network.py",
+        )
+        if spec and spec.loader:
+            ln = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(ln)
+            local_net = ln.build_local_network(interfaces=ifaces)
+    except Exception:
+        local_net = {}
+
     doc: dict[str, Any] = {
         "page": 1,
         "title": "US",
@@ -453,12 +488,16 @@ def build_us_field() -> dict[str, Any]:
         "motto": "Sherlock on localhost. Every fact from ss, ip, proc, and NEXUS state on this box — no external guesswork.",
         "generated_at": _now(),
         "identity": identity,
+        "local_network": local_net,
         "network": {
-            "interfaces": _interfaces(),
+            "interfaces": ifaces,
             "default_route": _default_route(),
             "dns": _dns_local(),
             "arp_neighbors": _arp_neighbors(),
             "connections": _ss_connections(),
+            "subnets": local_net.get("subnets") or [],
+            "lan_devices": local_net.get("devices") or [],
+            "tables_learned": local_net.get("tables_learned") or {},
         },
         "sockets": _ss_summary(),
         "gatekeeper": _gatekeeper_slice(),

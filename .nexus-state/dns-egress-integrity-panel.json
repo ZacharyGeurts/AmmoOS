@@ -1,0 +1,30 @@
+{
+  "schema": "dns-egress-integrity/v1",
+  "updated": "2026-06-24T04:58:18Z",
+  "motto": "Allowed egress verified — payload hash match or logged mismatch.",
+  "policy": "Only permitted DNS/DHCP paths; tamper = threat eradication.",
+  "stats": {
+    "total_checks": 0,
+    "verified_exact": 0,
+    "mismatches": 0,
+    "last_probe_ok": true
+  },
+  "recent": [],
+  "probes": [
+    {
+      "ts": "2026-06-24T04:58:18Z",
+      "kind": "egress_probe",
+      "dest": "root-hints",
+      "permitted": true,
+      "sent_hash": "4a71f7fa04789d0e58da937fa5f2248b",
+      "recv_hash": "65c3a82ea308ae4409fc8cd71bc1aef6",
+      "exact_match": false,
+      "sent_len": 23,
+      "recv_len": 995,
+      "ok": true,
+      "returncode": 0,
+      "integrity_ok": true
+    }
+  ],
+  "healthy": true
+}

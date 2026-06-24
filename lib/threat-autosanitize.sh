@@ -74,6 +74,17 @@ nexus_autosanitize_on_threat() {
         action="block_ip_out"
       fi
       ;;
+    DNS_POISON|DNS_TUNNEL|DDOS_FLOOD)
+      ip="$(nexus_firewall_parse_ip "$detail" "ip")"
+      [[ -z "$ip" ]] && ip="$(nexus_firewall_parse_ip "$detail" "src")"
+      [[ -z "$ip" ]] && ip="$(sed -n 's/.*client=\([^[:space:]]*\).*/\1/p' <<<"$detail" | cut -d: -f1)"
+      if [[ -n "$ip" ]]; then
+        target="$ip"
+        target_type="ip_in"
+        action="block_ip_in"
+      fi
+      declare -f nexus_field_dns_enforce_cycle >/dev/null 2>&1 && nexus_field_dns_enforce_cycle || true
+      ;;
     MITM_LISTENER|LISTENER_SURGE)
       port="$(sed -n 's/.*bind=[^:]*:\([0-9]*\).*/\1/p' <<<"$detail")"
       [[ -z "$port" ]] && port="$(sed -n 's/.*new_listener=[^:]*:\([0-9]*\).*/\1/p' <<<"$detail")"

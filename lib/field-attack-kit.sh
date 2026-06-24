@@ -503,7 +503,7 @@ nexus_field_attack_json() {
     trust_json="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
       python3 "${NEXUS_INSTALL_ROOT}/lib/trust-strike-engine.py" summary 2>/dev/null || echo '{}')"
   fi
-  printf '"trust_strike":%s,' "${trust_json:-{}}"
+  printf '"trust_strike":%s,' "${trust_json:-"{}"}"
   printf '"hosts":['
   local first=1 ts ip vector severity reason source
   while IFS=$'\t' read -r ts ip vector severity reason source; do

@@ -16,7 +16,11 @@ HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/H
 HOSTESS7_TEAM_FIELD = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
 BOOKS_SRC = INSTALL / "lib" / "field-books"
 DEWEY_MAP = INSTALL / "data" / "dewey-decimal-map.json"
+DEWEY_TREE = INSTALL / "data" / "dewey-full-tree.json"
+LIBRARY_PROFILES = INSTALL / "data" / "library-profiles.json"
+WAR_SEED = INSTALL / "data" / "war-books-seed.json"
 PAGE_CHARS = int(os.environ.get("NEXUS_H7_PAGE_CHARS", "3200"))
+DEFAULT_PROFILE = os.environ.get("NEXUS_LIBRARY_PROFILE", "hostess7")
 
 BUILTIN_CATALOG: list[dict[str, Any]] = [
     {
@@ -68,7 +72,24 @@ READER_FONTS = [
 
 _h7_mod: Any = None
 _dewey_doc: dict[str, Any] | None = None
+_dewey_tree: dict[str, Any] | None = None
+_library_profiles: dict[str, Any] | None = None
 _librarian_mod: Any = None
+_field_tie_mod: Any = None
+
+
+def _field_tie() -> Any:
+    global _field_tie_mod
+    if _field_tie_mod is not None:
+        return _field_tie_mod
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("h7_field_drive_tie", INSTALL / "lib" / "h7-field-drive-tie.py")
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _field_tie_mod = mod
+    return mod
 
 
 def _librarian() -> Any:
@@ -117,6 +138,92 @@ def _load_dewey() -> dict[str, Any]:
                 pass
     _dewey_doc = {"classes": [], "subjects": {}, "keyword_rules": []}
     return _dewey_doc
+
+
+def _load_dewey_tree() -> dict[str, Any]:
+    global _dewey_tree
+    if _dewey_tree is not None:
+        return _dewey_tree
+    for path in (DEWEY_TREE, INSTALL / "data" / "dewey-full-tree.json"):
+        if path.is_file():
+            try:
+                _dewey_tree = json.loads(path.read_text(encoding="utf-8"))
+                return _dewey_tree
+            except (OSError, json.JSONDecodeError):
+                pass
+    _dewey_tree = {"classes": [], "subdivisions": {}, "war_shelves": []}
+    return _dewey_tree
+
+
+def _load_library_profiles() -> dict[str, Any]:
+    global _library_profiles
+    if _library_profiles is not None:
+        return _library_profiles
+    for path in (LIBRARY_PROFILES, INSTALL / "data" / "library-profiles.json"):
+        if path.is_file():
+            try:
+                _library_profiles = json.loads(path.read_text(encoding="utf-8"))
+                return _library_profiles
+            except (OSError, json.JSONDecodeError):
+                pass
+    _library_profiles = {"default_profile": "hostess7", "profiles": {}}
+    return _library_profiles
+
+
+def list_library_profiles() -> list[dict[str, Any]]:
+    doc = _load_library_profiles()
+    out: list[dict[str, Any]] = []
+    for pid, prof in (doc.get("profiles") or {}).items():
+        out.append({
+            "id": pid,
+            "name": prof.get("name", pid),
+            "short": prof.get("short", pid),
+            "authority": prof.get("authority", ""),
+            "description": prof.get("description", ""),
+            "dewey_system": prof.get("dewey_system", "DDC23"),
+            "github_path": prof.get("github_path", ""),
+        })
+    return sorted(out, key=lambda x: (x["id"] != doc.get("default_profile", "hostess7"), x["name"]))
+
+
+def translate_dewey_label(code: str, *, profile_id: str | None = None) -> str:
+    pid = profile_id or DEFAULT_PROFILE
+    doc = _load_library_profiles()
+    prof = (doc.get("profiles") or {}).get(pid) or {}
+    overrides = prof.get("label_overrides") or {}
+    if code in overrides:
+        return str(overrides[code])
+    main = re.sub(r"[^0-9].*", "", code)[:3].ljust(3, "0")
+    if main in overrides:
+        return str(overrides[main])
+    tree = _load_dewey_tree()
+    for sub in (tree.get("subdivisions") or {}).values():
+        for child in sub.get("children") or []:
+            if str(child.get("code")) == code:
+                return str(child.get("title", code))
+        if str(sub.get("code", "")) == code or str(sub.get("code", "")) == main:
+            return str(sub.get("title", code))
+    dewey = _load_dewey()
+    subjects = dewey.get("subjects") or {}
+    for row in subjects.values():
+        if str(row.get("code")) == code:
+            return str(row.get("label", code))
+    return _dewey_class_label(code)
+
+
+def apply_library_profile(books: list[dict[str, Any]], *, profile_id: str | None = None) -> list[dict[str, Any]]:
+    pid = profile_id or DEFAULT_PROFILE
+    out: list[dict[str, Any]] = []
+    for book in books:
+        code = str(book.get("dewey", "000"))
+        label = translate_dewey_label(code, profile_id=pid)
+        out.append({
+            **book,
+            "dewey_label": label,
+            "dewey_label_base": book.get("dewey_label", ""),
+            "library_profile": pid,
+        })
+    return out
 
 
 def _dewey_class_label(code: str) -> str:
@@ -322,6 +429,54 @@ def _enrich_books(books: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [lib.merge_into_book(b) for b in books]
 
 
+def _war_seed_entries() -> list[dict[str, Any]]:
+    lib = _librarian()
+    rows: list[dict[str, Any]] = []
+    for path in (WAR_SEED, INSTALL / "data" / "war-books-seed.json"):
+        if not path.is_file():
+            continue
+        try:
+            doc = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for seed in doc.get("books") or []:
+            bid = str(seed.get("id", ""))
+            if not bid:
+                continue
+            row = {
+                "id": bid,
+                "title": seed.get("title", bid),
+                "author": seed.get("author", ""),
+                "category": seed.get("subject", "military"),
+                "license": seed.get("license", "Public Domain"),
+                "description": seed.get("study_note", ""),
+                "dewey": seed.get("dewey", "355"),
+                "dewey_label": translate_dewey_label(str(seed.get("dewey", "355"))),
+                "study_note": seed.get("study_note", ""),
+                "gutenberg_id": seed.get("gutenberg_id", ""),
+                "fetch_url": seed.get("fetch_url", ""),
+                "ready": False,
+                "format": "catalog-seed",
+                "war_shelf": True,
+            }
+            if lib:
+                row = lib.merge_into_book(row)
+            on_disk = bool(row.get("path")) or bool(_source_text(bid))
+            if on_disk:
+                row["ready"] = True
+                row["format"] = "H7"
+                rows.append(row)
+        break
+    return rows
+
+
+def _library_only(books: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    tie = _field_tie()
+    if not tie:
+        return [b for b in books if b.get("ready") and str(b.get("format", "")) not in ("catalog-seed", "staging-txt", "catalog-entry")]
+    return [b for b in books if tie.is_library_book(b)]
+
+
 def _scan_books() -> list[dict[str, Any]]:
     by_id: dict[str, dict[str, Any]] = {}
 
@@ -357,7 +512,28 @@ def _scan_books() -> list[dict[str, Any]]:
                 continue
             by_id[bid] = _txt_meta(path)
 
-    return _enrich_books(list(by_id.values()))
+    for row in _war_seed_entries():
+        bid = row["id"]
+        if bid not in by_id:
+            by_id[bid] = row
+        else:
+            merged = {**by_id[bid], **{k: v for k, v in row.items() if v}}
+            merged["ready"] = True
+            by_id[bid] = merged
+
+    tie = _field_tie()
+    if tie:
+        on_disk_ids = set(by_id.keys())
+        tied = tie.tie_field_drive(classify_dewey=classify_dewey, on_disk_ids=on_disk_ids)
+        for row in tied.get("corpus_books") or []:
+            bid = row["id"]
+            by_id[bid] = {**by_id.get(bid, {}), **row}
+
+    books = _library_only(_enrich_books(list(by_id.values())))
+    for book in books:
+        if book.get("dewey"):
+            book["dewey_label"] = translate_dewey_label(str(book["dewey"]))
+    return books
 
 
 def _txt_meta_from_text(bid: str, book: dict[str, Any], text: str) -> dict[str, Any]:
@@ -383,6 +559,12 @@ def _source_text(book_id: str) -> str:
         text = _vision_corpus_text()
         if text:
             return text
+
+    tie = _field_tie()
+    if tie:
+        tied_text = tie.source_text_for_id(book_id)
+        if tied_text:
+            return tied_text
 
     mod = _h7_book_module()
     for path in _iter_h7_files():
@@ -473,26 +655,81 @@ def search_books(query: str, *, limit: int = 24) -> list[dict[str, Any]]:
     return [{**b, "score": s} for s, b in scored[:limit]]
 
 
-def dewey_shelves() -> list[dict[str, Any]]:
+def dewey_shelves(*, profile_id: str | None = None) -> list[dict[str, Any]]:
     doc = _load_dewey()
+    books = apply_library_profile(_library_only(_scan_books()), profile_id=profile_id)
     buckets: dict[str, list[dict[str, Any]]] = {str(c["code"]): [] for c in doc.get("classes") or []}
-    for book in _scan_books():
+    for book in books:
         code = re.sub(r"[^0-9].*", "", str(book.get("dewey", "000")))[:3].ljust(3, "0")
         buckets.setdefault(code, []).append(book)
     shelves = []
     for cls in doc.get("classes") or []:
         code = str(cls["code"])
-        books = sorted(buckets.get(code, []), key=lambda b: str(b.get("title", "")))
+        shelf_books = sorted(buckets.get(code, []), key=lambda b: str(b.get("title", "")))
         shelves.append({
             "code": code,
-            "title": cls.get("title", code),
-            "count": len(books),
-            "books": books,
+            "title": translate_dewey_label(code, profile_id=profile_id) or cls.get("title", code),
+            "title_base": cls.get("title", code),
+            "count": len(shelf_books),
+            "books": shelf_books,
         })
     return shelves
 
 
-def build_catalog(*, force: bool = False) -> dict[str, Any]:
+def war_shelves(*, profile_id: str | None = None) -> list[dict[str, Any]]:
+    tree = _load_dewey_tree()
+    books = apply_library_profile(_library_only(_scan_books()), profile_id=profile_id)
+    war_ids = {str(b.get("id")) for b in books if b.get("war_shelf")}
+    lib = _librarian()
+    if lib:
+        war_study = lib.ascertain_war_books(write=False)
+        for row in war_study.get("books") or []:
+            war_ids.add(str(row.get("id", "")))
+
+    buckets: dict[str, list[dict[str, Any]]] = {}
+    for book in books:
+        bid = str(book.get("id", ""))
+        code = str(book.get("dewey", ""))
+        blob = f"{book.get('title', '')} {book.get('subject', '')} {book.get('category', '')}".lower()
+        is_war = (
+            book.get("war_shelf")
+            or bid in war_ids
+            or code.startswith("355")
+            or code.startswith("940.5")
+            or code.startswith("973.7")
+            or any(k in blob for k in ("war", "military", "battle", "civil war"))
+        )
+        if not is_war:
+            continue
+        for shelf_def in tree.get("war_shelves") or []:
+            sc = str(shelf_def["code"])
+            if code == sc or code.startswith(sc + ".") or (sc == "355" and code.startswith("355")):
+                buckets.setdefault(sc, []).append(book)
+                break
+        else:
+            main = re.sub(r"[^0-9].*", "", code)[:3]
+            if main in ("355", "940", "973"):
+                buckets.setdefault(main, []).append(book)
+
+    out: list[dict[str, Any]] = []
+    for shelf_def in tree.get("war_shelves") or []:
+        sc = str(shelf_def["code"])
+        shelf_books = sorted(buckets.get(sc, []), key=lambda b: str(b.get("title", "")))
+        if not shelf_books:
+            continue
+        out.append({
+            "code": sc,
+            "title": translate_dewey_label(sc, profile_id=profile_id) or shelf_def.get("title", sc),
+            "icon": shelf_def.get("icon", "⚔"),
+            "count": len(shelf_books),
+            "books": shelf_books,
+            "war_shelf": True,
+        })
+    return out
+
+
+def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict[str, Any]:
+    pid = profile_id or DEFAULT_PROFILE
     lib = _librarian()
     fp_doc: dict[str, Any] = {}
     if lib:
@@ -505,17 +742,31 @@ def build_catalog(*, force: bool = False) -> dict[str, Any]:
                 snap["last_touched"] = fp_doc.get("last_touched", "")
                 snap["last_touched_same"] = lib.last_touched_unchanged()
                 snap["librarian"] = lib.librarian_status()
+                snap["library_profile"] = pid
+                snap["books"] = apply_library_profile(snap.get("books") or [], profile_id=pid)
+                snap["shelves"] = dewey_shelves(profile_id=pid)
+                snap["war_shelves"] = war_shelves(profile_id=pid)
                 return snap
 
-    books = _scan_books()
+    if lib:
+        lib.ascertain_war_books(write=force or not lib.field_unchanged())
+
+    tie = _field_tie()
+    if tie and force:
+        tie.organize_h7_to_dewey(classify_fn=classify_dewey)
+
+    books = apply_library_profile(_scan_books(), profile_id=pid)
     if lib and (force or not lib.field_unchanged()):
         lib.build_bibliography_field(write=True)
 
+    prof_doc = _load_library_profiles()
+    active = (prof_doc.get("profiles") or {}).get(pid) or {}
+
     doc = {
         "updated": _now(),
-        "library_version": 3,
+        "library_version": 4,
         "page_chars": PAGE_CHARS,
-        "motto": "Hostess7 H7 library — field drive only, fingerprint sync, zero bandwidth waste.",
+        "motto": "World's Best Dewey Library — Hostess7 field drive, hot-swappable catalog profiles.",
         "field_root": str(_primary_field_root()),
         "field_fingerprint": lib.compute_field_fingerprint() if lib else "",
         "unchanged": False,
@@ -524,10 +775,22 @@ def build_catalog(*, force: bool = False) -> dict[str, Any]:
         "fingerprint_method": "micro_sig_v1",
         "book_count": len(books),
         "ready_count": sum(1 for b in books if b.get("ready")),
+        "war_book_count": sum(s.get("count", 0) for s in war_shelves(profile_id=pid)),
         "dewey_classes": _load_dewey().get("classes", []),
+        "dewey_tree": _load_dewey_tree().get("war_shelves", []),
+        "library_profile": pid,
+        "library_profile_name": active.get("name", pid),
+        "library_profiles": list_library_profiles(),
+        "profile_translation": prof_doc.get("translation_help", ""),
+        "github_library": "library/dewey/",
+        "field_drive": {
+            **(tie.field_drive_inventory() if (tie := _field_tie()) else {}),
+            **({"tracking": tie.tracking_lists(on_disk_ids={b["id"] for b in books})} if tie else {}),
+        },
         "fonts": READER_FONTS,
         "books": books,
-        "shelves": dewey_shelves(),
+        "shelves": dewey_shelves(profile_id=pid),
+        "war_shelves": war_shelves(profile_id=pid),
         "librarian": lib.librarian_status() if lib else {},
     }
     if lib:
@@ -651,7 +914,12 @@ def main() -> int:
 
     if cmd == "build":
         force = "--force" in sys.argv
-        json.dump(build_catalog(force=force), sys.stdout, ensure_ascii=False, indent=2)
+        pid = DEFAULT_PROFILE
+        if "--profile" in sys.argv:
+            idx = sys.argv.index("--profile")
+            if idx + 1 < len(sys.argv):
+                pid = sys.argv[idx + 1]
+        json.dump(build_catalog(force=force, profile_id=pid), sys.stdout, ensure_ascii=False, indent=2)
         sys.stdout.write("\n")
         return 0
 
@@ -687,7 +955,58 @@ def main() -> int:
         return 0
 
     if cmd == "dewey":
-        json.dump({"ok": True, "shelves": dewey_shelves(), "map": _load_dewey()}, sys.stdout, indent=2)
+        pid = DEFAULT_PROFILE
+        if "--profile" in sys.argv:
+            idx = sys.argv.index("--profile")
+            if idx + 1 < len(sys.argv):
+                pid = sys.argv[idx + 1]
+        json.dump({
+            "ok": True,
+            "profile": pid,
+            "shelves": dewey_shelves(profile_id=pid),
+            "war_shelves": war_shelves(profile_id=pid),
+            "map": _load_dewey(),
+            "tree": _load_dewey_tree(),
+        }, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "profiles":
+        doc = _load_library_profiles()
+        json.dump({
+            "ok": True,
+            "default_profile": doc.get("default_profile", "hostess7"),
+            "translation_help": doc.get("translation_help", ""),
+            "profiles": list_library_profiles(),
+        }, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "war":
+        lib = _librarian()
+        if lib:
+            json.dump(lib.ascertain_war_books(), sys.stdout, indent=2)
+        else:
+            json.dump({"ok": False, "error": "librarian_missing"}, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "organize":
+        tie = _field_tie()
+        if not tie:
+            json.dump({"ok": False, "error": "field_tie_missing"}, sys.stdout, indent=2)
+        else:
+            dry = "--dry-run" in sys.argv
+            json.dump(tie.organize_h7_to_dewey(dry_run=dry, classify_fn=classify_dewey), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "tracking":
+        tie = _field_tie()
+        if tie:
+            json.dump(tie.tracking_lists(), sys.stdout, indent=2)
+        else:
+            json.dump({"ok": False, "error": "field_tie_missing"}, sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0
 
@@ -718,8 +1037,8 @@ def main() -> int:
         return 0
 
     print(
-        "usage: h7-library-bridge.py [build [--force]|fingerprint|page <id> <n> [chars]|"
-        "full <id>|search <q>|dewey|fonts|upload <json>]",
+        "usage: h7-library-bridge.py [build [--force] [--profile <id>]|fingerprint|page <id> <n> [chars]|"
+        "full <id>|search <q>|dewey [--profile <id>]|profiles|war|organize [--dry-run]|tracking|fonts|upload <json>]",
         file=sys.stderr,
     )
     return 1

@@ -16,6 +16,42 @@
     "service": "Intentional radiator on wire — not OTA",
     "permitted_default": true
   },
+  "laser": {
+    "id": "fcc_laser_part15",
+    "label": "Laser / optical · Part 15 incidental",
+    "rule": "47 CFR §15.101 · IEC 60825-1",
+    "service": "LIDAR / free-space optical / pointer class",
+    "permitted_default": true
+  },
+  "ble": {
+    "id": "fcc_ble_part15",
+    "label": "Bluetooth LE · 2.4 GHz ISM",
+    "rule": "47 CFR Part 15",
+    "service": "BLE advertising · 2.402–2.480 GHz",
+    "frequency_mhz": 2402,
+    "permitted_default": true
+  },
+  "broadcast": {
+    "id": "fcc_broadcast_part73",
+    "label": "AM/FM/SW/LW broadcast · licensed",
+    "rule": "47 CFR Part 73 · ITU RR",
+    "service": "Licensed broadcast station",
+    "permitted_default": true
+  },
+  "broadcast_fm": {
+    "id": "fcc_broadcast_fm_part73",
+    "label": "FM broadcast · licensed",
+    "rule": "47 CFR Part 73 · FM",
+    "service": "Licensed FM broadcast station",
+    "permitted_default": true
+  },
+  "broadcast_pirate": {
+    "id": "fcc_broadcast_unlicensed",
+    "label": "UNLICENSED broadcast · band pirate",
+    "rule": "47 CFR Part 73 — NO LICENSE",
+    "service": "Illegal in-band transmission",
+    "permitted_default": false
+  },
   "threat_tags": {
     "none": { "label": "FCC permitted", "level": "none", "color": "#3dd68c" },
     "watch": { "label": "FCC watch", "level": "watch", "color": "#e8c878" },

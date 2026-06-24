@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.4.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.6.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -298,7 +298,7 @@ test_dusty_midnight_theme() {
   grep -q 'us-host-machine' "$panel"
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
-  grep -q 'v7.4.0' "$panel"
+  grep -q 'v7.6.0' "$panel"
 }
 
 test_hostess_profile_module() {
@@ -1388,21 +1388,36 @@ PY
 
 test_h7_library_module() {
   [[ -f "${ROOT}/lib/h7-library-bridge.py" ]]
+  [[ -f "${ROOT}/lib/h7-field-drive-tie.py" ]]
+  [[ -f "${ROOT}/lib/dewey-library-github.py" ]]
   [[ -f "${ROOT}/data/dewey-decimal-map.json" ]]
+  [[ -f "${ROOT}/data/library-profiles.json" ]]
+  [[ -f "${ROOT}/data/war-books-seed.json" ]]
+  [[ -f "${ROOT}/data/dewey-full-tree.json" ]]
   [[ -f "${ROOT}/panel/assets/h7-reader.js" ]]
   [[ -f "${ROOT}/lib/field-books/network-security-field-guide.txt" ]]
   grep -q 'h7_library' "${ROOT}/lib/threat-panel.sh"
   grep -q 'h7-library-bridge.py' "${ROOT}/lib/threat-panel.sh"
   grep -q 'view-library' "${ROOT}/panel/threat-panel.html"
   grep -q 'library-dewey' "${ROOT}/panel/threat-panel.html"
+  grep -q 'library-profile-select' "${ROOT}/panel/threat-panel.html"
+  grep -q 'library-war-shelves' "${ROOT}/panel/threat-panel.html"
   grep -q 'H7Reader' "${ROOT}/panel/threat-panel.html"
   grep -q '/api/library/search' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/library/full' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/library/profiles' "${ROOT}/lib/threat-panel-http.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}" \
     python3 "${ROOT}/lib/h7-library-bridge.py" build | grep -q 'network-security-field-guide'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/h7-library-bridge.py" search security | grep -q '"hits"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/h7-library-bridge.py" profiles | grep -q 'hostess7'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/h7-field-drive-tie.py" inventory | grep -q 'textbooks_h7'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/h7-library-bridge.py" tracking | grep -q 'manifest_count'
+  grep -q 'tracking.lists' "${ROOT}/panel/threat-panel.html"
 }
 
 run_test "packet dpi module" test_packet_dpi_module
@@ -1451,19 +1466,132 @@ test_signals_field_module() {
   grep -q 'signals_field' "${ROOT}/lib/threat-panel.sh"
   grep -q '/api/signals-field' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-signals' "${ROOT}/panel/threat-panel.html"
+  grep -q 'frequency_registry' "${ROOT}/lib/signals-field.py"
+  grep -q '_build_frequency_registry' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'signals-freq-registry' "${ROOT}/panel/threat-panel.html"
+  grep -q 'drawRipplingFieldSheet' "${ROOT}/panel/assets/signals-field.js"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/signals-field.py" json | grep -q 'signals-field/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/signals-field.py" json | grep -q 'frequency_registry'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 -c "
+import importlib.util, os, json
+from pathlib import Path
+ROOT = Path('${ROOT}')
+spec = importlib.util.spec_from_file_location('rf', ROOT / 'lib' / 'field-rf-sentinel.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+reg = mod._build_frequency_registry([])
+assert reg.get('schema') == 'frequency-registry/v1'
+assert reg.get('total_slots', 0) > 0
+assert reg.get('silent_slots') == reg.get('total_slots')
+reg2 = mod._build_frequency_registry([{'channel': 6, 'freq_mhz': '2437', 'band': '2.4GHz', 'signal_dbm': 72, 'ssid': 'test', 'bssid': 'aa:bb:cc:dd:ee:ff'}])
+assert reg2.get('recognized_slots', 0) >= 1
+"
 }
 
 run_test "signals field module" test_signals_field_module
+
+test_field_antenna_module() {
+  [[ -f "${ROOT}/lib/field-antenna-orchestrator.py" ]]
+  [[ -f "${ROOT}/lib/field-antenna.sh" ]]
+  [[ -f "${ROOT}/lib/field-antenna-launcher.sh" ]]
+  [[ -f "${ROOT}/scripts/field-antenna-test.sh" ]]
+  grep -q 'field_antenna' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'nexus_field_antenna_cycle' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/field-antenna' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'NEXUS_FIELD_ANTENNA' "${ROOT}/config/nexus.conf"
+  grep -q 'antenna)' "${ROOT}/bin/nexus"
+  grep -q 'field_antenna' "${ROOT}/lib/signals-field.py"
+  grep -q 'fcc_laser_part15' "${ROOT}/data/fcc-signal-registry.json"
+  grep -q 'kind == "laser"' "${ROOT}/lib/fcc-signal-lookup.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-antenna-orchestrator.py" build | grep -q 'field-antenna/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/fcc-signal-lookup.py" lookup laser 0 0 | grep -q 'fcc_laser_part15'
+  mkdir -p "$NEXUS_STATE_DIR"
+  printf '{"lat":37.7749,"lon":-122.4194,"source":"test"}\n' > "$NEXUS_STATE_DIR/operator-location.json"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-antenna-orchestrator.py" test | grep -q 'field-antenna-test/v1'
+}
+
+run_test "field antenna blaster module" test_field_antenna_module
+
+test_field_radio_module() {
+  [[ -f "${ROOT}/lib/field-radio-catcher.py" ]]
+  [[ -f "${ROOT}/lib/field-radio-catcher.sh" ]]
+  [[ -f "${ROOT}/data/field-radio-broadcast-registry.json" ]]
+  grep -q 'field_radio' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/field-radio' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'signals-radio-menu' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderRadioCatcher' "${ROOT}/panel/assets/signals-field.js"
+  grep -q 'fcc_broadcast_part73' "${ROOT}/data/fcc-signal-registry.json"
+  grep -q 'kind in ("broadcast"' "${ROOT}/lib/fcc-signal-lookup.py"
+  grep -q 'field_radio' "${ROOT}/lib/signals-field.py"
+  mkdir -p "$NEXUS_STATE_DIR"
+  printf '{"lat":45.7452,"lon":-87.0646,"source":"test"}\n' > "$NEXUS_STATE_DIR/operator-location.json"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'field-radio-catcher/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'station_menu'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'illegal_frequencies'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'tower_lat'
+}
+
+run_test "field radio catcher module" test_field_radio_module
+
+test_field_antenna_eval_script() {
+  [[ -x "${ROOT}/scripts/field-antenna-eval.sh" ]]
+  grep -q 'signals-antenna-banner' "${ROOT}/panel/threat-panel.html"
+  grep -q 'signals-antenna-readiness' "${ROOT}/panel/threat-panel.html"
+  grep -q 'mergeSignalsPayload' "${ROOT}/panel/assets/signals-field.js"
+  grep -q 'renderAntennaBanner' "${ROOT}/panel/assets/signals-field.js"
+  grep -q '_ensure_radio_and_signals' "${ROOT}/lib/field-antenna-orchestrator.py"
+}
+
+run_test "field antenna gui and eval" test_field_antenna_eval_script
+
+test_field_antenna_advanced() {
+  [[ -x "${ROOT}/scripts/field-antenna-advanced-test.sh" ]]
+  grep -q 'triangulate_planet_map' "${ROOT}/lib/gps-precision.py"
+  grep -q 'return_type' "${ROOT}/lib/field-antenna-orchestrator.py"
+  grep -q 'pointToNorm' "${ROOT}/panel/assets/signals-field.js"
+  NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/nexus-advanced-test}" \
+    NEXUS_INSTALL_ROOT="$ROOT" "${ROOT}/scripts/field-antenna-advanced-test.sh"
+}
+
+run_test "field antenna advanced 3-gps" test_field_antenna_advanced
 run_test "consumer secure defaults" test_consumer_defaults
 run_test "dusty midnight v7.1 theme" test_dusty_midnight_theme
 run_test "hostess profile module" test_hostess_profile_module
+
+test_panel_i18n_module() {
+  [[ -f "${ROOT}/lib/panel-i18n.py" ]]
+  [[ -f "${ROOT}/data/i18n/languages.json" ]]
+  grep -q '/api/panel-language' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus-lang-select' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/panel-i18n.py" json | grep -q '"languages"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/panel-i18n.py" set de '{"code":"de","remember":true}' | grep -q '"source": "user"'
+}
+
+run_test "panel i18n module" test_panel_i18n_module
 run_test "host security tier extreme" test_host_security_tier_module
 
 test_field_dns_module() {
   [[ -f "${ROOT}/lib/field-dns.py" ]]
   [[ -f "${ROOT}/lib/field-dns.sh" ]]
+  [[ -f "${ROOT}/lib/dns-internet-field.py" ]]
+  grep -q 'internet_field' "${ROOT}/lib/field-dns.py"
+  grep -q 'engineer_briefing' "${ROOT}/lib/field-dns.py"
+  grep -q 'dns-hero' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderEngineerBriefing' "${ROOT}/panel/assets/dns-dashboard.js" || grep -q 'dns-engineer-briefing' "${ROOT}/panel/assets/dns-dashboard.js"
+  grep -q 'nexus_dns_internet_pull_loop' "${ROOT}/lib/field-dns.sh"
+  grep -q 'dns-internet-field' "${ROOT}/panel/assets/dns-dashboard.js"
   [[ -f "${ROOT}/lib/dns-planetary-security.py" ]]
   [[ -f "${ROOT}/data/dns-legal-rfc-seed.json" ]]
   [[ -f "${ROOT}/panel/assets/dns-dashboard.js" ]]
@@ -1478,6 +1606,25 @@ test_field_dns_module() {
   grep -q 'NEXUS_FIELD_DNS_LOCAL_CAPTURE' "${ROOT}/config/nexus.conf"
   grep -q 'NEXUS_FIELD_DNS_BINDS_IPV4' "${ROOT}/config/nexus.conf"
   grep -q 'nexus_field_dns_enforce_cycle' "${ROOT}/lib/nexus-daemon.sh"
+  grep -q 'nexus_field_dns_takeover_cycle' "${ROOT}/lib/field-dns.sh"
+  [[ -f "${ROOT}/lib/dns-service-takeover.py" ]]
+  [[ -f "${ROOT}/lib/dns-egress-integrity.py" ]]
+  [[ -f "${ROOT}/lib/dns-threat-guard.py" ]]
+  [[ -f "${ROOT}/lib/field-dhcp.py" ]]
+  [[ -f "${ROOT}/lib/us-local-network.py" ]]
+  grep -q 'dns-takeover-panel' "${ROOT}/panel/threat-panel.html"
+  grep -q 'us-local-network' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderTakeover' "${ROOT}/panel/assets/dns-dashboard.js"
+  grep -q 'renderLocalNetwork' "${ROOT}/panel/assets/us-dashboard.js"
+  grep -q 'NEXUS_DNS_TAKEOVER_READY_CHECKS' "${ROOT}/config/nexus.conf"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-service-takeover.py" build | grep -q 'dns-takeover/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-egress-integrity.py" build | grep -q 'dns-egress-integrity/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-threat-guard.py" build | grep -q 'dns-threat-guard/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/us-local-network.py" build | grep -q 'us-local-network/v1'
   [[ -f "${ROOT}/lib/dns-multipoint-identity.py" ]]
   [[ -f "${ROOT}/data/dns-multipoint-seed.json" ]]
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -1488,9 +1635,80 @@ test_field_dns_module() {
     python3 "${ROOT}/lib/dns-planetary-security.py" json | grep -q 'dns-planetary/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-dns.py" build | grep -q 'RFC 1034'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-internet-field.py" build | grep -q 'dns-internet-field/v1'
 }
 
 run_test "field dns planetary module" test_field_dns_module
+
+test_field_outside_talk_module() {
+  [[ -f "${ROOT}/lib/field-outside-talk.py" ]]
+  [[ -f "${ROOT}/lib/field-outside-talk.sh" ]]
+  [[ -f "${ROOT}/lib/field-outside-asm.c" ]]
+  [[ -f "${ROOT}/lib/field-outside-asm.sh" ]]
+  [[ -f "${ROOT}/data/outside-tools-seed.json" ]]
+  [[ -f "${ROOT}/panel/assets/outside-tools.js" ]]
+  grep -q 'field_outside_talk' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/field-outside-talk' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'view-outside' "${ROOT}/panel/threat-panel.html"
+  grep -q 'data-view="outside"' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderOutsideTalk' "${ROOT}/panel/assets/outside-tools.js"
+  grep -q 'field-outside-asm' "${ROOT}/lib/field-outside-talk.py"
+  grep -q 'shell_deps_stripped' "${ROOT}/lib/field-outside-talk.py"
+  grep -q '18 U.S.C' "${ROOT}/data/outside-tools-seed.json"
+  grep -q 'NEXUS_FIELD_OUTSIDE_TALK' "${ROOT}/config/nexus.conf"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-outside-talk.py" build | grep -q 'field-outside-talk/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-outside-talk.py" build | grep -q 'hardening'
+  if command -v gcc >/dev/null 2>&1; then
+    NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+      source "${ROOT}/lib/nexus-common.sh" 2>/dev/null
+    NEXUS_INSTALL_ROOT="$ROOT" \
+      source "${ROOT}/lib/field-outside-asm.sh"
+    nexus_field_outside_asm_build
+    [[ -x "${ROOT}/lib/bin/field-outside-asm" ]]
+    "${ROOT}/lib/bin/field-outside-asm" tcp 127.0.0.1 9477 | grep -q '"engine":"asm"'
+  fi
+}
+
+run_test "field outside talk asm module" test_field_outside_talk_module
+
+test_field_drive_system_module() {
+  [[ -f "${ROOT}/lib/field-drive-system.py" ]]
+  [[ -f "${ROOT}/lib/field-drive-system.sh" ]]
+  [[ -f "${ROOT}/panel/field-talk.html" ]]
+  [[ -f "${ROOT}/panel/assets/field-talk.js" ]]
+  grep -q 'field-drive-system' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'field_drive' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/field-drive' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/field-talk' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'NEXUS_FIELD_DRIVE' "${ROOT}/config/nexus.conf"
+  grep -q 'nexus field' "${ROOT}/bin/nexus"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-drive-system.py" status | grep -q 'field-drive-system/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-drive-system.py" publish | grep -q '"whole_system": "gui"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-drive-system.py" talk '{"op":"drives"}' | grep -q '"drives"'
+  grep -q 'outside-field-drives' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderFieldDrive' "${ROOT}/panel/assets/field-drive-dashboard.js"
+}
+
+run_test "field drive whole system module" test_field_drive_system_module
+
+test_braille_a11y_module() {
+  [[ -f "${ROOT}/panel/assets/nexus-braille-a11y.js" ]]
+  [[ -f "${ROOT}/panel/assets/nexus-braille-a11y.css" ]]
+  grep -q 'NexusBraille' "${ROOT}/panel/assets/nexus-braille-a11y.js"
+  grep -q 'renderBookListbox' "${ROOT}/panel/assets/nexus-braille-a11y.js"
+  grep -q 'library-braille-output' "${ROOT}/panel/threat-panel.html"
+  grep -q 'library-a11y-listbox' "${ROOT}/panel/assets/nexus-braille-a11y.css"
+  grep -q 'Alt+Shift+B' "${ROOT}/panel/threat-panel.html"
+  grep -q 'h7r-braille-strip' "${ROOT}/panel/assets/h7-reader.js"
+}
+
+run_test "braille blind accessibility module" test_braille_a11y_module
 
 test_dns_admin_portal_module() {
   [[ -f "${ROOT}/lib/dns-admin-portal.py" ]]

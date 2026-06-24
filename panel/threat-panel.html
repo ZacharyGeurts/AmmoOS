@@ -30,6 +30,9 @@
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="stylesheet" href="/assets/nexus-theme.css" />
   <link rel="stylesheet" href="/assets/dusty-midnight.css" />
+  <link rel="stylesheet" href="/assets/nexus-braille-a11y.css" />
+  <script src="/assets/nexus-i18n.js"></script>
+  <script src="/assets/nexus-braille-a11y.js"></script>
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
     :root {
@@ -86,7 +89,57 @@
       background: linear-gradient(180deg, #101624 0%, #0c1018 100%);
       box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
     }
-    .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-left: auto; }
+    .header-partner-links {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin-left: auto; margin-right: 4px;
+    }
+    .header-twitch-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 4px 12px 4px 4px; border-radius: 999px;
+      border: 1px solid rgba(145, 70, 255, 0.5);
+      background: linear-gradient(135deg, #08040f 0%, #140a1c 100%);
+      text-decoration: none; transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    }
+    .header-twitch-link:hover {
+      border-color: #9146ff; box-shadow: 0 0 18px rgba(145, 70, 255, 0.38); transform: translateY(-1px);
+    }
+    .header-twitch-avatar {
+      width: 38px; height: 38px; border-radius: 50%; object-fit: cover;
+      border: 2px solid #9146ff; box-shadow: 0 0 14px rgba(145, 70, 255, 0.45);
+    }
+    .header-twitch-label {
+      font-size: 0.74rem; font-weight: 700; color: #d8b8ff; letter-spacing: 0.05em;
+    }
+    .header-twitch-sub {
+      display: block; font-size: 0.58rem; color: #9146ff; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .header-amouranthrtx-link {
+      display: inline-flex; align-items: center; text-decoration: none;
+      border-radius: 10px; overflow: hidden; border: 1px solid #3a3048;
+      background: #06060a;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    }
+    .header-amouranthrtx-link:hover {
+      border-color: #d4b86a; box-shadow: 0 0 20px rgba(212, 184, 106, 0.28); transform: translateY(-1px);
+    }
+    .header-amouranthrtx-link img { height: 40px; width: auto; display: block; }
+    .header-lang {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+      min-width: 168px;
+    }
+    .header-lang label {
+      font-size: 0.58rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    #nexus-lang-select {
+      width: 100%; min-width: 168px; max-width: 220px;
+      background: #000; color: var(--text); border: 1px solid #333;
+      border-radius: 8px; padding: 6px 10px; font-size: 0.72rem; cursor: pointer;
+    }
+    #nexus-lang-hint {
+      font-size: 0.58rem; color: var(--muted); max-width: 220px; line-height: 1.35;
+    }
+    html.nexus-rtl nav.menu { flex-direction: row-reverse; }
+    .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .nexus-update-chip { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
     #nexus-update-btn {
       background: #0d1828; border: 1px solid #2a4060; color: var(--muted);
@@ -200,31 +253,51 @@
     @media (max-width: 900px) { .honor-grid { grid-template-columns: 1fr; } }
     .signals-wrap {
       padding: 16px 24px; width: 100%; max-width: none;
-      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(77, 155, 255, 0.12), transparent 55%),
-        linear-gradient(180deg, #060c14 0%, #040810 100%);
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(61, 214, 140, 0.14), transparent 55%),
+        linear-gradient(180deg, #040a06 0%, #020403 100%);
     }
     .signals-motto { font-size: 0.88rem; color: var(--muted); margin: 0 0 14px; line-height: 1.55; }
+    .signals-operator {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+      margin: 0 0 12px; padding: 10px 14px; border-radius: 10px;
+      border: 1px solid rgba(77, 232, 138, 0.22); background: rgba(6, 16, 10, 0.72);
+      font-size: 0.78rem; line-height: 1.45;
+    }
+    .signals-operator strong { color: #8af0b0; }
+    .signals-operator a { color: #6ec8ff; text-decoration: none; }
+    .signals-operator a:hover { text-decoration: underline; }
+    .signals-operator .signals-op-gps { color: var(--muted); font-variant-numeric: tabular-nums; }
     .signals-hero-wrap {
       position: relative; border-radius: 14px; overflow: hidden; margin-bottom: 16px;
-      border: 1px solid rgba(77, 155, 255, 0.22);
-      box-shadow: 0 0 48px rgba(77, 155, 255, 0.08), inset 0 0 80px rgba(4, 8, 16, 0.9);
+      border: 1px solid rgba(61, 214, 140, 0.28);
+      box-shadow: 0 0 48px rgba(61, 214, 140, 0.1), inset 0 0 80px rgba(2, 6, 4, 0.92);
       min-height: min(58vh, 480px);
     }
     #signals-field-hero { display: block; width: 100%; height: min(58vh, 480px); }
     .signals-stats, .signals-stat { display: inline-flex; flex-direction: column; gap: 2px; margin-right: 18px; }
     .signals-stat-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-    .signals-stat strong { font-size: 1.1rem; color: var(--internet); }
+    .signals-stat strong { font-size: 1.1rem; color: #4de88a; }
     .signals-grid { display: grid; grid-template-columns: 1fr 340px; gap: 14px; }
-    @media (max-width: 1100px) { .signals-grid { grid-template-columns: 1fr; } }
+    .signals-grid-main { display: grid; grid-template-columns: 1fr 1fr 320px; gap: 14px; margin-top: 14px; }
+    .signals-grid-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    @media (max-width: 1200px) { .signals-grid-main { grid-template-columns: 1fr 1fr; } .signals-grid-main .signals-panel--pulse { grid-column: 1 / -1; } }
+    @media (max-width: 1100px) { .signals-grid { grid-template-columns: 1fr; } .signals-grid-main, .signals-grid-bottom { grid-template-columns: 1fr; } }
+    #signals-antenna-banner.blaster-ready { border-color: rgba(77, 232, 138, 0.55); background: rgba(12, 32, 22, 0.75); }
+    #signals-antenna-banner.blaster-warming { border-color: rgba(232, 200, 120, 0.45); background: rgba(32, 28, 12, 0.55); }
+    .signals-readiness { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 8px; }
+    .signals-readiness span { font-size: 0.62rem; padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); }
+    .signals-readiness span.ok { color: #8af0b0; border-color: rgba(77,232,138,0.35); }
+    .signals-readiness span.fail { color: #ff8a9a; border-color: rgba(255,58,74,0.35); }
+    .signals-radio-search { width: 100%; margin-bottom: 8px; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(77,232,138,0.22); background: rgba(4,10,6,0.9); color: var(--text); font-size: 0.78rem; }
     .signals-panel {
-      background: rgba(8, 14, 28, 0.72); border: 1px solid rgba(77, 155, 255, 0.15);
+      background: rgba(4, 10, 6, 0.82); border: 1px solid rgba(61, 214, 140, 0.2);
       border-radius: 12px; padding: 14px; backdrop-filter: blur(8px);
     }
-    .signals-panel h4 { margin: 0 0 10px; font-size: 0.78rem; color: var(--internet); letter-spacing: 0.08em; text-transform: uppercase; }
+    .signals-panel h4 { margin: 0 0 10px; font-size: 0.78rem; color: #4de88a; letter-spacing: 0.08em; text-transform: uppercase; }
     .signals-antenna-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
     .signals-antenna-card {
-      border: 1px solid rgba(77, 155, 255, 0.18); border-radius: 10px; overflow: hidden;
-      background: rgba(4, 8, 16, 0.85); box-shadow: 0 0 20px color-mix(in srgb, var(--ant-color, #5ec8ff) 25%, transparent);
+      border: 1px solid rgba(61, 214, 140, 0.22); border-radius: 10px; overflow: hidden;
+      background: rgba(2, 6, 4, 0.9); box-shadow: 0 0 20px color-mix(in srgb, var(--ant-color, #4de88a) 28%, transparent);
     }
     .signals-antenna-canvas { width: 100%; height: 120px; display: block; }
     .signals-antenna-info { padding: 8px 10px; font-size: 0.68rem; }
@@ -250,6 +323,57 @@
       border-radius: 2px; transition: width 0.35s ease;
     }
     .signals-channel-meta { font-size: 0.6rem; color: var(--muted); margin-top: 4px; }
+    .signals-channel-live { border-color: rgba(61, 214, 140, 0.45) !important; }
+    .signals-freq-summary {
+      display: flex; flex-wrap: wrap; gap: 10px 18px; margin-bottom: 10px;
+      font-size: 0.72rem; font-family: ui-monospace, monospace;
+    }
+    .signals-freq-summary strong { color: #4de88a; }
+    .signals-freq-live strong { color: #8af0b0; }
+    .signals-freq-table { max-height: 280px; overflow: auto; }
+    .signals-freq-table tr.freq-live td { color: #d8f8e4; }
+    .signals-freq-table tr.freq-silent td { color: var(--muted); opacity: 0.72; }
+    .signals-radio-panel { margin-top: 14px; }
+    .signals-radio-scroll {
+      max-height: 340px; overflow-y: auto; overflow-x: hidden;
+      border: 1px solid rgba(77, 232, 138, 0.18); border-radius: 8px;
+      background: rgba(8, 18, 14, 0.55);
+    }
+    .signals-radio-station {
+      display: grid; grid-template-columns: 72px 1fr auto; gap: 8px 12px;
+      padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+      cursor: pointer; align-items: center;
+    }
+    .signals-radio-station:hover { background: rgba(77, 232, 138, 0.06); }
+    .signals-radio-station.selected { background: rgba(77, 232, 138, 0.12); outline: 1px solid rgba(77, 232, 138, 0.35); }
+    .signals-radio-station.illegal { border-left: 3px solid #ff3a4a; }
+    .signals-radio-station.legal { border-left: 3px solid #4de88a; }
+    .signals-radio-freq { font-weight: 700; color: #8af0b0; font-variant-numeric: tabular-nums; }
+    .signals-radio-station.illegal .signals-radio-freq { color: #ff6a82; }
+    .signals-radio-tower { font-size: 0.72rem; color: var(--muted); }
+    .signals-radio-player {
+      margin: 10px 0 12px; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid rgba(77,232,138,0.28); background: rgba(4,12,8,0.92);
+    }
+    .signals-radio-player.playing { border-color: rgba(77,232,138,0.55); box-shadow: 0 0 18px rgba(77,232,138,0.12); }
+    .signals-radio-player .player-title { font-weight: 700; color: #8af0b0; margin-bottom: 4px; }
+    .signals-radio-player audio { width: 100%; margin-top: 8px; height: 32px; }
+    .signals-radio-tune-btn {
+      margin-top: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(77,232,138,0.35);
+      background: rgba(77,232,138,0.12); color: #c8f8d8; cursor: pointer; font-size: 0.78rem;
+    }
+    .signals-radio-tune-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .signals-radio-station .signals-radio-play { font-size: 0.72rem; color: #8af0b0; margin-left: 6px; }
+    .signals-radio-spectrum {
+      display: flex; flex-wrap: wrap; gap: 3px; max-height: 72px; overflow-y: auto;
+      margin-top: 8px; padding: 6px; background: rgba(0,0,0,0.2); border-radius: 6px;
+    }
+    .signals-radio-slot {
+      width: 8px; height: 18px; border-radius: 2px; flex-shrink: 0;
+    }
+    .signals-radio-slot.legal { background: #4de88a; }
+    .signals-radio-slot.illegal { background: #ff3a4a; }
+    .signals-radio-slot.silent { background: #2a3540; opacity: 0.5; }
     .fcc-threat-tag {
       display: inline-block; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.06em;
       padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: middle;
@@ -420,16 +544,24 @@
     }
     .panel-subnav button.active { color: var(--text); border-color: var(--internet); background: rgba(77, 155, 255, 0.1); }
     nav.menu button { position: relative; }
-    select, select option {
-      background: #0d1524;
-      color: #f0f4fc;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+    button:not(nav.menu button):not(.panel-subnav button) {
+      background: #000; color: #fff; border: 1px solid #333; border-radius: 6px; cursor: pointer;
     }
-    select:focus { outline: 1px solid var(--gold); }
+    button:not(nav.menu button):not(.panel-subnav button):hover {
+      border-color: #666; background: #0a0a0a;
+    }
+    button:not(nav.menu button):not(.panel-subnav button):disabled {
+      opacity: 0.5; cursor: not-allowed;
+    }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    textarea, select, select option {
+      background: #000; color: #fff; border: 1px solid #333; border-radius: 6px;
+    }
+    input::placeholder, textarea::placeholder { color: #888; }
+    select:focus, input:focus, textarea:focus { outline: 1px solid #666; }
     nav.menu button .tab-load-pct,
     .panel-subnav button .tab-load-pct {
-      display: none;
+      display: inline-flex;
       margin-left: 6px;
       padding: 1px 6px;
       border-radius: 999px;
@@ -521,7 +653,8 @@
       color: var(--internet); border-bottom-color: var(--internet);
       background: linear-gradient(180deg, transparent 0%, rgba(77, 155, 255, 0.08) 100%);
     }
-    nav.menu button:hover { color: var(--text); background: rgba(255, 255, 255, 0.03); }
+    nav.menu button:hover { color: var(--text); background: rgba(8, 12, 20, 0.85); }
+    nav.menu button.tab-gated { opacity: 0.55; cursor: wait; }
     .view { display: none; min-height: calc(100vh - 96px); }
     .view.active { display: block; }
     .toolbar {
@@ -861,6 +994,11 @@
     .library-cover-card img { width: 100%; border-radius: 6px; border: 1px solid var(--border); background: #0a1018; min-height: 140px; object-fit: cover; }
     .library-cover-card span { display: block; font-size: 0.58rem; color: var(--muted); margin-top: 4px; }
     .library-ein { font-size: 0.66rem; color: var(--internet); margin-top: 6px; word-break: break-all; }
+    .library-profile-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 0.66rem; }
+    .library-profile-row select { flex: 1; min-width: 180px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); background: #0d1520; color: var(--text); }
+    .library-profile-hint { color: var(--muted); font-size: 0.6rem; line-height: 1.35; margin-bottom: 8px; }
+    .library-war-shelves { border: 1px solid #4a3020; border-radius: 10px; padding: 8px; background: rgba(24,16,8,0.45); margin-bottom: 8px; max-height: 160px; overflow: auto; }
+    .library-war-label { font-size: 0.6rem; color: var(--gold); margin-bottom: 6px; letter-spacing: 0.04em; }
     .library-dewey { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: rgba(8,14,24,0.6); max-height: 220px; overflow: auto; }
     .library-dewey-btn {
       display: flex; justify-content: space-between; width: 100%; text-align: left; margin-bottom: 6px;
@@ -1591,31 +1729,66 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v7.4.0</h1>
-        <div class="brand-sub">Hostess 7 · Dusty Midnight · MIT licensed</div>
+        <h1>NEXUS-Shield v7.6.0</h1>
+        <div class="brand-sub" data-i18n="brand.sub">Hostess 7 · Dusty Midnight · MIT licensed</div>
       </div>
     </div>
+    <div class="header-partner-links" aria-label="Field partners">
+      <a class="header-twitch-link" href="https://www.twitch.tv/amouranth" target="_blank" rel="noopener noreferrer" title="Amouranth on Twitch">
+        <img class="header-twitch-avatar" src="/assets/amouranth-twitch-avatar.png" alt="Amouranth" width="38" height="38" loading="lazy" />
+        <span>
+          <span class="header-twitch-label">Amouranth</span>
+          <span class="header-twitch-sub">Twitch →</span>
+        </span>
+      </a>
+      <a class="header-amouranthrtx-link" href="https://github.com/ZacharyGeurts/AMOURANTHRTX" target="_blank" rel="noopener noreferrer" title="AMOURANTHRTX Field Die on GitHub">
+        <img src="/assets/amouranthrtx-wordmark.svg" alt="AMOURANTHRTX" width="200" height="40" />
+      </a>
+    </div>
     <div class="header-right">
+      <div class="header-lang" id="nexus-lang-wrap">
+        <label for="nexus-lang-select" data-i18n="lang.label">Language</label>
+        <select id="nexus-lang-select" aria-label="Panel language">
+          <option value="en-US">American English ★</option>
+        </select>
+        <span id="nexus-lang-hint" class="meta"></span>
+        <input type="checkbox" id="nexus-lang-remember" checked hidden aria-hidden="true" />
+      </div>
       <div class="meta">
         <span class="meta-chip" data-tip="How alert NEXUS is right now: calm = quiet day, storm = lots going on.">
-          <span>Activity</span> <strong id="mode">—</strong>
+          <span data-i18n="header.activity">Activity</span> <strong id="mode">—</strong>
         </span>
         <span class="meta-chip" data-tip="Roughly how confident NEXUS is that recent warnings are real — not a grade on you.">
-          <span>Signal</span> <strong id="signal">—</strong>%
+          <span data-i18n="header.signal">Signal</span> <strong id="signal">—</strong>%
         </span>
         <span class="meta-chip" data-tip="When this screen last refreshed. Updates every few seconds.">
-          <span>Updated</span> <strong id="updated">—</strong>
+          <span data-i18n="header.updated">Updated</span> <strong id="updated">—</strong>
         </span>
         <span class="meta-chip field-live" id="field-live-chip" data-tip="Live connections from gatekeeper — fetched fresh each cycle.">
-          <span>Live</span> <strong id="field-live">—</strong>
+          <span data-i18n="header.live">Live</span> <strong id="field-live">—</strong>
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.4.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.6.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
   </header>
+
+  <div class="nexus-skip-links">
+    <a href="#panel-main">Skip to main content</a>
+    <a href="#library-search">Skip to library search</a>
+    <a href="#library-shelf">Skip to books A–Z</a>
+    <a href="#library-braille-output">Skip to braille reader</a>
+  </div>
+  <div id="nexus-a11y-announcer" role="status" aria-live="polite" aria-atomic="true"></div>
+  <nav class="nexus-a11y-bar" aria-label="Accessibility and braille">
+    <button type="button" id="nexus-blind-mode-toggle" aria-pressed="false">Blind-friendly mode</button>
+    <button type="button" id="nexus-braille-reader-toggle" aria-pressed="true">Braille reader on</button>
+    <button type="button" id="nexus-a11y-help">Keyboard shortcuts</button>
+    <button type="button" id="nexus-goto-library" aria-keyshortcuts="Alt+Shift+B">Books · Library</button>
+    <span class="nexus-a11y-hint">Alt+Shift+B → Library · / → search · arrows in list</span>
+  </nav>
 
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
@@ -1659,15 +1832,16 @@
   </div>
 
   <nav class="menu" aria-label="Panel sections">
-    <button type="button" class="active" data-view="command" data-tip="Command deck — Good Guy vs Bad Guy scoreboard, field pulse, know-everything index. Start here.">Command</button>
-    <button type="button" data-view="us" data-tip="Page 1 — forensic identity of THIS machine. Every fact from ss, ip, proc, and NEXUS state — zero external guesswork.">US</button>
-    <button type="button" data-view="packets" data-tip="Packets — live connections scored Good/Bad plus deep DPI inspect. Packet permission v4.0.">Packets</button>
-    <button type="button" data-view="threats" data-tip="Threats — globe map, attack-path dossiers, Grok Heavy kill-orders. Identify. Record. KILL.">Threats</button>
-    <button type="button" data-view="intel" data-tip="Intel — honorability, field RF antenna, police interop, research tables.">Intel</button>
-    <button type="button" data-view="signals" data-tip="Signals — gorgeous field antenna pulses. Every signal FCC-identified with threat tags.">Signals</button>
-    <button type="button" data-view="dns" data-tip="DNS — NEXUS Truth Resolver. RFC matrix, legal framework, planetary EXTREME security. Our DNS server on loopback.">DNS</button>
-    <button type="button" data-view="library" data-tip="Hostess7 H7 field books — network security, NEXUS manual, AMOURANTHRTX biography.">Library</button>
-    <button type="button" data-view="system" data-tip="System — settings, logs, protection toggles.">System</button>
+    <button type="button" class="active" data-view="command" data-i18n="nav.command" data-tip="Command deck — Good Guy vs Bad Guy scoreboard, field pulse, know-everything index. Start here.">Command</button>
+    <button type="button" data-view="us" data-i18n="nav.us" data-tip="Page 1 — forensic identity of THIS machine. Every fact from ss, ip, proc, and NEXUS state — zero external guesswork.">US</button>
+    <button type="button" data-view="packets" data-i18n="nav.packets" data-tip="Packets — live connections scored Good/Bad plus deep DPI inspect. Packet permission v4.0.">Packets</button>
+    <button type="button" data-view="threats" data-i18n="nav.threats" data-tip="Threats — globe map, attack-path dossiers, Grok Heavy kill-orders. Identify. Record. KILL.">Threats</button>
+    <button type="button" data-view="intel" data-i18n="nav.intel" data-tip="Intel — honorability, field RF antenna, police interop, research tables.">Intel</button>
+    <button type="button" data-view="signals" data-i18n="nav.signals" data-tip="Signals — gorgeous field antenna pulses. Every signal FCC-identified with threat tags.">Signals</button>
+    <button type="button" data-view="dns" data-i18n="nav.dns" data-tip="DNS — NEXUS Truth Resolver. RFC matrix, legal framework, planetary EXTREME security. Our DNS server on loopback.">DNS</button>
+    <button type="button" data-view="outside" data-i18n="nav.outside" data-tip="Outside — NEXUS egress gate. SSH, telnet, mail, HTTP/S, custom ports. Operator-initiated outbound through our firewall.">Outside</button>
+    <button type="button" data-view="library" data-i18n="nav.library" aria-label="Library · Books · Alt Shift B" aria-keyshortcuts="Alt+Shift+B" data-tip="Hostess7 H7 field books — alphabetical list, braille reader, screen-reader search. Alt+Shift+B jumps here.">Library · Books</button>
+    <button type="button" data-view="system" data-i18n="nav.system" data-tip="System — settings, logs, protection toggles.">System</button>
   </nav>
   <nav id="panel-subnav" class="panel-subnav" aria-label="Section views" hidden></nav>
 
@@ -1718,6 +1892,10 @@
         <div id="us-traffic-bars" style="margin-top:14px;"></div>
       </section>
       <section id="us-observations" class="us-rundown-panel"><h3>Plain-English rundown</h3><div class="us-rundown"><div class="us-rundown-item"><p>Gathering ss · ip · proc · NEXUS state…</p></div></div></section>
+      <section class="us-card us-card--network" style="margin-bottom:18px;">
+        <h4 style="margin:0 0 12px;color:var(--dust-gold,#d4b86a);">Local network · learned tables</h4>
+        <div id="us-local-network"><div class="meta">Sampling ARP · DHCP · home protector · gatekeeper…</div></div>
+      </section>
       <div class="us-dashboard" id="us-grid">
         <div class="us-main">
           <article class="us-card us-card--network"><h4>Live connections</h4><div id="us-network">Loading…</div></article>
@@ -2019,21 +2197,36 @@
     </div>
   </section>
 
-  <section id="view-library" class="view">
-    <div class="library-layout">
+  <section id="view-library" class="view" aria-label="Library · field books" role="region">
+    <div class="library-layout" id="panel-main">
       <div class="library-sidebar">
-        <div class="library-search-row">
-          <input type="search" id="library-search" placeholder="Search title, author, EIN, ISBN, Dewey…" autocomplete="off">
-          <button type="button" id="library-search-btn">Search</button>
+        <div class="library-profile-row">
+          <label for="library-profile-select">Catalog</label>
+          <select id="library-profile-select" title="Hot-swap Dewey library profile" aria-label="Library catalog profile"></select>
         </div>
-        <div class="library-dewey" id="library-dewey"></div>
-        <div class="library-shelf" id="library-shelf"></div>
+        <div class="library-profile-hint" id="library-profile-hint"></div>
+        <div class="library-search-row">
+          <input type="search" id="library-search" placeholder="Search title, author, EIN, ISBN, Dewey…" autocomplete="off" aria-label="Search library books" aria-describedby="library-search-status" aria-keyshortcuts="Alt+Shift+S Slash">
+          <button type="button" id="library-search-btn" aria-label="Run library search">Search</button>
+        </div>
+        <div id="library-search-status" class="library-search-status" role="status" aria-live="polite"></div>
+        <div class="library-war-shelves" id="library-war-shelves" aria-label="War studies shelves"></div>
+        <div class="library-dewey" id="library-dewey" aria-label="Dewey decimal shelves"></div>
+        <div class="library-shelf" id="library-shelf" aria-label="Books alphabetically A to Z" tabindex="0"></div>
       </div>
       <div class="library-main">
         <h3 id="library-title" style="margin:0;font-size:0.9rem;color:var(--gold);">Hostess7 H7 Library</h3>
+        <aside class="library-braille-panel" id="library-braille-panel" aria-label="Braille reader output for selected book">
+          <h4>Braille reader</h4>
+          <div id="library-braille-output" class="library-braille-output" tabindex="0" aria-live="polite" aria-atomic="true">⠠⠎⠑⠇⠑⠉⠞ ⠁ ⠃⠕⠕⠅ ⠋⠗⠕⠍ ⠞⠓⠑ ⠠⠁ ⠞⠕ ⠠⠵ ⠇⠊⠎⠞⠲</div>
+          <div id="library-braille-plain" class="library-braille-plain">Select a book from the alphabetical list — arrow keys to move, Enter to open accessible reader.</div>
+          <div class="library-braille-actions">
+            <button type="button" id="library-braille-open-reader" disabled aria-label="Open selected book in accessible full-screen reader">Open accessible reader</button>
+          </div>
+        </aside>
         <div class="library-meta-bar">
-          <span id="library-meta"></span>
-          <button type="button" class="library-open-btn" id="library-open-reader" disabled>Open full-screen reader</button>
+          <span id="library-meta" role="status" aria-live="polite"></span>
+          <button type="button" class="library-open-btn" id="library-open-reader" disabled aria-label="Open full-screen reader for selected book">Open full-screen reader</button>
           <button type="button" class="library-upload-btn" id="library-upload-toggle">Upload to Dewey shelf</button>
         </div>
         <div class="library-sync-bar" id="library-sync-bar"></div>
@@ -2323,75 +2516,243 @@
       <p class="signals-motto" id="signals-motto" data-tip="Field antennas pulse live. Every WiFi, audio, and wire signal is FCC-identified — threats tagged automatically.">
         <strong>Signals · Field Antennas</strong> — gorgeous pulsing fields · FCC lookup on every signal · threat tags live.
       </p>
+      <div id="signals-operator" class="signals-operator" aria-label="Operator GPS and profile"></div>
+      <div id="signals-antenna-banner" class="gov-merge-banner blaster-warming" style="margin-bottom:12px;"></div>
       <div id="signals-fcc-banner" class="gov-merge-banner" style="border-color:#3a5080;background:rgba(20,36,56,0.55);margin-bottom:12px;"></div>
       <div id="signals-stats" class="signals-stats" style="margin-bottom:12px;"></div>
       <div class="signals-hero-wrap">
         <canvas id="signals-field-hero" aria-label="Pulsing multi-antenna field visualization"></canvas>
       </div>
-      <div class="signals-grid" style="margin-top:14px;">
-        <div>
-          <div class="signals-panel" style="margin-bottom:14px;">
-            <h4>FCC identified signals · threat tags</h4>
-            <div id="signals-fcc-table" class="meta"><div class="empty">Scanning — FCC lookups populate after first RF cycle…</div></div>
-          </div>
-          <div class="signals-panel">
-            <h4>Field antenna array</h4>
-            <div id="signals-antenna-grid" class="signals-antenna-grid"><div class="empty">Awaiting antenna fields…</div></div>
-          </div>
-        </div>
+      <div class="signals-grid-main">
         <div class="signals-panel">
+          <h4>Field antenna · blaster readiness</h4>
+          <div id="signals-antenna-readiness" class="signals-readiness"></div>
+          <div id="signals-antenna-grid" class="signals-antenna-grid" style="margin-top:10px;"><div class="empty">Awaiting antenna fields…</div></div>
+        </div>
+        <div class="signals-panel signals-radio-panel">
+          <h4>Field radio catcher · AM/FM · tune &amp; play</h4>
+          <div id="signals-radio-meta" class="signals-freq-summary meta" style="margin-bottom:8px;"></div>
+          <div id="signals-radio-player" class="signals-radio-player" aria-live="polite">
+            <div class="player-title" id="signals-radio-player-title">Field antenna · catch 83.1 MHz</div>
+            <div class="meta" id="signals-radio-player-meta">OTA lock via blaster antenna · Gladstone UP Michigan</div>
+            <audio id="signals-radio-audio" controls preload="none"></audio>
+            <button type="button" id="signals-radio-tune-831" class="signals-radio-tune-btn">Catch 83.1 MHz</button>
+          </div>
+          <input type="search" id="signals-radio-search" class="signals-radio-search" placeholder="Filter call sign, city, MHz/kHz…" aria-label="Filter radio stations" />
+          <div id="signals-radio-spectrum" class="signals-radio-spectrum" aria-label="AM/FM spectrum legal green illegal red"></div>
+          <div id="signals-radio-menu" class="signals-radio-scroll" role="listbox" aria-label="Known legal broadcast stations" tabindex="0">
+            <div class="empty">Building radio station menu from GPS + tower registry…</div>
+          </div>
+          <div id="signals-radio-illegal" style="margin-top:10px;"></div>
+        </div>
+        <div class="signals-panel signals-panel--pulse">
           <h4>Pulse channels · live energy</h4>
-          <div id="signals-channels" class="signals-channels"><div class="empty">Pulse channels load with scan…</div></div>
+          <div id="signals-channels" class="signals-channels" style="max-height:min(52vh,420px);"><div class="empty">Pulse channels load with scan…</div></div>
           <div style="margin-top:14px;">
-            <button type="button" id="signals-refresh" data-tip="Rebuild signals field + FCC lookups.">Rescan signals</button>
+            <button type="button" id="signals-refresh" data-tip="Full antenna cycle: RF, radio, signals, blaster test.">Rescan antenna</button>
+            <button type="button" id="signals-antenna-test" data-tip="Run blaster readiness test." style="margin-left:8px;">Test blaster</button>
             <button type="button" data-view-jump="intel/field-rf" style="margin-left:8px;">Field RF →</button>
           </div>
+        </div>
+      </div>
+      <div class="signals-grid-bottom">
+        <div class="signals-panel">
+          <h4>Frequency registry · every permitted slot</h4>
+          <div id="signals-freq-registry" class="meta"><div class="empty">Frequency registry builds from FCC permitted bands…</div></div>
+        </div>
+        <div class="signals-panel">
+          <h4>FCC identified signals · threat tags</h4>
+          <div id="signals-fcc-table" class="meta"><div class="empty">Scanning — FCC lookups populate after first RF cycle…</div></div>
         </div>
       </div>
     </div>
   </section>
 
   <section id="view-dns" class="view">
-    <div class="dns-wrap">
-      <p class="dns-motto" id="dns-motto" data-tip="NEXUS Truth DNS — self-hosted on loopback. Every control cites RFC section and applicable law. Planetary EXTREME security extends to all zones.">
-        <strong>DNS · Truth Resolver</strong> — RFC 1034/1035 trace-only · legal citations · planetary security.
-      </p>
-      <div id="dns-stats" class="dns-stats-bar"></div>
-      <div class="dns-grid">
-        <article class="dns-panel dns-panel--server">
-          <h4>Our DNS server · loopback listeners</h4>
-          <div id="dns-server-panel"><div class="empty">Sampling resolver…</div></div>
-        </article>
-        <article class="dns-panel">
-          <h4>Foreign resolvers stopped</h4>
-          <div id="dns-foreign-blocked"><div class="meta">Google, Cloudflare, Charter/Spectrum — bypass blocked.</div></div>
-        </article>
-        <article class="dns-panel dns-panel--wide">
-          <h4>RFC compliance matrix</h4>
+    <div class="dns-wrap dns-engineer">
+      <header class="dns-hero" id="dns-hero">
+        <div class="dns-hero-main">
+          <p class="dns-hero-eyebrow">NEXUS Truth DNS · Engineer command</p>
+          <h2 class="dns-hero-title" id="dns-hero-title">Truth Resolver</h2>
+          <p class="dns-hero-sub" id="dns-motto">Sampling resolver…</p>
+        </div>
+        <div class="dns-hero-status" id="dns-hero-status"></div>
+      </header>
+
+      <div id="dns-alerts" class="dns-alerts"></div>
+
+      <article class="dns-panel dns-panel--briefing">
+        <h4>Engineer briefing · end the call fast</h4>
+        <div id="dns-engineer-briefing"><div class="empty">Loading upfront DNS intelligence…</div></div>
+      </article>
+
+      <div id="dns-ops-strip" class="dns-ops-strip"></div>
+
+      <div class="dns-main-grid">
+        <div class="dns-main-col">
+          <article class="dns-panel">
+            <h4>True Reality Model · WHOLE + LOCAL NOW</h4>
+            <div id="dns-reality-model"></div>
+            <div class="dns-toolbar">
+              <input type="search" id="dns-internet-filter" placeholder="Filter TLD / domain…" aria-label="Filter internet field" />
+            </div>
+            <div id="dns-internet-field" class="dns-table-wrap"><div class="empty">Pulling internet field…</div></div>
+          </article>
+          <article class="dns-panel">
+            <h4>Recent queries · LOCAL NOW cache</h4>
+            <div id="dns-recent-queries" class="dns-table-wrap"><div class="empty">No queries yet — resolve a name to populate.</div></div>
+          </article>
+        </div>
+        <div class="dns-main-col">
+          <article class="dns-panel">
+            <h4>NEXUS DNS + DHCP servers · Hostess 7</h4>
+            <div id="dns-server-panel"><div class="empty">Sampling resolver…</div></div>
+          </article>
+          <article class="dns-panel">
+            <h4>Graceful takeover · listen before reject</h4>
+            <div id="dns-takeover-panel"><div class="empty">Evaluating incumbent DNS/DHCP…</div></div>
+          </article>
+          <article class="dns-panel">
+            <h4>Egress integrity · exact-as-sent</h4>
+            <div id="dns-egress-panel"><div class="empty">Verifying permitted egress…</div></div>
+          </article>
+          <article class="dns-panel">
+            <h4>Threat guard · permanent eradication</h4>
+            <div id="dns-threat-panel"><div class="empty">DDoS immunity active…</div></div>
+          </article>
+          <article class="dns-panel">
+            <h4>Multipoint secure identification</h4>
+            <div id="dns-multipoint-panel"><div class="empty">Loading identification points…</div></div>
+          </article>
+          <article class="dns-panel">
+            <h4>Foreign resolvers stopped · never trusted</h4>
+            <div id="dns-foreign-blocked"><div class="meta">Google, Cloudflare, Charter/Spectrum — bypass blocked.</div></div>
+          </article>
+        </div>
+      </div>
+
+      <nav class="dns-ref-tabs" id="dns-ref-tabs" aria-label="DNS reference sections">
+        <button type="button" class="active" data-dns-tab="rfc">RFC matrix</button>
+        <button type="button" data-dns-tab="legal">Legal framework</button>
+        <button type="button" data-dns-tab="roots">Root servers</button>
+        <button type="button" data-dns-tab="planetary">Planetary zones</button>
+        <button type="button" data-dns-tab="legacy">Legacy gear</button>
+      </nav>
+      <div class="dns-ref-panels">
+        <article class="dns-panel dns-panel--wide dns-ref-panel active" data-dns-panel="rfc">
+          <div class="dns-toolbar">
+            <input type="search" id="dns-rfc-search" placeholder="Search RFC, requirement, control…" aria-label="Search RFC matrix" />
+          </div>
           <div id="dns-rfc-table" class="dns-table-wrap"><div class="empty">Loading RFC matrix…</div></div>
         </article>
-        <article class="dns-panel dns-panel--wide">
-          <h4>Legal framework · letter of law</h4>
+        <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="legal" hidden>
           <div id="dns-legal-table" class="dns-table-wrap"><div class="empty">Loading legal citations…</div></div>
         </article>
-        <article class="dns-panel dns-panel--wide">
-          <h4>IANA root servers (RFC 1034 §3.6)</h4>
+        <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="roots" hidden>
           <div id="dns-root-table" class="dns-table-wrap"><div class="empty">Loading root hints…</div></div>
         </article>
-        <article class="dns-panel dns-panel--wide">
-          <h4>Planetary security · global zones</h4>
+        <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="planetary" hidden>
           <div id="dns-planetary-table" class="dns-table-wrap"><div class="empty">Loading planetary posture…</div></div>
         </article>
+        <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="legacy" hidden>
+          <div id="dns-legacy-table" class="dns-table-wrap"><div class="empty">Loading legacy interop…</div></div>
+        </article>
       </div>
-      <article class="dns-panel dns-panel--wide" id="dns-admin-portal-panel">
-        <h3>Hostess 7 DNS Admin · ports 7 · 77 · 777</h3>
-        <div id="dns-admin-portal-info" class="meta">Read-only engineer login — DNS information only, no remote controls. Equipment room reporting on by default.</div>
+
+      <article class="dns-panel dns-panel--wide dns-admin-engineer" id="dns-admin-portal-panel">
+        <h4>Hostess 7 DNS Admin · tired engineer ports</h4>
+        <div id="dns-admin-portal-info" class="meta">Ports 7 · 77 · 777 — information only, no remote controls.</div>
       </article>
+
       <div class="dns-crossrefs">
+        <button type="button" id="dns-refresh-btn" data-tip="Rebuild DNS field — resolver, internet pull, RFC matrix.">Refresh DNS field</button>
         <button type="button" data-view-jump="us">US field →</button>
         <button type="button" data-view-jump="packets/live">Live connections →</button>
         <button type="button" data-view-jump="signals">Signals →</button>
-        <button type="button" id="dns-refresh-btn" data-tip="Rebuild DNS panel — RFC matrix, planetary posture, resolver stats.">Refresh DNS field</button>
+      </div>
+      <div id="dns-stats" class="dns-stats-bar dns-stats-bar--hidden" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <section id="view-outside" class="view">
+    <div class="outside-wrap outside-engineer">
+      <header class="outside-hero" id="outside-hero">
+        <div class="outside-hero-main">
+          <p class="outside-hero-eyebrow">NEXUS Firewall · Egress gate</p>
+          <h2 class="outside-hero-title" id="outside-hero-title">Outside Talk</h2>
+          <p class="outside-hero-sub" id="outside-motto">Loading outside field…</p>
+        </div>
+        <div class="outside-hero-status" id="outside-hero-status"></div>
+      </header>
+
+      <div id="outside-alerts" class="outside-alerts"></div>
+
+      <div class="outside-main-grid">
+        <article class="outside-panel">
+          <h4>Connect outward · operator-initiated</h4>
+          <p id="outside-tool-hint" class="outside-hint meta">Select a tool — NEXUS permits egress then probes reachability.</p>
+          <div class="outside-form">
+            <label class="outside-label">Tool
+              <select id="outside-tool-select" class="outside-input" aria-label="Outbound tool"></select>
+            </label>
+            <label class="outside-label">Host
+              <input type="text" id="outside-host" class="outside-input" placeholder="hostname or IPv4" autocomplete="off" />
+            </label>
+            <label class="outside-label">Port
+              <input type="number" id="outside-port" class="outside-input" min="1" max="65535" value="22" />
+            </label>
+            <label class="outside-label" id="outside-user-row">Username
+              <input type="text" id="outside-user" class="outside-input" placeholder="ssh user" autocomplete="off" />
+            </label>
+            <label class="outside-label" id="outside-path-row" hidden>Path
+              <input type="text" id="outside-path" class="outside-input" value="/" placeholder="/" />
+            </label>
+            <label class="outside-label" id="outside-proto-row" hidden>Protocol
+              <select id="outside-proto" class="outside-input">
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+              </select>
+            </label>
+            <div class="outside-options">
+              <label class="outside-check"><input type="checkbox" id="outside-trust" /> Trust peer forever</label>
+              <label class="outside-check"><input type="checkbox" id="outside-force" /> Force harm-class port</label>
+            </div>
+            <span id="outside-secure-badge" class="outside-secure outside-secure--ok">TLS / encrypted path</span>
+            <div class="outside-actions">
+              <button type="button" id="outside-connect-btn" class="outside-btn outside-btn--primary">Connect via firewall</button>
+              <button type="button" id="outside-probe-btn" class="outside-btn">Probe only</button>
+            </div>
+          </div>
+          <div id="outside-terminal" class="outside-terminal" aria-live="polite">
+            <div class="outside-line outside-line--meta">NEXUS Outside Talk — every session logged locally. Authorized access only.</div>
+          </div>
+          <div class="outside-toolbar">
+            <button type="button" id="outside-clear-terminal" class="outside-btn">Clear terminal</button>
+            <button type="button" id="outside-refresh-btn" class="outside-btn">Refresh field</button>
+          </div>
+        </article>
+        <div class="outside-side-col">
+          <article class="outside-panel">
+            <h4>Session audit · recent outbound</h4>
+            <div id="outside-sessions" class="outside-table-wrap"><div class="empty">No sessions yet.</div></div>
+          </article>
+          <article class="outside-panel">
+            <h4>Legal framework · authorized egress</h4>
+            <div id="outside-legal-table" class="outside-table-wrap"><div class="empty">Loading legal citations…</div></div>
+          </article>
+        </div>
+      </div>
+
+      <article class="outside-panel outside-panel--wide">
+        <h4>Field drives · whole GUI talks to any mounted storage</h4>
+        <p class="outside-hint meta">Select a drive for Library corpora and H7 textbooks. Publish copies the full panel GUI to the active drive.</p>
+        <div id="outside-field-drives" class="outside-table-wrap"><div class="empty">Discovering field drives…</div></div>
+      </article>
+
+      <div class="outside-crossrefs">
+        <button type="button" data-view-jump="library">Library · field books →</button>
+        <button type="button" data-view-jump="packets/live">Live connections →</button>
+        <button type="button" data-view-jump="dns">Truth DNS →</button>
       </div>
     </div>
   </section>
@@ -2608,6 +2969,8 @@
   <script defer src="/assets/sdf-render.js"></script>
   <script defer src="/assets/signals-field.js"></script>
   <script defer src="/assets/dns-dashboard.js"></script>
+  <script defer src="/assets/outside-tools.js"></script>
+  <script defer src="/assets/field-drive-dashboard.js"></script>
   <script defer src="/assets/us-dashboard.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -2881,6 +3244,7 @@
       intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", "audio-train": "Audio · Train", "field-rf": "Field RF", research: "Research" } },
       signals: { panel: "signals", default: "signals", subs: { signals: "Field · Live" } },
       dns: { panel: "dns", default: "dns", subs: { dns: "Truth · Resolver" } },
+      outside: { panel: "outside", default: "outside", subs: { outside: "Egress · Gate" } },
       library: { panel: "library", default: "library", subs: { library: "Library" } },
       system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
     };
@@ -2892,6 +3256,7 @@
       settings: ["system", "settings"], logs: ["system", "logs"],
       signals: ["signals", "signals"],
       dns: ["dns", "dns"],
+      outside: ["outside", "outside"],
     };
     let currentPanel = "command";
     let currentSubView = "command";
@@ -2909,8 +3274,9 @@
       intel: { keys: ["audio_train", "field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
       library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
-      signals: { keys: ["signals_field"], subs: { signals: ["signals_field"] } },
+      signals: { keys: ["signals_field", "field_antenna", "field_radio"], subs: { signals: ["signals_field", "field_antenna", "field_radio"] } },
       dns: { keys: ["field_dns"], subs: { dns: ["field_dns"] } },
+      outside: { keys: ["field_outside_talk", "field_drive"], subs: { outside: ["field_outside_talk", "field_drive"] } },
     };
 
     function moduleReady(data, key) {
@@ -2919,8 +3285,12 @@
       if (key === "gatekeeper") return typeof val === "object" && Array.isArray(val.connections);
       if (key === "audio_train") return typeof val === "object" && (val.schema === "audio-train/v1" || val.stats != null);
       if (key === "home_protector") return typeof val === "object" && (val.schema === "home-protector/v1" || val.stats != null);
-      if (key === "signals_field") return typeof val === "object" && (val.schema === "signals-field/v1" || val.stats != null);
+      if (key === "signals_field") return typeof val === "object" && (val.schema === "signals-field/v1" || val.stats != null) && ((val.stats || {}).pulse_channels > 0 || (val.antennas || []).length > 0 || (val.field_radio || {}).station_menu?.length > 0);
+      if (key === "field_antenna") return typeof val === "object" && (val.schema === "field-antenna/v1" || (val.readiness || {}).score != null);
+      if (key === "field_radio") return typeof val === "object" && (val.schema === "field-radio-catcher/v1" || (val.station_menu || []).length > 0);
       if (key === "field_dns") return typeof val === "object" && (val.schema === "field-dns/v1" || val.rfc_matrix != null);
+      if (key === "field_outside_talk") return typeof val === "object" && (val.schema === "field-outside-talk/v1" || val.tools != null);
+      if (key === "field_drive") return typeof val === "object" && (val.schema === "field-drive-system/v1" || val.drives != null);
       if (key === "field_rf") return typeof val === "object" && (val.updated != null || val.antenna?.mode != null);
       if (key === "terror_spiderweb") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.nodes));
       if (key === "precision_field") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.entities));
@@ -3083,7 +3453,7 @@
         return `<button type="button" data-sub="${esc(k)}" class="${k === sub ? "active" : ""}">${esc(group.subs[k])}${tabLoadBadgeHtml(pct, { fetching: panelFetchInFlight })}</button>`;
       }).join("");
       subnav.querySelectorAll("button").forEach((btn) => {
-        btn.addEventListener("click", () => showView(`${panel}/${btn.dataset.sub}`));
+        btn.addEventListener("click", () => showView(`${panel}/${btn.dataset.sub}`, { fromNav: true }));
       });
     }
 
@@ -3095,6 +3465,7 @@
 
     function paintPanel(data) {
       if (!data) return;
+      if (global.NexusI18n?.mergeFromPanel) global.NexusI18n.mergeFromPanel(data);
       lastPanelData = data;
       lastPanelUpdated = data.updated || "";
       $("mode").textContent = data.vigil_mode || "calm";
@@ -3120,8 +3491,12 @@
       renderHonorability(data);
       renderAudioTrain(data.audio_train);
       renderHomeProtector(data.home_protector);
-      if (global.renderSignalsField) renderSignalsField(data.signals_field);
+      if (global.renderSignalsField) {
+        renderSignalsField(global.mergeSignalsPayload ? mergeSignalsPayload(data) : data.signals_field);
+      }
       if (global.renderDnsField) renderDnsField(data.field_dns, data);
+      if (global.renderOutsideTalk) renderOutsideTalk(data.field_outside_talk, data);
+      if (global.renderFieldDrive && data.field_drive) renderFieldDrive(data.field_drive);
       renderCommandCenter(data);
       renderFieldProtect(data);
       const gk = data.gatekeeper || {};
@@ -3139,7 +3514,7 @@
         if (global.renderPrecisionMap) renderPrecisionMap(pf);
         if (global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
       }
-      renderUSField(data.us_field);
+      renderUSField(data.us_field, data.h7_library);
       if (currentSubView === "us" && data.us_field && global.paintUSTraffic) {
         paintUSTraffic(data.us_field);
       }
@@ -3197,14 +3572,18 @@
         renderPacketField(lastPanelData.packet_field);
         renderInspect(lastPanelData.packet_field);
       }
-      if (sub === "library" && lastPanelData) renderLibrary(lastPanelData.h7_library);
-      if (sub === "us" && lastPanelData) renderUSField(lastPanelData.us_field);
+      if (sub === "library" && lastPanelData) {
+        renderLibrary(lastPanelData.h7_library);
+        global.NexusBraille?.onViewActivated?.("library");
+        requestAnimationFrame(() => $("library-shelf")?.focus?.());
+      }
+      if (sub === "us" && lastPanelData) renderUSField(lastPanelData.us_field, lastPanelData.h7_library);
       if (sub === "command" && lastPanelData) renderCommandCenter(lastPanelData);
       if (sub === "honor" && lastPanelData) renderHonorability(lastPanelData);
       if (sub === "audio-train" && lastPanelData) renderAudioTrain(lastPanelData.audio_train);
       if (sub === "home-protector" && lastPanelData) renderHomeProtector(lastPanelData.home_protector);
       if (currentPanel === "signals" && lastPanelData && global.renderSignalsField) {
-        renderSignalsField(lastPanelData.signals_field);
+        renderSignalsField(global.mergeSignalsPayload ? mergeSignalsPayload(lastPanelData) : lastPanelData.signals_field);
         if (global.onSignalsViewActivated) onSignalsViewActivated();
       } else if (currentPanel !== "signals" && global.onSignalsViewDeactivated) {
         onSignalsViewDeactivated();
@@ -3212,13 +3591,87 @@
       if (sub === "dns" && lastPanelData?.field_dns && global.renderDnsField) {
         renderDnsField(lastPanelData.field_dns, lastPanelData);
       }
+      if (sub === "outside") ensureOutsideFieldRendered();
       if (sub === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
     }
 
-    function showView(route) {
+    async function ensureOutsideFieldRendered() {
+      let doc = lastPanelData?.field_outside_talk;
+      let panel = lastPanelData || {};
+      if (!doc?.tools?.length) {
+        try {
+          const res = await fetch("/api/field-outside-talk", { cache: "no-store" });
+          if (res.ok) doc = await res.json();
+        } catch (_) {}
+      }
+      if (!panel.field_drive?.drives) {
+        try {
+          const res = await fetch("/api/field-drive", { cache: "no-store" });
+          if (res.ok) panel = { ...panel, field_drive: await res.json() };
+        } catch (_) {}
+      }
+      if (global.renderOutsideTalk && doc) {
+        global.renderOutsideTalk(doc, panel);
+      } else if (global.renderFieldDrive && panel.field_drive) {
+        global.renderFieldDrive(panel.field_drive);
+      }
+    }
+
+    const TAB_DOM_REQUIRED = {
+      command: ["command-motto", "command-know"],
+      us: ["us-motto", "us-hostess-profile"],
+      packets: ["connections"],
+      threats: ["home-protector-stats"],
+      intel: ["audio-train-motto"],
+      signals: ["signals-operator", "signals-antenna-banner", "signals-radio-menu"],
+      dns: ["dns-hero-title", "dns-reality-model"],
+      outside: ["outside-hero-title"],
+      library: ["library-search"],
+      system: ["settings-profile"],
+    };
+
+    function tabDomReady(panel) {
+      const ids = TAB_DOM_REQUIRED[panel] || [];
+      const pendingRe = /^(Loading|Awaiting|Harvesting|Building|Scanning|Pulling|No stations match)/i;
+      return ids.every((id) => {
+        const el = $(id);
+        if (!el) return false;
+        const text = (el.textContent || "").trim();
+        if (!text) return false;
+        const empty = el.querySelector(".empty");
+        if (empty && pendingRe.test((empty.textContent || "").trim())) return false;
+        if (pendingRe.test(text) && text.length < 80) return false;
+        return true;
+      });
+    }
+
+    function announceTabGate(msg) {
+      const ann = $("nexus-a11y-announcer");
+      if (ann) ann.textContent = msg;
+    }
+
+    async function ensureTabData(panel, sub) {
+      let pct = tabLoadPercent(lastPanelData, panel, sub);
+      if (pct >= 100 && tabDomReady(panel)) return true;
+      announceTabGate(`Loading ${panel} tab data…`);
+      try { await refresh(); } catch (_) {}
+      pct = tabLoadPercent(lastPanelData, panel, sub);
+      return pct >= 100 && tabDomReady(panel);
+    }
+
+    async function showView(route, opts = {}) {
       const { panel, sub } = resolveViewRoute(route);
       const btn = document.querySelector(`nav.menu button[data-view="${panel}"]`);
       if (!btn) return;
+      if (!opts.force && opts.fromNav) {
+        document.querySelectorAll("nav.menu button[data-view]").forEach((b) => b.classList.add("tab-gated"));
+        const ready = await ensureTabData(panel, sub);
+        document.querySelectorAll("nav.menu button[data-view]").forEach((b) => b.classList.remove("tab-gated"));
+        if (!ready) {
+          announceTabGate(`${panel} tab still loading — wait for 100% badge`);
+          return;
+        }
+      }
       currentPanel = panel;
       currentSubView = sub;
       document.querySelectorAll("nav.menu button").forEach((b) => b.classList.remove("active"));
@@ -3228,19 +3681,20 @@
       onSubViewActivated(sub);
       const hash = panel === sub ? panel : `${panel}/${sub}`;
       if (location.hash !== `#${hash}`) history.replaceState(null, "", `#${hash}`);
+      global.NexusBraille?.onViewActivated?.(sub || panel);
     }
 
     document.querySelectorAll("nav.menu button").forEach((btn) => {
-      btn.addEventListener("click", () => showView(btn.dataset.view));
+      btn.addEventListener("click", () => showView(btn.dataset.view, { fromNav: true }));
     });
     document.body.addEventListener("click", (ev) => {
       const jump = ev.target.closest?.("[data-view-jump]");
-      if (jump) showView(jump.dataset.viewJump);
+      if (jump) showView(jump.dataset.viewJump, { fromNav: true });
     });
 
     function applyHashView() {
       const raw = (location.hash || "#command").replace("#", "") || "command";
-      showView(raw);
+      showView(raw, { force: true });
     }
     window.addEventListener("hashchange", applyHashView);
     $("dns-refresh-btn")?.addEventListener("click", async () => {
@@ -3257,9 +3711,6 @@
         if (btn) { btn.disabled = false; btn.textContent = "Refresh DNS field"; }
       }
     });
-    bootstrapPanel();
-    applyHashView();
-
     function applyOldManMode(on) {
       document.documentElement.classList.toggle("old-man", !!on);
       try { localStorage.setItem("nexus_old_man", on ? "1" : "0"); } catch (_) {}
@@ -3965,8 +4416,10 @@
     }
 
     let libraryBookId = null;
-    let libraryCatalog = { books: [], shelves: [], fonts: [] };
+    let libraryCatalog = { books: [], shelves: [], war_shelves: [], fonts: [], profiles: [] };
     let libraryDeweyFilter = null;
+    let libraryWarFilter = null;
+    let libraryProfile = localStorage.getItem("nexus_library_profile") || "hostess7";
     let librarySearchMode = false;
     let libraryFingerprint = null;
 
@@ -4020,11 +4473,62 @@
 
     function libraryBooksForShelf() {
       if (librarySearchMode) return libraryCatalog.searchHits || [];
+      if (libraryWarFilter) {
+        const shelf = (libraryCatalog.war_shelves || []).find((s) => s.code === libraryWarFilter);
+        return shelf?.books || [];
+      }
       if (libraryDeweyFilter) {
         const shelf = (libraryCatalog.shelves || []).find((s) => s.code === libraryDeweyFilter);
         return shelf?.books || [];
       }
       return libraryCatalog.books || [];
+    }
+
+    function renderLibraryProfiles(lib) {
+      const sel = $("library-profile-select");
+      const hint = $("library-profile-hint");
+      if (!sel) return;
+      const profiles = lib?.library_profiles || lib?.profiles || [];
+      if (!profiles.length) {
+        sel.innerHTML = '<option value="hostess7">Hostess 7 Field Library</option>';
+        if (hint) hint.textContent = lib?.profile_translation || "";
+        return;
+      }
+      const active = lib?.library_profile || libraryProfile;
+      sel.innerHTML = profiles.map((p) =>
+        `<option value="${esc(p.id)}"${p.id === active ? " selected" : ""}>${esc(p.short || p.id)} — ${esc(p.name)}</option>`
+      ).join("");
+      if (hint) {
+        const prof = profiles.find((p) => p.id === active);
+        hint.textContent = [lib?.profile_translation, prof?.description].filter(Boolean).join(" · ");
+      }
+    }
+
+    function renderLibraryWarShelves(lib) {
+      const el = $("library-war-shelves");
+      if (!el) return;
+      const shelves = lib?.war_shelves || [];
+      if (!shelves.length) {
+        el.innerHTML = "";
+        return;
+      }
+      const total = shelves.reduce((n, s) => n + (s.count || 0), 0);
+      el.innerHTML = `<div class="library-war-label">⚔ War studies · ${total} books</div>` +
+        shelves.map((s) =>
+          `<button type="button" class="library-dewey-btn${libraryWarFilter === s.code ? " active" : ""}" data-war="${esc(s.code)}">
+            <strong>${esc(s.icon || "⚔")} ${esc(s.code)}</strong><span>${s.count} · ${esc((s.title || "").split("—")[0].trim())}</span>
+          </button>`
+        ).join("");
+      el.querySelectorAll("[data-war]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          librarySearchMode = false;
+          libraryDeweyFilter = null;
+          libraryWarFilter = libraryWarFilter === btn.dataset.war ? null : btn.dataset.war;
+          renderLibraryWarShelves(libraryCatalog);
+          renderLibraryDewey(libraryCatalog);
+          renderLibraryShelf(libraryCatalog);
+        });
+      });
     }
 
     function renderLibraryDewey(lib) {
@@ -4043,43 +4547,85 @@
       el.querySelectorAll("[data-dewey]").forEach((btn) => {
         btn.addEventListener("click", () => {
           librarySearchMode = false;
+          libraryWarFilter = null;
           libraryDeweyFilter = libraryDeweyFilter === btn.dataset.dewey ? null : btn.dataset.dewey;
+          renderLibraryWarShelves(libraryCatalog);
           renderLibraryDewey(libraryCatalog);
           renderLibraryShelf(libraryCatalog);
         });
       });
     }
 
+    function onLibraryListPick(bookId, opts) {
+      if (!bookId) return;
+      selectLibraryBook(bookId);
+      if (opts?.openReader && libraryBookId && window.H7Reader) {
+        const book = (libraryCatalog.books || []).find((b) => b.id === libraryBookId);
+        H7Reader.open(libraryBookId, book, { braille: true });
+      }
+    }
+
     function renderLibraryShelf(lib) {
       const shelf = $("library-shelf");
+      const status = $("library-search-status");
       if (!shelf) return;
       const books = libraryBooksForShelf().filter((b) => b.ready !== false);
       if (!books.length) {
+        shelf.removeAttribute("role");
         shelf.innerHTML = librarySearchMode
           ? '<div class="empty">No matches — try another search or browse Dewey shelves.</div>'
           : '<div class="empty">No books in this Dewey shelf — upload to field drive.</div>';
+        if (status) status.textContent = librarySearchMode ? "0 search results" : "";
+        global.NexusBraille?.updateLibraryBraille(null);
         return;
       }
-      shelf.innerHTML = books.map((b) =>
-        `<button type="button" class="library-book-btn${libraryBookId === b.id ? " active" : ""}" data-book-id="${esc(b.id)}">
-          <strong>${esc(b.title)}</strong>
-          <em>${esc(b.author || "")} · Dewey ${esc(b.dewey || "?")} · ${esc(b.format || "H7")}</em>
-        </button>`
-      ).join("");
-      shelf.querySelectorAll("[data-book-id]").forEach((btn) => {
-        btn.addEventListener("click", () => selectLibraryBook(btn.dataset.bookId));
-      });
-      if (!libraryBookId && books[0]) selectLibraryBook(books[0].id);
+      let sorted = books;
+      if (global.NexusBraille?.renderBookListbox) {
+        sorted = NexusBraille.renderBookListbox(shelf, books, libraryBookId, onLibraryListPick) || books;
+      } else {
+        sorted = [...books].sort((a, b) =>
+          String(a.title || "").localeCompare(String(b.title || ""), undefined, { sensitivity: "base" })
+        );
+        shelf.innerHTML = sorted.map((b) =>
+          `<button type="button" class="library-book-btn${libraryBookId === b.id ? " active" : ""}" data-book-id="${esc(b.id)}">
+            <strong>${esc(b.title)}</strong>
+            <em>${esc(b.author || "")} · Dewey ${esc(b.dewey || "?")} · ${esc(b.format || "H7")}</em>
+          </button>`
+        ).join("");
+        shelf.querySelectorAll("[data-book-id]").forEach((btn) => {
+          btn.addEventListener("click", () => selectLibraryBook(btn.dataset.bookId));
+        });
+      }
+      if (status) {
+        status.textContent = librarySearchMode
+          ? `${sorted.length} search result${sorted.length === 1 ? "" : "s"} · A to Z`
+          : `${sorted.length} books · A to Z`;
+      }
+      if (!libraryBookId && sorted[0]) selectLibraryBook(sorted[0].id);
+      else if (libraryBookId) {
+        const book = sorted.find((b) => b.id === libraryBookId);
+        const idx = sorted.findIndex((b) => b.id === libraryBookId);
+        global.NexusBraille?.updateLibraryBraille(book, { index: idx, total: sorted.length });
+      }
     }
 
     function selectLibraryBook(bookId) {
       libraryBookId = bookId;
+      const shelfBooks = libraryBooksForShelf().filter((b) => b.ready !== false);
+      const sorted = global.NexusBraille?.sortBooksAlpha
+        ? NexusBraille.sortBooksAlpha(shelfBooks)
+        : shelfBooks;
       const book = (libraryCatalog.books || []).find((b) => b.id === bookId)
-        || libraryBooksForShelf().find((b) => b.id === bookId);
-      document.querySelectorAll(".library-book-btn").forEach((b) => {
-        b.classList.toggle("active", b.dataset.bookId === bookId);
+        || sorted.find((b) => b.id === bookId);
+      const idx = sorted.findIndex((b) => b.id === bookId);
+      document.querySelectorAll(".library-book-btn, .library-book-option").forEach((b) => {
+        const on = b.dataset.bookId === bookId;
+        b.classList.toggle("active", on);
+        if (b.getAttribute("role") === "option") b.setAttribute("aria-selected", on ? "true" : "false");
       });
       $("library-title").textContent = book?.title || bookId;
+      global.NexusBraille?.updateLibraryBraille(book, { index: idx >= 0 ? idx : 0, total: sorted.length });
+      global.NexusBraille?.announce?.(`${book?.title || bookId} selected. ${idx >= 0 ? idx + 1 : 1} of ${sorted.length}.`);
       $("library-meta").textContent = [
         book?.author || "",
         book?.dewey ? `Dewey ${book.dewey} — ${book.dewey_label || ""}` : "",
@@ -4126,12 +4672,20 @@
       const same = !!lib?.unchanged;
       const touched = lib?.last_touched || "";
       const touchedSame = lib?.last_touched_same !== false;
-      const libName = lib?.librarian?.name || "Hostess7 Librarian";
+      const libName = lib?.library_profile_name || lib?.librarian?.name || "Hostess7 Librarian";
+      const warN = lib?.war_book_count || 0;
+      const fd = lib?.field_drive || {};
+      const trackN = fd.tracking?.total || 0;
+      const fdLine = fd.primary_root
+        ? `Library: ${fd.textbooks_h7_dewey || fd.textbooks_h7 || 0} H7 shelved · ${fd.brain_corpus_count || 0} virtual · Home tracks ${trackN}`
+        : "";
       el.innerHTML = `
-        <span><strong>${esc(libName)}</strong> · field drive only</span>
+        <span><strong>${esc(libName)}</strong> · World's Best Dewey · <code>${esc((fd.primary_root || "field drive").split("/").slice(-2).join("/"))}</code></span>
         <span class="${same ? "same" : "changed"}">${same ? "Field exact same" : "Field updated"} · sig ${esc(fp)}</span>
         ${touched ? `<span class="${touchedSame ? "same" : "changed"}">Last touched: ${esc(touched)}${touchedSame ? " (unchanged)" : " (changed)"}</span>` : ""}
-        <span>${(lib?.ready_count || 0)} books · ${(lib?.librarian?.isbn_count || 0)} ISBN</span>`;
+        <span>${(lib?.ready_count || 0)} books · ${warN} war · ${(lib?.librarian?.isbn_count || 0)} ISBN</span>
+        ${fdLine ? `<span>${esc(fdLine)}</span>` : ""}
+        <span><a href="https://github.com/ZacharyGeurts/NEXUS-Shield/tree/main/library/dewey" target="_blank" rel="noopener">GitHub Dewey shelves</a></span>`;
     }
 
     function renderLibraryUploadDewey(lib) {
@@ -4151,8 +4705,15 @@
       libraryCatalog = {
         books: lib?.books || [],
         shelves: lib?.shelves || [],
+        war_shelves: lib?.war_shelves || [],
         fonts: lib?.fonts || [],
         librarian: lib?.librarian || {},
+        library_profiles: lib?.library_profiles || [],
+        library_profile: lib?.library_profile || libraryProfile,
+        library_profile_name: lib?.library_profile_name || "",
+        profile_translation: lib?.profile_translation || "",
+        war_book_count: lib?.war_book_count || 0,
+        field_drive: lib?.field_drive || {},
         field_fingerprint: lib?.field_fingerprint,
         unchanged: lib?.unchanged,
         last_touched: lib?.last_touched,
@@ -4160,34 +4721,64 @@
         ready_count: lib?.ready_count,
         searchHits: libraryCatalog.searchHits || [],
       };
+      if (lib?.library_profile) libraryProfile = lib.library_profile;
       if (window.H7Reader?.setFonts) H7Reader.setFonts(libraryCatalog.fonts);
+      renderLibraryProfiles(lib);
       renderLibrarySyncBar(lib);
+      renderLibraryWarShelves(lib);
       renderLibraryDewey(lib);
       renderLibraryShelf(lib);
       renderLibraryUploadDewey(lib);
       if (libraryBookId) selectLibraryBook(libraryBookId);
     }
 
+    async function switchLibraryProfile(profileId) {
+      if (!profileId || profileId === libraryProfile) return;
+      libraryProfile = profileId;
+      localStorage.setItem("nexus_library_profile", profileId);
+      libraryFingerprint = null;
+      libraryWarFilter = null;
+      libraryDeweyFilter = null;
+      try {
+        const res = await fetch(`/api/library/catalog?profile=${encodeURIComponent(profileId)}`, { cache: "no-store" });
+        const data = await res.json();
+        renderLibrary(data);
+      } catch {
+        renderLibrary(lastPanelData?.h7_library || { books: [] });
+      }
+    }
+
     async function searchLibrary(query) {
       const q = String(query || "").trim();
+      const status = $("library-search-status");
       if (!q) {
         librarySearchMode = false;
         libraryCatalog.searchHits = [];
+        if (status) status.textContent = "Search cleared — showing all books A to Z";
+        global.NexusBraille?.announce?.("Search cleared.");
         renderLibraryShelf(libraryCatalog);
         return;
       }
+      if (status) status.textContent = "Searching…";
+      global.NexusBraille?.announce?.(`Searching library for ${q}`);
       try {
         const res = await fetch(`/api/library/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
         const data = await res.json();
         librarySearchMode = true;
         libraryDeweyFilter = null;
+        libraryWarFilter = null;
         libraryCatalog.searchHits = data.hits || [];
+        renderLibraryWarShelves(libraryCatalog);
         renderLibraryDewey(libraryCatalog);
         renderLibraryShelf(libraryCatalog);
+        const n = (libraryCatalog.searchHits || []).length;
+        global.NexusBraille?.announce?.(`${n} book${n === 1 ? "" : "s"} found for ${q}`);
       } catch {
         librarySearchMode = true;
         libraryCatalog.searchHits = [];
         renderLibraryShelf(libraryCatalog);
+        if (status) status.textContent = "Search failed — try again";
+        global.NexusBraille?.announce?.("Library search failed.", { polite: false });
       }
     }
 
@@ -4218,6 +4809,7 @@
       }
     }
 
+    $("library-profile-select")?.addEventListener("change", (ev) => switchLibraryProfile(ev.target.value));
     $("library-search-btn")?.addEventListener("click", () => searchLibrary($("library-search")?.value));
     $("library-search")?.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter") searchLibrary(ev.target.value);
@@ -4225,7 +4817,12 @@
     $("library-open-reader")?.addEventListener("click", () => {
       if (!libraryBookId || !window.H7Reader) return;
       const book = (libraryCatalog.books || []).find((b) => b.id === libraryBookId);
-      H7Reader.open(libraryBookId, book);
+      H7Reader.open(libraryBookId, book, { braille: global.NexusBraille?.brailleReaderOn?.() !== false });
+    });
+    document.addEventListener("nexus-open-braille-reader", () => {
+      if (!libraryBookId || !window.H7Reader) return;
+      const book = (libraryCatalog.books || []).find((b) => b.id === libraryBookId);
+      H7Reader.open(libraryBookId, book, { braille: true });
     });
     $("library-upload-toggle")?.addEventListener("click", () => {
       $("library-upload-panel")?.classList.toggle("open");
@@ -6511,7 +7108,8 @@
       }).join("");
     }
 
-    function renderUSField(us) {
+    function renderUSField(us, h7Lib) {
+      if (h7Lib && !lastPanelData?.h7_library) lastPanelData = { ...(lastPanelData || {}), h7_library: h7Lib };
       if (!us) {
         ["us-identity", "us-network", "us-sockets", "us-gatekeeper", "us-trust", "us-storage"].forEach((id) => {
           const el = $(id);
@@ -6620,15 +7218,42 @@
         ]);
       }
       const storage = us.field_storage || {};
+      const fd = lastPanelData?.h7_library?.field_drive || {};
+      const tracking = fd.tracking || {};
       const storEl = $("us-storage");
       if (storEl) {
         const arts = storage.artifacts || [];
-        if (arts.length) {
-          storEl.innerHTML = `<table class="us-table"><thead><tr><th>artifact</th><th>size</th></tr></thead><tbody>${
-            arts.map((a) => `<tr><td>${esc((a.path || "").split("/").pop())}</td><td>${a.exists ? esc(String(a.size)) : "missing"}</td></tr>`).join("")
-          }</tbody></table>` + (storage.packet_ring_lines ? `<div class="meta" style="margin-top:6px">packet ring: ${storage.packet_ring_lines} lines</div>` : "");
+        const trackRows = [
+          ...(tracking.lists?.manifest || []).slice(0, 8),
+          ...(tracking.lists?.staging || []).slice(0, 6),
+          ...(tracking.lists?.seed || []).slice(0, 6),
+        ];
+        const invLine = fd.primary_root
+          ? `<div class="meta" style="margin-bottom:8px">` +
+            `${fd.textbooks_h7_dewey || 0} H7 in Dewey shelves · ${fd.textbooks_h7_flat || 0} flat · ` +
+            `${fd.brain_corpus_count || 0} virtual corpora · ${tracking.total || 0} tracked (home only)</div>`
+          : "";
+        const trackHtml = trackRows.length
+          ? `<div class="meta" style="margin:8px 0 4px;color:var(--gold)">Tracking lists (not in Library tab)</div>` +
+            `<table class="us-table"><thead><tr><th>title</th><th>status</th></tr></thead><tbody>` +
+            trackRows.map((t) =>
+              `<tr><td>${esc(t.title || t.id)}</td><td>${esc(t.status || "—")}</td></tr>`
+            ).join("") +
+            `</tbody></table>` +
+            (tracking.total > trackRows.length
+              ? `<div class="meta" style="margin-top:4px">+${tracking.total - trackRows.length} more on field drive</div>`
+              : "")
+          : "";
+        if (arts.length || invLine || trackHtml) {
+          storEl.innerHTML = invLine +
+            (arts.length
+              ? `<table class="us-table"><thead><tr><th>artifact</th><th>size</th></tr></thead><tbody>${
+                  arts.map((a) => `<tr><td>${esc((a.path || "").split("/").pop())}</td><td>${a.exists ? esc(String(a.size)) : "missing"}</td></tr>`).join("")
+                }</tbody></table>` + (storage.packet_ring_lines ? `<div class="meta" style="margin-top:6px">packet ring: ${storage.packet_ring_lines} lines</div>` : "")
+              : "") +
+            trackHtml;
         } else {
-          storEl.innerHTML = '<span class="meta">Field storage catalog not in slim snapshot — full publish on /api/status.</span>';
+          storEl.innerHTML = '<span class="meta">Field storage warming up — TEAM drive catalog on next refresh.</span>';
         }
       }
       if (global.renderUSDashboard) {
@@ -6881,12 +7506,23 @@
 
     function renderConnections(gk, trusted, blocked, lockdownFirst) {
       const el = $("connections");
+      if (!el) return;
       const conns = gk?.connections || [];
       if (!conns.length) {
         const raw = gk?._fallback || [];
-        if (!raw.length) { el.innerHTML = '<div class="empty">No active flows</div>'; return; }
+        if (!raw.length) {
+          el.innerHTML = '<div class="empty">No active flows</div>';
+          return;
+        }
+        const why = gk?.why_no_auto_block
+          ? `<div class="meta" style="margin-bottom:8px;">${esc(gk.why_no_auto_block)}</div>`
+          : "";
+        el.innerHTML =
+          why +
+          `<div class="conn-section-head rec">Live flows (${raw.length}) — gatekeeper catalog pending</div>` +
+          raw.slice(0, 40).map((line) => `<div class="conn-row conn-row--raw"><code>${esc(line)}</code></div>`).join("");
+        return;
       }
-      if (!conns.length) return;
       const sorted = [...conns].sort((a, b) => {
         const ra = a.trust_rank ?? 5;
         const rb = b.trust_rank ?? 5;
@@ -7230,12 +7866,30 @@
       else checkNexusUpdate(true);
     });
 
+    function parsePanelJson(text) {
+      try {
+        return JSON.parse(text);
+      } catch (_) {
+        const raw = String(text || "").trim();
+        let depth = 0;
+        for (let i = 0; i < raw.length; i++) {
+          const ch = raw[i];
+          if (ch === "{") depth++;
+          else if (ch === "}") {
+            depth--;
+            if (depth === 0) return JSON.parse(raw.slice(0, i + 1));
+          }
+        }
+        throw new Error("invalid panel JSON");
+      }
+    }
+
     async function refresh() {
       panelFetchInFlight = true;
       updateTabLoadProgress(lastPanelData, { fetching: true });
       try {
         const res = await fetch("/api/status", { cache: "no-store" });
-        const data = await res.json();
+        const data = parsePanelJson(await res.text());
         panelFetchInFlight = false;
         paintPanel(data);
       } catch {
@@ -7299,8 +7953,20 @@
     setInterval(() => checkNexusUpdate(false), 3600000);
     window.showView = showView;
     window.refresh = refresh;
-    refresh();
-    setInterval(refresh, 2000);
+
+    function panelBoot() {
+      bootstrapPanel();
+      applyHashView();
+      refresh();
+      if (!window._nexusPanelRefreshTimer) {
+        window._nexusPanelRefreshTimer = setInterval(refresh, 2000);
+      }
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", panelBoot);
+    } else {
+      panelBoot();
+    }
   </script>
   <footer class="app-footer" role="contentinfo">
     <strong>NEXUS-Shield</strong> — <a href="https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a> (free to use with attribution).

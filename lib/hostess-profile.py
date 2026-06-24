@@ -51,20 +51,42 @@ def _norm_url(raw: str) -> str:
         return ""
 
 
+def _operator_default() -> dict[str, Any]:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "operator_default", INSTALL / "lib" / "operator-default.py",
+        )
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.load_default()
+    except Exception:
+        pass
+    return {}
+
+
 def default_profile() -> dict[str, Any]:
     host = socket.gethostname()
+    od = _operator_default()
+    urls = []
+    for u in od.get("urls") or []:
+        nu = _norm_url(str(u))
+        if nu:
+            urls.append(nu)
     return {
         "schema": "hostess-profile/v1",
         "updated": _now(),
-        "display_name": "",
-        "address": "",
+        "display_name": str(od.get("display_name") or "")[:120],
+        "address": str(od.get("address") or "")[:240],
         "profile_kind": "person",
-        "urls": [],
+        "urls": urls[:64],
         "host_machine": {
             "hostname": host,
             "fqdn": socket.getfqdn(),
             "explicit_label": f"This host · {host}",
-            "remember": True,
+            "remember": bool(od.get("remember", True)),
         },
         "notes": "",
     }
@@ -72,6 +94,19 @@ def default_profile() -> dict[str, Any]:
 
 def load_profile() -> dict[str, Any]:
     doc = _load_json(PROFILE, {})
+    if not doc.get("schema") or (not doc.get("display_name") and not doc.get("address")):
+        try:
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location(
+                "operator_default", INSTALL / "lib" / "operator-default.py",
+            )
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                doc = mod.seed_hostess_profile()
+        except Exception:
+            doc = default_profile() if not doc.get("schema") else doc
     if not doc.get("schema"):
         doc = default_profile()
     base = default_profile()

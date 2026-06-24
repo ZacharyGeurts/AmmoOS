@@ -14,6 +14,7 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield
 HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
 HOSTESS7_TEAM_FIELD = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
 SEED = INSTALL / "data" / "book-bibliography-seed.json"
+WAR_SEED = INSTALL / "data" / "war-books-seed.json"
 
 LIBRARIAN = {
     "name": "Hostess7 World's Best Librarian",
@@ -100,15 +101,32 @@ def make_ein(
     return f"H7-{src}-{digest}"
 
 
+def _load_seed_doc(path: Path) -> dict[str, dict[str, Any]]:
+    if not path.is_file():
+        return {}
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        return {str(r["id"]): r for r in doc.get("books", []) if r.get("id")}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
 def _load_seed() -> dict[str, dict[str, Any]]:
-    for path in (SEED, INSTALL / "data" / "book-bibliography-seed.json"):
+    merged: dict[str, dict[str, Any]] = {}
+    for path in (SEED, WAR_SEED, INSTALL / "data" / "book-bibliography-seed.json", INSTALL / "data" / "war-books-seed.json"):
+        for bid, row in _load_seed_doc(path).items():
+            merged.setdefault(bid, {}).update(row)
+    return merged
+
+
+def _load_war_seed_doc() -> dict[str, Any]:
+    for path in (WAR_SEED, INSTALL / "data" / "war-books-seed.json"):
         if path.is_file():
             try:
-                doc = json.loads(path.read_text(encoding="utf-8"))
-                return {str(r["id"]): r for r in doc.get("books", []) if r.get("id")}
+                return json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 pass
-    return {}
+    return {"books": [], "ascertain_keywords": []}
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -123,6 +141,21 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
         except json.JSONDecodeError:
             continue
     return rows
+
+
+def _resolve_path(path: str) -> str:
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("h7_field_drive_tie", INSTALL / "lib" / "h7-field-drive-tie.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            resolved = mod.resolve_field_path(path)
+            if resolved:
+                return str(resolved)
+    except Exception:
+        pass
+    return path
 
 
 def _scan_field_meta() -> dict[str, dict[str, Any]]:
@@ -144,7 +177,11 @@ def _scan_field_meta() -> dict[str, dict[str, Any]]:
                 for row in doc.get("books") or []:
                     bid = str(row.get("id", ""))
                     if bid:
-                        by_id.setdefault(bid, {}).update(row)
+                        merged = dict(row)
+                        raw = str(row.get("path") or row.get("h7_path") or "")
+                        if raw:
+                            merged["path"] = _resolve_path(raw)
+                        by_id.setdefault(bid, {}).update(merged)
             except (OSError, json.JSONDecodeError):
                 pass
 
@@ -191,6 +228,17 @@ def _gutenberg_id_from_book_id(book_id: str) -> str:
         "tom_sawyer": "74",
         "alice": "11",
         "art_of_war": "132",
+        "on_war": "20586",
+        "jomini_art_of_war": "28235",
+        "caesar_gallic_war": "10657",
+        "herodotus_histories": "2707",
+        "grant_memoirs": "4367",
+        "red_badge_courage": "73",
+        "mahan_sea_power": "35899",
+        "story_of_siegfried": "54969",
+        "war_peace_tolstoy": "2600",
+        "all_quiet": "345",
+        "treaty_versailles": "15776",
         "bible_kjv": "10",
         "einstein_relativity": "30114",
         "flatland": "201",
@@ -303,13 +351,69 @@ def merge_into_book(book: dict[str, Any]) -> dict[str, Any]:
     for key in (
         "ein", "isbn_10", "isbn_13", "isbn_13_valid", "oclc", "lccn",
         "gutenberg_id", "openstax_slug", "publisher", "published_year",
-        "language", "lc_class", "pages", "covers",
+        "language", "lc_class", "pages", "covers", "dewey", "dewey_label",
+        "subject", "study_note",
     ):
         if bib.get(key):
             out[key] = bib[key]
     if bib.get("ein"):
         out["ein"] = bib["ein"]
     return out
+
+
+def _war_match_blob(row: dict[str, Any]) -> str:
+    return " ".join(
+        str(row.get(k, "")) for k in (
+            "id", "title", "author", "subject", "category", "description", "dewey",
+        )
+    ).lower()
+
+
+def ascertain_war_books(*, write: bool = True) -> dict[str, Any]:
+    """Study field-drive books for war content — merge war seed + on-disk matches."""
+    war_doc = _load_war_seed_doc()
+    keywords = [k.lower() for k in war_doc.get("ascertain_keywords") or [] if k]
+    seed_ids = {str(r["id"]) for r in war_doc.get("books") or [] if r.get("id")}
+    index = load_bibliography_index()
+    matched: list[dict[str, Any]] = []
+    studied: list[dict[str, Any]] = []
+
+    for bid, row in index.items():
+        blob = _war_match_blob(row)
+        is_seed = bid in seed_ids
+        kw_hits = [k for k in keywords if k in blob]
+        dewey = str(row.get("dewey", ""))
+        is_war_dewey = dewey.startswith("355") or dewey.startswith("940") or dewey.startswith("973.7")
+        if is_seed or kw_hits or is_war_dewey:
+            seed_row = _load_seed().get(bid, {})
+            study = {
+                "id": bid,
+                "title": row.get("title", bid),
+                "author": row.get("author", ""),
+                "dewey": seed_row.get("dewey") or row.get("dewey", ""),
+                "keyword_hits": kw_hits,
+                "on_field_drive": bool(row.get("path") or row.get("covers")),
+                "study_note": seed_row.get("study_note", ""),
+                "ascertained": _now(),
+            }
+            studied.append(study)
+            matched.append(enrich_record(bid, {**row, **seed_row}))
+
+    study_path = library_meta_dir() / "war_study.jsonl"
+    if write and studied:
+        study_path.parent.mkdir(parents=True, exist_ok=True)
+        lines = [json.dumps(s, ensure_ascii=False) for s in studied]
+        study_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    return {
+        "ok": True,
+        "war_book_count": len(studied),
+        "seed_count": len(seed_ids),
+        "on_drive": sum(1 for s in studied if s.get("on_field_drive")),
+        "study_path": str(study_path),
+        "books": matched,
+        "studied": studied,
+    }
 
 
 def librarian_status() -> dict[str, Any]:
@@ -653,7 +757,10 @@ def main() -> int:
         idx = load_bibliography_index()
         print(json.dumps(idx.get(bid) or enrich_record(bid), indent=2))
         return 0
-    print("usage: h7-library-librarian.py [status|build|search <q>|get <id>]", file=sys.stderr)
+    if cmd == "war":
+        print(json.dumps(ascertain_war_books(), indent=2))
+        return 0
+    print("usage: h7-library-librarian.py [status|build|search <q>|get <id>|war]", file=sys.stderr)
     return 1
 
 

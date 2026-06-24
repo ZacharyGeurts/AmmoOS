@@ -33,6 +33,7 @@
     fonts: [],
     touchStartY: 0,
     touchStartX: 0,
+    brailleMode: false,
   };
 
   function loadPrefs() {
@@ -101,13 +102,23 @@
     return data;
   }
 
-  async function open(bookId, bookMeta) {
+  function announce(msg) {
+    if (global.NexusBraille?.announce) NexusBraille.announce(msg);
+    else {
+      const el = document.getElementById("nexus-a11y-announcer");
+      if (el) el.textContent = String(msg || "");
+    }
+  }
+
+  async function open(bookId, bookMeta, opts) {
     loadPrefs();
     state.bookId = bookId;
     state.book = bookMeta || null;
+    state.brailleMode = !!(opts?.braille ?? global.NexusBraille?.brailleReaderOn?.());
     state.loading = true;
     ensureOverlay();
     renderChrome();
+    announce(`Opening ${bookMeta?.title || bookId} in accessible reader.`);
     try {
       const data = await fetchFullText(bookId);
       state.book = data.book || bookMeta;
@@ -137,6 +148,7 @@
     renderChrome();
     const body = overlay?.querySelector(".h7r-body");
     if (body) body.scrollTop = 0;
+    announce(`Page ${state.page} of ${max}`);
   }
 
   function prevPage() {
@@ -208,9 +220,10 @@
     overlay.id = "h7-reader-overlay";
     overlay.className = "h7r-overlay";
     overlay.innerHTML = `
-      <div class="h7r-shell">
+      <div class="h7r-shell" role="dialog" aria-modal="true" aria-label="Accessible book reader">
         <header class="h7r-top"></header>
-        <div class="h7r-body-wrap"><article class="h7r-body" tabindex="0"></article></div>
+        <div class="h7r-body-wrap"><article class="h7r-body" tabindex="0" aria-live="polite" aria-atomic="true"></article></div>
+        <div class="h7r-braille-strip" id="h7r-braille-strip" hidden aria-label="Braille line for refreshable display"></div>
         <footer class="h7r-bottom"></footer>
         <button type="button" class="h7r-close" aria-label="Close reader">✕</button>
       </div>`;
@@ -243,13 +256,14 @@
     ).join("");
 
     top.innerHTML = `
-      <div class="h7r-title">${esc(title)}</div>
+      <div class="h7r-title" id="h7r-title">${esc(title)}</div>
       <div class="h7r-controls">
-        <label>Size <input type="range" min="12" max="32" step="1" class="h7r-fs" value="${state.prefs.fontSize}"></label>
-        <label>Text <input type="color" class="h7r-fg" value="${state.prefs.fontColor}"></label>
-        <label>Bg <input type="color" class="h7r-bg" value="${state.prefs.bgColor}"></label>
-        <label>Font <select class="h7r-font">${fontOpts}</select></label>
-        <label>Ratio <select class="h7r-ratio">${ratioOpts}</select></label>
+        <label><input type="checkbox" class="h7r-braille-toggle" ${state.brailleMode ? "checked" : ""}> Braille line</label>
+        <label>Size <input type="range" min="12" max="32" step="1" class="h7r-fs" value="${state.prefs.fontSize}" aria-label="Font size"></label>
+        <label>Text <input type="color" class="h7r-fg" value="${state.prefs.fontColor}" aria-label="Text color"></label>
+        <label>Bg <input type="color" class="h7r-bg" value="${state.prefs.bgColor}" aria-label="Background color"></label>
+        <label>Font <select class="h7r-font" aria-label="Font">${fontOpts}</select></label>
+        <label>Ratio <select class="h7r-ratio" aria-label="Page ratio">${ratioOpts}</select></label>
       </div>`;
 
     const max = Math.max(1, state.pages.length);
@@ -281,6 +295,11 @@
       state.prefs.ratioId = e.target.value;
       applyPrefs();
     });
+    top.querySelector(".h7r-braille-toggle")?.addEventListener("change", (e) => {
+      state.brailleMode = !!e.target.checked;
+      renderContent();
+      announce(state.brailleMode ? "Braille line on." : "Braille line off.");
+    });
     bottom.querySelector(".h7r-prev")?.addEventListener("click", prevPage);
     bottom.querySelector(".h7r-next")?.addEventListener("click", nextPage);
     bottom.querySelector(".h7r-slider")?.addEventListener("input", (e) => setPage(Number(e.target.value)));
@@ -292,10 +311,14 @@
     const wrap = overlay.querySelector(".h7r-body-wrap");
     const ratio = ratioSpec();
     const p = state.prefs;
+    const brailleStrip = overlay.querySelector("#h7r-braille-strip");
     if (state.loading) {
       body.textContent = "Opening book…";
+      body.setAttribute("aria-busy", "true");
+      if (brailleStrip) brailleStrip.hidden = true;
       return;
     }
+    body.removeAttribute("aria-busy");
     wrap.style.background = p.bgColor;
     body.style.color = p.fontColor;
     body.style.background = p.bgColor;
@@ -307,6 +330,15 @@
     body.style.margin = "0 auto";
     const text = state.pages[state.page - 1] || "";
     body.textContent = text;
+    body.setAttribute("aria-label", `${state.book?.title || state.bookId || "Book"} page ${state.page} of ${state.pages.length}`);
+    if (brailleStrip) {
+      const show = state.brailleMode && global.NexusBraille?.toBraille;
+      brailleStrip.hidden = !show;
+      if (show) {
+        const sample = text.slice(0, 280);
+        brailleStrip.textContent = NexusBraille.toBraille(sample);
+      }
+    }
   }
 
   function setFonts(fonts) {

@@ -1,0 +1,327 @@
+{
+  "records": {
+    "census:home_operator": {
+      "agency_id": "census_field",
+      "name": "Operator home",
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "role": "home",
+      "category": "census",
+      "source": "test+census_geographies+census_geographies+census_geographies+census_geographies",
+      "locations": [
+        {
+          "label": "",
+          "address": "",
+          "lat": 45.7452,
+          "lon": -87.0646,
+          "place": "Michigan"
+        }
+      ],
+      "census_geographies": [
+        {
+          "layer": "States",
+          "name": "Michigan",
+          "geoid": "26",
+          "state": "26",
+          "county": "",
+          "tract": "",
+          "place": ""
+        },
+        {
+          "layer": "County Subdivisions",
+          "name": "Escanaba city",
+          "geoid": "2604126360",
+          "state": "26",
+          "county": "041",
+          "tract": "",
+          "place": ""
+        },
+        {
+          "layer": "Urban Areas",
+          "name": "Escanaba, MI Urban Area",
+          "geoid": "27847",
+          "state": "",
+          "county": "",
+          "tract": "",
+          "place": ""
+        },
+        {
+          "layer": "Incorporated Places",
+          "name": "Escanaba city",
+          "geoid": "2626360",
+          "state": "26",
+          "county": "",
+          "tract": "",
+          "place": "26360"
+        },
+        {
+          "layer": "Counties",
+          "name": "Delta County",
+          "geoid": "26041",
+          "state": "26",
+          "county": "041",
+          "tract": "",
+          "place": ""
+        },
+        {
+          "layer": "2024 State Legislative Districts - Upper",
+          "name": "State Senate District 38",
+          "geoid": "26038",
+          "state": "26",
+          "county": "",
+          "tract": "",
+          "place": ""
+        },
+        {
+          "layer": "2024 State Legislative Districts - Lower",
+          "name": "State House District 108",
+          "geoid": "26108",
+          "state": "26",
+          "county": "",
+          "tract": "",
+          "place": ""
+        },
+        {
+          "layer": "2020 Census Blocks",
+          "name": "Block 1018",
+          "geoid": "260419710001018",
+          "state": "26",
+          "county": "041",
+          "tract": "971000",
+          "place": ""
+        },
+        {
+          "layer": "Census Tracts",
+          "name": "Census Tract 9710",
+          "geoid": "26041971000",
+          "state": "26",
+          "county": "041",
+          "tract": "971000",
+          "place": ""
+        },
+        {
+          "layer": "119th Congressional Districts",
+          "name": "Congressional District 1",
+          "geoid": "2601",
+          "state": "26",
+          "county": "",
+          "tract": "",
+          "place": ""
+        }
+      ],
+      "public_records": true,
+      "notes": "Auto-populated from free public census / government geocoder records.",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:States:26": {
+      "agency_id": "census_field",
+      "name": "Michigan",
+      "category": "census",
+      "geoid": "26",
+      "layer": "States",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — States",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:County Subdivisions:2604126360": {
+      "agency_id": "census_field",
+      "name": "Escanaba city",
+      "category": "census",
+      "geoid": "2604126360",
+      "layer": "County Subdivisions",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — County Subdivisions",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:Urban Areas:27847": {
+      "agency_id": "census_field",
+      "name": "Escanaba, MI Urban Area",
+      "category": "census",
+      "geoid": "27847",
+      "layer": "Urban Areas",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — Urban Areas",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:Incorporated Places:2626360": {
+      "agency_id": "census_field",
+      "name": "Escanaba city",
+      "category": "census",
+      "geoid": "2626360",
+      "layer": "Incorporated Places",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — Incorporated Places",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:Counties:26041": {
+      "agency_id": "census_field",
+      "name": "Delta County",
+      "category": "census",
+      "geoid": "26041",
+      "layer": "Counties",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — Counties",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:2024 State Legislative Districts - Upper:26038": {
+      "agency_id": "census_field",
+      "name": "State Senate District 38",
+      "category": "census",
+      "geoid": "26038",
+      "layer": "2024 State Legislative Districts - Upper",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — 2024 State Legislative Districts - Upper",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:2024 State Legislative Districts - Lower:26108": {
+      "agency_id": "census_field",
+      "name": "State House District 108",
+      "category": "census",
+      "geoid": "26108",
+      "layer": "2024 State Legislative Districts - Lower",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — 2024 State Legislative Districts - Lower",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:2020 Census Blocks:260419710001018": {
+      "agency_id": "census_field",
+      "name": "Block 1018",
+      "category": "census",
+      "geoid": "260419710001018",
+      "layer": "2020 Census Blocks",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — 2020 Census Blocks",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:Census Tracts:26041971000": {
+      "agency_id": "census_field",
+      "name": "Census Tract 9710",
+      "category": "census",
+      "geoid": "26041971000",
+      "layer": "Census Tracts",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — Census Tracts",
+      "updated": "2026-06-24T04:58:16Z"
+    },
+    "census:geo:119th Congressional Districts:2601": {
+      "agency_id": "census_field",
+      "name": "Congressional District 1",
+      "category": "census",
+      "geoid": "2601",
+      "layer": "119th Congressional Districts",
+      "source": "us_census_geocoder",
+      "public_records": true,
+      "lat": 45.7452,
+      "lon": -87.0646,
+      "notes": "Public geography layer near operator — 119th Congressional Districts",
+      "updated": "2026-06-24T04:58:16Z"
+    }
+  },
+  "import_log": [
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:home_operator"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:States:26"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:County Subdivisions:2604126360"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:Urban Areas:27847"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:Incorporated Places:2626360"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:Counties:26041"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:2024 State Legislative Districts - Upper:26038"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:2024 State Legislative Districts - Lower:26108"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:2020 Census Blocks:260419710001018"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:Census Tracts:26041971000"
+    },
+    {
+      "agency_id": "census_field",
+      "format_id": "auto_populate",
+      "merged": 1,
+      "imported_at": "2026-06-24T04:58:16Z",
+      "record_key": "census:geo:119th Congressional Districts:2601"
+    }
+  ],
+  "updated": "2026-06-24T04:58:16Z"
+}

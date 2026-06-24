@@ -44,7 +44,21 @@
     "k12": {"code": "370", "label": "K-12 textbooks"},
     "vision": {"code": "006.3", "label": "Computer vision"},
     "biography": {"code": "920", "label": "Biography"},
-    "program": {"code": "005.4", "label": "Systems & programs"}
+    "program": {"code": "005.4", "label": "Systems & programs"},
+    "military": {"code": "355", "label": "Military science"},
+    "military_strategy": {"code": "355.02", "label": "Military art & science — strategy"},
+    "military_theory": {"code": "355.02", "label": "Military theory & strategy"},
+    "military_history": {"code": "355.009", "label": "Military history"},
+    "naval_warfare": {"code": "359.009", "label": "Naval history & warfare"},
+    "civil_war": {"code": "973.7", "label": "United States — Civil War"},
+    "civil_war_fiction": {"code": "813.4", "label": "American war fiction"},
+    "world_war_i": {"code": "940.53", "label": "World War I"},
+    "world_war_ii": {"code": "940.54", "label": "World War II"},
+    "napoleonic_wars": {"code": "940.27", "label": "Napoleonic Wars"},
+    "us_military_history": {"code": "973", "label": "United States history"},
+    "world_military_history": {"code": "909", "label": "World history"},
+    "war_epic": {"code": "398.209", "label": "War epics & heroic legend"},
+    "warfare": {"code": "355", "label": "Warfare & military science"}
   },
   "keyword_rules": [
     {"tokens": ["python", "programming", "software", "algorithm", "computer"], "code": "005"},
@@ -62,6 +76,13 @@
     {"tokens": ["poetry", "verse", "poem"], "code": "811"},
     {"tokens": ["civics", "government", "political", "constitution"], "code": "320"},
     {"tokens": ["vision", "ocr", "existence"], "code": "006.3"},
-    {"tokens": ["biography", "memoir"], "code": "920"}
+    {"tokens": ["biography", "memoir"], "code": "920"},
+    {"tokens": ["art of war", "sun tzu", "strategy", "tactics", "clausewitz", "jomini", "on war"], "code": "355.02"},
+    {"tokens": ["military", "army", "navy", "soldier", "warfare", "combat", "siege", "campaign"], "code": "355"},
+    {"tokens": ["civil war", "grant", "gettysburg", "vicksburg", "appomattox", "confederate", "union army"], "code": "973.7"},
+    {"tokens": ["world war i", "wwi", "trench", "versailles", "western front"], "code": "940.53"},
+    {"tokens": ["world war ii", "wwii", "d-day", "holocaust", "normandy", "pearl harbor"], "code": "940.54"},
+    {"tokens": ["napoleon", "waterloo", "napoleonic"], "code": "940.27"},
+    {"tokens": ["naval", "sea power", "fleet", "admiral"], "code": "359.009"}
   ]
 }

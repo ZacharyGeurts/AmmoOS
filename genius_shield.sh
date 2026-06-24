@@ -68,13 +68,16 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/human-registry.py" "${ROOT}/lib/safe-signal-touch.py" "${ROOT}/lib/audio-train.py" "${ROOT}/lib/pet-signal-guard.py" \
   "${ROOT}/lib/home-protector.py" "${ROOT}/lib/heavyboi-importer.py" \
   "${ROOT}/lib/signals-field.py" "${ROOT}/lib/fcc-signal-lookup.py" \
+  "${ROOT}/lib/field-antenna-orchestrator.py" "${ROOT}/lib/field-radio-catcher.py" \
   "${ROOT}/lib/field-material-discern.py" "${ROOT}/lib/gps-precision.py" \
-  "${ROOT}/lib/precision-field.py" "${ROOT}/lib/hostess-profile.py" "${ROOT}/lib/host-security-tier.py" \
+  "${ROOT}/lib/precision-field.py" "${ROOT}/lib/operator-default.py" "${ROOT}/lib/panel-i18n.py" "${ROOT}/lib/hostess-profile.py" "${ROOT}/lib/host-security-tier.py" \
   "${ROOT}/lib/field-dns.py" "${ROOT}/lib/dns-planetary-security.py" \
+  "${ROOT}/lib/field-outside-talk.py" "${ROOT}/lib/field-outside-asm.c" \
+  "${ROOT}/lib/field-drive-system.py" \
   "${ROOT}/lib/dns-admin-portal.py" "${ROOT}/lib/equipment-room-field.py" \
   "${ROOT}/lib/dns-multipoint-identity.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
-  "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/field-dns.sh" "${ROOT}/lib/dns-admin-portal.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
+  "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/field-antenna.sh" "${ROOT}/lib/field-radio-catcher.sh" "${ROOT}/lib/field-antenna-launcher.sh" "${ROOT}/scripts/field-antenna-test.sh" "${ROOT}/lib/field-dns.sh" "${ROOT}/lib/field-outside-talk.sh" "${ROOT}/lib/field-outside-asm.sh" "${ROOT}/lib/field-drive-system.sh" "${ROOT}/lib/dns-admin-portal.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
   "${ROOT}/lib/honorability.sh" "${ROOT}/lib/field-rf-sentinel.sh" "${ROOT}/lib/police-agency.sh" \
   "${ROOT}/lib/field-command.sh" "${ROOT}/lib/gov-intel.sh" "${ROOT}/lib/program-tags.sh" \
@@ -82,6 +85,15 @@ chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/l
 chmod 555 /usr/local/lib/nexus-shield/lib/friendly-guard.py /usr/local/lib/nexus-shield/lib/friendly-guard.sh 2>/dev/null || true
 chmod 755 /usr/local/lib/nexus-shield/lib/*.py 2>/dev/null || true
 chmod -R a+rX /usr/local/lib/nexus-shield/data 2>/dev/null || true
+# Field Outside ASM — minimal egress probe (field-fast, no shell deps)
+if [[ -f /usr/local/lib/nexus-shield/lib/field-outside-asm.sh ]]; then
+  # shellcheck source=/dev/null
+  source /usr/local/lib/nexus-shield/lib/nexus-common.sh
+  NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield
+  # shellcheck source=/dev/null
+  source /usr/local/lib/nexus-shield/lib/field-outside-asm.sh
+  nexus_field_outside_asm_build 2>/dev/null || true
+fi
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/lib/nexus-shield/bin/nexus
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/bin/nexus
 install -m 755 -o root -g nexus "${ROOT}/nexus.sh" /usr/local/bin/nexus.sh
@@ -89,6 +101,8 @@ chmod 755 "${ROOT}/nexus.sh" 2>/dev/null || true
 install -m 750 -o root -g nexus "${ROOT}/lib/nexus-daemon.sh" /usr/local/lib/nexus-shield/lib/
 mkdir -p /var/lib/nexus-shield/shadow /var/lib/nexus-shield/behavior /var/lib/nexus-shield/hostess7-cache
 touch /var/log/nexus-alerts.log
+NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield NEXUS_STATE_DIR=/var/lib/nexus-shield \
+  python3 /usr/local/lib/nexus-shield/lib/operator-default.py seed 2>/dev/null || true
 
 # Ship canonical config (paranoia + shutdown guard included)
 install -m 640 -o root -g nexus "${ROOT}/config/nexus.conf" /usr/local/lib/nexus-shield/config/nexus.conf

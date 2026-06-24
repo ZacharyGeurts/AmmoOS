@@ -455,13 +455,58 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/field-antenna":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-antenna/catch-audio":
+            wav = STATE_DIR / "field-antenna-catch.wav"
+            if wav.is_file():
+                try:
+                    data = wav.read_bytes()
+                    self._send(200, data, "audio/wav")
+                except OSError:
+                    self._send(404, json.dumps({"error": "catch_audio_unreadable"}), "application/json")
+            else:
+                self._send(404, json.dumps({"error": "no_catch_audio"}), "application/json")
+            return
+
+        if path == "/api/field-radio":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-radio-catcher.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/field-dns":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/field-outside-talk":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-outside-talk.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-drive":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-drive-system.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-drive/drives":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-drive-system.py",
+                ["talk", json.dumps({"op": "drives"})],
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/hostess-profile":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess-profile.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/panel-language":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "panel-i18n.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -486,7 +531,7 @@ class Handler(BaseHTTPRequestHandler):
                 lines = 0
             payload = {
                 "ok": True,
-                "version": "7.4.0",
+                "version": "7.6.0",
                 "hostess_version": "7",
                 "pending": pending.is_file(),
                 "ingest_log_lines": lines,
@@ -613,7 +658,21 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
             if path == "/api/library/catalog":
-                payload = _lib_json(["build"], timeout=90)
+                profile = str(query.get("profile", [""])[0]).strip()
+                args = ["build"]
+                if profile:
+                    args.extend(["--profile", profile])
+                payload = _lib_json(args, timeout=90)
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/profiles":
+                payload = _lib_json(["profiles"])
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/war":
+                payload = _lib_json(["war"], timeout=90)
                 self._send(200, json.dumps(payload), "application/json")
                 return
 
@@ -627,7 +686,11 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
             if path == "/api/library/dewey":
-                payload = _lib_json(["dewey"], timeout=90)
+                profile = str(query.get("profile", [""])[0]).strip()
+                args = ["dewey"]
+                if profile:
+                    args.extend(["--profile", profile])
+                payload = _lib_json(args, timeout=90)
                 self._send(200, json.dumps(payload), "application/json")
                 return
 
@@ -755,7 +818,9 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(500, json.dumps({"ok": False, "error": "lookup failed"}), "application/json")
             return
 
-        if path in ("/field", "/field/", "/app", "/app/", "/", "/index.html"):
+        if path in ("/field-talk", "/field-talk/"):
+            target = PANEL_DIR / "field-talk.html"
+        elif path in ("/field", "/field/", "/app", "/app/", "/", "/index.html"):
             target = PANEL_DIR / "threat-panel.html"
         else:
             target = (PANEL_DIR / path.lstrip("/")).resolve()
@@ -962,9 +1027,109 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/field-radio":
+            action = str(body.get("action") or "build").strip().lower()
+            if action == "tune":
+                tune_body = {
+                    "station_id": body.get("station_id") or body.get("id") or "",
+                    "call_sign": body.get("call_sign") or "",
+                    "freq_mhz": body.get("freq_mhz"),
+                }
+                payload = _nexus_py_json(
+                    INSTALL_ROOT / "lib" / "field-radio-catcher.py",
+                    ["tune", json.dumps(tune_body)],
+                )
+                self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+                return
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-radio-catcher.py", ["build"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-antenna":
+            action = str(body.get("action") or "build").strip().lower()
+            if action == "catch":
+                catch_body = {
+                    "freq_mhz": body.get("freq_mhz", os.environ.get("NEXUS_FIELD_CATCH_MHZ", "83.1")),
+                    "station_id": body.get("station_id") or "",
+                    "call_sign": body.get("call_sign") or "",
+                }
+                payload = _nexus_py_json(
+                    INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py",
+                    ["catch", json.dumps(catch_body)],
+                )
+                self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+                return
+            if action in ("cycle", "test", "launch"):
+                extra = []
+                if action == "launch":
+                    extra = [str(body.get("max_rounds") or os.environ.get("NEXUS_FIELD_ANTENNA_ROUNDS", "12"))]
+                payload = _nexus_py_json(
+                    INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py",
+                    [action, *extra],
+                )
+            else:
+                payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py", ["build"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/field-dns":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["build"])
             self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-outside-talk":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-outside-talk.py", ["build"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-outside-talk/connect":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-outside-talk.py",
+                ["connect", json.dumps(body if isinstance(body, dict) else {})],
+            )
+            self._send(200 if payload.get("ok") or payload.get("session_id") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-outside-talk/probe":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-outside-talk.py",
+                ["probe", json.dumps(body if isinstance(body, dict) else {})],
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-outside-talk/disconnect":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-outside-talk.py",
+                ["disconnect", json.dumps(body if isinstance(body, dict) else {})],
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-drive":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-drive-system.py", ["build"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-drive/talk":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-drive-system.py",
+                ["talk", json.dumps(body if isinstance(body, dict) else {})],
+            )
+            self._send(200 if payload.get("ok") is not False else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/panel-language":
+            code = str((body or {}).get("code") or "").strip()
+            if not code:
+                self._send(400, json.dumps({"ok": False, "error": "missing code"}), "application/json")
+                return
+            remember = (body or {}).get("remember", True)
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "panel-i18n.py",
+                ["set", code, json.dumps({"code": code, "remember": remember})],
+            )
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
             return
 
         if path == "/api/hostess-profile":

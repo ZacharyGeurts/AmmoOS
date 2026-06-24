@@ -630,6 +630,152 @@ def _band_label(freq: Any) -> str:
     return "unknown"
 
 
+def _wifi_channel_center_mhz(channel: int, band_id: str = "") -> float | None:
+    """Center frequency (MHz) for a WiFi channel number."""
+    if 1 <= channel <= 14:
+        return 2412.0 + 5.0 * (channel - 1)
+    if 36 <= channel <= 196:
+        return 5000.0 + 5.0 * channel
+    bid = str(band_id or "").lower()
+    if bid.startswith("6ghz") and 1 <= channel <= 233:
+        return 5950.0 + 5.0 * channel
+    return None
+
+
+def _band_display_label(band_id: str, bands_doc: dict[str, Any]) -> str:
+    for band in bands_doc.get("bands") or []:
+        if str(band.get("id")) == band_id:
+            return str(band.get("label") or band_id)
+    return band_id
+
+
+def _band_from_id(band_id: str) -> str:
+    bid = str(band_id or "").lower()
+    if bid.startswith("2.4"):
+        return "2.4GHz"
+    if bid.startswith("5ghz") or bid.startswith("5"):
+        return "5GHz"
+    if bid.startswith("6ghz") or bid.startswith("6"):
+        return "6GHz"
+    return "unknown"
+
+
+def _registry_slots_for_band(band: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every permitted channel/frequency slot for one FCC band (strength filled later)."""
+    band_id = str(band.get("id") or "")
+    label = str(band.get("label") or band_id)
+    lo = float(band.get("freq_mhz_min") or 0)
+    hi = float(band.get("freq_mhz_max") or 0)
+    channels = list(band.get("channels") or [])
+    slots: list[dict[str, Any]] = []
+    if channels:
+        for ch in channels:
+            try:
+                ch_i = int(ch)
+            except (TypeError, ValueError):
+                continue
+            freq = _wifi_channel_center_mhz(ch_i, band_id)
+            if freq is None:
+                freq = lo + (hi - lo) / 2 if hi > lo else lo
+            slots.append({
+                "band_id": band_id,
+                "band_label": label,
+                "band": _band_from_id(band_id),
+                "channel": ch_i,
+                "freq_mhz": round(freq, 1),
+            })
+        return slots
+    step = 20.0
+    f = lo
+    idx = 0
+    while f <= hi + 0.01:
+        slots.append({
+            "band_id": band_id,
+            "band_label": label,
+            "band": _band_from_id(band_id),
+            "channel": None,
+            "freq_mhz": round(f, 1),
+            "slot_index": idx,
+        })
+        f += step
+        idx += 1
+    return slots
+
+
+def _match_scan_to_slot(slot: dict[str, Any], scan: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return scan hits that correlate to a registry slot."""
+    ch = slot.get("channel")
+    freq = float(slot.get("freq_mhz") or 0)
+    band_id = str(slot.get("band_id") or "")
+    band = str(slot.get("band") or "")
+    hits: list[dict[str, Any]] = []
+    for ap in scan:
+        ap_ch = _parse_channel(ap.get("channel"))
+        ap_freq = _parse_freq_mhz(ap.get("freq_mhz"))
+        ap_band = str(ap.get("band") or "")
+        if ch is not None and ap_ch is not None and ap_ch == ch:
+            hits.append(ap)
+            continue
+        if ap_freq is not None and abs(ap_freq - freq) <= 12.0:
+            if not band or ap_band == band or ap_band == "unknown":
+                hits.append(ap)
+            elif band_id and str(ap.get("permitted_band") or "") == band_id:
+                hits.append(ap)
+    return hits
+
+
+def _build_frequency_registry(scan: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Enumerate every FCC-permitted channel slot with local signal strength (0 if silent)."""
+    scan = list(scan or [])
+    bands_doc = _permitted_bands()
+    entries: list[dict[str, Any]] = []
+    recognized = 0
+    active = 0
+    max_strength = 0
+
+    for band in bands_doc.get("bands") or []:
+        for slot in _registry_slots_for_band(band):
+            hits = _match_scan_to_slot(slot, scan)
+            strengths = [int(h.get("signal_dbm") or 0) for h in hits]
+            strength = max(strengths) if strengths else 0
+            avg = round(sum(strengths) / len(strengths), 1) if strengths else 0.0
+            permitted, band_reason = _is_permitted_frequency(slot.get("freq_mhz"), slot.get("channel"))
+            entry = {
+                **slot,
+                "strength": strength,
+                "strength_avg": avg,
+                "strength_pct": strength,
+                "source_count": len(hits),
+                "recognized": bool(hits),
+                "permitted": permitted,
+                "permitted_band": band_reason if permitted else "",
+                "ssids": sorted({str(h.get("ssid") or "") for h in hits if h.get("ssid")})[:6],
+                "bssids": [str(h.get("bssid") or "") for h in hits[:4]],
+            }
+            entries.append(entry)
+            if hits:
+                recognized += 1
+                active += 1
+                max_strength = max(max_strength, strength)
+
+    by_band: dict[str, list[dict[str, Any]]] = {}
+    for e in entries:
+        by_band.setdefault(str(e.get("band") or "unknown"), []).append(e)
+
+    return {
+        "schema": "frequency-registry/v1",
+        "updated": _now(),
+        "total_slots": len(entries),
+        "recognized_slots": recognized,
+        "active_slots": active,
+        "silent_slots": len(entries) - recognized,
+        "max_strength": max_strength,
+        "coverage_pct": round((recognized / len(entries)) * 100.0, 1) if entries else 0.0,
+        "entries": entries,
+        "by_band": {k: v for k, v in sorted(by_band.items())},
+    }
+
+
 def _active_wifi_connection(wifi_dev: str) -> dict[str, Any] | None:
     text = _run(["nmcli", "-t", "-f", "GENERAL.CONNECTION,GENERAL.STATE,802-11-wireless.ssid,802-11-wireless.bssid", "dev", "show", wifi_dev])
     if not text.strip():
@@ -1907,6 +2053,8 @@ def sample_cycle() -> dict[str, Any]:
     except Exception:
         material_field = {}
 
+    frequency_registry = _build_frequency_registry(scan_material)
+
     return {
         "updated": _now(),
         "fcc": _fcc_policy(),
@@ -1954,6 +2102,7 @@ def sample_cycle() -> dict[str, Any]:
         "recent_bursts": [],
         "material_field": material_field,
         "scan_material": scan_material[:80],
+        "frequency_registry": frequency_registry,
     }
 
 
@@ -2005,6 +2154,9 @@ def panel_json() -> dict[str, Any]:
         "burst_kinds": [],
         "material_field": doc.get("material_field") or {},
         "scan_material": doc.get("scan_material") or [],
+        "frequency_registry": doc.get("frequency_registry") or _build_frequency_registry(
+            doc.get("scan_material") or [],
+        ),
     }
 
 

@@ -35,7 +35,7 @@
   function resolveAnchor(data) {
     const mk = global.NexusMap;
     if (mk?.resolveAnchor) return mk.resolveAnchor(data);
-    return data?.anchor || { lat: 45.854, lon: -87.023, label: "Field default" };
+    return data?.anchor || { lat: 45.845976, lon: -87.055759, label: "Gladstone MI · operator" };
   }
 
   function localExtentNm(entities) {
