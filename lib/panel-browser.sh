@@ -20,15 +20,9 @@ nexus_panel_app_url() {
 }
 
 nexus_panel_desired_version() {
-  if declare -F nexus_read_version >/dev/null 2>&1; then
-    nexus_read_version
-    return 0
-  fi
   local common="${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
   [[ -f "$common" ]] || return 1
-  # shellcheck source=/dev/null
-  source "$common" 2>/dev/null || true
-  nexus_read_version 2>/dev/null || grep -o 'NEXUS_VERSION="[^"]*"' "$common" 2>/dev/null | head -1 | cut -d'"' -f2
+  grep -o 'NEXUS_VERSION="[^"]*"' "$common" 2>/dev/null | head -1 | cut -d'"' -f2
 }
 
 nexus_panel_served_version() {
@@ -61,7 +55,7 @@ nexus_panel_stop() {
   if command -v fuser >/dev/null 2>&1; then
     fuser -k "${port}/tcp" 2>/dev/null || true
   fi
-  sleep 1
+  nexus_await_port_free "${port}" 5
 }
 
 nexus_panel_pick_port() {
@@ -120,13 +114,8 @@ nexus_panel_needs_restart() {
 
 nexus_panel_wait_ready() {
   local url="${1:-$(nexus_panel_url)}"
-  local tries="${2:-30}"
-  local i
-  for i in $(seq 1 "$tries"); do
-    curl -sk --connect-timeout 1 "$url" >/dev/null 2>&1 && return 0
-    sleep 1
-  done
-  return 1
+  local tries="${2:-5}"
+  nexus_await_curl_ready "$url" "$tries" "$tries"
 }
 
 nexus_panel_detect_browsers() {
@@ -154,9 +143,9 @@ nexus_panel_open_browser() {
   local ready_url
   ready_url="$(nexus_panel_app_url)"
 
-  if ! nexus_panel_wait_ready "$ready_url" 45; then
-    nexus_panel_wait_ready "$url" 15 || true
-    nexus_panel_wait_ready "${url%/field}/" 10 || true
+  if ! nexus_panel_wait_ready "$ready_url" 5; then
+    nexus_panel_wait_ready "$url" 5 || true
+    nexus_panel_wait_ready "${url%/field}/" 5 || true
   fi
   if ! curl -sk --connect-timeout 2 "$url" >/dev/null 2>&1 \
     && ! curl -sk --connect-timeout 2 "$ready_url" >/dev/null 2>&1; then

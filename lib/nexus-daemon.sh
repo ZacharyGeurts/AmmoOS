@@ -132,7 +132,7 @@ start_module() {
 [[ "${NEXUS_DNS_ADMIN_PORTAL:-1}" == "1" ]] && start_module dns-admin nexus_dns_admin_serve_loop
 [[ "${NEXUS_THREAT_PANEL:-1}" == "1" ]] && start_module panel nexus_threat_panel_serve_loop
 (
-  sleep 8
+  nexus_await_curl_ready "$(nexus_panel_app_url 2>/dev/null || nexus_panel_url 2>/dev/null || echo 'https://127.0.0.1:9477/app')" 5 5
   nexus_panel_open_browser
 ) &
 
@@ -173,5 +173,9 @@ while true; do
   if declare -f nexus_field_dns_enforce_cycle >/dev/null 2>&1; then
     nexus_field_dns_enforce_cycle
   fi
-  sleep "${NEXUS_VIGIL_MAINTAIN_INTERVAL:-300}"
+  if [[ "${NEXUS_THERMAL_GOVERNOR:-1}" == "1" ]] && [[ -f "${NEXUS_INSTALL_ROOT}/lib/thermal-governor.py" ]]; then
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "${NEXUS_INSTALL_ROOT}/lib/thermal-governor.py" cycle >/dev/null 2>&1 || true
+  fi
+  nexus_await_seconds "${NEXUS_VIGIL_MAINTAIN_INTERVAL:-5}" "${NEXUS_STATE_DIR}"
 done
