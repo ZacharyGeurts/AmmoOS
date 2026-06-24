@@ -56,30 +56,35 @@ def _fetch_json(url: str, timeout: int = 12) -> dict[str, Any] | list[Any] | Non
 
 
 def _github_latest() -> dict[str, Any]:
-    out: dict[str, Any] = {
-        "latest": None,
-        "release_url": f"https://github.com/{REPO}/releases/latest",
-        "release_notes": "",
-        "published_at": None,
-        "source": "none",
-    }
+    """Pick highest version across releases/latest, tags, and main branch."""
+    candidates: list[dict[str, Any]] = []
+
     rel = _fetch_json(f"https://api.github.com/repos/{REPO}/releases/latest")
     if isinstance(rel, dict) and rel.get("tag_name"):
-        out["latest"] = str(rel.get("tag_name", "")).lstrip("v")
-        out["release_url"] = rel.get("html_url") or out["release_url"]
-        out["release_notes"] = (rel.get("body") or "").strip()[:1200]
-        out["published_at"] = rel.get("published_at")
-        out["source"] = "releases/latest"
-        return out
-    tags = _fetch_json(f"https://api.github.com/repos/{REPO}/tags?per_page=8")
+        ver = str(rel.get("tag_name", "")).lstrip("v")
+        candidates.append({
+            "latest": ver,
+            "release_url": rel.get("html_url") or f"https://github.com/{REPO}/releases/latest",
+            "release_notes": (rel.get("body") or "").strip()[:1200],
+            "published_at": rel.get("published_at"),
+            "source": "releases/latest",
+        })
+
+    tags = _fetch_json(f"https://api.github.com/repos/{REPO}/tags?per_page=12")
     if isinstance(tags, list):
         for row in tags:
-            name = str(row.get("name") or "").lstrip("v")
-            if name and re.match(r"^\d+\.\d+", name):
-                out["latest"] = name
-                out["release_url"] = f"https://github.com/{REPO}/releases/tag/{row.get('name')}"
-                out["source"] = "tags"
-                return out
+            tag_name = str(row.get("name") or "")
+            ver = tag_name.lstrip("v")
+            if ver and re.match(r"^\d+\.\d+", ver):
+                candidates.append({
+                    "latest": ver,
+                    "release_url": f"https://github.com/{REPO}/releases/tag/{tag_name}",
+                    "release_notes": "",
+                    "published_at": None,
+                    "source": "tags",
+                })
+                break
+
     text = ""
     try:
         with urllib.request.urlopen(
@@ -95,10 +100,31 @@ def _github_latest() -> dict[str, Any]:
     if text:
         m = re.search(r'NEXUS_VERSION="([^"]+)"', text)
         if m:
-            out["latest"] = m.group(1)
-            out["release_url"] = f"https://github.com/{REPO}"
-            out["source"] = "main/nexus-common.sh"
-    return out
+            candidates.append({
+                "latest": m.group(1),
+                "release_url": f"https://github.com/{REPO}",
+                "release_notes": "",
+                "published_at": None,
+                "source": "main/nexus-common.sh",
+            })
+
+    if not candidates:
+        return {
+            "latest": None,
+            "release_url": f"https://github.com/{REPO}/releases/latest",
+            "release_notes": "",
+            "published_at": None,
+            "source": "none",
+        }
+
+    best = max(candidates, key=lambda c: _parse_version(str(c.get("latest") or "0")))
+    return {
+        "latest": best["latest"],
+        "release_url": best["release_url"],
+        "release_notes": best.get("release_notes") or "",
+        "published_at": best.get("published_at"),
+        "source": best["source"],
+    }
 
 
 def _lock_status() -> dict[str, Any]:
