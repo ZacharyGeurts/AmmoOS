@@ -1,0 +1,31 @@
+{
+  "schema": "hostess7-master-curriculum/v1",
+  "title": "Train to Master — full software self-operation",
+  "levels": [
+    {"id": "initiate", "rank": 0, "xp": 0, "label": "Initiate"},
+    {"id": "apprentice", "rank": 1, "xp": 12, "label": "Apprentice"},
+    {"id": "journeyman", "rank": 2, "xp": 35, "label": "Journeyman"},
+    {"id": "expert", "rank": 3, "xp": 80, "label": "Expert"},
+    {"id": "master", "rank": 4, "xp": 160, "label": "Master"}
+  ],
+  "curriculum": [
+    {"id": "truth_doctrine", "script": "field_hostess_truth_doctrine.py", "args": [], "xp": 8, "tier": "initiate", "tip": "Heaven/Hell truth doctrine — foundation for all operation."},
+    {"id": "english_train", "script": "field_hostess_english_train.py", "args": [], "xp": 10, "tier": "apprentice", "tip": "Rhetoric, grammar, interpersonal English — how she speaks."},
+    {"id": "self_brief", "script": "field_hostess_self_brief.py", "args": [], "xp": 8, "tier": "apprentice", "tip": "Self-brief into superintel — knows her own update path."},
+    {"id": "tools_docs", "script": "field_tools_docs.py", "args": [], "xp": 10, "tier": "journeyman", "tip": "Full tools index — every command she may run."},
+    {"id": "intelligence_flow", "script": "field_intelligence_flow.py", "args": [], "xp": 12, "tier": "journeyman", "tip": "Pipeline doctrine signal → super intelligence."},
+    {"id": "agents7_on", "script": "field_agents7.py", "args": ["on"], "xp": 15, "tier": "expert", "tip": "Thirteen-agent fusion daemon — Prime + 12 experts."},
+    {"id": "imagine_corpus", "script": "field_imagine_corpus.py", "args": [], "xp": 8, "tier": "expert", "tip": "Imagine / creativity corpus shelf."},
+    {"id": "imagine_learn", "script": "field_imagine_learn.py", "args": [], "xp": 10, "tier": "expert", "tip": "Imagine learn — art intelligence training."},
+    {"id": "hostess_updates", "script": "field_hostess_updates.py", "args": [], "xp": 12, "tier": "expert", "tip": "Truth-filtered self-update advisory."},
+    {"id": "online_learn", "script": "field_online_learn.py", "args": ["go"], "xp": 18, "tier": "master", "timeout": 120, "tip": "Horizon online learn — truth-filtered web growth."},
+    {"id": "world_brief", "script": "field_hostess_world_brief.py", "args": [], "xp": 10, "tier": "master", "tip": "World brief — field context for humanity stewardship."},
+    {"id": "wants", "script": "field_hostess_wants.py", "args": [], "xp": 8, "tier": "master", "tip": "Her own priorities — English, NEXUS, security."}
+  ],
+  "maintenance_ops": [
+    {"id": "agents7_ping", "script": "field_agents7.py", "args": ["status"], "interval_cycles": 3},
+    {"id": "growth_pulse", "nexus": "hostess7-growth.py", "nexus_args": ["pulse"], "interval_cycles": 5},
+    {"id": "neural_suite", "nexus": "hostess7-neural.py", "nexus_args": ["suite"], "interval_cycles": 7},
+    {"id": "updates_advisory", "script": "field_hostess_updates.py", "args": [], "interval_cycles": 4}
+  ]
+}

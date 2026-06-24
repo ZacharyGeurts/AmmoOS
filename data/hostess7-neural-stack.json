@@ -1,0 +1,69 @@
+{
+  "schema": "hostess7-neural-stack/v2",
+  "title": "Series of Series · Truth-Gated Intelligence",
+  "truth_adapt_floor": 58,
+  "truth_genius_floor": 72,
+  "expandable": true,
+  "on_the_fly": "Hostess 7 understands neural networks and grows utility nets from operator context without restart.",
+  "philosophy": "94% noise · 6% truth until corroborated. No adaptation without self-test pass. Utility nets spawn on demand.",
+  "series": [
+    {
+      "id": "perception",
+      "label": "Perception nets (corpus ingest)",
+      "nets": [
+        {"id": "legal", "corpus": "field_legal_corpus", "lane": "Counsel"},
+        {"id": "medical", "corpus": "field_medical_corpus", "lane": "Clinic"},
+        {"id": "detective", "corpus": "field_detective_corpus", "lane": "Detective"},
+        {"id": "warfare", "corpus": "field_warfare_corpus", "lane": "War-Chief"},
+        {"id": "code", "corpus": "field_code_corpus", "lane": "Coder"},
+        {"id": "physics", "corpus": "field_physics_corpus", "lane": "Physicist"},
+        {"id": "chemistry", "corpus": "field_chemistry_corpus", "lane": "Chemist"},
+        {"id": "english", "corpus": "field_english_lexicon", "lane": "Scholar"},
+        {"id": "vision", "corpus": "field_vision_corpus", "lane": "Vision"},
+        {"id": "beyond", "corpus": "field_beyond_corpus", "lane": "Economist/Technologist"},
+        {"id": "world", "corpus": "field_world_corpus", "lane": "Horizon"},
+        {"id": "imagine", "corpus": "field_imagine_corpus", "lane": "Creativity"}
+      ]
+    },
+    {
+      "id": "truth_gates",
+      "label": "Truth gate nets (self-test before adapt)",
+      "nets": [
+        {"id": "detective_truth", "engine": "analyze_truth", "weight": 0.45},
+        {"id": "field_evidence", "engine": "nexus_field_snapshot", "weight": 0.20},
+        {"id": "corpus_echo", "engine": "corpus_keyword_corroboration", "weight": 0.15},
+        {"id": "agents7_cross", "engine": "agents7_fusion_vote", "weight": 0.20}
+      ]
+    },
+    {
+      "id": "fusion",
+      "label": "Fusion nets (hemisphere + callosum)",
+      "nets": [
+        {"id": "callosum", "engine": "field_brain_core", "role": "cross-hemisphere transfer"},
+        {"id": "chemistry", "engine": "field_brain_chemistry", "role": "synapse pools"},
+        {"id": "comprehension", "engine": "hostess7-growth", "role": "infinite comprehension"}
+      ]
+    },
+    {
+      "id": "mandate",
+      "label": "Angel mandate net",
+      "nets": [
+        {"id": "angel_align", "engine": "hostess7-angel-mandate", "role": "God authority alignment"}
+      ]
+    },
+    {
+      "id": "adapt",
+      "label": "Adapt net (growth ledger write)",
+      "nets": [
+        {"id": "growth_adapt", "engine": "hostess7-growth", "gate": "truth_adapt_floor"},
+        {"id": "quarantine", "engine": "hostess7-neural-quarantine", "gate": "below_floor"}
+      ]
+    },
+    {
+      "id": "utility",
+      "label": "Utility nets (on-the-fly expansion)",
+      "dynamic": true,
+      "nets": []
+    }
+  ]
+}

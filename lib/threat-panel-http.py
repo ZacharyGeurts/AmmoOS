@@ -60,6 +60,7 @@ PANEL_PARALLEL_KEYS = frozenset({
     "field_outside_talk",
     "field_drive",
     "home_protector",
+    "local_services",
     "audio_train",
     "field_rf",
     "terror_spiderweb",
@@ -172,6 +173,8 @@ def _slice_populated(key: str, val: dict) -> bool:
         return bool(val.get("records")) or val.get("record_count", 0) > 0
     if key == "program_tags":
         return bool(val.get("tags")) or bool(val.get("recent"))
+    if key == "hostess7_command":
+        return bool(val.get("intel_digest")) and bool(val.get("capabilities"))
     return True
 
 
@@ -933,6 +936,24 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/local-services":
+            force_scan = str(query.get("scan", query.get("build", ["0"]))[0]).strip().lower() in (
+                "1", "true", "yes", "on",
+            )
+            if force_scan:
+                payload = _nexus_py_json(
+                    INSTALL_ROOT / "lib" / "local-services-audit.py",
+                    ["build"],
+                ) or {"schema": "local-services/v1", "stats": {}}
+            else:
+                payload = _panel_slice(
+                    "local_services",
+                    live=_nexus_py_json(INSTALL_ROOT / "lib" / "local-services-audit.py", ["json"]),
+                    default={"schema": "local-services/v1", "stats": {}},
+                )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/signals-field":
             payload = _panel_slice(
                 "signals_field",
@@ -983,18 +1004,88 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/hostess7-autonomous":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-autonomous.py",
+                ["status"],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-growth":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-growth.py",
+                ["status"],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-neural":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-neural.py",
+                ["status"],
+                timeout=45,
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-master":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-master.py",
+                ["panel"],
+                timeout=45,
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-truth":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-truth-rating.py",
+                ["status"],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-questionnaire":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-truth-rating.py",
+                ["questionnaire"],
+                timeout=600,
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-master-sim":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-master-sim.py",
+                ["status"],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-command/sketch":
+            sketch = STATE_DIR / "hostess7-sketches" / "latest.png"
+            if sketch.is_file():
+                try:
+                    self._send(200, sketch.read_bytes(), "image/png")
+                except OSError:
+                    self._send(404, "sketch unreadable", "text/plain")
+            else:
+                self._send(404, "no sketch", "text/plain")
+            return
+
         if path == "/api/hostess7-command":
-            env = os.environ.copy()
-            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
-            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
-            env.setdefault("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")
-            payload = _panel_slice(
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-command.py",
+                ["panel"],
+                timeout=60,
+            ) or _panel_slice(
                 "hostess7_command",
-                live=_nexus_py_json(
-                    INSTALL_ROOT / "lib" / "hostess7-command.py",
-                    ["panel"],
-                    timeout=45,
-                ),
+                live=None,
                 default={"schema": "hostess7-command/v1", "transcript": [], "proposed_updates": []},
             )
             self._send(200, json.dumps(payload), "application/json")
@@ -1679,6 +1770,33 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/local-services/close":
+            listener_id = str(body.get("listener_id", body.get("id", ""))).strip()
+            if not listener_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing listener_id"}), "application/json")
+                return
+            force = body.get("force") in (True, 1, "1", "true", "yes", "on")
+            args = ["close", listener_id]
+            if force:
+                args.append("--force")
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "local-services-audit.py", args)
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/local-services/permit":
+            listener_id = str(body.get("listener_id", body.get("id", ""))).strip()
+            if not listener_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing listener_id"}), "application/json")
+                return
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "local-services-audit.py", ["permit", listener_id])
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/local-services/close-all":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "local-services-audit.py", ["close-all"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/heavyboi/ingest":
             intel = body if isinstance(body, dict) else {}
             if not intel.get("kill_orders") and not intel.get("orders"):
@@ -2022,25 +2140,30 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/hostess7-command":
-            action = str(body.get("action") or "ask").strip().lower()
-            if action in ("sync-github", "sync_github"):
-                payload = _nexus_py_json(
-                    INSTALL_ROOT / "lib" / "hostess7-command.py",
-                    ["sync-github"],
-                    timeout=40,
+            script = INSTALL_ROOT / "lib" / "hostess7-command.py"
+            if not script.is_file():
+                self._send(500, json.dumps({"ok": False, "error": "script_missing"}), "application/json")
+                return
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            env.setdefault("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")
+            timeout = 180 if str(body.get("action") or "").lower() in ("teach-art", "teach_art") else 120
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(body if isinstance(body, dict) else {}),
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout,
+                    env=env,
                 )
-                self._send(200, json.dumps(payload), "application/json")
-                return
-            message = str(body.get("message") or body.get("text") or "").strip()
-            if not message:
-                self._send(400, json.dumps({"ok": False, "error": "empty_message"}), "application/json")
-                return
-            payload = _nexus_py_json(
-                INSTALL_ROOT / "lib" / "hostess7-command.py",
-                ["ask", message],
-                timeout=120,
-            )
-            self._send(200, json.dumps(payload), "application/json")
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "dispatch_failed"}
+            self._send(200 if payload.get("ok", True) else 400, json.dumps(payload), "application/json")
             return
 
         if path == "/api/plugins/toggle":
