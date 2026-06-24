@@ -434,10 +434,15 @@ def _is_wimk_target(station_id: str = "", freq_mhz: float | None = None) -> bool
 
 def _wimk_working(result: dict[str, Any]) -> tuple[bool, str]:
     """Decide if 93.1 playback is actually working."""
-    if result.get("ota_source") == "field_antenna" and result.get("program_audio"):
+    if result.get("program_audio") and result.get("ota_source") in (
+        "field_antenna", "tri_field_antenna",
+    ):
         return True, "antenna_program_audio"
-    if result.get("method") in ("field_antenna_ota", "field_antenna_capture", "field_antenna_live"):
-        if result.get("program_audio") or result.get("playing"):
+    if result.get("method") in (
+        "field_antenna_ota", "field_antenna_capture", "field_antenna_live",
+        "tri_field_fm_demod", "field_wave_fm_demod",
+    ):
+        if result.get("program_audio"):
             return True, "antenna_playing"
     if result.get("heard") and result.get("program_audio"):
         return True, "station_program"
