@@ -108,6 +108,8 @@ def _status_message(doc: dict[str, Any]) -> str:
         "signing": "Signing manifest",
         "starting_service": "Starting NEXUS",
         "restarting": "Restarting panel",
+        "awaiting_sudo": "Waiting for administrator password",
+        "failed": "Update failed",
     }
     label = labels.get(phase, phase.replace("_", " "))
     return f"{label} — {prev} → {tgt}"

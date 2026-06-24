@@ -1927,10 +1927,15 @@ test_field_toolkit_module() {
 
 test_nexus_update_module() {
   [[ -f "${ROOT}/lib/nexus-update.py" ]]
+  [[ -x "${ROOT}/lib/nexus-update-apply.sh" ]]
   grep -q '/api/update/check' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/update/apply' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/update/sudo-prompt' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_spawn_nexus_update_apply' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'github-update.lock' "${ROOT}/lib/nexus-update-lock.py"
   grep -q '_resolve_nexus_source_root' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'stealth_install.sh' "${ROOT}/genius_shield.sh"
+  grep -q 'promptUpdateSudo' "${ROOT}/panel/threat-panel.html"
   ! grep -q 'window.open(data.release_url' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/nexus-update.py" | grep -q '"current"'
@@ -2098,8 +2103,10 @@ test_field_gui_publish() {
   grep -q 'lethal_enforcement' "${ROOT}/lib/threat-panel.sh"
   grep -q '/api/field' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'renderHardware(doc)' "${ROOT}/panel/assets/signals-field.js"
-  grep -q 'fetch("/api/field"' "${ROOT}/panel/threat-panel.html"
-  grep -q 'NEXUS_VERSION="7.9.2"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'fetch("/api/status"' "${ROOT}/panel/threat-panel.html"
+  grep -q 'FIELD_PARALLEL_SLICES' "${ROOT}/panel/threat-panel.html"
+  grep -q 'PANEL_PARALLEL_KEYS' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'NEXUS_VERSION="7.9.3"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" bash -c '
     source "${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
     nexus_init_runtime_paths
@@ -2117,7 +2124,11 @@ test_panel_tray() {
   grep -q 'nexus_panel_tray_start' "${ROOT}/nexus.sh"
   grep -q 'nexus_panel_open_tab' "${ROOT}/lib/panel-tray.sh"
   grep -q 'AyatanaAppIndicator3' "${ROOT}/lib/panel-tray.py"
+  grep -q 'show_tab_picker' "${ROOT}/lib/panel-tray.py"
+  grep -q '_on_indicator_menu_show' "${ROOT}/lib/panel-tray.py"
   grep -q 'library' "${ROOT}/lib/panel-tray.py"
+  grep -q 'nexus-tray-amouranth' "${ROOT}/lib/panel-tray.py"
+  [[ -s "${ROOT}/panel/assets/nexus-tray-amouranth-24.png" ]]
   NEXUS_STATE_DIR="/tmp/nexus-tray-test-$$" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_THREAT_PANEL_PORT=9478 \
     python3 "${ROOT}/lib/panel-tray.py" open signals >/dev/null
   grep -q 'signals' "/tmp/nexus-tray-test-$$/panel-tray-last-tab.json"

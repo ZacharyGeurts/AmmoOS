@@ -46,6 +46,85 @@ LOG_FILES = {
     "vigil": STATE_DIR / "vigil-alerts.log",
 }
 
+# Keys loaded in parallel by the panel — omitted from /api/status unless ?full=1
+PANEL_PARALLEL_KEYS = frozenset({
+    "field_hardware",
+    "field_hazard_onset",
+    "lethal_enforcement",
+    "hostess7_lethal_insight",
+    "signals_field",
+    "field_antenna",
+    "field_radio",
+    "field_dns",
+    "field_outside_talk",
+    "field_drive",
+    "home_protector",
+    "audio_train",
+    "field_rf",
+    "terror_spiderweb",
+    "precision_field",
+    "h7_library",
+    "packet_field",
+    "gatekeeper",
+    "host_attacks",
+    "us_field",
+    "field_command",
+    "angel_dossiers",
+    "human_dossier",
+    "angel_research",
+    "browser_awareness",
+    "settings",
+})
+
+
+def _read_status_json(*, full: bool = False) -> str:
+    if not STATUS_JSON.is_file():
+        if full:
+            return "{}"
+        return (
+            '{"field":true,"panel_ready":false,'
+            '"gatekeeper":{"connections":[],"harm_candidates":0}}'
+        )
+    raw = STATUS_JSON.read_text(encoding="utf-8")
+    if full:
+        return raw
+    try:
+        doc = json.loads(raw)
+        if isinstance(doc, dict):
+            for key in PANEL_PARALLEL_KEYS:
+                doc.pop(key, None)
+        return json.dumps(doc, ensure_ascii=False)
+    except json.JSONDecodeError:
+        return raw
+
+
+def _read_state_json(name: str, default: dict) -> dict:
+    fp = STATE_DIR / name
+    if not fp.is_file():
+        return default
+    try:
+        doc = json.loads(fp.read_text(encoding="utf-8"))
+        return doc if isinstance(doc, dict) else default
+    except (OSError, json.JSONDecodeError):
+        return default
+
+
+def _nexus_shell_json_fn(fn: str, *, sources: list[str] | None = None, timeout: int = 25) -> dict:
+    sources = sources or []
+    src = " && ".join(f"source '{INSTALL_ROOT}/lib/{s}'" for s in sources)
+    inner = (
+        f"source '{INSTALL_ROOT}/lib/nexus-common.sh' && nexus_load_config"
+        f"{(' && ' + src) if src else ''} && {fn}"
+    )
+    ok, out = _run_nexus_bash(inner, timeout=timeout)
+    if not ok or not (out or "").strip():
+        return {}
+    try:
+        doc = json.loads(out)
+        return doc if isinstance(doc, dict) else {}
+    except json.JSONDecodeError:
+        return {}
+
 
 def _run_nexus_undo(action_id: str) -> bool:
     script = INSTALL_ROOT / "lib" / "threat-autosanitize.sh"
@@ -156,10 +235,28 @@ def _run_nexus_bash(inner: str, timeout: int = 30) -> tuple[bool, str]:
     return proc.returncode == 0, detail
 
 
+def _load_nexus_shield_source() -> str:
+    src = os.environ.get("NEXUS_SHIELD_SOURCE", "").strip()
+    if src:
+        return src
+    conf = INSTALL_ROOT / "config" / "nexus.conf"
+    if conf.is_file():
+        try:
+            for line in conf.read_text(encoding="utf-8", errors="replace").splitlines():
+                line = line.strip()
+                if line.startswith("NEXUS_SHIELD_SOURCE="):
+                    val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    if val:
+                        return val
+        except OSError:
+            pass
+    return ""
+
+
 def _resolve_nexus_source_root() -> Path | None:
     """Locate git tree with stealth_install.sh for panel UPDATE apply."""
     candidates: list[Path] = []
-    src = os.environ.get("NEXUS_SHIELD_SOURCE", "").strip()
+    src = _load_nexus_shield_source()
     if src:
         candidates.append(Path(src))
     candidates.extend([
@@ -211,6 +308,65 @@ def _nexus_update_check(force: bool = False) -> dict:
 
 def _nexus_update_lock(args: list[str], timeout: int = 15) -> dict:
     return _nexus_py_json(INSTALL_ROOT / "lib" / "nexus-update-lock.py", args, timeout=timeout)
+
+
+def _nexus_update_needs_sudo() -> dict | None:
+    fp = STATE_DIR / "update-needs-sudo.json"
+    if not fp.is_file():
+        return None
+    try:
+        doc = json.loads(fp.read_text(encoding="utf-8"))
+        return doc if isinstance(doc, dict) else None
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _spawn_nexus_update_apply(
+    *,
+    git_dir: Path,
+    install_sh: Path,
+    token: str,
+    target: str,
+    previous: str,
+) -> bool:
+    apply_sh = INSTALL_ROOT / "lib" / "nexus-update-apply.sh"
+    if not apply_sh.is_file():
+        apply_sh = git_dir / "lib" / "nexus-update-apply.sh"
+    if not apply_sh.is_file():
+        return False
+    log_fp = STATE_DIR / "update-apply.log"
+    try:
+        log_fp.parent.mkdir(parents=True, exist_ok=True)
+        with log_fp.open("a", encoding="utf-8") as lf:
+            lf.write(f"\n--- panel spawn update ---\n")
+    except OSError:
+        pass
+    env = os.environ.copy()
+    env.update({
+        "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT),
+        "NEXUS_STATE_DIR": str(STATE_DIR),
+        "NEXUS_UPDATE_LOCK_TOKEN": token,
+        "NEXUS_UPDATE_GIT_DIR": str(git_dir),
+        "NEXUS_UPDATE_TARGET": target,
+        "NEXUS_UPDATE_PREVIOUS": previous,
+        "NEXUS_UPDATE_INSTALL_SH": str(install_sh),
+    })
+    for key in ("DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "XDG_CURRENT_DESKTOP", "DBUS_SESSION_BUS_ADDRESS"):
+        if key in os.environ:
+            env[key] = os.environ[key]
+    try:
+        with log_fp.open("a", encoding="utf-8") as lf:
+            subprocess.Popen(
+                ["bash", str(apply_sh)],
+                stdout=lf,
+                stderr=subprocess.STDOUT,
+                env=env,
+                start_new_session=True,
+                cwd=str(git_dir),
+            )
+        return True
+    except OSError:
+        return False
 
 
 def _nexus_shell_publish_panel() -> None:
@@ -396,11 +552,82 @@ class Handler(BaseHTTPRequestHandler):
         path = unquote(self.path.split("?", 1)[0])
         query = parse_qs(urlparse(self.path).query)
 
-        if path in ("/api/status", "/api/threat-panel.json"):
+        if path == "/api/status":
+            full = str(query.get("full", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            self._send(200, _read_status_json(full=full), "application/json")
+            return
+
+        if path == "/api/threat-panel.json":
             if STATUS_JSON.is_file():
                 self._send(200, STATUS_JSON.read_text(encoding="utf-8"), "application/json")
             else:
                 self._send(200, "{}", "application/json")
+            return
+
+        if path == "/api/gatekeeper":
+            payload = _read_state_json(
+                "connection-intent.json",
+                {"connections": [], "harm_candidates": 0, "why_no_auto_block": "Gatekeeper warming up…"},
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/host-attacks":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "host-attack-map.py", ["json-panel"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/us-field":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-us-intel.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-command":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-command.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/angel-dossiers":
+            payload = _read_state_json(
+                "angel-dossiers.json",
+                {"dossier_count": 0, "dossiers": [], "motto": "Let's Be Angels"},
+            )
+            if not payload.get("dossiers"):
+                built = _nexus_py_json(INSTALL_ROOT / "lib" / "angel-dossier.py", ["dossiers"], timeout=45)
+                if built:
+                    payload = built
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/angel-research":
+            payload = _read_state_json(
+                "angel-research.json",
+                {"tables": {"mac_vendors": [], "ip_intel": [], "exploit_cve_map": [], "attack_paths": []}},
+            )
+            if not payload.get("tables"):
+                built = _nexus_py_json(INSTALL_ROOT / "lib" / "angel-dossier.py", ["research"], timeout=45)
+                if built:
+                    payload = built
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/human-dossier":
+            fp = DATA_FILES.get("human-dossier")
+            if fp and fp.is_file():
+                self._send(200, fp.read_text(encoding="utf-8"), "application/json")
+                return
+            payload = _nexus_shell_json_fn(
+                "nexus_human_dossier_json",
+                sources=["human-dossier.sh"],
+            )
+            if not payload:
+                payload = {"dossier_version": "7.0", "ip_count": 0, "ips": [], "analyst": "Grok Heavy"}
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/settings":
+            payload = _nexus_shell_json_fn("nexus_settings_json", sources=["nexus-settings.sh"])
+            self._send(200, json.dumps(payload or {}), "application/json")
             return
 
         if path in ("/api/update/check", "/api/update/status"):
@@ -409,9 +636,15 @@ class Handler(BaseHTTPRequestHandler):
             lock = _nexus_update_lock(["status"])
             payload["update_lock"] = lock
             payload["update_in_progress"] = bool(lock.get("locked"))
+            needs_sudo = _nexus_update_needs_sudo()
+            if needs_sudo:
+                payload["needs_sudo"] = True
+                payload["sudo_prompt"] = needs_sudo
             if lock.get("locked"):
                 payload["update_available"] = False
                 payload["message"] = lock.get("message") or "Update in progress"
+            elif needs_sudo:
+                payload["message"] = needs_sudo.get("message") or "Administrator password required"
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -520,12 +753,9 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
-        if path == "/api/field":
-            _nexus_shell_publish_panel()
-            if STATUS_JSON.is_file():
-                self._send(200, STATUS_JSON.read_text(encoding="utf-8"), "application/json")
-            else:
-                self._send(200, '{"field":true,"panel_ready":false}', "application/json")
+        if path == "/api/field/parallel":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-panel-parallel.py", ["json"], timeout=120)
+            self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/field-hardware":
@@ -698,10 +928,8 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/field":
-            if STATUS_JSON.is_file():
-                self._send(200, STATUS_JSON.read_text(encoding="utf-8"), "application/json")
-            else:
-                self._send(200, '{"field":true,"panel_ready":false,"gatekeeper":{"connections":[]}}', "application/json")
+            full = str(query.get("full", ["1"])[0]).strip().lower() in ("1", "true", "yes")
+            self._send(200, _read_status_json(full=full), "application/json")
             return
 
         if path.startswith("/api/library/"):
@@ -983,6 +1211,10 @@ class Handler(BaseHTTPRequestHandler):
                     "application/json",
                 )
                 return
+            try:
+                STATE_DIR.joinpath("update-needs-sudo.json").unlink(missing_ok=True)
+            except OSError:
+                pass
             upd = _nexus_update_check(force=True)
             if upd.get("update_in_progress"):
                 self._send(
@@ -1024,7 +1256,7 @@ class Handler(BaseHTTPRequestHandler):
             token = str(acq.get("token") or "")
             git_dir = _resolve_nexus_source_root()
             install_sh = (git_dir / "stealth_install.sh") if git_dir else None
-            if not install_sh or not install_sh.is_file():
+            if not git_dir or not install_sh or not install_sh.is_file():
                 _nexus_update_lock(["release", f"--token={token}"])
                 self._send(
                     500,
@@ -1032,58 +1264,107 @@ class Handler(BaseHTTPRequestHandler):
                         "ok": False,
                         "applied": False,
                         "error": "stealth_install_missing",
-                        "message": "stealth_install.sh not found — set NEXUS_SHIELD_SOURCE or reinstall from git tree",
+                        "message": "stealth_install.sh not found — set NEXUS_SHIELD_SOURCE in config/nexus.conf",
                         "install_root": str(INSTALL_ROOT),
                     }),
                     "application/json",
                 )
                 return
-            applied = False
-            detail = ""
-            install_log = ""
-            try:
-                _nexus_update_lock(["phase", "git_fetch", f"--token={token}"])
-                install_inner = (
-                    f"export NEXUS_UPDATE_LOCK_TOKEN='{token}'; "
-                    f"export NEXUS_UPDATE_PREVIOUS_VERSION='{previous}'; "
-                    f"bash '{install_sh}'"
-                )
-                if os.geteuid() != 0:
-                    install_inner = (
-                        f"export NEXUS_UPDATE_LOCK_TOKEN='{token}'; "
-                        f"export NEXUS_UPDATE_PREVIOUS_VERSION='{previous}'; "
-                        f"sudo -n bash '{install_sh}'"
-                    )
-                if (git_dir / ".git").is_dir():
-                    _nexus_update_lock(["phase", "git_pull", f"--token={token}"])
-                    inner = (
-                        f"cd '{git_dir}' && git fetch --tags origin 2>/dev/null && "
-                        f"git pull --ff-only origin main 2>/dev/null && "
-                        f"{install_inner}"
-                    )
-                    _nexus_update_lock(["phase", "stealth_install", f"--token={token}"])
-                    applied, install_log = _run_nexus_bash(inner, timeout=300)
-                    detail = "git_pull_stealth_install"
-                else:
-                    _nexus_update_lock(["phase", "stealth_install", f"--token={token}"])
-                    applied, install_log = _run_nexus_bash(install_inner, timeout=300)
-                    detail = "stealth_install_only"
-            finally:
+            started = _spawn_nexus_update_apply(
+                git_dir=git_dir,
+                install_sh=install_sh,
+                token=token,
+                target=target,
+                previous=previous,
+            )
+            if not started:
                 _nexus_update_lock(["release", f"--token={token}"])
-            payload = {
-                "ok": applied,
-                "applied": applied,
-                "reload_panel": applied,
-                "detail": detail,
-                "install_log": install_log,
-                "source_root": str(git_dir),
-                "previous": previous,
-                "latest": target,
-            }
-            if not applied:
-                payload["error"] = "stealth_install_failed"
-                payload["message"] = install_log or "stealth_install.sh exited non-zero"
-            self._send(200 if applied else 500, json.dumps(payload), "application/json")
+                self._send(
+                    500,
+                    json.dumps({
+                        "ok": False,
+                        "error": "update_spawn_failed",
+                        "message": "Could not start background update — see update-apply.log",
+                    }),
+                    "application/json",
+                )
+                return
+            lock_now = _nexus_update_lock(["status"])
+            self._send(
+                202,
+                json.dumps({
+                    "ok": True,
+                    "started": True,
+                    "update_in_progress": True,
+                    "reload_panel": True,
+                    "message": f"Update started — github-update.lock held · {previous} → {target}",
+                    "previous": previous,
+                    "latest": target,
+                    "source_root": str(git_dir),
+                    "update_lock": lock_now,
+                    "log": str(STATE_DIR / "update-apply.log"),
+                }),
+                "application/json",
+            )
+            return
+
+        if path == "/api/update/sudo-prompt":
+            lock = _nexus_update_lock(["status"])
+            needs = _nexus_update_needs_sudo()
+            if not needs and not lock.get("locked"):
+                self._send(
+                    400,
+                    json.dumps({"ok": False, "error": "no_pending_sudo"}),
+                    "application/json",
+                )
+                return
+            git_dir = _resolve_nexus_source_root()
+            install_sh = (git_dir / "stealth_install.sh") if git_dir else None
+            token = str(lock.get("token") or os.environ.get("NEXUS_UPDATE_LOCK_TOKEN", ""))
+            previous = str(lock.get("previous_version") or needs.get("previous") if needs else "")
+            target = str(lock.get("target_version") or needs.get("target") if needs else "")
+            if not git_dir or not install_sh or not install_sh.is_file():
+                self._send(
+                    500,
+                    json.dumps({"ok": False, "error": "stealth_install_missing"}),
+                    "application/json",
+                )
+                return
+            env = os.environ.copy()
+            env.update({
+                "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT),
+                "NEXUS_STATE_DIR": str(STATE_DIR),
+                "NEXUS_UPDATE_LOCK_TOKEN": token,
+                "NEXUS_UPDATE_GIT_DIR": str(git_dir),
+                "NEXUS_UPDATE_TARGET": target,
+                "NEXUS_UPDATE_PREVIOUS": previous,
+                "NEXUS_UPDATE_INSTALL_SH": str(install_sh),
+            })
+            helper = INSTALL_ROOT / "lib" / "nexus-update-apply.sh"
+            try:
+                subprocess.Popen(
+                    ["bash", str(helper)],
+                    env=env,
+                    start_new_session=True,
+                    cwd=str(git_dir),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                self._send(
+                    202,
+                    json.dumps({
+                        "ok": True,
+                        "prompt_started": True,
+                        "message": "Password prompt opened — complete sudo to finish update",
+                    }),
+                    "application/json",
+                )
+            except OSError as exc:
+                self._send(
+                    500,
+                    json.dumps({"ok": False, "error": str(exc)}),
+                    "application/json",
+                )
             return
 
         if path == "/api/home-protector/block":
@@ -1136,6 +1417,11 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/signals-field":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "signals-field.py", ["build"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field/parallel":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-panel-parallel.py", ["json"], timeout=120)
             self._send(200, json.dumps(payload), "application/json")
             return
 

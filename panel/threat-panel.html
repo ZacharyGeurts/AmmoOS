@@ -1769,7 +1769,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.9.2</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: acquires github-update.lock, git pull from GitHub, runs stealth_install (asks sudo if needed), restarts NEXUS, reloads this tab. Blocked while lock held.">v8.0.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -3312,6 +3312,37 @@
     let lastHostAttackUpdated = "";
     let lastGatekeeperSig = "";
     let panelFetchInFlight = false;
+    let panelParallelInFlight = false;
+    let panelSliceGeneration = 0;
+
+    const FIELD_PARALLEL_SLICES = [
+      { key: "field_command", url: "/api/field-command" },
+      { key: "gatekeeper", url: "/api/gatekeeper" },
+      { key: "lethal_enforcement", url: "/api/lethal-enforcement" },
+      { key: "hostess7_lethal_insight", url: "/api/hostess7-lethal-insight" },
+      { key: "us_field", url: "/api/us-field" },
+      { key: "packet_field", url: "/api/data/packet-field" },
+      { key: "home_protector", url: "/api/home-protector" },
+      { key: "host_attacks", url: "/api/host-attacks" },
+      { key: "terror_spiderweb", url: "/api/terror-spiderweb" },
+      { key: "precision_field", url: "/api/precision-field" },
+      { key: "angel_dossiers", url: "/api/angel-dossiers" },
+      { key: "human_dossier", url: "/api/human-dossier" },
+      { key: "angel_research", url: "/api/angel-research" },
+      { key: "browser_awareness", url: "/api/honorability" },
+      { key: "audio_train", url: "/api/audio-train" },
+      { key: "field_rf", url: "/api/field-rf" },
+      { key: "signals_field", url: "/api/signals-field" },
+      { key: "field_hardware", url: "/api/field-hardware" },
+      { key: "field_hazard_onset", url: "/api/field-hazard-onset" },
+      { key: "field_antenna", url: "/api/field-antenna" },
+      { key: "field_radio", url: "/api/field-radio" },
+      { key: "field_dns", url: "/api/field-dns" },
+      { key: "field_outside_talk", url: "/api/field-outside-talk" },
+      { key: "field_drive", url: "/api/field-drive" },
+      { key: "h7_library", url: "/api/library/catalog" },
+      { key: "settings", url: "/api/settings" },
+    ];
 
     const TAB_LOAD_MODULES = {
       command: { keys: ["field_command", "gatekeeper", "lethal_enforcement"], subs: { command: ["field_command", "lethal_enforcement"] } },
@@ -7738,11 +7769,32 @@
       }
     }
 
+    async function promptUpdateSudo(data) {
+      const prompt = data?.sudo_prompt || data;
+      const msg = prompt?.message || "NEXUS needs your administrator password to install the update and restart.";
+      const cmd = prompt?.command || "sudo bash stealth_install.sh";
+      const ok = confirm(`${msg}\n\nClick OK to open the system password prompt.\n\nManual: ${cmd}`);
+      if (!ok) return false;
+      try {
+        await fetch("/api/update/sudo-prompt", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        setUpdateBusy(true, "Waiting for administrator password…");
+        return true;
+      } catch {
+        alert(`Run in a terminal:\n${cmd}`);
+        return false;
+      }
+    }
+
     async function pollUpdateStatus() {
       try {
         const res = await fetch("/api/update/status", { cache: "no-store" });
         const data = await res.json();
         nexusUpdateState = data;
+        if (data.needs_sudo) {
+          setUpdateBusy(true, data.message || "Administrator password required");
+          await promptUpdateSudo(data);
+          return true;
+        }
         if (data.update_in_progress) {
           setUpdateBusy(true, data.message || data.update_lock?.message || "Update in progress…");
           return true;
@@ -7871,9 +7923,45 @@
           await pollUpdateStatus();
           return;
         }
+        if (res.status === 202 || data?.started) {
+          setUpdateBusy(true, data.message || "Update running — lock held on GitHub pull + install…");
+          if (!nexusUpdatePollTimer) {
+            nexusUpdatePollTimer = setInterval(async () => {
+              const busy = await pollUpdateStatus();
+              if (!busy) {
+                clearInterval(nexusUpdatePollTimer);
+                nexusUpdatePollTimer = null;
+                nexusUpdateApplying = false;
+                await reloadPanelAfterUpdate(targetVersion);
+              }
+            }, 2500);
+          }
+          return;
+        }
       } catch {
-        /* stealth_install kills the panel HTTP server — response may drop; still wait for restart */
-        data = { applied: true, latest: targetVersion, reload_panel: true };
+        /* panel may restart while background update runs */
+        setUpdateBusy(true, "NEXUS restarting — waiting for panel…");
+        if (!nexusUpdatePollTimer) {
+          nexusUpdatePollTimer = setInterval(async () => {
+            try {
+              const res = await fetch("/api/update/status", { cache: "no-store" });
+              const st = await res.json();
+              if (!st.update_in_progress) {
+                clearInterval(nexusUpdatePollTimer);
+                nexusUpdatePollTimer = null;
+                await reloadPanelAfterUpdate(targetVersion);
+              }
+            } catch {
+              /* still down */
+            }
+          }, 2500);
+        }
+        return;
+      }
+      if (data?.needs_sudo) {
+        await promptUpdateSudo(data);
+        await pollUpdateStatus();
+        return;
       }
       if (data?.applied || data?.reload_panel) {
         setUpdateBusy(true, "NEXUS restarting — waiting for panel…");
@@ -7953,24 +8041,78 @@
       }
     }
 
-    async function refresh() {
-      panelFetchInFlight = true;
-      updateTabLoadProgress(lastPanelData, { fetching: true });
+    function stripParallelSliceKeys(data) {
+      const base = data && typeof data === "object" ? { ...data } : {};
+      FIELD_PARALLEL_SLICES.forEach((slice) => {
+        delete base[slice.key];
+      });
+      return base;
+    }
+
+    function mergePanelSlice(key, val, gen) {
+      if (gen !== panelSliceGeneration || val == null) return;
+      const base = lastPanelData && typeof lastPanelData === "object" ? lastPanelData : {};
+      lastPanelData = { ...base, [key]: val };
+      fieldLiveCount(lastPanelData);
+      paintPanel(lastPanelData);
+    }
+
+    async function fetchPanelSlice(slice, gen) {
       try {
-        let res = await fetch("/api/field", { cache: "no-store" });
-        if (!res.ok) res = await fetch("/api/status", { cache: "no-store" });
+        const res = await fetch(slice.url, { cache: "no-store" });
+        if (!res.ok || gen !== panelSliceGeneration) return;
+        const val = parsePanelJson(await res.text());
+        mergePanelSlice(slice.key, val, gen);
+      } catch (_) { /* slice loads independently */ }
+    }
+
+    function refreshParallelSlices(gen) {
+      FIELD_PARALLEL_SLICES.forEach((slice) => {
+        fetchPanelSlice(slice, gen);
+      });
+    }
+
+    async function publishParallelFields() {
+      if (panelParallelInFlight) return;
+      panelParallelInFlight = true;
+      try {
+        const res = await fetch("/api/field/parallel", { method: "POST", cache: "no-store" });
+        if (!res.ok) return;
+        const j = parsePanelJson(await res.text());
+        if (j.panel && typeof j.panel === "object") {
+          lastPanelData = { ...(lastPanelData || {}), ...j.panel };
+          paintPanel(lastPanelData);
+        }
+      } catch (_) {
+      } finally {
+        panelParallelInFlight = false;
+      }
+    }
+
+    async function refresh() {
+      const gen = ++panelSliceGeneration;
+      panelFetchInFlight = true;
+      lastPanelData = stripParallelSliceKeys(lastPanelData);
+      updateTabLoadProgress(lastPanelData, { fetching: true });
+      refreshParallelSlices(gen);
+      try {
+        let res = await fetch("/api/status", { cache: "no-store" });
+        if (!res.ok) res = await fetch("/api/field", { cache: "no-store" });
         const data = parsePanelJson(await res.text());
-        panelFetchInFlight = false;
-        fieldLiveCount(data);
-        paintPanel(data);
+        if (gen !== panelSliceGeneration) return;
+        lastPanelData = { ...stripParallelSliceKeys(lastPanelData), ...stripParallelSliceKeys(data) };
+        fieldLiveCount(lastPanelData);
+        paintPanel(lastPanelData);
       } catch {
-        panelFetchInFlight = false;
+        if (gen !== panelSliceGeneration) return;
         updateTabLoadProgress(lastPanelData, { fetching: false });
         const conns = $("connections");
         const stale = conns?.querySelector(".conn-row, .conn-row.trusted");
         if (!stale) {
           conns.innerHTML = '<div class="empty">Can\'t reach NEXUS — try running <strong>./nexus.sh</strong> or click the desktop icon.</div>';
         }
+      } finally {
+        if (gen === panelSliceGeneration) panelFetchInFlight = false;
       }
     }
     bindHumanDossierFilters();
@@ -8029,8 +8171,12 @@
       bootstrapPanel();
       applyHashView();
       refresh();
+      publishParallelFields();
       if (!window._nexusPanelRefreshTimer) {
         window._nexusPanelRefreshTimer = setInterval(refresh, 2000);
+      }
+      if (!window._nexusPanelParallelTimer) {
+        window._nexusPanelParallelTimer = setInterval(publishParallelFields, 20000);
       }
     }
     if (document.readyState === "loading") {

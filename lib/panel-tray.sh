@@ -3,31 +3,46 @@
 
 nexus_panel_tray_icon_path() {
   local state_icon="${NEXUS_STATE_DIR}/nexus-tray.png"
-  if [[ -s "$state_icon" ]]; then
-    printf '%s' "$state_icon"
-    return 0
-  fi
-  local src="${NEXUS_INSTALL_ROOT}/panel/assets/nexus-shield.png"
-  [[ -f "$src" ]] || src="${NEXUS_INSTALL_ROOT}/assets/nexus-shield.png"
-  if [[ -f "$src" ]] && command -v python3 >/dev/null 2>&1; then
-    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+  local src=""
+  for candidate in \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-amouranth-24.png" \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-amouranth.png" \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/amouranth-twitch-avatar.png" \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-shield.png" \
+    "${NEXUS_INSTALL_ROOT}/assets/nexus-shield.png"; do
+    if [[ -s "$candidate" ]]; then
+      src="$candidate"
+      break
+    fi
+  done
+  if [[ -n "$src" ]] && command -v python3 >/dev/null 2>&1; then
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_TRAY_SRC="$src" \
       python3 -c "
 from pathlib import Path
 import os
 from PIL import Image
 install = Path(os.environ['NEXUS_INSTALL_ROOT'])
 state = Path(os.environ['NEXUS_STATE_DIR'])
-src = install / 'panel' / 'assets' / 'nexus-shield.png'
+src = Path(os.environ.get('NEXUS_TRAY_SRC') or '')
 if not src.is_file():
-    src = install / 'assets' / 'nexus-shield.png'
+    for rel in ('panel/assets/nexus-tray-amouranth-24.png', 'panel/assets/nexus-tray-amouranth.png', 'panel/assets/amouranth-twitch-avatar.png'):
+        p = install / rel
+        if p.is_file():
+            src = p
+            break
 out = state / 'nexus-tray.png'
 out.parent.mkdir(parents=True, exist_ok=True)
 if src.is_file():
-    img = Image.open(src).convert('RGBA').resize((24, 24))
-    img.save(out, format='PNG')
+    need = (not out.is_file()) or out.stat().st_mtime < src.stat().st_mtime
+    if need:
+        img = Image.open(src).convert('RGBA').resize((24, 24), Image.Resampling.LANCZOS)
+        img.save(out, format='PNG')
 " 2>/dev/null || true
   fi
-  [[ -s "$state_icon" ]] && printf '%s' "$state_icon"
+  if [[ -s "$state_icon" ]]; then
+    printf '%s' "$state_icon"
+    return 0
+  fi
 }
 
 nexus_panel_tray_start() {
@@ -63,7 +78,7 @@ nexus_panel_tray_start() {
   sleep 0.3
   if kill -0 "$pid" 2>/dev/null; then
     nexus_log "INFO" "panel-tray" "TRAY_STARTED pid=${pid} port=${NEXUS_THREAT_PANEL_PORT:-9477}"
-    echo "NEXUS tray icon active — right-click near the clock to pick a panel tab."
+    echo "NEXUS tray icon active — click near the clock to pick a panel tab."
     return 0
   fi
   nexus_log "WARN" "panel-tray" "TRAY_START_FAILED see ${NEXUS_STATE_DIR}/panel-tray.log"

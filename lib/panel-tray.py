@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NEXUS panel system tray — pick a tab and open in browser."""
+"""NEXUS panel system tray — left or right click opens tab picker."""
 from __future__ import annotations
 
 import json
@@ -11,8 +11,15 @@ from pathlib import Path
 import gi
 
 gi.require_version("Gtk", "3.0")
-gi.require_version("AyatanaAppIndicator3", "0.1")
-from gi.repository import AyatanaAppIndicator3, GLib, Gtk  # noqa: E402
+from gi.repository import GLib, Gtk  # noqa: E402
+
+try:
+    gi.require_version("AyatanaAppIndicator3", "0.1")
+    from gi.repository import AyatanaAppIndicator3  # noqa: E402
+
+    HAS_APPINDICATOR = True
+except (ImportError, ValueError):
+    HAS_APPINDICATOR = False
 
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parent.parent))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
@@ -46,16 +53,29 @@ def _panel_base() -> str:
     return f"{scheme}://127.0.0.1:{PORT}/field"
 
 
+def _tray_icon_source() -> Path:
+    for rel in (
+        "panel/assets/nexus-tray-amouranth-24.png",
+        "panel/assets/nexus-tray-amouranth.png",
+        "panel/assets/amouranth-twitch-avatar.png",
+        "panel/assets/nexus-shield.png",
+        "assets/nexus-shield.png",
+    ):
+        p = INSTALL / rel
+        if p.is_file() and p.stat().st_size > 0:
+            return p
+    return INSTALL / "panel" / "assets" / "nexus-shield.png"
+
+
 def _ensure_tray_icon() -> Path:
     icon = STATE / "nexus-tray.png"
-    if icon.is_file() and icon.stat().st_size > 0:
-        return icon
-    src = INSTALL / "panel" / "assets" / "nexus-shield.png"
-    if not src.is_file():
-        src = INSTALL / "assets" / "nexus-shield.png"
+    src = _tray_icon_source()
     icon.parent.mkdir(parents=True, exist_ok=True)
     if src.is_file():
         try:
+            src_mtime = src.stat().st_mtime
+            if icon.is_file() and icon.stat().st_size > 0 and icon.stat().st_mtime >= src_mtime:
+                return icon
             from PIL import Image
 
             img = Image.open(src).convert("RGBA")
@@ -63,8 +83,8 @@ def _ensure_tray_icon() -> Path:
             img.save(icon, format="PNG")
             return icon
         except Exception:
-            pass
-    # Minimal shield fallback
+            if icon.is_file() and icon.stat().st_size > 0:
+                return icon
     try:
         from PIL import Image, ImageDraw
 
@@ -147,60 +167,146 @@ def open_tab(route: str = "command") -> None:
             continue
 
 
+class TabPickerDialog(Gtk.Dialog):
+    def __init__(self) -> None:
+        super().__init__(
+            title="NEXUS-Shield — Go to tab",
+            transient_for=None,
+            flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
+        )
+        self.set_default_size(360, 420)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.add_buttons(
+            Gtk.STOCK_CANCEL,
+            Gtk.ResponseType.CANCEL,
+            "Quit tray",
+            Gtk.ResponseType.REJECT,
+            "Open tab",
+            Gtk.ResponseType.OK,
+        )
+        content = self.get_content_area()
+        content.set_spacing(8)
+        content.set_margin_top(12)
+        content.set_margin_bottom(8)
+        content.set_margin_start(12)
+        content.set_margin_end(12)
+
+        hint = Gtk.Label(label="Pick a panel tab to open in your browser:")
+        hint.set_xalign(0)
+        hint.set_line_wrap(True)
+        content.pack_start(hint, False, False, 0)
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_min_content_height(300)
+        self.listbox = Gtk.ListBox()
+        self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.listbox.set_activate_on_single_click(True)
+        for label, route in TAB_CHOICES:
+            row = Gtk.ListBoxRow()
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            box.set_margin_top(6)
+            box.set_margin_bottom(6)
+            box.set_margin_start(8)
+            box.set_margin_end(8)
+            title = Gtk.Label(label=label)
+            title.set_xalign(0)
+            title.get_style_context().add_class("title")
+            route_lbl = Gtk.Label(label=route)
+            route_lbl.set_xalign(0)
+            route_lbl.get_style_context().add_class("dim-label")
+            box.pack_start(title, False, False, 0)
+            box.pack_start(route_lbl, False, False, 0)
+            row.add(box)
+            row.route = route  # type: ignore[attr-defined]
+            self.listbox.add(row)
+        self.listbox.connect("row-activated", self._on_row_activated)
+        scroll.add(self.listbox)
+        content.pack_start(scroll, True, True, 0)
+
+        last_row = next(
+            (row for row in self.listbox.get_children() if getattr(row, "route", None) == _load_last_tab()),
+            None,
+        )
+        if last_row:
+            self.listbox.select_row(last_row)
+        content.show_all()
+
+    def _on_row_activated(self, _listbox, row) -> None:  # noqa: ANN001
+        route = getattr(row, "route", "command")
+        self.response(Gtk.ResponseType.OK)
+        self._chosen_route = route  # type: ignore[attr-defined]
+
+    def chosen_route(self) -> str:
+        row = self.listbox.get_selected_row()
+        if row is not None:
+            return str(getattr(row, "route", "command"))
+        return _load_last_tab()
+
+
+_dialog_open = False
+
+
+def show_tab_picker() -> None:
+    global _dialog_open
+    if _dialog_open:
+        return
+    _dialog_open = True
+    try:
+        dlg = TabPickerDialog()
+        response = dlg.run()
+        if response == Gtk.ResponseType.OK:
+            open_tab(getattr(dlg, "_chosen_route", None) or dlg.chosen_route())
+        elif response == Gtk.ResponseType.REJECT:
+            Gtk.main_quit()
+        dlg.destroy()
+    finally:
+        _dialog_open = False
+
+
 class NexusTray:
     def __init__(self) -> None:
         icon_path = str(_ensure_tray_icon())
-        self.indicator = AyatanaAppIndicator3.Indicator.new(
+        self._status_icon = None
+        self._indicator = None
+
+        if self._try_status_icon(icon_path):
+            return
+        if HAS_APPINDICATOR:
+            self._try_app_indicator(icon_path)
+
+    def _try_status_icon(self, icon_path: str) -> bool:
+        try:
+            icon = Gtk.StatusIcon()
+            if Path(icon_path).is_file() and Path(icon_path).stat().st_size:
+                icon.set_from_file(icon_path)
+            else:
+                icon.set_from_icon_name("security-high")
+            icon.set_tooltip_text("NEXUS-Shield · Amouranth — click to pick a panel tab")
+            icon.set_visible(True)
+            icon.connect("activate", lambda *_: show_tab_picker())
+            icon.connect("popup-menu", lambda *_: show_tab_picker())
+            self._status_icon = icon
+            return True
+        except Exception:
+            return False
+
+    def _try_app_indicator(self, icon_path: str) -> None:
+        self._indicator = AyatanaAppIndicator3.Indicator.new(
             APP_ID,
             icon_path if Path(icon_path).is_file() and Path(icon_path).stat().st_size else "security-high",
             AyatanaAppIndicator3.IndicatorCategory.APPLICATION_STATUS,
         )
-        self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
-        self.indicator.set_title("NEXUS-Shield — right-click to pick a tab")
-        self.indicator.set_menu(self._build_menu())
-
-    def _build_menu(self) -> Gtk.Menu:
+        self._indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
+        self._indicator.set_title("NEXUS-Shield · Amouranth — click to pick a panel tab")
+        # Ayatana opens this menu on left or right click — show the tab picker instead.
         menu = Gtk.Menu()
+        menu.connect("show", self._on_indicator_menu_show)
+        self._indicator.set_menu(menu)
 
-        header = Gtk.MenuItem(label="Go to tab")
-        header.set_sensitive(False)
-        menu.append(header)
-
-        for label, route in TAB_CHOICES:
-            item = Gtk.MenuItem(label=label)
-            item.connect("activate", self._on_tab, route)
-            menu.append(item)
-
-        menu.append(Gtk.SeparatorMenuItem())
-
-        last = Gtk.MenuItem(label=f"Last tab ({_load_last_tab()})")
-        last.connect("activate", self._on_last)
-        menu.append(last)
-
-        panel = Gtk.MenuItem(label="Open panel home")
-        panel.connect("activate", self._on_home)
-        menu.append(panel)
-
-        menu.append(Gtk.SeparatorMenuItem())
-
-        quit_item = Gtk.MenuItem(label="Quit tray icon")
-        quit_item.connect("activate", self._on_quit)
-        menu.append(quit_item)
-
-        menu.show_all()
-        return menu
-
-    def _on_tab(self, _item, route: str) -> None:  # noqa: ANN001
-        open_tab(route)
-
-    def _on_last(self, _item) -> None:  # noqa: ANN001
-        open_tab(_load_last_tab())
-
-    def _on_home(self, _item) -> None:  # noqa: ANN001
-        open_tab("command")
-
-    def _on_quit(self, _item) -> None:  # noqa: ANN001
-        Gtk.main_quit()
+    def _on_indicator_menu_show(self, menu: Gtk.Menu) -> None:
+        menu.hide()
+        GLib.idle_add(show_tab_picker)
 
 
 def main() -> int:
