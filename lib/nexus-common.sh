@@ -44,7 +44,15 @@ nexus_init_runtime_paths() {
   if [[ "${NEXUS_FIELD_STANDALONE:-}" == "1" ]]; then
     use_local=1
   fi
-  if [[ "$(id -u)" -ne 0 ]] && [[ ! -w /var/lib/nexus-shield ]] 2>/dev/null; then
+  local prod_state="/var/lib/nexus-shield"
+  local in_nexus_group=0
+  getent group nexus 2>/dev/null | grep -qE "(^|:)${USER:-$(id -un)}(,|$)" && in_nexus_group=1
+
+  # nexus group members read live field data from prod state even without write access.
+  if [[ "$in_nexus_group" -eq 1 ]] && [[ -r "${prod_state}/threat-panel.json" ]]; then
+    NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${prod_state}}"
+    use_local=0
+  elif [[ "$(id -u)" -ne 0 ]] && [[ ! -w "${prod_state}" ]] 2>/dev/null; then
     use_local=1
   fi
   if [[ "$(id -u)" -ne 0 ]] && [[ ! -w /var/log ]] 2>/dev/null; then
@@ -54,7 +62,7 @@ nexus_init_runtime_paths() {
   if [[ "$use_local" -eq 1 ]]; then
     NEXUS_FIELD_STANDALONE=1
     NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${NEXUS_INSTALL_ROOT}/.nexus-state}"
-    if [[ "$NEXUS_STATE_DIR" == /var/lib/nexus-shield ]]; then
+    if [[ "$NEXUS_STATE_DIR" == /var/lib/nexus-shield ]] && [[ "$in_nexus_group" -ne 1 ]]; then
       NEXUS_STATE_DIR="${NEXUS_INSTALL_ROOT}/.nexus-state"
     fi
     NEXUS_ALERT_LOG="${NEXUS_STATE_DIR}/nexus-alerts.log"
