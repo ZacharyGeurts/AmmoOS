@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.9.1"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.9.2"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -298,7 +298,7 @@ test_dusty_midnight_theme() {
   grep -q 'us-host-machine' "$panel"
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
-  grep -q 'v7.9.1' "$panel"
+  grep -q 'v7.9.2' "$panel"
 }
 
 test_hostess_profile_module() {
@@ -2053,7 +2053,7 @@ test_field_hardware_api() {
   grep -q 'signals-hardware-panel' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderHardware' "${ROOT}/panel/assets/signals-field.js"
   grep -q 'renderAudioQuality' "${ROOT}/panel/assets/signals-field.js"
-  grep -q 'NEXUS_VERSION="7.9.1"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.9.2"' "${ROOT}/lib/nexus-common.sh"
 }
 
 run_test "field hardware UI and API 7.9" test_field_hardware_api
@@ -2099,7 +2099,7 @@ test_field_gui_publish() {
   grep -q '/api/field' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'renderHardware(doc)' "${ROOT}/panel/assets/signals-field.js"
   grep -q 'fetch("/api/field"' "${ROOT}/panel/threat-panel.html"
-  grep -q 'NEXUS_VERSION="7.9.1"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.9.2"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" bash -c '
     source "${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
     nexus_init_runtime_paths
@@ -2110,6 +2110,21 @@ test_field_gui_publish() {
 }
 
 run_test "field GUI publish all slices 7.9.1" test_field_gui_publish
+
+test_panel_tray() {
+  [[ -f "${ROOT}/lib/panel-tray.py" ]]
+  [[ -f "${ROOT}/lib/panel-tray.sh" ]]
+  grep -q 'nexus_panel_tray_start' "${ROOT}/nexus.sh"
+  grep -q 'nexus_panel_open_tab' "${ROOT}/lib/panel-tray.sh"
+  grep -q 'AyatanaAppIndicator3' "${ROOT}/lib/panel-tray.py"
+  grep -q 'library' "${ROOT}/lib/panel-tray.py"
+  NEXUS_STATE_DIR="/tmp/nexus-tray-test-$$" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_THREAT_PANEL_PORT=9478 \
+    python3 "${ROOT}/lib/panel-tray.py" open signals >/dev/null
+  grep -q 'signals' "/tmp/nexus-tray-test-$$/panel-tray-last-tab.json"
+  rm -rf "/tmp/nexus-tray-test-$$"
+}
+
+run_test "panel tray tab picker" test_panel_tray
 
 rm -rf "$NEXUS_STATE_DIR" /tmp/nexus-ent-rand.bin /tmp/nexus-ent-text.txt /tmp/nexus-shadow-t.txt "$NEXUS_ALERT_LOG" 2>/dev/null || true
 

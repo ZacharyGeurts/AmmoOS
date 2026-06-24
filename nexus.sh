@@ -11,6 +11,8 @@ source "${ROOT}/lib/nexus-common.sh"
 nexus_init_runtime_paths
 # shellcheck source=/dev/null
 source "${ROOT}/lib/panel-browser.sh"
+# shellcheck source=/dev/null
+source "${ROOT}/lib/panel-tray.sh"
 
 nexus_resolve_panel_root() {
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/threat-panel-http.py" ]] \
@@ -142,11 +144,24 @@ if [[ "${1:-}" == "--no-browser" ]]; then
   echo "Version: $(nexus_panel_served_version 2>/dev/null || nexus_panel_desired_version 2>/dev/null || echo unknown)"
   echo "State: ${NEXUS_STATE_DIR}"
   echo "Tools: ${NEXUS_FIELD_TOOLS_DIR:-${NEXUS_INSTALL_ROOT}/lib/bin}"
+  nexus_panel_tray_start 2>/dev/null || true
   nexus_panel_open_help "$URL"
   exit 0
 fi
 
+if [[ "${1:-}" == "--tray" ]]; then
+  nexus_panel_tray_start
+  exit $?
+fi
+
+if [[ "${1:-}" == "--tab" && -n "${2:-}" ]]; then
+  nexus_panel_open_tab "$2"
+  nexus_panel_tray_start 2>/dev/null || true
+  exit 0
+fi
+
 if nexus_panel_open_browser "$URL"; then
+  nexus_panel_tray_start 2>/dev/null || true
   exit 0
 fi
 

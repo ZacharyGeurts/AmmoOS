@@ -191,6 +191,11 @@ Browser could not be opened automatically. Try one of:
   firefox '${url}'
   google-chrome-stable --ignore-certificate-errors '${url}'
 
+Tray icon (right-click near clock → pick a tab):
+
+  ./nexus.sh --tray
+  ./nexus.sh --tab library
+
 Or use the CLI (no browser needed):
 
   ./bin/nexus status
