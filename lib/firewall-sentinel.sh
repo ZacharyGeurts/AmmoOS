@@ -136,6 +136,7 @@ table inet ${NEXUS_FIREWALL_TABLE} {
     ip protocol icmp icmp type echo-request limit rate 10/second accept
     ip6 nexthdr icmpv6 icmpv6 type echo-request limit rate 10/second accept
     $( [[ "$allow_ssh" == "1" ]] && echo "tcp dport 22 accept" )
+    $( [[ "${NEXUS_DNS_ADMIN_PORTAL:-1}" == "1" ]] && echo "tcp dport { $(echo "${NEXUS_DNS_ADMIN_PORTS:-7,77,777}" | tr -d ' ') } accept comment \"nexus-dns-admin\"" )
     iif != "lo" tcp dport ${NEXUS_THREAT_PANEL_PORT:-9477} drop
     iif != "lo" udp dport ${NEXUS_THREAT_PANEL_PORT:-9477} drop
     counter log prefix "nexus-fw-drop-in: " drop

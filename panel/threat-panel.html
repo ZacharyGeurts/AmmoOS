@@ -1591,7 +1591,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v7.2.0</h1>
+        <h1>NEXUS-Shield v7.3.0</h1>
         <div class="brand-sub">Hostess 7 · Dusty Midnight · MIT licensed</div>
       </div>
     </div>
@@ -1611,7 +1611,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.2.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.3.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -2383,6 +2383,10 @@
           <div id="dns-planetary-table" class="dns-table-wrap"><div class="empty">Loading planetary posture…</div></div>
         </article>
       </div>
+      <article class="dns-panel dns-panel--wide" id="dns-admin-portal-panel">
+        <h3>Hostess 7 DNS Admin · ports 7 · 77 · 777</h3>
+        <div id="dns-admin-portal-info" class="meta">Read-only engineer login — DNS information only, no remote controls. Equipment room reporting on by default.</div>
+      </article>
       <div class="dns-crossrefs">
         <button type="button" data-view-jump="us">US field →</button>
         <button type="button" data-view-jump="packets/live">Live connections →</button>
@@ -3117,7 +3121,7 @@
       renderAudioTrain(data.audio_train);
       renderHomeProtector(data.home_protector);
       if (global.renderSignalsField) renderSignalsField(data.signals_field);
-      if (global.renderDnsField) renderDnsField(data.field_dns);
+      if (global.renderDnsField) renderDnsField(data.field_dns, data);
       renderCommandCenter(data);
       renderFieldProtect(data);
       const gk = data.gatekeeper || {};
@@ -3206,7 +3210,7 @@
         onSignalsViewDeactivated();
       }
       if (sub === "dns" && lastPanelData?.field_dns && global.renderDnsField) {
-        renderDnsField(lastPanelData.field_dns);
+        renderDnsField(lastPanelData.field_dns, lastPanelData);
       }
       if (sub === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
     }
@@ -3245,7 +3249,7 @@
       try {
         const res = await fetch("/api/field-dns", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
         const j = await res.json();
-        if (global.renderDnsField) renderDnsField(j);
+        if (global.renderDnsField) renderDnsField(j, { field_dns: j, dns_admin_portal: j.dns_admin_portal });
         refresh();
       } catch {
         alert("DNS field rebuild failed");

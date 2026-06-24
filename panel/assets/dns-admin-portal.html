@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostess 7 · DNS Admin</title>
+  <style>
+    :root {
+      --bg: #0c1018;
+      --panel: #141c28;
+      --text: #d8e4f0;
+      --meta: #7a9ab8;
+      --accent: #5ec8ff;
+      --ok: #6dd4a0;
+      --warn: #e8c878;
+      --border: #243040;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 48px; }
+    h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 8px; }
+    .motto { color: var(--meta); font-size: 0.95rem; margin-bottom: 24px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--accent); }
+    label { display: block; font-size: 0.85rem; color: var(--meta); margin-bottom: 4px; }
+    input, textarea, select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    button {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .port-hint { font-size: 0.85rem; color: var(--warn); margin-bottom: 16px; }
+    .upfront li { margin-bottom: 8px; }
+    .love { color: var(--ok); font-style: italic; margin-top: 16px; }
+    .hidden { display: none !important; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    th { color: var(--meta); font-weight: 500; }
+    code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
+    .chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #1a3040; color: var(--ok); }
+    .chip-warn { background: #3a3020; color: var(--warn); }
+    .stats { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+    .stat { background: var(--bg); padding: 10px 14px; border-radius: 8px; min-width: 120px; }
+    .stat span { display: block; font-size: 0.75rem; color: var(--meta); }
+    .stat strong { font-size: 1.1rem; }
+    .err { color: #f08080; margin-top: 8px; }
+    .check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .check-row input { width: auto; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Hostess 7 · DNS Admin</h1>
+    <p class="motto" id="motto">Information only — no remote controls. Ports 7 · 77 · 777.</p>
+
+    <section id="login-view" class="card">
+      <h2>Admin login</h2>
+      <p class="port-hint" id="port-hint">Tired engineer? Your passkey can be the port number you're on.</p>
+      <label for="username">Username</label>
+      <input id="username" autocomplete="username" placeholder="hostess · engineer · field" />
+      <label for="passkey">Passkey</label>
+      <input id="passkey" type="password" autocomplete="current-password" placeholder="7 · 77 · 777 — or lucky7 / double77 / triple7" />
+      <label for="port">Port</label>
+      <select id="port">
+        <option value="7">7 — lucky7</option>
+        <option value="77">77 — double77</option>
+        <option value="777" selected>777 — triple7</option>
+      </select>
+      <div class="check-row">
+        <input type="checkbox" id="equipment-enable" checked />
+        <label for="equipment-enable" style="margin:0">Enable network equipment room reporting (recommended)</label>
+      </div>
+      <button type="button" id="login-btn">Log in — DNS info only</button>
+      <p class="err hidden" id="login-err"></p>
+    </section>
+
+    <section id="dash-view" class="hidden">
+      <div class="stats" id="stats-bar"></div>
+
+      <article class="card" id="welcome-card">
+        <h2>DNS upfront — end the call fast</h2>
+        <ul class="upfront" id="upfront-list"></ul>
+        <p class="love" id="love-note"></p>
+      </article>
+
+      <article class="card">
+        <h2>Truth Resolver</h2>
+        <div id="resolver-panel"></div>
+      </article>
+
+      <article class="card">
+        <h2>RFC matrix</h2>
+        <div id="rfc-panel" style="overflow-x:auto"></div>
+      </article>
+
+      <article class="card">
+        <h2>Legal framework</h2>
+        <div id="legal-panel" style="overflow-x:auto"></div>
+      </article>
+
+      <article class="card">
+        <h2>Field DNS servers &amp; legacy gear</h2>
+        <div id="field-servers"></div>
+      </article>
+
+      <article class="card">
+        <h2>Equipment room · MDF/IDF checklist</h2>
+        <div id="checklist"></div>
+        <label for="report-notes">Room notes (information only — stored locally)</label>
+        <textarea id="report-notes" rows="3" placeholder="MDF patch panel row 4, legacy BIND forwarder retired…"></textarea>
+        <button type="button" id="report-btn">Submit equipment room report</button>
+        <p class="meta" style="color:var(--meta);font-size:0.85rem;margin-top:8px">No remote actions. Thank you for documenting the room.</p>
+      </article>
+
+      <button type="button" class="secondary" id="logout-btn">Log out</button>
+    </section>
+  </div>
+  <script>
+(function () {
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+  }
+  async function api(path, opts) {
+    const res = await fetch(path, Object.assign({ credentials: "same-origin" }, opts || {}));
+    const data = await res.json().catch(function () { return {}; });
+    return { res: res, data: data };
+  }
+  function detectPort() {
+    const p = parseInt(location.port, 10);
+    if ([7, 77, 777].indexOf(p) >= 0) {
+      $("port").value = String(p);
+      $("passkey").placeholder = String(p) + " — or mnemonic from welcome";
+    }
+  }
+  async function loadWelcome() {
+    const { data } = await api("/api/welcome");
+    if (data.mnemonic) $("port-hint").textContent = "On port " + data.port + ": " + data.mnemonic;
+    if (data.login_hint) $("motto").textContent = data.login_hint + " — no remote controls.";
+  }
+  function renderUpfront(w) {
+    const ul = $("upfront-list");
+    ul.innerHTML = (w.dns_upfront || []).map(function (line) {
+      return "<li>" + esc(line) + "</li>";
+    }).join("");
+    $("love-note").textContent = w.love_note || "";
+    if (w.headline) $("welcome-card").querySelector("h2").textContent = w.headline;
+  }
+  function renderResolver(d) {
+    const pol = d.resolver_policy || {};
+    const resolv = d.resolv || {};
+    $("resolver-panel").innerHTML =
+      "<p><span class='chip'>loopback only</span> " + (d.listeners || []).map(function (l) {
+        return "<code>" + esc(l) + "</code>";
+      }).join(" · ") + "</p>" +
+      "<p>Trace: <strong>" + (pol.no_shortcut_public_dns ? "dig +trace from root" : "—") + "</strong></p>" +
+      "<p>resolv.conf: " + (resolv.nameservers || []).map(function (n) {
+        return "<code>" + esc(n) + "</code>";
+      }).join(" ") + (resolv.nexus_truth_enforced ? " <span class='chip'>NEXUS enforced</span>" : "") + "</p>" +
+      "<p>Planetary: <strong>" + esc(d.planetary_security_level || "—") + "</strong></p>";
+  }
+  function renderTable(rows, cols) {
+    if (!rows.length) return "<p>No data.</p>";
+    return "<table><thead><tr>" + cols.map(function (c) {
+      return "<th>" + esc(c.label) + "</th>";
+    }).join("") + "</tr></thead><tbody>" + rows.map(function (r) {
+      return "<tr>" + cols.map(function (c) {
+        return "<td>" + (c.render ? c.render(r) : esc(r[c.key])) + "</td>";
+      }).join("") + "</tr>";
+    }).join("") + "</tbody></table>";
+  }
+  function renderDash(dns, equip) {
+    $("stats-bar").innerHTML = [
+      ["Resolver", dns.running ? "RUNNING" : "STOPPED"],
+      ["RFC rows", (dns.rfc_matrix || []).length],
+      ["Field peers", (equip.field_dns_peers || []).length],
+      ["Legacy gear", (equip.legacy_dns_equipment || []).length]
+    ].map(function (pair) {
+      return "<div class='stat'><span>" + esc(pair[0]) + "</span><strong>" + esc(pair[1]) + "</strong></div>";
+    }).join("");
+    renderResolver(dns);
+    $("rfc-panel").innerHTML = renderTable(dns.rfc_matrix || [], [
+      { key: "rfc", label: "RFC" },
+      { key: "section", label: "§" },
+      { key: "compliance", label: "Status", render: function (r) {
+        return "<span class='chip" + (r.compliance === "enforced" ? "" : "-warn") + "'>" + esc(r.compliance) + "</span>";
+      }},
+      { key: "nexus_control", label: "Control" }
+    ]);
+    $("legal-panel").innerHTML = renderTable(dns.legal_framework || [], [
+      { key: "citation", label: "Citation" },
+      { key: "title", label: "Instrument" },
+      { key: "nexus_application", label: "Application" }
+    ]);
+    const peers = equip.field_dns_peers || [];
+    const legacy = equip.legacy_dns_equipment || [];
+    $("field-servers").innerHTML =
+      "<h3 style='font-size:0.95rem;color:var(--meta)'>Field DNS peers</h3>" +
+      renderTable(peers, [
+        { key: "id", label: "ID" },
+        { key: "host", label: "Host" },
+        { key: "port", label: "Port" },
+        { key: "stack", label: "Stack" },
+        { key: "role", label: "Role" }
+      ]) +
+      "<h3 style='font-size:0.95rem;color:var(--meta);margin-top:16px'>Legacy equipment interop</h3>" +
+      renderTable(legacy, [
+        { key: "vendor", label: "Vendor" },
+        { key: "era", label: "Era" },
+        { key: "rfc", label: "RFC" },
+        { key: "interop", label: "Interop" }
+      ]);
+    const checks = equip.mdf_idf_checklist || [];
+    $("checklist").innerHTML = checks.map(function (c, i) {
+      return "<div class='check-row'><input type='checkbox' id='chk" + i + "' " +
+        (c.default_on !== false ? "checked" : "") + " /><label for='chk" + i + "'>" +
+        esc(c.item) + (c.rfc ? " <code>" + esc(c.rfc) + "</code>" : "") + "</label></div>";
+    }).join("");
+  }
+  async function afterLogin(welcome) {
+    $("login-view").classList.add("hidden");
+    $("dash-view").classList.remove("hidden");
+    if (welcome) renderUpfront(welcome);
+    const dns = (await api("/api/dns")).data;
+    const equip = (await api("/api/equipment-room")).data;
+    renderDash(dns, equip);
+  }
+  $("login-btn").addEventListener("click", async function () {
+    $("login-err").classList.add("hidden");
+    const body = {
+      username: $("username").value.trim(),
+      passkey: $("passkey").value.trim(),
+      port: parseInt($("port").value, 10),
+      accept_equipment_room: $("equipment-enable").checked
+    };
+    const { res, data } = await api("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      $("login-err").textContent = data.error || "Login failed";
+      $("login-err").classList.remove("hidden");
+      return;
+    }
+    await afterLogin(data.welcome);
+  });
+  $("logout-btn").addEventListener("click", async function () {
+    await api("/api/logout", { method: "POST", body: "{}" });
+    $("dash-view").classList.add("hidden");
+    $("login-view").classList.remove("hidden");
+  });
+  $("report-btn").addEventListener("click", async function () {
+    const checks = [];
+    document.querySelectorAll("#checklist input[type=checkbox]").forEach(function (el, i) {
+      if (el.checked) checks.push({ item: el.nextElementSibling.textContent, checked: true });
+    });
+    const { res, data } = await api("/api/equipment-room/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ checklist: checks, notes: $("report-notes").value, room: "MDF/IDF" })
+    });
+    alert(res.ok ? (data.message || "Report saved. Thank you!") : (data.error || "Report failed"));
+  });
+  detectPort();
+  loadWelcome();
+  api("/api/session").then(function (r) {
+    if (r.data.authenticated) afterLogin();
+  });
+})();
+  </script>
+</body>
+</html>

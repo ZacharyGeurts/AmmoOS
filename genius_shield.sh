@@ -70,9 +70,10 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/signals-field.py" "${ROOT}/lib/fcc-signal-lookup.py" \
   "${ROOT}/lib/field-material-discern.py" "${ROOT}/lib/gps-precision.py" \
   "${ROOT}/lib/precision-field.py" "${ROOT}/lib/hostess-profile.py" "${ROOT}/lib/host-security-tier.py" \
-  "${ROOT}/lib/field-dns.py" "${ROOT}/lib/dns-planetary-security.py" 2>/dev/null || true
+  "${ROOT}/lib/field-dns.py" "${ROOT}/lib/dns-planetary-security.py" \
+  "${ROOT}/lib/dns-admin-portal.py" "${ROOT}/lib/equipment-room-field.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
-  "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/field-dns.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
+  "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/field-dns.sh" "${ROOT}/lib/dns-admin-portal.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
   "${ROOT}/lib/honorability.sh" "${ROOT}/lib/field-rf-sentinel.sh" "${ROOT}/lib/police-agency.sh" \
   "${ROOT}/lib/field-command.sh" "${ROOT}/lib/gov-intel.sh" "${ROOT}/lib/program-tags.sh" \
@@ -149,7 +150,7 @@ StartLimitBurst=5
 Type=simple
 Environment=NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield
 ExecStart=/usr/local/lib/nexus-shield/lib/nexus-daemon.sh
-ExecStop=/bin/bash -c 'source /usr/local/lib/nexus-shield/lib/nexus-common.sh; source /usr/local/lib/nexus-shield/lib/shutdown-guard.sh 2>/dev/null; nexus_shutdown_mark_clean 2>/dev/null; pkill -9 -f threat-panel-http.py 2>/dev/null; pkill -9 -P $MAINPID 2>/dev/null; exit 0'
+ExecStop=/bin/bash -c 'source /usr/local/lib/nexus-shield/lib/nexus-common.sh; source /usr/local/lib/nexus-shield/lib/shutdown-guard.sh 2>/dev/null; nexus_shutdown_mark_clean 2>/dev/null; pkill -9 -f threat-panel-http.py 2>/dev/null; pkill -9 -f dns-admin-portal.py 2>/dev/null; pkill -9 -P $MAINPID 2>/dev/null; exit 0'
 KillMode=control-group
 TimeoutStopSec=8
 Restart=on-failure
@@ -163,8 +164,8 @@ ProtectHome=read-only
 ReadWritePaths=/var/lib/nexus-shield /var/log/nexus-alerts.log
 BindReadOnlyPaths=-/home/default/Desktop/SG/Hostess7
 BindPaths=/var/lib/nexus-shield/hostess7-cache:/home/default/Desktop/SG/Hostess7/cache
-AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW
-CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_DAC_OVERRIDE CAP_SETGID CAP_SETUID CAP_SYS_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_DAC_OVERRIDE CAP_SETGID CAP_SETUID CAP_SYS_ADMIN
 NoNewPrivileges=true
 
 [Install]

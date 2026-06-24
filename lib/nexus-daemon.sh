@@ -71,6 +71,8 @@ source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh"
@@ -101,6 +103,7 @@ nexus_firewall_ensure_self_access || true
 nexus_panel_tls_ensure
 nexus_hostess7_corroborate_integrity || true
 declare -f nexus_field_dns_enforce_resolv >/dev/null 2>&1 && nexus_field_dns_enforce_resolv || true
+declare -f nexus_dns_admin_firewall_permit >/dev/null 2>&1 && nexus_dns_admin_firewall_permit || true
 
 nexus_log "INFO" "nexus-daemon" "NEXUS-Shield v${NEXUS_VERSION} ultra-stealth active (genius-only)"
 
@@ -122,6 +125,7 @@ start_module() {
 [[ "${NEXUS_PRIVACY_GUARD:-1}" == "1" ]] && start_module privacy nexus_privacy_loop
 [[ "${NEXUS_PACKET_ORACLE:-1}" == "1" ]] && start_module packet nexus_packet_loop
 [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] && start_module field-dns nexus_field_dns_serve_loop
+[[ "${NEXUS_DNS_ADMIN_PORTAL:-1}" == "1" ]] && start_module dns-admin nexus_dns_admin_serve_loop
 [[ "${NEXUS_THREAT_PANEL:-1}" == "1" ]] && start_module panel nexus_threat_panel_serve_loop
 (
   sleep 8

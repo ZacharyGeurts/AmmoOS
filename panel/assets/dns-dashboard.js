@@ -137,8 +137,24 @@
     ).join("");
   }
 
-  function renderDnsField(fd) {
+  function renderDnsAdminPortal(dap) {
+    const el = $("dns-admin-portal-info");
+    if (!el || !dap) return;
+    const ports = (dap.ports || [7, 77, 777]).map((p) => {
+      const host = location.hostname === "127.0.0.1" ? location.hostname : location.hostname;
+      return `<a href="http://${host}:${p}/" target="_blank" rel="noopener">:${esc(p)}</a>`;
+    }).join(" · ");
+    el.innerHTML = `<div class="dns-admin-banner">
+      <span class="dns-chip dns-chip-ok">information only</span>
+      <span class="dns-chip dns-chip-warn">remote control blocked</span>
+      <p style="margin:8px 0 4px;">Tired engineer ports: ${ports} — passkey can be the port number (7, 77, 777).</p>
+      <p class="meta">Share all DNS upfront · equipment room MDF/IDF reporting enabled by default · legacy BIND/Windows/Cisco interop documented.</p>
+    </div>`;
+  }
+
+  function renderDnsField(fd, panel) {
     if (!fd) return;
+    if (panel?.dns_admin_portal) renderDnsAdminPortal(panel.dns_admin_portal);
     const motto = $("dns-motto");
     if (motto) {
       motto.innerHTML = `<strong>DNS · Truth Resolver</strong> — ${esc(fd.planetary?.motto || fd.motto || "Self-hosted loopback DNS. RFC and law on every answer. Planetary EXTREME security.")}`;

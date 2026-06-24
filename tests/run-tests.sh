@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.2.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.3.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -298,7 +298,7 @@ test_dusty_midnight_theme() {
   grep -q 'us-host-machine' "$panel"
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
-  grep -q 'v7.2.0' "$panel"
+  grep -q 'v7.3.0' "$panel"
 }
 
 test_hostess_profile_module() {
@@ -1484,6 +1484,29 @@ test_field_dns_module() {
 }
 
 run_test "field dns planetary module" test_field_dns_module
+
+test_dns_admin_portal_module() {
+  [[ -f "${ROOT}/lib/dns-admin-portal.py" ]]
+  [[ -f "${ROOT}/lib/dns-admin-portal.sh" ]]
+  [[ -f "${ROOT}/lib/equipment-room-field.py" ]]
+  [[ -f "${ROOT}/data/dns-admin-seed.json" ]]
+  [[ -f "${ROOT}/panel/assets/dns-admin-portal.html" ]]
+  grep -q 'NEXUS_DNS_ADMIN_PORTAL' "${ROOT}/config/nexus.conf"
+  grep -q 'nexus_dns_admin_serve_loop' "${ROOT}/lib/nexus-daemon.sh"
+  grep -q 'nexus-dns-admin' "${ROOT}/lib/firewall-sentinel.sh"
+  grep -q 'dns_admin_portal' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'dns-admin-portal-info' "${ROOT}/panel/threat-panel.html"
+  grep -q 'information only' "${ROOT}/data/dns-admin-seed.json"
+  grep -q 'remote_control_blocked' "${ROOT}/data/dns-admin-seed.json"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-admin-portal.py" status | grep -q 'dns-admin-portal/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/equipment-room-field.py" build | grep -q 'equipment-room/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-admin-portal.py" status | grep -q 'blocked'
+}
+
+run_test "dns admin portal hostess7 ports" test_dns_admin_portal_module
 run_test "gatekeeper strict enforce in+out" test_gatekeeper_strict_enforce
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout
 run_test "panel v2.4 action buttons" test_panel_v24_actions

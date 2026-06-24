@@ -33,6 +33,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 
@@ -79,6 +80,9 @@ nexus_threat_panel_publish() {
   fi
   if declare -f nexus_field_dns_publish >/dev/null 2>&1; then
     nexus_field_dns_publish
+  fi
+  if declare -f nexus_dns_admin_publish >/dev/null 2>&1; then
+    nexus_dns_admin_publish
   fi
   local ts mode conn arp egress listeners threats corr signal dns
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
@@ -296,6 +300,12 @@ nexus_threat_panel_publish() {
       nexus_field_dns_json
     else
       printf '{"schema":"field-dns/v1","running":false,"rfc_matrix":[],"legal_framework":[],"zones":[]}'
+    fi
+    printf ',"dns_admin_portal":'
+    if declare -f nexus_dns_admin_status_json >/dev/null 2>&1; then
+      nexus_dns_admin_status_json
+    else
+      printf '{"schema":"dns-admin-portal/v1","ports":[7,77,777],"policy":"information_only"}'
     fi
     printf ',"adblock_guardian":'
     if declare -f nexus_adblock_guardian_json >/dev/null 2>&1; then

@@ -46,6 +46,7 @@ EXTREME_PROTECTIONS: tuple[str, ...] = (
     "self_defense",
     "signals_field",
     "field_dns_planetary",
+    "dns_admin_portal_readonly",
     "packet_field_dpi",
     "endpoint_corroboration",
     "friendly_guard_v3",
