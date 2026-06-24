@@ -9,15 +9,15 @@
   --dust-muted: #b8b0c8;
   --dust-gold: #d4b86a;
   --dust-glow: rgba(180, 160, 220, 0.22);
-  --text-base: 21px;
-  --text-sm: 0.92rem;
-  --text-xs: 0.82rem;
-  --ui-scale: 1.18;
-  --tab-pad-y: 16px;
-  --tab-pad-x: 22px;
-  --btn-pad-y: 12px;
-  --btn-pad-x: 18px;
-  --input-pad: 12px 14px;
+  --text-base: 22px;
+  --text-sm: 15pt;
+  --text-xs: 14pt;
+  --ui-scale: 1.28;
+  --tab-pad-y: 18px;
+  --tab-pad-x: 24px;
+  --btn-pad-y: 14px;
+  --btn-pad-x: 20px;
+  --input-pad: 14px 16px;
   --radius: 12px;
 }
 
@@ -97,7 +97,7 @@ html.dusty-midnight input[type="text"],
 html.dusty-midnight input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 html.dusty-midnight textarea {
   padding: var(--input-pad) !important;
-  font-size: 1rem !important;
+  font-size: 1.0rem !important;
   min-height: 48px;
   border-radius: 10px !important;
   border: 1px solid #333 !important;
@@ -172,7 +172,7 @@ html.dusty-midnight .host-extreme-badge {
   margin: 8px 8px 0 0;
   padding: 6px 12px;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: 1.05rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -192,7 +192,7 @@ html.dusty-midnight .honor-extreme-chip {
   margin-left: 6px;
   padding: 2px 8px;
   border-radius: 6px;
-  font-size: 0.68rem;
+  font-size: 0.95rem;
   background: rgba(200, 80, 110, 0.2);
   border: 1px solid #c87898;
   color: #ffb8c8;
@@ -260,7 +260,7 @@ html.dusty-midnight .traffic-bar-row {
   align-items: center;
   gap: 12px;
   margin: 10px 0;
-  font-size: 0.92rem;
+  font-size: 1.1rem;
 }
 
 html.dusty-midnight .traffic-bar-track {
@@ -298,9 +298,148 @@ html.dusty-midnight .ggb-card {
 }
 
 html.dusty-midnight .dns-wrap,
-html.dusty-midnight .dns-engineer {
+html.dusty-midnight .dns-engineer,
+html.dusty-midnight .dns-planetary {
   padding: 18px 24px 48px;
   max-width: none;
+}
+html.dusty-midnight .dns-posture-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+html.dusty-midnight .dns-posture-card {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #000;
+  color: #fff;
+}
+html.dusty-midnight .dns-posture-label {
+  display: block;
+  font-size: 14pt;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #888;
+}
+html.dusty-midnight .dns-posture-value {
+  display: block;
+  font-size: 1.2rem;
+  color: #fff;
+  margin: 4px 0 6px;
+}
+html.dusty-midnight .dns-command-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+html.dusty-midnight .dns-panel--model { margin-bottom: 14px; }
+html.dusty-midnight .dns-threat-lvl {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid #333;
+}
+html.dusty-midnight .dns-threat-lvl--extreme { background: #301018; color: #ff8a9a; border-color: #5a2830; }
+html.dusty-midnight .dns-threat-lvl--high { background: #2a1810; color: #ffb878; border-color: #5a4020; }
+html.dusty-midnight .dns-threat-lvl--medium { background: #1a1a10; color: #e8d878; border-color: #444; }
+html.dusty-midnight .dns-threat-lvl--low,
+html.dusty-midnight .dns-threat-lvl--mitigated,
+html.dusty-midnight .dns-threat-lvl--controlled,
+html.dusty-midnight .dns-threat-lvl--stable { background: #0a2010; color: #4de88a; border-color: #2a5040; }
+html.dusty-midnight .dns-threat-lvl--guarded,
+html.dusty-midnight .dns-threat-lvl--elevated,
+html.dusty-midnight .dns-threat-lvl--monitored { background: #101820; color: #8ac8e8; border-color: #2a4048; }
+html.dusty-midnight .dns-threat-lvl--info { background: #111; color: #aaa; }
+html.dusty-midnight .dns-threat-summary { margin-bottom: 12px; }
+html.dusty-midnight .dns-threat-gauge { margin-bottom: 10px; }
+html.dusty-midnight .dns-threat-gauge-label {
+  display: block;
+  font-size: 14pt;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 4px;
+}
+html.dusty-midnight .dns-concerns-head {
+  display: block;
+  margin: 12px 0 8px;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dust-gold);
+}
+html.dusty-midnight .dns-concern-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #000;
+}
+html.dusty-midnight .dns-concern-ok { padding: 8px 0; }
+html.dusty-midnight .dns-traffic-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+html.dusty-midnight .dns-traffic-head strong { color: #4de88a; }
+html.dusty-midnight .dns-traffic-dns { margin-bottom: 14px; }
+html.dusty-midnight .dns-traffic-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 48px 40px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+}
+html.dusty-midnight .dns-traffic-label { color: #ccc; }
+html.dusty-midnight .dns-traffic-bar-wrap {
+  height: 8px;
+  border-radius: 4px;
+  background: #111;
+  border: 1px solid #333;
+  overflow: hidden;
+}
+html.dusty-midnight .dns-traffic-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1a5c38, #4de88a);
+  border-radius: 3px;
+  min-width: 2px;
+}
+html.dusty-midnight .dns-traffic-bar--dhcp {
+  background: linear-gradient(90deg, #1a3c5c, #5ec8ff);
+}
+html.dusty-midnight .dns-traffic-val { color: #fff; text-align: right; }
+html.dusty-midnight .dns-traffic-pct { text-align: right; font-size: 14pt; }
+html.dusty-midnight .dns-traffic-note { margin: 8px 0 0; }
+html.dusty-midnight .dns-model-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+html.dusty-midnight .dns-threat-model-table { font-size: 0.95rem; }
+html.dusty-midnight .dns-ops-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+html.dusty-midnight .dns-ops-section h5 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
 }
 html.dusty-midnight .dns-hero {
   display: flex;
@@ -317,7 +456,7 @@ html.dusty-midnight .dns-hero {
 }
 html.dusty-midnight .dns-hero-eyebrow {
   margin: 0 0 6px;
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #4de88a;
@@ -332,7 +471,7 @@ html.dusty-midnight .dns-hero-run { color: #4de88a; }
 html.dusty-midnight .dns-hero-stop { color: #ff6a82; }
 html.dusty-midnight .dns-hero-sub {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: 1.1rem;
   color: #ccc;
   max-width: 52rem;
   line-height: 1.55;
@@ -348,7 +487,7 @@ html.dusty-midnight .dns-hero-pill {
   border-radius: 8px;
   border: 1px solid #333;
   background: #000;
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   min-width: 88px;
 }
 html.dusty-midnight .dns-hero-pill span {
@@ -356,7 +495,7 @@ html.dusty-midnight .dns-hero-pill span {
   color: #888;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 0.62rem;
+  font-size: 14pt;
 }
 html.dusty-midnight .dns-hero-pill strong { color: #fff; font-size: 0.95rem; }
 html.dusty-midnight .dns-hero-pill--ok { border-color: #2a6040; }
@@ -371,7 +510,7 @@ html.dusty-midnight .dns-alert {
   border: 1px solid #333;
   background: #000;
   color: #fff;
-  font-size: 0.84rem;
+  font-size: 1.05rem;
   line-height: 1.45;
 }
 html.dusty-midnight .dns-alert strong { display: block; margin-bottom: 4px; }
@@ -383,7 +522,7 @@ html.dusty-midnight .dns-alert--ok { border-color: #2a5040; color: #9ae8b8; }
 html.dusty-midnight .dns-alert-action {
   display: block;
   margin-top: 6px;
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   color: #8af0b0;
 }
 html.dusty-midnight .dns-panel--briefing {
@@ -394,14 +533,14 @@ html.dusty-midnight .dns-panel--briefing {
 }
 html.dusty-midnight .dns-briefing-lead {
   margin: 0 0 10px;
-  font-size: 1rem;
+  font-size: 1.0rem;
   color: #fff;
 }
 html.dusty-midnight .dns-briefing-list {
   margin: 0;
   padding-left: 1.2rem;
   color: #ddd;
-  font-size: 0.88rem;
+  font-size: 1.05rem;
   line-height: 1.55;
 }
 html.dusty-midnight .dns-briefing-list li { margin-bottom: 8px; }
@@ -425,7 +564,7 @@ html.dusty-midnight .dns-ops-card {
 }
 html.dusty-midnight .dns-ops-label {
   display: block;
-  font-size: 0.62rem;
+  font-size: 14pt;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #888;
@@ -438,7 +577,7 @@ html.dusty-midnight .dns-ops-value {
 }
 html.dusty-midnight .dns-ops-sub {
   display: block;
-  font-size: 0.62rem;
+  font-size: 14pt;
   color: #666;
   font-style: normal;
   margin-top: 2px;
@@ -458,7 +597,7 @@ html.dusty-midnight .dns-reality-grid {
 }
 html.dusty-midnight .dns-model-col--whole { border-color: #2a4048 !important; }
 html.dusty-midnight .dns-model-col--now { border-color: #2a5040 !important; }
-html.dusty-midnight .dns-model-stat { margin-top: 8px; font-family: ui-monospace, monospace; font-size: 0.82rem; }
+html.dusty-midnight .dns-model-stat { margin-top: 8px; font-family: ui-monospace, monospace; font-size: 1.05rem; }
 html.dusty-midnight .dns-model-stat strong { color: #4de88a; }
 html.dusty-midnight .dns-coverage-bar {
   height: 8px;
@@ -475,7 +614,7 @@ html.dusty-midnight .dns-coverage-fill {
   transition: width 0.4s ease;
 }
 html.dusty-midnight .dns-coverage-label {
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   color: #888;
   margin-bottom: 10px;
 }
@@ -498,13 +637,13 @@ html.dusty-midnight .dns-strength-bar {
   background: linear-gradient(90deg, #1a4030, #4de88a);
   max-width: 48px;
 }
-html.dusty-midnight .dns-table-foot { margin-top: 8px; font-size: 0.68rem; }
+html.dusty-midnight .dns-table-foot { margin-top: 8px; font-size: 0.95rem; }
 html.dusty-midnight .dns-kv-grid {
   display: grid;
   grid-template-columns: minmax(120px, 34%) 1fr;
   gap: 8px 12px;
   margin: 0;
-  font-size: 0.86rem;
+  font-size: 1.05rem;
 }
 html.dusty-midnight .dns-kv-grid dt { color: #888; margin: 0; }
 html.dusty-midnight .dns-kv-grid dd { margin: 0; color: #fff; }
@@ -517,7 +656,7 @@ html.dusty-midnight .dns-ref-tabs {
 }
 html.dusty-midnight .dns-ref-tabs button {
   padding: 8px 14px !important;
-  font-size: 0.82rem !important;
+  font-size: 1.05rem !important;
   min-height: 40px !important;
   border-radius: 8px !important;
 }
@@ -548,12 +687,12 @@ html.dusty-midnight .dns-admin-port-link:hover { border-color: #4de88a; color: #
 html.dusty-midnight .dns-admin-users {
   margin: 8px 0 0;
   padding-left: 1.1rem;
-  font-size: 0.82rem;
+  font-size: 1.05rem;
   color: #ccc;
 }
 html.dusty-midnight .dns-stats-bar--hidden { display: none !important; }
 html.dusty-midnight .dns-motto {
-  font-size: 1rem;
+  font-size: 1.0rem;
   margin: 0 0 16px;
   line-height: 1.55;
 }
@@ -568,7 +707,7 @@ html.dusty-midnight .dns-stat {
   border-radius: var(--radius);
   background: var(--dust-card);
   border: 1px solid var(--dust-border);
-  font-size: 0.88rem;
+  font-size: 1.05rem;
 }
 html.dusty-midnight .dns-stat strong.dns-ok { color: #7ad8a0; }
 html.dusty-midnight .dns-stat strong.dns-warn { color: #ffb8c8; }
@@ -586,7 +725,7 @@ html.dusty-midnight .dns-panel {
 html.dusty-midnight .dns-panel--wide { grid-column: 1 / -1; }
 html.dusty-midnight .dns-panel h4 {
   margin: 0 0 12px;
-  font-size: 0.82rem;
+  font-size: 1.05rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--dust-gold);
@@ -600,7 +739,7 @@ html.dusty-midnight .dns-chip {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -611,7 +750,7 @@ html.dusty-midnight .dns-server-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 html.dusty-midnight .dns-internet-model {
   display: grid;
@@ -638,7 +777,7 @@ html.dusty-midnight .dns-internet-summary {
   gap: 10px 18px;
   margin-bottom: 10px;
   font-family: ui-monospace, monospace;
-  font-size: 0.82rem;
+  font-size: 1.05rem;
 }
 html.dusty-midnight .dns-internet-summary strong { color: #4de88a; }
 html.dusty-midnight .dns-ok-text strong { color: #8af0b0; }
@@ -671,12 +810,18 @@ html.dusty-midnight .dns-admin-banner {
   gap: 10px;
   margin-top: 18px;
 }
+@media (max-width: 1100px) {
+  html.dusty-midnight .dns-command-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 900px) {
   html.dusty-midnight .dns-grid { grid-template-columns: 1fr; }
   html.dusty-midnight .dns-server-grid { grid-template-columns: 1fr; }
   html.dusty-midnight .dns-main-grid { grid-template-columns: 1fr; }
   html.dusty-midnight .dns-reality-grid { grid-template-columns: 1fr; }
   html.dusty-midnight .dns-admin-engineer-grid { grid-template-columns: 1fr; }
+  html.dusty-midnight .dns-ops-grid { grid-template-columns: 1fr; }
+  html.dusty-midnight .dns-traffic-row { grid-template-columns: 90px 1fr 40px; }
+  html.dusty-midnight .dns-traffic-pct { display: none; }
   html.dusty-midnight .dns-hero { flex-direction: column; }
 }
 html.dusty-midnight .stat strong,
@@ -704,7 +849,7 @@ html.dusty-midnight .outside-hero {
   background: #000;
 }
 html.dusty-midnight .outside-hero-eyebrow {
-  font-size: 0.62rem;
+  font-size: 14pt;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #888;
@@ -719,7 +864,7 @@ html.dusty-midnight .outside-hero-run { color: #4de88a; }
 html.dusty-midnight .outside-hero-stop { color: #ff6a82; }
 html.dusty-midnight .outside-hero-sub {
   margin: 8px 0 0;
-  font-size: 0.82rem;
+  font-size: 1.05rem;
   color: #aaa;
   max-width: 52ch;
 }
@@ -735,7 +880,7 @@ html.dusty-midnight .outside-hero-pill {
   border: 1px solid #333;
   border-radius: 6px;
   background: #0a0a0a;
-  font-size: 0.68rem;
+  font-size: 0.95rem;
 }
 html.dusty-midnight .outside-hero-pill span { display: block; color: #666; text-transform: uppercase; letter-spacing: 0.06em; }
 html.dusty-midnight .outside-hero-pill strong { color: #fff; font-size: 0.95rem; }
@@ -746,14 +891,14 @@ html.dusty-midnight .outside-alert {
   border: 1px solid #333;
   border-radius: 8px;
   background: #080808;
-  font-size: 0.78rem;
+  font-size: 1rem;
   color: #ccc;
 }
 html.dusty-midnight .outside-alert strong { display: block; color: #fff; margin-bottom: 4px; }
 html.dusty-midnight .outside-alert--ok { border-color: #2a5040; color: #9ae8b8; }
 html.dusty-midnight .outside-alert--critical { border-color: #5a2830; background: #140808; }
 html.dusty-midnight .outside-alert--high { border-color: #5a4020; }
-html.dusty-midnight .outside-alert-action { margin-top: 6px; font-family: ui-monospace, monospace; font-size: 0.68rem; color: #888; }
+html.dusty-midnight .outside-alert-action { margin-top: 6px; font-family: ui-monospace, monospace; font-size: 0.95rem; color: #888; }
 html.dusty-midnight .outside-main-grid {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
@@ -769,7 +914,7 @@ html.dusty-midnight .outside-panel {
 }
 html.dusty-midnight .outside-panel h4 {
   margin: 0 0 10px;
-  font-size: 0.78rem;
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #fff;
@@ -784,7 +929,7 @@ html.dusty-midnight .outside-label {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 0.68rem;
+  font-size: 0.95rem;
   color: #888;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -797,20 +942,20 @@ html.dusty-midnight .outside-panel input {
   border: 1px solid #444 !important;
   border-radius: 6px;
   padding: 8px 10px;
-  font-size: 0.82rem;
+  font-size: 1.05rem;
 }
 html.dusty-midnight .outside-options {
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   color: #aaa;
 }
 html.dusty-midnight .outside-check { display: flex; align-items: center; gap: 6px; cursor: pointer; }
 html.dusty-midnight .outside-secure {
   grid-column: 1 / -1;
-  font-size: 0.68rem;
+  font-size: 0.95rem;
   padding: 6px 8px;
   border-radius: 4px;
   border: 1px solid #333;
@@ -830,7 +975,7 @@ html.dusty-midnight .outside-btn {
   border: 1px solid #555 !important;
   border-radius: 6px;
   padding: 8px 14px;
-  font-size: 0.75rem;
+  font-size: 1rem;
   cursor: pointer;
 }
 html.dusty-midnight .outside-btn--primary { border-color: #fff !important; font-weight: 600; }
@@ -844,7 +989,7 @@ html.dusty-midnight .outside-terminal {
   border-radius: 8px;
   background: #050505;
   font-family: ui-monospace, "Cascadia Code", monospace;
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   line-height: 1.45;
 }
 html.dusty-midnight .outside-line { margin-bottom: 6px; color: #bbb; }
@@ -871,7 +1016,7 @@ html.dusty-midnight .outside-table-wrap { overflow: auto; max-height: 280px; }
 html.dusty-midnight .outside-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.72rem;
+  font-size: 0.95rem;
 }
 html.dusty-midnight .outside-table th,
 html.dusty-midnight .outside-table td {
@@ -880,11 +1025,11 @@ html.dusty-midnight .outside-table td {
   text-align: left;
   color: #ccc;
 }
-html.dusty-midnight .outside-table th { color: #888; font-weight: 600; text-transform: uppercase; font-size: 0.62rem; }
+html.dusty-midnight .outside-table th { color: #888; font-weight: 600; text-transform: uppercase; font-size: 14pt; }
 html.dusty-midnight .outside-row-fail td { color: #ff9aaa; }
 html.dusty-midnight .outside-row-selected td { background: #0a1a12; }
 html.dusty-midnight .outside-panel--wide { margin-top: 14px; }
-html.dusty-midnight .outside-link { color: #9ad4ff; font-size: 0.75rem; margin-left: 8px; }
+html.dusty-midnight .outside-link { color: #9ad4ff; font-size: 1rem; margin-left: 8px; }
 html.dusty-midnight .outside-chip-ok { color: #4de88a; }
 html.dusty-midnight .outside-chip-warn { color: #ffb86a; }
 html.dusty-midnight .outside-crossrefs {
@@ -919,7 +1064,7 @@ html.dusty-midnight #nexus-lang-select {
   color: #f2eef8 !important;
   border-color: #333 !important;
   min-height: 40px;
-  font-size: 0.82rem !important;
+  font-size: 1.05rem !important;
 }
 html.dusty-midnight #nexus-lang-hint { color: #888; max-width: 240px; }
 
@@ -927,7 +1072,7 @@ html.dusty-midnight #nexus-lang-hint { color: #888; max-width: 240px; }
 html.dusty-midnight nav.menu button .tab-load-pct,
 html.dusty-midnight .panel-subnav button .tab-load-pct {
   display: inline-flex !important;
-  font-size: 0.62rem !important;
+  font-size: 14pt !important;
 }
 
 /* Kill standout white backgrounds — black theme */

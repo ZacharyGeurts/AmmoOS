@@ -552,6 +552,177 @@ def _engineer_briefing(
     }
 
 
+def _build_traffic_patterns(
+    srv: dict[str, Any],
+    dhcp: dict[str, Any],
+    egress: dict[str, Any],
+    threat_guard: dict[str, Any],
+    recent: list[dict[str, Any]],
+) -> dict[str, Any]:
+    stats = srv.get("stats") or {}
+    queries = int(stats.get("queries") or 0)
+    cache_hits = int(stats.get("cache_hits") or 0)
+    blocked = int(stats.get("blocked") or 0)
+    errors = int(stats.get("errors") or 0)
+    total = max(queries, 1)
+    eg_st = egress.get("stats") or {}
+    tg_st = threat_guard.get("stats") or {}
+    egress_checks = int(eg_st.get("total_checks") or 0)
+    egress_verified = int(eg_st.get("verified_exact") or 0)
+    leases = int(dhcp.get("lease_count") or 0)
+    pct = lambda n: round((n / total) * 100) if queries else 0
+    return {
+        "schema": "dns-traffic-patterns/v1",
+        "updated": _now(),
+        "dns": {
+            "queries": queries,
+            "cache_hits": cache_hits,
+            "blocked": blocked,
+            "errors": errors,
+            "hit_rate_pct": pct(cache_hits),
+            "block_rate_pct": pct(blocked),
+            "error_rate_pct": pct(errors),
+            "egress_checks": egress_checks,
+            "egress_verified": egress_verified,
+            "permanent_blocks": int(tg_st.get("permanent_blocks") or 0),
+            "recent_query_count": len(recent),
+        },
+        "dhcp": {
+            "leases_active": leases,
+            "running": bool(dhcp.get("running")),
+            "bind": dhcp.get("bind") or "0.0.0.0:67",
+            "dns_option": dhcp.get("dns_option") or ["127.0.0.1"],
+        },
+        "channels": [
+            {"id": "queries", "label": "DNS queries", "value": queries, "pct": 100 if queries else 0},
+            {"id": "cache", "label": "Cache hits", "value": cache_hits, "pct": pct(cache_hits)},
+            {"id": "blocked", "label": "Policy blocked", "value": blocked, "pct": pct(blocked)},
+            {"id": "errors", "label": "SERVFAIL", "value": errors, "pct": pct(errors)},
+            {
+                "id": "egress",
+                "label": "Egress verified",
+                "value": egress_verified,
+                "pct": round((egress_verified / egress_checks) * 100) if egress_checks else 0,
+            },
+            {"id": "leases", "label": "DHCP leases", "value": leases, "pct": 100 if dhcp.get("running") and leases else 0},
+        ],
+    }
+
+
+def _build_threat_model(
+    planetary: dict[str, Any],
+    multipoint: dict[str, Any],
+    threat_guard: dict[str, Any],
+    takeover: dict[str, Any],
+    dhcp: dict[str, Any],
+    srv: dict[str, Any],
+    briefing: dict[str, Any],
+) -> dict[str, Any]:
+    pol = planetary.get("resolver_policy") or {}
+    tg_pol = threat_guard.get("policy") or {}
+    alerts = briefing.get("alerts") or []
+    concern_count = sum(1 for a in alerts if a.get("level") in ("critical", "high", "medium"))
+    enforced = int(briefing.get("quick_facts", {}).get("rfc_enforced") or 0)
+    rfc_total = int(briefing.get("quick_facts", {}).get("rfc_total") or 0)
+    if concern_count >= 2:
+        overall = "elevated"
+    elif concern_count:
+        overall = "guarded"
+    elif planetary.get("planetary_security_level") == "extreme":
+        overall = "controlled"
+    else:
+        overall = "stable"
+    foreign_blocked = int(briefing.get("quick_facts", {}).get("foreign_blocked") or 0)
+    mp_pts = multipoint.get("point_count") or len(multipoint.get("identification_points") or [])
+    untrusted = len(multipoint.get("untrusted_never_added") or [])
+    inc = (takeover.get("incumbents") or {})
+    return {
+        "schema": "dns-threat-model/v1",
+        "updated": _now(),
+        "framework": "STRIDE + DNS/DHCP planetary",
+        "overall_risk": overall,
+        "controls_active": enforced,
+        "controls_total": rfc_total,
+        "summary": (
+            "Loopback Truth Resolver, multipoint secure identification, foreign resolver block, "
+            "DHCP listen-before-reject — planetary EXTREME when host honorability permits."
+        ),
+        "dns_vectors": [
+            {
+                "id": "spoofing",
+                "threat": "DNS response spoofing / cache poison",
+                "level": "mitigated" if pol.get("truthful_trace") else "open",
+                "control": "dig +trace from root — no public shortcut",
+                "rfc": "RFC 4033",
+            },
+            {
+                "id": "tampering",
+                "threat": "Unauthorized zone or record mutation",
+                "level": "mitigated" if pol.get("loopback_only") else "monitored",
+                "control": "Loopback bind only · egress integrity hash match",
+                "rfc": "RFC 1035 §4.1",
+            },
+            {
+                "id": "repudiation",
+                "threat": "Query/answer non-repudiation gap",
+                "level": "monitored",
+                "control": "Recent query JSONL + egress integrity log",
+                "rfc": "RFC 7766",
+            },
+            {
+                "id": "disclosure",
+                "threat": "Foreign resolver data exfiltration",
+                "level": "mitigated" if planetary.get("foreign_resolvers_stopped", True) else "open",
+                "control": f"{foreign_blocked} documented resolvers blocked",
+                "rfc": "RFC 8484",
+            },
+            {
+                "id": "dos",
+                "threat": "Amplification / QPS flood",
+                "level": "mitigated" if tg_pol.get("max_qps_per_client") else "monitored",
+                "control": f"Max {tg_pol.get('max_qps_per_client', 30)} QPS/client · permanent eradication",
+                "rfc": "RFC 6891",
+            },
+            {
+                "id": "elevation",
+                "threat": "Lateral movement via DNS channel",
+                "level": "mitigated" if tg_pol.get("no_lateral_movement") else "monitored",
+                "control": "No lateral movement · DHCP DNS-only option",
+                "rfc": "RFC 2131",
+            },
+        ],
+        "dhcp_vectors": [
+            {
+                "id": "rogue",
+                "threat": "Rogue DHCP server on LAN",
+                "level": "monitored" if inc.get("incumbent_dhcp") else "mitigated",
+                "control": "Incumbent port-67 detection · graceful takeover",
+                "rfc": "RFC 2131",
+            },
+            {
+                "id": "starvation",
+                "threat": "DHCP pool exhaustion",
+                "level": "monitored" if dhcp.get("running") else "info",
+                "control": f"{dhcp.get('lease_count', 0)} active leases · bind {dhcp.get('bind', '67/udp')}",
+                "rfc": "RFC 2131 §4.3",
+            },
+            {
+                "id": "option-inject",
+                "threat": "Malicious DNS option injection",
+                "level": "mitigated",
+                "control": f"DNS option → {', '.join(dhcp.get('dns_option') or ['127.0.0.1'])}",
+                "rfc": "RFC 3646",
+            },
+        ],
+        "identification": {
+            "points": mp_pts,
+            "untrusted_blocked": untrusted,
+        },
+        "concern_count": concern_count,
+        "resolver_running": bool(srv.get("running")),
+    }
+
+
 def _internet_field_mod() -> Any:
     import importlib.util
 
@@ -623,10 +794,16 @@ def build_panel() -> dict[str, Any]:
             "movement": "none — information only",
         },
     }
+    briefing = _engineer_briefing(srv, planetary, multipoint, internet_field, takeover)
+    recent = _recent_queries()
+    traffic_patterns = _build_traffic_patterns(srv, dhcp, egress, threat_guard, recent)
+    threat_model = _build_threat_model(
+        planetary, multipoint, threat_guard, takeover, dhcp, srv, briefing,
+    )
     doc: dict[str, Any] = {
         "schema": "field-dns/v1",
         "updated": _now(),
-        "title": "NEXUS Truth DNS",
+        "title": "NEXUS Truth DNS & DHCP",
         "running": bool(srv.get("running")),
         "self_hosted": True,
         "truthful": True,
@@ -658,8 +835,10 @@ def build_panel() -> dict[str, Any]:
         "internet_slots": internet_field.get("total_slots", 0),
         "internet_recognized": internet_field.get("recognized_slots", 0),
         "internet_coverage_pct": internet_field.get("coverage_pct", 0),
-        "recent_queries": _recent_queries(),
-        "engineer_briefing": _engineer_briefing(srv, planetary, multipoint, internet_field, takeover),
+        "recent_queries": recent,
+        "engineer_briefing": briefing,
+        "traffic_patterns": traffic_patterns,
+        "threat_model": threat_model,
         "legacy_dns_equipment": (_load_json(INSTALL / "data" / "dns-admin-seed.json", {}).get("legacy_dns_equipment") or []),
         "identity": planetary.get("identity") or {},
         "egress_integrity": egress,

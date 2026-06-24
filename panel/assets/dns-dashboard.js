@@ -1,5 +1,5 @@
 /**
- * DNS Engineer Command — Truth resolver, WHOLE+LOCAL NOW, full RFC/legal reference.
+ * Planetary DNS & DHCP Command — threat levels, traffic patterns, secure threat model, details.
  */
 (function (global) {
   "use strict";
@@ -30,6 +30,98 @@
     if (level === "high") return "dns-alert--high";
     if (level === "medium") return "dns-alert--medium";
     return "dns-alert--info";
+  }
+
+  function threatLevelClass(level) {
+    const v = String(level || "info").toLowerCase();
+    if (v === "extreme" || v === "critical") return "dns-threat-lvl--extreme";
+    if (v === "high") return "dns-threat-lvl--high";
+    if (v === "medium") return "dns-threat-lvl--medium";
+    if (v === "mitigated" || v === "low") return "dns-threat-lvl--low";
+    return "dns-threat-lvl--info";
+  }
+
+  function threatLevelChip(level) {
+    return `<span class="dns-threat-lvl ${threatLevelClass(level)}">${esc(level)}</span>`;
+  }
+
+  function synthesizeTraffic(fd) {
+    if (fd.traffic_patterns) return fd.traffic_patterns;
+    const st = fd.stats || {};
+    const dhcp = fd.dhcp_server || fd.servers?.dhcp || {};
+    const eg = fd.egress_integrity?.stats || {};
+    const tg = fd.threat_guard?.stats || {};
+    const queries = Number(st.queries || 0);
+    const cache = Number(st.cache_hits || 0);
+    const blocked = Number(st.blocked || 0);
+    const errors = Number(st.errors || 0);
+    const total = Math.max(queries, 1);
+    const pct = (n) => (queries ? Math.round((n / total) * 100) : 0);
+    return {
+      dns: {
+        queries,
+        cache_hits: cache,
+        blocked,
+        errors,
+        hit_rate_pct: pct(cache),
+        block_rate_pct: pct(blocked),
+        error_rate_pct: pct(errors),
+        egress_checks: Number(eg.total_checks || 0),
+        egress_verified: Number(eg.verified_exact || 0),
+        permanent_blocks: Number(tg.permanent_blocks || 0),
+      },
+      dhcp: {
+        leases_active: Number(dhcp.lease_count || 0),
+        running: Boolean(dhcp.running),
+        bind: dhcp.bind || "0.0.0.0:67",
+      },
+      channels: [
+        { id: "queries", label: "DNS queries", value: queries, pct: 100 },
+        { id: "cache", label: "Cache hits", value: cache, pct: pct(cache) },
+        { id: "blocked", label: "Policy blocked", value: blocked, pct: pct(blocked) },
+        { id: "errors", label: "SERVFAIL", value: errors, pct: pct(errors) },
+        { id: "egress", label: "Egress verified", value: Number(eg.verified_exact || 0), pct: eg.total_checks ? Math.round((Number(eg.verified_exact || 0) / Number(eg.total_checks)) * 100) : 0 },
+        { id: "leases", label: "DHCP leases", value: Number(dhcp.lease_count || 0), pct: dhcp.running ? 100 : 0 },
+      ],
+    };
+  }
+
+  function synthesizeThreatModel(fd) {
+    if (fd.threat_model) return fd.threat_model;
+    const pol = fd.resolver_policy || {};
+    const tg = fd.threat_guard || {};
+    const to = fd.takeover || {};
+    const dhcp = fd.dhcp_server || {};
+    const mp = fd.multipoint_identity || {};
+    const enforced = (fd.engineer_briefing?.quick_facts?.rfc_enforced) || 0;
+    const rfcTotal = (fd.engineer_briefing?.quick_facts?.rfc_total) || (fd.rfc_matrix?.length) || 0;
+    const alerts = fd.engineer_briefing?.alerts || [];
+    const concernCount = alerts.filter((a) => ["critical", "high", "medium"].includes(a.level)).length;
+    const overall = concernCount >= 2 ? "elevated" : concernCount ? "guarded" : (fd.planetary_security_level === "extreme" ? "controlled" : "stable");
+    return {
+      framework: "STRIDE + DNS/DHCP planetary",
+      overall_risk: overall,
+      controls_active: enforced,
+      controls_total: rfcTotal,
+      summary: "Loopback Truth Resolver, multipoint fingerprint, foreign resolver block, DHCP listen-before-reject.",
+      dns_vectors: [
+        { id: "spoofing", threat: "DNS response spoofing / cache poison", level: pol.truthful_trace ? "mitigated" : "open", control: "dig +trace from root — no public shortcut", rfc: "RFC 4033" },
+        { id: "tampering", threat: "Unauthorized zone or record mutation", level: pol.loopback_only ? "mitigated" : "monitored", control: "Loopback bind only · egress integrity hash match", rfc: "RFC 1035 §4.1" },
+        { id: "repudiation", threat: "Query/answer non-repudiation gap", level: "monitored", control: "Recent query JSONL + egress integrity log", rfc: "RFC 7766" },
+        { id: "disclosure", threat: "Foreign resolver data exfiltration", level: fd.foreign_resolvers_stopped ? "mitigated" : "open", control: `${fd.engineer_briefing?.quick_facts?.foreign_blocked || 0} resolvers blocked`, rfc: "RFC 8484" },
+        { id: "dos", threat: "Amplification / QPS flood", level: tg.policy?.max_qps_per_client ? "mitigated" : "monitored", control: `Max ${tg.policy?.max_qps_per_client || 30} QPS/client · permanent eradication`, rfc: "RFC 6891" },
+        { id: "elevation", threat: "Lateral movement via DNS channel", level: tg.policy?.no_lateral_movement ? "mitigated" : "monitored", control: "No lateral movement · DHCP DNS-only option", rfc: "RFC 2131" },
+      ],
+      dhcp_vectors: [
+        { id: "rogue", threat: "Rogue DHCP server on LAN", level: to.incumbents?.incumbent_dhcp ? "monitored" : "mitigated", control: "Incumbent port-67 detection · graceful takeover", rfc: "RFC 2131" },
+        { id: "starvation", threat: "DHCP pool exhaustion", level: dhcp.running ? "monitored" : "info", control: `${dhcp.lease_count || 0} active leases · bind ${dhcp.bind || "67/udp"}`, rfc: "RFC 2131 §4.3" },
+        { id: "option-inject", threat: "Malicious DNS option injection", level: "mitigated", control: `DNS option → ${(dhcp.dns_option || ["127.0.0.1"]).join(", ")}`, rfc: "RFC 3646" },
+      ],
+      identification: {
+        points: mp.point_count || (fd.identification_points || []).length,
+        untrusted_blocked: (mp.untrusted_never_added || []).length,
+      },
+    };
   }
 
   function bindRefTabs() {
@@ -68,24 +160,146 @@
     const title = $("dns-hero-title");
     const motto = $("dns-motto");
     const status = $("dns-hero-status");
+    const dhcp = fd.dhcp_server || fd.servers?.dhcp || {};
+    const dhcpRun = Boolean(dhcp.running);
     if (title) {
       title.innerHTML = run
-        ? '<span class="dns-hero-run">RUNNING</span> Truth Resolver'
-        : '<span class="dns-hero-stop">STOPPED</span> Truth Resolver';
+        ? `<span class="dns-hero-run">RUNNING</span> Truth Resolver · ${dhcpRun ? '<span class="dns-hero-run">DHCP LIVE</span>' : '<span class="dns-hero-stop">DHCP IDLE</span>'}`
+        : '<span class="dns-hero-stop">STOPPED</span> Truth Resolver · Field DHCP';
     }
     if (motto) {
-      motto.textContent = br.lead || fd.planetary?.motto || "Self-hosted loopback DNS · dig +trace from root · no foreign shortcut.";
+      motto.textContent = br.lead || fd.planetary?.motto || "Planetary DNS & DHCP — trace-only resolver, graceful takeover, EXTREME zone posture.";
     }
     if (status) {
       const listeners = (fd.listeners || qf.listeners || []).map((l) => `<code>${esc(l)}</code>`).join(" ");
+      const tm = synthesizeThreatModel(fd);
       status.innerHTML = [
-        `<div class="dns-hero-pill ${run ? "dns-hero-pill--ok" : "dns-hero-pill--bad"}"><span>Status</span><strong>${run ? "LIVE" : "DOWN"}</strong></div>`,
+        `<div class="dns-hero-pill ${run ? "dns-hero-pill--ok" : "dns-hero-pill--bad"}"><span>DNS</span><strong>${run ? "LIVE" : "DOWN"}</strong></div>`,
+        `<div class="dns-hero-pill ${dhcpRun ? "dns-hero-pill--ok" : ""}"><span>DHCP</span><strong>${dhcpRun ? "LIVE" : dhcp.may_serve === false ? "OBSERVE" : "IDLE"}</strong></div>`,
         `<div class="dns-hero-pill"><span>Planetary</span><strong>${esc(fd.planetary_security_level || qf.planetary_level || "—")}</strong></div>`,
-        `<div class="dns-hero-pill"><span>PID</span><strong>${esc(String(qf.pid || fd.pid || "—"))}</strong></div>`,
-        `<div class="dns-hero-pill"><span>Updated</span><strong>${esc((fd.updated || "").slice(11, 19) || "—")}</strong></div>`,
+        `<div class="dns-hero-pill"><span>Threat</span><strong>${esc(tm.overall_risk || "—")}</strong></div>`,
+        `<div class="dns-hero-pill"><span>Leases</span><strong>${esc(String(dhcp.lease_count ?? 0))}</strong></div>`,
         `<div class="dns-hero-pill dns-hero-pill--wide"><span>Listeners</span><strong>${listeners || "—"}</strong></div>`,
       ].join("");
     }
+  }
+
+  function renderPostureStrip(fd) {
+    const el = $("dns-posture-strip");
+    if (!el) return;
+    const qf = fd.engineer_briefing?.quick_facts || {};
+    const tm = synthesizeThreatModel(fd);
+    const traffic = synthesizeTraffic(fd);
+    const concerns = (fd.engineer_briefing?.alerts || []).length;
+    const items = [
+      ["Planetary security", fd.planetary_security_level || qf.planetary_level || "—", fd.planetary_security_level === "extreme" ? "extreme" : "info"],
+      ["Threat posture", tm.overall_risk || "—", tm.overall_risk],
+      ["RFC controls", `${tm.controls_active}/${tm.controls_total}`, tm.controls_active === tm.controls_total ? "mitigated" : "monitored"],
+      ["Active concerns", String(concerns), concerns ? "high" : "mitigated"],
+      ["DNS queries", String(traffic.dns.queries), "info"],
+      ["Cache hit rate", `${traffic.dns.hit_rate_pct}%`, traffic.dns.hit_rate_pct > 50 ? "mitigated" : "monitored"],
+      ["DHCP leases", String(traffic.dhcp.leases_active), traffic.dhcp.running ? "mitigated" : "monitored"],
+      ["Permanent blocks", String(traffic.dns.permanent_blocks), traffic.dns.permanent_blocks ? "high" : "mitigated"],
+    ];
+    el.innerHTML = items.map(([label, value, lvl]) => `<div class="dns-posture-card">
+      <span class="dns-posture-label">${esc(label)}</span>
+      <strong class="dns-posture-value">${esc(String(value))}</strong>
+      ${threatLevelChip(lvl)}
+    </div>`).join("");
+  }
+
+  function renderThreatPosture(fd) {
+    const el = $("dns-threat-posture");
+    if (!el) return;
+    const alerts = fd.engineer_briefing?.alerts || [];
+    const tm = synthesizeThreatModel(fd);
+    const zones = fd.zones || fd.planetary?.zones || [];
+    const extremeZones = zones.filter((z) => z.security_level === "extreme" || z.extreme_active).length;
+    el.innerHTML = `<div class="dns-threat-summary">
+      <div class="dns-threat-gauge">
+        <span class="dns-threat-gauge-label">Overall risk</span>
+        ${threatLevelChip(tm.overall_risk)}
+        <p class="meta">${esc(tm.summary || "")}</p>
+      </div>
+      <dl class="dns-kv-grid">
+        <dt>Planetary zones</dt><dd><strong>${esc(String(zones.length))}</strong> regions · <strong>${esc(String(extremeZones))}</strong> EXTREME</dd>
+        <dt>RFC enforced</dt><dd><strong>${esc(String(tm.controls_active))}</strong> / ${esc(String(tm.controls_total))}</dd>
+        <dt>Multipoint IDs</dt><dd><strong>${esc(String(tm.identification?.points || 0))}</strong> trusted · ${esc(String(tm.identification?.untrusted_blocked || 0))} foreign blocked</dd>
+        <dt>Foreign resolvers</dt><dd>${fd.foreign_resolvers_stopped ? '<span class="dns-chip dns-chip-ok">stopped</span>' : '<span class="dns-chip dns-chip-warn">review</span>'}</dd>
+      </dl>
+    </div>
+    <div class="dns-concerns-list">
+      <strong class="dns-concerns-head">Active concerns</strong>
+      ${alerts.length ? alerts.map((a) => `<div class="dns-concern-row ${alertLevelClass(a.level)}">
+        ${threatLevelChip(a.level)}
+        <div><strong>${esc(a.title)}</strong><span class="meta">${esc(a.detail)}</span></div>
+      </div>`).join("") : '<div class="meta dns-concern-ok">No critical concerns — planetary DNS/DHCP posture healthy.</div>'}
+    </div>`;
+  }
+
+  function renderTrafficPatterns(fd) {
+    const el = $("dns-traffic-patterns");
+    if (!el) return;
+    const traffic = synthesizeTraffic(fd);
+    const maxVal = Math.max(...traffic.channels.map((c) => c.value), 1);
+    el.innerHTML = `<div class="dns-traffic-dns">
+      <div class="dns-traffic-head"><strong>DNS</strong><span class="meta">${esc(String(traffic.dns.queries))} queries · ${esc(String(traffic.dns.hit_rate_pct))}% cache · ${esc(String(traffic.dns.egress_verified))} egress verified</span></div>
+      ${traffic.channels.filter((c) => c.id !== "leases").map((ch) => `<div class="dns-traffic-row">
+        <span class="dns-traffic-label">${esc(ch.label)}</span>
+        <div class="dns-traffic-bar-wrap"><div class="dns-traffic-bar" style="width:${clamp((ch.value / maxVal) * 100, 2, 100)}%"></div></div>
+        <strong class="dns-traffic-val">${esc(String(ch.value))}</strong>
+        <span class="meta dns-traffic-pct">${esc(String(ch.pct))}%</span>
+      </div>`).join("")}
+    </div>
+    <div class="dns-traffic-dhcp">
+      <div class="dns-traffic-head"><strong>DHCP</strong><span class="meta">${traffic.dhcp.running ? "LIVE" : "observing"} · <code>${esc(traffic.dhcp.bind)}</code></span></div>
+      <div class="dns-traffic-row">
+        <span class="dns-traffic-label">Active leases</span>
+        <div class="dns-traffic-bar-wrap"><div class="dns-traffic-bar dns-traffic-bar--dhcp" style="width:${clamp(traffic.dhcp.leases_active ? Math.min(traffic.dhcp.leases_active * 8, 100) : 4, 4, 100)}%"></div></div>
+        <strong class="dns-traffic-val">${esc(String(traffic.dhcp.leases_active))}</strong>
+      </div>
+      <p class="meta dns-traffic-note">DNS option v4 ${(fd.dhcp_server?.dns_option || fd.servers?.dhcp?.dns_option || ["127.0.0.1"]).map((d) => `<code>${esc(d)}</code>`).join(" ")} — clients steered to Truth Resolver.</p>
+    </div>`;
+  }
+
+  function renderThreatModel(fd) {
+    const el = $("dns-threat-model");
+    if (!el) return;
+    const tm = synthesizeThreatModel(fd);
+    const allVectors = [...(tm.dns_vectors || []), ...(tm.dhcp_vectors || [])];
+    el.innerHTML = `<div class="dns-model-meta">
+      <span class="dns-chip dns-chip-meta">${esc(tm.framework || "STRIDE")}</span>
+      <span>Overall: ${threatLevelChip(tm.overall_risk)}</span>
+      <span class="meta">Controls ${esc(String(tm.controls_active))}/${esc(String(tm.controls_total))} RFC enforced</span>
+    </div>
+    <table class="honor-table dns-table dns-threat-model-table"><thead><tr>
+      <th>Vector</th><th>Threat</th><th>Level</th><th>Control</th><th>RFC</th>
+    </tr></thead><tbody>${allVectors.map((v) => `<tr>
+      <td><code>${esc(v.id)}</code></td>
+      <td>${esc(v.threat)}</td>
+      <td>${threatLevelChip(v.level)}</td>
+      <td class="meta">${esc(v.control)}</td>
+      <td><code>${esc(v.rfc || "—")}</code></td>
+    </tr>`).join("")}</tbody></table>`;
+  }
+
+  function renderOperationsDetail(fd) {
+    const el = $("dns-operations-detail");
+    if (!el) return;
+    renderTakeover(fd);
+    renderEgress(fd);
+    renderThreatGuard(fd);
+    renderMultipoint(fd);
+    const to = $("dns-takeover-panel")?.innerHTML || "";
+    const eg = $("dns-egress-panel")?.innerHTML || "";
+    const tg = $("dns-threat-panel")?.innerHTML || "";
+    const mp = $("dns-multipoint-panel")?.innerHTML || "";
+    el.innerHTML = `<div class="dns-ops-grid">
+      <section class="dns-ops-section"><h5>Graceful takeover</h5>${to}</section>
+      <section class="dns-ops-section"><h5>Egress integrity</h5>${eg}</section>
+      <section class="dns-ops-section"><h5>Threat guard</h5>${tg}</section>
+      <section class="dns-ops-section"><h5>Multipoint secure ID</h5>${mp}</section>
+    </div>`;
   }
 
   function renderAlerts(fd) {
@@ -250,14 +464,16 @@
     const inside = h7.inside || {};
     const outside = h7.outside || {};
     const listeners = (dns.listeners || fd.listeners || []).map((l) => `<code>${esc(l)}</code>`).join(" ");
+    const to = fd.takeover || {};
+    const phase = to.phase || "observing";
     el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
-      <th>Service</th><th>Status</th><th>Bind</th><th>Detail</th>
+      <th>Service</th><th>Status</th><th>Bind</th><th>Planetary detail</th>
     </tr></thead><tbody>
       <tr>
         <td><strong>Truth DNS</strong></td>
         <td>${dns.running || fd.running ? '<span class="dns-chip dns-chip-ok">LIVE</span>' : '<span class="dns-chip dns-chip-warn">DOWN</span>'}</td>
         <td>${listeners || `<code>127.0.0.1:${esc(String(dns.port || 53))}</code>`}</td>
-        <td class="meta">PID ${esc(String(dns.pid || fd.pid || "—"))} · self-hosted trace resolver</td>
+        <td class="meta">PID ${esc(String(dns.pid || fd.pid || "—"))} · ${esc(fd.planetary_security_level || "—")} · trace-only · ${phaseChip(phase)}</td>
       </tr>
       <tr>
         <td><strong>Field DHCP</strong></td>
@@ -269,6 +485,7 @@
     <dl class="dns-kv-grid" style="margin-top:12px;">
       <dt>Hostess 7 inside</dt><dd class="meta">${esc(inside.dns || "—")} · ${esc(inside.dhcp || "—")} · ${esc(inside.movement || "none")}</dd>
       <dt>Hostess 7 outside</dt><dd class="meta">${esc(outside.dns_admin || "—")} · ${esc(outside.dhcp || "—")} · ${esc(outside.movement || "none")}</dd>
+      <dt>Takeover</dt><dd class="meta">${esc(to.motto || "Listen first — never interrupt on arrival.")}</dd>
     </dl>`;
   }
 
@@ -508,17 +725,18 @@
     bindRefTabs();
     bindFilters();
     renderDnsHero(fd);
+    renderPostureStrip(fd);
     renderAlerts(fd);
-    renderEngineerBriefing(fd);
+    renderThreatPosture(fd);
+    renderTrafficPatterns(fd);
+    renderDnsServer(fd);
+    renderThreatModel(fd);
     renderOpsStrip(fd);
+    renderEngineerBriefing(fd);
+    renderOperationsDetail(fd);
     renderRealityModel(fd);
     renderInternetField(fd);
     renderRecentQueries(fd);
-    renderDnsServer(fd);
-    renderTakeover(fd);
-    renderEgress(fd);
-    renderThreatGuard(fd);
-    renderMultipoint(fd);
     renderForeignBlocked(fd);
     renderRfcTable(fd);
     renderLegalTable(fd);

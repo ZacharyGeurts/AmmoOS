@@ -1891,7 +1891,7 @@
     <button type="button" data-view="threats" data-i18n="nav.threats" data-tip="Threats — globe map, attack-path dossiers, Grok Heavy kill-orders. Identify. Record. KILL.">Threats</button>
     <button type="button" data-view="intel" data-i18n="nav.intel" data-tip="Intel — honorability, field RF antenna, police interop, research tables.">Intel</button>
     <button type="button" data-view="signals" data-i18n="nav.signals" data-tip="Signals — gorgeous field antenna pulses. Every signal FCC-identified with threat tags.">Signals</button>
-    <button type="button" data-view="dns" data-i18n="nav.dns" data-tip="DNS — NEXUS Truth Resolver. RFC matrix, legal framework, planetary EXTREME security. Our DNS server on loopback.">DNS</button>
+    <button type="button" data-view="dns" data-i18n="nav.dns" data-tip="DNS & DHCP — planetary command. Threat levels, traffic patterns, secure threat model, Truth Resolver + Field DHCP on one tab.">DNS &amp; DHCP</button>
     <button type="button" data-view="outside" data-i18n="nav.outside" data-tip="Outside — NEXUS egress gate. SSH, telnet, mail, HTTP/S, custom ports. Operator-initiated outbound through our firewall.">Outside</button>
     <button type="button" data-view="library" data-i18n="nav.library" aria-label="Library · Books · Alt Shift B" aria-keyshortcuts="Alt+Shift+B" data-tip="Hostess7 H7 field books — alphabetical list, braille reader, screen-reader search. Alt+Shift+B jumps here.">Library · Books</button>
     <button type="button" data-view="system" data-i18n="nav.system" data-tip="System — settings, logs, protection toggles.">System</button>
@@ -2812,77 +2812,76 @@
   </section>
 
   <section id="view-dns" class="view">
-    <div class="dns-wrap dns-engineer">
+    <div class="dns-wrap dns-planetary">
       <header class="dns-hero" id="dns-hero">
         <div class="dns-hero-main">
-          <p class="dns-hero-eyebrow">NEXUS Truth DNS · Engineer command</p>
-          <h2 class="dns-hero-title" id="dns-hero-title">Truth Resolver</h2>
-          <p class="dns-hero-sub" id="dns-motto">Sampling resolver…</p>
+          <p class="dns-hero-eyebrow">Planetary DNS &amp; DHCP Command</p>
+          <h2 class="dns-hero-title" id="dns-hero-title">Truth Resolver · Field DHCP</h2>
+          <p class="dns-hero-sub" id="dns-motto">Sampling planetary posture…</p>
         </div>
         <div class="dns-hero-status" id="dns-hero-status"></div>
       </header>
 
+      <div id="dns-posture-strip" class="dns-posture-strip"><div class="empty">Loading threat posture…</div></div>
       <div id="dns-alerts" class="dns-alerts"></div>
 
-      <article class="dns-panel dns-panel--briefing">
-        <h4>Engineer briefing · end the call fast</h4>
-        <div id="dns-engineer-briefing"><div class="empty">Loading upfront DNS intelligence…</div></div>
+      <div class="dns-command-grid">
+        <article class="dns-panel dns-panel--threat">
+          <h4>Threat levels &amp; active concerns</h4>
+          <div id="dns-threat-posture"><div class="empty">Evaluating planetary threat levels…</div></div>
+        </article>
+        <article class="dns-panel dns-panel--traffic">
+          <h4>Traffic patterns · DNS &amp; DHCP</h4>
+          <div id="dns-traffic-patterns"><div class="empty">Sampling query and lease traffic…</div></div>
+        </article>
+        <article class="dns-panel dns-panel--services">
+          <h4>DNS &amp; DHCP services · Hostess 7</h4>
+          <div id="dns-server-panel"><div class="empty">Sampling resolver…</div></div>
+        </article>
+      </div>
+
+      <article class="dns-panel dns-panel--model">
+        <h4>Secure threat model · STRIDE + DHCP</h4>
+        <div id="dns-threat-model"><div class="empty">Building secure threat model…</div></div>
       </article>
 
       <div id="dns-ops-strip" class="dns-ops-strip"></div>
 
-      <div class="dns-main-grid">
-        <div class="dns-main-col">
-          <article class="dns-panel">
-            <h4>True Reality Model · WHOLE + LOCAL NOW</h4>
-            <div id="dns-reality-model"></div>
-            <div class="dns-toolbar">
-              <input type="search" id="dns-internet-filter" placeholder="Filter TLD / domain…" aria-label="Filter internet field" />
-            </div>
-            <div id="dns-internet-field" class="dns-table-wrap"><div class="empty">Pulling internet field…</div></div>
-          </article>
-          <article class="dns-panel">
-            <h4>Recent queries · LOCAL NOW cache</h4>
-            <div id="dns-recent-queries" class="dns-table-wrap"><div class="empty">No queries yet — resolve a name to populate.</div></div>
-          </article>
-        </div>
-        <div class="dns-main-col">
-          <article class="dns-panel">
-            <h4>NEXUS DNS + DHCP servers · Hostess 7</h4>
-            <div id="dns-server-panel"><div class="empty">Sampling resolver…</div></div>
-          </article>
-          <article class="dns-panel">
-            <h4>Graceful takeover · listen before reject</h4>
-            <div id="dns-takeover-panel"><div class="empty">Evaluating incumbent DNS/DHCP…</div></div>
-          </article>
-          <article class="dns-panel">
-            <h4>Egress integrity · exact-as-sent</h4>
-            <div id="dns-egress-panel"><div class="empty">Verifying permitted egress…</div></div>
-          </article>
-          <article class="dns-panel">
-            <h4>Threat guard · permanent eradication</h4>
-            <div id="dns-threat-panel"><div class="empty">DDoS immunity active…</div></div>
-          </article>
-          <article class="dns-panel">
-            <h4>Multipoint secure identification</h4>
-            <div id="dns-multipoint-panel"><div class="empty">Loading identification points…</div></div>
-          </article>
-          <article class="dns-panel">
-            <h4>Foreign resolvers stopped · never trusted</h4>
-            <div id="dns-foreign-blocked"><div class="meta">Google, Cloudflare, Charter/Spectrum — bypass blocked.</div></div>
-          </article>
-        </div>
-      </div>
+      <article class="dns-panel dns-panel--briefing">
+        <h4>Engineer briefing · planetary DNS/DHCP</h4>
+        <div id="dns-engineer-briefing"><div class="empty">Loading upfront intelligence…</div></div>
+      </article>
 
-      <nav class="dns-ref-tabs" id="dns-ref-tabs" aria-label="DNS reference sections">
-        <button type="button" class="active" data-dns-tab="rfc">RFC matrix</button>
-        <button type="button" data-dns-tab="legal">Legal framework</button>
-        <button type="button" data-dns-tab="roots">Root servers</button>
+      <nav class="dns-ref-tabs" id="dns-ref-tabs" aria-label="DNS and DHCP detail sections">
+        <button type="button" class="active" data-dns-tab="operations">Operations</button>
+        <button type="button" data-dns-tab="internet">Internet field</button>
+        <button type="button" data-dns-tab="queries">Recent queries</button>
         <button type="button" data-dns-tab="planetary">Planetary zones</button>
-        <button type="button" data-dns-tab="legacy">Legacy gear</button>
+        <button type="button" data-dns-tab="rfc">RFC matrix</button>
+        <button type="button" data-dns-tab="legal">Legal</button>
+        <button type="button" data-dns-tab="roots">Roots</button>
+        <button type="button" data-dns-tab="legacy">Legacy</button>
+        <button type="button" data-dns-tab="admin">Admin portal</button>
       </nav>
       <div class="dns-ref-panels">
-        <article class="dns-panel dns-panel--wide dns-ref-panel active" data-dns-panel="rfc">
+        <article class="dns-panel dns-panel--wide dns-ref-panel active" data-dns-panel="operations">
+          <div id="dns-operations-detail"><div class="empty">Loading takeover, egress, multipoint…</div></div>
+        </article>
+        <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="internet" hidden>
+          <div id="dns-reality-model"></div>
+          <div class="dns-toolbar">
+            <input type="search" id="dns-internet-filter" placeholder="Filter TLD / domain…" aria-label="Filter internet field" />
+          </div>
+          <div id="dns-internet-field" class="dns-table-wrap"><div class="empty">Pulling internet field…</div></div>
+        </article>
+        <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="queries" hidden>
+          <div id="dns-recent-queries" class="dns-table-wrap"><div class="empty">No queries yet — resolve a name to populate LOCAL NOW.</div></div>
+        </article>
+        <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="planetary" hidden>
+          <div id="dns-planetary-table" class="dns-table-wrap"><div class="empty">Loading planetary zones…</div></div>
+          <div id="dns-foreign-blocked" style="margin-top:12px;"></div>
+        </article>
+        <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="rfc" hidden>
           <div class="dns-toolbar">
             <input type="search" id="dns-rfc-search" placeholder="Search RFC, requirement, control…" aria-label="Search RFC matrix" />
           </div>
@@ -2894,26 +2893,25 @@
         <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="roots" hidden>
           <div id="dns-root-table" class="dns-table-wrap"><div class="empty">Loading root hints…</div></div>
         </article>
-        <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="planetary" hidden>
-          <div id="dns-planetary-table" class="dns-table-wrap"><div class="empty">Loading planetary posture…</div></div>
-        </article>
         <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="legacy" hidden>
           <div id="dns-legacy-table" class="dns-table-wrap"><div class="empty">Loading legacy interop…</div></div>
         </article>
+        <article class="dns-panel dns-panel--wide dns-ref-panel dns-admin-engineer" data-dns-panel="admin" hidden id="dns-admin-portal-panel">
+          <div id="dns-admin-portal-info" class="meta">Ports 7 · 77 · 777 — information only, no remote controls.</div>
+        </article>
       </div>
 
-      <article class="dns-panel dns-panel--wide dns-admin-engineer" id="dns-admin-portal-panel">
-        <h4>Hostess 7 DNS Admin · tired engineer ports</h4>
-        <div id="dns-admin-portal-info" class="meta">Ports 7 · 77 · 777 — information only, no remote controls.</div>
-      </article>
-
       <div class="dns-crossrefs">
-        <button type="button" id="dns-refresh-btn" data-tip="Rebuild DNS field — resolver, internet pull, RFC matrix.">Refresh DNS field</button>
+        <button type="button" id="dns-refresh-btn" data-tip="Rebuild DNS/DHCP field — resolver, internet pull, threat model.">Refresh DNS &amp; DHCP field</button>
         <button type="button" data-view-jump="us">US field →</button>
         <button type="button" data-view-jump="packets/live">Live connections →</button>
         <button type="button" data-view-jump="signals">Signals →</button>
       </div>
       <div id="dns-stats" class="dns-stats-bar dns-stats-bar--hidden" aria-hidden="true"></div>
+      <div id="dns-takeover-panel" hidden aria-hidden="true"></div>
+      <div id="dns-egress-panel" hidden aria-hidden="true"></div>
+      <div id="dns-threat-panel" hidden aria-hidden="true"></div>
+      <div id="dns-multipoint-panel" hidden aria-hidden="true"></div>
     </div>
   </section>
 
@@ -3498,7 +3496,7 @@
       threats: { panel: "threats", default: "home-protector", subs: { "home-protector": "Home · Airspace", "local-holes": "Local · Holes", "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", "precision-map": "Precision · Map", "precision-web": "Precision · Web", dossier: "Attack paths", "human-dossier": "Kill orders" } },
       intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", people: "People · Registry", "audio-train": "Audio · Train", "field-rf": "Field RF", research: "Research" } },
       signals: { panel: "signals", default: "signals", subs: { signals: "Field · Live" } },
-      dns: { panel: "dns", default: "dns", subs: { dns: "Truth · Resolver" } },
+      dns: { panel: "dns", default: "dns", subs: { dns: "DNS & DHCP · Planetary" } },
       outside: { panel: "outside", default: "outside", subs: { outside: "Egress · Gate" } },
       library: { panel: "library", default: "library", subs: { library: "Library" } },
       system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
@@ -4054,7 +4052,7 @@
       threats: ["home-protector-stats"],
       intel: ["people-meta", "audio-train-motto"],
       signals: ["signals-operator", "signals-antenna-banner", "signals-radio-menu"],
-      dns: ["dns-hero-title", "dns-reality-model"],
+      dns: ["dns-hero-title", "dns-posture-strip"],
       outside: ["outside-hero-title"],
       library: ["library-search"],
       system: ["settings-profile"],
@@ -4147,7 +4145,7 @@
       } catch {
         alert("DNS field rebuild failed");
       } finally {
-        if (btn) { btn.disabled = false; btn.textContent = "Refresh DNS field"; }
+        if (btn) { btn.disabled = false; btn.textContent = "Refresh DNS & DHCP field"; }
       }
     });
     function applyOldManMode(on) {
