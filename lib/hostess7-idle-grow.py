@@ -341,6 +341,10 @@ def start_idle_daemon() -> dict[str, Any]:
     try:
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_fh = open(log_path, "a", encoding="utf-8")
+    except (OSError, PermissionError):
+        log_path = Path("/tmp/hostess7-idle-grow-daemon.log")
+        log_fh = open(log_path, "a", encoding="utf-8")
+    try:
         proc = subprocess.Popen(
             [sys.executable, str(script), "daemon-loop"],
             cwd=str(INSTALL),

@@ -10,16 +10,41 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 9477
-PANEL_DIR = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("panel")
+_BOOT = Path.cwd()
+PANEL_DIR = (Path(sys.argv[2]) if len(sys.argv) > 2 else Path("panel")).resolve()
 STATUS_JSON = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("threat-panel.json")
 STATE_DIR = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL_ROOT = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
-TLS_CERT = Path(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4] else None
-TLS_KEY = Path(sys.argv[5]) if len(sys.argv) > 5 and sys.argv[5] else None
-if not TLS_CERT or not TLS_KEY:
-    TLS_CERT = STATE_DIR / "tls" / "nexus-panel.crt"
-    TLS_KEY = STATE_DIR / "tls" / "nexus-panel.key"
+_TLS_CERT_ARG = Path(sys.argv[4]).expanduser() if len(sys.argv) > 4 and sys.argv[4] else None
+_TLS_KEY_ARG = Path(sys.argv[5]).expanduser() if len(sys.argv) > 5 and sys.argv[5] else None
 USE_TLS = os.environ.get("NEXUS_PANEL_TLS", "1") == "1"
+
+
+def _readable(path: Path) -> bool:
+    try:
+        return path.is_file() and os.access(path, os.R_OK)
+    except OSError:
+        return False
+
+
+def _resolve_tls_paths() -> tuple[Path | None, Path | None]:
+    """Absolute cert/key paths — must run before chdir(PANEL_DIR). Prefer readable certs."""
+    cert_candidates: list[Path] = []
+    key_candidates: list[Path] = []
+    if _TLS_CERT_ARG:
+        cert_candidates.append(_TLS_CERT_ARG if _TLS_CERT_ARG.is_absolute() else (_BOOT / _TLS_CERT_ARG).resolve())
+    if _TLS_KEY_ARG:
+        key_candidates.append(_TLS_KEY_ARG if _TLS_KEY_ARG.is_absolute() else (_BOOT / _TLS_KEY_ARG).resolve())
+    for base in (INSTALL_ROOT / ".nexus-state", _BOOT / ".nexus-state", STATE_DIR):
+        cert_candidates.append((base / "tls" / "nexus-panel.crt").resolve())
+        key_candidates.append((base / "tls" / "nexus-panel.key").resolve())
+    cert = next((p for p in cert_candidates if _readable(p)), None)
+    key = next((p for p in key_candidates if _readable(p)), None)
+    if cert and key:
+        return cert, key
+    cert = next((p for p in cert_candidates if p.is_file()), None)
+    key = next((p for p in key_candidates if p.is_file()), None)
+    return cert, key
 
 DATA_FILES = {
     "threat-panel": STATE_DIR / "threat-panel.json",
@@ -2781,13 +2806,23 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
+    tls_cert, tls_key = _resolve_tls_paths()
     os.chdir(PANEL_DIR)
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
-    if USE_TLS and TLS_CERT and TLS_KEY and TLS_CERT.is_file() and TLS_KEY.is_file():
+    if USE_TLS:
+        if not tls_cert or not tls_key:
+            sys.stderr.write(
+                "FATAL: NEXUS_PANEL_TLS=1 but nexus-panel.crt/key not found "
+                f"(searched STATE={STATE_DIR}, INSTALL={INSTALL_ROOT})\n"
+            )
+            raise SystemExit(2)
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         ctx.minimum_version = ssl.TLSVersion.TLSv1_2
-        ctx.load_cert_chain(str(TLS_CERT), str(TLS_KEY))
+        ctx.load_cert_chain(str(tls_cert), str(tls_key))
         server.socket = ctx.wrap_socket(server.socket, server_side=True)
+        sys.stderr.write(f"NEXUS panel TLS on 127.0.0.1:{PORT} cert={tls_cert}\n")
+    else:
+        sys.stderr.write(f"NEXUS panel HTTP (no TLS) on 127.0.0.1:{PORT}\n")
     server.serve_forever()
 
 
