@@ -149,8 +149,7 @@ if [[ "${1:-}" == "--no-browser" ]]; then
   echo "State: ${NEXUS_STATE_DIR}"
   echo "Tools: ${NEXUS_FIELD_TOOLS_DIR:-${NEXUS_INSTALL_ROOT}/lib/bin}"
   nexus_panel_tray_install_autostart 2>/dev/null || true
-  nexus_panel_tray_start 2>/dev/null || true
-  nexus_panel_tray_watchdog_start 2>/dev/null || true
+  nexus_panel_tray_ensure_once 2>/dev/null || true
   nexus_panel_open_help "$URL"
   exit 0
 fi
@@ -158,22 +157,19 @@ fi
 if [[ "${1:-}" == "--tray" ]]; then
   nexus_panel_tray_icon_refresh 2>/dev/null || true
   nexus_panel_tray_install_autostart 2>/dev/null || true
-  nexus_panel_tray_start
-  rc=$?
-  nexus_panel_tray_watchdog_start 2>/dev/null || true
-  exit $rc
+  nexus_panel_tray_ensure_once
+  exit $?
 fi
 
 if [[ "${1:-}" == "--tab" && -n "${2:-}" ]]; then
   nexus_panel_open_tab "$2"
-  nexus_panel_tray_start 2>/dev/null || true
+  nexus_panel_tray_ensure_once 2>/dev/null || true
   exit 0
 fi
 
 if nexus_panel_open_browser "$URL"; then
   nexus_panel_tray_install_autostart 2>/dev/null || true
-  nexus_panel_tray_start 2>/dev/null || true
-  nexus_panel_tray_watchdog_start 2>/dev/null || true
+  nexus_panel_tray_ensure_once 2>/dev/null || true
   exit 0
 fi
 

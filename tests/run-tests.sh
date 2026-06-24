@@ -2132,7 +2132,10 @@ run_test "field GUI publish all slices 7.9.1" test_field_gui_publish
 test_panel_tray() {
   [[ -f "${ROOT}/lib/panel-tray.py" ]]
   [[ -f "${ROOT}/lib/panel-tray.sh" ]]
-  grep -q 'nexus_panel_tray_start' "${ROOT}/nexus.sh"
+  grep -q 'nexus_panel_tray_ensure_once' "${ROOT}/nexus.sh"
+  grep -q 'nexus_panel_tray_ensure_once' "${ROOT}/lib/panel-tray.sh"
+  grep -q 'fcntl.flock' "${ROOT}/lib/panel-tray.py"
+  grep -q 'nexus-panel-tray-watchdog' "${ROOT}/lib/panel-tray.sh"
   grep -q 'nexus_panel_open_tab' "${ROOT}/lib/panel-tray.sh"
   grep -q 'nexus_panel_tray_watchdog_start' "${ROOT}/lib/panel-tray.sh"
   grep -q 'nexus_panel_tray_install_autostart' "${ROOT}/lib/panel-tray.sh"

@@ -30,23 +30,91 @@ nexus_panel_tray_icon_refresh() {
   nexus_panel_tray_icon_path >/dev/null 2>&1 || true
 }
 
+# PIDs of long-running tray daemons (exclude short-lived `open` helper).
+nexus_panel_tray_pids() {
+  local line pid rest
+  while IFS= read -r line; do
+    [[ -n "$line" ]] || continue
+    pid="${line%% *}"
+    rest="${line#"$pid" }"
+    [[ "$rest" == *"panel-tray.py open"* ]] && continue
+    [[ "$rest" == *"panel-tray.py"* ]] || continue
+    printf '%s\n' "$pid"
+  done < <(pgrep -af "[p]anel-tray\.py" 2>/dev/null || true)
+}
+
 nexus_panel_tray_is_running() {
-  local pid_file="${NEXUS_STATE_DIR}/panel-tray.pid"
-  [[ -f "$pid_file" ]] || return 1
   local pid
-  pid="$(cat "$pid_file" 2>/dev/null || true)"
-  [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null \
-    && pgrep -af "panel-tray.py" 2>/dev/null | grep -qE "(^|[[:space:]])${pid}([[:space:]]|$)"
+  while IFS= read -r pid; do
+    [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null && return 0
+  done < <(nexus_panel_tray_pids)
+  return 1
 }
 
 nexus_panel_tray_prune_duplicates() {
   local keep_pid="${1:-}"
+  local pid_file="${NEXUS_STATE_DIR}/panel-tray.pid"
+  local -a pids=()
+  mapfile -t pids < <(nexus_panel_tray_pids)
+  if [[ ${#pids[@]} -eq 0 ]]; then
+    rm -f "$pid_file" 2>/dev/null || true
+    return 0
+  fi
+  if [[ -z "$keep_pid" ]]; then
+    keep_pid="$(cat "$pid_file" 2>/dev/null || true)"
+  fi
+  if [[ -n "$keep_pid" ]] && ! kill -0 "$keep_pid" 2>/dev/null; then
+    keep_pid=""
+  fi
+  if [[ -z "$keep_pid" ]]; then
+    keep_pid="${pids[0]}"
+  fi
+  for pid in "${pids[@]}"; do
+    [[ "$pid" == "$keep_pid" ]] && continue
+    kill "$pid" 2>/dev/null || true
+    sleep 0.1
+    kill -9 "$pid" 2>/dev/null || true
+  done
+  printf '%s\n' "$keep_pid" >"$pid_file" 2>/dev/null || true
+}
+
+nexus_panel_tray_watchdog_pids() {
   local line pid
   while IFS= read -r line; do
+    [[ -n "$line" ]] || continue
     pid="${line%% *}"
-    [[ -n "$pid" && "$pid" != "$keep_pid" ]] || continue
+    if [[ "$line" == *"nexus-panel-tray-watchdog"* ]] \
+      || { [[ "$line" == *"while true"* ]] && [[ "$line" == *"panel-tray.sh"* ]] && [[ "$line" == *"nexus_panel_tray_start"* ]]; }; then
+      printf '%s\n' "$pid"
+    fi
+  done < <(pgrep -af "bash -c" 2>/dev/null || true)
+}
+
+nexus_panel_tray_watchdog_prune() {
+  local keep_pid="${1:-}"
+  local wd_pid="${NEXUS_STATE_DIR}/panel-tray-watchdog.pid"
+  local -a pids=()
+  mapfile -t pids < <(nexus_panel_tray_watchdog_pids)
+  if [[ ${#pids[@]} -eq 0 ]]; then
+    rm -f "$wd_pid" 2>/dev/null || true
+    return 0
+  fi
+  if [[ -z "$keep_pid" ]]; then
+    keep_pid="$(cat "$wd_pid" 2>/dev/null || true)"
+  fi
+  if [[ -n "$keep_pid" ]] && ! kill -0 "$keep_pid" 2>/dev/null; then
+    keep_pid=""
+  fi
+  if [[ -z "$keep_pid" ]]; then
+    keep_pid="${pids[0]}"
+  fi
+  for pid in "${pids[@]}"; do
+    [[ "$pid" == "$keep_pid" ]] && continue
     kill "$pid" 2>/dev/null || true
-  done < <(pgrep -f "${NEXUS_INSTALL_ROOT}/lib/panel-tray.py" 2>/dev/null || true)
+    sleep 0.1
+    kill -9 "$pid" 2>/dev/null || true
+  done
+  printf '%s\n' "$keep_pid" >"$wd_pid" 2>/dev/null || true
 }
 
 nexus_panel_tray_start() {
@@ -56,56 +124,80 @@ nexus_panel_tray_start() {
   command -v python3 >/dev/null 2>&1 || return 0
   [[ -n "${DISPLAY:-}" || -n "${WAYLAND_DISPLAY:-}" ]] || return 0
 
-  nexus_panel_tray_icon_refresh
+  local start_lock="${NEXUS_STATE_DIR}/panel-tray.start.lock"
+  (
+    flock -n 9 || {
+      nexus_log "INFO" "panel-tray" "TRAY_START_SKIPPED flock_busy"
+      exit 0
+    }
+    nexus_panel_tray_icon_refresh
+    nexus_panel_tray_prune_duplicates ""
 
-  if nexus_panel_tray_is_running; then
-    local old_pid
-    old_pid="$(cat "${NEXUS_STATE_DIR}/panel-tray.pid" 2>/dev/null || true)"
-    nexus_panel_tray_prune_duplicates "$old_pid"
-    nexus_log "INFO" "panel-tray" "TRAY_ALREADY_RUNNING pid=${old_pid}"
-    return 0
-  fi
+    if nexus_panel_tray_is_running; then
+      local old_pid
+      old_pid="$(cat "${NEXUS_STATE_DIR}/panel-tray.pid" 2>/dev/null || true)"
+      nexus_log "INFO" "panel-tray" "TRAY_ALREADY_RUNNING pid=${old_pid}"
+      exit 0
+    fi
 
-  nexus_panel_tray_prune_duplicates ""
-
-  local pid_file="${NEXUS_STATE_DIR}/panel-tray.pid"
-  nohup env \
-    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-    NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
-    NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}" \
-    NEXUS_PANEL_TLS="${NEXUS_PANEL_TLS:-1}" \
-    NEXUS_TRAY_ICON_REFRESH=1 \
-    DISPLAY="${DISPLAY:-:0}" \
-    XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-}" \
-    python3 "$script" >>"${NEXUS_STATE_DIR}/panel-tray.log" 2>&1 &
-  local pid=$!
-  printf '%s\n' "$pid" >"$pid_file" 2>/dev/null || true
-  sleep 0.4
-  if kill -0 "$pid" 2>/dev/null; then
-    nexus_log "INFO" "panel-tray" "TRAY_STARTED pid=${pid} port=${NEXUS_THREAT_PANEL_PORT:-9477}"
-    echo "NEXUS tray icon active — click near the clock to pick a panel tab."
-    return 0
-  fi
-  nexus_log "WARN" "panel-tray" "TRAY_START_FAILED see ${NEXUS_STATE_DIR}/panel-tray.log"
-  return 1
+    local pid_file="${NEXUS_STATE_DIR}/panel-tray.pid"
+    nohup env \
+      NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+      NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}" \
+      NEXUS_PANEL_TLS="${NEXUS_PANEL_TLS:-1}" \
+      NEXUS_TRAY_ICON_REFRESH=1 \
+      DISPLAY="${DISPLAY:-:0}" \
+      XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-}" \
+      python3 "$script" >>"${NEXUS_STATE_DIR}/panel-tray.log" 2>&1 &
+    local pid=$!
+    printf '%s\n' "$pid" >"$pid_file" 2>/dev/null || true
+    sleep 0.5
+    nexus_panel_tray_prune_duplicates "$pid"
+    if kill -0 "$pid" 2>/dev/null; then
+      nexus_log "INFO" "panel-tray" "TRAY_STARTED pid=${pid} port=${NEXUS_THREAT_PANEL_PORT:-9477}"
+      echo "NEXUS tray icon active — click near the clock to pick a panel tab."
+      exit 0
+    fi
+    nexus_log "WARN" "panel-tray" "TRAY_START_FAILED see ${NEXUS_STATE_DIR}/panel-tray.log"
+    exit 1
+  ) 9>"$start_lock"
 }
 
 nexus_panel_tray_stop() {
+  local pid
+  for pid in $(nexus_panel_tray_pids); do
+    kill "$pid" 2>/dev/null || true
+    kill -9 "$pid" 2>/dev/null || true
+  done
   pkill -f "${NEXUS_INSTALL_ROOT}/lib/panel-tray.py" 2>/dev/null || pkill -f "panel-tray.py" 2>/dev/null || true
-  rm -f "${NEXUS_STATE_DIR}/panel-tray.pid" 2>/dev/null || true
+  for pid in $(nexus_panel_tray_watchdog_pids); do
+    kill "$pid" 2>/dev/null || true
+    kill -9 "$pid" 2>/dev/null || true
+  done
+  pkill -f "nexus-panel-tray-watchdog" 2>/dev/null || true
+  rm -f \
+    "${NEXUS_STATE_DIR}/panel-tray.pid" \
+    "${NEXUS_STATE_DIR}/panel-tray.lock" \
+    "${NEXUS_STATE_DIR}/panel-tray.start.lock" \
+    "${NEXUS_STATE_DIR}/panel-tray-watchdog.pid" \
+    "${NEXUS_STATE_DIR}/panel-tray-watchdog.lock" \
+    2>/dev/null || true
 }
 
 nexus_panel_tray_watchdog_start() {
   [[ "${NEXUS_PANEL_TRAY:-1}" == "1" ]] || return 0
   [[ -n "${DISPLAY:-}" || -n "${WAYLAND_DISPLAY:-}" ]] || return 0
-  local wd_pid="${NEXUS_STATE_DIR}/panel-tray-watchdog.pid"
-  if [[ -f "$wd_pid" ]]; then
+  local wd_lock="${NEXUS_STATE_DIR}/panel-tray-watchdog.lock"
+  if [[ -f "${NEXUS_STATE_DIR}/panel-tray-watchdog.pid" ]]; then
     local old
-    old="$(cat "$wd_pid" 2>/dev/null || true)"
+    old="$(cat "${NEXUS_STATE_DIR}/panel-tray-watchdog.pid" 2>/dev/null || true)"
     if [[ -n "$old" ]] && kill -0 "$old" 2>/dev/null; then
+      nexus_panel_tray_watchdog_prune "$old"
       return 0
     fi
   fi
+  nexus_panel_tray_watchdog_prune ""
   nohup env \
     NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
     NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
@@ -113,6 +205,10 @@ nexus_panel_tray_watchdog_start() {
     NEXUS_PANEL_TLS="${NEXUS_PANEL_TLS:-1}" \
     DISPLAY="${DISPLAY:-:0}" \
     bash -c '
+      # nexus-panel-tray-watchdog
+      exec 9>"'"${wd_lock}"'"
+      flock -n 9 || exit 0
+      printf "%s\n" "$$" > "'"${NEXUS_STATE_DIR}/panel-tray-watchdog.pid"'"
       while true; do
         if ! source "'"${NEXUS_INSTALL_ROOT}"'/lib/nexus-common.sh" 2>/dev/null; then
           sleep 20
@@ -122,11 +218,23 @@ nexus_panel_tray_watchdog_start() {
         source "'"${NEXUS_INSTALL_ROOT}"'/lib/panel-tray.sh"
         if ! nexus_panel_tray_is_running; then
           nexus_panel_tray_start >/dev/null 2>&1 || true
+        else
+          nexus_panel_tray_prune_duplicates "$(cat "'"${NEXUS_STATE_DIR}/panel-tray.pid"'" 2>/dev/null || true)"
         fi
-        sleep 15
+        nexus_await_seconds 15 "'"${NEXUS_STATE_DIR}"'" 2>/dev/null || sleep 15
       done
     ' >>"${NEXUS_STATE_DIR}/panel-tray-watchdog.log" 2>&1 &
-  printf '%s\n' "$!" >"$wd_pid" 2>/dev/null || true
+  sleep 0.2
+  nexus_panel_tray_watchdog_prune "$!"
+}
+
+# Single entry: prune duplicates, one tray, one watchdog.
+nexus_panel_tray_ensure_once() {
+  nexus_panel_tray_prune_duplicates ""
+  if ! nexus_panel_tray_is_running; then
+    nexus_panel_tray_start 2>/dev/null || true
+  fi
+  nexus_panel_tray_watchdog_start 2>/dev/null || true
 }
 
 nexus_panel_tray_install_autostart() {
@@ -141,7 +249,7 @@ nexus_panel_tray_install_autostart() {
 Type=Application
 Name=NEXUS-Shield Tray
 Comment=NEXUS panel taskbar icon — fast tab picker
-Exec=env NEXUS_INSTALL_ROOT=${root} NEXUS_STATE_DIR=${NEXUS_STATE_DIR:-/var/lib/nexus-shield} DISPLAY=:0 bash -c 'source ${root}/lib/nexus-common.sh; source ${root}/lib/panel-tray.sh; nexus_panel_tray_icon_refresh; nexus_panel_tray_start; nexus_panel_tray_watchdog_start'
+Exec=env NEXUS_INSTALL_ROOT=${root} NEXUS_STATE_DIR=${NEXUS_STATE_DIR:-/var/lib/nexus-shield} DISPLAY=:0 bash -c 'source ${root}/lib/nexus-common.sh; source ${root}/lib/panel-tray.sh; nexus_panel_tray_icon_refresh; nexus_panel_tray_ensure_once'
 Hidden=false
 NoDisplay=true
 X-GNOME-Autostart-enabled=true

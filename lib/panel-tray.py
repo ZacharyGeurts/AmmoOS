@@ -2,8 +2,11 @@
 """NEXUS panel system tray — left or right click opens tab picker."""
 from __future__ import annotations
 
+import atexit
+import fcntl
 import json
 import os
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -27,6 +30,9 @@ PORT = os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477")
 TLS = os.environ.get("NEXUS_PANEL_TLS", "1") == "1"
 APP_ID = "nexus-shield-panel"
 LAST_TAB_FILE = STATE / "panel-tray-last-tab.json"
+TRAY_LOCK = STATE / "panel-tray.lock"
+PID_FILE = STATE / "panel-tray.pid"
+_SERVE_LOCK_HANDLE = None
 
 TAB_CHOICES: list[tuple[str, str]] = [
     ("Command", "command"),
@@ -378,13 +384,66 @@ class NexusTray:
             return False
 
 
+def _release_tray_lock() -> None:
+    global _SERVE_LOCK_HANDLE
+    try:
+        PID_FILE.unlink(missing_ok=True)
+    except OSError:
+        pass
+    if _SERVE_LOCK_HANDLE is not None:
+        try:
+            fcntl.flock(_SERVE_LOCK_HANDLE.fileno(), fcntl.LOCK_UN)
+            _SERVE_LOCK_HANDLE.close()
+        except OSError:
+            pass
+        _SERVE_LOCK_HANDLE = None
+
+
+def _acquire_tray_lock() -> bool:
+    """Single GTK tray instance — second start exits quietly."""
+    global _SERVE_LOCK_HANDLE
+    STATE.mkdir(parents=True, exist_ok=True)
+    if PID_FILE.is_file():
+        try:
+            old = int(PID_FILE.read_text(encoding="utf-8").strip().split()[0])
+            os.kill(old, 0)
+            return False
+        except (OSError, ValueError):
+            PID_FILE.unlink(missing_ok=True)
+    try:
+        handle = open(TRAY_LOCK, "w", encoding="utf-8")
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return False
+    except OSError:
+        return False
+    handle.write(f"{os.getpid()}\n")
+    handle.flush()
+    _SERVE_LOCK_HANDLE = handle
+    PID_FILE.write_text(f"{os.getpid()}\n", encoding="utf-8")
+    atexit.register(_release_tray_lock)
+
+    def _on_signal(_signum: int, _frame: object) -> None:
+        _release_tray_lock()
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, _on_signal)
+    signal.signal(signal.SIGINT, _on_signal)
+    return True
+
+
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "open":
         open_tab(sys.argv[2] if len(sys.argv) > 2 else _load_last_tab())
         return 0
+    if not _acquire_tray_lock():
+        return 0
     Gtk.init(sys.argv)
     NexusTray()
-    Gtk.main()
+    try:
+        Gtk.main()
+    finally:
+        _release_tray_lock()
     return 0
 
 
