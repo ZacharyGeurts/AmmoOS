@@ -2,8 +2,10 @@
 # NEXUS-Shield shared runtime — invisible to consumers, root-only state.
 # shellcheck disable=SC2034
 
-NEXUS_VERSION="7.7.0"
+NEXUS_VERSION="7.8.0"
 HOSTESS_VERSION="7"
+_NEXUS_COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_NEXUS_TREE_ROOT="$(cd "${_NEXUS_COMMON_DIR}/.." && pwd)"
 NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 NEXUS_SHADOW_DIR="${NEXUS_SHADOW_DIR:-${NEXUS_STATE_DIR}/shadow}"
@@ -12,13 +14,76 @@ NEXUS_VIGIL_STATE="${NEXUS_VIGIL_STATE:-${NEXUS_STATE_DIR}/vigil.state}"
 NEXUS_ALERT_LOG="${NEXUS_ALERT_LOG:-/var/log/nexus-alerts.log}"
 NEXUS_CONFIG="${NEXUS_CONFIG:-${NEXUS_INSTALL_ROOT}/config/nexus.conf}"
 NEXUS_GROUP="${NEXUS_GROUP:-nexus}"
+NEXUS_FIELD_STANDALONE="${NEXUS_FIELD_STANDALONE:-0}"
+NEXUS_FIELD_TOOLS_DIR="${NEXUS_FIELD_TOOLS_DIR:-}"
 
 nexus_ensure_group() {
+  [[ "${NEXUS_FIELD_STANDALONE:-}" == "1" || "$(id -u)" -ne 0 ]] && return 0
   getent group "$NEXUS_GROUP" >/dev/null 2>&1 || groupadd -r "$NEXUS_GROUP" 2>/dev/null || true
 }
 
 nexus_is_dev_install() {
   [[ "${NEXUS_INSTALL_ROOT}" != /usr/local/lib/nexus-shield ]]
+}
+
+nexus_is_field_standalone() {
+  [[ "${NEXUS_FIELD_STANDALONE:-}" == "1" ]]
+}
+
+nexus_init_runtime_paths() {
+  # Tree checkout: use source tree when install root was not exported.
+  if [[ -f "${_NEXUS_TREE_ROOT}/lib/nexus-common.sh" ]] \
+    && [[ "${NEXUS_INSTALL_ROOT}" == /usr/local/lib/nexus-shield ]]; then
+    NEXUS_INSTALL_ROOT="${_NEXUS_TREE_ROOT}"
+  fi
+
+  local use_local=0
+  if nexus_is_dev_install; then
+    use_local=1
+  fi
+  if [[ "${NEXUS_FIELD_STANDALONE:-}" == "1" ]]; then
+    use_local=1
+  fi
+  if [[ "$(id -u)" -ne 0 ]] && [[ ! -w /var/lib/nexus-shield ]] 2>/dev/null; then
+    use_local=1
+  fi
+  if [[ "$(id -u)" -ne 0 ]] && [[ ! -w /var/log ]] 2>/dev/null; then
+    use_local=1
+  fi
+
+  if [[ "$use_local" -eq 1 ]]; then
+    NEXUS_FIELD_STANDALONE=1
+    NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${NEXUS_INSTALL_ROOT}/.nexus-state}"
+    if [[ "$NEXUS_STATE_DIR" == /var/lib/nexus-shield ]]; then
+      NEXUS_STATE_DIR="${NEXUS_INSTALL_ROOT}/.nexus-state"
+    fi
+    NEXUS_ALERT_LOG="${NEXUS_STATE_DIR}/nexus-alerts.log"
+    NEXUS_SHADOW_DIR="${NEXUS_STATE_DIR}/shadow"
+    NEXUS_BEHAVIOR_DIR="${NEXUS_STATE_DIR}/behavior"
+    NEXUS_VIGIL_STATE="${NEXUS_STATE_DIR}/vigil.state"
+  fi
+
+  # Portable field drive mirror — tools + state, no sudo.
+  local local_drive="${NEXUS_INSTALL_ROOT}/.nexus-field-drive/nexus-field"
+  if [[ -d "${local_drive}/state" ]]; then
+    NEXUS_FIELD_DRIVE_ACTIVE=1
+    NEXUS_FIELD_DRIVE_ROOT="${local_drive}"
+    NEXUS_STATE_DIR="${local_drive}/state"
+    NEXUS_ALERT_LOG="${NEXUS_STATE_DIR}/nexus-alerts.log"
+    NEXUS_SHADOW_DIR="${NEXUS_STATE_DIR}/shadow"
+    NEXUS_BEHAVIOR_DIR="${NEXUS_STATE_DIR}/behavior"
+    NEXUS_VIGIL_STATE="${NEXUS_STATE_DIR}/vigil.state"
+  fi
+  if [[ -d "${local_drive}/tools" ]]; then
+    NEXUS_FIELD_TOOLS_DIR="${local_drive}/tools"
+  elif [[ -d "${NEXUS_INSTALL_ROOT}/lib/bin" ]]; then
+    NEXUS_FIELD_TOOLS_DIR="${NEXUS_INSTALL_ROOT}/lib/bin"
+  fi
+
+  export NEXUS_INSTALL_ROOT NEXUS_STATE_DIR NEXUS_SHADOW_DIR NEXUS_BEHAVIOR_DIR
+  export NEXUS_VIGIL_STATE NEXUS_ALERT_LOG NEXUS_FIELD_STANDALONE NEXUS_FIELD_TOOLS_DIR
+  export NEXUS_FIELD_DRIVE_ACTIVE="${NEXUS_FIELD_DRIVE_ACTIVE:-0}"
+  export NEXUS_FIELD_DRIVE_ROOT="${NEXUS_FIELD_DRIVE_ROOT:-}"
 }
 
 nexus_operator_authorized() {
@@ -28,6 +93,13 @@ nexus_operator_authorized() {
 }
 
 nexus_apply_permissions() {
+  mkdir -p "$NEXUS_STATE_DIR" "$NEXUS_SHADOW_DIR" "$NEXUS_BEHAVIOR_DIR" 2>/dev/null || true
+  touch "$NEXUS_ALERT_LOG" 2>/dev/null || true
+  if nexus_is_field_standalone || [[ "$(id -u)" -ne 0 ]]; then
+    chmod 700 "$NEXUS_SHADOW_DIR" "$NEXUS_BEHAVIOR_DIR" 2>/dev/null || true
+    chmod 750 "$NEXUS_STATE_DIR" 2>/dev/null || true
+    return 0
+  fi
   nexus_ensure_group
   local grp="$NEXUS_GROUP"
 
@@ -88,9 +160,13 @@ nexus_load_config() {
 
 nexus_log() {
   local level="$1" module="$2" message="$3"
-  local ts
+  local ts line log_dir
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
-  printf '%s [%s] %s: %s\n' "$ts" "$level" "$module" "$message" >>"$NEXUS_ALERT_LOG" 2>/dev/null || true
+  line="$(printf '%s [%s] %s: %s\n' "$ts" "$level" "$module" "$message")"
+  log_dir="$(dirname "$NEXUS_ALERT_LOG")"
+  if [[ -n "$log_dir" ]] && { [[ -w "$NEXUS_ALERT_LOG" ]] || [[ -w "$log_dir" ]]; } 2>/dev/null; then
+    { printf '%s' "$line" >>"$NEXUS_ALERT_LOG"; } 2>/dev/null || true
+  fi
   logger -t "nexus-${module}" -p daemon.warning "${level}: ${message}" 2>/dev/null || true
 }
 
@@ -137,3 +213,5 @@ nexus_extension_allowlisted() {
   esac
   return 1
 }
+
+nexus_init_runtime_paths

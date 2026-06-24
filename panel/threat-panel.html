@@ -1729,7 +1729,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v7.7.0</h1>
+        <h1>NEXUS-Shield v7.8.0</h1>
         <div class="brand-sub" data-i18n="brand.sub">Hostess 7 · Dusty Midnight · MIT licensed</div>
       </div>
     </div>
@@ -1769,7 +1769,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.7.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.8.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -2563,6 +2563,16 @@
             <div class="player-title">Field instability · frequency physics</div>
             <div class="meta" id="signals-instability-meta">3-field variance → MHz lock · we are the hardware</div>
             <div id="signals-instability-table"></div>
+          </div>
+          <div id="signals-hardware-panel" class="signals-radio-player" style="margin-top:10px;border-color:rgba(77,232,138,0.35);">
+            <div class="player-title">Field hardware · tools on drive</div>
+            <div class="meta" id="signals-hardware-meta">No sudo — sysfs USB · net · audio · field tools</div>
+            <div id="signals-hardware-table"></div>
+          </div>
+          <div id="signals-audio-quality-panel" class="signals-radio-player" style="margin-top:10px;border-color:rgba(232,200,120,0.35);">
+            <div class="player-title">Program audio · crest · flatness · RMS</div>
+            <div class="meta" id="signals-audio-quality-meta">Validates real station audio vs flat tone</div>
+            <div id="signals-audio-quality-table"></div>
           </div>
           <div id="signals-tri-panel" class="signals-radio-player" style="margin-top:10px;border-color:rgba(120,180,255,0.35);">
             <div class="player-title">3-field GPS compare → pinpoint</div>

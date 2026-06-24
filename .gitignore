@@ -1,3 +1,6 @@
 .venv-screenshots/
 __pycache__/
+.nexus-state/
+.nexus-state-test/
+.build/
 *.pyc

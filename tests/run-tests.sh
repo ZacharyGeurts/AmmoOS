@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.7.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.8.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -298,7 +298,7 @@ test_dusty_midnight_theme() {
   grep -q 'us-host-machine' "$panel"
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
-  grep -q 'v7.7.0' "$panel"
+  grep -q 'v7.8.0' "$panel"
 }
 
 test_hostess_profile_module() {
@@ -2009,6 +2009,54 @@ run_test "firewall private ip detect" test_firewall_private_skip
 run_test "seal vault refresh/verify" test_seal_vault_refresh_verify
 run_test "tamper guard restore from seal" test_tamper_guard_restore
 run_test "panel TLS cert generation" test_panel_tls_ensure
+
+test_field_standalone_runtime() {
+  [[ -f "${ROOT}/lib/nexus-common.sh" ]]
+  grep -q 'nexus_init_runtime_paths' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_FIELD_STANDALONE' "${ROOT}/lib/nexus-common.sh"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_FIELD_STANDALONE=1 bash -c '
+    unset NEXUS_STATE_DIR NEXUS_ALERT_LOG
+    source "'"${ROOT}"'/lib/nexus-common.sh"
+    [[ "$NEXUS_STATE_DIR" == *".nexus-state"* ]]
+    [[ "$NEXUS_ALERT_LOG" == *".nexus-state"* ]]
+    [[ "$NEXUS_FIELD_STANDALONE" == "1" ]]
+  '
+  [[ -x "${ROOT}/nexus.sh" ]]
+}
+
+run_test "field standalone runtime paths" test_field_standalone_runtime
+
+test_field_hardware_probe() {
+  [[ -f "${ROOT}/lib/field-hardware-probe.py" ]]
+  [[ -f "${ROOT}/data/field-tools-registry.json" ]]
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_FIELD_STANDALONE=1 \
+    python3 "${ROOT}/lib/field-hardware-probe.py" json | grep -q 'field-hardware-probe/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_FIELD_STANDALONE=1 \
+    python3 "${ROOT}/lib/field-hardware-probe.py" json | grep -q '"no_sudo": true'
+}
+
+run_test "field hardware probe no sudo" test_field_hardware_probe
+
+test_field_radio_crest_rms() {
+  command -v python3 >/dev/null 2>&1 || return 0
+  python3 -c "import numpy, scipy" 2>/dev/null || return 0
+  grep -q 'analyze_audio_quality' "${ROOT}/lib/field-spectrum-demod.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-spectrum-demod.py" play '{"freq_mhz":93.1,"play":false,"seconds":5}' \
+    | grep -q 'crest_factor'
+}
+
+run_test "field radio crest RMS demod" test_field_radio_crest_rms
+
+test_field_hardware_api() {
+  grep -q '/api/field-hardware' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'signals-hardware-panel' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderHardware' "${ROOT}/panel/assets/signals-field.js"
+  grep -q 'renderAudioQuality' "${ROOT}/panel/assets/signals-field.js"
+  grep -q 'NEXUS_VERSION="7.8.0"' "${ROOT}/lib/nexus-common.sh"
+}
+
+run_test "field hardware UI and API 7.8" test_field_hardware_api
 
 rm -rf "$NEXUS_STATE_DIR" /tmp/nexus-ent-rand.bin /tmp/nexus-ent-text.txt /tmp/nexus-shadow-t.txt "$NEXUS_ALERT_LOG" 2>/dev/null || true
 

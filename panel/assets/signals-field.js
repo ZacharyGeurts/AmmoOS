@@ -625,6 +625,9 @@
         ws.ota_source ? esc(ws.ota_source) : "field_generator_spectrum",
         ws.snr_db != null ? `SNR ${esc(String(ws.snr_db))} dB` : "",
         ws.output_rms_dbfs != null ? `${esc(String(ws.output_rms_dbfs))} dBFS` : "",
+        ws.crest_factor != null ? `crest ${esc(String(ws.crest_factor))}` : "",
+        ws.spectral_flatness != null ? `flat ${esc(String(ws.spectral_flatness))}` : "",
+        ws.program_audio ? '<span class="signals-freq-live">PROGRAM</span>' : "",
         ws.fields_active != null ? `${esc(String(ws.fields_active))} fields` : "",
         `${attempts.length || ws.attempt_count || 0} attempts`,
       ].filter(Boolean).join(" · ");
@@ -712,8 +715,77 @@
       <tr><td class="meta">Tag</td><td><code>${esc(id.tag || "—")}</code> ${id.identified ? '<span class="signals-freq-live">IDENTIFIED</span>' : ""}</td></tr>
       <tr><td class="meta">Disk IQ</td><td><code>${esc(doc.capture?.iq_path || doc.demod?.iq_path || "—")}</code></td></tr>
       <tr><td class="meta">Spectrum SNR</td><td><strong>${esc(String(doc.snr_db ?? doc.demod?.snr_db ?? "—"))} dB</strong> · ${esc(doc.band || doc.demod?.band || "fm").toUpperCase()} ${esc((doc.demod || {}).method || "demod")}</td></tr>
-      <tr><td class="meta">Level</td><td><strong>${esc(String(doc.output_rms_dbfs ?? doc.demod?.output_rms_dbfs ?? "—"))} dBFS</strong> polite · peak ${esc(doc.demod?.polite_peak_dbfs ?? "-6")} dBFS</td></tr>
+      <tr><td class="meta">Level</td><td><strong>${esc(String(doc.output_rms_dbfs ?? doc.demod?.output_rms_dbfs ?? doc.audio_quality?.rms_dbfs ?? "—"))} dBFS</strong> polite · peak ${esc(doc.demod?.polite_peak_dbfs ?? "-6")} dBFS</td></tr>
+      <tr><td class="meta">Crest</td><td><strong>${esc(String(doc.crest_factor ?? doc.audio_quality?.crest_factor ?? doc.demod?.crest_factor ?? "—"))}</strong> · flatness ${esc(String(doc.spectral_flatness ?? doc.audio_quality?.spectral_flatness ?? doc.demod?.spectral_flatness ?? "—"))}</td></tr>
+      <tr><td class="meta">Program</td><td>${doc.program_audio || doc.audio_quality?.program_audio ? '<span class="signals-freq-live">PROGRAM AUDIO</span>' : '<span class="meta">warming tone check</span>'}</td></tr>
     </tbody></table>`;
+  }
+
+  function audioQualityFromDoc(doc) {
+    const catchDoc = doc?.field_antenna_catch || doc?.catch || doc?.field_antenna?.catch || {};
+    const demod = catchDoc.demod || doc?.demod || doc?.field_antenna_prototype?.demod || {};
+    const q = catchDoc.audio_quality || demod.audio_quality || doc?.audio_quality || {};
+    return {
+      crest_factor: catchDoc.crest_factor ?? demod.crest_factor ?? q.crest_factor,
+      spectral_flatness: catchDoc.spectral_flatness ?? demod.spectral_flatness ?? q.spectral_flatness,
+      rms_dbfs: catchDoc.output_rms_dbfs ?? demod.output_rms_dbfs ?? q.rms_dbfs,
+      program_audio: catchDoc.program_audio ?? demod.program_audio ?? q.program_audio,
+      thresholds: q.thresholds || {},
+    };
+  }
+
+  function renderAudioQuality(doc) {
+    const meta = document.getElementById("signals-audio-quality-meta");
+    const table = document.getElementById("signals-audio-quality-table");
+    if (!table) return;
+    const q = audioQualityFromDoc(doc);
+    if (meta) {
+      meta.textContent = [
+        q.program_audio ? "PROGRAM AUDIO VALIDATED" : "awaiting program dynamics",
+        q.crest_factor != null ? `crest ${q.crest_factor}` : "",
+        q.spectral_flatness != null ? `flatness ${q.spectral_flatness}` : "",
+        q.rms_dbfs != null ? `${q.rms_dbfs} dBFS` : "",
+      ].filter(Boolean).join(" · ") || "crest · spectral flatness · RMS — polite listening level";
+    }
+    const th = q.thresholds || {};
+    table.innerHTML = `<table class="honor-table" style="font-size:0.72rem;margin-top:6px;"><tbody>
+      <tr><td class="meta">Crest factor</td><td><strong>${esc(String(q.crest_factor ?? "—"))}</strong> min ${esc(String(th.crest_min ?? "2.5"))}</td></tr>
+      <tr><td class="meta">Spectral flatness</td><td><strong>${esc(String(q.spectral_flatness ?? "—"))}</strong> min ${esc(String(th.flatness_min ?? "0.02"))}</td></tr>
+      <tr><td class="meta">RMS</td><td><strong>${esc(String(q.rms_dbfs ?? "—"))} dBFS</strong> polite ${esc(String(th.polite_rms_dbfs ?? "-20"))}</td></tr>
+      <tr><td class="meta">Verdict</td><td>${q.program_audio ? '<span class="signals-freq-live">PROGRAM</span>' : '<span class="meta">not program yet</span>'}</td></tr>
+    </tbody></table>`;
+  }
+
+  async function renderHardware() {
+    const meta = document.getElementById("signals-hardware-meta");
+    const table = document.getElementById("signals-hardware-table");
+    if (!table) return;
+    try {
+      const res = await fetch("/api/field-hardware", { cache: "no-store" });
+      const hw = await res.json();
+      if (meta) {
+        meta.textContent = [
+          hw.standalone ? "FIELD STANDALONE" : "installed",
+          hw.dongle_present ? "RTL dongle" : "3-field antenna",
+          hw.we_are_the_antenna ? `${hw.antenna_fields} fields` : "",
+          `${(hw.field_tools || {}).ready_count || 0}/${(hw.field_tools || {}).count || 0} tools ready`,
+          hw.host?.hostname || "",
+        ].filter(Boolean).join(" · ");
+      }
+      const usb = (hw.usb || []).filter((d) => d.rtl_sdr).slice(0, 3);
+      const nets = (hw.net || []).filter((n) => n.carrier).slice(0, 4);
+      const tools = (hw.field_tools?.tools || []).filter((t) => t.ready).slice(0, 6);
+      table.innerHTML = `<table class="honor-table" style="font-size:0.72rem;margin-top:6px;"><tbody>
+        <tr><td class="meta">USB RTL</td><td>${usb.length ? usb.map((d) => esc(d.usb_id)).join(" · ") : "none (field antenna mode)"}</td></tr>
+        <tr><td class="meta">Net up</td><td>${nets.length ? nets.map((n) => esc(n.name)).join(" · ") : "—"}</td></tr>
+        <tr><td class="meta">Audio</td><td>${(hw.audio || []).map((a) => esc(a.label || a.index)).join(" · ") || "—"}</td></tr>
+        <tr><td class="meta">Tools</td><td>${tools.map((t) => `<code>${esc(t.id)}</code>`).join(" ") || "run field-drive publish_tools"}</td></tr>
+        <tr><td class="meta">State</td><td><code>${esc(hw.state_dir || "—")}</code></td></tr>
+      </tbody></table>`;
+    } catch (_) {
+      if (meta) meta.textContent = "Hardware probe warming…";
+      table.innerHTML = '<div class="empty">Could not load /api/field-hardware</div>';
+    }
   }
 
   async function prototypeSoundOff(opts) {
@@ -1177,6 +1249,8 @@
     renderCrosstalk(doc.crosstalk);
     renderInstability(doc.field_instability || (doc.field_wave_tuner || {}).instability);
     renderPrototype(doc.field_antenna_prototype || doc.prototype);
+    renderAudioQuality(doc);
+    renderHardware();
   }
 
   function bindSignalsRefresh() {

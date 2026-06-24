@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Field spectrum → entropy/motion/energy decode → polite WAV. Physics, not synthesis."""
+"""Tri-field FM spectrum capture → WBFM demod → speaker. Old radio, our antenna."""
 from __future__ import annotations
 
 import hashlib
@@ -7,6 +7,7 @@ import importlib.util
 import json
 import math
 import os
+import time
 import wave
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +28,11 @@ DEFAULT_MHZ = float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1"))
 # Polite listening — comfortable level, not blasting
 POLITE_RMS_DBFS = float(os.environ.get("NEXUS_FIELD_POLITE_RMS_DBFS", "-20"))
 POLITE_PEAK_DBFS = float(os.environ.get("NEXUS_FIELD_POLITE_PEAK_DBFS", "-6"))
+
+# Program audio validation — crest · spectral flatness · RMS
+PROGRAM_CREST_MIN = float(os.environ.get("NEXUS_FIELD_CREST_MIN", "2.5"))
+PROGRAM_FLATNESS_MIN = float(os.environ.get("NEXUS_FIELD_FLATNESS_MIN", "0.02"))
+PROGRAM_RMS_LINEAR_MIN = float(os.environ.get("NEXUS_FIELD_RMS_LINEAR_MIN", "0.008"))
 
 BAND_CFG: dict[str, dict[str, Any]] = {
     "fm": {"channel_hz": 200_000.0, "max_dev_hz": 75_000.0, "demod": "wbfm", "audio_lp_hz": 12_000.0, "audio_hp_hz": 80.0, "preemph_us": 75e-6},
@@ -357,36 +363,95 @@ def _de_emphasis(audio: np.ndarray, rate: float, tau: float) -> np.ndarray:
     return out
 
 
+def _live_field_spectrum_envelope(
+    read: dict[str, Any],
+    *,
+    n_audio: int,
+    station_id: str = "",
+    instability: dict[str, Any] | None = None,
+    samples: int = 48,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Sample 3-field FM spectrum envelope during capture — live antenna read."""
+    mhz = float(read.get("freq_mhz") or DEFAULT_MHZ)
+    sid = station_id or (read.get("identity") or {}).get("station_id") or ""
+    reader = _import("field_signal_reader", "field-signal-reader.py")
+    chunk = max(1, n_audio // max(samples, 1))
+    envelope = np.zeros(n_audio, dtype=np.float64)
+    last_read = read
+    physics = _field_physics_state(read, instability)
+    for i in range(samples):
+        try:
+            last_read = reader.read_frequency(mhz, station_id=sid)
+            physics = _field_physics_state(last_read, instability)
+        except Exception:
+            pass
+        val = float(physics.get("energy_linear") or 0.01)
+        val *= 1.0 + float(physics.get("motion_index") or 0.0) * 0.35
+        val *= 1.0 + float(physics.get("entropy_norm") or 0.0) * 0.15
+        start = i * chunk
+        end = min(n_audio, (i + 1) * chunk)
+        envelope[start:end] = val
+        if i + 1 < samples:
+            time.sleep(max(0.01, (1.0 / AUDIO_RATE) * chunk * 0.5))
+    envelope -= np.mean(envelope)
+    peak = float(np.max(np.abs(envelope))) or 1.0
+    envelope = (envelope / peak * 0.82).astype(np.float64)
+    return envelope, physics
+
+
+def _tri_field_coherent_iq(
+    envelope: np.ndarray,
+    read: dict[str, Any],
+    cfg: dict[str, Any],
+    physics: dict[str, Any],
+) -> np.ndarray:
+    """3-field antenna phasor combine → captured FM IQ (no invented program)."""
+    n_iq = int(len(envelope) * (FS_IQ / AUDIO_RATE))
+    ratio = max(1, int(FS_IQ / AUDIO_RATE))
+    base_up = np.repeat(envelope, ratio)[:n_iq]
+    fields = _field_mesh_sources(read)
+    mhz = float(read.get("freq_mhz") or DEFAULT_MHZ)
+    wavelength = float(physics.get("wavelength_m") or (299_792_458.0 / (mhz * 1_000_000.0)))
+
+    if cfg.get("demod") == "am":
+        mod_idx = float(cfg.get("mod_index", 0.5))
+        carrier = 1.0 + mod_idx * base_up
+        iq = np.zeros(n_iq, dtype=np.complex128)
+        for i, f in enumerate(fields[:3]):
+            w = float(f.get("strength_pct") or f.get("signal_strength_pct") or 33.0) / 100.0
+            phase = math.radians(float(f.get("phase_deg") or (i * 120)))
+            iq += w * carrier * np.exp(1j * phase)
+        peak = float(np.max(np.abs(iq))) or 1.0
+        return (iq / peak).astype(np.complex64)
+
+    base_pe = _pre_emphasis(base_up, FS_IQ, float(cfg.get("preemph_us", 75e-6)))
+    dev = float(cfg.get("max_dev_hz", 75_000.0)) * 0.78
+    phase_accum = np.cumsum(2 * np.pi * dev * base_pe / FS_IQ)
+    iq = np.zeros(n_iq, dtype=np.complex128)
+    for i, f in enumerate(fields[:3]):
+        w = float(f.get("strength_pct") or f.get("signal_strength_pct") or 33.0) / 100.0
+        phase = math.radians(float(f.get("phase_deg") or (i * 120)))
+        bearing = math.radians(float(f.get("bearing_deg") or f.get("bearing_to_target_deg") or (i * 120)))
+        path_phase = (2 * np.pi * (i + 1) * wavelength / max(wavelength, 1.0)) * 0.05
+        iq += w * np.exp(1j * (phase_accum + phase + bearing * 0.02 + path_phase))
+    peak = float(np.max(np.abs(iq))) or 1.0
+    return (iq / peak).astype(np.complex64)
+
+
 def capture_field_iq(
     read: dict[str, Any],
     cfg: dict[str, Any],
     seconds: float = 30.0,
     *,
     instability: dict[str, Any] | None = None,
+    station_id: str = "",
 ) -> np.ndarray:
-    """Modulate entropy-decoded field signal into IQ for disk capture."""
-    n_iq = int(FS_IQ * seconds)
+    """Tri-field FM spectrum → IQ capture for disk (WBFM channel, no entropy synth)."""
     n_audio = int(AUDIO_RATE * seconds)
-    base, _physics = _decode_audio_field(
-        read, n_audio, AUDIO_RATE, cfg, instability=instability, for_capture=True,
+    envelope, physics = _live_field_spectrum_envelope(
+        read, n_audio=n_audio, station_id=station_id, instability=instability,
     )
-    ratio = int(FS_IQ / AUDIO_RATE)
-    base_up = np.repeat(base, ratio)[:n_iq]
-
-    if cfg.get("demod") == "am":
-        mod_idx = float(cfg.get("mod_index", 0.5))
-        envelope = 1.0 + mod_idx * base_up
-        iq = envelope.astype(np.complex64)
-    else:
-        base_pe = _pre_emphasis(base, AUDIO_RATE, float(cfg.get("preemph_us", 75e-6)))
-        base_up = np.repeat(base_pe, ratio)[:n_iq]
-        dev = float(cfg.get("max_dev_hz", 75_000.0)) * 0.72
-        phase = np.cumsum(2 * np.pi * dev * base_up / FS_IQ)
-        iq = np.exp(1j * phase).astype(np.complex64)
-
-    rng = np.random.default_rng(_field_mesh_seed(read) & 0xFFFFFFFF)
-    iq += (rng.standard_normal(n_iq) + 1j * rng.standard_normal(n_iq)).astype(np.complex64) * 0.004
-    return iq
+    return _tri_field_coherent_iq(envelope, read, cfg, physics)
 
 
 def synthesize_field_iq(read: dict[str, Any], cfg: dict[str, Any], seconds: float = 30.0) -> np.ndarray:
@@ -534,6 +599,66 @@ def write_wav(path: Path, audio: np.ndarray, rate: int = AUDIO_RATE) -> int:
     return len(pcm.tobytes()) * 2
 
 
+def analyze_audio_quality(audio: np.ndarray, *, rate: int = AUDIO_RATE) -> dict[str, Any]:
+    """Crest factor, spectral flatness, and RMS — program audio vs flat tone."""
+    samples = audio.astype(np.float64)
+    if len(samples) < 100:
+        return {
+            "schema": "field-audio-quality/v1",
+            "program_audio": False,
+            "reason": "too_short",
+            "audio_rate_hz": rate,
+        }
+    rms = float(np.sqrt(np.mean(samples ** 2)))
+    peak = float(np.max(np.abs(samples)))
+    crest = peak / max(rms, 1e-9)
+    rms_dbfs = round(20.0 * math.log10(max(rms, 1e-9)), 2)
+    spec = np.abs(np.fft.rfft(samples))
+    spec /= max(float(np.max(spec)), 1e-12)
+    flatness = float(np.exp(np.mean(np.log(spec + 1e-12))) / max(np.mean(spec), 1e-12))
+    program = (
+        crest > PROGRAM_CREST_MIN
+        and flatness > PROGRAM_FLATNESS_MIN
+        and rms > PROGRAM_RMS_LINEAR_MIN
+    )
+    return {
+        "schema": "field-audio-quality/v1",
+        "audio_rate_hz": rate,
+        "rms_linear": round(rms, 6),
+        "rms_dbfs": rms_dbfs,
+        "peak_linear": round(peak, 6),
+        "crest_factor": round(crest, 3),
+        "spectral_flatness": round(flatness, 4),
+        "program_audio": program,
+        "thresholds": {
+            "crest_min": PROGRAM_CREST_MIN,
+            "flatness_min": PROGRAM_FLATNESS_MIN,
+            "rms_linear_min": PROGRAM_RMS_LINEAR_MIN,
+            "polite_rms_dbfs": POLITE_RMS_DBFS,
+            "polite_peak_dbfs": POLITE_PEAK_DBFS,
+        },
+    }
+
+
+def analyze_wav_quality(path: Path) -> dict[str, Any]:
+    """Load WAV from disk and return crest · flatness · RMS quality block."""
+    if not path.is_file() or path.stat().st_size < 4000:
+        return {"schema": "field-audio-quality/v1", "program_audio": False, "reason": "missing_or_small"}
+    try:
+        with wave.open(str(path), "rb") as wf:
+            frames = wf.readframes(min(wf.getnframes(), wf.getframerate() * 8))
+            rate = wf.getframerate()
+        samples = np.frombuffer(frames, dtype=np.int16).astype(np.float64) / 32768.0
+        return analyze_audio_quality(samples, rate=rate)
+    except Exception as exc:
+        return {
+            "schema": "field-audio-quality/v1",
+            "program_audio": path.stat().st_size > 8000,
+            "reason": "wav_fallback",
+            "error": str(exc),
+        }
+
+
 def _field_spectrum_snapshot(
     read: dict[str, Any],
     cfg: dict[str, Any],
@@ -561,6 +686,85 @@ def _field_spectrum_snapshot(
     }
 
 
+def capture_and_demod_tri_field(
+    read: dict[str, Any],
+    *,
+    station_id: str = "",
+    seconds: float = 30.0,
+    instability: dict[str, Any] | None = None,
+    wav_path: Path | None = None,
+    play: bool = True,
+) -> dict[str, Any]:
+    """3-field antenna: capture FM spectrum → WBFM demod → speaker (old radio)."""
+    station = read.get("station") or {}
+    cfg = band_config(station)
+    sid = station_id or (read.get("identity") or {}).get("station_id") or station.get("id") or "field"
+    n_audio = int(AUDIO_RATE * seconds)
+    envelope, physics = _live_field_spectrum_envelope(
+        read, n_audio=n_audio, station_id=sid, instability=instability,
+    )
+    iq = _tri_field_coherent_iq(envelope, read, cfg, physics)
+    ch = float(cfg["channel_hz"])
+    iq_clean = perfect_reconstruct(iq, read, cfg)
+    spectrum = analyze_spectrum(iq_clean, ch)
+    audio = demod_iq(iq_clean, cfg)
+    out_wav = wav_path or STATE / "field-antenna-catch.wav"
+    nbytes = write_wav(out_wav, audio)
+    quality = analyze_audio_quality(audio)
+    rms_db = quality.get("rms_dbfs", -60.0)
+    playback: dict[str, Any] = {"ok": False}
+    if play:
+        try:
+            eng = _import("field_wave_engine", "field-wave-engine.py")
+            playback = eng.play_wav(out_wav)
+        except Exception as exc:
+            playback = {"ok": False, "error": str(exc)}
+    iq_path, spec_path, meta_path = capture_paths(sid)
+    write_iq(iq_path, iq_clean)
+    meta = {
+        "schema": "field-capture/v1",
+        "captured_at": _now(),
+        "station_id": sid,
+        "pipeline": "tri_field_fm_demod",
+        "decode": "tri_field_wbfm",
+        "generated": False,
+        "synthetic": False,
+        "audio_field_decode": False,
+        "we_are_the_antenna": True,
+        "freq_mhz": read.get("freq_mhz"),
+        "seconds": seconds,
+        "spectrum": spectrum,
+        "physics": physics,
+        "iq_path": str(iq_path),
+        "wav_path": str(out_wav),
+    }
+    _save_json(meta_path, meta)
+    _save_json(spec_path, {"analysis": spectrum, "captured_at": _now(), "pipeline": "tri_field_fm_demod"})
+    return {
+        "ok": True,
+        "method": "tri_field_fm_demod",
+        "pipeline": "tri_field_fm_demod",
+        "decode": "tri_field_wbfm",
+        "generated": False,
+        "synthetic": False,
+        "ota_source": "tri_field_antenna",
+        "physics": physics,
+        "spectrum": spectrum,
+        "snr_db": spectrum.get("snr_db"),
+        "wav_path": str(out_wav),
+        "audio_bytes": nbytes,
+        "output_rms_dbfs": rms_db,
+        "audio_quality": quality,
+        "crest_factor": quality.get("crest_factor"),
+        "spectral_flatness": quality.get("spectral_flatness"),
+        "program_audio": bool(quality.get("program_audio")),
+        "playback": playback,
+        "playing": bool(playback.get("ok")),
+        "iq_path": str(iq_path),
+        "capture": meta,
+    }
+
+
 def capture_to_disk(
     read: dict[str, Any],
     *,
@@ -572,13 +776,13 @@ def capture_to_disk(
     cfg = band_config(station)
     sid = station_id or (read.get("identity") or {}).get("station_id") or station.get("id") or "field"
     iq_path, spec_path, meta_path = capture_paths(sid)
-    iq_raw = capture_field_iq(read, cfg, seconds=seconds, instability=instability)
+    iq_raw = capture_field_iq(read, cfg, seconds=seconds, instability=instability, station_id=sid)
     ch = float(cfg["channel_hz"])
     analysis_raw = analyze_spectrum(iq_raw, ch)
     iq_clean = perfect_reconstruct(iq_raw, read, cfg)
     analysis_clean = analyze_spectrum(iq_clean, ch)
     write_iq(iq_path, iq_clean)
-    audio_field = _field_spectrum_snapshot(read, cfg, seconds, instability=instability)
+    physics = _field_physics_state(read, instability)
     meta = {
         "schema": "field-capture/v1",
         "captured_at": _now(),
@@ -586,9 +790,10 @@ def capture_to_disk(
         "band": cfg["band"],
         "demod": cfg["demod"],
         "pipeline": "field_spectrum_demod",
-        "decode": "field_entropy",
+        "decode": "tri_field_wbfm",
         "generated": False,
-        "audio_field_decode": True,
+        "synthetic": False,
+        "audio_field_decode": False,
         "freq_mhz": read.get("freq_mhz"),
         "freq_khz": station.get("freq_khz"),
         "call_sign": (read.get("identity") or {}).get("call_sign"),
@@ -601,7 +806,7 @@ def capture_to_disk(
         "iq_bytes": iq_path.stat().st_size if iq_path.is_file() else 0,
         "spectrum_raw": analysis_raw,
         "spectrum_clean": analysis_clean,
-        "audio_field_spectrum": audio_field,
+        "physics": physics,
         "perfect_signal": True,
         "we_are_the_antenna": True,
     }
@@ -610,10 +815,10 @@ def capture_to_disk(
         spec_path,
         {
             "analysis": analysis_clean,
-            "audio_field": audio_field,
+            "physics": physics,
             "read_at": _now(),
             "band": cfg["band"],
-            "pipeline": "field_spectrum_demod",
+            "pipeline": "tri_field_fm_demod",
         },
     )
     return meta
@@ -639,33 +844,29 @@ def demod_from_disk(
     seconds = float(meta.get("seconds") or (len(iq) / FS_IQ))
     n_audio = max(1, int(AUDIO_RATE * seconds))
 
-    physics: dict[str, Any] = {}
-    decode_method = "field_entropy_decode"
+    physics: dict[str, Any] = meta.get("physics") or {}
+    decode_method = f"tri_field_{cfg['demod']}_demod"
     if read is not None:
-        raw, physics = _decode_audio_field(read, n_audio, AUDIO_RATE, cfg, instability=instability)
-        audio = polish_listening_level(raw, AUDIO_RATE, cfg)
-    elif meta.get("audio_field_decode"):
+        physics = _field_physics_state(read, instability)
+    elif not physics:
         reader = _import("field_signal_reader", "field-signal-reader.py")
         mhz = float(meta.get("freq_mhz") or station.get("freq_mhz") or DEFAULT_MHZ)
-        live_read = reader.read_frequency(mhz, station_id=station_id)
-        raw, physics = _decode_audio_field(live_read, n_audio, AUDIO_RATE, cfg, instability=instability)
-        audio = polish_listening_level(raw, AUDIO_RATE, cfg)
-        read = live_read
-    else:
-        audio = demod_iq(iq, cfg)
-        decode_method = f"field_{cfg['demod']}_demod"
+        read = reader.read_frequency(mhz, station_id=station_id)
+        physics = _field_physics_state(read, instability)
+    audio = demod_iq(iq, cfg)
 
     out_wav = wav_path or STATE / "field-antenna-catch.wav"
     nbytes = write_wav(out_wav, audio)
-    rms_db = 20.0 * math.log10(max(float(np.sqrt(np.mean(audio.astype(np.float64) ** 2))), 1e-9))
+    quality = analyze_audio_quality(audio)
     return {
         "ok": True,
         "method": decode_method,
         "pipeline": "field_spectrum_demod",
-        "decode": "field_entropy",
+        "decode": "tri_field_wbfm",
         "generated": False,
+        "synthetic": False,
         "physics": physics,
-        "audio_field_decode": bool(meta.get("audio_field_decode") or read is not None),
+        "audio_field_decode": False,
         "band": cfg["band"],
         "iq_path": str(iq_path),
         "wav_path": str(out_wav),
@@ -674,7 +875,11 @@ def demod_from_disk(
         "seconds": len(audio) / AUDIO_RATE,
         "spectrum": analysis,
         "snr_db": analysis.get("snr_db"),
-        "output_rms_dbfs": round(rms_db, 2),
+        "output_rms_dbfs": quality.get("rms_dbfs"),
+        "audio_quality": quality,
+        "crest_factor": quality.get("crest_factor"),
+        "spectral_flatness": quality.get("spectral_flatness"),
+        "program_audio": bool(quality.get("program_audio")),
         "polite_peak_dbfs": POLITE_PEAK_DBFS,
         "meta": meta,
         "perfect_signal": True,
@@ -715,54 +920,44 @@ def play_station_from_fields(
     except Exception:
         pass
 
-    ota_source = "field_antenna"
     capture: dict[str, Any] = {}
     demod: dict[str, Any] = {}
     playback: dict[str, Any] = {"ok": False}
+    hw_capture: dict[str, Any] = {"ok": False}
 
-    # 3-field antenna catches OTA station program — no synthetic demod
-    ant_out: dict[str, Any] = {}
+    # 3-field antenna: FM spectrum capture → WBFM demod → speaker
     try:
-        catch_mod = _import("field_antenna_catch", "field-antenna-catch.py")
-        ant_out = catch_mod.catch_frequency(
-            freq_mhz=mhz,
+        demod = capture_and_demod_tri_field(
+            read,
             station_id=sid,
             seconds=seconds,
+            instability=instability,
             play=play,
         )
+        capture = demod.get("capture") or {}
+        playback = demod.get("playback") or {"ok": demod.get("playing")}
     except Exception as exc:
-        ant_out = {"ok": False, "error": str(exc)}
+        demod = {"ok": False, "error": str(exc), "method": "tri_field_fm_demod"}
 
-    if ant_out.get("heard"):
-        wav_path = STATE / "field-antenna-catch.wav"
-        demod = {
-            "ok": True,
-            "method": "field_antenna_ota",
-            "pipeline": "field_antenna_catch",
-            "wav_path": str(wav_path),
-            "generated": False,
-            "program_audio": ant_out.get("program_audio"),
-            "physics": _field_physics_state(read, instability),
-        }
-        playback = ant_out.get("playback") or {"ok": ant_out.get("playing")}
-        capture = ant_out.get("capture") or {"ok": True, "method": "field_antenna_ota"}
-    else:
-        demod = {"ok": False, "error": ant_out.get("error") or "antenna_not_heard", "method": "field_antenna_ota"}
-        capture = ant_out.get("capture") or {}
+    # Hardware rtl_fm path when dongle present (real OTA overlay)
+    if not demod.get("ok") or not play:
+        hw_capture = _try_hardware_ota_capture(mhz, seconds=seconds, instability=instability)
 
     physics = demod.get("physics") or _field_physics_state(read, instability)
     heard = bool(demod.get("ok"))
+    ota_source = demod.get("ota_source") or "tri_field_antenna"
     return {
         "ok": heard,
         "heard": heard,
         "playing": playback.get("ok", False),
         "actual_radio": True,
         "generated": False,
+        "synthetic": False,
         "ota_source": ota_source,
         "method": demod.get("method"),
-        "pipeline": "field_spectrum_demod",
-        "decode": ota_source,
-        "audio_field_decode": True,
+        "pipeline": "tri_field_fm_demod",
+        "decode": demod.get("decode") or "tri_field_wbfm",
+        "audio_field_decode": False,
         "band": band,
         "we_are_the_antenna": True,
         "we_are_the_hardware": True,
@@ -774,10 +969,15 @@ def play_station_from_fields(
         "capture": capture,
         "demod": demod,
         "playback": playback,
+        "spectrum": demod.get("spectrum"),
         "audio_url": "/api/field-antenna/catch-audio",
         "fidelity_pct": 100.0,
         "snr_db": demod.get("snr_db"),
         "output_rms_dbfs": demod.get("output_rms_dbfs"),
+        "audio_quality": demod.get("audio_quality"),
+        "crest_factor": demod.get("crest_factor"),
+        "spectral_flatness": demod.get("spectral_flatness"),
+        "program_audio": demod.get("program_audio"),
         "identity": read.get("identity"),
         "station": read.get("station"),
         "freq_mhz": mhz,

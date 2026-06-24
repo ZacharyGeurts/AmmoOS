@@ -496,6 +496,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/field-hardware":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-hardware-probe.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/field-antenna":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
@@ -572,7 +577,7 @@ class Handler(BaseHTTPRequestHandler):
                 lines = 0
             payload = {
                 "ok": True,
-                "version": "7.7.0",
+                "version": "7.8.0",
                 "hostess_version": "7",
                 "pending": pending.is_file(),
                 "ingest_log_lines": lines,

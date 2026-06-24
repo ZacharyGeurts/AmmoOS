@@ -13,7 +13,8 @@ from typing import Any
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
-BIN = INSTALL / "lib" / "bin"
+_TOOLS = os.environ.get("NEXUS_FIELD_TOOLS_DIR", "").strip()
+BIN = Path(_TOOLS) if _TOOLS and Path(_TOOLS).is_dir() else INSTALL / "lib" / "bin"
 ASM_BIN = BIN / "field-wave-asm"
 ASM_SRC = INSTALL / "lib" / "field-wave-asm.c"
 

@@ -42,6 +42,7 @@ NEXUS_FIELD_NAME = "nexus-field"
 # Whole system = GUI (panel + assets). Backend lib stays on host; GUI snapshot travels on drive.
 GUI_DIRS = ("panel", "assets")
 SYSTEM_DIRS = ("lib", "panel", "data", "config", "bin", "assets")
+TOOL_DIRS = ("lib/bin",)
 SELECTED_FILE = "field-drive-selected.json"
 STATE_GLOBS = (
     "threat-panel.json",
@@ -292,6 +293,40 @@ def _ignore_copy(_dir: str, names: list[str]) -> set[str]:
     return {n for n in names if n in skip or n.endswith(".pyc")}
 
 
+def publish_tools(*, full: bool = False) -> dict[str, Any]:
+    """Copy ported field tools (lib/bin) onto field drive — no system deps."""
+    base = ensure_layout()
+    tools_dst = base / "tools"
+    if full and tools_dst.exists():
+        shutil.rmtree(tools_dst, ignore_errors=True)
+    tools_dst.mkdir(parents=True, exist_ok=True)
+    copied: list[str] = []
+    for rel in TOOL_DIRS:
+        src = INSTALL / rel
+        if not src.is_dir():
+            continue
+        for item in src.iterdir():
+            if not item.is_file():
+                continue
+            dst = tools_dst / item.name
+            shutil.copy2(item, dst)
+            try:
+                dst.chmod(0o755)
+            except OSError:
+                pass
+            copied.append(item.name)
+    reg_src = INSTALL / "data" / "field-tools-registry.json"
+    if reg_src.is_file():
+        shutil.copy2(reg_src, base / "field-tools-registry.json")
+    return {
+        "ok": bool(copied),
+        "artifact": "tools",
+        "tools_dir": str(tools_dst),
+        "copied": copied,
+        "count": len(copied),
+    }
+
+
 def publish_gui(*, full: bool = False) -> dict[str, Any]:
     """Publish whole GUI (panel + assets) to field drive — the portable system face."""
     base = ensure_layout()
@@ -326,6 +361,7 @@ def publish_system(*, full: bool = False) -> dict[str, Any]:
     st_dst = state_dir()
 
     gui_result = publish_gui(full=full)
+    tools_result = publish_tools(full=full)
 
     copied_dirs: list[str] = []
     for name in SYSTEM_DIRS:
@@ -380,6 +416,8 @@ def publish_system(*, full: bool = False) -> dict[str, Any]:
         "state_synced": state_files,
         "whole_system": "gui",
         "gui": gui_result,
+        "tools": tools_result,
+        "tools_dir": tools_result.get("tools_dir"),
         "gui_url": "/field",
         "talk_url": "/field-talk",
         "talk_api": "/api/field-drive/talk",
@@ -473,6 +511,18 @@ def talk(payload: dict[str, Any]) -> dict[str, Any]:
 
     if op == "publish_gui":
         return publish_gui(full=payload.get("full") in (True, 1, "1", "true", "yes"))
+
+    if op in ("publish_tools", "tools"):
+        return publish_tools(full=payload.get("full") in (True, 1, "1", "true", "yes"))
+
+    if op == "hardware":
+        spec = importlib.util.spec_from_file_location(
+            "field_hardware_probe", INSTALL / "lib" / "field-hardware-probe.py",
+        )
+        mod = importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(mod)
+        return mod.probe_all()
 
     return {"ok": False, "error": "unknown_op", "op": op}
 

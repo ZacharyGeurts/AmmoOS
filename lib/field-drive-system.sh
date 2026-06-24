@@ -5,6 +5,11 @@ HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldst
 HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
 
 nexus_field_drive_root() {
+  local local_mirror="${NEXUS_INSTALL_ROOT:-.}/.nexus-field-drive"
+  if [[ -d "${local_mirror}/nexus-field/state" ]]; then
+    printf '%s\n' "${local_mirror}"
+    return 0
+  fi
   if [[ -d "${HOSTESS7_TEAM_FIELD}/nexus-field" ]]; then
     printf '%s\n' "${HOSTESS7_TEAM_FIELD}"
     return 0

@@ -56,6 +56,12 @@
     "deemphasis_us": 75,
     "polite_rms_dbfs": -20,
     "polite_peak_dbfs": -6,
+    "quality": {
+      "crest_min": 2.5,
+      "flatness_min": 0.02,
+      "rms_linear_min": 0.008,
+      "note": "crest · spectral flatness · RMS — program audio validation"
+    },
     "field_resolution": 1000000000,
     "storage": "state_dir",
     "iq_pattern": "field-capture-{station_id}.iq",

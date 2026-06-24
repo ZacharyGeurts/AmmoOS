@@ -133,30 +133,14 @@ def _field_lock_strength(
     }
 
 
-def _is_program_audio(wav_path: Path) -> bool:
-    """Rough check: real station audio has program dynamics, not flat tone."""
-    if not wav_path.is_file() or wav_path.stat().st_size < 4000:
-        return False
-    try:
-        import wave as wave_mod
-        import numpy as np
+def _audio_quality(wav_path: Path) -> dict[str, Any]:
+    """Crest · spectral flatness · RMS — shared with field-spectrum-demod."""
+    demod_mod = _import("field_spectrum_demod", "field-spectrum-demod.py")
+    return demod_mod.analyze_wav_quality(wav_path)
 
-        with wave_mod.open(str(wav_path), "rb") as wf:
-            frames = wf.readframes(min(wf.getnframes(), wf.getframerate() * 8))
-        samples = np.frombuffer(frames, dtype=np.int16).astype(np.float64) / 32768.0
-        if len(samples) < 1000:
-            return False
-        rms = float(np.sqrt(np.mean(samples ** 2)))
-        if rms < 0.002:
-            return False
-        peak = float(np.max(np.abs(samples)))
-        crest = peak / max(rms, 1e-9)
-        spec = np.abs(np.fft.rfft(samples))
-        spec /= max(float(np.max(spec)), 1e-12)
-        flatness = float(np.exp(np.mean(np.log(spec + 1e-12))) / max(np.mean(spec), 1e-12))
-        return crest > 2.5 and flatness > 0.02 and rms > 0.008
-    except Exception:
-        return wav_path.stat().st_size > 8000
+
+def _is_program_audio(wav_path: Path) -> bool:
+    return bool(_audio_quality(wav_path).get("program_audio"))
 
 
 def _attempt_antenna_play(
@@ -164,70 +148,102 @@ def _attempt_antenna_play(
     *,
     seconds: float = 25.0,
     play: bool = True,
+    station_id: str = "",
 ) -> dict[str, Any]:
-    """One antenna attempt: field-wave live → capture → paplay."""
-    eng = _engine()
-    eng.ensure_ported_backends(build_asm=False)
+    """One attempt: 3-field FM spectrum capture → WBFM demod → speaker."""
     inst_mod = _import("field_instability", "field-instability.py")
     tri_mod = _import("field_tri_receive", "field-tri-receive.py")
-    st = _registry_station(target_mhz) or {}
+    reader = _import("field_signal_reader", "field-signal-reader.py")
+    demod_mod = _import("field_spectrum_demod", "field-spectrum-demod.py")
+    st = _registry_station(target_mhz, station_id=station_id) or {}
+    sid = station_id or st.get("id") or ""
+    read = reader.read_frequency(target_mhz, station_id=sid)
     tri = tri_mod.compare_fields_to_gps(target=st)
     instability = inst_mod.analyze_fields(tri_compare=tri, freq_mhz=target_mhz)
-    tune_hz = int(instability.get("freq_hz_corrected") or round(target_mhz * 1_000_000))
-    ppm = int(instability.get("ppm_correction") or 0)
 
-    live: dict[str, Any] = {"ok": False}
-    capture: dict[str, Any] = {"ok": False}
-    playback: dict[str, Any] = {"ok": False}
-
-    if play:
-        live = eng.live_play_wbfm(
-            target_mhz, seconds=seconds, freq_hz=tune_hz, ppm=ppm,
-        )
-
-    capture = eng.capture_wbfm(
-        target_mhz, out_path=CATCH_AUDIO, seconds=min(seconds, 20.0),
-        freq_hz=tune_hz, ppm=ppm,
+    demod = demod_mod.capture_and_demod_tri_field(
+        read,
+        station_id=sid,
+        seconds=min(seconds, 30.0),
+        instability=instability,
+        wav_path=CATCH_AUDIO,
+        play=play,
     )
-    program = _is_program_audio(CATCH_AUDIO) if CATCH_AUDIO.is_file() else False
+    quality = demod.get("audio_quality") or (_audio_quality(CATCH_AUDIO) if CATCH_AUDIO.is_file() else {})
+    program = bool(quality.get("program_audio")) or _is_program_audio(CATCH_AUDIO)
+    spectrum = demod.get("spectrum") or {}
+    snr = float(spectrum.get("snr_db") or demod.get("snr_db") or 0.0)
+
     if program:
-        if play:
-            playback = eng.play_wav(CATCH_AUDIO)
         return {
             "ok": True,
             "heard": True,
-            "playing": bool(playback.get("ok") or live.get("ok")),
-            "method": "field_antenna_capture",
-            "live": live,
-            "capture": capture,
-            "playback": playback,
+            "playing": bool(demod.get("playing") or (demod.get("playback") or {}).get("ok")),
+            "method": "tri_field_fm_demod",
+            "decode": "tri_field_wbfm",
+            "pipeline": "tri_field_fm_demod",
+            "synthetic": False,
+            "generated": False,
+            "capture": demod.get("capture") or {},
+            "demod": demod,
+            "playback": demod.get("playback") or {},
+            "spectrum": spectrum,
+            "snr_db": snr,
             "program_audio": True,
+            "audio_quality": quality,
+            "crest_factor": quality.get("crest_factor") or demod.get("crest_factor"),
+            "spectral_flatness": quality.get("spectral_flatness") or demod.get("spectral_flatness"),
+            "output_rms_dbfs": quality.get("rms_dbfs") or demod.get("output_rms_dbfs"),
             "audio_url": "/api/field-antenna/catch-audio",
         }
-    if live.get("ok") and play:
-        time.sleep(min(3.0, seconds * 0.25))
-        program = _is_program_audio(CATCH_AUDIO)
-        if program:
+
+    # Optional rtl_fm overlay when USB dongle present
+    eng = _engine()
+    eng.ensure_ported_backends(build_asm=False)
+    hw = eng.probe_hardware()
+    live: dict[str, Any] = {"ok": False}
+    hw_cap: dict[str, Any] = {"ok": False}
+    if hw.get("dongle_present"):
+        tune_hz = int(instability.get("freq_hz_corrected") or round(target_mhz * 1_000_000))
+        ppm = int(instability.get("ppm_correction") or 0)
+        hw_cap = eng.capture_wbfm(
+            target_mhz, out_path=CATCH_AUDIO, seconds=min(seconds, 20.0),
+            freq_hz=tune_hz, ppm=ppm,
+        )
+        if _is_program_audio(CATCH_AUDIO):
+            playback = eng.play_wav(CATCH_AUDIO) if play else {"ok": False}
             return {
                 "ok": True,
                 "heard": True,
-                "playing": True,
-                "method": "field_antenna_live",
-                "live": live,
-                "capture": capture,
-                "playback": live,
+                "playing": bool(playback.get("ok")),
+                "method": "field_wave_fm_demod",
+                "decode": "wbfm_discriminator",
+                "synthetic": False,
+                "capture": hw_cap,
+                "playback": playback,
                 "program_audio": True,
+                "audio_url": "/api/field-antenna/catch-audio",
             }
+        if play:
+            live = eng.live_play_wbfm(target_mhz, seconds=seconds, freq_hz=tune_hz, ppm=ppm)
 
     return {
         "ok": False,
-        "heard": False,
-        "playing": False,
-        "method": "field_antenna_ota",
+        "heard": snr > 6.0,
+        "playing": bool(demod.get("playing")),
+        "method": "tri_field_fm_demod",
+        "decode": "tri_field_wbfm",
+        "synthetic": False,
+        "generated": False,
+        "capture": demod.get("capture") or {},
+        "demod": demod,
+        "playback": demod.get("playback") or {},
         "live": live,
-        "capture": capture,
-        "playback": playback,
-        "error": capture.get("error") or live.get("error") or "antenna_capture_failed",
+        "hw_capture": hw_cap,
+        "spectrum": spectrum,
+        "snr_db": snr,
+        "program_audio": False,
+        "error": demod.get("error") or "awaiting_program_audio",
     }
 
 
@@ -294,7 +310,7 @@ def catch_frequency(
                 _import("field_antenna_orchestrator", "field-antenna-orchestrator.py").run_cycle(skip_precision=True)
             except Exception:
                 pass
-        attempt = _attempt_antenna_play(target_mhz, seconds=seconds, play=play)
+        attempt = _attempt_antenna_play(target_mhz, seconds=seconds, play=play, station_id=sid or "")
         row = {
             "attempt": n,
             "method": attempt.get("method"),
@@ -304,12 +320,9 @@ def catch_frequency(
             "error": attempt.get("error"),
         }
         attempts.append(row)
+        if not best or float(attempt.get("snr_db") or 0) > float(best.get("snr_db") or 0):
+            best = attempt
         if attempt.get("program_audio"):
-            best = attempt
-            heard = True
-            break
-        if attempt.get("heard") and attempt.get("program_audio"):
-            best = attempt
             heard = True
             break
 
@@ -324,9 +337,17 @@ def catch_frequency(
         "heard": heard,
         "playing": bool(best.get("playing")),
         "program_audio": bool(best.get("program_audio")),
-        "method": "field_antenna_ota",
-        "ota_source": "field_antenna",
+        "method": best.get("method") or "tri_field_fm_demod",
+        "decode": best.get("decode") or "tri_field_wbfm",
+        "ota_source": "tri_field_antenna",
         "generated": False,
+        "synthetic": False,
+        "spectrum": best.get("spectrum"),
+        "snr_db": best.get("snr_db"),
+        "audio_quality": best.get("audio_quality") or best.get("demod", {}).get("audio_quality"),
+        "crest_factor": best.get("crest_factor") or best.get("demod", {}).get("crest_factor"),
+        "spectral_flatness": best.get("spectral_flatness") or best.get("demod", {}).get("spectral_flatness"),
+        "output_rms_dbfs": best.get("output_rms_dbfs") or best.get("demod", {}).get("output_rms_dbfs"),
         "we_are_the_antenna": True,
         "freq_mhz": target_mhz,
         "freq_khz": int(round(target_mhz * 1000)),
@@ -360,11 +381,11 @@ def catch_frequency(
         "audio_url": audio_url,
         "return_type": "point",
         "summary": (
-            f"ANTENNA PLAYING {cs} {target_mhz} MHz"
+            f"ANTENNA PLAYING {cs} {target_mhz} MHz — tri-field FM demod"
             if caught and best.get("program_audio")
-            else f"ANTENNA LOCKED {cs} — catching OTA ({len(attempts)} attempts)"
-            if heard
-            else f"ANTENNA TUNING {cs} — retry ({len(attempts)} attempts)"
+            else f"ANTENNA LOCKED {cs} — spectrum capture + WBFM demod ({len(attempts)} attempts)"
+            if heard or best.get("snr_db")
+            else f"ANTENNA TUNING {cs} — tri-field retry ({len(attempts)} attempts)"
         ),
     }
     _save_json(CATCH_CACHE, doc)
