@@ -4,7 +4,7 @@ import json
 import math
 import os
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 
 TRIANGULATION_CEP_M = float(os.environ.get("NEXUS_FIELD_TRI_CEP_M", "0.25"))
 
@@ -23,7 +23,7 @@ def create_triangulation_fields(user_lat=45.75, user_lon=-87.07):  # Escanaba, M
         'precision': f'{TRIANGULATION_CEP_M}m CEP',
         'cep_m': TRIANGULATION_CEP_M,
         'world_fix': True,
-        'timestamp': datetime.utcnow().isoformat() + 'Z',
+        'timestamp': datetime.now(UTC).isoformat().replace('+00:00', 'Z'),
     }
     with open('data/field-gps-lock.json', 'w') as f:
         json.dump({'fields': fields, 'fix': lock, 'operator': 'Zachary Geurts - AmouranthRTX'}, f, indent=2)

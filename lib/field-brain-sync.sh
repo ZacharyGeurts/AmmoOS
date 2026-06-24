@@ -29,12 +29,15 @@ nexus_field_brain_best_root() {
 }
 
 nexus_field_brain_github_refresh() {
+  [[ "${NEXUS_FIELD_BRAIN_GITHUB_FETCH:-1}" == "1" ]] || return 0
   local install="${NEXUS_INSTALL_ROOT}"
   [[ -d "${install}/.git" ]] || return 0
   command -v git >/dev/null 2>&1 || return 0
   (
     cd "$install" || exit 0
-    git fetch origin main 2>/dev/null || true
+    GIT_TERMINAL_PROMPT=0 \
+    GIT_SSH_COMMAND="ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15" \
+      timeout 30 git fetch origin main 2>/dev/null || true
     git checkout origin/main -- library/ data/field-brain 2>/dev/null \
       || git checkout origin/main -- library/ 2>/dev/null || true
   )
