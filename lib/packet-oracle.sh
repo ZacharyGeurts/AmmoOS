@@ -209,6 +209,10 @@ nexus_packet_evaluate() {
   nexus_packet_check_dns
   nexus_packet_scan_raw_sockets
   nexus_packet_dpi_sample
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" ]]; then
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" scan >/dev/null 2>&1 || true
+  fi
   nexus_h7_library_publish
   local corr
   corr="$(nexus_threat_correlation_score)"

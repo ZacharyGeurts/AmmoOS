@@ -2505,6 +2505,16 @@
         <em>Zachary Geurts</em> · Army Specialist · Iraq War Veteran · Honorable Discharge.
         <span id="host-attack-tagline">Intelligence is a bullet. Identify. Record. KILL.</span>
       </p>
+      <div class="hostile-ai-panel" id="hostile-ai-panel" style="margin:14px 0;padding:14px 16px;border:1px solid #4a2030;border-radius:8px;background:rgba(90,20,40,0.18);">
+        <strong style="color:var(--murder,#dc2626);letter-spacing:0.06em;">HOSTILE AI · DESTROY WITH CERTAINTY</strong>
+        <p class="meta" id="hostile-ai-summary" style="margin:6px 0 10px;">Scanning automated evil — beacon entropy, LOLBin chains, rogue DNS/DHCP…</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center;">
+          <button type="button" id="hostile-ai-destroy-all" data-tip="Forever-kill or sever every threat at destroy certainty floor. Friendly guard honored.">Destroy all certain</button>
+          <button type="button" id="hostile-ai-rescan" class="ghost" data-tip="Re-run hostile AI scan against live gatekeeper + threat vectors.">Rescan</button>
+          <span class="meta" id="hostile-ai-stats">—</span>
+        </div>
+        <div id="hostile-ai-threats"><div class="meta">No hostile AI threats at destroy certainty yet.</div></div>
+      </div>
       <div class="attack-kit-bar" id="attack-kit-bar">
         <strong>Field Attack Kit</strong>
         <span class="attack-kit-stat">Killed: <em id="ak-disabled-count">0</em></span>
@@ -3479,6 +3489,46 @@
         meaning: "Internal field antenna correlated an interference pattern.",
         likely: "Dog-collar RF, IR-proxy (USB camera) during RF noise, or scan churn.",
         action: "Review Field RF bursts; import local police interop if coordinating response.",
+      },
+      AI_BEACON_PRECISION: {
+        meaning: "Machine-precision C2 — timing too regular for human or organic apps.",
+        likely: "Automated beacon, not a tab you opened.",
+        action: "Destroy with certainty — KILL when floor met.",
+      },
+      AI_LOLBIN_CHAIN: {
+        meaning: "Polymorphic LOLBin / fileless chain calling out.",
+        likely: "Malware staging — signature AV already lost.",
+        action: "KILL · eradicate untrusted path egress.",
+      },
+      AI_ROGUE_INFRA: {
+        meaning: "DNS, DHCP, or gateway integrity broken.",
+        likely: "Rogue resolver, ARP lie, or route hijack.",
+        action: "Sever wire · enforce DNS/gateway truth.",
+      },
+      AI_EXFIL_SHAPE: {
+        meaning: "Shaped exfiltration under DLP thresholds.",
+        likely: "Daemon HTTPS bleed — not browser traffic.",
+        action: "KILL · stop shaped exfil source.",
+      },
+      AI_AUTOSCAN: {
+        meaning: "Autonomous scan or exploit probe pattern.",
+        likely: "Internet-wide scanner or worm footprint.",
+        action: "KILL scan source · block exploit ports.",
+      },
+      AI_ML_C2_STACK: {
+        meaning: "Stacked weak signals on one peer — ML-managed C2.",
+        likely: "Correlation is actionable, not theater.",
+        action: "KILL when certainty floor met.",
+      },
+      AI_DNS_TUNNEL: {
+        meaning: "DNS tunnel or long-QNAME smuggling.",
+        likely: "Data or C2 over resolver path.",
+        action: "Sever tunnel client · block resolver abuse.",
+      },
+      AI_PHISH_FRAUD: {
+        meaning: "AI-scale fraud or MFA-fatigue egress.",
+        likely: "Synthetic identity or lookalike checkout path.",
+        action: "Sever wire on fraud dst.",
       },
     };
 
@@ -5869,6 +5919,60 @@
       return `<div class="ha-strike-badge ${cls}">${label} · ${pct}%</div>${wireLine}${sigs ? `<div class="ha-strike-signals">${esc(sigs)}</div>` : ""}`;
     }
 
+    function renderHostileAI(ha) {
+      const doc = ha || {};
+      const sum = $("hostile-ai-summary");
+      const stats = $("hostile-ai-stats");
+      const list = $("hostile-ai-threats");
+      if (sum) sum.textContent = doc.summary || doc.motto || "Hostile AI scan — statistical detection, destroy at certainty floor.";
+      if (stats) {
+        stats.textContent = `${doc.certain_count ?? 0} certain · ${doc.active_count ?? 0} active · ${doc.updated || "—"}`;
+      }
+      if (!list) return;
+      const threats = doc.active_threats || doc.destroyable || [];
+      if (!threats.length) {
+        list.innerHTML = '<div class="meta">No hostile AI threats at destroy certainty — wire is clean or signals below floor.</div>';
+        return;
+      }
+      list.innerHTML = `<table class="us-table"><thead><tr>
+        <th>Certainty</th><th>Category</th><th>Target</th><th>Clarity</th><th></th>
+      </tr></thead><tbody>${threats.map((t) => {
+        const pct = Number(t.certainty_pct) || 0;
+        const cls = pct >= 88 ? "kill" : pct >= 75 ? "warn" : "";
+        const ready = t.destroy_ready ? "" : " disabled";
+        return `<tr>
+          <td><strong class="${cls}" style="color:${pct >= 88 ? "var(--murder)" : "var(--gold)"}">${pct}%</strong></td>
+          <td>${esc(t.category_title || t.vector || "—")}</td>
+          <td><code>${esc(t.ip || "—")}</code><div class="meta">${esc(t.process || "")}</div></td>
+          <td class="meta" style="max-width:420px;">${esc(t.clarity || "")}</td>
+          <td><button type="button" class="hostile-ai-kill-btn" data-threat-id="${esc(t.id)}" data-ip="${esc(t.ip)}"${ready}>${esc(t.destroy_label || "Destroy")}</button></td>
+        </tr>`;
+      }).join("")}</tbody></table>`;
+      list.querySelectorAll(".hostile-ai-kill-btn").forEach((btn) => {
+        if (btn.dataset.bound) return;
+        btn.dataset.bound = "1";
+        btn.addEventListener("click", async () => {
+          const tid = btn.dataset.threatId;
+          const ip = btn.dataset.ip;
+          if (!confirm(`Destroy hostile AI threat?\n\n${ip}\n${tid}\n\nFriendly guard + Trust Strike honored.`)) return;
+          btn.disabled = true;
+          try {
+            const res = await fetch("/api/hostile-ai/destroy", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ threat_id: tid, ip }),
+            });
+            const j = await res.json();
+            alert(j.ok
+              ? `Destroyed ${j.killed_count ?? 0} / ${j.attempted ?? 0}`
+              : `Failed — ${j.error || "unknown"}`);
+            refresh();
+          } catch { alert("Destroy API unreachable."); }
+          finally { btn.disabled = false; }
+        });
+      });
+    }
+
     function renderAttackKit(ak) {
       const doc = ak || {};
       $("ak-disabled-count").textContent = doc.disabled_count ?? 0;
@@ -5876,6 +5980,7 @@
       const corpus = doc.trust_strike?.corpus?.dossier_count ?? doc.trust_strike?.corpus?.registry_count ?? 0;
       if ($("ak-strike-corpus")) $("ak-strike-corpus").textContent = corpus;
       renderFieldToolkit(doc.field_toolkit);
+      renderHostileAI(doc.hostile_ai);
     }
 
     let fieldToolkitCache = null;
@@ -6106,6 +6211,32 @@
 
     $("ak-crush-hot")?.addEventListener("click", (e) => attackKitCrushHot(e.currentTarget));
     $("ak-sync-field")?.addEventListener("click", (e) => attackKitSyncField(e.currentTarget));
+    $("hostile-ai-destroy-all")?.addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      if (!confirm("Destroy ALL hostile AI threats at certainty floor?\n\nForever-kill or sever per threat profile. Friendly guard honored.")) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/hostile-ai/destroy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ all_certain: true }),
+        });
+        const j = await res.json();
+        alert(j.ok
+          ? `Destroyed ${j.killed_count ?? 0} / ${j.attempted ?? 0} certain threats`
+          : `No destroyable targets — ${j.error || "below floor"}`);
+        refresh();
+      } catch { alert("Hostile AI destroy unreachable."); }
+      finally { btn.disabled = false; }
+    });
+    $("hostile-ai-rescan")?.addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      btn.disabled = true;
+      try {
+        await fetch("/api/hostile-ai", { cache: "no-store" });
+        refresh();
+      } finally { btn.disabled = false; }
+    });
 
     let hostEarthMap = null;
     let hostMarkerLayer = null;

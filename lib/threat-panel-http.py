@@ -935,6 +935,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/hostile-ai":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostile-ai-destroy.py", ["json"], timeout=45)
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/operator/location":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "operator-location.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
@@ -2783,6 +2788,16 @@ class Handler(BaseHTTPRequestHandler):
                 timeout=60,
             )
             self._send(200 if ok else 500, json.dumps({"ok": ok}), "application/json")
+            return
+
+        if path == "/api/hostile-ai/destroy":
+            script = INSTALL_ROOT / "lib" / "hostile-ai-destroy.py"
+            payload = _nexus_py_json(
+                script,
+                ["destroy", json.dumps(body, ensure_ascii=False)],
+                timeout=90,
+            )
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
             return
 
         if path == "/api/firewall/revoke":

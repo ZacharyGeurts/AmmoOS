@@ -66,7 +66,7 @@ nexus_autosanitize_on_threat() {
         action="block_ip_in"
       fi
       ;;
-    EGRESS_BEACON|EGRESS_TMP_BINARY|C2_CORRELATION|RST_FLOOD)
+    EGRESS_BEACON|EGRESS_TMP_BINARY|C2_CORRELATION|RST_FLOOD|AI_BEACON_PRECISION|AI_LOLBIN_CHAIN|AI_EXFIL_SHAPE|AI_AUTOSCAN|AI_ML_C2_STACK|AI_PHISH_FRAUD)
       ip="$(nexus_firewall_parse_ip "$detail" "dst")"
       if [[ -n "$ip" ]]; then
         target="$ip"
@@ -74,7 +74,7 @@ nexus_autosanitize_on_threat() {
         action="block_ip_out"
       fi
       ;;
-    DNS_POISON|DNS_TUNNEL|DDOS_FLOOD)
+    DNS_POISON|DNS_TUNNEL|DDOS_FLOOD|AI_ROGUE_INFRA|AI_DNS_TUNNEL)
       ip="$(nexus_firewall_parse_ip "$detail" "ip")"
       [[ -z "$ip" ]] && ip="$(nexus_firewall_parse_ip "$detail" "src")"
       [[ -z "$ip" ]] && ip="$(sed -n 's/.*client=\([^[:space:]]*\).*/\1/p' <<<"$detail" | cut -d: -f1)"

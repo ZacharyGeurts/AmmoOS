@@ -250,7 +250,7 @@ except Exception:
 
   if [[ -n "$ip" ]]; then
     case "$vector" in
-      ARP_SPOOF|PACKET_INJECTION|GATEWAY_SHIFT|CONN_HIJACK|MITM_LISTENER|LISTENER_SURGE)
+      ARP_SPOOF|PACKET_INJECTION|GATEWAY_SHIFT|CONN_HIJACK|MITM_LISTENER|LISTENER_SURGE|AI_ROGUE_INFRA|AI_AUTOSCAN|AI_LOLBIN_CHAIN)
         target_type="ip_in" ;;
       *)
         target_type="ip_out" ;;

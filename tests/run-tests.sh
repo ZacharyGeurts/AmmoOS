@@ -1000,6 +1000,13 @@ test_field_attack_kit_module() {
   grep -q 'attack_kit' "${ROOT}/lib/threat-panel.sh"
   grep -q '/api/attack-kit/disable' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/attack-kit/kill' "${ROOT}/lib/threat-panel-http.py"
+  [[ -f "${ROOT}/lib/hostile-ai-destroy.py" ]]
+  [[ -f "${ROOT}/data/hostile-ai-threats-seed.json" ]]
+  grep -q 'hostile-ai-panel' "${ROOT}/panel/threat-panel.html"
+  grep -q 'AI_BEACON_PRECISION' "${ROOT}/lib/threat-vectors.sh"
+  grep -q '/api/hostile-ai' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/hostile-ai-destroy.py" panel | grep -q 'hostile-ai-destroy/v1'
   grep -q '/api/attack-kit/check-online' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/attack-kit/rekill' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/attack-kit/nokill' "${ROOT}/lib/threat-panel-http.py"

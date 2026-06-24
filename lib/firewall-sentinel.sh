@@ -371,11 +371,11 @@ nexus_firewall_on_threat() {
   fi
   case "$vector" in
     C2_CORRELATION|RST_FLOOD) return 0 ;;
-    ARP_SPOOF|PACKET_INJECTION|GATEWAY_SHIFT|CONN_HIJACK)
+    ARP_SPOOF|PACKET_INJECTION|GATEWAY_SHIFT|CONN_HIJACK|AI_ROGUE_INFRA)
       ip="$(nexus_firewall_parse_ip "$detail" "ip")"
       [[ -n "$ip" ]] && nexus_firewall_block_ip in "$ip" "$NEXUS_FIREWALL_BLOCK_DURATION" "$vector"
       ;;
-    EGRESS_BEACON|EGRESS_TMP_BINARY)
+    EGRESS_BEACON|EGRESS_TMP_BINARY|AI_BEACON_PRECISION|AI_LOLBIN_CHAIN|AI_EXFIL_SHAPE|AI_AUTOSCAN|AI_ML_C2_STACK|AI_PHISH_FRAUD)
       ip="$(nexus_firewall_parse_ip "$detail" "dst")"
       [[ -n "$ip" ]] && nexus_firewall_block_ip out "$ip" "$NEXUS_FIREWALL_BLOCK_DURATION" "$vector"
       ;;

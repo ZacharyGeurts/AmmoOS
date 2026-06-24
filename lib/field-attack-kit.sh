@@ -520,5 +520,12 @@ nexus_field_attack_json() {
   else
     printf '{}'
   fi
+  printf ',"hostile_ai":'
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" ]]; then
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" json 2>/dev/null || printf '{}'
+  else
+    printf '{}'
+  fi
   printf '}'
 }
