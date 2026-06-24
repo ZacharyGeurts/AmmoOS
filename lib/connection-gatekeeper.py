@@ -639,6 +639,32 @@ def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str
     return "MONITOR", "Routine connection — no harm signal", False
 
 
+def _touch_module() -> Any:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("safe_signal_touch", INSTALL / "lib" / "safe-signal-touch.py")
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _human_touch_policy(
+    verdict: str,
+    trust_rank: int,
+    scores: dict[str, int],
+    soul_side: str,
+    kill_ok: bool,
+    proc: str,
+    ip_class: str,
+    host: str = "",
+) -> dict[str, Any]:
+    return _touch_module().connection_touch(
+        verdict, trust_rank, scores, soul_side, kill_ok, proc, ip_class,
+        host=host, min_accept_trust_rank=MIN_ACCEPT_TRUST_RANK,
+    )
+
+
 def _soul_side(
     verdict: str,
     trust_rank: int,
@@ -836,6 +862,10 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         soul_side, hell_chosen = _soul_side(verdict, trust_rank, scores, kill_ok)
         if hell_chosen and kill_tier == "block":
             kill_tier = "strike"
+        site_host = _infer_site_host(rip, intel)
+        touch = _human_touch_policy(
+            verdict, trust_rank, scores, soul_side, kill_ok, proc, ip_class, host=site_host,
+        )
         results.append({
             "remote_ip": rip,
             "remote_port": rport,
@@ -866,6 +896,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "kill_tier": kill_tier,
             "soul_side": soul_side,
             "hell_chosen": hell_chosen,
+            **touch,
             **honor_meta,
         })
 
@@ -929,6 +960,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         )
     return {
         "updated": _now(),
+        "touch_policy": _touch_module().aggregate_counts(results),
         "connection_count": len(results),
         "harm_candidates": len(harm_candidates),
         "kill_targets": len(kill_targets),

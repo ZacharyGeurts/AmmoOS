@@ -181,7 +181,7 @@ def panel_json(active_sites: list[dict[str, Any]] | None = None) -> dict[str, An
             pending.append(row)
     return {
         "motto": "Low-level data researchers — honorability at onset, stars not nagging.",
-        "tagline": "5 gold stars pass silently. Moderate default. Ask only when you visit the rough stuff.",
+        "tagline": "5 gold stars pass silently — safe signal, no human touch. Music, normal traffic, and animals are different.",
         "default_stars": int(seed_doc.get("default_stars") or DEFAULT_STARS),
         "gold_stars": GOLD_STARS,
         "accept_below_stars": ACCEPT_BELOW,

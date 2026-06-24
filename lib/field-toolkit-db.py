@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import random
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -466,6 +467,111 @@ def hell_rip() -> dict[str, Any]:
     return out
 
 
+FIELD_DIE_SIGNAL_THRESHOLD = 6
+FIELD_DIE_NOISE_RATIO = 0.94
+
+
+def field_die_roll(ip: str | None = None) -> dict[str, Any]:
+    """AMOURANTHRTX Field Die — 94% noise, 6% signal. Signal may sever top hostile."""
+    roll = random.randint(1, 20)
+    signal = roll <= FIELD_DIE_SIGNAL_THRESHOLD
+    targets = _collect_target_rows()
+    disabled = _disabled_ips()
+    active = [t for t in targets if t["ip"] not in disabled]
+    active.sort(key=lambda r: (-int(r.get("hostility_score") or 0), r["ip"]))
+    pick = str(ip or "").strip() or (active[0]["ip"] if active else "")
+    pick_row = next((t for t in active if t["ip"] == pick), active[0] if active else None)
+
+    out: dict[str, Any] = {
+        "ok": True,
+        "mode": "field_die",
+        "roll": roll,
+        "dice": f"d20={roll}",
+        "signal": signal,
+        "verdict": "signal" if signal else "noise",
+        "noise_ratio": FIELD_DIE_NOISE_RATIO,
+        "signal_ratio": round(1.0 - FIELD_DIE_NOISE_RATIO, 2),
+        "threshold": FIELD_DIE_SIGNAL_THRESHOLD,
+        "target_pool": len(active),
+        "recommended_ip": pick_row["ip"] if pick_row else None,
+        "motto": (
+            "Signal — 6% slice actionable. Hell may sever."
+            if signal
+            else "Noise — 94% floor. No friendly fire. Pass."
+        ),
+    }
+
+    if signal and pick_row:
+        sever = sever_target(
+            pick_row["ip"],
+            "FIELD_DIE",
+            str(pick_row.get("severity") or "high"),
+            f"field_die_signal:d20={roll}",
+        )
+        out["sever"] = sever
+        out["action_ip"] = pick_row["ip"]
+        out["action"] = "sever_wire" if sever.get("ok") else "refused"
+    elif signal:
+        out["action"] = "no_targets"
+    else:
+        out["action"] = "pass"
+
+    _log_disable({
+        "mode": "field_die",
+        "roll": roll,
+        "signal": signal,
+        "action_ip": out.get("action_ip"),
+        "action": out.get("action"),
+    })
+    return out
+
+
+def laser_corridor(ip: str, vector: str = "LASER_CORRIDOR", severity: str = "critical") -> dict[str, Any]:
+    """Undodgeable laser corridor — sever wire then forever kill. Heaven-protected only dodge."""
+    ip = str(ip or "").strip()
+    if not ip:
+        return {"ok": False, "error": "missing_ip", "mode": "laser_corridor"}
+
+    fg = _mod("friendly_guard", "friendly-guard.py")
+    refuse, guard_reason = fg.refuse_kill(ip, monitor=None)
+    if refuse:
+        return {
+            "ok": False,
+            "ip": ip,
+            "mode": "laser_corridor",
+            "undodgeable": False,
+            "friendly_refused": True,
+            "reason": guard_reason,
+            "motto": "Heaven dodged the grid — laser passes.",
+        }
+
+    sever = sever_target(ip, vector, severity, "laser_corridor:grid_sweep")
+    kit = _mod("field_attack_kit", "field-attack-kit.py")
+    kill = kit.kill_target(
+        ip,
+        vector,
+        severity,
+        "laser_corridor:undodgeable_slice",
+        extra={"toolkit": "laser_corridor", "undodgeable": True},
+    )
+
+    out = {
+        "ok": bool(sever.get("ok") or kill.get("ok") or kill.get("killed")),
+        "ip": ip,
+        "mode": "laser_corridor",
+        "undodgeable": True,
+        "vector": vector,
+        "severity": severity,
+        "grid_phases": ["horizontal", "vertical", "diagonal"],
+        "sever": sever,
+        "kill": kill,
+        "killed": bool(kill.get("killed") or kill.get("ok")),
+        "motto": "Undodgeable laser corridor — wire sliced. Hell goes to Hell. lulz.",
+    }
+    _log_disable({"mode": "laser_corridor", "ip": ip, "killed": out["killed"]})
+    return out
+
+
 def execute_disablement(body: dict[str, Any]) -> dict[str, Any]:
     """Unified Hell Kit disablement executor."""
     mode = str(body.get("mode") or body.get("profile") or "").strip().lower()
@@ -487,9 +593,21 @@ def execute_disablement(body: dict[str, Any]) -> dict[str, Any]:
         return human_threat_disable(max_ips=int(body.get("max_ips") or HUMAN_THREAT_MAX_IPS))
     if mode in ("rip", "hell_rip"):
         return hell_rip()
+    if mode in ("die", "field_die"):
+        return field_die_roll(str(body.get("ip") or "") or None)
+    if mode in ("laser", "laser_corridor"):
+        return laser_corridor(
+            str(body.get("ip") or ""),
+            str(body.get("vector") or "LASER_CORRIDOR"),
+            str(body.get("severity") or "critical"),
+        )
     if body.get("ip"):
         return sever_target(str(body["ip"]))
-    return {"ok": False, "error": "unknown_mode", "modes": ["sever", "regional", "human_threat", "hell_rip"]}
+    return {
+        "ok": False,
+        "error": "unknown_mode",
+        "modes": ["sever", "regional", "human_threat", "hell_rip", "field_die", "laser_corridor"],
+    }
 
 
 def panel_json() -> dict[str, Any]:
@@ -554,12 +672,19 @@ def main() -> int:
     if cmd == "hell-rip":
         print(json.dumps(hell_rip(), ensure_ascii=False))
         return 0
+    if cmd == "field-die":
+        target = sys.argv[2].strip() if len(sys.argv) >= 3 else None
+        print(json.dumps(field_die_roll(target), ensure_ascii=False))
+        return 0
+    if cmd == "laser-corridor" and len(sys.argv) >= 3:
+        print(json.dumps(laser_corridor(sys.argv[2]), ensure_ascii=False))
+        return 0
     if cmd == "disable" and len(sys.argv) >= 2:
         body = json.loads(sys.argv[2] if sys.argv[2] != "-" else sys.stdin.read())
         print(json.dumps(execute_disablement(body), ensure_ascii=False))
         return 0
     print(json.dumps({
-        "error": "usage: field-toolkit-db.py [json|regions|get ID|toggle ID|sever IP|regional VAL [field]|human-threat|hell-rip|disable JSON]",
+        "error": "usage: field-toolkit-db.py [json|regions|get ID|toggle ID|sever IP|regional VAL [field]|human-threat|hell-rip|field-die [IP]|laser-corridor IP|disable JSON]",
     }))
     return 1
 

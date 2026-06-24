@@ -28,6 +28,8 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/precision-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/precision-field.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/hostess7-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/hostess7-field.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/hostess7-operator.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/hostess7-operator.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -51,6 +53,9 @@ nexus_threat_panel_publish() {
   fi
   if declare -f nexus_field_attack_rekill_cycle >/dev/null 2>&1; then
     nexus_field_attack_rekill_cycle
+  fi
+  if declare -f nexus_audio_train_publish >/dev/null 2>&1; then
+    nexus_audio_train_publish
   fi
   local ts mode conn arp egress listeners threats corr signal dns
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
@@ -232,6 +237,18 @@ nexus_threat_panel_publish() {
       nexus_us_field_json
     else
       printf '{"page":1,"title":"US","observations":["US field intel module not loaded."]}'
+    fi
+    printf ',"human_registry":'
+    if declare -f nexus_human_registry_json >/dev/null 2>&1; then
+      nexus_human_registry_json
+    else
+      printf '{"schema":"human-registry/v1","stats":{"total":0},"table":[],"humans":{}}'
+    fi
+    printf ',"audio_train":'
+    if declare -f nexus_audio_train_json >/dev/null 2>&1; then
+      nexus_audio_train_json
+    else
+      printf '{"schema":"audio-train/v1","hostess_version":"6.9","stats":{"sources":0},"sources":{},"table":[]}'
     fi
     printf ',"human_dossier":'
     if declare -f nexus_human_dossier_json >/dev/null 2>&1; then

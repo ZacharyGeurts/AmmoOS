@@ -52,6 +52,27 @@
       "severity": "critical",
       "module": "heaven-hell",
       "hell_first": true
+    },
+    {
+      "id": "field_die",
+      "label": "Field Die · truth roll",
+      "mode": "die",
+      "description": "AMOURANTHRTX Field Die — 94% noise, 6% signal. Roll for actionable hostility; Heaven never bumped on noise.",
+      "vector": "FIELD_DIE",
+      "severity": "medium",
+      "noise_ratio": 0.94,
+      "signal_ratio": 0.06,
+      "hell_first": true
+    },
+    {
+      "id": "laser_corridor",
+      "label": "Laser corridor · undodgeable slice",
+      "mode": "laser",
+      "description": "Resident Evil corridor — red grid sweeps, wire severed, no dodge. Teardown + block + forever kill when hostility demands.",
+      "vector": "LASER_CORRIDOR",
+      "severity": "critical",
+      "undodgeable": true,
+      "hell_first": true
     }
   ],
   "attacks": [
@@ -71,7 +92,9 @@
     {"id": "human_threat_c2", "label": "Human threat · C2 kill order", "vector": "HUMAN_THREAT", "severity": "critical", "category": "human", "disablement": "human_threat", "indicators": ["ThreatFox live export", "Grok Heavy dossier", "AsyncRAT/Cobalt/Havoc family", "high hosting likelihood", "RE-KILL marker"], "study": "Human threat itself — operator-readable kill orders from Grok Heavy. Every IP is high-confidence C2; Hell Kit sweeps the dossier with friendly guard and Trust Strike gates.", "defenses": ["hell_human_threat", "trust_strike_autokill", "auto_rekill", "human_dossier_merge"]},
     {"id": "precision_hell_placement", "label": "Precision Hell placement", "vector": "HELL_PRECISION", "severity": "critical", "category": "geo", "disablement": "regional_disable", "indicators": ["sub-micron GPS lat_i/lon_i", "ENU nanometer offset", "terror spiderweb node", "thermal body correlate"], "study": "Precision field places detections at sub-micron GPS. Regional disablement severs every hostile entity in the ENU patch — Hell goes to Hell at detected coordinates.", "defenses": ["precision_field_kit", "hostility_priority_hell_first", "hell_regional_disable"]},
     {"id": "regional_hell_cluster", "label": "Regional Hell cluster", "vector": "HELL_REGIONAL", "severity": "critical", "category": "geo", "disablement": "regional_disable", "indicators": ["shared ASN", "country_code cluster", "state/region overlap", "census geography hostile"], "study": "Hostile nodes cluster by region. Hell Kit batch-disables the entire cluster — sever wire first, forever kill on PINPOINT CERTAIN.", "defenses": ["hell_regional_disable", "hostility_priority_hell_first", "census_field_populate"]},
-    {"id": "hostility_escalation", "label": "Hostility escalation · Hell first", "vector": "HELL_CHOSEN", "severity": "critical", "category": "hostility", "disablement": "hell_rip", "indicators": ["hostility_score spike", "hell_chosen verdict", "soul_side hell", "RF correlated heat"], "study": "Hell is Hell goes to Hell — hostility priority sorts harm ahead of Heaven. Escalation triggers sever, regional disable, or rip based on score.", "defenses": ["hostility_priority_hell_first", "heaven_hell_rip", "hell_rip"]}
+    {"id": "hostility_escalation", "label": "Hostility escalation · Hell first", "vector": "HELL_CHOSEN", "severity": "critical", "category": "hostility", "disablement": "hell_rip", "indicators": ["hostility_score spike", "hell_chosen verdict", "soul_side hell", "RF correlated heat"], "study": "Hell is Hell goes to Hell — hostility priority sorts harm ahead of Heaven. Escalation triggers sever, regional disable, or rip based on score.", "defenses": ["hostility_priority_hell_first", "heaven_hell_rip", "hell_rip"]},
+    {"id": "field_die_truth", "label": "Field Die · 94/6 truth roll", "vector": "FIELD_DIE", "severity": "medium", "category": "truth", "disablement": "field_die", "indicators": ["d20 roll ≤6 = signal", "94% internet noise floor", "hostility_score tie-break", "no action on noise"], "study": "Before AMOURANTHRTX had a name, there was noise. Ninety-four percent of the internet is background; six percent is signal. The Field Die lives inside that ratio — quieter truth, not a louder alarm.", "defenses": ["field_die_kit", "hostility_priority_hell_first", "hell_sever_wire"]},
+    {"id": "laser_corridor_slice", "label": "Laser corridor · undodgeable slice", "vector": "LASER_CORRIDOR", "severity": "critical", "category": "slice", "disablement": "laser_corridor", "indicators": ["horizontal grid sweep", "vertical grid sweep", "wire sever + forever kill", "friendly guard only dodge"], "study": "The Hive corridor — red lasers raster the field. Undodgeable except Heaven-protected flows. Sever wire, firewall both directions, Trust Strike kill when PINPOINT CERTAIN. lulz.", "defenses": ["laser_corridor_kit", "hell_sever_wire", "trust_strike_autokill", "auto_crush_hot"]}
   ],
   "defenses": [
     {"id": "auto_crush_hot", "label": "Autokill · 100% hardware destroy", "module": "field-attack-kit", "default": true, "description": "PINPOINT CERTAIN · 100% only — forever kill + full hardware destruction. Registry re-enforces on boot.", "setting_key": "NEXUS_ATTACK_KIT_AUTO_CRUSH", "hell_kit": true},
@@ -94,6 +117,8 @@
     {"id": "vision_ocr_corroborate", "label": "Vision + OCR corroboration", "module": "existence-identity", "default": true, "description": "H7 Team vision corpus + tesseract OCR toolkit corroborate entity existence scores.", "setting_key": null},
     {"id": "human_dossier_merge", "label": "Human dossier merge", "module": "human-dossier", "default": true, "description": "Grok Heavy kill-order intel merged into gov-intel and field registry.", "setting_key": null, "hell_kit": true},
     {"id": "heaven_hell_rip", "label": "Heaven/Hell classifier", "module": "heaven-hell", "default": true, "description": "We know Heaven from Hell — classify flows before any disablement action.", "setting_key": null, "hell_kit": true},
-    {"id": "census_field_populate", "label": "Census field populate", "module": "census-field-populate", "default": true, "description": "Government census geographies for regional Hell cluster targeting.", "setting_key": null, "hell_kit": true}
+    {"id": "census_field_populate", "label": "Census field populate", "module": "census-field-populate", "default": true, "description": "Government census geographies for regional Hell cluster targeting.", "setting_key": null, "hell_kit": true},
+    {"id": "field_die_kit", "label": "Hell Kit · Field Die", "module": "field-toolkit", "default": true, "description": "94/6 truth roll — signal picks top hostile; noise passes without friendly fire.", "setting_key": null, "hell_kit": true, "disablement": "field_die"},
+    {"id": "laser_corridor_kit", "label": "Hell Kit · laser corridor", "module": "field-toolkit", "default": true, "description": "Undodgeable Resident Evil grid — sever + kill on selected target. Heaven only escape.", "setting_key": null, "hell_kit": true, "disablement": "laser_corridor"}
   ]
 }

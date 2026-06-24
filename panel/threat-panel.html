@@ -119,6 +119,40 @@
       border: 1px solid #2a3548; background: #0d1520; min-height: 52px;
     }
     .ft-defense-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .ft-die-readout {
+      font-size: 0.62rem; color: var(--gold); min-width: 5.5rem; text-align: center;
+      padding: 4px 8px; border: 1px solid #3a3040; border-radius: 6px; background: #0a0e16;
+    }
+    .laser-corridor-overlay {
+      position: fixed; inset: 0; z-index: 99999; pointer-events: none;
+      background: rgba(4, 0, 8, 0.55); opacity: 0; transition: opacity 0.15s ease;
+    }
+    .laser-corridor-overlay.active { opacity: 1; }
+    .laser-corridor-overlay .laser-grid {
+      position: absolute; inset: 0; overflow: hidden;
+    }
+    .laser-corridor-overlay .laser-beam {
+      position: absolute; background: linear-gradient(90deg, transparent, #ff1a3a 35%, #fff 50%, #ff1a3a 65%, transparent);
+      box-shadow: 0 0 18px #ff0033, 0 0 40px rgba(255, 0, 60, 0.6);
+    }
+    .laser-corridor-overlay .laser-beam.h {
+      left: 0; right: 0; height: 3px; animation: laser-sweep-h 1.1s ease-in-out forwards;
+    }
+    .laser-corridor-overlay .laser-beam.v {
+      top: 0; bottom: 0; width: 3px;
+      background: linear-gradient(180deg, transparent, #ff1a3a 35%, #fff 50%, #ff1a3a 65%, transparent);
+      animation: laser-sweep-v 0.9s ease-in-out 0.55s forwards;
+    }
+    @keyframes laser-sweep-h {
+      0% { top: 8%; opacity: 0; }
+      15% { opacity: 1; }
+      100% { top: 92%; opacity: 0.85; }
+    }
+    @keyframes laser-sweep-v {
+      0% { left: 6%; opacity: 0; }
+      15% { opacity: 1; }
+      100% { left: 94%; opacity: 0.85; }
+    }
     .honor-stars { display: inline-flex; gap: 1px; letter-spacing: 0; font-size: 0.72rem; }
     .honor-stars .star-gold { color: var(--gold); text-shadow: 0 0 6px rgba(212, 175, 55, 0.45); }
     .honor-stars .star-dim { color: #4a5060; }
@@ -818,6 +852,26 @@
     }
     .intent-row.verdict-USER_OK { border-left: 4px solid var(--ok); }
     .intent-row.verdict-EPHEMERAL { border-left: 4px solid var(--internet); }
+    .intent-row-silent {
+      padding: 6px 10px; font-size: 0.66rem; color: var(--muted);
+      border-left: 2px solid rgba(61, 220, 104, 0.35); opacity: 0.72;
+    }
+    .intent-row-music { border-left: 4px solid #c8a030; }
+    .music-touch-badge, .traffic-touch-badge, .animal-touch-badge, .train-touch-badge {
+      display: inline-block; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.06em;
+      border-radius: 4px; padding: 1px 6px; margin-right: 6px;
+    }
+    .music-touch-badge { color: #e8c878; border: 1px solid #5a4820; }
+    .traffic-touch-badge { color: #9ec8ff; border: 1px solid #2a4060; }
+    .animal-touch-badge { color: #9ee8b0; border: 1px solid #2a5040; }
+    .train-touch-badge { color: #9ec8e8; border: 1px solid #2a4050; }
+    .intent-row-train { border-left: 3px solid #4a7a9a; }
+    .intent-row-traffic { border-left: 4px solid #4d7ab8; }
+    .intent-row-animal { border-left: 4px solid #3d9a68; }
+    .conn-silent-summary {
+      font-size: 0.68rem; color: var(--muted); padding: 8px 10px; margin-bottom: 8px;
+      border: 1px dashed rgba(61, 220, 104, 0.25); border-radius: 6px; background: rgba(8, 14, 10, 0.5);
+    }
     .intent-row.verdict-SUSPICIOUS { border-left: 4px solid var(--gold); }
     .intent-row.verdict-HARM_CANDIDATE { border-left: 4px solid var(--threat); }
     .intent-row.verdict-MONITOR { border-left: 4px solid var(--muted); }
@@ -1469,8 +1523,8 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v6.0.0</h1>
-        <div class="brand-sub">Your network helper · MIT licensed</div>
+        <h1>NEXUS-Shield v6.9.0</h1>
+        <div class="brand-sub">Hostess 6.9 · Audio Train · MIT licensed</div>
       </div>
     </div>
     <div class="header-right">
@@ -1489,7 +1543,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v6.0.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v6.9.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1500,6 +1554,13 @@
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
     <strong>v5.0 Command deck — Good Guy vs Bad Guy on every packet. Seven integrated tabs: Command · US · Packets · Threats · Intel · Library · System. Know everything.</strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
+  </div>
+
+  <div id="laser-corridor-overlay" class="laser-corridor-overlay" aria-hidden="true">
+    <div class="laser-grid">
+      <div class="laser-beam h"></div>
+      <div class="laser-beam v"></div>
+    </div>
   </div>
 
   <div id="murder-banner" class="murder-banner" role="alert">
@@ -1941,6 +2002,9 @@
           <button type="button" id="ft-sever-selected" class="ghost" data-tip="Sever wire on selected map target — teardown connections + 24h firewall block.">Sever wire</button>
           <button type="button" id="ft-human-threat" class="ghost" data-tip="Sweep Grok Heavy human dossier kill orders — human threat itself.">Human threat sweep</button>
           <button type="button" id="ft-hell-rip" class="ghost" data-tip="Heaven/Hell rip — Hell-chosen flows only. No friendly fire.">Hell rip</button>
+          <button type="button" id="ft-field-die" class="ghost" data-tip="Field Die — d20 roll. ≤6 = 6% signal (sever top hostile). &gt;6 = 94% noise (pass).">🎲 Field Die</button>
+          <span id="ft-die-readout" class="ft-die-readout" aria-live="polite">d20 —</span>
+          <button type="button" id="ft-laser-corridor" class="ghost" data-tip="Undodgeable laser corridor — Resident Evil grid slice on map target. Sever + kill. Heaven only dodge.">☇ Laser corridor</button>
         </div>
         <div class="field-toolkit-grid" style="margin-top:10px;">
           <div>
@@ -2110,6 +2174,37 @@
       </div>
       <div id="human-dossier-chips" class="human-dossier-stats"></div>
       <div id="human-dossier-list"><div class="empty">Loading Grok Heavy dossiers…</div></div>
+    </div>
+  </section>
+
+  <section id="view-audio-train" class="view">
+    <div class="field-rf-wrap">
+      <p class="field-rf-motto" id="audio-train-motto" data-tip="Train learns acceptable audio ranges from live sources. Push outside = hostile intent.">
+        <strong>Audio Train · Hostess 6.9</strong> — acceptable ranges grow as audio arrives. Push outside = hostile intent.
+      </p>
+      <div id="audio-train-stats" class="police-stats" style="margin-bottom:12px;"></div>
+      <div class="honor-grid">
+        <div class="honor-card" style="grid-column: 1 / -1;">
+          <h4 data-tip="Per-source learned min/max for level, peak, bass, treble, sample rate, and latency.">Acceptable ranges · live sources</h4>
+          <div id="audio-train-table" class="meta"><div class="empty">Harvesting audio sources…</div></div>
+        </div>
+        <div class="honor-card">
+          <h4 data-tip="Sources whose latest sample violated learned acceptable ranges — construed as hostile intent.">Hostile intent · range violations</h4>
+          <div id="audio-train-hostile"><div class="empty">No hostile audio — all sources acceptable.</div></div>
+        </div>
+        <div class="honor-card">
+          <h4 data-tip="Transit and rail audio markers — felt-safe like music and traffic.">Train · transit sources</h4>
+          <div id="audio-train-transit"><div class="empty">No train/transit sources yet.</div></div>
+        </div>
+        <div class="honor-card" id="audio-train-pet-guard-wrap" style="display:none;">
+          <h4 data-tip="If a dog is attacked by signal, we trace the source and strike it.">Pet signal guard</h4>
+          <div id="audio-train-pet-guard" class="meta"></div>
+        </div>
+      </div>
+      <div class="view-jump-row" style="margin-top:14px;">
+        <button type="button" data-view-jump="packets/live">Live connections →</button>
+        <button type="button" data-view-jump="threats/kill">Kill orders →</button>
+      </div>
     </div>
   </section>
 
@@ -2550,7 +2645,8 @@
       },
     };
 
-    function renderSuggestionBox(sug, verdict, scores) {
+    function renderSuggestionBox(sug, verdict, scores, humanTouch) {
+      if (humanTouch === "none") return "";
       if (!sug) return "";
       const friendly = sug.friendly_signals || [];
       const unfriendly = sug.unfriendly_signals || [];
@@ -2566,12 +2662,23 @@
       const axisBars = scores
         ? `<div class="axis-breakdown"><div class="axis-breakdown-title">10 checks per connection</div><div class="axis-grid axis-grid-prominent">${renderAxisBars(scores)}</div></div>`
         : "";
+      const feltNote = {
+        music: '<span class="music-touch-badge">♪ MUSIC</span> Safe signal — may be felt.',
+        traffic: '<span class="traffic-touch-badge">🚗 TRAFFIC</span> Normal car traffic — cool to notice.',
+        animal: '<span class="animal-touch-badge">🐾 ANIMAL</span> Animals — cool to notice.',
+        train: '<span class="train-touch-badge">🚆 TRAIN</span> Transit audio — cool to notice.',
+      }[humanTouch];
+      const musicNote = feltNote
+        ? `<div class="meta" style="margin-bottom:6px;">${feltNote}</div>`
+        : "";
+      const axisBlock = humanTouch === "none" || humanTouch === "alert" ? axisBars : "";
       return `<div class="suggestion-box verdict-${verdict}">
+        ${musicNote}
         <div class="summary"><strong>NEXUS suggests:</strong> ${esc(sug.summary || "")}
           <span class="score-chips"><span class="trust-chip">Trust ${trustPct}%</span> · <span class="concern-chip">Concern ${concernPct}%</span></span></div>
-        ${axisBars}
+        ${axisBlock}
         <div class="action"><strong>What to do:</strong> ${esc(sug.action || "")}</div>
-        ${signals}
+        ${humanTouch === "none" || humanTouch === "alert" ? signals : ""}
       </div>`;
     }
 
@@ -2580,13 +2687,13 @@
       us: { panel: "us", default: "us", subs: { us: "US" } },
       packets: { panel: "packets", default: "monitor", subs: { monitor: "Live · Good/Bad", inspect: "DPI · Deep inspect" } },
       threats: { panel: "threats", default: "host-attack", subs: { "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", "precision-map": "Precision · Map", "precision-web": "Precision · Web", dossier: "Attack paths", "human-dossier": "Kill orders" } },
-      intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", "field-rf": "Field RF", research: "Research" } },
+      intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", "audio-train": "Audio · Train", "field-rf": "Field RF", research: "Research" } },
       library: { panel: "library", default: "library", subs: { library: "Library" } },
       system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
     };
     const LEGACY_VIEW_MAP = {
       monitor: ["packets", "monitor"], inspect: ["packets", "inspect"],
-      honor: ["intel", "honor"], "field-rf": ["intel", "field-rf"], research: ["intel", "research"],
+      honor: ["intel", "honor"], "audio-train": ["intel", "audio-train"], "field-rf": ["intel", "field-rf"], research: ["intel", "research"],
       "host-attack": ["threats", "host-attack"], spiderweb: ["threats", "spiderweb"], "precision-map": ["threats", "precision-map"], "precision-web": ["threats", "precision-web"], dossier: ["threats", "dossier"], "human-dossier": ["threats", "human-dossier"],
       map: ["threats", "host-attack"], kill: ["threats", "human-dossier"],
       settings: ["system", "settings"], logs: ["system", "logs"],
@@ -2604,7 +2711,7 @@
       us: { keys: ["us_field"], subs: { us: ["us_field"] } },
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
       threats: { keys: ["host_attacks", "terror_spiderweb", "precision_field"], subs: { "host-attack": ["host_attacks"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
-      intel: { keys: ["field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
+      intel: { keys: ["audio_train", "field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
       library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
     };
@@ -2613,6 +2720,7 @@
       if (!data || data[key] == null) return false;
       const val = data[key];
       if (key === "gatekeeper") return typeof val === "object" && Array.isArray(val.connections);
+      if (key === "audio_train") return typeof val === "object" && (val.schema === "audio-train/v1" || val.stats != null);
       if (key === "field_rf") return typeof val === "object" && (val.updated != null || val.antenna?.mode != null);
       if (key === "terror_spiderweb") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.nodes));
       if (key === "precision_field") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.entities));
@@ -2810,6 +2918,7 @@
       if (data.paranoia) renderParanoia(data.paranoia);
       if (data.shutdown) renderShutdown(data.shutdown);
       renderHonorability(data);
+      renderAudioTrain(data.audio_train);
       renderCommandCenter(data);
       renderFieldProtect(data);
       const gk = data.gatekeeper || {};
@@ -2886,6 +2995,7 @@
       if (sub === "us" && lastPanelData) renderUSField(lastPanelData.us_field);
       if (sub === "command" && lastPanelData) renderCommandCenter(lastPanelData);
       if (sub === "honor" && lastPanelData) renderHonorability(lastPanelData);
+      if (sub === "audio-train" && lastPanelData) renderAudioTrain(lastPanelData.audio_train);
       if (sub === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
     }
 
@@ -3922,9 +4032,18 @@
       const pending = gk.pending_trust_count || 0;
       const permitted = gk.permitted_flow_count ?? 0;
       const segments = gk.segment_block_count ?? 0;
+      const tp = gk.touch_policy || {};
+      const silentN = tp.silent_count ?? 0;
+      const musicN = tp.music_count ?? 0;
+      const trafficN = tp.traffic_count ?? 0;
+      const animalN = tp.animal_count ?? 0;
       el.innerHTML =
-        `<span class="has-tip"><strong>Packet permission</strong>${tipMarkup("v4.0: DPI + gatekeeper know who and intent. Good flows permit at zero nft cost; harmful sections blocked only.")}</span> — ` +
+        `<span class="has-tip"><strong>Packet permission</strong>${tipMarkup("v4.0: DPI + gatekeeper know who and intent. Good flows permit at zero nft cost. Safe signals pass silently — music, normal car traffic, and animals are different.")}</span> — ` +
         `${gk.connection_count || 0} flows · <strong>${permitted}</strong> permitted · ` +
+        (silentN ? `<strong>${silentN}</strong> silent · ` : "") +
+        (musicN ? `<strong>${musicN}</strong> music · ` : "") +
+        (trafficN ? `<strong>${trafficN}</strong> traffic · ` : "") +
+        (animalN ? `<strong>${animalN}</strong> animal · ` : "") +
         (segments ? `<strong>${segments}</strong> segment hold${segments === 1 ? "" : "s"} · ` : "") +
         (pending ? `<strong>${pending}</strong> need review · ` : "") +
         `<strong>${harm}</strong> harm candidate${harm === 1 ? "" : "s"} · ` +
@@ -3995,9 +4114,15 @@
 
     function renderConnectionCard(c, trusted, blocked) {
       const v = c.verdict || "MONITOR";
+      const touch = c.human_touch || (c.safe_signal === false ? "alert" : "none");
       const vf = VERDICT_FRIENDLY[v] || { label: v, tip: "Gatekeeper classifying this connection." };
       const ip = c.remote_ip;
       const sug = c.suggestion || null;
+      if (touch === "none") {
+        return `<div class="intent-row-silent verdict-${v}" data-tip="Safe signal — passes silently. No human touch.">
+          <span class="meta">${esc(c.process || "app")} → ${esc(ip)} · ${esc(vf.label)} · silent pass</span>
+        </div>`;
+      }
       const verdictLabel = sug?.summary ? esc(sug.summary) : esc(vf.label);
       const verdictTip = sug?.summary ? esc(sug.summary + (c.reason ? ` · ${c.reason}` : "")) : esc(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""));
       const dir = strictTrustDirection(c);
@@ -4023,14 +4148,21 @@
       if (showPest) {
         actions += `<span class="has-tip has-tip-action"><button type="button" class="danger eradicate" data-eradicate="${ip}" data-pid="${c.pid || ""}" data-vector="${v}">Remove pest</button>${tipMarkup("Block peer, stop process, quarantine temp binary — full host pest removal.")}</span>`;
       }
-      return `<div class="intent-row verdict-${v}${blockedRow ? " is-blocked" : ""}">
+      const feltCls = touch === "music" ? " intent-row-music" : touch === "traffic" ? " intent-row-traffic" : touch === "animal" ? " intent-row-animal" : touch === "train" ? " intent-row-train" : "";
+      const feltBadge = {
+        music: '<span class="music-touch-badge">♪ MUSIC</span>',
+        traffic: '<span class="traffic-touch-badge">🚗 TRAFFIC</span>',
+        animal: '<span class="animal-touch-badge">🐾 ANIMAL</span>',
+        train: '<span class="train-touch-badge">🚆 TRAIN</span>',
+      }[touch] || "";
+      return `<div class="intent-row verdict-${v}${feltCls}${blockedRow ? " is-blocked" : ""}">
         <div class="intent-head">
-          <span class="verdict-${v} friendly-verdict"><span class="has-tip">${verdictLabel}${tipMarkup(verdictTip)}</span></span>
+          ${feltBadge}<span class="verdict-${v} friendly-verdict"><span class="has-tip">${verdictLabel}${tipMarkup(verdictTip)}</span></span>
           <span class="ip" title="Internet address">${ip}:${c.remote_port || "?"}</span>
           <span class="proc" title="Program using this connection">${c.process || "background app"}</span>
           <span class="meta intel-label">${c.intent?.who ? esc(c.intent.who) + " · " : ""}${intelLabel ? esc(intelLabel) : esc(c.ip_class || "classified peer")}${c.flow_policy?.block_scope && c.flow_policy.block_scope !== "none" ? ` · <strong>${esc(c.flow_policy.block_scope)} block</strong>` : c.flow_policy?.permit ? " · permit" : ""}${c.addr_version ? ` · ${esc(c.addr_version)}` : ""}${c.traffic_direction_label ? `<span class="dir-badge ${esc(c.traffic_direction || "from_us")}">${esc(c.traffic_direction === "at_us" ? "At us" : "From us")}</span>` : ""}${blockedRow ? " · blocked" : ""}</span>
         </div>
-        ${renderSuggestionBox(sug, v, c.scores)}
+        ${renderSuggestionBox(sug, v, c.scores, touch)}
         ${honorLine}
         ${c.reason ? `<details class="axis-details"><summary>Technical notes</summary><div class="intent-reason">${esc(c.reason)}</div></details>` : ""}
         <div class="intent-actions">${actions}</div>
@@ -4329,6 +4461,25 @@
 
     let hellKitBound = false;
 
+    function playLaserCorridor(ms = 1700) {
+      const overlay = $("laser-corridor-overlay");
+      if (!overlay) return Promise.resolve();
+      overlay.classList.add("active");
+      overlay.setAttribute("aria-hidden", "false");
+      overlay.querySelectorAll(".laser-beam").forEach((b) => {
+        b.style.animation = "none";
+        void b.offsetWidth;
+        b.style.animation = "";
+      });
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          overlay.classList.remove("active");
+          overlay.setAttribute("aria-hidden", "true");
+          resolve();
+        }, ms);
+      });
+    }
+
     function bindHellKitControls() {
       if (hellKitBound) return;
       hellKitBound = true;
@@ -4398,6 +4549,60 @@
           refresh();
         } catch { alert("Hell rip unreachable."); }
         finally { btn.disabled = false; }
+      });
+      $("ft-field-die")?.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        const readout = $("ft-die-readout");
+        const p = hostLastPoints?.find((x) => x.id === hostSelectedId);
+        const ip = p?.ip || "";
+        btn.disabled = true;
+        if (readout) readout.textContent = "rolling…";
+        try {
+          const res = await fetch("/api/field-toolkit/field-die", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(ip ? { ip } : {}),
+          });
+          const data = await res.json();
+          if (readout) {
+            readout.textContent = data.roll != null
+              ? `d20=${data.roll} · ${data.verdict || "—"}`
+              : "d20 —";
+          }
+          const msg = data.signal
+            ? `Field Die SIGNAL (≤6) — roll ${data.roll}\n${data.action_ip ? `Severed ${data.action_ip}` : data.action || "no targets"}`
+            : `Field Die NOISE (>6) — roll ${data.roll}\n94% floor — pass. No friendly fire.`;
+          alert(msg);
+          if (data.signal) refresh();
+        } catch {
+          if (readout) readout.textContent = "d20 —";
+          alert("Field Die unreachable.");
+        } finally { btn.disabled = false; }
+      });
+      $("ft-laser-corridor")?.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        const p = hostLastPoints?.find((x) => x.id === hostSelectedId) || hostLastPoints?.[0];
+        const ip = p?.ip;
+        if (!ip) { alert("Select a map target first."); return; }
+        if (!confirm(`Laser corridor on ${ip}?\n\nUndodgeable grid slice — sever + kill. Heaven-protected only escape. lulz`)) return;
+        btn.disabled = true;
+        const anim = playLaserCorridor();
+        try {
+          const res = await fetch("/api/field-toolkit/laser-corridor", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ip, vector: p.vector || "LASER_CORRIDOR", severity: p.severity || "critical" }),
+          });
+          const data = await res.json();
+          await anim;
+          if (data.friendly_refused) alert(`Heaven dodged the grid — ${ip} protected.`);
+          else if (data.ok) alert(`Laser corridor — ${ip} sliced.\nKilled: ${data.killed ? "yes" : "sever only"}. Undodgeable. lulz`);
+          else alert(`Laser failed — ${data.error || data.reason || "unknown"}`);
+          refresh();
+        } catch {
+          await anim;
+          alert("Laser corridor unreachable.");
+        } finally { btn.disabled = false; }
       });
     }
 
@@ -4631,6 +4836,79 @@
       document.querySelectorAll("[data-honor-accept]").forEach((btn) => {
         btn.addEventListener("click", () => acceptHonorDomain(btn.dataset.honorAccept));
       });
+    }
+
+    function renderAudioTrain(doc) {
+      const at = doc || {};
+      const motto = $("audio-train-motto");
+      if (motto) {
+        const tag = at.tagline || at.motto || "Acceptable ranges grow as audio arrives.";
+        motto.innerHTML = `<strong>Audio Train · Hostess ${esc(at.hostess_version || "6.9")}</strong> — ${esc(tag)}`;
+      }
+      const statsEl = $("audio-train-stats");
+      const st = at.stats || {};
+      if (statsEl) {
+        statsEl.innerHTML = [
+          ["Sources", st.sources ?? 0],
+          ["Acceptable", st.acceptable ?? 0],
+          ["Hostile", st.hostile ?? 0],
+          ["Train/transit", st.train_transit ?? 0],
+          ["Dimensions", st.dimensions ?? 0],
+          ["Ledger events", st.ledger_events ?? 0],
+        ].map(([k, v]) => `<span class="police-stat"><span class="police-stat-label">${esc(k)}</span><strong>${esc(String(v))}</strong></span>`).join("");
+      }
+      const tableEl = $("audio-train-table");
+      const rows = at.table || [];
+      if (tableEl) {
+        if (!rows.length) {
+          tableEl.innerHTML = '<div class="empty">No audio sources harvested yet — PipeWire/Pulse will populate on next cycle.</div>';
+        } else {
+          tableEl.innerHTML = `<table class="honor-table"><thead><tr>
+            <th>Source</th><th>Kind</th><th>Dimension</th><th>Min</th><th>Max</th><th>Samples</th><th>OK</th>
+          </tr></thead><tbody>${rows.map((r) => `<tr class="${r.acceptable === false ? "is-blocked" : ""}">
+            <td><strong>${esc(r.label || r.source_id)}</strong></td>
+            <td>${esc(r.kind || "—")}</td>
+            <td>${esc(r.dimension_label || r.dimension)}</td>
+            <td>${esc(String(r.acceptable_min ?? "—"))}</td>
+            <td>${esc(String(r.acceptable_max ?? "—"))}</td>
+            <td>${esc(String(r.samples ?? 0))}</td>
+            <td>${r.acceptable === false ? '<span class="hell-stat">HOSTILE</span>' : "✓"}</td>
+          </tr>`).join("")}</tbody></table>`;
+        }
+      }
+      const hostileEl = $("audio-train-hostile");
+      const hostile = at.recent_hostile || Object.values(at.sources || {}).filter((s) => s.acceptable === false);
+      if (hostileEl) {
+        if (!hostile.length) {
+          hostileEl.innerHTML = '<div class="empty">No hostile audio — all sources within acceptable ranges.</div>';
+        } else {
+          hostileEl.innerHTML = hostile.map((s) => `<div style="margin-bottom:8px;padding:8px;border:1px solid #5a2828;background:rgba(56,20,20,0.35);border-radius:6px;">
+            <strong>${esc(s.label || s.source_id)}</strong> · ${esc(s.kind || "source")}
+            <div class="meta">Events: ${esc(String(s.hostile_events ?? 1))} · last ${esc(s.last_hostile || s.last_seen || "—")}</div>
+          </div>`).join("");
+        }
+      }
+      const transitEl = $("audio-train-transit");
+      const sources = Object.values(at.sources || {});
+      const trains = sources.filter((s) => s.kind === "train_transit" || /train|rail|transit/i.test(String(s.label || "")));
+      if (transitEl) {
+        if (!trains.length) {
+          transitEl.innerHTML = '<div class="empty">No train/transit sources yet.</div>';
+        } else {
+          transitEl.innerHTML = trains.map((s) => `<div style="margin-bottom:6px;"><span class="train-touch-badge">🚆 TRAIN</span> <strong>${esc(s.label)}</strong> · ${esc(String(s.sample_count ?? 0))} samples</div>`).join("");
+        }
+      }
+      const guard = at.pet_signal_guard || {};
+      const guardWrap = $("audio-train-pet-guard-wrap");
+      const guardEl = $("audio-train-pet-guard");
+      if (guardWrap && guardEl && (guard.events?.length || guard.strike_count)) {
+        guardWrap.style.display = "";
+        guardEl.innerHTML = `<div class="meta" style="margin-bottom:6px;">${esc(guard.motto || "")}</div>
+          <div>Strikes: <strong>${esc(String(guard.strike_count ?? 0))}</strong></div>
+          ${(guard.events || []).slice(-4).map((e) => `<div class="meta" style="margin-top:4px;">${esc(e.label || e.source_id)} → ${esc(e.target_ip || "unresolved")} ${e.strike?.killed ? "· KILLED" : ""}</div>`).join("")}`;
+      } else if (guardWrap) {
+        guardWrap.style.display = "none";
+      }
     }
 
     function renderHonorability(data) {
@@ -6237,8 +6515,16 @@
         html += `<div class="lockdown-banner" role="note"><strong>Packet permission v4.0</strong> — DPI knows who and intent on every flow. Friendly, Ephemeral, and Monitor pass at zero cost. Suspicious flows get segment blocks; harm candidates get IP blocks.</div>`;
       }
       if (recommended.length) {
+        const silent = recommended.filter((c) => c.human_touch === "none");
+        const felt = recommended.filter((c) => c.human_touch !== "none");
         html += `<div class="conn-section-head rec">Permitted — zero-cost fast path (${recommended.length})</div>`;
-        html += recommended.map((c) => renderConnectionCard(c, trusted, blocked)).join("");
+        if (silent.length) {
+          html += `<div class="conn-silent-summary" data-tip="Safe signals pass without suggestion boxes, axis bars, or operator nagging. Music, normal car traffic, animals, and Train may still be felt.">${silent.length} safe signal${silent.length === 1 ? "" : "s"} passing silently — no human touch.</div>`;
+        }
+        html += felt.map((c) => renderConnectionCard(c, trusted, blocked)).join("");
+        if (silent.length <= 8) {
+          html += silent.map((c) => renderConnectionCard(c, trusted, blocked)).join("");
+        }
       }
       if (review.length) {
         html += `<div class="conn-section-head review">Segment held — suspicious flow only (${review.length})</div>`;

@@ -65,10 +65,11 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/field-command.py" "${ROOT}/lib/gov-intel-db.py" "${ROOT}/lib/program-tags-db.py" \
   "${ROOT}/lib/nexus-update-lock.py" "${ROOT}/lib/field-toolkit-db.py" "${ROOT}/lib/nexus-plugins.py" \
   "${ROOT}/lib/terror-spiderweb.py" "${ROOT}/lib/existence-identity.py" \
+  "${ROOT}/lib/human-registry.py" "${ROOT}/lib/safe-signal-touch.py" "${ROOT}/lib/audio-train.py" "${ROOT}/lib/pet-signal-guard.py" \
   "${ROOT}/lib/field-material-discern.py" "${ROOT}/lib/gps-precision.py" \
   "${ROOT}/lib/precision-field.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
-  "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
+  "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
   "${ROOT}/lib/honorability.sh" "${ROOT}/lib/field-rf-sentinel.sh" "${ROOT}/lib/police-agency.sh" \
   "${ROOT}/lib/field-command.sh" "${ROOT}/lib/gov-intel.sh" "${ROOT}/lib/program-tags.sh" \

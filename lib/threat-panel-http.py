@@ -430,6 +430,30 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/human-registry":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "human-registry.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/audio-train":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "audio-train.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/pet-signal-guard":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "pet-signal-guard.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path.startswith("/api/human-registry/resolve"):
+            ip = str(query.get("ip", [""])[0]).strip()
+            if not ip:
+                self._send(400, json.dumps({"error": "missing ip"}), "application/json")
+                return
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "human-registry.py", ["resolve", ip])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/existence-identity":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "existence-identity.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
@@ -836,6 +860,19 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/audio-train/ingest":
+            sample = body.get("sample") or body
+            sid = str(body.get("source_id") or sample.get("source_id") or "manual").strip()
+            ingest_body = json.dumps({
+                "source_id": sid,
+                "label": body.get("label") or sample.get("label") or sid,
+                "kind": body.get("kind") or sample.get("kind") or "",
+                "sample": sample if isinstance(sample, dict) else body,
+            })
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "audio-train.py", ["ingest", ingest_body])
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/field-toolkit/defense":
             defense_id = str(body.get("defense_id", body.get("id", ""))).strip()
             if not defense_id:
@@ -854,6 +891,8 @@ class Handler(BaseHTTPRequestHandler):
             "/api/field-toolkit/regional-disable",
             "/api/field-toolkit/human-threat",
             "/api/field-toolkit/hell-rip",
+            "/api/field-toolkit/field-die",
+            "/api/field-toolkit/laser-corridor",
             "/api/field-toolkit/disable",
         ):
             script = INSTALL_ROOT / "lib" / "field-toolkit-db.py"
@@ -876,6 +915,15 @@ class Handler(BaseHTTPRequestHandler):
                 payload = _nexus_py_json(script, ["human-threat"])
             elif path == "/api/field-toolkit/hell-rip":
                 payload = _nexus_py_json(script, ["hell-rip"])
+            elif path == "/api/field-toolkit/field-die":
+                ip = str(body.get("ip", "")).strip()
+                payload = _nexus_py_json(script, ["field-die"] + ([ip] if ip else []))
+            elif path == "/api/field-toolkit/laser-corridor":
+                ip = str(body.get("ip", "")).strip()
+                if not ip:
+                    self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
+                    return
+                payload = _nexus_py_json(script, ["laser-corridor", ip])
             else:
                 payload = _nexus_py_json(
                     script,

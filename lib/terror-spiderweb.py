@@ -1006,6 +1006,19 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         pass
     primary_coords = _primary_coords(op, home_rows)
     mobile_rows = _harvest_mobile_devices(panel_doc, op, primary_coords)
+    try:
+        st = _mod("safe_signal_touch", "safe-signal-touch.py")
+        for row in mobile_rows:
+            hostile = row.get("kind") in ("terror", "hostile") or "field_hostile" in (row.get("sources") or [])
+            row.update(st.field_entity_touch(
+                kind=str(row.get("kind") or "mobile"),
+                role=str(row.get("role") or ""),
+                label=str(row.get("label") or ""),
+                moving=bool(row.get("moving")),
+                hostile=hostile,
+            ))
+    except Exception:
+        pass
     battery_rows = _harvest_batteries(op, primary_coords)
 
     primary = next((h for h in home_rows if h.get("role") == "home" and h.get("placed")), None)

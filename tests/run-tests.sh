@@ -205,6 +205,9 @@ test_gatekeeper_youtube() {
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -qE '"verdict":\s*"USER_OK"'
 tcp ESTAB 0 0 10.0.0.5:52444 172.217.14.206:443 users:(("firefox",pid=1,fd=3))
 EOF
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"human_touch": "music"'
+tcp ESTAB 0 0 10.0.0.5:52444 172.217.14.206:443 users:(("firefox",pid=1,fd=3))
+EOF
 }
 
 test_gatekeeper_email() {
@@ -212,6 +215,60 @@ test_gatekeeper_email() {
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -qE '"verdict":\s*"(USER_OK|EPHEMERAL)"'
 tcp ESTAB 0 0 10.0.0.5:38444 142.250.80.46:993 users:(("thunderbird",pid=2,fd=4))
 EOF
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"human_touch": "none"'
+tcp ESTAB 0 0 10.0.0.5:38444 142.250.80.46:993 users:(("thunderbird",pid=2,fd=4))
+EOF
+}
+
+test_gatekeeper_touch_policy() {
+  [[ -f "${ROOT}/lib/safe-signal-touch.py" ]]
+  grep -q 'human_touch' "${ROOT}/lib/connection-gatekeeper.py"
+  grep -q 'animals are different' "${ROOT}/lib/safe-signal-touch.py"
+  grep -q 'conn-silent-summary' "${ROOT}/panel/threat-panel.html"
+  grep -q 'music-touch-badge' "${ROOT}/panel/threat-panel.html"
+  grep -q 'traffic-touch-badge' "${ROOT}/panel/threat-panel.html"
+  grep -q 'animal-touch-badge' "${ROOT}/panel/threat-panel.html"
+  grep -q 'train-touch-badge' "${ROOT}/panel/threat-panel.html"
+  grep -q 'Train are different' "${ROOT}/lib/safe-signal-touch.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q 'touch_policy'
+tcp ESTAB 0 0 10.0.0.5:52444 172.217.14.206:443 users:(("firefox",pid=1,fd=3))
+EOF
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/safe-signal-touch.py" 2>/dev/null || \
+    python3 -c "
+import importlib.util
+from pathlib import Path
+spec = importlib.util.spec_from_file_location('st', '${ROOT}/lib/safe-signal-touch.py')
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+assert m.felt_safe_kind(proc='waze', host='waze.com') == 'traffic'
+assert m.felt_safe_kind(proc='amtrak', host='') == 'train'
+assert m.lifeform_touch('pet') == 'animal'
+print('ok')
+"
+}
+
+test_audio_train_module() {
+  [[ -f "${ROOT}/lib/audio-train.py" ]]
+  [[ -f "${ROOT}/data/audio-train-seed.json" ]]
+  [[ -f "${ROOT}/lib/audio-train.sh" ]]
+  grep -q 'audio_train' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
+  grep -q 'HOSTESS_VERSION="6.9"' "${ROOT}/lib/nexus-common.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/audio-train.py" ingest '{"source_id":"test:spotify","label":"Spotify","kind":"music","sample":{"level_db":-18,"peak_db":-6,"bass_energy":0.4,"treble_energy":0.5,"sample_rate_hz":48000,"latency_ms":20}}' | grep -q '"ok": true'
+  local at_state="${NEXUS_STATE_DIR}/audio-train-test"
+  mkdir -p "$at_state"
+  local i
+  for i in 1 2 3 4; do
+    NEXUS_STATE_DIR="$at_state" NEXUS_INSTALL_ROOT="$ROOT" \
+      python3 "${ROOT}/lib/audio-train.py" ingest '{"source_id":"test:tractive","label":"Tractive Pet","kind":"pet","sample":{"level_db":-90,"peak_db":-40,"bass_energy":0.4,"treble_energy":0.5,"sample_rate_hz":48000,"latency_ms":20}}' >/dev/null
+  done
+  NEXUS_STATE_DIR="$at_state" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/audio-train.py" ingest '{"source_id":"test:tractive","label":"Tractive Pet","kind":"pet","sample":{"level_db":-90,"peak_db":-40,"bass_energy":0.4,"treble_energy":0.5,"sample_rate_hz":48000,"latency_ms":20}}' | grep -q '"hostile_intent": true'
 }
 
 test_consumer_defaults() {
@@ -1305,6 +1362,8 @@ run_test "connection gatekeeper json" test_gatekeeper_json
 run_test "connection gatekeeper suggestions" test_gatekeeper_suggestions
 run_test "connection gatekeeper youtube" test_gatekeeper_youtube
 run_test "connection gatekeeper email" test_gatekeeper_email
+run_test "gatekeeper safe touch policy" test_gatekeeper_touch_policy
+run_test "audio train module" test_audio_train_module
 run_test "consumer everyday defaults" test_consumer_defaults
 run_test "gatekeeper strict enforce in+out" test_gatekeeper_strict_enforce
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout
@@ -1361,9 +1420,15 @@ test_field_toolkit_module() {
   grep -q '/api/field-toolkit/regional-disable' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/field-toolkit/human-threat' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/field-toolkit/hell-rip' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/field-toolkit/field-die' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/field-toolkit/laser-corridor' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'field_die_truth' "${ROOT}/data/field-toolkit-seed.json"
+  grep -q 'laser_corridor_slice' "${ROOT}/data/field-toolkit-seed.json"
   grep -q 'field_toolkit' "${ROOT}/lib/field-attack-kit.sh"
   grep -q 'Hell goes to Hell' "${ROOT}/panel/threat-panel.html"
   grep -q 'ft-human-threat' "${ROOT}/panel/threat-panel.html"
+  grep -q 'ft-field-die' "${ROOT}/panel/threat-panel.html"
+  grep -q 'ft-laser-corridor' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-toolkit-db.py" json | grep -q 'Hell Kit'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -1372,6 +1437,10 @@ test_field_toolkit_module() {
     python3 "${ROOT}/lib/field-toolkit-db.py" toggle hell_sever_wire on | grep -q '"enabled": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-toolkit-db.py" regions | grep -q 'regions'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-toolkit-db.py" field-die | grep -q '"mode": "field_die"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-toolkit-db.py" laser-corridor 127.0.0.1 | grep -q 'laser_corridor'
 }
 
 test_nexus_update_module() {
