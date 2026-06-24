@@ -92,7 +92,7 @@ def _read_install_version() -> str:
                 return m.group(1)
         except OSError:
             pass
-    return os.environ.get("NEXUS_VERSION", "8.1.0")
+    return os.environ.get("NEXUS_VERSION", "8.2.0")
 
 
 def _read_status_json(*, full: bool = False) -> str:
@@ -104,7 +104,7 @@ def _read_status_json(*, full: bool = False) -> str:
             "field": True,
             "panel_ready": False,
             "version": version,
-            "panel_build": "military-v81",
+            "panel_build": "military-v82",
             "gatekeeper": {"connections": [], "harm_candidates": 0},
         }, ensure_ascii=False)
     raw = STATUS_JSON.read_text(encoding="utf-8")
@@ -116,7 +116,7 @@ def _read_status_json(*, full: bool = False) -> str:
             for key in PANEL_PARALLEL_KEYS:
                 doc.pop(key, None)
             doc["version"] = version
-            doc["panel_build"] = "military-v81"
+            doc["panel_build"] = "military-v82"
         return json.dumps(doc, ensure_ascii=False)
     except json.JSONDecodeError:
         return raw
@@ -638,6 +638,10 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/status":
             full = str(query.get("full", ["0"])[0]).strip().lower() in ("1", "true", "yes")
             self._send(200, _read_status_json(full=full), "application/json")
+            return
+
+        if path == "/api/nexus-field":
+            self._send(200, _read_status_json(full=True), "application/json")
             return
 
         if path == "/api/threat-panel.json":

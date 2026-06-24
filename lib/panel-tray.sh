@@ -15,33 +15,9 @@ nexus_panel_tray_icon_path() {
       break
     fi
   done
-  if [[ -n "$src" ]] && command -v python3 >/dev/null 2>&1; then
-    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_TRAY_SRC="$src" \
-      python3 -c "
-from pathlib import Path
-import os
-from PIL import Image
-install = Path(os.environ['NEXUS_INSTALL_ROOT'])
-state = Path(os.environ['NEXUS_STATE_DIR'])
-src = Path(os.environ.get('NEXUS_TRAY_SRC') or '')
-if not src.is_file():
-    for rel in ('panel/assets/nexus-tray-amouranth-24.png', 'panel/assets/nexus-tray-amouranth.png', 'panel/assets/amouranth-twitch-avatar.png'):
-        p = install / rel
-        if p.is_file():
-            src = p
-            break
-out = state / 'nexus-tray.png'
-stamp = state / 'nexus-tray-icon.stamp'
-out.parent.mkdir(parents=True, exist_ok=True)
-if src.is_file():
-    st = src.stat()
-    tag = f'{src}:{st.st_mtime_ns}:{st.st_size}'
-    need = (not out.is_file()) or (not stamp.is_file()) or stamp.read_text(encoding='utf-8', errors='replace').strip() != tag
-    if need:
-        img = Image.open(src).convert('RGBA').resize((24, 24), Image.Resampling.LANCZOS)
-        img.save(out, format='PNG')
-        stamp.write_text(tag + '\n', encoding='utf-8')
-" 2>/dev/null || true
+  if command -v python3 >/dev/null 2>&1 && [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-tray-icon.py" ]]; then
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      python3 "${NEXUS_INSTALL_ROOT}/lib/panel-tray-icon.py" >/dev/null 2>&1 || true
   fi
   if [[ -s "$state_icon" ]]; then
     printf '%s' "$state_icon"

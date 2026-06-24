@@ -5,7 +5,7 @@
   <script>
     (function () {
       try {
-        document.documentElement.classList.add("dusty-midnight", "nexus-military-v8");
+        document.documentElement.classList.add("dusty-midnight", "nexus-military-v8", "nexus-v82");
         if (localStorage.getItem("nexus_old_man") === "1") document.documentElement.classList.add("old-man");
         var raw = sessionStorage.getItem("nexus-field-v4") || sessionStorage.getItem("nexus-field-v3");
         if (raw) window.NEXUS_FIELD = JSON.parse(raw);
@@ -13,9 +13,8 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NEXUS-Shield v8.1.0 — Military C2 Panel</title>
-  <link rel="preload" href="/api/status" as="fetch" crossorigin />
-  <link rel="preload" href="/api/field" as="fetch" crossorigin />
+  <title>NEXUS-Shield v8.2.0 — Military C2 Panel</title>
+  <link rel="preload" href="/api/nexus-field" as="fetch" crossorigin />
   <script src="/assets/field-foundation.js"></script>
   <script src="/assets/h7-reader.js"></script>
   <script defer src="/assets/nexus-plugin-runtime.js"></script>
@@ -31,8 +30,10 @@
   <link rel="stylesheet" href="/assets/nexus-theme.css" />
   <link rel="stylesheet" href="/assets/dusty-midnight.css" />
   <link rel="stylesheet" href="/assets/nexus-military-v8.css" />
+  <link rel="stylesheet" href="/assets/nexus-military-v82.css" />
   <link rel="stylesheet" href="/assets/nexus-braille-a11y.css" />
   <script defer src="/assets/nexus-military-v8.js"></script>
+  <script defer src="/assets/nexus-military-v82.js"></script>
   <script src="/assets/nexus-i18n.js"></script>
   <script src="/assets/nexus-braille-a11y.js"></script>
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
@@ -1731,7 +1732,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1 id="nexus-version-title">NEXUS-Shield v8.1.0</h1>
+        <h1 id="nexus-version-title">NEXUS-Shield v8.2.0</h1>
         <div class="brand-sub" id="nexus-brand-sub" data-i18n="brand.sub">Military Grade C2 · Field Green · Hostess 7</div>
       </div>
     </div>
@@ -1771,7 +1772,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: acquires github-update.lock, git pull from GitHub, runs stealth_install (asks sudo if needed), restarts NEXUS, reloads this tab. Blocked while lock held.">v8.1.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: acquires github-update.lock, git pull from GitHub, runs stealth_install (asks sudo if needed), restarts NEXUS, reloads this tab. Blocked while lock held.">v8.2.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -8126,20 +8127,42 @@
       }
     }
 
+    function hydratePanelSettings(data) {
+      const base = data && typeof data === "object" ? data : {};
+      if (base.settings && typeof base.settings === "object" && Object.keys(base.settings).length) return base;
+      const shell = {
+        version: base.version,
+        panel_build: base.panel_build,
+        field: base.field,
+        parallel_load: base.parallel_load,
+      };
+      if (Object.values(shell).some((v) => v != null && v !== "")) {
+        return { ...base, settings: shell };
+      }
+      return base;
+    }
+
+    async function fetchNexusFieldBlob() {
+      let res = await fetch("/api/nexus-field", { cache: "no-store" });
+      if (!res.ok) res = await fetch("/api/field?full=1", { cache: "no-store" });
+      if (!res.ok) res = await fetch("/api/threat-panel.json", { cache: "no-store" });
+      return res;
+    }
+
     async function refresh() {
       const gen = ++panelSliceGeneration;
       panelFetchInFlight = true;
-      lastPanelData = stripParallelSliceKeys(lastPanelData);
       updateTabLoadProgress(lastPanelData, { fetching: true });
-      refreshParallelSlices(gen);
       try {
-        let res = await fetch("/api/status", { cache: "no-store" });
-        if (!res.ok) res = await fetch("/api/field", { cache: "no-store" });
-        const data = parsePanelJson(await res.text());
+        const res = await fetchNexusFieldBlob();
+        if (!res.ok) throw new Error("field_unavailable");
+        const data = hydratePanelSettings(parsePanelJson(await res.text()));
         if (gen !== panelSliceGeneration) return;
-        lastPanelData = { ...stripParallelSliceKeys(lastPanelData), ...stripParallelSliceKeys(data) };
+        lastPanelData = data;
+        try { sessionStorage.setItem("nexus-field-v4", JSON.stringify(lastPanelData)); } catch (_) {}
         fieldLiveCount(lastPanelData);
         paintPanel(lastPanelData);
+        updateTabLoadProgress(lastPanelData, { fetching: false });
       } catch {
         if (gen !== panelSliceGeneration) return;
         updateTabLoadProgress(lastPanelData, { fetching: false });
@@ -8203,17 +8226,15 @@
     setInterval(() => checkNexusUpdate(false), 3600000);
     window.showView = showView;
     window.refresh = refresh;
+    window.hydratePanelSettings = hydratePanelSettings;
+    window.paintPanel = paintPanel;
 
     function panelBoot() {
-      bootstrapPanel();
+      global.NexusMilitaryV82?.paintInstantCache?.();
       applyHashView();
-      refresh();
-      publishParallelFields();
+      bootstrapPanel();
       if (!window._nexusPanelRefreshTimer) {
         window._nexusPanelRefreshTimer = setInterval(refresh, 5000);
-      }
-      if (!window._nexusPanelParallelTimer) {
-        window._nexusPanelParallelTimer = setInterval(publishParallelFields, 20000);
       }
     }
     if (document.readyState === "loading") {

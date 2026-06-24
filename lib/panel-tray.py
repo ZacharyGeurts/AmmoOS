@@ -11,7 +11,7 @@ from pathlib import Path
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import GLib, Gtk  # noqa: E402
+from gi.repository import Gtk  # noqa: E402
 
 try:
     gi.require_version("AyatanaAppIndicator3", "0.1")
@@ -75,11 +75,53 @@ def _icon_stamp(src: Path) -> str:
         return ""
 
 
+def _install_xdg_tray_icon(icon: Path) -> str:
+    """Install 22/24/32 px tray icons so AppIndicator picks max taskbar resolution."""
+    try:
+        import importlib.util
+
+        mod_path = INSTALL / "lib" / "panel-tray-icon.py"
+        spec = importlib.util.spec_from_file_location("panel_tray_icon", mod_path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            mod.install_xdg_tray_icons(INSTALL)
+            return "nexus-shield-panel"
+    except Exception:
+        pass
+    home = Path(os.environ.get("HOME", "/home/default"))
+    theme_icon = home / ".local/share/icons/hicolor/32x32/apps/nexus-shield-panel.png"
+    try:
+        theme_icon.parent.mkdir(parents=True, exist_ok=True)
+        if icon.is_file() and icon.stat().st_size > 0:
+            theme_icon.write_bytes(icon.read_bytes())
+            subprocess.run(
+                ["gtk-update-icon-cache", str(theme_icon.parent.parent)],
+                capture_output=True,
+                timeout=8,
+            )
+            return "nexus-shield-panel"
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return str(icon)
+
+
 def _ensure_tray_icon(*, force: bool = False) -> Path:
     icon = STATE / "nexus-tray.png"
-    stamp_file = STATE / "nexus-tray-icon.stamp"
-    src = _tray_icon_source()
     icon.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        import importlib.util
+
+        mod_path = INSTALL / "lib" / "panel-tray-icon.py"
+        spec = importlib.util.spec_from_file_location("panel_tray_icon", mod_path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.build_tray_icons(INSTALL, STATE, force=force)
+    except Exception:
+        pass
+    src = _tray_icon_source()
+    stamp_file = STATE / "nexus-tray-icon.stamp"
     stamp = _icon_stamp(src)
     if src.is_file():
         try:
@@ -93,8 +135,7 @@ def _ensure_tray_icon(*, force: bool = False) -> Path:
                 return icon
             from PIL import Image
 
-            img = Image.open(src).convert("RGBA")
-            img = img.resize((24, 24), Image.Resampling.LANCZOS)
+            img = Image.open(src).convert("RGBA").resize((24, 24), Image.Resampling.LANCZOS)
             img.save(icon, format="PNG")
             if stamp:
                 stamp_file.write_text(stamp + "\n", encoding="utf-8")
@@ -193,7 +234,12 @@ class TabPickerPopup(Gtk.Window):
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_keep_above(True)
         self.set_skip_taskbar_hint(True)
-        self.set_type_hint(Gtk.WindowTypeHint.UTILITY)
+        try:
+            utility = getattr(Gtk, "WindowTypeHint", None)
+            if utility is not None:
+                self.set_type_hint(utility.UTILITY)
+        except (AttributeError, TypeError):
+            pass
         self.connect("delete-event", lambda *_: False)
 
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -248,36 +294,53 @@ class TabPickerPopup(Gtk.Window):
         self.destroy()
 
 
-_dialog_open = False
+def _populate_tray_flyout(menu: Gtk.Menu) -> None:
+    """Fill tray menu with tab rows — dbus/AppIndicator needs each item shown individually."""
+    for child in list(menu.get_children()):
+        menu.remove(child)
+        child.destroy()
+    last = _load_last_tab()
+    for label, route in TAB_CHOICES:
+        title = f"★ {label}" if route == last else label
+        item = Gtk.MenuItem.new_with_label(title)
+        item.connect("activate", lambda _w, r=route: open_tab(r))
+        item.show()
+        menu.append(item)
 
 
-def show_tab_picker() -> None:
-    global _dialog_open
-    if _dialog_open:
-        return
-    _dialog_open = True
+def build_tray_flyout_menu() -> Gtk.Menu:
+    """Native tray flyout — menu anchored to the taskbar icon, not a popup window."""
+    menu = Gtk.Menu()
+    _populate_tray_flyout(menu)
+    menu.show()
+    return menu
 
-    def _on_destroy(_widget) -> None:  # noqa: ANN001
-        global _dialog_open
-        _dialog_open = False
 
-    popup = TabPickerPopup()
-    popup.connect("destroy", _on_destroy)
-    popup.show_all()
-    popup.present()
+def show_tab_picker(status_icon=None, button: int = 0, activate_time: int = 0) -> None:
+    """Show the tray flyout menu (StatusIcon fallback path)."""
+    menu = build_tray_flyout_menu()
+    if status_icon is not None:
+        menu.popup(None, None, status_icon.position_popup, status_icon, button, activate_time)
+    else:
+        menu.popup(None, None, None, None, button, activate_time)
 
 
 class NexusTray:
     def __init__(self) -> None:
         force_icon = os.environ.get("NEXUS_TRAY_ICON_REFRESH", "0") == "1"
-        icon_path = str(_ensure_tray_icon(force=force_icon))
+        icon_file = _ensure_tray_icon(force=force_icon)
+        icon_ref = _install_xdg_tray_icon(icon_file)
         self._status_icon = None
         self._indicator = None
+        self._flyout_menu = Gtk.Menu()
+        self._flyout_menu.connect("show", self._refresh_flyout_menu)
 
-        if self._try_status_icon(icon_path):
+        if HAS_APPINDICATOR and self._try_app_indicator(icon_ref):
             return
-        if HAS_APPINDICATOR:
-            self._try_app_indicator(icon_path)
+        self._try_status_icon(str(icon_file))
+
+    def _refresh_flyout_menu(self, *_args) -> None:
+        _populate_tray_flyout(self._flyout_menu)
 
     def _try_status_icon(self, icon_path: str) -> bool:
         try:
@@ -288,29 +351,31 @@ class NexusTray:
                 icon.set_from_icon_name("security-high")
             icon.set_tooltip_text("NEXUS-Shield · Amouranth — click to pick a panel tab")
             icon.set_visible(True)
-            icon.connect("activate", lambda *_: show_tab_picker())
-            icon.connect("popup-menu", lambda *_: show_tab_picker())
+            icon.connect("activate", lambda ic, *_: show_tab_picker(ic, 1, Gtk.get_current_event_time()))
+            icon.connect("popup-menu", lambda ic, btn, t: show_tab_picker(ic, btn, t))
             self._status_icon = icon
             return True
         except Exception:
             return False
 
-    def _try_app_indicator(self, icon_path: str) -> None:
-        self._indicator = AyatanaAppIndicator3.Indicator.new(
-            APP_ID,
-            icon_path if Path(icon_path).is_file() and Path(icon_path).stat().st_size else "security-high",
-            AyatanaAppIndicator3.IndicatorCategory.APPLICATION_STATUS,
-        )
-        self._indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
-        self._indicator.set_title("NEXUS-Shield · Amouranth — click to pick a panel tab")
-        # Ayatana opens this menu on left or right click — show the tab picker instead.
-        menu = Gtk.Menu()
-        menu.connect("show", self._on_indicator_menu_show)
-        self._indicator.set_menu(menu)
-
-    def _on_indicator_menu_show(self, menu: Gtk.Menu) -> None:
-        menu.hide()
-        GLib.idle_add(show_tab_picker)
+    def _try_app_indicator(self, icon_ref: str) -> bool:
+        try:
+            icon_name = icon_ref
+            if Path(icon_ref).is_file():
+                if not Path(icon_ref).stat().st_size:
+                    icon_name = "security-high"
+            self._indicator = AyatanaAppIndicator3.Indicator.new(
+                APP_ID,
+                icon_name,
+                AyatanaAppIndicator3.IndicatorCategory.APPLICATION_STATUS,
+            )
+            self._indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
+            self._indicator.set_title("NEXUS-Shield · Amouranth — click to pick a panel tab")
+            _populate_tray_flyout(self._flyout_menu)
+            self._indicator.set_menu(self._flyout_menu)
+            return True
+        except Exception:
+            return False
 
 
 def main() -> int:
