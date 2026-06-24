@@ -113,20 +113,75 @@ def set_gps(lat: float, lon: float, label: str = "") -> dict[str, Any]:
     return {"ok": True, **doc}
 
 
-def set_address(address: str) -> dict[str, Any]:
+def _geocode_chain(address: str) -> dict[str, Any] | None:
+    """Census geocoder + Nominatim + census geography lookup."""
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "census_field_populate", INSTALL / "lib" / "census-field-populate.py",
+        )
+        mod = importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(mod)
+        hit = mod.geocode_address(address)
+        if hit.get("ok"):
+            return hit
+    except Exception:
+        pass
     geo = _geocode_address(address)
+    if not geo:
+        return None
+    return {**geo, "source": "address", "ok": True}
+
+
+def set_address(address: str) -> dict[str, Any]:
+    geo = _geocode_chain(address)
     if not geo:
         return {"ok": False, "error": "geocode_failed", "address": address}
     doc = _load()
     doc.update({
         "lat": geo["lat"],
         "lon": geo["lon"],
-        "label": geo["label"],
-        "source": "address",
+        "label": geo.get("label") or address,
+        "source": geo.get("source") or "address",
         "address": address,
         "wireless": _is_wireless(_default_route_iface()),
     })
+    if geo.get("census_geographies") or geo.get("geographies"):
+        flat = geo.get("census_geographies")
+        if not flat and geo.get("geographies"):
+            try:
+                import importlib.util
+
+                spec = importlib.util.spec_from_file_location(
+                    "census_field_populate", INSTALL / "lib" / "census-field-populate.py",
+                )
+                mod = importlib.util.module_from_spec(spec)
+                assert spec and spec.loader
+                spec.loader.exec_module(mod)
+                flat = mod._flatten_geographies(geo["geographies"])
+            except Exception:
+                flat = []
+        if flat:
+            doc["census_geographies"] = flat
+    if geo.get("acs"):
+        doc["census_acs"] = geo["acs"]
+    if geo.get("country_code"):
+        doc["country_code"] = geo["country_code"]
     _save(doc)
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "census_field_populate", INSTALL / "lib" / "census-field-populate.py",
+        )
+        mod = importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(mod)
+        mod.populate_from_operator(address=address, force=True)
+    except Exception:
+        pass
     return {"ok": True, **doc}
 
 
@@ -162,9 +217,13 @@ def panel_json() -> dict[str, Any]:
         "label": doc.get("label") or "",
         "source": doc.get("source") or "unset",
         "updated": doc.get("updated"),
+        "address": doc.get("address") or "",
         "wireless": bool(doc.get("wireless")) or _is_wireless(iface),
         "iface": iface,
         "gps_ready": doc.get("lat") is not None and doc.get("lon") is not None,
+        "census_geographies": doc.get("census_geographies") or [],
+        "census_acs": doc.get("census_acs"),
+        "country_code": doc.get("country_code") or "",
     }
 
 

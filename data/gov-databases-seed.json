@@ -5,6 +5,7 @@
     {"id": "law", "label": "Federal / state law enforcement"},
     {"id": "intelligence", "label": "Intelligence services"},
     {"id": "government", "label": "Government agencies"},
+    {"id": "census", "label": "Census & public government records"},
     {"id": "courts", "label": "Courts & judiciary"},
     {"id": "corrections", "label": "Corrections & probation"},
     {"id": "emergency", "label": "Emergency management"},
@@ -76,6 +77,7 @@
     {"id": "tr_mit", "name": "MIT — National Intelligence Organization (Turkey)", "country": "TR", "region": "me", "category": "intelligence", "system": "MIT", "coverage": "Turkish national intelligence", "formats": [{"id": "mit_directorate", "name": "Directorate roster", "ext": "csv", "columns": ["directorate", "city", "role"]}, {"id": "mit_subject", "name": "Subject JSON", "ext": "json", "columns": ["subject_id", "name", "nationality", "notes"]}]},
     {"id": "un_unicri", "name": "UNICRI / UN crime programmes", "country": "INT", "region": "global", "category": "intl", "system": "UN", "coverage": "United Nations crime and justice programmes", "formats": [{"id": "unicri_program", "name": "Programme index", "ext": "json", "columns": ["program", "region", "focus", "url"]}]},
     {"id": "obscure_programs", "name": "Obscure programs — MKUltra, Monarch, location tags", "country": "INT", "region": "global", "category": "intelligence", "system": "Program tags", "coverage": "MKUltra, Project Monarch, covert sub-projects, and precise location dossier tags", "formats": [{"id": "program_tag_csv", "name": "Program + location CSV", "ext": "csv", "columns": ["program_tags", "tags", "lat", "lon", "coords", "place", "address", "city", "country", "notes"]}, {"id": "program_tag_json", "name": "Program tag JSON", "ext": "json", "columns": ["program_tags", "tags", "lat", "lon", "place", "address", "notes", "record_id"]}]},
+    {"id": "census_field", "name": "Census & public government field records", "country": "INT", "region": "global", "category": "census", "system": "Census geocoder / ACS / open government", "coverage": "US Census geographies, international Nominatim, operator home binding — free public records", "formats": [{"id": "census_geo_json", "name": "Census geography JSON", "ext": "json", "columns": ["layer", "name", "geoid", "state", "county", "tract", "lat", "lon"]}, {"id": "census_acs_json", "name": "ACS population JSON", "ext": "json", "columns": ["NAME", "B01003_001E", "B19013_001E", "B25077_001E"]}]},
     {"id": "intel_open", "name": "Open intelligence / government data (generic)", "country": "INT", "region": "global", "category": "intelligence", "system": "Open data", "coverage": "Generic CSV/JSON/TSV intelligence or government open-data import for any agency", "formats": [{"id": "open_csv", "name": "Open CSV", "ext": "csv", "columns": []}, {"id": "open_tsv", "name": "Open TSV", "ext": "tsv", "columns": []}, {"id": "open_json", "name": "Open JSON", "ext": "json", "columns": []}, {"id": "open_ndjson", "name": "NDJSON stream", "ext": "ndjson", "columns": []}, {"id": "open_xml", "name": "Open XML", "ext": "xml", "columns": []}]}
   ]
 }

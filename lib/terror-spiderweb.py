@@ -238,6 +238,23 @@ def _harvest_homes(panel_doc: dict[str, Any], op: dict[str, Any]) -> list[dict[s
     for h in _correlate_operator(_load_seed_homes(), op):
         add_home(h)
 
+    if op.get("census_geographies"):
+        for i, row in enumerate(op.get("census_geographies") or []):
+            if not isinstance(row, dict):
+                continue
+            add_home({
+                "id": f"census_geo:{row.get('geoid') or i}",
+                "label": row.get("name") or row.get("layer") or "Census geography",
+                "address": row.get("layer") or "census",
+                "lat": _parse_float(op.get("lat")),
+                "lon": _parse_float(op.get("lon")),
+                "role": "gov",
+                "source": "census_field",
+                "sources": ["census_field", "operator"],
+                "census_layer": row.get("layer"),
+                "geoid": row.get("geoid"),
+            })
+
     # Program tag + gov dossier location pins
     gdoc = _load_json(GOV_DOSSIERS, {"records": {}})
     for key, rec in (gdoc.get("records") or {}).items():
@@ -940,18 +957,33 @@ def _find_hottest_cluster(nodes: list[dict[str, Any]], *, grid: float = 8.0) -> 
 
 def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
     panel_doc = panel_doc if isinstance(panel_doc, dict) else _panel_doc()
+    census_doc: dict[str, Any] = {}
+    try:
+        census_mod = _mod("census_field_populate", "census-field-populate.py")
+        census_doc = census_mod.populate_from_operator()
+    except Exception:
+        pass
     op = panel_doc.get("operator_location") or {}
+    try:
+        live_op = _mod("operator_location", "operator-location.py").panel_json()
+        if live_op.get("gps_ready"):
+            op = {**live_op, **op}
+    except Exception:
+        pass
     if not op:
-        try:
-            op = _mod("operator_location", "operator-location.py").panel_json()
-        except Exception:
-            op = {}
+        op = {}
 
     gps_doc = build_gps_table(op)
     home_rows = _home_registry(_harvest_homes(panel_doc, op))
     catalog = _harvest_internet_catalog(panel_doc)
     geo_map = _load_merged_geo()
     internet_rows = _internet_registry(catalog, geo_map)
+    try:
+        hp = _mod("hostility_priority", "hostility-priority.py")
+        internet_rows = [hp.enrich_internet_node(r) for r in internet_rows]
+        internet_rows = hp.sort_hell_first(internet_rows)
+    except Exception:
+        pass
     primary_coords = _primary_coords(op, home_rows)
     mobile_rows = _harvest_mobile_devices(panel_doc, op, primary_coords)
     battery_rows = _harvest_batteries(op, primary_coords)
@@ -1082,6 +1114,12 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "moving_count": len(moving_mobile),
     }
 
+    hostility_doc: dict[str, Any] = {}
+    try:
+        hostility_doc = _mod("hostility_priority", "hostility-priority.py").aggregate_field_hostility(panel_doc)
+    except Exception:
+        pass
+
     stats = {
         "total_homes": len(home_rows),
         "homes_placed": len(placed_homes),
@@ -1104,6 +1142,10 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "pipe_up": sum(1 for e in edges if e.get("kind") == "pipe_up"),
         "pipe_down": sum(1 for e in edges if e.get("kind") == "pipe_down"),
         "gps_correlated": gps_doc.get("with_coords", 0),
+        "hostility_priority": "hell_first",
+        "field_hostility_score": hostility_doc.get("field_hostility_score", 0),
+        "census_geographies": len((op.get("census_geographies") or [])),
+        "census_populated": bool(census_doc.get("ok")),
         "sources": {
             "gatekeeper": sum(1 for e in catalog.values() if "gatekeeper" in e.get("sources", [])),
             "host_attacks": sum(1 for e in catalog.values() if "host_attacks" in e.get("sources", [])),
@@ -1172,6 +1214,8 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
             "toolkit": existence_doc.get("toolkit") or {},
             "updated": existence_doc.get("updated"),
         } if existence_doc else {},
+        "hostility": hostility_doc,
+        "census_field": census_doc if census_doc.get("ok") else panel_doc.get("census_field") or {},
     }
 
 

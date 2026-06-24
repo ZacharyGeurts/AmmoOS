@@ -883,14 +883,27 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
     history["updated"] = _now()
     _save_json(HISTORY, history)
 
-    results.sort(
-        key=lambda x: (
-            x.get("trust_rank", 5),
-            -(x.get("suggestion") or {}).get("trust_meter", 0),
-            int(x.get("block_recommended", False)),
-            -x.get("harm_total", 0),
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "hostility_priority", INSTALL / "lib" / "hostility-priority.py",
         )
-    )
+        hp = importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(hp)
+        for row in results:
+            hp.enrich_connection(row)
+        results = hp.sort_hell_first(results)
+    except Exception:
+        results.sort(
+            key=lambda x: (
+                x.get("trust_rank", 5),
+                -(x.get("suggestion") or {}).get("trust_meter", 0),
+                int(x.get("block_recommended", False)),
+                -x.get("harm_total", 0),
+            )
+        )
     harm_candidates = [r for r in results if r["block_recommended"]]
     kill_targets = [r for r in results if r.get("kill_eligible")]
     hell_chosen = [r for r in results if r.get("hell_chosen")]
@@ -920,6 +933,8 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         "harm_candidates": len(harm_candidates),
         "kill_targets": len(kill_targets),
         "hell_chosen_count": len(hell_chosen),
+        "hostility_priority": "hell_first",
+        "peak_hostility_score": max((int(r.get("hostility_score") or 0) for r in results), default=0),
         "heaven_flow_count": len(heaven_flows),
         "heaven_hell_motto": (
             "We know Heaven from Hell. To those who chose Hell, we also choose it for them. "

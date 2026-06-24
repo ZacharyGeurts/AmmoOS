@@ -279,6 +279,7 @@ test_heaven_hell_module() {
   [[ -f "${ROOT}/lib/heaven-hell.sh" ]]
   grep -q 'soul_side' "${ROOT}/lib/connection-gatekeeper.py"
   grep -q 'hell_chosen' "${ROOT}/lib/connection-gatekeeper.py"
+  grep -q 'hostility_priority' "${ROOT}/lib/heaven-hell.py"
   grep -q 'heaven_hell' "${ROOT}/lib/field-command.py"
   grep -q 'heaven-hell-banner' "${ROOT}/panel/threat-panel.html"
   grep -q 'nexus_heaven_hell_rip' "${ROOT}/lib/heaven-hell.sh"
@@ -592,6 +593,32 @@ test_police_agency_module() {
 1,460.100,460.100,FM,test" test.csv | grep -q '"merge_only": true'
 }
 
+test_hostility_priority_module() {
+  [[ -f "${ROOT}/lib/hostility-priority.py" ]]
+  grep -q 'hostility-priority' "${ROOT}/lib/connection-gatekeeper.py"
+  grep -q 'hostility-priority' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'hostility-priority' "${ROOT}/lib/terror-spiderweb.py"
+  grep -q 'hell_first' "${ROOT}/lib/hostility-priority.py"
+  grep -q '/api/hostility-priority' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/hostility-priority.py" json | grep -q 'hell_first'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/hostility-priority.py" score-connection \
+    '{"verdict":"HARM_CANDIDATE","hell_chosen":true,"trust_rank":5,"harm_total":18}' \
+    | grep -q '"hostility_score"'
+}
+
+test_census_field_populate_module() {
+  [[ -f "${ROOT}/lib/census-field-populate.py" ]]
+  [[ -f "${ROOT}/data/census-sources-seed.json" ]]
+  grep -q 'census_field' "${ROOT}/data/gov-databases-seed.json"
+  grep -q '/api/census-field' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'census-field-populate' "${ROOT}/lib/operator-location.py"
+  grep -q 'census_field_populate' "${ROOT}/lib/terror-spiderweb.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/census-field-populate.py" json | grep -q 'census_geographies'
+}
+
 test_terror_spiderweb_module() {
   [[ -f "${ROOT}/lib/terror-spiderweb.py" ]]
   [[ -f "${ROOT}/lib/terror-spiderweb.sh" ]]
@@ -613,6 +640,8 @@ test_terror_spiderweb_module() {
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/terror-spiderweb.py" registry | grep -q 'mobile'
   grep -q 'existence_identity' "${ROOT}/lib/terror-spiderweb.py"
+  grep -q 'hostility_priority' "${ROOT}/lib/terror-spiderweb.py"
+  grep -q 'census_field' "${ROOT}/lib/terror-spiderweb.py"
 }
 
 test_existence_identity_module() {
@@ -913,7 +942,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.9.4' "$panel"
+  grep -q 'v5.9.5' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -922,7 +951,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.9.4' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.9.5' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
@@ -1280,6 +1309,8 @@ run_test "program tags module" test_program_tags_module
 run_test "gov intel module" test_gov_intel_module
 run_test "police agency module" test_police_agency_module
 run_test "panel field rf UI" test_panel_field_rf_ui
+run_test "hostility priority module" test_hostility_priority_module
+run_test "census field populate module" test_census_field_populate_module
 run_test "terror spiderweb module" test_terror_spiderweb_module
 run_test "existence identity module" test_existence_identity_module
 run_test "panel spiderweb UI" test_panel_spiderweb_ui

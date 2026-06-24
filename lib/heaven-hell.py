@@ -121,12 +121,26 @@ def build_status(panel: dict[str, Any] | None = None) -> dict[str, Any]:
             hostile = max(0, sum(1 for _ in HOSTILE.read_text(encoding="utf-8").splitlines()) - 1)
         except OSError:
             pass
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "hostility_priority", INSTALL / "lib" / "hostility-priority.py",
+        )
+        hp = importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(hp)
+        hell_rows = hp.sort_hell_first(hell_rows)
+    except Exception:
+        pass
+
     return {
         "updated": _now(),
         "motto": MOTTO,
         "tagline": TAGLINE,
         "no_mercy": True,
         "no_friendly_fire": True,
+        "hostility_priority": "hell_first",
         "heaven": {
             "count": len(heaven_rows),
             "label": "Heaven",

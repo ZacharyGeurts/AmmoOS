@@ -438,6 +438,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/hostility-priority":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostility-priority.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/census-field":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "census-field-populate.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/existence-identity":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "existence-identity.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
@@ -956,7 +966,28 @@ class Handler(BaseHTTPRequestHandler):
                     timeout=45,
                     env=env,
                 )
+            census_py = INSTALL_ROOT / "lib" / "census-field-populate.py"
+            if census_py.is_file() and mode in ("address", "gps", "wireless"):
+                env = os.environ.copy()
+                env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+                env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+                subprocess.run(
+                    [sys.executable, str(census_py), "populate"],
+                    capture_output=True,
+                    timeout=60,
+                    env=env,
+                )
             self._send(200, json.dumps({"ok": True, **payload}), "application/json")
+            return
+
+        if path == "/api/census-field/populate":
+            census_py = INSTALL_ROOT / "lib" / "census-field-populate.py"
+            address = str(body.get("address", "")).strip()
+            args = ["populate"]
+            if address:
+                args.append(address)
+            payload = _nexus_py_json(census_py, args)
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
             return
 
         if path == "/api/autosanitize/toggle":

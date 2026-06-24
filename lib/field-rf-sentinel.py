@@ -300,6 +300,20 @@ def _soft_rfkill_wifi(block: bool, wifi_dev: str | None, reason: str) -> list[di
 
 
 def _rfkill_hostility_score(threats: list[dict[str, Any]], active: dict[str, Any] | None) -> int:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "hostility_priority", INSTALL / "lib" / "hostility-priority.py",
+        )
+        hp = importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(hp)
+        trigger = [t for t in threats if t.get("kind") in RFKILL_TRIGGER_KINDS]
+        raw = hp.score_rf_threats(trigger, active)
+        return max(0, raw // 8)
+    except Exception:
+        pass
     score = 0
     for t in threats:
         kind = str(t.get("kind") or "")
