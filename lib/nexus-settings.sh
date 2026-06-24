@@ -152,13 +152,19 @@ nexus_settings_json() {
     printf '"%s":%s' "$key" "$val"
   done
   if declare -f nexus_adblock_status_json >/dev/null 2>&1; then
-    printf ',"adblock":'
+    [[ "$first" -eq 1 ]] || printf ','
+    first=0
+    printf '"adblock":'
     nexus_adblock_status_json
   else
-    printf ',"adblock":{"enabled":0,"domains":0,"ips":0,"policy":"annoyance","mode":"fair_guardian"}'
+    [[ "$first" -eq 1 ]] || printf ','
+    first=0
+    printf '"adblock":{"enabled":0,"domains":0,"ips":0,"policy":"annoyance","mode":"fair_guardian"}'
   fi
   if declare -f nexus_adblock_guardian_json >/dev/null 2>&1; then
-    printf ',"adblock_guardian":'
+    [[ "$first" -eq 1 ]] || printf ','
+    first=0
+    printf '"adblock_guardian":'
     nexus_adblock_guardian_json
   fi
   printf '}'

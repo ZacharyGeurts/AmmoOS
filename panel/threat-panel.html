@@ -16,6 +16,8 @@
   <link rel="preload" href="/api/status" as="fetch" crossorigin />
   <link rel="preload" href="/api/field" as="fetch" crossorigin />
   <script src="/assets/field-foundation.js"></script>
+  <script defer src="/assets/nexus-plugin-runtime.js"></script>
+  <script defer src="/assets/plugins/tab-beacon.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
@@ -156,6 +158,37 @@
     .rf-burst-chip.severity-high, .rf-burst-chip.severity-critical { border-color: var(--threat); color: #ff8a9a; }
     .rf-shield-on { color: var(--ok); font-weight: 700; }
     .rf-shield-off { color: var(--threat); font-weight: 700; }
+    .nexus-plugins-dock {
+      margin-top: 18px; padding: 12px 14px 10px; border-top: 1px solid var(--border);
+      background: rgba(12, 18, 30, 0.65); border-radius: 0 0 var(--radius) var(--radius);
+    }
+    .nexus-plugins-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-bottom: 8px; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .nexus-plugins-title { color: var(--internet); font-weight: 700; }
+    .nexus-plugins-body { display: flex; flex-wrap: wrap; gap: 8px; }
+    .nexus-plugins-empty { font-size: 0.68rem; color: var(--muted); font-style: italic; }
+    .nexus-plugin-card {
+      flex: 1 1 280px; max-width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background: rgba(20, 28, 44, 0.8); font-size: 0.72rem;
+    }
+    .nexus-plugin-card.accent-gold { border-color: rgba(212, 175, 55, 0.45); }
+    .nexus-plugin-card.accent-ok { border-color: rgba(61, 214, 140, 0.35); }
+    .nexus-plugin-card.accent-threat { border-color: rgba(255, 92, 122, 0.4); }
+    .nexus-plugin-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .nexus-plugin-id { font-size: 0.58rem; color: var(--muted); font-family: ui-monospace, monospace; }
+    .nexus-plugin-text { margin: 0 0 8px; line-height: 1.45; color: var(--text); }
+    .nexus-plugin-action {
+      font-size: 0.62rem; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+      border: 1px solid var(--border); background: transparent; color: var(--internet);
+    }
+    .nexus-beacon-pulse {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-left: 6px;
+      background: var(--ok); box-shadow: 0 0 6px var(--ok); animation: nexus-beacon-blink 2s ease-in-out infinite;
+    }
+    @keyframes nexus-beacon-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
     .police-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
     .police-toolbar select, .police-toolbar textarea {
       background: #0d1524; border: 1px solid var(--border); color: var(--text);
@@ -1339,7 +1372,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.8.9</h1>
+        <h1>NEXUS-Shield v5.9.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1359,7 +1392,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.8.9</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -2028,6 +2061,15 @@
         <h3><span>Auto-fix history</span><span data-tip="If auto-fix was ever on, past actions show here. Check Undo to reverse one."></span></h3>
         <div class="list" id="sanitize-list"><div class="empty">No auto-fix actions yet.</div></div>
       </div>
+
+      <div class="settings-group" data-settings-group="plugins">
+        <h3><span>Panel plugins</span><span data-tip="Unlimited plugins — each adds a dock at the bottom of every tab. Drop a folder under plugins/ with manifest.json + plugin.py."></span></h3>
+        <div class="group-summary" id="summary-plugins">—</div>
+        <p class="meta" style="padding:4px 16px 8px;margin:0;font-size:0.68rem;">
+          Plugin dock appears at the bottom of each tab. Enable or disable without restart.
+        </p>
+        <div id="nexus-plugin-manager" class="meta" style="padding:0 16px 12px;"><div class="empty">Loading plugin registry…</div></div>
+      </div>
     </div>
   </section>
 
@@ -2543,6 +2585,7 @@
         renderInspect(data.packet_field);
       }
       if (data.h7_library) renderLibraryShelf(data.h7_library);
+      if (window.NexusPlugins) NexusPlugins.render(data);
       updateTabLoadProgress(data);
       onSubViewActivated(currentSubView);
     }
@@ -5947,6 +5990,7 @@
         }
         if (currentSubView === "library") renderLibraryShelf(data.h7_library);
         lastPanelData = data;
+        if (window.NexusPlugins) NexusPlugins.render(data);
         updateTabLoadProgress(data);
         renderSubnav(currentPanel, currentSubView);
         if (window.NexusField && data.updated) NexusField.persist(data);
@@ -5978,6 +6022,8 @@
     });
     checkNexusUpdate(false);
     setInterval(() => checkNexusUpdate(false), 3600000);
+    window.showView = showView;
+    window.refresh = refresh;
     refresh();
     setInterval(refresh, 2000);
   </script>

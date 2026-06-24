@@ -588,6 +588,31 @@ test_police_agency_module() {
 1,460.100,460.100,FM,test" test.csv | grep -q '"merge_only": true'
 }
 
+test_nexus_plugins_module() {
+  [[ -f "${ROOT}/lib/nexus-plugins.py" ]]
+  [[ -f "${ROOT}/lib/nexus-plugins.sh" ]]
+  [[ -f "${ROOT}/plugins/tab-beacon/manifest.json" ]]
+  [[ -f "${ROOT}/plugins/tab-beacon/plugin.py" ]]
+  [[ -f "${ROOT}/panel/assets/nexus-plugin-runtime.js" ]]
+  grep -q 'nexus_plugins_merge_panel' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/plugins' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'panel_snapshot' "${ROOT}/plugins/tab-beacon/plugin.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/nexus-plugins.py" json | grep -q 'tab-beacon'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/nexus-plugins.py" json | grep -q '"view_ids"'
+}
+
+test_panel_plugins_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'nexus-plugin-runtime.js' "$panel"
+  grep -q 'nexus-plugins-dock' "$panel"
+  grep -q 'NexusPlugins.render' "$panel"
+  grep -q 'nexus-plugin-manager' "$panel"
+  grep -q 'tab-beacon.js' "$panel"
+  grep -q 'summary-plugins' "$panel"
+}
+
 test_panel_field_rf_ui() {
   local panel="${ROOT}/panel/threat-panel.html"
   grep -q 'view-field-rf' "$panel"
@@ -834,7 +859,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.8.9' "$panel"
+  grep -q 'v5.9.0' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -843,7 +868,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.8.9' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.9.0' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
@@ -1201,6 +1226,8 @@ run_test "program tags module" test_program_tags_module
 run_test "gov intel module" test_gov_intel_module
 run_test "police agency module" test_police_agency_module
 run_test "panel field rf UI" test_panel_field_rf_ui
+run_test "nexus plugins module" test_nexus_plugins_module
+run_test "panel plugins UI" test_panel_plugins_ui
 run_test "field command module" test_field_command_module
 run_test "panel command UI" test_panel_command_ui
 run_test "host attack map module" test_host_attack_module

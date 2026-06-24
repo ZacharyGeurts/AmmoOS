@@ -53,6 +53,7 @@ printf 'mode=1\nblock=0\nautosanitize_override=0\nupdated=%s\n' "$(date -u '+%Y-
 declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase copying_files
 install -d -m 750 -o root -g nexus /usr/local/lib/nexus-shield /usr/local/lib/nexus-shield/bin /usr/local/bin
 cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/assets" "${ROOT}/data" /usr/local/lib/nexus-shield/
+[[ -d "${ROOT}/plugins" ]] && cp -a "${ROOT}/plugins" /usr/local/lib/nexus-shield/
 chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/connection-gatekeeper.py" "${ROOT}/lib/vector-intel.py" "${ROOT}/lib/angel-dossier.py" \
   "${ROOT}/lib/fair-ad-guardian.py" "${ROOT}/lib/host-attack-map.py" "${ROOT}/lib/geo-intel-standards.py" \
@@ -62,7 +63,7 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/geo-distance.py" "${ROOT}/lib/operator-location.py" \
   "${ROOT}/lib/field-rf-sentinel.py" "${ROOT}/lib/police-agency-db.py" \
   "${ROOT}/lib/field-command.py" "${ROOT}/lib/gov-intel-db.py" "${ROOT}/lib/program-tags-db.py" \
-  "${ROOT}/lib/nexus-update-lock.py" "${ROOT}/lib/field-toolkit-db.py" 2>/dev/null || true
+  "${ROOT}/lib/nexus-update-lock.py" "${ROOT}/lib/field-toolkit-db.py" "${ROOT}/lib/nexus-plugins.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
   "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \

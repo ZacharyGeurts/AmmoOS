@@ -23,6 +23,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-command.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-command.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/gov-intel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/gov-intel.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/program-tags.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/program-tags.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-plugins.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/nexus-plugins.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -287,6 +288,9 @@ nexus_threat_panel_publish() {
     && mv -f "${NEXUS_THREAT_PANEL_JSON}.tmp" "$NEXUS_THREAT_PANEL_JSON"
   chmod 640 "$NEXUS_THREAT_PANEL_JSON" 2>/dev/null || true
   chown root:nexus "$NEXUS_THREAT_PANEL_JSON" 2>/dev/null || true
+  if declare -f nexus_plugins_merge_panel >/dev/null 2>&1; then
+    nexus_plugins_merge_panel
+  fi
   if [[ -s "$NEXUS_THREAT_PANEL_JSON" ]] && command -v python3 >/dev/null 2>&1; then
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 - <<'PY' 2>/dev/null || true
 import json, os

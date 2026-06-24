@@ -413,6 +413,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/plugins":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "nexus-plugins.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/plugins/registry":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "nexus-plugins.py", ["registry"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/police-agencies":
             region = str(query.get("region", [""])[0]).strip() or None
             script = INSTALL_ROOT / "lib" / "police-agency-db.py"
@@ -779,6 +789,22 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/field-rf/cycle":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-rf-sentinel.py", ["cycle"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/plugins/toggle":
+            plugin_id = str(body.get("id", body.get("plugin_id", ""))).strip()
+            if not plugin_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing id"}), "application/json")
+                return
+            enabled = body.get("enabled") in (True, 1, "1", "true", "yes", "on")
+            flag = "on" if enabled else "off"
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "nexus-plugins.py",
+                ["enable", flag, plugin_id],
+            )
+            if payload.get("ok"):
+                _nexus_py_json(INSTALL_ROOT / "lib" / "nexus-plugins.py", ["merge"])
             self._send(200, json.dumps(payload), "application/json")
             return
 
