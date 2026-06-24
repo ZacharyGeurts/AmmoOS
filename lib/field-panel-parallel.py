@@ -20,6 +20,7 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "field_hazard_onset": ("field-hazard-onset.py", ["panel"]),
     "lethal_enforcement": ("lethal-enforcement.py", ["panel"]),
     "hostess7_lethal_insight": ("hostess7-lethal-insight.py", ["panel"]),
+    "hostess7_command": ("hostess7-command.py", ["panel"]),
     "signals_field": ("signals-field.py", ["json"]),
     "field_antenna": ("field-antenna-orchestrator.py", ["json"]),
     "field_radio": ("field-radio-catcher.py", ["json"]),
@@ -32,12 +33,18 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "terror_spiderweb": ("terror-spiderweb.py", ["json"]),
     "precision_field": ("precision-field.py", ["json"]),
     "h7_library": ("h7-library-bridge.py", ["build"]),
-    "field_brain": ("field-brain-panel.py", ["json"]),
     "packet_field": ("packet-field.py", ["json"]),
     "host_attacks": ("host-attack-map.py", ["json-panel"]),
     "us_field": ("field-us-intel.py", ["json"]),
     "field_command": ("field-command.py", ["json"]),
     "browser_awareness": ("browser-awareness.py", ["json"]),
+    "police_agency": ("police-agency-db.py", ["json"]),
+    "human_registry": ("human-registry.py", ["json"]),
+    "gov_intel": ("gov-intel-db.py", ["json"]),
+    "program_tags": ("program-tags-db.py", ["json"]),
+    "census_field": ("census-field-populate.py", ["json"]),
+    "existence_identity": ("existence-identity.py", ["json"]),
+    "operator_location": ("operator-location.py", ["json"]),
 }
 
 STATE_SLICES: dict[str, tuple[str, dict[str, Any]]] = {

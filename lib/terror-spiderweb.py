@@ -1278,7 +1278,12 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
     }
 
 
-def panel_json() -> dict[str, Any]:
+def panel_json(*, force: bool = False) -> dict[str, Any]:
+    """Fast path: published cache. Rebuild only on miss or explicit build/rebuild."""
+    if not force and PANEL_CACHE.is_file():
+        doc = _load_json(PANEL_CACHE, {})
+        if isinstance(doc, dict) and doc.get("schema") and doc.get("updated") is not None:
+            return doc
     doc = build_spiderweb()
     _save_json(PANEL_CACHE, doc)
     return doc

@@ -110,9 +110,8 @@
         center: [20, 0], zoom: 2, minZoom: 2, maxZoom: 18,
         worldCopyJump: true, zoomControl: true, scrollWheelZoom: true,
       });
-    (mk ? mk.darkTileLayer(L, { maxZoom: 19 }) : L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      { attribution: "&copy; OSM &copy; CARTO", subdomains: "abcd", maxZoom: 19 },
+    (mk ? (mk.fieldGlobeLayer ? mk.fieldGlobeLayer(L) : mk.darkTileLayer(L, { maxZoom: 19 })) : (
+      global.NexusSdf?.createGlobeLayer ? NexusSdf.createGlobeLayer(L) : L.gridLayer({ tileSize: 256 })
     )).addTo(slot.map);
     slot.layer = L.layerGroup().addTo(slot.map);
     if (key === "terror") {

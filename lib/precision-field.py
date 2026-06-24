@@ -14,6 +14,7 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield
 REGISTRY_JSON = STATE / "precision-field-registry.json"
 PLACEMENTS_JSON = STATE / "precision-placements.json"
 PANEL_CACHE = STATE / "precision-field-panel.json"
+HOST_ATTACKS = STATE / "host-attacks.json"
 
 
 def _now() -> str:
@@ -77,6 +78,23 @@ def _collect_entities() -> list[dict[str, Any]]:
     for p in manual.get("placements") or []:
         if isinstance(p, dict):
             add(p, p.get("section") or "manual")
+
+    ha = _load_json(HOST_ATTACKS, {})
+    for p in ha.get("points") or []:
+        if not isinstance(p, dict) or p.get("lat") is None:
+            continue
+        killed = p.get("target_status") == "killed" or p.get("disabled_permanent")
+        add({
+            "id": p.get("id") or p.get("ip"),
+            "ip": p.get("ip"),
+            "label": p.get("label") or p.get("ip"),
+            "lat": p.get("lat"),
+            "lon": p.get("lon"),
+            "kind": "hostile" if killed else (p.get("kind") or "internet"),
+            "section": "internet",
+            "heat": p.get("heat"),
+            "target_status": p.get("target_status"),
+        }, "hostile" if killed else "internet")
 
     return entities
 
@@ -176,7 +194,7 @@ def build_precision_field() -> dict[str, Any]:
 def panel_json() -> dict[str, Any]:
     if PANEL_CACHE.is_file():
         doc = _load_json(PANEL_CACHE, {})
-        if doc.get("updated"):
+        if doc.get("updated") and (doc.get("entities") or doc.get("stats", {}).get("total", 0) > 0):
             return doc
     return build_precision_field()
 

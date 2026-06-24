@@ -43,12 +43,10 @@
     if (global.NexusSdf?.createThermalGlobeLayer) {
       thermalMap.sdfLayer = NexusSdf.createThermalGlobeLayer(L);
       thermalMap.sdfLayer.addTo(thermalMap.map);
-    } else {
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        attribution: "&copy; OSM &copy; CARTO",
-        subdomains: "abcd",
-        maxZoom: 19,
-      }).addTo(thermalMap.map);
+    } else if (global.NexusMap?.fieldGlobeLayer) {
+      NexusMap.fieldGlobeLayer(L).addTo(thermalMap.map);
+    } else if (global.NexusSdf?.createGlobeLayer) {
+      NexusSdf.createGlobeLayer(L).addTo(thermalMap.map);
     }
     thermalMap.markers = L.layerGroup().addTo(thermalMap.map);
     const finish = () => {

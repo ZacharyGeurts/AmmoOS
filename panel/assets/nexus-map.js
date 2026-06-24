@@ -4,8 +4,43 @@
 (function (global) {
   "use strict";
 
-  const DARK_TILE =
-    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  /** Field globe base — SDF wireframe tiles only (no third-party map services). */
+  function fieldGlobeLayer(Lref) {
+    const sdf = global.NexusSdf;
+    if (sdf?.createGlobeLayer) {
+      return sdf.createGlobeLayer(Lref);
+    }
+    const GridLayer = Lref.GridLayer.extend({
+      createTile(coords, done) {
+        const tile = document.createElement("canvas");
+        const size = this.getTileSize().x;
+        tile.width = size;
+        tile.height = size;
+        const ctx = tile.getContext("2d");
+        ctx.fillStyle = "#060a14";
+        ctx.fillRect(0, 0, size, size);
+        ctx.strokeStyle = "rgba(77, 155, 255, 0.18)";
+        for (let i = 0; i <= size; i += 32) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i, size);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(0, i);
+          ctx.lineTo(size, i);
+          ctx.stroke();
+        }
+        done(null, tile);
+      },
+    });
+    return new GridLayer({
+      tileSize: 256,
+      minZoom: 0,
+      maxZoom: 22,
+      noWrap: false,
+      className: "nexus-field-globe-layer",
+    });
+  }
 
   function scheduleInvalidate(map, el, delays) {
     if (!map) return;
@@ -45,12 +80,7 @@
   }
 
   function darkTileLayer(L, opts) {
-    return L.tileLayer(DARK_TILE, Object.assign({
-      attribution: "&copy; OSM &copy; CARTO",
-      subdomains: "abcd",
-      maxZoom: 22,
-      crossOrigin: true,
-    }, opts || {}));
+    return fieldGlobeLayer(L);
   }
 
   function create(el, options) {
@@ -292,6 +322,7 @@
 
   global.NexusMap = {
     create,
+    fieldGlobeLayer,
     darkTileLayer,
     scheduleInvalidate,
     bindWheelCapture,

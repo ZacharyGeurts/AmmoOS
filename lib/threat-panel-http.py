@@ -52,6 +52,7 @@ PANEL_PARALLEL_KEYS = frozenset({
     "field_hazard_onset",
     "lethal_enforcement",
     "hostess7_lethal_insight",
+    "hostess7_command",
     "signals_field",
     "field_antenna",
     "field_radio",
@@ -137,14 +138,41 @@ def _load_panel_doc() -> dict:
     if _PANEL_DOC_CACHE is not None and mtime == _PANEL_DOC_MTIME:
         return _PANEL_DOC_CACHE
     try:
-        doc = json.loads(STATUS_JSON.read_text(encoding="utf-8"))
+        raw = STATUS_JSON.read_text(encoding="utf-8")
+        try:
+            doc = json.loads(raw)
+        except json.JSONDecodeError:
+            doc, _ = json.JSONDecoder().raw_decode(raw.lstrip())
         if isinstance(doc, dict):
             _PANEL_DOC_CACHE = doc
             _PANEL_DOC_MTIME = mtime
             return doc
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, ValueError):
         pass
     return {}
+
+
+def _slice_populated(key: str, val: dict) -> bool:
+    if not isinstance(val, dict) or not val:
+        return False
+    if key == "host_attacks":
+        return bool(val.get("points")) or bool(val.get("updated"))
+    if key == "human_registry":
+        return bool(val.get("table")) or bool(val.get("humans"))
+    if key == "police_agency":
+        return bool(val.get("agencies")) or bool(val.get("updated"))
+    if key == "angel_research":
+        tables = val.get("tables") or {}
+        return any(isinstance(v, list) and v for v in tables.values()) or bool(val.get("updated"))
+    if key == "census_field":
+        return bool(val.get("last_run")) or bool(val.get("operator_gps_ready"))
+    if key == "existence_identity":
+        return bool(val.get("table")) or bool(val.get("updated"))
+    if key == "gov_intel":
+        return bool(val.get("records")) or val.get("record_count", 0) > 0
+    if key == "program_tags":
+        return bool(val.get("tags")) or bool(val.get("recent"))
+    return True
 
 
 def _panel_slice(
@@ -156,13 +184,14 @@ def _panel_slice(
     """Zero-cost read: published field cache first, live builder only on miss."""
     doc = _load_panel_doc()
     val = doc.get(key)
-    if isinstance(val, dict) and val:
+    if isinstance(val, dict) and _slice_populated(key, val):
         out = dict(val)
         out["_field_cache"] = True
         return out
-    if live:
-        live["_field_cache"] = False
-        return live
+    if live and isinstance(live, dict) and live:
+        out = dict(live)
+        out["_field_cache"] = False
+        return out
     return dict(default or {})
 
 
@@ -482,13 +511,16 @@ def _nexus_py_json(script: Path, args: list[str], timeout: int = 25) -> dict:
     env = os.environ.copy()
     env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
     env["NEXUS_STATE_DIR"] = str(STATE_DIR)
-    proc = subprocess.run(
-        [sys.executable, str(script), *args],
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        env=env,
-    )
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), *args],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "timeout", "script": script.name}
     try:
         return json.loads(proc.stdout or "{}")
     except json.JSONDecodeError:
@@ -656,7 +688,7 @@ class Handler(BaseHTTPRequestHandler):
                 "gatekeeper",
                 live=_read_state_json(
                     "connection-intent.json",
-                    {"connections": [], "harm_candidates": 0, "why_no_auto_block": "Gatekeeper warming up…"},
+                    {"connections": [], "harm_candidates": 0, "why_no_auto_block": "No live flows cataloged yet."},
                 ),
                 default={"connections": [], "harm_candidates": 0},
             )
@@ -686,6 +718,15 @@ class Handler(BaseHTTPRequestHandler):
                 "field_command",
                 live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-command.py", ["json"]),
                 default={"good_guy": {"count": 0}, "bad_guy": {"count": 0}, "pulse": {}},
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/packet-field":
+            payload = _panel_slice(
+                "packet_field",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "packet-field.py", ["json"]),
+                default={"recent": [], "ports": [], "field_graphics": {}},
             )
             self._send(200, json.dumps(payload), "application/json")
             return
@@ -801,8 +842,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/terror-spiderweb":
             payload = _panel_slice(
                 "terror_spiderweb",
-                live=_nexus_py_json(INSTALL_ROOT / "lib" / "terror-spiderweb.py", ["json"]),
-                default={"nodes": [], "edges": []},
+                live=_nexus_py_json(
+                    INSTALL_ROOT / "lib" / "terror-spiderweb.py",
+                    ["json"],
+                    timeout=60,
+                ),
+                default={"schema": "terror-spiderweb/v2", "nodes": [], "edges": [], "stats": {}},
             )
             self._send(200, json.dumps(payload), "application/json")
             return
@@ -871,11 +916,20 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/home-protector":
-            payload = _panel_slice(
-                "home_protector",
-                live=_nexus_py_json(INSTALL_ROOT / "lib" / "home-protector.py", ["json"]),
-                default={"schema": "home-protector/v1", "stats": {}},
+            force_scan = str(query.get("scan", query.get("harvest", ["0"]))[0]).strip().lower() in (
+                "1", "true", "yes", "on",
             )
+            if force_scan:
+                payload = _nexus_py_json(
+                    INSTALL_ROOT / "lib" / "home-protector.py",
+                    ["json"],
+                ) or {"schema": "home-protector/v1", "stats": {}}
+            else:
+                payload = _panel_slice(
+                    "home_protector",
+                    live=_nexus_py_json(INSTALL_ROOT / "lib" / "home-protector.py", ["json"]),
+                    default={"schema": "home-protector/v1", "stats": {}},
+                )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -925,6 +979,23 @@ class Handler(BaseHTTPRequestHandler):
                 "hostess7_lethal_insight",
                 live=_nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-lethal-insight.py", ["panel"]),
                 default={"schema": "hostess7-lethal-insight-panel/v1"},
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-command":
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            env.setdefault("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")
+            payload = _panel_slice(
+                "hostess7_command",
+                live=_nexus_py_json(
+                    INSTALL_ROOT / "lib" / "hostess7-command.py",
+                    ["panel"],
+                    timeout=45,
+                ),
+                default={"schema": "hostess7-command/v1", "transcript": [], "proposed_updates": []},
             )
             self._send(200, json.dumps(payload), "application/json")
             return
@@ -1360,6 +1431,30 @@ class Handler(BaseHTTPRequestHandler):
                 return
         body = self._read_json_body()
 
+        if path == "/api/packet-field/capture":
+            script = INSTALL_ROOT / "lib" / "packet-field.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "packet_field_missing"}), "application/json")
+                return
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            proc = subprocess.run(
+                [sys.executable, str(script), "capture"],
+                capture_output=True,
+                text=True,
+                timeout=12,
+                env=env,
+            )
+            try:
+                doc = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                doc = {"ok": False, "error": (proc.stderr or "capture_failed")[:300]}
+            if isinstance(doc, dict):
+                doc["ok"] = proc.returncode == 0
+            self._send(200 if proc.returncode == 0 else 500, json.dumps(doc), "application/json")
+            return
+
         if path.startswith("/api/library/"):
             script = INSTALL_ROOT / "lib" / "h7-library-bridge.py"
             env = os.environ.copy()
@@ -1387,30 +1482,6 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
         if path == "/api/update/apply":
-            if os.geteuid() != 0 and not _sudo_available():
-                needs = {
-                    "needs_sudo": True,
-                    "message": "Administrator password required — updates always run with sudo",
-                    "command": f"cd '{_resolve_nexus_source_root() or INSTALL_ROOT}' && sudo bash stealth_install.sh",
-                }
-                try:
-                    (STATE_DIR / "update-needs-sudo.json").write_text(
-                        json.dumps(needs) + "\n",
-                        encoding="utf-8",
-                    )
-                except OSError:
-                    pass
-                self._send(
-                    403,
-                    json.dumps({
-                        "ok": False,
-                        "needs_sudo": True,
-                        "sudo_prompt": needs,
-                        "message": needs["message"],
-                    }),
-                    "application/json",
-                )
-                return
             lock = _nexus_update_lock(["status"])
             if lock.get("locked"):
                 self._send(
@@ -1925,7 +1996,11 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/terror-spiderweb/rebuild":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "terror-spiderweb.py", ["build"])
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "terror-spiderweb.py",
+                ["build"],
+                timeout=120,
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -1942,6 +2017,28 @@ class Handler(BaseHTTPRequestHandler):
             payload = _nexus_py_json(
                 INSTALL_ROOT / "lib" / "hostess7-lethal-insight.py",
                 ["ask", claim, json.dumps(target)],
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-command":
+            action = str(body.get("action") or "ask").strip().lower()
+            if action in ("sync-github", "sync_github"):
+                payload = _nexus_py_json(
+                    INSTALL_ROOT / "lib" / "hostess7-command.py",
+                    ["sync-github"],
+                    timeout=40,
+                )
+                self._send(200, json.dumps(payload), "application/json")
+                return
+            message = str(body.get("message") or body.get("text") or "").strip()
+            if not message:
+                self._send(400, json.dumps({"ok": False, "error": "empty_message"}), "application/json")
+                return
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-command.py",
+                ["ask", message],
+                timeout=120,
             )
             self._send(200, json.dumps(payload), "application/json")
             return

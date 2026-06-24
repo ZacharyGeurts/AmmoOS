@@ -142,9 +142,8 @@
     state.global = mk
       ? mk.create(el, { center: [20, 0], zoom: 3, minZoom: 1, maxZoom: 22 })
       : L.map(el, { center: [20, 0], zoom: 3, minZoom: 1, maxZoom: 22, scrollWheelZoom: true });
-    (mk ? mk.darkTileLayer(L) : L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      { attribution: "&copy; OSM &copy; CARTO", subdomains: "abcd", maxZoom: 22 },
+    (mk ? (mk.fieldGlobeLayer ? mk.fieldGlobeLayer(L) : mk.darkTileLayer(L)) : (
+      global.NexusSdf?.createGlobeLayer ? NexusSdf.createGlobeLayer(L) : L.gridLayer({ tileSize: 256 })
     )).addTo(state.global);
     primeEl(el, state.global);
     return state.global;
@@ -176,7 +175,7 @@
     L.marker([0, 0], {
       icon: L.divIcon({
         className: "pf-anchor",
-        html: `<span style="color:#d4af37;font-size:0.6rem">ANCHOR · ${esc(axis.toUpperCase())}</span>`,
+        html: `<span style="color:#d4af37;font-size:14pt">ANCHOR · ${esc(axis.toUpperCase())}</span>`,
         iconSize: [72, 14],
         iconAnchor: [36, 7],
       }),
