@@ -198,10 +198,42 @@ def catch_frequency(
         cs = "FIELD"
         band = "vhf"
 
-    lock = _field_lock_strength(target_mhz, op_lat, op_lon, tlat, tlon, readiness, radio_boost)
-    rtl = _rtl_capture(target_mhz) if lock.get("locked") else {"ok": False, "skipped": "antenna_not_locked"}
+    tri: dict[str, Any] = {}
+    _tri_mod: Any = None
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_tri_receive", INSTALL / "lib" / "field-tri-receive.py",
+        )
+        if spec and spec.loader:
+            _tri_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_tri_mod)
+            tri = _tri_mod.compare_fields_to_gps(
+                operator=op,
+                target={
+                    "tower_lat": tlat,
+                    "tower_lon": tlon,
+                    "freq_mhz": target_mhz,
+                    "name": label,
+                    "call_sign": cs,
+                },
+            )
+    except Exception:
+        tri = {}
 
-    caught = lock.get("locked") and (rtl.get("ok") or not _which("rtl_fm"))
+    lock = _field_lock_strength(target_mhz, op_lat, op_lon, tlat, tlon, readiness, radio_boost)
+    tri_ready = bool(tri.get("tri_ready"))
+    concept = os.environ.get("NEXUS_FIELD_TRI_CONCEPT", "1") == "1"
+    may_capture = lock.get("locked") or (concept and tri_ready)
+    rtl = _rtl_capture(target_mhz) if may_capture else {"ok": False, "skipped": "antenna_not_locked"}
+
+    playback: dict[str, Any] = {"ok": False}
+    if rtl.get("ok") and CATCH_AUDIO.is_file() and _tri_mod is not None:
+        try:
+            playback = _tri_mod._play_wav(CATCH_AUDIO, background=True)
+        except Exception:
+            pass
+
+    caught = may_capture and (rtl.get("ok") or not _which("rtl_fm"))
     audio_url = f"/api/field-antenna/catch-audio" if rtl.get("ok") and CATCH_AUDIO.is_file() else ""
 
     doc = {
@@ -226,9 +258,15 @@ def catch_frequency(
         "distance_label": lock.get("distance_label"),
         "signal_strength_pct": lock.get("signal_strength_pct"),
         "antenna_locked": lock.get("locked"),
+        "tri_ready": tri_ready,
+        "tri_confidence": tri.get("tri_confidence"),
+        "tri_compare": tri,
+        "pinpoint_gps": tri.get("pinpoint_gps"),
         "blaster_ready": lock.get("blaster_ready"),
         "readiness_score": lock.get("score"),
         "capture": rtl,
+        "playback": playback,
+        "playing": bool(playback.get("ok")),
         "audio_url": audio_url,
         "return_type": "point",
     }

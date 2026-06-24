@@ -635,6 +635,58 @@
     wrap.classList.toggle("playing", !!playing || !!tuned.caught);
   }
 
+  function renderTriPanel(tri, antenna) {
+    const meta = document.getElementById("signals-tri-meta");
+    const fieldsEl = document.getElementById("signals-tri-fields");
+    if (!fieldsEl) return;
+    const cmp = tri?.tri_compare || tri || antenna?.tri_receive?.tri_compare || {};
+    const rows = cmp.fields || [];
+    const conf = cmp.tri_confidence ?? tri?.tri_confidence;
+    const pin = cmp.pinpoint_gps || tri?.pinpoint_gps || "—";
+    if (meta) {
+      meta.textContent = [
+        conf != null ? `confidence ${Math.round(conf * 100)}%` : "",
+        cmp.tri_ready ? "TRI READY" : "warming tri",
+        pin !== "—" ? `pinpoint ${pin}` : "",
+      ].filter(Boolean).join(" · ") || "Compare 3 fields to your GPS, then pinpoint 83.1 MHz";
+    }
+    if (!rows.length) {
+      fieldsEl.innerHTML = '<div class="meta">Run 3-field pinpoint & listen to compare Gladstone, Escanaba, Marquette vs operator GPS.</div>';
+      return;
+    }
+    fieldsEl.innerHTML = `<table class="honor-table" style="font-size:0.72rem;margin-top:6px;"><thead><tr>
+      <th>Field</th><th>vs GPS</th><th>→ target</th><th>Strength</th>
+    </tr></thead><tbody>${rows.map((f) => `<tr>
+      <td>${esc(f.label || f.field_id)}</td>
+      <td class="meta">${esc(f.operator_match_label || "—")}</td>
+      <td class="meta">${esc(f.distance_to_target_label || "—")} · ${esc(String(f.bearing_to_target_deg ?? "—"))}°</td>
+      <td><strong>${esc(String(f.signal_strength_pct ?? "—"))}%</strong></td>
+    </tr>`).join("")}</tbody></table>`;
+  }
+
+  async function triListenFrequency(opts) {
+    const body = { action: "listen", freq_mhz: 83.1, live_play: true, ...opts };
+    const res = await fetch("/api/field-antenna", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+    const heard = await res.json();
+    lastTuned = heard;
+    renderTriPanel(heard, null);
+    const audio = document.getElementById("signals-radio-audio");
+    const audioUrl = heard.audio_url || "";
+    if (audioUrl && audio) {
+      audio.src = audioUrl;
+      try {
+        await audio.play();
+      } catch (_) { /* server may paplay live */ }
+    }
+    updateRadioPlayer(heard, !!heard.playing || !!heard.heard);
+    return heard;
+  }
+
   async function catchRadioFrequency(opts) {
     const body = { action: "catch", freq_mhz: 83.1, ...opts };
     const res = await fetch("/api/field-antenna", {
@@ -645,6 +697,7 @@
     });
     const caught = await res.json();
     lastTuned = caught;
+    renderTriPanel(caught, null);
     const audio = document.getElementById("signals-radio-audio");
     const audioUrl = caught.audio_url || "";
     if (caught.ok && audioUrl && audio) {
@@ -669,6 +722,15 @@
       if (btn) btn.disabled = true;
       try {
         await catchRadioFrequency({ station_id: "field-catch-831", freq_mhz: 83.1, call_sign: "FIELD" });
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+    document.getElementById("signals-radio-tri-listen")?.addEventListener("click", async () => {
+      const btn = document.getElementById("signals-radio-tri-listen");
+      if (btn) btn.disabled = true;
+      try {
+        await triListenFrequency({ station_id: "field-catch-831", freq_mhz: 83.1, call_sign: "FIELD" });
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -753,6 +815,7 @@
     lastTuned = r.tuned || lastTuned;
     bindRadioSearch();
     bindRadioTune();
+    renderTriPanel(r.tuned || r.catch || {}, { tri_receive: (global.lastPanelData?.field_antenna || {}).tri_receive });
     updateRadioPlayer(lastTuned, !!lastTuned?.playing);
     if (!lastRadioStations.length) {
       menu.innerHTML = '<div class="empty">Set operator GPS — legal stations appear for your 1940s catcher range.</div>';

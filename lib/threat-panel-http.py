@@ -1047,17 +1047,19 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/field-antenna":
             action = str(body.get("action") or "build").strip().lower()
-            if action == "catch":
+            if action in ("catch", "listen", "receive", "pinpoint"):
                 catch_body = {
                     "freq_mhz": body.get("freq_mhz", os.environ.get("NEXUS_FIELD_CATCH_MHZ", "83.1")),
                     "station_id": body.get("station_id") or "",
                     "call_sign": body.get("call_sign") or "",
+                    "live_play": body.get("live_play", True),
                 }
+                orch_cmd = "listen" if action in ("listen", "receive", "pinpoint") else "catch"
                 payload = _nexus_py_json(
                     INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py",
-                    ["catch", json.dumps(catch_body)],
+                    [orch_cmd, json.dumps(catch_body)],
                 )
-                self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+                self._send(200 if payload.get("ok") or payload.get("tri_ready") else 400, json.dumps(payload), "application/json")
                 return
             if action in ("cycle", "test", "launch"):
                 extra = []

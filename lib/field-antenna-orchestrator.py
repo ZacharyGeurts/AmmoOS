@@ -29,11 +29,11 @@ RADIO_REGISTRY = INSTALL / "data" / "field-radio-broadcast-registry.json"
 PRECISION_PANEL = STATE / "precision-field-panel.json"
 PLANET_TRI_PANEL = STATE / "planet-triangulate-panel.json"
 
-# Three GPS anchors for planetary mapping (advanced / field triangulation)
+# Three local field GPS anchors — compare to operator, pinpoint OTA receive (UP Michigan)
 PLANET_ANCHORS = [
-    {"id": "anchor_gladstone", "lat": 45.845976, "lon": -87.055759, "label": "Gladstone MI · operator"},
-    {"id": "anchor_london", "lat": 51.5074, "lon": -0.1278, "label": "London UK"},
-    {"id": "anchor_tokyo", "lat": 35.6762, "lon": 139.6503, "label": "Tokyo JP"},
+    {"id": "field_gladstone", "lat": 45.845976, "lon": -87.055759, "label": "Gladstone · operator field"},
+    {"id": "field_escanaba", "lat": 45.7452, "lon": -87.0646, "label": "Escanaba · south field"},
+    {"id": "field_iron_mountain", "lat": 45.820, "lon": -88.041, "label": "Iron Mountain · west field"},
 ]
 OPERATOR_LOC = STATE / "operator-location.json"
 CONN_INTENT = STATE / "connection-intent.json"
@@ -634,6 +634,8 @@ def build_field_antenna_panel() -> dict[str, Any]:
             "placement_count": submicron.get("placement_count"),
             "anchor": submicron.get("anchor"),
         },
+        "tri_receive": _load_json(STATE / "field-tri-receive.json", {}),
+        "planet_triangulate": _load_json(PLANET_TRI_PANEL, {}),
     }
     _save_json(PANEL_CACHE, doc)
 
@@ -731,10 +733,32 @@ def main() -> int:
             except json.JSONDecodeError:
                 payload = {"freq_mhz": float(sys.argv[2])}
         run_cycle(skip_precision=True)
+        tri_out = _run_py(INSTALL / "lib" / "field-tri-receive.py", "receive", json.dumps(payload))
         out = _run_py(INSTALL / "lib" / "field-antenna-catch.py", "catch", json.dumps(payload))
+        if isinstance(tri_out, dict) and tri_out.get("tri_compare"):
+            out = {**(out if isinstance(out, dict) else {}), **{
+                "tri_compare": tri_out.get("tri_compare"),
+                "tri_confidence": tri_out.get("tri_confidence"),
+                "pinpoint_gps": tri_out.get("pinpoint_gps"),
+                "live_play": tri_out.get("live_play"),
+                "heard": tri_out.get("heard"),
+                "playing": tri_out.get("playing") or out.get("playing"),
+            }}
         build_field_antenna_panel()
         print(json.dumps(out, ensure_ascii=False))
-        return 0 if out.get("ok") else 1
+        return 0 if out.get("ok") or out.get("tri_ready") else 1
+    if cmd in ("receive", "listen", "pinpoint"):
+        payload: dict[str, Any] = {"freq_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "83.1"))}
+        if len(sys.argv) > 2:
+            try:
+                payload = json.loads(sys.argv[2])
+            except json.JSONDecodeError:
+                payload = {"freq_mhz": float(sys.argv[2])}
+        run_cycle(skip_precision=True)
+        out = _run_py(INSTALL / "lib" / "field-tri-receive.py", "receive", json.dumps(payload))
+        build_field_antenna_panel()
+        print(json.dumps(out, ensure_ascii=False))
+        return 0 if out.get("heard") or out.get("tri_ready") else 1
     print(json.dumps({
         "error": "usage: field-antenna-orchestrator.py [json|build|cycle|test|launch|catch]",
     }, ensure_ascii=False))
