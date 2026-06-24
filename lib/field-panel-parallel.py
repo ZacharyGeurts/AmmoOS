@@ -14,6 +14,7 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 PANEL_JSON = STATE / "threat-panel.json"
 
+# panel JSON key -> (script relative to lib/, cli args)
 FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "field_hardware": ("field-hardware-probe.py", ["json"]),
     "field_hazard_onset": ("field-hazard-onset.py", ["panel"]),
@@ -46,6 +47,8 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "census_field": ("census-field-populate.py", ["json"]),
     "existence_identity": ("existence-identity.py", ["json"]),
     "operator_location": ("operator-location.py", ["json"]),
+    "field_fabric": ("field-fabric-bridge.py", ["panel"]),
+    "thermal_governor": ("thermal-governor.py", ["panel"]),
 }
 
 STATE_SLICES: dict[str, tuple[str, dict[str, Any]]] = {
