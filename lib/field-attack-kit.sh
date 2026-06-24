@@ -463,7 +463,7 @@ nexus_field_attack_json() {
   done < <(nexus_field_attack_memory_paths)
 
   printf '{'
-  printf '"motto":"Our monitor feeds the globe — 100%% PINPOINT CERTAIN autokill hardware-destroys forever on field drive.",'
+  printf '"motto":"Hell goes to Hell — Hell Kit severs wire, regional disable, human threat sweep. 100%% PINPOINT CERTAIN hardware-destroys forever on field drive.",'
   printf '"enabled":%s,' "${NEXUS_FIELD_ATTACK_KIT:-1}"
   printf '"auto_crush":%s,' "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH 2>/dev/null || echo 0)"
   printf '"disabled_count":%s,' "${count:-0}"

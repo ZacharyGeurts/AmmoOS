@@ -1423,7 +1423,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.9.7</h1>
+        <h1>NEXUS-Shield v5.9.8</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1443,7 +1443,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.7</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.8</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1851,7 +1851,17 @@
         <button type="button" id="ak-sync-field" class="ghost" data-tip="Pull hostile registry from field drive and re-apply firewall blocks.">Sync field drive</button>
       </div>
       <div class="field-toolkit-panel" id="field-toolkit-panel">
-        <strong style="font-size:0.72rem;color:var(--gold);">Field toolkit — attack study &amp; automated defenses</strong>
+        <strong style="font-size:0.72rem;color:var(--gold);" id="ft-kit-title">Hell Kit — sever · regional disable · human threat</strong>
+        <p class="meta" id="ft-kit-motto" style="margin:4px 0 8px;font-size:0.62rem;">Hell goes to Hell — precision kit severs wire, region, and human threat itself.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center;">
+          <select id="ft-region-select" style="font-size:0.66rem;min-width:180px;background:#0d1524;border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;">
+            <option value="">— regional cluster —</option>
+          </select>
+          <button type="button" id="ft-regional-disable" class="ghost" data-tip="Batch disable every hostile in the selected region/country/ASN cluster. Hell goes to Hell.">Regional disable</button>
+          <button type="button" id="ft-sever-selected" class="ghost" data-tip="Sever wire on selected map target — teardown connections + 24h firewall block.">Sever wire</button>
+          <button type="button" id="ft-human-threat" class="ghost" data-tip="Sweep Grok Heavy human dossier kill orders — human threat itself.">Human threat sweep</button>
+          <button type="button" id="ft-hell-rip" class="ghost" data-tip="Heaven/Hell rip — Hell-chosen flows only. No friendly fire.">Hell rip</button>
+        </div>
         <div class="field-toolkit-grid" style="margin-top:10px;">
           <div>
             <label style="font-size:0.64rem;">Attack pattern
@@ -1859,10 +1869,10 @@
                 <option value="">— study pattern —</option>
               </select>
             </label>
-            <div id="ft-attack-desc" class="ft-attack-desc" style="margin-top:8px;">Select an attack to study indicators and linked defenses.</div>
+            <div id="ft-attack-desc" class="ft-attack-desc" style="margin-top:8px;">Select an attack to study indicators, disablement profile, and linked Hell Kit defenses.</div>
           </div>
           <div>
-            <div style="font-size:0.64rem;margin-bottom:6px;">Automated defenses <span id="ft-defense-count" class="meta"></span></div>
+            <div style="font-size:0.64rem;margin-bottom:6px;">Hell Kit defenses <span id="ft-defense-count" class="meta"></span></div>
             <div id="ft-defense-list"></div>
           </div>
         </div>
@@ -4015,6 +4025,10 @@
     function renderFieldToolkit(ft) {
       if (!ft) return;
       fieldToolkitCache = ft;
+      const title = $("ft-kit-title");
+      if (title) title.textContent = `${ft.kit_name || "Hell Kit"} — sever · regional disable · human threat`;
+      const motto = $("ft-kit-motto");
+      if (motto) motto.textContent = ft.motto || "Hell goes to Hell — precision kit severs wire, region, and human threat itself.";
       const sel = $("ft-attack-select");
       const prev = sel?.value || "";
       if (sel && !sel.dataset.filled) {
@@ -4028,12 +4042,25 @@
         sel.addEventListener("change", () => showFtAttack(sel.value));
       }
       if (prev) showFtAttack(prev);
+      const regionSel = $("ft-region-select");
+      if (regionSel) {
+        const cur = regionSel.value;
+        regionSel.innerHTML = '<option value="">— regional cluster —</option>' +
+          (ft.regions || []).map((r) =>
+            `<option value="${esc(r.key || r.value)}">${esc(r.label || r.value)} (${r.ip_count ?? 0})</option>`
+          ).join("");
+        if (cur) regionSel.value = cur;
+      }
       const dc = $("ft-defense-count");
-      if (dc) dc.textContent = `· ${ft.defenses_enabled ?? 0}/${ft.defense_count ?? 0} on`;
+      if (dc) {
+        const hellN = ft.hell_kit_defenses ?? (ft.defenses || []).filter((d) => d.hell_kit).length;
+        dc.textContent = `· ${ft.defenses_enabled ?? 0}/${ft.defense_count ?? 0} on · ${hellN} Hell Kit`;
+      }
       const list = $("ft-defense-list");
       if (list) {
-        list.innerHTML = (ft.defenses || []).map((d) =>
-          `<label class="ft-defense-row"><span><strong>${esc(d.label)}</strong><br/><span class="meta">${esc(d.description || "")}</span></span>` +
+        const defs = (ft.defenses || []).slice().sort((a, b) => (b.hell_kit ? 1 : 0) - (a.hell_kit ? 1 : 0));
+        list.innerHTML = defs.map((d) =>
+          `<label class="ft-defense-row"><span><strong>${esc(d.label)}</strong>${d.hell_kit ? ' <span class="meta" style="color:var(--gold);">Hell Kit</span>' : ""}<br/><span class="meta">${esc(d.description || "")}</span></span>` +
           `<input type="checkbox" data-ft-defense="${esc(d.id)}" ${d.enabled ? "checked" : ""} /></label>`
         ).join("");
         if (!ftBound) {
@@ -4050,6 +4077,81 @@
           });
         }
       }
+      bindHellKitControls();
+    }
+
+    let hellKitBound = false;
+
+    function bindHellKitControls() {
+      if (hellKitBound) return;
+      hellKitBound = true;
+      $("ft-regional-disable")?.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        const region = $("ft-region-select")?.value || "";
+        if (!region) { alert("Select a regional cluster first."); return; }
+        if (!confirm(`Regional disable — Hell goes to Hell for cluster:\n${region}\n\nForever kill all matched hostiles (friendly guard honored).`)) return;
+        btn.disabled = true;
+        try {
+          const res = await fetch("/api/field-toolkit/regional-disable", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ region }),
+          });
+          const data = await res.json();
+          alert(data.ok
+            ? `Regional disable — killed ${data.killed_count ?? 0}, skipped ${data.skipped_count ?? 0}`
+            : `Failed — ${data.error || "unknown"}`);
+          refresh();
+        } catch { alert("Regional disable unreachable."); }
+        finally { btn.disabled = false; }
+      });
+      $("ft-sever-selected")?.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        const p = hostLastPoints?.find((x) => x.id === hostSelectedId) || hostLastPoints?.[0];
+        const ip = p?.ip;
+        if (!ip) { alert("Select a map target first."); return; }
+        if (!confirm(`Sever wire on ${ip}?\n\nTeardown live connections + 24h firewall block.`)) return;
+        btn.disabled = true;
+        try {
+          const res = await fetch("/api/field-toolkit/sever", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ip, vector: p.vector || "HELL_SEVER", severity: p.severity || "high" }),
+          });
+          const data = await res.json();
+          if (data.friendly_refused) alert(`Sever refused — ${ip} is Heaven-protected.`);
+          else if (data.ok) alert(`Wire severed — ${ip} · teardown ${data.connections_teardown ?? 0}`);
+          else alert(`Sever failed — ${data.error || data.reason || "unknown"}`);
+          refresh();
+        } catch { alert("Sever unreachable."); }
+        finally { btn.disabled = false; }
+      });
+      $("ft-human-threat")?.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        if (!confirm("Human threat sweep?\n\nKill all Grok Heavy dossier C2 IPs — human threat itself. Friendly guard honored.")) return;
+        btn.disabled = true;
+        try {
+          const res = await fetch("/api/field-toolkit/human-threat", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+          const data = await res.json();
+          alert(data.ok
+            ? `Human threat swept — killed ${data.killed_count ?? 0}, refused Heaven ${(data.refused_heaven || []).length}`
+            : `Failed — ${data.error || "unknown"}`);
+          refresh();
+        } catch { alert("Human threat sweep unreachable."); }
+        finally { btn.disabled = false; }
+      });
+      $("ft-hell-rip")?.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        if (!confirm("Hell rip?\n\nHeaven/Hell rip — Hell-chosen flows only. No mercy. No friendly fire.")) return;
+        btn.disabled = true;
+        try {
+          const res = await fetch("/api/field-toolkit/hell-rip", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+          const data = await res.json();
+          alert(data.ok ? `Hell rip — ${data.ripped_count ?? 0} ripped` : `Rip failed — ${data.error || "unknown"}`);
+          refresh();
+        } catch { alert("Hell rip unreachable."); }
+        finally { btn.disabled = false; }
+      });
     }
 
     function showFtAttack(id) {
@@ -4057,15 +4159,17 @@
       const atk = (fieldToolkitCache?.attacks || []).find((a) => a.id === id);
       if (!desc) return;
       if (!atk) {
-        desc.textContent = "Select an attack to study indicators and linked defenses.";
+        desc.textContent = "Select an attack to study indicators, disablement profile, and linked Hell Kit defenses.";
         return;
       }
       const ind = (atk.indicators || []).map((i) => `• ${i}`).join("\n");
       const defs = (atk.defenses || []).join(", ");
-      desc.innerHTML = `<strong>${esc(atk.label)}</strong> · ${esc(atk.vector)} · ${esc(atk.severity)}<br/>` +
+      const prof = atk.disablement ? `Disablement: ${atk.disablement}` : "";
+      desc.innerHTML = `<strong>${esc(atk.label)}</strong> · ${esc(atk.vector)} · ${esc(atk.severity)}` +
+        (prof ? ` · <span class="meta">${esc(prof)}</span>` : "") + `<br/>` +
         `${esc(atk.study || "")}<br/>` +
         (ind ? `<span class="meta">${esc(ind)}</span><br/>` : "") +
-        (defs ? `<span class="meta">Defenses: ${esc(defs)}</span>` : "");
+        (defs ? `<span class="meta">Hell Kit defenses: ${esc(defs)}</span>` : "");
     }
 
     $("ak-crush-hot")?.addEventListener("click", (e) => attackKitCrushHot(e.currentTarget));

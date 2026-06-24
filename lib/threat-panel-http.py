@@ -779,6 +779,41 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
             return
 
+        if path in (
+            "/api/field-toolkit/sever",
+            "/api/field-toolkit/regional-disable",
+            "/api/field-toolkit/human-threat",
+            "/api/field-toolkit/hell-rip",
+            "/api/field-toolkit/disable",
+        ):
+            script = INSTALL_ROOT / "lib" / "field-toolkit-db.py"
+            if path == "/api/field-toolkit/sever":
+                ip = str(body.get("ip", "")).strip()
+                if not ip:
+                    self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
+                    return
+                payload = _nexus_py_json(script, ["sever", ip])
+            elif path == "/api/field-toolkit/regional-disable":
+                region = str(body.get("region", body.get("value", ""))).strip()
+                if not region:
+                    self._send(400, json.dumps({"ok": False, "error": "missing region"}), "application/json")
+                    return
+                args = ["regional", region]
+                if body.get("field") and ":" not in region:
+                    args.append(str(body.get("field")))
+                payload = _nexus_py_json(script, args)
+            elif path == "/api/field-toolkit/human-threat":
+                payload = _nexus_py_json(script, ["human-threat"])
+            elif path == "/api/field-toolkit/hell-rip":
+                payload = _nexus_py_json(script, ["hell-rip"])
+            else:
+                payload = _nexus_py_json(
+                    script,
+                    ["disable", json.dumps(body, ensure_ascii=False)],
+                )
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/host-attack/trash":
             pin_id = str(body.get("id", "")).strip()
             if not pin_id:

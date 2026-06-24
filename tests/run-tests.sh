@@ -992,7 +992,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.9.7' "$panel"
+  grep -q 'v5.9.8' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -1001,7 +1001,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.9.7' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.9.8' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
@@ -1322,13 +1322,27 @@ test_nexus_update_lock_module() {
 test_field_toolkit_module() {
   [[ -f "${ROOT}/lib/field-toolkit-db.py" ]]
   [[ -f "${ROOT}/data/field-toolkit-seed.json" ]]
-  grep -q 'port_scan' "${ROOT}/data/field-toolkit-seed.json"
+  grep -q 'nexus-hell-kit-v2' "${ROOT}/data/field-toolkit-seed.json"
+  grep -q 'Hell goes to Hell' "${ROOT}/data/field-toolkit-seed.json"
+  grep -q 'human_threat_c2' "${ROOT}/data/field-toolkit-seed.json"
+  grep -q 'hell_sever_wire' "${ROOT}/data/field-toolkit-seed.json"
+  grep -q 'hell_regional_disable' "${ROOT}/data/field-toolkit-seed.json"
   grep -q '/api/field-toolkit' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/field-toolkit/sever' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/field-toolkit/regional-disable' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/field-toolkit/human-threat' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/field-toolkit/hell-rip' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'field_toolkit' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'Hell goes to Hell' "${ROOT}/panel/threat-panel.html"
+  grep -q 'ft-human-threat' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-toolkit-db.py" json | grep -q 'auto_crush_hot'
+    python3 "${ROOT}/lib/field-toolkit-db.py" json | grep -q 'Hell Kit'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-toolkit-db.py" toggle auto_crush_hot on | grep -q '"enabled": true'
+    python3 "${ROOT}/lib/field-toolkit-db.py" json | grep -q 'disablement_profiles'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-toolkit-db.py" toggle hell_sever_wire on | grep -q '"enabled": true'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-toolkit-db.py" regions | grep -q 'regions'
 }
 
 test_nexus_update_module() {
