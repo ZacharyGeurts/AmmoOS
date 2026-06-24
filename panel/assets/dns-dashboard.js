@@ -5,8 +5,10 @@
   "use strict";
 
   let lastFd = null;
+  let lastDnsFp = "";
   let tabsBound = false;
   let filterBound = false;
+  const smooth = () => global.NexusUiSmooth;
 
   function esc(s) {
     return String(s ?? "")
@@ -153,12 +155,28 @@
   function bindFilters() {
     if (filterBound) return;
     filterBound = true;
-    $("dns-rfc-search")?.addEventListener("input", () => {
-      if (lastFd) renderRfcTable(lastFd);
-    });
-    $("dns-internet-filter")?.addEventListener("input", () => {
-      if (lastFd) renderInternetField(lastFd);
-    });
+    const ui = smooth();
+    const onRfc = () => { if (lastFd) renderRfcTable(lastFd); };
+    const onInternet = () => { if (lastFd) renderInternetField(lastFd); };
+    if (ui) {
+      ui.bindDebouncedInput($("dns-rfc-search"), onRfc, 150);
+      ui.bindDebouncedInput($("dns-internet-filter"), onInternet, 150);
+    } else {
+      $("dns-rfc-search")?.addEventListener("input", onRfc);
+      $("dns-internet-filter")?.addEventListener("input", onInternet);
+    }
+  }
+
+  function dnsFingerprint(fd) {
+    const ui = smooth();
+    if (ui) {
+      return ui.fingerprint(fd, ["updated", "schema", "running", "stats", "recent_queries", "top_domains", "threats", "dhcp_events"]);
+    }
+    return String(fd.updated || "") + String((fd.stats || {}).queries_total || 0);
+  }
+
+  function dnsViewRoot() {
+    return $("view-dns");
   }
 
   function renderDnsHero(fd) {
@@ -477,6 +495,25 @@
     <div class="dns-table-foot meta">Showing ${entries.length} of ${(inf.entries || []).length} slots · TLDs ${inf.tld_count ?? "—"}</div>`;
   }
 
+  function queryRowHtml(r) {
+    const reason = r.reason || r.status || (r.blocked ? "blocked" : "");
+    const chip = reason === "blocked" || reason === "block"
+      ? '<span class="dns-chip dns-chip-warn">blocked</span>'
+      : reason === "rate_limit"
+        ? '<span class="dns-chip dns-chip-warn">rate limit</span>'
+        : reason
+          ? `<span class="meta">${esc(reason)}</span>`
+          : '<span class="dns-chip dns-chip-ok">ok</span>';
+    const key = `${r.ts || ""}:${r.qname || r.name || ""}`;
+    return `<tr data-row-key="${esc(key)}">
+      <td class="meta">${esc((r.ts || "").slice(11, 19) || "—")}</td>
+      <td><strong>${esc(r.qname || r.name || "—")}</strong></td>
+      <td class="meta">${(r.answers || []).map((a) => `<code>${esc(a)}</code>`).join(" ") || "—"}</td>
+      <td class="meta">${fmtMs(r.latency_ms ?? r.latency)}</td>
+      <td>${chip}</td>
+    </tr>`;
+  }
+
   function renderRecentQueries(fd) {
     const el = $("dns-recent-queries");
     if (!el) return;
@@ -485,25 +522,22 @@
       el.innerHTML = '<div class="empty">No queries yet — resolve a name against 127.0.0.1 to populate LOCAL NOW.</div>';
       return;
     }
+    const ui = smooth();
+    if (ui && !ui.isUserTyping(dnsViewRoot())) {
+      if (!el.querySelector("table")) {
+        el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
+          <th>Time</th><th>QNAME</th><th>Answers</th><th>Latency</th><th>Status</th>
+        </tr></thead><tbody></tbody></table>
+        <div class="dns-table-foot meta" id="dns-recent-queries-foot"></div>`;
+      }
+      ui.patchTableRows(el, rows, (r) => `${r.ts || ""}:${r.qname || r.name || ""}`, queryRowHtml, { maxRows: 200 });
+      const foot = $("dns-recent-queries-foot");
+      if (foot) foot.textContent = `Showing ${rows.length} recent · schema ${fd.schema || "field-dns/v1"}`;
+      return;
+    }
     el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
       <th>Time</th><th>QNAME</th><th>Answers</th><th>Latency</th><th>Status</th>
-    </tr></thead><tbody>${rows.map((r) => {
-      const reason = r.reason || r.status || (r.blocked ? "blocked" : "");
-      const chip = reason === "blocked" || reason === "block"
-        ? '<span class="dns-chip dns-chip-warn">blocked</span>'
-        : reason === "rate_limit"
-          ? '<span class="dns-chip dns-chip-warn">rate limit</span>'
-          : reason
-            ? `<span class="meta">${esc(reason)}</span>`
-            : '<span class="dns-chip dns-chip-ok">ok</span>';
-      return `<tr>
-      <td class="meta">${esc((r.ts || "").slice(11, 19) || "—")}</td>
-      <td><strong>${esc(r.qname || r.name || "—")}</strong></td>
-      <td class="meta">${(r.answers || []).map((a) => `<code>${esc(a)}</code>`).join(" ") || "—"}</td>
-      <td class="meta">${fmtMs(r.latency_ms ?? r.latency)}</td>
-      <td>${chip}</td>
-    </tr>`;
-    }).join("")}</tbody></table>
+    </tr></thead><tbody>${rows.map(queryRowHtml).join("")}</tbody></table>
     <div class="dns-table-foot meta">Showing ${rows.length} recent · schema ${esc(fd.schema || "field-dns/v1")}</div>`;
   }
 
@@ -897,8 +931,29 @@
     ].join("");
   }
 
+  function renderDnsFieldLight(fd) {
+    if (!fd) return;
+    lastFd = fd;
+    renderDnsStats(fd);
+    renderOpsStrip(fd);
+    renderTrafficPatterns(fd);
+    renderRecentQueries(fd);
+    renderTopDomains(fd);
+    renderThreatsLog(fd);
+    renderDhcpLeases(fd);
+    renderDhcpEvents(fd);
+  }
+
   function renderDnsField(fd, panel) {
     if (!fd) return;
+    const fp = dnsFingerprint(fd);
+    const ui = smooth();
+    if (ui && ui.isUserTyping(dnsViewRoot()) && fp === lastDnsFp) return;
+    if (fp === lastDnsFp) {
+      renderDnsFieldLight(fd);
+      return;
+    }
+    lastDnsFp = fp;
     lastFd = fd;
     bindRefTabs();
     bindFilters();
@@ -927,4 +982,5 @@
   }
 
   global.renderDnsField = renderDnsField;
+  global.renderDnsFieldLight = renderDnsFieldLight;
 })(window);

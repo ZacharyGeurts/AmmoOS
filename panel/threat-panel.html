@@ -16,6 +16,7 @@
   <title>NEXUS-Shield — Military C2 Panel</title>
   <link rel="preload" href="/api/nexus-field" as="fetch" crossorigin />
   <script src="/assets/field-foundation.js"></script>
+  <script src="/assets/nexus-ui-smooth.js"></script>
   <script src="/assets/h7-reader.js"></script>
   <script defer src="/assets/nexus-plugin-runtime.js"></script>
   <script defer src="/assets/plugins/tab-beacon.js"></script>
@@ -3549,7 +3550,8 @@
     let panelSliceGeneration = 0;
     let slicePaintRaf = 0;
     const pendingSliceKeys = new Set();
-    const PANEL_REFRESH_MS = 5000;
+    let panelPollMs = 5000;
+    let lastScheduledPollMs = 0;
 
     const FIELD_PARALLEL_SLICES = [
       { key: "field_command", url: "/api/field-command" },
@@ -3975,7 +3977,11 @@
           }
           break;
         case "field_dns":
-          if (global.renderDnsField) renderDnsField(data.field_dns, data);
+          if (global.NexusUiSmooth?.isUserTyping?.($("view-dns")) && global.renderDnsFieldLight) {
+            global.renderDnsFieldLight(data.field_dns);
+          } else if (global.renderDnsField) {
+            renderDnsField(data.field_dns, data);
+          }
           break;
         case "field_outside_talk":
           if (global.renderOutsideTalk) renderOutsideTalk(data.field_outside_talk, data);
@@ -7095,9 +7101,14 @@
     function bindProgramTagControls() {
       if (programTagsBound) return;
       programTagsBound = true;
-      $("program-tag-search")?.addEventListener("input", () => {
+      const onProgramSearch = () => {
         if (programTagsCache) renderProgramTags(programTagsCache, true);
-      });
+      };
+      if (global.NexusUiSmooth) {
+        global.NexusUiSmooth.bindDebouncedInput($("program-tag-search"), onProgramSearch, 150);
+      } else {
+        $("program-tag-search")?.addEventListener("input", onProgramSearch);
+      }
       $("program-tag-select")?.addEventListener("change", (ev) => {
         const id = ev.target.value;
         selectedProgramTagIds = id ? [id] : [];
@@ -8152,10 +8163,15 @@
       const filter = $("human-dossier-filter");
       const mal = $("human-dossier-malware");
       if (filter && !filter.dataset.bound) {
-        filter.addEventListener("input", () => {
+        const onHumanFilter = () => {
           humanDossierFilter = filter.value || "";
           if (humanDossierCache) renderHumanDossierCards(humanDossierCache);
-        });
+        };
+        if (global.NexusUiSmooth) {
+          global.NexusUiSmooth.bindDebouncedInput(filter, onHumanFilter, 120);
+        } else {
+          filter.addEventListener("input", onHumanFilter);
+        }
         filter.dataset.bound = "1";
       }
       if (mal && !mal.dataset.bound) {
@@ -8843,10 +8859,22 @@
       scheduleSlicePaint(gen);
     }
 
+    function sliceFetchUrl(slice) {
+      if (slice.key === "field_dns") return `${slice.url}?delta=1`;
+      return slice.url;
+    }
+
     async function fetchPanelSlice(slice, gen) {
       try {
-        const res = await fetch(slice.url, { cache: "no-store" });
+        const headers = {};
+        const ui = global.NexusUiSmooth;
+        const etag = ui?.getSliceEtag?.(slice.key);
+        if (etag) headers["If-None-Match"] = `"${etag}"`;
+        const res = await fetch(sliceFetchUrl(slice), { cache: "no-store", headers });
         if (gen !== panelSliceGeneration) return;
+        if (res.status === 304) return;
+        const newEtag = (res.headers.get("ETag") || "").replace(/"/g, "");
+        if (newEtag && ui?.setSliceEtag) ui.setSliceEtag(slice.key, newEtag);
         if (!res.ok) {
           mergePanelSlice(slice.key, {
             ok: false,
@@ -8858,6 +8886,7 @@
           return;
         }
         const val = parsePanelJson(await res.text());
+        if (val && val.unchanged) return;
         mergePanelSlice(slice.key, val, gen);
       } catch (err) {
         if (gen !== panelSliceGeneration) return;
@@ -8916,6 +8945,41 @@
       return res;
     }
 
+    function applyStatusStrip(data) {
+      if (!data) return;
+      if (data.poll_ms) {
+        const next = Number(data.poll_ms) || panelPollMs;
+        if (next !== panelPollMs) {
+          panelPollMs = next;
+          if (lastScheduledPollMs !== panelPollMs) schedulePanelRefresh();
+        }
+      }
+      $("mode").textContent = data.vigil_mode || "calm";
+      $("signal").textContent = data.truth_signal ?? "0";
+      $("updated").textContent = data.updated || "—";
+      $("egress").textContent = data.internet?.egress_count ?? 0;
+      $("listeners").textContent = data.internet?.listener_count ?? 0;
+      $("dns").textContent = (data.internet?.dns_hash || "—").slice(0, 12);
+      $("corr").textContent = data.correlation_score ?? 0;
+      $("firewall").textContent = data.firewall ?? "—";
+      $("fw-blocks").textContent = data.firewall_blocks ?? 0;
+      lastPanelUpdated = data.updated || lastPanelUpdated;
+    }
+
+    async function refreshLight() {
+      if (document.hidden) return;
+      const gen = ++panelSliceGeneration;
+      try {
+        const res = await fetch("/api/status", { cache: "no-store" });
+        if (res.ok) {
+          const strip = parsePanelJson(await res.text());
+          if (gen === panelSliceGeneration) applyStatusStrip(strip);
+        }
+      } catch (_) { /* keep last strip */ }
+      if (gen !== panelSliceGeneration) return;
+      refreshActiveTabSlices(gen);
+    }
+
     async function refresh() {
       const gen = ++panelSliceGeneration;
       panelFetchInFlight = true;
@@ -8926,6 +8990,8 @@
         const data = hydratePanelSettings(parsePanelJson(await res.text()));
         if (gen !== panelSliceGeneration) return;
         lastPanelData = data;
+        applyStatusStrip(data);
+        if (data.poll_ms) panelPollMs = Number(data.poll_ms) || panelPollMs;
         try { sessionStorage.setItem("nexus-field-v4", JSON.stringify(lastPanelData)); } catch (_) {}
         fieldLiveCount(lastPanelData);
         paintPanel(lastPanelData);
@@ -9004,12 +9070,14 @@
 
     function panelRefreshTick() {
       if (document.hidden) return;
-      refresh();
+      refreshLight();
     }
 
     function schedulePanelRefresh() {
       if (window._nexusPanelRefreshTimer) clearInterval(window._nexusPanelRefreshTimer);
-      window._nexusPanelRefreshTimer = setInterval(panelRefreshTick, PANEL_REFRESH_MS);
+      const ms = Math.max(2000, Number(panelPollMs) || 5000);
+      lastScheduledPollMs = ms;
+      window._nexusPanelRefreshTimer = setInterval(panelRefreshTick, ms);
     }
 
     document.addEventListener("visibilitychange", () => {

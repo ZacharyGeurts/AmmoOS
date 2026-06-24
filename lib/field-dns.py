@@ -343,6 +343,11 @@ def _read_query_log(limit: int = QUERY_LOG_MAX) -> list[dict[str, Any]]:
     return rows
 
 
+_ANALYTICS_CACHE: dict[str, Any] = {}
+_ANALYTICS_AT: float = 0.0
+_ANALYTICS_TTL = float(os.environ.get("NEXUS_FIELD_DNS_ANALYTICS_TTL", "60"))
+
+
 def _query_analytics() -> dict[str, Any]:
     rows = _read_query_log()
     now = time.time()
@@ -359,6 +364,16 @@ def _query_analytics() -> dict[str, Any]:
         "top_domains": dict(top),
         "cache_hit_rate": round(100 * cache_hits / max(queries_total, 1), 1),
     }
+
+
+def _query_analytics_cached(force: bool = False) -> dict[str, Any]:
+    global _ANALYTICS_CACHE, _ANALYTICS_AT
+    now = time.time()
+    if not force and _ANALYTICS_CACHE and now - _ANALYTICS_AT < _ANALYTICS_TTL:
+        return _ANALYTICS_CACHE
+    _ANALYTICS_CACHE = _query_analytics()
+    _ANALYTICS_AT = now
+    return _ANALYTICS_CACHE
 
 
 def _dnssec_status() -> dict[str, Any]:
@@ -1009,7 +1024,7 @@ def build_panel() -> dict[str, Any]:
     }
     briefing = _engineer_briefing(srv, planetary, multipoint, internet_field, takeover)
     recent = _recent_queries(RECENT_PANEL_LIMIT)
-    analytics = _query_analytics()
+    analytics = _query_analytics_cached(force=True)
     dnssec = _dnssec_status()
     threats = _threats_summary()
     traffic_patterns = _build_traffic_patterns(srv, dhcp, egress, threat_guard, recent)
@@ -1119,13 +1134,30 @@ def build_panel() -> dict[str, Any]:
     return doc
 
 
+def _panel_json_stub() -> dict[str, Any]:
+    srv = status()
+    return {
+        "schema": "field-dns/v2",
+        "updated": _now(),
+        "running": bool(srv.get("running")),
+        "self_hosted": True,
+        "listeners": srv.get("listeners") or [],
+        "stats": srv.get("stats") or {},
+        "_stale": True,
+        "_partial": True,
+        "recent_queries": [],
+        "top_domains": {},
+        "threats": [],
+    }
+
+
 def panel_json() -> dict[str, Any]:
     if PANEL_CACHE.is_file():
         try:
             return json.loads(PANEL_CACHE.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             pass
-    return build_panel()
+    return _panel_json_stub()
 
 
 def main() -> int:

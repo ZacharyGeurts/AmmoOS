@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Local threat panel server — HTTPS on localhost only (Hostess7-secured)."""
+import hashlib
 import json
 import os
 import ssl
@@ -121,20 +122,69 @@ def _read_install_version() -> str:
     return os.environ.get("NEXUS_VERSION", "unknown")
 
 
+def _read_nexus_poll_seconds() -> dict[str, int]:
+    """Adaptive panel poll intervals (seconds) — mirrors nexus.conf defaults."""
+    conf = INSTALL_ROOT / "config" / "nexus.conf"
+    out = {"calm": 5, "alert": 5, "storm": 3}
+    if not conf.is_file():
+        return out
+    try:
+        for line in conf.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            if key in ("NEXUS_PANEL_POLL_CALM", "NEXUS_BEHAVIOR_POLL_CALM"):
+                out["calm"] = max(2, int(val))
+            elif key in ("NEXUS_PANEL_POLL_ALERT", "NEXUS_BEHAVIOR_POLL_ALERT"):
+                out["alert"] = max(2, int(val))
+            elif key in ("NEXUS_PANEL_POLL_STORM", "NEXUS_BEHAVIOR_POLL_STORM"):
+                out["storm"] = max(2, int(val))
+    except (OSError, ValueError):
+        pass
+    return out
+
+
+def _panel_poll_meta(doc: dict | None = None) -> dict:
+    base = doc if isinstance(doc, dict) else {}
+    mode = str(base.get("vigil_mode") or "calm").lower()
+    if mode not in ("calm", "alert", "storm"):
+        mode = "calm"
+    polls = _read_nexus_poll_seconds()
+    sec = polls.get(mode, polls["calm"])
+    return {
+        "vigil_mode": mode,
+        "poll_seconds": sec,
+        "poll_ms": sec * 1000,
+        "poll_intervals": polls,
+    }
+
+
 def _read_status_json(*, full: bool = False) -> str:
     version = _read_install_version()
     if not STATUS_JSON.is_file():
         if full:
             return "{}"
-        return json.dumps({
+        shell = {
             "field": True,
             "panel_ready": False,
             "version": version,
             "panel_build": "military-v82",
             "gatekeeper": {"connections": [], "harm_candidates": 0},
-        }, ensure_ascii=False)
+        }
+        shell.update(_panel_poll_meta(shell))
+        return json.dumps(shell, ensure_ascii=False)
     raw = STATUS_JSON.read_text(encoding="utf-8")
     if full:
+        try:
+            doc = json.loads(raw)
+            if isinstance(doc, dict):
+                doc.update(_panel_poll_meta(doc))
+                return json.dumps(doc, ensure_ascii=False)
+        except json.JSONDecodeError:
+            pass
         return raw
     try:
         doc = json.loads(raw)
@@ -143,6 +193,7 @@ def _read_status_json(*, full: bool = False) -> str:
                 doc.pop(key, None)
             doc["version"] = version
             doc["panel_build"] = "military-v82"
+            doc.update(_panel_poll_meta(doc))
         return json.dumps(doc, ensure_ascii=False)
     except json.JSONDecodeError:
         return raw
@@ -240,6 +291,42 @@ def _panel_slice(
     out.setdefault("ok", False)
     out.setdefault("error", reason)
     return out
+
+
+_FIELD_PANEL_FILES: dict[str, Path] = {
+    "field_dns": STATE_DIR / "field-dns-panel.json",
+    "field_dhcp": STATE_DIR / "field-dhcp-panel.json",
+}
+
+
+def _read_field_panel_file(key: str) -> dict | None:
+    fp = _FIELD_PANEL_FILES.get(key)
+    if not fp or not fp.is_file():
+        return None
+    try:
+        doc = json.loads(fp.read_text(encoding="utf-8"))
+        if isinstance(doc, dict) and doc.get("schema"):
+            out = dict(doc)
+            out["_field_cache"] = True
+            out.setdefault("_incomplete", False)
+            out.setdefault("_partial", False)
+            return out
+    except (OSError, json.JSONDecodeError):
+        pass
+    return None
+
+
+def _payload_etag(payload: dict) -> str:
+    """Cheap fingerprint for delta / 304 — not a security hash."""
+    lean = {
+        "schema": payload.get("schema"),
+        "updated": payload.get("updated"),
+        "running": payload.get("running"),
+        "stats": payload.get("stats"),
+        "lease_count": payload.get("lease_count"),
+    }
+    raw = json.dumps(lean, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
 def _sudo_available() -> bool:
@@ -689,7 +776,7 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_):
         return
 
-    def _send(self, code, body, ctype):
+    def _send(self, code, body, ctype, extra_headers: dict[str, str] | None = None):
         data = body.encode("utf-8") if isinstance(body, str) else body
         self.send_response(code)
         self.send_header("Content-Type", ctype)
@@ -697,8 +784,37 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
+        if extra_headers:
+            for hk, hv in extra_headers.items():
+                self.send_header(hk, hv)
         self.end_headers()
         self.wfile.write(data)
+
+    def _send_json_payload(
+        self,
+        payload: dict,
+        *,
+        delta: bool = False,
+        if_none_match: str = "",
+    ) -> None:
+        etag = _payload_etag(payload)
+        inm = (if_none_match or "").strip().strip('"')
+        if inm and inm == etag:
+            if delta:
+                body = json.dumps({
+                    "unchanged": True,
+                    "etag": etag,
+                    "updated": payload.get("updated"),
+                }, ensure_ascii=False)
+                self._send(200, body, "application/json", {"ETag": f'"{etag}"'})
+            else:
+                self.send_response(304)
+                self.send_header("ETag", f'"{etag}"')
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+            return
+        body = json.dumps(payload, ensure_ascii=False)
+        self._send(200, body, "application/json", {"ETag": f'"{etag}"'})
 
     def _read_json_body(self) -> dict:
         length = int(self.headers.get("Content-Length", 0))
@@ -1165,12 +1281,22 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/field-dns":
-            payload = _panel_slice(
-                "field_dns",
-                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"]),
-                default={"schema": "field-dns/v2"},
-            )
-            self._send(200, json.dumps(payload), "application/json")
+            delta = str(query.get("delta", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            live_ok = str(query.get("live", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            inm = self.headers.get("If-None-Match", "")
+            payload = _read_field_panel_file("field_dns")
+            if payload is None:
+                live = (
+                    _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"])
+                    if live_ok
+                    else None
+                )
+                payload = _panel_slice(
+                    "field_dns",
+                    live=live,
+                    default={"schema": "field-dns/v2", "_stale": True},
+                )
+            self._send_json_payload(payload, delta=delta, if_none_match=inm)
             return
 
         if path == "/api/field-outside-talk":

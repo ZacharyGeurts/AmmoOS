@@ -494,13 +494,28 @@ def build_panel() -> dict[str, Any]:
     return doc
 
 
+def _panel_json_stub() -> dict[str, Any]:
+    return {
+        "schema": "field-dhcp/v2",
+        "updated": _now(),
+        "running": False,
+        "lease_count": 0,
+        "leases_detailed": [],
+        "lease_history_events": [],
+        "stats_extended": {},
+        "threats": [],
+        "_stale": True,
+        "_partial": True,
+    }
+
+
 def panel_json() -> dict[str, Any]:
     if PANEL_CACHE.is_file():
         try:
             return json.loads(PANEL_CACHE.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             pass
-    return build_panel()
+    return _panel_json_stub()
 
 
 def main() -> int:
