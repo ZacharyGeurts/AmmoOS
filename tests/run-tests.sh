@@ -518,6 +518,11 @@ test_field_rf_module() {
   grep -q 'resolution_tier' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q '_apply_auto_rfkill' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'RFKILL_TRIGGER_KINDS' "${ROOT}/lib/field-rf-sentinel.py"
+  [[ -f "${ROOT}/lib/field-material-discern.py" ]]
+  grep -q 'material_field' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'field-material-discern' "${ROOT}/lib/field-material-discern.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-material-discern.py" json | grep -q 'field-material-discern/v1'
   grep -q 'hot_attack_correlated' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'auto_rfkill", True' "${ROOT}/lib/field-rf-sentinel.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -777,6 +782,9 @@ test_panel_field_rf_ui() {
   grep -q 'field-rf-unpermitted' "$panel"
   grep -q 'view-field-rf' "$panel"
   grep -q 'SHOOT TO KILL' "$panel"
+  grep -q 'field-material.js' "$panel"
+  grep -q 'field-rf-material-map' "$panel"
+  grep -q 'renderMaterialField' "$panel"
   grep -q 'disabled forever' "$panel"
   grep -q 'field-rf-pollution' "$panel"
   grep -q 'field-rf-operations' "$panel"

@@ -64,7 +64,9 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/field-rf-sentinel.py" "${ROOT}/lib/police-agency-db.py" \
   "${ROOT}/lib/field-command.py" "${ROOT}/lib/gov-intel-db.py" "${ROOT}/lib/program-tags-db.py" \
   "${ROOT}/lib/nexus-update-lock.py" "${ROOT}/lib/field-toolkit-db.py" "${ROOT}/lib/nexus-plugins.py" \
-  "${ROOT}/lib/terror-spiderweb.py" "${ROOT}/lib/existence-identity.py" 2>/dev/null || true
+  "${ROOT}/lib/terror-spiderweb.py" "${ROOT}/lib/existence-identity.py" \
+  "${ROOT}/lib/field-material-discern.py" "${ROOT}/lib/gps-precision.py" \
+  "${ROOT}/lib/precision-field.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
   "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \

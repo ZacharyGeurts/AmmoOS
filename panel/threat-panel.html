@@ -25,6 +25,7 @@
   <script defer src="/assets/thermal-earth.js"></script>
   <script defer src="/assets/precision-map.js"></script>
   <script defer src="/assets/precision-spiderweb.js"></script>
+  <script defer src="/assets/field-material.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="stylesheet" href="/assets/nexus-theme.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
@@ -167,6 +168,18 @@
     .rf-burst-chip.severity-high, .rf-burst-chip.severity-critical { border-color: var(--threat); color: #ff8a9a; }
     .rf-shield-on { color: var(--ok); font-weight: 700; }
     .rf-shield-off { color: var(--threat); font-weight: 700; }
+    .fm-swatch {
+      display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+      margin-right: 6px; vertical-align: middle; border: 1px solid rgba(248, 251, 255, 0.2);
+    }
+    #field-rf-material-map {
+      width: 100%; height: 280px; display: block; border-radius: 8px;
+      background: #040810; border: 1px solid var(--border);
+    }
+    .field-material-layout {
+      display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 1.4fr); gap: 14px;
+    }
+    @media (max-width: 900px) { .field-material-layout { grid-template-columns: 1fr; } }
     .nexus-plugins-dock {
       margin-top: 18px; padding: 12px 14px 10px; border-top: 1px solid var(--border);
       background: rgba(12, 18, 30, 0.65); border-radius: 0 0 var(--radius) var(--radius);
@@ -1670,6 +1683,17 @@
               <input type="checkbox" id="field-rf-auto-rfkill" checked />
               <span><strong>Soft rfkill (advanced)</strong> — OUR radio only; ON by default when hostilities confirmed</span>
             </label>
+          </div>
+        </div>
+        <div class="honor-card" id="field-rf-material-wrap" style="grid-column: 1 / -1; display:none;">
+          <h4 data-tip="Passive multi-antenna RF — bearing sectors, multipath interference, and path-loss fall-off infer wall/path materials. Concrete gray, wood brown, metal silver, glass cyan.">Field directions · materials</h4>
+          <div id="field-rf-material-meta" class="meta" style="margin-bottom:10px;">Material discernment — awaiting scan cycle…</div>
+          <div class="field-material-layout">
+            <canvas id="field-rf-material-map" role="img" aria-label="Polar map of inferred materials by compass bearing"></canvas>
+            <div>
+              <div id="field-rf-material-table" class="meta"></div>
+              <div id="field-rf-material-scan" class="meta" style="margin-top:10px;max-height:200px;overflow:auto;"></div>
+            </div>
           </div>
         </div>
         <div class="honor-card">
@@ -4976,6 +5000,9 @@
         recentEl.innerHTML = recent.length
           ? `<strong>Recent</strong> ${recent.slice(-6).reverse().map(rfThreatChip).join(" ")}`
           : "";
+      }
+      if (global.renderMaterialField) {
+        global.renderMaterialField(fr.material_field || {}, fr.scan_material || []);
       }
     }
 

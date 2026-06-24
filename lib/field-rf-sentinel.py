@@ -1892,6 +1892,21 @@ def sample_cycle() -> dict[str, Any]:
 
     bands = {s.get("band") for s in scan if s.get("band")}
     unpermitted = [s for s in scan if s.get("permitted") is False]
+
+    material_field: dict[str, Any] = {}
+    scan_material: list[dict[str, Any]] = scan
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_material_discern", INSTALL / "lib" / "field-material-discern.py",
+        )
+        if spec and spec.loader:
+            _md = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_md)
+            material_field = _md.build_material_field(scan, antenna_fields, persist=True)
+            scan_material = _md.annotate_scan(scan, material_field)
+    except Exception:
+        material_field = {}
+
     return {
         "updated": _now(),
         "fcc": _fcc_policy(),
@@ -1937,6 +1952,8 @@ def sample_cycle() -> dict[str, Any]:
         "forever_enforce": kick_result.get("forever_enforce") or {},
         "bursts": [],
         "recent_bursts": [],
+        "material_field": material_field,
+        "scan_material": scan_material[:80],
     }
 
 
@@ -1986,6 +2003,8 @@ def panel_json() -> dict[str, Any]:
         "bursts": [],
         "recent_bursts": [],
         "burst_kinds": [],
+        "material_field": doc.get("material_field") or {},
+        "scan_material": doc.get("scan_material") or [],
     }
 
 
