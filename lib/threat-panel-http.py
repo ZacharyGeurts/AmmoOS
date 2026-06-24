@@ -836,6 +836,11 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/nexus-field":
+            try:
+                if not STATUS_JSON.is_file() or STATUS_JSON.stat().st_size < 128:
+                    _nexus_shell_publish_panel()
+            except OSError:
+                _nexus_shell_publish_panel()
             self._send(200, _read_status_json(full=True), "application/json")
             return
 
@@ -1281,22 +1286,15 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/field-dns":
-            delta = str(query.get("delta", ["0"])[0]).strip().lower() in ("1", "true", "yes")
-            live_ok = str(query.get("live", ["0"])[0]).strip().lower() in ("1", "true", "yes")
-            inm = self.headers.get("If-None-Match", "")
             payload = _read_field_panel_file("field_dns")
             if payload is None:
-                live = (
-                    _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"])
-                    if live_ok
-                    else None
-                )
+                live = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"])
                 payload = _panel_slice(
                     "field_dns",
                     live=live,
-                    default={"schema": "field-dns/v2", "_stale": True},
+                    default={"schema": "field-dns/v2"},
                 )
-            self._send_json_payload(payload, delta=delta, if_none_match=inm)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
         if path == "/api/field-outside-talk":

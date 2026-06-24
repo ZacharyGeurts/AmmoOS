@@ -3608,6 +3608,7 @@
     function moduleReady(data, key) {
       if (!data || data[key] == null) return false;
       const val = data[key];
+      if (typeof val === "object" && (val._partial || val._incomplete || val.ok === false)) return false;
       if (key === "gatekeeper") return typeof val === "object" && Array.isArray(val.connections);
       if (key === "audio_train") return typeof val === "object" && (val.schema === "audio-train/v1" || val.stats != null);
       if (key === "home_protector") return typeof val === "object" && (val.schema === "home-protector/v1" || val.stats != null);
@@ -4013,7 +4014,15 @@
 
     async function bootstrapPanel() {
       updateTabLoadProgress(null, { fetching: true });
-      return refresh().then(() => true).catch(() => false);
+      const ok = await refresh().then(() => true).catch(() => false);
+      if (!ok || !lastPanelData || Object.keys(lastPanelData).length < 4) {
+        try {
+          await fetch("/api/field/parallel", { method: "POST", cache: "no-store" });
+          await refresh();
+        } catch (_) {}
+      }
+      prefetchTabSlices(currentPanel, currentSubView);
+      return ok || Boolean(lastPanelData);
     }
 
     function onSubViewActivated(sub) {
@@ -4261,8 +4270,9 @@
       tabPrefetchGen.set(panel, gen);
       const domReady = tabDomReady(panel);
       slices.forEach((slice) => {
-        if (moduleReady(lastPanelData, slice.key) && domReady) return;
-        fetchPanelSlice(slice, gen);
+        const ready = moduleReady(lastPanelData, slice.key);
+        if (ready && domReady) return;
+        fetchPanelSlice(slice, gen, { force: !ready });
       });
     }
 
@@ -4279,6 +4289,7 @@
       activateSubView(sub);
       onSubViewActivated(sub);
       if (lastPanelData) paintPanel(lastPanelData);
+      prefetchTabSlices(panel, sub);
       updateTabLoadProgress(lastPanelData, { fetching: panelFetchInFlight });
       const hash = panel === sub ? panel : `${panel}/${sub}`;
       if (location.hash !== `#${hash}`) history.replaceState(null, "", `#${hash}`);
@@ -8859,22 +8870,11 @@
       scheduleSlicePaint(gen);
     }
 
-    function sliceFetchUrl(slice) {
-      if (slice.key === "field_dns") return `${slice.url}?delta=1`;
-      return slice.url;
-    }
-
-    async function fetchPanelSlice(slice, gen) {
+    async function fetchPanelSlice(slice, gen, opts) {
+      const force = opts && opts.force;
       try {
-        const headers = {};
-        const ui = global.NexusUiSmooth;
-        const etag = ui?.getSliceEtag?.(slice.key);
-        if (etag) headers["If-None-Match"] = `"${etag}"`;
-        const res = await fetch(sliceFetchUrl(slice), { cache: "no-store", headers });
+        const res = await fetch(slice.url, { cache: "no-store" });
         if (gen !== panelSliceGeneration) return;
-        if (res.status === 304) return;
-        const newEtag = (res.headers.get("ETag") || "").replace(/"/g, "");
-        if (newEtag && ui?.setSliceEtag) ui.setSliceEtag(slice.key, newEtag);
         if (!res.ok) {
           mergePanelSlice(slice.key, {
             ok: false,
@@ -8886,7 +8886,7 @@
           return;
         }
         const val = parsePanelJson(await res.text());
-        if (val && val.unchanged) return;
+        if (!force && val && val.unchanged) return;
         mergePanelSlice(slice.key, val, gen);
       } catch (err) {
         if (gen !== panelSliceGeneration) return;
@@ -8939,8 +8939,8 @@
     }
 
     async function fetchNexusFieldBlob() {
-      let res = await fetch("/api/nexus-field", { cache: "no-store" });
-      if (!res.ok) res = await fetch("/api/field?full=1", { cache: "no-store" });
+      let res = await fetch("/api/field", { cache: "no-store" });
+      if (!res.ok) res = await fetch("/api/nexus-field", { cache: "no-store" });
       if (!res.ok) res = await fetch("/api/threat-panel.json", { cache: "no-store" });
       return res;
     }
@@ -8967,8 +8967,8 @@
     }
 
     async function refreshLight() {
-      if (document.hidden) return;
-      const gen = ++panelSliceGeneration;
+      if (document.hidden || panelFetchInFlight) return;
+      const gen = panelSliceGeneration;
       try {
         const res = await fetch("/api/status", { cache: "no-store" });
         if (res.ok) {
