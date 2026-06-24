@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="/assets/nexus-4k-type.css" />
   <link rel="stylesheet" href="/assets/nexus-person-system.css" />
   <link rel="stylesheet" href="/assets/hostess7-command.css" />
+  <link rel="stylesheet" href="/assets/field-inspector.css" />
   <script defer src="/assets/nexus-person-system.js"></script>
   <script defer src="/assets/nexus-map-interact.js"></script>
   <script defer src="/assets/hostess7-command.js"></script>
@@ -2866,6 +2867,7 @@
       </article>
 
       <div id="dns-ops-strip" class="dns-ops-strip"></div>
+      <div id="dns-stats" class="dns-stats-bar" aria-label="DNS v2 analytics — QPS, latency, DNSSEC"></div>
 
       <article class="dns-panel dns-panel--briefing">
         <h4>Engineer briefing · planetary DNS/DHCP</h4>
@@ -2896,6 +2898,8 @@
         </article>
         <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="queries" hidden>
           <div id="dns-recent-queries" class="dns-table-wrap"><div class="empty">No queries yet — resolve a name to populate LOCAL NOW.</div></div>
+          <h5 class="dns-subhead" style="margin-top:14px">Top domains · query volume</h5>
+          <div id="dns-top-domains" class="dns-table-wrap"><div class="meta">Top QNAME counts build from query log.</div></div>
         </article>
         <article class="dns-panel dns-panel--wide dns-ref-panel" data-dns-panel="planetary" hidden>
           <div id="dns-planetary-table" class="dns-table-wrap"><div class="empty">Loading planetary zones…</div></div>
@@ -2927,11 +2931,13 @@
         <button type="button" data-view-jump="packets/live">Live connections →</button>
         <button type="button" data-view-jump="signals">Signals →</button>
       </div>
-      <div id="dns-stats" class="dns-stats-bar dns-stats-bar--hidden" aria-hidden="true"></div>
       <div id="dns-takeover-panel" hidden aria-hidden="true"></div>
       <div id="dns-egress-panel" hidden aria-hidden="true"></div>
       <div id="dns-threat-panel" hidden aria-hidden="true"></div>
       <div id="dns-multipoint-panel" hidden aria-hidden="true"></div>
+      <div id="dns-threats-log" hidden aria-hidden="true"></div>
+      <div id="dns-dhcp-leases" hidden aria-hidden="true"></div>
+      <div id="dns-dhcp-events" hidden aria-hidden="true"></div>
     </div>
   </section>
 
@@ -3243,6 +3249,7 @@
   <script defer src="/assets/signals-field.js"></script>
   <script defer src="/assets/dns-dashboard.js"></script>
   <script defer src="/assets/outside-tools.js"></script>
+  <script defer src="/assets/field-inspector.js"></script>
   <script defer src="/assets/field-drive-dashboard.js"></script>
   <script defer src="/assets/us-dashboard.js"></script>
   <script>
@@ -3608,7 +3615,8 @@
       if (key === "field_radio") return typeof val === "object" && (val.schema === "field-radio-catcher/v1" || (val.station_menu || []).length > 0);
       if (key === "field_dns") {
         return typeof val === "object" && (
-          val.schema === "field-dns/v1"
+          val.schema === "field-dns/v2"
+          || val.schema === "field-dns/v1"
           || val.rfc_matrix != null
           || val.threat_model != null
           || val.traffic_patterns != null
@@ -3672,8 +3680,14 @@
           badge.className = "tab-load-pct";
           btn.appendChild(badge);
         }
-        badge.className = `tab-load-pct ${pct >= 100 ? "ready" : (fetching ? "loading" : "")}`;
-        badge.textContent = `${pct}%`;
+        const partialKeys = (TAB_LOAD_MODULES[panel]?.keys || []).filter((k) => slicePartialState.has(k));
+        badge.className = `tab-load-pct ${pct >= 100 && !partialKeys.length ? "ready" : (fetching || partialKeys.length ? "loading" : "")}`;
+        badge.textContent = partialKeys.length ? `${pct}% · partial` : `${pct}%`;
+        if (partialKeys.length) {
+          btn.title = `Partial data: ${partialKeys.join(", ")} — retry or check daemon`;
+        } else if (btn.title && btn.title.startsWith("Partial data:")) {
+          btn.title = btn.dataset.tip || "";
+        }
       });
       const subnav = $("panel-subnav");
       if (subnav) {
@@ -4225,6 +4239,7 @@
     }
 
     const tabPrefetchGen = new Map();
+    const slicePartialState = new Map();
 
     function slicesForTab(panel, sub) {
       const spec = TAB_LOAD_MODULES[panel];
@@ -8809,8 +8824,17 @@
       });
     }
 
+    function sliceLooksPartial(val) {
+      if (!val || typeof val !== "object") return true;
+      return Boolean(val._incomplete || val._partial || val.ok === false);
+    }
     function mergePanelSlice(key, val, gen) {
       if (gen !== panelSliceGeneration || val == null) return;
+      if (sliceLooksPartial(val)) {
+        slicePartialState.set(key, val._slice_reason || val.error || "partial_data");
+      } else {
+        slicePartialState.delete(key);
+      }
       const base = lastPanelData && typeof lastPanelData === "object" ? lastPanelData : {};
       lastPanelData = { ...base, [key]: val };
       window.lastPanelData = lastPanelData;
@@ -8822,10 +8846,29 @@
     async function fetchPanelSlice(slice, gen) {
       try {
         const res = await fetch(slice.url, { cache: "no-store" });
-        if (!res.ok || gen !== panelSliceGeneration) return;
+        if (gen !== panelSliceGeneration) return;
+        if (!res.ok) {
+          mergePanelSlice(slice.key, {
+            ok: false,
+            _incomplete: true,
+            _partial: true,
+            _slice_reason: `http_${res.status}`,
+            error: `HTTP ${res.status}`,
+          }, gen);
+          return;
+        }
         const val = parsePanelJson(await res.text());
         mergePanelSlice(slice.key, val, gen);
-      } catch (_) { /* slice loads independently */ }
+      } catch (err) {
+        if (gen !== panelSliceGeneration) return;
+        mergePanelSlice(slice.key, {
+          ok: false,
+          _incomplete: true,
+          _partial: true,
+          _slice_reason: "fetch_error",
+          error: String(err?.message || err || "fetch_error"),
+        }, gen);
+      }
     }
 
     function refreshActiveTabSlices(gen) {

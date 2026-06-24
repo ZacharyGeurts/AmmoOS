@@ -2,13 +2,15 @@
 """NEXUS Field DHCP — issue leases only; DNS option 6 → Truth Resolver."""
 from __future__ import annotations
 
+import atexit
+import fcntl
 import json
 import os
 import socket
 import struct
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -17,8 +19,15 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield
 PANEL_CACHE = STATE / "field-dhcp-panel.json"
 PID_FILE = STATE / "field-dhcp.pid"
 LEASE_FILE = STATE / "field-dhcp-leases.json"
+EVENTS_LOG = STATE / "field-dhcp-events.jsonl"
+EVENTS_LOG_MAX = 2000
+DHCP_LOCK = STATE / "field-dhcp.lock"
+_SERVE_LOCK_HANDLE = None
 
 PORT = 67
+DISCOVER_RATE: dict[str, list[float]] = {}
+DISCOVER_RATE_MAX = 12
+DISCOVER_RATE_WINDOW = 60.0
 def _dns_servers_v4() -> list[str]:
     raw = os.environ.get("NEXUS_FIELD_DHCP_DNS_IPV4", "127.0.0.1")
     hosts = [h.strip() for h in raw.split(",") if h.strip()]
@@ -38,7 +47,18 @@ POOL_START = os.environ.get("NEXUS_FIELD_DHCP_POOL_START", "192.168.50.100")
 POOL_END = os.environ.get("NEXUS_FIELD_DHCP_POOL_END", "192.168.50.200")
 BIND_IF = os.environ.get("NEXUS_FIELD_DHCP_BIND", "0.0.0.0")
 
-_stats = {"discover": 0, "offer": 0, "request": 0, "ack": 0, "rejected": 0, "started_at": ""}
+_stats = {
+    "discover": 0,
+    "offer": 0,
+    "request": 0,
+    "ack": 0,
+    "rejected": 0,
+    "threat_rejects": 0,
+    "conflicts_detected": 0,
+    "declines": 0,
+    "started_at": "",
+}
+_threats: list[dict[str, Any]] = []
 
 
 def _now() -> str:
@@ -67,18 +87,88 @@ def _int_to_ip(n: int) -> str:
     return socket.inet_ntoa(struct.pack("!I", n & 0xFFFFFFFF))
 
 
-def _next_lease(mac: str) -> str:
+def _lease_expiry(leased_at: str) -> tuple[str, int]:
+    try:
+        dt = datetime.strptime(leased_at[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        dt = datetime.now(timezone.utc)
+    exp = dt + timedelta(seconds=LEASE_SEC)
+    remaining = max(0, int((exp - datetime.now(timezone.utc)).total_seconds()))
+    return exp.strftime("%Y-%m-%dT%H:%M:%SZ"), remaining
+
+
+def _append_event(event: str, mac: str, ip: str = "", reason: str = "") -> None:
+    row = {"ts": _now(), "event": event, "mac": mac, "ip": ip, "reason": reason}
+    EVENTS_LOG.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with EVENTS_LOG.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        lines = EVENTS_LOG.read_text(encoding="utf-8", errors="replace").splitlines()
+        if len(lines) > EVENTS_LOG_MAX:
+            EVENTS_LOG.write_text("\n".join(lines[-EVENTS_LOG_MAX:]) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _record_threat(reason: str, ip: str, mac: str, action: str = "reject") -> None:
+    _stats["threat_rejects"] = int(_stats.get("threat_rejects") or 0) + 1
+    row = {"reason": reason, "ip": ip, "mac": mac, "action": action, "ts": _now()}
+    _threats.append(row)
+    if len(_threats) > 100:
+        del _threats[:-100]
+    _append_event("threat_reject", mac, ip, reason)
+
+
+def _discover_rate_ok(mac: str) -> bool:
+    now = time.time()
+    hits = [t for t in DISCOVER_RATE.get(mac, []) if now - t <= DISCOVER_RATE_WINDOW]
+    DISCOVER_RATE[mac] = hits
+    if len(hits) >= DISCOVER_RATE_MAX:
+        return False
+    hits.append(now)
+    DISCOVER_RATE[mac] = hits
+    return True
+
+
+def _pool_valid(ip: str) -> bool:
+    try:
+        n = _ip_to_int(ip)
+        return _ip_to_int(POOL_START) <= n <= _ip_to_int(POOL_END)
+    except OSError:
+        return False
+
+
+def _next_lease(mac: str, *, renew: bool = False) -> str:
     leases = _load_json(LEASE_FILE, {"leases": {}})
     pool = leases.setdefault("leases", {})
+    now = _now()
     if mac in pool:
-        return pool[mac]["ip"]
+        entry = pool[mac]
+        entry["last_seen"] = now
+        entry["renewals"] = int(entry.get("renewals") or 0) + (1 if renew else 0)
+        exp, rem = _lease_expiry(str(entry.get("leased_at") or now))
+        entry["expires_at"] = exp
+        entry["remaining_seconds"] = rem
+        entry["dns"] = DNS_SERVERS
+        _save_json(LEASE_FILE, leases)
+        return str(entry.get("ip") or POOL_START)
     start = _ip_to_int(POOL_START)
     end = _ip_to_int(POOL_END)
     used = {_ip_to_int(v["ip"]) for v in pool.values() if v.get("ip")}
     for n in range(start, end + 1):
         if n not in used:
             ip = _int_to_ip(n)
-            pool[mac] = {"ip": ip, "leased_at": _now(), "dns": DNS_SERVERS}
+            exp, rem = _lease_expiry(now)
+            pool[mac] = {
+                "ip": ip,
+                "leased_at": now,
+                "expires_at": exp,
+                "remaining_seconds": rem,
+                "renewals": 0,
+                "declines": 0,
+                "last_seen": now,
+                "dns": DNS_SERVERS,
+            }
             _save_json(LEASE_FILE, leases)
             return ip
     return POOL_START
@@ -161,10 +251,12 @@ def _handle(data: bytes, addr: tuple[str, int]) -> bytes | None:
         mod = _guard_mod()
         if mod.is_permanently_blocked(client):
             _stats["rejected"] += 1
+            _record_threat("permanent_block", addr[0], client, "reject")
             return None
         ok, reason = mod.listen_before_reject(client_key=client, packet_len=len(data))
         if not ok:
             _stats["rejected"] += 1
+            _record_threat(reason or "flood", addr[0], client, "reject")
             mod.eradicate_threat(client_key=client, reason=reason, vector="DDOS_FLOOD")
             return None
     except Exception:
@@ -175,16 +267,34 @@ def _handle(data: bytes, addr: tuple[str, int]) -> bytes | None:
     chaddr = data[28:44]
     mac = ":".join(f"{b:02x}" for b in chaddr[:6])
     if msg_type == 1:
+        if not _discover_rate_ok(mac):
+            _stats["rejected"] += 1
+            _record_threat("discover_rate_limit", addr[0], mac, "reject")
+            return None
         _stats["discover"] += 1
         ip = _next_lease(mac)
+        if not _pool_valid(ip):
+            _stats["rejected"] += 1
+            _stats["conflicts_detected"] = int(_stats.get("conflicts_detected") or 0) + 1
+            _append_event("pool_conflict", mac, ip, "invalid_pool_ip")
+            return None
         _stats["offer"] += 1
+        _append_event("offer", mac, ip)
         return _build_reply(2, xid, ip, chaddr)
     if msg_type == 3:
         _stats["request"] += 1
-        ip = _next_lease(mac)
+        ip = _next_lease(mac, renew=True)
+        if not _pool_valid(ip):
+            _stats["rejected"] += 1
+            return None
         _stats["ack"] += 1
+        _append_event("ack", mac, ip)
         return _build_reply(5, xid, ip, chaddr)
+    if msg_type == 7:
+        _stats["declines"] = int(_stats.get("declines") or 0) + 1
+        _append_event("decline", mac, "", "client_decline")
     _stats["rejected"] += 1
+    _append_event("reject", mac, "", f"msg_type_{msg_type}")
     return None
 
 
@@ -224,15 +334,101 @@ def _may_serve_dhcp() -> bool:
         return True
 
 
+def _release_serve_lock() -> None:
+    global _SERVE_LOCK_HANDLE
+    try:
+        PID_FILE.unlink(missing_ok=True)
+    except OSError:
+        pass
+    if _SERVE_LOCK_HANDLE is not None:
+        try:
+            fcntl.flock(_SERVE_LOCK_HANDLE.fileno(), fcntl.LOCK_UN)
+            _SERVE_LOCK_HANDLE.close()
+        except OSError:
+            pass
+        _SERVE_LOCK_HANDLE = None
+
+
+def _acquire_serve_lock() -> bool:
+    global _SERVE_LOCK_HANDLE
+    DHCP_LOCK.parent.mkdir(parents=True, exist_ok=True)
+    if PID_FILE.is_file():
+        try:
+            old = int(PID_FILE.read_text(encoding="utf-8").strip().split()[0])
+            os.kill(old, 0)
+            return False
+        except (OSError, ValueError):
+            PID_FILE.unlink(missing_ok=True)
+    try:
+        handle = open(DHCP_LOCK, "w", encoding="utf-8")
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return False
+    except OSError:
+        return False
+    handle.write(f"{os.getpid()}\n")
+    handle.flush()
+    _SERVE_LOCK_HANDLE = handle
+    atexit.register(_release_serve_lock)
+    return True
+
+
 def serve() -> int:
     if not _may_serve_dhcp():
         build_panel()
-        time.sleep(15)
+        from nexus_await import await_seconds
+
+        await_seconds(15, STATE)
+        return 0
+    if not _acquire_serve_lock():
+        from nexus_await import await_seconds
+
+        await_seconds(5, STATE)
         return 0
     _stats["started_at"] = _now()
     PID_FILE.write_text(f"{os.getpid()}\n", encoding="utf-8")
     _loop()
     return 0
+
+
+def _lease_history(limit: int = 100) -> list[dict[str, Any]]:
+    if not EVENTS_LOG.is_file():
+        return []
+    rows: list[dict[str, Any]] = []
+    try:
+        for line in EVENTS_LOG.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
+            if not line.strip():
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    except OSError:
+        pass
+    return list(reversed(rows[-limit:]))
+
+
+def _leases_detailed(raw: dict[str, Any], limit: int = 200) -> list[dict[str, Any]]:
+    pool = raw.get("leases") or {}
+    rows: list[dict[str, Any]] = []
+    for mac, entry in pool.items():
+        if not isinstance(entry, dict):
+            continue
+        leased_at = str(entry.get("leased_at") or "")
+        exp, rem = _lease_expiry(leased_at) if leased_at else ("", 0)
+        rows.append({
+            "mac": mac,
+            "ip": entry.get("ip"),
+            "leased_at": leased_at,
+            "expires_at": entry.get("expires_at") or exp,
+            "remaining_seconds": entry.get("remaining_seconds", rem),
+            "renewals": int(entry.get("renewals") or 0),
+            "declines": int(entry.get("declines") or 0),
+            "last_seen": entry.get("last_seen"),
+            "dns": entry.get("dns") or DNS_SERVERS,
+        })
+    rows.sort(key=lambda r: int(r.get("remaining_seconds") or 0))
+    return rows[:limit]
 
 
 def build_panel() -> dict[str, Any]:
@@ -251,11 +447,15 @@ def build_panel() -> dict[str, Any]:
             running = True
         except (OSError, ValueError):
             running = False
+    detailed = _leases_detailed(leases, 200)
+    events = _lease_history(100)
+    pool_count = len(leases.get("leases") or {})
     doc = {
-        "schema": "field-dhcp/v1",
+        "schema": "field-dhcp/v2",
         "updated": _now(),
         "running": running,
         "may_serve": may_serve,
+        "takeover": takeover,
         "takeover_phase": takeover.get("phase") or "observing",
         "motto": "DHCP issues only — DNS option 6 → NEXUS Truth Resolver.",
         "bind": f"{BIND_IF}:{PORT}",
@@ -264,8 +464,27 @@ def build_panel() -> dict[str, Any]:
         "dns_option_v6": DNS_SERVERS_V6,
         "lease_seconds": LEASE_SEC,
         "stats": dict(_stats),
-        "leases": list(leases.get("leases", {}).items())[:48],
-        "lease_count": len(leases.get("leases") or {}),
+        "stats_extended": {
+            "discovers": int(_stats.get("discover") or 0),
+            "offers": int(_stats.get("offer") or 0),
+            "acks": int(_stats.get("ack") or 0),
+            "rejects": int(_stats.get("rejected") or 0),
+            "threat_rejects": int(_stats.get("threat_rejects") or 0),
+            "conflicts_detected": int(_stats.get("conflicts_detected") or 0),
+            "declines": int(_stats.get("declines") or 0),
+        },
+        "leases": list(leases.get("leases", {}).items())[:200],
+        "leases_detailed": detailed,
+        "lease_history_events": events,
+        "lease_count": pool_count,
+        "total_leases": pool_count,
+        "ipv6_skeleton": {
+            "enabled": False,
+            "pool": "fe80::/64",
+            "dns_option_v6": DNS_SERVERS_V6,
+            "note": "IPv4-first serve path — IPv6 lease schema reserved",
+        },
+        "threats": list(_threats)[-50:],
         "hostess7": {
             "inside": f"LAN DHCP → {', '.join(DNS_SERVERS)} DNS · IPv6 field {', '.join(DNS_SERVERS_V6)}",
             "outside": "No DHCP on WAN — DNS admin ports 7/77/777 read-only",

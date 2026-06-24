@@ -298,14 +298,23 @@
     renderEgress(fd);
     renderThreatGuard(fd);
     renderMultipoint(fd);
+    renderThreatsLog(fd);
+    renderDhcpLeases(fd);
+    renderDhcpEvents(fd);
     const to = $("dns-takeover-panel")?.innerHTML || "";
     const eg = $("dns-egress-panel")?.innerHTML || "";
     const tg = $("dns-threat-panel")?.innerHTML || "";
     const mp = $("dns-multipoint-panel")?.innerHTML || "";
+    const threats = $("dns-threats-log")?.innerHTML || "";
+    const leases = $("dns-dhcp-leases")?.innerHTML || "";
+    const events = $("dns-dhcp-events")?.innerHTML || "";
     el.innerHTML = `<div class="dns-ops-grid">
       <section class="dns-ops-section"><h5>Graceful takeover</h5>${to}</section>
       <section class="dns-ops-section"><h5>Egress integrity</h5>${eg}</section>
       <section class="dns-ops-section"><h5>Threat guard</h5>${tg}</section>
+      <section class="dns-ops-section"><h5>Threat events</h5>${threats}</section>
+      <section class="dns-ops-section"><h5>DHCP leases</h5>${leases}</section>
+      <section class="dns-ops-section"><h5>DHCP events</h5>${events}</section>
       <section class="dns-ops-section"><h5>Multipoint secure ID</h5>${mp}</section>
     </div>`;
   }
@@ -346,20 +355,50 @@
       ${br.love_note ? `<p class="dns-briefing-love">${esc(br.love_note)}</p>` : ""}`;
   }
 
+  function fmtQps(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) return "0";
+    return n < 10 ? n.toFixed(2) : n.toFixed(1);
+  }
+
+  function fmtMs(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) return "—";
+    return n < 100 ? `${n.toFixed(1)} ms` : `${Math.round(n)} ms`;
+  }
+
+  function fmtRemaining(sec) {
+    const s = Number(sec);
+    if (!Number.isFinite(s) || s < 0) return "—";
+    if (s < 60) return `${s}s`;
+    if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`;
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return `${h}h ${m}m`;
+  }
+
   function renderOpsStrip(fd) {
     const el = $("dns-ops-strip");
     if (!el) return;
     const st = fd.stats || {};
     const br = fd.engineer_briefing?.quick_facts || {};
-    const qPct = st.queries ? Math.round(((st.cache_hits || 0) / st.queries) * 100) : 0;
-    const errPct = st.queries ? Math.round(((st.errors || 0) / st.queries) * 100) : 0;
+    const queries = st.queries_total ?? st.queries ?? 0;
+    const qPct = queries ? Math.round(((st.cache_hits || 0) / queries) * 100) : 0;
+    const errPct = queries ? Math.round(((st.errors || 0) / queries) * 100) : 0;
+    const cache = fd.cache || {};
+    const hitRate = cache.hit_rate != null ? `${Math.round(cache.hit_rate * 100)}%` : `${qPct}%`;
     const items = [
-      ["Queries", st.queries ?? 0, ""],
-      ["Cache hits", st.cache_hits ?? 0, `${qPct}% hit rate`],
-      ["Blocked", st.blocked ?? 0, "NXDOMAIN policy"],
+      ["Queries", queries, ""],
+      ["QPS 60s", fmtQps(st.qps_60s), "rolling window"],
+      ["QPS 5m", fmtQps(st.qps_5m), "rolling window"],
+      ["Avg latency", fmtMs(st.avg_latency_ms), "from query log"],
+      ["Cache hits", st.cache_hits ?? 0, `${hitRate} hit rate`],
+      ["Cache misses", st.cache_misses ?? 0, "resolver path"],
+      ["Blocked", st.blocks ?? st.blocked ?? 0, "NXDOMAIN policy"],
+      ["Rate limits", st.rate_limits ?? 0, "threat guard"],
       ["Errors", st.errors ?? 0, `${errPct}% SERVFAIL`],
-      ["Cache entries", fd.cache_entries ?? br.cache_entries ?? 0, "in-memory TTL"],
-      ["Blocklist", fd.blocklist_domains ?? br.blocklist_domains ?? 0, "domains"],
+      ["Cache entries", fd.cache?.size ?? fd.cache_entries ?? br.cache_entries ?? 0, "in-memory TTL"],
+      ["Blocklist", fd.blocklists?.domains ?? fd.blocklist_domains ?? br.blocklist_domains ?? 0, "domains"],
       ["Internet slots", fd.internet_slots ?? br.internet_slots ?? 0, "WHOLE field"],
       ["Recognized", fd.internet_recognized ?? br.internet_recognized ?? 0, `${fd.internet_coverage_pct ?? 0}% coverage`],
       ["RFC enforced", `${br.rfc_enforced ?? 0}/${br.rfc_total ?? fd.rfc_matrix?.length ?? 0}`, ""],
@@ -447,12 +486,118 @@
       return;
     }
     el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
-      <th>Time</th><th>QNAME</th><th>Answers</th><th>Strength</th>
+      <th>Time</th><th>QNAME</th><th>Answers</th><th>Latency</th><th>Status</th>
+    </tr></thead><tbody>${rows.map((r) => {
+      const reason = r.reason || r.status || (r.blocked ? "blocked" : "");
+      const chip = reason === "blocked" || reason === "block"
+        ? '<span class="dns-chip dns-chip-warn">blocked</span>'
+        : reason === "rate_limit"
+          ? '<span class="dns-chip dns-chip-warn">rate limit</span>'
+          : reason
+            ? `<span class="meta">${esc(reason)}</span>`
+            : '<span class="dns-chip dns-chip-ok">ok</span>';
+      return `<tr>
+      <td class="meta">${esc((r.ts || "").slice(11, 19) || "—")}</td>
+      <td><strong>${esc(r.qname || r.name || "—")}</strong></td>
+      <td class="meta">${(r.answers || []).map((a) => `<code>${esc(a)}</code>`).join(" ") || "—"}</td>
+      <td class="meta">${fmtMs(r.latency_ms ?? r.latency)}</td>
+      <td>${chip}</td>
+    </tr>`;
+    }).join("")}</tbody></table>
+    <div class="dns-table-foot meta">Showing ${rows.length} recent · schema ${esc(fd.schema || "field-dns/v1")}</div>`;
+  }
+
+  function renderTopDomains(fd) {
+    const el = $("dns-top-domains");
+    if (!el) return;
+    const top = fd.top_domains || {};
+    const entries = Object.entries(top).sort((a, b) => b[1] - a[1]).slice(0, 25);
+    if (!entries.length) {
+      el.innerHTML = '<div class="empty">No domain volume yet — queries populate top_domains from JSONL.</div>';
+      return;
+    }
+    const max = entries[0][1] || 1;
+    el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
+      <th>Domain</th><th>Queries</th><th>Share</th>
+    </tr></thead><tbody>${entries.map(([dom, cnt]) => {
+      const pct = Math.round((cnt / max) * 100);
+      return `<tr>
+        <td><strong>${esc(dom)}</strong></td>
+        <td>${esc(String(cnt))}</td>
+        <td><div class="dns-strength-cell"><span class="dns-strength-bar" style="width:${pct}%"></span></div></td>
+      </tr>`;
+    }).join("")}</tbody></table>`;
+  }
+
+  function renderThreatsLog(fd) {
+    const el = $("dns-threats-log");
+    if (!el) return;
+    const dnsThreats = fd.threats || [];
+    const dhcpThreats = (fd.servers?.dhcp?.threats || fd.dhcp_server?.threats || []).map((t) => ({
+      ...t,
+      type: t.type || "dhcp_reject",
+    }));
+    const rows = [...dnsThreats, ...dhcpThreats].slice(0, 50);
+    if (!rows.length) {
+      el.innerHTML = '<div class="meta">No threat events — rate limits, blocks, and poison anomalies log here.</div>';
+      return;
+    }
+    el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
+      <th>Time</th><th>Type</th><th>Target</th><th>Count</th><th>Detail</th>
+    </tr></thead><tbody>${rows.map((t) => `<tr>
+      <td class="meta">${esc((t.last || t.ts || "").slice(11, 19) || "—")}</td>
+      <td><span class="dns-chip dns-chip-warn">${esc(t.type || t.action || "threat")}</span></td>
+      <td class="meta">${esc(t.client || t.ip || t.mac || "—")}</td>
+      <td>${esc(String(t.count ?? "—"))}</td>
+      <td class="meta">${esc(t.reason || t.detail || "—")}</td>
+    </tr>`).join("")}</tbody></table>`;
+  }
+
+  function renderDhcpLeases(fd) {
+    const el = $("dns-dhcp-leases");
+    if (!el) return;
+    const dhcp = fd.servers?.dhcp || fd.dhcp_server || {};
+    const rows = fd.dhcp_leases_detailed || dhcp.leases_detailed || [];
+    const ext = dhcp.stats_extended || {};
+    if (!rows.length) {
+      el.innerHTML = `<div class="meta">No active leases · pool ${esc(dhcp.pool?.start || "—")}–${esc(dhcp.pool?.end || "—")}</div>
+        <div class="dns-ops-strip" style="margin-top:8px;">
+          <div class="dns-ops-card"><span class="dns-ops-label">Discovers</span><strong>${esc(String(ext.discovers ?? 0))}</strong></div>
+          <div class="dns-ops-card"><span class="dns-ops-label">Offers</span><strong>${esc(String(ext.offers ?? 0))}</strong></div>
+          <div class="dns-ops-card"><span class="dns-ops-label">Acks</span><strong>${esc(String(ext.acks ?? 0))}</strong></div>
+          <div class="dns-ops-card"><span class="dns-ops-label">Threat rejects</span><strong>${esc(String(ext.threat_rejects ?? 0))}</strong></div>
+        </div>`;
+      return;
+    }
+    el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
+      <th>MAC</th><th>IP</th><th>Expires</th><th>Remaining</th><th>Renewals</th><th>DNS</th>
+    </tr></thead><tbody>${rows.map((r) => `<tr>
+      <td><code>${esc(r.mac || "—")}</code></td>
+      <td><code>${esc(r.ip || "—")}</code></td>
+      <td class="meta">${esc((r.expires_at || "").slice(11, 19) || "—")}</td>
+      <td>${esc(fmtRemaining(r.remaining_seconds))}</td>
+      <td>${esc(String(r.renewals ?? 0))}</td>
+      <td class="meta">${(r.dns || []).map((d) => `<code>${esc(d)}</code>`).join(" ") || "—"}</td>
+    </tr>`).join("")}</tbody></table>
+    <div class="dns-table-foot meta">${rows.length} leases · ${esc(String(ext.conflicts_detected ?? 0))} conflicts · ${esc(String(ext.threat_rejects ?? 0))} threat rejects</div>`;
+  }
+
+  function renderDhcpEvents(fd) {
+    const el = $("dns-dhcp-events");
+    if (!el) return;
+    const rows = fd.dhcp_events || fd.servers?.dhcp?.lease_history_events || fd.dhcp_server?.lease_history_events || [];
+    if (!rows.length) {
+      el.innerHTML = '<div class="meta">No DHCP events yet — discover/offer/ack/reject log to JSONL.</div>';
+      return;
+    }
+    el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
+      <th>Time</th><th>Event</th><th>MAC</th><th>IP</th><th>Reason</th>
     </tr></thead><tbody>${rows.map((r) => `<tr>
       <td class="meta">${esc((r.ts || "").slice(11, 19) || "—")}</td>
-      <td><strong>${esc(r.qname || "—")}</strong></td>
-      <td class="meta">${(r.answers || []).map((a) => `<code>${esc(a)}</code>`).join(" ") || "—"}</td>
-      <td>${esc(String(r.strength ?? "—"))}%</td>
+      <td><span class="dns-chip dns-chip-meta">${esc(r.event || r.type || "—")}</span></td>
+      <td><code>${esc(r.mac || "—")}</code></td>
+      <td><code>${esc(r.ip || "—")}</code></td>
+      <td class="meta">${esc(r.reason || "—")}</td>
     </tr>`).join("")}</tbody></table>`;
   }
 
@@ -731,7 +876,25 @@
   function renderDnsStats(fd) {
     const el = $("dns-stats");
     if (!el) return;
-    el.innerHTML = "";
+    const st = fd.stats || {};
+    const dnssec = fd.dnssec || {};
+    const tp = fd.traffic_patterns || {};
+    const dnsTp = tp.dns || {};
+    const qps60 = st.qps_60s ?? dnsTp.qps_60s ?? 0;
+    const qps5 = st.qps_5m ?? dnsTp.qps_5m ?? 0;
+    const lat = st.avg_latency_ms ?? dnsTp.avg_latency_ms ?? 0;
+    const dnssecOn = dnssec.enabled === true;
+    const dnssecCls = dnssecOn ? "dns-ok" : "dns-warn";
+    const egressOk = tp.egress_integrity_ok !== false;
+    el.innerHTML = [
+      `<div class="dns-stat"><span class="meta">QPS 60s</span><strong>${esc(fmtQps(qps60))}</strong></div>`,
+      `<div class="dns-stat"><span class="meta">QPS 5m</span><strong>${esc(fmtQps(qps5))}</strong></div>`,
+      `<div class="dns-stat"><span class="meta">Avg latency</span><strong>${esc(fmtMs(lat))}</strong></div>`,
+      `<div class="dns-stat"><span class="meta">DNSSEC</span><strong class="${dnssecCls}">${dnssecOn ? "enabled" : "stub"}</strong> <span class="meta">${esc(String(dnssec.validations ?? 0))} ok · ${esc(String(dnssec.failures ?? 0))} fail</span></div>`,
+      `<div class="dns-stat"><span class="meta">DHCP leases</span><strong>${esc(String(tp.dhcp_lease_count ?? fd.servers?.dhcp?.lease_count ?? 0))}</strong></div>`,
+      `<div class="dns-stat"><span class="meta">Egress integrity</span><strong class="${egressOk ? "dns-ok" : "dns-warn"}">${egressOk ? "ok" : "check"}</strong></div>`,
+      `<div class="dns-stat dns-stat--spark" aria-hidden="true" title="QPS sparkline placeholder"><span class="meta">QPS trend</span><div class="dns-sparkline" style="width:100%;height:18px;background:linear-gradient(90deg, rgba(77,232,138,0.15) ${clamp(Math.round(qps60 * 8), 4, 100)}%, transparent 0)"></div></div>`,
+    ].join("");
   }
 
   function renderDnsField(fd, panel) {
@@ -752,6 +915,7 @@
     renderRealityModel(fd);
     renderInternetField(fd);
     renderRecentQueries(fd);
+    renderTopDomains(fd);
     renderForeignBlocked(fd);
     renderRfcTable(fd);
     renderLegalTable(fd);

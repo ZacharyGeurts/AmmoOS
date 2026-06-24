@@ -214,12 +214,32 @@ def _panel_slice(
     if isinstance(val, dict) and _slice_populated(key, val):
         out = dict(val)
         out["_field_cache"] = True
+        out.setdefault("_incomplete", False)
+        out.setdefault("_partial", False)
         return out
-    if live and isinstance(live, dict) and live:
+    live_ok = (
+        isinstance(live, dict)
+        and live
+        and not live.get("error")
+        and live.get("ok") is not False
+    )
+    if live_ok and (_slice_populated(key, live) or live.get("schema")):
         out = dict(live)
         out["_field_cache"] = False
+        out.setdefault("_incomplete", False)
+        out.setdefault("_partial", False)
         return out
-    return dict(default or {})
+    reason = "cache_miss_live_fail"
+    if isinstance(live, dict) and live:
+        reason = str(live.get("error") or live.get("detail") or "live_fail")
+    out = dict(default or {})
+    out["_incomplete"] = True
+    out["_partial"] = True
+    out["_slice_reason"] = reason
+    out["_slice_key"] = key
+    out.setdefault("ok", False)
+    out.setdefault("error", reason)
+    return out
 
 
 def _sudo_available() -> bool:
@@ -1081,7 +1101,6 @@ class Handler(BaseHTTPRequestHandler):
             )
             self._send(200, json.dumps(payload), "application/json")
             return
-
         if path == "/api/hostess7-master-sim":
             payload = _nexus_py_json(
                 INSTALL_ROOT / "lib" / "hostess7-master-sim.py",
@@ -1149,7 +1168,7 @@ class Handler(BaseHTTPRequestHandler):
             payload = _panel_slice(
                 "field_dns",
                 live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"]),
-                default={"schema": "field-dns/v1"},
+                default={"schema": "field-dns/v2"},
             )
             self._send(200, json.dumps(payload), "application/json")
             return

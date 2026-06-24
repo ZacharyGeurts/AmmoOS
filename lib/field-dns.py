@@ -7,6 +7,8 @@ dig +trace from root hints — no shortcut public DNS.
 """
 from __future__ import annotations
 
+import atexit
+import fcntl
 import json
 import os
 import re
@@ -16,7 +18,12 @@ import subprocess
 import sys
 import threading
 import time
+from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from nexus_await import await_seconds  # noqa: E402
 from typing import Any
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
@@ -32,6 +39,14 @@ CACHE_TTL = int(os.environ.get("NEXUS_FIELD_DNS_CACHE_TTL", "300"))
 IPV4 = os.environ.get("NEXUS_FIELD_DNS_IPV4", "127.0.0.1")
 IPV6 = os.environ.get("NEXUS_FIELD_DNS_IPV6", "::1")
 PORT = int(os.environ.get("NEXUS_FIELD_DNS_PORT", "53"))
+QUERY_LOG = STATE / "field-dns-queries.jsonl"
+QUERY_LOG_MAX = 5000
+RECENT_PANEL_LIMIT = 200
+DNS_LOCK = STATE / "field-dns.lock"
+_SERVE_LOCK_HANDLE = None
+_threat_events: list[dict[str, Any]] = []
+_poison_anomalies = 0
+_dnssec = {"enabled": True, "validations": 0, "failures": 0, "stub": True}
 
 
 def _bind_hosts_v4() -> list[str]:
@@ -50,11 +65,19 @@ QTYPE_MAP = {1: "A", 28: "AAAA", 5: "CNAME", 15: "MX", 16: "TXT"}
 
 _cache: dict[str, tuple[float, list[str]]] = {}
 _cache_lock = threading.Lock()
-_stats = {"queries": 0, "blocked": 0, "cache_hits": 0, "errors": 0, "started_at": ""}
+_stats = {
+    "queries": 0,
+    "blocked": 0,
+    "cache_hits": 0,
+    "cache_misses": 0,
+    "errors": 0,
+    "rate_limits": 0,
+    "started_at": "",
+}
 
 
 def _now() -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -249,11 +272,16 @@ def _resolve(qname: str, qtype: int, blocked: set[str]) -> tuple[list[str], str]
             _stats["cache_hits"] += 1
             return hit[1], "cache"
     answers = _resolve_trace(qname, qtype_name)
+    _stats["cache_misses"] = int(_stats.get("cache_misses") or 0) + 1
     if answers:
         with _cache_lock:
             _cache[key] = (now + CACHE_TTL, answers)
         try:
-            _integrity_mod().verify_dns_answer(qname, qtype_name, answers)
+            chk = _integrity_mod().verify_dns_answer(qname, qtype_name, answers)
+            if isinstance(chk, dict) and chk.get("exact_match") is False:
+                global _poison_anomalies
+                _poison_anomalies += 1
+                _record_threat_event("poison", qname, "integrity_mismatch")
         except Exception:
             pass
         try:
@@ -272,15 +300,140 @@ def _resolve(qname: str, qtype: int, blocked: set[str]) -> tuple[list[str], str]
     return [], "miss"
 
 
-def _handle_query(data: bytes, blocked: set[str]) -> bytes | None:
+def _record_threat_event(kind: str, target: str, detail: str) -> None:
+    row = {"type": kind, "target": target, "detail": detail, "ts": _now(), "count": 1}
+    _threat_events.append(row)
+    if len(_threat_events) > 200:
+        del _threat_events[:-200]
+
+
+def _append_query_log(row: dict[str, Any]) -> None:
+    QUERY_LOG.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with QUERY_LOG.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        lines = QUERY_LOG.read_text(encoding="utf-8", errors="replace").splitlines()
+        if len(lines) > QUERY_LOG_MAX:
+            QUERY_LOG.write_text("\n".join(lines[-QUERY_LOG_MAX:]) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _parse_query_ts(ts: str) -> float:
+    try:
+        return datetime.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).timestamp()
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def _read_query_log(limit: int = QUERY_LOG_MAX) -> list[dict[str, Any]]:
+    if not QUERY_LOG.is_file():
+        return []
+    rows: list[dict[str, Any]] = []
+    try:
+        for line in QUERY_LOG.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
+            if not line.strip():
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    except OSError:
+        pass
+    return rows
+
+
+def _query_analytics() -> dict[str, Any]:
+    rows = _read_query_log()
+    now = time.time()
+    last_60 = [r for r in rows if now - _parse_query_ts(str(r.get("ts") or "")) <= 60]
+    last_300 = [r for r in rows if now - _parse_query_ts(str(r.get("ts") or "")) <= 300]
+    latencies = [float(r["latency_ms"]) for r in rows if r.get("latency_ms") is not None]
+    top = Counter(str(r.get("qname") or "").lower().rstrip(".") for r in rows if r.get("qname")).most_common(20)
+    queries_total = int(_stats.get("queries") or 0)
+    cache_hits = int(_stats.get("cache_hits") or 0)
+    return {
+        "qps_60s": round(len(last_60) / 60, 2) if last_60 else 0.0,
+        "qps_5m": round(len(last_300) / 300, 2) if last_300 else 0.0,
+        "avg_latency_ms": round(sum(latencies) / len(latencies), 1) if latencies else 0.0,
+        "top_domains": dict(top),
+        "cache_hit_rate": round(100 * cache_hits / max(queries_total, 1), 1),
+    }
+
+
+def _dnssec_status() -> dict[str, Any]:
+    enabled = os.environ.get("NEXUS_FIELD_DNS_DNSSEC", "1") == "1"
+    if enabled:
+        try:
+            proc = subprocess.run(
+                ["dig", "+dnssec", "+time=3", "+tries=1", "+noall", "+answer", "example.com", "A"],
+                capture_output=True,
+                text=True,
+                timeout=8,
+                check=False,
+            )
+            out = (proc.stdout or "") + (proc.stderr or "")
+            if "ad" in out.lower() or "rrsig" in out.lower():
+                _dnssec["validations"] = int(_dnssec.get("validations") or 0) + 1
+            elif proc.returncode != 0:
+                _dnssec["failures"] = int(_dnssec.get("failures") or 0) + 1
+        except (OSError, subprocess.TimeoutExpired):
+            _dnssec["failures"] = int(_dnssec.get("failures") or 0) + 1
+    return {
+        "enabled": enabled,
+        "validations": int(_dnssec.get("validations") or 0),
+        "failures": int(_dnssec.get("failures") or 0),
+        "stub": True,
+    }
+
+
+def _threats_summary() -> list[dict[str, Any]]:
+    by_type: dict[str, dict[str, Any]] = {}
+    for row in _threat_events:
+        kind = str(row.get("type") or "unknown")
+        slot = by_type.setdefault(kind, {"type": kind, "count": 0, "last": row.get("ts")})
+        slot["count"] += 1
+        slot["last"] = row.get("ts") or slot["last"]
+    if _poison_anomalies:
+        slot = by_type.setdefault("poison", {"type": "poison", "count": 0, "last": _now()})
+        slot["count"] += _poison_anomalies
+    if int(_stats.get("rate_limits") or 0):
+        by_type.setdefault("rate_limit", {
+            "type": "rate_limit",
+            "count": int(_stats.get("rate_limits") or 0),
+            "last": _now(),
+        })
+    if int(_stats.get("blocked") or 0):
+        by_type.setdefault("block", {
+            "type": "block",
+            "count": int(_stats.get("blocked") or 0),
+            "last": _now(),
+        })
+    return list(by_type.values())
+
+
+def _handle_query(data: bytes, blocked: set[str], client: str = "") -> bytes | None:
     parsed = _parse_query(data)
     if not parsed:
         return None
     txn_id, qname, qtype, qclass = parsed
     _stats["queries"] += 1
+    t0 = time.time()
     answers, reason = _resolve(qname, qtype, blocked)
+    latency_ms = round((time.time() - t0) * 1000, 1)
+    _append_query_log({
+        "ts": _now(),
+        "qname": qname,
+        "qtype": QTYPE_MAP.get(qtype, str(qtype)),
+        "answers": answers[:8],
+        "reason": reason,
+        "client": client,
+        "latency_ms": latency_ms,
+        "blocked": reason == "blocked",
+    })
     if reason == "blocked":
         _stats["blocked"] += 1
+        _record_threat_event("block", qname, "blocklist")
         return _build_response(txn_id, qname, qtype, qclass, [], rcode=3)
     if not answers:
         _stats["errors"] += 1
@@ -318,12 +471,14 @@ def _udp_loop(family: int, host: str) -> None:
                 client_key=client, packet_len=len(data), qtype=qtype_peek,
             )
             if not ok:
+                _stats["rate_limits"] = int(_stats.get("rate_limits") or 0) + 1
+                _record_threat_event("rate_limit", client, reason or "flood")
                 guard.eradicate_threat(client_key=client, reason=reason, vector="DDOS_FLOOD")
                 continue
         except Exception:
             pass
         try:
-            resp = _handle_query(data, blocked)
+            resp = _handle_query(data, blocked, client=client)
         except Exception:
             _stats["errors"] += 1
             continue
@@ -368,21 +523,49 @@ def _multipoint_mod() -> Any:
     return mod
 
 
+def _release_serve_lock() -> None:
+    global _SERVE_LOCK_HANDLE
+    try:
+        PID_FILE.unlink(missing_ok=True)
+    except OSError:
+        pass
+    if _SERVE_LOCK_HANDLE is not None:
+        try:
+            fcntl.flock(_SERVE_LOCK_HANDLE.fileno(), fcntl.LOCK_UN)
+            _SERVE_LOCK_HANDLE.close()
+        except OSError:
+            pass
+        _SERVE_LOCK_HANDLE = None
+
+
 def _acquire_serve_lock() -> bool:
     """Single resolver instance — duplicate binds cause silent query loss."""
+    global _SERVE_LOCK_HANDLE
+    DNS_LOCK.parent.mkdir(parents=True, exist_ok=True)
     if PID_FILE.is_file():
         try:
             old = int(PID_FILE.read_text(encoding="utf-8").strip().split()[0])
             os.kill(old, 0)
             return False
         except (OSError, ValueError):
-            pass
+            PID_FILE.unlink(missing_ok=True)
+    try:
+        handle = open(DNS_LOCK, "w", encoding="utf-8")
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return False
+    except OSError:
+        return False
+    handle.write(f"{os.getpid()}\n")
+    handle.flush()
+    _SERVE_LOCK_HANDLE = handle
+    atexit.register(_release_serve_lock)
     return True
 
 
 def serve() -> int:
     if not _acquire_serve_lock():
-        time.sleep(10)
+        await_seconds(5, STATE)
         return 0
     _stats["started_at"] = _now()
     listeners: list[str] = []
@@ -402,7 +585,7 @@ def serve() -> int:
     for t in threads:
         t.start()
     while True:
-        time.sleep(30)
+        await_seconds(5, STATE)
         try:
             _multipoint_mod().build_identity(running=True)
         except Exception:
@@ -437,23 +620,25 @@ def _planetary_mod() -> Any:
     return mod
 
 
-def _recent_queries(limit: int = 48) -> list[dict[str, Any]]:
+def _recent_queries(limit: int = RECENT_PANEL_LIMIT) -> list[dict[str, Any]]:
+    rows = _read_query_log(limit * 2)
+    if rows:
+        return list(reversed(rows[-limit:]))
     hints = STATE / "field-dns-cache-hints.jsonl"
-    rows: list[dict[str, Any]] = []
+    legacy: list[dict[str, Any]] = []
     if not hints.is_file():
-        return rows
+        return legacy
     try:
-        lines = hints.read_text(encoding="utf-8", errors="replace").splitlines()
-        for line in lines[-limit:]:
+        for line in hints.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
             if not line.strip():
                 continue
             try:
-                rows.append(json.loads(line))
+                legacy.append(json.loads(line))
             except json.JSONDecodeError:
                 continue
     except OSError:
         pass
-    return list(reversed(rows[-limit:]))
+    return list(reversed(legacy[-limit:]))
 
 
 def _engineer_briefing(
@@ -509,6 +694,14 @@ def _engineer_briefing(
             "title": "Elevated SERVFAIL rate",
             "detail": f"{stats.get('errors', 0)} errors on {stats.get('queries', 0)} queries — check dig +trace path.",
             "action": "Inspect field-dns.json stats; verify root reachability",
+        })
+    if int(stats.get("rate_limits") or 0) > 0:
+        alerts.append({
+            "level": "medium",
+            "code": "dns_rate_limit",
+            "title": "DNS rate-limit events",
+            "detail": f"{stats.get('rate_limits', 0)} client floods rejected — threat guard active.",
+            "action": "Review dns-threat-guard permanent blocks",
         })
     if (internet_field.get("total_slots") or 0) and (internet_field.get("recognized_slots") or 0) == 0:
         alerts.append({
@@ -815,13 +1008,34 @@ def build_panel() -> dict[str, Any]:
         },
     }
     briefing = _engineer_briefing(srv, planetary, multipoint, internet_field, takeover)
-    recent = _recent_queries()
+    recent = _recent_queries(RECENT_PANEL_LIMIT)
+    analytics = _query_analytics()
+    dnssec = _dnssec_status()
+    threats = _threats_summary()
     traffic_patterns = _build_traffic_patterns(srv, dhcp, egress, threat_guard, recent)
+    traffic_patterns["dns"]["qps_60s"] = analytics.get("qps_60s", 0)
+    traffic_patterns["dns"]["qps_5m"] = analytics.get("qps_5m", 0)
+    traffic_patterns["dns"]["avg_latency_ms"] = analytics.get("avg_latency_ms", 0)
+    traffic_patterns["dhcp_lease_count"] = int(dhcp.get("lease_count") or 0)
+    traffic_patterns["egress_integrity_ok"] = egress.get("healthy", True) is not False
     threat_model = _build_threat_model(
         planetary, multipoint, threat_guard, takeover, dhcp, srv, briefing,
     )
+    base_stats = {**(srv.get("stats") or {}), **(planetary.get("stats") or {})}
+    panel_stats = {
+        "queries_total": int(base_stats.get("queries") or 0),
+        "cache_hits": int(base_stats.get("cache_hits") or 0),
+        "cache_misses": int(base_stats.get("cache_misses") or 0),
+        "blocks": int(base_stats.get("blocked") or 0),
+        "errors": int(base_stats.get("errors") or 0),
+        "rate_limits": int(base_stats.get("rate_limits") or 0),
+        "qps_60s": analytics.get("qps_60s", 0),
+        "qps_5m": analytics.get("qps_5m", 0),
+        "avg_latency_ms": analytics.get("avg_latency_ms", 0),
+        **base_stats,
+    }
     doc: dict[str, Any] = {
-        "schema": "field-dns/v1",
+        "schema": "field-dns/v2",
         "updated": _now(),
         "title": "NEXUS Truth DNS & DHCP",
         "running": bool(srv.get("running")),
@@ -831,10 +1045,20 @@ def build_panel() -> dict[str, Any]:
         "listeners": srv.get("listeners") or [f"{IPV4}#{PORT}", f"[{IPV6}]#{PORT}"],
         "ipv4": srv.get("ipv4") or {"host": IPV4, "port": PORT},
         "ipv6": srv.get("ipv6") or {"host": IPV6, "port": PORT},
-        "stats": {
-            **(srv.get("stats") or {}),
-            **(planetary.get("stats") or {}),
+        "stats": panel_stats,
+        "top_domains": analytics.get("top_domains") or {},
+        "cache": {
+            "size": srv.get("cache_entries", len(_cache)),
+            "hit_rate": analytics.get("cache_hit_rate", 0),
+            "ttl_default": CACHE_TTL,
         },
+        "blocklists": {
+            "domains": srv.get("blocklist_domains", len(_load_blocklist())),
+            "last_reload": _now(),
+            "sources": [str(BLOCKLIST), str(EXTRA_BLOCK)],
+        },
+        "dnssec": dnssec,
+        "threats": threats,
         "blocklist_domains": srv.get("blocklist_domains", len(_load_blocklist())),
         "cache_entries": srv.get("cache_entries", len(_cache)),
         "foreign_resolvers_stopped": True,
@@ -878,10 +1102,16 @@ def build_panel() -> dict[str, Any]:
                 "running": bool(dhcp.get("running")),
                 "bind": dhcp.get("bind"),
                 "lease_count": dhcp.get("lease_count", 0),
+                "may_serve": dhcp.get("may_serve", True),
                 "dns_option": dhcp.get("dns_option") or ["127.0.0.1"],
                 "dns_option_v6": dhcp.get("dns_option_v6") or ["::1"],
+                "leases_detailed": dhcp.get("leases_detailed") or [],
+                "stats_extended": dhcp.get("stats_extended") or {},
+                "threats": dhcp.get("threats") or [],
             },
         },
+        "dhcp_leases_detailed": dhcp.get("leases_detailed") or [],
+        "dhcp_events": dhcp.get("lease_history_events") or [],
     }
     tmp = PANEL_CACHE.with_suffix(".tmp")
     tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
