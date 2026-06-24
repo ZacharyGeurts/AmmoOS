@@ -42,12 +42,30 @@
     const pol = fd.resolver_policy || {};
     const resolv = fd.resolv || {};
     const listeners = (fd.listeners || []).map((l) => `<code>${esc(l)}</code>`).join(" · ") || "—";
+    const mp = fd.multipoint_identity || {};
+    const points = fd.identification_points || mp.identification_points || [];
+    const override = fd.dns_override_active ?? mp.override?.resolv?.nexus_override_active;
+    const mpRows = points.length
+      ? `<table class="honor-table dns-table" style="margin-top:10px;"><thead><tr>
+        <th>Point</th><th>Listener</th><th>Role</th><th>Fingerprint</th>
+      </tr></thead><tbody>${points.map((p) => `<tr>
+        <td><strong>${esc(p.id)}</strong></td>
+        <td><code>${esc(p.listener || p.address)}</code></td>
+        <td>${esc(p.role)}</td>
+        <td class="meta"><code>${esc(String(p.secure_fingerprint || "").slice(0, 16))}…</code></td>
+      </tr>`).join("")}</tbody></table>`
+      : "";
     el.innerHTML = `<div class="dns-server-grid">
-      <div><span class="meta">Listeners (loopback only · RFC 6761)</span><div style="margin-top:6px;">${listeners}</div></div>
+      <div><span class="meta">Local capture · all requests → NEXUS Truth</span><div style="margin-top:6px;">
+        ${listeners}</div>
+        ${override ? '<span class="dns-chip dns-chip-ok">resolv override active</span>' : '<span class="dns-chip dns-chip-warn">override pending</span>'}
+      </div>
+      <div><span class="meta">Multipoint secure ID (${points.length} trusted)</span>${mpRows}</div>
       <div><span class="meta">Trace policy</span><div><strong>${pol.no_shortcut_public_dns ? "dig +trace from root" : "—"}</strong></div></div>
       <div><span class="meta">QTYPE support (RFC 1035 §4.1.3)</span><div>${(pol.qtypes_supported || []).map((q) => `<code>${esc(q)}</code>`).join(" ")}</div></div>
       <div><span class="meta">/etc/resolv.conf</span><div>${(resolv.nameservers || []).map((n) => `<code>${esc(n)}</code>`).join(" ") || "—"}
-        ${resolv.nexus_truth_enforced ? ' <span class="dns-chip dns-chip-ok">NEXUS enforced</span>' : ' <span class="dns-chip dns-chip-warn">foreign DNS</span>'}</div></div>
+        ${resolv.nexus_truth_enforced || override ? ' <span class="dns-chip dns-chip-ok">NEXUS enforced</span>' : ' <span class="dns-chip dns-chip-warn">foreign DNS</span>'}</div></div>
+      <div><span class="meta">Untrusted resolvers</span><div class="meta">Never added — ${esc((mp.untrusted_never_added || []).slice(0, 4).join(", "))}…</div></div>
       <div><span class="meta">DoT/DoH bypass (RFC 7858 / RFC 8484)</span><div><strong>${esc(pol.dot_doh_bypass || "blocked")}</strong></div></div>
       <div><span class="meta">Blocklist domains</span><div><strong>${esc(fd.blocklist_domains ?? 0)}</strong></div></div>
     </div>`;
@@ -58,7 +76,7 @@
     if (!el) return;
     const rows = fd.rfc_matrix || [];
     if (!rows.length) {
-      el.innerHTML = '<div class="empty">RFC matrix loading…</div>';
+      el.innerHTML = '<div class="meta">RFC matrix — click Refresh DNS field to rebuild from seed.</div>';
       return;
     }
     el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
@@ -78,7 +96,7 @@
     if (!el) return;
     const rows = fd.legal_framework || [];
     if (!rows.length) {
-      el.innerHTML = '<div class="empty">Legal framework loading…</div>';
+      el.innerHTML = '<div class="meta">Legal framework — click Refresh DNS field to rebuild from seed.</div>';
       return;
     }
     el.innerHTML = `<table class="honor-table dns-table"><thead><tr>

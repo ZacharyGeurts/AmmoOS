@@ -162,5 +162,8 @@ while true; do
   if [[ "${NEXUS_ADBLOCK:-0}" == "1" ]]; then
     nexus_adblock_apply 2>/dev/null || true
   fi
+  if declare -f nexus_field_dns_enforce_cycle >/dev/null 2>&1; then
+    nexus_field_dns_enforce_cycle
+  fi
   sleep "${NEXUS_VIGIL_MAINTAIN_INTERVAL:-300}"
 done

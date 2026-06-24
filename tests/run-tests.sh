@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.3.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.4.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -298,7 +298,7 @@ test_dusty_midnight_theme() {
   grep -q 'us-host-machine' "$panel"
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
-  grep -q 'v7.3.0' "$panel"
+  grep -q 'v7.4.0' "$panel"
 }
 
 test_hostess_profile_module() {
@@ -1475,6 +1475,13 @@ test_field_dns_module() {
   grep -q 'RFC 1035' "${ROOT}/data/dns-legal-rfc-seed.json"
   grep -q '18 U.S.C' "${ROOT}/data/dns-legal-rfc-seed.json"
   grep -q 'NEXUS_FIELD_DNS' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_FIELD_DNS_LOCAL_CAPTURE' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_FIELD_DNS_BINDS_IPV4' "${ROOT}/config/nexus.conf"
+  grep -q 'nexus_field_dns_enforce_cycle' "${ROOT}/lib/nexus-daemon.sh"
+  [[ -f "${ROOT}/lib/dns-multipoint-identity.py" ]]
+  [[ -f "${ROOT}/data/dns-multipoint-seed.json" ]]
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-multipoint-identity.py" build | grep -q 'dns-multipoint-identity/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-dns.py" build | grep -q 'field-dns/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \

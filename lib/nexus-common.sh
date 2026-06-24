@@ -2,7 +2,7 @@
 # NEXUS-Shield shared runtime — invisible to consumers, root-only state.
 # shellcheck disable=SC2034
 
-NEXUS_VERSION="7.3.0"
+NEXUS_VERSION="7.4.0"
 HOSTESS_VERSION="7"
 NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"

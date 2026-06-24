@@ -33,6 +33,18 @@ IPV4 = os.environ.get("NEXUS_FIELD_DNS_IPV4", "127.0.0.1")
 IPV6 = os.environ.get("NEXUS_FIELD_DNS_IPV6", "::1")
 PORT = int(os.environ.get("NEXUS_FIELD_DNS_PORT", "53"))
 
+
+def _bind_hosts_v4() -> list[str]:
+    raw = os.environ.get("NEXUS_FIELD_DNS_BINDS_IPV4", "127.0.0.1,127.0.0.53")
+    hosts = [h.strip() for h in raw.split(",") if h.strip()]
+    return hosts or [IPV4]
+
+
+def _bind_hosts_v6() -> list[str]:
+    raw = os.environ.get("NEXUS_FIELD_DNS_BINDS_IPV6", IPV6)
+    hosts = [h.strip() for h in raw.split(",") if h.strip()]
+    return hosts or [IPV6]
+
 QTYPE_MAP = {1: "A", 28: "AAAA", 5: "CNAME", 15: "MX", 16: "TXT"}
 
 _cache: dict[str, tuple[float, list[str]]] = {}
@@ -272,19 +284,43 @@ def _publish(extra: dict[str, Any] | None = None) -> None:
     tmp.replace(OUT_JSON)
 
 
+def _multipoint_mod() -> Any:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "dns_multipoint_identity", INSTALL / "lib" / "dns-multipoint-identity.py",
+    )
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def serve() -> int:
     _stats["started_at"] = _now()
-    _publish({"running": True, "pid": os.getpid()})
+    listeners: list[str] = []
+    threads: list[threading.Thread] = []
+    for host in _bind_hosts_v4():
+        listeners.append(f"{host}#{PORT}")
+        threads.append(threading.Thread(target=_udp_loop, args=(socket.AF_INET, host), daemon=True))
+    for host in _bind_hosts_v6():
+        listeners.append(f"[{host}]#{PORT}")
+        threads.append(threading.Thread(target=_udp_loop, args=(socket.AF_INET6, host), daemon=True))
+    try:
+        _multipoint_mod().build_identity(running=True)
+    except Exception:
+        pass
+    _publish({"running": True, "pid": os.getpid(), "listeners": listeners})
     PID_FILE.write_text(f"{os.getpid()}\n", encoding="utf-8")
-    threads = [
-        threading.Thread(target=_udp_loop, args=(socket.AF_INET, IPV4), daemon=True),
-        threading.Thread(target=_udp_loop, args=(socket.AF_INET6, IPV6), daemon=True),
-    ]
     for t in threads:
         t.start()
     while True:
         time.sleep(30)
-        _publish({"running": True, "pid": os.getpid()})
+        try:
+            _multipoint_mod().build_identity(running=True)
+        except Exception:
+            pass
+        _publish({"running": True, "pid": os.getpid(), "listeners": listeners})
 
 
 def status() -> dict[str, Any]:
@@ -317,6 +353,11 @@ def _planetary_mod() -> Any:
 def build_panel() -> dict[str, Any]:
     srv = status()
     planetary = _planetary_mod().build_planetary_dns(extra={"server": srv})
+    multipoint: dict[str, Any] = {}
+    try:
+        multipoint = _multipoint_mod().build_identity(running=bool(srv.get("running")))
+    except Exception:
+        multipoint = {}
     doc: dict[str, Any] = {
         "schema": "field-dns/v1",
         "updated": _now(),
@@ -343,6 +384,9 @@ def build_panel() -> dict[str, Any]:
         "resolv": planetary.get("resolv") or {},
         "resolver_policy": planetary.get("resolver_policy") or {},
         "planetary_security_level": planetary.get("planetary_security_level"),
+        "multipoint_identity": multipoint,
+        "identification_points": multipoint.get("identification_points") or [],
+        "dns_override_active": (multipoint.get("override") or {}).get("resolv", {}).get("nexus_override_active"),
     }
     tmp = PANEL_CACHE.with_suffix(".tmp")
     tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

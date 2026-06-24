@@ -1,10 +1,16 @@
 #!/bin/bash
 # NEXUS-Shield release — tag and publish GitHub release.
+# Policy: every update is a full minor version (X.Y.0). Run bump-version.sh first.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-common.sh"
+
+if [[ ! "${NEXUS_VERSION}" =~ ^[0-9]+\.[0-9]+\.0$ ]]; then
+  echo "Release requires NEXUS_VERSION=X.Y.0 (got ${NEXUS_VERSION}). Use scripts/bump-version.sh" >&2
+  exit 1
+fi
 
 TAG="v${NEXUS_VERSION}"
 NOTES="${ROOT}/RELEASE-${NEXUS_VERSION}.md"

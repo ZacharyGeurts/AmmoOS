@@ -486,7 +486,7 @@ class Handler(BaseHTTPRequestHandler):
                 lines = 0
             payload = {
                 "ok": True,
-                "version": "7.3.0",
+                "version": "7.4.0",
                 "hostess_version": "7",
                 "pending": pending.is_file(),
                 "ingest_log_lines": lines,

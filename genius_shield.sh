@@ -71,7 +71,8 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/field-material-discern.py" "${ROOT}/lib/gps-precision.py" \
   "${ROOT}/lib/precision-field.py" "${ROOT}/lib/hostess-profile.py" "${ROOT}/lib/host-security-tier.py" \
   "${ROOT}/lib/field-dns.py" "${ROOT}/lib/dns-planetary-security.py" \
-  "${ROOT}/lib/dns-admin-portal.py" "${ROOT}/lib/equipment-room-field.py" 2>/dev/null || true
+  "${ROOT}/lib/dns-admin-portal.py" "${ROOT}/lib/equipment-room-field.py" \
+  "${ROOT}/lib/dns-multipoint-identity.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
   "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/field-dns.sh" "${ROOT}/lib/dns-admin-portal.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
