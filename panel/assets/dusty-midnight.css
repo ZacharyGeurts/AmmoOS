@@ -1,0 +1,266 @@
+/**
+ * Dusty Midnight v7.1 — warm dusty blues, bigger UI, scroll-friendly layouts.
+ */
+:root {
+  --dust-bg: #0c0b10;
+  --dust-panel: #14131a;
+  --dust-card: #1a1822;
+  --dust-border: #5a5568;
+  --dust-muted: #b8b0c8;
+  --dust-gold: #d4b86a;
+  --dust-glow: rgba(180, 160, 220, 0.22);
+  --text-base: 21px;
+  --text-sm: 0.92rem;
+  --text-xs: 0.82rem;
+  --ui-scale: 1.18;
+  --tab-pad-y: 16px;
+  --tab-pad-x: 22px;
+  --btn-pad-y: 12px;
+  --btn-pad-x: 18px;
+  --input-pad: 12px 14px;
+  --radius: 12px;
+}
+
+html.dusty-midnight {
+  font-size: var(--text-base);
+  scroll-behavior: smooth;
+}
+
+html.dusty-midnight body {
+  background:
+    radial-gradient(ellipse 140% 90% at 50% -30%, rgba(72, 58, 98, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 50% at 100% 20%, rgba(48, 42, 58, 0.4) 0%, transparent 50%),
+    linear-gradient(180deg, #0e0d12 0%, #08070c 100%) !important;
+  color: #f2eef8;
+  overflow-x: hidden;
+}
+
+html.dusty-midnight header.app-header {
+  padding: 16px 28px !important;
+  background: linear-gradient(180deg, #1a1724 0%, #100e16 100%) !important;
+  border-bottom: 1px solid var(--dust-border) !important;
+}
+
+html.dusty-midnight header.app-header h1 {
+  font-size: 1.35rem !important;
+  letter-spacing: 0.04em;
+}
+
+html.dusty-midnight nav.menu {
+  padding: 0 20px !important;
+  gap: 6px !important;
+  background: #12101a !important;
+  border-bottom: 2px solid var(--dust-border) !important;
+  flex-wrap: wrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+html.dusty-midnight nav.menu button {
+  padding: var(--tab-pad-y) var(--tab-pad-x) !important;
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  border-bottom-width: 3px !important;
+  border-radius: 8px 8px 0 0;
+  min-height: 52px;
+}
+
+html.dusty-midnight nav.menu button.active {
+  color: #c8e0ff !important;
+  border-bottom-color: var(--dust-gold) !important;
+  background: linear-gradient(180deg, rgba(100, 80, 140, 0.15) 0%, rgba(60, 50, 80, 0.08) 100%) !important;
+  box-shadow: 0 -2px 16px var(--dust-glow);
+}
+
+html.dusty-midnight #panel-subnav button {
+  padding: 10px 16px !important;
+  font-size: 0.95rem !important;
+}
+
+html.dusty-midnight button,
+html.dusty-midnight .us-crossrefs button,
+html.dusty-midnight .view-jump-row button,
+html.dusty-midnight .conn-actions button {
+  padding: var(--btn-pad-y) var(--btn-pad-x) !important;
+  font-size: 0.95rem !important;
+  border-radius: 10px !important;
+  min-height: 44px;
+}
+
+html.dusty-midnight select,
+html.dusty-midnight input[type="search"],
+html.dusty-midnight input[type="text"],
+html.dusty-midnight input:not([type="checkbox"]):not([type="radio"]) {
+  padding: var(--input-pad) !important;
+  font-size: 1rem !important;
+  min-height: 48px;
+  border-radius: 10px !important;
+  border: 1px solid var(--dust-border) !important;
+  background: #12101a !important;
+}
+
+html.dusty-midnight select {
+  min-height: 52px;
+  padding-right: 36px !important;
+}
+
+html.dusty-midnight .toggle input {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+html.dusty-midnight .view {
+  min-height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding-bottom: 48px;
+}
+
+html.dusty-midnight .us-wrap,
+html.dusty-midnight .signals-wrap,
+html.dusty-midnight .honor-wrap,
+html.dusty-midnight .settings-wrap {
+  padding: 20px 28px 40px !important;
+  max-width: none;
+}
+
+html.dusty-midnight .us-hero {
+  background: linear-gradient(135deg, rgba(40, 34, 56, 0.9), rgba(24, 20, 32, 0.95)) !important;
+  border: 1px solid var(--dust-border) !important;
+  border-radius: 16px !important;
+  padding: 24px 28px !important;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dusty-midnight .us-title {
+  font-size: 1.75rem !important;
+}
+
+html.dusty-midnight .us-card {
+  border-radius: 14px !important;
+  padding: 18px 20px !important;
+  border: 1px solid var(--dust-border) !important;
+  background: var(--dust-card) !important;
+  margin-bottom: 16px;
+}
+
+html.dusty-midnight .us-card h4 {
+  font-size: 0.95rem !important;
+  letter-spacing: 0.1em !important;
+  color: var(--dust-gold) !important;
+  margin-bottom: 14px !important;
+}
+
+html.dusty-midnight .hostess-profile-card {
+  border: 1px solid rgba(180, 160, 220, 0.35);
+  border-radius: 16px;
+  padding: 22px 24px;
+  background: linear-gradient(145deg, #1c1828, #14121c);
+  margin-bottom: 20px;
+  box-shadow: inset 0 0 40px rgba(80, 60, 120, 0.08);
+}
+
+html.dusty-midnight .host-machine-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(60, 48, 88, 0.5), rgba(30, 26, 40, 0.8));
+  border: 1px solid var(--dust-gold);
+  margin-bottom: 18px;
+}
+
+html.dusty-midnight .host-machine-banner img,
+html.dusty-midnight .host-machine-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: radial-gradient(circle, #3a3050, #1a1528);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+html.dusty-midnight .hostess-url-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+html.dusty-midnight .hostess-url-row input {
+  flex: 1;
+}
+
+html.dusty-midnight .hostess-url-row button {
+  min-width: 48px;
+  padding: 10px 14px !important;
+  font-size: 1.2rem !important;
+  font-weight: 700;
+}
+
+html.dusty-midnight .us-traffic-panel {
+  border-radius: 14px;
+  padding: 18px;
+  background: #100e16;
+  border: 1px solid var(--dust-border);
+  margin-bottom: 20px;
+}
+
+html.dusty-midnight #us-traffic-canvas {
+  width: 100%;
+  height: 200px;
+  display: block;
+  border-radius: 10px;
+  background: #08060c;
+}
+
+html.dusty-midnight .traffic-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+  font-size: 0.92rem;
+}
+
+html.dusty-midnight .traffic-bar-track {
+  flex: 1;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+html.dusty-midnight .traffic-bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.4s ease;
+  background: linear-gradient(90deg, #6a8ab8, #9ab8e8);
+}
+
+html.dusty-midnight .traffic-bar-fill.threat {
+  background: linear-gradient(90deg, #a84868, #ff7a98);
+}
+
+html.dusty-midnight .settings-group h3 {
+  font-size: 1.05rem !important;
+}
+
+html.dusty-midnight .setting-row {
+  padding: 14px 0 !important;
+}
+
+html.dusty-midnight .honor-card,
+html.dusty-midnight .signals-panel,
+html.dusty-midnight .ggb-card {
+  border-radius: 14px !important;
+  padding: 16px 18px !important;
+}
+
+html.dusty-midnight .stat strong,
+html.dusty-midnight .signals-stat strong {
+  font-size: 1.25rem !important;
+}

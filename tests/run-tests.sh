@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.0.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.1.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -274,17 +274,44 @@ test_audio_train_module() {
 
 test_consumer_defaults() {
   nexus_settings_apply_consumer_defaults
-  [[ "$(nexus_settings_get NEXUS_PARANOIA_BLOCK)" == "0" ]]
-  [[ "$(nexus_settings_get NEXUS_FIREWALL_AUTO_BLOCK)" == "0" ]]
-  [[ "$(nexus_settings_get NEXUS_AUTOSANITIZE)" == "0" ]]
-  [[ "$(nexus_settings_get NEXUS_ADBLOCK)" == "0" ]]
+  [[ "$(nexus_settings_get NEXUS_PARANOIA_BLOCK)" == "1" ]]
+  [[ "$(nexus_settings_get NEXUS_FIREWALL_AUTO_BLOCK)" == "1" ]]
+  [[ "$(nexus_settings_get NEXUS_AUTOSANITIZE)" == "1" ]]
+  [[ "$(nexus_settings_get NEXUS_ADBLOCK)" == "1" ]]
   [[ "$(nexus_settings_get NEXUS_CONNECTION_GATEKEEPER)" == "1" ]]
-  [[ "$(nexus_settings_get NEXUS_SHADOW_WATCH)" == "0" ]]
-  [[ "$(nexus_settings_get NEXUS_ENTROPY_WATCH)" == "0" ]]
-  [[ "$(nexus_settings_get NEXUS_PRIVACY_GUARD)" == "0" ]]
+  [[ "$(nexus_settings_get NEXUS_SHADOW_WATCH)" == "1" ]]
+  [[ "$(nexus_settings_get NEXUS_ENTROPY_WATCH)" == "1" ]]
+  [[ "$(nexus_settings_get NEXUS_PRIVACY_GUARD)" == "1" ]]
+  [[ "$(nexus_settings_get NEXUS_HOSTESS7_CORROBORATE)" == "1" ]]
   [[ "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH)" == "1" ]]
   [[ "$(nexus_settings_get NEXUS_GATEKEEPER_STRICT_TRUST)" == "1" ]]
   [[ "$(nexus_settings_get NEXUS_PACKET_PERMISSION)" == "1" ]]
+}
+
+test_dusty_midnight_theme() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  [[ -f "${ROOT}/panel/assets/dusty-midnight.css" ]]
+  [[ -f "${ROOT}/panel/assets/us-dashboard.js" ]]
+  grep -q 'dusty-midnight' "$panel"
+  grep -q 'dusty-midnight.css' "$panel"
+  grep -q 'us-dashboard.js' "$panel"
+  grep -q 'us-host-machine' "$panel"
+  grep -q 'us-traffic-canvas' "$panel"
+  grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
+  grep -q 'v7.1.0' "$panel"
+}
+
+test_hostess_profile_module() {
+  [[ -f "${ROOT}/lib/hostess-profile.py" ]]
+  grep -q 'hostess-profile' "${ROOT}/lib/field-us-intel.py"
+  grep -q '/api/hostess-profile' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'hostess-url-add' "${ROOT}/panel/assets/us-dashboard.js"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/hostess-profile.py" json | grep -q 'hostess-profile/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/hostess-profile.py" save '{"display_name":"Test Op","address":"1 Main St","profile_kind":"business","urls":["https://example.com"]}' | grep -q '"display_name": "Test Op"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-us-intel.py" json | grep -q 'host_machine_explicit'
 }
 
 test_gatekeeper_strict_enforce() {
@@ -443,7 +470,7 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -qE 'v7\.0\.0|v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
+  grep -qE 'v7\.(0|1)\.0|v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
 }
 
 test_host_attack_module() {
@@ -519,7 +546,7 @@ test_panel_host_attack_ui() {
   grep -q 'checkNexusUpdate' "$panel"
   grep -q 'nexus-update-btn' "$panel"
   grep -q 'distance_label' "$panel"
-  grep -qE 'v(4|5)\.[0-9]+\.0' "$panel"
+  grep -qE 'v[4-7]\.[0-9]+\.[0-9]+' "$panel"
 }
 
 test_field_command_module() {
@@ -1408,7 +1435,9 @@ test_signals_field_module() {
 }
 
 run_test "signals field module" test_signals_field_module
-run_test "consumer everyday defaults" test_consumer_defaults
+run_test "consumer secure defaults" test_consumer_defaults
+run_test "dusty midnight v7.1 theme" test_dusty_midnight_theme
+run_test "hostess profile module" test_hostess_profile_module
 run_test "gatekeeper strict enforce in+out" test_gatekeeper_strict_enforce
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout
 run_test "panel v2.4 action buttons" test_panel_v24_actions

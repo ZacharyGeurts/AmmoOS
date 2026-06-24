@@ -101,26 +101,26 @@ nexus_settings_set() {
   return 0
 }
 
-# Everyday profile — email, YouTube, browsing; no auto-block, light watchers.
+# Secure profile — watchers and auto-block ON when they harden the field.
 nexus_settings_apply_consumer_defaults() {
   nexus_settings_init
   local kv key val
   for kv in \
-    NEXUS_PARANOIA_BLOCK=0 \
+    NEXUS_PARANOIA_BLOCK=1 \
     NEXUS_PARANOIA_MODE=1 \
-    NEXUS_FIREWALL_AUTO_BLOCK=0 \
-    NEXUS_AUTOSANITIZE=0 \
-    NEXUS_ADBLOCK=0 \
+    NEXUS_FIREWALL_AUTO_BLOCK=1 \
+    NEXUS_AUTOSANITIZE=1 \
+    NEXUS_ADBLOCK=1 \
     NEXUS_ADBLOCK_RESPECT_POLICY=1 \
     NEXUS_PANEL_AUTO_OPEN=1 \
     NEXUS_CONNECTION_GATEKEEPER=1 \
     NEXUS_PACKET_ORACLE=1 \
-    NEXUS_SHADOW_WATCH=0 \
-    NEXUS_ENTROPY_WATCH=0 \
+    NEXUS_SHADOW_WATCH=1 \
+    NEXUS_ENTROPY_WATCH=1 \
     NEXUS_BEHAVIOR_WATCH=1 \
-    NEXUS_PRIVACY_GUARD=0 \
+    NEXUS_PRIVACY_GUARD=1 \
     NEXUS_SHUTDOWN_GUARD=1 \
-    NEXUS_HOSTESS7_CORROBORATE=0 \
+    NEXUS_HOSTESS7_CORROBORATE=1 \
     NEXUS_ATTACK_KIT_AUTO_CRUSH=1 \
     NEXUS_FIELD_AUTO_REKILL=1 \
     NEXUS_GATEKEEPER_STRICT_TRUST=1 \
@@ -131,7 +131,7 @@ nexus_settings_apply_consumer_defaults() {
     nexus_settings_set "$key" "$val" || return 1
   done
   nexus_settings_set_str "NEXUS_ADBLOCK_POLICY" "annoyance" || return 1
-  nexus_log "INFO" "nexus-settings" "CONSUMER_DEFAULTS applied (everyday profile)"
+  nexus_log "INFO" "nexus-settings" "SECURE_DEFAULTS applied (dusty midnight secure profile)"
   return 0
 }
 

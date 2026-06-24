@@ -470,6 +470,18 @@ def build_us_field() -> dict[str, Any]:
         },
     }
     doc["observations"] = _observations(doc)
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "hostess_profile", INSTALL / "lib" / "hostess-profile.py",
+        )
+        if spec and spec.loader:
+            hp = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(hp)
+            doc = hp.attach_to_us_field(doc)
+    except Exception:
+        pass
     return doc
 
 

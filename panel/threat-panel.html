@@ -5,6 +5,7 @@
   <script>
     (function () {
       try {
+        document.documentElement.classList.add("dusty-midnight");
         if (localStorage.getItem("nexus_old_man") === "1") document.documentElement.classList.add("old-man");
         var raw = sessionStorage.getItem("nexus-field-v4") || sessionStorage.getItem("nexus-field-v3");
         if (raw) window.NEXUS_FIELD = JSON.parse(raw);
@@ -28,6 +29,7 @@
   <script defer src="/assets/field-material.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="stylesheet" href="/assets/nexus-theme.css" />
+  <link rel="stylesheet" href="/assets/dusty-midnight.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
     :root {
@@ -1584,8 +1586,8 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v7.0.0</h1>
-        <div class="brand-sub">Hostess 7 · HeavyBoi · MIT licensed</div>
+        <h1>NEXUS-Shield v7.1.0</h1>
+        <div class="brand-sub">Hostess 7 · Dusty Midnight · MIT licensed</div>
       </div>
     </div>
     <div class="header-right">
@@ -1604,7 +1606,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.0.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.1.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1697,11 +1699,18 @@
   <section id="view-us" class="view">
     <div class="us-wrap">
       <header class="us-hero" id="us-motto">
-        <h1 class="us-title">US · Page 1</h1>
-        <p class="us-subtitle" id="us-subtitle">This machine, known personally — every fact from local field tools only.</p>
+        <h1 class="us-title">US · You &amp; This Host</h1>
+        <p class="us-subtitle" id="us-subtitle">This machine explicitly remembered — name, address, URLs. Hostess knows you as person, business, or family.</p>
         <div id="us-meta" class="us-stats-bar">Sampling local field…</div>
         <div id="us-pills" class="us-hero-status"></div>
       </header>
+      <div id="us-host-machine"></div>
+      <div id="us-hostess-profile"></div>
+      <section class="us-traffic-panel">
+        <h4 style="margin:0 0 12px;color:var(--dust-gold,#d4b86a);letter-spacing:0.08em;text-transform:uppercase;">Traffic patterns · live bars</h4>
+        <canvas id="us-traffic-canvas" aria-label="Live connection traffic pattern graph"></canvas>
+        <div id="us-traffic-bars" style="margin-top:14px;"></div>
+      </section>
       <section id="us-observations" class="us-rundown-panel"><h3>Plain-English rundown</h3><div class="us-rundown"><div class="us-rundown-item"><p>Gathering ss · ip · proc · NEXUS state…</p></div></div></section>
       <div class="us-dashboard" id="us-grid">
         <div class="us-main">
@@ -2547,6 +2556,7 @@
 
   <script defer src="/assets/sdf-render.js"></script>
   <script defer src="/assets/signals-field.js"></script>
+  <script defer src="/assets/us-dashboard.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let currentLog = "alerts";
@@ -3073,6 +3083,9 @@
         if (global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
       }
       renderUSField(data.us_field);
+      if (currentSubView === "us" && data.us_field && global.paintUSTraffic) {
+        paintUSTraffic(data.us_field);
+      }
       renderDossiers(data.angel_dossiers);
       renderHumanDossiers(data.human_dossier);
       renderResearch(data.angel_research);
@@ -3197,20 +3210,20 @@
     }
 
     const CONSUMER_DEFAULTS = {
-      NEXUS_PARANOIA_BLOCK: 0,
+      NEXUS_PARANOIA_BLOCK: 1,
       NEXUS_PARANOIA_MODE: 1,
-      NEXUS_FIREWALL_AUTO_BLOCK: 0,
-      NEXUS_AUTOSANITIZE: 0,
-      NEXUS_ADBLOCK: 0,
+      NEXUS_FIREWALL_AUTO_BLOCK: 1,
+      NEXUS_AUTOSANITIZE: 1,
+      NEXUS_ADBLOCK: 1,
       NEXUS_PANEL_AUTO_OPEN: 1,
       NEXUS_CONNECTION_GATEKEEPER: 1,
       NEXUS_PACKET_ORACLE: 1,
-      NEXUS_SHADOW_WATCH: 0,
-      NEXUS_ENTROPY_WATCH: 0,
+      NEXUS_SHADOW_WATCH: 1,
+      NEXUS_ENTROPY_WATCH: 1,
       NEXUS_BEHAVIOR_WATCH: 1,
-      NEXUS_PRIVACY_GUARD: 0,
+      NEXUS_PRIVACY_GUARD: 1,
       NEXUS_SHUTDOWN_GUARD: 1,
-      NEXUS_HOSTESS7_CORROBORATE: 0,
+      NEXUS_HOSTESS7_CORROBORATE: 1,
       NEXUS_ATTACK_KIT_AUTO_CRUSH: 1,
       NEXUS_GATEKEEPER_STRICT_TRUST: 1,
       NEXUS_PACKET_PERMISSION: 1,
@@ -3284,7 +3297,7 @@
       }
       if (elWatch) {
         elWatch.innerHTML = `<strong>${watch}</strong> of ${SETTING_GROUPS.watchers.length} watchers ON` +
-          (watch >= 4 && watch <= 5 ? " — everyday profile (core helpers on)" : "");
+          (watch >= SETTING_GROUPS.watchers.length - 1 ? " — secure profile (watchers hardened)" : "");
       }
       if (elAb) {
         const pol = s.NEXUS_ADBLOCK_POLICY || ab.policy || "annoyance";
@@ -3303,7 +3316,7 @@
         ? "Packet permission v4.0 — DPI knows who and intent on every flow. Good traffic passes at zero nft cost; only harmful sections get blocked."
         : "Custom profile — your choices are saved on this machine. Rows below show ON (green edge) vs OFF (muted).";
       const chips = [
-        `<span class="chip profile">${everyday ? "Everyday profile" : "Custom profile"}</span>`,
+        `<span class="chip profile">${everyday ? "Secure profile" : "Custom profile"}</span>`,
         `<span class="chip ${prot ? "on" : "off"}">Protection ${prot}/${SETTING_GROUPS.protection.length}</span>`,
         `<span class="chip ${watch ? "on" : "off"}">Watchers ${watch}/${SETTING_GROUPS.watchers.length}</span>`,
         `<span class="chip ${abOn ? "on" : "off"}">Guardian ${abOn ? (s.NEXUS_ADBLOCK_POLICY || "annoyance") : "OFF"}</span>`,
@@ -6528,6 +6541,10 @@
         } else {
           storEl.innerHTML = '<span class="meta">Field storage catalog not in slim snapshot — full publish on /api/status.</span>';
         }
+      }
+      if (global.renderUSDashboard) {
+        const profileMounted = !!$("hostess-name");
+        renderUSDashboard(us, { trafficOnly: profileMounted });
       }
     }
 

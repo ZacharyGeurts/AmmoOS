@@ -24,7 +24,7 @@ a2037318da5915e0ae7d986434aab33c35a56f3f9f1eeea77d06cafd4eb264d7  /home/default/
 219d96bd45f9125e31bd05fe5b6a4f1d9ef2827e308948fa998219d0dbcb9189  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-rf-sentinel.sh
 fd50cebb01b0baca4055ca1cb50bd37643cafc8aefda7fad9bf307d701886a07  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-toolkit-db.py
 a232e01f433bd2370c424fbbb945c5e047a8a77659fc8352514cf50868ac5434  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-toolkit.sh
-25a37af33bce5f0190ceed638f60d0d3892414226a66e3567e221c26e94afe21  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-us-intel.py
+c0c63bda84f2a9425fbdd053283477c95fa244f6e82555333ffd61daf36951c0  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-us-intel.py
 1de349b463efd7da622dd85a407b9dd4dfa2d79192e42b9d044c4b2e98948ed4  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/field-us-intel.sh
 93a261ec9a6baa197af9711863be71a29d65973408ff7fe0620cefba05226e0d  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/firewall-sentinel.sh
 5b2568da4f316a87d2dfa099ccc9ac56a9714176e0e3f94d9736929315c38926  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/firewall-trust.sh
@@ -51,6 +51,7 @@ dccda8a106431644de3bdc93479a879cde8cf9f0738bd79ee7d1bd2011fb5033  /home/default/
 0d475beecfc6730c29c69e22c4bac9d56dfac1bc50a918a0ea604e804a5f6ee2  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/hostess7-bridge.sh
 4ee749c5e0a9c159a0d49e9b68fe1f636b8e6566eaee492bdd45109a26330975  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/hostess7-field.sh
 a8a22e9647e56fd60b2c627393dfa3845413ed3dfb6af892a6cd3338441dd142  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/hostess7-operator.sh
+1d4abb25d9777d676b20a56188692788895e21c26493dd798fb67807fd81e919  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/hostess-profile.py
 f2248270e6932125882c2338e97b2fbcdc07cefd20efbed2b841b745cb95c094  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/host-identity.py
 d537bffd41edc5d33fdfb878f2e1071ccbac7f378c0a17200872420dc9928120  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/hostility-priority.py
 8f56bfcefb06a41eae87478c779f96082d407bba996a62165d553b44adb3afdc  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/host-map-trash.sh
@@ -65,7 +66,7 @@ de90af3922e507a8dd219e4533083a3c0f57845522e0523da6d5328eeb4b2c93  /home/default/
 1a8d7930f7e0d3cffffc350d920d77092facec0387c0a1ab1e022d767213a235  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-daemon.sh
 274b99fe07a8655c8864167219fef20b0d579762102d9543ada5b86c84aee469  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-plugins.py
 e3151f04580365c86ecc87821a5a2d58a686d8087eb3c64697b0a5bdc1ceade9  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-plugins.sh
-892586d7e636c81e0cc7fa1d4b883c0059aab3d0176eab46f2bec3590017ffa4  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-settings.sh
+f94a2ff7b72a5f23b49abe10210e559888dbe9dbfc82f19bbf83f64a105ea266  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-settings.sh
 7da7fdb2f600c0b74d4d44d85d17d4260d5c44d17e19500e4e9224f5889141a0  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-update-lock.py
 2021f14022ad3a718d2eaf01bdcedd6d9a2147dd7cc5c4cbda8f31740dad315d  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-update-lock.sh
 b7120d36d91b1349519dad0681d4c9994c3a2beeab03cf37a8f83dd66fcabede  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/nexus-update.py
@@ -105,7 +106,7 @@ b2f898f68d695a4f7530d25ca93861b158f95ca01d3170124302c5f7599f74eb  /home/default/
 44787b0a75fe91f1b65bc26b5f9b5002070a2c8e17dfa13d4f1ae8f3fc3aea13  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/terror-spiderweb.sh
 e2bf4951d3f64fdc5dfb3034877ec95b6c6f930196f8c51e543e70ccae5750c4  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/thermal-earth-field.py
 7d9bdd35e82679bf5b12f82d39e539ae12ea326f3b614622c6a054dbed44cce5  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/threat-autosanitize.sh
-1fc45a055a6de4548c409885afe3f19a8588a0aa614c26020bbf1c48582d0856  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/threat-panel-http.py
+426184bc7c4dd131397d74f5c6f3d67da1acee74588375b5ae8f7e88444eb2a4  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/threat-panel-http.py
 8aa5145c6ddf2547a1a146bca65be40c855b5b8ce6463f5755a0d2a581a2bc32  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/threat-panel.sh
 25448e429b4a09f5ac117c6a7337174bbb7f2bd05af92aafbd61049ed6173409  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/threat-vectors.sh
 504dd654c4aa3d95596554b55d7740abbc24ea1a2d50563704eb1a745ffc277c  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/trust-strike-engine.py
@@ -113,6 +114,7 @@ e2bf4951d3f64fdc5dfb3034877ec95b6c6f930196f8c51e543e70ccae5750c4  /home/default/
 c0578fb248656a27230c284f2b11d5cc4ba1cedbb38d48b508af47463ddfbe24  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/vector-intel.py
 9afa7ca943246cffcbe6288fcd01cb308c014f388db3a34284f9601b8fea9c5f  /home/default/Desktop/SG/Latest/NEXUS-Shield/lib/vector-scour.sh
 a57ce893f995bee8ff8326292f5b3dbe501bbe7818b4db3992e11479a6fdea71  /home/default/Desktop/SG/Latest/NEXUS-Shield/bin/nexus
+439e613009e868058afdf94b8843605eab7ca312d6b1c176ee6b2a3013058f84  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/dusty-midnight.css
 a9f0088972dee0254610af851c4d6838ca3f2cf79176987e0a5713e2c15ec042  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/earth-satellite-2k.jpg
 e1873c3a4b1a68c14bf269bcd772c78fd1579213104606778b2a73e13ff52c9b  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/field-foundation.js
 ad686d24c7f671afb9923103d35d09dee3e36a65dbcfb56938252bc63d2fdbdb  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/field-material.js
@@ -135,8 +137,8 @@ bfc765d262d96b4b8e2d6da295008ebad1021df37e1dc39946d6a8e03a33f3a2  /home/default/
 d43df7dc1f06d39847965cb145ed5729ef099a88f74325c2fb583b836a99b3dc  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/precision-spiderweb.js
 d9bea1dc02a9f248326796f67cf97d078c76ace9132ddb1989d76cd8da3ab964  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/antenna-bloom.sdf.json
 384f791e6c6c2cd9b3add030940048093b4e0201e9bb7d339e8a28c7cab6260a  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/antenna-bloom.sdf.png
-3baaac41cae044b714e07092718af6d4432e9c09cc73f083fa805bcb99c9d1ef  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/earth-thermal.sdf.json
-0a417e7a6c8b1615dba165c38ffaae90cf4aeb5c30f1f43c2052e4cf07bfc6ca  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/earth-thermal.sdf.png
+9fbab4a1027829fdcb5d432eaa1777848fed3cb0e6177b362a30f916125354c2  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/earth-thermal.sdf.json
+29cd2b669ab1407538161b5617bbc7ef829bbc0a14027bd675842500a3b1fc1e  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/earth-thermal.sdf.png
 f7a10af53fbc88718fd3313c7f69d487942db6cea20c9de3823a462c2620c5c4  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/field-wave.sdf.json
 614879a5019842aef8fd3bb0676e391f150bded70918c631ea381ac5f1dca40b  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/field-wave.sdf.png
 78dd28d0d1f24823fc19724b2ab3f6b78793cc2acf4ad4b388e12998c5c125eb  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/globe-wireframe.sdf.json
@@ -145,7 +147,7 @@ f7a10af53fbc88718fd3313c7f69d487942db6cea20c9de3823a462c2620c5c4  /home/default/
 73bcc467bb759b9be85cb22c89e35867c72efa4b1d60f36ff44f9a8f5e86416e  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/globe-world.sdf.png
 c1db0210048415110432b6a33ed9a3f6466c55767bdff7bae7649998a0286282  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/legend-dot.sdf.json
 5b30f0aa07b04f3356401560bc2f497b01e546c7077fa03add03cf14b6ed5dd9  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/legend-dot.sdf.png
-1059ba861bf0c151aa712c42fc60d5a9bc293d8fb892033157cb51a690f2f72a  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/manifest.json
+8c4fa0bb21c1482ee658a4b3749135d1c95dbcb5243d5adcde867dc35736be6f  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/manifest.json
 7c1da9bcf588d299395e6327885110b32085252f22950f9161ece2e18e546317  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/pin-friendly.sdf.json
 4375c5a9503b998d808e1f83c275ae30c52bae4fba6a805a558540651556b84e  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/pin-friendly.sdf.png
 d410aa4c160dc61af98eceb6fc4cf7b619e97ce25e92654047fbe1bef2e05832  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/sdf/pin-hostile.sdf.json
@@ -158,7 +160,8 @@ d1815307ba108b4a4529bf4443839f93bfd7ce6a3c9f4347ac99c335ca2a4f16  /home/default/
 e6d3593803b42864e40d9aafec64fd60c650b2d3d235c6ddaa76dcc13708ee50  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/signals-field.js
 50214e52af229b0951ff60751dbc4b4f7a4f763cb8a669d74b3f7b4c02a305db  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/terror-spiderweb.js
 f0d11db29215e0fe65a0d2bd91f92061687d43f35f895ca8d0e4823343645130  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/thermal-earth.js
+a3f0cdd26f61728310b0abfaec62affd60cad6204f1eaf1fd3bf027b36df30da  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/assets/us-dashboard.js
 48c3696dbb348a901ec4ec4bb3ebd86ea71021056ccce257ac635643dcae2a4e  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/field.html
-bafaf61f62d1fee2170559f746ad73e4a5ef802eb0b51c5cf263f4c30db24e77  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/threat-panel.html
-b56abd486cf69d4cde7be8acbafa9c5203c69196aea43b5b66bc23d8a822de8d  /home/default/Desktop/SG/Latest/NEXUS-Shield/config/nexus.conf
+5d65408c9c4cb122ccd4e6141fa083e1305a0aa31f1a6160d7480f659b7f5743  /home/default/Desktop/SG/Latest/NEXUS-Shield/panel/threat-panel.html
+4498c34090444bce5b772b3a03786a7f6496f6d1f47ad0cf14e2ab3d808625ed  /home/default/Desktop/SG/Latest/NEXUS-Shield/config/nexus.conf
 4f8d5ec4dbe916c9c15c83e97dca2daf187caabaf5c9de965f0428b0633b0abf  /home/default/Desktop/SG/Latest/NEXUS-Shield/config/device-whitelist.conf
