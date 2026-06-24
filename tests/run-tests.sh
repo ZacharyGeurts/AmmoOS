@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.8.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.9.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -298,7 +298,7 @@ test_dusty_midnight_theme() {
   grep -q 'us-host-machine' "$panel"
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
-  grep -q 'v7.8.0' "$panel"
+  grep -q 'v7.9.0' "$panel"
 }
 
 test_hostess_profile_module() {
@@ -2053,10 +2053,42 @@ test_field_hardware_api() {
   grep -q 'signals-hardware-panel' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderHardware' "${ROOT}/panel/assets/signals-field.js"
   grep -q 'renderAudioQuality' "${ROOT}/panel/assets/signals-field.js"
-  grep -q 'NEXUS_VERSION="7.8.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.9.0"' "${ROOT}/lib/nexus-common.sh"
 }
 
-run_test "field hardware UI and API 7.8" test_field_hardware_api
+run_test "field hardware UI and API 7.9" test_field_hardware_api
+
+test_lethal_enforcement_79() {
+  [[ -f "${ROOT}/lib/lethal-enforcement.py" ]]
+  [[ -f "${ROOT}/lib/hostess7-lethal-insight.py" ]]
+  [[ -f "${ROOT}/lib/spatial-target-geometry.py" ]]
+  [[ -f "${ROOT}/data/lethal-enforcement-policy.json" ]]
+  grep -q '/api/lethal-enforcement' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/hostess7-lethal-insight' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'lethal-status' "${ROOT}/panel/threat-panel.html"
+  grep -q 'kill_tier = "lethal"' "${ROOT}/lib/connection-gatekeeper.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/spatial-target-geometry.py" classify '{"lat":45.85,"lon":-87.05,"kind":"terror"}' \
+    | grep -q 'spatial-target-geometry'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/lethal-enforcement.py" status | grep -q 'lethal'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 - <<'PY'
+import importlib.util, json
+from pathlib import Path
+root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
+spec = importlib.util.spec_from_file_location("lethal", root / "lib" / "lethal-enforcement.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+heaven = mod.classify_removal({"verdict": "USER_OK", "trust_rank": 1, "remote_ip": "1.2.3.4"})
+assert heaven["removal_level"] == "pass", heaven
+hell = mod.classify_removal({"verdict": "HARM_CANDIDATE", "hell_chosen": True, "kind": "terror", "remote_ip": "6.6.6.6", "lat": 45.85, "lon": -87.05})
+assert hell["removal_level"] in ("lethal", "total_removal", "strike"), hell
+print(json.dumps({"heaven": heaven["removal_level"], "hell": hell["removal_level"]}))
+PY
+}
+
+run_test "MERCILESS lethal enforcement 7.9" test_lethal_enforcement_79
 
 rm -rf "$NEXUS_STATE_DIR" /tmp/nexus-ent-rand.bin /tmp/nexus-ent-text.txt /tmp/nexus-shadow-t.txt "$NEXUS_ALERT_LOG" 2>/dev/null || true
 

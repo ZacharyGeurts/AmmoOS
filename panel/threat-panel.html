@@ -1729,7 +1729,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v7.8.0</h1>
+        <h1>NEXUS-Shield v7.9.0</h1>
         <div class="brand-sub" data-i18n="brand.sub">Hostess 7 · Dusty Midnight · MIT licensed</div>
       </div>
     </div>
@@ -1769,7 +1769,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.8.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.9.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1855,6 +1855,7 @@
         <div class="heaven-hell-stats" id="heaven-hell-stats">
           <span class="heaven-stat">Heaven: <em id="hh-heaven-count">0</em></span>
           <span class="hell-stat">Hell: <em id="hh-hell-count">0</em> · rip ready <em id="hh-rip-count">0</em></span>
+          <span class="hell-stat">MERCILESS: <em id="lethal-status">—</em> · Hostess7 <em id="h7-truth-score">—</em></span>
         </div>
       </div>
       <div id="command-permission-banner" class="intel-banner" style="margin-bottom:14px;"></div>
@@ -3425,6 +3426,7 @@
       if ($("hh-heaven-count")) $("hh-heaven-count").textContent = String(hh.heaven_count ?? 0);
       if ($("hh-hell-count")) $("hh-hell-count").textContent = String(hh.hell_count ?? 0);
       if ($("hh-rip-count")) $("hh-rip-count").textContent = String(hh.hell_chosen_count ?? 0);
+      refreshLethalBanner();
       const perm = cmd.packet_permission || {};
       const banner = $("command-permission-banner");
       if (banner) {
@@ -7929,6 +7931,24 @@
         }
         throw new Error("invalid panel JSON");
       }
+    }
+
+    async function refreshLethalBanner() {
+      try {
+        const [lethalRes, h7Res] = await Promise.all([
+          fetch("/api/lethal-enforcement", { cache: "no-store" }),
+          fetch("/api/hostess7-lethal-insight", { cache: "no-store" }),
+        ]);
+        const lethalDoc = await lethalRes.json();
+        const h7Doc = await h7Res.json();
+        if ($("lethal-status")) {
+          $("lethal-status").textContent = lethalDoc.status || (lethalDoc.merciless ? "LETHAL" : "—");
+        }
+        const truth = h7Doc.last_insight?.truth_score;
+        if ($("h7-truth-score")) {
+          $("h7-truth-score").textContent = truth != null ? `${truth}%` : "—";
+        }
+      } catch (_) { /* panel may boot before APIs warm */ }
     }
 
     async function refresh() {

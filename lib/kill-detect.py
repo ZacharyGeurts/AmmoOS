@@ -141,15 +141,30 @@ def execute(doc: dict[str, Any] | None = None, dry_run: bool = False) -> dict[st
             skipped.append({"ip": ip, "reason": reason, "heaven_protected": True})
             continue
         tier = t.get("kill_tier") or "block"
-        if t.get("hell_chosen"):
-            tier = "strike"
+        if t.get("hell_chosen") and tier in ("block", "strike"):
+            tier = "lethal" if t.get("soul_side") == "hell" else "strike"
         entry: dict[str, Any] = {"ip": ip, "tier": tier, "kill_reason": t.get("kill_reason"), "ok": False}
         if dry_run:
             entry["ok"] = True
             entry["dry_run"] = True
             executed.append(entry)
             continue
-        if tier in ("eradicate", "strike"):
+        lethal_py = INSTALL / "lib" / "lethal-enforcement.py"
+        if lethal_py.is_file() and tier in ("lethal", "strike") and t.get("hell_chosen"):
+            subprocess.run(
+                [
+                    "python3", str(lethal_py), "execute",
+                    json.dumps({**t, "ip": ip, "remote_ip": ip}),
+                ],
+                env={**os.environ, "NEXUS_STATE_DIR": str(STATE), "NEXUS_INSTALL_ROOT": str(INSTALL)},
+                timeout=45,
+                check=False,
+            )
+            entry["lethal_enforcement"] = True
+            entry["ok"] = True
+            executed.append(entry)
+            continue
+        if tier in ("eradicate", "strike", "lethal"):
             pid = str(t.get("pid") or "0")
             script = INSTALL / "lib" / "pest-arsenal.sh"
             if script.is_file() and pid.isdigit() and int(pid) > 0:

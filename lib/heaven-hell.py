@@ -163,6 +163,34 @@ def rip_hell(doc: dict[str, Any] | None = None) -> dict[str, Any]:
     doc = doc if doc is not None else _load_json(INTENT, {})
     import subprocess
 
+    lethal_py = INSTALL / "lib" / "lethal-enforcement.py"
+    if lethal_py.is_file():
+        proc = subprocess.run(
+            ["python3", str(lethal_py), "cycle"],
+            env={**os.environ, "NEXUS_STATE_DIR": str(STATE), "NEXUS_INSTALL_ROOT": str(INSTALL)},
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        if proc.stdout.strip():
+            try:
+                cycle = json.loads(proc.stdout)
+                if cycle.get("executed_count", 0) > 0:
+                    out = {
+                        "ok": True,
+                        "updated": _now(),
+                        "motto": MOTTO,
+                        "ripped_count": cycle.get("executed_count", 0),
+                        "spared_heaven": cycle.get("spared_heaven", []),
+                        "lethal_cycle": cycle,
+                        "no_friendly_fire": True,
+                    }
+                    OUT_JSON.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                    return out
+            except json.JSONDecodeError:
+                pass
+
     ripped: list[dict[str, Any]] = []
     spared: list[dict[str, Any]] = []
     for row in doc.get("connections") or []:

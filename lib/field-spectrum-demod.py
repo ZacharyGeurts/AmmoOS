@@ -69,6 +69,13 @@ def _import(name: str, rel: str) -> Any:
     return mod
 
 
+def _hazard_onset() -> Any | None:
+    path = INSTALL / "lib" / "field-hazard-onset.py"
+    if not path.is_file():
+        return None
+    return _import("field_hazard_onset", "field-hazard-onset.py")
+
+
 def _dbfs_to_linear(dbfs: float) -> float:
     return float(10.0 ** (dbfs / 20.0))
 
@@ -706,6 +713,14 @@ def capture_and_demod_tri_field(
     iq = _tri_field_coherent_iq(envelope, read, cfg, physics)
     ch = float(cfg["channel_hz"])
     iq_clean = perfect_reconstruct(iq, read, cfg)
+    hazard_block: dict[str, Any] = {}
+    hazard_mod = _hazard_onset()
+    if hazard_mod is not None:
+        guarded = hazard_mod.guard_capture(
+            iq_clean, read, cfg, fs=FS_IQ, station_id=sid,
+        )
+        iq_clean = guarded.get("iq", iq_clean)
+        hazard_block = {k: v for k, v in guarded.items() if k != "iq"}
     spectrum = analyze_spectrum(iq_clean, ch)
     audio = demod_iq(iq_clean, cfg)
     out_wav = wav_path or STATE / "field-antenna-catch.wav"
@@ -737,6 +752,7 @@ def capture_and_demod_tri_field(
         "physics": physics,
         "iq_path": str(iq_path),
         "wav_path": str(out_wav),
+        "hazard_onset": hazard_block or None,
     }
     _save_json(meta_path, meta)
     _save_json(spec_path, {"analysis": spectrum, "captured_at": _now(), "pipeline": "tri_field_fm_demod"})
@@ -762,6 +778,7 @@ def capture_and_demod_tri_field(
         "playing": bool(playback.get("ok")),
         "iq_path": str(iq_path),
         "capture": meta,
+        "hazard_onset": hazard_block or None,
     }
 
 

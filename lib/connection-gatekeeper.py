@@ -882,8 +882,11 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             verdict, block_rec, scores, rip, rport, proc, threats, peer_hist,
         )
         soul_side, hell_chosen = _soul_side(verdict, trust_rank, scores, kill_ok)
-        if hell_chosen and kill_tier == "block":
-            kill_tier = "strike"
+        if hell_chosen:
+            if verdict == "HARM_CANDIDATE" or int(scores.get("threat_linked", 0)) >= 6:
+                kill_tier = "lethal"
+            elif kill_tier == "block":
+                kill_tier = "strike"
         site_host = _infer_site_host(rip, intel)
         touch = _human_touch_policy(
             verdict, trust_rank, scores, soul_side, kill_ok, proc, ip_class, host=site_host,

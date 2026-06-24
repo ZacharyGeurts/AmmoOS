@@ -501,6 +501,21 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/field-hazard-onset":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-hazard-onset.py", ["panel"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/lethal-enforcement":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "lethal-enforcement.py", ["panel"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-lethal-insight":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-lethal-insight.py", ["panel"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/field-antenna":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
@@ -1371,6 +1386,23 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/terror-spiderweb/rebuild":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "terror-spiderweb.py", ["build"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/lethal-enforcement/cycle":
+            dry = body.get("dry_run") in (True, 1, "1", "true")
+            args = ["cycle"] + (["--dry-run"] if dry else [])
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "lethal-enforcement.py", args)
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/hostess7-lethal-insight/ask":
+            claim = str(body.get("claim") or "MERCILESS lethal heaven hell spatial trespass").strip()
+            target = body.get("target") if isinstance(body.get("target"), dict) else {}
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-lethal-insight.py",
+                ["ask", claim, json.dumps(target)],
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
