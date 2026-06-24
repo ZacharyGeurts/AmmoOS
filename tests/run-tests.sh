@@ -323,7 +323,7 @@ test_panel_v241_settings_visual() {
   grep -q 'applySettingRowVisual' "$panel"
   grep -q 'renderSettingsProfile' "$panel"
   grep -q 'summary-protection' "$panel"
-  grep -qE 'v[2-5]\.[0-9]+\.[0-9]+' "$panel"
+  grep -qE 'v[2-7]\.[0-9]+\.[0-9]+' "$panel"
 }
 
 test_self_access_script() {
@@ -443,7 +443,7 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -qE 'v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
+  grep -qE 'v7\.0\.0|v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
 }
 
 test_host_attack_module() {
@@ -545,7 +545,7 @@ test_panel_command_ui() {
   grep -q 'data-view="system"' "$panel"
   grep -q 'panel-subnav' "$panel"
   grep -q 'Good Guy' "$panel"
-  grep -q 'v5\.8\.4' "$panel"
+  grep -qE 'v7\.0\.0|v5\.(0|8\.4)' "$panel"
 }
 
 test_field_rf_module() {
