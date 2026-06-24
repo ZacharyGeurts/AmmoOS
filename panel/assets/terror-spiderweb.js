@@ -357,6 +357,55 @@
       ).join("");
     }
     renderRegistryTables(data);
+    renderExistenceTable(data);
+  }
+
+  function renderExistenceTable(data) {
+    const meta = document.getElementById("spiderweb-existence-meta");
+    const host = document.getElementById("spiderweb-existence-table");
+    const ex = data.existence_identity || {};
+    const stats = ex.stats || {};
+    const toolkit = ex.toolkit || {};
+    const ocr = toolkit.ocr || {};
+    const vision = toolkit.vision || {};
+    if (meta) {
+      meta.innerHTML = [
+        `<span><strong>${stats.existing ?? 0}</strong> existing</span>`,
+        `<span>${stats.absent ?? 0} absent (persisted)</span>`,
+        `<span>${stats.vision_corroborated ?? 0} vision</span>`,
+        `<span>${stats.ocr_corroborated ?? 0} OCR</span>`,
+        `<span>${stats.with_identity_hash ?? 0} identity hash</span>`,
+        `<span class="meta">OCR ${ocr.available ? "tesseract ON" : "tesseract off"} · H7 vision ${vision.h7_team_mounted ? "mounted" : "cache"} · ${vision.domain_count ?? 0} domains</span>`,
+      ].join(" · ");
+    }
+    if (!host) return;
+    const rows = (ex.table || []).filter((r) => {
+      const q = swRegistrySearch.trim().toLowerCase();
+      if (!q) return true;
+      const hay = [
+        r.existence_id, r.entity_key, r.label, r.section, r.ip, r.mac, r.vendor,
+        r.identity_hash, (r.vision_domains || []).join(" "),
+      ].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+    host.innerHTML = rows.length
+      ? `<table class="honor-table"><thead><tr>
+          <th>Existence ID</th><th>Section</th><th>Label</th><th>Exists</th><th>Score</th><th>Identity</th><th>Vision</th><th>OCR</th><th>GPS</th><th>Sightings</th>
+        </tr></thead><tbody>
+        ${rows.slice(0, 300).map((r) => `<tr class="${r.exists ? "" : "meta"}">
+          <td>${esc(r.existence_id)}</td>
+          <td>${esc(r.section)}</td>
+          <td>${esc(r.label)}</td>
+          <td>${r.exists ? '<span class="severity-ok">yes</span>' : '<span class="meta">absent</span>'}</td>
+          <td>${esc(r.existence_score)}</td>
+          <td>${r.identity_hash ? esc(r.identity_hash.slice(0, 12) + "…") : "—"}</td>
+          <td>${(r.vision_domains || []).length ? esc((r.vision_domains || []).join(", ")) : "—"}</td>
+          <td>${r.ocr_corroborated ? '<span class="severity-ok">✓</span>' : "—"}</td>
+          <td>${r.lat != null ? esc(`${r.lat}, ${r.lon}`) : "—"}</td>
+          <td>${esc(r.sightings ?? 1)}</td>
+        </tr>`).join("")}
+        </tbody></table>`
+      : '<div class="empty">Rebuild spiderweb to populate persistent existence identities.</div>';
   }
 
   function setActiveMapTab(tab) {

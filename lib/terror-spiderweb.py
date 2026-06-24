@@ -1126,6 +1126,17 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
     }
     _save_json(UNIVERSAL_REGISTRY, registry_doc)
 
+    existence_doc: dict[str, Any] = {}
+    try:
+        ex_mod = _mod("existence_identity", "existence-identity.py")
+        existence_doc = ex_mod.build_existence_registry(registry_doc)
+        stats["existence_total"] = (existence_doc.get("stats") or {}).get("total", 0)
+        stats["existence_existing"] = (existence_doc.get("stats") or {}).get("existing", 0)
+        stats["existence_vision"] = (existence_doc.get("stats") or {}).get("vision_corroborated", 0)
+        stats["existence_ocr"] = (existence_doc.get("stats") or {}).get("ocr_corroborated", 0)
+    except Exception:
+        pass
+
     return {
         "schema": "terror-spiderweb/v2",
         "updated": _now(),
@@ -1155,6 +1166,12 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
             "battery": {"label": "Battery anywhere", "color": NODE_COLORS["battery"]},
         },
         "stats": stats,
+        "existence_identity": {
+            "stats": existence_doc.get("stats") or {},
+            "table": (existence_doc.get("table") or [])[:240],
+            "toolkit": existence_doc.get("toolkit") or {},
+            "updated": existence_doc.get("updated"),
+        } if existence_doc else {},
     }
 
 

@@ -46,6 +46,15 @@ CATALOG: list[dict[str, Any]] = [
         "pages_target": 230,
         "description": "Origins of the Field Die, 94/6 truth filter, and the invisible daemon ethos. Vol 1 scaffold — field-expandable to 230 pages.",
     },
+    {
+        "id": "h7-vision-existence-field-guide",
+        "title": "H7 Vision & Existence Field Guide",
+        "author": "Hostess7 Team / NEXUS-Shield",
+        "category": "vision",
+        "license": "Field (Hostess7 TEAM drive)",
+        "pages_target": 48,
+        "description": "OCR, computer vision, motion tracking, and persistent existence identity — synced from HOSTESS7_TEAM fieldstorage/brain/vision.",
+    },
 ]
 
 
@@ -61,7 +70,43 @@ def _book_paths() -> list[Path]:
     ]
 
 
+def _vision_corpus_text() -> str:
+    for root in (
+        HOSTESS7_TEAM_FIELD / "brain" / "vision" / "corpus.json",
+        HOSTESS7_ROOT / "cache" / "fieldstorage" / "brain" / "vision" / "corpus.json",
+    ):
+        if not root.is_file():
+            continue
+        try:
+            doc = json.loads(root.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        lines = [
+            "H7 Vision & Existence Field Guide",
+            "Source: Hostess7 TEAM drive — brain/vision/corpus.json",
+            "",
+            "OCR extracts text from rendered frames for ground-truth QA. Vision transforms light into structured understanding.",
+            "Existence identity persists every entity across NEXUS cycles — homes, internet, mobile, batteries.",
+            "",
+        ]
+        for dom in doc.get("domains") or []:
+            if not isinstance(dom, dict):
+                continue
+            lines.append(f"## {dom.get('title') or dom.get('id')}")
+            lines.append(str(dom.get("body") or ""))
+            tags = dom.get("tags") or []
+            if tags:
+                lines.append(f"Tags: {', '.join(str(t) for t in tags)}")
+            lines.append("")
+        return "\n".join(lines)
+    return ""
+
+
 def _source_text(book_id: str) -> str:
+    if book_id == "h7-vision-existence-field-guide":
+        text = _vision_corpus_text()
+        if text:
+            return text
     for base in (BOOKS_SRC, STATE / "field-books"):
         path = base / f"{book_id}.txt"
         if path.is_file():

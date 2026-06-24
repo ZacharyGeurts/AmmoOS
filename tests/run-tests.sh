@@ -608,6 +608,19 @@ test_terror_spiderweb_module() {
     python3 "${ROOT}/lib/terror-spiderweb.py" build | grep -q 'terror-spiderweb'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/terror-spiderweb.py" registry | grep -q 'mobile'
+  grep -q 'existence_identity' "${ROOT}/lib/terror-spiderweb.py"
+}
+
+test_existence_identity_module() {
+  [[ -f "${ROOT}/lib/existence-identity.py" ]]
+  [[ -f "${ROOT}/lib/existence-identity.sh" ]]
+  grep -q '/api/existence-identity' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'existence_identity_registry' "${ROOT}/data/field-toolkit-seed.json"
+  grep -q 'h7-vision-existence-field-guide' "${ROOT}/lib/h7-library-bridge.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/existence-identity.py" build | grep -q 'existence-identity-registry'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/existence-identity.py" table | grep -q 'table'
 }
 
 test_panel_spiderweb_ui() {
@@ -621,6 +634,8 @@ test_panel_spiderweb_ui() {
   grep -q 'Terror · Spiderweb' "$panel"
   grep -q 'spiderweb-registry-tables' "$panel"
   grep -q 'spiderweb-universal-banner' "$panel"
+  grep -q 'spiderweb-existence-table' "$panel"
+  grep -q 'Persistent existence identity' "$panel"
 }
 
 test_nexus_plugins_module() {
@@ -894,7 +909,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.9.2' "$panel"
+  grep -q 'v5.9.3' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -903,7 +918,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.9.2' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.9.3' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
@@ -1262,6 +1277,7 @@ run_test "gov intel module" test_gov_intel_module
 run_test "police agency module" test_police_agency_module
 run_test "panel field rf UI" test_panel_field_rf_ui
 run_test "terror spiderweb module" test_terror_spiderweb_module
+run_test "existence identity module" test_existence_identity_module
 run_test "panel spiderweb UI" test_panel_spiderweb_ui
 run_test "nexus plugins module" test_nexus_plugins_module
 run_test "panel plugins UI" test_panel_plugins_ui

@@ -438,6 +438,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/existence-identity":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "existence-identity.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/existence-identity/table":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "existence-identity.py", ["table"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/police-agencies":
             region = str(query.get("region", [""])[0]).strip() or None
             script = INSTALL_ROOT / "lib" / "police-agency-db.py"

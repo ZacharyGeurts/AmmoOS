@@ -113,11 +113,13 @@ def panel_snapshot(doc: dict[str, Any]) -> dict[str, Any]:
     sw = doc.get("terror_spiderweb") or {}
     sws = sw.get("stats") or {}
     focus = sw.get("focus") or {}
+    ex = sw.get("existence_identity") or {}
+    exs = ex.get("stats") or {}
     views["spiderweb"] = _chip(
         "Terror spiderweb",
         f"{sws.get('identified_everywhere', 0)} everywhere · "
-        f"{sws.get('total_homes', 0)} homes · {sws.get('total_internet', 0)} internet · "
-        f"{sws.get('mobile_moving', 0)} moving mobile · heat {focus.get('heat_sum', 0)}",
+        f"{exs.get('existing', 0)} existence · {exs.get('vision_corroborated', 0)} vision · "
+        f"{sws.get('mobile_moving', 0)} moving · heat {focus.get('heat_sum', 0)}",
         accent="threat",
         jump="threats/spiderweb",
         jump_label="Open spiderweb →",
