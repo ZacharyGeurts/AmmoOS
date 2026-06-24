@@ -1973,6 +1973,38 @@
     </div>
   </section>
 
+  <section id="view-home-protector" class="view">
+    <div class="field-rf-wrap">
+      <p class="field-rf-motto" id="home-protector-motto" data-tip="Immediate home protector — WiFi, LAN, and wire within ~1 acre. Block unauthorized entry through lawful means. No jamming.">
+        <strong>Home Protector · Immediate Airspace</strong> — everything within ~1 acre. WiFi and wire. Block without permission through lawful means.
+      </p>
+      <div id="home-protector-acre-banner" class="gov-merge-banner" style="border-color:#3a6040;background:rgba(20,40,28,0.55);margin-bottom:12px;"></div>
+      <div id="home-protector-stats" class="police-stats" style="margin-bottom:12px;"></div>
+      <div class="human-dossier-toolbar" style="margin-bottom:10px;">
+        <button type="button" id="home-protector-refresh" data-tip="Rescan WiFi and LAN neighbors in immediate airspace.">Scan airspace now</button>
+        <button type="button" id="home-protector-block-all" class="danger" data-tip="Block every unauthorized entity in ~1 acre through lawful wire-layer means.">Block all unauthorized</button>
+      </div>
+      <div class="honor-grid">
+        <div class="honor-card" style="grid-column: 1 / -1;">
+          <h4 data-tip="WiFi APs, LAN neighbors, and wire peers within estimated one-acre radius (~118 ft).">Immediate airspace · all entities</h4>
+          <div id="home-protector-table" class="meta"><div class="empty">Scanning immediate home airspace…</div></div>
+        </div>
+        <div class="honor-card">
+          <h4>Unauthorized · entered without permission</h4>
+          <div id="home-protector-unauthorized"><div class="empty">No unauthorized entities — airspace clean.</div></div>
+        </div>
+        <div class="honor-card">
+          <h4>Block means · lawful only</h4>
+          <div id="home-protector-means" class="meta"></div>
+        </div>
+      </div>
+      <div class="view-jump-row" style="margin-top:14px;">
+        <button type="button" data-view-jump="intel/field-rf">Field RF →</button>
+        <button type="button" data-view-jump="packets/live">Live connections →</button>
+      </div>
+    </div>
+  </section>
+
   <section id="view-host-attack" class="view">
     <div class="host-attack-wrap">
       <p class="host-attack-motto" id="host-attack-motto">
@@ -2686,7 +2718,7 @@
       command: { panel: "command", default: "command", subs: { command: "Command" } },
       us: { panel: "us", default: "us", subs: { us: "US" } },
       packets: { panel: "packets", default: "monitor", subs: { monitor: "Live · Good/Bad", inspect: "DPI · Deep inspect" } },
-      threats: { panel: "threats", default: "host-attack", subs: { "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", "precision-map": "Precision · Map", "precision-web": "Precision · Web", dossier: "Attack paths", "human-dossier": "Kill orders" } },
+      threats: { panel: "threats", default: "home-protector", subs: { "home-protector": "Home · Airspace", "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", "precision-map": "Precision · Map", "precision-web": "Precision · Web", dossier: "Attack paths", "human-dossier": "Kill orders" } },
       intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", "audio-train": "Audio · Train", "field-rf": "Field RF", research: "Research" } },
       library: { panel: "library", default: "library", subs: { library: "Library" } },
       system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
@@ -2694,7 +2726,7 @@
     const LEGACY_VIEW_MAP = {
       monitor: ["packets", "monitor"], inspect: ["packets", "inspect"],
       honor: ["intel", "honor"], "audio-train": ["intel", "audio-train"], "field-rf": ["intel", "field-rf"], research: ["intel", "research"],
-      "host-attack": ["threats", "host-attack"], spiderweb: ["threats", "spiderweb"], "precision-map": ["threats", "precision-map"], "precision-web": ["threats", "precision-web"], dossier: ["threats", "dossier"], "human-dossier": ["threats", "human-dossier"],
+      "home-protector": ["threats", "home-protector"], "host-attack": ["threats", "host-attack"], spiderweb: ["threats", "spiderweb"], "precision-map": ["threats", "precision-map"], "precision-web": ["threats", "precision-web"], dossier: ["threats", "dossier"], "human-dossier": ["threats", "human-dossier"],
       map: ["threats", "host-attack"], kill: ["threats", "human-dossier"],
       settings: ["system", "settings"], logs: ["system", "logs"],
     };
@@ -2710,7 +2742,7 @@
       command: { keys: ["field_command", "gatekeeper"], subs: { command: ["field_command"] } },
       us: { keys: ["us_field"], subs: { us: ["us_field"] } },
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
-      threats: { keys: ["host_attacks", "terror_spiderweb", "precision_field"], subs: { "host-attack": ["host_attacks"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
+      threats: { keys: ["home_protector", "host_attacks", "terror_spiderweb", "precision_field"], subs: { "home-protector": ["home_protector"], "host-attack": ["host_attacks"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["audio_train", "field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
       library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
@@ -2721,6 +2753,7 @@
       const val = data[key];
       if (key === "gatekeeper") return typeof val === "object" && Array.isArray(val.connections);
       if (key === "audio_train") return typeof val === "object" && (val.schema === "audio-train/v1" || val.stats != null);
+      if (key === "home_protector") return typeof val === "object" && (val.schema === "home-protector/v1" || val.stats != null);
       if (key === "field_rf") return typeof val === "object" && (val.updated != null || val.antenna?.mode != null);
       if (key === "terror_spiderweb") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.nodes));
       if (key === "precision_field") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.entities));
@@ -2919,6 +2952,7 @@
       if (data.shutdown) renderShutdown(data.shutdown);
       renderHonorability(data);
       renderAudioTrain(data.audio_train);
+      renderHomeProtector(data.home_protector);
       renderCommandCenter(data);
       renderFieldProtect(data);
       const gk = data.gatekeeper || {};
@@ -2996,6 +3030,7 @@
       if (sub === "command" && lastPanelData) renderCommandCenter(lastPanelData);
       if (sub === "honor" && lastPanelData) renderHonorability(lastPanelData);
       if (sub === "audio-train" && lastPanelData) renderAudioTrain(lastPanelData.audio_train);
+      if (sub === "home-protector" && lastPanelData) renderHomeProtector(lastPanelData.home_protector);
       if (sub === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
     }
 
@@ -4838,6 +4873,121 @@
       });
     }
 
+    async function homeProtectorBlock(entityId, btn) {
+      if (!entityId) return;
+      if (!confirm(`Block ${entityId} from immediate home airspace?\n\nLawful wire-layer response — firewall, RF forever-disable, or disconnect. No jamming.`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/home-protector/block", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entity_id: entityId }),
+        });
+        const j = await res.json();
+        if (j.ok) refresh();
+        else alert(j.error || "Block failed");
+      } catch { alert("Block failed"); }
+      finally { if (btn) btn.disabled = false; }
+    }
+
+    async function homeProtectorPermit(entityId, btn) {
+      if (!entityId) return;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/home-protector/permit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entity_id: entityId }),
+        });
+        const j = await res.json();
+        if (j.ok) refresh();
+        else alert(j.error || "Permit failed");
+      } catch { alert("Permit failed"); }
+      finally { if (btn) btn.disabled = false; }
+    }
+
+    function renderHomeProtector(doc) {
+      const hp = doc || {};
+      const motto = $("home-protector-motto");
+      if (motto && hp.motto) {
+        motto.innerHTML = `<strong>Home Protector · Immediate Airspace</strong> — ${esc(hp.motto)}`;
+      }
+      const acre = hp.acre || {};
+      const banner = $("home-protector-acre-banner");
+      if (banner) {
+        banner.innerHTML = `<strong>${esc(acre.label || "~1 acre")}</strong> — radius ${esc(String(acre.radius_ft || 118))} ft (${esc(String(acre.radius_m || 35.9))} m) · WiFi signal + LAN wire · operator ${esc(hp.operator?.label || hp.operator?.source || "unset")}`;
+      }
+      const statsEl = $("home-protector-stats");
+      const st = hp.stats || {};
+      if (statsEl) {
+        statsEl.innerHTML = [
+          ["In airspace", st.total ?? 0],
+          ["WiFi", st.wifi ?? 0],
+          ["LAN/wire", st.lan ?? 0],
+          ["Permitted", st.permitted ?? 0],
+          ["Watching", st.watch ?? 0],
+          ["Unauthorized", st.unauthorized ?? 0],
+        ].map(([k, v]) => `<span class="police-stat"><span class="police-stat-label">${esc(k)}</span><strong>${esc(String(v))}</strong></span>`).join("");
+      }
+      const meansEl = $("home-protector-means");
+      const means = hp.block_means || {};
+      if (meansEl) {
+        meansEl.innerHTML = Object.entries(means).map(([k, v]) =>
+          `<div style="margin-bottom:6px;"><strong>${esc(k)}</strong> — ${esc(String(v))}</div>`
+        ).join("") || '<div class="empty">Lawful block paths load with scan.</div>';
+      }
+      const permCls = { home_permitted: "trusted-badge", neighbor_watch: "meta", unauthorized: "hell-stat" };
+      const tableEl = $("home-protector-table");
+      const rows = hp.table || hp.entities || [];
+      if (tableEl) {
+        if (!rows.length) {
+          tableEl.innerHTML = '<div class="empty">No entities in immediate airspace yet — run Scan airspace now.</div>';
+        } else {
+          tableEl.innerHTML = `<table class="honor-table"><thead><tr>
+            <th>Entity</th><th>Kind</th><th>Distance</th><th>Signal</th><th>Permission</th><th>Actions</th>
+          </tr></thead><tbody>${rows.map((r) => {
+            const dist = r.on_wire ? "on wire" : `${r.est_distance_ft ?? "—"} ft`;
+            const actions = [];
+            if (r.block_eligible) {
+              actions.push(`<button type="button" class="danger" data-hp-block="${esc(r.entity_id)}">Block</button>`);
+            }
+            if (r.permission !== "home_permitted") {
+              actions.push(`<button type="button" data-hp-permit="${esc(r.entity_id)}">Permit</button>`);
+            }
+            return `<tr class="${r.unauthorized ? "is-blocked" : ""}">
+              <td><strong>${esc(r.label || r.entity_id)}</strong>${r.bssid ? `<div class="meta">${esc(r.bssid)}</div>` : ""}${r.ip ? `<div class="meta">${esc(r.ip)}</div>` : ""}</td>
+              <td>${esc(r.kind || "—")}</td>
+              <td>${esc(dist)}</td>
+              <td>${r.signal != null ? esc(String(r.signal)) : "—"}</td>
+              <td><span class="${permCls[r.permission] || "meta"}">${esc(r.permission || "—")}</span></td>
+              <td>${actions.join(" ") || "—"}</td>
+            </tr>`;
+          }).join("")}</tbody></table>`;
+          tableEl.querySelectorAll("[data-hp-block]").forEach((btn) => {
+            btn.addEventListener("click", () => homeProtectorBlock(btn.dataset.hpBlock, btn));
+          });
+          tableEl.querySelectorAll("[data-hp-permit]").forEach((btn) => {
+            btn.addEventListener("click", () => homeProtectorPermit(btn.dataset.hpPermit, btn));
+          });
+        }
+      }
+      const unauthEl = $("home-protector-unauthorized");
+      const unauth = hp.unauthorized || rows.filter((r) => r.unauthorized);
+      if (unauthEl) {
+        if (!unauth.length) {
+          unauthEl.innerHTML = '<div class="empty">No unauthorized entities — airspace clean.</div>';
+        } else {
+          unauthEl.innerHTML = unauth.map((r) => `<div style="margin-bottom:8px;padding:8px;border:1px solid #5a2828;background:rgba(56,20,20,0.35);border-radius:6px;">
+            <strong>${esc(r.label || r.entity_id)}</strong> · ${esc(r.kind)} · ${esc(r.detail || "")}
+            ${r.block_eligible ? `<button type="button" class="danger" style="margin-left:8px;" data-hp-block="${esc(r.entity_id)}">Block now</button>` : ""}
+          </div>`).join("");
+          unauthEl.querySelectorAll("[data-hp-block]").forEach((btn) => {
+            btn.addEventListener("click", () => homeProtectorBlock(btn.dataset.hpBlock, btn));
+          });
+        }
+      }
+    }
+
     function renderAudioTrain(doc) {
       const at = doc || {};
       const motto = $("audio-train-motto");
@@ -4964,6 +5114,7 @@
 
     let policeAgencyCache = null;
     let fieldRfBound = false;
+    let homeProtectorBound = false;
     let programTagsCache = null;
     let programTagsBound = false;
     let selectedProgramTagIds = [];
@@ -5004,6 +5155,27 @@
         body: JSON.stringify({ enabled, auto_rfkill: autoRfkill, lawful_kick: lawfulKick, shoot_to_kill: shootToKill }),
       });
       refresh();
+    }
+
+    function bindHomeProtectorControls() {
+      if (homeProtectorBound) return;
+      homeProtectorBound = true;
+      $("home-protector-refresh")?.addEventListener("click", async () => {
+        await fetch("/api/home-protector", { cache: "no-store" });
+        refresh();
+      });
+      $("home-protector-block-all")?.addEventListener("click", async () => {
+        if (!confirm("Block ALL unauthorized entities in immediate ~1 acre airspace?\n\nLawful wire-layer only — firewall, RF forever-disable, disconnect. No jamming.")) return;
+        const btn = $("home-protector-block-all");
+        if (btn) btn.disabled = true;
+        try {
+          const res = await fetch("/api/home-protector/block-all", { method: "POST" });
+          const j = await res.json();
+          if (j.ok) refresh();
+          else alert(j.error || "Block all failed");
+        } catch { alert("Block all failed"); }
+        finally { if (btn) btn.disabled = false; }
+      });
     }
 
     function bindFieldRfControls() {
@@ -5106,6 +5278,7 @@
     function renderFieldRF(fr) {
       if (!fr) return;
       bindFieldRfControls();
+      bindHomeProtectorControls();
       const motto = $("field-rf-motto");
       if (motto && fr.motto) {
         motto.innerHTML = `<strong>Field RF · Internal Antenna</strong> — ${esc(fr.motto)} ${esc(fr.tagline || "")}`;
@@ -5470,6 +5643,7 @@
       if (!pa) return;
       policeAgencyCache = pa;
       bindFieldRfControls();
+      bindHomeProtectorControls();
       renderProgramTags(pa.program_tags || pa);
       const categoryFilter = $("police-category-filter")?.value || "";
       const regionFilter = $("police-region-filter")?.value || "";

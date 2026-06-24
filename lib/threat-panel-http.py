@@ -445,6 +445,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/home-protector":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "home-protector.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path.startswith("/api/human-registry/resolve"):
             ip = str(query.get("ip", [""])[0]).strip()
             if not ip:
@@ -857,6 +862,33 @@ class Handler(BaseHTTPRequestHandler):
                 "previous": previous,
                 "latest": target,
             }
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/home-protector/block":
+            entity_id = str(body.get("entity_id", body.get("id", ""))).strip()
+            if not entity_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing entity_id"}), "application/json")
+                return
+            force = body.get("force") in (True, 1, "1", "true", "yes", "on")
+            args = ["block", entity_id]
+            if force:
+                args.append("--force")
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "home-protector.py", args)
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/home-protector/permit":
+            entity_id = str(body.get("entity_id", body.get("id", ""))).strip()
+            if not entity_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing entity_id"}), "application/json")
+                return
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "home-protector.py", ["permit", entity_id])
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/home-protector/block-all":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "home-protector.py", ["block-all"])
             self._send(200, json.dumps(payload), "application/json")
             return
 

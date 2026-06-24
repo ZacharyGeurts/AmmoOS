@@ -30,6 +30,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/hostess7-operator.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/hostess7-operator.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
@@ -56,6 +57,9 @@ nexus_threat_panel_publish() {
   fi
   if declare -f nexus_audio_train_publish >/dev/null 2>&1; then
     nexus_audio_train_publish
+  fi
+  if declare -f nexus_home_protector_publish >/dev/null 2>&1; then
+    nexus_home_protector_publish
   fi
   local ts mode conn arp egress listeners threats corr signal dns
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
@@ -249,6 +253,12 @@ nexus_threat_panel_publish() {
       nexus_audio_train_json
     else
       printf '{"schema":"audio-train/v1","hostess_version":"6.9","stats":{"sources":0},"sources":{},"table":[]}'
+    fi
+    printf ',"home_protector":'
+    if declare -f nexus_home_protector_json >/dev/null 2>&1; then
+      nexus_home_protector_json
+    else
+      printf '{"schema":"home-protector/v1","stats":{"total":0},"entities":[],"table":[]}'
     fi
     printf ',"human_dossier":'
     if declare -f nexus_human_dossier_json >/dev/null 2>&1; then

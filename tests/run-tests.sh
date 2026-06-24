@@ -1364,6 +1364,20 @@ run_test "connection gatekeeper youtube" test_gatekeeper_youtube
 run_test "connection gatekeeper email" test_gatekeeper_email
 run_test "gatekeeper safe touch policy" test_gatekeeper_touch_policy
 run_test "audio train module" test_audio_train_module
+
+test_home_protector_module() {
+  [[ -f "${ROOT}/lib/home-protector.py" ]]
+  [[ -f "${ROOT}/data/home-protector-seed.json" ]]
+  [[ -f "${ROOT}/lib/home-protector.sh" ]]
+  grep -q 'home_protector' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/home-protector' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'view-home-protector' "${ROOT}/panel/threat-panel.html"
+  grep -q 'acre_radius_m' "${ROOT}/data/home-protector-seed.json"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/home-protector.py" build | grep -q 'home-protector/v1'
+}
+
+run_test "home protector module" test_home_protector_module
 run_test "consumer everyday defaults" test_consumer_defaults
 run_test "gatekeeper strict enforce in+out" test_gatekeeper_strict_enforce
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout

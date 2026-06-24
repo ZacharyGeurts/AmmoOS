@@ -24,6 +24,13 @@
 - Daemon + panel JSON publish cycle
 - `/api/human-registry` and resolve endpoint active
 
+## Home Protector · immediate airspace
+- **`lib/home-protector.py`** — detects everything within ~1 acre (~118 ft / 36 m): WiFi APs (RSSI distance), LAN ARP, live wire peers
+- Classifies **permitted**, **watch**, or **unauthorized** (entered without permission)
+- **Threats → Home · Airspace** panel view — scan, permit, block per entity, or block all unauthorized
+- Lawful block means only: FCC RF forever-disable, firewall block, field attack kit — **no jamming**
+- API: `GET /api/home-protector`, `POST /api/home-protector/block`, `POST /api/home-protector/permit`, `POST /api/home-protector/block-all`
+
 ## Install
 ```bash
 cd /path/to/NEXUS-Shield
