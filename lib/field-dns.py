@@ -1143,7 +1143,6 @@ def _panel_json_stub() -> dict[str, Any]:
         "self_hosted": True,
         "listeners": srv.get("listeners") or [],
         "stats": srv.get("stats") or {},
-        "_stale": True,
         "_partial": True,
         "recent_queries": [],
         "top_domains": {},

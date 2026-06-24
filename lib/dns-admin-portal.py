@@ -224,7 +224,7 @@ def _dns_full() -> dict[str, Any]:
     cache = STATE / "field-dns-panel.json"
     if cache.is_file():
         doc = _load_json(cache, {})
-        if doc.get("schema") == "field-dns/v1" or doc.get("rfc_matrix"):
+        if doc.get("schema") in ("field-dns/v1", "field-dns/v2") or doc.get("rfc_matrix"):
             return doc
     return _py_json(INSTALL / "lib" / "field-dns.py", ["json"])
 

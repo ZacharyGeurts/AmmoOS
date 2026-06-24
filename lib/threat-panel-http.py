@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Local threat panel server — HTTPS on localhost only (Hostess7-secured)."""
-import hashlib
+
 import json
 import os
 import ssl
@@ -314,19 +314,6 @@ def _read_field_panel_file(key: str) -> dict | None:
     except (OSError, json.JSONDecodeError):
         pass
     return None
-
-
-def _payload_etag(payload: dict) -> str:
-    """Cheap fingerprint for delta / 304 — not a security hash."""
-    lean = {
-        "schema": payload.get("schema"),
-        "updated": payload.get("updated"),
-        "running": payload.get("running"),
-        "stats": payload.get("stats"),
-        "lease_count": payload.get("lease_count"),
-    }
-    raw = json.dumps(lean, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
 def _sudo_available() -> bool:
@@ -789,32 +776,6 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header(hk, hv)
         self.end_headers()
         self.wfile.write(data)
-
-    def _send_json_payload(
-        self,
-        payload: dict,
-        *,
-        delta: bool = False,
-        if_none_match: str = "",
-    ) -> None:
-        etag = _payload_etag(payload)
-        inm = (if_none_match or "").strip().strip('"')
-        if inm and inm == etag:
-            if delta:
-                body = json.dumps({
-                    "unchanged": True,
-                    "etag": etag,
-                    "updated": payload.get("updated"),
-                }, ensure_ascii=False)
-                self._send(200, body, "application/json", {"ETag": f'"{etag}"'})
-            else:
-                self.send_response(304)
-                self.send_header("ETag", f'"{etag}"')
-                self.send_header("Cache-Control", "no-store")
-                self.end_headers()
-            return
-        body = json.dumps(payload, ensure_ascii=False)
-        self._send(200, body, "application/json", {"ETag": f'"{etag}"'})
 
     def _read_json_body(self) -> dict:
         length = int(self.headers.get("Content-Length", 0))

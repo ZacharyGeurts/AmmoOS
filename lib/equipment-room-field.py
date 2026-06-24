@@ -51,7 +51,7 @@ def _local_ips() -> list[str]:
 def _dns_server_status() -> dict[str, Any]:
     py = INSTALL / "lib" / "field-dns.py"
     if not py.is_file():
-        return {"running": False, "schema": "field-dns/v1"}
+        return {"running": False, "schema": "field-dns/v2"}
     try:
         proc = subprocess.run(
             [os.environ.get("PYTHON", "python3"), str(py), "status"],

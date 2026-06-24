@@ -1746,7 +1746,7 @@ test_field_dns_module() {
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/dns-multipoint-identity.py" build | grep -q 'dns-multipoint-identity/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'field-dns/v1'
+    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'field-dns/v2'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/dns-planetary-security.py" json | grep -q 'dns-planetary/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \

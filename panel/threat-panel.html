@@ -7,8 +7,6 @@
       try {
         document.documentElement.classList.add("dusty-midnight", "nexus-military-v8", "nexus-v82", "nexus-4k");
         if (localStorage.getItem("nexus_old_man") === "1") document.documentElement.classList.add("old-man");
-        var raw = sessionStorage.getItem("nexus-field-v4") || sessionStorage.getItem("nexus-field-v3");
-        if (raw) window.NEXUS_FIELD = JSON.parse(raw);
       } catch (_) {}
     })();
   </script>
@@ -2423,7 +2421,7 @@
           <input type="text" id="library-upload-title" placeholder="Title">
           <input type="text" id="library-upload-author" placeholder="Author">
           <select id="library-upload-dewey"></select>
-          <textarea id="library-upload-text" placeholder="Paste plain text — compressed to H7 on field drive"></textarea>
+          <textarea id="library-upload-text" placeholder="Paste plain text — stored as uncompressed H7 field on drive"></textarea>
           <button type="button" class="library-upload-btn" id="library-upload-submit">Pack H7 → Dewey folder</button>
         </div>
       </div>
@@ -3546,7 +3544,6 @@
     let lastHostAttackUpdated = "";
     let lastGatekeeperSig = "";
     let panelFetchInFlight = false;
-    let panelParallelInFlight = false;
     let panelSliceGeneration = 0;
     let slicePaintRaf = 0;
     const pendingSliceKeys = new Set();
@@ -3619,7 +3616,6 @@
       if (key === "field_dns") {
         return typeof val === "object" && (
           val.schema === "field-dns/v2"
-          || val.schema === "field-dns/v1"
           || val.rfc_matrix != null
           || val.threat_model != null
           || val.traffic_patterns != null
@@ -4272,7 +4268,7 @@
       slices.forEach((slice) => {
         const ready = moduleReady(lastPanelData, slice.key);
         if (ready && domReady) return;
-        fetchPanelSlice(slice, gen, { force: !ready });
+        fetchPanelSlice(slice, gen);
       });
     }
 
@@ -8829,14 +8825,6 @@
       }
     }
 
-    function stripParallelSliceKeys(data) {
-      const base = data && typeof data === "object" ? { ...data } : {};
-      FIELD_PARALLEL_SLICES.forEach((slice) => {
-        delete base[slice.key];
-      });
-      return base;
-    }
-
     function scheduleSlicePaint(gen) {
       if (slicePaintRaf) return;
       slicePaintRaf = requestAnimationFrame(() => {
@@ -8870,8 +8858,7 @@
       scheduleSlicePaint(gen);
     }
 
-    async function fetchPanelSlice(slice, gen, opts) {
-      const force = opts && opts.force;
+    async function fetchPanelSlice(slice, gen) {
       try {
         const res = await fetch(slice.url, { cache: "no-store" });
         if (gen !== panelSliceGeneration) return;
@@ -8886,7 +8873,6 @@
           return;
         }
         const val = parsePanelJson(await res.text());
-        if (!force && val && val.unchanged) return;
         mergePanelSlice(slice.key, val, gen);
       } catch (err) {
         if (gen !== panelSliceGeneration) return;
@@ -8904,23 +8890,6 @@
       slicesForTab(currentPanel, currentSubView).forEach((slice) => {
         fetchPanelSlice(slice, gen);
       });
-    }
-
-    async function publishParallelFields() {
-      if (panelParallelInFlight) return;
-      panelParallelInFlight = true;
-      try {
-        const res = await fetch("/api/field/parallel", { method: "POST", cache: "no-store" });
-        if (!res.ok) return;
-        const j = parsePanelJson(await res.text());
-        if (j.panel && typeof j.panel === "object") {
-          lastPanelData = { ...(lastPanelData || {}), ...j.panel };
-          paintPanel(lastPanelData);
-        }
-      } catch (_) {
-      } finally {
-        panelParallelInFlight = false;
-      }
     }
 
     function hydratePanelSettings(data) {
@@ -8992,7 +8961,6 @@
         lastPanelData = data;
         applyStatusStrip(data);
         if (data.poll_ms) panelPollMs = Number(data.poll_ms) || panelPollMs;
-        try { sessionStorage.setItem("nexus-field-v4", JSON.stringify(lastPanelData)); } catch (_) {}
         fieldLiveCount(lastPanelData);
         paintPanel(lastPanelData);
         refreshActiveTabSlices(gen);
@@ -9060,13 +9028,11 @@
     setInterval(() => checkNexusUpdate(false), 3600000);
     window.showView = showView;
     window.refresh = refresh;
+    window.checkNexusUpdate = checkNexusUpdate;
     window.hydratePanelSettings = hydratePanelSettings;
     window.paintPanel = paintPanel;
     window.renderPacketField = renderPacketField;
     window.renderInspect = renderInspect;
-
-    window.showView = showView;
-    window.checkNexusUpdate = checkNexusUpdate;
 
     function panelRefreshTick() {
       if (document.hidden) return;
@@ -9085,7 +9051,6 @@
     });
 
     function panelBoot() {
-      global.NexusMilitaryV82?.paintInstantCache?.();
       applyHashView();
       bootstrapPanel();
       schedulePanelRefresh();

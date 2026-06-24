@@ -339,7 +339,7 @@ nexus_threat_panel_publish() {
     if declare -f nexus_field_dns_json >/dev/null 2>&1; then
       nexus_field_dns_json
     else
-      printf '{"schema":"field-dns/v1","running":false,"rfc_matrix":[],"legal_framework":[],"zones":[]}'
+      printf '{"schema":"field-dns/v2","running":false,"rfc_matrix":[],"legal_framework":[],"zones":[]}'
     fi
     printf ',"field_outside_talk":'
     if declare -f nexus_field_outside_talk_json >/dev/null 2>&1; then

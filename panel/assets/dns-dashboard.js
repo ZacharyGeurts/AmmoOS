@@ -532,13 +532,13 @@
       }
       ui.patchTableRows(el, rows, (r) => `${r.ts || ""}:${r.qname || r.name || ""}`, queryRowHtml, { maxRows: 200 });
       const foot = $("dns-recent-queries-foot");
-      if (foot) foot.textContent = `Showing ${rows.length} recent · schema ${fd.schema || "field-dns/v1"}`;
+      if (foot) foot.textContent = `Showing ${rows.length} recent · schema ${fd.schema || "field-dns/v2"}`;
       return;
     }
     el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
       <th>Time</th><th>QNAME</th><th>Answers</th><th>Latency</th><th>Status</th>
     </tr></thead><tbody>${rows.map(queryRowHtml).join("")}</tbody></table>
-    <div class="dns-table-foot meta">Showing ${rows.length} recent · schema ${esc(fd.schema || "field-dns/v1")}</div>`;
+    <div class="dns-table-foot meta">Showing ${rows.length} recent · schema ${esc(fd.schema || "field-dns/v2")}</div>`;
   }
 
   function renderTopDomains(fd) {

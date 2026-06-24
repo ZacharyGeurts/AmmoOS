@@ -504,7 +504,6 @@ def _panel_json_stub() -> dict[str, Any]:
         "lease_history_events": [],
         "stats_extended": {},
         "threats": [],
-        "_stale": True,
         "_partial": True,
     }
 

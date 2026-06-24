@@ -136,7 +136,7 @@ def _key_ready(data: dict[str, Any], key: str) -> bool:
     if key == "field_radio":
         return isinstance(val, dict) and len(val.get("station_menu") or []) > 0
     if key == "field_dns":
-        return isinstance(val, dict) and (val.get("rfc_matrix") is not None or val.get("schema") == "field-dns/v1")
+        return isinstance(val, dict) and (val.get("rfc_matrix") is not None or val.get("schema") == "field-dns/v2")
     if key == "h7_library":
         return isinstance(val, dict) and (val.get("books") is not None or val.get("updated"))
     if isinstance(val, dict):

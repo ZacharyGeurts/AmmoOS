@@ -168,16 +168,6 @@
     }).join("\x1f");
   }
 
-  const sliceEtags = new Map();
-
-  function getSliceEtag(key) {
-    return sliceEtags.get(key) || "";
-  }
-
-  function setSliceEtag(key, etag) {
-    if (etag) sliceEtags.set(key, etag);
-  }
-
   global.NexusUiSmooth = {
     debounce,
     throttle,
@@ -189,7 +179,5 @@
     bindDebouncedInput,
     patchTableRows,
     fingerprint,
-    getSliceEtag,
-    setSliceEtag,
   };
 })(window);

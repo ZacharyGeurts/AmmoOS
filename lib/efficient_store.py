@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Content-addressable append-only field store — blake3 + zstd Merkle chain."""
+"""Content-addressable append-only field store — blake3 Merkle chain (uncompressed payloads)."""
 from __future__ import annotations
 
 import json
@@ -25,24 +25,6 @@ def _hash_bytes(data: bytes) -> str:
         return hashlib.sha256(data).hexdigest()
 
 
-def _compress(data: bytes) -> bytes:
-    try:
-        import zstandard as zstd  # type: ignore
-
-        return zstd.ZstdCompressor(level=3).compress(data)
-    except ImportError:
-        return data
-
-
-def _decompress(data: bytes) -> bytes:
-    try:
-        import zstandard as zstd  # type: ignore
-
-        return zstd.ZstdDecompressor().decompress(data)
-    except ImportError:
-        return data
-
-
 def _parent_hash() -> str:
     if not CHAIN_FILE.is_file():
         return "0" * 64
@@ -56,20 +38,19 @@ def _parent_hash() -> str:
 def append_record(kind: str, doc: dict[str, Any]) -> dict[str, Any]:
     STORE_ROOT.mkdir(parents=True, exist_ok=True)
     payload = json.dumps({"kind": kind, "doc": doc}, ensure_ascii=False, separators=(",", ":")).encode()
-    compressed = _compress(payload)
-    content_hash = _hash_bytes(compressed)
+    content_hash = _hash_bytes(payload)
     parent = _parent_hash()
     merkle = _hash_bytes(f"{parent}:{content_hash}".encode())
     blob_path = STORE_ROOT / "blobs" / f"{content_hash[:2]}" / content_hash
     blob_path.parent.mkdir(parents=True, exist_ok=True)
     if not blob_path.is_file():
-        blob_path.write_bytes(compressed)
+        blob_path.write_bytes(payload)
     entry = {
         "kind": kind,
         "hash": merkle,
         "parent": parent,
         "content": content_hash,
-        "bytes": len(compressed),
+        "bytes": len(payload),
     }
     with CHAIN_FILE.open("a", encoding="utf-8") as fp:
         fp.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -93,7 +74,7 @@ def load_blob(content_hash: str) -> dict[str, Any] | None:
     blob_path = STORE_ROOT / "blobs" / f"{content_hash[:2]}" / content_hash
     if not blob_path.is_file():
         return None
-    raw = _decompress(blob_path.read_bytes())
+    raw = blob_path.read_bytes()
     try:
         return json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):

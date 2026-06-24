@@ -69,20 +69,6 @@
     }, 3200);
   }
 
-  function paintInstantCache() {
-    const raw = global.NEXUS_FIELD;
-    if (!raw || typeof raw !== "object") return false;
-    if (typeof global.hydratePanelSettings === "function" && typeof global.paintPanel === "function") {
-      const data = global.hydratePanelSettings(raw);
-      global.lastPanelData = data;
-      global.paintPanel(data);
-      document.documentElement.classList.add("panel-instant-cache");
-      updateKillChainBadge(data);
-      return true;
-    }
-    return false;
-  }
-
   function hookRefresh() {
     const orig = global.refresh;
     if (typeof orig !== "function" || orig.__nexusV82) return false;
@@ -106,7 +92,6 @@
       const out = orig.apply(this, arguments);
       updateKillChainBadge(data);
       stampV82();
-      document.documentElement.classList.remove("panel-instant-cache");
       return out;
     };
     global.paintPanel.__nexusV82 = true;
@@ -152,7 +137,6 @@
   function boot() {
     ensureChrome();
     stampV82();
-    paintInstantCache();
     const t = setInterval(() => {
       if (hookRefresh() && hookPaintPanel() && hookShowView()) clearInterval(t);
     }, 80);
@@ -166,7 +150,6 @@
     toast,
     setFetching,
     updateKillChainBadge,
-    paintInstantCache,
   };
   global.NexusToast = { show: toast };
 

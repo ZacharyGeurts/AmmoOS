@@ -53,7 +53,7 @@ nexus_field_dns_json() {
     python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$cache" 2>/dev/null
     return 0
   fi
-  printf '{"schema":"field-dns/v1","running":false,"rfc_matrix":[],"legal_framework":[],"zones":[]}'
+  printf '{"schema":"field-dns/v2","running":false,"rfc_matrix":[],"legal_framework":[],"zones":[]}'
 }
 
 nexus_field_dns_takeover_cycle() {
