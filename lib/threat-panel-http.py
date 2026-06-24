@@ -77,14 +77,35 @@ PANEL_PARALLEL_KEYS = frozenset({
 })
 
 
+def _read_install_version() -> str:
+    common = INSTALL_ROOT / "lib" / "nexus-common.sh"
+    if common.is_file():
+        try:
+            import re
+
+            m = re.search(
+                r'NEXUS_VERSION="([^"]+)"',
+                common.read_text(encoding="utf-8", errors="replace"),
+            )
+            if m:
+                return m.group(1)
+        except OSError:
+            pass
+    return os.environ.get("NEXUS_VERSION", "8.0.0")
+
+
 def _read_status_json(*, full: bool = False) -> str:
+    version = _read_install_version()
     if not STATUS_JSON.is_file():
         if full:
             return "{}"
-        return (
-            '{"field":true,"panel_ready":false,'
-            '"gatekeeper":{"connections":[],"harm_candidates":0}}'
-        )
+        return json.dumps({
+            "field": True,
+            "panel_ready": False,
+            "version": version,
+            "panel_build": "military-v8",
+            "gatekeeper": {"connections": [], "harm_candidates": 0},
+        }, ensure_ascii=False)
     raw = STATUS_JSON.read_text(encoding="utf-8")
     if full:
         return raw
@@ -93,6 +114,8 @@ def _read_status_json(*, full: bool = False) -> str:
         if isinstance(doc, dict):
             for key in PANEL_PARALLEL_KEYS:
                 doc.pop(key, None)
+            doc["version"] = version
+            doc["panel_build"] = "military-v8"
         return json.dumps(doc, ensure_ascii=False)
     except json.JSONDecodeError:
         return raw
