@@ -455,6 +455,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/field-dns":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/hostess-profile":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess-profile.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
@@ -481,7 +486,7 @@ class Handler(BaseHTTPRequestHandler):
                 lines = 0
             payload = {
                 "ok": True,
-                "version": "7.1.0",
+                "version": "7.2.0",
                 "hostess_version": "7",
                 "pending": pending.is_file(),
                 "ingest_log_lines": lines,
@@ -954,6 +959,11 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/signals-field":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "signals-field.py", ["build"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-dns":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["build"])
             self._send(200, json.dumps(payload), "application/json")
             return
 

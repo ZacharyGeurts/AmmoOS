@@ -23,6 +23,7 @@ STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 
 OUT_JSON = STATE / "field-dns.json"
+PANEL_CACHE = STATE / "field-dns-panel.json"
 PID_FILE = STATE / "field-dns.pid"
 BLOCKLIST = STATE / "adblock" / "domains-block.txt"
 EXTRA_BLOCK = STATE / "dns-truth-blocklist.txt"
@@ -30,7 +31,7 @@ CACHE_TTL = int(os.environ.get("NEXUS_FIELD_DNS_CACHE_TTL", "300"))
 
 IPV4 = os.environ.get("NEXUS_FIELD_DNS_IPV4", "127.0.0.1")
 IPV6 = os.environ.get("NEXUS_FIELD_DNS_IPV6", "::1")
-PORT = int(os.environ.get("NEXUS_FIELD_DNS_PORT", "5353"))
+PORT = int(os.environ.get("NEXUS_FIELD_DNS_PORT", "53"))
 
 QTYPE_MAP = {1: "A", 28: "AAAA", 5: "CNAME", 15: "MX", 16: "TXT"}
 
@@ -301,18 +302,81 @@ def status() -> dict[str, Any]:
     }
 
 
+def _planetary_mod() -> Any:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "dns_planetary_security", INSTALL / "lib" / "dns-planetary-security.py",
+    )
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def build_panel() -> dict[str, Any]:
+    srv = status()
+    planetary = _planetary_mod().build_planetary_dns(extra={"server": srv})
+    doc: dict[str, Any] = {
+        "schema": "field-dns/v1",
+        "updated": _now(),
+        "title": "NEXUS Truth DNS",
+        "running": bool(srv.get("running")),
+        "self_hosted": True,
+        "truthful": True,
+        "priority": 1,
+        "listeners": srv.get("listeners") or [f"{IPV4}#{PORT}", f"[{IPV6}]#{PORT}"],
+        "ipv4": srv.get("ipv4") or {"host": IPV4, "port": PORT},
+        "ipv6": srv.get("ipv6") or {"host": IPV6, "port": PORT},
+        "stats": {
+            **(srv.get("stats") or {}),
+            **(planetary.get("stats") or {}),
+        },
+        "blocklist_domains": srv.get("blocklist_domains", len(_load_blocklist())),
+        "cache_entries": srv.get("cache_entries", len(_cache)),
+        "foreign_resolvers_stopped": True,
+        "planetary": planetary,
+        "rfc_matrix": planetary.get("rfc_matrix") or [],
+        "legal_framework": planetary.get("legal_framework") or [],
+        "root_servers": planetary.get("root_servers") or [],
+        "zones": planetary.get("zones") or [],
+        "resolv": planetary.get("resolv") or {},
+        "resolver_policy": planetary.get("resolver_policy") or {},
+        "planetary_security_level": planetary.get("planetary_security_level"),
+    }
+    tmp = PANEL_CACHE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(PANEL_CACHE)
+    return doc
+
+
+def panel_json() -> dict[str, Any]:
+    if PANEL_CACHE.is_file():
+        try:
+            return json.loads(PANEL_CACHE.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+    return build_panel()
+
+
 def main() -> int:
     if len(sys.argv) < 2:
-        print("usage: field-dns.py [serve|json|status]", file=sys.stderr)
+        print("usage: field-dns.py [serve|build|json|status]", file=sys.stderr)
         return 1
     cmd = sys.argv[1]
     if cmd == "serve":
         serve()
         return 0
-    if cmd in ("json", "status"):
+    if cmd == "build":
+        print(json.dumps(build_panel(), ensure_ascii=False))
+        return 0
+    if cmd == "json":
+        print(json.dumps(panel_json(), ensure_ascii=False))
+        return 0
+    if cmd == "status":
         print(json.dumps(status(), ensure_ascii=False))
         return 0
-    print("usage: field-dns.py [serve|json|status]", file=sys.stderr)
+    print("usage: field-dns.py [serve|build|json|status]", file=sys.stderr)
     return 1
 
 

@@ -69,9 +69,10 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/home-protector.py" "${ROOT}/lib/heavyboi-importer.py" \
   "${ROOT}/lib/signals-field.py" "${ROOT}/lib/fcc-signal-lookup.py" \
   "${ROOT}/lib/field-material-discern.py" "${ROOT}/lib/gps-precision.py" \
-  "${ROOT}/lib/precision-field.py" "${ROOT}/lib/hostess-profile.py" "${ROOT}/lib/host-security-tier.py" 2>/dev/null || true
+  "${ROOT}/lib/precision-field.py" "${ROOT}/lib/hostess-profile.py" "${ROOT}/lib/host-security-tier.py" \
+  "${ROOT}/lib/field-dns.py" "${ROOT}/lib/dns-planetary-security.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
-  "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
+  "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/field-dns.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
   "${ROOT}/lib/honorability.sh" "${ROOT}/lib/field-rf-sentinel.sh" "${ROOT}/lib/police-agency.sh" \
   "${ROOT}/lib/field-command.sh" "${ROOT}/lib/gov-intel.sh" "${ROOT}/lib/program-tags.sh" \

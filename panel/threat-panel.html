@@ -1591,7 +1591,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v7.1.0</h1>
+        <h1>NEXUS-Shield v7.2.0</h1>
         <div class="brand-sub">Hostess 7 · Dusty Midnight · MIT licensed</div>
       </div>
     </div>
@@ -1611,7 +1611,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.1.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.2.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1665,6 +1665,7 @@
     <button type="button" data-view="threats" data-tip="Threats — globe map, attack-path dossiers, Grok Heavy kill-orders. Identify. Record. KILL.">Threats</button>
     <button type="button" data-view="intel" data-tip="Intel — honorability, field RF antenna, police interop, research tables.">Intel</button>
     <button type="button" data-view="signals" data-tip="Signals — gorgeous field antenna pulses. Every signal FCC-identified with threat tags.">Signals</button>
+    <button type="button" data-view="dns" data-tip="DNS — NEXUS Truth Resolver. RFC matrix, legal framework, planetary EXTREME security. Our DNS server on loopback.">DNS</button>
     <button type="button" data-view="library" data-tip="Hostess7 H7 field books — network security, NEXUS manual, AMOURANTHRTX biography.">Library</button>
     <button type="button" data-view="system" data-tip="System — settings, logs, protection toggles.">System</button>
   </nav>
@@ -2350,6 +2351,47 @@
     </div>
   </section>
 
+  <section id="view-dns" class="view">
+    <div class="dns-wrap">
+      <p class="dns-motto" id="dns-motto" data-tip="NEXUS Truth DNS — self-hosted on loopback. Every control cites RFC section and applicable law. Planetary EXTREME security extends to all zones.">
+        <strong>DNS · Truth Resolver</strong> — RFC 1034/1035 trace-only · legal citations · planetary security.
+      </p>
+      <div id="dns-stats" class="dns-stats-bar"></div>
+      <div class="dns-grid">
+        <article class="dns-panel dns-panel--server">
+          <h4>Our DNS server · loopback listeners</h4>
+          <div id="dns-server-panel"><div class="empty">Sampling resolver…</div></div>
+        </article>
+        <article class="dns-panel">
+          <h4>Foreign resolvers stopped</h4>
+          <div id="dns-foreign-blocked"><div class="meta">Google, Cloudflare, Charter/Spectrum — bypass blocked.</div></div>
+        </article>
+        <article class="dns-panel dns-panel--wide">
+          <h4>RFC compliance matrix</h4>
+          <div id="dns-rfc-table" class="dns-table-wrap"><div class="empty">Loading RFC matrix…</div></div>
+        </article>
+        <article class="dns-panel dns-panel--wide">
+          <h4>Legal framework · letter of law</h4>
+          <div id="dns-legal-table" class="dns-table-wrap"><div class="empty">Loading legal citations…</div></div>
+        </article>
+        <article class="dns-panel dns-panel--wide">
+          <h4>IANA root servers (RFC 1034 §3.6)</h4>
+          <div id="dns-root-table" class="dns-table-wrap"><div class="empty">Loading root hints…</div></div>
+        </article>
+        <article class="dns-panel dns-panel--wide">
+          <h4>Planetary security · global zones</h4>
+          <div id="dns-planetary-table" class="dns-table-wrap"><div class="empty">Loading planetary posture…</div></div>
+        </article>
+      </div>
+      <div class="dns-crossrefs">
+        <button type="button" data-view-jump="us">US field →</button>
+        <button type="button" data-view-jump="packets/live">Live connections →</button>
+        <button type="button" data-view-jump="signals">Signals →</button>
+        <button type="button" id="dns-refresh-btn" data-tip="Rebuild DNS panel — RFC matrix, planetary posture, resolver stats.">Refresh DNS field</button>
+      </div>
+    </div>
+  </section>
+
   <section id="view-research" class="view">
     <div class="angels-wrap">
       <p class="angels-motto"><strong>Research tables</strong> — MAC OUI vendors, IP intelligence cache, CVE ↔ vector mapping (legacy, recent, zero-day watch). Never unknown.</p>
@@ -2561,6 +2603,7 @@
 
   <script defer src="/assets/sdf-render.js"></script>
   <script defer src="/assets/signals-field.js"></script>
+  <script defer src="/assets/dns-dashboard.js"></script>
   <script defer src="/assets/us-dashboard.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -2833,6 +2876,7 @@
       threats: { panel: "threats", default: "home-protector", subs: { "home-protector": "Home · Airspace", "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", "precision-map": "Precision · Map", "precision-web": "Precision · Web", dossier: "Attack paths", "human-dossier": "Kill orders" } },
       intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", "audio-train": "Audio · Train", "field-rf": "Field RF", research: "Research" } },
       signals: { panel: "signals", default: "signals", subs: { signals: "Field · Live" } },
+      dns: { panel: "dns", default: "dns", subs: { dns: "Truth · Resolver" } },
       library: { panel: "library", default: "library", subs: { library: "Library" } },
       system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
     };
@@ -2843,6 +2887,7 @@
       map: ["threats", "host-attack"], kill: ["threats", "human-dossier"],
       settings: ["system", "settings"], logs: ["system", "logs"],
       signals: ["signals", "signals"],
+      dns: ["dns", "dns"],
     };
     let currentPanel = "command";
     let currentSubView = "command";
@@ -2861,6 +2906,7 @@
       library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
       signals: { keys: ["signals_field"], subs: { signals: ["signals_field"] } },
+      dns: { keys: ["field_dns"], subs: { dns: ["field_dns"] } },
     };
 
     function moduleReady(data, key) {
@@ -2870,6 +2916,7 @@
       if (key === "audio_train") return typeof val === "object" && (val.schema === "audio-train/v1" || val.stats != null);
       if (key === "home_protector") return typeof val === "object" && (val.schema === "home-protector/v1" || val.stats != null);
       if (key === "signals_field") return typeof val === "object" && (val.schema === "signals-field/v1" || val.stats != null);
+      if (key === "field_dns") return typeof val === "object" && (val.schema === "field-dns/v1" || val.rfc_matrix != null);
       if (key === "field_rf") return typeof val === "object" && (val.updated != null || val.antenna?.mode != null);
       if (key === "terror_spiderweb") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.nodes));
       if (key === "precision_field") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.entities));
@@ -3070,6 +3117,7 @@
       renderAudioTrain(data.audio_train);
       renderHomeProtector(data.home_protector);
       if (global.renderSignalsField) renderSignalsField(data.signals_field);
+      if (global.renderDnsField) renderDnsField(data.field_dns);
       renderCommandCenter(data);
       renderFieldProtect(data);
       const gk = data.gatekeeper || {};
@@ -3157,6 +3205,9 @@
       } else if (currentPanel !== "signals" && global.onSignalsViewDeactivated) {
         onSignalsViewDeactivated();
       }
+      if (sub === "dns" && lastPanelData?.field_dns && global.renderDnsField) {
+        renderDnsField(lastPanelData.field_dns);
+      }
       if (sub === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
     }
 
@@ -3188,6 +3239,20 @@
       showView(raw);
     }
     window.addEventListener("hashchange", applyHashView);
+    $("dns-refresh-btn")?.addEventListener("click", async () => {
+      const btn = $("dns-refresh-btn");
+      if (btn) { btn.disabled = true; btn.textContent = "Rebuilding…"; }
+      try {
+        const res = await fetch("/api/field-dns", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        const j = await res.json();
+        if (global.renderDnsField) renderDnsField(j);
+        refresh();
+      } catch {
+        alert("DNS field rebuild failed");
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "Refresh DNS field"; }
+      }
+    });
     bootstrapPanel();
     applyHashView();
 

@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.1.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.2.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -298,7 +298,7 @@ test_dusty_midnight_theme() {
   grep -q 'us-host-machine' "$panel"
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
-  grep -q 'v7.1.0' "$panel"
+  grep -q 'v7.2.0' "$panel"
 }
 
 test_hostess_profile_module() {
@@ -491,7 +491,7 @@ test_panel_fair_ad_ui() {
   grep -q 'policy-pick' "$panel"
   grep -q 'guardian-feed' "$panel"
   grep -q '/api/adblock/policy' "${ROOT}/lib/threat-panel-http.py"
-  grep -qE 'v7\.(0|1)\.0|v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
+  grep -qE 'v7\.[0-9]+\.[0-9]+|v2\.(7\.0|8\.0|9\.0)|v3\.(0\.(0|1)|[12]\.(0|1))' "$panel"
 }
 
 test_host_attack_module() {
@@ -1460,6 +1460,30 @@ run_test "consumer secure defaults" test_consumer_defaults
 run_test "dusty midnight v7.1 theme" test_dusty_midnight_theme
 run_test "hostess profile module" test_hostess_profile_module
 run_test "host security tier extreme" test_host_security_tier_module
+
+test_field_dns_module() {
+  [[ -f "${ROOT}/lib/field-dns.py" ]]
+  [[ -f "${ROOT}/lib/field-dns.sh" ]]
+  [[ -f "${ROOT}/lib/dns-planetary-security.py" ]]
+  [[ -f "${ROOT}/data/dns-legal-rfc-seed.json" ]]
+  [[ -f "${ROOT}/panel/assets/dns-dashboard.js" ]]
+  grep -q 'field_dns' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/field-dns' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'view-dns' "${ROOT}/panel/threat-panel.html"
+  grep -q 'data-view="dns"' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderDnsField' "${ROOT}/panel/assets/dns-dashboard.js"
+  grep -q 'RFC 1035' "${ROOT}/data/dns-legal-rfc-seed.json"
+  grep -q '18 U.S.C' "${ROOT}/data/dns-legal-rfc-seed.json"
+  grep -q 'NEXUS_FIELD_DNS' "${ROOT}/config/nexus.conf"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'field-dns/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-planetary-security.py" json | grep -q 'dns-planetary/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'RFC 1034'
+}
+
+run_test "field dns planetary module" test_field_dns_module
 run_test "gatekeeper strict enforce in+out" test_gatekeeper_strict_enforce
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout
 run_test "panel v2.4 action buttons" test_panel_v24_actions

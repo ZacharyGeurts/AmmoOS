@@ -32,6 +32,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 
@@ -75,6 +76,9 @@ nexus_threat_panel_publish() {
   fi
   if declare -f nexus_signals_field_publish >/dev/null 2>&1; then
     nexus_signals_field_publish
+  fi
+  if declare -f nexus_field_dns_publish >/dev/null 2>&1; then
+    nexus_field_dns_publish
   fi
   local ts mode conn arp egress listeners threats corr signal dns
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
@@ -286,6 +290,12 @@ nexus_threat_panel_publish() {
       nexus_signals_field_json
     else
       printf '{"schema":"signals-field/v1","stats":{"antenna_fields":0},"antennas":[],"pulse_channels":[]}'
+    fi
+    printf ',"field_dns":'
+    if declare -f nexus_field_dns_json >/dev/null 2>&1; then
+      nexus_field_dns_json
+    else
+      printf '{"schema":"field-dns/v1","running":false,"rfc_matrix":[],"legal_framework":[],"zones":[]}'
     fi
     printf ',"adblock_guardian":'
     if declare -f nexus_adblock_guardian_json >/dev/null 2>&1; then

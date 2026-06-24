@@ -100,6 +100,7 @@ nexus_firewall_takeover
 nexus_firewall_ensure_self_access || true
 nexus_panel_tls_ensure
 nexus_hostess7_corroborate_integrity || true
+declare -f nexus_field_dns_enforce_resolv >/dev/null 2>&1 && nexus_field_dns_enforce_resolv || true
 
 nexus_log "INFO" "nexus-daemon" "NEXUS-Shield v${NEXUS_VERSION} ultra-stealth active (genius-only)"
 
@@ -120,6 +121,7 @@ start_module() {
 [[ "${NEXUS_BEHAVIOR_WATCH:-1}" == "1" ]] && start_module behavior nexus_behavior_loop
 [[ "${NEXUS_PRIVACY_GUARD:-1}" == "1" ]] && start_module privacy nexus_privacy_loop
 [[ "${NEXUS_PACKET_ORACLE:-1}" == "1" ]] && start_module packet nexus_packet_loop
+[[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] && start_module field-dns nexus_field_dns_serve_loop
 [[ "${NEXUS_THREAT_PANEL:-1}" == "1" ]] && start_module panel nexus_threat_panel_serve_loop
 (
   sleep 8
