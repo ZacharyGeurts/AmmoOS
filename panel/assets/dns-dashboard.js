@@ -59,7 +59,7 @@
     const dhcp = fd.dhcp_server || fd.servers?.dhcp || {};
     const eg = fd.egress_integrity?.stats || {};
     const tg = fd.threat_guard?.stats || {};
-    const queries = Number(st.queries || 0);
+    const queries = Number(st.queries_total || st.queries || 0);
     const cache = Number(st.cache_hits || 0);
     const blocked = Number(st.blocked || 0);
     const errors = Number(st.errors || 0);
@@ -251,7 +251,7 @@
     const traffic = trafficData(fd);
     const maxVal = Math.max(...traffic.channels.map((c) => c.value), 1);
     el.innerHTML = `<div class="dns-traffic-dns">
-      <div class="dns-traffic-head"><strong>DNS</strong><span class="meta">${esc(String(traffic.dns.queries))} queries · ${esc(String(traffic.dns.hit_rate_pct))}% cache · ${esc(String(traffic.dns.egress_verified))} egress verified</span></div>
+      <div class="dns-traffic-head"><strong>DNS</strong><span class="meta">${esc(String(traffic.dns.queries))} queries · QPS ${esc(fmtQps(traffic.dns.qps_60s))} · ${esc(String(traffic.dns.hit_rate_pct))}% cache · ${esc(fmtMs(traffic.dns.avg_latency_ms))} avg</span></div>
       ${traffic.channels.filter((c) => c.id !== "leases").map((ch) => `<div class="dns-traffic-row">
         <span class="dns-traffic-label">${esc(ch.label)}</span>
         <div class="dns-traffic-bar-wrap"><div class="dns-traffic-bar" style="width:${clamp((ch.value / maxVal) * 100, 2, 100)}%"></div></div>
