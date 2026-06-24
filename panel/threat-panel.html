@@ -192,16 +192,36 @@
     @keyframes nexus-beacon-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
     .spiderweb-wrap { padding: 16px 24px; width: 100%; max-width: none; }
     .spiderweb-motto { font-size: 0.82rem; color: var(--muted); margin: 0 0 12px; line-height: 1.5; }
-    #spiderweb-map {
-      width: 100%; height: min(52vh, 520px); min-height: 320px; border-radius: var(--radius);
-      border: 1px solid var(--border); background: #060a14; position: relative;
-    }
     .spiderweb-stats { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.68rem; margin: 10px 0; color: var(--muted); }
     .spiderweb-stats strong { color: var(--text); }
+    .sw-universal-banner {
+      display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+      padding: 10px 14px; margin: 8px 0 12px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: rgba(77, 155, 255, 0.06); font-size: 0.72rem;
+    }
+    .sw-banner-item strong { color: var(--text); font-size: 0.88rem; }
+    .sw-banner-highlight strong { color: #5ec8ff; }
+    .sw-map-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+    .sw-map-tab {
+      font-size: 0.68rem; padding: 6px 12px; border-radius: 6px;
+      border: 1px solid var(--border); background: #0d1524; color: var(--muted); cursor: pointer;
+    }
+    .sw-map-tab.active { color: var(--text); border-color: #4d9bff; background: rgba(77, 155, 255, 0.12); }
+    .sw-map-panel { display: none; width: 100%; height: min(52vh, 520px); min-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); background: #060a14; position: relative; }
+    .sw-map-panel.active { display: block; }
+    #spiderweb-map.sw-map-panel.active { display: block; }
+    .sw-registry-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0 10px; }
+    .sw-registry-toolbar input, .sw-registry-toolbar select {
+      background: #0d1524; border: 1px solid var(--border); color: var(--text);
+      padding: 7px 10px; border-radius: 6px; font-size: 0.72rem;
+    }
+    .sw-registry-block { margin-bottom: 16px; }
+    .sw-registry-title { margin: 0 0 8px; font-size: 0.82rem; color: var(--internet); }
+    .sw-registry-scroll { max-height: 220px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
     .sw-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.64rem; margin: 8px 0 12px; }
     .sw-legend-item { display: inline-flex; align-items: center; gap: 6px; }
     .sw-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-    .sw-home-pin, .sw-terror-pin, .sw-remote-pin { background: transparent !important; border: none !important; }
+    .sw-home-pin, .sw-terror-pin, .sw-remote-pin, .sw-mobile-pin, .sw-battery-pin, .sw-registry-dot { background: transparent !important; border: none !important; }
     .police-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
     .police-toolbar select, .police-toolbar textarea {
       background: #0d1524; border: 1px solid var(--border); color: var(--text);
@@ -1385,7 +1405,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.9.1</h1>
+        <h1>NEXUS-Shield v5.9.2</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1405,7 +1425,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.1</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.2</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1868,9 +1888,10 @@
 
   <section id="view-spiderweb" class="view">
     <div class="spiderweb-wrap">
-      <p class="spiderweb-motto" id="spiderweb-motto" data-tip="Global terror spiderweb — auto-zooms the hottest red cluster. Green = neighbor homes, blue = pipe up, purple = pipe down.">
-        <strong>Global terror · Spiderweb</strong> — GPS/home correlation pushpins, colored pipes, auto-zoom to the reddest cluster.
+      <p class="spiderweb-motto" id="spiderweb-motto" data-tip="Universal field registry — three maps: terror web, full registry, mobile & battery field.">
+        <strong>Global terror · Spiderweb</strong> — every home, every internet endpoint, every moving cellphone & battery — everywhere identified.
       </p>
+      <div id="spiderweb-universal-banner" class="sw-universal-banner meta">Building universal registry…</div>
       <div id="spiderweb-meta" class="meta" style="margin-bottom:8px;">Building spiderweb…</div>
       <div class="sw-legend" id="spiderweb-legend"></div>
       <div class="spiderweb-stats" id="spiderweb-stats"></div>
@@ -1879,9 +1900,25 @@
         <button type="button" id="spiderweb-rebuild" class="ghost" data-tip="Rebuild spiderweb from live panel + GPS table.">Rebuild web</button>
         <button type="button" data-view-jump="intel/trust" style="margin-left:8px;font-size:0.68rem;">Set home GPS →</button>
       </div>
-      <div id="spiderweb-map" role="application" aria-label="Global terror spiderweb map with home pushpins"></div>
-      <h4 style="margin:14px 0 8px;font-size:0.82rem;color:var(--internet);">Home GPS ↔ address correlation</h4>
-      <div id="spiderweb-gps-table" class="meta"></div>
+      <div class="sw-map-tabs" role="tablist" aria-label="Spiderweb maps">
+        <button type="button" class="sw-map-tab active" data-sw-map="terror" role="tab">Terror web</button>
+        <button type="button" class="sw-map-tab" data-sw-map="registry" role="tab">Homes & internet everywhere</button>
+        <button type="button" class="sw-map-tab" data-sw-map="mobile" role="tab">Mobile & battery field</button>
+      </div>
+      <div id="spiderweb-map" class="sw-map-panel active" role="application" aria-label="Global terror spiderweb map"></div>
+      <div id="spiderweb-registry-map" class="sw-map-panel" role="application" aria-label="Universal registry map — all placed homes and internet"></div>
+      <div id="spiderweb-mobile-map" class="sw-map-panel" role="application" aria-label="Mobile and battery field map"></div>
+      <div class="sw-registry-toolbar">
+        <label>Search <input type="search" id="spiderweb-registry-search" placeholder="ID, IP, label, vendor, city…" autocomplete="off" /></label>
+        <label>Filter <select id="spiderweb-registry-filter">
+          <option value="all">All registry</option>
+          <option value="home">Homes only</option>
+          <option value="internet">Internet only</option>
+          <option value="mobile">Mobile only</option>
+          <option value="battery">Batteries only</option>
+        </select></label>
+      </div>
+      <div id="spiderweb-registry-tables" class="meta"></div>
     </div>
   </section>
 

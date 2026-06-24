@@ -115,8 +115,9 @@ def panel_snapshot(doc: dict[str, Any]) -> dict[str, Any]:
     focus = sw.get("focus") or {}
     views["spiderweb"] = _chip(
         "Terror spiderweb",
-        f"heat {focus.get('heat_sum', 0)} · terror {sws.get('terror_nodes', 0)} · "
-        f"pipe ↑{sws.get('pipe_up', 0)} ↓{sws.get('pipe_down', 0)} · GPS {sws.get('gps_correlated', 0)}",
+        f"{sws.get('identified_everywhere', 0)} everywhere · "
+        f"{sws.get('total_homes', 0)} homes · {sws.get('total_internet', 0)} internet · "
+        f"{sws.get('mobile_moving', 0)} moving mobile · heat {focus.get('heat_sum', 0)}",
         accent="threat",
         jump="threats/spiderweb",
         jump_label="Open spiderweb →",

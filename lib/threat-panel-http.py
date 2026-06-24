@@ -433,6 +433,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/terror-spiderweb/registry":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "terror-spiderweb.py", ["registry"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/police-agencies":
             region = str(query.get("region", [""])[0]).strip() or None
             script = INSTALL_ROOT / "lib" / "police-agency-db.py"

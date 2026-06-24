@@ -595,12 +595,19 @@ test_terror_spiderweb_module() {
   [[ -f "${ROOT}/panel/assets/terror-spiderweb.js" ]]
   grep -q 'terror_spiderweb' "${ROOT}/lib/threat-panel.sh"
   grep -q '/api/terror-spiderweb' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/terror-spiderweb/registry' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'pipe_up' "${ROOT}/lib/terror-spiderweb.py"
   grep -q 'home-gps-correlation' "${ROOT}/lib/terror-spiderweb.py"
+  grep -q 'identified_everywhere' "${ROOT}/lib/terror-spiderweb.py"
+  grep -q 'universal-field-registry' "${ROOT}/lib/terror-spiderweb.py"
+  grep -q '_harvest_mobile_devices' "${ROOT}/lib/terror-spiderweb.py"
+  grep -q '_harvest_batteries' "${ROOT}/lib/terror-spiderweb.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/terror-spiderweb.py" gps-table | grep -q 'homes'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/terror-spiderweb.py" build | grep -q 'terror-spiderweb'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/terror-spiderweb.py" registry | grep -q 'mobile'
 }
 
 test_panel_spiderweb_ui() {
@@ -609,8 +616,11 @@ test_panel_spiderweb_ui() {
   grep -q 'renderTerrorSpiderweb' "$panel"
   grep -q 'terror-spiderweb.js' "$panel"
   grep -q 'spiderweb-map' "$panel"
+  grep -q 'spiderweb-registry-map' "$panel"
+  grep -q 'spiderweb-mobile-map' "$panel"
   grep -q 'Terror · Spiderweb' "$panel"
-  grep -q 'spiderweb-gps-table' "$panel"
+  grep -q 'spiderweb-registry-tables' "$panel"
+  grep -q 'spiderweb-universal-banner' "$panel"
 }
 
 test_nexus_plugins_module() {
@@ -884,7 +894,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.9.1' "$panel"
+  grep -q 'v5.9.2' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -893,7 +903,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.9.1' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.9.2' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
