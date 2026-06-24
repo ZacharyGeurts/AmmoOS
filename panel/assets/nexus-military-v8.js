@@ -14,7 +14,7 @@
   };
 
   function stampVersion(ver) {
-    const v = ver || "8.0.0";
+    const v = ver || "8.1.0";
     const title = document.getElementById("nexus-version-title");
     const btn = document.getElementById("nexus-update-btn");
     if (title) title.textContent = `NEXUS-Shield v${v}`;
@@ -31,7 +31,7 @@
     const bar = document.createElement("div");
     bar.id = "nexus-ops-bar";
     bar.className = "nexus-ops-bar";
-    bar.innerHTML = '<span class="ops-label">OPS FLOW</span><div class="ops-chain" id="nexus-ops-chain"></div><span class="ops-status" id="nexus-ops-status">MILITARY v8</span>';
+    bar.innerHTML = '<span class="ops-label">OPS FLOW</span><div class="ops-chain" id="nexus-ops-chain"></div><span class="ops-status" id="nexus-ops-status">MILITARY v8.1</span>';
     nav.parentNode.insertBefore(bar, nav.nextSibling);
   }
 
@@ -95,7 +95,7 @@
   }
 
   function boot() {
-    stampVersion("8.0.0");
+    stampVersion("8.1.0");
     ensureOpsBar();
     onViewChange(location.hash);
     if (!hookShowView()) {

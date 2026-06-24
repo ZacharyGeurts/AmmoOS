@@ -317,7 +317,7 @@ def import_and_merge(
     created_count = 0
     human_merged = 0
     image_count = 0
-    preview: list[dict[str, Any]] = []
+    sample_rows: list[dict[str, Any]] = []
 
     img_queue = list(images or [])
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -362,8 +362,8 @@ def import_and_merge(
             merged_count += 1
         else:
             created_count += 1
-        if len(preview) < 8:
-            preview.append({"key": key, "fields": row})
+        if len(sample_rows) < 8:
+            sample_rows.append({"key": key, "fields": row})
 
         ip = _human_ip_from_row(row)
         if ip:
@@ -453,7 +453,7 @@ def import_and_merge(
         "images_stored": image_count,
         "record_count": len(records),
         "path": str(import_path),
-        "preview": preview,
+        "sample_rows": sample_rows,
         "reload_panel": True,
     }
 

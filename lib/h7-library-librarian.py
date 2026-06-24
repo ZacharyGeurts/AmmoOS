@@ -35,11 +35,26 @@ def _field_roots() -> list[Path]:
     return roots or [HOSTESS7_TEAM_FIELD]
 
 
+def _brain_score(root: Path) -> int:
+    score = 0
+    if (root / "brain").is_dir():
+        score += 5
+    if (root / "brain/library/manifest.json").is_file():
+        score += 80
+    if (root / "brain/superintel").is_dir():
+        score += 50
+    return score
+
+
 def _primary_root() -> Path:
+    best: Path | None = None
+    best_score = -1
     for r in _field_roots():
-        if (r / "brain").is_dir():
-            return r
-    return _field_roots()[0]
+        s = _brain_score(r)
+        if s > best_score:
+            best_score = s
+            best = r
+    return best or _field_roots()[0]
 
 
 def library_meta_dir() -> Path:
@@ -401,9 +416,12 @@ def ascertain_war_books(*, write: bool = True) -> dict[str, Any]:
 
     study_path = library_meta_dir() / "war_study.jsonl"
     if write and studied:
-        study_path.parent.mkdir(parents=True, exist_ok=True)
-        lines = [json.dumps(s, ensure_ascii=False) for s in studied]
-        study_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        try:
+            study_path.parent.mkdir(parents=True, exist_ok=True)
+            lines = [json.dumps(s, ensure_ascii=False) for s in studied]
+            study_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        except OSError:
+            pass
 
     return {
         "ok": True,

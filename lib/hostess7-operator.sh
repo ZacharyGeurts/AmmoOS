@@ -1,5 +1,5 @@
 #!/bin/bash
-# Hostess7 operator — autonomous NEXUS-Shield GitHub sync and field publish.
+# Hostess7 operator — autonomous NEXUS-Shield field sync (no preview-only update paths).
 
 HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
 # shellcheck source=/dev/null
@@ -20,12 +20,27 @@ nexus_hostess7_sync_field() {
   )
 }
 
-nexus_hostess7_nexus_update_plan() {
+nexus_hostess7_nexus_update_apply() {
+  [[ "${NEXUS_HOSTESS7_UPDATE_APPLY:-0}" == "1" ]] || return 0
   nexus_hostess7_available || return 0
-  local src
+  local src install_sh
   src="$(hostess7_nexus_source 2>/dev/null || true)"
   [[ -n "$src" ]] || return 0
-  NEXUS_SHIELD_SOURCE="$src" python3 "${HOSTESS7_ROOT}/scripts/field_nexus_shield.py" update 2>/dev/null || true
+  install_sh="${src}/stealth_install.sh"
+  [[ -f "$install_sh" ]] || {
+    nexus_log "WARN" "hostess7" "UPDATE_SKIP missing ${install_sh}"
+    return 1
+  }
+  if [[ "$(id -u)" -eq 0 ]]; then
+    bash "$install_sh"
+    return $?
+  fi
+  if sudo -n true 2>/dev/null; then
+    sudo -E bash "$install_sh"
+    return $?
+  fi
+  nexus_log "INFO" "hostess7" "UPDATE_REQUIRES_SUDO — use panel UPDATE NOW or: sudo bash ${install_sh}"
+  return 3
 }
 
 nexus_hostess7_autonomous_cycle() {
@@ -34,5 +49,4 @@ nexus_hostess7_autonomous_cycle() {
   if declare -f nexus_hostess7_corroborate_integrity >/dev/null 2>&1; then
     nexus_hostess7_corroborate_integrity || true
   fi
-  nexus_hostess7_nexus_update_plan
 }

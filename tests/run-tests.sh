@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="8.0.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="8.1.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -299,7 +299,13 @@ test_dusty_midnight_theme() {
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
   grep -q 'nexus-military-v8' "$panel"
-  grep -q 'v8.0.0' "$panel"
+  grep -q 'v8.1.0' "$panel"
+  grep -q '_panel_slice' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'prefetchTabSlices' "$panel"
+  grep -q 'field_brain' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q '/api/field-brain' "${ROOT}/lib/threat-panel-http.py"
+  [[ -f "${ROOT}/lib/field-brain-panel.py" ]]
+  [[ -d "${ROOT}/library/dewey" ]]
 }
 
 test_hostess_profile_module() {
@@ -2059,7 +2065,7 @@ test_field_hardware_api() {
   grep -q 'signals-hardware-panel' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderHardware' "${ROOT}/panel/assets/signals-field.js"
   grep -q 'renderAudioQuality' "${ROOT}/panel/assets/signals-field.js"
-  grep -q 'NEXUS_VERSION="8.0.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="8.1.0"' "${ROOT}/lib/nexus-common.sh"
 }
 
 run_test "field hardware UI and API 7.9" test_field_hardware_api
@@ -2107,7 +2113,9 @@ test_field_gui_publish() {
   grep -q 'fetch("/api/status"' "${ROOT}/panel/threat-panel.html"
   grep -q 'FIELD_PARALLEL_SLICES' "${ROOT}/panel/threat-panel.html"
   grep -q 'PANEL_PARALLEL_KEYS' "${ROOT}/lib/threat-panel-http.py"
-  grep -q 'NEXUS_VERSION="8.0.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'max_workers: int = 25' "${ROOT}/lib/field-panel-parallel.py"
+  ! grep -q 'nexus_hostess7_nexus_update_plan' "${ROOT}/lib/hostess7-operator.sh"
+  grep -q 'NEXUS_VERSION="8.1.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" bash -c '
     source "${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
     nexus_init_runtime_paths

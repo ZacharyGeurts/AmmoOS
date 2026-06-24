@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "team_device": "/dev/nvme2n1",
+  "brain_root": "/home/default/Desktop/AMOURANTHRTX/cache/fieldstorage/brain",
+  "field_persist": "/home/default/Desktop/AMOURANTHRTX/cache/fieldstorage/field_wave.persist",
+  "team_image": "/home/default/Desktop/AMOURANTHRTX/cache/fieldstorage/team_drive.img",
+  "created": "2026-06-23T02:02:31.740983+00:00"
+}

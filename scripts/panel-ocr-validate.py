@@ -18,13 +18,13 @@ PANEL_URL = os.environ.get("NEXUS_PANEL_URL", f"https://127.0.0.1:{PORT}")
 
 REQUIRED_HTML = (
     "nexus-military-v8",
-    "v8.0.0",
+    "v8.1.0",
     "Military C2 Panel",
     "nexus-military-v8.css",
     "nexus-military-v8.js",
 )
 REQUIRED_JS = ("OPS FLOW", "MILITARY v8", "stampVersion")
-REQUIRED_STATUS = ("8.0.0", "military-v8")
+REQUIRED_STATUS = ("8.1.0", "military-v81")
 
 
 def _ssl_ctx():
@@ -150,7 +150,7 @@ def main() -> int:
     if fail:
         print(f"\nOCR VALIDATION FAILED ({fail} hard failures)")
         return 1
-    print("\nOCR VALIDATION PASSED — v8.0.0 military GUI confirmed")
+    print("\nOCR VALIDATION PASSED — v8.1.0 military GUI confirmed")
     return 0
 
 

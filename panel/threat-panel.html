@@ -13,7 +13,7 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NEXUS-Shield v8.0.0 — Military C2 Panel</title>
+  <title>NEXUS-Shield v8.1.0 — Military C2 Panel</title>
   <link rel="preload" href="/api/status" as="fetch" crossorigin />
   <link rel="preload" href="/api/field" as="fetch" crossorigin />
   <script src="/assets/field-foundation.js"></script>
@@ -1731,7 +1731,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1 id="nexus-version-title">NEXUS-Shield v8.0.0</h1>
+        <h1 id="nexus-version-title">NEXUS-Shield v8.1.0</h1>
         <div class="brand-sub" id="nexus-brand-sub" data-i18n="brand.sub">Military Grade C2 · Field Green · Hostess 7</div>
       </div>
     </div>
@@ -1771,7 +1771,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: acquires github-update.lock, git pull from GitHub, runs stealth_install (asks sudo if needed), restarts NEXUS, reloads this tab. Blocked while lock held.">v8.0.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: acquires github-update.lock, git pull from GitHub, runs stealth_install (asks sudo if needed), restarts NEXUS, reloads this tab. Blocked while lock held.">v8.1.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -2232,6 +2232,7 @@
           <button type="button" class="library-open-btn" id="library-open-reader" disabled aria-label="Open full-screen reader for selected book">Open full-screen reader</button>
           <button type="button" class="library-upload-btn" id="library-upload-toggle">Upload to Dewey shelf</button>
         </div>
+        <div class="library-sync-bar" id="field-brain-banner"></div>
         <div class="library-sync-bar" id="library-sync-bar"></div>
         <div class="library-covers" id="library-covers"></div>
         <div class="library-ein" id="library-ein"></div>
@@ -3343,6 +3344,7 @@
       { key: "field_outside_talk", url: "/api/field-outside-talk" },
       { key: "field_drive", url: "/api/field-drive" },
       { key: "h7_library", url: "/api/library/catalog" },
+      { key: "field_brain", url: "/api/field-brain" },
       { key: "settings", url: "/api/settings" },
     ];
 
@@ -3352,7 +3354,7 @@
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
       threats: { keys: ["home_protector", "host_attacks", "terror_spiderweb", "precision_field"], subs: { "home-protector": ["home_protector"], "host-attack": ["host_attacks"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["audio_train", "field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
-      library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
+      library: { keys: ["h7_library", "field_brain"], subs: { library: ["h7_library", "field_brain"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
       signals: { keys: ["signals_field", "field_antenna", "field_radio", "field_hardware", "field_hazard_onset"], subs: { signals: ["signals_field", "field_antenna", "field_radio", "field_hardware"] } },
       dns: { keys: ["field_dns"], subs: { dns: ["field_dns"] } },
@@ -3380,6 +3382,7 @@
       if (key === "angel_research") return typeof val === "object" && (val.tables != null || val.updated != null);
       if (key === "us_field") return typeof val === "object" && (val.title != null || val.page != null || val.updated != null);
       if (key === "h7_library") return typeof val === "object" && (val.books != null || val.updated != null);
+      if (key === "field_brain") return typeof val === "object" && (val.ok === true || val.github_library_books > 0 || val.manifest_count > 0);
       if (key === "packet_field") return typeof val === "object" && (val.updated != null || val.ports != null || val.ring != null);
       if (key === "browser_awareness") return typeof val === "object" && (val.honorability != null || val.active_sites != null);
       if (key === "police_agency") return typeof val === "object" && (val.agencies != null || val.updated != null);
@@ -3611,6 +3614,7 @@
       renderPacketField(data.packet_field || {});
       renderInspect(data.packet_field || {});
       renderLibrary(data.h7_library || { books: [], shelves: [] });
+      renderFieldBrain(data.field_brain);
       if (window.NexusPlugins) NexusPlugins.render(data);
       updateTabLoadProgress(data);
       onSubViewActivated(currentSubView);
@@ -3737,42 +3741,51 @@
       if (ann) ann.textContent = msg;
     }
 
-    async function ensureTabData(panel, sub) {
-      let pct = tabLoadPercent(lastPanelData, panel, sub);
-      if (pct >= 100 && tabDomReady(panel)) return true;
-      announceTabGate(`Loading ${panel} tab data…`);
-      try { await refresh(); } catch (_) {}
-      pct = tabLoadPercent(lastPanelData, panel, sub);
-      return pct >= 100 && tabDomReady(panel);
+    const tabPrefetchGen = new Map();
+
+    function slicesForTab(panel, sub) {
+      const spec = TAB_LOAD_MODULES[panel];
+      if (!spec) return [];
+      const keys = new Set((sub && spec.subs?.[sub]) || spec.keys || []);
+      return FIELD_PARALLEL_SLICES.filter((slice) => keys.has(slice.key));
+    }
+
+    function prefetchTabSlices(panel, sub) {
+      const slices = slicesForTab(panel, sub);
+      if (!slices.length) return;
+      const gen = panelSliceGeneration;
+      tabPrefetchGen.set(panel, gen);
+      slices.forEach((slice) => {
+        if (moduleReady(lastPanelData, slice.key)) return;
+        fetchPanelSlice(slice, gen);
+      });
     }
 
     async function showView(route, opts = {}) {
       const { panel, sub } = resolveViewRoute(route);
       const btn = document.querySelector(`nav.menu button[data-view="${panel}"]`);
       if (!btn) return;
-      if (!opts.force && opts.fromNav) {
-        document.querySelectorAll("nav.menu button[data-view]").forEach((b) => b.classList.add("tab-gated"));
-        const ready = await ensureTabData(panel, sub);
-        document.querySelectorAll("nav.menu button[data-view]").forEach((b) => b.classList.remove("tab-gated"));
-        if (!ready) {
-          announceTabGate(`${panel} tab still loading — wait for 100% badge`);
-          return;
-        }
-      }
+      prefetchTabSlices(panel, sub);
       currentPanel = panel;
       currentSubView = sub;
-      document.querySelectorAll("nav.menu button").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll("nav.menu button").forEach((b) => b.classList.remove("active", "tab-gated"));
       btn.classList.add("active");
       renderSubnav(panel, sub);
       activateSubView(sub);
       onSubViewActivated(sub);
+      if (lastPanelData) paintPanel(lastPanelData);
+      updateTabLoadProgress(lastPanelData, { fetching: panelFetchInFlight });
       const hash = panel === sub ? panel : `${panel}/${sub}`;
       if (location.hash !== `#${hash}`) history.replaceState(null, "", `#${hash}`);
       global.NexusBraille?.onViewActivated?.(sub || panel);
+      global.NexusMilitary?.onViewChange?.(hash);
     }
 
     document.querySelectorAll("nav.menu button").forEach((btn) => {
-      btn.addEventListener("click", () => showView(btn.dataset.view, { fromNav: true }));
+      const panel = btn.dataset.view;
+      btn.addEventListener("mouseenter", () => prefetchTabSlices(panel));
+      btn.addEventListener("focus", () => prefetchTabSlices(panel));
+      btn.addEventListener("click", () => showView(panel, { fromNav: true }));
     });
     document.body.addEventListener("click", (ev) => {
       const jump = ev.target.closest?.("[data-view-jump]");
@@ -4752,6 +4765,20 @@
       }).join("");
     }
 
+    function renderFieldBrain(brain) {
+      const el = $("library-sync-bar");
+      if (!el || !brain) return;
+      const gh = brain.github_library_books || brain.github_manifest_count || 0;
+      const corp = brain.corpus_count || brain.brain_corpus_count || 0;
+      const src = brain.data_source || (gh ? "github" : "field");
+      const si = brain.superintelligence || {};
+      const extra = document.getElementById("field-brain-banner");
+      if (extra) {
+        extra.innerHTML = `<strong>Field brain</strong> · ${src} · GitHub ${gh} · corpora ${corp}`
+          + (si.available ? ` · Superintel ${esc(si.arc || si.head || "active")}` : "");
+      }
+    }
+
     function renderLibrarySyncBar(lib) {
       const el = $("library-sync-bar");
       if (!el) return;
@@ -4770,7 +4797,7 @@
         <span><strong>${esc(libName)}</strong> · World's Best Dewey · <code>${esc((fd.primary_root || "field drive").split("/").slice(-2).join("/"))}</code></span>
         <span class="${same ? "same" : "changed"}">${same ? "Field exact same" : "Field updated"} · sig ${esc(fp)}</span>
         ${touched ? `<span class="${touchedSame ? "same" : "changed"}">Last touched: ${esc(touched)}${touchedSame ? " (unchanged)" : " (changed)"}</span>` : ""}
-        <span>${(lib?.ready_count || 0)} books · ${warN} war · ${(lib?.librarian?.isbn_count || 0)} ISBN</span>
+        <span>${(lib?.ready_count || 0)} books · ${lib?.github_library_books || 0} GitHub · ${warN} war · ${(lib?.librarian?.isbn_count || 0)} ISBN</span>
         ${fdLine ? `<span>${esc(fdLine)}</span>` : ""}
         <span><a href="https://github.com/ZacharyGeurts/NEXUS-Shield/tree/main/library/dewey" target="_blank" rel="noopener">GitHub Dewey shelves</a></span>`;
     }
@@ -7910,6 +7937,11 @@
         await checkNexusUpdate(true);
         return;
       }
+      const sudoFirst = await promptUpdateSudo({
+        message: "NEXUS updates always require administrator (sudo) access to install and restart.",
+        command: "sudo bash stealth_install.sh",
+      });
+      if (!sudoFirst) return;
       nexusUpdateApplying = true;
       const btn = $("nexus-update-btn");
       const detail = $("nexus-update-detail");
@@ -8178,7 +8210,7 @@
       refresh();
       publishParallelFields();
       if (!window._nexusPanelRefreshTimer) {
-        window._nexusPanelRefreshTimer = setInterval(refresh, 2000);
+        window._nexusPanelRefreshTimer = setInterval(refresh, 5000);
       }
       if (!window._nexusPanelParallelTimer) {
         window._nexusPanelParallelTimer = setInterval(publishParallelFields, 20000);

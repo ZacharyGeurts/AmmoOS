@@ -40,6 +40,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-drive-system.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-drive-system.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-gui-publish.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-gui-publish.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-brain-sync.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-brain-sync.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 
@@ -60,6 +61,9 @@ nexus_threat_panel_publish() {
   local lock="${NEXUS_STATE_DIR}/threat-panel.publish.lock"
   exec 9>"$lock" 2>/dev/null || return 0
   flock -w 5 9 2>/dev/null || return 0
+  if declare -f nexus_field_brain_sync >/dev/null 2>&1; then
+    nexus_field_brain_sync
+  fi
   if declare -f nexus_field_gui_publish_all >/dev/null 2>&1; then
     nexus_field_gui_publish_all
   fi
@@ -459,6 +463,14 @@ nexus_threat_panel_publish() {
     else
       printf '{"schema":"hostess7-lethal-insight-panel/v1"}'
     fi
+    printf ',"field_brain":'
+    if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-brain-panel.py" ]]; then
+      NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+        python3 "${NEXUS_INSTALL_ROOT}/lib/field-brain-panel.py" json 2>/dev/null \
+        || printf '{"schema":"field-brain/v1","ok":false}'
+    else
+      printf '{"schema":"field-brain/v1","ok":false}'
+    fi
     printf ',"field_antenna_catch":'
     if declare -f nexus_field_antenna_catch_json >/dev/null 2>&1; then
       nexus_field_antenna_catch_json
@@ -476,6 +488,10 @@ nexus_threat_panel_publish() {
   chown root:nexus "$NEXUS_THREAT_PANEL_JSON" 2>/dev/null || true
   if declare -f nexus_plugins_merge_panel >/dev/null 2>&1; then
     nexus_plugins_merge_panel
+  fi
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-panel-parallel.py" ]]; then
+    NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+      python3 "${NEXUS_INSTALL_ROOT}/lib/field-panel-parallel.py" publish >/dev/null 2>&1 || true
   fi
   flock -u 9 2>/dev/null || true
 }

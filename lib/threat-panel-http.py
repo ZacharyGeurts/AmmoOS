@@ -74,6 +74,7 @@ PANEL_PARALLEL_KEYS = frozenset({
     "angel_research",
     "browser_awareness",
     "settings",
+    "field_brain",
 })
 
 
@@ -91,7 +92,7 @@ def _read_install_version() -> str:
                 return m.group(1)
         except OSError:
             pass
-    return os.environ.get("NEXUS_VERSION", "8.0.0")
+    return os.environ.get("NEXUS_VERSION", "8.1.0")
 
 
 def _read_status_json(*, full: bool = False) -> str:
@@ -103,7 +104,7 @@ def _read_status_json(*, full: bool = False) -> str:
             "field": True,
             "panel_ready": False,
             "version": version,
-            "panel_build": "military-v8",
+            "panel_build": "military-v81",
             "gatekeeper": {"connections": [], "harm_candidates": 0},
         }, ensure_ascii=False)
     raw = STATUS_JSON.read_text(encoding="utf-8")
@@ -115,10 +116,69 @@ def _read_status_json(*, full: bool = False) -> str:
             for key in PANEL_PARALLEL_KEYS:
                 doc.pop(key, None)
             doc["version"] = version
-            doc["panel_build"] = "military-v8"
+            doc["panel_build"] = "military-v81"
         return json.dumps(doc, ensure_ascii=False)
     except json.JSONDecodeError:
         return raw
+
+
+_PANEL_DOC_CACHE: dict | None = None
+_PANEL_DOC_MTIME: float = -1.0
+
+
+def _load_panel_doc() -> dict:
+    global _PANEL_DOC_CACHE, _PANEL_DOC_MTIME
+    if not STATUS_JSON.is_file():
+        return {}
+    try:
+        mtime = STATUS_JSON.stat().st_mtime
+    except OSError:
+        return {}
+    if _PANEL_DOC_CACHE is not None and mtime == _PANEL_DOC_MTIME:
+        return _PANEL_DOC_CACHE
+    try:
+        doc = json.loads(STATUS_JSON.read_text(encoding="utf-8"))
+        if isinstance(doc, dict):
+            _PANEL_DOC_CACHE = doc
+            _PANEL_DOC_MTIME = mtime
+            return doc
+    except (OSError, json.JSONDecodeError):
+        pass
+    return {}
+
+
+def _panel_slice(
+    key: str,
+    *,
+    live: dict | None = None,
+    default: dict | None = None,
+) -> dict:
+    """Zero-cost read: published field cache first, live builder only on miss."""
+    doc = _load_panel_doc()
+    val = doc.get(key)
+    if isinstance(val, dict) and val:
+        out = dict(val)
+        out["_field_cache"] = True
+        return out
+    if live:
+        live["_field_cache"] = False
+        return live
+    return dict(default or {})
+
+
+def _sudo_available() -> bool:
+    if os.geteuid() == 0:
+        return True
+    try:
+        proc = subprocess.run(
+            ["sudo", "-n", "true"],
+            capture_output=True,
+            timeout=5,
+            check=False,
+        )
+        return proc.returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
 
 
 def _read_state_json(name: str, default: dict) -> dict:
@@ -588,25 +648,41 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/gatekeeper":
-            payload = _read_state_json(
-                "connection-intent.json",
-                {"connections": [], "harm_candidates": 0, "why_no_auto_block": "Gatekeeper warming up…"},
+            payload = _panel_slice(
+                "gatekeeper",
+                live=_read_state_json(
+                    "connection-intent.json",
+                    {"connections": [], "harm_candidates": 0, "why_no_auto_block": "Gatekeeper warming up…"},
+                ),
+                default={"connections": [], "harm_candidates": 0},
             )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/host-attacks":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "host-attack-map.py", ["json-panel"])
+            payload = _panel_slice(
+                "host_attacks",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "host-attack-map.py", ["json-panel"]),
+                default={"points": [], "updated": None},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/us-field":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-us-intel.py", ["json"])
+            payload = _panel_slice(
+                "us_field",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-us-intel.py", ["json"]),
+                default={"title": "US Field", "page": {}},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/field-command":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-command.py", ["json"])
+            payload = _panel_slice(
+                "field_command",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-command.py", ["json"]),
+                default={"good_guy": {"count": 0}, "bad_guy": {"count": 0}, "pulse": {}},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -649,7 +725,11 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/settings":
-            payload = _nexus_shell_json_fn("nexus_settings_json", sources=["nexus-settings.sh"])
+            payload = _panel_slice(
+                "settings",
+                live=_nexus_shell_json_fn("nexus_settings_json", sources=["nexus-settings.sh"]),
+                default={},
+            )
             self._send(200, json.dumps(payload or {}), "application/json")
             return
 
@@ -687,12 +767,20 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/honorability":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "browser-awareness.py", ["json"])
+            payload = _panel_slice(
+                "browser_awareness",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "browser-awareness.py", ["json"]),
+                default={"honorability": {}, "active_sites": []},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/field-rf":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-rf-sentinel.py", ["json"])
+            payload = _panel_slice(
+                "field_rf",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-rf-sentinel.py", ["json"]),
+                default={"antenna": {"mode": "standby"}, "bursts": []},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -707,7 +795,11 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/terror-spiderweb":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "terror-spiderweb.py", ["json"])
+            payload = _panel_slice(
+                "terror_spiderweb",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "terror-spiderweb.py", ["json"]),
+                default={"nodes": [], "edges": []},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -742,7 +834,11 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/precision-field":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "precision-field.py", ["json"])
+            payload = _panel_slice(
+                "precision_field",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "precision-field.py", ["json"]),
+                default={"entities": [], "edges": [], "stats": {}},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -757,7 +853,11 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/audio-train":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "audio-train.py", ["json"])
+            payload = _panel_slice(
+                "audio_train",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "audio-train.py", ["json"]),
+                default={"schema": "audio-train/v1", "stats": {}},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -767,12 +867,20 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/home-protector":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "home-protector.py", ["json"])
+            payload = _panel_slice(
+                "home_protector",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "home-protector.py", ["json"]),
+                default={"schema": "home-protector/v1", "stats": {}},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/signals-field":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "signals-field.py", ["json"])
+            payload = _panel_slice(
+                "signals_field",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "signals-field.py", ["json"]),
+                default={"schema": "signals-field/v1", "stats": {}, "antennas": []},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -782,27 +890,47 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/field-hardware":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-hardware-probe.py", ["json"])
+            payload = _panel_slice(
+                "field_hardware",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-hardware-probe.py", ["json"]),
+                default={"schema": "field-hardware-probe/v1"},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/field-hazard-onset":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-hazard-onset.py", ["panel"])
+            payload = _panel_slice(
+                "field_hazard_onset",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-hazard-onset.py", ["panel"]),
+                default={"schema": "field-hazard-onset-panel/v1"},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/lethal-enforcement":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "lethal-enforcement.py", ["panel"])
+            payload = _panel_slice(
+                "lethal_enforcement",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "lethal-enforcement.py", ["panel"]),
+                default={"schema": "lethal-enforcement-panel/v1", "merciless": True},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/hostess7-lethal-insight":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-lethal-insight.py", ["panel"])
+            payload = _panel_slice(
+                "hostess7_lethal_insight",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-lethal-insight.py", ["panel"]),
+                default={"schema": "hostess7-lethal-insight-panel/v1"},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/field-antenna":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py", ["json"])
+            payload = _panel_slice(
+                "field_antenna",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py", ["json"]),
+                default={"schema": "field-antenna/v1"},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -819,22 +947,47 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/field-radio":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-radio-catcher.py", ["json"])
+            payload = _panel_slice(
+                "field_radio",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-radio-catcher.py", ["json"]),
+                default={"schema": "field-radio-catcher/v1", "station_menu": []},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/field-dns":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"])
+            payload = _panel_slice(
+                "field_dns",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"]),
+                default={"schema": "field-dns/v1"},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/field-outside-talk":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-outside-talk.py", ["json"])
+            payload = _panel_slice(
+                "field_outside_talk",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-outside-talk.py", ["json"]),
+                default={"schema": "field-outside-talk/v1"},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
         if path == "/api/field-drive":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-drive-system.py", ["json"])
+            payload = _panel_slice(
+                "field_drive",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-drive-system.py", ["json"]),
+                default={"schema": "field-drive-system/v1", "drives": []},
+            )
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field-brain":
+            payload = _panel_slice(
+                "field_brain",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-brain-panel.py", ["json"]),
+                default={"schema": "field-brain/v1", "ok": False},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -1002,6 +1155,10 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
             if path == "/api/library/catalog":
+                cached = _panel_slice("h7_library", default={})
+                if cached.get("_field_cache") and cached.get("books"):
+                    self._send(200, json.dumps(cached), "application/json")
+                    return
                 profile = str(query.get("profile", [""])[0]).strip()
                 args = ["build"]
                 if profile:
@@ -1096,6 +1253,12 @@ class Handler(BaseHTTPRequestHandler):
 
         if path.startswith("/api/data/"):
             key = path.split("/api/data/", 1)[1]
+            panel_key = key.replace("-", "_")
+            if panel_key in PANEL_PARALLEL_KEYS:
+                cached = _panel_slice(panel_key, default={})
+                if cached.get("_field_cache"):
+                    self._send(200, json.dumps(cached), "application/json")
+                    return
             fp = DATA_FILES.get(key)
             if not fp or not fp.is_file():
                 self._send(404, "not found", "text/plain")
@@ -1220,6 +1383,30 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
         if path == "/api/update/apply":
+            if os.geteuid() != 0 and not _sudo_available():
+                needs = {
+                    "needs_sudo": True,
+                    "message": "Administrator password required — updates always run with sudo",
+                    "command": f"cd '{_resolve_nexus_source_root() or INSTALL_ROOT}' && sudo bash stealth_install.sh",
+                }
+                try:
+                    (STATE_DIR / "update-needs-sudo.json").write_text(
+                        json.dumps(needs) + "\n",
+                        encoding="utf-8",
+                    )
+                except OSError:
+                    pass
+                self._send(
+                    403,
+                    json.dumps({
+                        "ok": False,
+                        "needs_sudo": True,
+                        "sudo_prompt": needs,
+                        "message": needs["message"],
+                    }),
+                    "application/json",
+                )
+                return
             lock = _nexus_update_lock(["status"])
             if lock.get("locked"):
                 self._send(

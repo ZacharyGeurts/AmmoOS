@@ -15,6 +15,8 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield
 HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
 HOSTESS7_TEAM_FIELD = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
 BOOKS_SRC = INSTALL / "lib" / "field-books"
+GITHUB_LIBRARY = INSTALL / "library" / "dewey"
+FIELD_BRAIN_DATA = INSTALL / "data" / "field-brain"
 DEWEY_MAP = INSTALL / "data" / "dewey-decimal-map.json"
 DEWEY_TREE = INSTALL / "data" / "dewey-full-tree.json"
 LIBRARY_PROFILES = INSTALL / "data" / "library-profiles.json"
@@ -291,11 +293,26 @@ def _textbook_roots() -> list[Path]:
     return out or [HOSTESS7_TEAM_FIELD / "textbooks"]
 
 
+def _brain_score(root: Path) -> int:
+    score = 0
+    if (root / "brain").is_dir():
+        score += 5
+    if (root / "brain/library/manifest.json").is_file():
+        score += 80
+    if (root / "brain/superintel").is_dir():
+        score += 50
+    return score
+
+
 def _primary_field_root() -> Path:
+    best: Path | None = None
+    best_score = -1
     for root in _field_roots():
-        if (root / "brain").is_dir() or (root / "textbooks").is_dir():
-            return root
-    return HOSTESS7_TEAM_FIELD
+        s = _brain_score(root)
+        if s > best_score:
+            best_score = s
+            best = root
+    return best or HOSTESS7_TEAM_FIELD
 
 
 def _dewey_dir(dewey_code: str, *, root: Path | None = None) -> Path:
@@ -477,6 +494,56 @@ def _library_only(books: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [b for b in books if tie.is_library_book(b)]
 
 
+def _scan_github_library() -> list[dict[str, Any]]:
+    """Zero-cost catalog from GitHub tree library/dewey/**/book.json (shipped with NEXUS-Shield)."""
+    if not GITHUB_LIBRARY.is_dir():
+        return []
+    rows: list[dict[str, Any]] = []
+    for book_json in sorted(GITHUB_LIBRARY.glob("**/book.json")):
+        try:
+            row = json.loads(book_json.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(row, dict):
+            continue
+        bid = str(row.get("id") or book_json.parent.name)
+        row["id"] = bid
+        row.setdefault("format", "github-catalog")
+        row["ready"] = True
+        row["source"] = "github"
+        row["github_path"] = str(book_json.relative_to(INSTALL))
+        row.setdefault("dewey_label", translate_dewey_label(str(row.get("dewey", ""))))
+        text = _source_text(bid)
+        if text and len(text) > 200:
+            meta = _txt_meta_from_text(bid, row, text)
+            row.update(meta)
+            row["ready"] = True
+        rows.append(row)
+    return rows
+
+
+def _github_brain_manifest() -> dict[str, Any]:
+    """Field brain manifests committed under data/field-brain/ on GitHub."""
+    out: dict[str, Any] = {"source": "github", "files": []}
+    if not FIELD_BRAIN_DATA.is_dir():
+        return out
+    for name in ("manifest.json", "context.json", "field_fingerprint.json", "index.json", "superintel.json"):
+        fp = FIELD_BRAIN_DATA / name
+        if not fp.is_file():
+            continue
+        try:
+            doc = json.loads(fp.read_text(encoding="utf-8"))
+            out["files"].append(name)
+            if name == "manifest.json" and isinstance(doc, dict):
+                out["manifest"] = doc
+                out["catalog_count"] = doc.get("catalog_count") or len(doc.get("books") or [])
+            if name == "context.json" and isinstance(doc, dict):
+                out["superintel_context"] = doc
+        except (OSError, json.JSONDecodeError):
+            continue
+    return out
+
+
 def _scan_books() -> list[dict[str, Any]]:
     by_id: dict[str, dict[str, Any]] = {}
 
@@ -520,6 +587,16 @@ def _scan_books() -> list[dict[str, Any]]:
             merged = {**by_id[bid], **{k: v for k, v in row.items() if v}}
             merged["ready"] = True
             by_id[bid] = merged
+
+    for row in _scan_github_library():
+        bid = row["id"]
+        prev = by_id.get(bid) or {}
+        merged = {**prev, **row}
+        if prev.get("char_count", 0) > row.get("char_count", 0):
+            merged["char_count"] = prev["char_count"]
+            merged["page_count"] = prev.get("page_count", merged.get("page_count"))
+            merged["format"] = prev.get("format", merged.get("format"))
+        by_id[bid] = merged
 
     tie = _field_tie()
     if tie:
@@ -783,6 +860,8 @@ def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict
         "library_profiles": list_library_profiles(),
         "profile_translation": prof_doc.get("translation_help", ""),
         "github_library": "library/dewey/",
+        "github_library_books": len(_scan_github_library()),
+        "github_field_brain": _github_brain_manifest(),
         "field_drive": {
             **(tie.field_drive_inventory() if (tie := _field_tie()) else {}),
             **({"tracking": tie.tracking_lists(on_disk_ids={b["id"] for b in books})} if tie else {}),

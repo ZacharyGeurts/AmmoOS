@@ -32,6 +32,7 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "terror_spiderweb": ("terror-spiderweb.py", ["json"]),
     "precision_field": ("precision-field.py", ["json"]),
     "h7_library": ("h7-library-bridge.py", ["build"]),
+    "field_brain": ("field-brain-panel.py", ["json"]),
     "packet_field": ("packet-field.py", ["json"]),
     "host_attacks": ("host-attack-map.py", ["json-panel"]),
     "us_field": ("field-us-intel.py", ["json"]),
@@ -100,7 +101,7 @@ def _save_panel(doc: dict[str, Any]) -> None:
     tmp.replace(PANEL_JSON)
 
 
-def publish_parallel(*, max_workers: int = 8) -> dict[str, Any]:
+def publish_parallel(*, max_workers: int = 25) -> dict[str, Any]:
     doc = _load_panel()
     doc["field"] = True
     doc["parallel_load"] = True
