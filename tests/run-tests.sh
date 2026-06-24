@@ -588,6 +588,31 @@ test_police_agency_module() {
 1,460.100,460.100,FM,test" test.csv | grep -q '"merge_only": true'
 }
 
+test_terror_spiderweb_module() {
+  [[ -f "${ROOT}/lib/terror-spiderweb.py" ]]
+  [[ -f "${ROOT}/lib/terror-spiderweb.sh" ]]
+  [[ -f "${ROOT}/data/home-gps-correlation.tsv" ]]
+  [[ -f "${ROOT}/panel/assets/terror-spiderweb.js" ]]
+  grep -q 'terror_spiderweb' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/terror-spiderweb' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'pipe_up' "${ROOT}/lib/terror-spiderweb.py"
+  grep -q 'home-gps-correlation' "${ROOT}/lib/terror-spiderweb.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/terror-spiderweb.py" gps-table | grep -q 'homes'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/terror-spiderweb.py" build | grep -q 'terror-spiderweb'
+}
+
+test_panel_spiderweb_ui() {
+  local panel="${ROOT}/panel/threat-panel.html"
+  grep -q 'view-spiderweb' "$panel"
+  grep -q 'renderTerrorSpiderweb' "$panel"
+  grep -q 'terror-spiderweb.js' "$panel"
+  grep -q 'spiderweb-map' "$panel"
+  grep -q 'Terror · Spiderweb' "$panel"
+  grep -q 'spiderweb-gps-table' "$panel"
+}
+
 test_nexus_plugins_module() {
   [[ -f "${ROOT}/lib/nexus-plugins.py" ]]
   [[ -f "${ROOT}/lib/nexus-plugins.sh" ]]
@@ -859,7 +884,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.9.0' "$panel"
+  grep -q 'v5.9.1' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -868,7 +893,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.9.0' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.9.1' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
@@ -1226,6 +1251,8 @@ run_test "program tags module" test_program_tags_module
 run_test "gov intel module" test_gov_intel_module
 run_test "police agency module" test_police_agency_module
 run_test "panel field rf UI" test_panel_field_rf_ui
+run_test "terror spiderweb module" test_terror_spiderweb_module
+run_test "panel spiderweb UI" test_panel_spiderweb_ui
 run_test "nexus plugins module" test_nexus_plugins_module
 run_test "panel plugins UI" test_panel_plugins_ui
 run_test "field command module" test_field_command_module

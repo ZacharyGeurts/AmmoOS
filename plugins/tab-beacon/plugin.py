@@ -110,6 +110,18 @@ def panel_snapshot(doc: dict[str, Any]) -> dict[str, Any]:
         jump_label="Kill orders →",
     )
 
+    sw = doc.get("terror_spiderweb") or {}
+    sws = sw.get("stats") or {}
+    focus = sw.get("focus") or {}
+    views["spiderweb"] = _chip(
+        "Terror spiderweb",
+        f"heat {focus.get('heat_sum', 0)} · terror {sws.get('terror_nodes', 0)} · "
+        f"pipe ↑{sws.get('pipe_up', 0)} ↓{sws.get('pipe_down', 0)} · GPS {sws.get('gps_correlated', 0)}",
+        accent="threat",
+        jump="threats/spiderweb",
+        jump_label="Open spiderweb →",
+    )
+
     ad = doc.get("angel_dossiers") or {}
     views["dossier"] = _chip(
         "Attack paths",

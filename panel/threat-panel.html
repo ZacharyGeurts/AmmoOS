@@ -18,6 +18,7 @@
   <script src="/assets/field-foundation.js"></script>
   <script defer src="/assets/nexus-plugin-runtime.js"></script>
   <script defer src="/assets/plugins/tab-beacon.js"></script>
+  <script defer src="/assets/terror-spiderweb.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
@@ -189,6 +190,18 @@
       background: var(--ok); box-shadow: 0 0 6px var(--ok); animation: nexus-beacon-blink 2s ease-in-out infinite;
     }
     @keyframes nexus-beacon-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    .spiderweb-wrap { padding: 16px 24px; width: 100%; max-width: none; }
+    .spiderweb-motto { font-size: 0.82rem; color: var(--muted); margin: 0 0 12px; line-height: 1.5; }
+    #spiderweb-map {
+      width: 100%; height: min(52vh, 520px); min-height: 320px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: #060a14; position: relative;
+    }
+    .spiderweb-stats { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.68rem; margin: 10px 0; color: var(--muted); }
+    .spiderweb-stats strong { color: var(--text); }
+    .sw-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.64rem; margin: 8px 0 12px; }
+    .sw-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .sw-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .sw-home-pin, .sw-terror-pin, .sw-remote-pin { background: transparent !important; border: none !important; }
     .police-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
     .police-toolbar select, .police-toolbar textarea {
       background: #0d1524; border: 1px solid var(--border); color: var(--text);
@@ -1372,7 +1385,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.9.0</h1>
+        <h1>NEXUS-Shield v5.9.1</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1392,7 +1405,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.1</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1850,6 +1863,25 @@
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section id="view-spiderweb" class="view">
+    <div class="spiderweb-wrap">
+      <p class="spiderweb-motto" id="spiderweb-motto" data-tip="Global terror spiderweb — auto-zooms the hottest red cluster. Green = neighbor homes, blue = pipe up, purple = pipe down.">
+        <strong>Global terror · Spiderweb</strong> — GPS/home correlation pushpins, colored pipes, auto-zoom to the reddest cluster.
+      </p>
+      <div id="spiderweb-meta" class="meta" style="margin-bottom:8px;">Building spiderweb…</div>
+      <div class="sw-legend" id="spiderweb-legend"></div>
+      <div class="spiderweb-stats" id="spiderweb-stats"></div>
+      <div style="margin-bottom:8px;">
+        <button type="button" id="spiderweb-refocus" data-tip="Fly map back to the hottest terror cluster.">Zoom hottest red</button>
+        <button type="button" id="spiderweb-rebuild" class="ghost" data-tip="Rebuild spiderweb from live panel + GPS table.">Rebuild web</button>
+        <button type="button" data-view-jump="intel/trust" style="margin-left:8px;font-size:0.68rem;">Set home GPS →</button>
+      </div>
+      <div id="spiderweb-map" role="application" aria-label="Global terror spiderweb map with home pushpins"></div>
+      <h4 style="margin:14px 0 8px;font-size:0.82rem;color:var(--internet);">Home GPS ↔ address correlation</h4>
+      <div id="spiderweb-gps-table" class="meta"></div>
     </div>
   </section>
 
@@ -2342,7 +2374,7 @@
       command: { panel: "command", default: "command", subs: { command: "Command" } },
       us: { panel: "us", default: "us", subs: { us: "US" } },
       packets: { panel: "packets", default: "monitor", subs: { monitor: "Live · Good/Bad", inspect: "DPI · Deep inspect" } },
-      threats: { panel: "threats", default: "host-attack", subs: { "host-attack": "Map · Globe", dossier: "Attack paths", "human-dossier": "Kill orders" } },
+      threats: { panel: "threats", default: "host-attack", subs: { "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", dossier: "Attack paths", "human-dossier": "Kill orders" } },
       intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", "field-rf": "Field RF", research: "Research" } },
       library: { panel: "library", default: "library", subs: { library: "Library" } },
       system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
@@ -2350,7 +2382,8 @@
     const LEGACY_VIEW_MAP = {
       monitor: ["packets", "monitor"], inspect: ["packets", "inspect"],
       honor: ["intel", "honor"], "field-rf": ["intel", "field-rf"], research: ["intel", "research"],
-      "host-attack": ["threats", "host-attack"], dossier: ["threats", "dossier"], "human-dossier": ["threats", "human-dossier"],
+      "host-attack": ["threats", "host-attack"], spiderweb: ["threats", "spiderweb"], dossier: ["threats", "dossier"], "human-dossier": ["threats", "human-dossier"],
+      map: ["threats", "host-attack"], kill: ["threats", "human-dossier"],
       settings: ["system", "settings"], logs: ["system", "logs"],
     };
     let currentPanel = "command";
@@ -2365,7 +2398,7 @@
       command: { keys: ["field_command", "gatekeeper"], subs: { command: ["field_command"] } },
       us: { keys: ["us_field"], subs: { us: ["us_field"] } },
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
-      threats: { keys: ["host_attacks"], subs: { "host-attack": ["host_attacks"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
+      threats: { keys: ["host_attacks", "terror_spiderweb"], subs: { "host-attack": ["host_attacks"], spiderweb: ["terror_spiderweb"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
       library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
@@ -2376,6 +2409,7 @@
       const val = data[key];
       if (key === "gatekeeper") return Array.isArray(val.connections);
       if (key === "field_rf") return Boolean(val.updated || val.antenna?.mode);
+      if (key === "terror_spiderweb") return Boolean(val.updated || val.nodes?.length || val.focus);
       if (key === "field_command") return Boolean(val.good_guy || val.pulse || val.motto);
       if (key === "settings") return typeof val === "object" && Object.keys(val).length > 0;
       if (Array.isArray(val)) return val.length > 0;
@@ -2576,6 +2610,7 @@
         renderHostAttackMap(data.host_attacks);
         lastHostAttackUpdated = data.host_attacks.updated || "";
       }
+      if (data.terror_spiderweb) renderTerrorSpiderweb(data.terror_spiderweb);
       if (data.us_field) renderUSField(data.us_field);
       if (data.angel_dossiers) renderDossiers(data.angel_dossiers);
       if (data.human_dossier) renderHumanDossiers(data.human_dossier);
@@ -2611,6 +2646,11 @@
         setTimeout(invalidateHostMapSize, 320);
         if (lastPanelData?.host_attacks) renderHostAttackMap(lastPanelData.host_attacks);
         else if (hostLastPoints.length) renderHostAttackMap({ points: hostLastPoints, stats: {}, author: {} });
+      }
+      if (sub === "spiderweb" && lastPanelData?.terror_spiderweb) {
+        renderTerrorSpiderweb(lastPanelData.terror_spiderweb);
+        setTimeout(invalidateSpiderwebMap, 80);
+        setTimeout(invalidateSpiderwebMap, 320);
       }
       if (sub === "dossier" && lastPanelData) renderDossiers(lastPanelData.angel_dossiers);
       if (sub === "human-dossier" && lastPanelData) {
@@ -5920,6 +5960,22 @@
       if (btn) { btn.disabled = false; btn.classList.remove("update-busy"); }
     }
 
+    $("spiderweb-refocus")?.addEventListener("click", () => {
+      if (typeof refocusSpiderweb === "function") refocusSpiderweb();
+    });
+    $("spiderweb-rebuild")?.addEventListener("click", async () => {
+      const btn = $("spiderweb-rebuild");
+      if (btn) { btn.disabled = true; btn.textContent = "Rebuilding…"; }
+      try {
+        const res = await fetch("/api/terror-spiderweb/rebuild", { method: "POST" });
+        const data = await res.json();
+        renderTerrorSpiderweb(data);
+        if (lastPanelData) lastPanelData.terror_spiderweb = data;
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "Rebuild web"; }
+      }
+    });
+
     $("nexus-update-btn")?.addEventListener("click", () => {
       if (nexusUpdateApplying || nexusUpdateState?.update_in_progress) {
         pollUpdateStatus();
@@ -5980,6 +6036,7 @@
           lastHostAttackUpdated = haUpdated;
           renderHostAttackMap(data.host_attacks);
         }
+        if (data.terror_spiderweb) renderTerrorSpiderweb(data.terror_spiderweb);
         if (currentSubView === "dossier") renderDossiers(data.angel_dossiers);
         if (currentSubView === "us") renderUSField(data.us_field);
         if (currentSubView === "human-dossier") renderHumanDossiers(data.human_dossier);

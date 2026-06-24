@@ -6,7 +6,7 @@
 
   const VIEW_IDS = [
     "command", "us", "honor", "field-rf", "monitor", "inspect", "library",
-    "host-attack", "dossier", "human-dossier", "research", "settings", "logs",
+    "host-attack", "spiderweb", "dossier", "human-dossier", "research", "settings", "logs",
   ];
 
   const clientHooks = {};

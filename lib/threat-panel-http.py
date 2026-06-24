@@ -423,6 +423,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/terror-spiderweb":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "terror-spiderweb.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/terror-spiderweb/gps-table":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "terror-spiderweb.py", ["gps-table"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/police-agencies":
             region = str(query.get("region", [""])[0]).strip() or None
             script = INSTALL_ROOT / "lib" / "police-agency-db.py"
@@ -789,6 +799,11 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/field-rf/cycle":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-rf-sentinel.py", ["cycle"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/terror-spiderweb/rebuild":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "terror-spiderweb.py", ["build"])
             self._send(200, json.dumps(payload), "application/json")
             return
 
