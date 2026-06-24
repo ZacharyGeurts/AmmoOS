@@ -515,6 +515,10 @@ test_field_rf_module() {
   grep -q '_merge_multi_antenna_scans' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'antenna_fields' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'resolution_tier' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q '_apply_auto_rfkill' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'RFKILL_TRIGGER_KINDS' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'hot_attack_correlated' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'auto_rfkill", True' "${ROOT}/lib/field-rf-sentinel.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'permitted_bands'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -909,7 +913,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.9.3' "$panel"
+  grep -q 'v5.9.4' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -918,7 +922,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.9.3' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.9.4' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null

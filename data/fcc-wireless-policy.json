@@ -9,13 +9,14 @@
     "Disconnect OUR station from rogue, unpermitted, or hostile APs (nmcli dev disconnect)",
     "Firewall block hostile IPs on the wire path (nftables)",
     "Trust Strike autokill + hardware destroy at 100% certainty on correlated threats",
-    "Operator-initiated soft rfkill on OUR wlan only (optional, off by default)"
+    "Operator-initiated soft rfkill on OUR wlan only",
+    "Automatic soft rfkill when confirmed RF hostilities exceed threshold (on by default)"
   ],
   "forbidden": [
     "Intentional jamming or deauthentication floods",
     "Overpower transmission or burst interference",
     "Spoofed beacon frames or deceptive RF transmission",
-    "Automatic rfkill on heuristic burst spikes",
+    "Rfkill on noise spikes without confirmed hostility markers",
     "Tolerating APs outside FCC permitted frequency bands"
   ],
   "lawful_kick_actions": [
@@ -24,8 +25,15 @@
     "firewall_block_correlated_ip",
     "autokill_strike_certain",
     "hardware_destroy_strike_certain",
-    "disable_unhealthy_forever"
+    "disable_unhealthy_forever",
+    "auto_rfkill_hostility"
   ],
+  "auto_rfkill": {
+    "enabled_by_default": true,
+    "scope": "our_wlan_soft_block_only",
+    "triggers": ["connected_unpermitted", "connected_rogue", "hostile_oui", "pollution_cluster", "hot_attack_correlated", "forever_disabled_nearby"],
+    "note": "Soft rfkill OUR radio when hostility score confirms threat — never jamming."
+  },
   "shoot_to_kill": {
     "enabled_by_default": true,
     "targets": ["unpermitted_spectrum", "evil_twin", "rogue_open", "hostile_oui", "connected_rogue", "connected_unpermitted"],

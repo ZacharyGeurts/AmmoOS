@@ -47,6 +47,25 @@ UNHEALTHY_FOREVER_KINDS = frozenset({
     "connected_rogue",
     "correlated_hostile_ip",
     "enterprise_downgrade",
+    "hot_attack_correlated",
+    "blocked_peer_rf",
+    "forever_disabled_nearby",
+    "pollution_cluster",
+})
+
+RFKILL_TRIGGER_KINDS = frozenset({
+    "connected_unpermitted",
+    "connected_rogue",
+    "hostile_oui",
+    "evil_twin",
+    "rogue_open",
+    "unpermitted_spectrum",
+    "correlated_hostile_ip",
+    "hot_attack_correlated",
+    "blocked_peer_rf",
+    "forever_disabled_nearby",
+    "pollution_cluster",
+    "enterprise_downgrade",
 })
 
 SUSPICIOUS_SSID_RE = re.compile(
@@ -70,6 +89,10 @@ VECTOR_MAP = {
     "correlated_hostile_ip": "WIFI_THREAT",
     "global_wireless_field": "FIELD_ANTENNA_ALERT",
     "global_pollution": "WIFI_THREAT",
+    "hot_attack_correlated": "WIFI_THREAT",
+    "blocked_peer_rf": "WIFI_THREAT",
+    "forever_disabled_nearby": "WIFI_THREAT",
+    "pollution_cluster": "WIFI_THREAT",
 }
 
 _PERMITTED_CACHE: dict[str, Any] | None = None
@@ -221,6 +244,125 @@ def _rfkill_rows() -> list[dict[str, str]]:
     if block:
         rows.append(block)
     return rows
+
+
+def _rfkill_index_for_iface(iface: str | None) -> str | None:
+    iface = str(iface or "").strip()
+    sysfs = Path("/sys/class/rfkill")
+    if sysfs.is_dir():
+        for entry in sorted(sysfs.glob("rfkill*")):
+            try:
+                type_path = entry / "type"
+                rtype = (type_path.read_text(encoding="utf-8", errors="replace").strip().lower()
+                         if type_path.is_file() else "")
+                if rtype != "wlan":
+                    continue
+                name = (entry / "name").read_text(encoding="utf-8", errors="replace").strip() if (entry / "name").is_file() else ""
+                idx = (entry / "index").read_text(encoding="utf-8", errors="replace").strip() if (entry / "index").is_file() else ""
+                if not idx:
+                    continue
+                if iface and (iface == name or iface in name or name in iface):
+                    return idx
+                if not iface:
+                    return idx
+            except OSError:
+                continue
+    for row in _rfkill_rows():
+        if row.get("type") == "wlan":
+            return row.get("index")
+    return None
+
+
+def _soft_rfkill_wifi(block: bool, wifi_dev: str | None, reason: str) -> list[dict[str, Any]]:
+    actions: list[dict[str, Any]] = []
+    idx = _rfkill_index_for_iface(wifi_dev)
+    if idx:
+        verb = "block" if block else "unblock"
+        out = _run(["rfkill", verb, idx], timeout=8)
+        actions.append({
+            "action": f"rfkill_{verb}",
+            "index": idx,
+            "device": wifi_dev,
+            "reason": reason,
+            "ok": "error" not in out.lower(),
+            "detail": out.strip()[:160],
+        })
+        return actions
+    out = _run(["rfkill", "block" if block else "unblock", "wifi"], timeout=8)
+    actions.append({
+        "action": "rfkill_block_wifi" if block else "rfkill_unblock_wifi",
+        "device": wifi_dev,
+        "reason": reason,
+        "ok": bool(out.strip()) and "error" not in out.lower(),
+        "detail": out.strip()[:160],
+    })
+    return actions
+
+
+def _rfkill_hostility_score(threats: list[dict[str, Any]], active: dict[str, Any] | None) -> int:
+    score = 0
+    for t in threats:
+        kind = str(t.get("kind") or "")
+        sev = str(t.get("severity") or "")
+        if kind not in RFKILL_TRIGGER_KINDS:
+            continue
+        if sev == "critical":
+            score += 3
+        elif sev == "high":
+            score += 2
+        elif sev == "medium":
+            score += 1
+    if active:
+        active_bssid = _norm_mac(str(active.get("bssid") or ""))
+        for t in threats:
+            if t.get("severity") in ("high", "critical") and _norm_mac(str(t.get("bssid") or "")) == active_bssid:
+                score += 4
+                break
+    return score
+
+
+def _apply_auto_rfkill(
+    threats: list[dict[str, Any]],
+    wifi_dev: str | None,
+    active: dict[str, Any] | None,
+) -> dict[str, Any]:
+    cfg = _shield_config()
+    if not cfg.get("enabled") or not cfg.get("auto_rfkill"):
+        return {"active": False, "action": "auto_rfkill_off", "rfkill_actions": []}
+
+    score = _rfkill_hostility_score(threats, active)
+    high_crit = [
+        t for t in threats
+        if t.get("severity") in ("high", "critical") and t.get("kind") in RFKILL_TRIGGER_KINDS
+    ]
+    must_block = score >= 3 or any(
+        t.get("kind") in ("connected_unpermitted", "connected_rogue") for t in threats
+    )
+    safe = score == 0 and not any(
+        t.get("kind") in ("connected_rogue", "connected_unpermitted") for t in threats
+    )
+
+    actions: list[dict[str, Any]] = []
+    if must_block and wifi_dev:
+        actions = _soft_rfkill_wifi(True, wifi_dev, f"hostility_score_{score}")
+        for act in actions:
+            _log_operation("auto_rfkill_block", {**act, "hostility_score": score, "threat_count": len(high_crit)})
+    elif safe:
+        rows = _rfkill_rows()
+        blocked = [r for r in rows if r.get("type") == "wlan" and str(r.get("soft_blocked") or "").lower() == "yes"]
+        if blocked:
+            actions = _soft_rfkill_wifi(False, wifi_dev, "hostility_clear")
+            for act in actions:
+                _log_operation("auto_rfkill_unblock", act)
+
+    return {
+        "active": True,
+        "action": "rfkill_blocked" if must_block else ("rfkill_clear" if safe else "rfkill_watch"),
+        "hostility_score": score,
+        "trigger_threats": len(high_crit),
+        "rfkill_actions": actions,
+        "auto_rfkill": True,
+    }
 
 
 def _nmcli_devices() -> list[dict[str, str]]:
@@ -498,6 +640,22 @@ def _active_wifi_connection(wifi_dev: str) -> dict[str, Any] | None:
     }
 
 
+def _dossier_storage_paths() -> list[Path]:
+    return [
+        HOSTESS7_ROOT / "cache" / "fieldstorage" / "brain" / "security" / TARGET_DOSSIER_FILE,
+        HOSTESS7_TEAM_FIELD / "brain" / "security" / TARGET_DOSSIER_FILE,
+        STATE / "field-storage" / TARGET_DOSSIER_FILE,
+    ]
+
+
+def _hostile_memory_paths() -> list[Path]:
+    return [
+        HOSTESS7_ROOT / "cache" / "fieldstorage" / "brain" / "security" / HOSTILE_MEMORY_FILE,
+        HOSTESS7_TEAM_FIELD / "brain" / "security" / HOSTILE_MEMORY_FILE,
+        STATE / "field-storage" / HOSTILE_MEMORY_FILE,
+    ]
+
+
 def _hostile_ips() -> set[str]:
     ips: set[str] = set()
     if not HOSTILE_TSV.is_file():
@@ -514,31 +672,74 @@ def _hostile_ips() -> set[str]:
 
 def _hostile_macs() -> set[str]:
     macs: set[str] = set()
-    hi = INSTALL / "lib" / "host-identity.py"
-    if hi.is_file():
-        spec = importlib.util.spec_from_file_location("host_identity_rf", hi)
-        mod = importlib.util.module_from_spec(spec)
-        assert spec and spec.loader
-        spec.loader.exec_module(mod)
-        for path_fn in (
-            lambda: (STATE / "field-storage" / "nexus-target-dossiers.jsonl"),
-        ):
-            path = path_fn()
-            if not path.is_file():
-                continue
-            try:
-                for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-                    if not line.strip():
-                        continue
+    for path in _dossier_storage_paths() + _hostile_memory_paths():
+        if not path.is_file():
+            continue
+        try:
+            for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+                if not line.strip():
+                    continue
+                try:
                     row = json.loads(line)
-                    dos = row.get("dossier") if isinstance(row.get("dossier"), dict) else row
-                    for key in ("mac", "bssid"):
-                        val = dos.get(key) or (dos.get("intel") or {}).get(key)
-                        if val:
-                            macs.add(_norm_mac(str(val)))
-            except (OSError, json.JSONDecodeError):
-                continue
+                except json.JSONDecodeError:
+                    continue
+                dos = row.get("dossier") if isinstance(row.get("dossier"), dict) else row
+                for key in ("mac", "bssid"):
+                    val = dos.get(key) or (dos.get("intel") or {}).get(key)
+                    if val:
+                        macs.add(_norm_mac(str(val)))
+        except OSError:
+            continue
+    reg = _forever_registry()
+    for entry in (reg.get("entries") or {}).values():
+        if isinstance(entry, dict):
+            bssid = entry.get("bssid") or entry.get("mac")
+            if bssid:
+                macs.add(_norm_mac(str(bssid)))
     return {m for m in macs if len(m) >= 6}
+
+
+def _blocked_ips() -> set[str]:
+    ips: set[str] = set()
+    blocks = STATE / "firewall-blocks.tsv"
+    if blocks.is_file():
+        try:
+            for line in blocks.read_text(encoding="utf-8", errors="replace").splitlines()[1:]:
+                parts = line.split("\t")
+                if len(parts) >= 2 and parts[1].strip():
+                    ips.add(parts[1].strip())
+        except OSError:
+            pass
+    ips.update(_hostile_ips())
+    return ips
+
+
+def _hot_attack_ips(*, min_heat: float = 0.5) -> set[str]:
+    ips: set[str] = set()
+    doc = _load_json(HOST_ATTACKS, {})
+    for p in doc.get("points") or []:
+        ip = str(p.get("ip") or "")
+        if not ip:
+            continue
+        if float(p.get("heat") or 0) >= min_heat or p.get("strike_certain"):
+            ips.add(ip)
+    hd = _load_json(STATE / "human-dossier.json", {})
+    for row in hd.get("ips") or []:
+        if isinstance(row, dict):
+            ip = str(row.get("ip") or "")
+            if ip:
+                ips.add(ip)
+    return ips
+
+
+def _forever_disabled_bssids() -> set[str]:
+    out: set[str] = set()
+    reg = _forever_registry()
+    for key in (reg.get("entries") or {}):
+        norm = _norm_mac(str(key))
+        if len(norm) >= 6:
+            out.add(norm)
+    return out
 
 
 def _suspicious_ouis() -> dict[str, str]:
@@ -563,13 +764,15 @@ def _suspicious_ouis() -> dict[str, str]:
 
 def _correlated_hostile_points() -> list[dict[str, Any]]:
     doc = _load_json(HOST_ATTACKS, {})
-    hostile = _hostile_ips()
+    hostile = _blocked_ips()
     out: list[dict[str, Any]] = []
+    seen: set[str] = set()
     for p in doc.get("points") or []:
         ip = str(p.get("ip") or "")
-        if not ip:
+        if not ip or ip in seen:
             continue
-        if ip in hostile or p.get("strike_certain") or float(p.get("heat") or 0) >= 0.7:
+        if ip in hostile or p.get("strike_certain") or float(p.get("heat") or 0) >= 0.5:
+            seen.add(ip)
             out.append(p)
     return out
 
@@ -834,24 +1037,14 @@ def _shield_config() -> dict[str, Any]:
     doc.setdefault("permitted_spectrum_only", True)
     doc.setdefault("fcc_passive_only", True)
     doc.setdefault("global_watch", True)
-    doc.setdefault("auto_rfkill", False)
+    if not doc.get("rfkill_advanced_v2"):
+        doc["auto_rfkill"] = True
+        doc["rfkill_advanced_v2"] = True
+        doc["updated"] = _now()
+        _save_json(SHIELD_CFG, doc)
+    else:
+        doc.setdefault("auto_rfkill", True)
     return doc
-
-
-def _dossier_storage_paths() -> list[Path]:
-    return [
-        HOSTESS7_ROOT / "cache" / "fieldstorage" / "brain" / "security" / TARGET_DOSSIER_FILE,
-        HOSTESS7_TEAM_FIELD / "brain" / "security" / TARGET_DOSSIER_FILE,
-        STATE / "field-storage" / TARGET_DOSSIER_FILE,
-    ]
-
-
-def _hostile_memory_paths() -> list[Path]:
-    return [
-        HOSTESS7_ROOT / "cache" / "fieldstorage" / "brain" / "security" / HOSTILE_MEMORY_FILE,
-        HOSTESS7_TEAM_FIELD / "brain" / "security" / HOSTILE_MEMORY_FILE,
-        STATE / "field-storage" / HOSTILE_MEMORY_FILE,
-    ]
 
 
 def _forever_registry() -> dict[str, Any]:
@@ -1223,7 +1416,7 @@ def _detect_wireless_threats(
                 threats.append({
                     "ts": ts,
                     "kind": "hidden_surveillance",
-                    "severity": "medium",
+                    "severity": "high" if len(strong_hidden) >= 3 else "medium",
                     "ssid": ssid,
                     "detail": f"{len(strong_hidden)} strong hidden APs in passive scan",
                     "global": True,
@@ -1330,17 +1523,67 @@ def _detect_wireless_threats(
         if active.get("ssid") and active.get("ssid") not in trusted_ssids and not SUSPICIOUS_SSID_RE.search(active.get("ssid", "")):
             trusted_ssids.add(active.get("ssid"))
 
-    for point in _correlated_hostile_points()[:12]:
-        if point.get("strike_certain"):
+    for point in _correlated_hostile_points()[:16]:
+        ip = str(point.get("ip") or "")
+        if not ip:
+            continue
+        certain = bool(point.get("strike_certain"))
+        heat = float(point.get("heat") or 0)
+        if certain:
             threats.append({
                 "ts": ts,
                 "kind": "correlated_hostile_ip",
                 "severity": "critical",
-                "ip": point.get("ip"),
-                "detail": f"Monitor host {point.get('ip')} at 100% strike certainty — wire kick eligible",
+                "ip": ip,
+                "detail": f"Monitor host {ip} at 100% strike certainty — wire kick eligible",
                 "global": True,
                 "strike_certain": True,
             })
+        elif heat >= 0.5 or ip in _blocked_ips():
+            threats.append({
+                "ts": ts,
+                "kind": "hot_attack_correlated",
+                "severity": "high" if heat >= 0.7 else "medium",
+                "ip": ip,
+                "detail": f"Host attack heat {heat:.2f} — RF field hostility correlated",
+                "global": True,
+                "heat": heat,
+            })
+
+    disabled_bssids = _forever_disabled_bssids()
+    for ap in scan:
+        bnorm = _norm_mac(str(ap.get("bssid") or ""))
+        if bnorm and bnorm in disabled_bssids:
+            threats.append({
+                "ts": ts,
+                "kind": "forever_disabled_nearby",
+                "severity": "critical",
+                "ssid": ap.get("ssid"),
+                "bssid": ap.get("bssid"),
+                "detail": "Forever-disabled unhealthy BSSID seen again in passive field",
+                "global": True,
+            })
+
+    if len(unpermitted_aps) >= 3:
+        threats.append({
+            "ts": ts,
+            "kind": "pollution_cluster",
+            "severity": "critical",
+            "detail": f"Pollution cluster — {len(unpermitted_aps)} unpermitted APs in one scan",
+            "global": True,
+            "count": len(unpermitted_aps),
+        })
+
+    blocked = _blocked_ips()
+    if blocked and (unpermitted_aps or any(t.get("kind") == "evil_twin" for t in threats)):
+        threats.append({
+            "ts": ts,
+            "kind": "blocked_peer_rf",
+            "severity": "high",
+            "detail": f"Blocked/hostile IP memory ({len(blocked)}) + active RF pollution — rfkill advanced",
+            "global": True,
+            "blocked_count": len(blocked),
+        })
 
     hist["trusted_ssids"] = sorted(trusted_ssids)[-40:]
     return [t for t in threats if t.get("severity") != "info" or t.get("kind") == "global_wireless_field"]
@@ -1501,6 +1744,10 @@ def _lawful_kick(
                 forever_disabled.append(result)
                 kicks.append({**result, "fcc": "disabled_forever"})
 
+    rfkill_result = _apply_auto_rfkill(threats, wifi_dev, active)
+    if rfkill_result.get("rfkill_actions"):
+        kicks.extend(rfkill_result["rfkill_actions"])
+
     reg = _forever_registry()
     return {
         "active": True,
@@ -1515,7 +1762,9 @@ def _lawful_kick(
         "forever_disabled": forever_disabled,
         "forever_disabled_count": len(forever_disabled),
         "forever_registry_count": len(reg.get("entries") or {}),
-        "auto_rfkill": False,
+        "auto_rfkill": cfg.get("auto_rfkill", True),
+        "rfkill": rfkill_result,
+        "hostility_score": rfkill_result.get("hostility_score", 0),
     }
 
 
@@ -1715,6 +1964,10 @@ def panel_json() -> dict[str, Any]:
             {"id": "correlated_hostile_ip", "label": "100% hostile IP (wire kick)", "vector": "WIFI_THREAT"},
             {"id": "global_wireless_field", "label": "Global passive field", "vector": "FIELD_ANTENNA_ALERT"},
             {"id": "global_pollution", "label": "Global pollution cleanup", "vector": "WIFI_THREAT"},
+            {"id": "hot_attack_correlated", "label": "Hot host attack correlated", "vector": "WIFI_THREAT"},
+            {"id": "blocked_peer_rf", "label": "Blocked peer + RF pollution", "vector": "WIFI_THREAT"},
+            {"id": "forever_disabled_nearby", "label": "Forever-disabled BSSID nearby", "vector": "WIFI_THREAT"},
+            {"id": "pollution_cluster", "label": "Unpermitted pollution cluster", "vector": "WIFI_THREAT"},
         ],
         "bursts": [],
         "recent_bursts": [],
@@ -1736,7 +1989,7 @@ def main() -> int:
         return 0
     if cmd == "shield" and len(sys.argv) >= 3:
         enabled = sys.argv[2].strip().lower() in ("1", "true", "on", "yes")
-        auto = False
+        auto = True
         lawful = True
         shoot = True
         if len(sys.argv) >= 4:

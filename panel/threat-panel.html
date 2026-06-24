@@ -1405,7 +1405,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.9.3</h1>
+        <h1>NEXUS-Shield v5.9.4</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1425,7 +1425,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.3</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.4</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1608,8 +1608,8 @@
               <span><strong>Shoot to kill</strong> — wipe all unpermitted spectrum on the wire</span>
             </label>
             <label class="toggle" style="font-size:0.72rem;margin-left:12px;">
-              <input type="checkbox" id="field-rf-auto-rfkill" />
-              <span><strong>Soft rfkill (advanced)</strong> — OUR radio only; off by default</span>
+              <input type="checkbox" id="field-rf-auto-rfkill" checked />
+              <span><strong>Soft rfkill (advanced)</strong> — OUR radio only; ON by default when hostilities confirmed</span>
             </label>
           </div>
         </div>
@@ -4465,8 +4465,11 @@
         const kicks = shield.kick_count ?? (fr.lawful_kicks || []).length;
         const shoot = shield.shoot_to_kill !== false;
         const foreverN = shield.forever_registry_count ?? (fr.forever_registry?.entries ? Object.keys(fr.forever_registry.entries).length : 0);
+        const rfkill = shield.rfkill || {};
+        const rfkillOn = shield.auto_rfkill !== false;
+        const hostScore = shield.hostility_score ?? rfkill.hostility_score ?? 0;
         shieldEl.innerHTML = on
-          ? `<span class="rf-shield-on">Watch ON</span>${shoot ? ' · <span class="severity-critical">SHOOT TO KILL</span>' : ""}${foreverN ? ` · ${foreverN} disabled forever` : ""} · ${esc(shield.action || "passive")}${kicks ? ` · ${kicks} kick(s)` : ""}`
+          ? `<span class="rf-shield-on">Watch ON</span>${shoot ? ' · <span class="severity-critical">SHOOT TO KILL</span>' : ""}${rfkillOn ? ` · rfkill <span class="severity-high">ON</span>` : ""}${hostScore ? ` · hostility ${hostScore}` : ""}${foreverN ? ` · ${foreverN} disabled forever` : ""} · ${esc(shield.action || rfkill.action || "passive")}${kicks ? ` · ${kicks} kick(s)` : ""}`
           : `<span class="rf-shield-off">Watch OFF</span>`;
       }
       const enBox = $("field-rf-shield-enabled");
