@@ -144,7 +144,10 @@ def build_command(panel: dict[str, Any] | None = None) -> dict[str, Any]:
                 ((panel.get("browser_awareness") or {}).get("honorability") or {}).get("pending_acceptance") or []
             ),
             "planetary_certain": po_globe.get("strike_certain", 0),
+            "planetary_killable": po_globe.get("killable", 0),
+            "planetary_needs_die": po_globe.get("needs_die", 0),
             "planetary_harm": po_wire.get("harm_candidates", 0),
+            "planetary_kill_eligible": po_wire.get("kill_eligible", 0),
             "hostile_ai_certain": po_ai.get("certain", 0),
             "planetary_proactive_actions": po_cycle.get("action_count", len(po_cycle.get("actions") or [])),
         },

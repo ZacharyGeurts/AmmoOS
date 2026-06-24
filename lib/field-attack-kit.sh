@@ -380,6 +380,14 @@ nexus_field_attack_autokill_certain() {
     python3 "$script" autokill-certain 2>/dev/null
 }
 
+nexus_field_attack_autokill_needs_die() {
+  command -v python3 >/dev/null 2>&1 || return 1
+  local script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
+  [[ -f "$script" ]] || return 1
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    python3 "$script" autokill-needs-die 2>/dev/null
+}
+
 nexus_field_attack_forever_kill_enforce() {
   command -v python3 >/dev/null 2>&1 || return 1
   local script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
@@ -431,8 +439,9 @@ nexus_field_attack_rekill_cycle() {
 
 nexus_field_attack_autokill() {
   [[ "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH 2>/dev/null || echo "${NEXUS_ATTACK_KIT_AUTO_CRUSH:-1}")" == "1" ]] || return 0
-  nexus_field_attack_autokill_certain >/dev/null 2>&1 || true
+  nexus_field_attack_autokill_needs_die >/dev/null 2>&1 || nexus_field_attack_autokill_certain >/dev/null 2>&1 || true
   nexus_field_attack_auto_rekill >/dev/null 2>&1 || true
+  nexus_field_attack_forever_kill_enforce >/dev/null 2>&1 || true
 }
 
 # Back-compat alias

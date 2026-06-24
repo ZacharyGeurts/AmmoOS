@@ -19,7 +19,9 @@ NOKILL_TSV = STATE / "field-nokill.tsv"
 DOSSIERS = STATE / "angel-dossiers.json"
 AUTO_REKILL_LOG = STATE / "auto-rekill-log.json"
 AUTO_REKILL_COOLDOWN_SEC = 3600
-AUTO_REKILL_MAX_IPS = 24
+AUTO_REKILL_MAX_IPS = int(os.environ.get("NEXUS_AUTO_REKILL_MAX_IPS", "64"))
+AUTOKILL_NEEDS_DIE_MAX = int(os.environ.get("NEXUS_PLANETARY_AUTOKILL_MAX", "64"))
+FOREVER_KILL_MAX_IPS = int(os.environ.get("NEXUS_PLANETARY_FOREVER_KILL_MAX", "64"))
 
 import importlib.util
 
@@ -363,6 +365,105 @@ def _kill_strike_certain_point(
     return ip, result
 
 
+def _point_needs_die(p: dict[str, Any]) -> bool:
+    if p.get("nokill") or p.get("target_status") == "killed" or p.get("disabled_permanent"):
+        return False
+    return bool(p.get("strike_certain") or p.get("killable"))
+
+
+def _kill_killable_point(
+    p: dict[str, Any],
+    *,
+    reason_prefix: str,
+    disabled: set[str],
+    nokill: set[str],
+) -> tuple[str | None, dict[str, Any] | None]:
+    ip = str(p.get("ip") or "")
+    if not ip or ip in disabled or ip in nokill:
+        return ip or None, None
+    if not p.get("killable") or p.get("strike_certain"):
+        return ip, None
+    vector = str(p.get("vector") or "HOSTILE")
+    severity = str(p.get("severity") or "high")
+    reason = f"{reason_prefix}:killable=1"
+    result = kill_target(
+        ip,
+        vector,
+        severity,
+        reason,
+        extra={"strike_mode": "manual", "monitor": p.get("monitor")},
+    )
+    if result.get("ok"):
+        disabled.add(ip)
+    return ip, result
+
+
+def autokill_needs_die(max_targets: int | None = None) -> dict[str, Any]:
+    """Autokill every globe target that needs to die — PINPOINT CERTAIN + killable."""
+    cap = AUTOKILL_NEEDS_DIE_MAX if max_targets is None else max_targets
+    doc = _load_json(HOST_ATTACKS, {})
+    points = [p for p in doc.get("points") or [] if _point_needs_die(p)]
+    points.sort(
+        key=lambda p: (
+            0 if p.get("strike_certain") else 1,
+            -(float(p.get("strike_confidence") or 0)),
+            -(float(p.get("heat") or 0)),
+        )
+    )
+    disabled = _disabled_ips()
+    nokill = _nokill_ips()
+    destroyed: list[str] = []
+    certain_killed: list[str] = []
+    killable_killed: list[str] = []
+    skipped: list[str] = []
+    results: list[dict[str, Any]] = []
+
+    for p in points[:cap]:
+        if p.get("strike_certain"):
+            ip, result = _kill_strike_certain_point(
+                p,
+                reason_prefix="autokill_needs_die",
+                disabled=disabled,
+                nokill=nokill,
+            )
+        else:
+            ip, result = _kill_killable_point(
+                p,
+                reason_prefix="autokill_needs_die",
+                disabled=disabled,
+                nokill=nokill,
+            )
+        if not ip:
+            continue
+        if result and result.get("ok"):
+            destroyed.append(ip)
+            if p.get("strike_certain"):
+                certain_killed.append(ip)
+            else:
+                killable_killed.append(ip)
+            results.append({"ip": ip, "hardware_destroy": result.get("hardware_destroy"), "ok": True})
+        elif result:
+            skipped.append(ip)
+            results.append({"ip": ip, "ok": False, "reason": result.get("reason")})
+        else:
+            skipped.append(ip)
+
+    return {
+        "ok": True,
+        "autokill": True,
+        "needs_die": True,
+        "destroyed": destroyed,
+        "destroyed_count": len(destroyed),
+        "killed_count": len(destroyed),
+        "certain_killed_count": len(certain_killed),
+        "killable_killed_count": len(killable_killed),
+        "hardware_destroy_count": sum(1 for r in results if r.get("hardware_destroy")),
+        "candidates": len(points),
+        "skipped": len(skipped),
+        "results": results[:32],
+    }
+
+
 def autokill_certain() -> dict[str, Any]:
     """Autokill path — PINPOINT CERTAIN · 100% only. Hardware destroy + forever kill."""
     doc = _load_json(HOST_ATTACKS, {})
@@ -436,7 +537,9 @@ def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
     }
 
 
-def forever_kill_enforce(max_ips: int = 64) -> dict[str, Any]:
+def forever_kill_enforce(max_ips: int | None = None) -> dict[str, Any]:
+    if max_ips is None:
+        max_ips = FOREVER_KILL_MAX_IPS
     """Re-apply forever kill + hardware destroy for archived HARDWARE_DESTROY registry entries."""
     disabled = sorted(_disabled_ips())[:max_ips]
     if not disabled:
@@ -701,7 +804,7 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
 def main() -> int:
     if len(sys.argv) < 2:
         print(
-            "usage: field-attack-kit.py [autokill-certain|forever-kill-enforce|forever-disable|crush-hot|auto-rekill|kill|disable|nokill|check-online|rekill <ip> ...]",
+            "usage: field-attack-kit.py [autokill-certain|autokill-needs-die|forever-kill-enforce|forever-disable|crush-hot|auto-rekill|kill|disable|nokill|check-online|rekill <ip> ...]",
             file=sys.stderr,
         )
         return 1
@@ -728,6 +831,10 @@ def main() -> int:
         return 0
     if cmd == "autokill-certain":
         json.dump(autokill_certain(), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+    if cmd == "autokill-needs-die":
+        json.dump(autokill_needs_die(), sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0
     if cmd == "forever-kill-enforce":

@@ -2053,12 +2053,12 @@
       <div id="command-permission-banner" class="intel-banner" style="margin-bottom:14px;"></div>
       <div class="planetary-observer-banner" id="planetary-observer" role="note" hidden
            data-tip="Global sight from globe map, planetary DNS, hostile AI, gatekeeper harm — proactive kills at certainty only.">
-        <strong>Planetary observation</strong> — proactive kills to keep us all safe.
-        <p class="meta" id="planetary-observer-summary" style="margin:6px 0 8px;">Observing the whole planet. Destroy only at certainty.</p>
+        <strong>Planetary observation</strong> — autokill + RE-KILL everything that needs to die.
+        <p class="meta" id="planetary-observer-summary" style="margin:6px 0 8px;">Observing the whole planet. Kill at certainty · autokill killable · RE-KILL returners.</p>
         <div class="planetary-observer-stats" id="planetary-observer-stats"></div>
         <div class="planetary-observer-actions">
           <button type="button" id="planetary-observer-cycle" class="ghost"
-                  data-tip="Run observe → certainty gates → hostile AI destroy · autokill · RE-KILL · forever enforce · regional disable.">Run proactive cycle</button>
+                  data-tip="Run observe → kill-detect · hostile AI destroy · autokill needs-die · RE-KILL · forever enforce · regional disable.">Run proactive cycle</button>
           <button type="button" data-view-jump="threats/host-attack">Host Attack map →</button>
         </div>
       </div>
@@ -3826,7 +3826,9 @@
       }
       const chips = [
         ["Globe", globe.total_targets ?? 0],
+        ["Need die", globe.needs_die ?? globe.strike_certain ?? 0],
         ["Certain", globe.strike_certain ?? 0],
+        ["Killable", globe.killable ?? 0],
         ["Harm", wire.harm_candidates ?? 0],
         ["Kill-eligible", wire.kill_eligible ?? 0],
         ["Hostile AI", hai.certain ?? 0],
@@ -3901,8 +3903,10 @@
           ["Blocked", pulse.firewall_blocks ?? 0],
           ["Trusted", pulse.trusted_count ?? 0],
           ["Hot targets", pulse.host_hot ?? 0],
-          ["Planetary certain", pulse.planetary_certain ?? 0],
+          ["Need die", pulse.planetary_needs_die ?? pulse.planetary_certain ?? 0],
+          ["Killable", pulse.planetary_killable ?? 0],
           ["Harm on wire", pulse.planetary_harm ?? 0],
+          ["Kill-eligible", pulse.planetary_kill_eligible ?? 0],
           ["Hostile AI", pulse.hostile_ai_certain ?? 0],
           ["RF bursts", pulse.rf_recent_bursts ?? 0],
           ["Kill dossiers", pulse.human_dossier_ips ?? 0],

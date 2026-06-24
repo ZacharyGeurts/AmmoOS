@@ -18,6 +18,9 @@ OPS_LOG = STATE / "planetary-proactive-kills.jsonl"
 
 PROACTIVE_DEFAULT = os.environ.get("NEXUS_PLANETARY_PROACTIVE_KILL", "1") == "1"
 REGIONAL_MIN_CLUSTER = int(os.environ.get("NEXUS_PLANETARY_REGIONAL_MIN", "5"))
+AUTOKILL_MAX = int(os.environ.get("NEXUS_PLANETARY_AUTOKILL_MAX", "64"))
+REKILL_MAX = int(os.environ.get("NEXUS_AUTO_REKILL_MAX_IPS", "64"))
+FOREVER_MAX = int(os.environ.get("NEXUS_PLANETARY_FOREVER_KILL_MAX", "64"))
 
 
 def _now() -> str:
@@ -57,6 +60,8 @@ def observe() -> dict[str, Any]:
     harm = [c for c in conns if c.get("verdict") in ("HARM_CANDIDATE", "BLOCK_RECOMMENDED")]
     kill_ready = [c for c in conns if c.get("kill_eligible")]
     certain_pts = [p for p in points if p.get("strike_certain")]
+    killable_pts = [p for p in points if p.get("killable") and not p.get("strike_certain")]
+    needs_die_pts = [p for p in points if p.get("strike_certain") or p.get("killable")]
     hot_pts = [p for p in points if (p.get("heat") or 0) >= 0.65 or p.get("severity") in ("critical", "high")]
 
     by_country: Counter[str] = Counter()
@@ -98,7 +103,7 @@ def observe() -> dict[str, Any]:
         "schema": "planetary-observer/v1",
         "updated": _now(),
         "motto": "Planetary observation — proactive kills to keep us all safe.",
-        "doctrine": "Observe the whole planet. Destroy only at certainty. RE-KILL forever.",
+        "doctrine": "Observe the whole planet. Autokill + RE-KILL everything that needs to die. Friendly guard honored.",
         "planetary_dns": {
             "level": planetary_dns.get("planetary_security_level"),
             "zones": len(planetary_dns.get("zones") or []),
@@ -110,6 +115,8 @@ def observe() -> dict[str, Any]:
             "total_targets": len(points),
             "hot_targets": len(hot_pts),
             "strike_certain": len(certain_pts),
+            "killable": len(killable_pts),
+            "needs_die": len(needs_die_pts),
             "monitor_targets": sum(1 for p in points if p.get("is_monitor_target")),
             "top_regions": top_regions,
             "top_asn": top_asn,
@@ -140,8 +147,25 @@ def _top_hostile_region(obs: dict[str, Any]) -> tuple[str, str, int] | None:
     return None
 
 
+def _record_action(results: dict[str, Any], step: str, out: dict[str, Any]) -> None:
+    results["actions"].append({"step": step, **out})
+    killed = (
+        out.get("killed_count")
+        or out.get("destroyed_count")
+        or out.get("rekilled_count")
+        or out.get("enforced_count")
+        or out.get("kill_count")
+        or 0
+    )
+    if killed:
+        _log_op({"step": step, **{k: out.get(k) for k in (
+            "killed_count", "destroyed_count", "rekilled_count", "enforced_count", "kill_count",
+            "certain_killed_count", "killable_killed_count", "attempted",
+        ) if out.get(k) is not None}})
+
+
 def proactive_cycle(*, force: bool = False) -> dict[str, Any]:
-    """Run proactive destroy passes — planetary observation drives kills."""
+    """Run proactive destroy passes — autokill + RE-KILL everything that needs to die."""
     if not PROACTIVE_DEFAULT and not force:
         return {"ok": True, "skipped": True, "reason": "proactive_disabled"}
 
@@ -157,56 +181,56 @@ def proactive_cycle(*, force: bool = False) -> dict[str, Any]:
     ha = _mod("hostile_ai", "hostile-ai-destroy.py")
     ft = _mod("field_toolkit", "field-toolkit-db.py")
 
-    # 1. Hostile AI at destroy certainty
-    if int(obs.get("hostile_ai", {}).get("certain") or 0) > 0:
-        out = ha.destroy_targets(all_certain=True)
-        results["actions"].append({"step": "hostile_ai_destroy", **out})
-        _log_op({"step": "hostile_ai_destroy", "killed": out.get("killed_count"), "attempted": out.get("attempted")})
+    # 1. Hostile AI at destroy certainty — always attempt
+    ai_out = ha.destroy_targets(all_certain=True)
+    if ai_out.get("attempted") or ai_out.get("killed_count"):
+        _record_action(results, "hostile_ai_destroy", ai_out)
 
-    # 2. PINPOINT CERTAIN globe targets — autokill
-    autokill = ak.autokill_certain()
-    if autokill.get("destroyed_count"):
-        results["actions"].append({"step": "autokill_certain", **autokill})
-        _log_op({"step": "autokill_certain", "destroyed": autokill.get("destroyed_count")})
+    # 2. Kill-detect — wire kill_eligible flows (zero-cost skip when signature unchanged)
+    try:
+        kd = _mod("kill_detect", "kill-detect.py")
+        kd_out = kd.execute()
+        if not kd_out.get("skipped"):
+            _record_action(results, "kill_detect_execute", kd_out)
+    except Exception as exc:
+        results["actions"].append({"step": "kill_detect_execute", "ok": False, "error": str(exc)})
 
-    # 3. RE-KILL validated returners
-    rekill = ak.auto_rekill_validated()
-    if rekill.get("rekilled_count"):
-        results["actions"].append({"step": "auto_rekill", **rekill})
-        _log_op({"step": "auto_rekill", "rekilled": rekill.get("rekilled_count")})
+    # 3. Globe autokill — PINPOINT CERTAIN + killable (everything that needs to die on map)
+    autokill = ak.autokill_needs_die(max_targets=AUTOKILL_MAX)
+    _record_action(results, "autokill_needs_die", autokill)
 
-    # 4. Forever-kill enforce (capped per cycle)
-    enforce = ak.forever_kill_enforce(max_ips=8)
-    if enforce.get("enforced_count"):
-        results["actions"].append({"step": "forever_kill_enforce", **enforce})
-        _log_op({"step": "forever_kill_enforce", "enforced": enforce.get("enforced_count")})
+    # 4. RE-KILL validated returners — always sweep hostile registry
+    rekill = ak.auto_rekill_validated(max_ips=REKILL_MAX)
+    _record_action(results, "auto_rekill", rekill)
 
-    # 5. Regional cluster — planetary proactive disable
+    # 5. Forever-kill enforce — re-apply hardware destroy on archived kills
+    enforce = ak.forever_kill_enforce(max_ips=FOREVER_MAX)
+    _record_action(results, "forever_kill_enforce", enforce)
+
+    # 6. Regional cluster — planetary proactive disable
     cluster = _top_hostile_region(obs)
     if cluster:
         field, value, hostile_n = cluster
         regional = ft.regional_disable(f"{field}:{value}")
         if regional.get("killed_count") or regional.get("severed_count"):
-            results["actions"].append({
-                "step": "regional_disable",
+            _record_action(results, "regional_disable", {
                 "field": field,
                 "value": value,
                 "hostile_in_cluster": hostile_n,
                 **regional,
             })
-            _log_op({
-                "step": "regional_disable",
-                "field": field,
-                "value": value,
-                "killed": regional.get("killed_count"),
-            })
 
     results["action_count"] = len(results["actions"])
+    killed_total = sum(
+        int(a.get("killed_count") or a.get("destroyed_count") or a.get("rekilled_count") or a.get("enforced_count") or 0)
+        for a in results["actions"]
+    )
+    results["killed_total"] = killed_total
     results["summary"] = (
-        f"Proactive cycle — {results['action_count']} action(s). "
-        f"Globe {obs['globe']['total_targets']} targets · "
-        f"{obs['globe']['strike_certain']} certain · "
-        f"{obs['wire']['harm_candidates']} harm on wire."
+        f"Proactive cycle — {killed_total} killed/rekilled/enforced across {results['action_count']} pass(es). "
+        f"Globe {obs['globe']['needs_die']} need die "
+        f"({obs['globe']['strike_certain']} certain · {obs['globe']['killable']} killable) · "
+        f"{obs['wire']['kill_eligible']} kill-eligible on wire."
     )
     return results
 

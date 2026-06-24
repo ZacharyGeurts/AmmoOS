@@ -1075,6 +1075,11 @@ test_planetary_observer_module() {
     python3 "${ROOT}/lib/planetary-observer.py" observe | grep -q 'planetary-observer/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_PLANETARY_PROACTIVE_KILL=0 \
     python3 "${ROOT}/lib/planetary-observer.py" panel | grep -q 'planetary-observer/v1'
+  grep -q 'autokill_needs_die' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'autokill-needs-die' "${ROOT}/lib/field-attack-kit.py"
+  grep -q 'nexus_field_attack_autokill_needs_die' "${ROOT}/lib/field-attack-kit.sh"
+  grep -q 'autokill_needs_die' "${ROOT}/lib/planetary-observer.py"
+  grep -q 'NEXUS_PLANETARY_AUTOKILL_MAX' "${ROOT}/config/nexus.conf"
 }
 
 test_host_identity_module() {
