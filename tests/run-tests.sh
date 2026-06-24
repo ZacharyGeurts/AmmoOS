@@ -1308,7 +1308,11 @@ test_threat_panel_json() {
   nexus_threat_vector_init
   nexus_threat_record "PACKET_INJECTION" high "test=injection"
   nexus_threat_panel_publish
-  grep -q '"vector":"PACKET_INJECTION"' "${NEXUS_STATE_DIR}/threat-panel.json"
+  python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1], encoding='utf-8'))
+assert any(t.get('vector') == 'PACKET_INJECTION' for t in d.get('threats') or [])
+" "${NEXUS_STATE_DIR}/threat-panel.json"
 }
 
 test_nexus_settings_roundtrip() {
@@ -1512,8 +1516,10 @@ test_field_antenna_module() {
     python3 "${ROOT}/lib/fcc-signal-lookup.py" lookup laser 0 0 | grep -q 'fcc_laser_part15'
   mkdir -p "$NEXUS_STATE_DIR"
   printf '{"lat":37.7749,"lon":-122.4194,"source":"test"}\n' > "$NEXUS_STATE_DIR/operator-location.json"
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-antenna-orchestrator.py" test | grep -q 'field-antenna-test/v1'
+  local ant_test_out
+  ant_test_out="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-antenna-orchestrator.py" test 2>/dev/null || true)"
+  [[ "$ant_test_out" == *'field-antenna-test/v1'* ]]
 }
 
 run_test "field antenna blaster module" test_field_antenna_module
