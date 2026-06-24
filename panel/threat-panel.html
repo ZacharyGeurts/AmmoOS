@@ -191,6 +191,67 @@
     }
     .conn-honor-line { font-size: 0.62rem; color: var(--gold); margin-top: 2px; }
     @media (max-width: 900px) { .honor-grid { grid-template-columns: 1fr; } }
+    .signals-wrap {
+      padding: 16px 24px; width: 100%; max-width: none;
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(77, 155, 255, 0.12), transparent 55%),
+        linear-gradient(180deg, #060c14 0%, #040810 100%);
+    }
+    .signals-motto { font-size: 0.88rem; color: var(--muted); margin: 0 0 14px; line-height: 1.55; }
+    .signals-hero-wrap {
+      position: relative; border-radius: 14px; overflow: hidden; margin-bottom: 16px;
+      border: 1px solid rgba(77, 155, 255, 0.22);
+      box-shadow: 0 0 48px rgba(77, 155, 255, 0.08), inset 0 0 80px rgba(4, 8, 16, 0.9);
+      min-height: min(58vh, 480px);
+    }
+    #signals-field-hero { display: block; width: 100%; height: min(58vh, 480px); }
+    .signals-stats, .signals-stat { display: inline-flex; flex-direction: column; gap: 2px; margin-right: 18px; }
+    .signals-stat-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .signals-stat strong { font-size: 1.1rem; color: var(--internet); }
+    .signals-grid { display: grid; grid-template-columns: 1fr 340px; gap: 14px; }
+    @media (max-width: 1100px) { .signals-grid { grid-template-columns: 1fr; } }
+    .signals-panel {
+      background: rgba(8, 14, 28, 0.72); border: 1px solid rgba(77, 155, 255, 0.15);
+      border-radius: 12px; padding: 14px; backdrop-filter: blur(8px);
+    }
+    .signals-panel h4 { margin: 0 0 10px; font-size: 0.78rem; color: var(--internet); letter-spacing: 0.08em; text-transform: uppercase; }
+    .signals-antenna-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
+    .signals-antenna-card {
+      border: 1px solid rgba(77, 155, 255, 0.18); border-radius: 10px; overflow: hidden;
+      background: rgba(4, 8, 16, 0.85); box-shadow: 0 0 20px color-mix(in srgb, var(--ant-color, #5ec8ff) 25%, transparent);
+    }
+    .signals-antenna-canvas { width: 100%; height: 120px; display: block; }
+    .signals-antenna-info { padding: 8px 10px; font-size: 0.68rem; }
+    .signals-antenna-info strong { display: block; color: var(--text); margin-bottom: 4px; }
+    .signals-channels { display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow: auto; }
+    .signals-channel {
+      padding: 8px 10px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--ch-color) 35%, transparent);
+      background: rgba(4, 8, 16, 0.6);
+    }
+    .signals-channel-head { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; margin-bottom: 6px; }
+    .signals-channel-head em { margin-left: auto; color: var(--muted); font-style: normal; font-size: 0.62rem; }
+    .signals-channel-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--ch-color);
+      box-shadow: 0 0 10px var(--ch-color); animation: signals-dot-pulse 2s ease-in-out infinite;
+    }
+    @keyframes signals-dot-pulse {
+      0%, 100% { opacity: 0.55; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    .signals-channel-bar { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+    .signals-channel-bar span {
+      display: block; height: 100%; background: linear-gradient(90deg, var(--ch-color), color-mix(in srgb, var(--ch-color) 40%, white));
+      border-radius: 2px; transition: width 0.35s ease;
+    }
+    .signals-channel-meta { font-size: 0.6rem; color: var(--muted); margin-top: 4px; }
+    .fcc-threat-tag {
+      display: inline-block; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.06em;
+      padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: middle;
+    }
+    .fcc-threat-tag.level-none { color: #3dd68c; border: 1px solid #2a5040; background: rgba(61, 214, 140, 0.08); }
+    .fcc-threat-tag.level-watch { color: #e8c878; border: 1px solid #5a4820; background: rgba(232, 200, 120, 0.08); }
+    .fcc-threat-tag.level-critical { color: #ff8a9a; border: 1px solid #5a2828; background: rgba(255, 92, 122, 0.15); animation: signals-threat-blink 2.4s ease-in-out infinite; }
+    @keyframes signals-threat-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.72; } }
+    .fcc-id-chip { font-family: ui-monospace, monospace; font-size: 0.62rem; color: #9ec8e8; }
     .field-rf-wrap { padding: 16px 24px; width: 100%; max-width: none; }
     .honor-wrap { padding: 16px 24px; width: 100%; max-width: none; }
     .field-rf-motto { font-size: 0.82rem; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
@@ -1596,6 +1657,7 @@
     <button type="button" data-view="packets" data-tip="Packets — live connections scored Good/Bad plus deep DPI inspect. Packet permission v4.0.">Packets</button>
     <button type="button" data-view="threats" data-tip="Threats — globe map, attack-path dossiers, Grok Heavy kill-orders. Identify. Record. KILL.">Threats</button>
     <button type="button" data-view="intel" data-tip="Intel — honorability, field RF antenna, police interop, research tables.">Intel</button>
+    <button type="button" data-view="signals" data-tip="Signals — gorgeous field antenna pulses. Every signal FCC-identified with threat tags.">Signals</button>
     <button type="button" data-view="library" data-tip="Hostess7 H7 field books — network security, NEXUS manual, AMOURANTHRTX biography.">Library</button>
     <button type="button" data-view="system" data-tip="System — settings, logs, protection toggles.">System</button>
   </nav>
@@ -1975,18 +2037,18 @@
 
   <section id="view-home-protector" class="view">
     <div class="field-rf-wrap">
-      <p class="field-rf-motto" id="home-protector-motto" data-tip="Immediate home protector — WiFi, LAN, and wire within ~1 acre. Block unauthorized entry through lawful means. No jamming.">
-        <strong>Home Protector · Immediate Airspace</strong> — everything within ~1 acre. WiFi and wire. Block without permission through lawful means.
+      <p class="field-rf-motto" id="home-protector-motto" data-tip="Extra home layer on top of global kill and re-kill — WiFi, LAN, and wire within a 3-bedroom home envelope (~55 ft). Lawful block only. No jamming.">
+        <strong>Home Protector · 3-Bedroom Home</strong> — immediate house airspace. Global kill and re-kill still apply everywhere; this is the extra at-home guard.
       </p>
       <div id="home-protector-acre-banner" class="gov-merge-banner" style="border-color:#3a6040;background:rgba(20,40,28,0.55);margin-bottom:12px;"></div>
       <div id="home-protector-stats" class="police-stats" style="margin-bottom:12px;"></div>
       <div class="human-dossier-toolbar" style="margin-bottom:10px;">
         <button type="button" id="home-protector-refresh" data-tip="Rescan WiFi and LAN neighbors in immediate airspace.">Scan airspace now</button>
-        <button type="button" id="home-protector-block-all" class="danger" data-tip="Block every unauthorized entity in ~1 acre through lawful wire-layer means.">Block all unauthorized</button>
+        <button type="button" id="home-protector-block-all" class="danger" data-tip="Block every unauthorized entity in the 3-bedroom home envelope through lawful wire-layer means.">Block all unauthorized</button>
       </div>
       <div class="honor-grid">
         <div class="honor-card" style="grid-column: 1 / -1;">
-          <h4 data-tip="WiFi APs, LAN neighbors, and wire peers within estimated one-acre radius (~118 ft).">Immediate airspace · all entities</h4>
+          <h4 data-tip="WiFi APs, LAN neighbors, and wire peers within the 3-bedroom home envelope (~55 ft).">Home airspace · all entities</h4>
           <div id="home-protector-table" class="meta"><div class="empty">Scanning immediate home airspace…</div></div>
         </div>
         <div class="honor-card">
@@ -2240,6 +2302,39 @@
     </div>
   </section>
 
+  <section id="view-signals" class="view">
+    <div class="signals-wrap">
+      <p class="signals-motto" id="signals-motto" data-tip="Field antennas pulse live. Every WiFi, audio, and wire signal is FCC-identified — threats tagged automatically.">
+        <strong>Signals · Field Antennas</strong> — gorgeous pulsing fields · FCC lookup on every signal · threat tags live.
+      </p>
+      <div id="signals-fcc-banner" class="gov-merge-banner" style="border-color:#3a5080;background:rgba(20,36,56,0.55);margin-bottom:12px;"></div>
+      <div id="signals-stats" class="signals-stats" style="margin-bottom:12px;"></div>
+      <div class="signals-hero-wrap">
+        <canvas id="signals-field-hero" aria-label="Pulsing multi-antenna field visualization"></canvas>
+      </div>
+      <div class="signals-grid" style="margin-top:14px;">
+        <div>
+          <div class="signals-panel" style="margin-bottom:14px;">
+            <h4>FCC identified signals · threat tags</h4>
+            <div id="signals-fcc-table" class="meta"><div class="empty">Scanning — FCC lookups populate after first RF cycle…</div></div>
+          </div>
+          <div class="signals-panel">
+            <h4>Field antenna array</h4>
+            <div id="signals-antenna-grid" class="signals-antenna-grid"><div class="empty">Awaiting antenna fields…</div></div>
+          </div>
+        </div>
+        <div class="signals-panel">
+          <h4>Pulse channels · live energy</h4>
+          <div id="signals-channels" class="signals-channels"><div class="empty">Pulse channels load with scan…</div></div>
+          <div style="margin-top:14px;">
+            <button type="button" id="signals-refresh" data-tip="Rebuild signals field + FCC lookups.">Rescan signals</button>
+            <button type="button" data-view-jump="intel/field-rf" style="margin-left:8px;">Field RF →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="view-research" class="view">
     <div class="angels-wrap">
       <p class="angels-motto"><strong>Research tables</strong> — MAC OUI vendors, IP intelligence cache, CVE ↔ vector mapping (legacy, recent, zero-day watch). Never unknown.</p>
@@ -2450,6 +2545,7 @@
   </section>
 
   <script defer src="/assets/sdf-render.js"></script>
+  <script defer src="/assets/signals-field.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let currentLog = "alerts";
@@ -2720,6 +2816,7 @@
       packets: { panel: "packets", default: "monitor", subs: { monitor: "Live · Good/Bad", inspect: "DPI · Deep inspect" } },
       threats: { panel: "threats", default: "home-protector", subs: { "home-protector": "Home · Airspace", "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", "precision-map": "Precision · Map", "precision-web": "Precision · Web", dossier: "Attack paths", "human-dossier": "Kill orders" } },
       intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", "audio-train": "Audio · Train", "field-rf": "Field RF", research: "Research" } },
+      signals: { panel: "signals", default: "signals", subs: { signals: "Field · Live" } },
       library: { panel: "library", default: "library", subs: { library: "Library" } },
       system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
     };
@@ -2729,6 +2826,7 @@
       "home-protector": ["threats", "home-protector"], "host-attack": ["threats", "host-attack"], spiderweb: ["threats", "spiderweb"], "precision-map": ["threats", "precision-map"], "precision-web": ["threats", "precision-web"], dossier: ["threats", "dossier"], "human-dossier": ["threats", "human-dossier"],
       map: ["threats", "host-attack"], kill: ["threats", "human-dossier"],
       settings: ["system", "settings"], logs: ["system", "logs"],
+      signals: ["signals", "signals"],
     };
     let currentPanel = "command";
     let currentSubView = "command";
@@ -2746,6 +2844,7 @@
       intel: { keys: ["audio_train", "field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
       library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
+      signals: { keys: ["signals_field"], subs: { signals: ["signals_field"] } },
     };
 
     function moduleReady(data, key) {
@@ -2754,6 +2853,7 @@
       if (key === "gatekeeper") return typeof val === "object" && Array.isArray(val.connections);
       if (key === "audio_train") return typeof val === "object" && (val.schema === "audio-train/v1" || val.stats != null);
       if (key === "home_protector") return typeof val === "object" && (val.schema === "home-protector/v1" || val.stats != null);
+      if (key === "signals_field") return typeof val === "object" && (val.schema === "signals-field/v1" || val.stats != null);
       if (key === "field_rf") return typeof val === "object" && (val.updated != null || val.antenna?.mode != null);
       if (key === "terror_spiderweb") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.nodes));
       if (key === "precision_field") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.entities));
@@ -2953,6 +3053,7 @@
       renderHonorability(data);
       renderAudioTrain(data.audio_train);
       renderHomeProtector(data.home_protector);
+      if (global.renderSignalsField) renderSignalsField(data.signals_field);
       renderCommandCenter(data);
       renderFieldProtect(data);
       const gk = data.gatekeeper || {};
@@ -3031,6 +3132,12 @@
       if (sub === "honor" && lastPanelData) renderHonorability(lastPanelData);
       if (sub === "audio-train" && lastPanelData) renderAudioTrain(lastPanelData.audio_train);
       if (sub === "home-protector" && lastPanelData) renderHomeProtector(lastPanelData.home_protector);
+      if (sub === "signals" && lastPanelData && global.renderSignalsField) {
+        renderSignalsField(lastPanelData.signals_field);
+        if (global.onSignalsViewActivated) onSignalsViewActivated();
+      } else if (global.onSignalsViewDeactivated) {
+        onSignalsViewDeactivated();
+      }
       if (sub === "field-rf" && lastPanelData) renderFieldProtect(lastPanelData);
     }
 
@@ -4915,7 +5022,7 @@
       const acre = hp.acre || {};
       const banner = $("home-protector-acre-banner");
       if (banner) {
-        banner.innerHTML = `<strong>${esc(acre.label || "~1 acre")}</strong> — radius ${esc(String(acre.radius_ft || 118))} ft (${esc(String(acre.radius_m || 35.9))} m) · WiFi signal + LAN wire · operator ${esc(hp.operator?.label || hp.operator?.source || "unset")}`;
+        banner.innerHTML = `<strong>${esc(acre.home_profile || acre.label || "3-bedroom home")}</strong> — ${esc(acre.label || "home airspace")} · radius ${esc(String(acre.radius_ft || 55))} ft (${esc(String(acre.radius_m || 16.8))} m) · WiFi + LAN wire · global kill/re-kill still active · operator ${esc(hp.operator?.label || hp.operator?.source || "unset")}`;
       }
       const statsEl = $("home-protector-stats");
       const st = hp.stats || {};
@@ -5165,7 +5272,7 @@
         refresh();
       });
       $("home-protector-block-all")?.addEventListener("click", async () => {
-        if (!confirm("Block ALL unauthorized entities in immediate ~1 acre airspace?\n\nLawful wire-layer only — firewall, RF forever-disable, disconnect. No jamming.")) return;
+        if (!confirm("Block ALL unauthorized entities in the 3-bedroom home airspace?\n\nLawful wire-layer only — firewall, RF forever-disable, disconnect. Global kill/re-kill unchanged. No jamming.")) return;
         const btn = $("home-protector-block-all");
         if (btn) btn.disabled = true;
         try {

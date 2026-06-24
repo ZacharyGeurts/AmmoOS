@@ -1,5 +1,5 @@
 #!/bin/bash
-# Immediate Home Protector — ~1 acre airspace publish helpers.
+# Immediate Home Protector — 3-bedroom home airspace publish helpers.
 
 nexus_home_protector_publish() {
   [[ "${NEXUS_HOME_PROTECTOR:-1}" == "1" ]] || return 0

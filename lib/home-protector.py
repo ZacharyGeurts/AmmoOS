@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Immediate Home Protector — ~1 acre airspace detector (WiFi, LAN, ARP)."""
+"""Immediate Home Protector — 3-bedroom home airspace detector (WiFi, LAN, ARP)."""
 from __future__ import annotations
 
 import importlib.util
@@ -56,7 +56,7 @@ def _append_log(row: dict[str, Any]) -> None:
 
 
 def _seed() -> dict[str, Any]:
-    return _load_json(SEED, {"acre_radius_m": 35.9, "acre_radius_ft": 118})
+    return _load_json(SEED, {"acre_radius_m": 16.8, "acre_radius_ft": 55, "home_profile": "3-bedroom home"})
 
 
 def _norm_mac(mac: str) -> str:
@@ -72,7 +72,7 @@ def _mod(name: str, rel: str) -> Any:
 
 
 def _acre_radius_m() -> float:
-    return float(_seed().get("acre_radius_m") or 35.9)
+    return float(_seed().get("acre_radius_m") or 16.8)
 
 
 def _signal_to_est_meters(signal_pct: int) -> float:
@@ -250,7 +250,7 @@ def _wifi_entities(rf_doc: dict[str, Any]) -> list[dict[str, Any]]:
             "threat_kind": threat.get("kind"),
             "security": ap.get("security"),
             "open": bool(ap.get("open")),
-            "detail": threat.get("detail") or f"WiFi AP within ~{est_m:.0f} m ({_acre_radius_m():.0f} m acre)",
+            "detail": threat.get("detail") or f"WiFi AP within ~{est_m:.0f} m ({_acre_radius_m():.0f} m home)",
         })
     return entities
 
@@ -347,10 +347,11 @@ def build_home_protector(harvest: bool = True) -> dict[str, Any]:
         "updated": _now(),
         "motto": seed.get("motto") or "",
         "acre": {
-            "radius_m": seed.get("acre_radius_m", 35.9),
-            "radius_ft": seed.get("acre_radius_ft", 118),
-            "area_m2": seed.get("acre_area_m2", 4047),
-            "label": "~1 acre immediate airspace",
+            "radius_m": seed.get("acre_radius_m", 16.8),
+            "radius_ft": seed.get("acre_radius_ft", 55),
+            "area_m2": seed.get("acre_area_m2", 887),
+            "label": seed.get("home_label") or "3-bedroom home airspace",
+            "home_profile": seed.get("home_profile") or "3-bedroom home",
         },
         "operator": {
             "lat": op.get("lat"),

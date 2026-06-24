@@ -1373,6 +1373,8 @@ test_home_protector_module() {
   grep -q '/api/home-protector' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-home-protector' "${ROOT}/panel/threat-panel.html"
   grep -q 'acre_radius_m' "${ROOT}/data/home-protector-seed.json"
+  grep -q '3-bedroom home' "${ROOT}/data/home-protector-seed.json"
+  grep -q '"acre_radius_ft": 55' "${ROOT}/data/home-protector-seed.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/home-protector.py" build | grep -q 'home-protector/v1'
 }
