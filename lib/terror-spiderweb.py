@@ -1120,6 +1120,20 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
     except Exception:
         pass
 
+    thermal_doc: dict[str, Any] = {}
+    try:
+        thermal_mod = _mod("thermal_earth_field", "thermal-earth-field.py")
+        thermal_doc = thermal_mod.build_thermal_field()
+        op_loc = _load_json(STATE / "operator-location.json", {})
+        if op_loc.get("lat") is not None:
+            thermal_doc["operator_focus"] = {
+                "lat": op_loc.get("lat"),
+                "lon": op_loc.get("lon"),
+                "label": op_loc.get("label") or "Operator",
+            }
+    except Exception:
+        pass
+
     stats = {
         "total_homes": len(home_rows),
         "homes_placed": len(placed_homes),
@@ -1146,6 +1160,8 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "field_hostility_score": hostility_doc.get("field_hostility_score", 0),
         "census_geographies": len((op.get("census_geographies") or [])),
         "census_populated": bool(census_doc.get("ok")),
+        "thermal_warm_bodies": (thermal_doc.get("stats") or {}).get("warm_bodies", 0),
+        "thermal_cold_bodies": (thermal_doc.get("stats") or {}).get("cold_bodies", 0),
         "sources": {
             "gatekeeper": sum(1 for e in catalog.values() if "gatekeeper" in e.get("sources", [])),
             "host_attacks": sum(1 for e in catalog.values() if "host_attacks" in e.get("sources", [])),
@@ -1216,6 +1232,7 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         } if existence_doc else {},
         "hostility": hostility_doc,
         "census_field": census_doc if census_doc.get("ok") else panel_doc.get("census_field") or {},
+        "thermal_earth": thermal_doc,
     }
 
 

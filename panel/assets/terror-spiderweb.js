@@ -13,6 +13,7 @@
     terror: { map: null, layer: null, canvas: null, ctx: null, focused: false },
     registry: { map: null, layer: null, focused: false },
     mobile: { map: null, layer: null, focused: false },
+    thermal: { map: null, focused: false },
   };
 
   function esc(s) {
@@ -413,8 +414,14 @@
       btn.classList.toggle("active", btn.dataset.swMap === tab);
     });
     document.querySelectorAll(".sw-map-panel").forEach((panel) => {
-      panel.classList.toggle("active", panel.id === `spiderweb-${tab}-map` || (tab === "terror" && panel.id === "spiderweb-map"));
+      const active =
+        (tab === "terror" && panel.id === "spiderweb-map")
+        || (tab === "thermal" && panel.id === "spiderweb-thermal-map")
+        || panel.id === `spiderweb-${tab}-map`;
+      panel.classList.toggle("active", active);
     });
+    const globe3d = document.getElementById("thermal-globe-3d-wrap");
+    if (globe3d) globe3d.classList.toggle("active", tab === "thermal");
     const slot = maps[tab];
     if (slot?.map) {
       setTimeout(() => {
@@ -460,6 +467,9 @@
     renderTerrorMap(sw);
     renderRegistryMap(sw);
     renderMobileMap(sw);
+    if (sw.thermal_earth && global.renderThermalEarth) {
+      global.renderThermalEarth(sw.thermal_earth);
+    }
     if (document.getElementById("view-spiderweb")?.classList.contains("active")) {
       Object.values(maps).forEach((slot) => slot.map?.invalidateSize());
       drawWeb();

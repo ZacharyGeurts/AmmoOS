@@ -32,6 +32,7 @@ SECTION_VISION_TAGS: dict[str, list[str]] = {
     "internet": ["ocr", "text", "screen", "network"],
     "mobile": ["motion", "track", "vision", "camera"],
     "battery": ["action", "power", "energy", "flow"],
+    "thermal": ["heat", "energy", "physics", "casimir", "temperature", "ocr"],
 }
 
 IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")

@@ -608,6 +608,18 @@ test_hostility_priority_module() {
     | grep -q '"hostility_score"'
 }
 
+test_thermal_earth_module() {
+  [[ -f "${ROOT}/lib/thermal-earth-field.py" ]]
+  [[ -f "${ROOT}/panel/assets/thermal-earth.js" ]]
+  grep -q 'thermal-earth-field' "${ROOT}/lib/terror-spiderweb.py"
+  grep -q '/api/thermal-earth' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'renderThermalGlobe3D' "${ROOT}/panel/assets/sdf-render.js"
+  grep -q 'earth-thermal' "${ROOT}/panel/assets/sdf-render.js"
+  grep -q 'Earth · Temperature' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_THERMAL_SKIP_NET=1 \
+    python3 "${ROOT}/lib/thermal-earth-field.py" json | grep -q 'thermal-earth-field'
+}
+
 test_census_field_populate_module() {
   [[ -f "${ROOT}/lib/census-field-populate.py" ]]
   [[ -f "${ROOT}/data/census-sources-seed.json" ]]
@@ -942,7 +954,7 @@ test_panel_field_attack_kit_ui() {
   grep -q 'old-man' "$panel"
   grep -q 'Comfort reading' "$panel"
   grep -q 'set-old-man' "$panel"
-  grep -q 'v5.9.5' "$panel"
+  grep -q 'v5.9.6' "$panel"
   ! grep -q 'Grandmas' "$panel"
 }
 
@@ -951,7 +963,7 @@ test_hardware_destruction_module() {
   grep -q 'nexus_hardware_destroy_target' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'nexus_hardware_destroy_teardown_connections' "${ROOT}/lib/hardware-destruction.sh"
   grep -q 'hardware_destroy' "${ROOT}/lib/host-attack-map.py"
-  grep -q '5.9.5' "${ROOT}/lib/nexus-common.sh"
+  grep -q '5.9.6' "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-common.sh"
   # shellcheck source=/dev/null
@@ -1309,6 +1321,7 @@ run_test "program tags module" test_program_tags_module
 run_test "gov intel module" test_gov_intel_module
 run_test "police agency module" test_police_agency_module
 run_test "panel field rf UI" test_panel_field_rf_ui
+run_test "thermal earth field module" test_thermal_earth_module
 run_test "hostility priority module" test_hostility_priority_module
 run_test "census field populate module" test_census_field_populate_module
 run_test "terror spiderweb module" test_terror_spiderweb_module

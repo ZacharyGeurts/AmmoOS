@@ -19,6 +19,7 @@
   <script defer src="/assets/nexus-plugin-runtime.js"></script>
   <script defer src="/assets/plugins/tab-beacon.js"></script>
   <script defer src="/assets/terror-spiderweb.js"></script>
+  <script defer src="/assets/thermal-earth.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
@@ -210,6 +211,10 @@
     .sw-map-panel { display: none; width: 100%; height: min(52vh, 520px); min-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); background: #060a14; position: relative; }
     .sw-map-panel.active { display: block; }
     #spiderweb-map.sw-map-panel.active { display: block; }
+    .thermal-globe-wrap { display: none; height: min(36vh, 320px); min-height: 220px; padding: 0; overflow: hidden; }
+    .thermal-globe-wrap.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #thermal-globe-3d { width: 100%; height: calc(100% - 28px); display: block; }
+    .thermal-globe-caption { padding: 6px 12px; font-size: 0.65rem; text-align: center; width: 100%; }
     .sw-registry-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0 10px; }
     .sw-registry-toolbar input, .sw-registry-toolbar select {
       background: #0d1524; border: 1px solid var(--border); color: var(--text);
@@ -1405,7 +1410,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.9.5</h1>
+        <h1>NEXUS-Shield v5.9.6</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1425,7 +1430,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.5</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.6</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1904,10 +1909,24 @@
         <button type="button" class="sw-map-tab active" data-sw-map="terror" role="tab">Terror web</button>
         <button type="button" class="sw-map-tab" data-sw-map="registry" role="tab">Homes & internet everywhere</button>
         <button type="button" class="sw-map-tab" data-sw-map="mobile" role="tab">Mobile & battery field</button>
+        <button type="button" class="sw-map-tab" data-sw-map="thermal" role="tab" data-tip="SDF temperature Earth — top-down + 3D globe. Every warm and cold body.">Earth · Temperature</button>
       </div>
       <div id="spiderweb-map" class="sw-map-panel active" role="application" aria-label="Global terror spiderweb map"></div>
       <div id="spiderweb-registry-map" class="sw-map-panel" role="application" aria-label="Universal registry map — all placed homes and internet"></div>
       <div id="spiderweb-mobile-map" class="sw-map-panel" role="application" aria-label="Mobile and battery field map"></div>
+      <div id="spiderweb-thermal-map" class="sw-map-panel" role="application" aria-label="Thermal Earth top-down SDF temperature map"></div>
+      <div id="thermal-globe-3d-wrap" class="sw-map-panel thermal-globe-wrap" aria-label="Thermal Earth 3D SDF globe">
+        <canvas id="thermal-globe-3d"></canvas>
+        <div class="thermal-globe-caption meta">TRUE REALITY MODEL — 3D SDF thermal globe · LOCAL NOW active physics</div>
+      </div>
+      <div id="thermal-earth-meta" class="meta" style="margin:8px 0;">Thermal Earth loading…</div>
+      <div id="thermal-earth-stats" class="spiderweb-stats"></div>
+      <div style="margin-bottom:8px;">
+        <button type="button" id="thermal-rebuild" data-tip="Rebuild SDF temperature field + OCR warm/cold body scan.">Rebuild thermal field</button>
+        <button type="button" id="thermal-refocus" class="ghost">Zoom warm cluster</button>
+      </div>
+      <h4 style="margin:12px 0 6px;font-size:0.82rem;color:var(--gold);">Warm & cold bodies — OCR + SDF identified</h4>
+      <div id="thermal-bodies-table" class="sw-registry-scroll meta"></div>
       <div class="sw-registry-toolbar">
         <label>Search <input type="search" id="spiderweb-registry-search" placeholder="ID, IP, label, vendor, city…" autocomplete="off" /></label>
         <label>Filter <select id="spiderweb-registry-filter">

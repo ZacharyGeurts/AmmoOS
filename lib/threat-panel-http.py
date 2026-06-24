@@ -448,6 +448,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/thermal-earth":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "thermal-earth-field.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/thermal-earth/bodies":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "thermal-earth-field.py", ["bodies"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/existence-identity":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "existence-identity.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
@@ -988,6 +998,11 @@ class Handler(BaseHTTPRequestHandler):
                 args.append(address)
             payload = _nexus_py_json(census_py, args)
             self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/thermal-earth/rebuild":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "thermal-earth-field.py", ["build"])
+            self._send(200 if payload.get("schema") else 500, json.dumps(payload), "application/json")
             return
 
         if path == "/api/autosanitize/toggle":

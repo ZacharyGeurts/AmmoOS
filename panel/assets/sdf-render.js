@@ -165,6 +165,132 @@
     });
   }
 
+  function tempToRgb(norm) {
+    const t = clamp(norm, 0, 1);
+    const r = clamp(Math.round(30 + t * 225), 0, 255);
+    const g = clamp(Math.round(40 + (1 - Math.abs(t - 0.5) * 2) * 120 + t * 40), 0, 255);
+    const b = clamp(Math.round(220 - t * 200), 0, 255);
+    return [r, g, b, 255];
+  }
+
+  function sampleThermalNorm(thermalPack, u, v) {
+    const { meta, field } = thermalPack;
+    const raw = sampleField(field, meta.width, meta.height, u, v);
+    return clamp((raw + 2) / 4, 0, 1);
+  }
+
+  async function renderThermalTile(canvas, size, x, y, z, opts) {
+    const thermalPack = await loadField("earth-thermal");
+    const landPack = await loadField("globe-world");
+    const wirePack = await loadField("globe-wireframe");
+    const b = tileLonLatBounds(x, y, z);
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    const img = ctx.createImageData(size, size);
+    const alphaLand = opts?.alphaLand ?? 0.35;
+    for (let py = 0; py < size; py++) {
+      for (let px = 0; px < size; px++) {
+        const lon = b.lonMin + ((px + 0.5) / size) * (b.lonMax - b.lonMin);
+        const lat = b.latMax - ((py + 0.5) / size) * (b.latMax - b.latMin);
+        const u = (lon + 180) / 360;
+        const v = (90 - lat) / 180;
+        const norm = sampleThermalNorm(thermalPack, u, v);
+        const rgba = tempToRgb(norm);
+        const dLand = sampleField(landPack.field, landPack.meta.width, landPack.meta.height, u, v);
+        const dWire = sampleField(wirePack.field, wirePack.meta.width, wirePack.meta.height, u, v);
+        const land = clamp(0.5 - dLand * 1.4, 0, 1);
+        const border = clamp(0.42 - Math.abs(dWire) * 3.0, 0, 1);
+        const idx = (py * size + px) * 4;
+        img.data[idx] = Math.round(rgba[0] * (0.82 + land * alphaLand));
+        img.data[idx + 1] = Math.round(rgba[1] * (0.82 + land * alphaLand));
+        img.data[idx + 2] = Math.round(rgba[2] * (0.82 + land * alphaLand));
+        img.data[idx + 3] = 255;
+        if (border > 0.2) {
+          img.data[idx] = Math.min(255, img.data[idx] + Math.round(border * 40));
+          img.data[idx + 1] = Math.min(255, img.data[idx + 1] + Math.round(border * 55));
+          img.data[idx + 2] = Math.min(255, img.data[idx + 2] + Math.round(border * 70));
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return canvas;
+  }
+
+  async function renderThermalGlobe3D(canvas, w, h, opts) {
+    const thermalPack = await loadField("earth-thermal");
+    const landPack = await loadField("globe-world");
+    const wirePack = await loadField("globe-wireframe");
+    const phase = (opts?.phase || 0) * Math.PI * 2;
+    const tilt = (opts?.tilt ?? 0.32) * Math.PI;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#040810";
+    ctx.fillRect(0, 0, w, h);
+    const cx = w * 0.5;
+    const cy = h * 0.52;
+    const radius = Math.min(w, h) * 0.38;
+    const img = ctx.createImageData(w, h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const dx = (x - cx) / radius;
+        const dy = (y - cy) / radius;
+        const r2 = dx * dx + dy * dy;
+        const idx = (y * w + x) * 4;
+        if (r2 > 1) {
+          img.data[idx + 3] = 255;
+          continue;
+        }
+        const dz = Math.sqrt(Math.max(0, 1 - r2));
+        const lat = Math.asin(clamp(dy * Math.cos(tilt) + dz * Math.sin(tilt), -1, 1));
+        const lon = Math.atan2(dx, dz * Math.cos(tilt) - dy * Math.sin(tilt)) + phase;
+        const u = (lon / Math.PI / 2 + 0.5) % 1;
+        const v = (90 - (lat * 180 / Math.PI)) / 180;
+        const norm = sampleThermalNorm(thermalPack, u, v);
+        const rgba = tempToRgb(norm);
+        const dLand = sampleField(landPack.field, landPack.meta.width, landPack.meta.height, u, v);
+        const dWire = sampleField(wirePack.field, wirePack.meta.width, wirePack.meta.height, u, v);
+        const land = clamp(0.55 - dLand * 1.6, 0, 1);
+        const border = clamp(0.38 - Math.abs(dWire) * 3.0, 0, 1);
+        const shade = 0.55 + dz * 0.45;
+        img.data[idx] = Math.round(rgba[0] * shade + land * 18 + border * 35);
+        img.data[idx + 1] = Math.round(rgba[1] * shade + land * 28 + border * 55);
+        img.data[idx + 2] = Math.round(rgba[2] * shade + land * 38 + border * 75);
+        img.data[idx + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    const grad = ctx.createRadialGradient(cx - radius * 0.25, cy - radius * 0.25, radius * 0.1, cx, cy, radius * 1.05);
+    grad.addColorStop(0, "rgba(120,200,255,0.12)");
+    grad.addColorStop(1, "rgba(0,0,0,0.45)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+    return canvas;
+  }
+
+  function createThermalGlobeLayer(Lref) {
+    const GridLayer = Lref.GridLayer.extend({
+      createTile(coords, done) {
+        const tile = document.createElement("canvas");
+        const size = this.getTileSize().x;
+        renderThermalTile(tile, size, coords.x, coords.y, coords.z)
+          .then(() => done(null, tile))
+          .catch((err) => done(err, tile));
+        return tile;
+      },
+    });
+    return new GridLayer({
+      tileSize: 256,
+      minZoom: 0,
+      maxZoom: 22,
+      noWrap: false,
+      className: "ha-thermal-tile-layer",
+    });
+  }
+
   function tileLonLatBounds(x, y, z) {
     const n = Math.pow(2, z);
     const lonMin = (x / n) * 360 - 180;
@@ -320,6 +446,11 @@
     renderGlobe,
     renderGlobeTile,
     createGlobeLayer,
+    renderThermalTile,
+    renderThermalGlobe3D,
+    createThermalGlobeLayer,
+    tempToRgb,
+    sampleThermalNorm,
     formatGps,
     pinIcon,
     parseColor,
