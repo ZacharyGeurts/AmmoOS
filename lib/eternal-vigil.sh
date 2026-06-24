@@ -85,11 +85,17 @@ nexus_vigil_get_mode() {
 }
 
 nexus_vigil_scan_interval() {
+  local raw
   case "$(nexus_vigil_get_mode)" in
-    storm) echo 300 ;;
-    alert) echo 900 ;;
-    *) echo 3600 ;;
+    storm) raw=5 ;;
+    alert) raw=5 ;;
+    *) raw=5 ;;
   esac
+  if declare -f nexus_await_clamp >/dev/null 2>&1; then
+    nexus_await_clamp "$raw"
+  else
+    printf '%s' "$raw"
+  fi
 }
 
 nexus_vigil_entropy_threshold() {

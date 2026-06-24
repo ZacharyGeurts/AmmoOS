@@ -1,0 +1,25 @@
+name: Release v10.0.0
+
+on:
+  push:
+    tags:
+      - 'v10.0.0'
+      - 'v10.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v10.0.0 Field Tools Edition
+          body_path: lib/RELEASE-10.0.0.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

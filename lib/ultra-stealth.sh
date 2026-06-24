@@ -2,16 +2,17 @@
 # Ultra-stealth — cgroup budget, adaptive event-driven pacing, <5% CPU target.
 
 NEXUS_CPU_QUOTA_PCT="${NEXUS_CPU_QUOTA_PCT:-5}"
-NEXUS_BEHAVIOR_POLL_CALM="${NEXUS_BEHAVIOR_POLL_CALM:-30}"
-NEXUS_BEHAVIOR_POLL_ALERT="${NEXUS_BEHAVIOR_POLL_ALERT:-8}"
+NEXUS_AWAIT_MAX_SEC="${NEXUS_AWAIT_MAX_SEC:-5}"
+NEXUS_BEHAVIOR_POLL_CALM="${NEXUS_BEHAVIOR_POLL_CALM:-5}"
+NEXUS_BEHAVIOR_POLL_ALERT="${NEXUS_BEHAVIOR_POLL_ALERT:-5}"
 NEXUS_BEHAVIOR_POLL_STORM="${NEXUS_BEHAVIOR_POLL_STORM:-2}"
-NEXUS_PRIVACY_POLL_CALM="${NEXUS_PRIVACY_POLL_CALM:-60}"
-NEXUS_PRIVACY_POLL_ALERT="${NEXUS_PRIVACY_POLL_ALERT:-15}"
+NEXUS_PRIVACY_POLL_CALM="${NEXUS_PRIVACY_POLL_CALM:-5}"
+NEXUS_PRIVACY_POLL_ALERT="${NEXUS_PRIVACY_POLL_ALERT:-5}"
 NEXUS_PRIVACY_POLL_STORM="${NEXUS_PRIVACY_POLL_STORM:-5}"
-NEXUS_PACKET_POLL_CALM="${NEXUS_PACKET_POLL_CALM:-45}"
-NEXUS_PACKET_POLL_ALERT="${NEXUS_PACKET_POLL_ALERT:-12}"
+NEXUS_PACKET_POLL_CALM="${NEXUS_PACKET_POLL_CALM:-5}"
+NEXUS_PACKET_POLL_ALERT="${NEXUS_PACKET_POLL_ALERT:-5}"
 NEXUS_PACKET_POLL_STORM="${NEXUS_PACKET_POLL_STORM:-3}"
-NEXUS_VIGIL_MAINTAIN_INTERVAL="${NEXUS_VIGIL_MAINTAIN_INTERVAL:-300}"
+NEXUS_VIGIL_MAINTAIN_INTERVAL="${NEXUS_VIGIL_MAINTAIN_INTERVAL:-5}"
 
 nexus_ultra_stealth_enabled() {
   [[ "${NEXUS_ULTRA_STEALTH:-1}" == "1" ]]
@@ -30,34 +31,35 @@ nexus_apply_cgroup_self() {
 
 nexus_adaptive_poll_interval() {
   local module="${1:-behavior}"
-  local mode
+  local mode raw
   mode="$(nexus_vigil_get_mode 2>/dev/null || echo calm)"
   case "$module" in
     behavior)
       case "$mode" in
-        storm) echo "$NEXUS_BEHAVIOR_POLL_STORM" ;;
-        alert) echo "$NEXUS_BEHAVIOR_POLL_ALERT" ;;
-        *) echo "$NEXUS_BEHAVIOR_POLL_CALM" ;;
+        storm) raw="$NEXUS_BEHAVIOR_POLL_STORM" ;;
+        alert) raw="$NEXUS_BEHAVIOR_POLL_ALERT" ;;
+        *) raw="$NEXUS_BEHAVIOR_POLL_CALM" ;;
       esac
       ;;
     privacy)
       case "$mode" in
-        storm) echo "$NEXUS_PRIVACY_POLL_STORM" ;;
-        alert) echo "$NEXUS_PRIVACY_POLL_ALERT" ;;
-        *) echo "$NEXUS_PRIVACY_POLL_CALM" ;;
+        storm) raw="$NEXUS_PRIVACY_POLL_STORM" ;;
+        alert) raw="$NEXUS_PRIVACY_POLL_ALERT" ;;
+        *) raw="$NEXUS_PRIVACY_POLL_CALM" ;;
       esac
       ;;
     packet)
       case "$mode" in
-        storm) echo "$NEXUS_PACKET_POLL_STORM" ;;
-        alert) echo "$NEXUS_PACKET_POLL_ALERT" ;;
-        *) echo "$NEXUS_PACKET_POLL_CALM" ;;
+        storm) raw="$NEXUS_PACKET_POLL_STORM" ;;
+        alert) raw="$NEXUS_PACKET_POLL_ALERT" ;;
+        *) raw="$NEXUS_PACKET_POLL_CALM" ;;
       esac
       ;;
     *)
-      echo "$NEXUS_VIGIL_MAINTAIN_INTERVAL"
+      raw="$NEXUS_VIGIL_MAINTAIN_INTERVAL"
       ;;
   esac
+  nexus_await_clamp "${raw:-5}"
 }
 
 nexus_cpu_budget_ok() {

@@ -70,10 +70,6 @@ nexus_field_standalone_ensure_panel() {
   port="${NEXUS_THREAT_PANEL_PORT}"
   cert="${NEXUS_PANEL_TLS_CERT:-${NEXUS_STATE_DIR}/tls/nexus-panel.crt}"
   key="${NEXUS_PANEL_TLS_KEY:-${NEXUS_STATE_DIR}/tls/nexus-panel.key}"
-  if [[ ! -r "$cert" || ! -r "$key" ]] && [[ -r "${panel_root}/.nexus-state/tls/nexus-panel.crt" ]]; then
-    cert="${panel_root}/.nexus-state/tls/nexus-panel.crt"
-    key="${panel_root}/.nexus-state/tls/nexus-panel.key"
-  fi
   url="$(nexus_panel_url)"
   ready_url="$(nexus_panel_app_url)"
 
@@ -90,12 +86,11 @@ nexus_field_standalone_ensure_panel() {
       python3 "$panel_py" "$port" "${panel_root}/panel" \
       "${NEXUS_STATE_DIR}/threat-panel.json" "$cert" "$key" \
       >>"${NEXUS_STATE_DIR}/panel-http.log" 2>&1 &
-    sleep 1
   fi
 
-  if nexus_panel_wait_ready "$ready_url" 45 \
-    || nexus_panel_wait_ready "$url" 30 \
-    || nexus_panel_wait_ready "${url%/field}/" 15; then
+  if nexus_panel_wait_ready "$ready_url" 5 \
+    || nexus_panel_wait_ready "$url" 5 \
+    || nexus_panel_wait_ready "${url%/field}/" 5; then
     served="$(nexus_panel_served_version 2>/dev/null || true)"
     nexus_log "INFO" "nexus.sh" "PANEL_READY url=${url} version=${served:-unknown}"
     return 0
@@ -135,7 +130,7 @@ if [[ "${1:-}" == "--url" ]]; then
 fi
 
 if [[ "${1:-}" == "--wait" ]]; then
-  if nexus_panel_wait_ready "$URL" 45; then
+  if nexus_panel_wait_ready "$URL" 5; then
     echo "Panel ready: $URL ($(nexus_panel_served_version 2>/dev/null || echo unknown))"
     exit 0
   fi
