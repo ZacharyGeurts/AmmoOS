@@ -14,7 +14,6 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 PANEL_JSON = STATE / "threat-panel.json"
 
-# panel JSON key -> (script relative to lib/, cli args)
 FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "field_hardware": ("field-hardware-probe.py", ["json"]),
     "field_hazard_onset": ("field-hazard-onset.py", ["panel"]),
@@ -110,7 +109,9 @@ def _save_panel(doc: dict[str, Any]) -> None:
     tmp.replace(PANEL_JSON)
 
 
-def publish_parallel(*, max_workers: int = 25) -> dict[str, Any]:
+def publish_parallel(*, max_workers: int | None = None) -> dict[str, Any]:
+    if max_workers is None:
+        max_workers = int(os.environ.get("NEXUS_PANEL_PARALLEL_WORKERS", "8"))
     doc = _load_panel()
     doc["field"] = True
     doc["parallel_load"] = True
