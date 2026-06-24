@@ -27,6 +27,7 @@
   let testBound = false;
   let radioSearchBound = false;
   let radioTuneBound = false;
+  let worldTuneBound = false;
   let lastRadioStations = [];
   let lastTuned = null;
 
@@ -54,6 +55,7 @@
         frequency_coverage_pct: (fa.frequency_knowledge || {}).coverage_pct ?? sf.field_antenna?.frequency_coverage_pct,
       },
       field_radio: Object.keys(fr).length ? fr : frSf,
+      field_world_placement: raw.field_world_placement || sf.field_world_placement || {},
       operator_profile: opProf,
     };
   }
@@ -606,33 +608,163 @@
     return s.freq_khz != null ? `${s.freq_khz} kHz` : "—";
   }
 
+  function renderWimkStatus(tuned, wp) {
+    const el = document.getElementById("signals-wimk-status");
+    if (!el) return;
+    const ws = tuned?.wimk_status || wp?.wimk_playback || {};
+    const working = !!(tuned?.wimk_working ?? ws.working);
+    const attempts = tuned?.playback_attempts || ws.attempts || [];
+    const phys = ws.physics || tuned?.physics || {};
+    const last = attempts.length ? attempts[attempts.length - 1] : {};
+    if (working) {
+      el.innerHTML = [
+        '<span class="signals-freq-live">93.1 WIMK WORKING</span>',
+        ws.working_method || tuned?.wimk_working_method ? `via <strong>${esc(ws.working_method || tuned.wimk_working_method)}</strong>` : "",
+        ws.working_reason ? `(${esc(ws.working_reason)})` : "",
+        ws.field_locked || tuned?.wimk_field_locked ? '<span class="signals-freq-live">3-FIELD LOCK</span>' : "",
+        ws.ota_source ? esc(ws.ota_source) : "field_generator_spectrum",
+        ws.snr_db != null ? `SNR ${esc(String(ws.snr_db))} dB` : "",
+        ws.output_rms_dbfs != null ? `${esc(String(ws.output_rms_dbfs))} dBFS` : "",
+        ws.fields_active != null ? `${esc(String(ws.fields_active))} fields` : "",
+        `${attempts.length || ws.attempt_count || 0} attempts`,
+      ].filter(Boolean).join(" · ");
+    } else if (attempts.length || ws.attempt_count) {
+      el.innerHTML = [
+        '<span style="color:#ffb0a8">93.1 WIMK trying…</span>',
+        `attempt ${esc(String(last.attempt || attempts.length))}/${esc(String(ws.max_attempts || 10))}`,
+        last.method ? esc(last.method) : "",
+        last.error ? esc(last.error) : (last.working_reason || "warming 3-field spectrum"),
+        ws.fields_active != null ? `${esc(String(ws.fields_active))} fields` : "3 fields",
+        ws.listen_ready ? "field listen ready" : "",
+      ].filter(Boolean).join(" · ");
+    } else {
+      el.innerHTML = '93.1 WIMK — <strong>3-field antenna</strong> tunes station · press Play (retries until program audio)';
+    }
+  }
+
   function updateRadioPlayer(tuned, playing) {
     const wrap = document.getElementById("signals-radio-player");
     const title = document.getElementById("signals-radio-player-title");
     const meta = document.getElementById("signals-radio-player-meta");
     const audio = document.getElementById("signals-radio-audio");
     if (!wrap || !title || !meta || !audio) return;
-    if (!tuned || (!tuned.station_id && !tuned.caught && !tuned.ok)) {
+    if (!tuned || (!tuned.station_id && !tuned.caught && !tuned.ok && !tuned.heard)) {
       wrap.classList.remove("playing");
-      title.textContent = "Field antenna · catch 83.1 MHz";
-      meta.textContent = "OTA lock via blaster antenna · Gladstone UP Michigan";
+      title.textContent = "Field wave tuner · 93.1 WIMK K-Rock";
+      meta.textContent = "Field antenna OTA · we are the hardware · Iron Mountain → Gladstone";
       audio.removeAttribute("src");
       return;
     }
-    title.textContent = `${tuned.freq_label || (tuned.freq_mhz ? tuned.freq_mhz + " MHz" : "")} · ${tuned.call_sign || "FIELD"} — ${tuned.name || "field catch"}`;
+    const st = tuned.station || {};
+    const line = tuned.line || {};
+    const sp = tuned.start_point || line.start_point || {};
+    const ep = tuned.end_point || line.end_point || {};
+    const inst = tuned.instability || {};
+    const phys = inst.physics || {};
+    title.textContent = `${tuned.freq_label || (tuned.freq_mhz ? tuned.freq_mhz + " MHz" : "")} · ${tuned.call_sign || st.call_sign || "FIELD"} — ${tuned.name || st.name || "field catch"}`;
+    const yp = tuned.your_place || tuned.world_placement?.your_place || {};
+    const selfRec = tuned.self || tuned.self_recognition || tuned.world_placement?.self || {};
     meta.textContent = [
-      tuned.antenna_locked ? "antenna LOCKED" : "warming lock",
-      tuned.signal_strength_pct != null ? `signal ${tuned.signal_strength_pct}%` : "",
-      tuned.bearing_deg != null ? `bearing ${tuned.bearing_deg}°` : "",
-      tuned.tower_gps ? `tower ${tuned.tower_gps}` : "",
-      tuned.distance_label || "",
-      playing ? "CAUGHT" : (tuned.catch?.capture?.method || "field antenna"),
+      selfRec.recognized ? "SELF RECOGNIZED" : (selfRec.confidence != null ? `self ${Math.round(selfRec.confidence * 100)}%` : ""),
+      yp.summary || "",
+      sp.gps ? `tower ${sp.gps}` : (tuned.tower_gps ? `tower ${tuned.tower_gps}` : ""),
+      ep.gps ? `you ${ep.gps}` : "",
+      tuned.distance_label ? tuned.distance_label : "",
+      tuned.bearing_deg != null ? `${tuned.bearing_deg}°` : "",
+      inst.instability_index != null ? `instability ${inst.instability_index} (${inst.instability_class || "—"})` : "",
+      phys.wavelength_m != null ? `λ ${phys.wavelength_m} m` : "",
+      phys.fspl_db != null ? `${phys.fspl_db} dB FSPL` : "",
+      inst.freq_mhz_corrected != null ? `tuned ${inst.freq_mhz_corrected} MHz` : "",
+      tuned.ota_source || tuned.method || "field_generator_spectrum",
+      playing || tuned.heard ? "HEARD" : (tuned.capture?.error || tuned.live_play?.error || "warming"),
     ].filter(Boolean).join(" · ");
     const audioUrl = tuned.audio_url || (tuned.catch || {}).audio_url || "";
     if (audioUrl && audio.getAttribute("src") !== audioUrl) {
       audio.src = audioUrl;
     }
     wrap.classList.toggle("playing", !!playing || !!tuned.caught);
+    renderWimkStatus(tuned, lastDoc?.field_world_placement);
+  }
+
+  function renderPrototype(proto) {
+    const meta = document.getElementById("signals-prototype-meta");
+    const table = document.getElementById("signals-prototype-table");
+    if (!table) return;
+    const doc = proto || {};
+    const read = doc.read || doc.field_read || {};
+    const id = doc.identity || read.identity || {};
+    const corr = read.corrections || {};
+    if (meta) {
+      meta.textContent = [
+        doc.sounded || doc.heard ? "SOUNDED OFF" : "prototype ready",
+        read.fidelity_pct != null ? `fidelity ${read.fidelity_pct}%` : "",
+        id.call_sign ? id.call_sign : "",
+        read.method || "generated_fields",
+        doc.mesh_energy != null ? `mesh ${doc.mesh_energy}` : "",
+      ].filter(Boolean).join(" · ") || "3 fields in one file — generated mesh reads every MHz";
+    }
+    const meshFields = (read.mesh || {}).fields || [];
+    table.innerHTML = `<table class="honor-table" style="font-size:0.72rem;margin-top:6px;"><tbody>
+      <tr><td class="meta">Read</td><td><strong>${esc(read.freq_label || read.freq_mhz || "—")}</strong> · ${esc(id.name || "")}</td></tr>
+      <tr><td class="meta">Fidelity</td><td><strong>${esc(String(read.fidelity_pct ?? "—"))}%</strong> boost ${esc(corr.fidelity_boost ?? "—")}</td></tr>
+      <tr><td class="meta">Corrected</td><td>crosstalk ${esc(corr.crosstalk_corrected ?? "—")} · sway ${esc(corr.sway_corrected ?? "—")} · interference ${esc(corr.interference_corrected ?? "—")}</td></tr>
+      <tr><td class="meta">3-field mesh</td><td>${meshFields.map((f) => `${esc(f.field_id)} ${esc(f.strength_pct)}%`).join(" · ") || "generate on read"}</td></tr>
+      <tr><td class="meta">Tag</td><td><code>${esc(id.tag || "—")}</code> ${id.identified ? '<span class="signals-freq-live">IDENTIFIED</span>' : ""}</td></tr>
+      <tr><td class="meta">Disk IQ</td><td><code>${esc(doc.capture?.iq_path || doc.demod?.iq_path || "—")}</code></td></tr>
+      <tr><td class="meta">Spectrum SNR</td><td><strong>${esc(String(doc.snr_db ?? doc.demod?.snr_db ?? "—"))} dB</strong> · ${esc(doc.band || doc.demod?.band || "fm").toUpperCase()} ${esc((doc.demod || {}).method || "demod")}</td></tr>
+      <tr><td class="meta">Level</td><td><strong>${esc(String(doc.output_rms_dbfs ?? doc.demod?.output_rms_dbfs ?? "—"))} dBFS</strong> polite · peak ${esc(doc.demod?.polite_peak_dbfs ?? "-6")} dBFS</td></tr>
+    </tbody></table>`;
+  }
+
+  async function prototypeSoundOff(opts) {
+    const body = { action: "sound_off", freq_mhz: 93.1, station_id: "wimk-931", call_sign: "WIMK", play: true, ...opts };
+    const res = await fetch("/api/field-antenna", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+    const out = await res.json();
+    lastTuned = out;
+    renderPrototype(out);
+    renderInstability(out.instability);
+    renderTriPanel(out, null);
+    const audio = document.getElementById("signals-radio-audio");
+    const audioUrl = out.audio_url || "";
+    if (audioUrl && audio) {
+      audio.src = audioUrl + (audioUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
+      try {
+        await audio.play();
+      } catch (_) { /* server paplay */ }
+    }
+    updateRadioPlayer(out, !!out.playing || !!out.heard || !!out.sounded);
+    return out;
+  }
+
+  function renderInstability(inst) {
+    const meta = document.getElementById("signals-instability-meta");
+    const table = document.getElementById("signals-instability-table");
+    if (!table) return;
+    const doc = inst || {};
+    const hw = doc.hardware || {};
+    const phys = doc.physics || {};
+    if (meta) {
+      meta.textContent = [
+        doc.instability_index != null ? `index ${doc.instability_index} (${doc.instability_class || "—"})` : "",
+        doc.stable_enough ? "STABLE" : "warming fields",
+        "3-field antenna",
+        doc.listen_anyway ? "listen ready" : "listen blocked",
+        phys.corrected_hz ? `${phys.corrected_hz} Hz` : "",
+      ].filter(Boolean).join(" · ") || "Run field wave tune — 3 fields detect instability before field-wave-fm";
+    }
+    const blockers = doc.listen_blockers || [];
+    table.innerHTML = `<table class="honor-table" style="font-size:0.72rem;margin-top:6px;"><tbody>
+      <tr><td class="meta">λ / FSPL</td><td><code>${esc(phys.wavelength_m ?? doc.wavelength_m ?? "—")} m</code> · <strong>${esc(String(phys.fspl_db ?? doc.path_loss_db ?? "—"))} dB</strong></td></tr>
+      <tr><td class="meta">Freq lock</td><td><code>${esc(doc.freq_mhz)} MHz</code> → <code>${esc(doc.freq_mhz_corrected ?? doc.freq_mhz)} MHz</code> ppm ${esc(doc.ppm_correction ?? 0)}</td></tr>
+      <tr><td class="meta">Field wave</td><td>field-wave-fm ${hw.field_wave_fm ? "yes" : "no"} · 3-field antenna · ppm ${esc(hw.ppm_correction ?? 0)}</td></tr>
+      <tr><td class="meta">Spread</td><td>strength ${esc(doc.field_strength_spread ?? "—")}% · bearing ${esc(doc.bearing_spread_deg ?? "—")}° · drift ${esc(doc.history_drift ?? "—")}</td></tr>
+      ${blockers.length ? `<tr><td class="meta">Blockers</td><td style="color:#ffb0a8">${blockers.map((b) => esc(b)).join(" · ")}</td></tr>` : ""}
+    </tbody></table>`;
   }
 
   function renderTriPanel(tri, antenna) {
@@ -648,7 +780,7 @@
         conf != null ? `confidence ${Math.round(conf * 100)}%` : "",
         cmp.tri_ready ? "TRI READY" : "warming tri",
         pin !== "—" ? `pinpoint ${pin}` : "",
-      ].filter(Boolean).join(" · ") || "Compare 3 fields to your GPS, then pinpoint 83.1 MHz";
+      ].filter(Boolean).join(" · ") || "Compare 3 fields to your GPS, then field wave tune 93.1 WIMK";
     }
     if (!rows.length) {
       fieldsEl.innerHTML = '<div class="meta">Run 3-field pinpoint & listen to compare Gladstone, Escanaba, Marquette vs operator GPS.</div>';
@@ -665,7 +797,9 @@
   }
 
   async function triListenFrequency(opts) {
-    const body = { action: "listen", freq_mhz: 83.1, live_play: true, ...opts };
+    const statusEl = document.getElementById("signals-wimk-status");
+    if (statusEl) statusEl.textContent = "93.1 WIMK — trying playback paths until working…";
+    const body = { action: "listen", freq_mhz: 93.1, station_id: "wimk-931", call_sign: "WIMK", live_play: true, ota_only: true, ...opts };
     const res = await fetch("/api/field-antenna", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -674,6 +808,8 @@
     });
     const heard = await res.json();
     lastTuned = heard;
+    renderWorldPlacement(heard.world_placement || lastDoc?.field_world_placement);
+    renderInstability(heard.instability);
     renderTriPanel(heard, null);
     const audio = document.getElementById("signals-radio-audio");
     const audioUrl = heard.audio_url || "";
@@ -688,7 +824,7 @@
   }
 
   async function catchRadioFrequency(opts) {
-    const body = { action: "catch", freq_mhz: 83.1, ...opts };
+    const body = { action: "catch", freq_mhz: 93.1, station_id: "wimk-931", call_sign: "WIMK", ...opts };
     const res = await fetch("/api/field-antenna", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -697,6 +833,7 @@
     });
     const caught = await res.json();
     lastTuned = caught;
+    renderInstability(caught.instability);
     renderTriPanel(caught, null);
     const audio = document.getElementById("signals-radio-audio");
     const audioUrl = caught.audio_url || "";
@@ -714,14 +851,97 @@
     return caught;
   }
 
+  async function tuneWorldBand(band) {
+    const res = await fetch("/api/field-antenna", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "listen", band, live_play: true, ota_only: true }),
+      cache: "no-store",
+    });
+    const heard = await res.json();
+    lastTuned = heard;
+    renderWorldPlacement(heard.world_placement || lastDoc?.field_world_placement);
+    renderInstability(heard.instability);
+    renderTriPanel(heard, null);
+    const audio = document.getElementById("signals-radio-audio");
+    const audioUrl = heard.audio_url || "";
+    if (audioUrl && audio) {
+      audio.src = audioUrl + (audioUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
+      try { await audio.play(); } catch (_) {}
+    }
+    updateRadioPlayer(heard, !!heard.playing || !!heard.heard);
+    return heard;
+  }
+
+  function bindWorldPlacementTune() {
+    if (worldTuneBound) return;
+    worldTuneBound = true;
+    document.getElementById("signals-world-bands")?.addEventListener("click", async (ev) => {
+      const btn = ev.target.closest("[data-world-band]");
+      if (!btn) return;
+      btn.disabled = true;
+      try {
+        await tuneWorldBand(btn.getAttribute("data-world-band"));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  function renderWorldPlacement(wp) {
+    const meta = document.getElementById("signals-world-meta");
+    const bandsEl = document.getElementById("signals-world-bands");
+    const placeEl = document.getElementById("signals-world-placements");
+    if (!bandsEl && !placeEl) return;
+    const doc = wp || {};
+    const yp = doc.your_place || {};
+    const selfRec = doc.self || doc.self_recognition || {};
+    const stats = doc.stats || {};
+    const db = doc.station_tower_db || {};
+    if (meta) {
+      meta.innerHTML = [
+        selfRec.recognized ? '<span class="signals-freq-live">SELF RECOGNIZED</span>' : '<span class="meta">recognizing self…</span>',
+        yp.summary ? esc(yp.summary) : "",
+        stats.stations_identified != null ? `${stats.stations_identified} stations · ${stats.tower_gps ?? 0} towers GPS` : "",
+        yp.in_range_total != null ? `${yp.in_range_total} in range` : "",
+      ].filter(Boolean).join(" · ");
+    }
+    if (bandsEl) {
+      const bandKeys = ["fm", "am", "lw", "sw"];
+      bandsEl.innerHTML = bandKeys.map((band) => {
+        const b = (doc.bands || {})[band] || {};
+        const count = b.in_range ?? b.total ?? 0;
+        return `<button type="button" class="signals-radio-tune-btn" data-world-band="${esc(band)}" style="margin:2px 4px 2px 0;font-size:0.72rem;">${esc((b.label || band).toUpperCase())} <strong>${esc(String(count))}</strong></button>`;
+      }).join("");
+      bindWorldPlacementTune();
+    }
+    const rows = (doc.placements || []).filter((p) => p.role === "transmitter").slice(0, 12);
+    const inRange = (db.in_range_stations || doc.identified_stations || []).filter((s) => s.in_range).slice(0, 8);
+    if (placeEl) {
+      if (!rows.length && !inRange.length) {
+        placeEl.innerHTML = '<div class="meta">Scan bands from operator GPS — stations and tower placements populate here.</div>';
+        return;
+      }
+      const selfRow = `<tr><td class="meta">You</td><td><strong>${selfRec.recognized ? "SELF" : "operator"}</strong> · ${esc(yp.operator_gps || doc.operator?.gps || "—")}</td><td>${selfRec.home_match_label ? esc(selfRec.home_match_label) : "—"}</td></tr>`;
+      const towerRows = (inRange.length ? inRange : rows).map((p) => `<tr>
+        <td><span class="signals-freq-live">${esc(p.call_sign || p.label || "—")}</span></td>
+        <td>${esc(p.freq_label || (p.freq_mhz != null ? p.freq_mhz + " MHz" : p.freq_khz != null ? p.freq_khz + " kHz" : "—"))} · ${esc(p.band || "")}</td>
+        <td class="meta">${esc(p.tower_gps || p.gps || "—")} · ${esc(p.distance_label || "—")}${p.bearing_deg != null ? ` · ${esc(String(p.bearing_deg))}°` : ""}</td>
+      </tr>`).join("");
+      placeEl.innerHTML = `<table class="honor-table" style="font-size:0.72rem;margin-top:4px;"><thead><tr>
+        <th>Station</th><th>Band</th><th>Tower GPS · range</th>
+      </tr></thead><tbody>${selfRow}${towerRows}</tbody></table>`;
+    }
+  }
+
   function bindRadioTune() {
     if (radioTuneBound) return;
     radioTuneBound = true;
-    document.getElementById("signals-radio-tune-831")?.addEventListener("click", async () => {
-      const btn = document.getElementById("signals-radio-tune-831");
+    document.getElementById("signals-radio-tune-931")?.addEventListener("click", async () => {
+      const btn = document.getElementById("signals-radio-tune-931");
       if (btn) btn.disabled = true;
       try {
-        await catchRadioFrequency({ station_id: "field-catch-831", freq_mhz: 83.1, call_sign: "FIELD" });
+        await triListenFrequency({ station_id: "wimk-931", freq_mhz: 93.1, call_sign: "WIMK" });
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -730,7 +950,16 @@
       const btn = document.getElementById("signals-radio-tri-listen");
       if (btn) btn.disabled = true;
       try {
-        await triListenFrequency({ station_id: "field-catch-831", freq_mhz: 83.1, call_sign: "FIELD" });
+        await triListenFrequency({ station_id: "wimk-931", freq_mhz: 93.1, call_sign: "WIMK" });
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+    document.getElementById("signals-prototype-soundoff")?.addEventListener("click", async () => {
+      const btn = document.getElementById("signals-prototype-soundoff");
+      if (btn) btn.disabled = true;
+      try {
+        await prototypeSoundOff({ station_id: "wimk-931", freq_mhz: 93.1, call_sign: "WIMK" });
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -785,7 +1014,33 @@
         const idx = parseInt(el.getAttribute("data-radio-idx") || "0", 10);
         const st = stations[idx];
         if (st?.playable || st?.catch_target) {
-          await catchRadioFrequency({ station_id: st.id, call_sign: st.call_sign, freq_mhz: st.freq_mhz });
+          const body = {
+            action: "listen",
+            station_id: st.id,
+            call_sign: st.call_sign,
+            live_play: true,
+            ota_only: true,
+          };
+          if (st.freq_mhz != null) body.freq_mhz = st.freq_mhz;
+          if (st.freq_khz != null) body.freq_khz = st.freq_khz;
+          const res = await fetch("/api/field-antenna", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+            cache: "no-store",
+          });
+          const heard = await res.json();
+          lastTuned = heard;
+          renderPrototype(heard);
+          renderInstability(heard.instability);
+          renderTriPanel(heard, null);
+          const audio = document.getElementById("signals-radio-audio");
+          const audioUrl = heard.audio_url || "";
+          if (audioUrl && audio) {
+            audio.src = audioUrl + (audioUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
+            try { await audio.play(); } catch (_) {}
+          }
+          updateRadioPlayer(heard, !!heard.playing || !!heard.heard);
         }
       });
     });
@@ -815,8 +1070,10 @@
     lastTuned = r.tuned || lastTuned;
     bindRadioSearch();
     bindRadioTune();
-    renderTriPanel(r.tuned || r.catch || {}, { tri_receive: (global.lastPanelData?.field_antenna || {}).tri_receive });
-    updateRadioPlayer(lastTuned, !!lastTuned?.playing);
+    const tunedDoc = r.tuned || r.catch || global.lastPanelData?.field_wave_tuner || {};
+    renderInstability(tunedDoc.instability || global.lastPanelData?.field_instability);
+    renderTriPanel(tunedDoc, { tri_receive: (global.lastPanelData?.field_antenna || {}).tri_receive });
+    updateRadioPlayer(lastTuned || tunedDoc, !!(lastTuned?.playing || tunedDoc?.playing || tunedDoc?.heard));
     if (!lastRadioStations.length) {
       menu.innerHTML = '<div class="empty">Set operator GPS — legal stations appear for your 1940s catcher range.</div>';
     } else {
@@ -850,6 +1107,41 @@
     }
   }
 
+  function renderCrosstalk(ct) {
+    const meta = document.getElementById("signals-crosstalk-meta");
+    const table = document.getElementById("signals-crosstalk-table");
+    if (!table) return;
+    const doc = ct || {};
+    const illegal = doc.illegal_crosstalk || [];
+    const enforced = (doc.stats || {}).enforced_at_start ?? 0;
+    if (meta) {
+      meta.textContent = [
+        `${illegal.length} illegal line touch`,
+        `${enforced} blocked at start`,
+        `${(doc.stats || {}).violators_tracked ?? 0} violators tracked`,
+        doc.target_mhz ? `target ${doc.target_mhz} MHz` : "",
+      ].filter(Boolean).join(" · ");
+    }
+    const rows = [...illegal, ...(doc.legal_crosstalk || []).slice(0, 4)];
+    if (!rows.length) {
+      table.innerHTML = '<div class="meta">No crosstalk on our lines — rescan antenna to populate.</div>';
+      return;
+    }
+    table.innerHTML = `<table class="honor-table" style="font-size:0.72rem;margin-top:6px;"><thead><tr>
+      <th>Class</th><th>Start (their end)</th><th>End (our line)</th><th>Counter</th>
+    </tr></thead><tbody>${rows.map((r) => {
+      const start = r.start_point || {};
+      const end = r.end_point || {};
+      const cm = r.countermeasure || {};
+      return `<tr>
+        <td><span class="fcc-threat-tag level-${esc(r.severity || "medium")}">${esc(r.classification || "")}</span></td>
+        <td class="meta">${esc(start.label || start.gps || "—")}</td>
+        <td class="meta">${esc(end.gps || end.label || "—")}</td>
+        <td>${cm.enforced ? '<span class="signals-freq-live">BLOCKED AT START</span>' : esc(r.mitigation || "—")}</td>
+      </tr>`;
+    }).join("")}</tbody></table>`;
+  }
+
   function renderSignalsMeta(doc) {
     const motto = document.getElementById("signals-motto");
     if (motto) {
@@ -880,6 +1172,11 @@
     renderFccTable(doc.fcc);
     renderFrequencyRegistry(doc);
     renderRadioCatcher(doc.field_radio);
+    renderWorldPlacement(doc.field_world_placement);
+    renderWimkStatus(null, doc.field_world_placement);
+    renderCrosstalk(doc.crosstalk);
+    renderInstability(doc.field_instability || (doc.field_wave_tuner || {}).instability);
+    renderPrototype(doc.field_antenna_prototype || doc.prototype);
   }
 
   function bindSignalsRefresh() {

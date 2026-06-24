@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.6.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.7.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -298,7 +298,7 @@ test_dusty_midnight_theme() {
   grep -q 'us-host-machine' "$panel"
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
-  grep -q 'v7.6.0' "$panel"
+  grep -q 'v7.7.0' "$panel"
 }
 
 test_hostess_profile_module() {
@@ -1549,6 +1549,100 @@ test_field_radio_module() {
 
 run_test "field radio catcher module" test_field_radio_module
 
+test_field_wave_crosstalk_module() {
+  [[ -f "${ROOT}/lib/field-wave-tuner.py" ]]
+  [[ -f "${ROOT}/lib/field-crosstalk.py" ]]
+  grep -q 'NEXUS_FIELD_CATCH_MHZ=93.1' "${ROOT}/config/nexus.conf"
+  grep -q 'wimk-931' "${ROOT}/data/field-radio-broadcast-registry.json"
+  grep -q 'field_wave_tuner' "${ROOT}/lib/field-wave-tuner.py"
+  grep -q 'start_point' "${ROOT}/lib/field-crosstalk.py"
+  grep -q 'signals-crosstalk-panel' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderCrosstalk' "${ROOT}/panel/assets/signals-field.js"
+  grep -q 'signals-radio-tune-931' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-wave-tuner.py" json | grep -q 'field-wave-tuner/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-crosstalk.py" build | grep -q 'field-crosstalk/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-crosstalk.py" build | grep -q 'start_point'
+}
+
+run_test "field wave tuner and crosstalk" test_field_wave_crosstalk_module
+
+test_field_instability_module() {
+  [[ -f "${ROOT}/lib/field-instability.py" ]]
+  [[ -f "${ROOT}/lib/field-wave-engine.py" ]]
+  [[ -f "${ROOT}/lib/field-wave-asm.c" ]]
+  [[ -x "${ROOT}/scripts/field-wave-hardware.sh" ]]
+  grep -q 'instability_index' "${ROOT}/lib/field-instability.py"
+  grep -q 'field-wave-engine' "${ROOT}/lib/field-wave-tuner.py"
+  grep -q 'field-wave-fm' "${ROOT}/lib/field-wave-engine.py"
+  grep -q 'renderInstability' "${ROOT}/panel/assets/signals-field.js"
+  grep -q 'signals-instability-panel' "${ROOT}/panel/threat-panel.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-wave-engine.py" ensure | grep -q 'field-wave-engine'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-wave-engine.py" probe | grep -q 'dongle_present'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-instability.py" build | grep -q 'instability_index'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-wave-tuner.py" tune '{"freq_mhz":93.1,"station_id":"wimk-931","live_play":false}' \
+    | grep -q 'instability_index'
+}
+
+run_test "field instability and hardware physics" test_field_instability_module
+
+test_field_antenna_prototype_module() {
+  [[ -f "${ROOT}/data/field-receiver-3fields.json" ]]
+  [[ -f "${ROOT}/lib/field-signal-reader.py" ]]
+  [[ -f "${ROOT}/lib/field-antenna-prototype.py" ]]
+  grep -q 'field-receiver-3fields/v1' "${ROOT}/data/field-receiver-3fields.json"
+  grep -q 'generated_fields' "${ROOT}/lib/field-signal-reader.py"
+  grep -q 'sound_off' "${ROOT}/lib/field-antenna-prototype.py"
+  grep -q 'signals-prototype-soundoff' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderPrototype' "${ROOT}/panel/assets/signals-field.js"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-signal-reader.py" read 93.1 | grep -q 'field-signal-read/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-antenna-prototype.py" sound_off '{"freq_mhz":93.1,"station_id":"wimk-931","play":false}' \
+    | grep -q 'sounded'
+  [[ -f "${ROOT}/lib/field-spectrum-demod.py" ]]
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-spectrum-demod.py" play '{"freq_mhz":93.1,"station_id":"wimk-931","play":false,"seconds":5}' \
+    | grep -q 'field_spectrum_demod'
+  [[ -f "${NEXUS_STATE_DIR}/field-capture-wimk-931.iq" ]]
+}
+
+run_test "field antenna prototype 3fields reader" test_field_antenna_prototype_module
+
+test_field_world_placement_module() {
+  [[ -f "${ROOT}/lib/field-world-placement.py" ]]
+  grep -q 'field_world_placement' "${ROOT}/lib/signals-field.py"
+  grep -q 'field-world-placement' "${ROOT}/lib/field-antenna-orchestrator.py"
+  grep -q 'signals-world-placement' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderWorldPlacement' "${ROOT}/panel/assets/signals-field.js"
+  grep -q 'field-world-placement.py' "${ROOT}/genius_shield.sh"
+  mkdir -p "$NEXUS_STATE_DIR"
+  printf '{"lat":45.845976,"lon":-87.055759,"label":"Gladstone, MI","source":"test"}\n' > "$NEXUS_STATE_DIR/operator-location.json"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-world-placement.py" build | grep -q 'field-world-placement/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-world-placement.py" build | grep -q 'self_recognized'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-world-placement.py" build | grep -q 'identified_stations'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-world-placement.py" build | grep -q 'wimk-931'
+  [[ -f "${NEXUS_STATE_DIR}/field-station-tower-db.json" ]]
+  grep -q 'play_wimk_until_working' "${ROOT}/lib/field-world-placement.py"
+  grep -q 'signals-wimk-status' "${ROOT}/panel/threat-panel.html"
+  grep -q 'renderWimkStatus' "${ROOT}/panel/assets/signals-field.js"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_WIMK_MAX_ATTEMPTS=3 \
+    python3 "${ROOT}/lib/field-world-placement.py" play_until '{"play":false,"seconds":5}' | grep -q 'wimk_status'
+  [[ -f "${NEXUS_STATE_DIR}/field-wimk-playback.json" ]]
+}
+
+run_test "field world placement stations and self" test_field_world_placement_module
+
 test_field_antenna_eval_script() {
   [[ -x "${ROOT}/scripts/field-antenna-eval.sh" ]]
   grep -q 'signals-antenna-banner' "${ROOT}/panel/threat-panel.html"
@@ -1611,6 +1705,13 @@ test_field_dns_module() {
   grep -q 'NEXUS_FIELD_DNS' "${ROOT}/config/nexus.conf"
   grep -q 'NEXUS_FIELD_DNS_LOCAL_CAPTURE' "${ROOT}/config/nexus.conf"
   grep -q 'NEXUS_FIELD_DNS_BINDS_IPV4' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_FIELD_DNS_BINDS_IPV6' "${ROOT}/config/nexus.conf"
+  grep -q 'nexus_field_dns_foreign_ips' "${ROOT}/lib/field-dns.sh"
+  grep -q 'nexus-dns-local-v6' "${ROOT}/lib/field-dns.sh"
+  grep -q '2001:4860:4860::8888' "${ROOT}/data/dns-legal-rfc-seed.json"
+  grep -q 'foreign_resolver_ipv6' "${ROOT}/lib/dns-planetary-security.py"
+  grep -q 'ipv6_truth_enforced' "${ROOT}/lib/dns-planetary-security.py"
+  grep -q 'ipv6' "${ROOT}/panel/assets/dns-dashboard.js"
   grep -q 'nexus_field_dns_enforce_cycle' "${ROOT}/lib/nexus-daemon.sh"
   grep -q 'nexus_field_dns_takeover_cycle' "${ROOT}/lib/field-dns.sh"
   [[ -f "${ROOT}/lib/dns-service-takeover.py" ]]
@@ -1639,6 +1740,14 @@ test_field_dns_module() {
     python3 "${ROOT}/lib/field-dns.py" build | grep -q 'field-dns/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/dns-planetary-security.py" json | grep -q 'dns-planetary/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-planetary-security.py" json | grep -q 'foreign_resolver_ipv6'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/dns-planetary-security.py" foreign-ips | grep -q '2001:4860:4860::8888'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'foreign_resolver_ipv6'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'ipv6_truth_enforced'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/field-dns.py" build | grep -q 'RFC 1034'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -1820,8 +1929,23 @@ test_nexus_update_module() {
   [[ -f "${ROOT}/lib/nexus-update.py" ]]
   grep -q '/api/update/check' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/update/apply' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_resolve_nexus_source_root' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'stealth_install.sh' "${ROOT}/genius_shield.sh"
+  ! grep -q 'window.open(data.release_url' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/nexus-update.py" | grep -q '"current"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 - <<'PY'
+import importlib.util
+import os
+from pathlib import Path
+root = Path(os.environ["NEXUS_INSTALL_ROOT"])
+spec = importlib.util.spec_from_file_location("tph", root / "lib" / "threat-panel-http.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+src = mod._resolve_nexus_source_root()
+assert src and (src / "stealth_install.sh").is_file(), src
+PY
 }
 
 test_host_map_trash_module() {

@@ -299,6 +299,8 @@
       ["Listeners", (dns.listeners || []).join(" · ")],
       ["Trace", pol.no_shortcut_public_dns ? "dig +trace from root" : "—"],
       ["resolv.conf", (resolv.nameservers || []).join(" ") + (resolv.nexus_truth_enforced ? " ✓ NEXUS" : " ⚠ foreign")],
+      ["resolv IPv4", ((resolv.ipv4_nameservers || []).join(" ") || "—") + (resolv.ipv4_truth_enforced === false ? " ⚠ foreign" : resolv.ipv4_nameservers?.length ? " ✓ NEXUS" : "")],
+      ["resolv IPv6", ((resolv.ipv6_nameservers || []).join(" ") || "—") + (resolv.ipv6_truth_enforced === false ? " ⚠ foreign" : resolv.ipv6_nameservers?.length ? " ✓ NEXUS" : "")],
       ["Planetary", dns.planetary_security_level || "—"],
       ["DoT/DoH", pol.dot_doh_bypass || "blocked"],
       ["PID", dns.engineer_briefing?.quick_facts?.pid || dns.pid || "—"],

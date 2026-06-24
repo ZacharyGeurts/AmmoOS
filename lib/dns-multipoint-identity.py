@@ -75,6 +75,17 @@ def _bind_hosts() -> tuple[list[str], list[str]]:
     return v4 or ["127.0.0.1"], v6 or ["::1"]
 
 
+def _split_nameservers(servers: list[str]) -> tuple[list[str], list[str]]:
+    v4: list[str] = []
+    v6: list[str] = []
+    for addr in servers:
+        if ":" in addr:
+            v6.append(addr)
+        else:
+            v4.append(addr)
+    return v4, v6
+
+
 def _resolv_enforced() -> dict[str, Any]:
     path = Path("/etc/resolv.conf")
     servers: list[str] = []
@@ -84,11 +95,19 @@ def _resolv_enforced() -> dict[str, Any]:
             if len(parts) >= 2 and parts[0] == "nameserver":
                 servers.append(parts[1])
     port = int(os.environ.get("NEXUS_FIELD_DNS_PORT", "53"))
-    trusted = {"127.0.0.1", "::1", "127.0.0.53"}
-    nexus_only = servers and all(s in trusted for s in servers)
+    trusted_v4 = {"127.0.0.1", "127.0.0.53", f"127.0.0.1#{port}"}
+    trusted_v6 = {"::1", f"::1#{port}"}
+    ipv4_servers, ipv6_servers = _split_nameservers(servers)
+    ipv4_only = not ipv4_servers or all(s in trusted_v4 for s in ipv4_servers)
+    ipv6_only = not ipv6_servers or all(s in trusted_v6 for s in ipv6_servers)
+    nexus_only = bool(servers) and ipv4_only and ipv6_only
     return {
         "path": str(path),
         "nameservers": servers,
+        "ipv4_nameservers": ipv4_servers,
+        "ipv6_nameservers": ipv6_servers,
+        "ipv4_truth_enforced": ipv4_only,
+        "ipv6_truth_enforced": ipv6_only,
         "nexus_override_active": nexus_only,
         "port": port,
     }

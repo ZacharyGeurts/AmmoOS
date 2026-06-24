@@ -487,11 +487,19 @@ def _engineer_briefing(
             "action": "Wait for primary phase — no resolv interrupt",
         })
     elif not resolv.get("nexus_truth_enforced"):
+        v4_ns = ", ".join(resolv.get("ipv4_nameservers") or []) or "—"
+        v6_ns = ", ".join(resolv.get("ipv6_nameservers") or []) or "—"
+        stacks = []
+        if resolv.get("ipv4_nameservers") and not resolv.get("ipv4_truth_enforced"):
+            stacks.append(f"IPv4 foreign: {v4_ns}")
+        if resolv.get("ipv6_nameservers") and not resolv.get("ipv6_truth_enforced"):
+            stacks.append(f"IPv6 foreign: {v6_ns}")
+        detail = " · ".join(stacks) if stacks else f"Nameservers: {', '.join(resolv.get('nameservers') or ['—'])}"
         alerts.append({
             "level": "high",
             "code": "resolv_foreign",
-            "title": "resolv.conf not steered to NEXUS",
-            "detail": f"Nameservers: {', '.join(resolv.get('nameservers') or ['—'])} — enforce cycle pending or needs root.",
+            "title": "resolv.conf not steered to NEXUS (dual-stack)",
+            "detail": f"{detail} — enforce cycle pending or needs root.",
             "action": "nexus_field_dns_enforce_resolv (daemon cycle or sudo)",
         })
     if int(stats.get("errors") or 0) > int(stats.get("queries") or 0) * 0.25 and int(stats.get("queries") or 0) > 3:
@@ -533,6 +541,9 @@ def _engineer_briefing(
             "internet_slots": internet_field.get("total_slots", 0),
             "internet_recognized": internet_field.get("recognized_slots", 0),
             "foreign_blocked": len(planetary.get("foreign_resolvers_blocked") or []),
+            "foreign_ipv4_blocked": len(planetary.get("foreign_resolver_ipv4") or []),
+            "foreign_ipv6_blocked": len(planetary.get("foreign_resolver_ipv6") or []),
+            "ipv6_truth_enforced": (planetary.get("resolv") or {}).get("ipv6_truth_enforced"),
             "blocklist_domains": srv.get("blocklist_domains", 0),
             "cache_entries": srv.get("cache_entries", 0),
         },
@@ -636,6 +647,8 @@ def build_panel() -> dict[str, Any]:
         "root_servers": planetary.get("root_servers") or [],
         "zones": planetary.get("zones") or [],
         "resolv": planetary.get("resolv") or {},
+        "foreign_resolver_ipv4": planetary.get("foreign_resolver_ipv4") or [],
+        "foreign_resolver_ipv6": planetary.get("foreign_resolver_ipv6") or [],
         "resolver_policy": planetary.get("resolver_policy") or {},
         "planetary_security_level": planetary.get("planetary_security_level"),
         "multipoint_identity": multipoint,
@@ -666,6 +679,7 @@ def build_panel() -> dict[str, Any]:
                 "bind": dhcp.get("bind"),
                 "lease_count": dhcp.get("lease_count", 0),
                 "dns_option": dhcp.get("dns_option") or ["127.0.0.1"],
+                "dns_option_v6": dhcp.get("dns_option_v6") or ["::1"],
             },
         },
     }

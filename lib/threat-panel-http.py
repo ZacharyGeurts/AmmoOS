@@ -141,7 +141,7 @@ def _run_nexus_firewall_trust(cmd: str, ip: str, direction: str = "out", label: 
     return proc.returncode == 0
 
 
-def _run_nexus_bash(inner: str, timeout: int = 30) -> bool:
+def _run_nexus_bash(inner: str, timeout: int = 30) -> tuple[bool, str]:
     env = os.environ.copy()
     env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
     env["NEXUS_STATE_DIR"] = str(STATE_DIR)
@@ -152,7 +152,44 @@ def _run_nexus_bash(inner: str, timeout: int = 30) -> bool:
         timeout=timeout,
         env=env,
     )
-    return proc.returncode == 0
+    detail = (proc.stderr or proc.stdout or "").strip()[:400]
+    return proc.returncode == 0, detail
+
+
+def _resolve_nexus_source_root() -> Path | None:
+    """Locate git tree with stealth_install.sh for panel UPDATE apply."""
+    candidates: list[Path] = []
+    src = os.environ.get("NEXUS_SHIELD_SOURCE", "").strip()
+    if src:
+        candidates.append(Path(src))
+    candidates.extend([
+        INSTALL_ROOT,
+        INSTALL_ROOT.parent,
+        Path("/home/default/Desktop/SG/Latest/NEXUS-Shield"),
+        Path("/home/default/Desktop/SG/NEXUS-Shield"),
+    ])
+    seen: set[str] = set()
+    for base in candidates:
+        if not base:
+            continue
+        try:
+            resolved = base.resolve()
+        except OSError:
+            continue
+        key = str(resolved)
+        if key in seen:
+            continue
+        seen.add(key)
+        cur = resolved
+        for _ in range(5):
+            install = cur / "stealth_install.sh"
+            if install.is_file():
+                return cur
+            parent = cur.parent
+            if parent == cur:
+                break
+            cur = parent
+    return None
 
 
 def _nexus_update_check(force: bool = False) -> dict:
@@ -207,7 +244,8 @@ def _nexus_host_map_trash_add(pin_id: str) -> bool:
         f"source {INSTALL_ROOT}/lib/nexus-common.sh && nexus_load_config && "
         f"source {trash_sh} && nexus_host_map_trash_add '{safe}'"
     )
-    return _run_nexus_bash(inner, timeout=15)
+    ok, _ = _run_nexus_bash(inner, timeout=15)
+    return ok
 
 
 def _nexus_shell_prelude() -> str:
@@ -227,7 +265,8 @@ def _run_nexus_settings_set(key: str, val: str) -> bool:
         return False
     safe_key = key.replace("'", "'\"'\"'")
     inner = _nexus_shell_prelude() + f"nexus_settings_set '{safe_key}' '{val}'"
-    return _run_nexus_bash(inner, timeout=45)
+    ok, _ = _run_nexus_bash(inner, timeout=45)
+    return ok
 
 
 def _run_nexus_adblock_load(preset: str = "", url: str = "") -> bool:
@@ -243,7 +282,8 @@ def _run_nexus_adblock_load(preset: str = "", url: str = "") -> bool:
         inner += f"nexus_adblock_load_url '{safe}'"
     else:
         return False
-    return _run_nexus_bash(inner, timeout=180)
+    ok, _ = _run_nexus_bash(inner, timeout=180)
+    return ok
 
 
 def _run_nexus_adblock_apply() -> bool:
@@ -251,7 +291,8 @@ def _run_nexus_adblock_apply() -> bool:
     if not script.is_file():
         return False
     inner = _nexus_shell_prelude() + "nexus_adblock_apply"
-    return _run_nexus_bash(inner, timeout=120)
+    ok, _ = _run_nexus_bash(inner, timeout=120)
+    return ok
 
 
 def _run_nexus_autosanitize_toggle(enabled: bool) -> bool:
@@ -531,7 +572,7 @@ class Handler(BaseHTTPRequestHandler):
                 lines = 0
             payload = {
                 "ok": True,
-                "version": "7.6.0",
+                "version": "7.7.0",
                 "hostess_version": "7",
                 "pending": pending.is_file(),
                 "ingest_log_lines": lines,
@@ -929,24 +970,39 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 return
             token = str(acq.get("token") or "")
-            install_sh = INSTALL_ROOT.parent / "stealth_install.sh"
-            if not install_sh.is_file():
-                for candidate in (
-                    Path("/home/default/Desktop/SG/Latest/NEXUS-Shield/stealth_install.sh"),
-                    INSTALL_ROOT / "stealth_install.sh",
-                ):
-                    if candidate.is_file():
-                        install_sh = candidate
-                        break
-            git_dir = install_sh.parent if install_sh.is_file() else None
+            git_dir = _resolve_nexus_source_root()
+            install_sh = (git_dir / "stealth_install.sh") if git_dir else None
+            if not install_sh or not install_sh.is_file():
+                _nexus_update_lock(["release", f"--token={token}"])
+                self._send(
+                    500,
+                    json.dumps({
+                        "ok": False,
+                        "applied": False,
+                        "error": "stealth_install_missing",
+                        "message": "stealth_install.sh not found — set NEXUS_SHIELD_SOURCE or reinstall from git tree",
+                        "install_root": str(INSTALL_ROOT),
+                    }),
+                    "application/json",
+                )
+                return
             applied = False
             detail = ""
+            install_log = ""
             try:
                 _nexus_update_lock(["phase", "git_fetch", f"--token={token}"])
-                install_inner = f"export NEXUS_UPDATE_LOCK_TOKEN='{token}'; export NEXUS_UPDATE_PREVIOUS_VERSION='{previous}'; bash '{install_sh}'"
+                install_inner = (
+                    f"export NEXUS_UPDATE_LOCK_TOKEN='{token}'; "
+                    f"export NEXUS_UPDATE_PREVIOUS_VERSION='{previous}'; "
+                    f"bash '{install_sh}'"
+                )
                 if os.geteuid() != 0:
-                    install_inner = f"export NEXUS_UPDATE_LOCK_TOKEN='{token}'; export NEXUS_UPDATE_PREVIOUS_VERSION='{previous}'; sudo -n bash '{install_sh}'"
-                if git_dir and (git_dir / ".git").is_dir() and install_sh.is_file():
+                    install_inner = (
+                        f"export NEXUS_UPDATE_LOCK_TOKEN='{token}'; "
+                        f"export NEXUS_UPDATE_PREVIOUS_VERSION='{previous}'; "
+                        f"sudo -n bash '{install_sh}'"
+                    )
+                if (git_dir / ".git").is_dir():
                     _nexus_update_lock(["phase", "git_pull", f"--token={token}"])
                     inner = (
                         f"cd '{git_dir}' && git fetch --tags origin 2>/dev/null && "
@@ -954,24 +1010,28 @@ class Handler(BaseHTTPRequestHandler):
                         f"{install_inner}"
                     )
                     _nexus_update_lock(["phase", "stealth_install", f"--token={token}"])
-                    applied = _run_nexus_bash(inner, timeout=300)
+                    applied, install_log = _run_nexus_bash(inner, timeout=300)
                     detail = "git_pull_stealth_install"
-                elif install_sh.is_file():
+                else:
                     _nexus_update_lock(["phase", "stealth_install", f"--token={token}"])
-                    applied = _run_nexus_bash(install_inner, timeout=300)
+                    applied, install_log = _run_nexus_bash(install_inner, timeout=300)
                     detail = "stealth_install_only"
             finally:
                 _nexus_update_lock(["release", f"--token={token}"])
             payload = {
-                "ok": True,
+                "ok": applied,
                 "applied": applied,
                 "reload_panel": applied,
                 "detail": detail,
-                "release_url": upd.get("release_url"),
+                "install_log": install_log,
+                "source_root": str(git_dir),
                 "previous": previous,
                 "latest": target,
             }
-            self._send(200, json.dumps(payload), "application/json")
+            if not applied:
+                payload["error"] = "stealth_install_failed"
+                payload["message"] = install_log or "stealth_install.sh exited non-zero"
+            self._send(200 if applied else 500, json.dumps(payload), "application/json")
             return
 
         if path == "/api/home-protector/block":
@@ -1047,13 +1107,29 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/field-antenna":
             action = str(body.get("action") or "build").strip().lower()
+            if action in ("sound_off", "soundoff", "prototype"):
+                catch_body = {
+                    "freq_mhz": body.get("freq_mhz", os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1")),
+                    "station_id": body.get("station_id") or "wimk-931",
+                    "call_sign": body.get("call_sign") or "WIMK",
+                    "play": body.get("play", True),
+                }
+                payload = _nexus_py_json(
+                    INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py",
+                    ["sound_off", json.dumps(catch_body)],
+                )
+                self._send(200 if payload.get("heard") or payload.get("ok") else 400, json.dumps(payload), "application/json")
+                return
             if action in ("catch", "listen", "receive", "pinpoint"):
                 catch_body = {
-                    "freq_mhz": body.get("freq_mhz", os.environ.get("NEXUS_FIELD_CATCH_MHZ", "83.1")),
+                    "freq_mhz": body.get("freq_mhz"),
+                    "freq_khz": body.get("freq_khz"),
                     "station_id": body.get("station_id") or "",
                     "call_sign": body.get("call_sign") or "",
                     "live_play": body.get("live_play", True),
                 }
+                if catch_body["freq_mhz"] is None and catch_body["freq_khz"] is None:
+                    catch_body["freq_mhz"] = body.get("freq_mhz", os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1"))
                 orch_cmd = "listen" if action in ("listen", "receive", "pinpoint") else "catch"
                 payload = _nexus_py_json(
                     INSTALL_ROOT / "lib" / "field-antenna-orchestrator.py",
@@ -1776,7 +1852,7 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/attack-kit/sync-field":
             kit = INSTALL_ROOT / "lib" / "field-attack-kit.sh"
-            ok = _run_nexus_bash(
+            ok, _ = _run_nexus_bash(
                 f"source {INSTALL_ROOT}/lib/nexus-settings.sh && "
                 f"source {kit} && nexus_field_attack_sync_from_memory && nexus_field_attack_apply_registry",
                 timeout=60,
@@ -1857,7 +1933,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(400, json.dumps({"ok": False, "error": "invalid policy"}), "application/json")
                 return
             inner = _nexus_shell_prelude() + f"nexus_adblock_set_policy '{policy}'"
-            ok = _run_nexus_bash(inner, timeout=120)
+            ok, _ = _run_nexus_bash(inner, timeout=120)
             self._send(200 if ok else 500, json.dumps({"ok": ok, "policy": policy}), "application/json")
             return
 
@@ -1872,7 +1948,7 @@ class Handler(BaseHTTPRequestHandler):
             safe_p = policy.replace("'", "'\"'\"'")
             safe_n = note.replace("'", "'\"'\"'")
             inner = _nexus_shell_prelude() + f"nexus_adblock_site_policy '{safe_d}' '{safe_p}' '{safe_n}'"
-            ok = _run_nexus_bash(inner, timeout=30)
+            ok, _ = _run_nexus_bash(inner, timeout=30)
             if ok:
                 _run_nexus_adblock_apply()
             self._send(200 if ok else 500, json.dumps({"ok": ok, "domain": domain, "policy": policy}), "application/json")
@@ -1896,7 +1972,7 @@ class Handler(BaseHTTPRequestHandler):
                 f"source {INSTALL_ROOT}/lib/pest-arsenal.sh && "
                 f"nexus_pest_eradicate '{safe_ip}' '{pid}' '{vector}' '{safe_exe}'"
             )
-            ok = _run_nexus_bash(inner, timeout=45)
+            ok, _ = _run_nexus_bash(inner, timeout=45)
             self._send(
                 200 if ok else 500,
                 json.dumps({"ok": ok, "ip": ip, "pid": pid, "vector": vector}),

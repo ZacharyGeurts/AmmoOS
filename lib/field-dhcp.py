@@ -19,7 +19,20 @@ PID_FILE = STATE / "field-dhcp.pid"
 LEASE_FILE = STATE / "field-dhcp-leases.json"
 
 PORT = 67
-DNS_SERVERS = ["127.0.0.1"]
+def _dns_servers_v4() -> list[str]:
+    raw = os.environ.get("NEXUS_FIELD_DHCP_DNS_IPV4", "127.0.0.1")
+    hosts = [h.strip() for h in raw.split(",") if h.strip()]
+    return hosts or ["127.0.0.1"]
+
+
+def _dns_servers_v6() -> list[str]:
+    raw = os.environ.get("NEXUS_FIELD_DHCP_DNS_IPV6", os.environ.get("NEXUS_FIELD_DNS_IPV6", "::1"))
+    hosts = [h.strip() for h in raw.split(",") if h.strip()]
+    return hosts or ["::1"]
+
+
+DNS_SERVERS = _dns_servers_v4()
+DNS_SERVERS_V6 = _dns_servers_v6()
 LEASE_SEC = int(os.environ.get("NEXUS_FIELD_DHCP_LEASE", "3600"))
 POOL_START = os.environ.get("NEXUS_FIELD_DHCP_POOL_START", "192.168.50.100")
 POOL_END = os.environ.get("NEXUS_FIELD_DHCP_POOL_END", "192.168.50.200")
@@ -248,12 +261,13 @@ def build_panel() -> dict[str, Any]:
         "bind": f"{BIND_IF}:{PORT}",
         "pool": {"start": POOL_START, "end": POOL_END},
         "dns_option": DNS_SERVERS,
+        "dns_option_v6": DNS_SERVERS_V6,
         "lease_seconds": LEASE_SEC,
         "stats": dict(_stats),
         "leases": list(leases.get("leases", {}).items())[:48],
         "lease_count": len(leases.get("leases") or {}),
         "hostess7": {
-            "inside": "LAN DHCP → 127.0.0.1 DNS",
+            "inside": f"LAN DHCP → {', '.join(DNS_SERVERS)} DNS · IPv6 field {', '.join(DNS_SERVERS_V6)}",
             "outside": "No DHCP on WAN — DNS admin ports 7/77/777 read-only",
         },
     }

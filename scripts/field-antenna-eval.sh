@@ -51,11 +51,11 @@ for need in ("rf", "broadcast", "audio", "laser"):
         errors.append(f"missing modality {need}")
 if not (radio.get("station_menu") or []):
     errors.append("radio station_menu empty")
-catch831 = next((s for s in (radio.get("all_legal_stations") or []) if s.get("id") == "field-catch-831"), None)
-if not catch831:
-    errors.append("field-catch-831 (83.1 MHz) missing from registry")
-elif not catch831.get("tunable"):
-    errors.append("83.1 MHz not tunable from operator GPS")
+wimk = next((s for s in (radio.get("all_legal_stations") or []) if s.get("id") == "wimk-931"), None)
+if not wimk:
+    errors.append("wimk-931 (93.1 MHz) missing from registry")
+elif not wimk.get("tunable"):
+    errors.append("93.1 MHz WIMK not tunable from operator GPS")
 if "vhf" not in (radio.get("stats") or {}).get("bands", []):
     errors.append("VHF band not in catcher bands")
 fr = signals.get("field_radio") or {}

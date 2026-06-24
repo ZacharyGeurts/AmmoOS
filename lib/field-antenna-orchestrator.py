@@ -538,7 +538,7 @@ def run_cycle(*, skip_precision: bool = False, skip_thermal: bool = True) -> dic
     steps["field_catch"] = _run_py(
         INSTALL / "lib" / "field-antenna-catch.py",
         "catch",
-        json.dumps({"freq_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "83.1"))}),
+        json.dumps({"freq_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1"))}),
     )
     steps["signals_field"] = _run_py(INSTALL / "lib" / "signals-field.py", "build")
 
@@ -616,7 +616,7 @@ def build_field_antenna_panel() -> dict[str, Any]:
                 "crystal_clarity": radio.get("crystal_clarity"),
                 "field_boost": radio.get("field_boost"),
                 "world_tune": (radio.get("field_boost") or {}).get("world_tune"),
-                "catch_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "83.1")),
+                "catch_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1")),
             },
             "field_catch": _load_json(STATE / "field-antenna-catch.json", {}),
             "precision_gps": submicron,
@@ -726,7 +726,7 @@ def main() -> int:
         print(json.dumps(out, ensure_ascii=False))
         return 0 if out.get("ok") else 1
     if cmd == "catch":
-        payload: dict[str, Any] = {"freq_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "83.1"))}
+        payload: dict[str, Any] = {"freq_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1"))}
         if len(sys.argv) > 2:
             try:
                 payload = json.loads(sys.argv[2])
@@ -747,15 +747,52 @@ def main() -> int:
         build_field_antenna_panel()
         print(json.dumps(out, ensure_ascii=False))
         return 0 if out.get("ok") or out.get("tri_ready") else 1
-    if cmd in ("receive", "listen", "pinpoint"):
-        payload: dict[str, Any] = {"freq_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "83.1"))}
+    if cmd in ("sound_off", "prototype", "soundoff"):
+        payload = {
+            "freq_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1")),
+            "station_id": "wimk-931",
+            "call_sign": "WIMK",
+            "play": True,
+        }
+        if len(sys.argv) > 2:
+            try:
+                payload = json.loads(sys.argv[2])
+            except json.JSONDecodeError:
+                payload = {"freq_mhz": float(sys.argv[2])}
+        out = _run_py(INSTALL / "lib" / "field-antenna-prototype.py", "sound_off", json.dumps(payload))
+        build_field_antenna_panel()
+        print(json.dumps(out if isinstance(out, dict) else {"error": "prototype_failed"}, ensure_ascii=False))
+        return 0 if isinstance(out, dict) and out.get("heard") else 1
+    if cmd in ("receive", "listen", "pinpoint", "tune"):
+        payload: dict[str, Any] = {
+            "freq_mhz": float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1")),
+            "station_id": "wimk-931",
+            "call_sign": "WIMK",
+        }
         if len(sys.argv) > 2:
             try:
                 payload = json.loads(sys.argv[2])
             except json.JSONDecodeError:
                 payload = {"freq_mhz": float(sys.argv[2])}
         run_cycle(skip_precision=True)
-        out = _run_py(INSTALL / "lib" / "field-tri-receive.py", "receive", json.dumps(payload))
+        try:
+            _run_py(INSTALL / "lib" / "field-crosstalk.py", "build")
+        except Exception:
+            pass
+        out = _run_py(
+            INSTALL / "lib" / "field-antenna-catch.py",
+            "catch",
+            json.dumps({
+                **payload,
+                "play": payload.get("live_play", True),
+                "seconds": float(payload.get("seconds", 30.0)),
+            }),
+        ) or {}
+        out["we_are_the_antenna"] = True
+        out["actual_radio"] = bool(out.get("heard"))
+        out["ota_only"] = True
+        out["generated"] = False
+        out["method"] = out.get("method") or "field_antenna_ota"
         build_field_antenna_panel()
         print(json.dumps(out, ensure_ascii=False))
         return 0 if out.get("heard") or out.get("tri_ready") else 1

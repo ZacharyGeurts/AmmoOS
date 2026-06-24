@@ -1729,7 +1729,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v7.6.0</h1>
+        <h1>NEXUS-Shield v7.7.0</h1>
         <div class="brand-sub" data-i18n="brand.sub">Hostess 7 · Dusty Midnight · MIT licensed</div>
       </div>
     </div>
@@ -1769,7 +1769,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.6.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.7.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -2531,13 +2531,38 @@
         </div>
         <div class="signals-panel signals-radio-panel">
           <h4>Field radio catcher · AM/FM · tune &amp; play</h4>
+          <div id="signals-world-placement" class="signals-radio-player" style="margin-bottom:10px;border-color:rgba(100,200,255,0.35);">
+            <div class="player-title">Your place in this world</div>
+            <div class="meta" id="signals-world-meta">Tune the bands · tower GPS placements · operator field</div>
+            <div id="signals-world-bands" class="signals-freq-summary meta" style="margin:6px 0;"></div>
+            <div id="signals-world-placements" class="meta"></div>
+          </div>
           <div id="signals-radio-meta" class="signals-freq-summary meta" style="margin-bottom:8px;"></div>
           <div id="signals-radio-player" class="signals-radio-player" aria-live="polite">
-            <div class="player-title" id="signals-radio-player-title">Field antenna · catch 83.1 MHz</div>
-            <div class="meta" id="signals-radio-player-meta">OTA lock via blaster antenna · Gladstone UP Michigan</div>
+            <div class="player-title" id="signals-radio-player-title">Field wave tuner · 93.1 WIMK K-Rock</div>
+            <div class="meta" id="signals-radio-player-meta">Field antenna OTA · we are the hardware · Iron Mountain → Gladstone</div>
+            <div id="signals-wimk-status" class="meta" style="margin:6px 0;padding:6px 8px;border:1px solid rgba(100,200,255,0.25);border-radius:4px;">
+              93.1 WIMK — awaiting playback status…
+            </div>
             <audio id="signals-radio-audio" controls preload="none"></audio>
-            <button type="button" id="signals-radio-tune-831" class="signals-radio-tune-btn">Catch 83.1 MHz</button>
+            <button type="button" id="signals-radio-tune-931" class="signals-radio-tune-btn">Play WIMK 93.1 OTA</button>
             <button type="button" id="signals-radio-tri-listen" class="signals-radio-tune-btn" style="margin-left:8px;">3-field pinpoint &amp; listen</button>
+            <button type="button" id="signals-prototype-soundoff" class="signals-radio-tune-btn" style="margin-left:8px;border-color:rgba(255,200,80,0.45);">Prototype sound off</button>
+          </div>
+          <div id="signals-prototype-panel" class="signals-radio-player" style="margin-top:10px;border-color:rgba(255,200,80,0.35);">
+            <div class="player-title">Antenna prototype · 3 fields in one file</div>
+            <div class="meta" id="signals-prototype-meta">Generated fields read every MHz — we are the hardware</div>
+            <div id="signals-prototype-table"></div>
+          </div>
+          <div id="signals-crosstalk-panel" class="signals-radio-player" style="margin-top:10px;border-color:rgba(255,90,110,0.35);">
+            <div class="player-title">Crosstalk · start → end lines</div>
+            <div class="meta" id="signals-crosstalk-meta">Countermeasures at violator start — never past our line</div>
+            <div id="signals-crosstalk-table"></div>
+          </div>
+          <div id="signals-instability-panel" class="signals-radio-player" style="margin-top:10px;border-color:rgba(180,140,255,0.35);">
+            <div class="player-title">Field instability · frequency physics</div>
+            <div class="meta" id="signals-instability-meta">3-field variance → MHz lock · we are the hardware</div>
+            <div id="signals-instability-table"></div>
           </div>
           <div id="signals-tri-panel" class="signals-radio-player" style="margin-top:10px;border-color:rgba(120,180,255,0.35);">
             <div class="player-title">3-field GPS compare → pinpoint</div>
@@ -7838,13 +7863,19 @@
       nexusUpdateApplying = false;
       if (data?.already_current) {
         await checkNexusUpdate(true);
-      } else if (data?.release_url) {
-        window.open(data.release_url, "_blank", "noopener");
-        if (detail) detail.textContent = `Auto-install unavailable — opened GitHub release ${data.previous} → ${data.latest}`;
       } else if (detail) {
-        detail.textContent = data?.error || data?.message || "Update not applied — try: sudo bash stealth_install.sh";
+        const err = data?.message || data?.error || data?.install_log || "Update not applied";
+        detail.textContent = `${err} — retry UPDATE or: sudo bash stealth_install.sh`;
+        detail.classList.add("update-ready");
       }
-      if (btn) { btn.disabled = false; btn.classList.remove("update-busy"); }
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove("update-busy");
+        if (nexusUpdateState?.update_available) {
+          btn.classList.add("update-ready");
+          btn.textContent = "UPDATE NOW";
+        }
+      }
     }
 
     $("spiderweb-refocus")?.addEventListener("click", () => {

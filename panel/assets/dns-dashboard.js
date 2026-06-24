@@ -143,7 +143,7 @@
       ["RFC enforced", `${br.rfc_enforced ?? 0}/${br.rfc_total ?? fd.rfc_matrix?.length ?? 0}`, ""],
       ["Root hints", br.root_servers ?? fd.root_servers?.length ?? 0, "IANA"],
       ["Multipoint", br.multipoint_points ?? 0, "trusted IDs"],
-      ["Foreign blocked", br.foreign_blocked ?? 0, "resolvers"],
+      ["Foreign blocked", br.foreign_blocked ?? 0, `${br.foreign_ipv6_blocked ?? 0} IPv6`],
     ];
     el.innerHTML = items.map(([k, v, sub]) => `<div class="dns-ops-card">
       <span class="dns-ops-label">${esc(k)}</span>
@@ -263,7 +263,7 @@
         <td><strong>Field DHCP</strong></td>
         <td>${dhcp.running ? '<span class="dns-chip dns-chip-ok">LIVE</span>' : dhcp.may_serve === false ? '<span class="dns-chip dns-chip-warn">OBSERVING</span>' : '<span class="dns-chip dns-chip-meta">IDLE</span>'}</td>
         <td><code>${esc(dhcp.bind || "0.0.0.0:67")}</code></td>
-        <td class="meta">${esc(String(dhcp.lease_count ?? 0))} leases · DNS option ${(dhcp.dns_option || ["127.0.0.1"]).map((d) => `<code>${esc(d)}</code>`).join(" ")}</td>
+        <td class="meta">${esc(String(dhcp.lease_count ?? 0))} leases · DNS v4 ${(dhcp.dns_option || ["127.0.0.1"]).map((d) => `<code>${esc(d)}</code>`).join(" ")} · v6 ${(dhcp.dns_option_v6 || ["::1"]).map((d) => `<code>${esc(d)}</code>`).join(" ")}</td>
       </tr>
     </tbody></table>
     <dl class="dns-kv-grid" style="margin-top:12px;">
@@ -456,10 +456,11 @@
       return;
     }
     el.innerHTML = `<table class="honor-table dns-table"><thead><tr>
-      <th>Resolver</th><th>IPv4</th><th>Reason</th>
+      <th>Resolver</th><th>IPv4</th><th>IPv6</th><th>Reason</th>
     </tr></thead><tbody>${rows.map((r) => `<tr>
       <td><strong>${esc(r.name)}</strong></td>
-      <td><code>${(r.ipv4 || []).join(", ")}</code></td>
+      <td><code>${(r.ipv4 || []).join(", ") || "—"}</code></td>
+      <td><code>${(r.ipv6 || []).join(", ") || "—"}</code></td>
       <td class="meta">${esc(r.reason)}</td>
     </tr>`).join("")}</tbody></table>`;
   }

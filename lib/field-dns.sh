@@ -121,6 +121,15 @@ nexus_field_dns_enforce_resolv() {
   nexus_log "INFO" "field-dns" "resolv override active (127.0.0.1 + ::1 truth resolver)"
 }
 
+nexus_field_dns_foreign_ips() {
+  local py="${NEXUS_INSTALL_ROOT}/lib/dns-planetary-security.py"
+  if [[ -f "$py" ]]; then
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      python3 "$py" foreign-ips 2>/dev/null && return 0
+  fi
+  printf '%s\n' '{"ipv4":["8.8.8.8","8.8.4.4","1.1.1.1","1.0.0.1","9.9.9.9","71.10.216.1","71.10.216.2"],"ipv6":["2001:4860:4860::8888","2001:4860:4860::8844","2606:4700:4700::1111","2606:4700:4700::1001","2620:fe::fe","2620:fe::9"]}'
+}
+
 nexus_field_dns_local_capture() {
   [[ "${NEXUS_FIELD_DNS_LOCAL_CAPTURE:-1}" == "1" ]] || return 0
   command -v nft >/dev/null 2>&1 || return 0
@@ -130,19 +139,35 @@ nexus_field_dns_local_capture() {
     return 0
   fi
   # Block egress DNS to foreign resolvers — never add untrusted (RFC 9520)
-  local foreign="8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1, 9.9.9.9, 71.10.216.1, 71.10.216.2"
-  nft add rule inet "$table" output \
-    ip daddr "{ ${foreign} }" udp dport "${port}" drop comment "nexus-dns-local" 2>/dev/null || true
-  nft add rule inet "$table" output \
-    ip daddr "{ ${foreign} }" tcp dport "${port}" drop comment "nexus-dns-local" 2>/dev/null || true
+  local foreign_json foreign4 foreign6
+  foreign_json="$(nexus_field_dns_foreign_ips)"
+  foreign4="$(printf '%s' "$foreign_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv4") or []))' 2>/dev/null || true)"
+  foreign6="$(printf '%s' "$foreign_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv6") or []))' 2>/dev/null || true)"
+  foreign4="${foreign4:-8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1, 9.9.9.9, 71.10.216.1, 71.10.216.2}"
+  if [[ -n "$foreign4" ]]; then
+    nft add rule inet "$table" output \
+      ip daddr "{ ${foreign4} }" udp dport "${port}" drop comment "nexus-dns-local" 2>/dev/null || true
+    nft add rule inet "$table" output \
+      ip daddr "{ ${foreign4} }" tcp dport "${port}" drop comment "nexus-dns-local" 2>/dev/null || true
+  fi
+  if [[ -n "$foreign6" ]]; then
+    nft add rule inet "$table" output \
+      ip6 daddr "{ ${foreign6} }" udp dport "${port}" drop comment "nexus-dns-local-v6" 2>/dev/null || true
+    nft add rule inet "$table" output \
+      ip6 daddr "{ ${foreign6} }" tcp dport "${port}" drop comment "nexus-dns-local-v6" 2>/dev/null || true
+  fi
   nft add rule inet "$table" output \
     udp dport 853 drop comment "nexus-dns-local-dot" 2>/dev/null || true
-  # DDoS immunity — rate-limit DNS ingress to loopback resolver
+  # DDoS immunity — rate-limit DNS ingress to loopback resolver (IPv4 + IPv6)
   nft add rule inet "$table" input \
     ip daddr 127.0.0.1 udp dport "${port}" limit rate 120/second burst 60 packets accept comment "nexus-dns-ddos-in" 2>/dev/null || true
   nft add rule inet "$table" input \
     ip daddr 127.0.0.1 udp dport "${port}" drop comment "nexus-dns-ddos-drop" 2>/dev/null || true
-  nexus_log "INFO" "field-dns" "local DNS capture — foreign resolver egress blocked · DDoS rate limit active"
+  nft add rule inet "$table" input \
+    ip6 daddr ::1 udp dport "${port}" limit rate 120/second burst 60 packets accept comment "nexus-dns-ddos-in6" 2>/dev/null || true
+  nft add rule inet "$table" input \
+    ip6 daddr ::1 udp dport "${port}" drop comment "nexus-dns-ddos-drop6" 2>/dev/null || true
+  nexus_log "INFO" "field-dns" "local DNS capture — foreign resolver egress blocked (IPv4+IPv6) · DDoS rate limit active"
 }
 
 nexus_field_dhcp_serve_loop() {

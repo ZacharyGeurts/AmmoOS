@@ -52,6 +52,48 @@ def _host_security_level() -> str:
     return "standard"
 
 
+def _is_ipv6_addr(addr: str) -> bool:
+    return ":" in addr
+
+
+def _split_nameservers(servers: list[str]) -> tuple[list[str], list[str]]:
+    v4: list[str] = []
+    v6: list[str] = []
+    for addr in servers:
+        if _is_ipv6_addr(addr):
+            v6.append(addr)
+        else:
+            v4.append(addr)
+    return v4, v6
+
+
+def _trusted_v4_nameservers(port: int) -> set[str]:
+    return {"127.0.0.1", "127.0.0.53", f"127.0.0.1#{port}"}
+
+
+def _trusted_v6_nameservers(port: int) -> set[str]:
+    return {"::1", f"::1#{port}"}
+
+
+def _stack_truth_enforced(servers: list[str], trusted: set[str]) -> bool:
+    if not servers:
+        return True
+    return all(s in trusted for s in servers)
+
+
+def _foreign_resolver_ip_sets(seed: dict[str, Any]) -> dict[str, list[str]]:
+    v4: list[str] = []
+    v6: list[str] = []
+    for row in seed.get("foreign_resolvers_blocked") or []:
+        for ip in row.get("ipv4") or []:
+            if ip and ip not in v4:
+                v4.append(str(ip))
+        for ip in row.get("ipv6") or []:
+            if ip and ip not in v6:
+                v6.append(str(ip))
+    return {"ipv4": v4, "ipv6": v6}
+
+
 def _resolv_snapshot() -> dict[str, Any]:
     servers: list[str] = []
     search: list[str] = []
@@ -70,14 +112,18 @@ def _resolv_snapshot() -> dict[str, Any]:
             elif parts[0] == "options" and len(parts) > 1:
                 options.extend(parts[1:])
     local_port = int(os.environ.get("NEXUS_FIELD_DNS_PORT", "53"))
-    nexus_local = any(
-        s in ("127.0.0.1", "::1", f"127.0.0.1#{local_port}")
-        for s in servers
-    )
+    ipv4_servers, ipv6_servers = _split_nameservers(servers)
+    ipv4_enforced = _stack_truth_enforced(ipv4_servers, _trusted_v4_nameservers(local_port))
+    ipv6_enforced = _stack_truth_enforced(ipv6_servers, _trusted_v6_nameservers(local_port))
+    nexus_local = ipv4_enforced and ipv6_enforced
     return {
         "nameservers": servers,
+        "ipv4_nameservers": ipv4_servers,
+        "ipv6_nameservers": ipv6_servers,
         "search_domains": search,
         "options": options,
+        "ipv4_truth_enforced": ipv4_enforced,
+        "ipv6_truth_enforced": ipv6_enforced,
         "nexus_truth_enforced": nexus_local,
         "path": str(path),
     }
@@ -94,11 +140,13 @@ def _hostname_fqdn() -> dict[str, str]:
 
 def build_planetary_dns(extra: dict[str, Any] | None = None) -> dict[str, Any]:
     seed = _load_json(SEED, {})
+    foreign_ips = _foreign_resolver_ip_sets(seed)
     host_level = _host_security_level()
     planetary_level = "extreme" if host_level == "extreme" else "hardened"
     rfc_rows = list(seed.get("rfc_matrix") or [])
     legal_rows = list(seed.get("legal_framework") or [])
     enforced = sum(1 for r in rfc_rows if r.get("compliance") == "enforced")
+    ipv6_bind = os.environ.get("NEXUS_FIELD_DNS_IPV6", "::1")
     doc: dict[str, Any] = {
         "schema": "dns-planetary/v1",
         "updated": _now(),
@@ -117,6 +165,8 @@ def build_planetary_dns(extra: dict[str, Any] | None = None) -> dict[str, Any]:
         "legal_framework": legal_rows,
         "root_servers": seed.get("root_servers") or [],
         "foreign_resolvers_blocked": seed.get("foreign_resolvers_blocked") or [],
+        "foreign_resolver_ipv4": foreign_ips["ipv4"],
+        "foreign_resolver_ipv6": foreign_ips["ipv6"],
         "resolv": _resolv_snapshot(),
         "identity": _hostname_fqdn(),
         "resolver_policy": {
@@ -124,17 +174,23 @@ def build_planetary_dns(extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "truthful_trace": True,
             "loopback_only": True,
             "ipv4_bind": os.environ.get("NEXUS_FIELD_DNS_IPV4", "127.0.0.1"),
-            "ipv6_bind": os.environ.get("NEXUS_FIELD_DNS_IPV6", "::1"),
+            "ipv6_bind": ipv6_bind,
+            "ipv6_enabled": bool(ipv6_bind.strip()),
             "port": int(os.environ.get("NEXUS_FIELD_DNS_PORT", "53")),
             "no_shortcut_public_dns": True,
             "dot_doh_bypass": "blocked_under_extreme",
             "qtypes_supported": ["A", "AAAA", "CNAME", "MX", "TXT"],
+            "dual_stack": True,
         },
         "stats": {
             "planetary_zones": len(PLANETARY_ZONES),
             "root_servers": len(seed.get("root_servers") or []),
+            "root_servers_ipv6": sum(1 for r in (seed.get("root_servers") or []) if r.get("ipv6")),
             "legal_citations": len(legal_rows),
             "rfc_citations": len(rfc_rows),
+            "foreign_resolvers_blocked": len(seed.get("foreign_resolvers_blocked") or []),
+            "foreign_resolver_ipv4": len(foreign_ips["ipv4"]),
+            "foreign_resolver_ipv6": len(foreign_ips["ipv6"]),
         },
     }
     if extra:
@@ -149,7 +205,11 @@ def main() -> int:
     if cmd == "json":
         print(json.dumps(build_planetary_dns(), ensure_ascii=False))
         return 0
-    print(json.dumps({"error": "usage: dns-planetary-security.py [json]"}, ensure_ascii=False))
+    if cmd == "foreign-ips":
+        seed = _load_json(SEED, {})
+        print(json.dumps(_foreign_resolver_ip_sets(seed), ensure_ascii=False))
+        return 0
+    print(json.dumps({"error": "usage: dns-planetary-security.py [json|foreign-ips]"}, ensure_ascii=False))
     return 1
 
 

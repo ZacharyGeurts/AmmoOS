@@ -46,9 +46,9 @@
     {"letter": "m", "hostname": "m.root-servers.net", "ipv4": "202.12.27.33", "ipv6": "2001:dc3::35", "operator": "WIDE Project"}
   ],
   "foreign_resolvers_blocked": [
-    {"name": "Google Public DNS", "ipv4": ["8.8.8.8", "8.8.4.4"], "reason": "RFC 9520 — non-authoritative shortcut"},
-    {"name": "Cloudflare DNS", "ipv4": ["1.1.1.1", "1.0.0.1"], "reason": "Foreign resolver bypass"},
-    {"name": "Charter/Spectrum", "ipv4": ["71.10.216.1", "71.10.216.2"], "reason": "ISP DNS redirection — 47 CFR CPNI class"},
-    {"name": "Quad9", "ipv4": ["9.9.9.9"], "reason": "Third-party policy injection"}
+    {"name": "Google Public DNS", "ipv4": ["8.8.8.8", "8.8.4.4"], "ipv6": ["2001:4860:4860::8888", "2001:4860:4860::8844"], "reason": "RFC 9520 — non-authoritative shortcut"},
+    {"name": "Cloudflare DNS", "ipv4": ["1.1.1.1", "1.0.0.1"], "ipv6": ["2606:4700:4700::1111", "2606:4700:4700::1001"], "reason": "Foreign resolver bypass"},
+    {"name": "Charter/Spectrum", "ipv4": ["71.10.216.1", "71.10.216.2"], "ipv6": [], "reason": "ISP DNS redirection — 47 CFR CPNI class"},
+    {"name": "Quad9", "ipv4": ["9.9.9.9"], "ipv6": ["2620:fe::fe", "2620:fe::9"], "reason": "Third-party policy injection"}
   ]
 }

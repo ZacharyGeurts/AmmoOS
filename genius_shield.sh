@@ -53,6 +53,9 @@ printf 'mode=1\nblock=0\nautosanitize_override=0\nupdated=%s\n' "$(date -u '+%Y-
 declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase copying_files
 install -d -m 750 -o root -g nexus /usr/local/lib/nexus-shield /usr/local/lib/nexus-shield/bin /usr/local/bin
 cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/assets" "${ROOT}/data" /usr/local/lib/nexus-shield/
+install -m 755 -o root -g nexus "${ROOT}/stealth_install.sh" /usr/local/lib/nexus-shield/stealth_install.sh
+mkdir -p /usr/local/lib/nexus-shield/scripts
+install -m 755 -o root -g nexus "${ROOT}/scripts/play-wimk-ota.sh" /usr/local/lib/nexus-shield/scripts/play-wimk-ota.sh 2>/dev/null || true
 [[ -d "${ROOT}/plugins" ]] && cp -a "${ROOT}/plugins" /usr/local/lib/nexus-shield/
 chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/connection-gatekeeper.py" "${ROOT}/lib/vector-intel.py" "${ROOT}/lib/angel-dossier.py" \
@@ -68,16 +71,22 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/human-registry.py" "${ROOT}/lib/safe-signal-touch.py" "${ROOT}/lib/audio-train.py" "${ROOT}/lib/pet-signal-guard.py" \
   "${ROOT}/lib/home-protector.py" "${ROOT}/lib/heavyboi-importer.py" \
   "${ROOT}/lib/signals-field.py" "${ROOT}/lib/fcc-signal-lookup.py" \
-  "${ROOT}/lib/field-antenna-orchestrator.py" "${ROOT}/lib/field-radio-catcher.py" \
+  "${ROOT}/lib/field-antenna-orchestrator.py" "${ROOT}/lib/field-antenna-catch.py" "${ROOT}/lib/field-radio-catcher.py" \
+  "${ROOT}/lib/field-wave-tuner.py" "${ROOT}/lib/field-wave-engine.py" "${ROOT}/lib/field-signal-reader.py" \
+  "${ROOT}/lib/field-antenna-prototype.py" "${ROOT}/lib/field-spectrum-demod.py" "${ROOT}/lib/field-instability.py" \
+  "${ROOT}/lib/field-world-placement.py" "${ROOT}/lib/field-generator-triangulator.py" \
+  "${ROOT}/lib/field-crosstalk.py" \
+  "${ROOT}/lib/field-tri-receive.py" \
   "${ROOT}/lib/field-material-discern.py" "${ROOT}/lib/gps-precision.py" \
   "${ROOT}/lib/precision-field.py" "${ROOT}/lib/operator-default.py" "${ROOT}/lib/panel-i18n.py" "${ROOT}/lib/hostess-profile.py" "${ROOT}/lib/host-security-tier.py" \
   "${ROOT}/lib/field-dns.py" "${ROOT}/lib/dns-planetary-security.py" \
   "${ROOT}/lib/field-outside-talk.py" "${ROOT}/lib/field-outside-asm.c" \
+  "${ROOT}/lib/field-wave-asm.c" \
   "${ROOT}/lib/field-drive-system.py" \
   "${ROOT}/lib/dns-admin-portal.py" "${ROOT}/lib/equipment-room-field.py" \
   "${ROOT}/lib/dns-multipoint-identity.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
-  "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/field-antenna.sh" "${ROOT}/lib/field-radio-catcher.sh" "${ROOT}/lib/field-antenna-launcher.sh" "${ROOT}/scripts/field-antenna-test.sh" "${ROOT}/lib/field-dns.sh" "${ROOT}/lib/field-outside-talk.sh" "${ROOT}/lib/field-outside-asm.sh" "${ROOT}/lib/field-drive-system.sh" "${ROOT}/lib/dns-admin-portal.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
+  "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/field-antenna.sh" "${ROOT}/lib/field-radio-catcher.sh" "${ROOT}/lib/field-antenna-launcher.sh" "${ROOT}/scripts/field-antenna-test.sh" "${ROOT}/scripts/field-wave-hardware.sh" "${ROOT}/lib/field-dns.sh" "${ROOT}/lib/field-outside-talk.sh" "${ROOT}/lib/field-outside-asm.sh" "${ROOT}/lib/field-wave-asm.sh" "${ROOT}/lib/field-drive-system.sh" "${ROOT}/lib/dns-admin-portal.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
   "${ROOT}/lib/honorability.sh" "${ROOT}/lib/field-rf-sentinel.sh" "${ROOT}/lib/police-agency.sh" \
   "${ROOT}/lib/field-command.sh" "${ROOT}/lib/gov-intel.sh" "${ROOT}/lib/program-tags.sh" \
@@ -93,6 +102,13 @@ if [[ -f /usr/local/lib/nexus-shield/lib/field-outside-asm.sh ]]; then
   # shellcheck source=/dev/null
   source /usr/local/lib/nexus-shield/lib/field-outside-asm.sh
   nexus_field_outside_asm_build 2>/dev/null || true
+fi
+# Field Wave ASM — field-fast RTL-SDR USB probe
+if [[ -f /usr/local/lib/nexus-shield/lib/field-wave-asm.sh ]]; then
+  # shellcheck source=/dev/null
+  source /usr/local/lib/nexus-shield/lib/field-wave-asm.sh
+  nexus_field_wave_asm_build 2>/dev/null || true
+  python3 /usr/local/lib/nexus-shield/lib/field-wave-engine.py ensure 2>/dev/null || true
 fi
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/lib/nexus-shield/bin/nexus
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/bin/nexus

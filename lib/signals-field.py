@@ -552,6 +552,87 @@ def build_signals_field() -> dict[str, Any]:
         },
         "sdf_assets": ["antenna-bloom", "field-wave", "ring-pulse"],
     }
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_crosstalk", INSTALL / "lib" / "field-crosstalk.py",
+        )
+        if spec and spec.loader:
+            _ct = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_ct)
+            out["crosstalk"] = _ct.build_panel()
+    except Exception:
+        out["crosstalk"] = {}
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_wave_tuner", INSTALL / "lib" / "field-wave-tuner.py",
+        )
+        if spec and spec.loader:
+            _wt = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_wt)
+            out["field_wave_tuner"] = _wt.panel_json()
+    except Exception:
+        out["field_wave_tuner"] = {}
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_instability", INSTALL / "lib" / "field-instability.py",
+        )
+        if spec and spec.loader:
+            _fi = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_fi)
+            out["field_instability"] = _fi.panel_json()
+    except Exception:
+        out["field_instability"] = {}
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_wave_engine", INSTALL / "lib" / "field-wave-engine.py",
+        )
+        if spec and spec.loader:
+            _we = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_we)
+            _we.ensure_ported_backends(build_asm=False)
+            out["field_wave_engine"] = _we.probe_hardware()
+    except Exception:
+        out["field_wave_engine"] = {}
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_signal_reader", INSTALL / "lib" / "field-signal-reader.py",
+        )
+        if spec and spec.loader:
+            _sr = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_sr)
+            out["field_signal_reader"] = _sr.panel_json()
+    except Exception:
+        out["field_signal_reader"] = {}
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_antenna_prototype", INSTALL / "lib" / "field-antenna-prototype.py",
+        )
+        if spec and spec.loader:
+            _ap = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_ap)
+            out["field_antenna_prototype"] = _ap.panel_json()
+    except Exception:
+        out["field_antenna_prototype"] = {}
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_generator", INSTALL / "lib" / "field-generator-triangulator.py",
+        )
+        if spec and spec.loader:
+            _fg = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_fg)
+            out["field_generator"] = _fg.panel_json()
+    except Exception:
+        out["field_generator"] = {}
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_world_placement", INSTALL / "lib" / "field-world-placement.py",
+        )
+        if spec and spec.loader:
+            _wp = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_wp)
+            out["field_world_placement"] = _wp.panel_json()
+    except Exception:
+        out["field_world_placement"] = {}
     _save_json(PANEL_CACHE, out)
     return out
 

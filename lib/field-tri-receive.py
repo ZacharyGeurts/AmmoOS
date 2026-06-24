@@ -20,9 +20,11 @@ CATCH_AUDIO = STATE / "field-antenna-catch.wav"
 REGISTRY_PATH = INSTALL / "data" / "field-radio-broadcast-registry.json"
 OPERATOR_LOC = STATE / "operator-location.json"
 
-DEFAULT_MHZ = float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "83.1"))
+DEFAULT_MHZ = float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1"))
 CONCEPT_MODE = os.environ.get("NEXUS_FIELD_TRI_CONCEPT", "1") == "1"
 MIN_TRI_CONFIDENCE = float(os.environ.get("NEXUS_FIELD_TRI_MIN_CONF", "0.25"))
+
+RECEIVER_3F = INSTALL / "data" / "field-receiver-3fields.json"
 
 # Three local fields — compared to operator GPS, then used to pinpoint signal
 FIELD_ANCHORS = [
@@ -48,6 +50,12 @@ FIELD_ANCHORS = [
         "role": "triangulation_west",
     },
 ]
+
+
+def _field_anchors() -> list[dict[str, Any]]:
+    doc = _load_json(RECEIVER_3F, {})
+    fields = doc.get("fields") if doc.get("schema") == "field-receiver-3fields/v1" else None
+    return list(fields) if fields else FIELD_ANCHORS
 
 
 def _now() -> str:
@@ -134,7 +142,7 @@ def compare_fields_to_gps(
     op = operator or _operator()
     op_lat = float(op.get("lat") or FIELD_ANCHORS[0]["lat"])
     op_lon = float(op.get("lon") or FIELD_ANCHORS[0]["lon"])
-    fields = anchors or FIELD_ANCHORS
+    fields = anchors or _field_anchors()
     tgt = target or {}
     tlat = float(tgt.get("tower_lat") or op_lat)
     tlon = float(tgt.get("tower_lon") or op_lon)
@@ -226,78 +234,45 @@ def compare_fields_to_gps(
     }
 
 
+def _engine() -> Any:
+    spec = importlib.util.spec_from_file_location("field_wave_engine", INSTALL / "lib" / "field-wave-engine.py")
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _rtl_capture(freq_mhz: float, seconds: float = 8.0) -> dict[str, Any]:
-    rtl = _which("rtl_fm")
-    sox = _which("sox")
-    if not rtl:
-        return {"ok": False, "method": "none", "error": "rtl_fm_not_installed", "hint": "sudo apt install rtl-sdr sox"}
-    hz = int(round(freq_mhz * 1_000_000))
-    STATE.mkdir(parents=True, exist_ok=True)
-    try:
-        if sox:
-            cmd = (
-                f"timeout {int(seconds) + 3} rtl_fm -f {hz} -M wbfm -s 200000 -E deemp - 2>/dev/null | "
-                f"sox -t raw -r 200000 -esigned-integer -b16 -c1 - -t wav '{CATCH_AUDIO}' trim 0 {seconds}"
-            )
-            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=seconds + 12)
-        else:
-            cmd = [rtl, "-f", str(hz), "-M", "wbfm", "-s", "200000", "-E", "deemp", "-"]
-            with CATCH_AUDIO.open("wb") as fh:
-                proc = subprocess.run(cmd, stdout=fh, stderr=subprocess.DEVNULL, timeout=seconds + 6)
-        size = CATCH_AUDIO.stat().st_size if CATCH_AUDIO.is_file() else 0
-        return {
-            "ok": proc.returncode == 0 and size > 2000,
-            "method": "rtl_fm",
-            "audio_path": str(CATCH_AUDIO),
-            "audio_bytes": size,
-            "freq_hz": hz,
-        }
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        return {"ok": False, "method": "rtl_fm", "error": str(exc)}
+    eng = _engine()
+    eng.ensure_ported_backends(build_asm=False)
+    out = eng.capture_wbfm(freq_mhz, out_path=CATCH_AUDIO, seconds=seconds)
+    out["method"] = "field_wave_engine"
+    return out
 
 
 def _play_wav(path: Path, *, background: bool = True) -> dict[str, Any]:
-    player = _which("paplay") or _which("aplay")
-    if not player or not path.is_file():
-        return {"ok": False, "error": "no_player_or_file", "player": player}
+    eng = _engine()
+    if not path.is_file():
+        return {"ok": False, "error": "no_player_or_file"}
+    if background:
+        out = eng.play_wav(path)
+        if out.get("ok"):
+            out["background"] = True
+        return out
     try:
-        if background:
-            subprocess.Popen(
-                [player, str(path)],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=True,
-            )
-            return {"ok": True, "method": player, "background": True, "path": str(path)}
-        proc = subprocess.run([player, str(path)], capture_output=True, timeout=120)
-        return {"ok": proc.returncode == 0, "method": player, "background": False}
+        proc = subprocess.run([str(eng.FIELD_PLAY), str(path)], capture_output=True, timeout=120)
+        return {"ok": proc.returncode == 0, "method": "field-wave-play", "background": False}
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {"ok": False, "error": str(exc)}
 
 
 def _live_play(freq_mhz: float, seconds: float = 30.0) -> dict[str, Any]:
-    """Pipe rtl_fm directly to speakers — hear station live."""
-    rtl = _which("rtl_fm")
-    sox = _which("sox")
-    paplay = _which("paplay")
-    if not rtl:
-        return {"ok": False, "error": "rtl_fm_not_installed"}
-    if not paplay:
-        return {"ok": False, "error": "paplay_not_installed"}
-    hz = int(round(freq_mhz * 1_000_000))
-    try:
-        if sox:
-            cmd = (
-                f"timeout {int(seconds)} rtl_fm -f {hz} -M wbfm -s 200000 -E deemp - 2>/dev/null | "
-                f"sox -t raw -r 200000 -esigned-integer -b16 -c1 - -t wav - 2>/dev/null | "
-                f"paplay --raw --rate=200000 --format=s16le --channels=1"
-            )
-        else:
-            cmd = f"timeout {int(seconds)} rtl_fm -f {hz} -M wbfm -s 200000 -E deemp - 2>/dev/null | paplay"
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-        return {"ok": True, "method": "live_rtl_fm", "pid": proc.pid, "seconds": seconds, "freq_hz": hz}
-    except OSError as exc:
-        return {"ok": False, "error": str(exc)}
+    """Field-wave-engine live WBFM to speakers."""
+    eng = _engine()
+    out = eng.live_play_wbfm(freq_mhz, seconds=seconds)
+    if out.get("ok"):
+        out["method"] = "field_wave_engine_live"
+    return out
 
 
 def receive_signal(
@@ -320,7 +295,9 @@ def receive_signal(
         capture = _rtl_capture(target_mhz, seconds=capture_seconds)
         if capture.get("ok") and CATCH_AUDIO.is_file():
             playback = _play_wav(CATCH_AUDIO, background=live_play)
-        if live_play and _which("rtl_fm") and _which("paplay"):
+        eng = _engine()
+        hw = eng.probe_hardware()
+        if live_play and hw.get("listen_ready"):
             live = _live_play(target_mhz, seconds=45.0)
 
     heard = bool(playback.get("ok") or live.get("ok") or capture.get("ok"))
@@ -351,7 +328,7 @@ def receive_signal(
             "Plug RTL-SDR dongle into USB",
             "sudo apt install rtl-sdr sox pulseaudio-utils",
             "Run: ./scripts/field-tri-receive.sh listen",
-            "Or panel Signals → Pinpoint & Listen 83.1",
+            "Or panel Signals → Field wave tune 93.1 WIMK",
         ],
     }
     _save_json(PANEL_CACHE, doc)

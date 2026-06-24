@@ -20,7 +20,7 @@ OPERATOR_LOC = STATE / "operator-location.json"
 ANTENNA_PANEL = STATE / "field-antenna-panel.json"
 
 CATCHER_BANDS = frozenset({"am", "lw", "sw", "fm", "vhf"})
-DEFAULT_CATCH_MHZ = 83.1
+DEFAULT_CATCH_MHZ = float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1"))
 
 
 def _now() -> str:
@@ -487,7 +487,7 @@ def build_field_radio_panel() -> dict[str, Any]:
         "schema": "field-radio-catcher/v1",
         "updated": _now(),
         "motto": "Field radio catcher — GPS-scoped legal AM/FM/SW · tower GPS · tune & play.",
-        "tagline": "Field antenna catch 83.1 MHz UP Michigan · tower GPS · illegal frequencies red",
+        "tagline": "Field wave tuner 93.1 WIMK OTA · tower GPS · illegal frequencies red",
         "era": "field_catcher_fm",
         "crystal_clarity": boost.get("clarity"),
         "field_boost": boost,
