@@ -93,10 +93,13 @@ def lookup(domain: str) -> dict[str, Any]:
     stars = max(1, min(GOLD_STARS, stars))
     needs_acceptance = stars < ACCEPT_BELOW and dom not in accepted
     gold = stars >= GOLD_STARS
+    protection_level = "extreme" if stars >= 4 else "standard"
     return {
         "domain": dom,
         "stars": stars,
         "gold": gold,
+        "protection_level": protection_level,
+        "extreme_endpoint_protection": protection_level == "extreme",
         "category": row.get("category") or "unknown",
         "note": row.get("note") or "",
         "source": row.get("source") or ("seed" if dom in seed else "default"),
@@ -109,9 +112,9 @@ def lookup(domain: str) -> dict[str, Any]:
 
 def _stars_label(stars: int) -> str:
     if stars >= GOLD_STARS:
-        return "5 gold — full trust"
+        return "5 gold — full trust · EXTREME protection"
     if stars == 4:
-        return "4 stars — trusted on visit"
+        return "4 stars — trusted on visit · EXTREME protection"
     if stars == 3:
         return "3 stars — moderate default"
     if stars == 2:

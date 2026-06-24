@@ -314,6 +314,27 @@ test_hostess_profile_module() {
     python3 "${ROOT}/lib/field-us-intel.py" json | grep -q 'host_machine_explicit'
 }
 
+test_host_security_tier_module() {
+  [[ -f "${ROOT}/lib/host-security-tier.py" ]]
+  grep -q 'host-security-tier' "${ROOT}/lib/hostess-profile.py"
+  grep -q 'endpoint_extreme_meta' "${ROOT}/lib/connection-gatekeeper.py"
+  grep -q 'protection_level' "${ROOT}/lib/honorability-db.py"
+  grep -q 'nexus_settings_apply_extreme_defaults' "${ROOT}/lib/nexus-settings.sh"
+  grep -q 'adblock_relaxed_fair' "${ROOT}/lib/host-security-tier.py"
+  grep -q 'NEXUS_ADBLOCK_POLICY" "fair' "${ROOT}/lib/nexus-settings.sh"
+  grep -q '/api/host-security-tier' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'honor-extreme-chip' "${ROOT}/panel/threat-panel.html"
+  grep -q 'host-extreme-badge' "${ROOT}/panel/assets/us-dashboard.js"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/host-security-tier.py" level 5 | grep -q '"protection_level": "extreme"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/host-security-tier.py" level 3 | grep -q '"protection_level": "standard"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/honorability-db.py" lookup x.com | grep -q '"protection_level": "extreme"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/hostess-profile.py" save '{"display_name":"Zach","address":"1 Main","profile_kind":"family","urls":["https://example.com"]}' | grep -q '"extreme_active": true'
+}
+
 test_gatekeeper_strict_enforce() {
   [[ -f "${ROOT}/lib/gatekeeper-enforce.sh" ]]
   [[ -f "${ROOT}/lib/packet-permission.py" ]]
@@ -1438,6 +1459,7 @@ run_test "signals field module" test_signals_field_module
 run_test "consumer secure defaults" test_consumer_defaults
 run_test "dusty midnight v7.1 theme" test_dusty_midnight_theme
 run_test "hostess profile module" test_hostess_profile_module
+run_test "host security tier extreme" test_host_security_tier_module
 run_test "gatekeeper strict enforce in+out" test_gatekeeper_strict_enforce
 run_test "panel v2.2 axis bar layout" test_panel_v22_axis_layout
 run_test "panel v2.4 action buttons" test_panel_v24_actions

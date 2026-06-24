@@ -192,6 +192,11 @@
       padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.68rem;
     }
     .conn-honor-line { font-size: 0.62rem; color: var(--gold); margin-top: 2px; }
+    .honor-extreme-chip {
+      display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 4px;
+      font-size: 0.58rem; background: rgba(200, 80, 110, 0.2); border: 1px solid #c87898;
+      color: #ffb8c8; letter-spacing: 0.05em; vertical-align: middle;
+    }
     @media (max-width: 900px) { .honor-grid { grid-template-columns: 1fr; } }
     .signals-wrap {
       padding: 16px 24px; width: 100%; max-width: none;
@@ -3282,6 +3287,14 @@
       });
     }
 
+    function isExtremeProfile(s) {
+      if (!isEverydayProfile(s)) return false;
+      const hostSec = lastPanelData?.us_field?.host_security || lastPanelData?.host_security || {};
+      if (hostSec.extreme_active) return true;
+      const pol = s.NEXUS_ADBLOCK_POLICY || s.adblock?.policy || "annoyance";
+      return pol === "fair" || pol === "annoyance";
+    }
+
     function renderGroupSummaries(s) {
       const prot = countGroupOn(s, SETTING_GROUPS.protection);
       const watch = countGroupOn(s, SETTING_GROUPS.watchers);
@@ -3309,14 +3322,19 @@
 
     function renderSettingsProfile(s) {
       const everyday = isEverydayProfile(s);
+      const extreme = isExtremeProfile(s);
+      const hostSec = lastPanelData?.us_field?.host_security || lastPanelData?.host_security || {};
       const prot = countGroupOn(s, SETTING_GROUPS.protection);
       const watch = countGroupOn(s, SETTING_GROUPS.watchers);
       const abOn = settingIsOn(s.NEXUS_ADBLOCK);
-      $("settings-profile-desc").textContent = everyday
+      $("settings-profile-desc").textContent = extreme
+        ? "EXTREME envelope — every watcher and protection point at maximum for your 4★/5★ host. Adblock stays relaxed (fair) so trusted sites flow; shadow, entropy, privacy, paranoia, firewall, DPI all hardened."
+        : everyday
         ? "Packet permission v4.0 — DPI knows who and intent on every flow. Good traffic passes at zero nft cost; only harmful sections get blocked."
         : "Custom profile — your choices are saved on this machine. Rows below show ON (green edge) vs OFF (muted).";
       const chips = [
-        `<span class="chip profile">${everyday ? "Secure profile" : "Custom profile"}</span>`,
+        `<span class="chip profile">${extreme ? "EXTREME · 4-5★ host" : everyday ? "Secure profile" : "Custom profile"}</span>`,
+        hostSec.extreme_active ? `<span class="chip on">Host ${hostSec.host_star_tier || "?"}★</span>` : "",
         `<span class="chip ${prot ? "on" : "off"}">Protection ${prot}/${SETTING_GROUPS.protection.length}</span>`,
         `<span class="chip ${watch ? "on" : "off"}">Watchers ${watch}/${SETTING_GROUPS.watchers.length}</span>`,
         `<span class="chip ${abOn ? "on" : "off"}">Guardian ${abOn ? (s.NEXUS_ADBLOCK_POLICY || "annoyance") : "OFF"}</span>`,
@@ -4298,7 +4316,7 @@
       const intel = c.intel || {};
       const intelLabel = intel.label || c.notes?.intel_label || "";
       const honorLine = c.active_site
-        ? `<div class="conn-honor-line">${honorStarsHtml(c.honor_stars ?? 3)} ${esc(c.active_site)}${c.honor_gold ? " · gold trust" : ""}${c.honor_needs_acceptance ? ' · <button type="button" data-honor-accept="' + esc(c.active_site) + '" data-tip="Accept this site — only asked because you are visiting it.">Accept visit</button>' : ""}</div>`
+        ? `<div class="conn-honor-line">${honorStarsHtml(c.honor_stars ?? 3)} ${esc(c.active_site)}${c.honor_gold ? " · gold trust" : ""}${(c.honor_stars >= 4 || c.extreme_endpoint_protection || c.security_level === "extreme") ? ' · <span class="honor-extreme-chip">EXTREME</span>' : ""}${c.honor_needs_acceptance ? ' · <button type="button" data-honor-accept="' + esc(c.active_site) + '" data-tip="Accept this site — only asked because you are visiting it.">Accept visit</button>' : ""}</div>`
         : "";
       const showPest = v === "HARM_CANDIDATE" || (c.block_recommended && !trustedRow);
       if (showPest) {
@@ -5207,6 +5225,7 @@
             `<div style="margin-bottom:6px;">${honorStarsHtml(s.honor_stars ?? s.stars)}
               <strong>${esc(s.host)}</strong> via ${esc(s.process || "browser")}
               ${s.honor_gold || s.gold ? " · <em>gold — full trust</em>" : ""}
+              ${(s.honor_stars >= 4 || s.extreme_endpoint_protection || s.protection_level === "extreme") ? ' · <span class="honor-extreme-chip">EXTREME</span>' : ""}
               ${s.needs_acceptance ? ' · <button type="button" data-honor-accept="' + esc(s.host) + '">Accept</button>' : ""}
             </div>`
           ).join("");
@@ -5220,10 +5239,11 @@
       if (dbEl) {
         if (!entries.length) dbEl.innerHTML = '<div class="empty">No honorability entries.</div>';
         else {
-          dbEl.innerHTML = `<table class="honor-table"><thead><tr><th>Domain</th><th>Stars</th><th>Category</th><th>Note</th></tr></thead><tbody>
+          dbEl.innerHTML = `<table class="honor-table"><thead><tr><th>Domain</th><th>Stars</th><th>Protection</th><th>Category</th><th>Note</th></tr></thead><tbody>
             ${entries.map((e) => `<tr>
               <td><strong>${esc(e.domain)}</strong></td>
               <td>${honorStarsHtml(e.stars)}</td>
+              <td>${e.stars >= 4 || e.protection_level === "extreme" ? '<span class="honor-extreme-chip">EXTREME</span>' : "standard"}</td>
               <td>${esc(e.category || "—")}</td>
               <td>${esc(e.note || "")}${e.needs_acceptance ? " · needs visit accept" : ""}</td>
             </tr>`).join("")}

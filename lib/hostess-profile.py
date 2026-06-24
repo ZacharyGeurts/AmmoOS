@@ -12,6 +12,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 PROFILE = STATE / "hostess-profile.json"
 
 KINDS = frozenset({"person", "business", "family"})
@@ -93,6 +94,18 @@ def load_profile() -> dict[str, Any]:
             if nu and nu not in urls:
                 urls.append(nu)
     base["urls"] = urls[:64]
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "host_security_tier", INSTALL / "lib" / "host-security-tier.py",
+        )
+        if spec and spec.loader:
+            tier_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(tier_mod)
+            return tier_mod.enrich_profile(base)
+    except Exception:
+        pass
     return base
 
 
@@ -128,6 +141,19 @@ def save_profile(body: dict[str, Any]) -> dict[str, Any]:
     )[:160]
     hm["remember"] = True
     out["host_machine"] = hm
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "host_security_tier", INSTALL / "lib" / "host-security-tier.py",
+        )
+        if spec and spec.loader:
+            tier_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(tier_mod)
+            out = tier_mod.enrich_profile(out)
+            tier_mod.publish_tier(out)
+    except Exception:
+        pass
     _save_json(PROFILE, out)
     return out
 
@@ -145,6 +171,18 @@ def attach_to_us_field(doc: dict[str, Any]) -> dict[str, Any]:
     doc["identity"] = ident
     doc["hostess_profile"] = prof
     doc["host_machine_explicit"] = prof.get("host_machine") or {}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "host_security_tier", INSTALL / "lib" / "host-security-tier.py",
+        )
+        if spec and spec.loader:
+            tier_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(tier_mod)
+            doc = tier_mod.attach_to_us_field(doc)
+    except Exception:
+        pass
     return doc
 
 

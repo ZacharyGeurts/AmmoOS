@@ -135,6 +135,26 @@ nexus_settings_apply_consumer_defaults() {
   return 0
 }
 
+# EXTREME envelope — all watchers hardened; adblock stays relaxed (fair) for 4★/5★ hosts.
+nexus_settings_apply_extreme_defaults() {
+  nexus_settings_apply_consumer_defaults || return 1
+  nexus_settings_set_str "NEXUS_ADBLOCK_POLICY" "fair" || return 1
+  nexus_log "INFO" "nexus-settings" "EXTREME_DEFAULTS applied (watchers max, adblock fair/relaxed)"
+  return 0
+}
+
+nexus_host_extreme_apply_if_eligible() {
+  local tier_json level
+  tier_json="$(python3 "${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/host-security-tier.py" json 2>/dev/null)" || return 0
+  level="$(printf '%s' "$tier_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("security_level",""))' 2>/dev/null)" || return 0
+  if [[ "$level" == "extreme" ]]; then
+    nexus_settings_apply_extreme_defaults
+    python3 "${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/host-security-tier.py" publish >/dev/null 2>&1 || true
+    return 0
+  fi
+  return 1
+}
+
 nexus_settings_json() {
   nexus_settings_init
   local key val first=1

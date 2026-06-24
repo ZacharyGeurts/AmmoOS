@@ -133,7 +133,29 @@ def _apply_honorability(
         "honor_gold": info["gold"],
         "honor_needs_acceptance": info["needs_acceptance"],
         "honor_label": info["stars_label"],
+        "protection_level": info.get("protection_level") or "standard",
     }
+    extreme_meta: dict[str, Any] = {}
+    if int(info.get("stars") or 0) >= 4:
+        try:
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location(
+                "host_security_tier", INSTALL / "lib" / "host-security-tier.py",
+            )
+            if spec and spec.loader:
+                tier_mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(tier_mod)
+                extreme_meta = tier_mod.endpoint_extreme_meta(int(info["stars"]))
+        except Exception:
+            extreme_meta = {
+                "security_level": "extreme",
+                "extreme_endpoint_protection": True,
+                "extreme_watch": True,
+            }
+        meta.update(extreme_meta)
+        scores["process_trust"] = max(int(scores.get("process_trust") or 0), 8)
+        scores["operator_auth"] = max(int(scores.get("operator_auth") or 0), 6)
     if info["gold"]:
         scores["user_browser"] = max(int(scores.get("user_browser") or 0), 10)
         return "USER_OK", TRUST_RANK["USER_OK"], meta

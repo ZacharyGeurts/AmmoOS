@@ -8,6 +8,12 @@
 - Fresh installs and `nexus_settings_apply_consumer_defaults` now turn **ON** every hardening toggle: shadow, entropy, privacy, paranoia block, firewall auto-block, autosanitize, adblock, Hostess7 corroborate
 - `NEXUS_NETWORK_LOCKDOWN` stays **OFF** (file sharing friendly)
 
+## EXTREME security — 4★ and 5★ hosts
+- **`lib/host-security-tier.py`** — EXTREME envelope on every protection point for 4★/5★ hosts
+- Honorability 4★/5★ domains tagged `protection_level: extreme` on live connections
+- Complete US profile (name + address + URLs) → auto-applies **EXTREME** watchers; adblock stays **relaxed (fair)** for 4★/5★ hosts
+- **API**: `GET /api/host-security-tier`
+
 ## US page — Hostess knows you
 - **Host machine banner** — explicit “this box” with hostname, FQDN, operator
 - **Hostess profile card** — name, address, person/business/family, **+ Add URL** / **−** expander

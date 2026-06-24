@@ -460,6 +460,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/host-security-tier":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "host-security-tier.py", ["json"])
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/fcc-signal-lookup":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "fcc-signal-lookup.py", ["identify"])
             self._send(200, json.dumps(payload), "application/json")
@@ -957,6 +962,12 @@ class Handler(BaseHTTPRequestHandler):
                 INSTALL_ROOT / "lib" / "hostess-profile.py",
                 ["save", json.dumps(body if isinstance(body, dict) else {})],
             )
+            if payload.get("extreme_active") or int(payload.get("host_star_tier") or 0) >= 4:
+                inner = _nexus_shell_prelude() + "nexus_host_extreme_apply_if_eligible"
+                _run_nexus_bash(inner, timeout=60)
+                tier = _nexus_py_json(INSTALL_ROOT / "lib" / "host-security-tier.py", ["publish"])
+                payload["extreme_applied"] = bool(tier.get("extreme_active"))
+                payload["host_security"] = tier
             self._send(200, json.dumps(payload), "application/json")
             return
 

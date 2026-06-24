@@ -21,15 +21,25 @@
     const hm = us?.host_machine_explicit || us?.hostess_profile?.host_machine || {};
     const ident = us?.identity || {};
     const label = hm.explicit_label || `This host · ${ident.hostname || "localhost"}`;
+    const sec = us?.host_security || us?.hostess_profile || {};
+    const tier = sec.host_star_tier ?? us?.hostess_profile?.host_star_tier;
+    const extreme = sec.extreme_active || sec.security_level === "extreme" || us?.hostess_profile?.extreme_active;
+    const tierBadge = tier
+      ? `<span class="host-tier-badge">${tier}★ host</span>`
+      : "";
+    const extremeBadge = extreme
+      ? `<span class="host-extreme-badge">EXTREME · ${sec.protection_points || (sec.extreme_protections || []).length || "all"} protection points</span>`
+      : "";
     el.innerHTML = `<div class="host-machine-banner">
       <div class="host-machine-icon" aria-hidden="true">🖥</div>
       <div>
         <strong style="font-size:1.15rem;color:var(--dust-gold,#d4b86a);">${esc(label)}</strong>
+        ${tierBadge}${extremeBadge}
         <div class="meta" style="margin-top:6px;font-size:0.95rem;">
           Hostname <strong>${esc(ident.hostname || "—")}</strong> · FQDN ${esc(ident.fqdn || "—")} ·
           Operator ${esc(ident.operator_user || "—")} · NEXUS ${esc(ident.nexus_version || "—")}
         </div>
-        <div class="meta" style="margin-top:4px;">Hostess remembers this machine explicitly — not a generic client.</div>
+        <div class="meta" style="margin-top:4px;">Hostess remembers this machine explicitly — 4★ and 5★ hosts get EXTREME security on every protection point.</div>
       </div>
     </div>`;
   }
@@ -131,7 +141,11 @@
         body: JSON.stringify(body),
       });
       const j = await res.json();
-      if (status) status.textContent = j.ok !== false ? "Saved ✓" : "Save failed";
+      if (status) {
+        status.textContent = j.ok !== false
+          ? (j.extreme_applied ? "Saved ✓ · EXTREME envelope active" : j.host_star_tier >= 4 ? "Saved ✓ · " + j.host_star_tier + "★ host" : "Saved ✓")
+          : "Save failed";
+      }
       if (global.refresh) global.refresh();
     } catch {
       if (status) status.textContent = "API unreachable";

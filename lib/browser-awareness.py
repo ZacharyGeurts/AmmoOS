@@ -88,6 +88,8 @@ def detect_active_sites() -> list[dict[str, Any]]:
                 "honor_gold": info["gold"],
                 "needs_acceptance": info["needs_acceptance"],
                 "honor_label": info["stars_label"],
+                "protection_level": info.get("protection_level") or "standard",
+                "extreme_endpoint_protection": bool(info.get("extreme_endpoint_protection")),
             }
     return list(seen.values())
 
@@ -113,6 +115,8 @@ def enrich_connection(conn: dict[str, Any]) -> dict[str, Any]:
     out["honor_gold"] = info["gold"]
     out["honor_needs_acceptance"] = info["needs_acceptance"]
     out["honor_label"] = info["stars_label"]
+    out["protection_level"] = info.get("protection_level") or "standard"
+    out["extreme_endpoint_protection"] = bool(info.get("extreme_endpoint_protection"))
     if info["gold"] and proc in getattr(_fair_guardian(), "BROWSER_PROCS", set()):
         out["browser_trusted_site"] = True
     return out

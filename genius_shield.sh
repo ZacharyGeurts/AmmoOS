@@ -69,7 +69,7 @@ chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/home-protector.py" "${ROOT}/lib/heavyboi-importer.py" \
   "${ROOT}/lib/signals-field.py" "${ROOT}/lib/fcc-signal-lookup.py" \
   "${ROOT}/lib/field-material-discern.py" "${ROOT}/lib/gps-precision.py" \
-  "${ROOT}/lib/precision-field.py" "${ROOT}/lib/hostess-profile.py" 2>/dev/null || true
+  "${ROOT}/lib/precision-field.py" "${ROOT}/lib/hostess-profile.py" "${ROOT}/lib/host-security-tier.py" 2>/dev/null || true
 chmod 755 "${ROOT}/lib/pest-arsenal.sh" "${ROOT}/lib/vector-scour.sh" "${ROOT}/lib/angel-dossier.sh" \
   "${ROOT}/lib/human-registry.sh" "${ROOT}/lib/audio-train.sh" "${ROOT}/lib/home-protector.sh" "${ROOT}/lib/signals-field.sh" "${ROOT}/lib/human-dossier.sh" "${ROOT}/lib/field-us-intel.sh" "${ROOT}/lib/gatekeeper-enforce.sh" "${ROOT}/lib/host-attack.sh" \
   "${ROOT}/lib/field-attack-kit.sh" "${ROOT}/lib/friendly-guard.sh" "${ROOT}/lib/host-map-trash.sh" \
@@ -135,6 +135,7 @@ nexus_panel_install_desktop
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh"
 nexus_settings_apply_consumer_defaults
+nexus_host_extreme_apply_if_eligible || true
 
 cat >/etc/systemd/system/nexus-genius.service <<'EOF'
 [Unit]
