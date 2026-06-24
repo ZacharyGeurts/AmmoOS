@@ -287,48 +287,10 @@ def _tail_file(path: Path, lines: int = 120) -> str:
         return ""
 
 
-def _read_panel_json_raw() -> str | None:
-    field_path = STATE_DIR / "field-snapshot.json"
-    if field_path.is_file():
-        return field_path.read_text(encoding="utf-8")
-    if not STATUS_JSON.is_file():
-        return None
-    return STATUS_JSON.read_text(encoding="utf-8")
-
-
-def _coerce_json_object(raw: str) -> str | None:
-    if not raw:
-        return None
-    try:
-        obj = json.loads(raw)
-    except json.JSONDecodeError:
-        try:
-            obj, _end = json.JSONDecoder().raw_decode(raw.lstrip())
-        except json.JSONDecodeError:
-            return None
-    return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
-
-
-def _inject_field_bootstrap(html: str) -> str:
-    payload = _coerce_json_object(_read_panel_json_raw() or "")
-    if not payload:
-        return html
-    tag = '<script id="nexus-field-bootstrap">window.NEXUS_FIELD='
-    if tag in html:
-        return html
-    script = f'{tag}{payload};</script>\n'
-    for marker in ("<body>", "<BODY>"):
-        if marker in html:
-            return html.replace(marker, marker + "\n" + script, 1)
-    if "</head>" in html:
-        return html.replace("</head>", script + "</head>", 1)
-    return script + html
-
-
 def _serve_panel_html(handler: "Handler", target: Path) -> None:
     if target.suffix == ".html" and target.name == "threat-panel.html":
         try:
-            body = _inject_field_bootstrap(target.read_text(encoding="utf-8"))
+            body = target.read_text(encoding="utf-8")
         except OSError:
             handler._send(404, "not found", "text/plain")
             return
@@ -525,13 +487,10 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/field":
-            field_path = STATE_DIR / "field-snapshot.json"
-            if field_path.is_file():
-                self._send(200, field_path.read_text(encoding="utf-8"), "application/json")
-            elif STATUS_JSON.is_file():
+            if STATUS_JSON.is_file():
                 self._send(200, STATUS_JSON.read_text(encoding="utf-8"), "application/json")
             else:
-                self._send(200, '{"field":true,"points":[],"gatekeeper":{"connections":[]}}', "application/json")
+                self._send(200, '{"field":true,"panel_ready":false,"gatekeeper":{"connections":[]}}', "application/json")
             return
 
         if path == "/api/library/page":

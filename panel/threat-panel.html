@@ -297,9 +297,16 @@
     }
     .panel-subnav button.active { color: var(--text); border-color: var(--internet); background: rgba(77, 155, 255, 0.1); }
     nav.menu button { position: relative; }
+    select, select option {
+      background: #0d1524;
+      color: #f0f4fc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    select:focus { outline: 1px solid var(--gold); }
     nav.menu button .tab-load-pct,
     .panel-subnav button .tab-load-pct {
-      display: inline-block;
+      display: none;
       margin-left: 6px;
       padding: 1px 6px;
       border-radius: 999px;
@@ -1423,7 +1430,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v5.9.8</h1>
+        <h1>NEXUS-Shield v6.0.0</h1>
         <div class="brand-sub">Your network helper · MIT licensed</div>
       </div>
     </div>
@@ -1438,12 +1445,12 @@
         <span class="meta-chip" data-tip="When this screen last refreshed. Updates every few seconds.">
           <span>Updated</span> <strong id="updated">—</strong>
         </span>
-        <span class="meta-chip field-live field-warm" id="field-live-chip" data-tip="Live connections painted from field cache — no fetch wait on first paint.">
+        <span class="meta-chip field-live" id="field-live-chip" data-tip="Live connections from gatekeeper — fetched fresh each cycle.">
           <span>Live</span> <strong id="field-live">—</strong>
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v5.9.8</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v6.0.0</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -1972,7 +1979,7 @@
       <p class="precision-motto" id="precision-map-motto">
         <strong>Precision · Map</strong> — sub-micron detected GPS. Fixed-point 1e15°⁻¹ (~0.11 nm LSB). Global WGS84 to 15 decimals + local ENU nanometer patch ±20 mm.
       </p>
-      <div id="precision-map-meta" class="meta" style="margin-bottom:8px;">Loading precision map…</div>
+      <div id="precision-map-meta" class="meta" style="margin-bottom:8px;">Precision map — awaiting field data…</div>
       <div id="precision-map-stats" class="spiderweb-stats"></div>
       <div style="margin-bottom:8px;">
         <button type="button" class="pf-map-tab active" data-pf-map="global">Global · 15dp WGS84</button>
@@ -1991,7 +1998,7 @@
       <p class="precision-motto" id="precision-web-motto">
         <strong>Precision · Spiderweb</strong> — edges drawn at detected sub-micron GPS. Every node carries lat_str/lon_str + ENU E/N/U nanometers.
       </p>
-      <div id="precision-web-meta" class="meta" style="margin-bottom:8px;">Loading precision spiderweb…</div>
+      <div id="precision-web-meta" class="meta" style="margin-bottom:8px;">Precision spiderweb — awaiting field data…</div>
       <div style="margin-bottom:8px;">
         <button type="button" class="pf-web-tab active" data-pf-web="global">Global web</button>
         <button type="button" class="pf-web-tab" data-pf-web="local">Local ENU web</button>
@@ -2527,14 +2534,23 @@
     function moduleReady(data, key) {
       if (!data || data[key] == null) return false;
       const val = data[key];
-      if (key === "gatekeeper") return Array.isArray(val.connections);
-      if (key === "field_rf") return Boolean(val.updated || val.antenna?.mode);
-      if (key === "terror_spiderweb") return Boolean(val.updated || val.nodes?.length || val.focus);
-      if (key === "precision_field") return Boolean(val.updated || val.entities?.length);
-      if (key === "field_command") return Boolean(val.good_guy || val.pulse || val.motto);
+      if (key === "gatekeeper") return typeof val === "object" && Array.isArray(val.connections);
+      if (key === "field_rf") return typeof val === "object" && (val.updated != null || val.antenna?.mode != null);
+      if (key === "terror_spiderweb") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.nodes));
+      if (key === "precision_field") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.entities));
+      if (key === "host_attacks") return typeof val === "object" && (val.updated != null || Array.isArray(val.points));
+      if (key === "angel_dossiers") return typeof val === "object" && (val.dossier_count != null || Array.isArray(val.dossiers));
+      if (key === "human_dossier") return typeof val === "object" && (val.ip_count != null || Array.isArray(val.ips));
+      if (key === "angel_research") return typeof val === "object" && (val.tables != null || val.updated != null);
+      if (key === "us_field") return typeof val === "object" && (val.title != null || val.page != null || val.updated != null);
+      if (key === "h7_library") return typeof val === "object" && (val.books != null || val.updated != null);
+      if (key === "packet_field") return typeof val === "object" && (val.updated != null || val.ports != null || val.ring != null);
+      if (key === "browser_awareness") return typeof val === "object" && (val.honorability != null || val.active_sites != null);
+      if (key === "police_agency") return typeof val === "object" && (val.agencies != null || val.updated != null);
+      if (key === "field_command") return typeof val === "object" && (val.updated != null || val.good_guy != null || val.pulse != null || val.motto != null);
       if (key === "settings") return typeof val === "object" && Object.keys(val).length > 0;
-      if (Array.isArray(val)) return val.length > 0;
-      if (typeof val === "object") return Object.keys(val).length > 0;
+      if (Array.isArray(val)) return true;
+      if (typeof val === "object") return Object.keys(val).length > 0 || val.updated != null;
       return Boolean(val);
     }
 
@@ -2691,7 +2707,7 @@
       if (el) el.classList.add("active");
     }
 
-    function paintPanelFromCache(data) {
+    function paintPanel(data) {
       if (!data) return;
       lastPanelData = data;
       lastPanelUpdated = data.updated || "";
@@ -2722,46 +2738,32 @@
       if (!gk.connections?.length && data.internet?.connections?.length) {
         gk._fallback = data.internet.connections;
       }
-      if (gk.connections?.length || gk._fallback?.length) {
-        renderGatekeeperBanner(gk);
-        renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
-        lastGatekeeperSig = gatekeeperSig(gk);
-      }
-      if (data.host_attacks) {
-        renderHostAttackMap(data.host_attacks);
-        lastHostAttackUpdated = data.host_attacks.updated || "";
-      }
-      if (data.terror_spiderweb) renderTerrorSpiderweb(data.terror_spiderweb);
+      renderGatekeeperBanner(gk);
+      renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
+      lastGatekeeperSig = gatekeeperSig(gk);
+      renderHostAttackMap(data.host_attacks || { points: [], stats: {} });
+      lastHostAttackUpdated = data.host_attacks?.updated || "";
+      renderTerrorSpiderweb(data.terror_spiderweb || { nodes: [], edges: [] });
       {
-        const pf = data.precision_field || data.terror_spiderweb?.precision_field;
-        if (pf) {
-          if (global.renderPrecisionMap) renderPrecisionMap(pf);
-          if (global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
-        }
+        const pf = data.precision_field || data.terror_spiderweb?.precision_field || { entities: [], edges: [], stats: {} };
+        if (global.renderPrecisionMap) renderPrecisionMap(pf);
+        if (global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
       }
-      if (data.us_field) renderUSField(data.us_field);
-      if (data.angel_dossiers) renderDossiers(data.angel_dossiers);
-      if (data.human_dossier) renderHumanDossiers(data.human_dossier);
-      if (data.angel_research) renderResearch(data.angel_research);
-      if (data.packet_field) {
-        renderPacketField(data.packet_field);
-        renderInspect(data.packet_field);
-      }
-      if (data.h7_library) renderLibraryShelf(data.h7_library);
+      renderUSField(data.us_field);
+      renderDossiers(data.angel_dossiers);
+      renderHumanDossiers(data.human_dossier);
+      renderResearch(data.angel_research);
+      renderPacketField(data.packet_field || {});
+      renderInspect(data.packet_field || {});
+      renderLibraryShelf(data.h7_library || { books: [] });
       if (window.NexusPlugins) NexusPlugins.render(data);
       updateTabLoadProgress(data);
       onSubViewActivated(currentSubView);
     }
 
-    function bootstrapPanelCache() {
-      const data = window.NEXUS_FIELD || (window.NexusField && NexusField.load && NexusField.load());
-      if (data) {
-        window.NEXUS_FIELD = data;
-        paintPanelFromCache(data);
-        return true;
-      }
+    function bootstrapPanel() {
       updateTabLoadProgress(null, { fetching: true });
-      return false;
+      return refresh().then(() => true).catch(() => false);
     }
 
     function onSubViewActivated(sub) {
@@ -2836,7 +2838,7 @@
       showView(raw);
     }
     window.addEventListener("hashchange", applyHashView);
-    bootstrapPanelCache();
+    bootstrapPanel();
     applyHashView();
 
     function applyOldManMode(on) {
@@ -5549,7 +5551,13 @@
     }
 
     function renderUSField(us) {
-      if (!us) return;
+      if (!us) {
+        ["us-identity", "us-network", "us-sockets", "us-gatekeeper", "us-trust", "us-storage"].forEach((id) => {
+          const el = $(id);
+          if (el) el.innerHTML = '<span class="meta">US field intel not published yet.</span>';
+        });
+        return;
+      }
       const motto = $("us-motto");
       if (motto) {
         const subtitle = us.subtitle || "This machine — field-gleaned forensic identity";
@@ -5812,6 +5820,11 @@
     function renderDossiers(ad) {
       const list = $("dossier-list");
       const stats = $("dossier-stats");
+      if (!ad) {
+        if (stats) stats.textContent = "Attack-path dossiers not loaded.";
+        if (list) list.innerHTML = '<div class="empty">No attack-path dossiers — NEXUS is watching.</div>';
+        return;
+      }
       if (!ad?.dossiers?.length) {
         stats.textContent = "No dossiers yet — quiet is good. Warnings and suspicious connections build paths automatically.";
         list.innerHTML = '<div class="empty">No attack-path dossiers — NEXUS is watching.</div>';
@@ -5839,6 +5852,11 @@
 
     function renderResearch(ar) {
       const el = $("research-content");
+      if (!el) return;
+      if (!ar) {
+        el.innerHTML = '<div class="empty">Research tables not published — run field publish cycle.</div>';
+        return;
+      }
       const t = ar?.tables || {};
       const macRows = (t.mac_vendors || []).map((m) =>
         `<tr><td>${esc(m.ip)}</td><td>${esc(m.mac)}</td><td>${esc(m.vendor)}</td><td>${esc(m.category)}</td><td>${esc(m.source)}</td></tr>`
@@ -6008,7 +6026,7 @@
     }
 
     function fieldPaintInstant(field) {
-      paintPanelFromCache(field);
+      paintPanel(field);
     }
 
     function onLeafletReady(fn) {
@@ -6228,94 +6246,16 @@
         const res = await fetch("/api/status", { cache: "no-store" });
         const data = await res.json();
         panelFetchInFlight = false;
-        const panelChanged = data.updated !== lastPanelUpdated;
-        if (panelChanged) lastPanelUpdated = data.updated || "";
-        $("mode").textContent = data.vigil_mode || "calm";
-        $("signal").textContent = data.truth_signal ?? "0";
-        $("updated").textContent = data.updated || "—";
-        $("egress").textContent = data.internet?.egress_count ?? 0;
-        $("listeners").textContent = data.internet?.listener_count ?? 0;
-        $("dns").textContent = (data.internet?.dns_hash || "—").slice(0, 12);
-        $("corr").textContent = data.correlation_score ?? 0;
-        $("firewall").textContent = data.firewall ?? "—";
-        $("fw-blocks").textContent = data.firewall_blocks ?? 0;
-        const gk = data.gatekeeper || {};
-        if (!gk.connections?.length && data.internet?.connections?.length) {
-          gk._fallback = data.internet.connections;
-        }
-        fieldLiveCount(data);
-        const gkSig = gatekeeperSig(gk);
-        if (gkSig !== lastGatekeeperSig) {
-          lastGatekeeperSig = gkSig;
-          renderGatekeeperBanner(gk);
-          renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
-        }
-        if (panelChanged) {
-          renderIntelBanner(data.vector_intel);
-          renderAttackKit(data.attack_kit);
-          renderTrusted(data.trusted);
-          renderThreats(data.threats);
-          renderVectors(data.vectors);
-          renderSettings(data.settings);
-          renderGuardianFeed(data.adblock_guardian, data.settings);
-          renderSanitize(data.autosanitize);
-          renderParanoia(data.paranoia);
-          renderShutdown(data.shutdown);
-        }
-        renderHonorability(data);
-        renderCommandCenter(data);
-        if (currentSubView === "honor") renderHonorability(data);
-        if (currentSubView === "field-rf") renderFieldProtect(data);
-        if (currentSubView === "command") renderCommandCenter(data);
-        const haUpdated = data.host_attacks?.updated || "";
-        if (haUpdated !== lastHostAttackUpdated) {
-          lastHostAttackUpdated = haUpdated;
-          renderHostAttackMap(data.host_attacks);
-        }
-        if (data.terror_spiderweb) renderTerrorSpiderweb(data.terror_spiderweb);
-        if (currentSubView === "precision-map") {
-          const pf = data.precision_field || data.terror_spiderweb?.precision_field;
-          if (pf && global.renderPrecisionMap) renderPrecisionMap(pf);
-          setTimeout(invalidatePrecisionMap, 80);
-        }
-        if (currentSubView === "precision-web") {
-          const pf = data.precision_field || data.terror_spiderweb?.precision_field;
-          if (pf && global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
-          setTimeout(invalidatePrecisionSpiderweb, 80);
-        }
-        if (currentSubView === "dossier") renderDossiers(data.angel_dossiers);
-        if (currentSubView === "us") renderUSField(data.us_field);
-        if (currentSubView === "human-dossier") renderHumanDossiers(data.human_dossier);
-        if (currentSubView === "research") renderResearch(data.angel_research);
-        if (currentSubView === "inspect") {
-          renderPacketField(data.packet_field);
-          renderInspect(data.packet_field);
-        }
-        if (currentSubView === "library") renderLibraryShelf(data.h7_library);
-        lastPanelData = data;
-        if (window.NexusPlugins) NexusPlugins.render(data);
-        updateTabLoadProgress(data);
-        renderSubnav(currentPanel, currentSubView);
-        if (window.NexusField && data.updated) NexusField.persist(data);
+        paintPanel(data);
       } catch {
         panelFetchInFlight = false;
         updateTabLoadProgress(lastPanelData, { fetching: false });
         const conns = $("connections");
         const stale = conns?.querySelector(".conn-row, .conn-row.trusted");
-        if (!stale && lastPanelData?.gatekeeper?.connections?.length) {
-          fieldPaintInstant(lastPanelData);
-        } else if (!stale) {
+        if (!stale) {
           conns.innerHTML = '<div class="empty">Can\'t reach NEXUS — try running <strong>./nexus.sh</strong> or click the desktop icon.</div>';
         }
       }
-    }
-
-    if (window.NexusField) {
-      NexusField.fetchField().then((d) => {
-        if (!d) return;
-        NexusField.persist(d);
-        if (!lastPanelUpdated || d.updated !== lastPanelUpdated) paintPanelFromCache(d);
-      });
     }
     bindHumanDossierFilters();
     initTips();

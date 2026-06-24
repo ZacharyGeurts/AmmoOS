@@ -36,6 +36,8 @@ source "${NEXUS_INSTALL_ROOT}/lib/tamper-guard.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/hostess7-bridge.sh"
 # shellcheck source=/dev/null
+source "${NEXUS_INSTALL_ROOT}/lib/hostess7-operator.sh"
+# shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/panel-tls.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
