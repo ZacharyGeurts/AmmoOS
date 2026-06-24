@@ -633,6 +633,34 @@ def build_signals_field() -> dict[str, Any]:
             out["field_world_placement"] = _wp.panel_json()
     except Exception:
         out["field_world_placement"] = {}
+
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_hardware_probe", INSTALL / "lib" / "field-hardware-probe.py",
+        )
+        if spec and spec.loader:
+            _hw = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(_hw)
+            out["field_hardware"] = _hw.probe_all()
+    except Exception:
+        out["field_hardware"] = _load_json(STATE / "field-hardware-panel.json", {})
+    for key, rel in (
+        ("field_hazard_onset", "field-hazard-onset.py"),
+        ("lethal_enforcement", "lethal-enforcement.py"),
+        ("hostess7_lethal_insight", "hostess7-lethal-insight.py"),
+    ):
+        try:
+            spec = importlib.util.spec_from_file_location(key, INSTALL / "lib" / rel)
+            if spec and spec.loader:
+                _m = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(_m)
+                out[key] = _m.panel_status() if hasattr(_m, "panel_status") else {}
+        except Exception:
+            panel_name = key.replace("_", "-")
+            out[key] = _load_json(STATE / f"{panel_name}-panel.json", {})
+
+    out["field_antenna_catch"] = _load_json(STATE / "field-antenna-catch.json", {})
+    out["field_source"] = "signals-field"
     _save_json(PANEL_CACHE, out)
     return out
 

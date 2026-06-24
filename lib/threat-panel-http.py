@@ -213,6 +213,30 @@ def _nexus_update_lock(args: list[str], timeout: int = 15) -> dict:
     return _nexus_py_json(INSTALL_ROOT / "lib" / "nexus-update-lock.py", args, timeout=timeout)
 
 
+def _nexus_shell_publish_panel() -> None:
+    script = INSTALL_ROOT / "lib" / "threat-panel.sh"
+    if not script.is_file():
+        return
+    env = os.environ.copy()
+    env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+    env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+    env["NEXUS_THREAT_PANEL"] = "1"
+    subprocess.run(
+        [
+            "bash", "-c",
+            (
+                f"source '{INSTALL_ROOT}/lib/nexus-common.sh' && "
+                f"source '{script}' && "
+                f"nexus_threat_panel_publish"
+            ),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=180,
+        env=env,
+    )
+
+
 def _nexus_py_json(script: Path, args: list[str], timeout: int = 25) -> dict:
     if not script.is_file():
         return {"ok": False, "error": "script_missing"}
@@ -494,6 +518,14 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/signals-field":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "signals-field.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field":
+            _nexus_shell_publish_panel()
+            if STATUS_JSON.is_file():
+                self._send(200, STATUS_JSON.read_text(encoding="utf-8"), "application/json")
+            else:
+                self._send(200, '{"field":true,"panel_ready":false}', "application/json")
             return
 
         if path == "/api/field-hardware":
@@ -1105,6 +1137,14 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/signals-field":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "signals-field.py", ["build"])
             self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/field":
+            _nexus_shell_publish_panel()
+            if STATUS_JSON.is_file():
+                self._send(200, STATUS_JSON.read_text(encoding="utf-8"), "application/json")
+            else:
+                self._send(200, '{"field":true,"panel_ready":false}', "application/json")
             return
 
         if path == "/api/field-radio":

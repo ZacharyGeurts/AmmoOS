@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="7.9.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.9.1"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -298,7 +298,7 @@ test_dusty_midnight_theme() {
   grep -q 'us-host-machine' "$panel"
   grep -q 'us-traffic-canvas' "$panel"
   grep -q 'renderUSDashboard' "${ROOT}/panel/assets/us-dashboard.js"
-  grep -q 'v7.9.0' "$panel"
+  grep -q 'v7.9.1' "$panel"
 }
 
 test_hostess_profile_module() {
@@ -2053,7 +2053,7 @@ test_field_hardware_api() {
   grep -q 'signals-hardware-panel' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderHardware' "${ROOT}/panel/assets/signals-field.js"
   grep -q 'renderAudioQuality' "${ROOT}/panel/assets/signals-field.js"
-  grep -q 'NEXUS_VERSION="7.9.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="7.9.1"' "${ROOT}/lib/nexus-common.sh"
 }
 
 run_test "field hardware UI and API 7.9" test_field_hardware_api
@@ -2089,6 +2089,27 @@ PY
 }
 
 run_test "MERCILESS lethal enforcement 7.9" test_lethal_enforcement_79
+
+test_field_gui_publish() {
+  [[ -f "${ROOT}/lib/field-gui-publish.sh" ]]
+  grep -q 'nexus_field_gui_publish_all' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'field_hardware' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'field_hazard_onset' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'lethal_enforcement' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/field' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'renderHardware(doc)' "${ROOT}/panel/assets/signals-field.js"
+  grep -q 'fetch("/api/field"' "${ROOT}/panel/threat-panel.html"
+  grep -q 'NEXUS_VERSION="7.9.1"' "${ROOT}/lib/nexus-common.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" bash -c '
+    source "${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
+    nexus_init_runtime_paths
+    source "${NEXUS_INSTALL_ROOT}/lib/field-gui-publish.sh"
+    nexus_field_gui_publish_all
+    [[ -s "${NEXUS_STATE_DIR}/field-hardware-panel.json" ]] || nexus_field_hardware_json | grep -q field-hardware
+  '
+}
+
+run_test "field GUI publish all slices 7.9.1" test_field_gui_publish
 
 rm -rf "$NEXUS_STATE_DIR" /tmp/nexus-ent-rand.bin /tmp/nexus-ent-text.txt /tmp/nexus-shadow-t.txt "$NEXUS_ALERT_LOG" 2>/dev/null || true
 

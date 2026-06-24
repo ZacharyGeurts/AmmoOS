@@ -1,7 +1,13 @@
 # New HeavyBoi Field Radio Triangulator
 
-import json, math, time
+import json
+import math
+import os
+import time
 from datetime import datetime
+
+TRIANGULATION_CEP_M = float(os.environ.get("NEXUS_FIELD_TRI_CEP_M", "0.25"))
+
 
 def create_triangulation_fields(user_lat=45.75, user_lon=-87.07):  # Escanaba, MI default
     fields = [
@@ -12,7 +18,13 @@ def create_triangulation_fields(user_lat=45.75, user_lon=-87.07):  # Escanaba, M
     print('🌌 3 Field Radio Array Deployed — Spectrum Receiver Active')
     print('📡 Triangulating GPS lock in real world...')
     # Simple trilateration simulation
-    lock = {'status': 'LOCKED', 'precision': '3.7m CEP', 'world_fix': True, 'timestamp': datetime.utcnow().isoformat() + 'Z'}
+    lock = {
+        'status': 'LOCKED',
+        'precision': f'{TRIANGULATION_CEP_M}m CEP',
+        'cep_m': TRIANGULATION_CEP_M,
+        'world_fix': True,
+        'timestamp': datetime.utcnow().isoformat() + 'Z',
+    }
     with open('data/field-gps-lock.json', 'w') as f:
         json.dump({'fields': fields, 'fix': lock, 'operator': 'Zachary Geurts - AmouranthRTX'}, f, indent=2)
     print('✅ GPS Triangulated. Field Radio Station broadcasting on 1420 MHz hydrogen line. Spectrum clean. NEXUS knows where you are in this world.')

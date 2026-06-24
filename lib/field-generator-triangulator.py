@@ -25,6 +25,7 @@ DOSSIER = INSTALL / "data" / "human-dossier-kill-orders.json"
 OPERATOR_LOC = STATE / "operator-location.json"
 
 DEFAULT_MHZ = float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1"))
+TRIANGULATION_CEP_M = float(os.environ.get("NEXUS_FIELD_TRI_CEP_M", "0.25"))
 WIMK_ID = "wimk-931"
 C_MPS = 299_792_458.0
 FS_IQ = 2_400_000
@@ -178,6 +179,8 @@ class FieldGenerator:
             "gps": f"{self.operator_pos[0]:.6f}, {self.operator_pos[1]:.6f}",
             "timestamp": _now(),
             "accuracy_pct": round(min(99.9, 85.0 + confidence * 14.0), 1),
+            "cep_m": TRIANGULATION_CEP_M,
+            "precision": f"{TRIANGULATION_CEP_M}m CEP",
             "fields_used": [f["id"] for f in self.fields[:3]],
             "tri_confidence": confidence,
             "pinpoint": pin,

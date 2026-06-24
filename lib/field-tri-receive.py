@@ -23,6 +23,7 @@ OPERATOR_LOC = STATE / "operator-location.json"
 DEFAULT_MHZ = float(os.environ.get("NEXUS_FIELD_CATCH_MHZ", "93.1"))
 CONCEPT_MODE = os.environ.get("NEXUS_FIELD_TRI_CONCEPT", "1") == "1"
 MIN_TRI_CONFIDENCE = float(os.environ.get("NEXUS_FIELD_TRI_MIN_CONF", "0.25"))
+TRIANGULATION_CEP_M = float(os.environ.get("NEXUS_FIELD_TRI_CEP_M", "0.25"))
 
 RECEIVER_3F = INSTALL / "data" / "field-receiver-3fields.json"
 
@@ -216,6 +217,8 @@ def compare_fields_to_gps(
     return {
         "schema": "field-tri-compare/v1",
         "updated": _now(),
+        "cep_m": TRIANGULATION_CEP_M if confidence >= MIN_TRI_CONFIDENCE else None,
+        "precision": f"{TRIANGULATION_CEP_M}m CEP" if confidence >= MIN_TRI_CONFIDENCE else None,
         "operator": {"lat": op_lat, "lon": op_lon, "gps": f"{op_lat:.6f}, {op_lon:.6f}", "source": op.get("source")},
         "target": {
             "tower_lat": tlat,

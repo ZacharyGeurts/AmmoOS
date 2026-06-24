@@ -39,6 +39,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-outside-talk.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-outside-talk.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-drive-system.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-drive-system.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-gui-publish.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-gui-publish.sh"
 
 NEXUS_THREAT_PANEL_JSON="${NEXUS_THREAT_PANEL_JSON:-${NEXUS_STATE_DIR}/threat-panel.json}"
 
@@ -59,6 +60,9 @@ nexus_threat_panel_publish() {
   local lock="${NEXUS_STATE_DIR}/threat-panel.publish.lock"
   exec 9>"$lock" 2>/dev/null || return 0
   flock -w 5 9 2>/dev/null || return 0
+  if declare -f nexus_field_gui_publish_all >/dev/null 2>&1; then
+    nexus_field_gui_publish_all
+  fi
   if declare -f nexus_field_rf_cycle >/dev/null 2>&1; then
     nexus_field_rf_cycle
   fi
@@ -431,6 +435,37 @@ nexus_threat_panel_publish() {
     else
       printf '{"entities":[],"edges":[],"stats":{}}'
     fi
+    printf ',"field_hardware":'
+    if declare -f nexus_field_hardware_json >/dev/null 2>&1; then
+      nexus_field_hardware_json
+    else
+      printf '{"schema":"field-hardware-probe/v1"}'
+    fi
+    printf ',"field_hazard_onset":'
+    if declare -f nexus_field_hazard_onset_json >/dev/null 2>&1; then
+      nexus_field_hazard_onset_json
+    else
+      printf '{"schema":"field-hazard-onset-panel/v1"}'
+    fi
+    printf ',"lethal_enforcement":'
+    if declare -f nexus_lethal_enforcement_json >/dev/null 2>&1; then
+      nexus_lethal_enforcement_json
+    else
+      printf '{"schema":"lethal-enforcement-panel/v1"}'
+    fi
+    printf ',"hostess7_lethal_insight":'
+    if declare -f nexus_hostess7_lethal_insight_json >/dev/null 2>&1; then
+      nexus_hostess7_lethal_insight_json
+    else
+      printf '{"schema":"hostess7-lethal-insight-panel/v1"}'
+    fi
+    printf ',"field_antenna_catch":'
+    if declare -f nexus_field_antenna_catch_json >/dev/null 2>&1; then
+      nexus_field_antenna_catch_json
+    else
+      printf '{"schema":"field-antenna-catch/v1"}'
+    fi
+    printf ',"field":true'
     printf ',"panel_ready":true'
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'

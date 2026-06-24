@@ -45,6 +45,11 @@
     const opProf = sf.operator_profile || raw.operator_location || fr.operator || {};
     return {
       ...sf,
+      field_hardware: sf.field_hardware || raw.field_hardware || {},
+      field_hazard_onset: sf.field_hazard_onset || raw.field_hazard_onset || {},
+      lethal_enforcement: sf.lethal_enforcement || raw.lethal_enforcement || {},
+      hostess7_lethal_insight: sf.hostess7_lethal_insight || raw.hostess7_lethal_insight || {},
+      field_antenna_catch: sf.field_antenna_catch || raw.field_antenna_catch || fa.catch || {},
       field_antenna: {
         blaster_ready: readiness.blaster_ready ?? sf.field_antenna?.blaster_ready,
         score: readiness.score ?? sf.field_antenna?.score,
@@ -756,13 +761,17 @@
     </tbody></table>`;
   }
 
-  async function renderHardware() {
+  function renderHardware(doc) {
     const meta = document.getElementById("signals-hardware-meta");
     const table = document.getElementById("signals-hardware-table");
     if (!table) return;
+    const hw = doc?.field_hardware || {};
+    if (!hw.schema && !hw.host) {
+      if (meta) meta.textContent = "Field hardware warming…";
+      table.innerHTML = '<div class="empty">Awaiting field publish — run ./nexus.sh</div>';
+      return;
+    }
     try {
-      const res = await fetch("/api/field-hardware", { cache: "no-store" });
-      const hw = await res.json();
       if (meta) {
         meta.textContent = [
           hw.standalone ? "FIELD STANDALONE" : "installed",
@@ -784,8 +793,30 @@
       </tbody></table>`;
     } catch (_) {
       if (meta) meta.textContent = "Hardware probe warming…";
-      table.innerHTML = '<div class="empty">Could not load /api/field-hardware</div>';
+      table.innerHTML = '<div class="empty">Field hardware slice missing</div>';
     }
+  }
+
+  function renderHazardOnset(doc) {
+    const meta = document.getElementById("signals-hazard-meta");
+    const table = document.getElementById("signals-hazard-table");
+    if (!table) return;
+    const hz = doc?.field_hazard_onset || {};
+    const last = hz.last || hz.panel?.last || {};
+    const guard = last.guard_action || last.guard?.action || "—";
+    if (meta) {
+      meta.textContent = [
+        hz.proactive ? "PROACTIVE" : "monitor",
+        last.onset_us != null ? `${last.onset_us} µs onset` : "",
+        guard !== "—" ? guard : "",
+      ].filter(Boolean).join(" · ") || "microsecond onset guard";
+    }
+    table.innerHTML = `<table class="honor-table" style="font-size:0.72rem;margin-top:6px;"><tbody>
+      <tr><td class="meta">Status</td><td><strong>${esc(hz.status || (last.ceased ? "ceased" : "ready"))}</strong></td></tr>
+      <tr><td class="meta">Onset</td><td>${esc(String(last.onset_us ?? "—"))} µs · sample ${esc(String(last.onset_sample ?? "—"))}</td></tr>
+      <tr><td class="meta">Guard</td><td><code>${esc(guard)}</code></td></tr>
+      <tr><td class="meta">Hazard</td><td>${esc(last.hazard_kind || last.hazard?.kind || "—")}</td></tr>
+    </tbody></table>`;
   }
 
   async function prototypeSoundOff(opts) {
@@ -1250,7 +1281,8 @@
     renderInstability(doc.field_instability || (doc.field_wave_tuner || {}).instability);
     renderPrototype(doc.field_antenna_prototype || doc.prototype);
     renderAudioQuality(doc);
-    renderHardware();
+    renderHardware(doc);
+    renderHazardOnset(doc);
   }
 
   function bindSignalsRefresh() {
@@ -1260,15 +1292,10 @@
       const btn = document.getElementById("signals-refresh");
       if (btn) btn.disabled = true;
       try {
-        await fetch("/api/field-antenna", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "cycle" }),
-          cache: "no-store",
-        });
-        const res = await fetch("/api/signals-field", { method: "POST", cache: "no-store" });
+        await fetch("/api/field", { method: "POST", cache: "no-store" });
+        const res = await fetch("/api/field", { cache: "no-store" });
         const doc = await res.json();
-        renderSignalsField(mergeSignalsPayload({ signals_field: doc }));
+        renderSignalsField(mergeSignalsPayload(doc));
         if (global.refresh) global.refresh();
       } catch (_) {
         if (global.refresh) global.refresh();

@@ -1729,7 +1729,7 @@
     <div class="brand">
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
-        <h1>NEXUS-Shield v7.9.0</h1>
+        <h1>NEXUS-Shield v7.9.1</h1>
         <div class="brand-sub" data-i18n="brand.sub">Hostess 7 · Dusty Midnight · MIT licensed</div>
       </div>
     </div>
@@ -1769,7 +1769,7 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.9.0</button>
+        <button type="button" id="nexus-update-btn" data-tip="When an update is available: pulls GitHub under github-update.lock (safe mid-update), runs stealth_install, then reloads this tab. Double-click blocked while lock held.">v7.9.1</button>
         <span id="nexus-update-detail">Checking GitHub…</span>
       </div>
     </div>
@@ -2575,6 +2575,11 @@
             <div class="meta" id="signals-audio-quality-meta">Validates real station audio vs flat tone</div>
             <div id="signals-audio-quality-table"></div>
           </div>
+          <div id="signals-hazard-panel" class="signals-radio-player" style="margin-top:10px;border-color:rgba(255,106,130,0.35);">
+            <div class="player-title">Hazard onset · proactive guard</div>
+            <div class="meta" id="signals-hazard-meta">microsecond shoot/buffer — from field</div>
+            <div id="signals-hazard-table"></div>
+          </div>
           <div id="signals-tri-panel" class="signals-radio-player" style="margin-top:10px;border-color:rgba(120,180,255,0.35);">
             <div class="player-title">3-field GPS compare → pinpoint</div>
             <div class="meta" id="signals-tri-meta">Gladstone · Escanaba · Marquette fields vs your GPS</div>
@@ -3309,14 +3314,14 @@
     let panelFetchInFlight = false;
 
     const TAB_LOAD_MODULES = {
-      command: { keys: ["field_command", "gatekeeper"], subs: { command: ["field_command"] } },
+      command: { keys: ["field_command", "gatekeeper", "lethal_enforcement"], subs: { command: ["field_command", "lethal_enforcement"] } },
       us: { keys: ["us_field"], subs: { us: ["us_field"] } },
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
       threats: { keys: ["home_protector", "host_attacks", "terror_spiderweb", "precision_field"], subs: { "home-protector": ["home_protector"], "host-attack": ["host_attacks"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["audio_train", "field_rf", "browser_awareness"], subs: { honor: ["browser_awareness"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency"], research: ["angel_research"] } },
       library: { keys: ["h7_library"], subs: { library: ["h7_library"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
-      signals: { keys: ["signals_field", "field_antenna", "field_radio"], subs: { signals: ["signals_field", "field_antenna", "field_radio"] } },
+      signals: { keys: ["signals_field", "field_antenna", "field_radio", "field_hardware", "field_hazard_onset"], subs: { signals: ["signals_field", "field_antenna", "field_radio", "field_hardware"] } },
       dns: { keys: ["field_dns"], subs: { dns: ["field_dns"] } },
       outside: { keys: ["field_outside_talk", "field_drive"], subs: { outside: ["field_outside_talk", "field_drive"] } },
     };
@@ -3346,6 +3351,9 @@
       if (key === "browser_awareness") return typeof val === "object" && (val.honorability != null || val.active_sites != null);
       if (key === "police_agency") return typeof val === "object" && (val.agencies != null || val.updated != null);
       if (key === "field_command") return typeof val === "object" && (val.updated != null || val.good_guy != null || val.pulse != null || val.motto != null);
+      if (key === "field_hardware") return typeof val === "object" && (val.schema === "field-hardware-probe/v1" || val.host != null);
+      if (key === "field_hazard_onset") return typeof val === "object" && (val.schema != null || val.panel != null || val.enabled != null);
+      if (key === "lethal_enforcement") return typeof val === "object" && (val.merciless != null || val.status != null || val.heaven_hell != null);
       if (key === "settings") return typeof val === "object" && Object.keys(val).length > 0;
       if (Array.isArray(val)) return true;
       if (typeof val === "object") return Object.keys(val).length > 0 || val.updated != null;
@@ -3426,7 +3434,7 @@
       if ($("hh-heaven-count")) $("hh-heaven-count").textContent = String(hh.heaven_count ?? 0);
       if ($("hh-hell-count")) $("hh-hell-count").textContent = String(hh.hell_count ?? 0);
       if ($("hh-rip-count")) $("hh-rip-count").textContent = String(hh.hell_chosen_count ?? 0);
-      refreshLethalBanner();
+      renderLethalFromField(data);
       const perm = cmd.packet_permission || {};
       const banner = $("command-permission-banner");
       if (banner) {
@@ -7933,31 +7941,27 @@
       }
     }
 
-    async function refreshLethalBanner() {
-      try {
-        const [lethalRes, h7Res] = await Promise.all([
-          fetch("/api/lethal-enforcement", { cache: "no-store" }),
-          fetch("/api/hostess7-lethal-insight", { cache: "no-store" }),
-        ]);
-        const lethalDoc = await lethalRes.json();
-        const h7Doc = await h7Res.json();
-        if ($("lethal-status")) {
-          $("lethal-status").textContent = lethalDoc.status || (lethalDoc.merciless ? "LETHAL" : "—");
-        }
-        const truth = h7Doc.last_insight?.truth_score;
-        if ($("h7-truth-score")) {
-          $("h7-truth-score").textContent = truth != null ? `${truth}%` : "—";
-        }
-      } catch (_) { /* panel may boot before APIs warm */ }
+    function renderLethalFromField(data) {
+      const lethalDoc = data?.lethal_enforcement || {};
+      const h7Doc = data?.hostess7_lethal_insight || {};
+      if ($("lethal-status")) {
+        $("lethal-status").textContent = lethalDoc.status || (lethalDoc.merciless ? "LETHAL" : "—");
+      }
+      const truth = h7Doc.last_insight?.truth_score;
+      if ($("h7-truth-score")) {
+        $("h7-truth-score").textContent = truth != null ? `${truth}%` : "—";
+      }
     }
 
     async function refresh() {
       panelFetchInFlight = true;
       updateTabLoadProgress(lastPanelData, { fetching: true });
       try {
-        const res = await fetch("/api/status", { cache: "no-store" });
+        let res = await fetch("/api/field", { cache: "no-store" });
+        if (!res.ok) res = await fetch("/api/status", { cache: "no-store" });
         const data = parsePanelJson(await res.text());
         panelFetchInFlight = false;
+        fieldLiveCount(data);
         paintPanel(data);
       } catch {
         panelFetchInFlight = false;

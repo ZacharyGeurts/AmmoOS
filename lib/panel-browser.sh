@@ -19,6 +19,99 @@ nexus_panel_app_url() {
   fi
 }
 
+nexus_panel_desired_version() {
+  local common="${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
+  [[ -f "$common" ]] || return 1
+  grep -o 'NEXUS_VERSION="[^"]*"' "$common" 2>/dev/null | head -1 | cut -d'"' -f2
+}
+
+nexus_panel_served_version() {
+  local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
+  local html
+  html="$(curl -sk --connect-timeout 2 "https://127.0.0.1:${port}/field" 2>/dev/null \
+    || curl -sk --connect-timeout 2 "http://127.0.0.1:${port}/field" 2>/dev/null)" || return 1
+  [[ -n "$html" ]] || return 1
+  grep -oE 'NEXUS-Shield v[0-9]+\.[0-9]+\.[0-9]+' <<<"$html" 2>/dev/null | head -1 | sed 's/.*v//'
+}
+
+nexus_panel_running_install_root() {
+  local line
+  line="$(pgrep -af 'threat-panel-http\.py' 2>/dev/null | head -1)" || return 1
+  [[ -n "$line" ]] || return 1
+  if [[ "$line" =~ threat-panel-http\.py[[:space:]]+[0-9]+[[:space:]]+([^[:space:]]+/panel) ]]; then
+    dirname "${BASH_REMATCH[1]}"
+    return 0
+  fi
+  awk '{
+    for (i = 1; i <= NF; i++) {
+      if ($i ~ /\/panel$/) { print $i; exit }
+    }
+  }' <<<"$line" | sed 's|/panel$||'
+}
+
+nexus_panel_stop() {
+  local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
+  pkill -f "threat-panel-http.py.*${port}" 2>/dev/null || true
+  if command -v fuser >/dev/null 2>&1; then
+    fuser -k "${port}/tcp" 2>/dev/null || true
+  fi
+  sleep 1
+}
+
+nexus_panel_pick_port() {
+  local want="${1:-$(nexus_panel_desired_version 2>/dev/null || true)}"
+  local primary="${NEXUS_THREAT_PANEL_PORT:-9477}"
+  local fallback="${NEXUS_THREAT_PANEL_FALLBACK_PORT:-9478}"
+  local served
+
+  if ! curl -sk --connect-timeout 1 "https://127.0.0.1:${primary}/field" >/dev/null 2>&1 \
+    && ! curl -sk --connect-timeout 1 "http://127.0.0.1:${primary}/field" >/dev/null 2>&1; then
+    printf '%s' "$primary"
+    return 0
+  fi
+
+  served="$(NEXUS_THREAT_PANEL_PORT="$primary" nexus_panel_served_version 2>/dev/null || true)"
+  if [[ -z "$want" || -z "$served" || "$served" == "$want" ]]; then
+    printf '%s' "$primary"
+    return 0
+  fi
+
+  nexus_panel_stop
+  served="$(NEXUS_THREAT_PANEL_PORT="$primary" nexus_panel_served_version 2>/dev/null || true)"
+  if [[ -z "$served" || "$served" == "$want" ]]; then
+    printf '%s' "$primary"
+    return 0
+  fi
+
+  nexus_log "WARN" "panel-browser" "PORT_FALLBACK primary=${primary} served=${served} want=${want} -> ${fallback}"
+  printf '%s' "$fallback"
+}
+
+nexus_panel_needs_restart() {
+  local want="${1:-$(nexus_panel_desired_version)}"
+  local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
+  local running_root served want_root
+
+  [[ -n "$want" ]] || return 0
+  want_root="${NEXUS_INSTALL_ROOT}"
+
+  if ! pgrep -f "threat-panel-http.py.*${port}" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  running_root="$(nexus_panel_running_install_root 2>/dev/null || true)"
+  if [[ -n "$running_root" && "$running_root" != "$want_root" ]]; then
+    return 0
+  fi
+
+  served="$(nexus_panel_served_version 2>/dev/null || true)"
+  if [[ -n "$served" && "$served" != "$want" ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
 nexus_panel_wait_ready() {
   local url="${1:-$(nexus_panel_url)}"
   local tries="${2:-30}"
@@ -55,11 +148,12 @@ nexus_panel_open_browser() {
   local ready_url
   ready_url="$(nexus_panel_app_url)"
 
-  if ! nexus_panel_wait_ready "$ready_url" 30; then
+  if ! nexus_panel_wait_ready "$ready_url" 45; then
+    nexus_panel_wait_ready "$url" 15 || true
     nexus_panel_wait_ready "${url%/field}/" 10 || true
   fi
-  if ! curl -sk --connect-timeout 1 "$url" >/dev/null 2>&1 \
-    && ! curl -sk --connect-timeout 1 "$ready_url" >/dev/null 2>&1; then
+  if ! curl -sk --connect-timeout 2 "$url" >/dev/null 2>&1 \
+    && ! curl -sk --connect-timeout 2 "$ready_url" >/dev/null 2>&1; then
     nexus_log "WARN" "panel-browser" "PANEL_NOT_READY url=${url}"
     return 1
   fi
@@ -69,8 +163,8 @@ nexus_panel_open_browser() {
     if [[ "$browser" == "xdg-open" ]]; then
       DISPLAY="${DISPLAY:-:0}" xdg-open "$url" >/dev/null 2>&1 &
     elif [[ "$browser" == "google-chrome-stable" || "$browser" == "google-chrome" || "$browser" == "chromium-browser" || "$browser" == "chromium" ]]; then
-      DISPLAY="${DISPLAY:-:0}" "$browser" --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
-        || DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
+      DISPLAY="${DISPLAY:-:0}" "$browser" --ignore-certificate-errors --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
+        || DISPLAY="${DISPLAY:-:0}" "$browser" --ignore-certificate-errors --new-window "$url" >/dev/null 2>&1 &
     elif [[ "$browser" == "firefox" ]]; then
       DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
     else
@@ -79,6 +173,7 @@ nexus_panel_open_browser() {
     fi
     opened=1
     nexus_log "INFO" "panel-browser" "FIELD_WINDOW_OPENED url=${url} via=${browser}"
+    echo "Opened NEXUS panel: ${url}"
     return 0
   done < <(nexus_panel_detect_browsers)
 
@@ -90,23 +185,20 @@ nexus_panel_open_help() {
   cat <<EOF
 NEXUS panel URL: ${url}
 
-Browser could not be opened automatically. Try one of these:
+Browser could not be opened automatically. Try one of:
 
   xdg-open '${url}'
   firefox '${url}'
-  google-chrome-stable '${url}'
+  google-chrome-stable --ignore-certificate-errors '${url}'
 
 Or use the CLI (no browser needed):
 
-  nexus status
-  nexus connections
-  nexus trust <ip> [label]
-  nexus block <ip> [--forever]
-  nexus unblock <ip>
+  ./bin/nexus status
+  ./bin/nexus test
 
 If the panel is offline:
 
-  sudo systemctl start nexus-genius.service
-  nexus panel --wait
+  ./nexus.sh --wait
+  ./nexus.sh --no-browser
 EOF
 }
