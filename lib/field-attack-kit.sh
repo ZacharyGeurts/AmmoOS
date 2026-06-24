@@ -397,11 +397,36 @@ nexus_field_attack_crush_hot() {
 }
 
 nexus_field_attack_auto_rekill() {
+  [[ "$(nexus_settings_get NEXUS_FIELD_AUTO_REKILL 2>/dev/null || echo "${NEXUS_FIELD_AUTO_REKILL:-1}")" == "1" ]] || return 0
   command -v python3 >/dev/null 2>&1 || return 1
   local script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
   [[ -f "$script" ]] || return 1
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     python3 "$script" auto-rekill 2>/dev/null
+}
+
+# Constant RE-KILL cycle — runs while hostile registry has entries (killed C2 / bad shit).
+# Throttled by default; kill-detect harm-signature changes bypass throttle.
+nexus_field_attack_rekill_cycle() {
+  local force="${1:-0}"
+  [[ "${NEXUS_FIELD_ATTACK_KIT:-1}" == "1" ]] || return 0
+  [[ "$(nexus_settings_get NEXUS_FIELD_AUTO_REKILL 2>/dev/null || echo "${NEXUS_FIELD_AUTO_REKILL:-1}")" == "1" ]] || return 0
+  local hostile_count
+  hostile_count="$(nexus_field_attack_count 2>/dev/null || echo 0)"
+  [[ "${hostile_count:-0}" -gt 0 ]] || return 0
+  if [[ "$force" != "1" ]]; then
+    local interval="${NEXUS_FIELD_REKILL_INTERVAL:-60}"
+    local stamp="${NEXUS_STATE_DIR}/rekill-cycle.stamp"
+    local now last
+    now="$(date +%s 2>/dev/null || echo 0)"
+    last="$(cat "$stamp" 2>/dev/null || echo 0)"
+    if [[ "$now" -gt 0 && "$last" -gt 0 && $((now - last)) -lt "$interval" ]]; then
+      return 0
+    fi
+    printf '%s' "$now" >"$stamp" 2>/dev/null || true
+  fi
+  nexus_field_attack_auto_rekill >/dev/null 2>&1 || true
+  nexus_field_attack_forever_kill_enforce >/dev/null 2>&1 || true
 }
 
 nexus_field_attack_autokill() {

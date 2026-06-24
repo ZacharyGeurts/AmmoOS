@@ -6,10 +6,10 @@
 
   let pfData = null;
   let mode = "global";
-  const state = { global: null, local: null, layer: null, markers: null };
+  const state = { global: null, local: null, markers: null, localExtentNm: 0, anchorLayer: null };
 
   const NM_PER_MM = 1e6;
-  const LOCAL_EXTENT_NM = 20 * NM_PER_MM; // ±20 mm local patch
+  const DEFAULT_EXTENT_NM = 20 * NM_PER_MM;
 
   function esc(s) {
     return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
@@ -32,17 +32,22 @@
     return `${sign}${abs} nm`;
   }
 
-  function gpsLabel(e) {
-    return [
-      e.lat_str || e.lat,
-      e.lon_str || e.lon,
-      `E${formatNm(e.enu_e_nm)}`,
-      `N${formatNm(e.enu_n_nm)}`,
-    ].join(" · ");
+  function resolveAnchor(data) {
+    const mk = global.NexusMap;
+    if (mk?.resolveAnchor) return mk.resolveAnchor(data);
+    return data?.anchor || { lat: 45.854, lon: -87.023, label: "Field default" };
   }
 
-  function makeEnuCrs(anchor) {
-    const centerNm = LOCAL_EXTENT_NM;
+  function localExtentNm(entities) {
+    const mk = global.NexusMap;
+    const ex = mk?.varianceExtents ? mk.varianceExtents(entities) : {};
+    const spread = Math.max(ex.varE || 0, ex.varN || 0, ex.varU || 0, DEFAULT_EXTENT_NM);
+    const padded = Math.max(DEFAULT_EXTENT_NM, spread * 1.6 + 5 * NM_PER_MM);
+    return Math.min(padded, 500 * NM_PER_MM);
+  }
+
+  function makeEnuCrs(extentNm) {
+    const centerNm = extentNm;
     return L.extend({}, L.CRS.Simple, {
       transformation: new L.Transformation(1 / (2 * centerNm), 0.5, -1 / (2 * centerNm), 0.5),
       scale(zoom) {
@@ -52,8 +57,8 @@
         return Math.log(scale * (2 * centerNm) / 256) / Math.LN2;
       },
       distance(p1, p2) {
-        const dx = (p1.lng - p2.lng);
-        const dy = (p1.lat - p2.lat);
+        const dx = p1.lng - p2.lng;
+        const dy = p1.lat - p2.lat;
         return Math.sqrt(dx * dx + dy * dy);
       },
       infinite: false,
@@ -86,25 +91,27 @@
     });
   }
 
+  function destroyLocalMap() {
+    if (state.local) {
+      state.local.remove();
+      state.local = null;
+    }
+    state.anchorLayer = null;
+  }
+
   function destroyMap() {
     if (state.global) {
       state.global.remove();
       state.global = null;
     }
-    if (state.local) {
-      state.local.remove();
-      state.local = null;
-    }
-    state.layer = null;
+    destroyLocalMap();
     state.markers = null;
   }
 
   function renderMarkers(map, entities, toLatLng) {
     if (!map) return;
     if (state.markers) state.markers.clearLayers();
-    else {
-      state.markers = L.layerGroup().addTo(map);
-    }
+    else state.markers = L.layerGroup().addTo(map);
     entities.forEach((e) => {
       if (!e.placed && e.lat == null) return;
       const m = L.marker(toLatLng(e), { icon: precisionIcon(e), riseOnHover: true })
@@ -121,69 +128,60 @@
     });
   }
 
+  function primeEl(el, map) {
+    const mk = global.NexusMap;
+    if (mk?.primeMapPanel) mk.primeMapPanel(el, map);
+    else map?.invalidateSize();
+  }
+
   function ensureGlobalMap() {
     const el = document.getElementById("precision-global-map");
     if (!el || typeof L === "undefined") return null;
     if (state.global) return state.global;
-    el.classList.add("host-map-booting");
-    state.global = L.map(el, {
-      center: [20, 0],
-      zoom: 3,
-      minZoom: 1,
-      maxZoom: 22,
-      worldCopyJump: true,
-    });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OSM &copy; CARTO",
-      subdomains: "abcd",
-      maxZoom: 22,
-    }).addTo(state.global);
-    setTimeout(() => {
-      el.classList.remove("host-map-booting");
-      el.classList.add("host-map-ready");
-      state.global.invalidateSize();
-    }, 100);
+    const mk = global.NexusMap;
+    state.global = mk
+      ? mk.create(el, { center: [20, 0], zoom: 3, minZoom: 1, maxZoom: 22 })
+      : L.map(el, { center: [20, 0], zoom: 3, minZoom: 1, maxZoom: 22, scrollWheelZoom: true });
+    (mk ? mk.darkTileLayer(L) : L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      { attribution: "&copy; OSM &copy; CARTO", subdomains: "abcd", maxZoom: 22 },
+    )).addTo(state.global);
+    primeEl(el, state.global);
     return state.global;
   }
 
-  function ensureLocalMap(anchor) {
+  function ensureLocalMap(anchor, extentNm) {
     const el = document.getElementById("precision-local-map");
     if (!el || typeof L === "undefined") return null;
-    if (state.local) return state.local;
-    const crs = makeEnuCrs(anchor);
-    el.classList.add("host-map-booting");
-    state.local = L.map(el, {
+    if (state.local && state.localExtentNm === extentNm) return state.local;
+    destroyLocalMap();
+    state.localExtentNm = extentNm;
+    const crs = makeEnuCrs(extentNm);
+    const mk = global.NexusMap;
+    const localOpts = {
       crs,
       center: [0, 0],
       zoom: 14,
       minZoom: 8,
       maxZoom: 28,
-      maxBounds: L.latLngBounds(
-        [-LOCAL_EXTENT_NM, -LOCAL_EXTENT_NM],
-        [LOCAL_EXTENT_NM, LOCAL_EXTENT_NM],
-      ),
+      maxBounds: L.latLngBounds([-extentNm, -extentNm], [extentNm, extentNm]),
       maxBoundsViscosity: 0.85,
-    });
+    };
+    state.local = mk ? mk.create(el, localOpts) : L.map(el, Object.assign({ scrollWheelZoom: true }, localOpts));
     L.rectangle(
-      [
-        [-LOCAL_EXTENT_NM, -LOCAL_EXTENT_NM],
-        [LOCAL_EXTENT_NM, LOCAL_EXTENT_NM],
-      ],
+      [[-extentNm, -extentNm], [extentNm, extentNm]],
       { color: "#4d9bff", weight: 1, fillOpacity: 0.03 },
     ).addTo(state.local);
+    const axis = anchor?.dominant_axis || "u";
     L.marker([0, 0], {
       icon: L.divIcon({
         className: "pf-anchor",
-        html: '<span style="color:#d4af37;font-size:0.6rem">ANCHOR</span>',
-        iconSize: [48, 14],
-        iconAnchor: [24, 7],
+        html: `<span style="color:#d4af37;font-size:0.6rem">ANCHOR · ${esc(axis.toUpperCase())}</span>`,
+        iconSize: [72, 14],
+        iconAnchor: [36, 7],
       }),
     }).addTo(state.local).bindTooltip(esc(anchor?.label || "Operator anchor"), { permanent: false });
-    setTimeout(() => {
-      el.classList.remove("host-map-booting");
-      el.classList.add("host-map-ready");
-      state.local.invalidateSize();
-    }, 100);
+    primeEl(el, state.local);
     return state.local;
   }
 
@@ -192,11 +190,13 @@
     const stats = document.getElementById("precision-map-stats");
     const s = pfData?.stats || {};
     const g = pfData?.gps || {};
+    const anchor = resolveAnchor(pfData || {});
     if (meta) {
       meta.textContent = [
         pfData?.tagline || "",
         g.resolution_nm ? `LSB ${g.resolution_nm} nm` : "",
-        pfData?.anchor?.label ? `anchor ${pfData.anchor.label}` : "",
+        anchor.label ? `anchor ${anchor.label}` : "",
+        anchor.dominant_axis ? `dominant ${anchor.dominant_axis.toUpperCase()}` : "",
       ].filter(Boolean).join(" · ");
     }
     if (stats) {
@@ -208,6 +208,33 @@
     }
   }
 
+  function fitGlobalView(map, entities, anchor) {
+    const mk = global.NexusMap;
+    const latlngs = (entities || [])
+      .filter((e) => e.lat != null && e.lon != null)
+      .map((e) => [Number(e.lat), Number(e.lon)]);
+    if (anchor?.lat != null && anchor?.lon != null) latlngs.push([anchor.lat, anchor.lon]);
+    if (latlngs.length > 1 && mk?.fitLatLngs) {
+      mk.fitLatLngs(map, latlngs, { pad: 0.2, maxZoom: 14 });
+    } else if (anchor?.lat != null && mk?.flyToAnchor) {
+      mk.flyToAnchor(map, anchor, { zoom: latlngs.length ? 10 : 12 });
+    } else if (anchor?.lat != null) {
+      map.flyTo([anchor.lat, anchor.lon], 12, { duration: 0.75 });
+    }
+  }
+
+  function fitLocalView(map, entities) {
+    const pts = (entities || [])
+      .filter((e) => e.enu_e_nm != null || e.enu_n_nm != null)
+      .map(enuLatLng);
+    if (pts.length < 2) {
+      map.setView([0, 0], 16);
+      return;
+    }
+    const bounds = L.latLngBounds(pts);
+    if (bounds.isValid()) map.fitBounds(bounds.pad(0.25), { maxZoom: 22, animate: true });
+  }
+
   function setMode(next) {
     mode = next;
     document.querySelectorAll(".pf-map-tab").forEach((b) => {
@@ -216,24 +243,25 @@
     document.getElementById("precision-global-map")?.classList.toggle("active", next === "global");
     document.getElementById("precision-local-map")?.classList.toggle("active", next === "local");
     const entities = pfData?.entities || [];
+    const anchor = resolveAnchor(pfData || {});
+    const extent = localExtentNm(entities);
     if (next === "global") {
       const map = ensureGlobalMap();
       renderMarkers(map, entities, globalLatLng);
-      if (pfData?.anchor?.lat != null) {
-        map.flyTo([pfData.anchor.lat, pfData.anchor.lon], 14, { duration: 0.8 });
-      }
-      setTimeout(() => map?.invalidateSize(), 80);
+      fitGlobalView(map, entities, anchor);
+      primeEl(document.getElementById("precision-global-map"), map);
     } else {
-      const map = ensureLocalMap(pfData?.anchor || {});
+      const map = ensureLocalMap(anchor, extent);
       renderMarkers(map, entities, enuLatLng);
-      map.setView([0, 0], 16);
-      setTimeout(() => map?.invalidateSize(), 80);
+      fitLocalView(map, entities);
+      primeEl(document.getElementById("precision-local-map"), map);
     }
   }
 
   function renderPrecisionMap(data) {
     pfData = data || pfData;
     if (!pfData) return;
+    if (pfData.anchor) pfData.anchor = resolveAnchor(pfData);
     renderMeta();
     setMode(mode);
   }
@@ -276,14 +304,13 @@
       renderPrecisionMap(await res.json());
     });
     document.getElementById("precision-map-refocus")?.addEventListener("click", () => {
-      if (mode === "global" && state.global && pfData?.anchor) {
-        state.global.flyTo([pfData.anchor.lat, pfData.anchor.lon], 17, { duration: 0.9 });
+      const entities = pfData?.entities || [];
+      const anchor = resolveAnchor(pfData || {});
+      if (mode === "global" && state.global) {
+        fitGlobalView(state.global, entities, anchor);
       } else if (state.local) {
-        state.local.setView([0, 0], 20);
+        fitLocalView(state.local, entities);
       }
-    });
-    document.getElementById("precision-local-map")?.addEventListener("click", (ev) => {
-      if (ev.target.closest?.(".pf-place-mode.active")) return;
     });
     document.getElementById("precision-place-toggle")?.addEventListener("click", (ev) => {
       ev.target.classList.toggle("active");
@@ -296,8 +323,16 @@
   }
 
   function invalidatePrecisionMap() {
-    state.global?.invalidateSize();
-    state.local?.invalidateSize();
+    const mk = global.NexusMap;
+    const gEl = document.getElementById("precision-global-map");
+    const lEl = document.getElementById("precision-local-map");
+    if (mk) {
+      if (state.global) primeEl(gEl, state.global);
+      if (state.local) primeEl(lEl, state.local);
+    } else {
+      state.global?.invalidateSize();
+      state.local?.invalidateSize();
+    }
   }
 
   if (document.readyState === "loading") {

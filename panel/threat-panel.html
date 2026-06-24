@@ -19,32 +19,36 @@
   <script src="/assets/h7-reader.js"></script>
   <script defer src="/assets/nexus-plugin-runtime.js"></script>
   <script defer src="/assets/plugins/tab-beacon.js"></script>
+  <script defer src="/assets/leaflet/leaflet.js"></script>
+  <script defer src="/assets/nexus-map.js"></script>
   <script defer src="/assets/terror-spiderweb.js"></script>
   <script defer src="/assets/thermal-earth.js"></script>
   <script defer src="/assets/precision-map.js"></script>
   <script defer src="/assets/precision-spiderweb.js"></script>
   <link rel="stylesheet" href="/assets/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="/assets/nexus-theme.css" />
   <link rel="preload" href="/assets/sdf/manifest.json" as="fetch" crossorigin />
   <style>
     :root {
       --text-base: 18px;
       --text-sm: 0.8125rem;
       --text-xs: 0.75rem;
-      --bg: #080a10;
-      --bg-accent: #0d1220;
-      --panel: #12151d;
-      --card: #141a26;
-      --border: #2a3040;
-      --text: #e8ecf4;
-      --muted: #9aa8be;
-      --internet: #4d9bff;
-      --threat: #ff5c7a;
-      --gold: #d4af37;
-      --ok: #3dd68c;
-      --murder: #ff0033;
-      --glow: rgba(61, 139, 253, 0.15);
+      --bg: #010204;
+      --bg-accent: #040810;
+      --panel: #080c14;
+      --card: #0c121c;
+      --border: #4a5a78;
+      --text: #f8fbff;
+      --muted: #c8d6ea;
+      --internet: #88c8ff;
+      --threat: #ff7a98;
+      --gold: #f0d060;
+      --ok: #5af8aa;
+      --murder: #ff2858;
+      --glow: rgba(136, 200, 255, 0.32);
       --radius: 10px;
-      --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+      --map-bg: #03060c;
     }
     .murder-banner {
       display: none;
@@ -211,9 +215,10 @@
       border: 1px solid var(--border); background: #0d1524; color: var(--muted); cursor: pointer;
     }
     .sw-map-tab.active { color: var(--text); border-color: #4d9bff; background: rgba(77, 155, 255, 0.12); }
-    .sw-map-panel { display: none; width: 100%; height: min(52vh, 520px); min-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); background: #060a14; position: relative; }
+    .sw-map-stack { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .sw-map-panel { display: none; background: var(--map-bg); position: relative; }
     .sw-map-panel.active { display: block; }
-    #spiderweb-map.sw-map-panel.active { display: block; }
+    .map-viewport .sw-map-panel.active { display: block; }
     .thermal-globe-wrap { display: none; height: min(36vh, 320px); min-height: 220px; padding: 0; overflow: hidden; }
     .thermal-globe-wrap.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
     #thermal-globe-3d { width: 100%; height: calc(100% - 28px); display: block; }
@@ -222,8 +227,10 @@
     .precision-motto { font-size: 0.82rem; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
     .pf-map-tab, .pf-web-tab { font-size: 0.68rem; padding: 6px 12px; margin-right: 6px; border: 1px solid var(--border); border-radius: 6px; background: #0d1524; color: var(--muted); cursor: pointer; }
     .pf-map-tab.active, .pf-web-tab.active { border-color: var(--gold); color: var(--gold); }
-    .pf-map-panel { display: none; width: 100%; height: min(52vh, 520px); min-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); background: #060a14; position: relative; }
+    .pf-map-stack { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .pf-map-panel { display: none; background: var(--map-bg); position: relative; }
     .pf-map-panel.active { display: block; }
+    .map-viewport .pf-map-panel.active { display: block; }
     #precision-web-canvas-wrap { display: none; width: 100%; height: min(48vh, 480px); min-height: 280px; border-radius: var(--radius); border: 1px solid var(--border); background: #060a14; position: relative; }
     #precision-web-canvas-wrap.active { display: block; }
     #precision-web-canvas { width: 100%; height: 100%; display: block; }
@@ -519,47 +526,15 @@
     .human-malware-chip.asyncrat { border-color: #5a4020; color: #ffc878; }
     .human-malware-chip.havoc { border-color: #4a2060; color: #d8b0ff; }
     .human-malware-chip.remcos { border-color: #503040; color: #ffb0d0; }
-    .us-wrap { padding: 16px 24px 32px; width: 100%; max-width: none; }
-    .us-motto {
-      margin: 0 0 16px; padding: 16px 20px; border-radius: 10px;
-      background: linear-gradient(135deg, #0a1424 0%, #101828 55%, #14102a 100%);
-      border: 1px solid #2a4868; font-size: 1.05rem; line-height: 1.65; color: #d0e4ff;
-    }
-    .us-motto .us-lead { margin: 8px 0 0; font-size: 1rem; color: #b8cce8; }
-    .us-motto strong { color: #7ec8ff; letter-spacing: 0.04em; font-size: 1.12rem; }
-    .us-meta-line { font-size: 0.95rem !important; margin-bottom: 14px !important; }
-    .us-observations {
-      margin: 0 0 20px; padding: 16px 18px; border-radius: 10px;
-      background: #0c121c; border: 1px solid #1e3048; font-size: 1rem; line-height: 1.65;
-    }
-    .us-observations h3 {
-      margin: 0 0 14px; font-size: 0.95rem; color: var(--internet);
-      letter-spacing: 0.06em; text-transform: uppercase;
-    }
-    .us-rundown { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px 16px; }
+    .us-rundown { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 14px; }
     .us-rundown-item {
-      padding: 12px 14px; border-radius: 8px; background: #0a1018;
-      border: 1px solid #1a2838; min-width: 0;
+      padding: 12px 14px; border-radius: 8px; background: var(--bg-accent);
+      border: 1px solid rgba(74, 90, 120, 0.45); min-width: 0;
     }
     .us-rundown-item h4 {
-      margin: 0 0 6px; font-size: 0.88rem; color: var(--gold); font-weight: 700;
-      letter-spacing: 0.02em;
+      margin: 0 0 6px; font-size: 0.86rem; color: var(--gold); font-weight: 700;
     }
-    .us-rundown-item p { margin: 0; font-size: 1rem; color: var(--text); line-height: 1.6; }
-    .us-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; margin-bottom: 18px;
-    }
-    .us-card {
-      padding: 14px 16px; border-radius: 8px; background: #0e1218; border: 1px solid #1e2838;
-      font-size: 0.95rem; line-height: 1.55; min-width: 0;
-    }
-    .us-card h4 {
-      margin: 0 0 10px; font-size: 0.88rem; letter-spacing: 0.06em; text-transform: uppercase;
-      color: var(--internet); border-bottom: 1px solid #1a2430; padding-bottom: 8px;
-    }
-    .us-kv { display: grid; grid-template-columns: minmax(110px, 32%) 1fr; gap: 6px 12px; }
-    .us-kv dt { color: var(--muted); margin: 0; font-size: 0.92rem; }
-    .us-kv dd { margin: 0; word-break: break-word; font-family: ui-monospace, monospace; font-size: 0.9rem; }
+    .us-rundown-item p { margin: 0; font-size: 0.94rem; color: var(--text); line-height: 1.6; }
     .us-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 8px; }
     .us-table th, .us-table td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #1a2430; }
     .us-table th { color: var(--muted); font-weight: 600; }
@@ -759,10 +734,18 @@
       flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
       background: #0d1520; color: var(--text); font-size: 0.72rem;
     }
-    .library-search-row button, .library-upload-btn, .library-fetch-btn {
+    .library-search-row button, .library-upload-btn {
       padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
       background: #1a2430; color: var(--text); cursor: pointer; font-size: 0.68rem;
     }
+    .library-sync-bar { font-size: 0.64rem; color: var(--muted); padding: 6px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .library-sync-bar .same { color: var(--ok); }
+    .library-sync-bar .changed { color: var(--gold); }
+    .library-covers { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+    .library-cover-card { width: 110px; text-align: center; }
+    .library-cover-card img { width: 100%; border-radius: 6px; border: 1px solid var(--border); background: #0a1018; min-height: 140px; object-fit: cover; }
+    .library-cover-card span { display: block; font-size: 0.58rem; color: var(--muted); margin-top: 4px; }
+    .library-ein { font-size: 0.66rem; color: var(--internet); margin-top: 6px; word-break: break-all; }
     .library-dewey { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: rgba(8,14,24,0.6); max-height: 220px; overflow: auto; }
     .library-dewey-btn {
       display: flex; justify-content: space-between; width: 100%; text-align: left; margin-bottom: 6px;
@@ -789,8 +772,7 @@
       background: #0d1520; color: var(--text); font-size: 0.72rem;
     }
     .library-upload-panel textarea { min-height: 120px; resize: vertical; }
-    .library-linkable { font-size: 0.66rem; color: var(--muted); max-height: 140px; overflow: auto; }
-    .library-link-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid #1a2430; }
+
     .h7r-overlay { position: fixed; inset: 0; z-index: 99990; background: rgba(0,0,0,0.92); display: none; }
     .h7r-overlay.open { display: flex; }
     .h7r-shell { position: relative; flex: 1; display: flex; flex-direction: column; width: 100%; height: 100%; }
@@ -1199,10 +1181,10 @@
       box-shadow: inset 0 0 60px rgba(20, 60, 120, 0.15);
     }
     #host-earth-map {
-      width: 100%; height: 520px; min-height: 340px; z-index: 1;
-      background: #060a14;
+      width: 100%; height: 100%; min-height: 0; z-index: 1;
+      background: var(--map-bg);
     }
-    #host-earth-map.host-map-ready { background: #060a14; }
+    #host-earth-map.host-map-ready { background: var(--map-bg); }
     #host-earth-map.host-map-booting::after {
       content: "Loading globe…"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
       color: var(--muted); font-size: 0.78rem; pointer-events: none; background: rgba(6, 10, 20, 0.35);
@@ -1578,16 +1560,24 @@
 
   <section id="view-us" class="view">
     <div class="us-wrap">
-      <p class="us-motto" id="us-motto"><strong>US · Page 1</strong><span class="us-lead">This machine, known personally — every fact from local field tools only.</span></p>
-      <div id="us-meta" class="meta us-meta-line">Sampling local field…</div>
-      <div id="us-observations" class="us-observations"><h3>Plain-English rundown</h3><div class="us-rundown"><div class="us-rundown-item"><p>Gathering ss · ip · proc · NEXUS state…</p></div></div></div>
-      <div class="us-grid" id="us-grid">
-        <div class="us-card"><h4>Identity</h4><div id="us-identity">Loading…</div></div>
-        <div class="us-card us-net-wide"><h4>Network</h4><div id="us-network">Loading…</div></div>
-        <div class="us-card"><h4>Socket posture</h4><div id="us-sockets">Loading…</div></div>
-        <div class="us-card"><h4>Gatekeeper</h4><div id="us-gatekeeper">Loading…</div></div>
-        <div class="us-card"><h4>Trust posture</h4><div id="us-trust">Loading…</div></div>
-        <div class="us-card"><h4>Field storage</h4><div id="us-storage">Loading…</div></div>
+      <header class="us-hero" id="us-motto">
+        <h1 class="us-title">US · Page 1</h1>
+        <p class="us-subtitle" id="us-subtitle">This machine, known personally — every fact from local field tools only.</p>
+        <div id="us-meta" class="us-stats-bar">Sampling local field…</div>
+        <div id="us-pills" class="us-hero-status"></div>
+      </header>
+      <section id="us-observations" class="us-rundown-panel"><h3>Plain-English rundown</h3><div class="us-rundown"><div class="us-rundown-item"><p>Gathering ss · ip · proc · NEXUS state…</p></div></div></section>
+      <div class="us-dashboard" id="us-grid">
+        <div class="us-main">
+          <article class="us-card us-card--network"><h4>Live connections</h4><div id="us-network">Loading…</div></article>
+        </div>
+        <aside class="us-sidebar">
+          <article class="us-card us-card--identity"><h4>Identity</h4><div id="us-identity">Loading…</div></article>
+          <article class="us-card"><h4>Socket posture</h4><div id="us-sockets">Loading…</div></article>
+          <article class="us-card"><h4>Gatekeeper</h4><div id="us-gatekeeper">Loading…</div></article>
+          <article class="us-card"><h4>Trust posture</h4><div id="us-trust">Loading…</div></article>
+          <article class="us-card"><h4>Field storage</h4><div id="us-storage">Loading…</div></article>
+        </aside>
       </div>
       <div class="us-crossrefs">
         <button type="button" data-view-jump="command">Command deck →</button>
@@ -1871,7 +1861,7 @@
     <div class="library-layout">
       <div class="library-sidebar">
         <div class="library-search-row">
-          <input type="search" id="library-search" placeholder="Search title, author, Dewey…" autocomplete="off">
+          <input type="search" id="library-search" placeholder="Search title, author, EIN, ISBN, Dewey…" autocomplete="off">
           <button type="button" id="library-search-btn">Search</button>
         </div>
         <div class="library-dewey" id="library-dewey"></div>
@@ -1884,6 +1874,9 @@
           <button type="button" class="library-open-btn" id="library-open-reader" disabled>Open full-screen reader</button>
           <button type="button" class="library-upload-btn" id="library-upload-toggle">Upload to Dewey shelf</button>
         </div>
+        <div class="library-sync-bar" id="library-sync-bar"></div>
+        <div class="library-covers" id="library-covers"></div>
+        <div class="library-ein" id="library-ein"></div>
         <div class="library-upload-panel" id="library-upload-panel">
           <input type="text" id="library-upload-title" placeholder="Title">
           <input type="text" id="library-upload-author" placeholder="Author">
@@ -1891,7 +1884,6 @@
           <textarea id="library-upload-text" placeholder="Paste plain text — compressed to H7 on field drive"></textarea>
           <button type="button" class="library-upload-btn" id="library-upload-submit">Pack H7 → Dewey folder</button>
         </div>
-        <div class="library-linkable" id="library-linkable"></div>
       </div>
     </div>
   </section>
@@ -1954,7 +1946,9 @@
             <button type="button" id="ha-fit-all" data-tip="Zoom map to fit all threat dots.">Fit all</button>
             <button type="button" id="ha-reset-globe" data-tip="Reset to full-world view.">World view</button>
           </div>
-          <div id="host-earth-map" role="application" aria-label="SDF wireframe world map with infinite zoom and GPS pushpins"></div>
+          <div class="map-viewport map-viewport--host">
+            <div id="host-earth-map" role="application" aria-label="SDF wireframe world map with infinite zoom and GPS pushpins"></div>
+          </div>
           <div class="host-map-trash" id="host-map-trash" title="Close a pin dossier — it flies here. Empties dismissed targets from the map.">
             🗑️<span class="trash-count" id="host-trash-count">0</span>
           </div>
@@ -1998,13 +1992,15 @@
         <button type="button" class="sw-map-tab" data-sw-map="mobile" role="tab">Mobile & battery field</button>
         <button type="button" class="sw-map-tab" data-sw-map="thermal" role="tab" data-tip="SDF temperature Earth — top-down + 3D globe. Every warm and cold body.">Earth · Temperature</button>
       </div>
-      <div id="spiderweb-map" class="sw-map-panel active" role="application" aria-label="Global terror spiderweb map"></div>
-      <div id="spiderweb-registry-map" class="sw-map-panel" role="application" aria-label="Universal registry map — all placed homes and internet"></div>
-      <div id="spiderweb-mobile-map" class="sw-map-panel" role="application" aria-label="Mobile and battery field map"></div>
-      <div id="spiderweb-thermal-map" class="sw-map-panel" role="application" aria-label="Thermal Earth top-down SDF temperature map"></div>
-      <div id="thermal-globe-3d-wrap" class="sw-map-panel thermal-globe-wrap" aria-label="Thermal Earth 3D SDF globe">
-        <canvas id="thermal-globe-3d"></canvas>
-        <div class="thermal-globe-caption meta">TRUE REALITY MODEL — 3D SDF thermal globe · LOCAL NOW active physics</div>
+      <div class="sw-map-stack map-viewport map-viewport--spiderweb">
+        <div id="spiderweb-map" class="sw-map-panel active" role="application" aria-label="Global terror spiderweb map"></div>
+        <div id="spiderweb-registry-map" class="sw-map-panel" role="application" aria-label="Universal registry map — all placed homes and internet"></div>
+        <div id="spiderweb-mobile-map" class="sw-map-panel" role="application" aria-label="Mobile and battery field map"></div>
+        <div id="spiderweb-thermal-map" class="sw-map-panel" role="application" aria-label="Thermal Earth top-down SDF temperature map"></div>
+        <div id="thermal-globe-3d-wrap" class="sw-map-panel thermal-globe-wrap" aria-label="Thermal Earth 3D SDF globe">
+          <canvas id="thermal-globe-3d"></canvas>
+          <div class="thermal-globe-caption meta">TRUE REALITY MODEL — 3D SDF thermal globe · LOCAL NOW active physics</div>
+        </div>
       </div>
       <div id="thermal-earth-meta" class="meta" style="margin:8px 0;">Thermal Earth loading…</div>
       <div id="thermal-earth-stats" class="spiderweb-stats"></div>
@@ -2045,8 +2041,10 @@
         <button type="button" id="precision-map-refocus" class="ghost">Zoom anchor</button>
         <button type="button" id="precision-place-toggle" class="ghost" data-tip="Click local map to place entity at sub-micron ENU offset.">Place mode</button>
       </div>
-      <div id="precision-global-map" class="pf-map-panel active" role="application" aria-label="Precision global map"></div>
-      <div id="precision-local-map" class="pf-map-panel" role="application" aria-label="Precision local ENU nanometer map"></div>
+      <div class="pf-map-stack map-viewport map-viewport--precision">
+        <div id="precision-global-map" class="pf-map-panel active" role="application" aria-label="Precision global map"></div>
+        <div id="precision-local-map" class="pf-map-panel" role="application" aria-label="Precision local ENU nanometer map"></div>
+      </div>
     </div>
   </section>
 
@@ -2300,7 +2298,6 @@
     </div>
   </section>
 
-  <script defer src="/assets/leaflet/leaflet.js" id="leaflet-js"></script>
   <script defer src="/assets/sdf-render.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -2826,6 +2823,7 @@
     function onSubViewActivated(sub) {
       if (sub === "logs") loadLog(currentLog);
       if (sub === "host-attack") {
+        hostMapNeedsFit = true;
         ensureHostEarthMap();
         invalidateHostMapSize();
         requestAnimationFrame(invalidateHostMapSize);
@@ -3590,9 +3588,10 @@
     }
 
     let libraryBookId = null;
-    let libraryCatalog = { books: [], shelves: [], linkable: [], fonts: [] };
+    let libraryCatalog = { books: [], shelves: [], fonts: [] };
     let libraryDeweyFilter = null;
     let librarySearchMode = false;
+    let libraryFingerprint = null;
 
     function renderModemLights(modem) {
       const m = modem || {};
@@ -3681,7 +3680,7 @@
       if (!books.length) {
         shelf.innerHTML = librarySearchMode
           ? '<div class="empty">No matches — try another search or browse Dewey shelves.</div>'
-          : '<div class="empty">No books in this Dewey shelf — upload or fetch from catalog.</div>';
+          : '<div class="empty">No books in this Dewey shelf — upload to field drive.</div>';
         return;
       }
       shelf.innerHTML = books.map((b) =>
@@ -3710,28 +3709,52 @@
         book?.char_count ? `${book.char_count.toLocaleString()} chars` : "",
         book?.format || "",
       ].filter(Boolean).join(" · ");
+      const einEl = $("library-ein");
+      if (einEl) {
+        const parts = [
+          book?.ein ? `EIN ${book.ein}` : "",
+          book?.isbn_13 ? `ISBN-13 ${book.isbn_13}` : "",
+          book?.isbn_10 ? `ISBN-10 ${book.isbn_10}` : "",
+          book?.gutenberg_id ? `GUT ${book.gutenberg_id}` : "",
+          book?.publisher || "",
+          book?.published_year ? String(book.published_year) : "",
+        ].filter(Boolean);
+        einEl.textContent = parts.length ? parts.join(" · ") : "Bibliography on field drive — librarian indexing…";
+      }
+      renderLibraryCovers(book);
       const openBtn = $("library-open-reader");
       if (openBtn) openBtn.disabled = !book?.ready;
     }
 
-    function renderLibraryLinkable(lib) {
-      const el = $("library-linkable");
+    function renderLibraryCovers(book) {
+      const el = $("library-covers");
+      if (!el || !book) { if (el) el.innerHTML = ""; return; }
+      const sides = [
+        { key: "front", label: "Front cover" },
+        { key: "back", label: "Back cover" },
+      ];
+      el.innerHTML = sides.map(({ key, label }) => {
+        const url = book.covers?.[key]?.url || `/api/library/cover?book=${encodeURIComponent(book.id)}&side=${key}`;
+        return `<div class="library-cover-card">
+          <img src="${esc(url)}" alt="${esc(label)}" loading="lazy">
+          <span>${esc(label)}</span>
+        </div>`;
+      }).join("");
+    }
+
+    function renderLibrarySyncBar(lib) {
+      const el = $("library-sync-bar");
       if (!el) return;
-      const rows = (lib?.linkable || []).slice(0, 24);
-      if (!rows.length) {
-        el.innerHTML = "";
-        return;
-      }
-      el.innerHTML = `<div style="margin-bottom:6px;color:var(--gold);font-size:0.68rem;">Fetch from best libraries → H7 on field drive</div>`
-        + rows.map((b) =>
-          `<div class="library-link-row">
-            <span>${esc(b.title)} <em style="color:var(--muted)">· ${esc(b.author || "")}</em></span>
-            <button type="button" class="library-fetch-btn" data-fetch-id="${esc(b.id)}">Retrieve H7</button>
-          </div>`
-        ).join("");
-      el.querySelectorAll("[data-fetch-id]").forEach((btn) => {
-        btn.addEventListener("click", () => fetchLibraryBook(btn.dataset.fetchId, btn));
-      });
+      const fp = lib?.field_fingerprint || "—";
+      const same = !!lib?.unchanged;
+      const touched = lib?.last_touched || "";
+      const touchedSame = lib?.last_touched_same !== false;
+      const libName = lib?.librarian?.name || "Hostess7 Librarian";
+      el.innerHTML = `
+        <span><strong>${esc(libName)}</strong> · field drive only</span>
+        <span class="${same ? "same" : "changed"}">${same ? "Field exact same" : "Field updated"} · sig ${esc(fp)}</span>
+        ${touched ? `<span class="${touchedSame ? "same" : "changed"}">Last touched: ${esc(touched)}${touchedSame ? " (unchanged)" : " (changed)"}</span>` : ""}
+        <span>${(lib?.ready_count || 0)} books · ${(lib?.librarian?.isbn_count || 0)} ISBN</span>`;
     }
 
     function renderLibraryUploadDewey(lib) {
@@ -3744,17 +3767,26 @@
     }
 
     function renderLibrary(lib) {
+      if (lib?.unchanged && lib.field_fingerprint && lib.field_fingerprint === libraryFingerprint) {
+        return;
+      }
+      libraryFingerprint = lib?.field_fingerprint || libraryFingerprint;
       libraryCatalog = {
         books: lib?.books || [],
         shelves: lib?.shelves || [],
-        linkable: lib?.linkable || [],
         fonts: lib?.fonts || [],
+        librarian: lib?.librarian || {},
+        field_fingerprint: lib?.field_fingerprint,
+        unchanged: lib?.unchanged,
+        last_touched: lib?.last_touched,
+        last_touched_same: lib?.last_touched_same,
+        ready_count: lib?.ready_count,
         searchHits: libraryCatalog.searchHits || [],
       };
       if (window.H7Reader?.setFonts) H7Reader.setFonts(libraryCatalog.fonts);
+      renderLibrarySyncBar(lib);
       renderLibraryDewey(lib);
       renderLibraryShelf(lib);
-      renderLibraryLinkable(lib);
       renderLibraryUploadDewey(lib);
       if (libraryBookId) selectLibraryBook(libraryBookId);
     }
@@ -3782,31 +3814,6 @@
       }
     }
 
-    async function fetchLibraryBook(bookId, btn) {
-      if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
-      try {
-        const res = await fetch("/api/library/fetch", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ book_id: bookId }),
-        });
-        const data = await res.json();
-        if (!data.ok) throw new Error(data.error || "fetch_failed");
-        const catRes = await fetch("/api/library/catalog", { cache: "no-store" });
-        const cat = await catRes.json();
-        renderLibrary(cat);
-        if (data.id) selectLibraryBook(data.id);
-      } catch (err) {
-        if (btn) btn.textContent = "Failed";
-        console.warn("library fetch", err);
-      } finally {
-        if (btn && btn.textContent === "Fetching…") {
-          btn.disabled = false;
-          btn.textContent = "Retrieve H7";
-        }
-      }
-    }
-
     async function uploadLibraryBook() {
       const title = $("library-upload-title")?.value?.trim();
       const author = $("library-upload-author")?.value?.trim() || "";
@@ -3823,8 +3830,8 @@
         });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || "upload_failed");
-        const catRes = await fetch("/api/library/catalog", { cache: "no-store" });
-        renderLibrary(await catRes.json());
+        libraryFingerprint = null;
+        renderLibrary(lastPanelData?.h7_library || { books: [] });
         $("library-upload-panel")?.classList.remove("open");
         if (data.id) selectLibraryBook(data.id);
       } catch (err) {
@@ -4412,9 +4419,56 @@
       return [clampedLat, clampedLon];
     }
 
+    let hostMapNeedsFit = true;
+    let hostOperatorMarker = null;
+
     function invalidateHostMapSize() {
       if (!hostEarthMap) return;
-      hostEarthMap.invalidateSize({ animate: false, pan: false });
+      const el = $("host-earth-map");
+      if (typeof NexusMap !== "undefined" && NexusMap.primeMapPanel) {
+        NexusMap.primeMapPanel(el, hostEarthMap);
+      } else {
+        hostEarthMap.invalidateSize({ animate: false, pan: false });
+      }
+    }
+
+    function fitHostAttackBounds(ha) {
+      if (!hostEarthMap || typeof NexusMap === "undefined") return;
+      const points = ha?.points || hostLastPoints || [];
+      const latlngs = points
+        .filter((p) => p.globe_pin !== false)
+        .map((p) => normalizeGeo(p.lat, p.lon))
+        .filter(Boolean);
+      const anchor = NexusMap.resolveAnchor({
+        anchor: ha?.anchor,
+        points,
+        operator_location: ha?.operator_location || lastPanelData?.operator_location,
+      });
+      if (anchor?.lat != null && anchor?.lon != null) latlngs.push([anchor.lat, anchor.lon]);
+      if (latlngs.length > 1) {
+        NexusMap.fitLatLngs(hostEarthMap, latlngs, { pad: 0.28, maxZoom: 14 });
+      } else if (anchor?.lat != null) {
+        NexusMap.flyToAnchor(hostEarthMap, anchor, { zoom: 10 });
+      }
+    }
+
+    function paintHostOperatorPin(op) {
+      if (!hostEarthMap) return;
+      if (hostOperatorMarker) {
+        hostMarkerLayer?.removeLayer(hostOperatorMarker);
+        hostOperatorMarker = null;
+      }
+      if (!op?.gps_ready || op.lat == null || op.lon == null) return;
+      const ll = normalizeGeo(op.lat, op.lon);
+      if (!ll || !hostMarkerLayer) return;
+      hostOperatorMarker = L.circleMarker(ll, {
+        radius: 7,
+        color: "#88c8ff",
+        weight: 2,
+        fillColor: "#1a4060",
+        fillOpacity: 0.85,
+      }).bindTooltip(`You · ${esc(op.label || "Operator")}`, { direction: "top", opacity: 0.95 });
+      hostOperatorMarker.addTo(hostMarkerLayer);
     }
 
     const HA_SDF_PIN_SIZE = [134, 201];
@@ -5314,19 +5368,18 @@
       if (!el) return null;
       el.classList.add("host-map-booting");
 
-      hostEarthMap = L.map(el, {
+      const mapOpts = {
         center: [22, 0],
         zoom: 2,
         minZoom: 0,
         maxZoom: 22,
         maxBounds: HOST_MAP_BOUNDS,
         maxBoundsViscosity: 0.85,
-        worldCopyJump: true,
-        zoomControl: true,
         attributionControl: true,
-        fadeAnimation: true,
-        zoomAnimation: true,
-      });
+      };
+      hostEarthMap = typeof NexusMap !== "undefined"
+        ? NexusMap.create(el, mapOpts)
+        : L.map(el, Object.assign({}, mapOpts, { worldCopyJump: true, zoomControl: true }));
 
       if (typeof NexusSdf !== "undefined") {
         hostSdfBaseLayer = NexusSdf.createGlobeLayer(L);
@@ -5357,14 +5410,14 @@
       el.classList.remove("host-map-booting");
       el.classList.add("host-map-ready");
       updateHostTrashUi();
+      if (typeof NexusMap !== "undefined" && NexusMap.primeMapPanel) {
+        NexusMap.primeMapPanel(el, hostEarthMap);
+      }
 
       if (!$("ha-fit-all")?.dataset.bound) {
         $("ha-fit-all")?.addEventListener("click", () => {
-          if (!hostLastPoints.length || !hostEarthMap) return;
-          const bounds = L.latLngBounds(
-            hostLastPoints.map((p) => normalizeGeo(p.lat, p.lon)).filter(Boolean)
-          );
-          if (bounds.isValid()) hostEarthMap.fitBounds(bounds.pad(0.35), { maxZoom: 14, animate: true });
+          if (!hostEarthMap) return;
+          fitHostAttackBounds(lastPanelData?.host_attacks || { points: hostLastPoints });
         });
         $("ha-reset-globe")?.addEventListener("click", () => hostEarthMap?.setView([22, 0], 2, { animate: true }));
         $("ha-fit-all").dataset.bound = "1";
@@ -5592,8 +5645,13 @@
         hydrateHostSdfMarkers();
         paintLegendSdfSwatches();
       }
+      paintHostOperatorPin(doc.operator_location || lastPanelData?.operator_location);
       if ($("view-host-attack").classList.contains("active")) {
-        setTimeout(() => map.invalidateSize(), 80);
+        invalidateHostMapSize();
+        if (hostMapNeedsFit && geoPoints.length) {
+          hostMapNeedsFit = false;
+          setTimeout(() => fitHostAttackBounds(doc), 100);
+        }
       }
       const monitorPoints = points.filter((p) => p.globe_pin || p.is_monitor_target);
       const stripPoints = (monitorPoints.length ? monitorPoints : points).slice(0, 50);
@@ -5772,19 +5830,40 @@
         });
         return;
       }
-      const motto = $("us-motto");
-      if (motto) {
+      const titleEl = $("us-motto")?.querySelector?.(".us-title");
+      const subtitleEl = $("us-subtitle");
+      if (titleEl) {
+        titleEl.textContent = `${us.title || "US"} · Page ${us.page || 1}`;
+      }
+      if (subtitleEl) {
         const subtitle = us.subtitle || "This machine — field-gleaned forensic identity";
-        const extra = us.motto && us.motto !== subtitle
-          ? `<span class="us-lead">${esc(us.motto)}</span>` : "";
-        motto.innerHTML =
-          `<strong>${esc(us.title || "US")} · Page ${us.page || 1}</strong>` +
-          `<span class="us-lead">${esc(subtitle)}</span>${extra}`;
+        const motto = us.motto && us.motto !== subtitle ? `${subtitle} — ${us.motto}` : subtitle;
+        subtitleEl.textContent = motto;
       }
       const meta = $("us-meta");
       const ident = us.identity || {};
       if (meta) {
-        meta.textContent = `${ident.hostname || "—"} · NEXUS ${ident.nexus_version || "—"} · vigil ${ident.vigil_mode || "—"} · sampled ${us.generated_at || "—"}`;
+        meta.innerHTML = [
+          `<span><span class="us-stat-label">Host</span>${esc(ident.hostname || "—")}</span>`,
+          `<span><span class="us-stat-label">NEXUS</span>${esc(ident.nexus_version || "—")}</span>`,
+          `<span><span class="us-stat-label">Vigil</span>${esc(ident.vigil_mode || "—")}</span>`,
+          `<span><span class="us-stat-label">Sampled</span>${esc(us.generated_at || "—")}</span>`,
+        ].join("");
+      }
+      const pills = $("us-pills");
+      const gk = us.gatekeeper || {};
+      const trust = us.trust_posture || {};
+      const net = us.network || {};
+      if (pills) {
+        const connCount = (net.connections || []).length;
+        const strict = gk.strict_trust ? "us-pill--ok" : "us-pill--warn";
+        const lock = trust.lockdown_first_complete ? "us-pill--ok" : "us-pill--warn";
+        pills.innerHTML = [
+          `<span class="us-pill ${strict}"><span class="us-pill-label">Trust</span>${gk.strict_trust ? "strict" : "moderate"}</span>`,
+          `<span class="us-pill ${lock}"><span class="us-pill-label">Lockdown</span>${trust.lockdown_first_complete ? "ready" : "pending"}</span>`,
+          `<span class="us-pill"><span class="us-pill-label">Conns</span>${connCount}</span>`,
+          `<span class="us-pill"><span class="us-pill-label">Harm</span>${gk.harm_candidates ?? 0}</span>`,
+        ].join("");
       }
       const obsEl = $("us-observations");
       const obs = us.observations || [];
@@ -5810,7 +5889,6 @@
           ["Operator", ident.operator_user],
         ]);
       }
-      const net = us.network || {};
       const netEl = $("us-network");
       if (netEl) {
         netEl.innerHTML = usNetConnectionsHtml(net.connections);
@@ -5828,7 +5906,6 @@
           ["Top remotes", peers],
         ]);
       }
-      const gk = us.gatekeeper || {};
       const gkEl = $("us-gatekeeper");
       if (gkEl) {
         const hist = gk.verdict_histogram || {};
@@ -5842,7 +5919,6 @@
           ["Updated", gk.updated || "—"],
         ]) + `<div class="us-histogram">${chips}</div>`;
       }
-      const trust = us.trust_posture || {};
       const trustEl = $("us-trust");
       if (trustEl) {
         trustEl.innerHTML = usKv([

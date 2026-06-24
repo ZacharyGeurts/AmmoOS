@@ -49,6 +49,9 @@ nexus_threat_panel_publish() {
   if declare -f nexus_hostess7_autonomous_cycle >/dev/null 2>&1; then
     nexus_hostess7_autonomous_cycle
   fi
+  if declare -f nexus_field_attack_rekill_cycle >/dev/null 2>&1; then
+    nexus_field_attack_rekill_cycle
+  fi
   local ts mode conn arp egress listeners threats corr signal dns
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
   mode="$(nexus_vigil_get_mode 2>/dev/null || echo calm)"

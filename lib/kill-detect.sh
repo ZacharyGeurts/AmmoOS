@@ -8,6 +8,11 @@ nexus_kill_detect_execute() {
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     python3 "$py" execute >/dev/null 2>&1 || true
+  if declare -f nexus_field_attack_rekill_cycle >/dev/null 2>&1; then
+    nexus_field_attack_rekill_cycle 1
+  elif declare -f nexus_field_attack_auto_rekill >/dev/null 2>&1; then
+    nexus_field_attack_auto_rekill >/dev/null 2>&1 || true
+  fi
   if declare -f nexus_heaven_hell_rip >/dev/null 2>&1; then
     nexus_heaven_hell_rip
   fi

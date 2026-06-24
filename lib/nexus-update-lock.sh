@@ -37,12 +37,16 @@ nexus_update_lock_adopt() {
 nexus_update_lock_phase() {
   local phase="${1:-stealth_install}"
   local token="${2:-$NEXUS_UPDATE_LOCK_TOKEN}"
-  [[ -n "$token" ]] && nexus_update_lock_py phase "$phase" "--token=${token}"
+  if [[ -n "$token" ]]; then
+    nexus_update_lock_py phase "$phase" "--token=${token}"
+  fi
 }
 
 nexus_update_lock_heartbeat() {
   local token="${1:-$NEXUS_UPDATE_LOCK_TOKEN}"
-  [[ -n "$token" ]] && nexus_update_lock_py heartbeat "--token=${token}"
+  if [[ -n "$token" ]]; then
+    nexus_update_lock_py heartbeat "--token=${token}"
+  fi
 }
 
 nexus_update_lock_release() {
@@ -60,8 +64,11 @@ nexus_update_lock_ensure() {
     nexus_update_lock_adopt "$NEXUS_UPDATE_LOCK_TOKEN" "stealth_install" "stealth_install" | grep -q '"ok": true'
     return $?
   fi
-  local cur prev
+  local cur prev out
   cur="${NEXUS_VERSION:-}"
   prev="${NEXUS_UPDATE_PREVIOUS_VERSION:-$cur}"
-  nexus_update_lock_acquire "stealth_install" "stealth_install" "$cur" "$prev" | grep -q '"ok": true'
+  out="$(nexus_update_lock_acquire "stealth_install" "stealth_install" "$cur" "$prev")"
+  echo "$out" | grep -q '"ok": true' || return 1
+  NEXUS_UPDATE_LOCK_TOKEN="$(printf '%s' "$out" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("token","") or "")' 2>/dev/null || true)"
+  export NEXUS_UPDATE_LOCK_TOKEN
 }

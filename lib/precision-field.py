@@ -44,7 +44,7 @@ def _mod(name: str, rel: str) -> Any:
 
 def _collect_entities() -> list[dict[str, Any]]:
     gp = _mod("gps_precision", "gps-precision.py")
-    anchor = gp._load_anchor()
+    anchor = gp._load_anchor([])
     entities: list[dict[str, Any]] = []
     seen: set[str] = set()
 
@@ -139,8 +139,11 @@ def place_entity(body: dict[str, Any]) -> dict[str, Any]:
 
 def build_precision_field() -> dict[str, Any]:
     gp = _mod("gps_precision", "gps-precision.py")
-    anchor = gp._load_anchor()
     entities = _collect_entities()
+    anchor = gp._load_anchor(entities)
+    if anchor.get("id") != "operator":
+        for ent in entities:
+            gp.enrich_entity(ent, anchor)
     edges = _build_edges(entities, anchor)
 
     placed = [e for e in entities if e.get("placed")]

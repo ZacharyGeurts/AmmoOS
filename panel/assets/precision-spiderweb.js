@@ -6,7 +6,7 @@
 
   let pfData = null;
   let anim = null;
-  const web = { canvas: null, ctx: null, mode: "global" };
+  const web = { canvas: null, ctx: null, mode: "global", viewport: null };
 
   function esc(s) {
     return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
@@ -73,16 +73,24 @@
     if (web.ctx) web.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  function drawWeb() {
+  function drawWeb(viewport) {
     if (!web.ctx || !pfData) return;
     resizeCanvas();
     const rect = web.canvas.getBoundingClientRect();
     const w = rect.width;
     const h = rect.height;
     const ctx = web.ctx;
+    const vp = viewport || web.viewport?.state || { scale: 1, panX: 0, panY: 0 };
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = "#060a14";
+    ctx.fillStyle = "#03060c";
     ctx.fillRect(0, 0, w, h);
+
+    ctx.save();
+    ctx.translate(vp.panX, vp.panY);
+    ctx.scale(vp.scale, vp.scale);
+    const ox = (w * (1 - 1 / vp.scale)) * 0.5;
+    const oy = (h * (1 - 1 / vp.scale)) * 0.5;
+    ctx.translate(-ox, -oy);
 
     const entities = (pfData.entities || []).filter((e) => e.lat != null);
     const bounds = computeBounds(entities);
@@ -103,7 +111,7 @@
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.lineTo(b.x, b.y);
-      ctx.strokeStyle = edge.kind === "terror" ? "rgba(255,58,74,0.75)" : edge.kind === "neighbor" ? "rgba(61,214,140,0.55)" : "rgba(77,155,255,0.5)";
+      ctx.strokeStyle = edge.kind === "terror" ? "rgba(255,74,90,0.82)" : edge.kind === "neighbor" ? "rgba(74,232,154,0.58)" : "rgba(114,184,255,0.55)";
       ctx.lineWidth = edge.kind === "terror" ? 1.8 : 1.2;
       ctx.setLineDash(edge.kind === "terror" ? [] : [4, 3]);
       ctx.stroke();
@@ -116,15 +124,15 @@
       const r = e.kind === "terror" || e.kind === "hostile" ? 5 : 4;
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = e.kind === "terror" ? "#ff3a4a" : e.section === "home" ? "#d4af37" : "#5ec8ff";
+      ctx.fillStyle = e.kind === "terror" ? "#ff3a4a" : e.section === "home" ? "#e8c04a" : "#72b8ff";
       ctx.fill();
-      ctx.strokeStyle = "rgba(232,236,244,0.85)";
+      ctx.strokeStyle = "rgba(242,246,252,0.9)";
       ctx.lineWidth = 1;
       ctx.stroke();
       if (web.mode === "local" && (Math.abs(parseNm(e.enu_e_nm)) < 50000 || Math.abs(parseNm(e.enu_n_nm)) < 50000)) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
-        ctx.strokeStyle = "rgba(212,175,55,0.35)";
+        ctx.strokeStyle = "rgba(232,192,74,0.4)";
         ctx.lineWidth = 0.6;
         ctx.stroke();
       }
@@ -133,7 +141,7 @@
     if (web.mode === "local") {
       const cx = w / 2;
       const cy = h / 2;
-      ctx.strokeStyle = "rgba(212,175,55,0.5)";
+      ctx.strokeStyle = "rgba(232,192,74,0.55)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(cx - 8, cy);
@@ -142,6 +150,7 @@
       ctx.lineTo(cx, cy + 8);
       ctx.stroke();
     }
+    ctx.restore();
   }
 
   function renderMeta() {
@@ -181,6 +190,7 @@
     document.querySelectorAll(".pf-web-tab").forEach((b) => {
       b.classList.toggle("active", b.dataset.pfWeb === next);
     });
+    web.viewport?.reset?.();
     drawWeb();
     renderMeta();
   }
@@ -193,7 +203,16 @@
     if (!web.canvas) {
       web.canvas = document.getElementById("precision-web-canvas");
       web.ctx = web.canvas?.getContext("2d");
-      window.addEventListener("resize", drawWeb);
+      if (!wrap.querySelector(".nexus-canvas-hint")) {
+        const hint = document.createElement("span");
+        hint.className = "nexus-canvas-hint";
+        hint.textContent = "Scroll zoom · drag pan";
+        wrap.appendChild(hint);
+      }
+      if (global.NexusMap?.bindCanvasZoomPan) {
+        web.viewport = global.NexusMap.bindCanvasZoomPan(web.canvas, wrap, drawWeb);
+      }
+      window.addEventListener("resize", () => drawWeb());
     }
     renderMeta();
     drawWeb();

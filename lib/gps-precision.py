@@ -198,21 +198,128 @@ def enrich_entity(entity: dict[str, Any], anchor: dict[str, Any] | None = None) 
     return out
 
 
-def _load_anchor() -> dict[str, Any]:
+def _enu_variance(entities: list[dict[str, Any]]) -> dict[str, Any]:
+    """Dominant ENU axis — height (U) often carries most placement variance."""
+    e_vals: list[int] = []
+    n_vals: list[int] = []
+    u_vals: list[int] = []
+    lats: list[float] = []
+    lons: list[float] = []
+    for ent in entities:
+        if ent.get("lat") is not None and ent.get("lon") is not None:
+            try:
+                lats.append(float(ent["lat"]))
+                lons.append(float(ent["lon"]))
+            except (TypeError, ValueError):
+                pass
+        for key, bucket in (("enu_e_nm", e_vals), ("enu_n_nm", n_vals), ("enu_u_nm", u_vals)):
+            raw = ent.get(key)
+            if raw is None:
+                continue
+            try:
+                bucket.append(int(str(raw)))
+            except (TypeError, ValueError):
+                pass
+
+    def _spread(vals: list[int]) -> int:
+        if not vals:
+            return 0
+        if len(vals) < 2:
+            return abs(vals[0])
+        return max(vals) - min(vals)
+
+    var_e, var_n, var_u = _spread(e_vals), _spread(n_vals), _spread(u_vals)
+    if var_u >= var_e and var_u >= var_n:
+        dominant = "u"
+    elif var_e >= var_n:
+        dominant = "e"
+    else:
+        dominant = "n"
+    mean_u = int(sum(u_vals) / len(u_vals)) if u_vals else 0
+    return {
+        "var_e_nm": var_e,
+        "var_n_nm": var_n,
+        "var_u_nm": var_u,
+        "dominant_axis": dominant,
+        "mean_u_nm": mean_u,
+        "center_lat": sum(lats) / len(lats) if lats else None,
+        "center_lon": sum(lons) / len(lons) if lons else None,
+        "count": len(lats),
+    }
+
+
+def resolve_anchor_from_entities(entities: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    entities = entities or []
+    var = _enu_variance(entities)
+    alt_m = round(var["mean_u_nm"] / NM_PER_M, 4) if var["mean_u_nm"] else 0.0
+    if var["center_lat"] is not None and var["center_lon"] is not None:
+        return {
+            "id": "variance_centroid",
+            "lat": var["center_lat"],
+            "lon": var["center_lon"],
+            "label": f"Centroid ({var['count']} placed)",
+            "alt_m": alt_m,
+            "dominant_axis": var["dominant_axis"],
+            "var_u_nm": var["var_u_nm"],
+            "var_e_nm": var["var_e_nm"],
+            "var_n_nm": var["var_n_nm"],
+        }
+    return {
+        "id": "field_default",
+        "lat": 45.854,
+        "lon": -87.023,
+        "label": "Gladstone MI · field default",
+        "alt_m": 0.0,
+        "dominant_axis": "u",
+    }
+
+
+def _try_seed_operator_wireless() -> dict[str, Any] | None:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("op_loc", INSTALL / "lib" / "operator-location.py")
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        out = mod.wireless_immediate()
+        if out.get("ok") and out.get("lat") is not None:
+            return {
+                "id": "operator",
+                "lat": float(out["lat"]),
+                "lon": float(out["lon"]),
+                "label": out.get("label") or "Wireless egress",
+                "alt_m": float(out.get("alt_m") or 0),
+                "source": out.get("source") or "wireless_egress",
+            }
+    except Exception:
+        return None
+    return None
+
+
+def _load_anchor(entities: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     op = STATE / "operator-location.json"
     if op.is_file():
         try:
             doc = json.loads(op.read_text(encoding="utf-8"))
-            if doc.get("lat") is not None:
+            lat, lon = doc.get("lat"), doc.get("lon")
+            if lat is not None and lon is not None and not (float(lat) == 0.0 and float(lon) == 0.0):
                 return {
                     "id": "operator",
-                    "lat": float(doc["lat"]),
-                    "lon": float(doc["lon"]),
+                    "lat": float(lat),
+                    "lon": float(lon),
                     "label": doc.get("label") or "Operator",
+                    "alt_m": float(doc.get("alt_m") or 0),
                 }
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
             pass
-    return {"id": "origin", "lat": 0.0, "lon": 0.0, "label": "WGS84 origin"}
+    seeded = _try_seed_operator_wireless()
+    if seeded:
+        return seeded
+    if entities:
+        return resolve_anchor_from_entities(entities)
+    return resolve_anchor_from_entities([])
 
 
 def panel_json() -> dict[str, Any]:

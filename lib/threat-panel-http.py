@@ -563,6 +563,44 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(payload), "application/json")
                 return
 
+            if path == "/api/library/fingerprint":
+                payload = _lib_json(["fingerprint"])
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/cover":
+                book_id = str(query.get("book", [""])[0]).strip()
+                side = str(query.get("side", ["front"])[0]).strip() or "front"
+                fmt = str(query.get("format", ["png"])[0]).strip() or "png"
+                if not book_id:
+                    self._send(400, "missing book", "text/plain")
+                    return
+                try:
+                    import importlib.util
+                    lib_py = INSTALL_ROOT / "lib" / "h7-library-librarian.py"
+                    spec = importlib.util.spec_from_file_location("h7_library_librarian", lib_py)
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)
+                    got = mod.get_cover_bytes(book_id, side, fmt=fmt)
+                    if not got and fmt == "png":
+                        cov_py = INSTALL_ROOT / "lib" / "sdf-book-covers.py"
+                        bib = mod.load_bibliography_index().get(book_id) or mod.enrich_record(book_id)
+                        subprocess.run(
+                            [sys.executable, str(cov_py), book_id, side],
+                            capture_output=True,
+                            timeout=30,
+                            env=env,
+                        )
+                        got = mod.get_cover_bytes(book_id, side, fmt=fmt)
+                    if not got:
+                        self._send(404, "cover not on field drive", "text/plain")
+                        return
+                    data, ctype = got
+                    self._send(200, data, ctype)
+                except Exception:
+                    self._send(404, "cover not found", "text/plain")
+                return
+
         if path == "/api/data":
             items = []
             for key, fp in DATA_FILES.items():
@@ -696,28 +734,6 @@ class Handler(BaseHTTPRequestHandler):
                     payload = json.loads(proc.stdout or "{}")
                 except json.JSONDecodeError:
                     payload = {"ok": False, "error": "upload_failed"}
-                self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
-                return
-
-            if path == "/api/library/fetch":
-                book_id = str(body.get("book_id", body.get("id", ""))).strip()
-                if not book_id:
-                    self._send(400, json.dumps({"ok": False, "error": "missing book_id"}), "application/json")
-                    return
-                args = ["fetch", book_id]
-                if body.get("force"):
-                    args.append("--force")
-                proc = subprocess.run(
-                    [sys.executable, str(script), *args],
-                    capture_output=True,
-                    text=True,
-                    timeout=180,
-                    env=env,
-                )
-                try:
-                    payload = json.loads(proc.stdout or "{}")
-                except json.JSONDecodeError:
-                    payload = {"ok": False, "error": "fetch_failed"}
                 self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
                 return
 

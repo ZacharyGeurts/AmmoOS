@@ -33,15 +33,13 @@
     const el = document.getElementById("spiderweb-thermal-map");
     if (!el || typeof L === "undefined") return null;
     if (thermalMap.map) return thermalMap.map;
-    el.classList.add("host-map-booting");
-    thermalMap.map = L.map(el, {
-      center: [20, 0],
-      zoom: 2,
-      minZoom: 1,
-      maxZoom: 18,
-      worldCopyJump: true,
-      zoomControl: true,
-    });
+    const mk = global.NexusMap;
+    thermalMap.map = mk
+      ? mk.create(el, { center: [20, 0], zoom: 2, minZoom: 1, maxZoom: 18 })
+      : L.map(el, {
+        center: [20, 0], zoom: 2, minZoom: 1, maxZoom: 18,
+        worldCopyJump: true, zoomControl: true, scrollWheelZoom: true,
+      });
     if (global.NexusSdf?.createThermalGlobeLayer) {
       thermalMap.sdfLayer = NexusSdf.createThermalGlobeLayer(L);
       thermalMap.sdfLayer.addTo(thermalMap.map);
@@ -53,11 +51,13 @@
       }).addTo(thermalMap.map);
     }
     thermalMap.markers = L.layerGroup().addTo(thermalMap.map);
-    setTimeout(() => {
+    const finish = () => {
       el.classList.remove("host-map-booting");
       el.classList.add("host-map-ready");
-      thermalMap.map.invalidateSize();
-    }, 120);
+      if (mk) mk.scheduleInvalidate(thermalMap.map, el);
+      else thermalMap.map.invalidateSize();
+    };
+    setTimeout(finish, mk ? 60 : 120);
     return thermalMap.map;
   }
 

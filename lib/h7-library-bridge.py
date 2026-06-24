@@ -68,6 +68,21 @@ READER_FONTS = [
 
 _h7_mod: Any = None
 _dewey_doc: dict[str, Any] | None = None
+_librarian_mod: Any = None
+
+
+def _librarian() -> Any:
+    global _librarian_mod
+    if _librarian_mod is not None:
+        return _librarian_mod
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("h7_library_librarian", INSTALL / "lib" / "h7-library-librarian.py")
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _librarian_mod = mod
+    return mod
 
 
 def _now() -> str:
@@ -300,32 +315,11 @@ def _txt_meta(path: Path, book: dict[str, Any] | None = None) -> dict[str, Any]:
     }
 
 
-def _catalog_fetch_books() -> list[dict[str, Any]]:
-    scripts = HOSTESS7_ROOT / "scripts"
-    if not scripts.is_dir():
-        return []
-    if str(scripts) not in sys.path:
-        sys.path.insert(0, str(scripts))
-    try:
-        from field_library_catalog import iter_all_library_books  # type: ignore
-
-        return [
-            {
-                "id": str(b.get("id", "")),
-                "title": str(b.get("title", "")),
-                "author": str(b.get("author", "")),
-                "category": str(b.get("category", b.get("subject", ""))),
-                "license": str(b.get("license", "OER")),
-                "fetch_url": str(b.get("fetch_url", "")),
-                "description": str(b.get("body", b.get("title", "")))[:240],
-                "source": "catalog",
-                "ready": False,
-            }
-            for b in iter_all_library_books()
-            if b.get("fetch_url")
-        ]
-    except ImportError:
-        return []
+def _enrich_books(books: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    lib = _librarian()
+    if not lib:
+        return books
+    return [lib.merge_into_book(b) for b in books]
 
 
 def _scan_books() -> list[dict[str, Any]]:
@@ -363,7 +357,7 @@ def _scan_books() -> list[dict[str, Any]]:
                 continue
             by_id[bid] = _txt_meta(path)
 
-    return list(by_id.values())
+    return _enrich_books(list(by_id.values()))
 
 
 def _txt_meta_from_text(bid: str, book: dict[str, Any], text: str) -> dict[str, Any]:
@@ -445,6 +439,9 @@ def _search_blob(book: dict[str, Any]) -> str:
         book.get("dewey", ""),
         book.get("dewey_label", ""),
         book.get("description", ""),
+        book.get("ein", ""),
+        book.get("isbn_13", ""),
+        book.get("isbn_10", ""),
     ]
     if book.get("ready") and book.get("char_count", 0) < 12000:
         parts.append(_source_text(str(book.get("id", "")))[:8000])
@@ -495,26 +492,47 @@ def dewey_shelves() -> list[dict[str, Any]]:
     return shelves
 
 
-def build_catalog() -> dict[str, Any]:
+def build_catalog(*, force: bool = False) -> dict[str, Any]:
+    lib = _librarian()
+    fp_doc: dict[str, Any] = {}
+    if lib:
+        fp_doc = lib.load_fingerprint_doc()
+        if not force and lib.field_unchanged():
+            snap = lib.load_catalog_snapshot()
+            if snap:
+                snap["unchanged"] = True
+                snap["field_fingerprint"] = fp_doc.get("fingerprint", lib.compute_field_fingerprint())
+                snap["last_touched"] = fp_doc.get("last_touched", "")
+                snap["last_touched_same"] = lib.last_touched_unchanged()
+                snap["librarian"] = lib.librarian_status()
+                return snap
+
     books = _scan_books()
-    catalog_links = _catalog_fetch_books()
-    on_disk = {b["id"] for b in books if b.get("ready")}
-    linkable = [b for b in catalog_links if b["id"] not in on_disk]
-    return {
+    if lib and (force or not lib.field_unchanged()):
+        lib.build_bibliography_field(write=True)
+
+    doc = {
         "updated": _now(),
-        "library_version": 2,
+        "library_version": 3,
         "page_chars": PAGE_CHARS,
-        "motto": "Hostess7 H7 library — Dewey shelves on field drive, live read, no cache.",
+        "motto": "Hostess7 H7 library — field drive only, fingerprint sync, zero bandwidth waste.",
         "field_root": str(_primary_field_root()),
+        "field_fingerprint": lib.compute_field_fingerprint() if lib else "",
+        "unchanged": False,
+        "last_touched": fp_doc.get("last_touched", "") if lib else "",
+        "last_touched_same": lib.last_touched_unchanged() if lib else True,
+        "fingerprint_method": "micro_sig_v1",
         "book_count": len(books),
         "ready_count": sum(1 for b in books if b.get("ready")),
-        "linkable_count": len(linkable),
         "dewey_classes": _load_dewey().get("classes", []),
         "fonts": READER_FONTS,
         "books": books,
-        "linkable": linkable[:120],
         "shelves": dewey_shelves(),
+        "librarian": lib.librarian_status() if lib else {},
     }
+    if lib:
+        lib.save_fingerprint(catalog=doc)
+    return doc
 
 
 def read_page(book_id: str, page: int, *, page_chars: int | None = None) -> dict[str, Any]:
@@ -590,6 +608,9 @@ def write_h7_book(
         "reader": "NEXUS_H7",
     }
     stats = mod.write_h7(path, text, pack_meta)
+    lib = _librarian()
+    if lib:
+        lib.touch_book(book_id)
     return {"ok": True, "path": str(path), "dewey": code, "dewey_label": dewey["label"], **stats}
 
 
@@ -621,77 +642,6 @@ def upload_book(
     )
 
 
-def fetch_and_pack(book_id: str, *, force: bool = False) -> dict[str, Any]:
-    scripts = HOSTESS7_ROOT / "scripts"
-    if not scripts.is_dir():
-        return {"ok": False, "error": "hostess7_scripts_missing"}
-    if str(scripts) not in sys.path:
-        sys.path.insert(0, str(scripts))
-    try:
-        from field_library import pack_book  # type: ignore
-        from field_library_catalog import iter_all_library_books  # type: ignore
-    except ImportError as exc:
-        return {"ok": False, "error": f"import_fail:{exc}"}
-
-    book = next((b for b in iter_all_library_books() if str(b.get("id")) == book_id), None)
-    if not book:
-        return {"ok": False, "error": "catalog_miss"}
-
-    if not force:
-        for path in _iter_h7_files():
-            try:
-                mod = _h7_book_module()
-                if mod:
-                    header, _ = mod.unpack_h7(path.read_bytes(), verify=False)
-                    if str(header.get("id")) == book_id:
-                        return {"ok": True, "already_packed": True, "path": str(path), "id": book_id}
-            except (OSError, ValueError):
-                continue
-
-    row = pack_book(book, force_fetch=force, fast_only=True)
-    if not row.get("ok"):
-        return {"ok": False, "error": row.get("error", "pack_failed"), "detail": row}
-
-    src = Path(str(row.get("path", "")))
-    if not src.is_file():
-        return {"ok": False, "error": "pack_path_missing"}
-
-    mod = _h7_book_module()
-    if not mod:
-        return {"ok": True, "id": book_id, "path": str(src), "relocated": False}
-
-    try:
-        doc = mod.read_h7_file(src)
-        text = str(doc.get("text", ""))
-    except (OSError, ValueError) as exc:
-        return {"ok": False, "error": f"read_fail:{exc}"}
-
-    dewey = classify_dewey(
-        category=str(book.get("category", book.get("subject", ""))),
-        title=str(book.get("title", book_id)),
-        author=str(book.get("author", "")),
-        text_sample=text[:3000],
-    )
-    dest_dir = _dewey_dir(dewey["code"])
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    dest = dest_dir / f"{_safe_id(book_id)}.h7"
-    if src.resolve() != dest.resolve():
-        dest.write_bytes(src.read_bytes())
-        try:
-            src.unlink()
-        except OSError:
-            pass
-    return {
-        "ok": True,
-        "id": book_id,
-        "path": str(dest),
-        "dewey": dewey["code"],
-        "dewey_label": dewey["label"],
-        "char_count": row.get("char_count"),
-        "file_bytes": dest.stat().st_size if dest.is_file() else 0,
-    }
-
-
 def reader_fonts() -> dict[str, Any]:
     return {"fonts": READER_FONTS}
 
@@ -700,7 +650,22 @@ def main() -> int:
     cmd = sys.argv[1] if len(sys.argv) > 1 else "build"
 
     if cmd == "build":
-        json.dump(build_catalog(), sys.stdout, ensure_ascii=False, indent=2)
+        force = "--force" in sys.argv
+        json.dump(build_catalog(force=force), sys.stdout, ensure_ascii=False, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "fingerprint":
+        lib = _librarian()
+        if not lib:
+            json.dump({"ok": False, "error": "librarian_missing"}, sys.stdout)
+        else:
+            json.dump({
+                "ok": True,
+                "fingerprint": lib.compute_field_fingerprint(),
+                "unchanged": lib.field_unchanged(),
+                **lib.load_fingerprint_doc(),
+            }, sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0
 
@@ -731,12 +696,6 @@ def main() -> int:
         sys.stdout.write("\n")
         return 0
 
-    if cmd == "fetch" and len(sys.argv) >= 3:
-        force = "--force" in sys.argv
-        json.dump(fetch_and_pack(sys.argv[2], force=force), sys.stdout, indent=2)
-        sys.stdout.write("\n")
-        return 0
-
     if cmd == "upload" and len(sys.argv) >= 3:
         try:
             payload = json.loads(sys.argv[2])
@@ -759,8 +718,8 @@ def main() -> int:
         return 0
 
     print(
-        "usage: h7-library-bridge.py [build|page <id> <n> [chars]|full <id>|search <q>|"
-        "dewey|fonts|fetch <id>|upload <json>]",
+        "usage: h7-library-bridge.py [build [--force]|fingerprint|page <id> <n> [chars]|"
+        "full <id>|search <q>|dewey|fonts|upload <json>]",
         file=sys.stderr,
     )
     return 1
