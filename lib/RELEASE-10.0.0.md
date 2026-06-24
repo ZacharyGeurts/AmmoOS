@@ -28,16 +28,24 @@
 
 ## Config (`config/nexus.conf`)
 
-- `NEXUS_AWAIT_MAX_SEC=5` — no blocking waits longer than 5 seconds
-- `NEXUS_VIGIL_MAINTAIN_INTERVAL=5` (was 300)
-- `NEXUS_PANEL_REFRESH_MS=5000`
-- `NEXUS_THERMAL_GOVERNOR`, `NEXUS_HEAT_CRUSH_THRESHOLD=0.7`
+- `NEXUS_THERMAL_GOVERNOR`, `NEXUS_THERMAL_WARN_C`, `NEXUS_THERMAL_CRIT_C`
+- `NEXUS_HEAT_CRUSH_THRESHOLD=0.7` (threat heat auto-crush)
 - `NEXUS_RUST_CORE=0` (opt-in after `build-rust-core.sh`)
+
+## Heat terminology
+
+- **Threat heat** ≥ 0.7 → auto-crush (scoring / host-attack correlation)
+- **Thermal** → hwmon sensors throttle `NEXUS_CPU_QUOTA_PCT` via `thermal-advisory.json`
 
 ## Upgrade
 
 ```bash
+cd /path/to/NEXUS-Shield
 ./scripts/reboot-nexus.sh
+# optional
+./scripts/build-rust-core.sh
+export NEXUS_RUST_CORE=1
+./scripts/profile-baseline.sh
 ```
 
 Low energy + infinite verifiable storage via field tools. God Bless.
