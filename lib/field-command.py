@@ -61,6 +61,11 @@ def build_command(panel: dict[str, Any] | None = None) -> dict[str, Any]:
     hd = panel.get("human_dossier") or {}
     ad = panel.get("angel_dossiers") or {}
     vi = panel.get("vector_intel") or {}
+    po = panel.get("planetary_observer") or _load_json(STATE / "planetary-observer-panel.json", {})
+    po_globe = po.get("globe") or {}
+    po_wire = po.get("wire") or {}
+    po_ai = po.get("hostile_ai") or {}
+    po_cycle = po.get("last_proactive_cycle") or {}
 
     total = len(conns) or 1
     good_pct = round(100 * len(good) / total)
@@ -138,12 +143,22 @@ def build_command(panel: dict[str, Any] | None = None) -> dict[str, Any]:
             "honor_pending": len(
                 ((panel.get("browser_awareness") or {}).get("honorability") or {}).get("pending_acceptance") or []
             ),
+            "planetary_certain": po_globe.get("strike_certain", 0),
+            "planetary_harm": po_wire.get("harm_candidates", 0),
+            "hostile_ai_certain": po_ai.get("certain", 0),
+            "planetary_proactive_actions": po_cycle.get("action_count", len(po_cycle.get("actions") or [])),
         },
         "know_everything": [
             {"id": "us", "label": "This machine", "stat": (panel.get("us_field") or {}).get("identity", {}).get("hostname", "—"), "jump": "us"},
             {"id": "packets-live", "label": "Live connections", "stat": f"{len(conns)} scored", "jump": "packets/live"},
             {"id": "packets-dpi", "label": "Packet DPI", "stat": f"{gk.get('segment_block_count', 0)} segment holds", "jump": "packets/dpi"},
             {"id": "threats-map", "label": "Threat map", "stat": f"{ha_stats.get('hot', 0)} hot", "jump": "threats/map"},
+            {
+                "id": "planetary",
+                "label": "Planetary defense",
+                "stat": f"{po_globe.get('strike_certain', 0)} certain · {po_wire.get('harm_candidates', 0)} harm",
+                "jump": "threats/host-attack",
+            },
             {"id": "threats-kill", "label": "Kill orders", "stat": f"{hd.get('ip_count', 0)} IPs", "jump": "threats/kill"},
             {"id": "intel-trust", "label": "Honorability", "stat": f"{panel.get('trust_count', 0)} trusted", "jump": "intel/trust"},
             {"id": "intel-rf", "label": "Field RF", "stat": f"{len(rf.get('recent_bursts') or [])} bursts", "jump": "intel/rf"},

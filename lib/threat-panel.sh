@@ -16,6 +16,7 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/planetary-observer.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/planetary-observer.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/honorability.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/honorability.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-i18n.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/panel-i18n.sh"
@@ -372,6 +373,12 @@ nexus_threat_panel_publish() {
       nexus_host_attacks_json
     else
       printf '{"points":[],"stats":{"total":0,"hot":0,"warm":0,"cool":0}}'
+    fi
+    printf ',"planetary_observer":'
+    if declare -f nexus_planetary_observer_json >/dev/null 2>&1; then
+      nexus_planetary_observer_json
+    else
+      printf '{"schema":"planetary-observer/v1","globe":{"total_targets":0,"strike_certain":0},"wire":{"harm_candidates":0},"proactive_enabled":false}'
     fi
     printf ',"attack_kit":'
     if declare -f nexus_field_attack_json >/dev/null 2>&1; then

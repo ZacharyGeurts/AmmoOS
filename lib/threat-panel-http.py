@@ -95,6 +95,7 @@ PANEL_PARALLEL_KEYS = frozenset({
     "packet_field",
     "gatekeeper",
     "host_attacks",
+    "planetary_observer",
     "us_field",
     "field_command",
     "angel_dossiers",
@@ -937,6 +938,15 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/hostile-ai":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostile-ai-destroy.py", ["json"], timeout=45)
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/planetary-observer":
+            payload = _panel_slice(
+                "planetary_observer",
+                live=_nexus_py_json(INSTALL_ROOT / "lib" / "planetary-observer.py", ["json"], timeout=60),
+                default={"schema": "planetary-observer/v1", "globe": {"total_targets": 0}, "wire": {}},
+            )
             self._send(200, json.dumps(payload), "application/json")
             return
 
@@ -2798,6 +2808,15 @@ class Handler(BaseHTTPRequestHandler):
                 timeout=90,
             )
             self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/planetary-observer/cycle":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "planetary-observer.py",
+                ["cycle"],
+                timeout=120,
+            )
+            self._send(200 if payload.get("ok", True) else 500, json.dumps(payload), "application/json")
             return
 
         if path == "/api/firewall/revoke":

@@ -1062,6 +1062,21 @@ PY
   declare -f nexus_field_attack_json >/dev/null 2>&1
 }
 
+test_planetary_observer_module() {
+  [[ -f "${ROOT}/lib/planetary-observer.py" ]]
+  [[ -f "${ROOT}/lib/planetary-observer.sh" ]]
+  grep -q 'planetary-observer.sh' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'planetary_observer' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'nexus_planetary_observer_cycle' "${ROOT}/lib/nexus-daemon.sh"
+  grep -q 'NEXUS_PLANETARY_OBSERVER' "${ROOT}/config/nexus.conf"
+  grep -q 'planetary-observer' "${ROOT}/panel/threat-panel.html"
+  grep -q '/api/planetary-observer' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_PLANETARY_PROACTIVE_KILL=0 \
+    python3 "${ROOT}/lib/planetary-observer.py" observe | grep -q 'planetary-observer/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_PLANETARY_PROACTIVE_KILL=0 \
+    python3 "${ROOT}/lib/planetary-observer.py" panel | grep -q 'planetary-observer/v1'
+}
+
 test_host_identity_module() {
   [[ -f "${ROOT}/lib/host-identity.py" ]]
   grep -q 'validate_same_host' "${ROOT}/lib/host-identity.py"
@@ -2016,6 +2031,7 @@ run_test "panel host attack UI" test_panel_host_attack_ui
 run_test "geo intel standards module" test_geo_intel_standards_module
 run_test "friendly guard immutable module" test_friendly_guard_module
 run_test "field attack kit module" test_field_attack_kit_module
+run_test "planetary observer module" test_planetary_observer_module
 run_test "host identity module" test_host_identity_module
 run_test "trust strike engine module" test_trust_strike_engine_module
 run_test "hardware destruction module" test_hardware_destruction_module

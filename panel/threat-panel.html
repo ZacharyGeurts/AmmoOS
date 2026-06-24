@@ -598,6 +598,23 @@
     .command-wrap { padding: 16px 24px 32px; width: 100%; }
     .command-motto { font-size: 1.05rem; color: var(--muted); margin: 0 0 16px; line-height: 1.6; }
     .command-motto strong { color: var(--gold); }
+    .planetary-observer-banner {
+      margin: 0 0 14px; padding: 12px 14px; border-radius: 8px; line-height: 1.55;
+      background: linear-gradient(135deg, rgba(20, 50, 80, 0.5), rgba(50, 20, 40, 0.35));
+      border: 1px solid rgba(80, 140, 200, 0.35);
+    }
+    .planetary-observer-banner strong { color: #7ec8ff; letter-spacing: 0.05em; }
+    .planetary-observer-stats {
+      display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 8px 0 10px; font-size: 0.92rem;
+    }
+    .planetary-observer-stats span strong { color: var(--gold); margin-left: 4px; }
+    .planetary-observer-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .planetary-host-strip {
+      margin: 0 0 12px; padding: 10px 12px; border-radius: 8px; font-size: 0.92rem;
+      border: 1px solid rgba(80, 140, 200, 0.3);
+      background: rgba(15, 35, 60, 0.35);
+    }
+    .planetary-host-strip strong { color: #7ec8ff; }
     .heaven-hell-banner {
       margin: 0 0 14px; padding: 12px 16px; border-radius: 8px; line-height: 1.55; font-size: 1.1rem;
       border: 1px solid #3a3048; background: linear-gradient(135deg, rgba(18, 14, 28, 0.95), rgba(12, 18, 30, 0.9));
@@ -2034,6 +2051,17 @@
         </div>
       </div>
       <div id="command-permission-banner" class="intel-banner" style="margin-bottom:14px;"></div>
+      <div class="planetary-observer-banner" id="planetary-observer" role="note" hidden
+           data-tip="Global sight from globe map, planetary DNS, hostile AI, gatekeeper harm — proactive kills at certainty only.">
+        <strong>Planetary observation</strong> — proactive kills to keep us all safe.
+        <p class="meta" id="planetary-observer-summary" style="margin:6px 0 8px;">Observing the whole planet. Destroy only at certainty.</p>
+        <div class="planetary-observer-stats" id="planetary-observer-stats"></div>
+        <div class="planetary-observer-actions">
+          <button type="button" id="planetary-observer-cycle" class="ghost"
+                  data-tip="Run observe → certainty gates → hostile AI destroy · autokill · RE-KILL · forever enforce · regional disable.">Run proactive cycle</button>
+          <button type="button" data-view-jump="threats/host-attack">Host Attack map →</button>
+        </div>
+      </div>
       <div class="ggb-row" id="command-ggb-row">
         <div class="ggb-card good"><h3>Heaven</h3><div class="ggb-sub">Good Guy · zero cost</div><div class="ggb-count" id="cmd-good-count">0</div><div class="ggb-pct" id="cmd-good-pct">—</div><div class="ggb-flow-list" id="cmd-good-flows"></div></div>
         <div class="ggb-card watch"><h3>Watch</h3><div class="ggb-count" id="cmd-watch-count">0</div><div class="ggb-pct" id="cmd-watch-pct">MONITOR · SUSPICIOUS</div><div class="ggb-flow-list" id="cmd-watch-flows"></div></div>
@@ -2505,6 +2533,8 @@
         <em>Zachary Geurts</em> · Army Specialist · Iraq War Veteran · Honorable Discharge.
         <span id="host-attack-tagline">Intelligence is a bullet. Identify. Record. KILL.</span>
       </p>
+      <div class="planetary-host-strip" id="planetary-host-strip" hidden
+           data-tip="Planetary observer aggregate — globe certain, harm on wire, hostile AI, last proactive cycle."></div>
       <div class="hostile-ai-panel" id="hostile-ai-panel" style="margin:14px 0;padding:14px 16px;border:1px solid #4a2030;border-radius:8px;background:rgba(90,20,40,0.18);">
         <strong style="color:var(--murder,#dc2626);letter-spacing:0.06em;">HOSTILE AI · DESTROY WITH CERTAINTY</strong>
         <p class="meta" id="hostile-ai-summary" style="margin:6px 0 10px;">Scanning automated evil — beacon entropy, LOLBin chains, rogue DNS/DHCP…</p>
@@ -3615,6 +3645,7 @@
       { key: "home_protector", url: "/api/home-protector" },
       { key: "local_services", url: "/api/local-services" },
       { key: "host_attacks", url: "/api/host-attacks" },
+      { key: "planetary_observer", url: "/api/planetary-observer" },
       { key: "terror_spiderweb", url: "/api/terror-spiderweb" },
       { key: "precision_field", url: "/api/precision-field" },
       { key: "angel_dossiers", url: "/api/angel-dossiers" },
@@ -3644,10 +3675,10 @@
     ];
 
     const TAB_LOAD_MODULES = {
-      command: { keys: ["field_command", "gatekeeper", "lethal_enforcement", "hostess7_command"], subs: { command: ["field_command", "lethal_enforcement", "hostess7_command"] } },
+      command: { keys: ["field_command", "planetary_observer", "gatekeeper", "lethal_enforcement", "hostess7_command"], subs: { command: ["field_command", "planetary_observer", "lethal_enforcement", "hostess7_command"] } },
       us: { keys: ["us_field"], subs: { us: ["us_field"] } },
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
-      threats: { keys: ["home_protector", "local_services", "host_attacks", "terror_spiderweb", "precision_field", "angel_dossiers", "human_dossier"], subs: { "home-protector": ["home_protector"], "local-holes": ["local_services"], "host-attack": ["host_attacks"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
+      threats: { keys: ["home_protector", "local_services", "host_attacks", "planetary_observer", "terror_spiderweb", "precision_field", "angel_dossiers", "human_dossier"], subs: { "home-protector": ["home_protector"], "local-holes": ["local_services"], "host-attack": ["host_attacks", "planetary_observer"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["audio_train", "field_rf", "browser_awareness", "human_registry", "police_agency", "census_field", "existence_identity", "angel_research"], subs: { honor: ["browser_awareness"], people: ["human_registry", "census_field", "existence_identity"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency", "gov_intel", "program_tags"], research: ["angel_research"] } },
       library: { keys: ["h7_library", "field_brain"], subs: { library: ["h7_library", "field_brain"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
@@ -3681,6 +3712,7 @@
       if (key === "terror_spiderweb") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.nodes));
       if (key === "precision_field") return typeof val === "object" && (val.updated != null || val.schema != null || Array.isArray(val.entities));
       if (key === "host_attacks") return typeof val === "object" && (val.updated != null || Array.isArray(val.points));
+      if (key === "planetary_observer") return typeof val === "object" && val.schema === "planetary-observer/v1";
       if (key === "angel_dossiers") return typeof val === "object" && (val.updated != null || val.dossier_count != null || Array.isArray(val.dossiers));
       if (key === "human_dossier") return typeof val === "object" && (val.generated_at != null || val.ip_count != null || Array.isArray(val.ips));
       if (key === "angel_research") return typeof val === "object" && (val.tables != null || val.updated != null);
@@ -3777,8 +3809,55 @@
         <span class="meta"> · ${esc(f.verdict)}${f.trust_meter != null ? " · trust " + f.trust_meter + "%" : ""}</span></div>`;
     }
 
+    function renderPlanetaryObserver(po) {
+      const doc = po || {};
+      const banner = $("planetary-observer");
+      const summary = $("planetary-observer-summary");
+      const stats = $("planetary-observer-stats");
+      const strip = $("planetary-host-strip");
+      const globe = doc.globe || {};
+      const wire = doc.wire || {};
+      const dns = doc.planetary_dns || {};
+      const hai = doc.hostile_ai || {};
+      const active = doc.schema === "planetary-observer/v1";
+      if (banner) banner.hidden = !active;
+      if (summary) {
+        summary.textContent = doc.proactive_summary || doc.motto || "Observing the whole planet. Destroy only at certainty.";
+      }
+      const chips = [
+        ["Globe", globe.total_targets ?? 0],
+        ["Certain", globe.strike_certain ?? 0],
+        ["Harm", wire.harm_candidates ?? 0],
+        ["Kill-eligible", wire.kill_eligible ?? 0],
+        ["Hostile AI", hai.certain ?? 0],
+        ["DNS zones", dns.zones ?? 0],
+        ["Proactive", doc.proactive_enabled ? "ON" : "OFF"],
+      ];
+      if (stats) {
+        stats.innerHTML = chips.map(([k, v]) =>
+          `<span>${esc(k)}: <strong>${esc(String(v))}</strong></span>`
+        ).join("");
+      }
+      if (strip) {
+        if (!active) {
+          strip.hidden = true;
+          strip.innerHTML = "";
+        } else {
+          const actions = (doc.last_proactive_cycle || {}).action_count ?? 0;
+          strip.hidden = false;
+          strip.innerHTML =
+            `<strong>Planetary observer</strong> — ${esc(doc.doctrine || "Observe globally. Kill at certainty.")} ` +
+            `<span class="meta">· ${esc(String(globe.total_targets ?? 0))} targets · ` +
+            `${esc(String(globe.strike_certain ?? 0))} certain · ` +
+            `${esc(String(wire.harm_candidates ?? 0))} harm · ` +
+            `${esc(String(actions))} last-cycle action(s)</span>`;
+        }
+      }
+    }
+
     function renderCommandCenter(data) {
       const cmd = data?.field_command || {};
+      renderPlanetaryObserver(data?.planetary_observer);
       const motto = $("command-motto");
       if (motto && cmd.motto) {
         motto.innerHTML = `<strong>Command · Heaven vs Hell</strong> — ${esc(cmd.motto)}`;
@@ -3822,9 +3901,13 @@
           ["Blocked", pulse.firewall_blocks ?? 0],
           ["Trusted", pulse.trusted_count ?? 0],
           ["Hot targets", pulse.host_hot ?? 0],
+          ["Planetary certain", pulse.planetary_certain ?? 0],
+          ["Harm on wire", pulse.planetary_harm ?? 0],
+          ["Hostile AI", pulse.hostile_ai_certain ?? 0],
           ["RF bursts", pulse.rf_recent_bursts ?? 0],
           ["Kill dossiers", pulse.human_dossier_ips ?? 0],
           ["Killed", pulse.attack_kit_killed ?? 0],
+          ["Proactive acts", pulse.planetary_proactive_actions ?? 0],
         ];
         pulseEl.innerHTML = chips.map(([k, v]) =>
           `<div class="pulse-chip">${esc(k)}<strong>${esc(String(v))}</strong></div>`
@@ -3917,6 +4000,7 @@
       renderConnections(gk, data.trusted, data.blocked, data.lockdown_first);
       lastGatekeeperSig = gatekeeperSig(gk);
       renderHostAttackMap(data.host_attacks || { points: [], stats: {} });
+      renderPlanetaryObserver(data.planetary_observer);
       lastHostAttackUpdated = data.host_attacks?.updated || "";
       renderTerrorSpiderweb(data.terror_spiderweb || { nodes: [], edges: [] });
       {
@@ -3987,6 +4071,9 @@
         case "host_attacks":
           renderHostAttackMap(data.host_attacks || { points: [], stats: {} });
           lastHostAttackUpdated = data.host_attacks?.updated || "";
+          break;
+        case "planetary_observer":
+          renderPlanetaryObserver(data.planetary_observer);
           break;
         case "terror_spiderweb":
           renderTerrorSpiderweb(data.terror_spiderweb || { nodes: [], edges: [] });
@@ -6229,6 +6316,26 @@
       } catch { alert("Hostile AI destroy unreachable."); }
       finally { btn.disabled = false; }
     });
+    $("planetary-observer-cycle")?.addEventListener("click", async (ev) => {
+      ev.preventDefault();
+      const btn = $("planetary-observer-cycle");
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/planetary-observer/cycle", { method: "POST", cache: "no-store" });
+        const j = await res.json();
+        if (!j.ok && !j.skipped) {
+          alert(j.error || j.reason || "Proactive cycle failed.");
+          return;
+        }
+        if (j.summary) alert(j.summary);
+        refresh();
+      } catch {
+        alert("Planetary observer cycle unreachable.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+
     $("hostile-ai-rescan")?.addEventListener("click", async (ev) => {
       const btn = ev.currentTarget;
       btn.disabled = true;

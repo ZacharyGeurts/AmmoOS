@@ -164,6 +164,9 @@ while true; do
   if declare -f nexus_host_attack_publish_deep >/dev/null 2>&1; then
     nexus_host_attack_publish_deep
   fi
+  if declare -f nexus_planetary_observer_cycle >/dev/null 2>&1; then
+    nexus_planetary_observer_cycle
+  fi
   if declare -f nexus_field_rf_forever_enforce >/dev/null 2>&1; then
     nexus_field_rf_forever_enforce
   fi
