@@ -34,17 +34,31 @@ TAB_SPECS: dict[str, dict[str, Any]] = {
 PENDING_RE = re.compile(r"^(Loading|Awaiting|Harvesting|Building|Scanning|Pulling)", re.I)
 
 
+def _read_json_file(fp: Path) -> dict[str, Any] | None:
+    if not fp.is_file() or fp.stat().st_size < 32:
+        return None
+    try:
+        doc = json.loads(fp.read_text(encoding="utf-8", errors="replace"))
+        return doc if isinstance(doc, dict) and doc else None
+    except (OSError, json.JSONDecodeError, PermissionError):
+        pass
+    try:
+        out = subprocess.check_output(
+            ["sudo", "-n", "cat", str(fp)],
+            stderr=subprocess.DEVNULL,
+            timeout=20,
+        )
+        doc = json.loads(out.decode("utf-8", errors="replace"))
+        return doc if isinstance(doc, dict) and doc else None
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError):
+        return None
+
+
 def _load_state_json() -> dict[str, Any] | None:
     for state_dir in (STATE, Path("/var/lib/nexus-shield")):
-        fp = state_dir / "threat-panel.json"
-        if not fp.is_file() or fp.stat().st_size < 32:
-            continue
-        try:
-            doc = json.loads(fp.read_text(encoding="utf-8", errors="replace"))
-            if isinstance(doc, dict) and doc:
-                return doc
-        except (OSError, json.JSONDecodeError):
-            continue
+        doc = _read_json_file(state_dir / "threat-panel.json")
+        if doc:
+            return doc
     return None
 
 
