@@ -180,13 +180,8 @@ nexus_packet_check_dns() {
 }
 
 nexus_h7_library_publish() {
-  [[ "${NEXUS_H7_LIBRARY:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
-  local script="${NEXUS_INSTALL_ROOT}/lib/h7-library-bridge.py"
-  [[ -f "$script" ]] || return 0
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}" \
-    python3 "$script" build >/dev/null 2>&1 || true
+  # Library catalog is live from field drives — no snapshot cache.
+  :
 }
 
 nexus_packet_field_capture() {

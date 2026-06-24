@@ -177,11 +177,14 @@ nexus_threat_panel_publish() {
       printf '{}'
     fi
     printf ',"h7_library":'
-    if [[ -s "${NEXUS_STATE_DIR}/h7-library.json" ]]; then
-      python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
-        "${NEXUS_STATE_DIR}/h7-library.json" 2>/dev/null || printf '{}'
+    if [[ -f "${NEXUS_INSTALL_ROOT}/lib/h7-library-bridge.py" ]]; then
+      NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+        HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}" \
+        HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}" \
+        python3 "${NEXUS_INSTALL_ROOT}/lib/h7-library-bridge.py" build 2>/dev/null \
+        || printf '{"books":[],"shelves":[]}'
     else
-      printf '{"books":[]}'
+      printf '{"books":[],"shelves":[]}'
     fi
     printf ',"gatekeeper":'
     if [[ -s "${NEXUS_STATE_DIR}/connection-intent.json" ]]; then

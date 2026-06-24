@@ -1260,15 +1260,21 @@ PY
 
 test_h7_library_module() {
   [[ -f "${ROOT}/lib/h7-library-bridge.py" ]]
+  [[ -f "${ROOT}/data/dewey-decimal-map.json" ]]
+  [[ -f "${ROOT}/panel/assets/h7-reader.js" ]]
   [[ -f "${ROOT}/lib/field-books/network-security-field-guide.txt" ]]
-  grep -q 'nexus_h7_library_publish' "${ROOT}/lib/packet-oracle.sh"
   grep -q 'h7_library' "${ROOT}/lib/threat-panel.sh"
-  grep -q 'view-inspect' "${ROOT}/panel/threat-panel.html"
+  grep -q 'h7-library-bridge.py' "${ROOT}/lib/threat-panel.sh"
   grep -q 'view-library' "${ROOT}/panel/threat-panel.html"
-  grep -q 'renderInspect' "${ROOT}/panel/threat-panel.html"
-  grep -q 'retro-modem' "${ROOT}/panel/threat-panel.html"
+  grep -q 'library-dewey' "${ROOT}/panel/threat-panel.html"
+  grep -q 'H7Reader' "${ROOT}/panel/threat-panel.html"
+  grep -q '/api/library/search' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/library/full' "${ROOT}/lib/threat-panel-http.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}" \
     python3 "${ROOT}/lib/h7-library-bridge.py" build | grep -q 'network-security-field-guide'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    python3 "${ROOT}/lib/h7-library-bridge.py" search security | grep -q '"hits"'
 }
 
 run_test "packet dpi module" test_packet_dpi_module

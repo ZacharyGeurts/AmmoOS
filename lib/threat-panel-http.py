@@ -493,29 +493,75 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, '{"field":true,"panel_ready":false,"gatekeeper":{"connections":[]}}', "application/json")
             return
 
-        if path == "/api/library/page":
-            book_id = str(query.get("book", [""])[0]).strip()
-            page = int(query.get("page", ["1"])[0] or "1")
-            if not book_id:
-                self._send(400, json.dumps({"ok": False, "error": "missing book"}), "application/json")
-                return
+        if path.startswith("/api/library/"):
             script = INSTALL_ROOT / "lib" / "h7-library-bridge.py"
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
-            proc = subprocess.run(
-                [sys.executable, str(script), "page", book_id, str(page)],
-                capture_output=True,
-                text=True,
-                timeout=20,
-                env=env,
-            )
-            try:
-                payload = json.loads(proc.stdout or "{}")
-            except json.JSONDecodeError:
-                payload = {"ok": False, "error": "library_read_failed"}
-            self._send(200 if payload.get("ok") else 404, json.dumps(payload), "application/json")
-            return
+            env.setdefault("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")
+            env.setdefault("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage")
+
+            def _lib_json(args: list[str], *, timeout: int = 45) -> dict:
+                if not script.is_file():
+                    return {"ok": False, "error": "library_bridge_missing"}
+                proc = subprocess.run(
+                    [sys.executable, str(script), *args],
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout,
+                    env=env,
+                )
+                try:
+                    return json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    return {"ok": False, "error": "library_read_failed", "detail": (proc.stderr or "")[:400]}
+
+            if path == "/api/library/page":
+                book_id = str(query.get("book", [""])[0]).strip()
+                page = int(query.get("page", ["1"])[0] or "1")
+                chars = str(query.get("chars", [""])[0]).strip()
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book"}), "application/json")
+                    return
+                args = ["page", book_id, str(page)]
+                if chars.isdigit():
+                    args.append(chars)
+                payload = _lib_json(args)
+                self._send(200 if payload.get("ok") else 404, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/full":
+                book_id = str(query.get("book", [""])[0]).strip()
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book"}), "application/json")
+                    return
+                payload = _lib_json(["full", book_id], timeout=120)
+                self._send(200 if payload.get("ok") else 404, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/catalog":
+                payload = _lib_json(["build"], timeout=90)
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/search":
+                q = str(query.get("q", query.get("query", [""]))[0]).strip()
+                if not q:
+                    self._send(400, json.dumps({"ok": False, "error": "missing query"}), "application/json")
+                    return
+                payload = _lib_json(["search", q])
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/dewey":
+                payload = _lib_json(["dewey"], timeout=90)
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/fonts":
+                payload = _lib_json(["fonts"])
+                self._send(200, json.dumps(payload), "application/json")
+                return
 
         if path == "/api/data":
             items = []
@@ -616,15 +662,64 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = unquote(self.path.split("?", 1)[0])
+        max_body = 8_388_608 if path.startswith("/api/library/") else 65536
         if self.headers.get("Content-Length"):
             try:
                 length = int(self.headers.get("Content-Length", 0))
             except ValueError:
                 length = 0
-            if length > 65536:
+            if length > max_body:
                 self._send(413, "payload too large", "text/plain")
                 return
         body = self._read_json_body()
+
+        if path.startswith("/api/library/"):
+            script = INSTALL_ROOT / "lib" / "h7-library-bridge.py"
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            env.setdefault("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")
+            env.setdefault("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage")
+
+            if path == "/api/library/upload":
+                if not script.is_file():
+                    self._send(500, json.dumps({"ok": False, "error": "library_bridge_missing"}), "application/json")
+                    return
+                proc = subprocess.run(
+                    [sys.executable, str(script), "upload", json.dumps(body)],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    env=env,
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "upload_failed"}
+                self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/fetch":
+                book_id = str(body.get("book_id", body.get("id", ""))).strip()
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book_id"}), "application/json")
+                    return
+                args = ["fetch", book_id]
+                if body.get("force"):
+                    args.append("--force")
+                proc = subprocess.run(
+                    [sys.executable, str(script), *args],
+                    capture_output=True,
+                    text=True,
+                    timeout=180,
+                    env=env,
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "fetch_failed"}
+                self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+                return
 
         if path == "/api/update/apply":
             lock = _nexus_update_lock(["status"])

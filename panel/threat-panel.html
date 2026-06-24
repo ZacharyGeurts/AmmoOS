@@ -16,6 +16,7 @@
   <link rel="preload" href="/api/status" as="fetch" crossorigin />
   <link rel="preload" href="/api/field" as="fetch" crossorigin />
   <script src="/assets/field-foundation.js"></script>
+  <script src="/assets/h7-reader.js"></script>
   <script defer src="/assets/nexus-plugin-runtime.js"></script>
   <script defer src="/assets/plugins/tab-beacon.js"></script>
   <script defer src="/assets/terror-spiderweb.js"></script>
@@ -751,8 +752,26 @@
     .inspect-scroll { max-height: 420px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
     .inspect-verdict-alert { color: var(--murder); font-weight: 700; }
     .inspect-verdict-clean { color: var(--ok); }
-    .library-layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; padding: 16px 18px; min-height: 480px; }
-    .library-shelf { border: 1px solid var(--border); border-radius: 10px; padding: 12px; background: rgba(8,14,24,0.6); }
+    .library-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; padding: 16px 18px; min-height: 520px; }
+    .library-sidebar { display: flex; flex-direction: column; gap: 10px; }
+    .library-search-row { display: flex; gap: 8px; }
+    .library-search-row input {
+      flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: #0d1520; color: var(--text); font-size: 0.72rem;
+    }
+    .library-search-row button, .library-upload-btn, .library-fetch-btn {
+      padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: #1a2430; color: var(--text); cursor: pointer; font-size: 0.68rem;
+    }
+    .library-dewey { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: rgba(8,14,24,0.6); max-height: 220px; overflow: auto; }
+    .library-dewey-btn {
+      display: flex; justify-content: space-between; width: 100%; text-align: left; margin-bottom: 6px;
+      padding: 8px 10px; border-radius: 8px; border: 1px solid #2a3848; background: rgba(12,20,32,0.8);
+      color: var(--text); cursor: pointer; font-size: 0.68rem;
+    }
+    .library-dewey-btn:hover, .library-dewey-btn.active { border-color: var(--gold); background: rgba(30,24,12,0.35); }
+    .library-dewey-btn span { color: var(--muted); font-size: 0.62rem; }
+    .library-shelf { border: 1px solid var(--border); border-radius: 10px; padding: 12px; background: rgba(8,14,24,0.6); flex: 1; min-height: 180px; max-height: 360px; overflow: auto; }
     .library-book-btn {
       display: block; width: 100%; text-align: left; margin-bottom: 8px; padding: 10px 12px;
       border-radius: 8px; border: 1px solid #2a3848; background: rgba(12,20,32,0.8); color: var(--text);
@@ -760,11 +779,36 @@
     }
     .library-book-btn:hover, .library-book-btn.active { border-color: var(--gold); background: rgba(30,24,12,0.35); }
     .library-book-btn em { display: block; color: var(--muted); font-size: 0.62rem; margin-top: 4px; font-style: normal; }
-    .library-reader { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: rgba(8,12,20,0.75); }
-    .library-reader pre { white-space: pre-wrap; font-family: Georgia, serif; font-size: 0.82rem; line-height: 1.55; color: #d8e0ec; margin: 0; }
-    .library-nav { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
-    .library-nav button { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: #1a2430; color: var(--text); cursor: pointer; font-size: 0.72rem; }
-    .library-nav button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .library-main { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: rgba(8,12,20,0.75); display: flex; flex-direction: column; gap: 12px; }
+    .library-meta-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 0.68rem; color: var(--muted); }
+    .library-open-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--gold); background: rgba(30,24,12,0.45); color: var(--gold); cursor: pointer; font-size: 0.74rem; }
+    .library-upload-panel { display: none; border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: rgba(10,16,26,0.8); }
+    .library-upload-panel.open { display: block; }
+    .library-upload-panel input, .library-upload-panel textarea, .library-upload-panel select {
+      width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 6px; border: 1px solid var(--border);
+      background: #0d1520; color: var(--text); font-size: 0.72rem;
+    }
+    .library-upload-panel textarea { min-height: 120px; resize: vertical; }
+    .library-linkable { font-size: 0.66rem; color: var(--muted); max-height: 140px; overflow: auto; }
+    .library-link-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid #1a2430; }
+    .h7r-overlay { position: fixed; inset: 0; z-index: 99990; background: rgba(0,0,0,0.92); display: none; }
+    .h7r-overlay.open { display: flex; }
+    .h7r-shell { position: relative; flex: 1; display: flex; flex-direction: column; width: 100%; height: 100%; }
+    .h7r-top { padding: 10px 48px 10px 14px; border-bottom: 1px solid #1e2838; background: #0a1018; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .h7r-title { font-size: 0.82rem; color: var(--gold); font-weight: 600; margin-right: 12px; }
+    .h7r-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 0.62rem; color: var(--muted); }
+    .h7r-controls label { display: flex; align-items: center; gap: 4px; }
+    .h7r-controls select { padding: 3px 6px; border-radius: 4px; border: 1px solid var(--border); background: #0d1520; color: var(--text); }
+    .h7r-body-wrap { flex: 1; overflow: hidden; padding: 12px 16px; }
+    .h7r-body { height: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; hyphens: auto; padding: 8px 4px; }
+    .h7r-bottom { padding: 10px 16px; border-top: 1px solid #1e2838; background: #0a1018; display: flex; align-items: center; gap: 12px; }
+    .h7r-slider-wrap { flex: 1; display: flex; align-items: center; gap: 10px; }
+    .h7r-slider { flex: 1; }
+    .h7r-page-label { font-size: 0.72rem; color: var(--muted); min-width: 72px; text-align: center; }
+    .h7r-nav { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #1a2430; color: var(--text); cursor: pointer; }
+    .h7r-nav:disabled { opacity: 0.35; cursor: not-allowed; }
+    .h7r-close { position: absolute; top: 8px; right: 10px; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #1a2430; color: var(--text); cursor: pointer; z-index: 2; }
+    .h7r-error { color: #ffb0b8; padding: 20px; }
     @media (max-width: 900px) { .library-layout { grid-template-columns: 1fr; } }
     .verdict-USER_OK { color: var(--ok); }
     .verdict-EPHEMERAL { color: var(--internet); }
@@ -1825,16 +1869,29 @@
 
   <section id="view-library" class="view">
     <div class="library-layout">
-      <div class="library-shelf" id="library-shelf"><div class="empty">Loading H7 shelf…</div></div>
-      <div class="library-reader">
-        <h3 id="library-title" style="margin:0 0 8px;font-size:0.9rem;color:var(--gold);">Select a book</h3>
-        <div id="library-meta" class="meta" style="font-size:0.68rem;margin-bottom:12px;"></div>
-        <pre id="library-text">Hostess7 field books — network security, operator manual, AMOURANTHRTX biography. Expand on field drive.</pre>
-        <div class="library-nav">
-          <button type="button" id="library-prev" disabled>← Prev</button>
-          <span id="library-page-label" style="font-size:0.72rem;color:var(--muted);">—</span>
-          <button type="button" id="library-next" disabled>Next →</button>
+      <div class="library-sidebar">
+        <div class="library-search-row">
+          <input type="search" id="library-search" placeholder="Search title, author, Dewey…" autocomplete="off">
+          <button type="button" id="library-search-btn">Search</button>
         </div>
+        <div class="library-dewey" id="library-dewey"></div>
+        <div class="library-shelf" id="library-shelf"></div>
+      </div>
+      <div class="library-main">
+        <h3 id="library-title" style="margin:0;font-size:0.9rem;color:var(--gold);">Hostess7 H7 Library</h3>
+        <div class="library-meta-bar">
+          <span id="library-meta"></span>
+          <button type="button" class="library-open-btn" id="library-open-reader" disabled>Open full-screen reader</button>
+          <button type="button" class="library-upload-btn" id="library-upload-toggle">Upload to Dewey shelf</button>
+        </div>
+        <div class="library-upload-panel" id="library-upload-panel">
+          <input type="text" id="library-upload-title" placeholder="Title">
+          <input type="text" id="library-upload-author" placeholder="Author">
+          <select id="library-upload-dewey"></select>
+          <textarea id="library-upload-text" placeholder="Paste plain text — compressed to H7 on field drive"></textarea>
+          <button type="button" class="library-upload-btn" id="library-upload-submit">Pack H7 → Dewey folder</button>
+        </div>
+        <div class="library-linkable" id="library-linkable"></div>
       </div>
     </div>
   </section>
@@ -2755,7 +2812,7 @@
       renderResearch(data.angel_research);
       renderPacketField(data.packet_field || {});
       renderInspect(data.packet_field || {});
-      renderLibraryShelf(data.h7_library || { books: [] });
+      renderLibrary(data.h7_library || { books: [], shelves: [] });
       if (window.NexusPlugins) NexusPlugins.render(data);
       updateTabLoadProgress(data);
       onSubViewActivated(currentSubView);
@@ -2803,7 +2860,7 @@
         renderPacketField(lastPanelData.packet_field);
         renderInspect(lastPanelData.packet_field);
       }
-      if (sub === "library" && lastPanelData) renderLibraryShelf(lastPanelData.h7_library);
+      if (sub === "library" && lastPanelData) renderLibrary(lastPanelData.h7_library);
       if (sub === "us" && lastPanelData) renderUSField(lastPanelData.us_field);
       if (sub === "command" && lastPanelData) renderCommandCenter(lastPanelData);
       if (sub === "honor" && lastPanelData) renderHonorability(lastPanelData);
@@ -3533,7 +3590,9 @@
     }
 
     let libraryBookId = null;
-    let libraryPage = 1;
+    let libraryCatalog = { books: [], shelves: [], linkable: [], fonts: [] };
+    let libraryDeweyFilter = null;
+    let librarySearchMode = false;
 
     function renderModemLights(modem) {
       const m = modem || {};
@@ -3583,56 +3642,211 @@
       }).join("");
     }
 
+    function libraryBooksForShelf() {
+      if (librarySearchMode) return libraryCatalog.searchHits || [];
+      if (libraryDeweyFilter) {
+        const shelf = (libraryCatalog.shelves || []).find((s) => s.code === libraryDeweyFilter);
+        return shelf?.books || [];
+      }
+      return libraryCatalog.books || [];
+    }
+
+    function renderLibraryDewey(lib) {
+      const el = $("library-dewey");
+      if (!el) return;
+      const shelves = lib?.shelves || [];
+      if (!shelves.length) {
+        el.innerHTML = '<div class="empty">No Dewey shelves on field drive yet.</div>';
+        return;
+      }
+      el.innerHTML = shelves.map((s) =>
+        `<button type="button" class="library-dewey-btn${libraryDeweyFilter === s.code ? " active" : ""}" data-dewey="${esc(s.code)}">
+          <strong>${esc(s.code)}</strong><span>${s.count} · ${esc((s.title || "").split("—")[0].trim())}</span>
+        </button>`
+      ).join("");
+      el.querySelectorAll("[data-dewey]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          librarySearchMode = false;
+          libraryDeweyFilter = libraryDeweyFilter === btn.dataset.dewey ? null : btn.dataset.dewey;
+          renderLibraryDewey(libraryCatalog);
+          renderLibraryShelf(libraryCatalog);
+        });
+      });
+    }
+
     function renderLibraryShelf(lib) {
       const shelf = $("library-shelf");
       if (!shelf) return;
-      const books = lib?.books || [];
+      const books = libraryBooksForShelf().filter((b) => b.ready !== false);
       if (!books.length) {
-        shelf.innerHTML = '<div class="empty">Library warming up…</div>';
+        shelf.innerHTML = librarySearchMode
+          ? '<div class="empty">No matches — try another search or browse Dewey shelves.</div>'
+          : '<div class="empty">No books in this Dewey shelf — upload or fetch from catalog.</div>';
         return;
       }
       shelf.innerHTML = books.map((b) =>
         `<button type="button" class="library-book-btn${libraryBookId === b.id ? " active" : ""}" data-book-id="${esc(b.id)}">
           <strong>${esc(b.title)}</strong>
-          <em>${esc(b.author || "")} · ${b.page_count || 0} pg · ${esc(b.category || "")}</em>
+          <em>${esc(b.author || "")} · Dewey ${esc(b.dewey || "?")} · ${esc(b.format || "H7")}</em>
         </button>`
       ).join("");
       shelf.querySelectorAll("[data-book-id]").forEach((btn) => {
-        btn.addEventListener("click", () => loadLibraryBook(btn.dataset.bookId, 1));
+        btn.addEventListener("click", () => selectLibraryBook(btn.dataset.bookId));
       });
-      if (!libraryBookId && books[0]) loadLibraryBook(books[0].id, 1);
+      if (!libraryBookId && books[0]) selectLibraryBook(books[0].id);
     }
 
-    async function loadLibraryBook(bookId, page) {
+    function selectLibraryBook(bookId) {
       libraryBookId = bookId;
-      libraryPage = page;
+      const book = (libraryCatalog.books || []).find((b) => b.id === bookId)
+        || libraryBooksForShelf().find((b) => b.id === bookId);
       document.querySelectorAll(".library-book-btn").forEach((b) => {
         b.classList.toggle("active", b.dataset.bookId === bookId);
       });
+      $("library-title").textContent = book?.title || bookId;
+      $("library-meta").textContent = [
+        book?.author || "",
+        book?.dewey ? `Dewey ${book.dewey} — ${book.dewey_label || ""}` : "",
+        book?.char_count ? `${book.char_count.toLocaleString()} chars` : "",
+        book?.format || "",
+      ].filter(Boolean).join(" · ");
+      const openBtn = $("library-open-reader");
+      if (openBtn) openBtn.disabled = !book?.ready;
+    }
+
+    function renderLibraryLinkable(lib) {
+      const el = $("library-linkable");
+      if (!el) return;
+      const rows = (lib?.linkable || []).slice(0, 24);
+      if (!rows.length) {
+        el.innerHTML = "";
+        return;
+      }
+      el.innerHTML = `<div style="margin-bottom:6px;color:var(--gold);font-size:0.68rem;">Fetch from best libraries → H7 on field drive</div>`
+        + rows.map((b) =>
+          `<div class="library-link-row">
+            <span>${esc(b.title)} <em style="color:var(--muted)">· ${esc(b.author || "")}</em></span>
+            <button type="button" class="library-fetch-btn" data-fetch-id="${esc(b.id)}">Retrieve H7</button>
+          </div>`
+        ).join("");
+      el.querySelectorAll("[data-fetch-id]").forEach((btn) => {
+        btn.addEventListener("click", () => fetchLibraryBook(btn.dataset.fetchId, btn));
+      });
+    }
+
+    function renderLibraryUploadDewey(lib) {
+      const sel = $("library-upload-dewey");
+      if (!sel) return;
+      const classes = lib?.dewey_classes || [];
+      sel.innerHTML = classes.map((c) =>
+        `<option value="${esc(c.code)}">${esc(c.code)} — ${esc(c.title)}</option>`
+      ).join("");
+    }
+
+    function renderLibrary(lib) {
+      libraryCatalog = {
+        books: lib?.books || [],
+        shelves: lib?.shelves || [],
+        linkable: lib?.linkable || [],
+        fonts: lib?.fonts || [],
+        searchHits: libraryCatalog.searchHits || [],
+      };
+      if (window.H7Reader?.setFonts) H7Reader.setFonts(libraryCatalog.fonts);
+      renderLibraryDewey(lib);
+      renderLibraryShelf(lib);
+      renderLibraryLinkable(lib);
+      renderLibraryUploadDewey(lib);
+      if (libraryBookId) selectLibraryBook(libraryBookId);
+    }
+
+    async function searchLibrary(query) {
+      const q = String(query || "").trim();
+      if (!q) {
+        librarySearchMode = false;
+        libraryCatalog.searchHits = [];
+        renderLibraryShelf(libraryCatalog);
+        return;
+      }
       try {
-        const res = await fetch(`/api/library/page?book=${encodeURIComponent(bookId)}&page=${page}`, { cache: "no-store" });
+        const res = await fetch(`/api/library/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
         const data = await res.json();
-        if (!data.ok) {
-          $("library-text").textContent = "Could not load book page.";
-          return;
-        }
-        $("library-title").textContent = data.book?.title || bookId;
-        $("library-meta").textContent = `${data.book?.author || ""} · page ${data.page} of ${data.page_count} · target ${data.book?.pages_target || "?"} pages`;
-        $("library-text").textContent = data.text || "";
-        $("library-page-label").textContent = `Page ${data.page} / ${data.page_count}`;
-        $("library-prev").disabled = !data.has_prev;
-        $("library-next").disabled = !data.has_next;
+        librarySearchMode = true;
+        libraryDeweyFilter = null;
+        libraryCatalog.searchHits = data.hits || [];
+        renderLibraryDewey(libraryCatalog);
+        renderLibraryShelf(libraryCatalog);
       } catch {
-        $("library-text").textContent = "Library API unreachable.";
+        librarySearchMode = true;
+        libraryCatalog.searchHits = [];
+        renderLibraryShelf(libraryCatalog);
       }
     }
 
-    $("library-prev")?.addEventListener("click", () => {
-      if (libraryBookId && libraryPage > 1) loadLibraryBook(libraryBookId, libraryPage - 1);
+    async function fetchLibraryBook(bookId, btn) {
+      if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
+      try {
+        const res = await fetch("/api/library/fetch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ book_id: bookId }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "fetch_failed");
+        const catRes = await fetch("/api/library/catalog", { cache: "no-store" });
+        const cat = await catRes.json();
+        renderLibrary(cat);
+        if (data.id) selectLibraryBook(data.id);
+      } catch (err) {
+        if (btn) btn.textContent = "Failed";
+        console.warn("library fetch", err);
+      } finally {
+        if (btn && btn.textContent === "Fetching…") {
+          btn.disabled = false;
+          btn.textContent = "Retrieve H7";
+        }
+      }
+    }
+
+    async function uploadLibraryBook() {
+      const title = $("library-upload-title")?.value?.trim();
+      const author = $("library-upload-author")?.value?.trim() || "";
+      const text = $("library-upload-text")?.value?.trim() || "";
+      const dewey = $("library-upload-dewey")?.value || "";
+      if (!title || text.length < 40) return;
+      const btn = $("library-upload-submit");
+      if (btn) { btn.disabled = true; btn.textContent = "Packing H7…"; }
+      try {
+        const res = await fetch("/api/library/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, author, text, dewey }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "upload_failed");
+        const catRes = await fetch("/api/library/catalog", { cache: "no-store" });
+        renderLibrary(await catRes.json());
+        $("library-upload-panel")?.classList.remove("open");
+        if (data.id) selectLibraryBook(data.id);
+      } catch (err) {
+        console.warn("library upload", err);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "Pack H7 → Dewey folder"; }
+      }
+    }
+
+    $("library-search-btn")?.addEventListener("click", () => searchLibrary($("library-search")?.value));
+    $("library-search")?.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") searchLibrary(ev.target.value);
     });
-    $("library-next")?.addEventListener("click", () => {
-      if (libraryBookId) loadLibraryBook(libraryBookId, libraryPage + 1);
+    $("library-open-reader")?.addEventListener("click", () => {
+      if (!libraryBookId || !window.H7Reader) return;
+      const book = (libraryCatalog.books || []).find((b) => b.id === libraryBookId);
+      H7Reader.open(libraryBookId, book);
     });
+    $("library-upload-toggle")?.addEventListener("click", () => {
+      $("library-upload-panel")?.classList.toggle("open");
+    });
+    $("library-upload-submit")?.addEventListener("click", uploadLibraryBook);
 
     function renderPacketField(pf) {
       const statsEl = $("packet-field-stats");
