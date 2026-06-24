@@ -67,20 +67,37 @@ def _tray_icon_source() -> Path:
     return INSTALL / "panel" / "assets" / "nexus-shield.png"
 
 
-def _ensure_tray_icon() -> Path:
+def _icon_stamp(src: Path) -> str:
+    try:
+        st = src.stat()
+        return f"{src}:{st.st_mtime_ns}:{st.st_size}"
+    except OSError:
+        return ""
+
+
+def _ensure_tray_icon(*, force: bool = False) -> Path:
     icon = STATE / "nexus-tray.png"
+    stamp_file = STATE / "nexus-tray-icon.stamp"
     src = _tray_icon_source()
     icon.parent.mkdir(parents=True, exist_ok=True)
+    stamp = _icon_stamp(src)
     if src.is_file():
         try:
-            src_mtime = src.stat().st_mtime
-            if icon.is_file() and icon.stat().st_size > 0 and icon.stat().st_mtime >= src_mtime:
+            if (
+                not force
+                and icon.is_file()
+                and icon.stat().st_size > 0
+                and stamp_file.is_file()
+                and stamp_file.read_text(encoding="utf-8", errors="replace").strip() == stamp
+            ):
                 return icon
             from PIL import Image
 
             img = Image.open(src).convert("RGBA")
             img = img.resize((24, 24), Image.Resampling.LANCZOS)
             img.save(icon, format="PNG")
+            if stamp:
+                stamp_file.write_text(stamp + "\n", encoding="utf-8")
             return icon
         except Exception:
             if icon.is_file() and icon.stat().st_size > 0:
@@ -167,34 +184,28 @@ def open_tab(route: str = "command") -> None:
             continue
 
 
-class TabPickerDialog(Gtk.Dialog):
+class TabPickerPopup(Gtk.Window):
+    """Fast-track tab list — single click opens browser tab; no quit/cancel chrome."""
+
     def __init__(self) -> None:
-        super().__init__(
-            title="NEXUS-Shield — Go to tab",
-            transient_for=None,
-            flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
-        )
+        super().__init__(title="NEXUS-Shield — Tab")
         self.set_default_size(360, 420)
         self.set_position(Gtk.WindowPosition.CENTER)
-        self.add_buttons(
-            Gtk.STOCK_CANCEL,
-            Gtk.ResponseType.CANCEL,
-            "Quit tray",
-            Gtk.ResponseType.REJECT,
-            "Open tab",
-            Gtk.ResponseType.OK,
-        )
-        content = self.get_content_area()
-        content.set_spacing(8)
-        content.set_margin_top(12)
-        content.set_margin_bottom(8)
-        content.set_margin_start(12)
-        content.set_margin_end(12)
+        self.set_keep_above(True)
+        self.set_skip_taskbar_hint(True)
+        self.set_type_hint(Gtk.WindowTypeHint.UTILITY)
+        self.connect("delete-event", lambda *_: False)
 
-        hint = Gtk.Label(label="Pick a panel tab to open in your browser:")
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        outer.set_margin_top(12)
+        outer.set_margin_bottom(12)
+        outer.set_margin_start(12)
+        outer.set_margin_end(12)
+
+        hint = Gtk.Label(label="Click a tab — opens immediately in your browser")
         hint.set_xalign(0)
         hint.set_line_wrap(True)
-        content.pack_start(hint, False, False, 0)
+        outer.pack_start(hint, False, False, 0)
 
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -222,7 +233,7 @@ class TabPickerDialog(Gtk.Dialog):
             self.listbox.add(row)
         self.listbox.connect("row-activated", self._on_row_activated)
         scroll.add(self.listbox)
-        content.pack_start(scroll, True, True, 0)
+        outer.pack_start(scroll, True, True, 0)
 
         last_row = next(
             (row for row in self.listbox.get_children() if getattr(row, "route", None) == _load_last_tab()),
@@ -230,18 +241,11 @@ class TabPickerDialog(Gtk.Dialog):
         )
         if last_row:
             self.listbox.select_row(last_row)
-        content.show_all()
+        self.add(outer)
 
     def _on_row_activated(self, _listbox, row) -> None:  # noqa: ANN001
-        route = getattr(row, "route", "command")
-        self.response(Gtk.ResponseType.OK)
-        self._chosen_route = route  # type: ignore[attr-defined]
-
-    def chosen_route(self) -> str:
-        row = self.listbox.get_selected_row()
-        if row is not None:
-            return str(getattr(row, "route", "command"))
-        return _load_last_tab()
+        open_tab(str(getattr(row, "route", "command")))
+        self.destroy()
 
 
 _dialog_open = False
@@ -252,21 +256,21 @@ def show_tab_picker() -> None:
     if _dialog_open:
         return
     _dialog_open = True
-    try:
-        dlg = TabPickerDialog()
-        response = dlg.run()
-        if response == Gtk.ResponseType.OK:
-            open_tab(getattr(dlg, "_chosen_route", None) or dlg.chosen_route())
-        elif response == Gtk.ResponseType.REJECT:
-            Gtk.main_quit()
-        dlg.destroy()
-    finally:
+
+    def _on_destroy(_widget) -> None:  # noqa: ANN001
+        global _dialog_open
         _dialog_open = False
+
+    popup = TabPickerPopup()
+    popup.connect("destroy", _on_destroy)
+    popup.show_all()
+    popup.present()
 
 
 class NexusTray:
     def __init__(self) -> None:
-        icon_path = str(_ensure_tray_icon())
+        force_icon = os.environ.get("NEXUS_TRAY_ICON_REFRESH", "0") == "1"
+        icon_path = str(_ensure_tray_icon(force=force_icon))
         self._status_icon = None
         self._indicator = None
 

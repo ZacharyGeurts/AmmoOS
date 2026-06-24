@@ -17,8 +17,11 @@
 ## System tray
 
 - **Amouranth face** tray icon (`nexus-tray-amouranth.png`) — military green/bronze ring
-- **Left or right click** → tab picker dialog (AppIndicator + StatusIcon)
+- **Left or right click** → fast-track tab picker (single click opens tab; no quit/cancel dialogs)
+- **Autostart + watchdog** — tray icon on login; auto-restart if the process exits
+- **Icon cache refresh** — stamp-based tray PNG so updates reshow the correct face
 - **`./nexus.sh --tab signals`** — open any tab from CLI
+- **OCR validated** — `scripts/panel-ocr-validate.py` confirms v8.0.0 military GUI before release
 
 ## Field & panel
 

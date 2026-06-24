@@ -2124,9 +2124,13 @@ test_panel_tray() {
   [[ -f "${ROOT}/lib/panel-tray.sh" ]]
   grep -q 'nexus_panel_tray_start' "${ROOT}/nexus.sh"
   grep -q 'nexus_panel_open_tab' "${ROOT}/lib/panel-tray.sh"
+  grep -q 'nexus_panel_tray_watchdog_start' "${ROOT}/lib/panel-tray.sh"
+  grep -q 'nexus_panel_tray_install_autostart' "${ROOT}/lib/panel-tray.sh"
   grep -q 'AyatanaAppIndicator3' "${ROOT}/lib/panel-tray.py"
   grep -q 'show_tab_picker' "${ROOT}/lib/panel-tray.py"
+  grep -q 'TabPickerPopup' "${ROOT}/lib/panel-tray.py"
   grep -q '_on_indicator_menu_show' "${ROOT}/lib/panel-tray.py"
+  ! grep -q 'Quit tray' "${ROOT}/lib/panel-tray.py"
   grep -q 'library' "${ROOT}/lib/panel-tray.py"
   grep -q 'nexus-tray-amouranth' "${ROOT}/lib/panel-tray.py"
   [[ -s "${ROOT}/panel/assets/nexus-tray-amouranth-24.png" ]]

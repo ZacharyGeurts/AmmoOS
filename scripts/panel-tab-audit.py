@@ -34,17 +34,34 @@ TAB_SPECS: dict[str, dict[str, Any]] = {
 PENDING_RE = re.compile(r"^(Loading|Awaiting|Harvesting|Building|Scanning|Pulling)", re.I)
 
 
+def _load_state_json() -> dict[str, Any] | None:
+    for state_dir in (STATE, Path("/var/lib/nexus-shield")):
+        fp = state_dir / "threat-panel.json"
+        if not fp.is_file() or fp.stat().st_size < 32:
+            continue
+        try:
+            doc = json.loads(fp.read_text(encoding="utf-8", errors="replace"))
+            if isinstance(doc, dict) and doc:
+                return doc
+        except (OSError, json.JSONDecodeError):
+            continue
+    return None
+
+
 def _fetch_panel_json() -> dict[str, Any] | None:
-    url = f"{PANEL_URL}/api/field"
     ctx = __import__("ssl").create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = __import__("ssl").CERT_NONE
-    req = urllib.request.Request(url, headers={"User-Agent": "NEXUS-Panel-Tab-Audit"})
-    try:
-        with urllib.request.urlopen(req, timeout=12, context=ctx) as resp:
-            return json.loads(resp.read().decode("utf-8", errors="replace"))
-    except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError):
-        return None
+    for url in (f"{PANEL_URL}/api/field?full=1", f"{PANEL_URL}/api/field"):
+        req = urllib.request.Request(url, headers={"User-Agent": "NEXUS-Panel-Tab-Audit"})
+        try:
+            with urllib.request.urlopen(req, timeout=45, context=ctx) as resp:
+                doc = json.loads(resp.read().decode("utf-8", errors="replace"))
+                if isinstance(doc, dict) and len(doc) > 2:
+                    return doc
+        except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError):
+            continue
+    return _load_state_json()
 
 
 def _build_local_field() -> dict[str, Any]:
@@ -155,7 +172,7 @@ def main() -> int:
 
     data = _fetch_panel_json()
     source = "panel"
-    if not data:
+    if not data and os.environ.get("NEXUS_PANEL_AUDIT_SKIP_BUILD") != "1":
         data = _build_local_field()
         source = "local-build"
     if not data:
