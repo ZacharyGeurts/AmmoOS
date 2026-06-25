@@ -100,6 +100,83 @@ nexus_field_standalone_ensure_panel() {
   return 1
 }
 
+nexus_panel_shutdown_immediate() {
+  local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
+  nexus_panel_tray_watchdog_stop 2>/dev/null || true
+  nexus_panel_tray_stop 2>/dev/null || true
+  pkill -9 -f 'threat-panel-http\.py' 2>/dev/null || true
+  if command -v fuser >/dev/null 2>&1; then
+    fuser -k "${port}/tcp" 2>/dev/null || true
+    fuser -k "${NEXUS_THREAT_PANEL_FALLBACK_PORT:-9478}/tcp" 2>/dev/null || true
+  fi
+  nexus_await_port_free "${port}" 3 2>/dev/null || true
+  rm -f "${NEXUS_STATE_DIR}/panel.pid" 2>/dev/null || true
+  nexus_log "INFO" "nexus.sh" "PANEL_SHUTDOWN state=${NEXUS_STATE_DIR}"
+}
+
+nexus_panel_restart_immediate() {
+  nexus_panel_shutdown_immediate
+  nexus_field_standalone_ensure_panel
+}
+
+nexus_usage() {
+  cat <<EOF
+NEXUS-Shield — start the threat panel and open the browser
+  Version: $(nexus_read_version 2>/dev/null || echo unknown)
+  Install: ${NEXUS_INSTALL_ROOT}
+  State:   ${NEXUS_STATE_DIR}
+
+Usage:
+  ./nexus.sh                 Start panel (if needed), open browser, tray icon
+  ./nexus.sh --help          Show this help (-h, help)
+  ./nexus.sh --url           Print panel URL only
+  ./nexus.sh --wait          Block until panel responds
+  ./nexus.sh --no-browser    Start panel; print URL and CLI hints (no browser)
+  ./nexus.sh --no-tray       Skip system-tray icon (combine with other flags)
+  ./nexus.sh --tray          Start tray icon only (right-click → jump to tab)
+  ./nexus.sh --tab <view>    Open a panel tab in the browser (e.g. command, library)
+  ./nexus.sh --shutdown      Stop panel, tray, and watchdog immediately (--stop)
+  ./nexus.sh --restart       Stop and start panel immediately (--restart-immediate)
+
+Tab views (for --tab):
+  command, us, packets, threats, intel, signals, dns, outside, library, system
+  Sub-views: packets/monitor, threats/map, intel/honor, system/settings, …
+
+Environment:
+  NEXUS_STATE_DIR      Field state directory (default: /var/lib/nexus-shield)
+  NEXUS_PANEL_ROOT     Override panel install tree
+  NEXUS_THREAT_PANEL_PORT  HTTPS port (auto-picked if unset)
+
+CLI without browser:
+  ./bin/nexus status
+  ./bin/nexus panel --no-browser
+
+Logs: \${NEXUS_STATE_DIR}/panel-http.log
+EOF
+}
+
+case "${1:-}" in
+  -h|--help|help)
+    nexus_usage
+    exit 0
+    ;;
+  --shutdown|--stop)
+    nexus_panel_shutdown_immediate
+    echo "Panel stopped."
+    exit 0
+    ;;
+  --restart|--restart-immediate)
+    if nexus_panel_restart_immediate; then
+      URL="$(nexus_panel_url)"
+      echo "Panel restarted: ${URL}"
+      echo "Version: $(nexus_panel_served_version 2>/dev/null || nexus_panel_desired_version 2>/dev/null || echo unknown)"
+      exit 0
+    fi
+    echo "Panel restart failed — see ${NEXUS_STATE_DIR}/panel-http.log" >&2
+    exit 1
+    ;;
+esac
+
 # Installed systems: try systemd only when not field-standalone.
 if [[ "${NEXUS_FIELD_STANDALONE:-}" != "1" ]] \
   && [[ -f "${ROOT}/lib/nexus-daemon.sh" ]] && command -v systemctl >/dev/null 2>&1; then
@@ -115,12 +192,26 @@ nexus_field_standalone_ensure_panel || {
   exit 1
 }
 
-panel_root="$(nexus_resolve_panel_root)"
-if [[ -f "${panel_root}/lib/threat-panel.sh" ]]; then
+nexus_panel_publish_if_needed() {
+  local panel_root="$1"
+  local panel_json="${NEXUS_STATE_DIR}/threat-panel.json"
+  [[ -f "${panel_root}/lib/threat-panel.sh" ]] || return 0
   # shellcheck source=/dev/null
   source "${panel_root}/lib/threat-panel.sh"
-  NEXUS_THREAT_PANEL=1 nexus_threat_panel_publish 2>/dev/null || true
-fi
+  if [[ -s "$panel_json" ]] && [[ "$(wc -c <"$panel_json" 2>/dev/null || echo 0)" -gt 32 ]]; then
+    return 0
+  fi
+  local assemble="${panel_root}/scripts/panel-json-assemble.py"
+  if [[ -f "$assemble" ]] && command -v python3 >/dev/null 2>&1; then
+    NEXUS_INSTALL_ROOT="${panel_root}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      python3 "$assemble" >/dev/null 2>&1 && return 0
+  fi
+  NEXUS_PANEL_PUBLISH_FAST="${NEXUS_PANEL_PUBLISH_FAST:-1}" \
+    NEXUS_THREAT_PANEL=1 nexus_threat_panel_publish 2>/dev/null || true
+}
+
+panel_root="$(nexus_resolve_panel_root)"
+nexus_panel_publish_if_needed "$panel_root"
 
 URL="$(nexus_panel_url)"
 

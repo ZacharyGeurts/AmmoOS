@@ -2199,6 +2199,31 @@ test_panel_tray() {
 
 run_test "panel tray tab picker" test_panel_tray
 
+test_panel_ocr_validate() {
+  [[ -f "${ROOT}/scripts/panel-ocr-validate.py" ]]
+  [[ -f "${ROOT}/panel/assets/nexus-rtx-zero.js" ]]
+  [[ -f "${ROOT}/panel/assets/nexus-rtx-zero.css" ]]
+  [[ -f "${ROOT}/panel/assets/packet-field-graphics.js" ]]
+  [[ -f "${ROOT}/panel/assets/nexus-sdf-menu.js" ]]
+  grep -q 'rtx-zero-v1' "${ROOT}/scripts/panel-ocr-validate.py"
+  grep -q '10.0.0' "${ROOT}/scripts/panel-ocr-validate.py"
+  grep -q '_panel_rtx_meta' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_status_shell' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus-rtx-zero' "${ROOT}/panel/threat-panel.html"
+  grep -q 'packet-field-graphics' "${ROOT}/panel/threat-panel.html"
+}
+
+test_panel_tab_audit_assemble() {
+  [[ -f "${ROOT}/scripts/panel-tab-audit.py" ]]
+  grep -q '_assemble_from_state' "${ROOT}/scripts/panel-tab-audit.py"
+  grep -q 'STATE_FRAGMENTS' "${ROOT}/scripts/panel-tab-audit.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$ROOT/.nexus-state" NEXUS_PANEL_AUDIT_SKIP_BUILD=1 \
+    python3 "${ROOT}/scripts/panel-tab-audit.py" >/dev/null
+}
+
+run_test "panel OCR validate assets" test_panel_ocr_validate
+run_test "panel tab audit state assemble" test_panel_tab_audit_assemble
+
 rm -rf "$NEXUS_STATE_DIR" /tmp/nexus-ent-rand.bin /tmp/nexus-ent-text.txt /tmp/nexus-shadow-t.txt "$NEXUS_ALERT_LOG" 2>/dev/null || true
 
 echo "---"

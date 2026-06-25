@@ -62,56 +62,58 @@ nexus_threat_panel_publish() {
   local lock="${NEXUS_STATE_DIR}/threat-panel.publish.lock"
   exec 9>"$lock" 2>/dev/null || return 0
   flock -w 5 9 2>/dev/null || return 0
-  if declare -f nexus_field_brain_sync >/dev/null 2>&1; then
-    nexus_field_brain_sync
-  fi
-  if declare -f nexus_field_gui_publish_all >/dev/null 2>&1; then
-    nexus_field_gui_publish_all
-  fi
-  if declare -f nexus_field_rf_cycle >/dev/null 2>&1; then
-    nexus_field_rf_cycle
-  fi
-  if declare -f nexus_terror_spiderweb_publish >/dev/null 2>&1; then
-    nexus_terror_spiderweb_publish
-  fi
-  if declare -f nexus_precision_field_publish >/dev/null 2>&1; then
-    nexus_precision_field_publish
-  fi
-  if declare -f nexus_hostess7_autonomous_cycle >/dev/null 2>&1; then
-    nexus_hostess7_autonomous_cycle
-  fi
-  if declare -f nexus_field_attack_rekill_cycle >/dev/null 2>&1; then
-    nexus_field_attack_rekill_cycle
-  fi
-  if declare -f nexus_audio_train_publish >/dev/null 2>&1; then
-    nexus_audio_train_publish
-  fi
-  if declare -f nexus_home_protector_publish >/dev/null 2>&1; then
-    nexus_home_protector_publish
-  fi
-  if declare -f nexus_field_antenna_cycle >/dev/null 2>&1; then
-    nexus_field_antenna_cycle
-  fi
-  if declare -f nexus_field_radio_publish >/dev/null 2>&1; then
-    nexus_field_radio_publish
-  fi
-  if declare -f nexus_signals_field_publish >/dev/null 2>&1; then
-    nexus_signals_field_publish
-  fi
-  if declare -f nexus_field_antenna_publish >/dev/null 2>&1; then
-    nexus_field_antenna_publish
-  fi
-  if declare -f nexus_field_dns_publish >/dev/null 2>&1; then
-    nexus_field_dns_publish
-  fi
-  if declare -f nexus_field_outside_talk_publish >/dev/null 2>&1; then
-    nexus_field_outside_talk_publish
-  fi
-  if declare -f nexus_field_drive_publish >/dev/null 2>&1; then
-    nexus_field_drive_publish
-  fi
-  if declare -f nexus_dns_admin_publish >/dev/null 2>&1; then
-    nexus_dns_admin_publish
+  if [[ "${NEXUS_PANEL_PUBLISH_FAST:-}" != "1" ]]; then
+    if declare -f nexus_field_brain_sync >/dev/null 2>&1; then
+      nexus_field_brain_sync
+    fi
+    if declare -f nexus_field_gui_publish_all >/dev/null 2>&1; then
+      nexus_field_gui_publish_all
+    fi
+    if declare -f nexus_field_rf_cycle >/dev/null 2>&1; then
+      nexus_field_rf_cycle
+    fi
+    if declare -f nexus_terror_spiderweb_publish >/dev/null 2>&1; then
+      nexus_terror_spiderweb_publish
+    fi
+    if declare -f nexus_precision_field_publish >/dev/null 2>&1; then
+      nexus_precision_field_publish
+    fi
+    if declare -f nexus_hostess7_autonomous_cycle >/dev/null 2>&1; then
+      nexus_hostess7_autonomous_cycle
+    fi
+    if declare -f nexus_field_attack_rekill_cycle >/dev/null 2>&1; then
+      nexus_field_attack_rekill_cycle
+    fi
+    if declare -f nexus_audio_train_publish >/dev/null 2>&1; then
+      nexus_audio_train_publish
+    fi
+    if declare -f nexus_home_protector_publish >/dev/null 2>&1; then
+      nexus_home_protector_publish
+    fi
+    if declare -f nexus_field_antenna_cycle >/dev/null 2>&1; then
+      nexus_field_antenna_cycle
+    fi
+    if declare -f nexus_field_radio_publish >/dev/null 2>&1; then
+      nexus_field_radio_publish
+    fi
+    if declare -f nexus_signals_field_publish >/dev/null 2>&1; then
+      nexus_signals_field_publish
+    fi
+    if declare -f nexus_field_antenna_publish >/dev/null 2>&1; then
+      nexus_field_antenna_publish
+    fi
+    if declare -f nexus_field_dns_publish >/dev/null 2>&1; then
+      nexus_field_dns_publish
+    fi
+    if declare -f nexus_field_outside_talk_publish >/dev/null 2>&1; then
+      nexus_field_outside_talk_publish
+    fi
+    if declare -f nexus_field_drive_publish >/dev/null 2>&1; then
+      nexus_field_drive_publish
+    fi
+    if declare -f nexus_dns_admin_publish >/dev/null 2>&1; then
+      nexus_dns_admin_publish
+    fi
   fi
   local ts mode conn arp egress listeners threats corr signal dns
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"

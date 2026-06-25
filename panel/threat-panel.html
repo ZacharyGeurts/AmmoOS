@@ -7,6 +7,14 @@
       try {
         document.documentElement.classList.add("dusty-midnight", "nexus-military-v8", "nexus-v82", "nexus-4k");
         if (localStorage.getItem("nexus_old_man") === "1") document.documentElement.classList.add("old-man");
+        try {
+          const q = new URLSearchParams(location.search);
+          if (q.get("rtx") === "1" || q.get("zero") === "1" || localStorage.getItem("nexus_rtx_zero") === "1") {
+            document.documentElement.classList.add("nexus-rtx-zero");
+          }
+        } catch (_) {}
+        var raw = sessionStorage.getItem("nexus-field-v4") || sessionStorage.getItem("nexus-field-v3");
+        if (raw) window.NEXUS_FIELD = JSON.parse(raw);
       } catch (_) {}
     })();
   </script>
@@ -40,6 +48,10 @@
   <script defer src="/assets/hostess7-command.js"></script>
   <script defer src="/assets/nexus-military-v8.js"></script>
   <script defer src="/assets/nexus-military-v82.js"></script>
+  <link rel="stylesheet" href="/assets/nexus-rtx-zero.css" />
+  <link rel="stylesheet" href="/assets/nexus-sdf-menu.css" />
+  <script defer src="/assets/nexus-rtx-zero.js"></script>
+  <script defer src="/assets/nexus-sdf-menu.js"></script>
   <script defer src="/assets/packet-field-graphics.js"></script>
   <script src="/assets/nexus-i18n.js"></script>
   <script src="/assets/nexus-braille-a11y.js"></script>

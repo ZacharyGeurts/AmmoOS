@@ -62,6 +62,76 @@ def _load_state_json() -> dict[str, Any] | None:
     return None
 
 
+STATE_FRAGMENTS: dict[str, str] = {
+    "gatekeeper": "connection-intent.json",
+    "field_antenna": "field-antenna-panel.json",
+    "field_radio": "field-radio-panel.json",
+    "signals_field": "signals-field-panel.json",
+    "field_dns": "field-dns-panel.json",
+    "home_protector": "home-protector-panel.json",
+    "host_attacks": "host-attacks.json",
+    "audio_train": "audio-train.json",
+    "field_rf": "field-rf-panel.json",
+}
+
+
+def _shell_json(cmd: str, *, timeout: int = 90) -> dict[str, Any] | None:
+    env = {**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)}
+    try:
+        out = subprocess.check_output(
+            ["bash", "-c", cmd],
+            stderr=subprocess.DEVNULL,
+            timeout=timeout,
+            env=env,
+            cwd=str(INSTALL),
+        )
+        doc = json.loads(out.decode("utf-8", errors="replace"))
+        return doc if isinstance(doc, dict) else None
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError):
+        return None
+
+
+def _assemble_from_state(*, write: bool = True) -> dict[str, Any] | None:
+    """Fast path: stitch threat-panel.json from existing state fragments (no RF cycle)."""
+    doc: dict[str, Any] = {"updated": "assembled", "panel_ready": True}
+    loaded = 0
+    for key, rel in STATE_FRAGMENTS.items():
+        frag = _read_json_file(STATE / rel)
+        if frag:
+            doc[key] = frag
+            loaded += 1
+    for key, cmd in (
+        ("field_command", f'python3 "{INSTALL}/lib/field-command.py" json'),
+        ("us_field", f'python3 "{INSTALL}/lib/field-us-intel.py" json'),
+        ("field_outside_talk", f'python3 "{INSTALL}/lib/field-outside-talk.py" json'),
+        (
+            "h7_library",
+            f'NEXUS_STATE_DIR="{STATE}" NEXUS_INSTALL_ROOT="{INSTALL}" '
+            f'python3 "{INSTALL}/lib/h7-library-bridge.py" build',
+        ),
+        (
+            "settings",
+            f'source "{INSTALL}/lib/nexus-common.sh" && '
+            f'source "{INSTALL}/lib/nexus-settings.sh" && nexus_settings_json',
+        ),
+    ):
+        if key in doc:
+            continue
+        frag = _shell_json(cmd, timeout=120 if key == "h7_library" else 45)
+        if frag:
+            doc[key] = frag
+            loaded += 1
+    if loaded < 4:
+        return None
+    if write:
+        out = STATE / "threat-panel.json"
+        try:
+            out.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        except OSError:
+            pass
+    return doc
+
+
 def _fetch_panel_json() -> dict[str, Any] | None:
     ctx = __import__("ssl").create_default_context()
     ctx.check_hostname = False
@@ -186,6 +256,9 @@ def main() -> int:
 
     data = _fetch_panel_json()
     source = "panel"
+    if not data and os.environ.get("NEXUS_PANEL_AUDIT_SKIP_BUILD") != "1":
+        data = _assemble_from_state()
+        source = "state-assemble"
     if not data and os.environ.get("NEXUS_PANEL_AUDIT_SKIP_BUILD") != "1":
         data = _build_local_field()
         source = "local-build"
