@@ -34,7 +34,9 @@
     "ear_existence": "Final_Ear/zocr_ear_localize.py correlate_existence",
     "eye_ear_fusion": "Final_Ear/zocr_eye_ear_fusion.py",
     "g16_linker": "Grok16/forge/g16-linker.py",
-    "g16_ironclad": "Grok16/forge/g16-ironclad.py"
+    "g16_ironclad": "Grok16/forge/g16-ironclad.py",
+    "g1id_format": "lib/g1id-format.py",
+    "g1id_doctrine": "data/g1id-format-doctrine.json"
   },
   "books": [
     {

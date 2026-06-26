@@ -103,6 +103,27 @@ def _has_place_receipt(entity: dict[str, Any]) -> bool:
     return any(entity.get(k) not in (None, "", []) for k in keys)
 
 
+def load_g1id(path: Path | str, *, verify_plate: bool = True) -> dict[str, Any]:
+    """Load cold .g1id geometric identity — this_one hardened, plate preserved."""
+    g1 = _mod(INSTALL / "lib" / "g1id-format.py", "g1id_format")
+    if not g1 or not hasattr(g1, "read_file"):
+        return {"ok": False, "error": "g1id_format_missing"}
+    try:
+        result = g1.read_file(path, verify_plate=verify_plate)
+        if not result.get("ok"):
+            return result
+        doc = result.get("document") or {}
+        entity = g1.to_spatial_entity(doc) if hasattr(g1, "to_spatial_entity") else {}
+        return {
+            **result,
+            "entity": entity,
+            "classify": classify_entity(entity),
+            "format": "g1id",
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc), "path": str(path)}
+
+
 def classify_entity(entity: dict[str, Any]) -> dict[str, Any]:
     """Classify as this_one (witnessed here) or that_one (uncorroborated there)."""
     doc = _load(DOCTRINE, {})
