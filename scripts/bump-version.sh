@@ -6,6 +6,26 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-common.sh"
 
+usage() {
+  cat <<'EOF'
+Usage: bump-version.sh [--dry-run] [--help]
+
+Bumps NEXUS_VERSION from X.Y.0 → X.(Y+1).0 in canonical files.
+
+  --dry-run   Show next version without editing files
+  --help      Show this help
+EOF
+}
+
+DRY_RUN=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help) usage; exit 0 ;;
+    -n|--dry-run) DRY_RUN=1; shift ;;
+    *) echo "unknown option: $1" >&2; usage >&2; exit 1 ;;
+  esac
+done
+
 cur="${NEXUS_VERSION}"
 if [[ ! "$cur" =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
   echo "NEXUS_VERSION must be X.Y.0 (got ${cur})" >&2
@@ -16,6 +36,11 @@ major="${BASH_REMATCH[1]}"
 minor="${BASH_REMATCH[2]}"
 next_minor=$((minor + 1))
 next="${major}.${next_minor}.0"
+
+if [[ "$DRY_RUN" -eq 1 ]]; then
+  echo "dry-run: would bump ${cur} → ${next}"
+  exit 0
+fi
 
 notes="${ROOT}/RELEASE-${next}.md"
 if [[ ! -f "$notes" ]]; then

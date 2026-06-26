@@ -75,7 +75,8 @@ nexus_resolve_pythong() {
     "${SG_ROOT}/GrokPy/bin/grokpy" \
     "${QUEEN_ROOT}/scripts/pythong" \
     "${NEXUS_INSTALL_ROOT}/scripts/nexus-py" \
-    "$(command -v pythong 2>/dev/null || true)"; do
+    "$(command -v pythong 2>/dev/null || true)" \
+    "$(command -v python3 2>/dev/null || true)"; do
     [[ -n "$candidate" && -x "$candidate" ]] || continue
     printf '%s' "$candidate"
     return 0

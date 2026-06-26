@@ -460,19 +460,38 @@ test_nexus_boot_impl() {
   grep -q 'nexus_boot_impl_run' "${ROOT}/nexus.sh"
   grep -q 'nexus-boot-impl.sh' "${ROOT}/genius_shield.sh"
   grep -q 'boot_impl' "${ROOT}/data/sg-canonical.json"
+  grep -q 'nexus_boot_impl_validate_install_root' "${ROOT}/lib/nexus-boot-impl.sh"
+  grep -q 'nexus_boot_impl_script_trusted' "${ROOT}/lib/nexus-boot-impl.sh"
+  grep -q 'nexus_boot_impl_rotate_log' "${ROOT}/lib/nexus-boot-impl.sh"
+  grep -q 'INTEGRITY_VERIFY_FAILED' "${ROOT}/lib/nexus-boot-impl.sh"
+  ! grep -q 'nexus_verify_integrity 2>/dev/null || true' "${ROOT}/lib/nexus-boot-impl.sh"
+  ! grep -q 'nexus_boot_impl_training_viewer' <(sed -n '/^nexus_boot_impl_refresh/,/^}/p' "${ROOT}/lib/nexus-boot-impl.sh")
+  ! NEXUS_INSTALL_ROOT='../etc' NEXUS_STATE_DIR="$(mktemp -d)" NEXUS_BOOT_IMPL=1 \
+    bash "${ROOT}/scripts/nexus-boot-impl.sh" >/dev/null 2>&1
   local tmp_state
   tmp_state="$(mktemp -d)"
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" NEXUS_BOOT_IMPL=1 \
-    NEXUS_FRONT_HOOK=0 NEXUS_SENSE_PACKAGE=0 \
+    NEXUS_FRONT_HOOK=0 NEXUS_SELF_DEFENSE=0 \
     bash "${ROOT}/scripts/nexus-boot-impl.sh" >/dev/null 2>&1
   [[ -f "${tmp_state}/first-boot.complete" ]]
   [[ -f "${tmp_state}/boot-impl.last" ]]
   grep -q 'mode=first' "${tmp_state}/boot-impl.last"
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" NEXUS_BOOT_IMPL=1 \
-    NEXUS_FRONT_HOOK=0 NEXUS_SENSE_PACKAGE=0 \
+    NEXUS_FRONT_HOOK=0 NEXUS_SELF_DEFENSE=0 NEXUS_TRAINING_VIEWER_BOOT=1 \
     bash "${ROOT}/scripts/nexus-boot-impl.sh" >/dev/null 2>&1
   grep -q 'mode=refresh' "${tmp_state}/boot-impl.last"
   rm -rf "$tmp_state"
+}
+
+test_release_tooling() {
+  [[ -x "${ROOT}/scripts/pack-release.sh" ]]
+  [[ -x "${ROOT}/scripts/nexus-release-finalize.sh" ]]
+  bash "${ROOT}/scripts/pack-release.sh" --help | grep -q 'dry-run'
+  bash "${ROOT}/scripts/release.sh" --help | grep -q 'dry-run'
+  bash "${ROOT}/scripts/bump-version.sh" --help | grep -q 'dry-run'
+  [[ -f "${ROOT}/SECURITY.md" ]]
+  grep -q 'non-destructive' "${ROOT}/SECURITY.md"
+  ! [[ -f "${ROOT}/scripts/publish-v10.0.0.sh" ]]
 }
 
 test_heaven_hell_module() {
@@ -2009,6 +2028,7 @@ run_test "hostess7 in nexus" test_hostess7_in_nexus
 run_test "NewLatest stack wired" test_newlatest_stack_wired
 run_test "panel browser boot open" test_panel_browser_boot_open
 run_test "nexus boot impl" test_nexus_boot_impl
+run_test "release tooling" test_release_tooling
 run_test "heaven hell module" test_heaven_hell_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
 run_test "fair ad guardian module" test_fair_ad_guardian_module
