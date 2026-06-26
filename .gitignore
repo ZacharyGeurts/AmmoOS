@@ -52,6 +52,9 @@ Queen/amouranth_engine.log
 Queen/data/*.log
 MANIFEST.sha256.bak
 
+# Release pack staging (tarballs uploaded to GitHub releases only)
+/dist/
+
 # Hostess7 cache + field storage (source lives in-tree)
 Hostess7/cache/
 Hostess7/zac/

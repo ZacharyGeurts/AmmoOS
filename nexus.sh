@@ -9,6 +9,10 @@ export NEXUS_FIELD_STANDALONE=1
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-common.sh"
 nexus_init_runtime_paths
+nexus_load_config 2>/dev/null || true
+# shellcheck source=/dev/null
+[[ -f "${ROOT}/lib/nexus-boot-impl.sh" ]] && source "${ROOT}/lib/nexus-boot-impl.sh"
+declare -f nexus_boot_impl_run >/dev/null 2>&1 && nexus_boot_impl_run || true
 # shellcheck source=/dev/null
 source "${ROOT}/lib/panel-browser.sh"
 # shellcheck source=/dev/null
@@ -278,6 +282,11 @@ if [[ "${1:-}" == "--tab" && -n "${2:-}" ]]; then
   exit 0
 fi
 
+if declare -f nexus_panel_open_on_boot >/dev/null 2>&1 && nexus_panel_open_on_boot "$URL"; then
+  nexus_panel_tray_install_autostart 2>/dev/null || true
+  nexus_panel_tray_ensure_once 2>/dev/null || true
+  exit 0
+fi
 if nexus_panel_open_browser "$URL"; then
   nexus_panel_tray_install_autostart 2>/dev/null || true
   nexus_panel_tray_ensure_once 2>/dev/null || true

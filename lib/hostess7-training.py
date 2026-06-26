@@ -46,6 +46,151 @@ def _append_ledger(row: dict[str, Any]) -> None:
         pass
 
 
+def _tail_ledger(limit: int = 80) -> list[dict[str, Any]]:
+    if not LEDGER.is_file() or limit <= 0:
+        return []
+    rows: list[dict[str, Any]] = []
+    try:
+        for line in LEDGER.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    except OSError:
+        return []
+    return rows
+
+
+def _write_runtime(**fields: Any) -> None:
+    doc = _load(RUNTIME, {"schema": "hostess7-training-runtime/v1"})
+    doc.update(fields)
+    doc["updated"] = _now()
+    _save(RUNTIME, doc)
+
+
+def _ask_with_timeout(cmd: Any, question: str, panel: dict[str, Any], *, timeout_s: int = 45) -> dict[str, Any]:
+    import concurrent.futures
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        fut = pool.submit(cmd.ask_operator, question, panel=panel, use_brain=True)
+        try:
+            return fut.result(timeout=timeout_s)
+        except concurrent.futures.TimeoutError:
+            return {"ok": False, "reply": "", "error": "ask_timeout", "timeout_s": timeout_s}
+
+
+TRACK_ID_ALIASES: dict[str, str] = {
+    "master_curriculum": "curriculum",
+}
+
+
+def build_evaluation_graphs() -> dict[str, Any]:
+    """Chart-ready evaluation data — timeline, track bars, curriculum, facets."""
+    assess = assess_all()
+    tracks = assess.get("tracks") or {}
+    master_st = _load(STATE / "hostess7-master-state.json", {})
+    curriculum = _load(INSTALL / "data" / "hostess7-master-curriculum.json", {})
+    done = set(master_st.get("completed_steps") or [])
+    steps = curriculum.get("curriculum") or []
+
+    timeline: list[dict[str, Any]] = []
+    for row in _tail_ledger(100):
+        timeline.append({
+            "ts": row.get("ts"),
+            "event": row.get("event"),
+            "track": row.get("track"),
+            "level": row.get("level"),
+            "overall_score": row.get("overall_score"),
+            "passed": row.get("passed"),
+            "ok": row.get("ok"),
+        })
+
+    track_bars: list[dict[str, Any]] = []
+    for tid, t in tracks.items():
+        score = t.get("score")
+        if score is not None and float(score) <= 1:
+            score = round(float(score) * 100, 1)
+        track_bars.append({
+            "id": tid,
+            "label": t.get("label") or tid,
+            "score": score,
+            "level": t.get("level"),
+            "complete": bool(t.get("complete")),
+            "mastered": bool(t.get("mastered")),
+        })
+    track_bars.sort(key=lambda x: (-(float(x["score"]) if x["score"] is not None else 0), x["id"]))
+
+    curriculum_steps = [
+        {
+            "id": s.get("id"),
+            "completed": s.get("id") in done,
+            "xp": s.get("xp"),
+            "tier": s.get("tier"),
+            "tip": (s.get("tip") or "")[:120],
+        }
+        for s in steps
+    ]
+
+    facets = (assess.get("mastery_facets") or {}).get("facets") or {}
+    facet_radar = [
+        {
+            "id": fid,
+            "label": (facets[fid] or {}).get("label") or fid,
+            "score": round(float((facets[fid] or {}).get("score") or 0) * 100, 1),
+            "level": (facets[fid] or {}).get("level"),
+        }
+        for fid in ("flexibility", "adaptability", "confidence")
+        if fid in facets
+    ]
+
+    return {
+        "schema": "hostess7-training-graphs/v1",
+        "updated": _now(),
+        "overall_score": assess.get("overall_score"),
+        "completion_level": assess.get("completion_level"),
+        "tracks_complete": assess.get("tracks_complete"),
+        "tracks_total": assess.get("tracks_total"),
+        "timeline": timeline,
+        "track_bars": track_bars,
+        "curriculum_steps": curriculum_steps,
+        "curriculum_done": len(done),
+        "curriculum_total": len(steps),
+        "facet_radar": facet_radar,
+    }
+
+
+def build_track_evaluation(track_id: str, result: dict[str, Any], assessment: dict[str, Any]) -> dict[str, Any]:
+    track_assess = (assessment.get("tracks") or {}).get(track_id) or {}
+    summary: dict[str, Any] = {"ok": result.get("ok")}
+    if result.get("step"):
+        summary["curriculum_step"] = result.get("step", {}).get("id")
+    if result.get("steps_run") is not None:
+        summary["steps_run"] = result.get("steps_run")
+    if result.get("panel"):
+        panel = result["panel"]
+        if isinstance(panel, dict):
+            for key in ("tier", "verdict", "pass_rate", "fluent", "mastered", "truth_score", "estimated_iq"):
+                if panel.get(key) is not None:
+                    summary[key] = panel[key]
+    if result.get("rows"):
+        summary["rounds"] = len(result["rows"])
+        summary["passed_rounds"] = sum(1 for r in result["rows"] if r.get("passed"))
+    return {
+        "track_id": track_id,
+        "level": track_assess.get("level"),
+        "score": track_assess.get("score"),
+        "label": track_assess.get("label"),
+        "complete": track_assess.get("complete"),
+        "mastered": track_assess.get("mastered"),
+        "signals": {k: track_assess[k] for k in ("tier", "verdict", "iq_pass", "fluent", "slots") if track_assess.get(k) is not None},
+        "result_summary": summary,
+        "result_detail": {k: result[k] for k in ("testing_center", "improve_cycle", "ocr_train", "results", "rows") if k in result},
+    }
+
+
 def _mod(name: str, rel: str) -> Any | None:
     try:
         import importlib.util
@@ -663,11 +808,61 @@ def assess_all() -> dict[str, Any]:
     }
 
 
-def _run_curriculum(*, trusted: bool = True, max_steps: int = 24) -> dict[str, Any]:
+def _run_curriculum(*, trusted: bool = True, max_steps: int = 1) -> dict[str, Any]:
+    """Run curriculum steps — default one step per GUI call to avoid hangs."""
     master = _mod("h7master", "hostess7-master.py")
     if not master:
         return {"ok": False, "error": "master_missing"}
-    return master.train_to_master(max_steps=max_steps, trusted=trusted)
+    _write_runtime(phase="curriculum", progress_pct=5, detail="Starting curriculum step…")
+    out = master.train_to_master(max_steps=max_steps, trusted=trusted)
+    _write_runtime(phase="curriculum", progress_pct=100, detail=f"Ran {out.get('steps_run', 0)} step(s)")
+    return out
+
+
+def run_curriculum_step(*, trusted: bool = True) -> dict[str, Any]:
+    """Single curriculum step with explicit evaluation — GUI-friendly."""
+    master = _mod("h7master", "hostess7-master.py")
+    if not master:
+        return {"ok": False, "error": "master_missing"}
+    nxt = master.next_curriculum_step()
+    if not nxt:
+        st = master.master_status()
+        return {"ok": True, "detail": "curriculum_complete", "master": st}
+    _write_runtime(
+        phase="curriculum_step",
+        active_track="master_curriculum",
+        progress_pct=10,
+        detail=f"Running {nxt.get('id')}…",
+        step_id=nxt.get("id"),
+    )
+    result = master.run_training_step(trusted=trusted)
+    assess = assess_all()
+    graphs = build_evaluation_graphs()
+    evaluation = build_track_evaluation("master_curriculum", result, assess)
+    _write_runtime(
+        active_track=None,
+        phase="idle",
+        progress_pct=100,
+        last_step=nxt.get("id"),
+        last_evaluation=evaluation,
+    )
+    _append_ledger({
+        "ts": _now(),
+        "event": "curriculum_step",
+        "track": "master_curriculum",
+        "step": nxt.get("id"),
+        "ok": result.get("ok"),
+        "level": evaluation.get("level"),
+        "overall_score": assess.get("overall_score"),
+    })
+    return {
+        "ok": bool(result.get("ok")),
+        "step": nxt,
+        "result": result,
+        "assessment": assess,
+        "evaluation": evaluation,
+        "graphs": graphs,
+    }
 
 
 def _run_programming() -> dict[str, Any]:
@@ -684,62 +879,68 @@ def _run_g16() -> dict[str, Any]:
     return {"ok": True, "panel": g16.build_panel(write=True)}
 
 
-def _run_codecraft() -> dict[str, Any]:
+def _run_codecraft(*, full_improve: bool = False) -> dict[str, Any]:
     craft = _mod("h7craft", "hostess7-codecraft.py")
     if not craft:
         return {"ok": False}
+    _write_runtime(phase="codecraft", progress_pct=20, detail="Testing center gates…")
     center = craft.testing_center_run(fast=True) if hasattr(craft, "testing_center_run") else {"ok": False}
-    improve = craft.self_improve_cycle() if hasattr(craft, "self_improve_cycle") else {"ok": False}
+    improve = (
+        craft.self_improve_cycle()
+        if full_improve and hasattr(craft, "self_improve_cycle")
+        else {"ok": True, "skipped": True, "reason": "fast_track"}
+    )
+    _write_runtime(phase="codecraft", progress_pct=75, detail="Building codecraft panel…")
     panel = craft.build_panel(write=True)
     return {"ok": True, "panel": panel, "testing_center": center, "improve_cycle": improve}
 
 
-def _run_calculator() -> dict[str, Any]:
+def _run_calculator(*, ocr_train: bool = False) -> dict[str, Any]:
     calc = _mod("h7calc", "hostess7-calculator.py")
     if not calc:
         return {"ok": False}
-    ingest = calc.ingest_ocr_vision() if hasattr(calc, "ingest_ocr_vision") else {"ok": False}
-    train = calc.train_ocr_vision() if hasattr(calc, "train_ocr_vision") else {"ok": False}
+    ingest = calc.ingest_ocr_vision() if ocr_train and hasattr(calc, "ingest_ocr_vision") else {"ok": True, "skipped": True}
+    train = calc.train_ocr_vision() if ocr_train and hasattr(calc, "train_ocr_vision") else {"ok": True, "skipped": True}
     panel = calc.build_panel(write=True)
     return {"ok": True, "panel": panel, "ocr_ingest": ingest, "ocr_train": train}
 
 
-def _run_biology() -> dict[str, Any]:
+def _run_biology(*, ocr_train: bool = False) -> dict[str, Any]:
     bio = _mod("h7bio", "hostess7-biology.py")
     if not bio:
         return {"ok": False}
-    ingest = bio.ingest_ocr_vision() if hasattr(bio, "ingest_ocr_vision") else {"ok": False}
-    train = bio.train_ocr_vision() if hasattr(bio, "train_ocr_vision") else {"ok": False}
+    ingest = bio.ingest_ocr_vision() if ocr_train and hasattr(bio, "ingest_ocr_vision") else {"ok": True, "skipped": True}
+    train = bio.train_ocr_vision() if ocr_train and hasattr(bio, "train_ocr_vision") else {"ok": True, "skipped": True}
     panel = bio.build_panel(write=True)
     return {"ok": True, "panel": panel, "ocr_ingest": ingest, "ocr_train": train}
 
 
-def _run_engineering() -> dict[str, Any]:
+def _run_engineering(*, ocr_train: bool = False) -> dict[str, Any]:
     eng = _mod("h7eng", "hostess7-engineering.py")
     if not eng:
         return {"ok": False}
-    ingest = eng.ingest_ocr_vision() if hasattr(eng, "ingest_ocr_vision") else {"ok": False}
-    train = eng.train_ocr_vision() if hasattr(eng, "train_ocr_vision") else {"ok": False}
+    ingest = eng.ingest_ocr_vision() if ocr_train and hasattr(eng, "ingest_ocr_vision") else {"ok": True, "skipped": True}
+    train = eng.train_ocr_vision() if ocr_train and hasattr(eng, "train_ocr_vision") else {"ok": True, "skipped": True}
     panel = eng.build_panel(write=True)
     return {"ok": True, "panel": panel, "ocr_ingest": ingest, "ocr_train": train}
 
 
-def _run_combat() -> dict[str, Any]:
+def _run_combat(*, ocr_train: bool = False) -> dict[str, Any]:
     combat = _mod("h7combat", "hostess7-combat.py")
     if not combat:
         return {"ok": False}
-    ingest = combat.ingest_ocr_vision() if hasattr(combat, "ingest_ocr_vision") else {"ok": False}
-    train = combat.train_ocr_vision() if hasattr(combat, "train_ocr_vision") else {"ok": False}
+    ingest = combat.ingest_ocr_vision() if ocr_train and hasattr(combat, "ingest_ocr_vision") else {"ok": True, "skipped": True}
+    train = combat.train_ocr_vision() if ocr_train and hasattr(combat, "train_ocr_vision") else {"ok": True, "skipped": True}
     panel = combat.build_panel(write=True)
     return {"ok": True, "panel": panel, "ocr_ingest": ingest, "ocr_train": train}
 
 
-def _run_mos() -> dict[str, Any]:
+def _run_mos(*, ocr_train: bool = False) -> dict[str, Any]:
     mos = _mod("h7mos", "hostess7-mos.py")
     if not mos:
         return {"ok": False}
-    ingest = mos.ingest_ocr_vision() if hasattr(mos, "ingest_ocr_vision") else {"ok": False}
-    train = mos.train_ocr_vision() if hasattr(mos, "train_ocr_vision") else {"ok": False}
+    ingest = mos.ingest_ocr_vision() if ocr_train and hasattr(mos, "ingest_ocr_vision") else {"ok": True, "skipped": True}
+    train = mos.train_ocr_vision() if ocr_train and hasattr(mos, "train_ocr_vision") else {"ok": True, "skipped": True}
     panel = mos.build_panel(write=True)
     return {"ok": True, "panel": panel, "ocr_ingest": ingest, "ocr_train": train}
 
@@ -762,12 +963,20 @@ def _run_iq(*, fast: bool = True) -> dict[str, Any]:
         return {"ok": False}
     ask_fn = None
     if fast and cmd:
-        panel = _load(STATE / "threat-panel.json", {})
+        panel_ref = _load(STATE / "threat-panel.json", {})
 
         def ask_fn(q: str, panel=None):  # type: ignore[no-redef]
-            return cmd.ask_operator(q, panel=panel or _load(STATE / "threat-panel.json", {}), use_brain=True)
+            return _ask_with_timeout(
+                cmd,
+                q,
+                panel or panel_ref,
+                timeout_s=50,
+            )
 
-    return truth.run_iq_test(ask_fn=ask_fn)
+    _write_runtime(phase="iq_battery", progress_pct=15, detail="IQ battery — truth-gated asks…")
+    out = truth.run_iq_test(ask_fn=ask_fn)
+    _write_runtime(phase="iq_battery", progress_pct=100, detail="IQ battery complete")
+    return out
 
 
 def _run_turing(*, fast: bool = False) -> dict[str, Any]:
@@ -814,8 +1023,14 @@ def run_self_interaction_train(*, rounds: int = 6, truth_floor: float = 75.0) ->
     passed = 0
 
     for i, q in enumerate(queries):
+        _write_runtime(
+            phase="self_interaction",
+            active_track="self_interaction",
+            progress_pct=int(10 + (80 * i / max(len(queries), 1))),
+            detail=f"Round {i + 1}/{len(queries)}…",
+        )
         try:
-            out = cmd.ask_operator(q, panel=panel, use_brain=True)
+            out = _ask_with_timeout(cmd, q, panel, timeout_s=55)
         except Exception as exc:
             out = {"ok": False, "reply": "", "error": str(exc)}
         reply = str(out.get("reply_body") or out.get("reply") or "").strip()
@@ -849,18 +1064,20 @@ def run_self_interaction_train(*, rounds: int = 6, truth_floor: float = 75.0) ->
     return {"ok": True, **doc}
 
 
-def run_track(track_id: str) -> dict[str, Any]:
-    """Run a single training track — GUI-friendly granular training."""
-    runners = {
-        "curriculum": lambda: _run_curriculum(),
+def run_track(track_id: str, *, ocr_train: bool = False) -> dict[str, Any]:
+    """Run a single training track — GUI-friendly granular training with evaluation."""
+    canonical = TRACK_ID_ALIASES.get(track_id, track_id)
+    runners: dict[str, Callable[[], dict[str, Any]]] = {
+        "curriculum": lambda: _run_curriculum(max_steps=1),
+        "master_curriculum": lambda: _run_curriculum(max_steps=1),
         "programming": _run_programming,
         "g16": _run_g16,
-        "codecraft": _run_codecraft,
-        "calculator": _run_calculator,
-        "biology": _run_biology,
-        "engineering": _run_engineering,
-        "combat": _run_combat,
-        "mos": _run_mos,
+        "codecraft": lambda: _run_codecraft(full_improve=False),
+        "calculator": lambda: _run_calculator(ocr_train=ocr_train),
+        "biology": lambda: _run_biology(ocr_train=ocr_train),
+        "engineering": lambda: _run_engineering(ocr_train=ocr_train),
+        "combat": lambda: _run_combat(ocr_train=ocr_train),
+        "mos": lambda: _run_mos(ocr_train=ocr_train),
         "brain_guard": _run_brain,
         "iq_battery": lambda: _run_iq(fast=True),
         "turing_battery": _run_turing,
@@ -868,12 +1085,48 @@ def run_track(track_id: str) -> dict[str, Any]:
         "omnibus": lambda: _run_omnibus(fast=True),
         "self_interaction": lambda: run_self_interaction_train(),
     }
-    fn = runners.get(track_id)
+    fn = runners.get(canonical) or runners.get(track_id)
     if not fn:
-        return {"ok": False, "error": "unknown_track", "track": track_id}
-    result = fn()
+        return {"ok": False, "error": "unknown_track", "track": track_id, "known": sorted(runners.keys())}
+    _write_runtime(
+        active_track=track_id,
+        phase="track_run",
+        progress_pct=5,
+        detail=f"Running {track_id}…",
+    )
+    try:
+        result = fn()
+    except Exception as exc:
+        _write_runtime(active_track=None, phase="error", progress_pct=0, detail=str(exc))
+        return {"ok": False, "error": str(exc), "track": track_id}
     assess = assess_all()
-    return {"ok": True, "track": track_id, "result": result, "assessment": assess}
+    graphs = build_evaluation_graphs()
+    evaluation = build_track_evaluation(track_id, result if isinstance(result, dict) else {"ok": True}, assess)
+    _write_runtime(
+        active_track=None,
+        phase="idle",
+        progress_pct=100,
+        last_track=track_id,
+        last_evaluation=evaluation,
+        detail=f"{track_id} complete",
+    )
+    _append_ledger({
+        "ts": _now(),
+        "event": "track_run",
+        "track": track_id,
+        "ok": result.get("ok") if isinstance(result, dict) else True,
+        "level": evaluation.get("level"),
+        "overall_score": assess.get("overall_score"),
+    })
+    return {
+        "ok": True,
+        "track": track_id,
+        "canonical": canonical,
+        "result": result,
+        "assessment": assess,
+        "evaluation": evaluation,
+        "graphs": graphs,
+    }
 
 
 def complete_all(
@@ -1078,6 +1331,8 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "whole_mastery": assessment.get("whole_mastery"),
         "motto": _load(FACETS, {}).get("motto"),
         "excellence_pledge": _load(FACETS, {}).get("excellence_pledge") or "We do our best always.",
+        "evaluation_graphs": build_evaluation_graphs(),
+        "training_runtime": _load(RUNTIME, {}),
     }
     cached = _load(PANEL, {})
     if cached.get("phases"):
@@ -1126,10 +1381,20 @@ def main() -> int:
         print(json.dumps(run_self_interaction_train(rounds=rounds), ensure_ascii=False))
         return 0
     if cmd in ("track", "run-track") and len(sys.argv) > 2:
-        print(json.dumps(run_track(sys.argv[2].strip()), ensure_ascii=False))
+        ocr = "--ocr-train" in sys.argv
+        print(json.dumps(run_track(sys.argv[2].strip(), ocr_train=ocr), ensure_ascii=False))
+        return 0
+    if cmd in ("curriculum-step", "curriculum_step"):
+        print(json.dumps(run_curriculum_step(), ensure_ascii=False))
+        return 0
+    if cmd in ("graphs", "evaluation-graphs"):
+        print(json.dumps(build_evaluation_graphs(), ensure_ascii=False))
+        return 0
+    if cmd == "runtime":
+        print(json.dumps(_load(RUNTIME, {}), ensure_ascii=False))
         return 0
     print(json.dumps({
-        "error": "usage: hostess7-training.py [assess|panel|complete|self-interaction|track ID]",
+        "error": "usage: hostess7-training.py [assess|panel|complete|self-interaction|curriculum-step|graphs|runtime|track ID]",
     }, ensure_ascii=False))
     return 1
 

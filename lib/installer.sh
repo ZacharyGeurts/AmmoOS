@@ -124,13 +124,14 @@ EOF
   chmod 644 "${apps}/nexus-shield.desktop"
   local tristate_exec="${exec}"
   [[ -f "${root}/nexus-install-gui.sh" ]] && tristate_exec="${root}/nexus-install-gui.sh"
+  [[ -x /usr/local/bin/nexus-install-gui.sh ]] && tristate_exec="/usr/local/bin/nexus-install-gui.sh"
   cat >"${apps}/nexus-tristate-installer.desktop" <<EOF
 [Desktop Entry]
-Version=10.0
+Version=10.4.0
 Type=Application
 Name=2026 Tristate Installer
 GenericName=Field Underlay Install
-Comment=Move under NEXUS/KILROY permanently — World_Redata WRDT1 · F9 hotkey
+Comment=Underlay F9 installer — opens browser · KILROY · World_Redata · F9 hotkey
 Exec=${tristate_exec}
 Icon=${icon}
 Path=${path}

@@ -1,0 +1,370 @@
+(function () {
+  "use strict";
+
+  const API = "/api/hostess7/training";
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  let pollTimer = null;
+  let runtimePoll = null;
+  let trainingActive = false;
+  let bound = false;
+  let lastWireframe = null;
+
+  function pct(n) {
+    return Math.round(Math.max(0, Math.min(1, Number(n) || 0)) * 100);
+  }
+
+  function levelClass(level) {
+    const l = String(level || "pending").toLowerCase();
+    if (l === "mastered" || l === "g16_master") return "level-mastered";
+    if (l === "complete" || l === "fluent") return "level-complete";
+    if (l === "training") return "level-training";
+    return "level-pending";
+  }
+
+  function setStatus(msg) {
+    const el = $("h7-training-status");
+    if (el) el.textContent = msg;
+  }
+
+  function isTabVisible() {
+    return document.getElementById("view-training")?.classList.contains("active");
+  }
+
+  async function fetchBundle(refresh) {
+    const q = refresh ? "?refresh=1" : "";
+    const r = await fetch(`${API}/bundle${q}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(`bundle HTTP ${r.status}`);
+    return r.json();
+  }
+
+  async function fetchRuntime() {
+    const r = await fetch(`${API}/runtime`, { cache: "no-store" });
+    if (!r.ok) return {};
+    return r.json();
+  }
+
+  function drawBarChart(canvasId, items, opts) {
+    const canvas = $(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const color = (opts && opts.color) || "#60a5fa";
+    const labelKey = (opts && opts.labelKey) || "label";
+    const valueKey = (opts && opts.valueKey) || "score";
+    const w = canvas.width = Math.max(280, canvas.clientWidth) * 2;
+    const h = canvas.height = Math.max(120, canvas.clientHeight) * 2;
+    ctx.clearRect(0, 0, w, h);
+    const list = items || [];
+    if (!list.length) {
+      ctx.fillStyle = "#8fb4d9";
+      ctx.font = "24px system-ui,sans-serif";
+      ctx.fillText("No data — press Assess", 20, h / 2);
+      return;
+    }
+    const pad = 28;
+    const barH = Math.max(14, (h - pad * 2) / list.length - 8);
+    const maxV = Math.max(...list.map((x) => Number(x[valueKey]) || 0), 1);
+    list.forEach((item, i) => {
+      const v = Number(item[valueKey]) || 0;
+      const bw = ((w - pad * 2 - 130) * v) / maxV;
+      const y = pad + i * (barH + 8);
+      ctx.fillStyle = "#8fb4d9";
+      ctx.font = "20px system-ui,sans-serif";
+      ctx.fillText(String(item[labelKey] || item.id || "").slice(0, 16), 10, y + barH - 3);
+      ctx.fillStyle = color;
+      ctx.fillRect(130, y, Math.max(2, bw), barH);
+      ctx.fillStyle = "#e8f2ff";
+      ctx.fillText(`${Math.round(v)}%`, 134 + bw + 8, y + barH - 3);
+    });
+  }
+
+  function drawFieldGraph(graph) {
+    const canvas = $("nexus-training-wireframe-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const w = canvas.width = Math.max(400, canvas.clientWidth) * 2;
+    const h = canvas.height = Math.max(240, canvas.clientHeight) * 2;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#060a12";
+    ctx.fillRect(0, 0, w, h);
+
+    const nodes = (graph && graph.nodes) || [];
+    const edges = (graph && graph.edges) || [];
+    lastWireframe = graph;
+    if (!nodes.length) {
+      ctx.fillStyle = "#8fb4d9";
+      ctx.font = "26px system-ui,sans-serif";
+      ctx.fillText("Field graph loads after Assess", 24, h / 2);
+      return;
+    }
+
+    const xs = nodes.map((n) => n.x || 0);
+    const ys = nodes.map((n) => n.z || n.y || 0);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = 50;
+    const sx = (x) => pad + ((x - minX) / Math.max(maxX - minX, 1)) * (w - pad * 2);
+    const sy = (y) => pad + ((y - minY) / Math.max(maxY - minY, 1)) * (h - pad * 2);
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+
+    ctx.strokeStyle = "rgba(36, 53, 82, 0.8)";
+    ctx.lineWidth = 2;
+    edges.forEach((e) => {
+      const a = byId.get(e.from);
+      const b = byId.get(e.to);
+      if (!a || !b) return;
+      ctx.beginPath();
+      ctx.moveTo(sx(a.x), sy(a.z || a.y));
+      ctx.lineTo(sx(b.x), sy(b.z || b.y));
+      ctx.stroke();
+    });
+
+    nodes.forEach((n) => {
+      const x = sx(n.x);
+      const y = sy(n.z || n.y);
+      const r = n.group === "core" ? 14 : 8;
+      ctx.fillStyle = n.color || "#60a5fa";
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#e8f2ff";
+      ctx.font = "18px system-ui,sans-serif";
+      ctx.fillText(String(n.label || n.id || "").slice(0, 14), x + r + 4, y + 5);
+    });
+
+    const hud = $("nexus-training-wireframe-hud");
+    if (hud) hud.textContent = `${nodes.length} nodes · ${edges.length} edges`;
+  }
+
+  function renderCharts(bundle) {
+    if (!isTabVisible()) return;
+    requestAnimationFrame(() => {
+      const g = bundle.evaluation_graphs || {};
+      drawBarChart("h7-chart-tracks", g.track_bars || [], { labelKey: "label", valueKey: "score" });
+      drawBarChart("h7-chart-facets", g.facet_radar || [], { labelKey: "label", valueKey: "score", color: "#f4a261" });
+      drawFieldGraph(bundle.wireframe || {});
+    });
+  }
+
+  function renderHero(bundle) {
+    const a = bundle.assessment || {};
+    const tp = bundle.training_panel || {};
+    const overall = a.overall_score ?? tp.overall_score ?? 0;
+    const ring = $("h7-score-ring");
+    if (ring) {
+      ring.style.setProperty("--pct", String(pct(overall)));
+      const strong = ring.querySelector("strong");
+      if (strong) strong.textContent = `${pct(overall)}%`;
+    }
+    const meta = $("h7-hero-meta");
+    if (!meta) return;
+    const level = a.completion_level || tp.completion_level || "pending";
+    const done = a.tracks_complete ?? tp.tracks_complete ?? 0;
+    const total = a.tracks_total ?? tp.tracks_total ?? 0;
+    const mf = a.mastery_facets || tp.mastery_facets || {};
+    meta.innerHTML = `
+      <div>${[
+        `<span class="h7-badge ${levelClass(level)}">${esc(level)}</span>`,
+        a.solid || tp.solid ? '<span class="h7-badge solid">SOLID</span>' : "",
+        a.whole_mastery || tp.whole_mastery ? '<span class="h7-badge level-mastered">WHOLE</span>' : "",
+      ].join("")}</div>
+      <p class="h7-sub" style="margin:8px 0 4px">${esc(tp.reason || "Live training evaluation from NEXUS state.")}</p>
+      <p class="h7-sub">Tracks <strong>${done}/${total}</strong> · Pillars <strong>${mf.facets_mastered ?? 0}/${mf.facets_total ?? 3}</strong></p>`;
+  }
+
+  function renderTracks(bundle) {
+    const grid = $("h7-tracks-grid");
+    if (!grid) return;
+    const tracks = (bundle.assessment || {}).tracks || (bundle.training_panel || {}).tracks || {};
+    const rows = Object.entries(tracks);
+    if (!rows.length) {
+      grid.innerHTML = '<div class="h7-card"><p class="h7-sub">Press Assess to load tracks.</p></div>';
+      return;
+    }
+    grid.innerHTML = rows.map(([id, t]) => {
+      const score = t.score != null ? (t.score <= 1 ? pct(t.score) : Math.round(t.score)) : 0;
+      return `<article class="h7-card">
+        <h2>${esc(t.label || id)}</h2>
+        <span class="h7-badge ${levelClass(t.level)}">${esc(t.level || "pending")}</span>
+        <div class="score">${score}%</div>
+        <div class="bar"><i style="width:${score}%"></i></div>
+        <button type="button" class="h7-track-train" data-track="${esc(id)}">Train</button>
+      </article>`;
+    }).join("");
+    grid.querySelectorAll(".h7-card").forEach((card, i) => {
+      const id = rows[i][0];
+      card.querySelector(".h7-track-train")?.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        btn.disabled = true;
+        await post(`${API}/track/${encodeURIComponent(id)}`, `Train ${id}`);
+        btn.disabled = false;
+      });
+    });
+  }
+
+  function renderCurriculum(bundle) {
+    const el = $("h7-curriculum-list");
+    if (!el) return;
+    const steps = bundle.curriculum_steps || [];
+    if (!steps.length) {
+      el.innerHTML = '<p class="h7-sub">No curriculum loaded.</p>';
+      return;
+    }
+    el.innerHTML = `<div class="h7-curriculum">${steps.map((s) => `
+      <div class="h7-cur-step ${s.completed ? "done" : ""}">
+        <div>${s.completed ? "✓" : "·"}</div>
+        <div><strong>${esc(s.id)}</strong><div class="h7-sub">${esc((s.tip || "").slice(0, 100))}</div></div>
+        <div style="color:var(--h7-amber)">+${esc(s.xp || 0)}</div>
+      </div>`).join("")}</div>`;
+  }
+
+  function renderEvaluation(bundle) {
+    const el = $("h7-eval-detail");
+    if (!el) return;
+    const rt = bundle.training_runtime || {};
+    const ev = rt.last_evaluation;
+    if (!ev) {
+      el.textContent = "Run a track or curriculum step for detailed evaluation JSON.";
+      return;
+    }
+    el.textContent = JSON.stringify(ev, null, 2);
+  }
+
+  function renderLedger(bundle) {
+    const el = $("h7-ledger-log");
+    if (el) {
+      const rows = (bundle.ledger_training || []).slice(-24);
+      el.textContent = rows.length ? rows.map((r) => JSON.stringify(r)).join("\n") : "Ledger empty.";
+    }
+    const raw = $("h7-raw-json");
+    if (raw) raw.textContent = JSON.stringify(bundle, null, 2);
+  }
+
+  function render(bundle) {
+    lastWireframe = bundle.wireframe || lastWireframe;
+    renderHero(bundle);
+    renderTracks(bundle);
+    renderCurriculum(bundle);
+    renderEvaluation(bundle);
+    renderLedger(bundle);
+    renderCharts(bundle);
+  }
+
+  async function load(refresh) {
+    if (!isTabVisible()) return;
+    setStatus(refresh ? "Refreshing…" : "Loading…");
+    try {
+      const bundle = await fetchBundle(refresh);
+      render(bundle);
+      setStatus(`Updated ${new Date().toLocaleTimeString()}`);
+    } catch (e) {
+      setStatus(`Error: ${e.message}`);
+    }
+  }
+
+  async function post(path, label) {
+    trainingActive = true;
+    startRuntimePoll();
+    setStatus(`${label}…`);
+    try {
+      const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const j = await r.json();
+      if (j.evaluation) {
+        const el = $("h7-eval-detail");
+        if (el) el.textContent = JSON.stringify(j.evaluation, null, 2);
+      }
+      await load(true);
+      setStatus(`${label} done — ${j.evaluation?.level || j.assessment?.completion_level || (j.ok ? "ok" : "check")}`);
+      return j;
+    } catch (e) {
+      setStatus(`${label} failed: ${e.message}`);
+      return null;
+    } finally {
+      trainingActive = false;
+      stopRuntimePoll();
+    }
+  }
+
+  function startRuntimePoll() {
+    stopRuntimePoll();
+    runtimePoll = setInterval(async () => {
+      if (!trainingActive) return;
+      const rt = await fetchRuntime();
+      if (rt.detail) setStatus(`${rt.phase || "training"}: ${rt.detail} (${rt.progress_pct ?? 0}%)`);
+    }, 2000);
+  }
+
+  function stopRuntimePoll() {
+    if (runtimePoll) clearInterval(runtimePoll);
+    runtimePoll = null;
+  }
+
+  function setupTabs() {
+    document.querySelectorAll("#view-training .h7-tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#view-training .h7-tab").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll("#view-training .h7-panels").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        const panel = $(btn.dataset.panel);
+        if (panel) panel.classList.add("active");
+      });
+    });
+  }
+
+  function bind() {
+    if (bound) return;
+    bound = true;
+    $("h7-btn-refresh")?.addEventListener("click", () => load(true));
+    $("h7-btn-assess")?.addEventListener("click", async () => {
+      const btn = $("h7-btn-assess");
+      if (btn) btn.disabled = true;
+      await post(`${API}/assess`, "Assess");
+      if (btn) btn.disabled = false;
+    });
+    $("h7-btn-curriculum")?.addEventListener("click", async () => {
+      const btn = $("h7-btn-curriculum");
+      if (btn) btn.disabled = true;
+      await post(`${API}/curriculum-step`, "Curriculum step");
+      if (btn) btn.disabled = false;
+    });
+    $("h7-btn-self")?.addEventListener("click", async () => {
+      const btn = $("h7-btn-self");
+      if (btn) btn.disabled = true;
+      await post(`${API}/self-interaction`, "Self-interaction");
+      if (btn) btn.disabled = false;
+    });
+    $("h7-btn-iq")?.addEventListener("click", async () => {
+      const btn = $("h7-btn-iq");
+      if (btn) btn.disabled = true;
+      await post(`${API}/iq`, "IQ battery");
+      if (btn) btn.disabled = false;
+    });
+    $("h7-btn-solidify")?.addEventListener("click", async () => {
+      const btn = $("h7-btn-solidify");
+      if (btn) btn.disabled = true;
+      await post(`${API}/solidify`, "Solidify");
+      if (btn) btn.disabled = false;
+    });
+    $("h7-btn-focus")?.addEventListener("click", () => drawFieldGraph(lastWireframe || {}));
+    setupTabs();
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => {
+      if ($("h7-auto-refresh")?.checked && isTabVisible()) load(false);
+    }, 15000);
+    window.addEventListener("resize", () => {
+      if (isTabVisible() && lastWireframe) drawFieldGraph(lastWireframe);
+    });
+  }
+
+  global.NexusTraining = {
+    init() {
+      bind();
+      load(true);
+    },
+    refresh: () => load(true),
+  };
+})();

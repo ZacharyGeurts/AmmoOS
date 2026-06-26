@@ -273,15 +273,31 @@
 
   async function post(path, label) {
     setStatus(`${label}…`);
+    const poll = setInterval(async () => {
+      try {
+        const rt = await fetch("/api/bundle", { cache: "no-store" }).then(() => null);
+        void rt;
+        const r = await fetch("/api/health", { cache: "no-store" });
+        if (r.ok) {
+          const b = await fetchBundle(false);
+          if (b.training_runtime?.detail) {
+            setStatus(`${b.training_runtime.phase || "training"}: ${b.training_runtime.detail}`);
+          }
+        }
+      } catch (_) {}
+    }, 2500);
     try {
       const r = await fetch(path, { method: "POST" });
       const j = await r.json();
       await load(true);
-      setStatus(`${label} done — ${j.completion_level || j.level?.label || (j.ok ? "ok" : "check log")}`);
+      const ev = j.evaluation?.level || j.assessment?.completion_level;
+      setStatus(`${label} done — ${ev || j.completion_level || j.level?.label || (j.ok ? "ok" : "check log")}`);
       return j;
     } catch (e) {
       setStatus(`${label} failed: ${e.message}`);
       return null;
+    } finally {
+      clearInterval(poll);
     }
   }
 

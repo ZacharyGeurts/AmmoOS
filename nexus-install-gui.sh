@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
-# 2026 Tristate Installer — premium GUI entry (panel + zenity fallback).
+# 2026 Tristate Installer — opens Underlay F9 in browser (panel + zenity fallback).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
 export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 export SG_ROOT="${SG_ROOT:-${ROOT}}"
-PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
-URL="http://127.0.0.1:${PORT}/field"
+export NEXUS_FIELD_STANDALONE="${NEXUS_FIELD_STANDALONE:-1}"
+
+# shellcheck source=/dev/null
+source "${ROOT}/lib/nexus-common.sh"
+nexus_init_runtime_paths
+nexus_load_config 2>/dev/null || true
+# shellcheck source=/dev/null
+source "${ROOT}/lib/panel-browser.sh"
 
 if [[ -f "${ROOT}/lib/kilroy-resolve.sh" ]]; then
   # shellcheck source=/dev/null
@@ -15,29 +21,18 @@ if [[ -f "${ROOT}/lib/kilroy-resolve.sh" ]]; then
   nexus_kilroy_export "${SG_ROOT}" 2>/dev/null || true
 fi
 
-_open_browser() {
-  local url="$1"
-  if [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
-    if command -v xdg-open >/dev/null 2>&1; then
-      xdg-open "$url" >/dev/null 2>&1 &
-      return 0
-    fi
-  fi
-  return 1
-}
+URL="$(nexus_panel_tristate_url)"
+FIELD_URL="$(nexus_panel_url)"
 
 _ensure_panel() {
-  if curl -fsS --connect-timeout 2 "$URL" >/dev/null 2>&1; then
+  if curl -fsS --connect-timeout 2 "$FIELD_URL" >/dev/null 2>&1; then
     return 0
   fi
   if [[ -x "${ROOT}/nexus.sh" ]]; then
-    "${ROOT}/nexus.sh" --restart >/dev/null 2>&1 &
-    for _ in $(seq 1 25); do
-      sleep 1
-      curl -fsS --connect-timeout 1 "$URL" >/dev/null 2>&1 && return 0
-    done
+    "${ROOT}/nexus.sh" --no-browser >/dev/null 2>&1 &
+    nexus_panel_wait_ready "$FIELD_URL" 30 || nexus_panel_wait_ready "$URL" 30 || true
+    curl -fsS --connect-timeout 2 "$FIELD_URL" >/dev/null 2>&1
   fi
-  return 1
 }
 
 case "${1:-}" in
@@ -45,13 +40,18 @@ case "${1:-}" in
     cat <<EOF
 2026 Tristate Installer — NEXUS Field underlay (permanent, F9 hotkey)
 
-  $0              Open installer in browser
+  $0              Open Underlay F9 installer in browser
+  $0 --field      Open main field panel (/field)
   $0 --zenity     Zenity wizard (no browser)
   $0 --hotkey     Same as F9 — open installer
 
-Panel: ${URL}
+Underlay F9: ${URL}
+Field panel:   ${FIELD_URL}
 EOF
     exit 0
+    ;;
+  --field)
+    URL="$FIELD_URL"
     ;;
   --zenity)
     exec pythong "${ROOT}/lib/field-underlay-switch.py" zenity
@@ -61,8 +61,8 @@ EOF
     ;;
 esac
 
-if _ensure_panel && _open_browser "$URL"; then
-  echo "Tristate Installer: $URL"
+if _ensure_panel && nexus_panel_open_browser "$URL"; then
+  echo "Tristate Installer (Underlay F9): $URL"
   exit 0
 fi
 

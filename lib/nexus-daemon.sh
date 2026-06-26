@@ -6,7 +6,11 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
+nexus_init_runtime_paths
 nexus_load_config
+# shellcheck source=/dev/null
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-boot-impl.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/nexus-boot-impl.sh"
+declare -f nexus_boot_impl_run >/dev/null 2>&1 && nexus_boot_impl_run || true
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/self-defense.sh"
 nexus_verify_integrity || exit 1
@@ -164,9 +168,15 @@ start_module() {
 [[ "${NEXUS_DNS_INTERNET_PULL:-1}" == "1" ]] && start_module dns-internet nexus_dns_internet_pull_loop
 [[ "${NEXUS_DNS_ADMIN_PORTAL:-1}" == "1" ]] && start_module dns-admin nexus_dns_admin_serve_loop
 [[ "${NEXUS_THREAT_PANEL:-1}" == "1" ]] && start_module panel nexus_threat_panel_serve_loop
+# shellcheck source=/dev/null
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh"
 (
   nexus_await_curl_ready "$(nexus_panel_app_url 2>/dev/null || nexus_panel_url 2>/dev/null || echo 'http://127.0.0.1:9477/app')" 5 5
-  nexus_panel_open_browser
+  if declare -f nexus_panel_open_on_boot >/dev/null 2>&1; then
+    nexus_panel_open_on_boot "$(nexus_panel_url 2>/dev/null || echo 'http://127.0.0.1:9477/field')"
+  else
+    nexus_panel_open_browser
+  fi
 ) &
 
 # Supervisor: vigil maintenance only — shadow verify handled by inotify

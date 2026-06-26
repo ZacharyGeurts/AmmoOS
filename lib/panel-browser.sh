@@ -111,6 +111,46 @@ nexus_panel_wait_ready() {
   nexus_await_curl_ready "$url" "$tries" "$tries"
 }
 
+nexus_panel_boot_id() {
+  local bid
+  bid="$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)"
+  [[ -n "$bid" ]] || bid="boot-$(date -u '+%Y%m%d%H%M%S' 2>/dev/null || date '+%Y%m%d%H%M%S')"
+  printf '%s' "$bid"
+}
+
+nexus_panel_operator_user() {
+  local user home
+  user="${SUDO_USER:-}"
+  [[ -z "$user" || "$user" == "root" ]] && user="$(logname 2>/dev/null || true)"
+  [[ -z "$user" || "$user" == "root" ]] && user="${USER:-}"
+  [[ -z "$user" || "$user" == "root" ]] && user="default"
+  home="$(getent passwd "$user" 2>/dev/null | cut -d: -f6)"
+  [[ -n "$home" ]] || home="/home/${user}"
+  printf '%s:%s' "$user" "$home"
+}
+
+nexus_panel_tristate_url() {
+  local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
+  printf 'http://127.0.0.1:%s/underlay-f9?sector=underlay' "$port"
+}
+
+nexus_panel_open_on_boot() {
+  [[ "${NEXUS_PANEL_AUTO_OPEN:-1}" == "1" ]] || return 0
+  local marker="${NEXUS_PANEL_LAUNCH_MARKER:-${NEXUS_STATE_DIR}/panel-launched.boot}"
+  local boot_id url
+  boot_id="$(nexus_panel_boot_id)"
+  if [[ -f "$marker" ]] && grep -qFx "$boot_id" "$marker" 2>/dev/null; then
+    return 0
+  fi
+  url="${1:-$(nexus_panel_url)}"
+  if nexus_panel_open_browser "$url"; then
+    printf '%s\n' "$boot_id" >"$marker"
+    chmod 640 "$marker" 2>/dev/null || true
+    return 0
+  fi
+  return 1
+}
+
 nexus_panel_detect_browsers() {
   local c
   for c in \
@@ -150,7 +190,7 @@ nexus_panel_open_browser() {
       return 0
     fi
   fi
-  if [[ "${NEXUS_NO_OS_BROWSER_HOOK:-1}" == "1" ]]; then
+  if [[ "${NEXUS_NO_OS_BROWSER_HOOK:-0}" == "1" ]]; then
     nexus_log "WARN" "panel-browser" "SOVEREIGN_NO_OS_HOOK url=${url}"
     return 1
   fi
@@ -173,9 +213,26 @@ nexus_panel_open_browser() {
     return 1
   fi
 
+  local op_user op_home op_uid
+  IFS=: read -r op_user op_home <<<"$(nexus_panel_operator_user)"
+  op_uid="$(getent passwd "$op_user" 2>/dev/null | cut -d: -f3)"
+
   while IFS= read -r browser; do
     [[ -n "$browser" ]] || continue
-    if [[ "$browser" == "xdg-open" ]]; then
+    if [[ "$(id -u)" -eq 0 && -n "$op_uid" && "$op_uid" != "0" ]]; then
+      if [[ "$browser" == "xdg-open" ]]; then
+        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
+          xdg-open "$url" >/dev/null 2>&1 &
+      elif [[ "$browser" == "google-chrome-stable" || "$browser" == "google-chrome" || "$browser" == "chromium-browser" || "$browser" == "chromium" ]]; then
+        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
+          "$browser" --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
+          || sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
+      else
+        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
+          "$browser" --new-window "$url" >/dev/null 2>&1 \
+          || sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
+      fi
+    elif [[ "$browser" == "xdg-open" ]]; then
       DISPLAY="${DISPLAY:-:0}" xdg-open "$url" >/dev/null 2>&1 &
     elif [[ "$browser" == "google-chrome-stable" || "$browser" == "google-chrome" || "$browser" == "chromium-browser" || "$browser" == "chromium" ]]; then
       DISPLAY="${DISPLAY:-:0}" "$browser" --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
@@ -185,7 +242,7 @@ nexus_panel_open_browser() {
         || DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
     fi
     opened=1
-    nexus_log "INFO" "panel-browser" "FIELD_WINDOW_OPENED url=${url} via=${browser}"
+    nexus_log "INFO" "panel-browser" "FIELD_WINDOW_OPENED url=${url} via=${browser} user=${op_user:-self}"
     echo "Opened NEXUS panel: ${url}"
     return 0
   done < <(nexus_panel_detect_browsers)

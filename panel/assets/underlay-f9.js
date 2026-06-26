@@ -423,10 +423,21 @@
     });
   }
 
+  function initialSector() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get("sector");
+      if (q && SECTORS.includes(q)) return q;
+      const hash = (window.location.hash || "").replace(/^#/, "");
+      if (hash === "underlay" || (hash && SECTORS.includes(hash))) return hash === "underlay" ? "underlay" : hash;
+    } catch (_) { /* ignore */ }
+    return "command";
+  }
+
   function init() {
     bindNav();
     bindF9();
-    setSector("command");
+    setSector(initialSector());
     refresh();
     setInterval(refresh, POLL_MS);
   }

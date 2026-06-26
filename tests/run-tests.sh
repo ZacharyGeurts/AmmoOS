@@ -433,6 +433,40 @@ assert mod.kilroy_root().name == 'KILROY', mod.kilroy_root()
 "
 }
 
+test_panel_browser_boot_open() {
+  [[ -f "${ROOT}/lib/panel-browser.sh" ]]
+  grep -q 'nexus_panel_open_on_boot' "${ROOT}/lib/panel-browser.sh"
+  grep -q 'nexus_panel_tristate_url' "${ROOT}/lib/panel-browser.sh"
+  grep -q 'NEXUS_NO_OS_BROWSER_HOOK:-0' "${ROOT}/lib/panel-browser.sh"
+  grep -q 'nexus_panel_open_on_boot' "${ROOT}/lib/nexus-daemon.sh"
+  grep -q 'underlay-f9?sector=underlay' "${ROOT}/nexus-install-gui.sh"
+  grep -q 'underlay-f9?sector=underlay' "${ROOT}/panel/tristate-installer.html"
+  grep -q 'initialSector' "${ROOT}/panel/assets/underlay-f9.js"
+}
+
+test_nexus_boot_impl() {
+  [[ -f "${ROOT}/lib/nexus-boot-impl.sh" ]]
+  [[ -x "${ROOT}/scripts/nexus-boot-impl.sh" ]]
+  grep -q 'nexus_boot_impl_run' "${ROOT}/lib/nexus-boot-impl.sh"
+  grep -q 'nexus_boot_impl_run' "${ROOT}/lib/nexus-daemon.sh"
+  grep -q 'nexus_boot_impl_run' "${ROOT}/nexus.sh"
+  grep -q 'nexus-boot-impl.sh' "${ROOT}/genius_shield.sh"
+  grep -q 'boot_impl' "${ROOT}/data/sg-canonical.json"
+  local tmp_state
+  tmp_state="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" NEXUS_BOOT_IMPL=1 \
+    NEXUS_FRONT_HOOK=0 NEXUS_SENSE_PACKAGE=0 \
+    bash "${ROOT}/scripts/nexus-boot-impl.sh" >/dev/null 2>&1
+  [[ -f "${tmp_state}/first-boot.complete" ]]
+  [[ -f "${tmp_state}/boot-impl.last" ]]
+  grep -q 'mode=first' "${tmp_state}/boot-impl.last"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" NEXUS_BOOT_IMPL=1 \
+    NEXUS_FRONT_HOOK=0 NEXUS_SENSE_PACKAGE=0 \
+    bash "${ROOT}/scripts/nexus-boot-impl.sh" >/dev/null 2>&1
+  grep -q 'mode=refresh' "${tmp_state}/boot-impl.last"
+  rm -rf "$tmp_state"
+}
+
 test_heaven_hell_module() {
   [[ -f "${ROOT}/lib/heaven-hell.py" ]]
   [[ -f "${ROOT}/lib/heaven-hell.sh" ]]
@@ -1965,6 +1999,8 @@ run_test "kill detect module" test_kill_detect_module
 run_test "excellence doctrine" test_excellence_doctrine
 run_test "hostess7 in nexus" test_hostess7_in_nexus
 run_test "NewLatest stack wired" test_newlatest_stack_wired
+run_test "panel browser boot open" test_panel_browser_boot_open
+run_test "nexus boot impl" test_nexus_boot_impl
 run_test "heaven hell module" test_heaven_hell_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
 run_test "fair ad guardian module" test_fair_ad_guardian_module

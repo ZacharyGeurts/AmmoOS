@@ -1,50 +1,12 @@
 #!/bin/bash
-# Open NEXUS threat panel in default browser once per boot (operator UX).
+# Panel launch — desktop entries + boot browser open (delegates to panel-browser.sh).
 
-NEXUS_PANEL_LAUNCH_MARKER="${NEXUS_PANEL_LAUNCH_MARKER:-${NEXUS_STATE_DIR}/panel-launched.marker}"
-NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
+# shellcheck source=/dev/null
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh"
 
 nexus_panel_open_browser() {
-  [[ "${NEXUS_PANEL_AUTO_OPEN:-1}" == "1" ]] || return 0
-  local url="http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/field"
-  local today
-  today="$(date -u '+%Y-%m-%d' 2>/dev/null || date '+%Y-%m-%d')"
-
-  if [[ -f "$NEXUS_PANEL_LAUNCH_MARKER" ]] && grep -q "^${today}$" "$NEXUS_PANEL_LAUNCH_MARKER" 2>/dev/null; then
-    return 0
-  fi
-
-  local uid user home
-  uid="$(id -u default 2>/dev/null || echo "")"
-  [[ -n "$uid" ]] || uid="$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f3)"
-  user="$(getent passwd "${SUDO_USER:-default}" 2>/dev/null | cut -d: -f1)"
-  [[ -z "$user" || "$user" == "root" ]] && user="default"
-  home="$(getent passwd "$user" 2>/dev/null | cut -d: -f6)"
-  [[ -n "$home" ]] || home="/home/default"
-
-  local opened=0 i
-  for i in $(seq 1 30); do
-    if curl -s --connect-timeout 1 "$url" >/dev/null 2>&1; then
-      opened=1
-      break
-    fi
-    sleep 1
-  done
-  [[ "$opened" -eq 1 ]] || {
-    nexus_log "WARN" "panel-launch" "PANEL_OPEN_SKIP panel not ready url=${url}"
-    return 0
-  }
-
-  if [[ -n "$uid" && "$uid" != "0" ]]; then
-    sudo -u "$user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-$home/.Xauthority}" \
-      xdg-open "$url" >/dev/null 2>&1 &
-  else
-    DISPLAY="${DISPLAY:-:0}" xdg-open "$url" >/dev/null 2>&1 &
-  fi
-
-  printf '%s\n' "$today" >"$NEXUS_PANEL_LAUNCH_MARKER"
-  chmod 640 "$NEXUS_PANEL_LAUNCH_MARKER" 2>/dev/null || true
-  nexus_log "INFO" "panel-launch" "PANEL_OPENED url=${url} user=${user}"
+  declare -f nexus_panel_open_on_boot >/dev/null 2>&1 \
+    && nexus_panel_open_on_boot "${1:-$(nexus_panel_url 2>/dev/null || echo "http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT:-9477}/field")}"
 }
 
 nexus_panel_install_desktop() {
@@ -53,7 +15,8 @@ nexus_panel_install_desktop() {
   local icon_src="${root}/assets/nexus-shield.png"
   local apps_dir="/usr/share/applications"
   local icon_dir="/usr/share/icons/hicolor/256x256/apps"
-  local url="http://127.0.0.1:${port}/field"
+  local ver
+  ver="$(nexus_read_version 2>/dev/null || echo "10.4.0")"
 
   [[ -f "$icon_src" ]] || return 0
   install -d -m 755 "$icon_dir" 2>/dev/null || return 0
@@ -62,11 +25,11 @@ nexus_panel_install_desktop() {
   install -m 755 "${root}/nexus.sh" /usr/local/bin/nexus.sh 2>/dev/null || true
   cat >"${apps_dir}/nexus-shield.desktop" <<EOF
 [Desktop Entry]
-Version=10.0.0
+Version=${ver}
 Type=Application
 Name=Underlay F9 — NEXUS Field
 GenericName=Underlay F9
-Comment=Full field underlay command — black green brown military C2
+Comment=Full field underlay command — opens panel in browser on start
 Exec=/usr/local/bin/nexus.sh
 Icon=nexus-shield
 Terminal=false
@@ -75,6 +38,24 @@ Keywords=security;firewall;network;nexus;field;znetwork;
 StartupNotify=true
 EOF
   chmod 644 "${apps_dir}/nexus-shield.desktop" 2>/dev/null || true
+
+  local tristate_exec="/usr/local/bin/nexus-install-gui.sh"
+  [[ -x "${root}/nexus-install-gui.sh" ]] || tristate_exec="/usr/local/bin/nexus.sh --tab underlay"
+  cat >"${apps_dir}/nexus-tristate-installer.desktop" <<EOF
+[Desktop Entry]
+Version=${ver}
+Type=Application
+Name=2026 Tristate Installer
+GenericName=Field Underlay Install
+Comment=Underlay F9 installer — KILROY · World_Redata WRDT1 · F9 hotkey
+Exec=${tristate_exec}
+Icon=nexus-shield
+Terminal=false
+Categories=System;Settings;Security;
+Keywords=nexus;underlay;kilroy;tristate;install;field;
+StartupNotify=true
+EOF
+  chmod 644 "${apps_dir}/nexus-tristate-installer.desktop" 2>/dev/null || true
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database /usr/share/applications 2>/dev/null || true
-  nexus_log "INFO" "panel-launch" "DESKTOP_ENTRY installed nexus-shield.desktop"
+  nexus_log "INFO" "panel-launch" "DESKTOP_ENTRY installed nexus-shield + tristate"
 }

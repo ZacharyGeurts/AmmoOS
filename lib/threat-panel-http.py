@@ -1758,6 +1758,23 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path in ("/api/hostess7/training/bundle", "/api/hostess7-training/bundle"):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            args = ["bundle"] + (["--refresh"] if refresh else [])
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training-bundle.py", args, timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/training/runtime", "/api/hostess7-training/runtime"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training.py", ["runtime"], timeout=10)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/training/graphs", "/api/hostess7-training/graphs"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training.py", ["graphs"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path == "/api/hostess7/training/complete":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training.py", ["complete"], timeout=600)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -3917,6 +3934,81 @@ class Handler(BaseHTTPRequestHandler):
             except json.JSONDecodeError:
                 gate_out = {"ok": False, "error": "logic_gate_failed"}
             self._send(200 if gate_out.get("permit") else 403, json.dumps(gate_out), "application/json")
+            return
+
+        _TRAIN_TRACK_TIMEOUTS = {
+            "master_curriculum": 150,
+            "curriculum": 150,
+            "codecraft": 240,
+            "iq_battery": 200,
+            "self_interaction": 200,
+            "turing_battery": 300,
+            "neural_suite": 180,
+            "omnibus": 240,
+            "calculator": 200,
+            "biology": 200,
+            "engineering": 200,
+            "combat": 200,
+            "mos": 200,
+        }
+
+        if path in ("/api/hostess7/training/assess", "/api/hostess7-training/assess"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training.py", ["assess"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/training/solidify", "/api/hostess7/training/complete"):
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-training.py",
+                ["complete", "--skip-omnibus"],
+                timeout=600,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/training/self-interaction", "/api/hostess7-training/self-interaction"):
+            rounds = int(body.get("rounds") or 6)
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-training.py",
+                ["self-interaction", str(rounds)],
+                timeout=200,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/training/curriculum-step", "/api/hostess7-training/curriculum-step"):
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-training.py",
+                ["curriculum-step"],
+                timeout=150,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/training/iq", "/api/hostess7-training/iq"):
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-truth-rating.py",
+                ["iq-test"],
+                timeout=300,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/training/track/") or path.startswith("/api/hostess7-training/track/"):
+            track_id = path.split("/track/", 1)[-1].strip("/")
+            if not track_id:
+                self._send(400, json.dumps({"ok": False, "error": "track_required"}), "application/json")
+                return
+            args = ["track", track_id]
+            if body.get("ocr_train"):
+                args.append("--ocr-train")
+            timeout = _TRAIN_TRACK_TIMEOUTS.get(track_id, 180)
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-training.py",
+                args,
+                timeout=timeout,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
         if path == "/api/hostess7-command":

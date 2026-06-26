@@ -40,9 +40,27 @@ git tag -a "$TAG" -m "NEXUS-Shield ${NEXUS_VERSION}" 2>/dev/null || git tag -f "
 git push origin main
 git push origin "$TAG" --force
 
+if [[ -x "${ROOT}/scripts/pack-release.sh" ]]; then
+  bash "${ROOT}/scripts/pack-release.sh"
+fi
+
 if command -v gh >/dev/null 2>&1; then
-  gh release create "$TAG" --title "NEXUS-Shield ${NEXUS_VERSION}" --notes-file "$NOTES" 2>/dev/null \
-    || gh release edit "$TAG" --notes-file "$NOTES" 2>/dev/null || true
+  assets=()
+  for asset in "${ROOT}/dist/nexus-shield-${NEXUS_VERSION}-source.tar.gz" \
+    "${ROOT}/dist/nexus-shield-${NEXUS_VERSION}-installers.tar.gz"; do
+    [[ -f "$asset" ]] && assets+=("$asset")
+  done
+  if gh release view "$TAG" >/dev/null 2>&1; then
+    gh release edit "$TAG" --title "NEXUS-Shield ${NEXUS_VERSION}" --notes-file "$NOTES" 2>/dev/null || true
+    [[ ${#assets[@]} -gt 0 ]] && gh release upload "$TAG" "${assets[@]}" --clobber 2>/dev/null || true
+  else
+    if [[ ${#assets[@]} -gt 0 ]]; then
+      gh release create "$TAG" --title "NEXUS-Shield ${NEXUS_VERSION}" --notes-file "$NOTES" "${assets[@]}"
+    else
+      gh release create "$TAG" --title "NEXUS-Shield ${NEXUS_VERSION}" --notes-file "$NOTES" 2>/dev/null \
+        || gh release edit "$TAG" --notes-file "$NOTES" 2>/dev/null || true
+    fi
+  fi
   echo "Release ${TAG} published via gh"
 else
   echo "Tagged ${TAG}. Install gh CLI to auto-publish release notes."

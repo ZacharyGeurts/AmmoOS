@@ -64,6 +64,9 @@ install -d -m 750 -o root -g nexus /usr/local/lib/nexus-shield /usr/local/lib/ne
 cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/assets" "${ROOT}/data" /usr/local/lib/nexus-shield/
 [[ -d "${ROOT}/install" ]] && cp -a "${ROOT}/install" /usr/local/lib/nexus-shield/
 [[ -d "${ROOT}/Queen" ]] && cp -a "${ROOT}/Queen" /usr/local/lib/nexus-shield/
+[[ -d "${ROOT}/Hostess7" ]] && cp -a "${ROOT}/Hostess7" /usr/local/lib/nexus-shield/
+[[ -d "${ROOT}/hostess7-training-viewer" ]] && cp -a "${ROOT}/hostess7-training-viewer" /usr/local/lib/nexus-shield/
+[[ -d "${ROOT}/scripts" ]] && cp -a "${ROOT}/scripts" /usr/local/lib/nexus-shield/
 for _nx_ship in install-all.sh nexus-install-gui.sh; do
   [[ -f "${ROOT}/${_nx_ship}" ]] && install -m 755 "${ROOT}/${_nx_ship}" "/usr/local/lib/nexus-shield/${_nx_ship}"
 done
@@ -71,6 +74,9 @@ unset _nx_ship
 install -m 755 -o root -g nexus "${ROOT}/stealth_install.sh" /usr/local/lib/nexus-shield/stealth_install.sh
 mkdir -p /usr/local/lib/nexus-shield/scripts
 install -m 755 -o root -g nexus "${ROOT}/scripts/play-wimk-ota.sh" /usr/local/lib/nexus-shield/scripts/play-wimk-ota.sh 2>/dev/null || true
+install -m 755 -o root -g nexus "${ROOT}/scripts/wire-stack.sh" /usr/local/lib/nexus-shield/scripts/wire-stack.sh 2>/dev/null || true
+install -m 755 -o root -g nexus "${ROOT}/scripts/nexus-boot-impl.sh" /usr/local/lib/nexus-shield/scripts/nexus-boot-impl.sh 2>/dev/null || true
+install -m 755 -o root -g nexus "${ROOT}/scripts/migrate-nexus-state.sh" /usr/local/lib/nexus-shield/scripts/migrate-nexus-state.sh 2>/dev/null || true
 [[ -d "${ROOT}/plugins" ]] && cp -a "${ROOT}/plugins" /usr/local/lib/nexus-shield/
 chmod 755 "${ROOT}/lib/threat-panel-http.py" "${ROOT}/lib/shutdown-analyze.py" \
   "${ROOT}/lib/connection-gatekeeper.py" "${ROOT}/lib/vector-intel.py" "${ROOT}/lib/angel-dossier.py" \
@@ -171,6 +177,8 @@ if [[ -d "$ZN_SRC" ]]; then
   fi
 fi
 install -m 755 -o root -g nexus "${ROOT}/nexus-launch.sh" /usr/local/lib/nexus-shield/nexus-launch.sh 2>/dev/null || true
+install -m 755 -o root -g nexus "${ROOT}/nexus-install-gui.sh" /usr/local/lib/nexus-shield/nexus-install-gui.sh 2>/dev/null || true
+install -m 755 -o root -g nexus "${ROOT}/nexus-install-gui.sh" /usr/local/bin/nexus-install-gui.sh 2>/dev/null || true
 
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh"
@@ -235,6 +243,7 @@ StartLimitBurst=5
 Type=simple
 Environment=NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield
 Environment=SG_ROOT=${SG_ROOT}
+ExecStartPre=/usr/local/lib/nexus-shield/scripts/nexus-boot-impl.sh
 ExecStart=/usr/local/lib/nexus-shield/lib/nexus-daemon.sh
 ExecStop=/bin/bash -c 'source /usr/local/lib/nexus-shield/lib/nexus-common.sh; source /usr/local/lib/nexus-shield/lib/shutdown-guard.sh 2>/dev/null; nexus_shutdown_mark_clean 2>/dev/null; pkill -9 -f threat-panel-http.py 2>/dev/null; pkill -9 -f dns-admin-portal.py 2>/dev/null; pkill -9 -P \$MAINPID 2>/dev/null; exit 0'
 KillMode=control-group
@@ -277,6 +286,12 @@ source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" 2>/dev/null || true
 source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
 nexus_field_attack_install_autokill || true
 
+# First-install boot impl — wire stack, migrate, meld; marks first-boot.complete
+export NEXUS_BOOT_FORCE_FIRST=1
+NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield NEXUS_STATE_DIR=/var/lib/nexus-shield \
+  SG_ROOT="${SG_ROOT}" bash /usr/local/lib/nexus-shield/scripts/nexus-boot-impl.sh 2>/dev/null || true
+unset NEXUS_BOOT_FORCE_FIRST
+
 declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase starting_service
 if ! systemctl is-active --quiet nexus-genius.service; then
   echo 'NEXUS-Shield install finished, but nexus-genius.service failed to start.' >&2
@@ -302,7 +317,7 @@ if [[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-os-assist.sh" ]]; then
 fi
 
 echo "NEXUS-Shield v${NEXUS_VERSION:-2.0.1} active — panel http://127.0.0.1:9477/field (browser opens on startup)."
-echo "Tristate Installer: http://127.0.0.1:9477/tristate-installer"
+echo "Tristate Installer: http://127.0.0.1:9477/underlay-f9?sector=underlay (browser opens on start)"
 echo 'Start menu: NEXUS-Shield · 2026 Tristate Installer'
 echo 'License: NEXUS-Shield = MIT. AMOURANTHRTX (Field Die) = GPL v3 or commercial — not MIT-free.'
 echo 'Profile: Packet permission v4.0 — DPI knows intent; harmful sections blocked; good flows pass.'

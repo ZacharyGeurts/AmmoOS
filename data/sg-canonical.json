@@ -66,6 +66,14 @@
     "field_stack": "NewLatest/scripts/start-field-stack.sh",
     "live_build": "NewLatest/Queen/scripts/queen-live-build.sh",
     "training_viewer": "NewLatest/hostess7-training-viewer/launch.sh",
-    "wire_stack": "NewLatest/scripts/wire-stack.sh"
+    "wire_stack": "NewLatest/scripts/wire-stack.sh",
+    "boot_impl": "NewLatest/scripts/nexus-boot-impl.sh"
+  },
+  "boot_impl": {
+    "script": "NewLatest/lib/nexus-boot-impl.sh",
+    "standalone": "NewLatest/scripts/nexus-boot-impl.sh",
+    "first_marker": "first-boot.complete",
+    "last_marker": "boot-impl.last",
+    "semantics": "First install runs full wire+migrate+meld; every reboot runs lighter refresh before normal daemon boot."
   }
 }

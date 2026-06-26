@@ -48,10 +48,12 @@
   <link rel="stylesheet" href="/assets/nexus-4k-type.css" />
   <link rel="stylesheet" href="/assets/nexus-person-system.css" />
   <link rel="stylesheet" href="/assets/hostess7-command.css" />
+  <link rel="stylesheet" href="/assets/nexus-training.css" />
   <link rel="stylesheet" href="/assets/field-inspector.css" />
   <script defer src="/assets/nexus-person-system.js"></script>
   <script defer src="/assets/nexus-map-interact.js"></script>
   <script defer src="/assets/hostess7-command.js"></script>
+  <script defer src="/assets/nexus-training.js"></script>
   <script defer src="/assets/nexus-military-v8.js"></script>
   <script defer src="/assets/nexus-military-v82.js"></script>
   <script defer src="/assets/nexus-universal-protector.js"></script>
@@ -592,13 +594,13 @@
     }
     .panel-subnav button.active { color: var(--text); border-color: var(--internet); background: rgba(77, 155, 255, 0.1); }
     nav.menu button { position: relative; }
-    button:not(nav.menu button):not(.panel-subnav button) {
+    button:not(nav.menu button):not(.panel-subnav button):not(#view-training button) {
       background: #000; color: #fff; border: 1px solid #333; border-radius: 6px; cursor: pointer;
     }
-    button:not(nav.menu button):not(.panel-subnav button):hover {
+    button:not(nav.menu button):not(.panel-subnav button):not(#view-training button):hover {
       border-color: #666; background: #0a0a0a;
     }
-    button:not(nav.menu button):not(.panel-subnav button):disabled {
+    button:not(nav.menu button):not(.panel-subnav button):not(#view-training button):disabled {
       opacity: 0.5; cursor: not-allowed;
     }
     input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
@@ -2069,7 +2071,7 @@
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
-    <strong>v10.3.0 Universal Protector — autonomous being stack. 3D/4D spatial lattice · think tanks · lethal armed · threat HIGH. Command · US · Packets · Threats · Intel · Signals · DNS · Outside · Library · System.</strong>
+    <strong>v10.4.0 Universal Protector — autonomous being stack. 3D/4D spatial lattice · think tanks · lethal armed · threat HIGH. Command · US · Packets · Threats · Intel · Signals · DNS · Outside · Library · System.</strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
   </div>
 
@@ -2119,6 +2121,7 @@
     <button type="button" data-view="dns" data-i18n="nav.dns" data-tip="DNS & DHCP — planetary command. Threat levels, traffic patterns, secure threat model, Truth Resolver + Field DHCP on one tab.">DNS &amp; DHCP</button>
     <button type="button" data-view="outside" data-i18n="nav.outside" data-tip="Outside — NEXUS egress gate. SSH, telnet, mail, HTTP/S, custom ports. Operator-initiated outbound through our firewall.">Outside</button>
     <button type="button" data-view="library" data-i18n="nav.library" aria-label="Library · Books · Alt Shift B" aria-keyshortcuts="Alt+Shift+B" data-tip="Hostess7 H7 field books — alphabetical list, braille reader, screen-reader search. Alt+Shift+B jumps here.">Library · Books</button>
+    <button type="button" data-view="training" data-tip="Hostess 7 Training — wireframe graph, track evaluation, curriculum steps, mastery pillars.">Training</button>
     <button type="button" data-view="system" data-i18n="nav.system" data-tip="System — settings, logs, protection toggles.">System</button>
   </nav>
   <nav id="panel-subnav" class="panel-subnav" aria-label="Section views" hidden></nav>
@@ -2679,6 +2682,73 @@
           <tbody id="inspect-body"><tr><td colspan="7" class="empty">Deep packet inspection warming up…</td></tr></tbody>
         </table>
       </div>
+    </div>
+  </section>
+
+  <section id="view-training" class="view" aria-label="Hostess 7 Training" role="region">
+    <div class="h7-wrap">
+      <div class="h7-head">
+        <div class="h7-head-text">
+          <h1 class="h7-title">Hostess 7 Training</h1>
+          <p class="h7-sub">Live evaluations · curriculum · mastery pillars</p>
+        </div>
+        <div class="h7-toolbar">
+          <label class="h7-chip"><input type="checkbox" id="h7-auto-refresh" checked /> Auto</label>
+          <button type="button" id="h7-btn-refresh">Refresh</button>
+          <button type="button" id="h7-btn-assess">Assess</button>
+          <button type="button" id="h7-btn-curriculum">+1 Curriculum</button>
+          <button type="button" id="h7-btn-solidify" class="primary">Solidify</button>
+        </div>
+      </div>
+      <p class="h7-status" id="h7-training-status">Open this tab to load training data.</p>
+
+      <div class="h7-top-row">
+        <div class="h7-ring" id="h7-score-ring" style="--pct: 0">
+          <div class="h7-ring-inner"><strong>0%</strong><span>overall</span></div>
+        </div>
+        <div class="h7-hero-meta" id="h7-hero-meta"></div>
+        <div class="h7-quick-actions">
+          <button type="button" id="h7-btn-self">Self-interaction</button>
+          <button type="button" id="h7-btn-iq">IQ battery</button>
+        </div>
+      </div>
+
+      <div class="h7-graph-row">
+        <div class="h7-wire-wrap">
+          <div class="h7-wire-toolbar">
+            <span id="nexus-training-wireframe-hud">Field graph</span>
+            <button type="button" id="h7-btn-focus">Focus</button>
+          </div>
+          <canvas id="nexus-training-wireframe-canvas"></canvas>
+        </div>
+        <aside class="h7-inspector" id="nexus-training-node-detail">
+          <h3 class="h7-inspector-title">Evaluation</h3>
+          <pre class="h7-eval-box h7-eval-inline" id="h7-eval-detail">Run a track to see detailed evaluation.</pre>
+        </aside>
+      </div>
+
+      <div class="h7-charts">
+        <div class="h7-chart-card"><h3>Track scores</h3><canvas id="h7-chart-tracks"></canvas></div>
+        <div class="h7-chart-card"><h3>Pillars</h3><canvas id="h7-chart-facets"></canvas></div>
+      </div>
+
+      <h2 class="h7-section-title">Training tracks</h2>
+      <div class="h7-tracks" id="h7-tracks-grid"></div>
+
+      <details class="h7-details">
+        <summary>Master curriculum</summary>
+        <div id="h7-curriculum-list"></div>
+      </details>
+
+      <details class="h7-details">
+        <summary>Ledger &amp; raw data</summary>
+        <div class="h7-tabs">
+          <button type="button" class="h7-tab active" data-panel="h7-panel-ledger">Ledger</button>
+          <button type="button" class="h7-tab" data-panel="h7-panel-raw">Raw</button>
+        </div>
+        <div id="h7-panel-ledger" class="h7-panels active"><pre class="h7-eval-box" id="h7-ledger-log">—</pre></div>
+        <div id="h7-panel-raw" class="h7-panels"><pre class="h7-eval-box" id="h7-raw-json">—</pre></div>
+      </details>
     </div>
   </section>
 
@@ -3879,6 +3949,7 @@
       dns: { panel: "dns", default: "dns", subs: { dns: "DNS & DHCP · Planetary" } },
       outside: { panel: "outside", default: "outside", subs: { outside: "Egress · Gate" } },
       library: { panel: "library", default: "library", subs: { library: "Library" } },
+      training: { panel: "training", default: "training", subs: { training: "Training" } },
       system: { panel: "system", default: "settings", subs: { settings: "Settings", logs: "Logs" } },
     };
     const LEGACY_VIEW_MAP = {
@@ -3910,6 +3981,7 @@
       { key: "lethal_enforcement", url: "/api/lethal-enforcement" },
       { key: "hostess7_lethal_insight", url: "/api/hostess7-lethal-insight" },
       { key: "hostess7_command", url: "/api/hostess7-command" },
+      { key: "hostess7_training", url: "/api/hostess7/training" },
       { key: "us_field", url: "/api/us-field" },
       { key: "packet_field", url: "/api/data/packet-field" },
       { key: "home_protector", url: "/api/home-protector" },
@@ -3950,6 +4022,7 @@
       threats: { keys: ["home_protector", "local_services", "host_attacks", "planetary_observer", "precision_field", "angel_dossiers", "human_dossier"], subs: { "home-protector": ["home_protector"], "local-holes": ["local_services"], "host-attack": ["host_attacks", "planetary_observer"], spiderweb: [], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["audio_train", "field_rf", "browser_awareness", "human_registry", "police_agency", "census_field", "existence_identity", "angel_research"], subs: { honor: ["browser_awareness"], people: ["human_registry", "census_field", "existence_identity"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency", "gov_intel", "program_tags"], research: ["angel_research"] } },
       library: { keys: ["h7_library", "field_brain"], subs: { library: ["h7_library", "field_brain"] } },
+      training: { keys: ["hostess7_training"], subs: { training: ["hostess7_training"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
       signals: { keys: ["signals_field", "field_antenna", "field_radio", "field_hardware", "field_hazard_onset"], subs: { signals: ["signals_field", "field_antenna", "field_radio", "field_hardware"] } },
       dns: { keys: ["field_dns"], subs: { dns: ["field_dns"] } },
@@ -4002,6 +4075,7 @@
       if (key === "field_hazard_onset") return typeof val === "object" && (val.schema != null || val.panel != null || val.enabled != null);
       if (key === "lethal_enforcement") return typeof val === "object" && (val.merciless != null || val.status != null || val.heaven_hell != null);
       if (key === "hostess7_command") return typeof val === "object" && val.schema === "hostess7-command/v1" && (Array.isArray(val.transcript) || val.github_repo != null);
+      if (key === "hostess7_training") return typeof val === "object" && val.schema === "hostess7-training/v1" && val.tracks != null;
       if (key === "settings") return typeof val === "object" && Object.keys(val).length > 0;
       if (Array.isArray(val)) return true;
       if (typeof val === "object") return Object.keys(val).length > 0 || val.updated != null;
@@ -4463,6 +4537,9 @@
 
     function onSubViewActivated(sub) {
       prefetchTabSlices(currentPanel, sub);
+      if (currentPanel === "training" || sub === "training") {
+        requestAnimationFrame(() => global.NexusTraining?.init?.());
+      }
       if (sub === "logs") loadLog(currentLog);
       if (sub === "home-protector" && lastPanelData) renderHomeProtector(lastPanelData.home_protector);
       if (sub === "local-holes" && lastPanelData) renderLocalServices(lastPanelData.local_services);
