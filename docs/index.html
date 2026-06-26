@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXUS-Shield Manual</title>
+  <link rel="canonical" href="https://zacharygeurts.github.io/NEXUS-Shield/" />
+  <meta name="description" content="NEXUS-Shield 10.4.0 — field C2 panel, I/O manual, installers, Underlay F9 Tristate." />
+  <link rel="stylesheet" href="manual.css" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand"><strong>NEXUS-Shield Manual</strong> <span class="nav-version">v10.4.0</span></div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" aria-current="page">Index</a>
+      <a href="getting-started.html">Install</a>
+      <a href="io.html">Field I/O</a>
+      <a href="https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/INSTALL-README.md">Installers README</a>
+      <a href="https://github.com/ZacharyGeurts/NEXUS-Shield">GitHub</a>
+    </div>
+  </nav>
+
+  <img class="hero-img" src="images/hero-banner.svg" width="1200" height="320" alt="NEXUS-Shield Universal Protector banner" />
+
+  <h1>NEXUS-Shield Programmer &amp; Operator Manual</h1>
+  <p class="lead">Loopback field C2 — gatekeeper scoring, panel APIs, state I/O, boot-impl reload, and 2026 Tristate / Underlay F9 installer.</p>
+
+  <h2>Start here</h2>
+  <div class="workflow">
+    <a href="getting-started.html#release"><strong>1 Release</strong>Download tarballs from GitHub</a>
+    <a href="getting-started.html#install"><strong>2 Install</strong>install-all.sh one approval</a>
+    <a href="getting-started.html#boot"><strong>3 Boot</strong>Browser opens /field</a>
+    <a href="io.html#api"><strong>4 API</strong>Panel HTTP I/O</a>
+    <a href="io.html#state"><strong>5 State</strong>Runtime files</a>
+  </div>
+
+  <h2>Manuals</h2>
+  <table>
+    <tr><th>Page</th><th>Contents</th></tr>
+    <tr><td><a href="getting-started.html">Getting Started</a></td><td>Installers, systemd, first boot, Tristate GUI</td></tr>
+    <tr><td><a href="io.html">Field I/O</a></td><td>Architecture diagrams, API routes, state files, CLI, boot markers</td></tr>
+    <tr><td><a href="https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/INSTALL-README.md">INSTALL-README</a></td><td>Installer tarball — scripts, env, troubleshooting</td></tr>
+  </table>
+
+  <h2>Live surfaces (after install)</h2>
+  <table>
+    <tr><th>URL</th><th>Purpose</th></tr>
+    <tr><td><code>http://127.0.0.1:9477/field</code></td><td>Main threat panel — opens in browser on start</td></tr>
+    <tr><td><code>http://127.0.0.1:9477/underlay-f9?sector=underlay</code></td><td>2026 Tristate / Underlay F9 installer</td></tr>
+    <tr><td><code>http://127.0.0.1:9477/field#training</code></td><td>Hostess7 training tab</td></tr>
+  </table>
+
+  <figure class="figure">
+    <img src="images/io-architecture.svg" width="920" height="420" alt="NEXUS-Shield architecture — panel, daemon, state, perimeter" />
+    <figcaption>Figure 1 — Operator browser, panel HTTP, daemon, state dir, and perimeter enforcement</figcaption>
+  </figure>
+
+  <footer>NEXUS-Shield v10.4.0 — MIT — Zachary Geurts · <a href="https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.0">Release v10.4.0</a></footer>
+</body>
+</html>

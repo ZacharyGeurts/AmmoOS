@@ -53,7 +53,7 @@ echo "=== installers tarball ==="
 INSTALL_STAGE="${DIST}/nexus-shield-${VER}-installers"
 rm -rf "$INSTALL_STAGE"
 mkdir -p "$INSTALL_STAGE/scripts" "$INSTALL_STAGE/install"
-for f in install-all.sh genius_shield.sh nexus-install-gui.sh nexus.sh stealth_install.sh install.sh; do
+for f in install-all.sh genius_shield.sh nexus-install-gui.sh nexus.sh stealth_install.sh install.sh INSTALL-README.md; do
   [[ -f "${ROOT}/${f}" ]] && cp "${ROOT}/${f}" "$INSTALL_STAGE/"
 done
 cp -a "${ROOT}/scripts/nexus-boot-impl.sh" "${ROOT}/scripts/wire-stack.sh" \

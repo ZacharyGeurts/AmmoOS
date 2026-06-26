@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXUS-Shield Manual — Install</title>
+  <link rel="canonical" href="https://zacharygeurts.github.io/NEXUS-Shield/getting-started.html" />
+  <meta name="description" content="Install NEXUS-Shield 10.4.0 — release tarballs, install-all.sh, Tristate installer." />
+  <link rel="stylesheet" href="manual.css" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand"><strong>NEXUS-Shield Manual</strong> <span class="nav-version">v10.4.0</span></div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Index</a>
+      <a href="getting-started.html" aria-current="page">Install</a>
+      <a href="io.html">Field I/O</a>
+      <a href="https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/INSTALL-README.md">Installers README</a>
+    </div>
+  </nav>
+
+  <h1>Getting Started — Installers</h1>
+  <p class="lead">One admin approval installs the full field stack: daemon, panel, firewall, polkit, Tristate / Underlay F9, and desktop entries. Browser opens automatically on first boot.</p>
+
+  <figure class="figure">
+    <img src="images/io-boot-flow.svg" width="900" height="300" alt="Install and boot flow" />
+    <figcaption>Figure 1 — Install → first boot impl → refresh on every reboot</figcaption>
+  </figure>
+
+  <h2 id="release">Download release</h2>
+  <p>From <a href="https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.0">v10.4.0 release</a>:</p>
+  <table>
+    <tr><th>Asset</th><th>Use</th></tr>
+    <tr><td><code>nexus-shield-10.4.0-source.tar.gz</code></td><td>Full tree — recommended for install</td></tr>
+    <tr><td><code>nexus-shield-10.4.0-installers.tar.gz</code></td><td>Scripts only — overlay into existing tree</td></tr>
+  </table>
+
+  <h2 id="install">Full install (Linux)</h2>
+  <pre><code>tar -xzf nexus-shield-10.4.0-source.tar.gz
+cd nexus-shield-10.4.0
+chmod +x install-all.sh genius_shield.sh nexus.sh nexus-install-gui.sh
+sudo ./install-all.sh</code></pre>
+
+  <p>This runs <code>genius_shield.sh</code> which:</p>
+  <ul>
+    <li>Copies to <code>/usr/local/lib/nexus-shield</code></li>
+    <li>Enables <code>nexus-genius.service</code> (systemd)</li>
+    <li>Runs first-install boot-impl</li>
+    <li>Installs desktop entries + Tristate installer shortcut</li>
+  </ul>
+
+  <h2 id="boot">After install</h2>
+  <table>
+    <tr><th>Action</th><th>Result</th></tr>
+    <tr><td>Reboot or <code>systemctl start nexus-genius</code></td><td>Panel on <code>:9477</code>, browser opens <code>/field</code></td></tr>
+    <tr><td>Start menu → <strong>2026 Tristate Installer</strong></td><td>Opens <code>/underlay-f9?sector=underlay</code></td></tr>
+    <tr><td><code>nexus-install-gui.sh</code></td><td>Same Tristate URL in browser</td></tr>
+    <tr><td><code>./nexus.sh</code> (dev tree)</td><td>Field standalone panel + browser</td></tr>
+  </table>
+
+  <figure class="figure">
+    <img src="screenshots/panel-monitor.png" width="1440" height="900" alt="NEXUS panel Monitor tab screenshot" />
+    <figcaption>Figure 2 — Panel Monitor tab (live connections, trust/block)</figcaption>
+  </figure>
+
+  <h2 id="tristate">Tristate / Underlay F9</h2>
+  <p>Permanent underlay installer — F9 hotkey in panel, no off switch after commit. GUI at:</p>
+  <pre><code>http://127.0.0.1:9477/underlay-f9?sector=underlay</code></pre>
+  <p>Legacy path <code>/tristate-installer</code> redirects to the same surface.</p>
+
+  <h2 id="verify">Verify</h2>
+  <pre><code>nexus status
+nexus verify
+curl -s http://127.0.0.1:9477/api/status | jq .</code></pre>
+
+  <p>Full installer reference: <a href="https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/INSTALL-README.md">INSTALL-README.md</a></p>
+
+  <footer><a href="io.html">Field I/O manual</a> · MIT · Zachary Geurts</footer>
+</body>
+</html>
