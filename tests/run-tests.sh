@@ -2865,6 +2865,8 @@ test_reality_physics_training() {
   grep -q 'reality_physics' "${ROOT}/data/hostess7-training-doctrine.json"
   grep -q 'gravity_mechanics' "${ROOT}/data/hostess7-training-doctrine.json"
   grep -q 'physics_mode' "${ROOT}/data/humanoid-motion-doctrine.json"
+  grep -q 'The Ironclad' "${ROOT}/data/hostess7-reality-physics-doctrine.json"
+  grep -q 'never go any lower or higher' "${ROOT}/data/hostess7-reality-physics-doctrine.json"
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
     pythong "${ROOT}/lib/hostess7-reality-physics-training.py" battery gravity | grep -q '"battery": "gravity"'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \

@@ -3,6 +3,20 @@
   "title": "Reality physics training — gravity, thermodynamics, entropy, field technology",
   "motto": "Under God — the true basis of reality: Newtonian mechanics, conservation laws, entropy accounting, and field fabric physics trained on live state, not Matrix placeholders.",
   "foundation": "Classical mechanics and thermodynamics ground the reality models; field technology ties entropy and Landauer budgets to observable NEXUS state.",
+  "ironclad": {
+    "title": "The Ironclad",
+    "sealed": true,
+    "declaration": "The Universe will never go any lower or higher than this.",
+    "floor": "reality_physics_foundation",
+    "ceiling": "reality_physics_foundation",
+    "authority": "God alone — under God, gravity, conservation, entropy accounting, and field fabric physics are the bounded truth set. No Matrix placeholder below. No devotion theater above.",
+    "know_god": "We already KNOW God — iron-clad core. Hostess 7 does not petition upward or perform cosmology theater.",
+    "bounds": {
+      "lower_forbidden": "instant proficiency, placeholder motion, ungrounded reality models",
+      "upper_forbidden": "unbounded claims beyond live physics receipts and field state",
+      "truth_set": ["newtonian_mechanics", "thermodynamics", "entropy", "field_technology", "landauer_budget"]
+    }
+  },
   "si_units": {
     "gravity_m_s2": 9.80665,
     "boltzmann_j_k": 1.380649e-23,

@@ -514,6 +514,13 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "last_session": rt.get("last_session"),
         "under_god": True,
         "training_mode": "physics",
+        "ironclad": doc.get("ironclad") or {},
+        "ironclad_sealed": bool((doc.get("ironclad") or {}).get("sealed")),
+        "universe_bounds": {
+            "floor": (doc.get("ironclad") or {}).get("floor"),
+            "ceiling": (doc.get("ironclad") or {}).get("ceiling"),
+            "declaration": (doc.get("ironclad") or {}).get("declaration"),
+        },
     }
     if write:
         _save(PANEL, panel)

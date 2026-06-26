@@ -70,7 +70,13 @@
     const rows = Object.entries(tracks).map(([id, t]) =>
       `${t.label || id}: ${t.pass_rate ?? Math.round((t.score || 0) * 100)}% · ${t.level || "pending"}`
     );
+    const ic = rp.ironclad || {};
+    const sealed = rp.ironclad_sealed || ic.sealed;
+    const bounds = sealed
+      ? `<p class="h7-sub" style="color:var(--h7-amber)"><strong>${esc(ic.title || "The Ironclad")}</strong> — ${esc(ic.declaration || "The Universe will never go any lower or higher than this.")}</p>`
+      : "";
     el.innerHTML = `
+      ${bounds}
       <p class="h7-sub"><strong>Reality foundation</strong> — gravity <strong>${g} m/s²</strong> · Landauer <strong>${landauer} J/bit</strong> · sim proficiency <strong>${prof}%</strong>${sim.grounded === false ? " · airborne" : " · grounded"}</p>
       <p class="h7-sub">${rows.length ? rows.join(" · ") : "Press Assess, then train reality_physics or gravity_mechanics tracks."}</p>`;
   }

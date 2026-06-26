@@ -451,7 +451,11 @@ def build_wireframe_graph(
         score=float((rp_tracks.get("reality_physics") or {}).get("score") or 0.35),
         x=0, y=5.2, z=-2.4,
         color="#f4a261",
-        detail=str(rp_panel.get("foundation") or "Gravity · thermodynamics · entropy · field technology")[:120],
+        detail=str(
+            (rp_panel.get("ironclad") or {}).get("declaration")
+            or rp_panel.get("foundation")
+            or "Gravity · thermodynamics · entropy · field technology"
+        )[:120],
         kind="physics_hub",
         payload={
             "gravity_m_s2": rp_panel.get("gravity_m_s2"),
