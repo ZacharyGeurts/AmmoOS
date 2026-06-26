@@ -3,8 +3,9 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
-export HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
-export HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}"
+# shellcheck source=/dev/null
+source "${ROOT}/lib/sg-paths.sh"
+sg_paths_export_defaults
 
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-common.sh"
@@ -19,13 +20,13 @@ nexus_field_brain_sync
 echo "Building Dewey GitHub tree…"
 export NEXUS_DEWEY_GITHUB_ROOT="${NEXUS_DEWEY_GITHUB_ROOT:-$ROOT/library}"
 if [[ -f "${ROOT}/lib/dewey-library-github.py" ]]; then
-  python3 "${ROOT}/lib/h7-library-bridge.py" build --force >/dev/null
-  python3 "${ROOT}/lib/dewey-library-github.py"
+  pythong "${ROOT}/lib/h7-library-bridge.py" build --force >/dev/null
+  pythong "${ROOT}/lib/dewey-library-github.py"
 fi
 
 best="$(nexus_field_brain_best_root 2>/dev/null || hostess7_field_root)"
 echo "field_root: ${best}"
-python3 "${ROOT}/lib/field-brain-panel.py" json | python3 -c "
+pythong "${ROOT}/lib/field-brain-panel.py" json | pythong -c "
 import json,sys
 d=json.load(sys.stdin)
 print('brain_ok:', d.get('ok'))

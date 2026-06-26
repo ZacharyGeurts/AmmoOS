@@ -1,0 +1,98 @@
+{
+  "schema": "field-sense-package-doctrine/v1",
+  "title": "Sense Package — Eye · Ear · ZOCR · Redata · Hostess7",
+  "motto": "One clean meld + protect envelope — sibling repos witnessed; Hostess7 brain read-only, never relocated.",
+  "policy": {
+    "destructive_merge": false,
+    "repos_stay_sibling": true,
+    "resolve_order": ["env", "sg_canonical", "zocr_fallback"],
+    "read_meld_first": true,
+    "chain_with_plate_meld": true,
+    "protect_code_seals": true,
+    "probe_cache_seconds": 12,
+    "shallow_http_probe": true
+  },
+  "products": {
+    "final_eye": {
+      "env": "FINAL_EYE_ROOT",
+      "canonical": "SG/ZNEWOCR",
+      "fallback_env": "ZOCR_ROOT",
+      "fallback": "SG/ZOCR",
+      "lineage": "SG/Final_Eye",
+      "port_env": ["ZOCR_PORT", "FINAL_EYE_PORT"],
+      "default_port": 9479,
+      "health": "/api/health",
+      "bridge": "Queen/lib/queen_final_eye.py",
+      "role": "Vision offense — entity weapons, motion-track, IRTN mesh"
+    },
+    "final_ear": {
+      "env": "FINAL_EAR_ROOT",
+      "canonical": "SG/Final_Ear",
+      "bridge": "Queen/lib/queen-earball.py",
+      "role": "Audio offense — GAC1 truth filter, eye-ear fusion"
+    },
+    "znewocr": {
+      "env": "ZNEWOCR_ROOT",
+      "canonical": "SG/ZNEWOCR",
+      "port_env": ["ZOCR_PORT", "FINAL_EYE_PORT"],
+      "default_port": 9479,
+      "health": "/api/health",
+      "role": "SG field OCR home — Final_Eye 1.3.0 lineage; primary vision server"
+    },
+    "zocr": {
+      "env": "ZOCR_ROOT",
+      "canonical": "SG/ZOCR",
+      "role": "Legacy ZOCR root — fallback when ZNEWOCR absent; forge witness"
+    },
+    "world_redata": {
+      "env": "WORLD_REDATA_ROOT",
+      "canonical": "SG/World_Redata",
+      "port_env": "WORLD_REDATA_WEB_PORT",
+      "default_port": 9478,
+      "health": "/api/health",
+      "formats": ["WRDT1", "WRZC1", "ZAC7"],
+      "role": "Lossless redata envelopes — drive converter, in-place snap"
+    },
+    "hostess7": {
+      "env": "HOSTESS7_ROOT",
+      "canonical": "SG/Hostess7",
+      "brain_env": "HOSTESS7_TEAM_FIELD",
+      "brain_fallback": "cache/fieldstorage",
+      "bridge": "lib/hostess7-field.sh",
+      "brain_sync": "lib/field-brain-sync.sh",
+      "role": "Forever Watchguard Angel — brain, SDF, truth corroboration; witness only on meld"
+    }
+  },
+  "hostess7_brain": {
+    "witness_only": true,
+    "relocate": false,
+    "destructive_sync": false,
+    "best_of_roots": [
+      "HOSTESS7_TEAM_FIELD",
+      "HOSTESS7_TEAM1_FIELD",
+      "cache/fieldstorage",
+      "HOSTESS7_NEXUS_CACHE"
+    ],
+    "secure_signal_line": "data/signals-field-secure-line-doctrine.json",
+    "score_markers": [
+      "brain/library/manifest.json",
+      "brain/library/search_index.jsonl",
+      "brain/superintel/context.json",
+      "brain/sdf"
+    ]
+  },
+  "bus_slots": {
+    "sense_lane": [12, 13, 14, 15],
+    "eye_live": 12,
+    "ear_sealed": 13,
+    "zocr_legacy": 14,
+    "redata_ok": 15,
+    "hostess_brain_tier": 15
+  },
+  "protection": {
+    "flock": true,
+    "fsync": true,
+    "triple_mirror": true,
+    "witness": ["VERSION", "data/code-seal.json", "data/field-manual-index.json"]
+  }
+}

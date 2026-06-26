@@ -1,8 +1,13 @@
 #!/bin/bash
-# Hostess7 unified fieldstorage — best-of-world: TEAM NVMe primary, desktop cache fallback.
+# Hostess7 unified fieldstorage — portable roots; optional TEAM mounts via env only.
 
-HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
-HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}"
+# shellcheck source=/dev/null
+[[ -f "${NEXUS_INSTALL_ROOT:-}/lib/sg-paths.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/sg-paths.sh"
+[[ -f "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh" ]] && source "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh"
+sg_paths_export_defaults 2>/dev/null || true
+
+HOSTESS7_ROOT="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root 2>/dev/null || printf '%s' "${SG_ROOT}/Hostess7")}"
+HOSTESS7_NEXUS_CACHE="${HOSTESS7_NEXUS_CACHE:-$(sg_paths_hostess7_nexus_cache 2>/dev/null || printf '%s' "${NEXUS_STATE_DIR:-/var/lib/nexus-shield}/hostess7-cache/fieldstorage")}"
 
 hostess7_field_brain_score() {
   local root="$1"
@@ -12,26 +17,43 @@ hostess7_field_brain_score() {
   [[ -f "${root}/brain/library/search_index.jsonl" ]] && score=$((score + 40))
   [[ -d "${root}/brain/superintel" ]] && score=$((score + 50))
   [[ -f "${root}/brain/superintel/context.json" ]] && score=$((score + 30))
+  [[ -d "${root}/brain/sdf" ]] && score=$((score + 20))
   printf '%s' "$score"
 }
 
-hostess7_field_root() {
-  local team="${HOSTESS7_TEAM_FIELD}"
+hostess7_field_brain_bytes() {
+  local brain="${1}/brain"
+  [[ -d "$brain" ]] || return 0
+  du -sb "$brain" 2>/dev/null | awk '{print $1}' || printf '0'
+}
+
+hostess7_field_brain_candidates() {
   local cache="${HOSTESS7_ROOT}/cache/fieldstorage"
-  local best="" score best_score=0 s
-  for candidate in "$team" "$cache"; do
+  local nexus="${HOSTESS7_NEXUS_CACHE}"
+  if [[ -n "${HOSTESS7_TEAM_FIELD:-}" && "${HOSTESS7_TEAM_FIELD}" != "${cache}" ]]; then
+    printf '%s\n' "${HOSTESS7_TEAM_FIELD}"
+  fi
+  [[ -n "${HOSTESS7_TEAM1_FIELD:-}" ]] && printf '%s\n' "${HOSTESS7_TEAM1_FIELD}"
+  printf '%s\n' "$cache" "$nexus"
+}
+
+hostess7_field_root() {
+  local best="" score best_score=0 best_bytes=0 s b candidate
+  while IFS= read -r candidate; do
     [[ -d "$candidate" ]] || continue
     s="$(hostess7_field_brain_score "$candidate")"
-    if [[ "$s" -gt "$best_score" ]]; then
+    b="$(hostess7_field_brain_bytes "$candidate")"
+    if [[ "$s" -gt "$best_score" ]] || { [[ "$s" -eq "$best_score" ]] && [[ "$b" -gt "$best_bytes" ]]; }; then
       best_score="$s"
+      best_bytes="$b"
       best="$candidate"
     fi
-  done
+  done < <(hostess7_field_brain_candidates)
   if [[ -n "$best" ]]; then
     printf '%s\n' "$best"
     return 0
   fi
-  printf '%s\n' "${HOSTESS7_TEAM_FIELD}"
+  printf '%s\n' "${HOSTESS7_ROOT}/cache/fieldstorage"
 }
 
 hostess7_security_paths() {
@@ -48,8 +70,9 @@ hostess7_security_paths() {
 hostess7_nexus_source() {
   local candidates=(
     "${NEXUS_SHIELD_SOURCE:-}"
-    "/home/default/Desktop/SG/Latest/NEXUS-Shield"
-    "/home/default/Desktop/SG/NEXUS-Shield"
+    "${NEXUS_INSTALL_ROOT:-}"
+    "${SG_ROOT:-}/NewLatest"
+    "${HOSTESS7_ROOT}/../NewLatest"
     "${HOSTESS7_ROOT}/../Latest/NEXUS-Shield"
   )
   local p

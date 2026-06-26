@@ -2,7 +2,10 @@
 # Firewall trust — permanent operator-authorized peers (panel click + Hostess7 field memory).
 
 NEXUS_FIREWALL_TRUSTED="${NEXUS_FIREWALL_TRUSTED:-${NEXUS_STATE_DIR}/firewall-trusted.tsv}"
-HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}"
+# shellcheck source=/dev/null
+[[ -f "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh" ]] && source "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh"
+sg_paths_export_defaults 2>/dev/null || true
+HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-$(sg_paths_hostess7_team_field 2>/dev/null)}"
 NEXUS_TRUST_MEMORY_FILE="${NEXUS_TRUST_MEMORY_FILE:-nexus-trusted.jsonl}"
 
 nexus_firewall_trust_init() {
@@ -13,7 +16,7 @@ nexus_firewall_trust_init() {
 }
 
 nexus_firewall_trust_memory_paths() {
-  local root="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
+  local root="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root 2>/dev/null)}"
   printf '%s\n' \
     "${root}/cache/fieldstorage/brain/security/${NEXUS_TRUST_MEMORY_FILE}" \
     "${HOSTESS7_TEAM_FIELD}/brain/security/${NEXUS_TRUST_MEMORY_FILE}"
@@ -54,7 +57,7 @@ nexus_firewall_trust_hostess_record() {
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
   local entry
   entry="$(
-    TS="$ts" IP="$ip" DIR="$direction" LABEL="${label:-}" SRC="$source" python3 -c '
+    TS="$ts" IP="$ip" DIR="$direction" LABEL="${label:-}" SRC="$source" pythong -c '
 import json, os
 print(json.dumps({
     "kind": "nexus_trust",
@@ -100,7 +103,7 @@ nexus_firewall_trust_sync_from_memory() {
     while IFS= read -r line; do
       [[ -n "$line" ]] || continue
       read -r ip direction label ts source < <(
-        python3 -c '
+        pythong -c '
 import json, sys
 try:
     o = json.loads(sys.stdin.read())
@@ -216,7 +219,7 @@ nexus_firewall_revoke_trust() {
   local ts entry
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
   entry="$(
-    TS="$ts" IP="$ip" DIR="$direction" python3 -c '
+    TS="$ts" IP="$ip" DIR="$direction" pythong -c '
 import json, os
 print(json.dumps({
     "kind": "nexus_trust",

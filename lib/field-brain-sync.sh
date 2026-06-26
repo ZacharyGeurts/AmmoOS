@@ -9,22 +9,44 @@ nexus_field_brain_score() {
   [[ -f "${root}/brain/library/search_index.jsonl" ]] && score=$((score + 40))
   [[ -d "${root}/brain/superintel" ]] && score=$((score + 50))
   [[ -f "${root}/brain/superintel/context.json" ]] && score=$((score + 30))
+  [[ -d "${root}/brain/sdf" ]] && score=$((score + 20))
   printf '%s' "$score"
 }
 
+nexus_field_brain_bytes() {
+  local brain="${1}/brain"
+  [[ -d "$brain" ]] || return 0
+  du -sb "$brain" 2>/dev/null | awk '{print $1}' || printf '0'
+}
+
+# shellcheck source=/dev/null
+[[ -f "${NEXUS_INSTALL_ROOT:-}/lib/sg-paths.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/sg-paths.sh"
+[[ -f "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh" ]] && source "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh"
+sg_paths_export_defaults 2>/dev/null || true
+
+nexus_field_brain_candidates() {
+  local h7="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root 2>/dev/null)}"
+  local cache="${h7}/cache/fieldstorage"
+  if [[ -n "${HOSTESS7_TEAM_FIELD:-}" && "${HOSTESS7_TEAM_FIELD}" != "${cache}" ]]; then
+    printf '%s\n' "${HOSTESS7_TEAM_FIELD}"
+  fi
+  [[ -n "${HOSTESS7_TEAM1_FIELD:-}" ]] && printf '%s\n' "${HOSTESS7_TEAM1_FIELD}"
+  printf '%s\n' "$cache" "${HOSTESS7_NEXUS_CACHE:-$(sg_paths_hostess7_nexus_cache 2>/dev/null)}"
+}
+
 nexus_field_brain_best_root() {
-  local team="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}"
-  local cache="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}/cache/fieldstorage"
-  local best="" score best_score=0 s
-  for candidate in "$team" "$cache"; do
+  local best="" score best_score=0 best_bytes=0 s b candidate
+  while IFS= read -r candidate; do
     [[ -d "$candidate" ]] || continue
     s="$(nexus_field_brain_score "$candidate")"
-    if [[ "$s" -gt "$best_score" ]]; then
+    b="$(nexus_field_brain_bytes "$candidate")"
+    if [[ "$s" -gt "$best_score" ]] || { [[ "$s" -eq "$best_score" ]] && [[ "$b" -gt "$best_bytes" ]]; }; then
       best_score="$s"
+      best_bytes="$b"
       best="$candidate"
     fi
-  done
-  [[ -n "$best" ]] || best="$cache"
+  done < <(nexus_field_brain_candidates)
+  [[ -n "$best" ]] || best="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root 2>/dev/null)}/cache/fieldstorage"
   printf '%s' "$best"
 }
 
@@ -46,8 +68,8 @@ nexus_field_brain_github_refresh() {
 
 nexus_field_brain_sync() {
   [[ "${NEXUS_FIELD_BRAIN_SYNC:-1}" == "1" ]] || return 0
-  local h7_root="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
-  local team="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}"
+  local h7_root="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root 2>/dev/null)}"
+  local team="${HOSTESS7_TEAM_FIELD:-$(sg_paths_hostess7_team_field 2>/dev/null)}"
   local cache="${h7_root}/cache/fieldstorage"
   local install="${NEXUS_INSTALL_ROOT}"
   local data="${install}/data"
@@ -79,13 +101,13 @@ nexus_field_brain_sync() {
   if [[ -f "${install}/lib/field-brain-panel.py" ]]; then
     NEXUS_INSTALL_ROOT="${install}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
       HOSTESS7_ROOT="${h7_root}" HOSTESS7_TEAM_FIELD="${team}" \
-      python3 "${install}/lib/field-brain-panel.py" panel >/dev/null 2>&1 || true
+      pythong "${install}/lib/field-brain-panel.py" panel >/dev/null 2>&1 || true
   fi
 
   if [[ -f "${install}/lib/h7-library-bridge.py" ]]; then
     NEXUS_INSTALL_ROOT="${install}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
       HOSTESS7_ROOT="${h7_root}" HOSTESS7_TEAM_FIELD="${team}" \
-      python3 "${install}/lib/h7-library-bridge.py" build >/dev/null 2>&1 || true
+      pythong "${install}/lib/h7-library-bridge.py" build >/dev/null 2>&1 || true
   fi
 
   nexus_log "INFO" "field-brain-sync" "BRAIN_SYNC github_books=${gh_books} field_root=${best}"

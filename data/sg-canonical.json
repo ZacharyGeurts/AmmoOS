@@ -1,0 +1,59 @@
+{
+  "schema": "sg-canonical/v1",
+  "updated": "2026-06-25",
+  "canonical_root": "NewLatest",
+  "motto": "SG/NewLatest is the big guy \u2014 Queen + NEXUS + Field Technology",
+  "stack": {
+    "operator_surface": "NewLatest/Queen",
+    "network_shield": "NewLatest",
+    "compiler": "Grok16",
+    "final_eye": "Final_Eye",
+    "final_ear": "Final_Ear",
+    "zocr": "ZNEWOCR",
+    "zocr_legacy": "ZOCR",
+    "znewocr": "ZNEWOCR",
+    "world_redata": "World_Redata",
+    "hostess_brain": "Hostess7",
+    "field_kernel": "KILROY",
+    "field_book": "Field_Primer",
+    "textbook": "NewLatest/Textbook"
+  },
+  "cpu_vulnerability_shield": {
+    "doctrine": "NewLatest/data/cpu-vulnerability-doctrine.json",
+    "posture": "NewLatest/lib/cpu-vulnerability-shield.py",
+    "api": "/api/cpu-vulnerability",
+    "motto": "Known CPU CVEs mitigated; speculative zero-day classes watched; fail closed on Vulnerable"
+  },
+  "native_layer": {
+    "doctrine": "NewLatest/data/native-layer-doctrine.json",
+    "posture": "NewLatest/lib/native-layer.py",
+    "flash_chip": false,
+    "motto": "We are THE native — BIOS witness, no ROM flash, everything lives with us"
+  },
+  "sense_package": {
+    "doctrine": "NewLatest/data/field-sense-package-doctrine.json",
+    "meld": "NewLatest/lib/field-sense-package-meld.py",
+    "api": "/api/sense-package",
+    "motto": "Eye · Ear · ZOCR · Redata · Hostess7 — melded and protected; brain witnessed read-only"
+  },
+  "security": {
+    "root_sovereign": "NewLatest/Queen/lib/queen-root-sovereign.py",
+    "kill_policy": "prejudice",
+    "invisible_guard": "NewLatest/lib/root-sovereign-guard.sh",
+    "code_seal": "NewLatest/Queen/lib/queen-security.py",
+    "nexus_daemon": "NewLatest/lib/nexus-daemon.sh",
+    "env": {
+      "SG_ROOT_KILL_PREJUDICE": "1",
+      "SG_ROOT_SOVEREIGN_KILL": "1",
+      "SG_ROOT_GUARD_INTERVAL": "8",
+      "SG_ROOT_GUARD_FAST_INTERVAL": "4"
+    }
+  },
+  "launch": {
+    "queen": "NewLatest/Queen/scripts/run-queen.sh",
+    "nexus": "NewLatest/nexus.sh",
+    "g16_build": "NewLatest/Queen/scripts/g16-build.sh",
+    "field_stack": "NewLatest/scripts/start-field-stack.sh",
+    "live_build": "NewLatest/Queen/scripts/queen-live-build.sh"
+  }
+}

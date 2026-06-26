@@ -1,7 +1,11 @@
 #!/bin/bash
 # Hostess7 operator — autonomous NEXUS-Shield field sync (no preview-only update paths).
 
-HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
+# shellcheck source=/dev/null
+[[ -f "${NEXUS_INSTALL_ROOT:-}/lib/sg-paths.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/sg-paths.sh"
+[[ -f "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh" ]] && source "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh"
+sg_paths_export_defaults 2>/dev/null || true
+HOSTESS7_ROOT="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root 2>/dev/null)}"
 # shellcheck source=/dev/null
 [[ -f "${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/hostess7-field.sh" ]] \
   && source "${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/hostess7-field.sh"

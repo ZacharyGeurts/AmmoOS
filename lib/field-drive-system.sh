@@ -1,8 +1,11 @@
 #!/bin/bash
 # Field Drive System — whole NEXUS on TEAM fieldstorage; minimal browser talk path.
 
-HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}"
-HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
+# shellcheck source=/dev/null
+[[ -f "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh" ]] && source "$(dirname "${BASH_SOURCE[0]}")/sg-paths.sh"
+sg_paths_export_defaults 2>/dev/null || true
+HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-$(sg_paths_hostess7_team_field 2>/dev/null)}"
+HOSTESS7_ROOT="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root 2>/dev/null)}"
 
 nexus_field_drive_root() {
   local local_mirror="${NEXUS_INSTALL_ROOT:-.}/.nexus-field-drive"
@@ -54,26 +57,26 @@ nexus_field_drive_apply_paths() {
 
 nexus_field_drive_publish() {
   [[ "${NEXUS_FIELD_DRIVE:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local py="${NEXUS_INSTALL_ROOT}/lib/field-drive-system.py"
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}" \
     NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     HOSTESS7_TEAM_FIELD="$HOSTESS7_TEAM_FIELD" \
     HOSTESS7_ROOT="$HOSTESS7_ROOT" \
-    python3 "$py" sync >/dev/null 2>&1 || true
+    pythong "$py" sync >/dev/null 2>&1 || true
 }
 
 nexus_field_drive_publish_full() {
   [[ "${NEXUS_FIELD_DRIVE:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local py="${NEXUS_INSTALL_ROOT}/lib/field-drive-system.py"
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}" \
     NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     HOSTESS7_TEAM_FIELD="$HOSTESS7_TEAM_FIELD" \
     HOSTESS7_ROOT="$HOSTESS7_ROOT" \
-    python3 "$py" publish >/dev/null 2>&1 || true
+    pythong "$py" publish >/dev/null 2>&1 || true
 }
 
 nexus_field_drive_json() {
@@ -86,18 +89,18 @@ nexus_field_drive_json() {
       NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
       HOSTESS7_TEAM_FIELD="$HOSTESS7_TEAM_FIELD" \
       HOSTESS7_ROOT="$HOSTESS7_ROOT" \
-      python3 "$py" json 2>/dev/null && return 0
+      pythong "$py" json 2>/dev/null && return 0
   fi
   printf '{"schema":"field-drive-system/v1","drive_mounted":false,"whole_system_on_drive":false,"drives":[],"gui_on_drive":false,"panel_url":"/field"}'
 }
 
 nexus_field_drive_inbox_loop() {
   [[ "${NEXUS_FIELD_DRIVE:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local py="${NEXUS_INSTALL_ROOT}/lib/field-drive-system.py"
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}" \
     NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     HOSTESS7_TEAM_FIELD="$HOSTESS7_TEAM_FIELD" \
-    python3 "$py" inbox >/dev/null 2>&1 || true
+    pythong "$py" inbox >/dev/null 2>&1 || true
 }

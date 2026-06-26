@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field Drive System — whole NEXUS on portable field storage; talk with minimal browser.
 
 Layout on HOSTESS7 TEAM fieldstorage:
@@ -34,8 +34,22 @@ def _host_state_dir() -> Path:
     if canonical.is_dir():
         return canonical
     return Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
-HOSTESS7_TEAM = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
-HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
+def _sg_paths():
+    import importlib.util
+    py = Path(__file__).resolve().parent / "sg_paths.py"
+    if not py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("sg_paths", py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+_sp = _sg_paths()
+HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(_sp.hostess7_root() if _sp else "Hostess7")))
+HOSTESS7_TEAM = Path(os.environ.get("HOSTESS7_TEAM_FIELD", str(_sp.hostess7_team_field() if _sp else HOSTESS7_ROOT / "cache" / "fieldstorage")))
 VERSION = os.environ.get("NEXUS_VERSION", "7.5.0")
 
 NEXUS_FIELD_NAME = "nexus-field"
@@ -595,8 +609,8 @@ def build_status() -> dict[str, Any]:
             "sessions": len(outside_panel.get("recent_sessions") or []),
             "asm_ready": (outside_panel.get("hardening") or {}).get("asm_ready"),
         },
-        "panel_url": f"https://127.0.0.1:{os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477')}/field",
-        "talk_panel_url": f"https://127.0.0.1:{os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477')}/field-talk",
+        "panel_url": f"http://127.0.0.1:{os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477')}/field",
+        "talk_panel_url": f"http://127.0.0.1:{os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477')}/field-talk",
     }
 
 

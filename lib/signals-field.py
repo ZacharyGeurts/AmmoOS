@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Signals field — gorgeous antenna + RF + audio pulse payload for Signals tab."""
 from __future__ import annotations
 
@@ -18,6 +18,46 @@ AUDIO_PANEL = STATE / "audio-train-panel.json"
 HOME_PANEL = STATE / "home-protector-panel.json"
 ANTENNA_PANEL = STATE / "field-antenna-panel.json"
 RADIO_PANEL = STATE / "field-radio-panel.json"
+SECURE_LINE_DOCTRINE = INSTALL / "data" / "signals-field-secure-line-doctrine.json"
+SENSE_PANEL = STATE / "field-sense-package-panel.json"
+
+
+def _secure_signal_line() -> dict[str, Any]:
+    """Plated secure line in/out — melded to Hostess7; witness only, never system corrupt."""
+    doctrine = _load_json(SECURE_LINE_DOCTRINE, {})
+    sense = _load_json(SENSE_PANEL, {})
+    h7 = (sense.get("members") or {}).get("hostess7") or {}
+    policy = doctrine.get("policy") or {}
+    plate = sense.get("plate_link") or {}
+    return {
+        "schema": "secure-signal-line/v1",
+        "motto": doctrine.get("motto")
+        or "One secure signal line in and out — plated, melded to Hostess7, never system corrupt.",
+        "plated": True,
+        "meld_to_hostess7": True,
+        "system_corrupt": False,
+        "ingress": {
+            "sealed": policy.get("ingress_sealed", True),
+            "witness": "hostess7",
+            "brain_witness_only": h7.get("brain_witness_only", True),
+            "relocate": h7.get("brain_relocate", False),
+        },
+        "egress": {
+            "sealed": policy.get("egress_sealed", True),
+            "witness": "hostess7",
+            "chain_hash": sense.get("chain_hash"),
+            "plate_generation": plate.get("plate_generation"),
+        },
+        "hostess7": {
+            "brain_protected": h7.get("brain_protected"),
+            "smart_one": (h7.get("smart_one") or {}).get("label"),
+            "brain_score": h7.get("brain_score"),
+            "brain_relocate": False,
+            "destructive_sync": False,
+        },
+        "sense_package_generation": sense.get("generation"),
+        "shared_program_comms": True,
+    }
 
 
 def _operator_profile() -> dict[str, Any]:
@@ -660,6 +700,7 @@ def build_signals_field() -> dict[str, Any]:
             out[key] = _load_json(STATE / f"{panel_name}-panel.json", {})
 
     out["field_antenna_catch"] = _load_json(STATE / "field-antenna-catch.json", {})
+    out["secure_signal_line"] = _secure_signal_line()
     out["field_source"] = "signals-field"
     _save_json(PANEL_CACHE, out)
     return out

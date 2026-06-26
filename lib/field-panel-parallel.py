@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Parallel field slice publish — each tab's fields refresh symmetrically."""
 from __future__ import annotations
 
@@ -13,6 +13,16 @@ from typing import Any
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 PANEL_JSON = STATE / "threat-panel.json"
+
+
+def _queen_root() -> Path:
+    qr = os.environ.get("QUEEN_ROOT", "").strip()
+    if qr:
+        p = Path(qr)
+        if p.is_dir():
+            return p
+    candidate = INSTALL.parent / "Queen"
+    return candidate if candidate.is_dir() else INSTALL
 
 # panel JSON key -> (script relative to lib/, cli args)
 FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
@@ -32,14 +42,16 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "local_services": ("local-services-audit.py", ["json"]),
     "audio_train": ("audio-train.py", ["json"]),
     "field_rf": ("field-rf-sentinel.py", ["json"]),
-    "terror_spiderweb": ("terror-spiderweb.py", ["json"]),
-    "precision_field": ("precision-field.py", ["json"]),
+
     "h7_library": ("h7-library-bridge.py", ["build"]),
     "packet_field": ("packet-field.py", ["json"]),
     "host_attacks": ("host-attack-map.py", ["json-panel"]),
     "us_field": ("field-us-intel.py", ["json"]),
     "field_command": ("field-command.py", ["json"]),
     "browser_awareness": ("browser-awareness.py", ["json"]),
+    "field_queen_browser": ("field-queen-browser.py", ["json"]),
+    "field_stack": ("queen_field_nexus.py", ["json"]),
+    "trust_strike": ("trust-strike-engine.py", ["summary"]),
     "police_agency": ("police-agency-db.py", ["json"]),
     "human_registry": ("human-registry.py", ["json"]),
     "gov_intel": ("gov-intel-db.py", ["json"]),
@@ -49,6 +61,16 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "operator_location": ("operator-location.py", ["json"]),
     "field_fabric": ("field-fabric-bridge.py", ["panel"]),
     "thermal_governor": ("thermal-governor.py", ["panel"]),
+    "port_ddos_shield": ("field-port-ddos-shield.py", ["json"]),
+    "packet_deinterlace": ("field-packet-deinterlace.py", ["json"]),
+    "kernel_meld": ("field-kernel-meld.py", ["json"]),
+    "firmware_threat": ("field-firmware-threat-removal.py", ["json"]),
+    "sense_package": ("field-sense-package-meld.py", ["json"]),
+    "field_bus": ("field-unified-bus.py", ["json"]),
+}
+
+QUEEN_SLICES: dict[str, tuple[str, list[str]]] = {
+    "field_eyeball": ("lib/queen-eyeball.py", ["json"]),
 }
 
 STATE_SLICES: dict[str, tuple[str, dict[str, Any]]] = {
@@ -56,15 +78,34 @@ STATE_SLICES: dict[str, tuple[str, dict[str, Any]]] = {
     "angel_dossiers": ("angel-dossiers.json", {"dossier_count": 0, "dossiers": []}),
     "angel_research": ("angel-research.json", {"tables": {}}),
     "human_dossier": ("human-dossier.json", {"ip_count": 0, "ips": []}),
+    "terror_spiderweb": ("terror-spiderweb-panel.json", {"schema": "terror-spiderweb/v2", "mode": "idle", "nodes": [], "edges": []}),
+    "precision_field": ("precision-field-panel.json", {"schema": "precision-field/v1", "mode": "idle", "entities": [], "edges": []}),
 }
 
 
-def _env() -> dict[str, str]:
+def _env(*, cwd: Path | None = None) -> dict[str, str]:
     env = os.environ.copy()
     env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
     env["NEXUS_STATE_DIR"] = str(STATE)
-    env.setdefault("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")
-    env.setdefault("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage")
+    sg = INSTALL.parent if INSTALL.name == "NewLatest" else INSTALL.parent.parent
+    env.setdefault("SG_ROOT", str(sg))
+    env.setdefault("QUEEN_ROOT", str(_queen_root()))
+    env.setdefault("FINAL_EYE_ROOT", str(sg / "Final_Eye"))
+    try:
+        import importlib.util
+
+        sp_py = INSTALL / "lib" / "sg_paths.py"
+        if sp_py.is_file():
+            spec = importlib.util.spec_from_file_location("sg_paths", sp_py)
+            if spec and spec.loader:
+                sp = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(sp)
+                env.setdefault("HOSTESS7_ROOT", str(sp.hostess7_root()))
+                env.setdefault("HOSTESS7_TEAM_FIELD", str(sp.hostess7_team_field()))
+    except Exception:
+        pass
+    if cwd is not None:
+        env["QUEEN_ROOT"] = str(cwd)
     return env
 
 
@@ -79,8 +120,15 @@ def _read_state_slice(key: str, filename: str, default: dict[str, Any]) -> tuple
         return key, dict(default)
 
 
-def _run_slice(key: str, script_rel: str, args: list[str]) -> tuple[str, Any | None]:
-    script = INSTALL / "lib" / script_rel
+def _run_slice(
+    key: str,
+    script_rel: str,
+    args: list[str],
+    *,
+    root: Path | None = None,
+) -> tuple[str, Any | None]:
+    base = root or INSTALL
+    script = base / script_rel if root else INSTALL / "lib" / script_rel
     if not script.is_file():
         return key, None
     try:
@@ -89,7 +137,8 @@ def _run_slice(key: str, script_rel: str, args: list[str]) -> tuple[str, Any | N
             capture_output=True,
             text=True,
             timeout=90,
-            env=_env(),
+            cwd=str(root or INSTALL),
+            env=_env(cwd=root),
         )
         if proc.returncode != 0 or not (proc.stdout or "").strip():
             return key, None
@@ -126,6 +175,9 @@ def publish_parallel(*, max_workers: int | None = None) -> dict[str, Any]:
             pool.submit(_run_slice, key, script, args): key
             for key, (script, args) in FIELD_SLICES.items()
         }
+        queen = _queen_root()
+        for key, (script, args) in QUEEN_SLICES.items():
+            futures[pool.submit(_run_slice, key, script, args, root=queen)] = key
         for key, (filename, default) in STATE_SLICES.items():
             futures[pool.submit(_read_state_slice, key, filename, default)] = key
         for fut in as_completed(futures):
@@ -153,13 +205,30 @@ def publish_parallel(*, max_workers: int | None = None) -> dict[str, Any]:
     }
 
 
+def stored_panel() -> dict[str, Any]:
+    """Return published threat-panel.json — no slice rebuild."""
+    doc = _load_panel()
+    keys = [k for k in doc if not str(k).startswith("_") and k not in ("field", "parallel_load")]
+    return {
+        "ok": True,
+        "stored": True,
+        "panel": doc,
+        "slice_count": len(keys),
+        "field_slices_updated": keys,
+        "field_slices_failed": [],
+    }
+
+
 def main() -> int:
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
-        print("usage: field-panel-parallel.py [publish|json]", file=sys.stderr)
+        print("usage: field-panel-parallel.py [publish|json|stored]", file=sys.stderr)
         return 1
     cmd = sys.argv[1]
     if cmd == "publish":
         publish_parallel()
+        return 0
+    if cmd == "stored":
+        print(json.dumps(stored_panel(), ensure_ascii=False))
         return 0
     if cmd == "json":
         print(json.dumps(publish_parallel(), ensure_ascii=False))

@@ -10,6 +10,23 @@ nexus_read_version() {
 }
 _NEXUS_COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _NEXUS_TREE_ROOT="$(cd "${_NEXUS_COMMON_DIR}/.." && pwd)"
+SG_ROOT="${SG_ROOT:-$(cd "${_NEXUS_TREE_ROOT}/.." && pwd)}"
+if [[ -f "${_NEXUS_COMMON_DIR}/sg-paths.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${_NEXUS_COMMON_DIR}/sg-paths.sh"
+  sg_paths_export_defaults 2>/dev/null || true
+fi
+ZOCR_ROOT="${ZOCR_ROOT:-${SG_ROOT}/ZNEWOCR}"
+ZNEWOCR_ROOT="${ZNEWOCR_ROOT:-${ZOCR_ROOT}}"
+QUEEN_ROOT="${QUEEN_ROOT:-${SG_ROOT}/NewLatest/Queen}"
+# KILROY Field OS — top-level sibling of SG, never inside Queen
+if [[ -z "${KILROY_ROOT:-}" && -f "${_NEXUS_COMMON_DIR}/kilroy-resolve.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${_NEXUS_COMMON_DIR}/kilroy-resolve.sh"
+  nexus_kilroy_export "$SG_ROOT" 2>/dev/null || KILROY_ROOT="${SG_ROOT}/KILROY"
+  export KILROY_ROOT
+fi
+KILROY_ROOT="${KILROY_ROOT:-${SG_ROOT}/KILROY}"
 NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 NEXUS_SHADOW_DIR="${NEXUS_SHADOW_DIR:-${NEXUS_STATE_DIR}/shadow}"
@@ -23,6 +40,8 @@ NEXUS_FIELD_TOOLS_DIR="${NEXUS_FIELD_TOOLS_DIR:-}"
 
 # shellcheck source=/dev/null
 [[ -f "${_NEXUS_COMMON_DIR}/nexus-await.sh" ]] && source "${_NEXUS_COMMON_DIR}/nexus-await.sh"
+# shellcheck source=/dev/null
+[[ -f "${_NEXUS_COMMON_DIR}/field-max.sh" ]] && source "${_NEXUS_COMMON_DIR}/field-max.sh"
 
 nexus_ensure_group() {
   [[ "${NEXUS_FIELD_STANDALONE:-}" == "1" || "$(id -u)" -ne 0 ]] && return 0
@@ -37,12 +56,40 @@ nexus_is_field_standalone() {
   [[ "${NEXUS_FIELD_STANDALONE:-}" == "1" ]]
 }
 
+nexus_resolve_pythong() {
+  local candidate
+  for candidate in \
+    "${NEXUS_PYTHONG:-}" \
+    "${PYTHONG:-}" \
+    "${PYTHONG_ROOT:-}/bin/pythong" \
+    "${SG_ROOT}/PythonG/bin/pythong" \
+    "${GPY16_ROOT:-}/bin/gpy-16" \
+    "${SG_ROOT}/GrokPy/bin/gpy-16" \
+    "${SG_ROOT}/GrokPy/bin/grokpy" \
+    "${QUEEN_ROOT}/scripts/pythong" \
+    "${NEXUS_INSTALL_ROOT}/scripts/nexus-py" \
+    "$(command -v pythong 2>/dev/null || true)"; do
+    [[ -n "$candidate" && -x "$candidate" ]] || continue
+    printf '%s' "$candidate"
+    return 0
+  done
+  return 1
+}
+
 nexus_init_runtime_paths() {
   # Tree checkout: use source tree when install root was not exported.
   if [[ -f "${_NEXUS_TREE_ROOT}/lib/nexus-common.sh" ]] \
     && [[ "${NEXUS_INSTALL_ROOT}" == /usr/local/lib/nexus-shield ]]; then
     NEXUS_INSTALL_ROOT="${_NEXUS_TREE_ROOT}"
   fi
+
+  export SG_ROOT QUEEN_ROOT
+  export GPY16_ROOT="${GPY16_ROOT:-${SG_ROOT}/GrokPy}"
+  export PYTHONG_ROOT="${PYTHONG_ROOT:-${SG_ROOT}/PythonG}"
+  PATH="${PYTHONG_ROOT}/bin:${GPY16_ROOT}/bin:${QUEEN_ROOT}/scripts:${NEXUS_INSTALL_ROOT}/lib/bin:${PATH}"
+  NEXUS_PYTHONG="$(nexus_resolve_pythong 2>/dev/null || true)"
+  [[ -n "$NEXUS_PYTHONG" ]] && PATH="$(dirname "$NEXUS_PYTHONG"):${PATH}"
+  export PATH NEXUS_PYTHONG
 
   local use_local=0
   if nexus_is_dev_install; then
@@ -101,8 +148,20 @@ nexus_init_runtime_paths() {
   export NEXUS_FIELD_DRIVE_ROOT="${NEXUS_FIELD_DRIVE_ROOT:-}"
 }
 
+nexus_root_sovereign_ok() {
+  [[ "${SG_ROOT_SOVEREIGN_OFF:-}" == "1" ]] && return 0
+  local py="${QUEEN_ROOT:-${SG_ROOT:-}/NewLatest/Queen}/lib/queen-root-sovereign.py"
+  [[ -f "$py" ]] || return 0
+  local pythong_bin="${NEXUS_PYTHONG:-$(nexus_resolve_pythong 2>/dev/null || true)}"
+  [[ -n "$pythong_bin" ]] || return 0
+  "$pythong_bin" "$py" check-root >/dev/null 2>&1
+}
+
 nexus_operator_authorized() {
-  [[ "$(id -u)" -eq 0 ]] && return 0
+  if [[ "$(id -u)" -eq 0 ]]; then
+    nexus_root_sovereign_ok && return 0
+    return 1
+  fi
   nexus_is_dev_install && return 0
   id -nG 2>/dev/null | grep -qw "$NEXUS_GROUP"
 }

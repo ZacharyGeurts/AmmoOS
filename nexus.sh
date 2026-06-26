@@ -1,5 +1,5 @@
 #!/bin/bash
-# NEXUS-Shield — start panel from this tree and open the browser.
+# NewLatest NEXUS field stack — start panel from this tree and open the browser.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -23,8 +23,10 @@ nexus_resolve_panel_root() {
   local candidate
   for candidate in \
     "${NEXUS_PANEL_ROOT:-}" \
-    "${ROOT}/../SG/Latest/NEXUS-Shield" \
-    "/home/default/Desktop/SG/Latest/NEXUS-Shield"; do
+    "${ROOT}" \
+    "${SG_ROOT:-}/NewLatest" \
+    "${ROOT}/../NewLatest" \
+    "${ROOT}/../Latest/NEXUS-Shield"; do
     [[ -n "$candidate" ]] || continue
     if [[ -f "${candidate}/lib/threat-panel-http.py" ]] && [[ -d "${candidate}/panel" ]]; then
       printf '%s' "${candidate}"
@@ -41,15 +43,17 @@ nexus_field_standalone_ensure_panel() {
   panel_root="$(nexus_resolve_panel_root)"
   panel_py="${panel_root}/lib/threat-panel-http.py"
   [[ -f "$panel_py" ]] || {
-    echo "BLOCKER: threat-panel-http.py not found — run from full NEXUS-Shield tree." >&2
+    echo "BLOCKER: threat-panel-http.py not found — run from SG/NewLatest field tree." >&2
     return 1
   }
   [[ -d "${panel_root}/panel" ]] || {
     echo "BLOCKER: panel/ directory missing." >&2
     return 1
   }
-  command -v python3 >/dev/null 2>&1 || {
-    echo "BLOCKER: python3 required for panel." >&2
+  local pythong_bin="${NEXUS_PYTHONG:-$(nexus_resolve_pythong 2>/dev/null || true)}"
+  [[ -n "$pythong_bin" && -x "$pythong_bin" ]] || {
+    echo "BLOCKER: pythong required for panel." >&2
+    echo "Expected: ${PYTHONG_ROOT:-${SG_ROOT}/PythonG}/bin/pythong or ${GPY16_ROOT:-${SG_ROOT}/GrokPy}/bin/gpy-16" >&2
     return 1
   }
   command -v curl >/dev/null 2>&1 || {
@@ -57,10 +61,10 @@ nexus_field_standalone_ensure_panel() {
     return 1
   }
 
-  nexus_ensure_dirs 2>/dev/null || mkdir -p "$NEXUS_STATE_DIR" "${NEXUS_STATE_DIR}/tls" 2>/dev/null || true
+  nexus_ensure_dirs 2>/dev/null || mkdir -p "$NEXUS_STATE_DIR" 2>/dev/null || true
   # shellcheck source=/dev/null
-  [[ -f "${panel_root}/lib/panel-tls.sh" ]] && source "${panel_root}/lib/panel-tls.sh"
-  nexus_panel_tls_ensure 2>/dev/null || true
+  [[ -f "${panel_root}/lib/znetwork-field.sh" ]] && source "${panel_root}/lib/znetwork-field.sh"
+  nexus_znetwork_publish 2>/dev/null || true
 
   want="$(nexus_panel_desired_version 2>/dev/null || true)"
   export NEXUS_THREAT_PANEL_PORT
@@ -68,8 +72,6 @@ nexus_field_standalone_ensure_panel() {
   export NEXUS_THREAT_PANEL_PORT
 
   port="${NEXUS_THREAT_PANEL_PORT}"
-  cert="${NEXUS_PANEL_TLS_CERT:-${NEXUS_STATE_DIR}/tls/nexus-panel.crt}"
-  key="${NEXUS_PANEL_TLS_KEY:-${NEXUS_STATE_DIR}/tls/nexus-panel.key}"
   url="$(nexus_panel_url)"
   ready_url="$(nexus_panel_app_url)"
 
@@ -78,13 +80,16 @@ nexus_field_standalone_ensure_panel() {
     nexus_panel_stop
   fi
 
-  if [[ -f "$cert" && -f "$key" ]] && ! pgrep -f "threat-panel-http.py.*${port}" >/dev/null 2>&1; then
+  if ! pgrep -f "threat-panel-http.py.*${port}" >/dev/null 2>&1; then
     nohup env \
       NEXUS_INSTALL_ROOT="${panel_root}" \
       NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
-      NEXUS_PANEL_TLS=1 \
-      python3 "$panel_py" "$port" "${panel_root}/panel" \
-      "${NEXUS_STATE_DIR}/threat-panel.json" "$cert" "$key" \
+      PATH="${PATH}" \
+      SG_ROOT="${SG_ROOT}" \
+      PYTHONG_ROOT="${PYTHONG_ROOT}" \
+      GPY16_ROOT="${GPY16_ROOT}" \
+      "$pythong_bin" "$panel_py" "$port" "${panel_root}/panel" \
+      "${NEXUS_STATE_DIR}/threat-panel.json" \
       >>"${NEXUS_STATE_DIR}/panel-http.log" 2>&1 &
   fi
 
@@ -121,7 +126,7 @@ nexus_panel_restart_immediate() {
 
 nexus_usage() {
   cat <<EOF
-NEXUS-Shield — start the threat panel and open the browser
+NewLatest NEXUS field — start the threat panel and open the browser
   Version: $(nexus_read_version 2>/dev/null || echo unknown)
   Install: ${NEXUS_INSTALL_ROOT}
   State:   ${NEXUS_STATE_DIR}
@@ -145,7 +150,8 @@ Tab views (for --tab):
 Environment:
   NEXUS_STATE_DIR      Field state directory (default: /var/lib/nexus-shield)
   NEXUS_PANEL_ROOT     Override panel install tree
-  NEXUS_THREAT_PANEL_PORT  HTTPS port (auto-picked if unset)
+  NEXUS_THREAT_PANEL_PORT  Panel HTTP port (default 9477)
+  NEXUS_ZNETWORK_PROMPT    ZNetwork Yes/No/Skip on start (default 1)
 
 CLI without browser:
   ./bin/nexus status
@@ -166,6 +172,10 @@ case "${1:-}" in
     exit 0
     ;;
   --restart|--restart-immediate)
+    nexus_load_config 2>/dev/null || true
+    # shellcheck source=/dev/null
+    [[ -f "${ROOT}/lib/znetwork-field.sh" ]] && source "${ROOT}/lib/znetwork-field.sh"
+    nexus_znetwork_startup_prompt || true
     if nexus_panel_restart_immediate; then
       URL="$(nexus_panel_url)"
       echo "Panel restarted: ${URL}"
@@ -187,6 +197,16 @@ if [[ "${NEXUS_FIELD_STANDALONE:-}" != "1" ]] \
   fi
 fi
 
+nexus_load_config 2>/dev/null || true
+[[ -f "${ROOT}/lib/front-hook.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/front-hook.sh"
+  nexus_front_hook_board 2>/dev/null || true
+}
+# shellcheck source=/dev/null
+[[ -f "${ROOT}/lib/znetwork-field.sh" ]] && source "${ROOT}/lib/znetwork-field.sh"
+nexus_znetwork_startup_prompt || true
+
 nexus_field_standalone_ensure_panel || {
   echo "Try: ./nexus.sh --no-browser" >&2
   exit 1
@@ -202,9 +222,10 @@ nexus_panel_publish_if_needed() {
     return 0
   fi
   local assemble="${panel_root}/scripts/panel-json-assemble.py"
-  if [[ -f "$assemble" ]] && command -v python3 >/dev/null 2>&1; then
+  local pythong_bin="${NEXUS_PYTHONG:-$(nexus_resolve_pythong 2>/dev/null || true)}"
+  if [[ -f "$assemble" && -n "$pythong_bin" && -x "$pythong_bin" ]]; then
     NEXUS_INSTALL_ROOT="${panel_root}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
-      python3 "$assemble" >/dev/null 2>&1 && return 0
+      "$pythong_bin" "$assemble" >/dev/null 2>&1 && return 0
   fi
   NEXUS_PANEL_PUBLISH_FAST="${NEXUS_PANEL_PUBLISH_FAST:-1}" \
     NEXUS_THREAT_PANEL=1 nexus_threat_panel_publish 2>/dev/null || true
