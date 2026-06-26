@@ -208,6 +208,7 @@
       card("Generation", pm.generation ?? "—", "uninterruptable flock") +
       card("Plates", pm.plate_count ?? (pm.plates || []).length, (pm.plates || []).join(", ")) +
       card("Route words", sum.route_words ?? "—", "iron plate") +
+      card("Field plate", sum.field_dimension_count ?? "—", "∞ dim · amp " + (sum.field_peak_amplitude ?? "—")) +
       card("Kernel meld", sum.bzimage_ready ? "fused" : "—", "boot " + (sum.boot_vector ?? "—")) +
       card("Firmware", sum.firmware_verdict || "—", "removed " + (sum.firmware_removed ?? 0)) +
       card("Bus checksum", sum.bus_checksum ?? "—", "copilot lane") +

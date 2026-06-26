@@ -1,0 +1,37 @@
+{
+  "schema": "field-plate-meld-doctrine/v1",
+  "title": "Plate meld — uninterruptable truth between plates",
+  "motto": "Flock, fsync, chain-hash, triple mirror — plates never lose each other mid-tick.",
+  "policy": {
+    "flock_exclusive": true,
+    "fsync_writes": true,
+    "chain_hash": true,
+    "triple_mirror": true,
+    "generation_monotonic": true,
+    "read_meld_first": true,
+    "kernel_meld_in_place": true
+  },
+  "plates": {
+    "field_plate": {
+      "panel": "field-plate-field-runtime.json",
+      "doctrine": "data/field-plate-field-doctrine.json",
+      "role": "Infinite-dimension amplitude field over all panel slices",
+      "refresh_before_fuse": true
+    },
+    "sense_package": {
+      "panel": "field-sense-package-panel.json",
+      "role": "Sense stack meld — Hostess7 brain witness read-only"
+    },
+    "kernel": {
+      "panel": "field-kernel-meld-panel.json",
+      "role": "KILROY linux-7.1.1 witness + bzImage in-place manifest",
+      "refresh_before_fuse": true
+    }
+  },
+  "architecture": {
+    "publish": "field",
+    "parallel_compat": true,
+    "infinite_dimension": true,
+    "amplitude_process": "superposition_normalize"
+  }
+}

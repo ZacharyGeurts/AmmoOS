@@ -219,19 +219,42 @@ def stored_panel() -> dict[str, Any]:
     }
 
 
+def _delegate_field() -> Any:
+    import importlib.util
+
+    py = INSTALL / "lib" / "field-panel-field.py"
+    spec = importlib.util.spec_from_file_location("field_panel_field", py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def main() -> int:
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         print("usage: field-panel-parallel.py [publish|json|stored]", file=sys.stderr)
         return 1
+    use_field = os.environ.get("NEXUS_FIELD_PLATES", "1") == "1"
+    field_mod = _delegate_field() if use_field else None
     cmd = sys.argv[1]
     if cmd == "publish":
-        publish_parallel()
+        if field_mod:
+            field_mod.publish_field()
+        else:
+            publish_parallel()
         return 0
     if cmd == "stored":
-        print(json.dumps(stored_panel(), ensure_ascii=False))
+        if field_mod:
+            print(json.dumps(field_mod.stored_panel(), ensure_ascii=False))
+        else:
+            print(json.dumps(stored_panel(), ensure_ascii=False))
         return 0
     if cmd == "json":
-        print(json.dumps(publish_parallel(), ensure_ascii=False))
+        if field_mod:
+            print(json.dumps(field_mod.publish_field(), ensure_ascii=False))
+        else:
+            print(json.dumps(publish_parallel(), ensure_ascii=False))
         return 0
     print(json.dumps({"ok": False, "error": "unknown_command"}, ensure_ascii=False))
     return 1
