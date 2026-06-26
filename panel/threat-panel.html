@@ -2071,7 +2071,7 @@
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
-    <strong>v10.4.0 Universal Protector — autonomous being stack. 3D/4D spatial lattice · think tanks · lethal armed · threat HIGH. Command · US · Packets · Threats · Intel · Signals · DNS · Outside · Library · System.</strong>
+    <strong>v10.4.1 Universal Protector — autonomous being stack. 3D/4D spatial lattice · think tanks · lethal armed · threat HIGH. Command · US · Packets · Threats · Intel · Signals · DNS · Outside · Library · System.</strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
   </div>
 
@@ -2143,6 +2143,7 @@
             <button type="button" id="h7-human-questionnaire" data-tip="20-question human/Turing battery — target 20/20.">Turing 20/20</button>
             <button type="button" id="h7-command-sync" data-tip="Pull ZacharyGeurts/NEXUS-Shield — README, commits, releases.">Sync GitHub</button>
             <button type="button" id="h7-command-voice" class="active" data-tip="Hostess 7 speaks every reply aloud.">Voice on</button>
+            <button type="button" id="h7-field-clarity-jump" data-tip="Open Field clarity in System — all slices, scores, DNS, antenna live values.">Field clarity</button>
           </div>
         </header>
 
@@ -2227,24 +2228,27 @@
             </div>
           </section>
         </div>
-        <div class="h7-superintel__grid h7-superintel__grid--intel">
-          <aside class="h7-superintel__side h7-superintel__side--full" aria-label="Intel and assessments">
-            <div class="h7-iq-panel" id="h7-iq-panel">
-              <div class="h7-iq-panel__head">IQ &amp; Turing</div>
-              <div class="h7-iq-panel__score" id="h7-iq-score">Run IQ test or Turing battery</div>
-              <div class="h7-iq-panel__detail" id="h7-iq-detail"></div>
-            </div>
-            <div class="h7-truth-bar h7-truth-bar--compact" id="h7-truth-bar">
-              <span class="h7-truth-status" id="h7-truth-status">Truth on every reply</span>
-            </div>
-            <div class="h7-superintel__caps" id="h7-command-caps"></div>
-            <div class="h7-intel__head">Field intel</div>
-            <div class="h7-intel__scroll" id="h7-intel-digest"></div>
-            <div class="h7-command-map-wrap">
-              <div id="h7-command-map" role="application" aria-label="Mini threat map"></div>
-            </div>
-          </aside>
-        </div>
+        <details class="h7-intel-fold">
+          <summary>Assessments · IQ · field intel · map</summary>
+          <div class="h7-superintel__grid h7-superintel__grid--intel">
+            <aside class="h7-superintel__side h7-superintel__side--full" aria-label="Intel and assessments">
+              <div class="h7-iq-panel" id="h7-iq-panel">
+                <div class="h7-iq-panel__head">IQ &amp; Turing</div>
+                <div class="h7-iq-panel__score" id="h7-iq-score">Run IQ test or Turing battery</div>
+                <div class="h7-iq-panel__detail" id="h7-iq-detail"></div>
+              </div>
+              <div class="h7-truth-bar h7-truth-bar--compact" id="h7-truth-bar">
+                <span class="h7-truth-status" id="h7-truth-status">Truth on every reply</span>
+              </div>
+              <div class="h7-superintel__caps" id="h7-command-caps"></div>
+              <div class="h7-intel__head">Field intel</div>
+              <div class="h7-intel__scroll" id="h7-intel-digest"></div>
+              <div class="h7-command-map-wrap">
+                <div id="h7-command-map" role="application" aria-label="Mini threat map"></div>
+              </div>
+            </aside>
+          </div>
+        </details>
 
         <details class="h7-ops-fold">
           <summary>Field operations · Angel · Neural · Master · Draw</summary>
@@ -3432,6 +3436,13 @@
         <h2>Your settings</h2>
         <p id="settings-profile-desc">Loading current choices…</p>
         <div id="settings-profile-stats" class="settings-profile-stats"></div>
+      </div>
+      <div class="settings-group field-clarity-group" id="field-clarity" data-settings-group="field-clarity">
+        <details class="field-clarity-fold">
+          <summary>Field clarity — all slices &amp; live values</summary>
+          <p class="meta field-clarity-hint">Search any field slice (gatekeeper, lethal, Hostess7, DNS, antenna). Click a row for detail and jump to its tab.</p>
+          <div id="field-clarity-mount" class="field-clarity-mount"></div>
+        </details>
       </div>
       <div class="settings-group" data-settings-group="protection">
         <h3><span>Protection</span><span data-tip="v4.0 Packet Permission: DPI classifies every flow. Good traffic passes at zero nft cost; only harmful packet sections are blocked."></span></h3>

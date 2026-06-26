@@ -143,3 +143,165 @@ BrokenPipeError: [Errno 32] Broken pipe
 127.0.0.1 - [26/Jun/2026 03:16:43] "GET /api/bundle HTTP/1.1" 200 -
 127.0.0.1 - [26/Jun/2026 03:16:44] "GET /api/bundle HTTP/1.1" 200 -
 127.0.0.1 - [26/Jun/2026 03:16:47] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:16:50] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:16:51] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:16:56] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:16:57] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:16:58] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:05] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:06] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:08] "POST /api/train/track/programming HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:09] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:12] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:14] "GET /api/bundle?refresh=1 HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:16] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:19] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:22] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:23] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:26] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:29] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:30] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:32] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:34] "POST /api/train/self-interaction HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:37] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:40] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:40] "GET /api/bundle?refresh=1 HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:42] "POST /api/train-all HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:43] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:45] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:47] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:48] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:49] "GET /api/bundle?refresh=1 HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:53] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:55] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:17:56] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:00] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:01] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:02] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:08] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:10] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:11] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:17] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:18] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:18] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:24] "GET /api/bundle HTTP/1.1" 200 -
+127.0.0.1 - [26/Jun/2026 03:18:27] "GET /api/bundle HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 48316)
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/socketserver.py", line 692, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.12/socketserver.py", line 761, in __init__
+    self.handle()
+  File "/usr/lib/python3.12/http/server.py", line 436, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.12/http/server.py", line 424, in handle_one_request
+    method()
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 234, in do_GET
+    self._json(bundle_training_data(refresh=refresh))
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 200, in _json
+    self._send(code, json.dumps(doc, ensure_ascii=False, indent=2).encode("utf-8"), "application/json")
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 197, in _send
+    self.wfile.write(body)
+  File "/usr/lib/python3.12/socketserver.py", line 840, in write
+    self._sock.sendall(b)
+BrokenPipeError: [Errno 32] Broken pipe
+----------------------------------------
+127.0.0.1 - [26/Jun/2026 03:18:27] "GET /api/bundle HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 48328)
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/socketserver.py", line 692, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.12/socketserver.py", line 761, in __init__
+    self.handle()
+  File "/usr/lib/python3.12/http/server.py", line 436, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.12/http/server.py", line 424, in handle_one_request
+    method()
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 234, in do_GET
+    self._json(bundle_training_data(refresh=refresh))
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 200, in _json
+    self._send(code, json.dumps(doc, ensure_ascii=False, indent=2).encode("utf-8"), "application/json")
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 197, in _send
+    self.wfile.write(body)
+  File "/usr/lib/python3.12/socketserver.py", line 840, in write
+    self._sock.sendall(b)
+BrokenPipeError: [Errno 32] Broken pipe
+----------------------------------------
+127.0.0.1 - [26/Jun/2026 03:19:35] "POST /api/train/track/brain_guard HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 56394)
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/socketserver.py", line 692, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.12/socketserver.py", line 761, in __init__
+    self.handle()
+  File "/usr/lib/python3.12/http/server.py", line 436, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.12/http/server.py", line 424, in handle_one_request
+    method()
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 279, in do_POST
+    self._json(_py_json("hostess7-training.py", ["track", track_id], timeout=300))
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 200, in _json
+    self._send(code, json.dumps(doc, ensure_ascii=False, indent=2).encode("utf-8"), "application/json")
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 197, in _send
+    self.wfile.write(body)
+  File "/usr/lib/python3.12/socketserver.py", line 840, in write
+    self._sock.sendall(b)
+BrokenPipeError: [Errno 32] Broken pipe
+----------------------------------------
+127.0.0.1 - [26/Jun/2026 03:20:37] "POST /api/train/track/omnibus HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 57670)
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/socketserver.py", line 692, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.12/socketserver.py", line 761, in __init__
+    self.handle()
+  File "/usr/lib/python3.12/http/server.py", line 436, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.12/http/server.py", line 424, in handle_one_request
+    method()
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 279, in do_POST
+    self._json(_py_json("hostess7-training.py", ["track", track_id], timeout=300))
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 200, in _json
+    self._send(code, json.dumps(doc, ensure_ascii=False, indent=2).encode("utf-8"), "application/json")
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 197, in _send
+    self.wfile.write(body)
+  File "/usr/lib/python3.12/socketserver.py", line 840, in write
+    self._sock.sendall(b)
+BrokenPipeError: [Errno 32] Broken pipe
+----------------------------------------
+127.0.0.1 - [26/Jun/2026 03:21:16] "POST /api/train/track/omnibus HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 56392)
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/socketserver.py", line 692, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.12/socketserver.py", line 761, in __init__
+    self.handle()
+  File "/usr/lib/python3.12/http/server.py", line 436, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.12/http/server.py", line 424, in handle_one_request
+    method()
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 279, in do_POST
+    self._json(_py_json("hostess7-training.py", ["track", track_id], timeout=300))
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 200, in _json
+    self._send(code, json.dumps(doc, ensure_ascii=False, indent=2).encode("utf-8"), "application/json")
+  File "/home/default/Desktop/SG/NewLatest/hostess7-training-viewer/serve.py", line 197, in _send
+    self.wfile.write(body)
+  File "/usr/lib/python3.12/socketserver.py", line 840, in write
+    self._sock.sendall(b)
+BrokenPipeError: [Errno 32] Broken pipe
+----------------------------------------

@@ -1177,6 +1177,22 @@ def _tail_file(path: Path, lines: int = 120) -> str:
         return ""
 
 
+def _panel_static_mime(path: Path) -> str:
+    ext = path.suffix.lower()
+    return {
+        ".html": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "application/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".svg": "image/svg+xml",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".woff2": "font/woff2",
+    }.get(ext, "application/octet-stream")
+
+
 def _serve_panel_html(handler: "Handler", target: Path) -> None:
     if target.suffix == ".html" and target.name == "threat-panel.html":
         try:
@@ -1184,10 +1200,10 @@ def _serve_panel_html(handler: "Handler", target: Path) -> None:
         except OSError:
             handler._send(404, "not found", "text/plain")
             return
-        handler._send(200, body, "text/html")
+        handler._send(200, body, "text/html; charset=utf-8")
         return
     try:
-        handler._send(200, target.read_bytes(), "text/html" if target.suffix == ".html" else "application/octet-stream")
+        handler._send(200, target.read_bytes(), _panel_static_mime(target))
     except OSError:
         handler._send(404, "not found", "text/plain")
 
@@ -2933,17 +2949,17 @@ class Handler(BaseHTTPRequestHandler):
 
         if path in ("/field-talk", "/field-talk/"):
             target = PANEL_DIR / "field-talk.html"
-        elif path in ("/underlay-f9", "/underlay-f9/"):
-            target = PANEL_DIR / "underlay-f9.html"
         elif path in (
+            "/underlay-f9", "/underlay-f9/",
             "/tristate-installer", "/tristate-installer/",
             "/install-underlay", "/install-underlay/",
-            "/field", "/field/", "/app", "/app/", "/", "/index.html",
+            "/field-modern", "/field-modern/",
         ):
             target = PANEL_DIR / "underlay-f9.html"
-        elif path in ("/field-modern", "/field-modern/"):
-            target = PANEL_DIR / "underlay-f9.html"
-        elif path in ("/field-legacy", "/field-legacy/"):
+        elif path in (
+            "/field", "/field/", "/app", "/app/", "/", "/index.html",
+            "/field-legacy", "/field-legacy/",
+        ):
             target = PANEL_DIR / "threat-panel.html"
             if target.is_file():
                 _serve_panel_html(self, target)
@@ -2957,8 +2973,7 @@ class Handler(BaseHTTPRequestHandler):
             if target.suffix == ".html" and target.name == "threat-panel.html":
                 _serve_panel_html(self, target)
             else:
-                ctype = "text/html" if target.suffix == ".html" else "application/octet-stream"
-                self._send(200, target.read_bytes(), ctype)
+                self._send(200, target.read_bytes(), _panel_static_mime(target))
             return
         self._send(404, "not found", "text/plain")
 

@@ -32,6 +32,7 @@ Installs:
   • 2026 Tristate Installer + F9 underlay hotkey (permanent, no off switch)
 
 Portable only: ./install.sh
+Launcher:      ./nexus.sh  (single entry after install)
 EOF
       exit 0
       ;;
@@ -73,4 +74,4 @@ echo ""
 echo "=== NEXUS Field install complete ==="
 echo "Panel:  http://127.0.0.1:9477/field"
 echo "Report: ${NEXUS_STATE_DIR:-/var/lib/nexus-shield}/install-report.json"
-echo "Start menu → NEXUS Field Command Center"
+echo "Start menu / taskbar → NEXUS Field Command Center  (./nexus.sh)"

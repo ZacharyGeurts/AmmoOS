@@ -7,8 +7,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-common.sh"
 
-if [[ ! "${NEXUS_VERSION}" =~ ^[0-9]+\.[0-9]+\.0$ ]]; then
-  echo "Release requires NEXUS_VERSION=X.Y.0 (got ${NEXUS_VERSION}). Use scripts/bump-version.sh" >&2
+if [[ ! "${NEXUS_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "Release requires NEXUS_VERSION=X.Y.Z (got ${NEXUS_VERSION}). Use scripts/bump-version.sh" >&2
   exit 1
 fi
 

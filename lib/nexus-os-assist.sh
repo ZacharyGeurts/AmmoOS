@@ -153,7 +153,7 @@ nexus_os_assist_desktop_entries() {
     # shellcheck source=/dev/null
     source "${root}/lib/installer.sh"
     nexus_install_linux_desktop_user "$root" "$user"
-    nexus_os_assist_log "desktop entries (shield + tristate) for ${user}"
+    nexus_os_assist_log "desktop entry nexus-field for ${user}"
   fi
 }
 
@@ -168,10 +168,10 @@ nexus_os_assist_deploy_extras() {
     rm -rf "${dest}/Queen" 2>/dev/null || true
     cp -a "${src}/Queen" "${dest}/"
   fi
-  for f in install-all.sh nexus-launch.sh nexus-install-gui.sh; do
+  for f in install-all.sh nexus.sh; do
     [[ -f "${src}/${f}" ]] && install -m 755 "${src}/${f}" "${dest}/${f}" 2>/dev/null || true
   done
-  nexus_os_assist_log "payload extras deployed (Queen, scripts, install, tristate GUI)"
+  nexus_os_assist_log "payload extras deployed (Queen, scripts, install, launcher)"
 }
 
 nexus_os_assist_write_report() {

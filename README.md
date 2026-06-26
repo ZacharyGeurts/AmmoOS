@@ -1,6 +1,6 @@
 # NEXUS-Shield · Universal Protector
 
-**v10.4.0** — Autonomous field C2. Gatekeeper scoring, loopback panel, boot-impl reload, Underlay F9 Tristate installer.
+**v10.4.1** — Autonomous field C2. Gatekeeper scoring, loopback panel, boot-impl reload, Underlay F9 Tristate installer.
 
 Built by [Zachary Geurts](https://github.com/ZacharyGeurts) · MIT License
 
@@ -13,9 +13,9 @@ Built by [Zachary Geurts](https://github.com/ZacharyGeurts) · MIT License
 ## Install (release tarballs)
 
 ```bash
-# From https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.0
-tar -xzf nexus-shield-10.4.0-source.tar.gz
-cd nexus-shield-10.4.0
+# From https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.1
+tar -xzf nexus-shield-10.4.1-source.tar.gz
+cd nexus-shield-10.4.1
 sudo ./install-all.sh
 ```
 

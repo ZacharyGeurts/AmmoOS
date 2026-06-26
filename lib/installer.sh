@@ -82,68 +82,145 @@ nexus_install_copy_payload() {
     rm -rf "${dest}/${d}" 2>/dev/null || true
     cp -a "${src}/${d}" "${dest}/"
   done
-  for f in nexus.sh nexus-launch.sh install.sh genius_shield.sh LICENSE README.md; do
+  for f in nexus.sh install-all.sh install.sh LICENSE README.md; do
     [[ -f "${src}/${f}" ]] || continue
     install -m 755 "${src}/${f}" "${dest}/${f}" 2>/dev/null || cp -a "${src}/${f}" "${dest}/"
   done
-  chmod +x "${dest}/nexus.sh" "${dest}/nexus-launch.sh" "${dest}/install.sh" \
-    "${dest}/genius_shield.sh" "${dest}/scripts/"*.sh 2>/dev/null || true
+  chmod +x "${dest}/nexus.sh" "${dest}/install-all.sh" "${dest}/install.sh" \
+    "${dest}/scripts/"*.sh 2>/dev/null || true
 }
 
-nexus_install_linux_desktop_user() {
-  local root="$1" user="${2:-${SUDO_USER:-$USER}}"
-  local home icon apps exec path
+nexus_install_resolve_launcher() {
+  local root="$1"
+  if [[ -x /usr/local/bin/nexus.sh && "$root" == /usr/local/lib/nexus-shield ]]; then
+    printf '%s' "/usr/local/bin/nexus.sh"
+  else
+    printf '%s' "${root}/nexus.sh"
+  fi
+}
+
+nexus_install_icon_src() {
+  local root="$1"
+  local candidate
+  for candidate in \
+    "${root}/assets/nexus-field.png" \
+    "${root}/panel/assets/nexus-field.png" \
+    "${root}/panel/assets/nexus-field-256.png" \
+    "${root}/panel/assets/nexus-shield.png" \
+    "${root}/assets/nexus-shield.png"; do
+    [[ -f "$candidate" ]] && printf '%s' "$candidate" && return 0
+  done
+  return 1
+}
+
+nexus_install_icon_theme() {
+  local root="$1" scope="${2:-user}" user="${3:-${SUDO_USER:-$USER}}"
+  local src sizes=(48 64 128 256) sz dir
+  src="$(nexus_install_icon_src "$root" 2>/dev/null || true)"
+  [[ -n "$src" ]] || return 0
+
+  if [[ "$scope" == "system" && "$(id -u)" -eq 0 ]]; then
+    for sz in "${sizes[@]}"; do
+      local sized="${root}/panel/assets/nexus-field-${sz}.png"
+      [[ -f "$sized" ]] || sized="$src"
+      dir="/usr/share/icons/hicolor/${sz}x${sz}/apps"
+      install -d -m 755 "$dir"
+      install -m 644 "$sized" "${dir}/nexus-field.png" 2>/dev/null || true
+    done
+    command -v gtk-update-icon-cache >/dev/null 2>&1 && \
+      gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
+    return 0
+  fi
+
+  local home
   home="$(getent passwd "$user" 2>/dev/null | cut -d: -f6)"
   [[ -n "$home" ]] || home="${HOME:-/home/$user}"
-  icon="${root}/panel/assets/nexus-tray-us-64.png"
-  [[ -f "$icon" ]] || icon="${root}/panel/assets/nexus-shield.png"
-  if [[ -x /usr/local/bin/nexus.sh && "$root" == /usr/local/lib/nexus-shield ]]; then
-    exec="/usr/local/bin/nexus.sh"
-    path="/usr/local/lib/nexus-shield"
-  else
-    exec="${root}/nexus-launch.sh"
-    path="${root}"
-  fi
-  apps="${home}/.local/share/applications"
-  install -d -m 755 "$apps"
-  cat >"${apps}/nexus-shield.desktop" <<EOF
+  for sz in "${sizes[@]}"; do
+    sized="${root}/panel/assets/nexus-field-${sz}.png"
+    [[ -f "$sized" ]] || sized="$src"
+    dir="${home}/.local/share/icons/hicolor/${sz}x${sz}/apps"
+    mkdir -p "$dir" 2>/dev/null || true
+    cp -f "$sized" "${dir}/nexus-field.png" 2>/dev/null || true
+    chmod 644 "${dir}/nexus-field.png" 2>/dev/null || true
+  done
+  command -v gtk-update-icon-cache >/dev/null 2>&1 && \
+    gtk-update-icon-cache -f "${home}/.local/share/icons/hicolor" 2>/dev/null || true
+}
+
+nexus_install_write_desktop() {
+  local dest="$1" root="$2" exec="$3" ver="${4:-10.4.1}"
+  cat >"$dest" <<EOF
 [Desktop Entry]
-Version=10.0
+Version=${ver}
 Type=Application
 Name=NEXUS Field Command Center
 GenericName=Field C2
-Comment=Guarding Humanity — loopback HTTP panel + ZNetwork
+Comment=Queen field browser — secured Firefox/Chrome + NEXUS panel — tray + ZNetwork
 Exec=${exec}
-Icon=${icon}
-Path=${path}
+Icon=nexus-field
+Path=${root}
 Terminal=false
 Categories=Security;Network;System;
-Keywords=security;firewall;nexus;field;znetwork;
+Keywords=security;firewall;nexus;field;znetwork;underlay;
 StartupNotify=true
-EOF
-  chmod 644 "${apps}/nexus-shield.desktop"
-  local tristate_exec="${exec}"
-  [[ -f "${root}/nexus-install-gui.sh" ]] && tristate_exec="${root}/nexus-install-gui.sh"
-  [[ -x /usr/local/bin/nexus-install-gui.sh ]] && tristate_exec="/usr/local/bin/nexus-install-gui.sh"
-  cat >"${apps}/nexus-tristate-installer.desktop" <<EOF
-[Desktop Entry]
-Version=10.4.0
-Type=Application
+Actions=Underlay;Tray;
+
+[Desktop Action Underlay]
 Name=2026 Tristate Installer
-GenericName=Field Underlay Install
-Comment=Underlay F9 installer — opens browser · KILROY · World_Redata · F9 hotkey
-Exec=${tristate_exec}
-Icon=${icon}
-Path=${path}
-Terminal=false
-Categories=System;Settings;Security;
-Keywords=nexus;underlay;kilroy;tristate;install;field;
-StartupNotify=true
+Exec=${exec} --underlay
+
+[Desktop Action Tray]
+Name=Show Taskbar Icon
+Exec=${exec} --tray
 EOF
-  chmod 644 "${apps}/nexus-tristate-installer.desktop"
+  chmod 644 "$dest" 2>/dev/null || true
+}
+
+nexus_install_desktop_shortcut() {
+  local home="$1" exec="$2" root="$3"
+  local desktop_dir="${home}/Desktop"
+  [[ -d "$desktop_dir" ]] || return 0
+  nexus_install_write_desktop "${desktop_dir}/nexus-field.desktop" "$root" "$exec"
+  chmod +x "${desktop_dir}/nexus-field.desktop" 2>/dev/null || true
+  command -v gio >/dev/null 2>&1 && \
+    gio set "${desktop_dir}/nexus-field.desktop" metadata::trusted true 2>/dev/null || true
+}
+
+nexus_install_linux_desktop() {
+  local root="$1" user="${2:-${SUDO_USER:-$USER}}" scope="${3:-user}"
+  [[ -n "$user" && "$user" != "root" ]] || scope="system"
+  local home exec path ver apps
+  home="$(getent passwd "$user" 2>/dev/null | cut -d: -f6)"
+  [[ -n "$home" ]] || home="${HOME:-/home/$user}"
+  exec="$(nexus_install_resolve_launcher "$root")"
+  path="${root}"
+  ver="$(grep -o 'NEXUS_VERSION="[^"]*"' "${root}/lib/nexus-common.sh" 2>/dev/null | head -1 | cut -d'"' -f2)"
+  ver="${ver:-10.4.1}"
+
+  nexus_install_icon_theme "$root" "$scope" "$user"
+
+  if [[ "$scope" == "system" && "$(id -u)" -eq 0 ]]; then
+    apps="/usr/share/applications"
+    install -d -m 755 "$apps"
+    nexus_install_write_desktop "${apps}/nexus-field.desktop" "$root" "$exec" "$ver"
+    rm -f "${apps}/nexus-shield.desktop" "${apps}/nexus-tristate-installer.desktop" 2>/dev/null || true
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps" 2>/dev/null || true
+    echo "Start menu: ${apps}/nexus-field.desktop"
+  fi
+
+  apps="${home}/.local/share/applications"
+  install -d -m 755 "$apps" 2>/dev/null || mkdir -p "$apps" 2>/dev/null || true
+  nexus_install_write_desktop "${apps}/nexus-field.desktop" "$root" "$exec" "$ver"
+  rm -f "${apps}/nexus-shield.desktop" "${apps}/nexus-tristate-installer.desktop" 2>/dev/null || true
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps" 2>/dev/null || true
-  echo "Start menu: ${apps}/nexus-shield.desktop"
-  echo "Start menu: ${apps}/nexus-tristate-installer.desktop"
+  nexus_install_desktop_shortcut "$home" "$exec" "$root"
+  echo "Start menu: ${apps}/nexus-field.desktop"
+  echo "Launcher: ${exec}"
+}
+
+# Back-compat alias
+nexus_install_linux_desktop_user() {
+  nexus_install_linux_desktop "$1" "${2:-${SUDO_USER:-$USER}}" "user"
 }
 
 nexus_install_macos_app() {
@@ -153,11 +230,12 @@ nexus_install_macos_app() {
   install -d -m 755 "${contents}/MacOS" "${contents}/Resources"
   cat >"${contents}/MacOS/nexus-launch" <<EOF
 #!/bin/bash
-cd "${root}" && exec "${root}/nexus-launch.sh"
+cd "${root}" && exec "${root}/nexus.sh"
 EOF
   chmod 755 "${contents}/MacOS/nexus-launch"
-  [[ -f "${root}/panel/assets/nexus-tray-us-64.png" ]] && \
-    cp "${root}/panel/assets/nexus-tray-us-64.png" "${contents}/Resources/nexus-field.png" 2>/dev/null || true
+  local icon
+  icon="$(nexus_install_icon_src "$root" 2>/dev/null || true)"
+  [[ -n "$icon" ]] && cp "$icon" "${contents}/Resources/nexus-field.png" 2>/dev/null || true
   cat >"${contents}/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -166,7 +244,8 @@ EOF
   <key>CFBundleExecutable</key><string>nexus-launch</string>
   <key>CFBundleIdentifier</key><string>com.nexus.field</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleVersion</key><string>10.0.0</string>
+  <key>CFBundleVersion</key><string>10.4.1</string>
+  <key>CFBundleIconFile</key><string>nexus-field</string>
 </dict></plist>
 EOF
   echo "Applications: ${app}"
@@ -182,7 +261,7 @@ nexus_install_portable() {
   nexus_install_build_znetwork "$sg" || true
   [[ -n "$zn" ]] && nexus_install_ship_znetwork "$root" "$zn" || true
   case "$(nexus_install_detect_os)" in
-    linux) nexus_install_linux_desktop_user "$root" ;;
+    linux) nexus_install_linux_desktop "$root" "${USER:-}" "user" ;;
     macos) nexus_install_macos_app "$root" ;;
     windows)
       if command -v powershell.exe >/dev/null 2>&1; then
@@ -191,6 +270,6 @@ nexus_install_portable() {
       ;;
   esac
   echo "PORTABLE_OK root=${root}"
-  echo "Launch: ${root}/nexus-launch.sh"
+  echo "Launch: ${root}/nexus.sh"
   echo "Panel:  http://127.0.0.1:9477/field"
 }

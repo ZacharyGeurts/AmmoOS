@@ -136,32 +136,6 @@
       "equirectangular": true,
       "wireframe": true,
       "source": "Natural Earth 110m admin-0 + admin-1"
-    },
-    "earth-thermal": {
-      "id": "earth-thermal",
-      "width": 1024,
-      "height": 512,
-      "anchor": [
-        0,
-        0
-      ],
-      "bounds": [
-        [
-          -90,
-          -180
-        ],
-        [
-          90,
-          180
-        ]
-      ],
-      "format": "r8",
-      "file": "/assets/sdf/earth-thermal.sdf.png",
-      "equirectangular": true,
-      "thermal": true,
-      "temp_min_c": -17.5,
-      "temp_max_c": 34.8,
-      "updated": "2026-06-25T23:11:04Z"
     }
   }
 }

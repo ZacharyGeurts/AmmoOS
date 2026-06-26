@@ -1,4 +1,4 @@
-# NEXUS-Shield Installers — v10.4.0
+# NEXUS-Shield Installers — v10.4.1
 
 Installer guide for release tarballs and in-tree scripts. For architecture and API I/O see the [Field I/O manual](https://zacharygeurts.github.io/NEXUS-Shield/io.html).
 
@@ -8,18 +8,18 @@ Installer guide for release tarballs and in-tree scripts. For architecture and A
 
 | File | Size | Contents |
 |------|------|----------|
-| `nexus-shield-10.4.0-source.tar.gz` | ~96 MB | Full NEXUS tree (panel, lib, Hostess7, Queen, scripts) |
-| `nexus-shield-10.4.0-installers.tar.gz` | ~14 KB | Installer scripts only |
+| `nexus-shield-10.4.1-source.tar.gz` | ~96 MB | Full NEXUS tree (panel, lib, Hostess7, Queen, scripts) |
+| `nexus-shield-10.4.1-installers.tar.gz` | ~14 KB | Installer scripts only |
 
-Download: https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.0
+Download: https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.1
 
 ---
 
 ## Quick install (recommended)
 
 ```bash
-tar -xzf nexus-shield-10.4.0-source.tar.gz
-cd nexus-shield-10.4.0
+tar -xzf nexus-shield-10.4.1-source.tar.gz
+cd nexus-shield-10.4.1
 chmod +x install-all.sh genius_shield.sh nexus.sh nexus-install-gui.sh
 sudo ./install-all.sh
 ```
@@ -51,8 +51,8 @@ sudo ./install-all.sh
 If you already have a NEXUS tree and only need fresh installer scripts:
 
 ```bash
-tar -xzf nexus-shield-10.4.0-installers.tar.gz
-cd nexus-shield-10.4.0-installers
+tar -xzf nexus-shield-10.4.1-installers.tar.gz
+cd nexus-shield-10.4.1-installers
 # Copy scripts into your existing tree, then:
 sudo ./install-all.sh
 ```

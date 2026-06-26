@@ -378,6 +378,15 @@
     });
   }
 
+  function openIntegrated() {
+    const fold = document.querySelector(".field-clarity-fold");
+    const mount = document.getElementById("field-clarity-mount");
+    if (fold) fold.open = true;
+    if (mount) {
+      mount.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
   async function mount() {
     if (mounted || document.getElementById("field-inspector")) return;
     try {
@@ -388,13 +397,16 @@
       host.innerHTML = html.trim();
       const node = host.firstElementChild;
       if (!node) throw new Error("empty fragment");
-      document.body.appendChild(node);
+      const target = document.getElementById("field-clarity-mount") || document.body;
+      const integrated = target.id === "field-clarity-mount";
+      node.classList.toggle("field-inspector--integrated", integrated);
+      target.appendChild(node);
       mounted = true;
       bindUi();
       renderFields();
       hookPaintPanel();
       refreshLiveBadges();
-      console.log("✅ Field Clarity loaded | respects all fields + latest commits");
+      console.log("✅ Field Clarity loaded | integrated in System settings");
     } catch (err) {
       console.warn("Field inspector mount failed:", err);
     }
@@ -412,6 +424,7 @@
     explain,
     resolveLive,
     refresh: refreshLiveBadges,
+    open: openIntegrated,
   };
   global.filterFields = filterFields;
   global.explain = explain;

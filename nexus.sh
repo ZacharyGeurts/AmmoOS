@@ -1,5 +1,5 @@
 #!/bin/bash
-# NewLatest NEXUS field stack — start panel from this tree and open the browser.
+# NEXUS Field — single launcher (panel, tray, Tristate underlay).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -127,6 +127,33 @@ nexus_panel_restart_immediate() {
   nexus_field_standalone_ensure_panel
 }
 
+nexus_launch_underlay() {
+  local mode="${1:-browser}"
+  local url
+  url="$(nexus_panel_tristate_url)"
+  case "$mode" in
+    zenity)
+      exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-underlay-switch.py" zenity
+      ;;
+    hotkey)
+      exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-underlay-hotkey.py" once
+      ;;
+  esac
+  nexus_field_standalone_ensure_panel || true
+  if nexus_panel_open_browser "$url"; then
+    echo "Tristate Installer (Underlay F9): $url"
+    nexus_panel_tray_install_autostart 2>/dev/null || true
+    nexus_panel_tray_ensure_once 2>/dev/null || true
+    return 0
+  fi
+  if command -v zenity >/dev/null 2>&1 && [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
+    exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-underlay-switch.py" zenity
+  fi
+  echo "Start NEXUS Field: ${NEXUS_INSTALL_ROOT}/nexus.sh" >&2
+  echo "Then open: $url" >&2
+  return 1
+}
+
 nexus_usage() {
   cat <<EOF
 NewLatest NEXUS field — start the threat panel and open the browser
@@ -142,6 +169,7 @@ Usage:
   ./nexus.sh --no-browser    Start panel; print URL and CLI hints (no browser)
   ./nexus.sh --no-tray       Skip system-tray icon (combine with other flags)
   ./nexus.sh --tray          Start tray icon only (right-click → jump to tab)
+  ./nexus.sh --underlay      Open 2026 Tristate / Underlay F9 installer
   ./nexus.sh --tab <view>    Open a panel tab in the browser (e.g. command, library)
   ./nexus.sh --shutdown      Stop panel, tray, and watchdog immediately (--stop)
   ./nexus.sh --restart       Stop and start panel immediately (--restart-immediate)
@@ -168,6 +196,18 @@ case "${1:-}" in
   -h|--help|help)
     nexus_usage
     exit 0
+    ;;
+  --underlay|--tristate|--install-gui)
+    nexus_launch_underlay browser
+    exit $?
+    ;;
+  --zenity)
+    nexus_launch_underlay zenity
+    exit $?
+    ;;
+  --hotkey)
+    nexus_launch_underlay hotkey
+    exit $?
     ;;
   --shutdown|--stop)
     nexus_panel_shutdown_immediate
@@ -277,6 +317,10 @@ if [[ "${1:-}" == "--tray" ]]; then
 fi
 
 if [[ "${1:-}" == "--tab" && -n "${2:-}" ]]; then
+  if [[ "${2}" == "underlay" || "${2}" == "tristate" ]]; then
+    nexus_launch_underlay browser
+    exit $?
+  fi
   nexus_panel_open_tab "$2"
   nexus_panel_tray_ensure_once 2>/dev/null || true
   exit 0

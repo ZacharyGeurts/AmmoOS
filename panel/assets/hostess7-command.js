@@ -1111,6 +1111,16 @@
       if (!voiceOn && global.speechSynthesis) global.speechSynthesis.cancel();
     });
     $("h7-command-sync")?.addEventListener("click", syncGithub);
+    $("h7-field-clarity-jump")?.addEventListener("click", () => {
+      if (typeof global.showView === "function") {
+        global.showView("system/settings");
+      } else {
+        global.location.hash = "#system/settings";
+      }
+      global.setTimeout(() => {
+        global.NexusFieldInspector?.open?.();
+      }, 120);
+    });
     $("h7-command-teach-art")?.addEventListener("click", teachArt);
     $("h7-idle-start")?.addEventListener("click", async () => {
       const j = await dispatch({ action: "idle_grow_start" });

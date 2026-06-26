@@ -20,7 +20,7 @@
   "file": "/assets/sdf/earth-thermal.sdf.png",
   "equirectangular": true,
   "thermal": true,
-  "temp_min_c": -17.5,
-  "temp_max_c": 34.8,
-  "updated": "2026-06-25T23:11:04Z"
+  "temp_min_c": -13.2,
+  "temp_max_c": 37.8,
+  "updated": "2026-06-26T08:00:52Z"
 }

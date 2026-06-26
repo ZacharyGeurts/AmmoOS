@@ -86,5 +86,9 @@ nexus_fieldfox_sovereign_rtx() {
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  nexus_fieldfox_sovereign_rtx "${URL}" || nexus_fieldfox_launch "${URL}"
+  if [[ "${NEXUS_FIELD_BROWSER_QUEEN:-0}" == "1" && "${NEXUS_EMBED_PANEL_IN_ENGINE:-0}" != "1" ]]; then
+    nexus_fieldfox_launch "${URL}"
+  else
+    nexus_fieldfox_sovereign_rtx "${URL}" || nexus_fieldfox_launch "${URL}"
+  fi
 fi

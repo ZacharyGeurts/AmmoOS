@@ -31,7 +31,8 @@ NEXUS Field Installer
 
   ./install-all.sh          Same as --system (recommended on Linux)
 
-  Tristate Installer GUI:   http://127.0.0.1:9477/tristate-installer
+  After install: ./nexus.sh  (or Start menu → NEXUS Field Command Center)
+  Tristate underlay: ./nexus.sh --underlay
 
 Needs: python3, curl, web browser
 Optional: zenity or yad (ZNetwork Yes / No / Skip dialog)
@@ -70,4 +71,4 @@ case "$MODE" in
 esac
 
 echo ""
-echo "Done. Start menu → NEXUS Field Command Center  or  ./nexus-launch.sh"
+echo "Done. Start menu → NEXUS Field Command Center  or  ./nexus.sh"

@@ -5,9 +5,11 @@ nexus_panel_tray_icon_path() {
   local state_icon="${NEXUS_STATE_DIR}/nexus-tray.png"
   local src=""
   for candidate in \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-field-24.png" \
     "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-us-24.png" \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-field.png" \
+    "${NEXUS_INSTALL_ROOT}/assets/nexus-field.png" \
     "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-us.png" \
-    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-us-source.jpg" \
     "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-shield.png" \
     "${NEXUS_INSTALL_ROOT}/assets/nexus-shield.png"; do
     if [[ -s "$candidate" ]]; then
@@ -248,8 +250,9 @@ nexus_panel_tray_install_autostart() {
   cat >"$desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=NEXUS-Shield Tray
-Comment=NEXUS panel taskbar icon — fast tab picker
+Name=NEXUS Field Tray
+Comment=NEXUS Field taskbar icon — fast tab picker
+Icon=nexus-field
 Exec=env NEXUS_INSTALL_ROOT=${root} NEXUS_STATE_DIR=${NEXUS_STATE_DIR:-/var/lib/nexus-shield} DISPLAY=:0 bash -c 'source ${root}/lib/nexus-common.sh; source ${root}/lib/panel-tray.sh; nexus_panel_tray_icon_refresh; nexus_panel_tray_ensure_once'
 Hidden=false
 NoDisplay=true

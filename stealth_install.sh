@@ -1,41 +1,12 @@
 #!/bin/bash
-# NEXUS-Shield unified installer — genius-only, non-intrusive.
+# Deprecated — use install-all.sh (single installer).
 set -euo pipefail
-
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-cd "$ROOT"
-
-export NEXUS_ULTRA_STEALTH=1
-export NEXUS_CPU_QUOTA_PCT=5
-export NEXUS_SELF_DEFENSE=1
-export NEXUS_PREDICTIVE=1
-
-detect_os() {
-  case "$(uname -s)" in
-    Linux) echo linux ;;
-    MINGW*|MSYS*|CYGWIN*) echo windows ;;
-    Darwin) echo macos ;;
-    *) echo unknown ;;
-  esac
-}
-
-OS="$(detect_os)"
-
-case "$OS" in
-  linux)
-    export SG_ROOT="${SG_ROOT:-${ROOT}}"
-    exec bash "${ROOT}/install-all.sh"
-    ;;
-  windows)
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
     powershell.exe -ExecutionPolicy Bypass -File "${ROOT}/stealth.ps1"
     ;;
-  macos)
-    bash "${ROOT}/genius_shield.sh"
-    ;;
   *)
-    echo "Unsupported OS. Use genius_shield.sh (Linux) or stealth.ps1 (Windows)." >&2
-    exit 1
+    exec bash "${ROOT}/install-all.sh" "$@"
     ;;
 esac
-
-exit 0

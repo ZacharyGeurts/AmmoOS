@@ -438,8 +438,16 @@ test_panel_browser_boot_open() {
   grep -q 'nexus_panel_open_on_boot' "${ROOT}/lib/panel-browser.sh"
   grep -q 'nexus_panel_tristate_url' "${ROOT}/lib/panel-browser.sh"
   grep -q 'NEXUS_NO_OS_BROWSER_HOOK:-0' "${ROOT}/lib/panel-browser.sh"
+  grep -q 'nexus_panel_detect_os_browsers' "${ROOT}/lib/panel-browser.sh"
+  grep -q 'firefox' "${ROOT}/lib/panel-browser.sh"
+  grep -q 'NEXUS_FIELD_BROWSER_QUEEN=1' "${ROOT}/config/nexus.conf"
+  grep -q 'FieldAmmoBrowser' "${ROOT}/../AMOURANTHRTX/Navigator/engine/FieldQueenBrowser.cpp" 2>/dev/null \
+    || grep -q 'FieldAmmoBrowser' "${ROOT}/AMOURANTHRTX/Navigator/engine/FieldQueenBrowser.cpp" 2>/dev/null \
+    || [[ -f "${ROOT}/../AMOURANTHRTX/Navigator/engine/FieldQueenBrowser.cpp" ]]
   grep -q 'nexus_panel_open_on_boot' "${ROOT}/lib/nexus-daemon.sh"
-  grep -q 'underlay-f9?sector=underlay' "${ROOT}/nexus-install-gui.sh"
+  grep -q 'underlay-f9?sector=underlay' "${ROOT}/nexus.sh"
+  grep -q 'nexus-field.desktop' "${ROOT}/lib/installer.sh"
+  [[ -f "${ROOT}/assets/nexus-field.png" ]]
   grep -q 'underlay-f9?sector=underlay' "${ROOT}/panel/tristate-installer.html"
   grep -q 'initialSector' "${ROOT}/panel/assets/underlay-f9.js"
 }

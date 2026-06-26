@@ -67,11 +67,10 @@ cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/as
 [[ -d "${ROOT}/Hostess7" ]] && cp -a "${ROOT}/Hostess7" /usr/local/lib/nexus-shield/
 [[ -d "${ROOT}/hostess7-training-viewer" ]] && cp -a "${ROOT}/hostess7-training-viewer" /usr/local/lib/nexus-shield/
 [[ -d "${ROOT}/scripts" ]] && cp -a "${ROOT}/scripts" /usr/local/lib/nexus-shield/
-for _nx_ship in install-all.sh nexus-install-gui.sh; do
-  [[ -f "${ROOT}/${_nx_ship}" ]] && install -m 755 "${ROOT}/${_nx_ship}" "/usr/local/lib/nexus-shield/${_nx_ship}"
-done
-unset _nx_ship
-install -m 755 -o root -g nexus "${ROOT}/stealth_install.sh" /usr/local/lib/nexus-shield/stealth_install.sh
+[[ -f "${ROOT}/install-all.sh" ]] && \
+  install -m 755 -o root -g nexus "${ROOT}/install-all.sh" /usr/local/lib/nexus-shield/install-all.sh
+[[ -f "${ROOT}/stealth_install.sh" ]] && \
+  install -m 755 -o root -g nexus "${ROOT}/stealth_install.sh" /usr/local/lib/nexus-shield/stealth_install.sh
 mkdir -p /usr/local/lib/nexus-shield/scripts
 install -m 755 -o root -g nexus "${ROOT}/scripts/play-wimk-ota.sh" /usr/local/lib/nexus-shield/scripts/play-wimk-ota.sh 2>/dev/null || true
 install -m 755 -o root -g nexus "${ROOT}/scripts/wire-stack.sh" /usr/local/lib/nexus-shield/scripts/wire-stack.sh 2>/dev/null || true
@@ -176,9 +175,7 @@ if [[ -d "$ZN_SRC" ]]; then
         >>/usr/local/lib/nexus-shield/config/nexus.conf
   fi
 fi
-install -m 755 -o root -g nexus "${ROOT}/nexus-launch.sh" /usr/local/lib/nexus-shield/nexus-launch.sh 2>/dev/null || true
-install -m 755 -o root -g nexus "${ROOT}/nexus-install-gui.sh" /usr/local/lib/nexus-shield/nexus-install-gui.sh 2>/dev/null || true
-install -m 755 -o root -g nexus "${ROOT}/nexus-install-gui.sh" /usr/local/bin/nexus-install-gui.sh 2>/dev/null || true
+
 
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh"
@@ -317,8 +314,8 @@ if [[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-os-assist.sh" ]]; then
 fi
 
 echo "NEXUS-Shield v${NEXUS_VERSION:-2.0.1} active — panel http://127.0.0.1:9477/field (browser opens on startup)."
-echo "Tristate Installer: http://127.0.0.1:9477/underlay-f9?sector=underlay (browser opens on start)"
-echo 'Start menu: NEXUS-Shield · 2026 Tristate Installer'
+echo "Launcher: nexus.sh  |  Tristate: nexus.sh --underlay"
+echo 'Start menu / taskbar: NEXUS Field Command Center'
 echo 'License: NEXUS-Shield = MIT. AMOURANTHRTX (Field Die) = GPL v3 or commercial — not MIT-free.'
 echo 'Profile: Packet permission v4.0 — DPI knows intent; harmful sections blocked; good flows pass.'
 echo 'First-run lockdown applied — trust recommended connections in panel or: nexus trust <ip>'

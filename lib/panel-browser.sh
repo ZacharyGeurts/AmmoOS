@@ -151,13 +151,9 @@ nexus_panel_open_on_boot() {
   return 1
 }
 
-nexus_panel_detect_browsers() {
+nexus_panel_detect_os_browsers() {
   local c
   for c in \
-    fieldfox \
-    field-queen \
-    queen-browser \
-    xdg-open \
     firefox \
     google-chrome-stable \
     google-chrome \
@@ -168,86 +164,146 @@ nexus_panel_detect_browsers() {
     microsoft-edge \
     msedge \
     opera \
-    vivaldi; do
+    vivaldi \
+    xdg-open; do
     command -v "$c" >/dev/null 2>&1 && printf '%s\n' "$c"
   done
 }
 
+# Back-compat — OS browsers only (Queen/FieldFox are opt-in).
+nexus_panel_detect_browsers() {
+  nexus_panel_detect_os_browsers
+}
+
+nexus_panel_exec_browser() {
+  local browser="$1" url="$2" op_user="$3" op_home="$4" op_uid="$5"
+  [[ -n "$browser" && -n "$url" ]] || return 1
+
+  if [[ "$(id -u)" -eq 0 && -n "$op_uid" && "$op_uid" != "0" ]]; then
+    case "$browser" in
+      xdg-open)
+        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
+          xdg-open "$url" >/dev/null 2>&1 &
+        ;;
+      google-chrome-stable|google-chrome|chromium-browser|chromium)
+        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
+          "$browser" --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
+          || sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
+        ;;
+      firefox)
+        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
+          "$browser" --new-window "$url" >/dev/null 2>&1 \
+          || sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
+        ;;
+      *)
+        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
+          "$browser" --new-window "$url" >/dev/null 2>&1 \
+          || sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
+        ;;
+    esac
+    return 0
+  fi
+
+  case "$browser" in
+    xdg-open)
+      DISPLAY="${DISPLAY:-:0}" xdg-open "$url" >/dev/null 2>&1 &
+      ;;
+    google-chrome-stable|google-chrome|chromium-browser|chromium)
+      DISPLAY="${DISPLAY:-:0}" "$browser" --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
+        || DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
+      ;;
+    firefox)
+      DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 \
+        || DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
+      ;;
+    *)
+      DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 \
+        || DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
+      ;;
+  esac
+}
+
+nexus_panel_open_queen_browser() {
+  local url="$1"
+  local queen_root="${QUEEN_ROOT:-${NEXUS_INSTALL_ROOT}/Queen}"
+  local ff_launch="${NEXUS_INSTALL_ROOT}/lib/fieldfox-launch.sh"
+  local queen_launch opened=0
+
+  # Queen field browser = normal Firefox/Chrome with Truth DNS, gates, no telemetry.
+  if [[ -x "$ff_launch" ]]; then
+    DISPLAY="${DISPLAY:-:0}" \
+      NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+      NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      QUEEN_ROOT="${queen_root}" \
+      NEXUS_FIELD_BROWSER_QUEEN=1 \
+      NEXUS_QUEEN_SOVEREIGN=1 \
+      QUEEN_INTERNAL_ONLY=0 \
+      NEXUS_EMBED_PANEL_IN_ENGINE=0 \
+      "$ff_launch" "${url}" >/dev/null 2>&1 && opened=1
+  fi
+
+  # RTX field stack (headless — no boot splash window).
+  for queen_launch in \
+    "${queen_root}/build/rtx/bin/Linux/queen-browser" \
+    "${queen_root}/build/queen-browser"; do
+    [[ -x "$queen_launch" ]] || continue
+    AMOURANTHRTX_HEADLESS=1 AMOURANTHRTX_MAX_FRAMES=2 \
+      NEXUS_PANEL_URL="${url}" QUEEN_START_URL="${url}" \
+      "$queen_launch" --queen --sovereign --extended-field --url="${url}" \
+      >/dev/null 2>&1 &
+    break
+  done
+
+  if [[ "$opened" -eq 1 ]]; then
+    nexus_log "INFO" "panel-browser" "QUEEN_FIELD_BROWSER url=${url}"
+    echo "Opened Queen field browser (secured web): ${url}"
+    return 0
+  fi
+  return 1
+}
+
 nexus_panel_open_browser() {
   local url="${1:-$(nexus_panel_url)}"
-  local browser opened=0
-  local ready_url
-  local ff_launch="${NEXUS_INSTALL_ROOT}/lib/fieldfox-launch.sh"
-  local queen_launch="${QUEEN_ROOT:-${NEXUS_INSTALL_ROOT}/../Queen}/build/queen-browser"
+  local browser ready_url
+  local op_user op_home op_uid
   ready_url="$(nexus_panel_app_url)"
 
-  if [[ "${NEXUS_QUEEN_SOVEREIGN:-1}" == "1" || "${NEXUS_FIELD_BROWSER_QUEEN:-1}" == "1" ]]; then
-    if [[ -x "${queen_launch}" ]]; then
-      DISPLAY="${DISPLAY:-:0}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-        "${queen_launch}" --sovereign --extended-field "${url}" >/dev/null 2>&1 &
-      nexus_log "INFO" "panel-browser" "QUEEN_RTX_SOVEREIGN url=${url}"
-      echo "Opened Queen RTX (sovereign): ${url}"
-      return 0
-    fi
-  fi
   if [[ "${NEXUS_NO_OS_BROWSER_HOOK:-0}" == "1" ]]; then
+    if [[ "${NEXUS_FIELD_BROWSER_QUEEN:-1}" == "1" || "${NEXUS_QUEEN_SOVEREIGN:-1}" == "1" ]]; then
+      nexus_panel_open_queen_browser "$url" && return 0
+    fi
     nexus_log "WARN" "panel-browser" "SOVEREIGN_NO_OS_HOOK url=${url}"
     return 1
   fi
-  if [[ "${NEXUS_FIELD_BROWSER_QUEEN:-1}" == "1" && -x "${ff_launch}" ]]; then
-    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
-      "${ff_launch}" "${url}" >/dev/null 2>&1 && {
-      nexus_log "INFO" "panel-browser" "FIELD_WINDOW_OPENED url=${url}"
-      echo "Opened Queen browser: ${url}"
+
+  if [[ "${NEXUS_FIELD_BROWSER_QUEEN:-1}" == "1" || "${NEXUS_QUEEN_SOVEREIGN:-1}" == "1" ]]; then
+    if nexus_panel_open_queen_browser "$url"; then
       return 0
-    }
+    fi
   fi
 
   if ! nexus_panel_wait_ready "$ready_url" 5; then
     nexus_panel_wait_ready "$url" 5 || true
     nexus_panel_wait_ready "${url%/field}/" 5 || true
   fi
-  if ! curl -s --connect-timeout 2 "$url" >/dev/null 2>&1 \
-    && ! curl -s --connect-timeout 2 "$ready_url" >/dev/null 2>&1; then
+  if ! curl -fsS --connect-timeout 2 "$url" >/dev/null 2>&1 \
+    && ! curl -fsS --connect-timeout 2 "$ready_url" >/dev/null 2>&1; then
     nexus_log "WARN" "panel-browser" "PANEL_NOT_READY url=${url}"
     return 1
   fi
 
-  local op_user op_home op_uid
   IFS=: read -r op_user op_home <<<"$(nexus_panel_operator_user)"
   op_uid="$(getent passwd "$op_user" 2>/dev/null | cut -d: -f3)"
 
   while IFS= read -r browser; do
     [[ -n "$browser" ]] || continue
-    if [[ "$(id -u)" -eq 0 && -n "$op_uid" && "$op_uid" != "0" ]]; then
-      if [[ "$browser" == "xdg-open" ]]; then
-        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
-          xdg-open "$url" >/dev/null 2>&1 &
-      elif [[ "$browser" == "google-chrome-stable" || "$browser" == "google-chrome" || "$browser" == "chromium-browser" || "$browser" == "chromium" ]]; then
-        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
-          "$browser" --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
-          || sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
-      else
-        sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" XAUTHORITY="${XAUTHORITY:-${op_home}/.Xauthority}" \
-          "$browser" --new-window "$url" >/dev/null 2>&1 \
-          || sudo -u "$op_user" DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
-      fi
-    elif [[ "$browser" == "xdg-open" ]]; then
-      DISPLAY="${DISPLAY:-:0}" xdg-open "$url" >/dev/null 2>&1 &
-    elif [[ "$browser" == "google-chrome-stable" || "$browser" == "google-chrome" || "$browser" == "chromium-browser" || "$browser" == "chromium" ]]; then
-      DISPLAY="${DISPLAY:-:0}" "$browser" --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
-        || DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
-    else
-      DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 \
-        || DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
-    fi
-    opened=1
+    nexus_panel_exec_browser "$browser" "$url" "$op_user" "$op_home" "$op_uid" || continue
     nexus_log "INFO" "panel-browser" "FIELD_WINDOW_OPENED url=${url} via=${browser} user=${op_user:-self}"
-    echo "Opened NEXUS panel: ${url}"
+    echo "Opened NEXUS panel in web browser (${browser}): ${url}"
     return 0
-  done < <(nexus_panel_detect_browsers)
+  done < <(nexus_panel_detect_os_browsers)
 
-  [[ "$opened" -eq 1 ]]
+  return 1
 }
 
 nexus_panel_open_help() {
