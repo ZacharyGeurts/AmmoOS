@@ -31,7 +31,9 @@ EOF
 fi
 
 cd "$ROOT"
-git add -A
+# Stage only versioned source — never runtime logs/state (amouranth_engine.log exceeds GitHub limits).
+git add -u
+git add RELEASE-*.md README.md INSTALL-README.md lib/nexus-common.sh scripts/ 2>/dev/null || true
 if ! git diff --cached --quiet; then
   git commit -m "release: NEXUS-Shield ${NEXUS_VERSION}" || true
 fi
