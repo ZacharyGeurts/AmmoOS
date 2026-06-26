@@ -1,0 +1,39 @@
+{
+  "id": "seg-070-8fb5a868f456",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-070-8fb5a868f456.pgm",
+  "caption_stub": "Citation drill footnote one primary source Landauer Shannon Maxwell paper and one Field Primer chapter per memo section Wikipedia counts as pointer not primary This discipline keeps creditors honored per covenant Clause III 11 Shannon oracle separation Chapter 14 treats\u2026",
+  "text_sha256": "7e4129af57e8f63a76d94fcc130af21408ebaf048f7f07ee210950a9dbfde840",
+  "words_source": 904,
+  "tags": [
+    "and",
+    "citation",
+    "drill",
+    "footnote",
+    "grid",
+    "hostess",
+    "landauer",
+    "lossless",
+    "maxwell",
+    "one",
+    "paper",
+    "primary",
+    "redata",
+    "sdf",
+    "segment",
+    "shannon",
+    "source"
+  ],
+  "ocr_hint": "Citation drill footnote one primary source Landauer Shannon Maxwell paper and one Field Primer chapter per memo section ",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-070-8fb5a868f456",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 62.2,
+  "truth_accepted": true
+}

@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:*; frame-ancestors 'none'; base-uri 'self'" />
+  <meta name="referrer" content="no-referrer" />
   <title>Hostess 7 · DNS Engineer Admin</title>
   <style>
     :root {
@@ -121,8 +123,8 @@
     }
   </style>
 </head>
-<body>
-  <div class="wrap">
+<body data-front-hook="nexus">
+  <div class="wrap" data-admin-shield="1" data-front-hook="nexus">
     <header class="hero" id="page-hero">
       <div>
         <p class="eyebrow">Hostess 7 · DNS Engineer Admin</p>
@@ -213,6 +215,9 @@
       <button type="button" class="secondary" id="logout-btn">Log out</button>
     </section>
   </div>
+  <script src="/assets/front-hook.js"></script>
+  <script src="/assets/hardware-wire.js"></script>
+  <script src="/assets/admin-window-shield.js"></script>
   <script>
 (function () {
   "use strict";

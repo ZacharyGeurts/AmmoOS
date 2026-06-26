@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Planetary DNS security — EXTREME envelope extended planet-wide per RFC and law."""
 from __future__ import annotations
 

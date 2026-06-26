@@ -1,0 +1,40 @@
+{
+  "id": "seg-122-700ee49ffe12",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "integrate",
+  "file": "brain/sdf/plates/seg-122-700ee49ffe12.pgm",
+  "caption_stub": "NEXUS_LAST_HOST Environment flag for ELLIE sole survivor global services on last machine Nick Builder beside stack honest fields no phone home Operator Human at keyboard final authority daemons assist do not inherit conscience Operator covenant Chapter 18 clauses teach build\u2026",
+  "text_sha256": "86b13874cb58a6de84db3b7a5bc219495518b44ce85735e4d0b0144242029004",
+  "words_source": 621,
+  "tags": [
+    "ellie",
+    "environment",
+    "flag",
+    "for",
+    "global",
+    "grid",
+    "hostess",
+    "last",
+    "lossless",
+    "machine",
+    "nexus_last_host",
+    "nick",
+    "redata",
+    "sdf",
+    "segment",
+    "services",
+    "sole",
+    "survivor"
+  ],
+  "ocr_hint": "NEXUS_LAST_HOST Environment flag for ELLIE sole survivor global services on last machine Nick Builder beside stack hones",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-122-700ee49ffe12",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 55.0,
+  "truth_accepted": true
+}

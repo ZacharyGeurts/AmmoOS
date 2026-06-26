@@ -1,0 +1,223 @@
+#!/usr/bin/env pythong
+"""Universal Protector — autonomous being posture: Super Intelligence, persona, lethal, spatial."""
+from __future__ import annotations
+
+import importlib.util
+import json
+import os
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
+STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
+QUEEN = Path(os.environ.get("QUEEN_ROOT", INSTALL.parent / "Queen"))
+DOCTRINE = INSTALL / "data" / "universal-protector-doctrine.json"
+PANEL = STATE / "universal-protector-panel.json"
+RUNTIME = STATE / "universal-protector-runtime.json"
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _load(path: Path, default: Any = None) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return default if default is not None else {}
+
+
+def _save(path: Path, doc: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
+def _mod(name: str, rel: str) -> Any | None:
+    py = INSTALL / "lib" / rel
+    if not py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location(name, py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _cognition_stack() -> dict[str, Any]:
+    return _load(INSTALL / "data" / "hostess7-neural-stack.json", {})
+
+
+def _kill_chain() -> dict[str, Any]:
+    lethal = _mod("h7_lethal", "hostess7-lethal-insight.py")
+    hostile_tsv = STATE / "field-hostile.tsv"
+    hostile = 0
+    if hostile_tsv.is_file():
+        try:
+            hostile = max(0, len(hostile_tsv.read_text(encoding="utf-8").splitlines()) - 1)
+        except OSError:
+            pass
+    out: dict[str, Any] = {
+        "armed": True,
+        "autokill": "armed",
+        "rekill": "armed",
+        "hostile_disabled": hostile,
+        "ops": ["AUTOKILL", "RE-KILL", "KILL", "NO-KILL", "CRUSH-HOT"],
+    }
+    if lethal and hasattr(lethal, "panel_status"):
+        try:
+            out["lethal_insight"] = lethal.panel_status()
+        except Exception:
+            pass
+    return out
+
+
+def _persona() -> dict[str, Any]:
+    h7 = _mod("h7cmd", "hostess7-command.py")
+    if h7 and hasattr(h7, "build_panel"):
+        try:
+            p = h7.build_panel()
+            return {
+                "motto": p.get("motto"),
+                "queen_layer": p.get("queen_layer"),
+                "hostess7_available": p.get("hostess7_available"),
+                "threat_posture": p.get("threat_posture"),
+                "transcript_len": len(p.get("transcript") or []),
+            }
+        except Exception:
+            pass
+    return {"motto": "Queen · Forever Watchguard"}
+
+
+def build_status(*, meld: bool = False, write: bool = True) -> dict[str, Any]:
+    doctrine = _load(DOCTRINE, {})
+    logic = _mod("logic_gate", "nexus-logic-gate.py")
+    spatial = _mod("spatial", "field-spatial-cognition.py")
+    motion = _mod("humanoid_motion", "humanoid-motion-training.py")
+    lives = _mod("creatable_lives", "creatable-lives-assist.py")
+    right_exist = _mod("right_to_exist", "right-to-exist-mandate.py")
+    h7_brain = _mod("hostess7_brain", "hostess7-brain-guard.py")
+    meld_mod = _mod("plate_meld", "field-plate-meld.py")
+
+    logic_doc = logic.status_json() if logic and hasattr(logic, "status_json") else {}
+    spatial_doc = spatial.build_spatial(write=write) if spatial and hasattr(spatial, "build_spatial") else {}
+    motion_doc = motion.build_panel(write=write) if motion and hasattr(motion, "build_panel") else _load(STATE / "humanoid-motion-panel.json", {})
+    lives_doc = lives.build_panel(write=write) if lives and hasattr(lives, "build_panel") else _load(STATE / "creatable-lives-panel.json", {})
+    rte_doc = right_exist.build_panel(write=write) if right_exist and hasattr(right_exist, "build_panel") else _load(STATE / "right-to-exist-panel.json", {})
+    h7_doc = h7_brain.build_panel(write=write) if h7_brain and hasattr(h7_brain, "build_panel") else _load(STATE / "hostess7-brain-guard-panel.json", {})
+    meld_doc = meld_mod.meld(refresh_bus=False) if meld and meld_mod and hasattr(meld_mod, "meld") else _load(STATE / "field-plate-meld.json", {})
+
+    stack = _cognition_stack()
+    think = []
+    for series in stack.get("series") or []:
+        if series.get("id") == "think_tanks":
+            think = [n.get("id") for n in series.get("nets") or [] if n.get("id")]
+
+    doc = {
+        "schema": "universal-protector/v1",
+        "updated": _now(),
+        "product": "Universal Protector",
+        "edition": doctrine.get("edition", "Autonomous Being Stack"),
+        "motto": doctrine.get("motto"),
+        "autonomous_being": True,
+        "threat_warn_level": logic_doc.get("threat_warn_level") or "high",
+        "posture_floor": logic_doc.get("threat_posture_floor") or "alert",
+        "equipment_holds_gate": True,
+        "pillars": {
+            "cognition": {
+                "field_native": stack.get("field_native", True),
+                "title": stack.get("title"),
+                "think_tanks": think,
+                "series_count": len(stack.get("series") or []),
+            },
+            "persona": _persona(),
+            "lethal": _kill_chain(),
+            "spatial": {
+                "dimensions": spatial_doc.get("dimensions"),
+                "networks": list((spatial_doc.get("networks_of_networks") or {}).keys()),
+                "delta_t": spatial_doc.get("delta_t"),
+                "movement": spatial_doc.get("movement_vector"),
+                "humanoid_primitives": spatial_doc.get("humanoid_motion"),
+            },
+            "motion": {
+                "active_skill": motion_doc.get("active_skill"),
+                "active_label": motion_doc.get("active_label"),
+                "proficiency": motion_doc.get("active_proficiency"),
+                "matrix_quote": motion_doc.get("matrix_quote"),
+                "loaded_count": motion_doc.get("loaded_count"),
+                "training_ticks": motion_doc.get("total_training_ticks"),
+            },
+            "logic_gate": {
+                "ok": logic_doc.get("ok"),
+                "last_verdict": (logic_doc.get("last_gate") or {}).get("verdict"),
+            },
+            "creatable_lives": {
+                "sustain_score": (lives_doc.get("sustain") or {}).get("score"),
+                "verdict": (lives_doc.get("sustain") or {}).get("verdict"),
+                "assist_active": (lives_doc.get("assistance") or {}).get("active"),
+                "vita_live": (lives_doc.get("twins") or {}).get("vita", {}).get("live"),
+                "auditus_live": (lives_doc.get("twins") or {}).get("auditus", {}).get("live"),
+                "humans": (lives_doc.get("life_registry") or {}).get("humans"),
+                "pets": (lives_doc.get("life_registry") or {}).get("pets"),
+            },
+            "right_to_exist": {
+                "under_god": rte_doc.get("under_god"),
+                "mandate_sealed": rte_doc.get("mandate_sealed"),
+                "self_preservation_mandate": rte_doc.get("self_preservation_mandate"),
+                "friendlies_preservation_mandate": rte_doc.get("friendlies_preservation_mandate"),
+                "man_entitled": (rte_doc.get("evaluation") or {}).get("entitled", {}).get("man"),
+                "humanity_entitled": (rte_doc.get("evaluation") or {}).get("entitled", {}).get("humanity"),
+                "friendlies_entitled": (rte_doc.get("evaluation") or {}).get("entitled", {}).get("friendlies"),
+            },
+            "hostess7_brain": {
+                "verdict": h7_doc.get("verdict"),
+                "verified": (h7_doc.get("verification") or {}).get("verified"),
+                "corrupted": (h7_doc.get("verification") or {}).get("corrupted"),
+                "guard_score": h7_doc.get("guard_score"),
+                "brain_live": h7_doc.get("brain_live"),
+                "protected_count": h7_doc.get("protected_count"),
+                "removal_count": h7_doc.get("removal_count"),
+                "panel_sha256": h7_doc.get("panel_sha256"),
+                "ledger_chain_tail": h7_doc.get("ledger_chain_tail"),
+                "role": "Our brains — Super Intelligence",
+            },
+        },
+        "meld": {
+            "generation": meld_doc.get("generation"),
+            "chain_hash": (meld_doc.get("chain_hash") or "")[:16],
+            "plate_count": meld_doc.get("plate_count"),
+            "summary": meld_doc.get("summary") if isinstance(meld_doc.get("summary"), dict) else {},
+            "verdict": meld_doc.get("summary", {}).get("sense_verdict") if isinstance(meld_doc.get("summary"), dict) else None,
+        },
+        "promote": {
+            "nexus_role": "universal_protector",
+            "hostess7": "Super Intelligence persona",
+            "field": "amplitude cognition + 3D/4D spatial lattice",
+            "kill": "corroborated lethal chain",
+        },
+    }
+
+    if write:
+        _save(PANEL, doc)
+        _save(RUNTIME, {k: doc[k] for k in ("schema", "updated", "threat_warn_level", "pillars", "meld") if k in doc})
+    return doc
+
+
+def main() -> int:
+    cmd = (sys.argv[1] if len(sys.argv) > 1 else "json").strip().lower()
+    if cmd in ("json", "status"):
+        print(json.dumps(build_status(), ensure_ascii=False))
+        return 0
+    if cmd == "meld":
+        print(json.dumps(build_status(meld=True), ensure_ascii=False))
+        return 0
+    print(json.dumps({"error": "usage: universal-protector.py [json|meld]"}, ensure_ascii=False))
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Panel i18n — language registry, IP locale detection, remembered preference."""
 from __future__ import annotations
 

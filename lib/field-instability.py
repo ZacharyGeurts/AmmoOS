@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field instability & frequency detection — 3-field physics before hardware tune."""
 from __future__ import annotations
 
@@ -74,7 +74,7 @@ def _probe_rtl_dongle() -> dict[str, Any]:
         "ppm_correction": int(hw.get("ppm_correction") or 0),
         "listen_ready": bool(hw.get("listen_ready")),
         "engine": "field-wave-engine",
-        "ensure_hint": hw.get("ensure_hint", "python3 lib/field-wave-engine.py ensure"),
+        "ensure_hint": hw.get("ensure_hint", "pythong lib/field-wave-engine.py ensure"),
     }
 
 
@@ -163,7 +163,7 @@ def analyze_fields(
 
     blockers: list[str] = []
     if not hw.get("field_wave_play"):
-        blockers.append("field-wave-play not ready — python3 lib/field-wave-engine.py ensure")
+        blockers.append("field-wave-play not ready — pythong lib/field-wave-engine.py ensure")
     if not stable:
         blockers.append("3-field instability high — warming tri lock")
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Heaven / Hell — we know Heaven from Hell.
 
 Heaven: permitted flows, operator trust, zero friendly fire.
@@ -15,16 +15,46 @@ from typing import Any
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
+DOCTRINE_PATH = INSTALL / "data" / "heaven-hell-doctrine.json"
 INTENT = STATE / "connection-intent.json"
 HOSTILE = STATE / "field-hostile.tsv"
 OUT_JSON = STATE / "heaven-hell.json"
 RIP_LOG = STATE / "heaven-hell-rip.jsonl"
 
-MOTTO = (
+_DEFAULT_MOTTO = (
     "We know Heaven from Hell. To those who chose Hell, we also choose it for them. "
     "No mercy. No friendly fire. God Bless."
 )
-TAGLINE = "Heaven passes at zero cost. Hell gets ripped — block forever, eradicate, strike."
+_DEFAULT_TAGLINE = "Heaven passes at zero cost. Hell gets ripped — block forever, eradicate, strike."
+_DEFAULT_KNOW = (
+    "Know that nothing is unseen and nothing is fully secure. "
+    "We can't hide all the rocks, so send Hell to Hell."
+)
+
+
+def _doctrine() -> dict[str, Any]:
+    try:
+        doc = json.loads(DOCTRINE_PATH.read_text(encoding="utf-8"))
+        return doc if isinstance(doc, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _motto() -> str:
+    return str(_doctrine().get("heaven_hell_motto") or _DEFAULT_MOTTO)
+
+
+def _tagline() -> str:
+    return str(_doctrine().get("tagline") or _DEFAULT_TAGLINE)
+
+
+def _know_doctrine() -> str:
+    return str(_doctrine().get("motto") or _DEFAULT_KNOW)
+
+
+MOTTO = _motto()
+TAGLINE = _tagline()
+KNOW_DOCTRINE = _know_doctrine()
 
 HEAVEN_VERDICTS = frozenset({"USER_OK", "EPHEMERAL", "MONITOR"})
 HELL_VERDICTS = frozenset({"HARM_CANDIDATE", "SUSPICIOUS"})
@@ -134,10 +164,14 @@ def build_status(panel: dict[str, Any] | None = None) -> dict[str, Any]:
     except Exception:
         pass
 
+    doc = _doctrine()
     return {
         "updated": _now(),
-        "motto": MOTTO,
-        "tagline": TAGLINE,
+        "motto": _motto(),
+        "tagline": _tagline(),
+        "know_doctrine": _know_doctrine(),
+        "send_hell": str(doc.get("send_hell") or "Send Hell to Hell — hostility first, rip ready, no mercy."),
+        "visibility": doc.get("visibility") or {},
         "no_mercy": True,
         "no_friendly_fire": True,
         "hostility_priority": "hell_first",
@@ -166,7 +200,7 @@ def rip_hell(doc: dict[str, Any] | None = None) -> dict[str, Any]:
     lethal_py = INSTALL / "lib" / "lethal-enforcement.py"
     if lethal_py.is_file():
         proc = subprocess.run(
-            ["python3", str(lethal_py), "cycle"],
+            ["pythong", str(lethal_py), "cycle"],
             env={**os.environ, "NEXUS_STATE_DIR": str(STATE), "NEXUS_INSTALL_ROOT": str(INSTALL)},
             capture_output=True,
             text=True,
@@ -237,7 +271,7 @@ def rip_hell(doc: dict[str, Any] | None = None) -> dict[str, Any]:
         if kit.is_file():
             subprocess.run(
                 [
-                    "python3",
+                    "pythong",
                     str(kit),
                     "kill",
                     ip,

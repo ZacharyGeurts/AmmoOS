@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Precision field — new map & spiderweb data with sub-micron detected GPS placement."""
 from __future__ import annotations
 
@@ -196,7 +196,14 @@ def panel_json() -> dict[str, Any]:
         doc = _load_json(PANEL_CACHE, {})
         if doc.get("updated") and (doc.get("entities") or doc.get("stats", {}).get("total", 0) > 0):
             return doc
-    return build_precision_field()
+    return {
+        "schema": "precision-field/v1",
+        "mode": "idle",
+        "entities": [],
+        "edges": [],
+        "stats": {"idle": True, "total": 0},
+        "motto": "Rebuild precision field after spiderweb survey — operator-triggered only.",
+    }
 
 
 def main() -> int:

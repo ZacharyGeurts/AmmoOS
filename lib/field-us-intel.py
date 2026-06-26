@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Field US Intel — Page 1 dossier for THIS machine.
 
 Sherlock-grade facts gleaned only from local field tools and state:

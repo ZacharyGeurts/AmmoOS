@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
 export NEXUS_INSTALL_SRC="${NEXUS_INSTALL_SRC:-$ROOT}"
-export SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
+export SG_ROOT="${SG_ROOT:-${ROOT}}"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   if [[ "${NEXUS_ELEVATED_ROOT:-}" == "1" ]]; then
@@ -213,7 +213,7 @@ nexus_settings_apply_consumer_defaults
 nexus_host_extreme_apply_if_eligible || true
 
 H7_ROOT=""
-for _h7 in "${SG_ROOT}/Hostess7" "${ROOT}/../Hostess7" "${HOME}/Desktop/SG/Hostess7"; do
+for _h7 in "${NEXUS_INSTALL_ROOT}/Hostess7" "${SG_ROOT}/NewLatest/Hostess7" "${SG_ROOT}/Hostess7" "${ROOT}/Hostess7" "${HOME}/Desktop/SG/NewLatest/Hostess7"; do
   [[ -d "$_h7" ]] && H7_ROOT="$(cd "$_h7" && pwd)" && break
 done
 unset _h7

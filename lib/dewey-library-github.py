@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Generate World's Best Dewey Library folder tree for GitHub — shelf.json + book manifests."""
 from __future__ import annotations
 

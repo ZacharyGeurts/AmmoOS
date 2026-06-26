@@ -25,13 +25,13 @@ nexus_friendly_guard_python_refuse() {
   local out refuse
   if [[ -n "$monitor_json" ]]; then
     out="$(NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-      python3 "$script" check "$ip" "$monitor_json" 2>/dev/null)" || true
+      pythong "$script" check "$ip" "$monitor_json" 2>/dev/null)" || true
   else
     out="$(NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-      python3 "$script" check "$ip" 2>/dev/null)" || true
+      pythong "$script" check "$ip" 2>/dev/null)" || true
   fi
   [[ -n "$out" ]] || return 0
-  refuse="$(REFUSE_JSON="$out" python3 -c '
+  refuse="$(REFUSE_JSON="$out" pythong -c '
 import json, os
 try:
     o = json.loads(os.environ.get("REFUSE_JSON", "{}"))

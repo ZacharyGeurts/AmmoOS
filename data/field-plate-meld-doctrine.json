@@ -20,7 +20,47 @@
     },
     "sense_package": {
       "panel": "field-sense-package-panel.json",
-      "role": "Sense stack meld — Hostess7 brain witness read-only"
+      "role": "Sense stack meld — Eyes · Ears · Mouth · field cognition witness read-only"
+    },
+    "field_cognition": {
+      "doctrine": "data/field-cognition-doctrine.json",
+      "stack": "data/hostess7-neural-stack.json",
+      "role": "Secure think tanks — amplitude chambers supersede neural nets"
+    },
+    "spatial_field": {
+      "panel": "field-spatial-panel.json",
+      "doctrine": "data/field-spatial-doctrine.json",
+      "role": "3D/4D networks-of-networks lattice — body·room·field·planetary"
+    },
+    "universal_protector": {
+      "panel": "universal-protector-panel.json",
+      "doctrine": "data/universal-protector-doctrine.json",
+      "role": "Autonomous being posture — cognition · persona · lethal · spatial"
+    },
+    "humanoid_motion": {
+      "panel": "humanoid-motion-panel.json",
+      "doctrine": "data/humanoid-motion-doctrine.json",
+      "role": "Matrix motion training — kung fu · MMA · grappling on body lattice"
+    },
+    "iron_plate_motion": {
+      "panel": "iron-plate-motion-resolve-panel.json",
+      "doctrine": "data/simple-iron-plate-goals.json",
+      "role": "Simple Iron Plate goals · iron-clad motion from assemblage remaining"
+    },
+    "creatable_lives": {
+      "panel": "creatable-lives-panel.json",
+      "doctrine": "data/creatable-lives-doctrine.json",
+      "role": "Creatable lives assistance — Vita · Auditus · registry · sustain score"
+    },
+    "right_to_exist": {
+      "panel": "right-to-exist-panel.json",
+      "doctrine": "data/right-to-exist-doctrine.json",
+      "role": "Right to exist under God — Man · Humanity · Friendlies · self preservation mandate"
+    },
+    "hostess7_brain": {
+      "panel": "hostess7-brain-guard-panel.json",
+      "doctrine": "data/hostess7-brain-guard-doctrine.json",
+      "role": "Hostess 7 brain guard — checksum · verify · removal witness · no corruptions"
     },
     "kernel": {
       "panel": "field-kernel-meld-panel.json",

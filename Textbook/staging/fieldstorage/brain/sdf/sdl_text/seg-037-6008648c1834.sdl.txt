@@ -1,0 +1,90 @@
+Cross-link Chapter 3: clamps on evolved values ( newPhi ∈ [-2, 2] , etc.) are numerical embodiment of “the kitchen cannot invent infinite temperature because the UI got excited.” The host CFL guard and shader clamps are coupled defenses against operator over-enthusiasm.
+
+Boot sequence — what first dispatch establishes
+
+First-run operators see splash and chrome; stderr sees obligations. Typical boot when x86 canvas is live:
+
+aos_load / splash SPIR-V warm-up
+
+FieldAmouranthOs::boot() when die path active
+
+sync_aos_textures() — bindings 11–14 populated
+
+Guest programs via FieldAmouranthLaunch / FieldAmouranthExec when operator launches
+
+Chrome hit-testing shares layout constants with x86.comp ( TASKBAR_H , UI_BOOST , etc.)
+
+Boot is offense — you impose initial boundary conditions on empty guest RAM, seed fabrics, seal time. Subsequent dispatches are offense at cadence. Defense, in the network sense, is a different product (NEXUS). Do not conflate them in one dashboard number.
+
+Queen and FieldFox — same spine, held gates
+
+When QUEEN_BROWSER_BUILD is set, Queen browser links the same rtx() fabric. Navigation → packet field → gatekeeper → thermo receipt is Chapter 21’s doctrine. For this chapter, note: Queen does not replace dispatch; it inherits it. WebGL/WebGPU contexts receive thermo discipline; FieldWebPanel reads the same sealed session.
+
+Implemented when built. queen-browser with --sovereign --queen flags. “Hold all gates” is operator philosophy with implemented gatekeeper wiring — Chapter 12 separates them.
+
+CFL preview — host refuses explosion
+
+Chapter 9 owns CFL deeply. Every operator of dispatch must know it exists on the spine:
+
+waveCFL = c·Δt/Δx ≤ 1 · thermoCFL = α·Δt/Δx² ≤ 1
+
+Before GPU evolution, host scales down unsafe waveSpeed , thermoAlpha , per-step dT , and injectStrength . Hard caps apply (e.g. waveSpeed ∈ [0.01, 2.0] , dT ≤ 0.033 ). This is the “intelligent management” layer in silicon-gate metaphor — pre-conditioning operator inputs before they reach x86.comp or CANVAS.comp .
+
+Offense without CFL is vandalism against your own field. You can write arbitrary boundary conditions; the host refuses to let those writes numerically annihilate the fabric.
+
+Headless dispatch and CI honesty
+
+Valid engineering signal does not require a window. Headless dispatch still runs dispatch_canvas() , still populates ThermoAccountant, still advances sealed time. Chapter 12 lists this as a rock: trust headless stderr for CI, not cover art.
+
+Operators packaging AMOURANTHRTX in pipelines should grep THERMO from headless runs the same way they would on desktop. Zero entropy while fabrics claim evolution is a failed path — physics refusing to lie.
+
+Operator drill — week one dispatch proof
+
+Drill 7.A — Dispatch spine alive
+
+./linux.sh run 2>&1 | tee run.log
+# Let run 90 seconds on default x86 canvas
+grep -E 'VULKAN|CANVAS|dispatch|THERMO|STATUS' run.log | tail -40
+ Expect VULKAN init, CANVAS dispatch lines, periodic STATUS with FPS/GPU ms/VRAM, THERMO with entropy and boundary thermo. Absence of THERMO after fabric motion means your path failed — return to bindings and layout version.
+
+Drill 7.B — Layout version grep
+
+grep -r 'FIELD_LAYOUT_VERSION' Navigator/engine/ Navigator/shaders/
+# Confirm host and x86.comp agree on version 5
+ Drill 7.C — Swipe pedagogy
+
+# From prompt terminal inside run:
+set AnalogFields.GateFidelity 0.85
+list AnalogFields
+# Swipe to energy canvas 60s, grep entropyThisFrame in log
+ Drill 7.C connects Chapter 7 spine to Chapter 3 thermo pedagogy without abandoning die default on next launch.
+
+Common failures — dispatch literacy
+
+Symptom Likely cause First grep
+
+HUD hex nonsense FIELD_LAYOUT_VERSION skew layout constant in host + shader
+
+Flat entropy, moving chrome ThermoAccountant not populated THERMO category silent
+
+Instant NaN colors on Classic CFL violated before guard waveCFL / thermoCFL in debug
+
+Guest RAM stale Layer pump skipped or SSBO not bound binding 1, pumpAll
+
+Spiderweb frozen Fabric empty or mirror not called updateHardwareFromAnalogFields
+
+Dispatch literacy is knowing which layer owns the symptom. The GPU runs the world — but the host can refuse to call it, bind wrong memory, or pack lies into data_bus .
+
+Chapter summary
+
+Chapter 7 is the offensive core: thin host, fat GPU, one dispatch spine. Default canvas is x86.comp with FieldSocket , not decorative raymarch. rtx() singleton unifies device, budget, and hardwareFabric . Descriptor bindings 0–2 and 8–14 must match FIELD_LAYOUT_VERSION = 5 . Each dispatch_canvas() seals time, enforces CFL, pumps layers, fills ThermoAccountant and data_bus , mirrors hardware, and issues vkCmdDispatch . Sealed time keeps physics linear; analog FCC floats keep host and shader honest about knobs. Queen inherits this spine when built. Trust stderr before screenshots; headless dispatch counts.
+
+Next: Chapter 8 — Die-Resident Universe owns 64 MiB guest RAM, layer map L0–L9, and the full data_bus[64] slot contract. Prior: Chapter 6 — Signal Shell separated RF meanings before offense took the spear.
+
+RayCanvas — window, fabric, and presentation
+
+RayCanvas sits between the navigator shell and Pipeline::dispatch_canvas() . It owns swapchain-facing presentation, adaptive resolution scaling from 320×200 heritage up to 4K+ operator preference, and the call to createAnalogFieldFabric() that instantiates Phi, Thermo, and Flow storage images. Without RayCanvas, you would have a Pipeline with no honest surface to present and no fabric to evolve.
+
+Adaptive scale is not vanity. It interacts with CFL: Δx changes when resolution changes, which changes admissible Δt and wave speed. The harmonics guard in dispatch_canvas() reads render resolution when computing CFL numbers. Operators who crank resolution without watching stderr may find the host silently scaling FCC floats down — not punishment, protection.
+
+RayCanvas also participates in chrome layout shared with x86.comp . Taskbar height, UI boost constants, and hit-testing regions must match shader expectations or clicks land in wrong guest coordinates. Offense includes UX boundary conditions: where the operator points is where the field receives probe injection.

@@ -1,0 +1,37 @@
+{
+  "id": "seg-082-a324326efc09",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-082-a324326efc09.pgm",
+  "caption_stub": "1 Love as coupling constant philosophy beside math Philosophy beside the math not instead of it In Field Technology we say plainly love is coupled evolution When you dispatch you change what your neighbor must respond to next tick When\u2026",
+  "text_sha256": "6c0f8c9070a9ab899b27c4896244a39564d038698d3fde8eb4a9f670240b39b2",
+  "words_source": 932,
+  "tags": [
+    "beside",
+    "constant",
+    "coupling",
+    "grid",
+    "hostess",
+    "instead",
+    "lossless",
+    "love",
+    "math",
+    "not",
+    "philosophy",
+    "redata",
+    "sdf",
+    "segment",
+    "the"
+  ],
+  "ocr_hint": "1 Love as coupling constant philosophy beside math Philosophy beside the math not instead of it In Field Technology we s",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-082-a324326efc09",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 61.3,
+  "truth_accepted": true
+}

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Score engine bridge — Rust NexusCore when NEXUS_RUST_CORE=1, else Python fallback."""
 from __future__ import annotations
 

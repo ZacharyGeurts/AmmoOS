@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Panel tab audit — verify each tab has required API data and DOM anchors before next tab."""
 from __future__ import annotations
 
@@ -101,13 +101,13 @@ def _assemble_from_state(*, write: bool = True) -> dict[str, Any] | None:
             doc[key] = frag
             loaded += 1
     for key, cmd in (
-        ("field_command", f'python3 "{INSTALL}/lib/field-command.py" json'),
-        ("us_field", f'python3 "{INSTALL}/lib/field-us-intel.py" json'),
-        ("field_outside_talk", f'python3 "{INSTALL}/lib/field-outside-talk.py" json'),
+        ("field_command", f'pythong "{INSTALL}/lib/field-command.py" json'),
+        ("us_field", f'pythong "{INSTALL}/lib/field-us-intel.py" json'),
+        ("field_outside_talk", f'pythong "{INSTALL}/lib/field-outside-talk.py" json'),
         (
             "h7_library",
             f'NEXUS_STATE_DIR="{STATE}" NEXUS_INSTALL_ROOT="{INSTALL}" '
-            f'python3 "{INSTALL}/lib/h7-library-bridge.py" build',
+            f'pythong "{INSTALL}/lib/h7-library-bridge.py" build',
         ),
         (
             "settings",
@@ -167,7 +167,7 @@ def _build_local_field() -> dict[str, Any]:
                 f'source "{INSTALL}/lib/field-radio-catcher.sh" 2>/dev/null; '
                 f'source "{INSTALL}/lib/signals-field.sh" 2>/dev/null; '
                 f'NEXUS_STATE_DIR="{STATE}" NEXUS_INSTALL_ROOT="{INSTALL}" '
-                f'python3 "{INSTALL}/lib/operator-default.py" seed >/dev/null 2>&1; '
+                f'pythong "{INSTALL}/lib/operator-default.py" seed >/dev/null 2>&1; '
                 f'nexus_field_antenna_cycle 2>/dev/null; '
                 f'source "{INSTALL}/lib/threat-panel.sh" && nexus_threat_panel_publish'
             ),

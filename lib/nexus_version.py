@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS-Shield version — read from lib/nexus-common.sh (single source of truth)."""
 from __future__ import annotations
 

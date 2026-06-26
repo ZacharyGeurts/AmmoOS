@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Host security tier — EXTREME protection envelope for 4★ and 5★ hosts."""
 from __future__ import annotations
 

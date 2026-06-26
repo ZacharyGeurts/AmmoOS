@@ -1,0 +1,39 @@
+{
+  "id": "seg-054-ca5086ae78c9",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "integrate",
+  "file": "brain/sdf/plates/seg-054-ca5086ae78c9.pgm",
+  "caption_stub": "Spiderweb edges Edges carry currentUtil as fabric driven story Tesla reverse damping from Chapter 9 modifies edge update forward ease reverse resist Tidewalker tier EnableSpiderwebGraph allows override operator responsibility rises Chapter 18 covenant applies simulatedChipCycles Accumulated cycles are comparative telemetry\u2026",
+  "text_sha256": "bd8010e6db56b7d36751600c4316680486564cda9213cc17e981b3d102a444dc",
+  "words_source": 922,
+  "tags": [
+    "carry",
+    "currentutil",
+    "damping",
+    "driven",
+    "edges",
+    "fabric",
+    "from",
+    "grid",
+    "hostess",
+    "lossless",
+    "redata",
+    "reverse",
+    "sdf",
+    "segment",
+    "spiderweb",
+    "story",
+    "tesla"
+  ],
+  "ocr_hint": "Spiderweb edges Edges carry currentUtil as fabric driven story Tesla reverse damping from Chapter 9 modifies edge update",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-054-ca5086ae78c9",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 48.3,
+  "truth_accepted": true
+}

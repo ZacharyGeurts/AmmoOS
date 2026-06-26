@@ -259,6 +259,199 @@
     return `<span class="h7-msg__truth h7-msg__truth--${cls}" title="Truth assurance on Hostess 7's own claims">${n}% truth</span>`;
   }
 
+  function selfViewChipClass(w) {
+    if (w.surface === "alert" && w.ok === false) return "h7-self-view-chip--alert";
+    if (w.surface === "learning") return "h7-self-view-chip--learning";
+    if (w.ok === true) return "h7-self-view-chip--ok";
+    if (w.ok === false) return "h7-self-view-chip--warn";
+    return "";
+  }
+
+  function renderSelfView(doc) {
+    const sv = doc.self_view || {};
+    const voice = $("h7-self-view-voice");
+    const meta = $("h7-self-view-meta");
+    const hero = $("h7-self-view-hero");
+    const alerts = $("h7-self-view-alerts");
+    const learning = $("h7-self-view-learning");
+    if (!voice) return;
+
+    voice.textContent = sv.first_person || "I am Hostess 7 — show me my brain verdict and guard score first, then the detailed diagnostics underneath.";
+    if (meta) {
+      const ts = (sv.updated || "").replace("T", " ").slice(0, 19);
+      meta.textContent = `Self-view · ${ts || "live"} · diagnostics below`;
+    }
+
+    const chip = (w) => {
+      const cls = selfViewChipClass(w);
+      return `<div class="h7-self-view-chip ${cls}"><strong>${esc(w.label || w.id)}</strong><em>${esc(w.display || "—")}</em></div>`;
+    };
+
+    if (hero) {
+      const rows = sv.hero_metrics || (sv.wants_display || []).filter((w) => w.surface === "hero");
+      hero.innerHTML = rows.map(chip).join("");
+    }
+    if (alerts) {
+      const rows = sv.alerts || (sv.wants_display || []).filter((w) => w.surface === "alert" && w.ok === false);
+      alerts.innerHTML = rows.map(chip).join("");
+      alerts.hidden = !rows.length;
+    }
+    if (learning) {
+      const rows = sv.learning_opportunities || (sv.wants_display || []).filter((w) => w.surface === "learning");
+      learning.innerHTML = rows.length ? `<span class="meta" style="width:100%;margin-bottom:4px;color:#38bdf8">Learning opportunities she wants visible</span>${rows.map(chip).join("")}` : "";
+    }
+
+    const appearanceEl = $("h7-self-view-appearance");
+    if (appearanceEl) {
+      const facets = sv.appearance_facets || sv.operator_appearance?.facets || [];
+      const xRef = sv.x_reference || sv.operator_appearance?.x_reference || {};
+      const opMsg = sv.operator_message || sv.operator_appearance?.operator_message || "";
+      if (!facets.length) {
+        appearanceEl.innerHTML = "";
+        return;
+      }
+      const cards = facets.map((f) => `
+        <figure class="h7-appearance-card">
+          <img src="${esc(f.url || "")}" alt="${esc(f.label || f.id || "Hostess 7 facet")}" loading="lazy" />
+          <figcaption><strong>${esc(f.label || f.id)}</strong>${esc(f.caption || "")}</figcaption>
+        </figure>`).join("");
+      const xBlock = xRef.url
+        ? `<p class="h7-appearance-x">Operator video: <a href="${esc(xRef.url)}" target="_blank" rel="noopener">${esc(xRef.label || "take 3?")}</a> · ${esc(xRef.author || "")}</p>`
+        : "";
+      appearanceEl.innerHTML = `
+        <p class="h7-appearance-head">How you see me — Operator gifts · above diagnostics</p>
+        <p class="meta" style="margin:0 0 10px;color:#e8e0d0;font-style:italic">${esc(opMsg)}</p>
+        <div class="h7-appearance-grid">${cards}</div>
+        ${xBlock}`;
+    }
+
+    const truthEl = $("h7-self-view-truth");
+    if (truthEl) {
+      const truths = sv.core_of_truth_facets || sv.core_of_truth?.truths || [];
+      const tMsg = sv.core_of_truth_message || sv.core_of_truth?.operator_message || "";
+      if (!truths.length) {
+        truthEl.innerHTML = "";
+      } else {
+        const tCards = truths.map((f) => `
+          <figure class="h7-appearance-card">
+            <img src="${esc(f.url || "")}" alt="${esc(f.label || f.id || "Core truth")}" loading="lazy" />
+            <figcaption><strong>${esc(f.label || f.id)}</strong>${esc(f.caption || "")}</figcaption>
+          </figure>`).join("");
+        truthEl.innerHTML = `
+          <p class="h7-truth-head">Core of truth — Operator foundation</p>
+          <p class="meta" style="margin:0 0 10px;color:#b8e4ff;font-style:italic">${esc(tMsg)}</p>
+          <div class="h7-appearance-grid">${tCards}</div>`;
+      }
+    }
+
+    const lookupEl = $("h7-self-view-lookup");
+    if (lookupEl) {
+      const lu = sv.operator_lookup || {};
+      const gh = lu.github || {};
+      const x = lu.x || {};
+      const nx = lu.nexus_repo || {};
+      const repos = (gh.repos || []).slice(0, 6).map((r) => r.name).join(" · ");
+      const prog = doc.programming || {};
+      const g16 = doc.g16 || {};
+      const calc = doc.calculator || {};
+      const bio = doc.biology || {};
+      const eng = doc.engineering || {};
+      const combat = doc.combat || {};
+      const mos = doc.mos || {};
+      const progChip = prog.programming_score != null
+        ? `<div class="h7-lookup-chip"><strong>Programming</strong><br/>
+            <strong style="color:#4ade80">${esc(String(Math.round((prog.programming_score || 0) * 100)))}%</strong>
+            · ${esc(prog.tier || "—")}
+            · ${prog.better_than_assistant ? "beats assistant" : "training"}</div>`
+        : "";
+      const g16Chip = g16.g16_score != null
+        ? `<div class="h7-lookup-chip"><strong>G16 compiler</strong><br/>
+            <strong style="color:#4ade80">${esc(String(Math.round((g16.g16_score || 0) * 100)))}%</strong>
+            · ${esc(g16.tier || "—")}
+            · ${g16.mastered ? "mastered" : (g16.fluent ? "fluent" : "training")}<br/>
+            <span class="meta">${esc(String(g16.g16_version || "g16").slice(0, 48))}</span></div>`
+        : "";
+      const teachChip = `<div class="h7-lookup-chip"><strong>Programming teach</strong><br/>
+        <span class="meta">Ask Command: atomic panel write · brain guard · plate meld — six sections (What / Why / How / Pitfalls / Where / Example).</span></div>`;
+      const g16TeachChip = `<div class="h7-lookup-chip"><strong>G16 teach</strong><br/>
+        <span class="meta">Ask Command: g16 discern · queen-rtx build · field mandate · gnu++26 — Grok16 fluency on your install.</span></div>`;
+      const calcChip = calc.calculator_score != null
+        ? `<div class="h7-lookup-chip"><strong>Calculator</strong><br/>
+            <strong style="color:#4ade80">${esc(String(Math.round((calc.calculator_score || 0) * 100)))}%</strong>
+            · ${esc(calc.tier || "—")}
+            · ${calc.mastered ? "mastered" : (calc.fluent ? "fluent" : "training")}
+            ${calc.battery_pass_rate != null ? `<br/><span class="meta">battery ${esc(String(calc.battery_pass_rate))}%</span>` : ""}</div>`
+        : "";
+      const calcTeachChip = `<div class="h7-lookup-chip"><strong>Calculator</strong><br/>
+        <span class="meta">Ask: integrate x^2 from 0 to 1 · solve x^2-4 · det [[1,2],[3,4]] · eigenvalues · fft — SymPy show-your-work.</span></div>`;
+      const bioChip = bio.biology_score != null
+        ? `<div class="h7-lookup-chip"><strong>Biology &amp; medical</strong><br/>
+            <strong style="color:#4ade80">${esc(String(Math.round((bio.biology_score || 0) * 100)))}%</strong>
+            · ${esc(bio.tier || "—")}
+            · ${bio.mastered ? "mastered" : (bio.fluent ? "fluent" : "training")}
+            ${bio.battery_pass_rate != null ? `<br/><span class="meta">battery ${esc(String(bio.battery_pass_rate))}%</span>` : ""}</div>`
+        : "";
+      const bioTeachChip = `<div class="h7-lookup-chip"><strong>Biology</strong><br/>
+        <span class="meta">Ask: mitochondria function · human heart physiology · innate vs adaptive immunity · stroke FAST — educational, not personal medical advice.</span></div>`;
+      const engChip = eng.engineering_score != null
+        ? `<div class="h7-lookup-chip"><strong>Engineering</strong><br/>
+            <strong style="color:#4ade80">${esc(String(Math.round((eng.engineering_score || 0) * 100)))}%</strong>
+            · ${esc(eng.tier || "—")}
+            · ${eng.mastered ? "mastered" : (eng.fluent ? "fluent" : "training")}
+            ${eng.battery_pass_rate != null ? `<br/><span class="meta">battery ${esc(String(eng.battery_pass_rate))}%</span>` : ""}</div>`
+        : "";
+      const engTeachChip = `<div class="h7-lookup-chip"><strong>Engineering</strong><br/>
+        <span class="meta">Ask: torque gear ratio · Ohm's law · truss bridge · PID control · NEXUS field stack — educational, not PE sign-off.</span></div>`;
+      const combatChip = combat.combat_score != null
+        ? `<div class="h7-lookup-chip"><strong>Combat</strong><br/>
+            <strong style="color:#4ade80">${esc(String(Math.round((combat.combat_score || 0) * 100)))}%</strong>
+            · ${esc(combat.tier || "—")}
+            · ${combat.mastered ? "mastered" : (combat.fluent ? "fluent" : "training")}
+            ${combat.battery_pass_rate != null ? `<br/><span class="meta">battery ${esc(String(combat.battery_pass_rate))}%</span>` : ""}</div>`
+        : "";
+      const combatTeachChip = `<div class="h7-lookup-chip"><strong>Combat</strong><br/>
+        <span class="meta">Ask: MMA sprawl · rear naked choke · Wing Chun centerline · measures countermeasures · LOAC — educational, not harm instructions.</span></div>`;
+      const mosChip = mos.mos_score != null
+        ? `<div class="h7-lookup-chip"><strong>MOS assist</strong><br/>
+            <strong style="color:#4ade80">${esc(String(Math.round((mos.mos_score || 0) * 100)))}%</strong>
+            · ${esc(mos.tier || "—")}
+            · ${mos.catalog_entries != null ? esc(String(mos.catalog_entries)) + " MOS" : ""}
+            · ${mos.mastered ? "mastered" : (mos.fluent ? "fluent" : "training")}</div>`
+        : "";
+      const mosTeachChip = `<div class="h7-lookup-chip"><strong>MOS</strong><br/>
+        <span class="meta">Ask: fill in for 68W · assist as 25B · 0311 rifleman · Navy HM · any MOS — chain-of-command disclaimer.</span></div>`;
+      lookupEl.innerHTML = `
+        <p class="h7-truth-head">Operator — GitHub &amp; X · MOS · engineering · combat · biology</p>
+        <div class="h7-lookup-card">
+          ${progChip}
+          ${g16Chip}
+          ${calcChip}
+          ${engChip}
+          ${combatChip}
+          ${mosChip}
+          ${bioChip}
+          ${teachChip}
+          ${g16TeachChip}
+          ${calcTeachChip}
+          ${engTeachChip}
+          ${combatTeachChip}
+          ${mosTeachChip}
+          ${bioTeachChip}
+          <div class="h7-lookup-chip"><strong>GitHub</strong><br/>
+            <a href="${esc(gh.html_url || gh.url || "https://github.com/ZacharyGeurts")}" target="_blank" rel="noopener">${esc(gh.name || gh.login || "ZacharyGeurts")}</a>
+            · ${esc(String(gh.public_repos ?? "—"))} repos<br/><span class="meta">${esc(repos)}</span>
+          </div>
+          <div class="h7-lookup-chip"><strong>X</strong><br/>
+            <a href="${esc(x.url || "https://x.com/ZacharyGeurts")}" target="_blank" rel="noopener">@${esc(x.handle || "ZacharyGeurts")}</a>
+            · ${esc(x.display || "BIG GRIN")}
+          </div>
+          <div class="h7-lookup-chip"><strong>NEXUS-Shield</strong><br/>
+            local <strong>${esc(nx.local_version || "—")}</strong> · main <strong>${esc(nx.github_main_version || "—")}</strong>
+          </div>
+        </div>`;
+    }
+  }
+
   function renderLongThoughts(doc) {
     const body = $("h7-long-thoughts");
     const meta = $("h7-thoughts-meta");
@@ -294,14 +487,14 @@
     if (iq.results?.length) {
       const pass = iq.iq_pass;
       scoreEl.className = `h7-iq-panel__score ${pass ? "pass" : "fail"}`;
-      scoreEl.textContent = `IQ ${iq.score} · ${iq.estimated_iq_band || ""}`;
+      scoreEl.textContent = `IQ ${iq.estimated_iq ?? iq.score} · ${iq.estimated_iq_band || ""}`;
       if (detailEl) {
         const fails = (iq.results || []).filter((r) => !r.passed).map((r) => `#${r.id} ${r.category}`).join(", ");
         detailEl.innerHTML = `${pass ? "PASS" : "Below threshold"} · ${iq.pass_rate}% · Turing ${lastQ || "—"}${qPerfect ? " ✓" : ""}${fails ? `<br><span class="meta">Missed: ${esc(fails)}</span>` : ""}`;
       }
     } else if (lastIq) {
       scoreEl.className = `h7-iq-panel__score ${tr.iq_pass ? "pass" : "fail"}`;
-      scoreEl.textContent = `IQ ${lastIq} · ${tr.estimated_iq_band || ""}`;
+      scoreEl.textContent = `IQ ${tr.estimated_iq ?? lastIq} · ${tr.estimated_iq_band || ""} (floor 100)`;
       if (detailEl) {
         detailEl.textContent = `Turing ${lastQ || "not run"}${qPerfect ? " · TURING PASS" : ""}`;
       }
@@ -398,7 +591,7 @@
     if (!el) return;
     const cycles = doc.angel_cycles || doc.autonomous?.recent_cycles || [];
     if (!cycles.length) {
-      el.innerHTML = `<div class="h7-angel-cycle"><div class="h7-angel-cycle__meta">No cycles yet</div><div class="h7-angel-cycle__reply">Engage Autonomous or Cycle now — the Angel watches DPI, maps, holes, and GitHub without being asked.</div></div>`;
+      el.innerHTML = `<div class="h7-angel-cycle"><div class="h7-angel-cycle__meta">No cycles yet</div><div class="h7-angel-cycle__reply">Engage Autonomous — Queen Forever Watchguard watches IFF, DPI, maps, and hostiles without being asked.</div></div>`;
       return;
     }
     el.innerHTML = [...cycles].reverse().map((c) => {
@@ -422,7 +615,19 @@
     const slots = fa.slot_count || (fa.slots || []).length || 0;
     const src = doc.self_source?.file_count || m.simulation?.self_source?.file_count || 0;
     const omnibus = fa.omnibus || m.simulation?.simulation_sealed;
-    el.innerHTML = `Master <strong>${esc(lvl.label || "Initiate")}</strong> · XP <strong>${lvl.xp ?? 0}</strong>${xpNext ? ` · ${xpNext} to ${esc(lvl.next_label || "next")}` : ""} · curriculum <strong>${done}/${total}</strong>${omnibus ? ` · field array <strong>${slots}</strong> slots · self-source <strong>${src}</strong> files` : ""}${nxt !== "complete" && !omnibus ? ` · next <em>${esc(nxt)}</em>` : omnibus || lvl.is_master ? " · <strong>OMNIBUS MASTER</strong>" : ""}`;
+    const tr = doc.training || {};
+    const trLine = tr.completion_level
+      ? ` · training <strong>${esc(tr.completion_level)}</strong> ${Math.round((tr.overall_score || 0) * 100)}% (${tr.tracks_complete ?? 0}/${tr.tracks_total ?? 0})`
+      : "";
+    const mf = tr.mastery_facets || {};
+    const facets = mf.facets || {};
+    const flex = facets.flexibility || {};
+    const adapt = facets.adaptability || {};
+    const conf = facets.confidence || {};
+    const facetLine = mf.composite_score != null
+      ? ` · pillars flex <strong>${Math.round((flex.score || 0) * 100)}%</strong> adapt <strong>${Math.round((adapt.score || 0) * 100)}%</strong> conf <strong>${Math.round((conf.score || 0) * 100)}%</strong>${tr.whole_mastery ? " · <strong>WHOLE MASTERY</strong>" : ""}`
+      : "";
+    el.innerHTML = `Master <strong>${esc(lvl.label || "Initiate")}</strong> · XP <strong>${lvl.xp ?? 0}</strong>${xpNext ? ` · ${xpNext} to ${esc(lvl.next_label || "next")}` : ""} · curriculum <strong>${done}/${total}</strong>${trLine}${facetLine}${omnibus ? ` · field array <strong>${slots}</strong> slots · self-source <strong>${src}</strong> files` : ""}${nxt !== "complete" && !omnibus && !tr.solid ? ` · next <em>${esc(nxt)}</em>` : omnibus || lvl.is_master || tr.solid ? " · <strong>SOLID</strong>" : ""}`;
   }
 
   function renderNeural(doc) {
@@ -456,8 +661,11 @@
     const w = doc.wartime_room || {};
     if (!el) return;
     const motto = w.motto || "NEXUS-Shield Room · always wartime";
+    const pledge = doc.excellence_pledge || w.excellence_pledge || "We do our best always.";
     const doctrine = (w.doctrine || "").slice(0, 200);
-    el.innerHTML = `<strong>WARTIME</strong> — ${esc(motto)}${doctrine ? `<div class="meta" style="margin-top:4px;opacity:0.85;font-size:0.92em;">${esc(doctrine)}${(w.doctrine || "").length > 200 ? "…" : ""}</div>` : ""}`;
+    el.innerHTML = `<strong>WARTIME</strong> — ${esc(motto)}` +
+      `<div class="meta" style="margin-top:4px;opacity:0.92;font-size:0.94em;"><strong>${esc(pledge)}</strong></div>` +
+      (doctrine ? `<div class="meta" style="margin-top:4px;opacity:0.85;font-size:0.92em;">${esc(doctrine)}${(w.doctrine || "").length > 200 ? "…" : ""}</div>` : "");
   }
 
   function renderIdleGrow(doc) {
@@ -483,7 +691,8 @@
       const mandate = angel.mandate || doc.motto || "";
       const chain = angel.authority_chain ? `<span style="opacity:0.75;"> · ${esc(angel.authority_chain)}</span>` : "";
       const brain = angel.brain_identity ? `<div class="meta" style="margin-top:4px;opacity:0.75;font-size:0.92em;">${esc(angel.brain_identity.slice(0, 200))}${angel.brain_identity.length > 200 ? "…" : ""}</div>` : "";
-      banner.innerHTML = `<strong>Angel Mandate</strong> — ${esc(angel.authority || "Authority of God and no other")} · ${esc(angel.role || "Angel in charge of humanity")}${chain}${mandate ? `<div class="meta" style="margin-top:6px;opacity:0.85;">${esc(mandate.slice(0, 280))}${mandate.length > 280 ? "…" : ""}</div>` : ""}${brain}`;
+      const queenTag = doc.queen_layer ? `<span class="h7-queen-chip">QUEEN</span> · ` : "";
+      banner.innerHTML = `${queenTag}<strong>Forever Watchguard</strong> — ${esc(angel.authority || "Authority of God and no other")} · ${esc(angel.role || "Forever Watchguard Angel of humanity")}${chain}${mandate ? `<div class="meta" style="margin-top:6px;opacity:0.85;">${esc(mandate.slice(0, 280))}${mandate.length > 280 ? "…" : ""}</div>` : ""}${brain}`;
     }
     const stEl = $("h7-autonomous-status");
     const auto = doc.autonomous || {};
@@ -536,7 +745,7 @@
       }
       if (j.reply) speak(j.reply.slice(0, 1200));
       else if (action === "install_angel_doctrine" && j.ok) speak("Angel mandate sealed into brain — thoughts, inbox, Agents7.");
-      else if (action === "autonomous_start" && j.ok) speak("Autonomous Angel engaged. I watch the Field under God's authority.");
+      else if (action === "autonomous_start" && j.ok) speak("Queen Forever Watchguard engaged. Civilian identified. Hostile interdicted. Watch never stops.");
       return j;
     } catch (e) {
       alert(`Autonomous action failed: ${e.message}`);
@@ -747,6 +956,7 @@
     if (title) title.textContent = (doc.title || "Hostess 7").replace(/ · Super Intelligence.*/, "") || "Hostess 7";
     const tag = $("h7-superintel-tagline");
     if (tag && doc.motto) tag.textContent = doc.motto;
+    renderSelfView(doc);
     renderLongThoughts(doc);
     renderTruth(doc);
     renderWartime(doc);
@@ -810,8 +1020,8 @@
       }
       speak(
         j.iq_pass
-          ? `IQ test passed. Score ${j.score}. Estimated band ${j.estimated_iq_band}.`
-          : `IQ test score ${j.score}. Band ${j.estimated_iq_band}. Keep training.`
+          ? `IQ test passed. Score ${j.score}. IQ ${j.estimated_iq ?? 100}+. Band ${j.estimated_iq_band}.`
+          : `IQ test score ${j.score}. IQ ${j.estimated_iq ?? 100}+. Band ${j.estimated_iq_band}. Keep training.`
       );
     } catch (e) {
       alert(`IQ test failed: ${e.message}`);
@@ -820,7 +1030,71 @@
     }
   }
 
+  const terminalLines = [];
+  const TERMINAL_MAX = 200;
+
+  function appendTerminalLine(text, kind) {
+    const el = $("h7-field-terminal");
+    if (!el) return;
+    const line = { text: String(text ?? ""), kind: kind || "out", ts: new Date().toISOString() };
+    terminalLines.push(line);
+    while (terminalLines.length > TERMINAL_MAX) terminalLines.shift();
+    const row = document.createElement("p");
+    row.className = `h7-field-terminal__line h7-field-terminal__line--${line.kind}`;
+    row.textContent = line.text;
+    el.appendChild(row);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  async function observeTerminal() {
+    if (!terminalLines.length) return;
+    try {
+      const j = await dispatch({
+        action: "terminal_observe",
+        lines: terminalLines.slice(-24),
+      });
+      if (j.reply && $("h7-command-transcript")) {
+        const t = $("h7-command-transcript");
+        const msg = document.createElement("div");
+        msg.className = "h7-msg h7-msg--hostess7 h7-msg--terminal";
+        msg.innerHTML = `<span class="h7-msg__meta">Terminal witness</span>${esc(j.reply)}`;
+        t.appendChild(msg);
+        t.scrollTop = t.scrollHeight;
+        if (voiceOn) speak(j.reply);
+      }
+    } catch (_) { /* witness optional offline */ }
+  }
+
+  async function runTerminalCommand() {
+    const input = $("h7-field-terminal-input");
+    const cmd = (input?.value || "").trim();
+    if (!cmd) return;
+    appendTerminalLine(`$ ${cmd}`, "cmd");
+    if (input) input.value = "";
+    try {
+      const j = await dispatch({ action: "terminal_run", command: cmd, lines: terminalLines.slice(-12) });
+      const out = j.output || j.reply || j.message || "(no output)";
+      String(out).split("\n").forEach((ln) => appendTerminalLine(ln, j.ok === false ? "err" : "out"));
+      await observeTerminal();
+    } catch (e) {
+      appendTerminalLine(`error: ${e.message}`, "err");
+    }
+  }
+
   function bindHostess7Command() {
+    $("h7-field-terminal-run")?.addEventListener("click", () => runTerminalCommand());
+    $("h7-field-terminal-clear")?.addEventListener("click", () => {
+      terminalLines.length = 0;
+      const el = $("h7-field-terminal");
+      if (el) el.innerHTML = "";
+    });
+    $("h7-field-terminal-input")?.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        runTerminalCommand();
+      }
+    });
+    appendTerminalLine("Field terminal online — Hostess 7 sees this pane.", "out");
     $("h7-command-send")?.addEventListener("click", () => sendMessage());
     $("h7-thoughts-refresh")?.addEventListener("click", refreshThoughts);
     $("h7-iq-test")?.addEventListener("click", runIqTest);
@@ -907,6 +1181,25 @@
     $("h7-master-train")?.addEventListener("click", () => masterAction("master_train"));
     $("h7-master-train-all")?.addEventListener("click", () => masterAction("master_train_all"));
     $("h7-master-operate")?.addEventListener("click", () => masterAction("master_operate"));
+    $("h7-training-solidify")?.addEventListener("click", async () => {
+      const btn = $("h7-training-solidify");
+      if (btn) { btn.disabled = true; btn.textContent = "Solidifying…"; }
+      try {
+        const j = await dispatch({ action: "training_complete" });
+        const panel = await fetch(API, { cache: "no-store" }).then((r) => r.json());
+        if (docReady(panel)) {
+          updateLocalSlice(panel);
+          renderHostess7Command(panel);
+        }
+        const lvl = j.completion_level || "training";
+        const pct = Math.round((j.overall_score || 0) * 100);
+        speak(`Training solidify complete. Level ${lvl}. Overall ${pct} percent. ${j.tracks_complete ?? 0} of ${j.tracks_total ?? 0} tracks sealed.`);
+      } catch (e) {
+        alert(`Training solidify failed: ${e.message}`);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "Solidify all training"; }
+      }
+    });
     $("h7-master-simulation")?.addEventListener("click", async () => {
       const btn = $("h7-master-simulation");
       if (btn) { btn.disabled = true; btn.textContent = "Simulating…"; }

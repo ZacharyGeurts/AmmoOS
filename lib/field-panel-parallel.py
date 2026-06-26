@@ -67,6 +67,23 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "firmware_threat": ("field-firmware-threat-removal.py", ["json"]),
     "sense_package": ("field-sense-package-meld.py", ["json"]),
     "field_bus": ("field-unified-bus.py", ["json"]),
+    "logic_gate": ("nexus-logic-gate.py", ["json"]),
+    "spatial_field": ("field-spatial-cognition.py", ["json"]),
+    "universal_protector": ("universal-protector.py", ["json"]),
+    "humanoid_motion": ("humanoid-motion-training.py", ["json"]),
+    "iron_plate_motion": ("iron-plate-motion-resolve.py", ["resolve"]),
+    "creatable_lives": ("creatable-lives-assist.py", ["json"]),
+    "right_to_exist": ("right-to-exist-mandate.py", ["json"]),
+    "hostess7_brain": ("hostess7-brain-guard.py", ["json"]),
+    "hostess7_programming": ("hostess7-programming.py", ["json"]),
+    "hostess7_g16": ("hostess7-g16.py", ["json"]),
+    "hostess7_codecraft": ("hostess7-codecraft.py", ["json"]),
+    "hostess7_training": ("hostess7-training.py", ["json"]),
+    "hostess7_calculator": ("hostess7-calculator.py", ["json"]),
+    "hostess7_biology": ("hostess7-biology.py", ["json"]),
+    "hostess7_engineering": ("hostess7-engineering.py", ["json"]),
+    "hostess7_combat": ("hostess7-combat.py", ["json"]),
+    "hostess7_mos": ("hostess7-mos.py", ["json"]),
 }
 
 QUEEN_SLICES: dict[str, tuple[str, list[str]]] = {

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Friendly Guard v3.3.2 — IMMUTABLE. Never KILL friendlies.
 
 Tamper-sealed via MANIFEST.sha256. Fail-closed: if this module cannot run,
@@ -36,7 +36,7 @@ SACRED_IPV4: frozenset[str] = frozenset({
     "149.112.112.112",
 })
 TRUSTED_TSV = STATE / "firewall-trusted.tsv"
-HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
+HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
 HOSTESS7_TEAM_FIELD = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
 TRUST_MEMORY_FILE = os.environ.get("NEXUS_TRUST_MEMORY_FILE", "nexus-trusted.jsonl")
 

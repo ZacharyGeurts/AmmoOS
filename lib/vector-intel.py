@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Vector Intelligence — classify every peer and process; never leave unknown.
 
 When internet is available, enriches IPs via PTR + ip-api.com (cached).

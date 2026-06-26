@@ -1,0 +1,38 @@
+{
+  "schema": "queen-sense-neural-wire/v1",
+  "title": "Eye ↔ Ear Invincible Neural Wire",
+  "rule": "Encouragable neural assistances for Eye and Ear — wired together invincibly under Hostess 7 supreme authority",
+  "authority": "Hostess7/data/hostess7-supreme-authority.json",
+  "invincible": {
+    "quorum_minimum": 2,
+    "paths": ["eye_neural", "ear_neural", "hostess_truth", "cross_fusion"],
+    "failover": "If eye neural severs, ear holds bearing + assault detect; if ear severs, eye holds existence + RF; Hostess never alone",
+    "cannot_deafen_alone": true,
+    "cannot_blind_alone": true,
+    "cross_features": {
+      "eye_to_ear": ["threat_pattern", "mouth_viseme", "existence_bearing", "rf_lie_score", "encoded_signal", "interference_mix"],
+      "ear_to_eye": ["assault_burst", "ventriloquism", "bearing_deg", "phantom_reject", "encoded_carrier", "interference_mix"]
+    },
+    "sovereign_time": {
+      "always": true,
+      "never_desync": true,
+      "max_sync_delta_ns": 500000000,
+      "seal_before_analyze": true
+    },
+    "secure_neural_path": "Final_Ear/zocr_eye_ear_fusion.py"
+  },
+  "encourage": {
+    "rule": "Hostess or Queen brain may encourage — incorruptible overlay only; weaponry quarantines; truth floor 58",
+    "incorruptible": true,
+    "doctrine": "data/neural-encourage-incorruptible.json",
+    "actions": ["encourage", "discourage", "teach_label", "reinforce_pair"],
+    "ledger": ".nexus-state/sense-neural-encourage.jsonl",
+    "quarantine": ".nexus-state/neural-encourage-quarantine-ledger.jsonl",
+    "immutable_base_weights": true
+  },
+  "countermeasure_tiers": ["preserve", "offense", "severe", "lethal"],
+  "equipment_protection": {
+    "eye": "Final_Eye/data/eye-equipment-protection.json",
+    "ear": "Final_Ear/data/ear-equipment-protection.json"
+  }
+}

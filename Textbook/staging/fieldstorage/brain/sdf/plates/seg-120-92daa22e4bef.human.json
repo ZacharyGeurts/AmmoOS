@@ -1,0 +1,42 @@
+{
+  "id": "seg-120-92daa22e4bef",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-120-92daa22e4bef.human.pgm",
+  "caption_stub": "Tidewalker tier Tidewalker tier Full spiderweb graph override highest operator mirror control In textbook usage Tidewalker tier appears wherever operators cross engine NEXUS and Queen boundaries If you meet Tidewalker tier in a panel slice jsonl receipt or shader header\u2026",
+  "text_sha256": "6d65a739c5464d1f3fa2854a3ab3f78966d8aee568c809737cba12b901c4b129",
+  "words_source": 916,
+  "tags": [
+    "control",
+    "full",
+    "graph",
+    "grid",
+    "highest",
+    "hostess",
+    "human",
+    "lossless",
+    "mirror",
+    "operator",
+    "override",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "spiderweb",
+    "tidewalker",
+    "tier"
+  ],
+  "ocr_hint": "Tidewalker tier Tidewalker tier Full spiderweb graph override highest operator mirror control In textbook usage Tidewalk",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-120-92daa22e4bef",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-120-92daa22e4bef.json",
+  "truth_score": 46.9,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

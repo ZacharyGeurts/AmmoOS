@@ -45,7 +45,7 @@ nexus_gatekeeper_apply_action() {
 nexus_gatekeeper_enforce_strict() {
   nexus_packet_permission_enabled || return 0
   [[ "${NEXUS_CONNECTION_GATEKEEPER:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   declare -f nexus_firewall_block_ip >/dev/null 2>&1 || return 0
   declare -f nexus_firewall_is_sacred_ip >/dev/null 2>&1 || return 0
   declare -f nexus_firewall_is_trusted >/dev/null 2>&1 && nexus_firewall_trust_init
@@ -57,7 +57,7 @@ nexus_gatekeeper_enforce_strict() {
   local sig_file="${NEXUS_STATE_DIR}/gatekeeper-enforce.sig"
   local sig=""
   if [[ -s "$intent" ]]; then
-    sig="$(python3 -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest()[:20])" "$intent" 2>/dev/null || true)"
+    sig="$(pythong -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest()[:20])" "$intent" 2>/dev/null || true)"
   fi
   if [[ -n "$sig" && -f "$sig_file" && "$(cat "$sig_file" 2>/dev/null)" == "$sig" ]]; then
     return 0
@@ -75,7 +75,7 @@ nexus_gatekeeper_enforce_strict() {
     esac
   done < <(
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$py" flows 2>/dev/null
+      pythong "$py" flows 2>/dev/null
   )
 
   [[ $((permits + segments + ips)) -gt 0 ]] && \
@@ -86,7 +86,7 @@ nexus_gatekeeper_enforce_strict() {
 nexus_packet_enforce_dpi_segments() {
   nexus_packet_permission_enabled || return 0
   [[ "${NEXUS_PACKET_ORACLE:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local py="${NEXUS_INSTALL_ROOT}/lib/packet-permission.py"
   [[ -f "$py" ]] || return 0
   declare -f nexus_gatekeeper_apply_action >/dev/null 2>&1 || return 0
@@ -98,7 +98,7 @@ nexus_packet_enforce_dpi_segments() {
     segments=$((segments + 1))
   done < <(
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$py" segments 2>/dev/null
+      pythong "$py" segments 2>/dev/null
   )
   [[ "$segments" -gt 0 ]] && nexus_log "INFO" "gatekeeper-enforce" "DPI_SEGMENT_BLOCKS=${segments}"
   return 0

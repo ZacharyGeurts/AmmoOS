@@ -9,6 +9,6 @@ nexus_panel_language_json() {
   fi
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
     NEXUS_I18N_DIR="${NEXUS_I18N_DIR:-${NEXUS_INSTALL_ROOT}/data/i18n}" \
-    python3 "$script" json 2>/dev/null \
+    pythong "$script" json 2>/dev/null \
     || printf '{"schema":"panel-language/v1","active":{"code":"en-US","source":"default"},"languages":[],"messages":{}}'
 }

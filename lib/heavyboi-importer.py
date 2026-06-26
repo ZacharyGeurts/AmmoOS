@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """HeavyBoi v7 — ingest nexus-kill-intel JSON into dossier, globe pins, autokill queue."""
 from __future__ import annotations
 
@@ -271,7 +271,7 @@ def ingest_kill_intel(
                 ip = str(order.get("ip") or "").strip()
                 reason = str(order.get("reason") or "heavyboi_intel")
                 proc = subprocess.run(
-                    ["python3", str(kit), "kill", ip, "HEAVYBOI_INTEL", "critical", reason],
+                    ["pythong", str(kit), "kill", ip, "HEAVYBOI_INTEL", "critical", reason],
                     env={**os.environ, "NEXUS_STATE_DIR": str(STATE), "NEXUS_INSTALL_ROOT": str(INSTALL)},
                     capture_output=True,
                     text=True,
@@ -291,7 +291,7 @@ def ingest_kill_intel(
         script = INSTALL / "lib" / "host-attack-map.py"
         if script.is_file():
             subprocess.run(
-                ["python3", str(script), "build-fast"],
+                ["pythong", str(script), "build-fast"],
                 env={**os.environ, "NEXUS_STATE_DIR": str(STATE), "NEXUS_INSTALL_ROOT": str(INSTALL)},
                 capture_output=True,
                 timeout=120,

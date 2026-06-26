@@ -11,5 +11,5 @@ nexus_field_toolkit_json() {
     return 0
   fi
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-    python3 "$script" json 2>/dev/null || printf '{"attack_count":0,"defenses":[]}'
+    pythong "$script" json 2>/dev/null || printf '{"attack_count":0,"defenses":[]}'
 }

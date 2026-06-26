@@ -19,7 +19,7 @@ export FINAL_EAR_ROOT="${FINAL_EAR_ROOT:-${SG}/Final_Ear}"
 export ZOCR_ROOT="${ZOCR_ROOT:-${SG}/ZNEWOCR}"
 export ZNEWOCR_ROOT="${ZNEWOCR_ROOT:-${ZOCR_ROOT}}"
 export WORLD_REDATA_ROOT="${WORLD_REDATA_ROOT:-${SG}/World_Redata}"
-export HOSTESS7_ROOT="${HOSTESS7_ROOT:-${SG}/Hostess7}"
+export HOSTESS7_ROOT="${HOSTESS7_ROOT:-${NEXUS_INSTALL_ROOT:-${SG}/NewLatest}/Hostess7}"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/sg-paths.sh"
 sg_paths_export_defaults
@@ -137,7 +137,7 @@ doc["layers"]["sense_package"] = {
     "api": "/api/sense-package",
     "role": "Unified meld + protect — eye, ear, zocr, redata, Hostess7 brain (witness read-only)",
 }
-h7 = sg.parent / "Hostess7"
+h7 = sg / "Hostess7"
 if h7.is_dir():
     doc["layers"]["hostess7"] = {
         "root": str(h7.relative_to(sg.parent) if h7.is_relative_to(sg.parent) else h7),

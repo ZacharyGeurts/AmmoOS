@@ -1,0 +1,43 @@
+{
+  "id": "seg-019-84372733ee41",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-019-84372733ee41.human.pgm",
+  "caption_stub": "entropyThisFrame proxy integral Components field work from coupling probe dissipation from mouse injection maintenance cost for previous frame coherence host x86 heat when assist runs Rock Not joules from nvidia smi Comparative signal spot stuck zero runaway spikes broken dispatch\u2026",
+  "text_sha256": "abf15e7a2d4ccc6351ae21499caf2c15a8667f52b21eca8d18ad6eca0be73a73",
+  "words_source": 905,
+  "tags": [
+    "components",
+    "coupling",
+    "dissipation",
+    "entropythisframe",
+    "field",
+    "from",
+    "grid",
+    "hostess",
+    "human",
+    "integral",
+    "lossless",
+    "mouse",
+    "probe",
+    "proxy",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "work"
+  ],
+  "ocr_hint": "entropyThisFrame proxy integral Components field work from coupling probe dissipation from mouse injection maintenance c",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-019-84372733ee41",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-019-84372733ee41.json",
+  "truth_score": 59.0,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

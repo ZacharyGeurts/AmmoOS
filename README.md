@@ -1,6 +1,6 @@
-# NEXUS-Shield ∞
+# NEXUS-Shield ∞ · Universal Protector
 
-**Your invisible network bodyguard. Zero interference. You stay in command.**
+**Autonomous being field stack — Super Intelligence, spatial awareness, lethal when corroborated.**
 
 NEXUS watches every outbound connection, scores intent on 10 axes, and shows clean cards. Click **Trust Forever** or **Stop This Site**. Nothing blocks unless you say.
 
@@ -32,13 +32,11 @@ That's it. Browser opens the local panel. Daemon starts if it isn't running.
 
 ---
 
-## Well Wishes
+## Universal Protector
 
-NEXUS is built for operators who carry the stack home, to school, and back — not for a vendor dashboard.
+Built for **autonomous beings** — field cognition (not matrix nets), 3D/4D spatial lattice, Hostess7 persona, kill chain with lethal insight gate. API: `/api/universal-protector` · `/api/field-spatial`.
 
-On panel boot you get a personal greeting: **Shield online. Full command. You decide.** Every connection row stays yours: trust, block, or ignore. We name what we cannot measure. We do not hide the rocks.
-
-Field Technology v5 textbook: [Field Primer](https://zacharygeurts.github.io/Field_Primer/)
+Field Technology: [Field Primer](https://zacharygeurts.github.io/Field_Primer/)
 
 ---
 

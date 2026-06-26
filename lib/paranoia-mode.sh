@@ -85,7 +85,7 @@ nexus_paranoia_set_mode() {
 }
 
 nexus_paranoia_json_escape() {
-  printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))' 2>/dev/null \
+  printf '%s' "$1" | pythong -c 'import json,sys; print(json.dumps(sys.stdin.read()))' 2>/dev/null \
     || printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g; s/$/\\n/' | tr -d '\n' | sed 's/\\n$//'
 }
 
@@ -155,7 +155,7 @@ nexus_paranoia_gather_forensics() {
   PARANOIA_CORR="$corr" PARANOIA_DNS="$dns" PARANOIA_VECTOR="$vector" \
   PARANOIA_DETAIL="$detail" PARANOIA_PIP="$primary_ip" PARANOIA_PPORT="$primary_port" \
   PARANOIA_SIPS="$suspect_ips" PARANOIA_SPROCS="$suspect_procs" \
-  python3 -c '
+  pythong -c '
 import json, os
 def lines(key):
     raw = os.environ.get(key, "")
@@ -228,7 +228,7 @@ nexus_paranoia_pick_target() {
   local ip port target_type=""
   ip="$(nexus_firewall_parse_ip "$detail" "ip")"
   [[ -z "$ip" ]] && ip="$(nexus_firewall_parse_ip "$detail" "dst")"
-  [[ -z "$ip" ]] && ip="$(python3 -c "
+  [[ -z "$ip" ]] && ip="$(pythong -c "
 import json,sys
 try:
   d=json.loads(sys.stdin.read())
@@ -239,7 +239,7 @@ except Exception:
 
   port="$(sed -n 's/.*bind=[^:]*:\([0-9]*\).*/\1/p' <<<"$detail")"
   [[ -z "$port" ]] && port="$(sed -n 's/.*new_listener=[^:]*:\([0-9]*\).*/\1/p' <<<"$detail")"
-  [[ -z "$port" ]] && port="$(python3 -c "
+  [[ -z "$port" ]] && port="$(pythong -c "
 import json,sys
 try:
   d=json.loads(sys.stdin.read())
@@ -300,7 +300,7 @@ nexus_paranoia_on_threat() {
     fi
   fi
 
-  python3 -c '
+  pythong -c '
 import json, os, sys
 print(json.dumps({
     "id": os.environ["PID"],
@@ -328,13 +328,13 @@ nexus_paranoia_disable_incident() {
   [[ -n "$line" ]] || return 1
   grep -q '"disabled":true' <<<"$line" && return 0
 
-  forensic="$(python3 -c "
+  forensic="$(pythong -c "
 import json,sys
 d=json.loads(sys.stdin.read())
 print(json.dumps(d.get('forensics',{})))
 " <<<"$line" 2>/dev/null)"
-  vector="$(python3 -c "import json,sys; print(json.loads(sys.stdin.read()).get('vector',''))" <<<"$line" 2>/dev/null)"
-  detail="$(python3 -c "import json,sys; print(json.loads(sys.stdin.read()).get('detail',''))" <<<"$line" 2>/dev/null)"
+  vector="$(pythong -c "import json,sys; print(json.loads(sys.stdin.read()).get('vector',''))" <<<"$line" 2>/dev/null)"
+  detail="$(pythong -c "import json,sys; print(json.loads(sys.stdin.read()).get('detail',''))" <<<"$line" 2>/dev/null)"
 
   target_line="$(nexus_paranoia_pick_target "$vector" "$detail" "$forensic")" || return 1
   target_type="${target_line%%$'\t'*}"
@@ -342,7 +342,7 @@ print(json.dumps(d.get('forensics',{})))
   nexus_paranoia_apply_disable "$id" "$target" "$target_type" "$vector" || return 1
 
   local tmp="${NEXUS_PARANOIA_INCIDENTS}.tmp"
-  python3 -c "
+  pythong -c "
 import json,sys
 id=sys.argv[1]
 target=sys.argv[2]
@@ -369,13 +369,13 @@ nexus_paranoia_reenable_incident() {
   line="$(grep -F "\"id\":\"${id}\"" "$NEXUS_PARANOIA_INCIDENTS" 2>/dev/null | tail -1)"
   [[ -n "$line" ]] || return 1
 
-  target="$(python3 -c "import json,sys; d=json.loads(sys.stdin.read()); print(d.get('block_target',''))" <<<"$line" 2>/dev/null)"
-  target_type="$(python3 -c "import json,sys; d=json.loads(sys.stdin.read()); print(d.get('block_type',''))" <<<"$line" 2>/dev/null)"
+  target="$(pythong -c "import json,sys; d=json.loads(sys.stdin.read()); print(d.get('block_target',''))" <<<"$line" 2>/dev/null)"
+  target_type="$(pythong -c "import json,sys; d=json.loads(sys.stdin.read()); print(d.get('block_type',''))" <<<"$line" 2>/dev/null)"
   [[ -n "$target" && "$target_type" != "none" ]] || return 1
   nexus_paranoia_undo_disable "$id" "$target" "$target_type" || return 1
 
   local tmp="${NEXUS_PARANOIA_INCIDENTS}.tmp"
-  python3 -c "
+  pythong -c "
 import json,sys
 id=sys.argv[1]
 for line in open(sys.argv[2]):
@@ -394,7 +394,7 @@ for line in open(sys.argv[2]):
 
 nexus_paranoia_recent_json() {
   local limit="${1:-20}"
-  python3 -c "
+  pythong -c "
 import json
 from pathlib import Path
 p=Path('${NEXUS_PARANOIA_INCIDENTS}')
@@ -425,7 +425,7 @@ nexus_paranoia_status_json() {
 }
 
 nexus_paranoia_panel_json() {
-  python3 -c "
+  pythong -c "
 import json
 from pathlib import Path
 state=Path('${NEXUS_PARANOIA_STATE}')

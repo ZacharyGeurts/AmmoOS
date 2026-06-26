@@ -1,0 +1,82 @@
+.qs {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, system-ui, sans-serif;
+  background: linear-gradient(160deg, #0a0e16 0%, #050608 55%, #101820 100%);
+  color: #e8eef8;
+}
+
+.qs-hero {
+  padding: 28px 24px 12px;
+  border-bottom: 1px solid rgba(46, 184, 224, 0.18);
+}
+
+.qs-eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(46, 184, 224, 0.8);
+}
+
+.qs-hero h1 {
+  margin: 0 0 8px;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.qs-motto {
+  margin: 0;
+  max-width: 52ch;
+  color: #8899aa;
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+
+.qs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 12px;
+  padding: 20px 24px 32px;
+}
+
+.qs-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 14px 12px;
+  border: 1px solid rgba(46, 184, 224, 0.22);
+  border-radius: 10px;
+  background: rgba(12, 16, 24, 0.92);
+  color: #f0f4ff;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.qs-tile:hover {
+  border-color: #2eb8e0;
+  background: rgba(46, 184, 224, 0.1);
+}
+
+.qs-tile strong {
+  font-size: 0.92rem;
+}
+
+.qs-tile span {
+  font-size: 0.72rem;
+  color: #8899aa;
+}
+
+.qs-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 12px 24px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.72rem;
+  color: #6a7a8a;
+}

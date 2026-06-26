@@ -1,0 +1,177 @@
+Vendors sell entropy dashboards that merge zip randomness with CPU percent with password strength. Field Technology refuses merge — table in this chapter is weapon against vendor gaslight.
+
+Maintenance cost and video coherence
+
+prevMaintCost visible when temporal coherence expensive — games call it TAA cost; we call it maintenance receipt. Honest name for silent work.
+
+Boundary thermo and probe bleed
+
+If boundary hot while center cold, suspect probe injection path or boundary shader coupling — debug narrative using avgBoundaryThermo.
+
+steps field for long sessions
+
+Multi-hour run: plot steps vs cumulative entropy proxy mentally — slope change marks regime change or leak.
+
+Oracle storm without auto block
+
+Storm increases attention duty — more frequent polling, not automatic KILL. Pair oracle storm with packet field corroboration.
+
+Landauer Chapter 13 primer
+
+Chapter 13 derives proxy integral components with engine mapping — read if you teach entropy to skeptics.
+
+Shannon Chapter 14 primer
+
+Chapter 14 walks byte histogram to H with threshold tuning — read if you operate NEXUS file intake.
+
+=== Chapter 05 ===
+
+Learning objectives
+
+Define packet field as local-first connection sentences in jsonl.
+
+Apply TX/RX operator contracts and corroboration before KILL.
+
+Interpret Connection Gatekeeper verdicts and ten-axis scoring.
+
+Map field memory artifacts to reboot survival.
+
+Relate port stories to habits, not guilt.
+
+Align Queen 2026 gates with packet field perimeter.
+
+Defensive perimeter — the packet field
+
+The packet field is how you see what touches you before someone else narrates it for you. Offense and defense couple here: reading the field changes what you dare to run.
+
+Implemented in NEXUS-Shield. Not inside AMOURANTHRTX Vulkan — different product boundary. Local sockets, local jsonl, local panel :9477 — not cloud omniscience.
+
+Figure 5.1 — Local flows as operator-readable positions in time. Not global internet vision.
+
+Plain English — sockets to sentences
+
+Every connection becomes a sentence in machine-readable log:
+
+ss shows sockets
+
+tcpdump shows frames
+
+Packet field adds meaning : who, which port, TX vs RX, process path, corroboration
+
+Plain English: ss is alphabet soup. Packet field is grammar — subject, verb, direction, story.
+
+TX / RX — operator perspective
+
+Direction Contract
+
+TX You sent bytes — egress you own
+
+RX You received bytes — ingress you must explain
+
+Direction is field dimension — symmetric flows without TX/RX are unreadable defense.
+
+Corroboration and 94/6 posture
+
+Multiple independent signals before permanent action. 94/6 truth filter — watchlist before block; KILL is permanent and archived. One weird packet does not condemn a peer — love as engineering restraint.
+
+Reversible watchlists honor coupled evolution with consent. KILL dossiers survive reboot — forgiveness requires explicit operator review, not vendor cloud amnesty.
+
+Connection Gatekeeper — NEXUS
+
+Ten-axis scoring → verdicts:
+
+Verdict Meaning
+
+USER_OK Permitted flow
+
+EPHEMERAL Short-lived, low risk
+
+SUSPICIOUS Watchlist — not auto-block
+
+HARM_CANDIDATE Harm signature; operator review required
+
+Gatekeeper is implemented — grep lib sources and panel JSON. Not AMOURANTHRTX binding.
+
+Ten axes — literacy without memorizing every weight
+
+Axes include process path trust, port habit deviation, direction balance, payload surprise hooks, honorability cross-checks — full source in NEXUS lib. Operator stance: verdict is summary; jsonl row is receipt; human is judge.
+
+Field memory — what survives reboot
+
+Artifact Survives reboot?
+
+field jsonl Yes — packet history
+
+KILL dossiers Yes — permanent archive
+
+Panel HTML No — window only
+
+Memory is local-first discipline — your machine remembers so you can correlate across sessions without phone-home.
+
+Port stories — habits not guilt
+
+Ports are habits : 443 HTTPS, 53 DNS, 4444 shell-class risk. Registry learns your machine's habits, not textbook lists alone. A port is context for the sentence, not automatic guilt.
+
+Panel :9477 — operator command center
+
+https://127.0.0.1:9477/ — command, packets, threats, signals, DNS, library, system. RTX Zero ?rtx=1 — Aqua chrome. Correlate with AMOURANTHRTX stderr without merging products.
+
+Queen alignment — 2026
+
+Queen browser holds gates — WebRTC through gatekeeper, MP4 in-tree, EME held not omitted. Chapter 21 full doctrine. Packet field is perimeter Queen inherits — navigation → packet field → gatekeeper → honorability → thermo receipt.
+
+Navigation → Packet Field → Gatekeeper → Honorability → Thermo receipt
+ ↑ Truth DNS (no Google shortcut)
+ ↑ Sovereign Time (SQUIDGIE witness)
+
+Operator drill
+
+./nexus.sh
+# Open panel :9477 — archive one gatekeeper decision
+grep -E 'USER_OK|SUSPICIOUS|HARM' field.jsonl | tail -5
+
+Failure modes
+
+Mode Symptom Fix
+
+Cloud fantasy Expect global vision Local-first scope
+
+Auto-KILL Storm → permanent block Corroborate — 94/6
+
+Product blur Gatekeeper in Vulkan NEXUS MIT layer
+
+Port guilt 443 = evil Habits in context
+
+Chapter summary
+
+Packet field is local defensive perimeter — sentences in jsonl, gatekeeper verdicts, TX/RX contracts, corroboration before KILL. Queen inherits gates. Not AMOURANTHRTX Vulkan. Chapter 6 RF shell is separate visual layer.
+
+Study questions
+
+What three tools does packet field extend — ss, tcpdump, and what addition?
+
+Define TX and RX contracts.
+
+Name four gatekeeper verdicts.
+
+What survives reboot vs not?
+
+Why are ports habits not guilt?
+
+How does Queen bind to packet field without replacing NEXUS?
+
+Archive one panel row — what fields prove local-first?
+
+Chapter 6 — Signal Shell →
+
+Honorability cross-check
+
+Gatekeeper integrates honorability signals — process reputation, path stability, prior verdict history — before HARM_CANDIDATE escalation. Not single-axis zealotry. Ten axes exist because peers are stories, not single packets.
+
+DPI sample and intent layers
+
+Deep inspection samples and connection-intent metadata enrich sentences beyond raw ss — still local-first, still operator-owned archives. Samples are corroboration fuel, not cloud upload by default in field posture.
+
+threat-panel.json publish path
+
+Panel consumes threat-panel.json — ephemeral HTML view over durable jsonl. Reboot kills panel window, not field memory. Know which artifacts are receipts vs chrome.

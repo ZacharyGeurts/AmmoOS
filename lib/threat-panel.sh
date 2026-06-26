@@ -72,10 +72,11 @@ nexus_threat_panel_publish() {
     if declare -f nexus_field_rf_cycle >/dev/null 2>&1; then
       nexus_field_rf_cycle
     fi
-    if declare -f nexus_terror_spiderweb_publish >/dev/null 2>&1; then
+    # Spiderweb + precision: operator-triggered only (NEXUS_TERROR_SPIDERWEB=1 to auto-publish).
+    if [[ "${NEXUS_TERROR_SPIDERWEB:-0}" == "1" ]] && declare -f nexus_terror_spiderweb_publish >/dev/null 2>&1; then
       nexus_terror_spiderweb_publish
     fi
-    if declare -f nexus_precision_field_publish >/dev/null 2>&1; then
+    if [[ "${NEXUS_PRECISION_FIELD:-0}" == "1" ]] && declare -f nexus_precision_field_publish >/dev/null 2>&1; then
       nexus_precision_field_publish
     fi
     if declare -f nexus_hostess7_autonomous_cycle >/dev/null 2>&1; then
@@ -237,7 +238,7 @@ nexus_threat_panel_publish() {
     fi
     printf ',"packet_field":'
     if [[ -s "${NEXUS_STATE_DIR}/packet-field.json" ]]; then
-      python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
+      pythong -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
         "${NEXUS_STATE_DIR}/packet-field.json" 2>/dev/null || printf '{}'
     else
       printf '{}'
@@ -245,16 +246,16 @@ nexus_threat_panel_publish() {
     printf ',"h7_library":'
     if [[ -f "${NEXUS_INSTALL_ROOT}/lib/h7-library-bridge.py" ]]; then
       NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-        HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}" \
+        HOSTESS7_ROOT="${HOSTESS7_ROOT:-${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/Hostess7}" \
         HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}" \
-        python3 "${NEXUS_INSTALL_ROOT}/lib/h7-library-bridge.py" build 2>/dev/null \
+        pythong "${NEXUS_INSTALL_ROOT}/lib/h7-library-bridge.py" build 2>/dev/null \
         || printf '{"books":[],"shelves":[]}'
     else
       printf '{"books":[],"shelves":[]}'
     fi
     printf ',"gatekeeper":'
     if [[ -s "${NEXUS_STATE_DIR}/connection-intent.json" ]]; then
-      python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
+      pythong -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
         "${NEXUS_STATE_DIR}/connection-intent.json" 2>/dev/null \
         || printf '{"connections":[],"harm_candidates":0}'
     else
@@ -475,7 +476,7 @@ nexus_threat_panel_publish() {
     printf ',"field_brain":'
     if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-brain-panel.py" ]]; then
       NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
-        python3 "${NEXUS_INSTALL_ROOT}/lib/field-brain-panel.py" json 2>/dev/null \
+        pythong "${NEXUS_INSTALL_ROOT}/lib/field-brain-panel.py" json 2>/dev/null \
         || printf '{"schema":"field-brain/v1","ok":false}'
     else
       printf '{"schema":"field-brain/v1","ok":false}'
@@ -491,7 +492,7 @@ nexus_threat_panel_publish() {
     printf ',"version":"%s"' "${NEXUS_VERSION}"
     printf '}\n'
   } >"${NEXUS_THREAT_PANEL_JSON}.tmp" 2>/dev/null \
-    && python3 -c "import json,sys; json.load(open(sys.argv[1], encoding='utf-8'))" "${NEXUS_THREAT_PANEL_JSON}.tmp" 2>/dev/null \
+    && pythong -c "import json,sys; json.load(open(sys.argv[1], encoding='utf-8'))" "${NEXUS_THREAT_PANEL_JSON}.tmp" 2>/dev/null \
     && mv -f "${NEXUS_THREAT_PANEL_JSON}.tmp" "$NEXUS_THREAT_PANEL_JSON"
   chmod 640 "$NEXUS_THREAT_PANEL_JSON" 2>/dev/null || true
   chown root:nexus "$NEXUS_THREAT_PANEL_JSON" 2>/dev/null || true
@@ -500,7 +501,7 @@ nexus_threat_panel_publish() {
   fi
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-panel-parallel.py" ]]; then
     NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-      python3 "${NEXUS_INSTALL_ROOT}/lib/field-panel-parallel.py" publish >/dev/null 2>&1 || true
+      pythong "${NEXUS_INSTALL_ROOT}/lib/field-panel-parallel.py" publish >/dev/null 2>&1 || true
   fi
   flock -u 9 2>/dev/null || true
 }
@@ -514,32 +515,24 @@ nexus_threat_panel_stop_stale() {
 
 nexus_threat_panel_serve_loop() {
   [[ "${NEXUS_THREAT_PANEL:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || {
-    nexus_log "WARN" "threat-panel" "python3 missing; panel JSON only at ${NEXUS_THREAT_PANEL_JSON}"
+  command -v pythong >/dev/null 2>&1 || {
+    nexus_log "WARN" "threat-panel" "pythong missing; panel JSON only at ${NEXUS_THREAT_PANEL_JSON}"
     return 0
   }
   nexus_threat_panel_stop_stale
   printf '%s\n' "$$" >"${NEXUS_STATE_DIR}/panel.pid"
   # shellcheck source=/dev/null
-  [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-tls.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/panel-tls.sh"
-  nexus_panel_tls_ensure 2>/dev/null || true
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh"
+  nexus_znetwork_publish 2>/dev/null || true
   local panel_dir="${NEXUS_INSTALL_ROOT}/panel"
   local port="$NEXUS_THREAT_PANEL_PORT"
-  local tls_cert="${NEXUS_PANEL_TLS_CERT:-${NEXUS_STATE_DIR}/tls/nexus-panel.crt}"
-  local tls_key="${NEXUS_PANEL_TLS_KEY:-${NEXUS_STATE_DIR}/tls/nexus-panel.key}"
-  export NEXUS_PANEL_TLS="${NEXUS_PANEL_TLS:-1}"
   export NEXUS_STATE_DIR
   while true; do
-    if [[ "${NEXUS_PANEL_TLS:-1}" == "1" && -f "$tls_cert" && -f "$tls_key" ]]; then
-      NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" NEXUS_PANEL_TLS=1 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
-        python3 "${NEXUS_INSTALL_ROOT}/lib/threat-panel-http.py" \
-        "$port" "$panel_dir" "$NEXUS_THREAT_PANEL_JSON" "$tls_cert" "$tls_key" \
-        >>"${NEXUS_STATE_DIR}/panel-http.log" 2>&1
-      printf '%s\n' "$$" >"${NEXUS_STATE_DIR}/panel.pid"
-    else
-      nexus_log "WARN" "threat-panel" "TLS unavailable — retrying port=${port}"
-      sleep 5
-    fi
+    NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+      pythong "${NEXUS_INSTALL_ROOT}/lib/threat-panel-http.py" \
+      "$port" "$panel_dir" "$NEXUS_THREAT_PANEL_JSON" \
+      >>"${NEXUS_STATE_DIR}/panel-http.log" 2>&1
+    printf '%s\n' "$$" >"${NEXUS_STATE_DIR}/panel.pid"
     sleep 5
   done
 }

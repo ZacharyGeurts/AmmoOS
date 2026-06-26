@@ -10,7 +10,7 @@ NEXUS_UPDATE_LOCK_TOKEN="${NEXUS_UPDATE_LOCK_TOKEN:-}"
 
 nexus_update_lock_py() {
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-    python3 "$NEXUS_UPDATE_LOCK_SCRIPT" "$@" 2>/dev/null
+    pythong "$NEXUS_UPDATE_LOCK_SCRIPT" "$@" 2>/dev/null
 }
 
 nexus_update_lock_status() {
@@ -69,6 +69,6 @@ nexus_update_lock_ensure() {
   prev="${NEXUS_UPDATE_PREVIOUS_VERSION:-$cur}"
   out="$(nexus_update_lock_acquire "stealth_install" "stealth_install" "$cur" "$prev")"
   echo "$out" | grep -q '"ok": true' || return 1
-  NEXUS_UPDATE_LOCK_TOKEN="$(printf '%s' "$out" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("token","") or "")' 2>/dev/null || true)"
+  NEXUS_UPDATE_LOCK_TOKEN="$(printf '%s' "$out" | pythong -c 'import sys,json; print(json.load(sys.stdin).get("token","") or "")' 2>/dev/null || true)"
   export NEXUS_UPDATE_LOCK_TOKEN
 }

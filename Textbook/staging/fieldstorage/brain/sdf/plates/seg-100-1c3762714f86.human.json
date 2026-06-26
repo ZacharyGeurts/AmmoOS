@@ -1,0 +1,43 @@
+{
+  "id": "seg-100-1c3762714f86",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "integrate",
+  "file": "brain/sdf/plates/seg-100-1c3762714f86.human.pgm",
+  "caption_stub": "Comparison to naive ntpdate behavior ntpdate style step changes wall clock instantly without signed chain or silicon witness Under terror threat that is unacceptable for enrolled hosts Sovereign sync is pull verify store not blind step Clients may still use\u2026",
+  "text_sha256": "d1523c3936641c34745c44fc32dd0eb87d92780c4f82be86964bb9feb2895b0c",
+  "words_source": 909,
+  "tags": [
+    "behavior",
+    "changes",
+    "clock",
+    "comparison",
+    "grid",
+    "hostess",
+    "human",
+    "instantly",
+    "lossless",
+    "naive",
+    "ntpdate",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "step",
+    "style",
+    "wall",
+    "without"
+  ],
+  "ocr_hint": "Comparison to naive ntpdate behavior ntpdate style step changes wall clock instantly without signed chain or silicon wit",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-100-1c3762714f86",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-100-1c3762714f86.json",
+  "truth_score": 65.4,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

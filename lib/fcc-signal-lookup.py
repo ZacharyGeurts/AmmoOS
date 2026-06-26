@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """FCC signal lookup — identify every signal by permitted spectrum; tag threats."""
 from __future__ import annotations
 

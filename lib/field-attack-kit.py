@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Field Attack Kit — batch crush, KILL targets, permanent dossier archive."""
 from __future__ import annotations
 

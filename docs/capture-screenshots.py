@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Capture NEXUS panel screenshots for README/wiki (localhost HTTPS)."""
 import os
 import subprocess

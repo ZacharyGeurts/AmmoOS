@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS hostility priority — Hell is Hell goes to Hell.
 
 Central scoring and hell-first ordering for connections, RF threats, and field registry.
@@ -15,7 +15,10 @@ from typing import Any, Callable
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 
-MOTTO = "Hell is Hell goes to Hell — hostility first, Heaven never bumped ahead of harm."
+MOTTO = (
+    "Send Hell to Hell — nothing unseen, nothing fully secure, honest rocks. "
+    "Hostility first; Heaven never bumped ahead of harm."
+)
 
 SOUL_ORDER = {"hell": 0, "limbo": 1, "heaven": 2}
 

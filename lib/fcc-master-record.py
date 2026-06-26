@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """FCC master record — append every lookup; deduplicated table for Signals panel."""
 from __future__ import annotations
 

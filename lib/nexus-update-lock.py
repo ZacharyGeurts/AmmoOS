@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """GitHub update lock — prevents concurrent or mid-update panel breaks."""
 from __future__ import annotations
 

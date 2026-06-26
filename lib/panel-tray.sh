@@ -5,9 +5,9 @@ nexus_panel_tray_icon_path() {
   local state_icon="${NEXUS_STATE_DIR}/nexus-tray.png"
   local src=""
   for candidate in \
-    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-amouranth-24.png" \
-    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-amouranth.png" \
-    "${NEXUS_INSTALL_ROOT}/panel/assets/amouranth-twitch-avatar.png" \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-us-24.png" \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-us.png" \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-us-source.jpg" \
     "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-shield.png" \
     "${NEXUS_INSTALL_ROOT}/assets/nexus-shield.png"; do
     if [[ -s "$candidate" ]]; then
@@ -15,9 +15,9 @@ nexus_panel_tray_icon_path() {
       break
     fi
   done
-  if command -v python3 >/dev/null 2>&1 && [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-tray-icon.py" ]]; then
+  if command -v pythong >/dev/null 2>&1 && [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-tray-icon.py" ]]; then
     NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
-      python3 "${NEXUS_INSTALL_ROOT}/lib/panel-tray-icon.py" >/dev/null 2>&1 || true
+      pythong "${NEXUS_INSTALL_ROOT}/lib/panel-tray-icon.py" >/dev/null 2>&1 || true
   fi
   if [[ -s "$state_icon" ]]; then
     printf '%s' "$state_icon"
@@ -121,7 +121,7 @@ nexus_panel_tray_start() {
   [[ "${NEXUS_PANEL_TRAY:-1}" == "1" ]] || return 0
   local script="${NEXUS_INSTALL_ROOT}/lib/panel-tray.py"
   [[ -f "$script" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   [[ -n "${DISPLAY:-}" || -n "${WAYLAND_DISPLAY:-}" ]] || return 0
 
   local start_lock="${NEXUS_STATE_DIR}/panel-tray.start.lock"
@@ -145,11 +145,11 @@ nexus_panel_tray_start() {
       NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
       NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
       NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}" \
-      NEXUS_PANEL_TLS="${NEXUS_PANEL_TLS:-1}" \
+
       NEXUS_TRAY_ICON_REFRESH=1 \
       DISPLAY="${DISPLAY:-:0}" \
       XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-}" \
-      python3 "$script" >>"${NEXUS_STATE_DIR}/panel-tray.log" 2>&1 &
+      pythong "$script" >>"${NEXUS_STATE_DIR}/panel-tray.log" 2>&1 &
     local pid=$!
     printf '%s\n' "$pid" >"$pid_file" 2>/dev/null || true
     sleep 0.5
@@ -202,7 +202,7 @@ nexus_panel_tray_watchdog_start() {
     NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
     NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
     NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}" \
-    NEXUS_PANEL_TLS="${NEXUS_PANEL_TLS:-1}" \
+
     DISPLAY="${DISPLAY:-:0}" \
     bash -c '
       # nexus-panel-tray-watchdog
@@ -216,6 +216,7 @@ nexus_panel_tray_watchdog_start() {
         fi
         # shellcheck source=/dev/null
         source "'"${NEXUS_INSTALL_ROOT}"'/lib/panel-tray.sh"
+        nexus_panel_tray_watchdog_prune "$$"
         if ! nexus_panel_tray_is_running; then
           nexus_panel_tray_start >/dev/null 2>&1 || true
         else
@@ -267,9 +268,9 @@ nexus_panel_open_tab() {
     NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
     NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
     NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}" \
-    NEXUS_PANEL_TLS="${NEXUS_PANEL_TLS:-1}" \
+
     DISPLAY="${DISPLAY:-:0}" \
-      python3 "$script" open "$route" 2>/dev/null && return 0
+      pythong "$script" open "$route" 2>/dev/null && return 0
   fi
   local url
   url="$(nexus_panel_url)#${route}"

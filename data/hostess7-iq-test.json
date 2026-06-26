@@ -3,6 +3,9 @@
   "title": "Hostess 7 · IQ Battery",
   "pass_threshold": 9,
   "total": 12,
+  "iq_floor": 100,
+  "iq_adaptive": true,
+  "self_interaction_boost": true,
   "questions": [
     {"id": 1, "category": "pattern", "q": "What number comes next in the sequence: 2, 4, 8, 16, 32, ?", "answer_keys": ["64"]},
     {"id": 2, "category": "math", "q": "If 5 machines take 5 minutes to make 5 widgets, how many minutes do 100 machines need to make 100 widgets?", "answer_keys": ["5", "five"]},

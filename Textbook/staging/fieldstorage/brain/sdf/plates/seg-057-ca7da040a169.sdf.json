@@ -1,0 +1,40 @@
+{
+  "id": "seg-057-ca7da040a169",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-057-ca7da040a169.pgm",
+  "caption_stub": "Observability drill block 10 Structured grep and panel exercise 10 for muscle memory stderr rhythm Session 10 tee run log for 120 seconds Count STATUS lines expect 24 at 5s cadence Note entropy and boundary thermo drift when injecting mouse\u2026",
+  "text_sha256": "b2ea3e4c56fd7b3d8d844441f4eb71cd97ce5eded64f9b9b1c7f71b41257ce10",
+  "words_source": 910,
+  "tags": [
+    "and",
+    "block",
+    "drill",
+    "exercise",
+    "for",
+    "grep",
+    "grid",
+    "hostess",
+    "lossless",
+    "memory",
+    "muscle",
+    "observability",
+    "panel",
+    "redata",
+    "sdf",
+    "segment",
+    "stderr",
+    "structured"
+  ],
+  "ocr_hint": "Observability drill block 10 Structured grep and panel exercise 10 for muscle memory stderr rhythm Session 10 tee run lo",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-057-ca7da040a169",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 57.0,
+  "truth_accepted": true
+}

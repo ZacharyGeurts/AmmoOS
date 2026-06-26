@@ -26,7 +26,7 @@ nexus_hardware_destroy_record() {
   local ts entry
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
   entry="$(
-    TS="$ts" IP="$ip" MANIFEST="$manifest" python3 -c '
+    TS="$ts" IP="$ip" MANIFEST="$manifest" pythong -c '
 import json, os
 raw = os.environ.get("MANIFEST", "") or "{}"
 try:
@@ -84,7 +84,7 @@ nexus_hardware_destroy_kill_sessions() {
 
   local killed
   killed="$(
-    DOSSIER_JSON="$dossier" python3 -c '
+    DOSSIER_JSON="$dossier" pythong -c '
 import json, os, subprocess, sys
 
 try:
@@ -187,7 +187,7 @@ nexus_hardware_destroy_target() {
   source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
   local monitor_json=""
   if [[ -n "$dossier" ]]; then
-    monitor_json="$(DOSSIER_JSON="$dossier" python3 -c '
+    monitor_json="$(DOSSIER_JSON="$dossier" pythong -c '
 import json, os
 try:
     d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
@@ -205,7 +205,7 @@ if m:
 
   local meta mac ports_blob conn_killed proc_killed flow_blocks lan_actions manifest
   meta="$(
-    DOSSIER_JSON="${dossier:-"{}"}" IP="$ip" python3 -c '
+    DOSSIER_JSON="${dossier:-"{}"}" IP="$ip" pythong -c '
 import json, os
 try:
     d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
@@ -241,8 +241,8 @@ print(json.dumps({
 ' 2>/dev/null
   )" || meta='{}'
 
-  mac="$(META_JSON="$meta" python3 -c 'import json,os; print(json.loads(os.environ.get("META_JSON","{}") or "{}").get("mac",""))' 2>/dev/null)"
-  ports_blob="$(META_JSON="$meta" python3 -c 'import json,os; print(" ".join(str(p) for p in json.loads(os.environ.get("META_JSON","{}") or "{}").get("ports",[])))' 2>/dev/null)"
+  mac="$(META_JSON="$meta" pythong -c 'import json,os; print(json.loads(os.environ.get("META_JSON","{}") or "{}").get("mac",""))' 2>/dev/null)"
+  ports_blob="$(META_JSON="$meta" pythong -c 'import json,os; print(" ".join(str(p) for p in json.loads(os.environ.get("META_JSON","{}") or "{}").get("ports",[])))' 2>/dev/null)"
 
   conn_killed="$(nexus_hardware_destroy_teardown_connections "$ip")"
   proc_killed="$(nexus_hardware_destroy_kill_sessions "$dossier")"
@@ -254,7 +254,7 @@ print(json.dumps({
 
   manifest="$(
     IP="$ip" CONN="$conn_killed" PROC="$proc_killed" FLOW="$flow_blocks" LAN="$lan_actions" \
-      python3 -c '
+      pythong -c '
 import json, os
 print(json.dumps({
     "ip": os.environ["IP"],

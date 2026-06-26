@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Hostess 7 Idle Growth — wartime curiosity, internet explore, self-grow when Operator is quiet."""
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield
 _SCRIPT = Path(__file__).resolve().parent
 if not (INSTALL / "data").is_dir() and (_SCRIPT.parent / "data").is_dir():
     INSTALL = _SCRIPT.parent
-HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
+HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
 WARTIME_JSON = INSTALL / "data" / "hostess7-wartime-room.json"
 TRANSCRIPT = STATE / "hostess7-command.jsonl"
 IDLE_STATE = STATE / "hostess7-idle-grow-state.json"
@@ -89,9 +89,11 @@ def wartime_room_doc() -> dict[str, Any]:
 
 def wartime_prompt_block() -> str:
     doc = wartime_room_doc()
+    pledge = doc.get("excellence_pledge") or "We do our best always."
     return (
         "=== NEXUS-SHIELD ROOM · ALWAYS WARTIME ===\n"
         f"{doc.get('motto', 'Always Wartime')}\n"
+        f"{pledge}\n"
         f"{doc.get('doctrine', '')}\n"
         f"{doc.get('idle_doctrine', '')}\n"
         "=== END WARTIME ROOM ==="

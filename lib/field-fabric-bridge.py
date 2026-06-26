@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Map NEXUS_FIELD_* runtime to AMOURANTHRTX FieldFabric modules."""
 from __future__ import annotations
 

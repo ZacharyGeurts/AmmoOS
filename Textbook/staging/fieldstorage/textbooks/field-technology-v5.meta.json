@@ -1,0 +1,119 @@
+{
+  "title": "Field Technology v5",
+  "edition": "2026",
+  "chapters": 22,
+  "source": "Field_Primer",
+  "chapter_meta": [
+    {
+      "file": "01.html",
+      "html_bytes": 50655,
+      "text_words": 6231
+    },
+    {
+      "file": "02.html",
+      "html_bytes": 46126,
+      "text_words": 5761
+    },
+    {
+      "file": "03.html",
+      "html_bytes": 44840,
+      "text_words": 5124
+    },
+    {
+      "file": "04.html",
+      "html_bytes": 40851,
+      "text_words": 4981
+    },
+    {
+      "file": "05.html",
+      "html_bytes": 41718,
+      "text_words": 5049
+    },
+    {
+      "file": "06.html",
+      "html_bytes": 38395,
+      "text_words": 4684
+    },
+    {
+      "file": "07.html",
+      "html_bytes": 40155,
+      "text_words": 4815
+    },
+    {
+      "file": "08.html",
+      "html_bytes": 36307,
+      "text_words": 4543
+    },
+    {
+      "file": "09.html",
+      "html_bytes": 37688,
+      "text_words": 4942
+    },
+    {
+      "file": "10.html",
+      "html_bytes": 38744,
+      "text_words": 4592
+    },
+    {
+      "file": "11.html",
+      "html_bytes": 36690,
+      "text_words": 4864
+    },
+    {
+      "file": "12.html",
+      "html_bytes": 38558,
+      "text_words": 4534
+    },
+    {
+      "file": "13.html",
+      "html_bytes": 39298,
+      "text_words": 5544
+    },
+    {
+      "file": "14.html",
+      "html_bytes": 33365,
+      "text_words": 4767
+    },
+    {
+      "file": "15.html",
+      "html_bytes": 31880,
+      "text_words": 4573
+    },
+    {
+      "file": "16.html",
+      "html_bytes": 32173,
+      "text_words": 4608
+    },
+    {
+      "file": "17.html",
+      "html_bytes": 31971,
+      "text_words": 4557
+    },
+    {
+      "file": "18.html",
+      "html_bytes": 33529,
+      "text_words": 4754
+    },
+    {
+      "file": "19.html",
+      "html_bytes": 35370,
+      "text_words": 4686
+    },
+    {
+      "file": "20.html",
+      "html_bytes": 34816,
+      "text_words": 4747
+    },
+    {
+      "file": "21.html",
+      "html_bytes": 36248,
+      "text_words": 4612
+    },
+    {
+      "file": "22.html",
+      "html_bytes": 77691,
+      "text_words": 9339
+    }
+  ],
+  "built": "2026-06-25T06:30:18.360572+00:00"
+}

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Network equipment room field — MDF/IDF reporting, legacy DNS gear, field server peers."""
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ def _dns_server_status() -> dict[str, Any]:
         return {"running": False, "schema": "field-dns/v2"}
     try:
         proc = subprocess.run(
-            [os.environ.get("PYTHON", "python3"), str(py), "status"],
+            [os.environ.get("PYTHON", "pythong"), str(py), "status"],
             capture_output=True,
             text=True,
             timeout=8,

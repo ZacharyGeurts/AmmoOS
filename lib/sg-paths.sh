@@ -2,34 +2,57 @@
 # SG portable path resolution — no operator-specific defaults; env + sibling discovery only.
 
 sg_paths_root() {
+  if [[ -n "${NEXUS_INSTALL_ROOT:-}" && -d "${NEXUS_INSTALL_ROOT}/lib" ]]; then
+    printf '%s\n' "$(cd "${NEXUS_INSTALL_ROOT}" && pwd)"
+    return 0
+  fi
   if [[ -n "${SG_ROOT:-}" ]]; then
     printf '%s\n' "$(cd "${SG_ROOT}" && pwd)"
     return 0
   fi
-  if [[ -n "${NEXUS_INSTALL_ROOT:-}" ]]; then
-    local parent
-    parent="$(cd "${NEXUS_INSTALL_ROOT}/.." 2>/dev/null && pwd)" || true
-    if [[ -n "$parent" && -d "${parent}/Hostess7" ]]; then
-      printf '%s\n' "$parent"
-      return 0
-    fi
-    if [[ -n "$parent" ]]; then
-      printf '%s\n' "$parent"
-      return 0
-    fi
-  fi
   if [[ -n "${BASH_SOURCE[1]:-}" ]]; then
-    local lib
+    local lib tree
     lib="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)"
-    printf '%s\n' "$(cd "${lib}/../.." && pwd)"
+    tree="$(cd "${lib}/.." && pwd)"
+    if [[ -d "${tree}/lib" ]]; then
+      printf '%s\n' "$tree"
+      return 0
+    fi
+    printf '%s\n' "$(cd "${tree}/.." && pwd)"
     return 0
   fi
   printf '%s\n' "$(pwd)"
 }
 
+sg_paths_stack_child() {
+  local name="$1"
+  shift || true
+  local sg parent candidate resolved=""
+  sg="$(sg_paths_root)"
+  parent="$(cd "${sg}/.." 2>/dev/null && pwd || true)"
+  if [[ -e "${sg}/${name}" ]]; then
+    printf '%s\n' "$(cd "${sg}/${name}" && pwd)"
+    return 0
+  fi
+  for candidate in "$@"; do
+    [[ -e "${sg}/${candidate}" ]] || continue
+    printf '%s\n' "$(cd "${sg}/${candidate}" && pwd)"
+    return 0
+  done
+  if [[ -n "$parent" && -e "${parent}/${name}" ]]; then
+    printf '%s\n' "$(cd "${parent}/${name}" && pwd)"
+    return 0
+  fi
+  printf '%s\n' "${sg}/${name}"
+}
+
 sg_paths_hostess7_root() {
   if [[ -n "${HOSTESS7_ROOT:-}" ]]; then
     printf '%s\n' "$(cd "${HOSTESS7_ROOT}" && pwd)"
+    return 0
+  fi
+  if [[ -n "${NEXUS_INSTALL_ROOT:-}" && -d "${NEXUS_INSTALL_ROOT}/Hostess7" ]]; then
+    printf '%s\n' "$(cd "${NEXUS_INSTALL_ROOT}/Hostess7" && pwd)"
     return 0
   fi
   local sg
@@ -69,14 +92,14 @@ sg_paths_znewocr_root() {
     printf '%s\n' "$(cd "${ZOCR_ROOT}" 2>/dev/null && pwd || echo "${ZOCR_ROOT}")"
     return 0
   fi
-  local sg
-  sg="$(sg_paths_root)"
-  for candidate in "${sg}/ZNEWOCR" "${sg}/Final_Eye" "${sg}/ZOCR"; do
-    [[ -d "$candidate" ]] || continue
-    printf '%s\n' "$candidate"
+  local candidate resolved=""
+  for candidate in ZNEWOCR ZOCR Final_Eye; do
+    resolved="$(sg_paths_stack_child "$candidate" 2>/dev/null || true)"
+    [[ -n "$resolved" && -e "$resolved" ]] || continue
+    printf '%s\n' "$resolved"
     return 0
   done
-  printf '%s\n' "${sg}/ZNEWOCR"
+  sg_paths_stack_child "ZNEWOCR"
 }
 
 sg_paths_znetwork_root() {
@@ -84,14 +107,7 @@ sg_paths_znetwork_root() {
     printf '%s\n' "$(cd "${ZNETWORK_ROOT}" 2>/dev/null && pwd || echo "${ZNETWORK_ROOT}")"
     return 0
   fi
-  local sg
-  sg="$(sg_paths_root)"
-  for candidate in "${sg}/ZNetwork" "${sg}/znetwork"; do
-    [[ -d "$candidate" ]] || continue
-    printf '%s\n' "$candidate"
-    return 0
-  done
-  printf '%s\n' "${sg}/ZNetwork"
+  sg_paths_stack_child "ZNetwork" "znetwork"
 }
 
 sg_paths_export_defaults() {
@@ -103,5 +119,11 @@ sg_paths_export_defaults() {
   export ZOCR_ROOT="${ZOCR_ROOT:-${ZNEWOCR_ROOT}}"
   export ZNETWORK_ROOT="${ZNETWORK_ROOT:-$(sg_paths_znetwork_root)}"
   export NEXUS_SHIELD_SOURCE="${NEXUS_SHIELD_SOURCE:-${NEXUS_INSTALL_ROOT:-}}"
-  export FINAL_EYE_ROOT="${FINAL_EYE_ROOT:-${SG_ROOT}/Final_Eye}"
+  export FINAL_EYE_ROOT="${FINAL_EYE_ROOT:-$(sg_paths_stack_child Final_Eye)}"
+  export GROK16_ROOT="${GROK16_ROOT:-$(sg_paths_stack_child Grok16)}"
+  export KILROY_ROOT="${KILROY_ROOT:-$(sg_paths_stack_child KILROY)}"
+  export PYTHONG_ROOT="${PYTHONG_ROOT:-$(sg_paths_stack_child PythonG)}"
+  export GROKPY_ROOT="${GROKPY_ROOT:-$(sg_paths_stack_child GrokPy)}"
+  export AMOURANTHRTX_ROOT="${AMOURANTHRTX_ROOT:-$(sg_paths_stack_child AMOURANTHRTX)}"
+  export WORLD_REDATA_ROOT="${WORLD_REDATA_ROOT:-$(sg_paths_stack_child World_Redata)}"
 }

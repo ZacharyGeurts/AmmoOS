@@ -21,7 +21,7 @@ NEXUS 3-field triangulation receive
   field-tri-receive.sh cycle       Full antenna cycle + listen
 
 Requires RTL-SDR dongle for OTA audio:
-  python3 lib/field-wave-engine.py ensure
+  pythong lib/field-wave-engine.py ensure
 
 Environment:
   NEXUS_STATE_DIR          State dir
@@ -34,16 +34,16 @@ shift || true
 
 case "$cmd" in
   compare|pinpoint)
-    exec python3 "$PY" compare "${NEXUS_FIELD_CATCH_MHZ}"
+    exec pythong "$PY" compare "${NEXUS_FIELD_CATCH_MHZ}"
     ;;
   listen|receive|catch)
     echo "[field-tri] 3-field pinpoint → ${NEXUS_FIELD_CATCH_MHZ} MHz → speakers"
-    python3 "$ROOT/lib/field-wave-engine.py" ensure >/dev/null 2>&1 || true
-    python3 "$ORCH" listen "{\"freq_mhz\":${NEXUS_FIELD_CATCH_MHZ},\"live_play\":true}"
+    pythong "$ROOT/lib/field-wave-engine.py" ensure >/dev/null 2>&1 || true
+    pythong "$ORCH" listen "{\"freq_mhz\":${NEXUS_FIELD_CATCH_MHZ},\"live_play\":true}"
     ;;
   cycle)
-    python3 "$ORCH" cycle
-    python3 "$PY" receive "{\"freq_mhz\":${NEXUS_FIELD_CATCH_MHZ}}"
+    pythong "$ORCH" cycle
+    pythong "$PY" receive "{\"freq_mhz\":${NEXUS_FIELD_CATCH_MHZ}}"
     ;;
   -h|--help|help)
     usage

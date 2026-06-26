@@ -1,0 +1,40 @@
+{
+  "id": "seg-114-632f54019b32",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-114-632f54019b32.pgm",
+  "caption_stub": "In textbook usage EME appears wherever operators cross engine NEXUS and Queen boundaries If you meet EME in a panel slice jsonl receipt or shader header this definition is the canonical Field Technology v5 reading not generic industry jargon unless\u2026",
+  "text_sha256": "43500e241c702c0e3f53ad7eaccde631dfdac6a54c571774da8fc578b4660679",
+  "words_source": 932,
+  "tags": [
+    "and",
+    "appears",
+    "boundaries",
+    "cross",
+    "eme",
+    "engine",
+    "grid",
+    "hostess",
+    "lossless",
+    "nexus",
+    "operators",
+    "queen",
+    "redata",
+    "sdf",
+    "segment",
+    "textbook",
+    "usage",
+    "wherever"
+  ],
+  "ocr_hint": "In textbook usage EME appears wherever operators cross engine NEXUS and Queen boundaries If you meet EME in a panel slic",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-114-632f54019b32",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 52.6,
+  "truth_accepted": true
+}

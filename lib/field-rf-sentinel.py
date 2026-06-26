@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field RF Sentinel — FCC permitted-spectrum enforcement + passive threat watch.
 
 Passive global WiFi field scan (receive-only beacon correlation). Whitelists all
@@ -33,7 +33,7 @@ HOSTILE_TSV = STATE / "field-hostile.tsv"
 HOST_ATTACKS = STATE / "host-attacks.json"
 RF_DISABLED_FOREVER = STATE / "field-rf-disabled-forever.json"
 OUI_VENDORS = INSTALL / "data" / "oui-vendors.tsv"
-HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
+HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
 HOSTESS7_TEAM_FIELD = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
 TARGET_DOSSIER_FILE = "nexus-target-dossiers.jsonl"
 HOSTILE_MEMORY_FILE = "nexus-hostile.jsonl"
@@ -1329,7 +1329,7 @@ def _forever_disable_ip(ip: str, threat: dict[str, Any]) -> dict[str, Any]:
     })
     proc = subprocess.run(
         [
-            os.environ.get("PYTHON", "python3"), str(script),
+            os.environ.get("PYTHON", "pythong"), str(script),
             "forever-disable", ip, "WIFI_THREAT", "critical", "rf_unhealthy_forever", meta,
         ],
         capture_output=True,
@@ -1783,7 +1783,7 @@ def _autokill_ip(ip: str) -> dict[str, Any]:
     env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
     env["NEXUS_STATE_DIR"] = str(STATE)
     proc = subprocess.run(
-        [os.environ.get("PYTHON", "python3"), str(script), "kill", ip, "WIFI_THREAT", "high", "rf_lawful_kick"],
+        [os.environ.get("PYTHON", "pythong"), str(script), "kill", ip, "WIFI_THREAT", "high", "rf_lawful_kick"],
         capture_output=True,
         text=True,
         timeout=60,

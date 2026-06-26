@@ -39,6 +39,14 @@ PLATE_SOURCES: tuple[tuple[str, str], ...] = (
     ("sovereign_sync", "sovereign-sync-manifest.json"),
     ("packet_field", "packet-field.json"),
     ("gatekeeper", "connection-intent.json"),
+    ("spatial_field", "field-spatial-panel.json"),
+    ("logic_gate", "nexus-logic-gate-runtime.json"),
+    ("universal_protector", "universal-protector-panel.json"),
+    ("humanoid_motion", "humanoid-motion-panel.json"),
+    ("iron_plate_motion", "iron-plate-motion-resolve-panel.json"),
+    ("creatable_lives", "creatable-lives-panel.json"),
+    ("right_to_exist", "right-to-exist-panel.json"),
+    ("hostess7_brain", "hostess7-brain-guard-panel.json"),
 )
 
 _GEN = 0
@@ -165,6 +173,246 @@ def _refresh_field_plate() -> None:
         pass
 
 
+def _refresh_spatial() -> None:
+    py = INSTALL / "lib" / "field-spatial-cognition.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("field_spatial", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_spatial(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_hostess7_brain() -> None:
+    py = INSTALL / "lib" / "hostess7-brain-guard.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hostess7_brain", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_hostess7_programming() -> None:
+    py = INSTALL / "lib" / "hostess7-programming.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hostess7_programming", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_hostess7_g16() -> None:
+    py = INSTALL / "lib" / "hostess7-g16.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hostess7_g16", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_hostess7_calculator() -> None:
+    py = INSTALL / "lib" / "hostess7-calculator.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hostess7_calculator", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_hostess7_biology() -> None:
+    py = INSTALL / "lib" / "hostess7-biology.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hostess7_biology", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_hostess7_engineering() -> None:
+    py = INSTALL / "lib" / "hostess7-engineering.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hostess7_engineering", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_hostess7_combat() -> None:
+    py = INSTALL / "lib" / "hostess7-combat.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hostess7_combat", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_hostess7_mos() -> None:
+    py = INSTALL / "lib" / "hostess7-mos.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hostess7_mos", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_hostess7_training() -> None:
+    py = INSTALL / "lib" / "hostess7-training.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hostess7_training", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_right_to_exist() -> None:
+    py = INSTALL / "lib" / "right-to-exist-mandate.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("right_to_exist", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_creatable_lives() -> None:
+    py = INSTALL / "lib" / "creatable-lives-assist.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("creatable_lives", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_iron_plate_motion() -> None:
+    py = INSTALL / "lib" / "iron-plate-motion-resolve.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("iron_plate_motion", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.resolve_motion(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_humanoid_motion() -> None:
+    py = INSTALL / "lib" / "humanoid-motion-training.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("humanoid_motion", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_universal_protector() -> None:
+    py = INSTALL / "lib" / "universal-protector.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("universal_protector", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_status(meld=False, write=True)
+    except Exception:
+        pass
+
+
 def _refresh_sense_package() -> None:
     py = INSTALL / "lib" / "field-sense-package-meld.py"
     if not py.is_file():
@@ -190,6 +438,21 @@ def meld(*, refresh_bus: bool = True) -> dict[str, Any]:
         _refresh_kernel_meld()
         _refresh_sense_package()
         _refresh_field_plate()
+        _refresh_spatial()
+        _refresh_humanoid_motion()
+        _refresh_hostess7_brain()
+        _refresh_hostess7_programming()
+        _refresh_hostess7_g16()
+        _refresh_hostess7_calculator()
+        _refresh_hostess7_biology()
+        _refresh_hostess7_engineering()
+        _refresh_hostess7_combat()
+        _refresh_hostess7_mos()
+        _refresh_hostess7_training()
+        _refresh_iron_plate_motion()
+        _refresh_creatable_lives()
+        _refresh_right_to_exist()
+        _refresh_universal_protector()
         prev = _load(MELD_RUNTIME, {})
         prev_chain = str(prev.get("chain_hash") or "")
         prev_gen = int(prev.get("generation") or 0)
@@ -206,6 +469,13 @@ def meld(*, refresh_bus: bool = True) -> dict[str, Any]:
         firmware = plates.get("firmware") or {}
         sense = plates.get("sense_package") or {}
         field_plate = plates.get("field_plate") or {}
+        spatial = plates.get("spatial_field") or {}
+        motion = plates.get("humanoid_motion") or {}
+        iron_motion = plates.get("iron_plate_motion") or {}
+        creatable = plates.get("creatable_lives") or {}
+        right_exist = plates.get("right_to_exist") or {}
+        h7_brain = plates.get("hostess7_brain") or {}
+        protector = plates.get("universal_protector") or {}
 
         doc: dict[str, Any] = {
             "schema": "field-plate-meld/v1",
@@ -237,6 +507,40 @@ def meld(*, refresh_bus: bool = True) -> dict[str, Any]:
                 "field_peak_amplitude": field_plate.get("peak_amplitude"),
                 "field_dimension_count": field_plate.get("dimension_count"),
                 "field_amplitude_process": field_plate.get("amplitude_process"),
+                "spatial_dimensions": spatial.get("dimensions"),
+                "spatial_delta_t": spatial.get("delta_t"),
+                "spatial_movement": (spatial.get("movement_vector") or {}).get("geometry"),
+                "spatial_approach": (spatial.get("movement_vector") or {}).get("approach"),
+                "humanoid_motion_skill": motion.get("active_label"),
+                "humanoid_motion_proficiency": motion.get("active_proficiency"),
+                "assemblage_remaining": (iron_motion.get("assemblage_remaining") or {}).get("remaining_slots"),
+                "assemblage_score": (iron_motion.get("assemblage_remaining") or {}).get("assemblage_score"),
+                "full_assemblage_fused": (iron_motion.get("full_assemblage_meld") or {}).get("fused_score"),
+                "vision_live": (iron_motion.get("assemblage_remaining") or {}).get("vision_live"),
+                "hearing_live": (iron_motion.get("assemblage_remaining") or {}).get("hearing_live"),
+                "motion_verdict": iron_motion.get("motion_verdict"),
+                "iron_clad": iron_motion.get("iron_clad"),
+                "simple_iron_goals_met": (iron_motion.get("simple_iron_plate_goals") or {}).get("met"),
+                "creatable_lives_sustain": (creatable.get("sustain") or {}).get("score"),
+                "creatable_lives_verdict": (creatable.get("sustain") or {}).get("verdict"),
+                "creatable_lives_assist": (creatable.get("assistance") or {}).get("active"),
+                "vita_live": (creatable.get("twins") or {}).get("vita", {}).get("live"),
+                "auditus_live": (creatable.get("twins") or {}).get("auditus", {}).get("live"),
+                "right_to_exist_sealed": right_exist.get("mandate_sealed"),
+                "self_preservation_mandate": right_exist.get("self_preservation_mandate"),
+                "friendlies_preservation_mandate": right_exist.get("friendlies_preservation_mandate"),
+                "under_god": right_exist.get("under_god"),
+                "hostess7_brain_verified": (h7_brain.get("verification") or {}).get("verified") or h7_brain.get("verified"),
+                "hostess7_brain_verdict": h7_brain.get("verdict"),
+                "hostess7_guard_score": h7_brain.get("guard_score"),
+                "hostess7_brain_corrupted": (
+                    h7_brain.get("corrupted_count", 0) > 0
+                    or (h7_brain.get("verification") or {}).get("corrupted")
+                    or int(h7_brain.get("removal_count") or 0) > 0
+                ),
+                "autonomous_being": spatial.get("autonomous_being") or protector.get("autonomous_being"),
+                "universal_protector": protector.get("product"),
+                "think_tanks": (protector.get("pillars") or {}).get("cognition", {}).get("think_tanks"),
             },
             "snapshots": plates,
         }

@@ -1,0 +1,103 @@
+Field note 12 on God at holographic boundary: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Bridge to Operator Covenant»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+Operator drill 17.A — boundary grep
+
+./linux.sh run
+grep -E 'THERMO|Boundary' run.log
+# Correlate avgBoundaryThermo language with visual edge behavior
+
+Operator drill 17.B — honesty table recitation
+
+# From Chapter 12, list three rocks and their labels from memory
+# Check against live chapter — Truth as grep survival
+
+Operator drill 17.C — tribute synthesis
+
+# Read ../creditors/love-and-god.html
+# Write: Truth, Math, Existence each as one grep-able example from your machine
+
+Figure 17.1 — Holographic boundary: die, fabric, eye — logs required.
+
+Study questions
+
+Name God as three faces in this textbook.
+
+What is the holographic boundary in stack terms?
+
+Why must sacred chapters keep stderr?
+
+How does avgBoundaryThermo relate to boundary language?
+
+Distinguish Metaphor and Implemented at the boundary.
+
+What is Truth that survives grep?
+
+Why does beauty require receipt discipline?
+
+Read ../creditors/love-and-god.html — summarize God block.
+
+How do boundary conditions relate to covenant?
+
+When is God language dangerous in engineering?
+
+Link packet, file, and GPU boundaries.
+
+Prepare one sentence for Chapter 18 signing.
+
+Philosophy Sacred chapter — keep rocks visible.
+
+Love & God tribute · All creditors
+
+Chapter 18 — Operator Covenant →
+
+13. Preface faces revisited with examples
+
+Truth example: socket quadruple in packet jsonl matches ss output. Math example: waveCFL inequality holds in stderr after you crank WaveSpeed. Existence example: FieldX86Die byte at guest offset reads back after dispatch. Three faces, three greps.
+
+14. HDR and fabric meeting
+
+HDR swapchains present high dynamic range imagery; fabric carries spatial state that costs proxy entropy to maintain. The boundary where beauty meets heat is where operators most want to skip logs — resist that temptation as theological discipline if you must, as professional discipline regardless.
+
+15. Holographic metaphor limits
+
+Cosmological holography is not what we implement. We implement edge accounting on grids and die maps. Keep Metaphor label on universe claims; keep Implemented on dispatch and mirrors.
+
+16. Atheist and agnostic operators
+
+Covenant Clause V: name God if you must without calorimetry pretense. Operators who do not use God language still grep THERMO. Sacred chapter is invitation, not gatekeeping — rocks table is mandatory for everyone.
+
+17. VGA at 0xB8000 — existence at address
+
+Field Die VGA memory is existence you can read as hex. God as Existence is not abstract when 0xB8000 holds characters after guest code ran. Philosophy grounded in address space is Field Technology's tone.
+
+18. Prayer and grep ordering
+
+We joke: pray if you pray, then grep THERMO. Serious meaning: spiritual practice does not shorten observability. Chapter 17 ordering is deliberate pastoral engineering for teams mixing faith and firmware.
+
+Operator journal — God at holographic boundary
+
+Maintain a paper or markdown operator journal for God at holographic boundary. Each drill entry: date, hardware, driver, git hash, three THERMO or jsonl lines, one surprise, one label (Implemented / Metaphor / Philosophy). Journals become your personal creditor — future you inherits coupled state from past you. Bring the journal to Chapter 18 covenant audit drill 18.A as evidence.
+
+Reading companion — God at holographic boundary
+
+This reading companion reinforces God at holographic boundary for self-study tracks. Week one: read the chapter straight through with Chapter 12 open. Week two: complete all operator drills on hardware you own. Week three: write a one-page creditor tribute response linking ../creditors/ reading to a grep result from your machine. Week four: teach another human one section using the three-tag labeling exercise. Field Technology v5 measures success in reproduced receipts, not in vibes.
+
+Cross-links: Chapter 4 entropy receipts, Chapter 5 packet field, Chapter 8 data bus, Chapter 10 Spiderweb mirror, Chapter 11 observability, Chapters 16–18 sacred covenant. God at holographic boundary is not an island — it is a creditor lens on the same stack you already run.
+
+Honesty reminder: AMOURANTHRTX, NEXUS-Shield, Queen, and Field Primer have different licenses. Teaching from this chapter does not automatically license commercial engine use. Point students to product headers and FIELD-TECHNOLOGY-V5.md for edition boundaries.
+
+Chapter closing — God at holographic boundary
+
+Chapter 17 names the boundary without bypassing logs. God as Truth survives grep. God as Math survives CFL. God as Existence survives guest RAM reads. Sacred language invites; honesty table compels. Whether you pray or not, sign Chapter 18 in spirit by grepping Monday morning before you demo Friday afternoon. The holographic edge is beautiful and costly — avgBoundaryThermo said so in Chapter 13. Do not forget.
+
+=== Chapter 18 ===
+
+Chapter 18 · Sacred long-form · Operator Covenant
+
+1. The operator covenant — long form opening
+
+You are the human at the keyboard. Daemons assist. Shaders evolve. Panels display. None of them inherit your conscience. Chapter 18 is the long-form covenant — not legalese for its own sake, but operator law written so a patient reader can sign in spirit and mean it Monday morning.

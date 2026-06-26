@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Canonical operator default — Gladstone MI anchor, name, address, GitHub + X URLs."""
 from __future__ import annotations
 

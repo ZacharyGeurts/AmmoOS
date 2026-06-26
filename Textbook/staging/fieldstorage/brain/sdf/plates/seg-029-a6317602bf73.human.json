@@ -1,0 +1,42 @@
+{
+  "id": "seg-029-a6317602bf73",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-029-a6317602bf73.human.pgm",
+  "caption_stub": "Week one registry is naive textbook ports only Week four registry is yours dev servers game anticheat channels local mesh sync Queen WebRTC UDP patterns The packet field learns without cloud upload because jsonl stays on disk Operators exporting habits\u2026",
+  "text_sha256": "c0810a2461c3415462e0090988df074d1fc5a0742f4fa036964ddbe33f6abd8d",
+  "words_source": 902,
+  "tags": [
+    "dev",
+    "four",
+    "grid",
+    "hostess",
+    "human",
+    "lossless",
+    "naive",
+    "one",
+    "only",
+    "ports",
+    "redata",
+    "registry",
+    "sdf",
+    "segment",
+    "serviceable",
+    "textbook",
+    "week",
+    "yours"
+  ],
+  "ocr_hint": "Week one registry is naive textbook ports only Week four registry is yours dev servers game anticheat channels local mes",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-029-a6317602bf73",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-029-a6317602bf73.json",
+  "truth_score": 59.8,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

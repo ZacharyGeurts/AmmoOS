@@ -8,5 +8,5 @@ export NEXUS_FIELD_CATCH_MHZ="${NEXUS_FIELD_CATCH_MHZ:-93.1}"
 export NEXUS_ANTENNA_MAX_ATTEMPTS="${NEXUS_ANTENNA_MAX_ATTEMPTS:-8}"
 
 echo "=== 93.1 WIMK — 3-field antenna → play station ==="
-python3 "$ROOT/lib/field-antenna-catch.py" catch \
+pythong "$ROOT/lib/field-antenna-catch.py" catch \
   '{"freq_mhz":93.1,"station_id":"wimk-931","call_sign":"WIMK","play":true,"seconds":30}'

@@ -1,0 +1,40 @@
+{
+  "id": "seg-108-1c0d63692b0b",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "integrate",
+  "file": "brain/sdf/plates/seg-108-1c0d63692b0b.pgm",
+  "caption_stub": "Process names tracked include fieldfox firefox chromium family for browser awareness integration queen browser in engine RTX path queen browser binary AMOURANTHRTX Vulkan SDL3 inside In engine UI via FieldWebPanel QueenBoot comp 2026 aqua rose chrome Hostess 7 Forever Watchguard\u2026",
+  "text_sha256": "74c4f2362bae9904ea37915fb2dc3503409728d06d167b669f3a84a1bc941750",
+  "words_source": 916,
+  "tags": [
+    "awareness",
+    "browser",
+    "chromium",
+    "family",
+    "fieldfox",
+    "firefox",
+    "for",
+    "grid",
+    "hostess",
+    "include",
+    "integration",
+    "lossless",
+    "names",
+    "process",
+    "redata",
+    "sdf",
+    "segment",
+    "tracked"
+  ],
+  "ocr_hint": "Process names tracked include fieldfox firefox chromium family for browser awareness integration queen browser in engine",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-108-1c0d63692b0b",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 64.9,
+  "truth_accepted": true
+}

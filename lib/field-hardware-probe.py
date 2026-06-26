@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field hardware probe — read-only sysfs/proc, no sudo. Tools from field drive."""
 from __future__ import annotations
 

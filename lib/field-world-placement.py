@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field world placement — tune radio bands, tower GPS placements, find your place."""
 from __future__ import annotations
 
@@ -676,8 +676,8 @@ def play_wimk_until_working(
         ),
         "next_if_not_working": [] if working else [
             "Rescan 3-field antenna (Signals → Rescan)",
-            "python3 lib/field-generator-triangulator.py deploy",
-            "Retry: python3 lib/field-world-placement.py play_until",
+            "pythong lib/field-generator-triangulator.py deploy",
+            "Retry: pythong lib/field-world-placement.py play_until",
         ],
     }
     _save_json(WIMK_PLAYBACK_CACHE, status)

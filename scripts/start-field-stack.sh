@@ -26,7 +26,7 @@ export FINAL_EAR_ROOT="${FINAL_EAR}"
 export ZOCR_ROOT="${ZOCR}"
 export ZNEWOCR_ROOT="${ZNEWOCR}"
 export WORLD_REDATA_ROOT="${WORLD_REDATA}"
-export HOSTESS7_ROOT="${HOSTESS7_ROOT:-${SG}/Hostess7}"
+export HOSTESS7_ROOT="${HOSTESS7_ROOT:-${NEXUS_INSTALL_ROOT:-${SG}/NewLatest}/Hostess7}"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/sg-paths.sh"
 sg_paths_export_defaults

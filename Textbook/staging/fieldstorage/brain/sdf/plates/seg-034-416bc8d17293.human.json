@@ -1,0 +1,43 @@
+{
+  "id": "seg-034-416bc8d17293",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-034-416bc8d17293.human.pgm",
+  "caption_stub": "Swiping to weave in AMOURANTHRTX does not pause Field Die default product truth weave is alternate curriculum on shared Vulkan spine per Chapter 7 Thermo still accrues underneath THERMO still greps Deep dive Field Antenna operator tour 30 minutes Start\u2026",
+  "text_sha256": "06078ccef3afbed55927a6ce339dcc1fa54b9ec73797161476c8ca0f6062fca5",
+  "words_source": 910,
+  "tags": [
+    "amouranthrtx",
+    "default",
+    "die",
+    "does",
+    "field",
+    "grid",
+    "hostess",
+    "human",
+    "lossless",
+    "not",
+    "pause",
+    "product",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "swiping",
+    "truth",
+    "weave"
+  ],
+  "ocr_hint": "Swiping to weave in AMOURANTHRTX does not pause Field Die default product truth weave is alternate curriculum on shared ",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-034-416bc8d17293",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-034-416bc8d17293.json",
+  "truth_score": 64.1,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

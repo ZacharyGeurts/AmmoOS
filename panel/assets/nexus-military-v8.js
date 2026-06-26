@@ -23,8 +23,14 @@
     const v = ver || resolveVersion("…");
     const title = document.getElementById("nexus-version-title");
     const btn = document.getElementById("nexus-update-btn");
-    if (title) title.textContent = `NEXUS-Shield v${v}`;
-    document.title = `NEXUS-Shield v${v} — Military C2 Panel`;
+    const edition = global.NEXUS_FIELD?.edition || "Universal Protector";
+    if (title) title.textContent = `NEXUS-Shield v${v} · ${edition}`;
+    document.title = `NEXUS-Shield v${v} · ${edition}`;
+    const sub = document.getElementById("nexus-brand-sub");
+    if (sub && !sub.dataset.upStamped) {
+      sub.textContent = `${edition} · 3D/4D spatial lattice · Hostess 7 · threat HIGH`;
+      sub.dataset.upStamped = "1";
+    }
     if (btn && !btn.classList.contains("update-ready") && !btn.classList.contains("update-busy")) {
       btn.textContent = `v${v}`;
     }

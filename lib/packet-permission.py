@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Packet Permission v4.0 — sync flow permits/blocks and DPI segment enforcement."""
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Read signals from generated 3-field mesh — never stable snapshots. Every MHz from live fields."""
 from __future__ import annotations
 

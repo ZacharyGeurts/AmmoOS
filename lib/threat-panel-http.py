@@ -764,8 +764,6 @@ def _resolve_nexus_source_root() -> Path | None:
     candidates.extend([
         INSTALL_ROOT,
         INSTALL_ROOT.parent,
-        Path("/home/default/Desktop/SG/Latest/NEXUS-Shield"),
-        Path("/home/default/Desktop/SG/NEXUS-Shield"),
     ])
     seen: set[str] = set()
     for base in candidates:
@@ -959,7 +957,7 @@ def _field_stack_env() -> dict[str, str]:
     env.setdefault("SG_ROOT", str(sg))
     env.setdefault("QUEEN_ROOT", str(_queen_root()))
     env.setdefault("FINAL_EYE_ROOT", str(sg / "Final_Eye"))
-    env.setdefault("HOSTESS7_ROOT", str(sg / "Hostess7"))
+    env.setdefault("HOSTESS7_ROOT", str(INSTALL_ROOT / "Hostess7"))
     return env
 
 
@@ -1466,6 +1464,21 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/logic-gate":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "nexus-logic-gate.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/queen/root-threats":
+            qr = _queen_root()
+            script = qr / "lib" / "queen-root-threats.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=20)
+            else:
+                payload = {"ok": False, "error": "queen_root_threats_missing"}
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/field-stack":
             payload = _panel_slice(
                 "field_stack",
@@ -1594,6 +1607,41 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path in ("/api/universal-protector", "/api/universal-protector/status"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "universal-protector.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/universal-protector/meld":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "universal-protector.py", ["meld"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-spatial", "/api/spatial-field"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-spatial-cognition.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/humanoid-motion", "/api/humanoid-motion/status"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "humanoid-motion-training.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/humanoid-motion/catalog":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "humanoid-motion-training.py", ["catalog"], timeout=15)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/humanoid-motion/wireframe":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "humanoid-motion-training.py", ["wireframe"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/humanoid-motion/data-all", "/api/humanoid-motion/data"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "humanoid-motion-training.py", ["data-all"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path == "/api/plate-meld":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-plate-meld.py", ["json"], timeout=20)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -1601,6 +1649,358 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/plate-meld/cycle":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-plate-meld.py", ["meld"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/iron-plate/motion-resolve", "/api/iron-plate/resolve"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "iron-plate-motion-resolve.py", ["resolve"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/iron-plate/goals":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "iron-plate-motion-resolve.py", ["goals"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/iron-plate/assemblage":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "iron-plate-motion-resolve.py", ["assemblage"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/iron-plate/full-meld", "/api/full-assemblage-meld"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "iron-plate-motion-resolve.py", ["full-meld"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/brain-guard", "/api/hostess7-brain-guard"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-brain-guard.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/brain-guard/verify":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-brain-guard.py", ["verify"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/brain-guard/witness", "/api/hostess7-brain-guard/witness"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-brain-guard.py", ["witness"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/self-view", "/api/hostess7-self-view"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-self-view.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/appearance", "/api/hostess7-operator-appearance"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-self-view.py", ["deliver"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/core-of-truth", "/api/hostess7-core-of-truth"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-self-view.py", ["truth"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/operator-lookup", "/api/hostess7-operator-lookup"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-self-view.py", ["lookup"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/programming", "/api/hostess7-programming"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-programming.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/programming/explain":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-programming.py",
+                ["explain", str(q or "better than assistant")],
+                timeout=25,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/g16", "/api/hostess7-g16"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-g16.py", ["json"], timeout=35)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/codecraft", "/api/hostess7-codecraft"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-codecraft.py", ["json"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/codecraft/explain":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-codecraft.py",
+                ["teach", str(q or "codecraft mastery")],
+                timeout=45,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/codecraft/testing-center":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-codecraft.py",
+                ["testing-center", "--fast"],
+                timeout=180,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/training", "/api/hostess7-training"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/training/complete":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training.py", ["complete"], timeout=600)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/calculator", "/api/hostess7-calculator"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-calculator.py", ["json"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/calculator/ocr-ingest":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-calculator.py", ["ocr-ingest"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/calculator/ocr-train":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-calculator.py", ["ocr-train"], timeout=180)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/calculator/ocr-status":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-calculator.py", ["ocr-status"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/calculator/compute":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-calculator.py",
+                ["calc", str(q or "2+2")],
+                timeout=45,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/calculator/explain":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-calculator.py",
+                ["teach", str(q or "perfect calculator")],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/biology", "/api/hostess7-biology"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-biology.py", ["json"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/biology/ocr-ingest":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-biology.py", ["ocr-ingest"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/biology/ocr-train":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-biology.py", ["ocr-train"], timeout=180)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/biology/ocr-status":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-biology.py", ["ocr-status"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/biology/search":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-biology.py",
+                ["search", str(q or "mitochondria")],
+                timeout=45,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/biology/explain":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-biology.py",
+                ["teach", str(q or "biology fluency")],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/engineering", "/api/hostess7-engineering"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-engineering.py", ["json"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/engineering/ocr-ingest":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-engineering.py", ["ocr-ingest"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/engineering/ocr-train":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-engineering.py", ["ocr-train"], timeout=180)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/engineering/ocr-status":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-engineering.py", ["ocr-status"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/engineering/search":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-engineering.py",
+                ["search", str(q or "torque gear ratio")],
+                timeout=45,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/engineering/explain":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-engineering.py",
+                ["teach", str(q or "engineering fluency")],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/combat", "/api/hostess7-combat"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-combat.py", ["json"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/combat/ocr-ingest":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-combat.py", ["ocr-ingest"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/combat/ocr-train":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-combat.py", ["ocr-train"], timeout=180)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/combat/ocr-status":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-combat.py", ["ocr-status"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/combat/search":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-combat.py",
+                ["search", str(q or "mma sprawl")],
+                timeout=45,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/combat/explain":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-combat.py",
+                ["teach", str(q or "combat fluency")],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/mos", "/api/hostess7-mos"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-mos.py", ["json"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/mos/assist":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-mos.py",
+                ["assist", str(q or "assist 11B infantryman")],
+                timeout=45,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/mos/catalog":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-mos.py", ["catalog"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/mos/explain":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-mos.py",
+                ["teach", str(q or "mos fluency")],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/g16/explain":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-g16.py",
+                ["teach", str(q or "g16 compiler fluency")],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/creatable-lives", "/api/creatable-lives/status"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "creatable-lives-assist.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/creatable-lives/assist":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "creatable-lives-assist.py", ["assist"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/creatable-lives/registry":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "creatable-lives-assist.py", ["registry"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/creatable-lives/sustain":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "creatable-lives-assist.py", ["sustain"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/right-to-exist", "/api/right-to-exist/mandate"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "right-to-exist-mandate.py", ["json"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/right-to-exist/evaluate":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "right-to-exist-mandate.py", ["evaluate"], timeout=20)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -2302,7 +2702,7 @@ class Handler(BaseHTTPRequestHandler):
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
-            env.setdefault("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")
+            env.setdefault("HOSTESS7_ROOT", str(__import__("sg_paths", fromlist=["hostess7_root"]).hostess7_root()))
             env.setdefault("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage")
 
             def _lib_json(args: list[str], *, timeout: int = 45) -> dict:
@@ -2761,7 +3161,7 @@ class Handler(BaseHTTPRequestHandler):
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
-            env.setdefault("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")
+            env.setdefault("HOSTESS7_ROOT", str(__import__("sg_paths", fromlist=["hostess7_root"]).hostess7_root()))
             env.setdefault("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage")
 
             if path == "/api/library/upload":
@@ -3184,6 +3584,51 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/humanoid-motion/load":
+            skill_id = str(body.get("skill_id") or body.get("skill") or "").strip()
+            if not skill_id:
+                self._send(400, json.dumps({"ok": False, "error": "missing skill_id"}), "application/json")
+                return
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "humanoid-motion-training.py",
+                ["load", skill_id],
+                timeout=30,
+            )
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/humanoid-motion/train":
+            skill_id = str(body.get("skill_id") or body.get("skill") or "").strip()
+            ticks = int(body.get("ticks") or body.get("duration_ticks") or 0)
+            args = ["train"]
+            if skill_id:
+                args.append(skill_id)
+            if ticks > 0:
+                args.append(str(ticks))
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "humanoid-motion-training.py",
+                args,
+                timeout=90,
+            )
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
+        if path in ("/api/humanoid-motion/train-blast", "/api/humanoid-motion/blast"):
+            skill_id = str(body.get("skill_id") or body.get("skill") or "").strip()
+            ticks = int(body.get("ticks") or body.get("blast_ticks") or 0)
+            args = ["blast"]
+            if skill_id:
+                args.append(skill_id)
+            if ticks > 0:
+                args.append(str(ticks))
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "humanoid-motion-training.py",
+                args,
+                timeout=30,
+            )
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+            return
+
         if path == "/api/audio-train/ingest":
             sample = body.get("sample") or body
             sid = str(body.get("source_id") or sample.get("source_id") or "manual").strip()
@@ -3359,7 +3804,7 @@ class Handler(BaseHTTPRequestHandler):
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
             env.setdefault("QUEEN_ROOT", str(INSTALL_ROOT if (INSTALL_ROOT / ".queen-inside").is_file() else INSTALL_ROOT.parent / "Queen"))
-            env.setdefault("HOSTESS7_ROOT", str(Path(env["QUEEN_ROOT"]).parent.parent / "Hostess7"))
+            env.setdefault("HOSTESS7_ROOT", str(INSTALL_ROOT / "Hostess7"))
             for k in ("NEXUS_AI_SECURE_CHANNEL", "QUEEN_AI_TELEMETRY_OK", "QUEEN_GROK_BUILD", "QUEEN_GROK_BUILD_SECURE", "QUEEN_FIELD_GPU"):
                 env.setdefault(k, "1")
             act = str(body.get("action") or "").lower()
@@ -3437,6 +3882,43 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200 if payload.get("ok", True) else 400, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/logic-gate/ingress":
+            gate_body = body if isinstance(body, dict) else {}
+            payload = str(
+                gate_body.get("payload") or gate_body.get("message") or gate_body.get("text") or ""
+            )
+            proc = subprocess.run(
+                [sys.executable, str(INSTALL_ROOT / "lib" / "nexus-logic-gate.py"), "ingress"],
+                input=json.dumps(gate_body),
+                capture_output=True,
+                text=True,
+                timeout=20,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT), "NEXUS_STATE_DIR": str(STATE_DIR)},
+            )
+            try:
+                gate_out = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                gate_out = {"ok": False, "error": "logic_gate_failed"}
+            self._send(200 if gate_out.get("permit") else 403, json.dumps(gate_out), "application/json")
+            return
+
+        if path == "/api/logic-gate/egress":
+            gate_body = body if isinstance(body, dict) else {}
+            proc = subprocess.run(
+                [sys.executable, str(INSTALL_ROOT / "lib" / "nexus-logic-gate.py"), "egress"],
+                input=json.dumps(gate_body),
+                capture_output=True,
+                text=True,
+                timeout=20,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT), "NEXUS_STATE_DIR": str(STATE_DIR)},
+            )
+            try:
+                gate_out = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                gate_out = {"ok": False, "error": "logic_gate_failed"}
+            self._send(200 if gate_out.get("permit") else 403, json.dumps(gate_out), "application/json")
+            return
+
         if path == "/api/hostess7-command":
             script = INSTALL_ROOT / "lib" / "hostess7-command.py"
             if not script.is_file():
@@ -3445,7 +3927,27 @@ class Handler(BaseHTTPRequestHandler):
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
-            env.setdefault("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")
+            env.setdefault("HOSTESS7_ROOT", str(__import__("sg_paths", fromlist=["hostess7_root"]).hostess7_root()))
+            if os.environ.get("NEXUS_LOGIC_GATE", "1") == "1":
+                msg = str(body.get("message") or body.get("query") or "")
+                if msg.strip() and str(body.get("action") or "ask").lower() in ("ask", "message", "chat"):
+                    gate = _nexus_py_json(
+                        INSTALL_ROOT / "lib" / "nexus-logic-gate.py",
+                        ["ingress", msg],
+                        timeout=15,
+                    )
+                    if not gate.get("permit"):
+                        self._send(
+                            403,
+                            json.dumps({
+                                "ok": False,
+                                "logic_gate": gate,
+                                "reply": "Equipment logic gate held inbound message.",
+                                "threat_warn_level": "high",
+                            }),
+                            "application/json",
+                        )
+                        return
             timeout = 180 if str(body.get("action") or "").lower() in ("teach-art", "teach_art") else 120
             try:
                 proc = subprocess.run(

@@ -1,7 +1,7 @@
 {
   "version": 2,
   "updated": "2026-06-24T06:56:02.709354+00:00",
-  "textbooks_dir": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks",
+  "textbooks_dir": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks",
   "catalog_count": 94,
   "h7_packed": 80,
   "h7_on_disk": 84,
@@ -16,7 +16,7 @@
     {
       "id": "openstax_elementary_algebra",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_elementary_algebra.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_elementary_algebra.h7",
       "source": "k12_cache",
       "file_bytes": 9420,
       "raw_bytes": 50024,
@@ -29,7 +29,7 @@
     {
       "id": "openstax_prealgebra",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_prealgebra.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_prealgebra.h7",
       "source": "k12_cache",
       "file_bytes": 9459,
       "raw_bytes": 50024,
@@ -42,7 +42,7 @@
     {
       "id": "openstax_algebra",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_algebra.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_algebra.h7",
       "source": "k12_cache",
       "file_bytes": 9518,
       "raw_bytes": 50036,
@@ -55,7 +55,7 @@
     {
       "id": "openstax_precalculus",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_precalculus.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_precalculus.h7",
       "source": "k12_cache",
       "file_bytes": 9451,
       "raw_bytes": 50024,
@@ -68,7 +68,7 @@
     {
       "id": "openstax_calculus_vol1",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_calculus_vol1.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/510/openstax_calculus_vol1.h7",
       "source": "k12_cache",
       "file_bytes": 9468,
       "raw_bytes": 50027,
@@ -81,7 +81,7 @@
     {
       "id": "wikibooks_hs_math",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/510/wikibooks_hs_math.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/510/wikibooks_hs_math.h7",
       "source": "k12_cache",
       "file_bytes": 7828,
       "raw_bytes": 32614,
@@ -94,7 +94,7 @@
     {
       "id": "wikibooks_basic_algebra",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/510/wikibooks_basic_algebra.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/510/wikibooks_basic_algebra.h7",
       "source": "k12_cache",
       "file_bytes": 8036,
       "raw_bytes": 35336,
@@ -107,7 +107,7 @@
     {
       "id": "openstax_biology",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/500/openstax_biology.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/500/openstax_biology.h7",
       "source": "k12_cache",
       "file_bytes": 9411,
       "raw_bytes": 50024,
@@ -120,7 +120,7 @@
     {
       "id": "openstax_biology_ap",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/500/openstax_biology_ap.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/500/openstax_biology_ap.h7",
       "source": "k12_cache",
       "file_bytes": 9468,
       "raw_bytes": 50027,
@@ -133,7 +133,7 @@
     {
       "id": "openstax_physics",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/500/openstax_physics.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/500/openstax_physics.h7",
       "source": "k12_cache",
       "file_bytes": 9558,
       "raw_bytes": 50032,
@@ -146,7 +146,7 @@
     {
       "id": "openstax_microbiology",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/500/openstax_microbiology.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/500/openstax_microbiology.h7",
       "source": "k12_cache",
       "file_bytes": 9464,
       "raw_bytes": 50024,
@@ -159,7 +159,7 @@
     {
       "id": "wikibooks_hs_physics",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/500/wikibooks_hs_physics.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/500/wikibooks_hs_physics.h7",
       "source": "k12_cache",
       "file_bytes": 4342,
       "raw_bytes": 10199,
@@ -172,7 +172,7 @@
     {
       "id": "wikibooks_hs_chemistry",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/500/wikibooks_hs_chemistry.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/500/wikibooks_hs_chemistry.h7",
       "source": "k12_cache",
       "file_bytes": 4582,
       "raw_bytes": 11910,
@@ -185,7 +185,7 @@
     {
       "id": "gutenberg_geology_school",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/500/gutenberg_geology_school.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/500/gutenberg_geology_school.h7",
       "source": "k12_cache",
       "file_bytes": 12340,
       "raw_bytes": 25346,
@@ -198,7 +198,7 @@
     {
       "id": "wikibooks_rhetoric",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/000/wikibooks_rhetoric.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/000/wikibooks_rhetoric.h7",
       "source": "k12_cache",
       "file_bytes": 8889,
       "raw_bytes": 45771,
@@ -211,7 +211,7 @@
     {
       "id": "wikibooks_poetry",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/000/wikibooks_poetry.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/000/wikibooks_poetry.h7",
       "source": "k12_cache",
       "file_bytes": 7986,
       "raw_bytes": 23534,
@@ -224,7 +224,7 @@
     {
       "id": "openstax_writing_guide",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/000/openstax_writing_guide.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/000/openstax_writing_guide.h7",
       "source": "k12_cache",
       "file_bytes": 9500,
       "raw_bytes": 50024,
@@ -237,7 +237,7 @@
     {
       "id": "gutenberg_grammar_land",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_grammar_land.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_grammar_land.h7",
       "source": "k12_cache",
       "file_bytes": 24103,
       "raw_bytes": 48694,
@@ -250,7 +250,7 @@
     {
       "id": "gutenberg_mcgruffey_1",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/000/gutenberg_mcgruffey_1.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/000/gutenberg_mcgruffey_1.h7",
       "source": "k12_cache",
       "file_bytes": 25210,
       "raw_bytes": 48730,
@@ -263,7 +263,7 @@
     {
       "id": "gutenberg_mcgruffey_2",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/000/gutenberg_mcgruffey_2.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/000/gutenberg_mcgruffey_2.h7",
       "source": "k12_cache",
       "file_bytes": 25446,
       "raw_bytes": 48884,
@@ -276,7 +276,7 @@
     {
       "id": "openstax_world_history_1",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/900/openstax_world_history_1.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/900/openstax_world_history_1.h7",
       "source": "k12_cache",
       "file_bytes": 9506,
       "raw_bytes": 50028,
@@ -289,7 +289,7 @@
     {
       "id": "openstax_world_history_2",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/900/openstax_world_history_2.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/900/openstax_world_history_2.h7",
       "source": "k12_cache",
       "file_bytes": 9505,
       "raw_bytes": 50028,
@@ -308,7 +308,7 @@
     {
       "id": "wikibooks_us_history",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/900/wikibooks_us_history.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/900/wikibooks_us_history.h7",
       "source": "k12_cache",
       "file_bytes": 9530,
       "raw_bytes": 50086,
@@ -321,7 +321,7 @@
     {
       "id": "wikibooks_world_history",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/900/wikibooks_world_history.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/900/wikibooks_world_history.h7",
       "source": "k12_cache",
       "file_bytes": 6251,
       "raw_bytes": 16481,
@@ -334,7 +334,7 @@
     {
       "id": "gutenberg_civics_manual",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/320/gutenberg_civics_manual.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/320/gutenberg_civics_manual.h7",
       "source": "k12_cache",
       "file_bytes": 12987,
       "raw_bytes": 26273,
@@ -353,7 +353,7 @@
     {
       "id": "gutenberg_physical_geo",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/000/gutenberg_physical_geo.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/000/gutenberg_physical_geo.h7",
       "source": "k12_cache",
       "file_bytes": 26131,
       "raw_bytes": 48995,
@@ -372,7 +372,7 @@
     {
       "id": "wikibooks_sex_ed",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/613/wikibooks_sex_ed.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/613/wikibooks_sex_ed.h7",
       "source": "k12_cache",
       "file_bytes": 5031,
       "raw_bytes": 12010,
@@ -385,7 +385,7 @@
     {
       "id": "openstax_cs",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/004/openstax_cs.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/004/openstax_cs.h7",
       "source": "k12_cache",
       "file_bytes": 9511,
       "raw_bytes": 50028,
@@ -398,7 +398,7 @@
     {
       "id": "wikibooks_python",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/004/wikibooks_python.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/004/wikibooks_python.h7",
       "source": "k12_cache",
       "file_bytes": 6802,
       "raw_bytes": 50000,
@@ -411,7 +411,7 @@
     {
       "id": "wikibooks_cs",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/004/wikibooks_cs.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/004/wikibooks_cs.h7",
       "source": "k12_cache",
       "file_bytes": 5008,
       "raw_bytes": 16107,
@@ -424,7 +424,7 @@
     {
       "id": "wikibooks_art_history",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/900/wikibooks_art_history.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/900/wikibooks_art_history.h7",
       "source": "k12_cache",
       "file_bytes": 4309,
       "raw_bytes": 13213,
@@ -437,7 +437,7 @@
     {
       "id": "wikibooks_music",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/780/wikibooks_music.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/780/wikibooks_music.h7",
       "source": "k12_cache",
       "file_bytes": 5499,
       "raw_bytes": 46494,
@@ -450,7 +450,7 @@
     {
       "id": "wikibooks_spanish",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/000/wikibooks_spanish.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/000/wikibooks_spanish.h7",
       "source": "internet_cache",
       "file_bytes": 4771,
       "raw_bytes": 14363,
@@ -463,7 +463,7 @@
     {
       "id": "wikibooks_french",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/000/wikibooks_french.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/000/wikibooks_french.h7",
       "source": "k12_cache",
       "file_bytes": 6158,
       "raw_bytes": 22382,
@@ -482,7 +482,7 @@
     {
       "id": "wikibooks_elem_math",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/510/wikibooks_elem_math.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/510/wikibooks_elem_math.h7",
       "source": "internet_cache",
       "file_bytes": 3063,
       "raw_bytes": 7098,
@@ -495,7 +495,7 @@
     {
       "id": "gutenberg_arithmetic",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/510/gutenberg_arithmetic.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/510/gutenberg_arithmetic.h7",
       "source": "k12_cache",
       "file_bytes": 26543,
       "raw_bytes": 50423,
@@ -532,7 +532,7 @@
     {
       "id": "gutenberg_alice",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_alice.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_alice.h7",
       "source": "internet_cache",
       "file_bytes": 79487,
       "raw_bytes": 170549,
@@ -545,7 +545,7 @@
     {
       "id": "gutenberg_pride_prejudice",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_pride_prejudice.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_pride_prejudice.h7",
       "source": "internet_cache",
       "file_bytes": 356242,
       "raw_bytes": 757471,
@@ -558,7 +558,7 @@
     {
       "id": "gutenberg_frankenstein",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_frankenstein.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_frankenstein.h7",
       "source": "internet_cache",
       "file_bytes": 213374,
       "raw_bytes": 441144,
@@ -571,7 +571,7 @@
     {
       "id": "gutenberg_sherlock_study",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_sherlock_study.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_sherlock_study.h7",
       "source": "internet_cache",
       "file_bytes": 130099,
       "raw_bytes": 263653,
@@ -584,7 +584,7 @@
     {
       "id": "gutenberg_tom_sawyer",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_tom_sawyer.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_tom_sawyer.h7",
       "source": "internet_cache",
       "file_bytes": 209778,
       "raw_bytes": 425085,
@@ -597,7 +597,7 @@
     {
       "id": "gutenberg_art_of_war",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/030/gutenberg_art_of_war.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/030/gutenberg_art_of_war.h7",
       "source": "internet_cache",
       "file_bytes": 165422,
       "raw_bytes": 334964,
@@ -610,7 +610,7 @@
     {
       "id": "gutenberg_declaration",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/320/gutenberg_declaration.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/320/gutenberg_declaration.h7",
       "source": "internet_cache",
       "file_bytes": 14706,
       "raw_bytes": 30229,
@@ -623,7 +623,7 @@
     {
       "id": "gutenberg_wizard_oz",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_wizard_oz.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/813/gutenberg_wizard_oz.h7",
       "source": "internet_cache",
       "file_bytes": 106009,
       "raw_bytes": 232099,
@@ -636,7 +636,7 @@
     {
       "id": "gutenberg_child_garden",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_child_garden.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_child_garden.h7",
       "source": "internet_cache",
       "file_bytes": 217313,
       "raw_bytes": 465464,
@@ -649,7 +649,7 @@
     {
       "id": "gutenberg_peter_pan",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_peter_pan.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_peter_pan.h7",
       "source": "internet_cache",
       "file_bytes": 137311,
       "raw_bytes": 282123,
@@ -662,7 +662,7 @@
     {
       "id": "gutenberg_pinocchio",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_pinocchio.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_pinocchio.h7",
       "source": "internet_cache",
       "file_bytes": 114557,
       "raw_bytes": 239456,
@@ -675,7 +675,7 @@
     {
       "id": "gutenberg_wind_willows",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_wind_willows.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_wind_willows.h7",
       "source": "internet_cache",
       "file_bytes": 173564,
       "raw_bytes": 351823,
@@ -688,7 +688,7 @@
     {
       "id": "gutenberg_treasure_island",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_treasure_island.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_treasure_island.h7",
       "source": "internet_cache",
       "file_bytes": 191466,
       "raw_bytes": 392002,
@@ -701,7 +701,7 @@
     {
       "id": "gutenberg_little_women",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_little_women.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_little_women.h7",
       "source": "internet_cache",
       "file_bytes": 541731,
       "raw_bytes": 1090584,
@@ -714,7 +714,7 @@
     {
       "id": "gutenberg_bible_kjv",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_bible_kjv.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_bible_kjv.h7",
       "source": "internet_cache",
       "file_bytes": 844785,
       "raw_bytes": 2051713,
@@ -727,7 +727,7 @@
     {
       "id": "gutenberg_bible_kjv_complete",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_bible_kjv_complete.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_bible_kjv_complete.h7",
       "source": "internet_cache",
       "file_bytes": 822419,
       "raw_bytes": 2048874,
@@ -740,7 +740,7 @@
     {
       "id": "gutenberg_bible_web",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_bible_web.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_bible_web.h7",
       "source": "internet_cache",
       "file_bytes": 785384,
       "raw_bytes": 2062797,
@@ -753,7 +753,7 @@
     {
       "id": "gutenberg_bible_apocrypha",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_bible_apocrypha.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_bible_apocrypha.h7",
       "source": "internet_cache",
       "file_bytes": 372303,
       "raw_bytes": 814786,
@@ -772,7 +772,7 @@
     {
       "id": "gutenberg_douay_rheims",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_douay_rheims.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_douay_rheims.h7",
       "source": "internet_cache",
       "file_bytes": 879479,
       "raw_bytes": 2047384,
@@ -785,7 +785,7 @@
     {
       "id": "gutenberg_paradise_lost",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/230/gutenberg_paradise_lost.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/230/gutenberg_paradise_lost.h7",
       "source": "internet_cache",
       "file_bytes": 250047,
       "raw_bytes": 480254,
@@ -810,7 +810,7 @@
     {
       "id": "gutenberg_book_mormon",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_book_mormon.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_book_mormon.h7",
       "source": "internet_cache",
       "file_bytes": 603648,
       "raw_bytes": 1487346,
@@ -829,7 +829,7 @@
     {
       "id": "gutenberg_sound_music",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/534/gutenberg_sound_music.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/534/gutenberg_sound_music.h7",
       "source": "internet_cache",
       "file_bytes": 56588,
       "raw_bytes": 121086,
@@ -842,7 +842,7 @@
     {
       "id": "gutenberg_quran_rodwell",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_quran_rodwell.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/220/gutenberg_quran_rodwell.h7",
       "source": "internet_cache",
       "file_bytes": 542968,
       "raw_bytes": 1118282,
@@ -855,7 +855,7 @@
     {
       "id": "wikibooks_acoustics",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/534/wikibooks_acoustics.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/534/wikibooks_acoustics.h7",
       "source": "internet_cache",
       "file_bytes": 5671,
       "raw_bytes": 16446,
@@ -868,7 +868,7 @@
     {
       "id": "gutenberg_lovelace_notes",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/005/gutenberg_lovelace_notes.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/005/gutenberg_lovelace_notes.h7",
       "source": "internet_cache",
       "file_bytes": 21749,
       "raw_bytes": 44028,
@@ -881,7 +881,7 @@
     {
       "id": "gutenberg_symbolic_logic",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/005/gutenberg_symbolic_logic.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/005/gutenberg_symbolic_logic.h7",
       "source": "internet_cache",
       "file_bytes": 101445,
       "raw_bytes": 206615,
@@ -894,7 +894,7 @@
     {
       "id": "gutenberg_flatland",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/005/gutenberg_flatland.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/005/gutenberg_flatland.h7",
       "source": "internet_cache",
       "file_bytes": 107324,
       "raw_bytes": 223228,
@@ -907,7 +907,7 @@
     {
       "id": "gutenberg_story_of_siegfried",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_story_of_siegfried.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/028/gutenberg_story_of_siegfried.h7",
       "source": "internet_cache",
       "file_bytes": 337606,
       "raw_bytes": 756218,
@@ -920,7 +920,7 @@
     {
       "id": "gutenberg_einstein_relativity",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_einstein_relativity.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_einstein_relativity.h7",
       "source": "internet_cache",
       "file_bytes": 77634,
       "raw_bytes": 161200,
@@ -933,7 +933,7 @@
     {
       "id": "gutenberg_huygens_light",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_huygens_light.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_huygens_light.h7",
       "source": "internet_cache",
       "file_bytes": 98584,
       "raw_bytes": 228064,
@@ -946,7 +946,7 @@
     {
       "id": "gutenberg_faraday_candle",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_faraday_candle.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_faraday_candle.h7",
       "source": "internet_cache",
       "file_bytes": 38288,
       "raw_bytes": 79398,
@@ -959,7 +959,7 @@
     {
       "id": "gutenberg_babbage_economy",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/005/gutenberg_babbage_economy.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/005/gutenberg_babbage_economy.h7",
       "source": "internet_cache",
       "file_bytes": 361659,
       "raw_bytes": 736790,
@@ -972,7 +972,7 @@
     {
       "id": "gutenberg_divine_comedy",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/230/gutenberg_divine_comedy.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/230/gutenberg_divine_comedy.h7",
       "source": "internet_cache",
       "file_bytes": 1035608,
       "raw_bytes": 2025462,
@@ -997,7 +997,7 @@
     {
       "id": "gutenberg_maxwell_matter",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_maxwell_matter.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_maxwell_matter.h7",
       "source": "internet_cache",
       "file_bytes": 389379,
       "raw_bytes": 780542,
@@ -1010,7 +1010,7 @@
     {
       "id": "gutenberg_elementary_chemistry",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/540/gutenberg_elementary_chemistry.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/540/gutenberg_elementary_chemistry.h7",
       "source": "internet_cache",
       "file_bytes": 110338,
       "raw_bytes": 224448,
@@ -1023,7 +1023,7 @@
     {
       "id": "gutenberg_chemical_lectures",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/540/gutenberg_chemical_lectures.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/540/gutenberg_chemical_lectures.h7",
       "source": "internet_cache",
       "file_bytes": 84274,
       "raw_bytes": 173802,
@@ -1036,7 +1036,7 @@
     {
       "id": "gutenberg_first_aid_manual",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_first_aid_manual.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_first_aid_manual.h7",
       "source": "internet_cache",
       "file_bytes": 136547,
       "raw_bytes": 276227,
@@ -1049,7 +1049,7 @@
     {
       "id": "gutenberg_alchemy_chemistry",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/540/gutenberg_alchemy_chemistry.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/540/gutenberg_alchemy_chemistry.h7",
       "source": "internet_cache",
       "file_bytes": 133638,
       "raw_bytes": 282169,
@@ -1062,7 +1062,7 @@
     {
       "id": "gutenberg_lavoisier_elements",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/540/gutenberg_lavoisier_elements.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/540/gutenberg_lavoisier_elements.h7",
       "source": "internet_cache",
       "file_bytes": 305931,
       "raw_bytes": 612374,
@@ -1075,7 +1075,7 @@
     {
       "id": "gutenberg_nightingale_nursing",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_nightingale_nursing.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_nightingale_nursing.h7",
       "source": "internet_cache",
       "file_bytes": 194884,
       "raw_bytes": 397832,
@@ -1088,7 +1088,7 @@
     {
       "id": "gutenberg_hygiene_brain",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_hygiene_brain.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_hygiene_brain.h7",
       "source": "internet_cache",
       "file_bytes": 37447,
       "raw_bytes": 72212,
@@ -1101,7 +1101,7 @@
     {
       "id": "gutenberg_forensic_medicine",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_forensic_medicine.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_forensic_medicine.h7",
       "source": "internet_cache",
       "file_bytes": 138459,
       "raw_bytes": 276948,
@@ -1114,7 +1114,7 @@
     {
       "id": "gutenberg_physics_beginners",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_physics_beginners.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/530/gutenberg_physics_beginners.h7",
       "source": "internet_cache",
       "file_bytes": 651683,
       "raw_bytes": 1489863,
@@ -1127,7 +1127,7 @@
     {
       "id": "gutenberg_home_treatment",
       "ok": true,
-      "path": "/home/default/Desktop/SG/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_home_treatment.h7",
+      "path": "/home/default/Desktop/SG/NewLatest/Hostess7/cache/fieldstorage/textbooks/dewey/610/gutenberg_home_treatment.h7",
       "source": "internet_cache",
       "file_bytes": 573401,
       "raw_bytes": 1129824,

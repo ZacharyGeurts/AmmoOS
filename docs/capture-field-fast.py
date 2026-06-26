@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Benchmark /field first paint and OCR-verify header + connections."""
 import json
 import os

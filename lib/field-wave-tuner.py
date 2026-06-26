@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field wave tuner — OTA MHz lock via field-wave-engine + 3-field pinpoint. No URLs."""
 from __future__ import annotations
 
@@ -257,7 +257,7 @@ def tune(
         "field_play": field_play,
         "we_are_the_antenna": True,
         "next_steps": [] if heard else [
-            "python3 lib/field-antenna-prototype.py play_radio",
+            "pythong lib/field-antenna-prototype.py play_radio",
             "./scripts/play-wimk-ota.sh",
             "Signals tab → Play WIMK 93.1 OTA",
         ],

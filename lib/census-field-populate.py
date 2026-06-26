@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Census & public government field population — operator home, geographies, open records.
 
 Geocodes operator address (Census geocoder + Nominatim), binds home_operator GPS table,

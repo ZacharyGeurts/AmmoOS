@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """DNS/DHCP graceful takeover — observe incumbents, never interrupt on arrival."""
 from __future__ import annotations
 

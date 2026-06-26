@@ -2,7 +2,8 @@
 # NEXUS-Shield shared runtime — invisible to consumers, root-only state.
 # shellcheck disable=SC2034
 
-NEXUS_VERSION="10.0.1"
+NEXUS_VERSION="10.3.0"
+NEXUS_EDITION="Universal Protector"
 HOSTESS_VERSION="7"
 
 nexus_read_version() {
@@ -10,7 +11,8 @@ nexus_read_version() {
 }
 _NEXUS_COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _NEXUS_TREE_ROOT="$(cd "${_NEXUS_COMMON_DIR}/.." && pwd)"
-SG_ROOT="${SG_ROOT:-$(cd "${_NEXUS_TREE_ROOT}/.." && pwd)}"
+NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${_NEXUS_TREE_ROOT}}"
+SG_ROOT="${SG_ROOT:-${_NEXUS_TREE_ROOT}}"
 if [[ -f "${_NEXUS_COMMON_DIR}/sg-paths.sh" ]]; then
   # shellcheck source=/dev/null
   source "${_NEXUS_COMMON_DIR}/sg-paths.sh"
@@ -27,7 +29,9 @@ if [[ -z "${KILROY_ROOT:-}" && -f "${_NEXUS_COMMON_DIR}/kilroy-resolve.sh" ]]; t
   export KILROY_ROOT
 fi
 KILROY_ROOT="${KILROY_ROOT:-${SG_ROOT}/KILROY}"
-NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
+if [[ "${NEXUS_INSTALL_ROOT}" == /usr/local/lib/nexus-shield && -d "${_NEXUS_TREE_ROOT}/lib" ]]; then
+  NEXUS_INSTALL_ROOT="${_NEXUS_TREE_ROOT}"
+fi
 NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 NEXUS_SHADOW_DIR="${NEXUS_SHADOW_DIR:-${NEXUS_STATE_DIR}/shadow}"
 NEXUS_BEHAVIOR_DIR="${NEXUS_BEHAVIOR_DIR:-${NEXUS_STATE_DIR}/behavior}"
@@ -62,9 +66,12 @@ nexus_resolve_pythong() {
     "${NEXUS_PYTHONG:-}" \
     "${PYTHONG:-}" \
     "${PYTHONG_ROOT:-}/bin/pythong" \
+    "${NEXUS_INSTALL_ROOT}/PythonG/bin/pythong" \
     "${SG_ROOT}/PythonG/bin/pythong" \
     "${GPY16_ROOT:-}/bin/gpy-16" \
+    "${NEXUS_INSTALL_ROOT}/GrokPy/bin/gpy-16" \
     "${SG_ROOT}/GrokPy/bin/gpy-16" \
+    "${NEXUS_INSTALL_ROOT}/GrokPy/bin/grokpy" \
     "${SG_ROOT}/GrokPy/bin/grokpy" \
     "${QUEEN_ROOT}/scripts/pythong" \
     "${NEXUS_INSTALL_ROOT}/scripts/nexus-py" \

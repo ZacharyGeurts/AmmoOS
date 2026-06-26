@@ -48,10 +48,10 @@ We hold the full internet **passively in fields** — not by downloading every h
 ```bash
 # One-shot build (seed + cache, no live probes)
 NEXUS_INSTALL_ROOT=/path/to/NEXUS-Shield NEXUS_STATE_DIR=/var/lib/nexus-shield \
-  python3 lib/dns-internet-field.py build
+  pythong lib/dns-internet-field.py build
 
 # Full pull with live trace probes (48 TLD apex samples per cycle)
-python3 lib/dns-internet-field.py pull
+pythong lib/dns-internet-field.py pull
 ```
 
 Output: `/var/lib/nexus-shield/dns-internet-field.json`

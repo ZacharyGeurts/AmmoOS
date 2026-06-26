@@ -12,9 +12,9 @@ nexus_host_map_trash_init() {
 nexus_host_map_trash_add() {
   local id="$1"
   [[ -n "$id" ]] || return 1
-  command -v python3 >/dev/null 2>&1 || return 1
+  command -v pythong >/dev/null 2>&1 || return 1
   nexus_host_map_trash_init
-  NEXUS_HOST_MAP_TRASH="$NEXUS_HOST_MAP_TRASH" python3 - <<'PY' "$id"
+  NEXUS_HOST_MAP_TRASH="$NEXUS_HOST_MAP_TRASH" pythong - <<'PY' "$id"
 import json, os, sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,7 +38,7 @@ PY
 nexus_host_map_trash_json() {
   nexus_host_map_trash_init
   if [[ -s "$NEXUS_HOST_MAP_TRASH" ]]; then
-    python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$NEXUS_HOST_MAP_TRASH" 2>/dev/null
+    pythong -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$NEXUS_HOST_MAP_TRASH" 2>/dev/null
     return 0
   fi
   printf '{"ids":[],"updated":""}'

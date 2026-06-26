@@ -1,0 +1,95 @@
+In textbook usage, Big Grin HUD appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Big Grin HUD in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+browser-awareness
+
+browser-awareness — NEXUS module reporting active tab honorability — feeds Queen panel slice.
+
+In textbook usage, browser-awareness appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet browser-awareness in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+C
+
+CANVAS.comp
+
+CANVAS.comp — Classic canvas compute shader — thermo and RT demos on PushConstants path.
+
+In textbook usage, CANVAS.comp appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet CANVAS.comp in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Captain Ellie
+
+Captain Ellie — Persona encoding ELLIE.hpp covenant — TotalTime seal, verify, THERMO logging categories.
+
+In textbook usage, Captain Ellie appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Captain Ellie in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+CC BY-NC-SA
+
+CC BY-NC-SA — Field Primer license — teach freely, name rocks, noncommercial share-alike.
+
+In textbook usage, CC BY-NC-SA appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet CC BY-NC-SA in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+CFL
+
+CFL — Courant–Friedrichs–Lewy stability condition — host refuses fabric steps that would outrun the mesh.
+
+In textbook usage, CFL appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet CFL in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Connection Gatekeeper
+
+Connection Gatekeeper — NEXUS 10-axis intent scorer — every connection earns verdict before sustained egress.
+
+In textbook usage, Connection Gatekeeper appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Connection Gatekeeper in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+COOP/COEP
+
+COOP/COEP — Cross-origin isolation headers — SharedArrayBuffer gate held with policy.
+
+In textbook usage, COOP/COEP appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet COOP/COEP in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+D
+
+data_bus
+
+data_bus — Sixty-four word telemetry spine per dispatch — FCC floats, thermo mirrors, input, Tesla bias.
+
+In textbook usage, data_bus appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet data_bus in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+dig +trace
+
+dig +trace — DNS trace from root — Truth Resolver discipline, no shortcut.
+
+In textbook usage, dig +trace appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet dig +trace in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+DNS threat guard
+
+DNS threat guard — Rate limits and permanent blocks for abusive DNS query patterns — retired dig fork bomb class.
+
+In textbook usage, DNS threat guard appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet DNS threat guard in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+dns-egress-integrity
+
+dns-egress-integrity — Hashes DNS answers so tamper in flight is visible to operator.
+
+In textbook usage, dns-egress-integrity appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet dns-egress-integrity in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+dns-service-takeover
+
+dns-service-takeover — Waits for healthy loopback DNS before steering resolv.conf to Truth Resolver.
+
+In textbook usage, dns-service-takeover appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet dns-service-takeover in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+E
+
+ELLIE
+
+ELLIE — Logging and covenant framework in engine — MAIN, VULKAN, CANVAS, THERMO, STATUS, RTXPROBE categories.
+
+In textbook usage, ELLIE appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet ELLIE in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+ellie-last-host
+
+ellie-last-host — Python module for sole-survivor DNS/DHCP/TIME posture when NEXUS_LAST_HOST=1.
+
+In textbook usage, ellie-last-host appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet ellie-last-host in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+EME
+
+EME — Encrypted Media Extensions — Widevine held in Queen, not omitted.

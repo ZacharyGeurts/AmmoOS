@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Field DNS — smart truthful self-hosted resolver (IPv4 + IPv6).
 
 Only loopback listeners. Foreign resolvers (Charter, Google, Cloudflare, etc.)
@@ -77,6 +77,18 @@ _stats = {
 
 
 def _now() -> str:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "sovereign_sync_dns", INSTALL / "lib" / "field-sovereign-sync.py",
+        )
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.utc("dns")
+    except (ImportError, OSError, AttributeError):
+        pass
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -427,7 +439,24 @@ def _threats_summary() -> list[dict[str, Any]]:
     return list(by_type.values())
 
 
+def _sovereign_gate() -> dict[str, Any]:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "sovereign_gate_dns", INSTALL / "lib" / "field-sovereign-gate.py",
+        )
+        if not spec or not spec.loader:
+            return {}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.gate(service="dns", action="query")
+    except Exception:
+        return {}
+
+
 def _handle_query(data: bytes, blocked: set[str], client: str = "") -> bytes | None:
+    gate = _sovereign_gate()
     parsed = _parse_query(data)
     if not parsed:
         return None
@@ -437,7 +466,8 @@ def _handle_query(data: bytes, blocked: set[str], client: str = "") -> bytes | N
     answers, reason = _resolve(qname, qtype, blocked)
     latency_ms = round((time.time() - t0) * 1000, 1)
     _append_query_log({
-        "ts": _now(),
+        "ts": gate.get("derived_utc") or _now(),
+        "cycle": gate.get("cycle"),
         "qname": qname,
         "qtype": QTYPE_MAP.get(qtype, str(qtype)),
         "answers": answers[:8],
@@ -724,7 +754,7 @@ def _engineer_briefing(
             "code": "internet_silent",
             "title": "Internet field all silent",
             "detail": "WHOLE slots loaded — run pull cycle or resolve domains to light LOCAL NOW.",
-            "action": "python3 lib/dns-internet-field.py pull",
+            "action": "pythong lib/dns-internet-field.py pull",
         })
 
     enforced = sum(1 for r in (planetary.get("rfc_matrix") or []) if r.get("compliance") == "enforced")
@@ -1056,6 +1086,8 @@ def build_panel() -> dict[str, Any]:
         "running": bool(srv.get("running")),
         "self_hosted": True,
         "truthful": True,
+        "security_model": "field-sovereign-gate",
+        "never_lose_cycle": True,
         "priority": 1,
         "listeners": srv.get("listeners") or [f"{IPV4}#{PORT}", f"[{IPV6}]#{PORT}"],
         "ipv4": srv.get("ipv4") or {"host": IPV4, "port": PORT},

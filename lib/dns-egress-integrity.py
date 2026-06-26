@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """DNS egress integrity — verify allowed traffic arrives exactly as sent."""
 from __future__ import annotations
 

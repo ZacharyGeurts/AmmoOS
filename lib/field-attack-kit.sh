@@ -12,7 +12,7 @@ NEXUS_TARGET_DOSSIER_FILE="${NEXUS_TARGET_DOSSIER_FILE:-nexus-target-dossiers.js
 HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-/media/default/HOSTESS7_TEAM/fieldstorage}"
 
 nexus_field_attack_memory_paths() {
-  local root="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
+  local root="${HOSTESS7_ROOT:-${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/Hostess7}"
   printf '%s\n' \
     "${root}/cache/fieldstorage/brain/security/${NEXUS_HOSTILE_MEMORY_FILE}" \
     "${HOSTESS7_TEAM_FIELD}/brain/security/${NEXUS_HOSTILE_MEMORY_FILE}" \
@@ -20,7 +20,7 @@ nexus_field_attack_memory_paths() {
 }
 
 nexus_field_attack_dossier_paths() {
-  local root="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}"
+  local root="${HOSTESS7_ROOT:-${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/Hostess7}"
   printf '%s\n' \
     "${root}/cache/fieldstorage/brain/security/${NEXUS_TARGET_DOSSIER_FILE}" \
     "${HOSTESS7_TEAM_FIELD}/brain/security/${NEXUS_TARGET_DOSSIER_FILE}" \
@@ -64,7 +64,7 @@ nexus_field_attack_record_field() {
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
   entry="$(
     TS="$ts" IP="$ip" VECTOR="${vector:-HOSTILE}" SEV="${severity:-high}" \
-      REASON="${reason:-field_attack}" SRC="$source" META="${meta:-}" python3 -c '
+      REASON="${reason:-field_attack}" SRC="$source" META="${meta:-}" pythong -c '
 import json, os
 meta = {}
 raw = os.environ.get("META", "")
@@ -108,7 +108,7 @@ nexus_field_attack_record_dossier_forever() {
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)"
   entry="$(
     TS="$ts" IP="$ip" VECTOR="${vector:-HOSTILE}" SEV="${severity:-high}" \
-      REASON="${reason:-target_kill}" SRC="$source" DOSSIER="$dossier" python3 -c '
+      REASON="${reason:-target_kill}" SRC="$source" DOSSIER="$dossier" pythong -c '
 import json, os
 raw = os.environ.get("DOSSIER", "")
 try:
@@ -172,7 +172,7 @@ nexus_field_attack_kill_target() {
   source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
   local monitor_json=""
   if [[ -n "$dossier" ]]; then
-    monitor_json="$(DOSSIER_JSON="$dossier" python3 -c '
+    monitor_json="$(DOSSIER_JSON="$dossier" pythong -c '
 import json, os
 try:
     d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
@@ -190,7 +190,7 @@ if m:
   nexus_field_attack_disable_host "$ip" "$vector" "$severity" "$reason" "$source" "$dossier" || return 1
   local hw_destroy=0
   if [[ -n "$dossier" && "$dossier" != "{}" ]]; then
-    hw_destroy="$(DOSSIER_JSON="$dossier" python3 -c '
+    hw_destroy="$(DOSSIER_JSON="$dossier" pythong -c '
 import json, os, sys
 try:
     d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
@@ -221,7 +221,7 @@ nexus_field_attack_rekill_target() {
   source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
   local monitor_json=""
   if [[ -n "$dossier" ]]; then
-    monitor_json="$(DOSSIER_JSON="$dossier" python3 -c '
+    monitor_json="$(DOSSIER_JSON="$dossier" pythong -c '
 import json, os
 try:
     d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
@@ -250,7 +250,7 @@ if m:
   nexus_field_attack_record_field "$ip" "$vector" "$severity" "$reason" "$source" "$dossier"
   if [[ -n "$dossier" && "$dossier" != "{}" ]]; then
     nexus_field_attack_record_dossier_forever "$ip" "$vector" "$severity" "$reason" "$source" "$dossier"
-    if DOSSIER_JSON="$dossier" python3 -c '
+    if DOSSIER_JSON="$dossier" pythong -c '
 import json, os, sys
 try:
     d = json.loads(os.environ.get("DOSSIER_JSON", "") or "{}")
@@ -281,7 +281,7 @@ nexus_field_attack_disable_host() {
   source "${NEXUS_INSTALL_ROOT}/lib/friendly-guard.sh"
   local monitor_json=""
   if [[ -n "$meta" ]]; then
-    monitor_json="$(META_JSON="$meta" python3 -c '
+    monitor_json="$(META_JSON="$meta" pythong -c '
 import json, os
 try:
     d = json.loads(os.environ.get("META_JSON", "") or "{}")
@@ -325,7 +325,7 @@ nexus_field_attack_sync_from_memory() {
     while IFS= read -r line; do
       [[ -n "$line" ]] || continue
       read -r ip vector severity reason ts source < <(
-        python3 -c '
+        pythong -c '
 import json, sys
 try:
     o = json.loads(sys.stdin.read())
@@ -373,44 +373,44 @@ nexus_field_attack_apply_registry() {
 }
 
 nexus_field_attack_autokill_certain() {
-  command -v python3 >/dev/null 2>&1 || return 1
+  command -v pythong >/dev/null 2>&1 || return 1
   local script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
   [[ -f "$script" ]] || return 1
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" autokill-certain 2>/dev/null
+    pythong "$script" autokill-certain 2>/dev/null
 }
 
 nexus_field_attack_autokill_needs_die() {
-  command -v python3 >/dev/null 2>&1 || return 1
+  command -v pythong >/dev/null 2>&1 || return 1
   local script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
   [[ -f "$script" ]] || return 1
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" autokill-needs-die 2>/dev/null
+    pythong "$script" autokill-needs-die 2>/dev/null
 }
 
 nexus_field_attack_forever_kill_enforce() {
-  command -v python3 >/dev/null 2>&1 || return 1
+  command -v pythong >/dev/null 2>&1 || return 1
   local script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
   [[ -f "$script" ]] || return 1
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" forever-kill-enforce 2>/dev/null
+    pythong "$script" forever-kill-enforce 2>/dev/null
 }
 
 nexus_field_attack_crush_hot() {
-  command -v python3 >/dev/null 2>&1 || return 1
+  command -v pythong >/dev/null 2>&1 || return 1
   local script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
   [[ -f "$script" ]] || return 1
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" crush-hot 2>/dev/null
+    pythong "$script" crush-hot 2>/dev/null
 }
 
 nexus_field_attack_auto_rekill() {
   [[ "$(nexus_settings_get NEXUS_FIELD_AUTO_REKILL 2>/dev/null || echo "${NEXUS_FIELD_AUTO_REKILL:-1}")" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 1
+  command -v pythong >/dev/null 2>&1 || return 1
   local script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
   [[ -f "$script" ]] || return 1
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" auto-rekill 2>/dev/null
+    pythong "$script" auto-rekill 2>/dev/null
 }
 
 # Constant RE-KILL cycle — runs while hostile registry has entries (killed C2 / bad shit).
@@ -456,7 +456,7 @@ nexus_field_attack_install_autokill() {
     nexus_host_attack_publish >/dev/null 2>&1 || true
   elif [[ -f "${NEXUS_INSTALL_ROOT}/lib/host-attack-map.py" ]]; then
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "${NEXUS_INSTALL_ROOT}/lib/host-attack-map.py" build >/dev/null 2>&1 || true
+      pythong "${NEXUS_INSTALL_ROOT}/lib/host-attack-map.py" build >/dev/null 2>&1 || true
   fi
   nexus_field_attack_sync_from_memory || true
   nexus_field_attack_apply_registry || true
@@ -506,11 +506,11 @@ nexus_field_attack_json() {
   printf '"standards":["IEEE-802-OUI","RFC7483-RDAP","GeoIP","Field-Memory","Trust-Strike-Engine"],'
   local trust_json="{}"
   if [[ -s "${NEXUS_STATE_DIR}/trust-strike-summary.json" ]]; then
-    trust_json="$(python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
+    trust_json="$(pythong -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" \
       "${NEXUS_STATE_DIR}/trust-strike-summary.json" 2>/dev/null || echo '{}')"
   elif [[ -f "${NEXUS_INSTALL_ROOT}/lib/trust-strike-engine.py" ]]; then
     trust_json="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "${NEXUS_INSTALL_ROOT}/lib/trust-strike-engine.py" summary 2>/dev/null || echo '{}')"
+      pythong "${NEXUS_INSTALL_ROOT}/lib/trust-strike-engine.py" summary 2>/dev/null || echo '{}')"
   fi
   printf '"trust_strike":%s,' "${trust_json:-"{}"}"
   printf '"hosts":['
@@ -532,7 +532,7 @@ nexus_field_attack_json() {
   printf ',"hostile_ai":'
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" ]]; then
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" json 2>/dev/null || printf '{}'
+      pythong "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" json 2>/dev/null || printf '{}'
   else
     printf '{}'
   fi

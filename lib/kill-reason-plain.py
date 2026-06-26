@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Plain-English explanations — what triggered threat classification and why they were killed."""
 from __future__ import annotations
 
@@ -7,22 +7,22 @@ from typing import Any
 
 # Technical reason token → plain-English template (use {ip}, {process}, {vector}, {detail})
 _REASON_TEMPLATES: dict[str, str] = {
-    "strike_certain": "PINPOINT CERTAIN — malware evidence on the actual wire host, not CDN collateral.",
-    "killable": "Trust Strike authorized — confirmed wire host with malware evidence above manual floor.",
-    "harm_candidate": "Gatekeeper marked this as a harm candidate — hostile intent on the live connection.",
-    "threat_correlated_harm": "Harm flow correlated with active threat intelligence on this IP.",
-    "stream_theft_daemon": "Daemon showed stream-theft / bandwidth abuse patterns toward this remote host.",
-    "persistent_beacon": "Persistent beaconing to this host from an untrusted local process.",
-    "beacon_burst": "Repeated beacon bursts to this host — not normal consumer traffic.",
-    "rekill_same_host_validated": "RE-KILL — same hostile host came back online; identity markers matched archived dossier.",
-    "forever_kill_enforce": "Forever-kill re-enforced — prior hardware destroy dossier still active on field drive.",
+    "strike_certain": "PINPOINT CERTAIN — hostile confirmed on wire host. Interdict executed. No CDN collateral.",
+    "killable": "Trust Strike authorized — hostile wire host above certainty floor. Interdict without delay.",
+    "harm_candidate": "IFF HOSTILE — gatekeeper confirmed hostile intent on live connection. Interdict standing.",
+    "threat_correlated_harm": "HOSTILE — egress correlated with active threat intelligence on this IP.",
+    "stream_theft_daemon": "HOSTILE — daemon exhibited stream exfiltration / bandwidth abuse toward remote host.",
+    "persistent_beacon": "HOSTILE — persistent beaconing from untrusted local process to remote host.",
+    "beacon_burst": "HOSTILE — repeated beacon bursts. Not civilian consumer traffic.",
+    "rekill_same_host_validated": "RE-KILL — hostile host reappeared. Identity markers matched archived dossier. Interdict re-executed.",
+    "forever_kill_enforce": "FOREVER-KILL enforced — prior destroy dossier active on field drive. No permit restoration.",
     "operator_disable": "Operator ordered permanent disable from the threat panel.",
     "operator_nokill": "Operator exempted this IP from autokill (NO-KILL).",
     "target_kill": "Operator or field kit ordered permanent kill on this target.",
     "gatekeeper_harm": "Live gatekeeper harm signature — kill-detect executed block/strike.",
     "rf_unhealthy_forever": "Unhealthy RF-correlated wireless threat — permanent disable.",
     "regional_disable": "Regional cluster disable — multiple hostiles in the same geography.",
-    "hostile_ai_destroy": "Hostile AI destroy at certainty floor — automated evil stack confirmed.",
+    "hostile_ai_destroy": "HOSTILE AI — certainty floor met. Automated threat stack destroyed without hesitation.",
     "nokill_exempt": "Kill refused — IP is on the NO-KILL exempt list.",
 }
 

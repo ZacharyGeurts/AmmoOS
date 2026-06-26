@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Fair Ad Guardian — non-intrusive, advertiser-fair ad control.
 
 Blocks what people actually complain about (popups, lockouts, third-party junk).
@@ -27,6 +27,7 @@ USER_POLICIES = STATE / "adblock" / "site-policies.json"
 ADBLOCK_DIR = STATE / "adblock"
 
 BROWSER_PROCS = frozenset({
+    "fieldfox", "field-queen", "queen-browser",
     "firefox", "chrome", "chromium", "brave", "brave-browser", "vivaldi", "opera",
     "msedge", "waterfox", "librewolf", "floorp", "google-chrome", "google-chrome-stable",
 })

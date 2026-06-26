@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS panel system tray — left or right click opens tab picker."""
 from __future__ import annotations
 
@@ -27,7 +27,6 @@ except (ImportError, ValueError):
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parent.parent))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 PORT = os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477")
-TLS = os.environ.get("NEXUS_PANEL_TLS", "1") == "1"
 APP_ID = "nexus-shield-panel"
 LAST_TAB_FILE = STATE / "panel-tray-last-tab.json"
 TRAY_LOCK = STATE / "panel-tray.lock"
@@ -35,7 +34,9 @@ PID_FILE = STATE / "panel-tray.pid"
 _SERVE_LOCK_HANDLE = None
 
 TAB_CHOICES: list[tuple[str, str]] = [
-    ("Command", "command"),
+    ("Command Center", "command"),
+    ("Actions", "actions"),
+    ("ZNetwork · Status", "system/settings"),
     ("US field", "us"),
     ("Packets · Live", "packets/monitor"),
     ("Packets · DPI", "packets/inspect"),
@@ -55,15 +56,14 @@ TAB_CHOICES: list[tuple[str, str]] = [
 
 
 def _panel_base() -> str:
-    scheme = "https" if TLS else "http"
-    return f"{scheme}://127.0.0.1:{PORT}/field"
+    return f"http://127.0.0.1:{PORT}/field"
 
 
 def _tray_icon_source() -> Path:
     for rel in (
-        "panel/assets/nexus-tray-amouranth-24.png",
-        "panel/assets/nexus-tray-amouranth.png",
-        "panel/assets/amouranth-twitch-avatar.png",
+        "panel/assets/nexus-tray-us-24.png",
+        "panel/assets/nexus-tray-us.png",
+        "panel/assets/nexus-tray-us-source.jpg",
         "panel/assets/nexus-shield.png",
         "assets/nexus-shield.png",
     ):
@@ -212,7 +212,7 @@ def open_tab(route: str = "command") -> None:
                 subprocess.Popen(["xdg-open", url], env=env, start_new_session=True)
             elif browser in ("google-chrome-stable", "google-chrome", "chromium-browser", "chromium"):
                 subprocess.Popen(
-                    [browser, "--ignore-certificate-errors", f"--app={url}", "--new-window"],
+                    [browser, f"--app={url}", "--new-window"],
                     env=env,
                     start_new_session=True,
                     stdout=subprocess.DEVNULL,
@@ -355,7 +355,7 @@ class NexusTray:
                 icon.set_from_file(icon_path)
             else:
                 icon.set_from_icon_name("security-high")
-            icon.set_tooltip_text("NEXUS-Shield · Amouranth — click to pick a panel tab")
+            icon.set_tooltip_text("NEXUS Field Command Center — click or right-click for tabs")
             icon.set_visible(True)
             icon.connect("activate", lambda ic, *_: show_tab_picker(ic, 1, Gtk.get_current_event_time()))
             icon.connect("popup-menu", lambda ic, btn, t: show_tab_picker(ic, btn, t))
@@ -376,7 +376,7 @@ class NexusTray:
                 AyatanaAppIndicator3.IndicatorCategory.APPLICATION_STATUS,
             )
             self._indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
-            self._indicator.set_title("NEXUS-Shield · Amouranth — click to pick a panel tab")
+            self._indicator.set_title("NEXUS Field Command Center — click or right-click for tabs")
             _populate_tray_flyout(self._flyout_menu)
             self._indicator.set_menu(self._flyout_menu)
             return True

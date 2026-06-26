@@ -1,0 +1,36 @@
+{
+  "text": "Operators learning from matrix algebra may think of each fabric channel as a matrix; operators learning from PDEs may think of each as a grid sample in a finite-difference scheme. Both intuitions work if labeled: finite-difference here is GPU compute shader arithmetic, not host LAPACK. The host never applies a global matrix solver across the fabric; evolution is local neighbor coupling per dispatch, repeated each frame. That locality is why CFL guards make sense \u2014 stability is per-step, per-cell neighborhood, not global eigenvalue analysis on CPU.\n\nWhen you read hardwareFabric spiderweb mirrors in Chapter 10, remember they are spatial averages over this texel field \u2014 compression of high-dimensional fabric state into operator dashboard metrics. Averages are lossy; stderr THERMO lines and direct fabric visualization on Classic canvas recover detail averages hide. Three-scale literacy means knowing when to zoom into texels, when to read bus words, when to read jsonl sentences.\n\nDeep dive \u2014 Field Die linear address space\n\nThe Field Die maps 64 MiB of guest linear address space. Byte offset 0 is not \u201cthe origin of the universe\u201d poetically \u2014 it is the first byte the guest can address, interpreted by layers. VGA text at guest 0xB8000 is a structured window into the field: color cells with attribute bytes, cursor semantics, scroll behavior pumped through field layers. The C mirror at 0x01000000 exposes guest state to host-assisted tooling when enabled. ZMM1024 tile cache in the SSBO tail is shader-side fabric sample cache \u2014 a performance structure that also teaches that the die is not only guest RAM but also GPU-accessible cache lines the HUD reads.\n\nReality is 3D on the bus means offsets are coordinates. Time is linear means pump order and dispatch order advance guest state forward. Energy can be moved means fabric thermo mirrors and Tesla biases published into data_bus slots couple die execution to thermodynamic story \u2014 not joules, proxy receipts, but coupling nonetheless.\n\nChapter 8 will enumerate L0\u2013L9 layers in detail. Chapter 2 fixes the conceptual frame: die is scale 2, fabric is scale 1, packet field is scale 3. Do not collapse scale 2 into \u201cemulator nostalgia.\u201d RTX-DOS and AmmoOS are software universes with addresses; the GPU interprets them each tick on the default path.\n\nDeep dive \u2014 packet field sentences and jsonl archive\n\nPacket field rows in jsonl are sentences, not packets. A single TCP segment is not the unit of meaning; the connection habit over time is. Gatekeeper verdicts summarize stories across axes: process path stability, port deviation from habit, direction balance, payload hints, honorability cross-checks. The sentence may span many frames of wire time; the archive preserves the sentence for reboot-surviving memory.\n\nLocal-first scope is non-negotiable honesty. The packet field sees sockets on your machine and habits your machine develops. It does not see the whole internet. It does not replace ISP visibility. It replaces vendor cloud narration with local grep-able archive \u2014 a different promise, honestly labeled. When threat modeling, model what jsonl can prove, not what marketing wishes jsonl implied.\n\nQueen browser navigation feeds the packet field perimeter when peers open WebRTC, fetch MP4, resolve DNS through Truth Resolver. Chapter 21 ties browser gates to jsonl receipts. Chapter 2 ties jsonl to panel :9477 correlation with AMOURANTHRTX stderr \u2014 human integration, not automatic merge.\n\nIntegration exercises \u2014 expanded operator lab\n\nExercise 2.D \u2014 fabric-only hour: Run Classic or energy swipe one hour. Log THERMO every five minutes. Note knob changes. No NEXUS. Outcome: fluency in scale 1 only.\n\nExercise 2.E \u2014 packet-only hour: Run NEXUS only. Archive three jsonl rows. No AMOURANTHRTX. Outcome: fluency in scale 3 only.\n\nExercise 2.F \u2014 die default afternoon: Run default x86 one afternoon. Occasional list Hardware and list AnalogFields in prompt. Outcome: fluency in scale 2 default product.\n\nExercise 2.G \u2014 tri-scale correlation: One session with both products. One suspicious RX while fabric entropy rises. Write half-page narrative separating layers. Outcome: human integration without metric collapse.\n\nCategory errors \u2014 extended catalog\n\nError: Treating data_bus as heatmap. Fix: Telemetry vector, not spatial field.\n\nError: Treating spiderweb as fabric duplicate. Fix: Read-only mirror per Chapter 10.\n\nError: Treating Queen thermo as NEXUS Shannon. Fix: Browser context thermo vs file oracle.\n\nError: Treating planetary weave as antenna readout. Fix: Visual only \u2014 Chapter 6.\n\nError: Treating 3D hype as address map. Fix: Reality is 3D = named coordinates.\n\nThree-scale mnemonic \u2014 FDP\n\nFabric Die Packet \u2014 FDP \u2014 say it before coffee. Fabric 8-10, Die 64MiB binding 1, Packet jsonl. FDP is not company name \u2014 memory hook.\n\nOperator panel correlation worksheet\n\nColumn A timestamp. Column B stderr line. Column C jsonl id. Column D your verdict. Fill 10 rows one shift \u2014 graduation worksheet.\n\nChapter 2 extended \u2014 spatial reasoning for GPU operators\n\nSpatial reasoning on fabric means tracking (x,y) indices while adaptive resolution changes grid size. When scale rises, more texels sample the same logical canvas; when scale falls, fewer texels summarize. Address identity is cell index in current grid, not world coordinate in meters. This differs from die linear addresses in bytes and packet addresses in IP/port space \u2014 three different coordinate systems, one operator brain.\n\nWhen correlating fabric hot spot with spiderweb thermal throttle, remember hot spot is texel average region, throttle is hardwareFabric dashboard compression. Lossy pipeline by design \u2014 recover detail via Classic visualization or stderr boundary thermo, not via demanding spiderweb become SEM.\n\nDie spatial reasoning uses byte offsets and layer semantics \u2014 VGA cells at 0xB8000 are not fabric texels; converting between scales is category error. Packet spatial reasoning uses socket endpoints \u2014 127.0.0.1:9477 is local panel position in connection space, not texel, not guest offset.",
+  "id": "seg-009-72d08cf5ba81",
+  "source": "Field_Primer/content/chapters",
+  "index": 9,
+  "words": 944,
+  "action": "sdl_store",
+  "scores": {
+    "spatial": 61.0,
+    "procedural": 17.0,
+    "metaphor": 0.0,
+    "words": 944.0
+  },
+  "caption_stub": "Operators learning from matrix algebra may think of each fabric channel as a matrix operators learning from PDEs may think of each as a grid sample in a finite difference scheme Both intuitions work if labeled finite difference here is\u2026",
+  "text_sha256": "cc24e6d1bdb21f8c3875d9372d9322f6ecd3dfc9c3e877edd0de65771f4735ae",
+  "truth_filter": {
+    "truth_score": 51.0,
+    "accepted": true,
+    "reason": "ok",
+    "deception_risk": "medium",
+    "deception_flags": [
+      "absolute_language"
+    ],
+    "word_count": 903,
+    "operator_hits": 96,
+    "honesty_hits": 2,
+    "noise_hits": 0,
+    "marketing_hits": 0,
+    "noise_ratio": 0.94,
+    "truth_ratio": 0.06,
+    "truth_floor": 28,
+    "recommended_action": "redata"
+  },
+  "lossless": true,
+  "ts": "2026-06-25T06:30:18.701769+00:00"
+}

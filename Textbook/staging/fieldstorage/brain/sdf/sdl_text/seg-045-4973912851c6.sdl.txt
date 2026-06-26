@@ -1,0 +1,125 @@
+Quote Tesla constants and explain directional damping on spiderweb edges.
+
+Contrast PropalacticScale knob with planetary RF visual shell.
+
+Describe KILROY kernel FCC parallel and entropy feedback clamps.
+
+Introduction — stability is offense ethics
+
+Offense without stability is vandalism against your own field. Chapter 7 placed the CFL harmonics guard on the dispatch spine; Chapter 9 teaches the science, constants, and operator drills behind that guard. FCC here means Field Control Constants — analog floats packed to data_bus[16–23] — not Federal Communications Commission, though NEXUS ITU-R path loss docs live beside RF teaching in Chapter 6.
+
+Before fabric evolution each dispatch_canvas() , host computes:
+
+waveCFL = c·Δt/Δx ≤ 1 · thermoCFL = α·Δt/Δx² ≤ 1
+
+Violations scale down unsafe parameters. Plain English: the engine refuses diffusion so hot the simulation explodes into NaN. This is numerical ethics — creditor debt to Courant, Friedrichs, and Lewy. CFL creditor page .
+
+Cross-links: Chapter 3 thermo knobs, Chapter 7 dispatch placement, Chapter 8 bus slots, Chapter 10 spiderweb Tesla edges, Chapter 12 honesty rows for Propalactic and Tesla metaphor.
+
+Figure 9.1 — Directional damping metaphor with constants in FieldRtxFieldAbs.hpp .
+
+Wave CFL — intuition on a grid
+
+Explicit wave integrators allow information to travel at most one cell per step. If c·Δt exceeds Δx, the scheme tries to move wave energy farther than the mesh can represent — instability follows. Host reads render resolution for Δx proxy, WaveSpeed for c, TimeScale for effective Δt multiplier. Product waveCFL ≤ 1 is the guard line.
+
+Operators who crank WaveSpeed in prompt without reading stderr may never see NaN — host scales c down first. That is care, not censorship. Compare list AnalogFields after aggressive set — admitted value may differ from requested.
+
+Diffusion CFL — why Δx² matters
+
+Diffusion stiffens faster as meshes refine. thermoCFL = α·Δt/Δx² ≤ 1 shrinks admissible Δt when resolution upscale halves Δx. RayCanvas adaptive 4K path interacts with guard — Chapter 7 warned adaptive scale is not vanity. Adept operators watch STATUS when changing resolution and TimeScale together.
+
+Harmonics guard implementation posture
+
+From OptionsMenu.hpp commentary: FCC floats are pre-conditioned in dispatch_canvas before GPU. Hard caps include waveSpeed ∈ [0.01, 2.0], dT ≤ 0.033, inject strength cooperation. Body-temperature seeding and similar simulation flavor remain labeled Metaphor in Chapter 3 — not hidden as SI measurement.
+
+Input Guard effect
+
+TimeScale ↑ Effective Δt ↑ — both CFL products ↑
+
+ThermoAlpha ↑ thermoCFL ↑
+
+WaveSpeed ↑ waveCFL ↑
+
+Resolution ↑ Δx ↓ — thermoCFL ↑↑
+
+InjectStrength ↑ May clamp with coupling workload
+
+FCC floats — complete slot map
+
+[16] TimeScale [17] ThermoAlpha [18] WaveSpeed [19] GateFidelity
+[20] EntropyFloor [21] InjectStrength [22] PropalacticScale [23] FieldCoupling
+ Each float is mirrored for guest HUD and grep. Shader bindings 8–10 receive admitted values post-guard. FieldSocket path and Classic path share guard philosophy even when push layout differs.
+
+GateFidelity — sharp gates and stability
+
+0 = soft analog gates; 1 = transistor-sharp Flow gates. Sharpness changes gradient stories and indirect coupling workload — can raise effective field work and prevMaintCost. Stability is not only CFL; coupling spikes can challenge entropy proxy without violating CFL if clamps already admitted parameters.
+
+EntropyFloor — second law as engineering
+
+Minimum irreversible noise in fabric — Chapter 3 entropy floor. Prevents unphysical reversibility. Works with CFL as dual ethics: one limits step size, one enforces noise floor.
+
+PropalacticScale — honesty label
+
+Large-wavelength forcing on Phi. Chapter 12 honesty: dynamics knob, not cosmic oracle. Moves fabric; does not replace packet field or GPS precision maps. Metaphor when marketing says cosmic weave.
+
+Tesla valve — constants and publication
+
+TESLA_R_FORWARD = 0.18 TESLA_R_REVERSE = 3.2 FIELD_PHI_MILLI = 618
+TESLA_R_FWD_MILLI = 180 TESLA_R_REV_MILLI = 3200
+ teslaBias() in updateHardwareFromAnalogFields dampens reverse flow on spiderweb edges more than forward. Published to data_bus[31] and [34]. TeslaBiasStrength FCC knob mirrors coherence. Fluidic diode metaphor — not literal chassis part. Tesla creditor .
+
+Tesla on Flow fabric
+
+Flow channel mixes gradient magnitude with GateFidelity and Tesla relaxation — Chapter 3 per-texel evolution. Directional preference appears in color stories operators see on Classic canvas and in edge util mirror Chapter 10.
+
+KILROY FCC — kernel parallel
+
+When CONFIG_RTX_FIELD_DIE kernel stack runs, scale 0–1,000,000 µ from overshoot; entropy feedback clamps aggressive modes. Userspace guard and kernel FCC share vocabulary — Chapter 21 Queen + KILROY sovereign field. Ring transition does not reset operator literacy — same constants, stronger enforcement boundary.
+
+Failure modes — NaN theology
+
+Disabled guard in a fork yields white noise HDR, NaN entropy, frozen spiderweb, lying FCC mirrors. Recovery: restore harmonics guard, reset analog defaults, clear fabrics, new sealed session. Do not ship screenshots of accidents as Visual without label.
+
+Operator drills
+
+Drill 9.A — CFL clamp
+
+set AnalogFields.WaveSpeed 9.9
+set AnalogFields.TimeScale 4.0
+list AnalogFields
+grep -iE 'cfl|clamp|scale' run.log
+ Drill 9.B — Tesla grep
+
+grep -E 'TESLA_R_|FIELD_PHI_MILLI|data_bus' Navigator/engine/FieldRtxFieldAbs.hpp
+ Drill 9.C — Propalactic honesty
+
+set AnalogFields.PropalacticScale 2.0
+# Observe Phi forcing — label dynamics knob in operator notes
+
+Chapter summary
+
+CFL guard enforces wave and diffusion limits before GPU evolution. FCC floats pack to data_bus[16–23]. Tesla constants bias direction — slots 31, 34. KILROY extends discipline to kernel. PropalacticScale and GateFidelity are powerful — grep and label.
+
+Prior: Chapter 8 . Next: Chapter 10 .
+
+Study questions
+
+Write CFL inequalities and explain Δx².
+
+What happens when waveCFL > 1 before dispatch?
+
+Quote Tesla forward/reverse resistance.
+
+Which slots publish Tesla bias?
+
+How is PropalacticScale labeled in Chapter 12?
+
+What is KILROY FCC overshoot scale?
+
+Why does resolution upscale interact with thermoCFL?
+
+Name three FCC floats and stability roles.
+
+What is NaN theology?
+
+How does Tesla affect spiderweb edges?

@@ -14,29 +14,29 @@ echo "=== Field Antenna Catch Test — ${NEXUS_FIELD_CATCH_MHZ} MHz UP Michigan 
 echo "State: $NEXUS_STATE_DIR"
 
 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-  python3 "$ROOT/lib/operator-default.py" seed >/dev/null
+  pythong "$ROOT/lib/operator-default.py" seed >/dev/null
 
 echo "--- Antenna cycle ---"
 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_FIELD_CATCH_MHZ="$NEXUS_FIELD_CATCH_MHZ" \
-  python3 "$ROOT/lib/field-antenna-orchestrator.py" launch 3 >/dev/null || true
+  pythong "$ROOT/lib/field-antenna-orchestrator.py" launch 3 >/dev/null || true
 
 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-  python3 "$ROOT/lib/field-antenna-orchestrator.py" test > "$NEXUS_STATE_DIR/.tune-antenna.json"
+  pythong "$ROOT/lib/field-antenna-orchestrator.py" test > "$NEXUS_STATE_DIR/.tune-antenna.json"
 
 echo "--- Radio build ---"
 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-  python3 "$ROOT/lib/field-radio-catcher.py" build > "$NEXUS_STATE_DIR/.tune-radio.json"
+  pythong "$ROOT/lib/field-radio-catcher.py" build > "$NEXUS_STATE_DIR/.tune-radio.json"
 
 echo "--- Catch ${NEXUS_FIELD_CATCH_MHZ} MHz via field antenna ---"
 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_FIELD_CATCH_MHZ="$NEXUS_FIELD_CATCH_MHZ" \
-  python3 "$ROOT/lib/field-antenna-orchestrator.py" catch "{\"freq_mhz\":${NEXUS_FIELD_CATCH_MHZ},\"station_id\":\"field-catch-831\"}" \
+  pythong "$ROOT/lib/field-antenna-orchestrator.py" catch "{\"freq_mhz\":${NEXUS_FIELD_CATCH_MHZ},\"station_id\":\"field-catch-831\"}" \
   > "$NEXUS_STATE_DIR/.tune-result.json"
 
 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-  python3 "$ROOT/lib/signals-field.py" build > "$NEXUS_STATE_DIR/.tune-signals.json"
+  pythong "$ROOT/lib/signals-field.py" build > "$NEXUS_STATE_DIR/.tune-signals.json"
 
 FAIL=0
-NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_FIELD_CATCH_MHZ="$NEXUS_FIELD_CATCH_MHZ" python3 - <<'PY' || FAIL=1
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_FIELD_CATCH_MHZ="$NEXUS_FIELD_CATCH_MHZ" pythong - <<'PY' || FAIL=1
 import json, os, sys
 from pathlib import Path
 

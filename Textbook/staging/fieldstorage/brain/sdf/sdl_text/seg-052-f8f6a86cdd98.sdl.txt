@@ -1,0 +1,151 @@
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 9 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 11 — units, edges, and sysfs
+
+Depth pass 11 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 10 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 12 — units, edges, and sysfs
+
+Depth pass 12 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 11 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 13 — units, edges, and sysfs
+
+Depth pass 13 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 12 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 14 — units, edges, and sysfs
+
+Depth pass 14 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 13 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 15 — units, edges, and sysfs
+
+Depth pass 15 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 14 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 16 — units, edges, and sysfs
+
+Depth pass 16 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 15 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 17 — units, edges, and sysfs
+
+Depth pass 17 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 16 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.

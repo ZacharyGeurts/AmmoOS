@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Hostess 7 Truth Rating — 0-100% assurance on every response + human/Turing questionnaire."""
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ if not IQ_TEST_JSON.is_file():
     _iq_alt = _SCRIPT.parent / "data" / "hostess7-iq-test.json"
     if _iq_alt.is_file():
         IQ_TEST_JSON = _iq_alt
+IQ_DOCTRINE_JSON = INSTALL / "data" / "hostess7-iq-doctrine.json"
 RATING_STATE = STATE / "hostess7-truth-rating-state.json"
 QUESTIONNAIRE_PANEL = STATE / "hostess7-questionnaire-panel.json"
 QUESTIONNAIRE_LOG = STATE / "hostess7-questionnaire.jsonl"
@@ -272,6 +273,61 @@ def iq_test_doc() -> dict[str, Any]:
     return _load_json(IQ_TEST_JSON, {"questions": [], "pass_threshold": 9, "total": 12})
 
 
+def iq_doctrine_doc() -> dict[str, Any]:
+    return _load_json(IQ_DOCTRINE_JSON, {"iq_floor": 100, "iq_adaptive": True})
+
+
+def compute_estimated_iq(
+    *,
+    passed: int,
+    total: int,
+    truth_avg: float = 0.0,
+    training_score: float = 0.0,
+    self_interaction_rounds: int = 0,
+) -> dict[str, Any]:
+    """Adaptive IQ — floor 100, scales through the roof with mastery."""
+    doc = iq_doctrine_doc()
+    test_doc = iq_test_doc()
+    floor = int(doc.get("iq_floor") or test_doc.get("iq_floor") or 100)
+    denom = max(total, 1)
+    rate = passed / denom
+
+    battery_pts = rate * 42.0
+    truth_pts = rate * min(28.0, float(truth_avg) * 0.28)
+    train_pts = rate * min(38.0, float(training_score) * 38.0)
+    self_pts = min(22.0, self_interaction_rounds * 2.2) * (0.35 + 0.65 * rate)
+
+    iq = int(floor + battery_pts + truth_pts + train_pts + self_pts)
+    if passed >= denom:
+        iq += 14
+    elif rate >= 0.92:
+        iq += 10
+    elif rate >= 0.75:
+        iq += 6
+    iq = max(floor, iq)
+
+    band = "solid baseline (100+)"
+    for spec in doc.get("bands") or []:
+        lo = int(spec.get("min") or 0)
+        hi = int(spec.get("max") or 999)
+        if lo <= iq <= hi:
+            band = str(spec.get("label") or band)
+            break
+
+    return {
+        "estimated_iq": iq,
+        "estimated_iq_band": band,
+        "iq_floor": floor,
+        "iq_adaptive": bool(doc.get("iq_adaptive", True)),
+        "components": {
+            "battery": round(battery_pts, 2),
+            "truth": round(truth_pts, 2),
+            "training": round(train_pts, 2),
+            "self_interaction": round(self_pts, 2),
+        },
+    }
+
+
 def _iq_answer_pass(item: dict[str, Any], answer: str) -> dict[str, Any]:
     """Score one IQ item — keyword match + category heuristics."""
     a = (answer or "").strip().lower()
@@ -377,6 +433,19 @@ def run_iq_test(*, ask_fn: Any = None) -> dict[str, Any]:
             pass
 
     total = len(results)
+    truth_scores = [float(r.get("truth_score") or 0) for r in results if r.get("truth_score")]
+    truth_avg = sum(truth_scores) / max(len(truth_scores), 1) if truth_scores else 0.0
+    training_panel = _load_json(STATE / "hostess7-training-panel.json", {})
+    training_score = float(training_panel.get("overall_score") or 0)
+    self_panel = _load_json(STATE / "hostess7-self-interaction-panel.json", {})
+    self_rounds = int(self_panel.get("rounds_complete") or 0)
+    iq_metrics = compute_estimated_iq(
+        passed=passed,
+        total=total,
+        truth_avg=truth_avg,
+        training_score=training_score,
+        self_interaction_rounds=self_rounds,
+    )
     report = {
         "schema": "hostess7-iq-test/v1",
         "ok": True,
@@ -387,12 +456,11 @@ def run_iq_test(*, ask_fn: Any = None) -> dict[str, Any]:
         "iq_pass": passed >= threshold,
         "pass_threshold": threshold,
         "pass_rate": round(100 * passed / max(total, 1), 1),
-        "estimated_iq_band": (
-            "exceptional (130+)" if passed >= 11 else
-            "high (115–129)" if passed >= 9 else
-            "average (90–114)" if passed >= 6 else
-            "developing (<90)"
-        ),
+        "estimated_iq": iq_metrics["estimated_iq"],
+        "estimated_iq_band": iq_metrics["estimated_iq_band"],
+        "iq_floor": iq_metrics["iq_floor"],
+        "iq_adaptive": iq_metrics["iq_adaptive"],
+        "iq_components": iq_metrics["components"],
         "results": results,
     }
     _save_json(IQ_TEST_PANEL, report)
@@ -402,6 +470,7 @@ def run_iq_test(*, ask_fn: Any = None) -> dict[str, Any]:
         "last_iq_test": report["score"],
         "last_iq_pass_rate": report["pass_rate"],
         "iq_pass": report["iq_pass"],
+        "estimated_iq": report["estimated_iq"],
         "estimated_iq_band": report["estimated_iq_band"],
     })
     _save_json(RATING_STATE, st)
@@ -503,7 +572,9 @@ def rating_status() -> dict[str, Any]:
         "last_iq_test": st.get("last_iq_test"),
         "last_iq_pass_rate": st.get("last_iq_pass_rate"),
         "iq_pass": st.get("iq_pass"),
+        "estimated_iq": st.get("estimated_iq") or iq_last.get("estimated_iq"),
         "estimated_iq_band": st.get("estimated_iq_band"),
+        "iq_floor": iq_last.get("iq_floor") or 100,
         "iq_test": iq_last if iq_last.get("results") else None,
     }
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Browser site awareness — active tab hosts + honorability + X.com CDN mapping."""
 from __future__ import annotations
 
@@ -122,15 +122,34 @@ def enrich_connection(conn: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _queen_slice() -> dict[str, Any]:
+    path = INSTALL / "lib" / "field-queen-browser.py"
+    if not path.is_file():
+        return {}
+    try:
+        return _load_module("field_queen_browser", path).panel_json()
+    except Exception:
+        return {}
+
+
 def panel_json() -> dict[str, Any]:
     honor = _honor()
     sites = detect_active_sites()
-    return {
+    queen = _queen_slice()
+    out = {
         "active_sites": sites,
         "honorability": honor.panel_json(sites),
         "x_com_active": any(s.get("host") == "x.com" for s in sites),
         "browser_site_count": len(sites),
     }
+    if queen:
+        out["queen"] = {
+            "verdict": queen.get("queen_verdict"),
+            "gates_held": (queen.get("gates") or {}).get("all_held"),
+            "mp4_mandatory": (queen.get("codecs") or {}).get("mp4_mandatory"),
+            "motto": queen.get("motto"),
+        }
+    return out
 
 
 def main() -> int:

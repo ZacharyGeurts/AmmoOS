@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Fast threat-panel.json assembly from .nexus-state fragments (no RF cycle)."""
 from __future__ import annotations
 

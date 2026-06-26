@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """OCR + DOM validation for NEXUS RTX Zero panel (NewLatest tree)."""
 from __future__ import annotations
 
@@ -143,11 +143,11 @@ def main() -> int:
         print(f"API FAIL: /api/status — {exc}")
         fail += 1
 
-    tray_icon = INSTALL / "panel" / "assets" / "nexus-tray-amouranth-24.png"
+    tray_icon = INSTALL / "panel" / "assets" / "nexus-tray-us-24.png"
     if tray_icon.is_file() and tray_icon.stat().st_size > 100:
         print(f"TRAY ICON OK: {tray_icon.name} ({tray_icon.stat().st_size} bytes)")
     else:
-        print("TRAY ICON WARN: nexus-tray-amouranth-24.png missing — non-fatal")
+        print("TRAY ICON WARN: nexus-tray-us-24.png missing — non-fatal")
 
     shot = Path("/tmp/nexus-panel-ocr-rtx.png")
     if _screenshot_panel(shot, RTX_URL):

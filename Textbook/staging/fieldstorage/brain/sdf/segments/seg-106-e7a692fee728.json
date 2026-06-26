@@ -1,0 +1,36 @@
+{
+  "text": "Truth DNS 53 UDP/TCP 127.0.0.1 / ::1 only Foreign resolver shortcut, ANY flood, dig fork bomb\n\nField DHCP 67 UDP LAN IP bind, takeover primary only 0.0.0.0 rogue DHCP, option-50 mismatch\n\nSovereign NTP 123 UDP Operator stratum from signed pulses Pool NTP as sole authority\n\npython3 field-services-2026.py json\npython3 sovereign-time.py sync\npython3 ellie-last-host.py posture\npython3 ellie-last-host.py verify\nNEXUS_LAST_HOST=1 ./nexus.sh restart\n\nOperator drills\n\nDrill 20-A \u2014 Truth trace. dig +trace example domain through 127.0.0.1 only. Goal: no shortcut resolver in path.\n\nDrill 20-B \u2014 DHCP conflict. Place static IP in pool range; attempt lease. Goal: ping conflict blocks OFFER; event in jsonl.\n\nDrill 20-C \u2014 Sovereign NTP gate. Query NTP; induce SQUIDGIE; confirm squidgie_blocks increments.\n\nDrill 20-D \u2014 Panel slice. Archive field-services-2026-panel.json; verify vulnerabilities_retired matches seed.\n\nDrill 20-E \u2014 Last host tabletop. Document who sets NEXUS_LAST_HOST=1; run posture dry-run without WAN.\n\nStudy questions\n\nWhy is NEXUS_FIELD_SERVICES_PUBLIC=1 explicit opt-in?\n\nWhat does dns-service-takeover wait for before steering resolv.conf?\n\nExplain option-50 validation and why it matters.\n\nHow do sovereign-time.py and field-ntp-2026.py cooperate?\n\nWhat services does ELLIE Last Host registry enumerate?\n\nName three retired vulnerabilities from 2026 seed.\n\nWhy must DHCP option 6 point at Truth Resolver for Queen?\n\nWhat is honest label for DNSSEC today?\n\nHow does nft foreign resolver block relate to primary phase?\n\nWhat unified command refreshes the services panel slice?\n\nChapter 21 \u2014 Field Browser Queen \u2192\n\nTruth DNS and Field DHCP must be restarted together after seed policy changes \u2014 panel slice stale until field-services-2026.py build runs.\n\ndig +trace failures on offline laptop are expected \u2014 Truth Resolver cannot walk to root without uplink. Distinguish offline from misconfiguration by checking bind and takeover phase first.\n\nDHCP option 6 multiple DNS servers should still list 127.0.0.1 first \u2014 secondary forwarders are policy choice, not Google defaults.\n\nfield-dhcp-events.jsonl rotation at EVENTS_LOG_MAX prevents unbounded disk \u2014 archive rotated logs before they are truncated.\n\nNTP rate limits protect against accidental amplification if operator enables public mode \u2014 keep rate env defaults unless measurement proves need.\n\nellie-last-host-thermo.jsonl pairs covenant events with thermo ethic \u2014 grep alongside sovereign receipts during last-host drills.\n\nDNS admin portal passkey rotation should follow same ceremony as sovereign key rotation \u2014 documented operator root events.\n\nThreat panel merge of field-dns/v3 and services_2026 means one tab for auditor tour \u2014 practice demo path before external review.\n\nMAC allowlist enablement without updating seed is silent failure \u2014 always version control seed json with DHCP policy.\n\nPing conflict detect may fail if ICMP blocked on segment \u2014 document segment exceptions where ARP-only checks are insufficient.\n\nGateway option 3 on last host must match actual router story \u2014 wrong gateway is DHCP lie as much as wrong DNS.\n\nIPv6 ::1 DNS option in seed prepares dual-stack Truth path \u2014 do not disable IPv6 loopback bind without reading field-dns panel.\n\nStub DNSSEC counters exist to honesty-label phase 2 \u2014 teach auditors difference between trace integrity and chain validation.\n\nfield-services-2026 edition string Grok rewrite 2026 is version anchor \u2014 cite in compliance packets.\n\nReceive-verify list in seed is copy-paste of Chapter 19 policy \u2014 intentional duplication for auditors who read only services seed.\n\nEquipment room static reservations reduce DHCP entropy on factory floors \u2014 events jsonl becomes asset audit.\n\nCleartext admin ports 7 77 777 on localhost still require passkey hygiene \u2014 localhost is not automatic trust of all local users.\n\nNEXUS_FIELD_SERVICES_PUBLIC=1 requires written WAN exposure approval \u2014 attach to operator covenant filings.\n\nQueen browser FieldFox profile DNS lock must be re-exported after FieldFox upgrade \u2014 upgrades sometimes reset prefs.\n\nWeekly archive zip: field-services panel json, sovereign receipts, dhcp events tail, dns threat blocks \u2014 minimum compliance habit.\n\nTruth DNS and Field DHCP must be restarted together after seed policy changes \u2014 panel slice stale until field-services-2026.py build runs.\n\ndig +trace failures on offline laptop are expected \u2014 Truth Resolver cannot walk to root without uplink. Distinguish offline from misconfiguration by checking bind and takeover phase first.\n\nDHCP option 6 multiple DNS servers should still list 127.0.0.1 first \u2014 secondary forwarders are policy choice, not Google defaults.\n\nfield-dhcp-events.jsonl rotation at EVENTS_LOG_MAX prevents unbounded disk \u2014 archive rotated logs before they are truncated.\n\nNTP rate limits protect against accidental amplification if operator enables public mode \u2014 keep rate env defaults unless measurement proves need.\n\nellie-last-host-thermo.jsonl pairs covenant events with thermo ethic \u2014 grep alongside sovereign receipts during last-host drills.\n\nDNS admin portal passkey rotation should follow same ceremony as sovereign key rotation \u2014 documented operator root events.\n\nThreat panel merge of field-dns/v3 and services_2026 means one tab for auditor tour \u2014 practice demo path before external review.\n\nMAC allowlist enablement without updating seed is silent failure \u2014 always version control seed json with DHCP policy.\n\nPing conflict detect may fail if ICMP blocked on segment \u2014 document segment exceptions where ARP-only checks are insufficient.\n\nGateway option 3 on last host must match actual router story \u2014 wrong gateway is DHCP lie as much as wrong DNS.\n\nIPv6 ::1 DNS option in seed prepares dual-stack Truth path \u2014 do not disable IPv6 loopback bind without reading field-dns panel.\n\nStub DNSSEC counters exist to honesty-label phase 2 \u2014 teach auditors difference between trace integrity and chain validation.",
+  "id": "seg-106-e7a692fee728",
+  "source": "Field_Primer/content/chapters",
+  "index": 106,
+  "words": 909,
+  "action": "sdl_store",
+  "scores": {
+    "spatial": 21.0,
+    "procedural": 8.0,
+    "metaphor": 0.0,
+    "words": 909.0
+  },
+  "caption_stub": "Truth DNS 53 UDP TCP 127 0 0 1 1 only Foreign resolver shortcut ANY flood dig fork bomb Field DHCP 67 UDP LAN IP bind takeover primary only 0 0 0 0 rogue DHCP option 50 mismatch Sovereign NTP\u2026",
+  "text_sha256": "5a42bdf937832bb6b635761f5400883e5a531f81900694a0bca21d55d6fbee82",
+  "truth_filter": {
+    "truth_score": 56.7,
+    "accepted": true,
+    "reason": "ok",
+    "deception_risk": "medium",
+    "deception_flags": [
+      "absolute_language"
+    ],
+    "word_count": 873,
+    "operator_hits": 48,
+    "honesty_hits": 6,
+    "noise_hits": 0,
+    "marketing_hits": 0,
+    "noise_ratio": 0.94,
+    "truth_ratio": 0.06,
+    "truth_floor": 28,
+    "recommended_action": "redata"
+  },
+  "lossless": true,
+  "ts": "2026-06-25T06:30:22.022455+00:00"
+}

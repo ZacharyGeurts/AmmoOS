@@ -29,20 +29,20 @@ shift || true
 
 case "$cmd" in
   cycle)
-    exec python3 "$ORCH" cycle "$@"
+    exec pythong "$ORCH" cycle "$@"
     ;;
   test)
-    exec python3 "$ORCH" test "$@"
+    exec pythong "$ORCH" test "$@"
     ;;
   launch|blaster|restart)
     max="${1:-24}"
     echo "[field-antenna] Blaster launch — restart until ready (max $max cycles)"
-    exec python3 "$ORCH" launch "$max"
+    exec pythong "$ORCH" launch "$max"
     ;;
   status)
     panel="$STATE/field-antenna-panel.json"
     if [[ -f "$panel" ]]; then
-      python3 -c "
+      pythong -c "
 import json,sys
 p=json.load(open('$panel'))
 print('blaster_ready:', p.get('blaster_ready') or (p.get('readiness') or {}).get('blaster_ready'))

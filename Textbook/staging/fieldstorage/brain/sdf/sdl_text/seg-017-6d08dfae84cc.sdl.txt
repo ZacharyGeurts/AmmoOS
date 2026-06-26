@@ -1,0 +1,100 @@
+ThermoAccountant Populated every dispatch Same — canvas-agnostic
+
+Visual thermo Hidden behind chrome Obvious heatmap
+
+Debug path ControlFieldDebugHud Swipe itself
+
+Honest testimony stderr THERMO + bus hex stderr + screenshot
+
+Category error “No thermo on die” “Thermo only on Classic”
+
+Drill 3.C — die vs Classic same session
+
+# Segment A: x86 default 90s mouse move — grep THERMO
+# Segment B: swipe GreenWaves 90s same knobs — grep THERMO
+# Compare entropyThisFrame distributions — both must be non-silent
+ Silence on either segment is failed path — binding 2 or dispatch broken, not “die has no physics.”
+
+AnalogFields knobs — FCC mirror quick reference
+
+Knob Bus slot Chapter 3 focus
+
+TimeScale [16] Effective Δt — CFL interaction
+
+ThermoAlpha [17] Diffusion rate — thermoCFL
+
+WaveSpeed [18] Wave propagation — waveCFL
+
+GateFidelity [19] Analog vs sharp gates — maintenance
+
+EntropyFloor [20] Minimum irreversible noise
+
+InjectStrength [21] Probe boundary offense
+
+PropalacticScale [22] Large-scale Phi forcing
+
+FieldCoupling [23] Phi ↔ Thermo ↔ Flow bleed
+
+Prompt set AnalogFields.* changes host state; CFL guard may scale before GPU sees values — numerical ethics, not censorship.
+
+Maxwell neighborhood preview — coupling before Chapter 15
+
+James Clerk Maxwell taught that fields talk to neighbors — electrical potential and heat exchange stories are coupled, not isolated channels on a grid. AMOURANTHRTX implements neighborhood whispers as discrete Laplacian on Phi, diffusion on Thermo, gradient-driven Flow with FieldCoupling mixing strengths. This is Implemented shader arithmetic on bindings 8–10 — not a claim the engine solved Maxwell’s equations in full analytical glory.
+
+Preview intuition for coupling lab: when Phi develops sharp spatial features, Thermo at neighboring texels warms when coupling is high — energy can be moved, axiom three. When coupling is low, channels evolve as parallel homework problems — useful pedagogy, incomplete product story. Chapter 15 creditor page goes historical; Chapter 3 demands you see the consequence in THERMO grep when coupling sweeps.
+
+Do not quote Maxwell to justify ionosphere colors from planetary weave — that is Chapter 6 Visual category error. Quote Maxwell when discrete Laplacian and coupling knobs have stderr witnesses.
+
+Sealed time on fabric — linear physics before sovereign sync
+
+TotalTime::seal() writes monotonic session genesis into FieldSocket::sealed_time before fabric evolves. Thermodynamics without sealed time would let frame-rate jitter rewrite effective Δt stories retroactively — logs would lie. Chapter 3 connects seal to thermo receipts: freeEnergyIncome (Chapter 4) treats sealed time as living-world potential feeding the ledger.
+
+Operators comparing week-one to week-six sessions should compare THERMO against rising steps counter and sealed genesis, not wall clock alone. Chapter 19 sovereign pulses extend the discipline across hosts; session seal is prerequisite intuition — local physics clock before planetary sync narrative.
+
+Failure catalog — thermodynamics edition
+
+Failure mode Symptom Fix
+
+Joule fantasy Bill from THERMO lines Proxy rock — Ch. 4
+
+CFL ignorance NaN colors instant Read clamp grep; Ch. 9
+
+Die thermo denial “Heat only on Classic” Drill 3.C; debug HUD
+
+Oracle merge Zip H tied to boundary thermo Layer exam — Ch. 4
+
+nvidia-smi equivalence GPU power = entropyThisFrame Host vs GPU table above
+
+Zero floor myth EntropyFloor 0 “for clean run” Clausius spirit; reseed
+
+Screenshot-only lab Flowers pretty, THERMO silent Binding 2 checklist — Ch. 7
+
+Chapter summary
+
+Chapter 3 teaches thermodynamics as honest accounting on Phi/Thermo/Flow bindings 8–10. CFL wave and thermo inequalities express mesh-speed ethics; WaveSpeed caps enforce them before dispatch. Boundary thermo narrates probe offense; host x86 heat adds optional proxy terms separate from GPU fabric work. Coupling sweep lab on Flowers/GreenWaves/energy swipes produces grep journals; die-default path shares ThermoAccountant with hidden heatmaps — stderr remains scripture. Clausius spirit lives in entropy floor and irreversibility language without joule fraud. RTXProbe optional timing complements THERMO receipts.
+
+Next: Chapter 4 — Entropy . Dispatch: Chapter 7 . CFL constants: Chapter 9 . Maxwell: Maxwell .
+
+Deep dive — thermodynamics travels through field layers
+
+Guest RAM, VGA, FAT, and audio layers (Chapter 8) pump telemetry into data_bus before fabric evolves. Thermodynamics on the fabric is not isolated from die activity — guest execution raises host pump work, layer sync costs, and optional FieldX86Emu assist heat. Literate operators correlate rising entropyThisFrame with rising pump generation in slot 0 without claiming a single causal line — correlation is human narrative; receipts are grep lines.
+
+When AmmoOS chrome animates on binding 11–14 textures, presentation work still rides the same dispatch loop that populates ThermoAccountant. Chrome is not “outside thermo.” If chrome moves and THERMO is flat, suspect dispatch failure or logging category filters — not “OS mode is free.”
+
+Field layers L0–L9 exist so DOS-shaped universes remain addressable to shaders. Each layer pump is a host obligation in dispatch_canvas() — thermodynamics begins on the host timeline before vkCmdDispatch writes GPU texels. Skip pump literacy and you will misread thermo spikes as fabric bugs when they are guest sync stories.
+
+Deep dive — prompt terminal AnalogFields as live FCC
+
+The in-engine prompt exposes set AnalogFields.TimeScale , ThermoAlpha , WaveSpeed , and siblings — the same namespace mirrored to data_bus[16–23] on the x86 path. Treat prompt changes as offensive writes to boundary conditions: you are not “adjusting graphics,” you are changing the next tick’s PDE parameters subject to CFL guard.
+
+Prompt command Immediate effect Grep witness
+
+set AnalogFields.FieldCoupling 0.8 Cross-channel bleed rises THERMO slope vs prior session
+
+set AnalogFields.InjectStrength 1.2 Mouse probe heats boundary avgBoundaryThermo lines
+
+set AnalogFields.GateFidelity 0.95 Sharper gates, higher maintenance prevMaintCost — Ch. 4
+
+set AnalogFields.WaveSpeed 1.8 CFL may clamp before dispatch harmonics guard stderr
+
+Document knob state in lab journals. Future-you comparing week-six grep to week-one without knob notes will invent myths about “mysterious drift.”

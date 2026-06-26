@@ -1,0 +1,47 @@
+Synthesis question for «CFL and Maxwell stability»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 9 on Maxwell locality on GPU: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «CFL and Maxwell stability»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+10. What we do not claim
+
+We do not claim GPU fabric replaces antenna simulation for FCC compliance (Chapter 6 visual is labeled Visual). We do not claim Laplacian Phi equals full Maxwell TE/TM modes in waveguides. We claim local coupling discipline for operator education and engine stability.
+
+Pedagogy for «What we do not claim»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Maxwell locality on GPU. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 10: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Maxwell locality on GPU is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.
+
+Synthesis question for «What we do not claim»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 10 on Maxwell locality on GPU: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «What we do not claim»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+11. Maxwell and Landauer — offense meets receipts
+
+Maxwell coupling moves energy between channels. Landauer accounting records that movement had irreversibility stories. Read Chapter 13 for proxy decomposition. Coupling raises field work; maintenance remembers frames.
+
+Pedagogy for «Maxwell and Landauer»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Maxwell locality on GPU. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 11: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Maxwell locality on GPU is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.
+
+Synthesis question for «Maxwell and Landauer»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 11 on Maxwell locality on GPU: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Maxwell and Landauer»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+12. Creditor tribute practice
+
+Visit ../creditors/maxwell.html. Portrait plus love block: fields are how existence touches neighbors. Teach students to grep coupling before they screenshot beauty.
+
+Pedagogy for «Creditor tribute practice»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Maxwell locality on GPU. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 12: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Maxwell locality on GPU is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.

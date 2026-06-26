@@ -1,0 +1,52 @@
+{
+  "schema": "queen-gui/v1",
+  "name": "Field Technology Queen 2026",
+  "field_technology_book": true,
+  "primer_palette": "Field_Primer/docs/css/field-primer.css",
+  "colors": {
+    "void": "#040810",
+    "panel": "#0f1a2e",
+    "border": "#2a4068",
+    "phi": "#38bdf8",
+    "thermo": "#f59e0b",
+    "flow": "#a78bfa",
+    "gold": "#f0d060",
+    "aqua": "#38bdf8",
+    "rose": "#eb488c",
+    "accent": "#5ecfff",
+    "text": "#e8f2ff",
+    "dim": "#8aa4c8",
+    "ok": "#34d399",
+    "bar_fill": "#38bdf8",
+    "bar_track": "#1a2230"
+  },
+  "chrome": {
+    "tab_height": 40,
+    "url_bar_height": 44,
+    "corner_radius": 8,
+    "compshader_boot": "QueenBoot.comp",
+    "fallback_boot_ms": 1800
+  },
+  "typography": {
+    "ui_font": "Inter, system-ui, sans-serif",
+    "mono_font": "JetBrains Mono, monospace"
+  },
+  "rtx": {
+    "field_socket_layout": "AMOURANTHRTX",
+    "sealed_time_drive": true,
+    "thermo_per_tab": true,
+    "display": {
+      "width": 3840,
+      "height": 2160,
+      "refresh_hz": 120
+    }
+  },
+  "grok_build": {
+    "enabled": true,
+    "secure_channel": true,
+    "partner": "xAI / X",
+    "branded_deck": "gui/grok-build-deck.html",
+    "acp_bind": "127.0.0.1:2419",
+    "model": "grok-build"
+  }
+}

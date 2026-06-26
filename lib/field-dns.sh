@@ -3,29 +3,45 @@
 
 nexus_field_dns_publish() {
   [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local py="${NEXUS_INSTALL_ROOT}/lib/field-dns.py"
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$py" build >/dev/null 2>&1 || true
+    pythong "$py" build >/dev/null 2>&1 || true
   local eg="${NEXUS_INSTALL_ROOT}/lib/dns-egress-integrity.py"
   [[ -f "$eg" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$eg" build >/dev/null 2>&1 || true
+    pythong "$eg" build >/dev/null 2>&1 || true
   local tg="${NEXUS_INSTALL_ROOT}/lib/dns-threat-guard.py"
   [[ -f "$tg" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$tg" build >/dev/null 2>&1 || true
+    pythong "$tg" build >/dev/null 2>&1 || true
   local dh="${NEXUS_INSTALL_ROOT}/lib/field-dhcp.py"
   [[ -f "$dh" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$dh" build >/dev/null 2>&1 || true
+    pythong "$dh" build >/dev/null 2>&1 || true
   local to="${NEXUS_INSTALL_ROOT}/lib/dns-service-takeover.py"
   [[ -f "$to" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$to" build >/dev/null 2>&1 || true
+    pythong "$to" build >/dev/null 2>&1 || true
   local mid="${NEXUS_INSTALL_ROOT}/lib/dns-multipoint-identity.py"
   [[ -f "$mid" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$mid" build >/dev/null 2>&1 || true
+    pythong "$mid" build >/dev/null 2>&1 || true
   local inf="${NEXUS_INSTALL_ROOT}/lib/dns-internet-field.py"
   [[ -f "$inf" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$inf" build >/dev/null 2>&1 || true
+    pythong "$inf" build >/dev/null 2>&1 || true
+  local ntp="${NEXUS_INSTALL_ROOT}/lib/field-ntp-2026.py"
+  [[ -f "$ntp" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    pythong "$ntp" build >/dev/null 2>&1 || true
+  local st="${NEXUS_INSTALL_ROOT}/lib/sovereign-time.py"
+  [[ -f "$st" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    pythong "$st" status >/dev/null 2>&1 || true
+  local gate="${NEXUS_INSTALL_ROOT}/lib/field-sovereign-gate.py"
+  [[ -f "$gate" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    pythong "$gate" json >/dev/null 2>&1 || true
+  local fs="${NEXUS_INSTALL_ROOT}/lib/field-services-2026.py"
+  [[ -f "$fs" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    pythong "$fs" build >/dev/null 2>&1 || true
+  local sync="${NEXUS_INSTALL_ROOT}/lib/field-sovereign-sync.py"
+  [[ -f "$sync" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    pythong "$sync" mirror >/dev/null 2>&1 && \
+    pythong "$sync" json >/dev/null 2>&1 || true
 }
 
 nexus_dns_internet_pull_loop() {
@@ -34,7 +50,7 @@ nexus_dns_internet_pull_loop() {
   [[ -f "$py" ]] || return 0
   while true; do
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$py" pull >/dev/null 2>&1 || true
+      pythong "$py" pull >/dev/null 2>&1 || true
     sleep "${NEXUS_DNS_INTERNET_PULL_INTERVAL:-3600}"
   done
 }
@@ -47,10 +63,10 @@ nexus_field_dns_json() {
   local cache="${NEXUS_STATE_DIR}/field-dns-panel.json"
   if [[ -f "$py" ]]; then
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$py" json 2>/dev/null && return 0
+      pythong "$py" json 2>/dev/null && return 0
   fi
   if [[ -s "$cache" ]]; then
-    python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$cache" 2>/dev/null
+    pythong -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$cache" 2>/dev/null
     return 0
   fi
   printf '{"schema":"field-dns/v2","running":false,"rfc_matrix":[],"legal_framework":[],"zones":[]}'
@@ -61,10 +77,10 @@ nexus_field_dns_takeover_cycle() {
   local py="${NEXUS_INSTALL_ROOT}/lib/dns-service-takeover.py"
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$py" evaluate >/dev/null 2>&1 || true
+    pythong "$py" evaluate >/dev/null 2>&1 || true
   local phase
   phase="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$py" phase 2>/dev/null || echo observing)"
+    pythong "$py" phase 2>/dev/null || echo observing)"
   if [[ "$phase" == "primary" ]]; then
     declare -f nexus_field_dns_enforce_resolv >/dev/null 2>&1 && nexus_field_dns_enforce_resolv || true
     declare -f nexus_field_dns_local_capture >/dev/null 2>&1 && nexus_field_dns_local_capture || true
@@ -80,7 +96,7 @@ nexus_field_dns_serve_loop() {
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
       NEXUS_FIELD_DNS_BINDS_IPV4="${NEXUS_FIELD_DNS_BINDS_IPV4:-127.0.0.1}" \
       NEXUS_FIELD_DNS_BINDS_IPV6="${NEXUS_FIELD_DNS_BINDS_IPV6:-::1}" \
-      python3 "$py" serve 2>/dev/null || true
+      pythong "$py" serve 2>/dev/null || true
     sleep 5
   done
 }
@@ -91,7 +107,7 @@ nexus_field_dns_enforce_resolv() {
   if [[ -f "$to" ]]; then
     local ok
     ok="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$to" can-enforce-resolv 2>/dev/null || echo 0)"
+      pythong "$to" can-enforce-resolv 2>/dev/null || echo 0)"
     [[ "$ok" == "1" ]] || return 0
   fi
   local port="${NEXUS_FIELD_DNS_PORT:-53}"
@@ -125,7 +141,7 @@ nexus_field_dns_foreign_ips() {
   local py="${NEXUS_INSTALL_ROOT}/lib/dns-planetary-security.py"
   if [[ -f "$py" ]]; then
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$py" foreign-ips 2>/dev/null && return 0
+      pythong "$py" foreign-ips 2>/dev/null && return 0
   fi
   printf '%s\n' '{"ipv4":["8.8.8.8","8.8.4.4","1.1.1.1","1.0.0.1","9.9.9.9","71.10.216.1","71.10.216.2"],"ipv6":["2001:4860:4860::8888","2001:4860:4860::8844","2606:4700:4700::1111","2606:4700:4700::1001","2620:fe::fe","2620:fe::9"]}'
 }
@@ -141,8 +157,8 @@ nexus_field_dns_local_capture() {
   # Block egress DNS to foreign resolvers — never add untrusted (RFC 9520)
   local foreign_json foreign4 foreign6
   foreign_json="$(nexus_field_dns_foreign_ips)"
-  foreign4="$(printf '%s' "$foreign_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv4") or []))' 2>/dev/null || true)"
-  foreign6="$(printf '%s' "$foreign_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv6") or []))' 2>/dev/null || true)"
+  foreign4="$(printf '%s' "$foreign_json" | pythong -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv4") or []))' 2>/dev/null || true)"
+  foreign6="$(printf '%s' "$foreign_json" | pythong -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv6") or []))' 2>/dev/null || true)"
   foreign4="${foreign4:-8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1, 9.9.9.9, 71.10.216.1, 71.10.216.2}"
   if [[ -n "$foreign4" ]]; then
     nft add rule inet "$table" output \
@@ -179,14 +195,14 @@ nexus_field_dhcp_serve_loop() {
     local to="${NEXUS_INSTALL_ROOT}/lib/dns-service-takeover.py"
     if [[ -f "$to" ]]; then
       ok="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-        python3 "$to" can-serve-dhcp 2>/dev/null || echo 0)"
+        pythong "$to" can-serve-dhcp 2>/dev/null || echo 0)"
     fi
     if [[ "$ok" == "1" ]]; then
       NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-        python3 "$py" serve 2>/dev/null || true
+        pythong "$py" serve 2>/dev/null || true
     else
       NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-        python3 "$py" build >/dev/null 2>&1 || true
+        pythong "$py" build >/dev/null 2>&1 || true
       sleep 15
     fi
     sleep 5
@@ -197,4 +213,29 @@ nexus_field_dns_enforce_cycle() {
   [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
   declare -f nexus_field_dns_takeover_cycle >/dev/null 2>&1 && nexus_field_dns_takeover_cycle || true
   declare -f nexus_field_dns_publish >/dev/null 2>&1 && nexus_field_dns_publish || true
+}
+
+nexus_sovereign_time_serve_loop() {
+  [[ "${NEXUS_SOVEREIGN_TIME:-1}" == "1" ]] || return 0
+  local py="${NEXUS_INSTALL_ROOT}/lib/sovereign-time.py"
+  [[ -f "$py" ]] || return 0
+  while true; do
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      NEXUS_SOVEREIGN_TIME_BIND="${NEXUS_SOVEREIGN_TIME_BIND:-127.0.0.1}" \
+      pythong "$py" serve 2>/dev/null || true
+    sleep 5
+  done
+}
+
+nexus_field_ntp_serve_loop() {
+  [[ "${NEXUS_FIELD_NTP:-1}" == "1" ]] || return 0
+  local py="${NEXUS_INSTALL_ROOT}/lib/field-ntp-2026.py"
+  [[ -f "$py" ]] || return 0
+  while true; do
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      NEXUS_FIELD_NTP_BIND="${NEXUS_FIELD_NTP_BIND:-127.0.0.1}" \
+      NEXUS_SOVEREIGN_TIME_FIRST="${NEXUS_SOVEREIGN_TIME_FIRST:-1}" \
+      pythong "$py" serve 2>/dev/null || true
+    sleep 5
+  done
 }

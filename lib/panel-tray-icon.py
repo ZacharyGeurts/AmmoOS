@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""Dark-theme NEXUS tray icon — Amouranth face maxed at taskbar pixel size."""
+#!/usr/bin/env pythong
+"""Dark-theme NEXUS tray icon — US field (Statue of Liberty) at taskbar pixel size."""
 from __future__ import annotations
 
 import os
@@ -14,55 +14,60 @@ TRAY_PIXEL_SIZES = (22, 24, 32)
 
 DARK_FILL = (8, 10, 18, 255)
 DARK_EDGE = (12, 18, 32, 255)
+ICON_BASENAME = "nexus-tray-us"
 
 
-def _face_source(install: Path) -> Path:
+def _us_source(install: Path) -> Path:
     for rel in (
-        "panel/assets/amouranth-twitch-avatar.png",
-        "panel/assets/nexus-tray-amouranth.png",
+        "panel/assets/nexus-tray-us-source.jpg",
+        "panel/assets/nexus-tray-us-source.png",
+        f"panel/assets/{ICON_BASENAME}.png",
         "panel/assets/nexus-shield.png",
     ):
         p = install / rel
         if p.is_file() and p.stat().st_size > 0:
             return p
-    return install / "panel" / "assets" / "amouranth-twitch-avatar.png"
+    return install / "panel" / "assets" / "nexus-tray-us-source.jpg"
 
 
-def _face_crop(img: Image.Image) -> Image.Image:
-    """Tight square crop biased upward so the face fills the tiny tray slot."""
+def _us_crop(img: Image.Image) -> Image.Image:
+    """Square crop on crown and face — biased upward for the portrait source."""
     rgba = img.convert("RGBA")
     w, h = rgba.size
     side = min(w, h)
-    zoom = 0.82
+    zoom = 0.88
     crop_side = max(8, int(side * zoom))
     left = (w - crop_side) // 2
-    top = max(0, (h - crop_side) // 2 - int(h * 0.06))
+    top = max(0, int(h * 0.02))
     if top + crop_side > h:
         top = h - crop_side
     return rgba.crop((left, top, left + crop_side, top + crop_side))
 
 
-def render_dark_face_icon(face: Image.Image, size: int) -> Image.Image:
-    """Tiny dark tray tile — face uses every pixel possible (1 px dark rim)."""
+def render_dark_us_icon(face: Image.Image, size: int) -> Image.Image:
+    """Tiny dark tray tile — statue head fills the slot (1 px dark rim)."""
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     margin = 1
-    face_px = size - 2 * margin
-    face_sq = _face_crop(face).resize((face_px, face_px), Image.Resampling.LANCZOS)
+    icon_px = size - 2 * margin
+    icon_sq = _us_crop(face).resize((icon_px, icon_px), Image.Resampling.LANCZOS)
     if size <= 32:
-        face_sq = face_sq.filter(ImageFilter.UnsharpMask(radius=0.5, percent=140, threshold=1))
+        icon_sq = icon_sq.filter(ImageFilter.UnsharpMask(radius=0.5, percent=150, threshold=1))
 
-    mask = Image.new("L", (face_px, face_px), 0)
-    ImageDraw.Draw(mask).ellipse((0, 0, face_px - 1, face_px - 1), fill=255)
-    face_sq.putalpha(mask)
+    mask = Image.new("L", (icon_px, icon_px), 0)
+    draw_mask = ImageDraw.Draw(mask)
+    radius = max(2, icon_px // 6)
+    draw_mask.rounded_rectangle((0, 0, icon_px - 1, icon_px - 1), radius=radius, fill=255)
+    icon_sq.putalpha(mask)
 
     draw = ImageDraw.Draw(canvas)
-    draw.ellipse(
-        (margin, margin, margin + face_px - 1, margin + face_px - 1),
+    draw.rounded_rectangle(
+        (margin, margin, margin + icon_px - 1, margin + icon_px - 1),
+        radius=radius,
         fill=DARK_FILL,
         outline=DARK_EDGE,
         width=1,
     )
-    canvas.paste(face_sq, (margin, margin), face_sq)
+    canvas.paste(icon_sq, (margin, margin), icon_sq)
     return canvas
 
 
@@ -71,7 +76,7 @@ def install_xdg_tray_icons(install: Path, home: Path | None = None) -> None:
     assets = install / "panel" / "assets"
     cache_root = home / ".local/share/icons/hicolor"
     for px in TRAY_PIXEL_SIZES:
-        src = assets / f"nexus-tray-amouranth-{px}.png"
+        src = assets / f"{ICON_BASENAME}-{px}.png"
         if not src.is_file():
             continue
         dest = cache_root / f"{px}x{px}" / "apps" / "nexus-shield-panel.png"
@@ -92,13 +97,13 @@ def build_tray_icons(
     *,
     force: bool = False,
 ) -> Path:
-    src = _face_source(install)
+    src = _us_source(install)
     icon = state / "nexus-tray.png"
     stamp_file = state / "nexus-tray-icon.stamp"
     tag = (
-        f"dark-v3-maxface:{src}:{src.stat().st_mtime_ns}:{src.stat().st_size}"
+        f"dark-v4-us:{src}:{src.stat().st_mtime_ns}:{src.stat().st_size}"
         if src.is_file()
-        else "dark-v3-maxface:missing"
+        else "dark-v4-us:missing"
     )
     state.mkdir(parents=True, exist_ok=True)
     assets = install / "panel" / "assets"
@@ -114,16 +119,16 @@ def build_tray_icons(
         return icon
 
     if not src.is_file():
-        raise FileNotFoundError(f"face source missing: {src}")
+        raise FileNotFoundError(f"US tray source missing: {src}")
 
-    face = Image.open(src)
+    statue = Image.open(src)
     rendered: dict[int, Image.Image] = {}
     for px in TRAY_PIXEL_SIZES:
-        rendered[px] = render_dark_face_icon(face, px)
-        rendered[px].save(assets / f"nexus-tray-amouranth-{px}.png", format="PNG")
+        rendered[px] = render_dark_us_icon(statue, px)
+        rendered[px].save(assets / f"{ICON_BASENAME}-{px}.png", format="PNG")
     for px in (64, 128):
-        render_dark_face_icon(face, px).save(
-            assets / ("nexus-tray-amouranth.png" if px == 128 else "nexus-tray-amouranth-64.png"),
+        render_dark_us_icon(statue, px).save(
+            assets / (f"{ICON_BASENAME}.png" if px == 128 else f"{ICON_BASENAME}-64.png"),
             format="PNG",
         )
 

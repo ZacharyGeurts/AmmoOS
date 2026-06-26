@@ -310,6 +310,40 @@
     }).join("");
   }
 
+  function renderSectionsDiagram(data) {
+    const host = document.getElementById("spiderweb-sections-diagram");
+    if (!host) return;
+    const diag = data.sections_diagram || {};
+    const sections = Array.isArray(diag.sections) ? diag.sections : [];
+    const idle = data.mode === "idle" || diag.idle || data.stats?.idle;
+    if (!sections.length && !diag.ascii) {
+      host.innerHTML =
+        '<pre class="sw-sections-ascii">[ idle — press Rebuild web to survey sections ]</pre>';
+      return;
+    }
+    const cards = sections
+      .map((sec) => {
+        const placed =
+          sec.placed != null ? ` · ${sec.placed} placed` : sec.moving != null ? ` · ${sec.moving} moving` : "";
+        const samples = (sec.samples || []).length
+          ? `<div class="sw-section-samples">${esc((sec.samples || []).join(" · "))}</div>`
+          : "";
+        return (
+          `<article class="sw-section-card${idle ? " sw-section-card--idle" : ""}">` +
+          `<h4>${esc(sec.title || sec.id)}</h4>` +
+          `<div class="sw-section-count"><strong>${sec.total ?? 0}</strong>${placed}</div>` +
+          samples +
+          "</article>"
+        );
+      })
+      .join("");
+    host.innerHTML =
+      (diag.ascii
+        ? `<pre class="sw-sections-ascii" aria-label="Section topology">${esc(diag.ascii)}</pre>`
+        : "") +
+      `<div class="sw-sections-grid">${cards}</div>`;
+  }
+
   function renderMeta(data) {
     const motto = document.getElementById("spiderweb-motto");
     const meta = document.getElementById("spiderweb-meta");
@@ -318,6 +352,9 @@
     const leg = document.getElementById("spiderweb-legend");
     const s = data.stats || {};
     const focus = data.focus || {};
+    const idle = data.mode === "idle" || s.idle;
+
+    renderSectionsDiagram(data);
 
     if (motto && data.motto) {
       motto.innerHTML = `<strong>Global terror · Spiderweb</strong> — ${esc(data.motto)}`;
@@ -333,12 +370,15 @@
       ].join("");
     }
     if (meta) {
-      meta.textContent = [
-        focus.label || "Spiderweb active",
-        `heat ${focus.heat_sum ?? 0}`,
-        s.terror_nodes != null ? `terror ${s.terror_nodes}` : "",
-        s.edges != null ? `edges ${s.edges}` : "",
-      ].filter(Boolean).join(" · ");
+      meta.textContent = idle
+        ? "Idle — operator rebuild only · no background probes"
+        : [
+            focus.label || "Spiderweb survey",
+            `heat ${focus.heat_sum ?? 0}`,
+            s.terror_nodes != null ? `terror ${s.terror_nodes}` : "",
+            s.edges != null ? `edges ${s.edges}` : "",
+            data.tempered ? "tempered build" : "",
+          ].filter(Boolean).join(" · ");
     }
     if (stats) {
       stats.innerHTML = [

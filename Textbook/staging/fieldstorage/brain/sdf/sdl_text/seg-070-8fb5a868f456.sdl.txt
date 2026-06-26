@@ -1,0 +1,83 @@
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+11. Shannon oracle separation
+
+Chapter 14 treats Shannon entropy H on files in NEXUS. ThermoAccountant lives in the GPU dispatch loop. Same word entropy, different layers. Vendors fuse them into one dashboard; Field Technology refuses.
+
+Landauer prices bit erasure thermodynamically. Shannon measures surprise in symbol distributions. Boltzmann links microstates to macro entropy. Keep creditors named and separated. Read ../creditors/shannon.html when file storms rise; read this chapter when frame receipts matter.
+
+Pedagogy for «Shannon oracle separation»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Landauer and ThermoAccountant. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 11: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Landauer and ThermoAccountant is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.
+
+Synthesis question for «Shannon oracle separation»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 11 on Landauer and ThermoAccountant: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Shannon oracle separation»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+12. Historical weight — 1961 in a 2026 textbook
+
+Landauer worked when computers filled rooms. His bound survived vacuum tubes, CMOS, GPUs, and will survive whatever compute substrate follows. As devices approach atomic limits, per-bit thermodynamics becomes engineering constraint rather than philosophy footnote.
+
+AMOURANTHRTX is not a laboratory Landauer engine. It is operator training: grep irreversibility before someone sells reversible cloud myth. The textbook is serious because it teaches mechanism and labels rocks visible.
+
+Pedagogy for «Historical weight»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Landauer and ThermoAccountant. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 12: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Landauer and ThermoAccountant is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.
+
+Synthesis question for «Historical weight»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 12 on Landauer and ThermoAccountant: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Historical weight»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+Operator drill 13.A — baseline grep
+
+./linux.sh run 2>&1 | tee ch13-run.log
+# Classic canvas: idle 30s, inject 60s
+grep -E 'THERMO|entropy|Boundary|prevMaint|steps' ch13-run.log | tail -60
+
+Operator drill 13.B — coupling A/B
+
+# Session A: FieldCoupling = 0, 120s
+# Session B: FieldCoupling = 1.0, 120s
+# Compare entropyThisFrame distributions — field work should rise with coupling
+
+Operator drill 13.C — data_bus mirror
+
+# Correlate HUD / debug read of data_bus[24-28] with stderr THERMO lines
+
+Figure 13.1 — Theory floor, proxy ledger, honest label.
+
+Study questions
+
+State Landauer's bound in symbols and plain English. Why does ln 2 appear?
+
+Enumerate ThermoAccountant fields and their roles.
+
+Why must entropyThisFrame stay labeled Metaphor in public writing?
+
+Fabric moves, entropy zero — what do you check first?
+
+Explain prevMaintCost as coherence tax.
+
+How is avgBoundaryThermo different from GPU junction temperature?
+
+What is the entropy floor defending against?
+
+Name three comparative uses of proxy curves.
+
+How do Landauer receipts relate to sealed time?
+
+Distinguish ThermoAccountant entropy from Shannon file H.
+
+Read ../creditors/landauer.html — what does the love block claim?
+
+When would you escalate from proxy grep to laboratory calorimetry?
+
+Tributes: Rolf Landauer · Clausius & Boltzmann · All creditors

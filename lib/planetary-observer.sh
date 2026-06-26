@@ -5,7 +5,7 @@ nexus_planetary_observer_json() {
   local py="${NEXUS_INSTALL_ROOT}/lib/planetary-observer.py"
   [[ -f "$py" ]] || { printf '{}'; return 0; }
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$py" json 2>/dev/null || printf '{}'
+    pythong "$py" json 2>/dev/null || printf '{}'
 }
 
 nexus_planetary_observer_cycle() {
@@ -13,7 +13,7 @@ nexus_planetary_observer_cycle() {
   local py="${NEXUS_INSTALL_ROOT}/lib/planetary-observer.py"
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$py" cycle >/dev/null 2>&1 || true
+    pythong "$py" cycle >/dev/null 2>&1 || true
 }
 
 nexus_planetary_observer_proactive() {
@@ -21,5 +21,5 @@ nexus_planetary_observer_proactive() {
   local py="${NEXUS_INSTALL_ROOT}/lib/planetary-observer.py"
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$py" proactive 2>/dev/null || true
+    pythong "$py" proactive 2>/dev/null || true
 }

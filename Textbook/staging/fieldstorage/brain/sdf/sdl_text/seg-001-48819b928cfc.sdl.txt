@@ -1,0 +1,113 @@
+Family Binding / store Contents Product
+
+GPU analog fabric Vulkan 8, 9, 10 Phi, Thermo, Flow per texel AMOURANTHRTX
+
+Field Die SSBO binding 1 FieldX86Die — 64 MiB guest RAM, VGA, tile cache AMOURANTHRTX
+
+Packet field NEXUS field jsonl TX/RX, ports, paths, gatekeeper verdicts NEXUS-Shield
+
+Implemented. Fabric via createAnalogFieldFabric() . Die via FieldX86Die . Packet field via NEXUS — not inside Vulkan engine .
+
+Host never runs CPU-side PDE on fabric — evolution is compute shader work per vkCmdDispatch . Default ./linux.sh run boots Field Die ( x86.comp ), not decorative raymarch. Chapter 8 owns die map; Chapter 2 owns three-scale integration.
+
+Phi, Thermo, Flow in one sentence each
+
+Phi (Φ) — wave and gate potential; electrical metaphor on binding 8. Thermo — heat and entropy density scalar per texel; binding 9. Flow — advection and momentum; gradients in .gb ; binding 10. FieldCoupling links all three — energy can be moved.
+
+The axioms — constraints on honest sentences
+
+Reality is 3D. Texels, die bytes, socket positions — addressable space.
+
+Time is linear. Logs append; TotalTime::seal() ; no retroactive myth.
+
+Energy can be moved. Coupling between channels; proxy accounting labeled honest.
+
+Reality is 3D is not cosmology slides — it is coordinates. Time is linear is sealed session clocks and jsonl append — Chapter 19 extends across hosts. Energy can be moved is Maxwell's neighborhood on a grid — Chapter 3 thermodynamics, Chapter 4 entropy receipts.
+
+Status labels — contract with the reader
+
+Label Meaning Example
+
+Implemented Grep, set, screenshot FieldCoupling , gatekeeper, Queen QUEEN_READY
+
+Metaphor Intuition, not SI units Proxy entropy; Tesla valve bias
+
+Philosophy Operator discipline 94/6 filter; literacy as weapon
+
+Visual Shader art, not instruments Planetary weave RF shell
+
+Science posture: theory inspires vocabulary; implementation is what you grep. Equations on blackboards do not exist in silicon until bindings and log lines prove them.
+
+Four products — one literacy, distinct boundaries
+
+Product License Role
+
+AMOURANTHRTX GPL v3 or commercial Vulkan Field Die, fabric, thermo
+
+NEXUS-Shield MIT Packet field, gatekeeper, panel :9477
+
+Queen Sovereign browser RTX + all gates held; WebRTC through gatekeeper
+
+KILROY Field OS kernel CONFIG_RTX_FIELD_DIE , syscall boundary
+
+Conflating products is week-one failure. Gatekeeper verdicts are not in AMOURANTHRTX sources. vkCmdDispatch is not in NEXUS. Queen links spine when QUEEN_BROWSER_BUILD is set — Chapter 21.
+
+Queen posture preview
+
+Nothing optional. Hold all gates. MP4 mandatory in-tree. Wrong: disable WebRTC to feel safe. Right: WebRTC through Connection Gatekeeper with honorability and packet field. EME held, not omitted. Chapter 21 is full doctrine; preface plants the stake.
+
+NEXUS gatekeeper preview
+
+Connection Gatekeeper scores ten axes → USER_OK, EPHEMERAL, SUSPICIOUS, HARM_CANDIDATE. One weird packet does not condemn a peer. Chapter 5 is defensive core.
+
+Local-first perimeter — why loopback truth
+
+Everything here is local-first : loopback panel, operator-owned time, grep-able jsonl. Not cloud security. Packet field sees your machine's habits — Implemented scope, not internet omniscience. Planetary weave RF is Visual only — Chapter 6. Proxy entropy is not joules — Chapter 4.
+
+Cloud vendors sell single-dashboard truth. Field operators distrust single-dashboard truth by training. Literacy means correlating stderr, data_bus , and jsonl without outsourcing conscience.
+
+How to read this book — chapter spine
+
+Chapters 2–12: engineering core. 13–15: creditor deep dives. 16–18: Love, God, Covenant. 19–21: sovereign time, public services, Queen. 22: glossary.
+
+Ch. Link Topic
+
+2 02-fields-pixels-packets Three dimensions of state
+
+3 03-thermodynamics Thermodynamics
+
+4 04-entropy Entropy receipts
+
+5 05-packet-field Packet field
+
+6 06-rf-signals RF & weave
+
+12 12-reality-theory Honesty rocks
+
+Read preface once. Bookmark Chapter 12. When sold cosmology, return to rocks table.
+
+Version five — what changed
+
+v5 adds textbook depth: objectives, drills, failure modes, study questions, explicit rocks on every poetic knob. Image manifest version 5 locks chapter slugs and wiki links. Social meta and build-chapters.py assemble full pages from these body fragments in content/chapters/ . You are reading the body fragment — the serious book layer operators grep against.
+
+Holographic boundary — where rendering pays cost
+
+The holographic boundary in this stack is where HDR frame pairs meet analog fabric — where beauty costs heat in ThermoAccountant receipts, where existence becomes visible to the operator eye. Chapter 17 names God at that boundary as philosophy. Chapter 1 names it as engineering fact: every presented frame that evolved fabric texels left a trace in proxy entropy unless dispatch failed.
+
+Operators who screenshot without grepping mistake the boundary for decoration. The boundary is the invoice. Not joules from a wattmeter — proxy integral — but an honest invoice nonetheless. When entropy reads zero while fabric moves, physics refuses to lie for you; the dispatch path failed.
+
+Queen browser inherits the same boundary when WebGL and WebGPU contexts accrue thermo per context (Chapter 21). Browser tabs are not outside field theory; they are another writable surface held behind gates.
+
+ThermoAccountant — preview from Chapter 4
+
+Vulkan binding 2 carries ThermoAccountant — populated every dispatch_canvas() . Fields include entropyThisFrame , avgBoundaryThermo , prevMaintCost , freeEnergyIncome , steps . Mirrored to data_bus[24–28] for HUD and grep.
+
+entropyThisFrame — Landauer proxy + field work + probes
+avgBoundaryThermo — mean boundary temperature / entropy density
+prevMaintCost — coherence with previous frame
+
+Rock: entropyThisFrame is proxy — field work + probe dissipation + maintenance. Not joules from nvidia-smi. Chapter 4 and Chapter 13 go deeper. Preface plants the label so newcomers do not bill the power company from stderr.
+
+Sealed time — preview from Chapter 19
+
+TotalTime::seal() locks session genesis into FieldSocket::sealed_time . Frame-rate jitter cannot rewrite physics time. Sovereign time extends seal-forward and verify-at-receive across hosts with HMAC pulses and SQUIDGIE verdicts.

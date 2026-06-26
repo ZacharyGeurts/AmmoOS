@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Field DHCP — issue leases only; DNS option 6 → Truth Resolver."""
 from __future__ import annotations
 
@@ -62,6 +62,18 @@ _threats: list[dict[str, Any]] = []
 
 
 def _now() -> str:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "sovereign_sync_dhcp", INSTALL / "lib" / "field-sovereign-sync.py",
+        )
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.utc("dhcp")
+    except (ImportError, OSError, AttributeError):
+        pass
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -91,9 +103,10 @@ def _lease_expiry(leased_at: str) -> tuple[str, int]:
     try:
         dt = datetime.strptime(leased_at[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
     except (ValueError, TypeError):
-        dt = datetime.now(timezone.utc)
+        dt = datetime.strptime(_now()[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
     exp = dt + timedelta(seconds=LEASE_SEC)
-    remaining = max(0, int((exp - datetime.now(timezone.utc)).total_seconds()))
+    now_dt = datetime.strptime(_now()[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+    remaining = max(0, int((exp - now_dt).total_seconds()))
     return exp.strftime("%Y-%m-%dT%H:%M:%SZ"), remaining
 
 
@@ -242,7 +255,24 @@ def _guard_mod() -> Any:
     return mod
 
 
+def _sovereign_gate() -> dict[str, Any]:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "sovereign_gate_dhcp", INSTALL / "lib" / "field-sovereign-gate.py",
+        )
+        if not spec or not spec.loader:
+            return {}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.gate(service="dhcp", action="packet")
+    except Exception:
+        return {}
+
+
 def _handle(data: bytes, addr: tuple[str, int]) -> bytes | None:
+    gate = _sovereign_gate()
     if len(data) < 240:
         _stats["rejected"] += 1
         return None
@@ -457,7 +487,9 @@ def build_panel() -> dict[str, Any]:
         "may_serve": may_serve,
         "takeover": takeover,
         "takeover_phase": takeover.get("phase") or "observing",
-        "motto": "DHCP issues only — DNS option 6 → NEXUS Truth Resolver.",
+        "security_model": "field-sovereign-gate",
+        "never_lose_cycle": True,
+        "motto": "DHCP sovereign-gated — DNS option 6 → Truth Resolver; cycle never lost.",
         "bind": f"{BIND_IF}:{PORT}",
         "pool": {"start": POOL_START, "end": POOL_END},
         "dns_option": DNS_SERVERS,

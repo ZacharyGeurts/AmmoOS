@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field antenna catch — 3-field antenna tunes MHz, catches OTA station, plays to speakers."""
 from __future__ import annotations
 

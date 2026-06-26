@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Geo Intel — industry-standard enrichment for host attack placement.
 
 Standards pipeline (no single vendor lock-in):

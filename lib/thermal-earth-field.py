@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Thermal Earth field — SDF temperature grid, OCR body identification, warm/cold registry.
 
 Top-down equirectangular temperature SDF + 3D globe sampling. Every warm and cold body

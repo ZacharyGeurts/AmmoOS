@@ -1,0 +1,49 @@
+Synthesis question for «Thermo to Flow»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 6 on Maxwell locality on GPU: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Thermo to Flow»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+7. Flow gradients and GateFidelity
+
+Flow stores gradient magnitudes. GateFidelity slides between soft analog behavior and sharp gating. Maxwell locality plus gate shaping is how offense dispatch stays visually coherent under load.
+
+Pedagogy for «Flow gradients and GateFidelity»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Maxwell locality on GPU. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 7: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Maxwell locality on GPU is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.
+
+Synthesis question for «Flow gradients and GateFidelity»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 7 on Maxwell locality on GPU: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Flow gradients and GateFidelity»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+8. hardwareFabric mirror — Chapter 10 bridge
+
+Fabric averages feed hardwareFabric in Spiderweb observability. Maxwell coupling on GPU becomes node colors and edge weights on the operator mirror. Local physics becomes global legibility without faking instrumentation.
+
+Pedagogy for «hardwareFabric mirror»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Maxwell locality on GPU. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 8: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Maxwell locality on GPU is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.
+
+Synthesis question for «hardwareFabric mirror»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 8 on Maxwell locality on GPU: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «hardwareFabric mirror»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+9. CFL and Maxwell stability
+
+waveCFL = c·Δt/Δx ≤ 1 and thermoCFL = α·Δt/Δx² ≤ 1 guard the mesh. Violation means neighbors talk faster than the grid can honestly relay — numerical instability dressed as energy.
+
+Host scales parameters down before dispatch. This is care for operators who grep after long sessions.
+
+Pedagogy for «CFL and Maxwell stability»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Maxwell locality on GPU. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 9: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Maxwell locality on GPU is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.

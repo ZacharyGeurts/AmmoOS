@@ -1,0 +1,95 @@
+Science posture: jsonl is not physics. It is forensic narrative. Truth survives grep when keys are honest and timestamps sealed.
+
+KILL dossier ethics — permanent does not mean casual
+
+KILL is not a button mood. It creates a permanent dossier — archived, surviving reboot, readable years later when you forgot the afternoon’s frustration. Ethics:
+
+Watchlist before block. SUSPICIOUS earns observation; KILL earns authorship.
+
+Corroboration before permanence. Multiple axes, optionally oracle alert, optionally DNS trace — not one weird packet.
+
+Human authorship. Daemons recommend; operators sign. No automated KILL because entropy stormed.
+
+Forgiveness path. Local memory enables review — downgrade watchlist, annotate dossier, admit mistake without phone-home.
+
+No cloud absolution. Vendor “global ban lists” outsource conscience; NEXUS keeps yours local.
+
+Love as engineering restraint: KILL dossiers are gravestones, not confetti. The stack gives you power to remember — use it when you are willing to stand behind the memory.
+
+Panel HTML at :9477 is ephemeral window chrome — pretty, convenient, not the archive. field jsonl and KILL dossiers are the memory. Screenshot the panel for teaching; trust jsonl for testimony.
+
+Port registry learning — habits, not textbook alone
+
+Ports are habits learned on your machine: 443 HTTPS, 53 DNS, 123 NTP, 9123 sovereign pulse, 9477 panel. Shell-class ports (4444, 1337 folklore) raise different axis weight than loopback 9477 health checks. The registry compares today’s flow against your history — not a generic list shipped from a vendor who never saw your lab.
+
+First week on a fresh install: many flows read EPHEMERAL or lightly SUSPICIOUS because habit axis lacks memory — normal, not failure. Week six: repeated Queen WebRTC peers should stabilize toward USER_OK if honorability and paths stay clean. Sudden habit breakage — trusted port, alien path — is corroboration gold.
+
+Chapter 20 Truth DNS at 127.0.0.1 with trace-from-root supplies naming honesty for corroboration. Packet field sentences plus DNS receipts beat either alone.
+
+Panel :9477 tour — command, packets, threats, signals
+
+Open https://127.0.0.1:9477/ after ./nexus.sh (or your package equivalent). Treat tabs as views on the same archive, not separate products.
+
+Panel area What you learn Correlate with
+
+Command Operator actions, daemon control stderr, jsonl command rows
+
+Packets Live flow sentences field jsonl tail
+
+Threats Watchlist and harm candidates Gatekeeper axes, not oracle alone
+
+Signals RF/audio orchestration hints Chapter 6 Field Antenna JSON
+
+DNS Local resolution truth Chapter 20 trace-from-root
+
+Library Reference docs in-tree This primer — no CDN conscience
+
+System Service registry, ports wiki service table :53 :67 :123 :9123 :9477
+
+Tour drill: pick one USER_OK row in Packets, one SUSPICIOUS row, grep jsonl for matching keys, note sealed time delta. If UI and jsonl disagree, UI is wrong until reconciled — same rule as HUD hex versus THERMO in Chapter 4.
+
+Queen WebRTC chain — gates held, not disabled
+
+Queen posture: nothing optional, hold all gates, MP4 mandatory in-tree, EME held not omitted. Wrong security story: disable WebRTC to feel safe. Right story: WebRTC through Connection Gatekeeper with honorability axis and packet field sentences per peer.
+
+Navigation → DNS (Ch.20) → socket open → gatekeeper axes → verdict
+ → field jsonl append → thermo receipt (Ch.7/21) → operator review
+ WebRTC media paths do not bypass NEXUS because Queen is sovereign browser, not a chrome fork with holes poked for convenience. Each peer earns TX/RX diary entries. Thermo context per WebGL surface inherits AMOURANTHRTX proxy discipline when built with QUEEN_BROWSER_BUILD — offense and defense share timestamps without merging scores.
+
+Chapter 21 is full doctrine. This chapter plants the chain: packet field is not “network chapter only” — it is the perimeter Queen wears.
+
+TX and RX — contracts the gatekeeper expects you to honor
+
+Every packet field sentence carries direction because accountability is asymmetric. TX flows are confessions: you originated bytes, chose destination, accepted egress policy. RX flows are interrogations: someone reached your machine — which process listened, which port opened, which habit broke? Operators who journal only RX panic miss half the story; operators who journal only TX forget that defense begins at ingress.
+
+Corroboration pairs directions. A peer with heavy RX and no TX history may be benign software update noise — or may be exfiltration listening post. A symmetric chat pattern on loopback 9477 differs from symmetric chatter to global RFC1918. The gatekeeper encodes direction on its own axis; your job is to narrate why the direction makes sense in plain language before you escalate verdicts.
+
+Chapter 2 named packet field as the third scale of state. Direction is not metadata garnish — it is a coordinate. Queen navigation that claims HTTPS honorability while jsonl shows raw shell-class TX is a lie the axes exist to catch.
+
+Defense rhythm — daily, weekly, incident
+
+Field Technology is practice, not one-time read. Rhythm beats heroics.
+
+Cadence Action Artifact
+
+Daily Glance panel Packets while dev session runs Mental model of normal
+
+Weekly Archive one gatekeeper decision explicitly jsonl trust or watchlist row
+
+Weekly grep THERMO + tail jsonl same session Ch. 11 observability marriage
+
+Incident SUSPICIOUS → corroborate axes → decide Annotated jsonl, not rage-KILL
+
+Quarterly Rotate jsonl backup; test restore Encrypted archive integrity
+
+Drill 5.A — Defense baseline
+
+./nexus.sh
+curl -k https://127.0.0.1:9477/ | head -5 # panel alive
+ss -tunap | head -20
+tail -5 /var/lib/nexus-shield/field.jsonl # path may vary per install
+ Drill 5.B — Corroboration write
+
+# After SUSPICIOUS row appears:
+grep -F 'SUSPICIOUS' /var/lib/nexus-shield/field.jsonl | tail -3
+# Record process path + port + DNS answer for same peer in operator journal

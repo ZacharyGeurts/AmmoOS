@@ -24,9 +24,8 @@ nexus_resolve_panel_root() {
   for candidate in \
     "${NEXUS_PANEL_ROOT:-}" \
     "${ROOT}" \
-    "${SG_ROOT:-}/NewLatest" \
-    "${ROOT}/../NewLatest" \
-    "${ROOT}/../Latest/NEXUS-Shield"; do
+    "${SG_ROOT:-}" \
+    "${ROOT}/../NewLatest"; do
     [[ -n "$candidate" ]] || continue
     if [[ -f "${candidate}/lib/threat-panel-http.py" ]] && [[ -d "${candidate}/panel" ]]; then
       printf '%s' "${candidate}"

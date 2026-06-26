@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """DNS Internet Field — passive whole-internet registry held in field storage.
 
 WHOLE: every IANA TLD slot + root delegation chain (all timestamps exist at once).

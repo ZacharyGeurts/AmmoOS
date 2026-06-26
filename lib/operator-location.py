@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Operator location — GPS, address geocode, wireless-fast egress geo."""
 from __future__ import annotations
 

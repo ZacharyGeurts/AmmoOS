@@ -1,0 +1,105 @@
+Gamepad API gate matters for browser games — held for completeness, scored like any device API.
+
+Web Serial and WebUSB gates protect industrial operator tools — disabling would push operators to unsafe binaries.
+
+Queen weekly checklist should be printed beside Chapter 18 covenant poster — ethics plus json verdicts.
+
+Queen gate seed held flags are boolean — CI should fail if any gate sets held false accidentally in merge conflict.
+
+field-queen-browser.py build command refreshes panel cache before screenshot releases — stale queen_verdict misleads users.
+
+WebGPU compute shaders in browser share thermal governor with WebGL — both bill per tab.
+
+Service worker cache API persistence triggers storage gate receipts — long-lived caches are exfiltration risk if unheld.
+
+SharedArrayBuffer requires COOP COEP headers — Queen holds gate with isolation policy, not disable.
+
+HTTP/3 QUIC UDP flows appear in packet field with distinct port habits — gatekeeper learns process association over time.
+
+Third-party iframe embeds on scholarly sites are why popups and embeds gates exist — amputation breaks citations.
+
+WASM surrogates for Flash preserve legacy homework sites — operator schools benefit from Queen surface preservation.
+
+fieldfox-launch.sh should be invoked from documented install root — NEXUS_INSTALL_ROOT mismatch breaks native bridge paths.
+
+queen-browser --sovereign --queen flags link engine time and DNS posture — document in sovereign field package README.
+
+Grok Build manifest hash verification should be step one of Queen Forge flash procedure — skip is covenant violation.
+
+proc kilroy_field reads align with data_bus slots vocabulary — kernel userspace debug pairs Chapter 8 and Chapter 21.
+
+browser-awareness honorability updates on tab switch — panel live view requires NEXUS daemon running.
+
+Connection gatekeeper ten-axis intent is local inference — not cloud reputation — consistent with local-first stack.
+
+Fair Ad Guardian reduces need for blind ad blockers that omit network surface — holds junk without amputating first-party.
+
+EME license server flows may coincide with CDN — separate scoring axes prevent conflated verdicts.
+
+MathML in Field Primer pages dogfoods document gates — Queen should render this chapter's equations inline.
+
+Gamepad API gate matters for browser games — held for completeness, scored like any device API.
+
+Web Serial and WebUSB gates protect industrial operator tools — disabling would push operators to unsafe binaries.
+
+Queen weekly checklist should be printed beside Chapter 18 covenant poster — ethics plus json verdicts.
+
+Queen gate seed held flags are boolean — CI should fail if any gate sets held false accidentally in merge conflict.
+
+=== Chapter 22 ===
+
+Glossary — Field Technology v5
+
+This chapter is an encyclopedic glossary for the full textbook. Every term used across Chapters 1–21 appears here in prose and in the master table at the end. When a term has both poetry and code meanings, both are named. Read alphabetically by section; grep the table when you are in a hurry.
+
+Status labels from Chapter 1 still apply: Implemented means grep-able source; Metaphor means intuition not SI units; Philosophy means operator discipline.
+
+A
+
+Adaptive scale
+
+Adaptive scale — Resolution scaling 320×200 toward 4K+ — honest performance trade.
+
+In textbook usage, Adaptive scale appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Adaptive scale in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Adept tier
+
+Adept tier — Spiderweb level with SimulateSubMicron and target clock control.
+
+In textbook usage, Adept tier appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Adept tier in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+AmmoOS
+
+AmmoOS — Guest operating environment living inside Field Die address space — pumped by x86.comp each frame.
+
+In textbook usage, AmmoOS appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet AmmoOS in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Amouranth
+
+Amouranth — Engine namesake spirit — courage to be seen while holding boundaries.
+
+In textbook usage, Amouranth appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Amouranth in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+AMOURANTHRTX
+
+AMOURANTHRTX — The Vulkan field engine — fabric channels, Field Die, dispatch loop, ELLIE logging. Default ./linux.sh run enters Field Die path.
+
+In textbook usage, AMOURANTHRTX appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet AMOURANTHRTX in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+AnalogFields
+
+AnalogFields — Host-side knobs for Phi, Thermo, Flow coupling — GateFidelity and related parameters the prompt terminal can set.
+
+In textbook usage, AnalogFields appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet AnalogFields in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Apocalypse handler
+
+Apocalypse handler — ELLIE fail-closed path when session entropy verification fails — engine abort posture mirrored in perimeter grep discipline.
+
+In textbook usage, Apocalypse handler appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Apocalypse handler in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+B
+
+Big Grin HUD
+
+Big Grin HUD — 172×48 character HUD rendered by x86.comp inside Field Die — operator-facing die-resident display.

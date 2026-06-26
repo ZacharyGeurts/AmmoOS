@@ -4,35 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#040810" />
-  <title>NEXUS-Shield Field · Opening panel</title>
-  <meta name="description" content="NEXUS-Shield field entry — warm boot into the operator panel." />
+  <title>Universal Protector · Field entry</title>
+  <meta name="description" content="NEXUS Universal Protector — autonomous being field stack." />
   <link rel="stylesheet" href="/assets/dusty-midnight.css" />
   <style>
     :root { --bg: #040810; --text: #e8f2ff; --gold: #f0d060; --phi: #38bdf8; }
     * { box-sizing: border-box; }
     body {
-      margin: 0; min-height: 100dvh; min-height: 100svh;
+      margin: 0; min-height: 100dvh;
       display: flex; align-items: center; justify-content: center;
       font-family: "Segoe UI", system-ui, sans-serif;
       background: radial-gradient(ellipse 120% 80% at 50% 0%, #152040 0%, transparent 55%), var(--bg);
-      color: var(--text); padding: max(1.5rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+      color: var(--text); padding: 1.5rem;
     }
     main {
       max-width: 36rem; width: 100%; text-align: center;
       border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 14px;
       padding: 2rem 1.75rem; background: rgba(8, 12, 20, 0.92);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
     }
     h1 { font-size: clamp(1.5rem, 4vw, 2rem); color: var(--gold); margin: 0 0 0.75rem; }
-    p { line-height: 1.65; margin: 0 0 1rem; font-size: 1.05rem; }
-    .well { color: var(--phi); font-weight: 600; }
+    p { line-height: 1.65; margin: 0 0 1rem; }
     a.btn {
       display: inline-block; margin-top: 0.5rem; padding: 0.75rem 1.35rem;
       border-radius: 8px; border: 1px solid var(--phi); color: var(--phi);
       text-decoration: none; font-weight: 600;
     }
-    a.btn:hover { background: rgba(56, 189, 248, 0.15); color: var(--text); }
-    noscript { display: block; margin-top: 1rem; color: #f59e0b; }
   </style>
   <script>
     (function () {
@@ -41,19 +37,16 @@
         if (location.search) dest = "/" + location.search + (location.hash || "#command");
         else if (location.hash) dest = "/" + location.hash;
       } catch (_) {}
-      setTimeout(function () { location.replace(dest); }, 900);
+      setTimeout(function () { location.replace(dest); }, 600);
     })();
   </script>
 </head>
 <body>
-  <main role="main" aria-labelledby="field-boot-title">
-    <h1 id="field-boot-title">NEXUS-Shield Field</h1>
-    <p class="well" role="status" aria-live="polite">Shield warming up — full command stays with you.</p>
-    <p>Opening the operator panel. Nothing blocks unless you say. Use <strong>Trust forever</strong> or <strong>Stop this site</strong> on any connection.</p>
-    <p><a class="btn" href="/">Open panel now</a></p>
-    <noscript>
-      JavaScript is off — <a href="/">click here to open the NEXUS panel</a>.
-    </noscript>
+  <main>
+    <h1>Universal Protector</h1>
+    <p>Autonomous being stack online — Super Intelligence, 3D/4D networks-of-networks spatial lattice, lethal chain armed. Threat posture HIGH.</p>
+    <p><a class="btn" href="/">Open command panel</a></p>
+    <noscript><a href="/">Open panel</a></noscript>
   </main>
 </body>
 </html>

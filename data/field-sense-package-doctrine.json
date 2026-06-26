@@ -55,7 +55,7 @@
     },
     "hostess7": {
       "env": "HOSTESS7_ROOT",
-      "canonical": "SG/Hostess7",
+      "canonical": "NewLatest/Hostess7",
       "brain_env": "HOSTESS7_TEAM_FIELD",
       "brain_fallback": "cache/fieldstorage",
       "bridge": "lib/hostess7-field.sh",

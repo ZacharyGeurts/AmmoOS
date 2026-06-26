@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Kill Detect — zero-overhead harm scan + execution queue.
 
 Runs only when connection-intent signature changes. Good flows never touch
@@ -178,7 +178,7 @@ def execute(doc: dict[str, Any] | None = None, dry_run: bool = False) -> dict[st
         if lethal_py.is_file() and tier in ("lethal", "strike") and t.get("hell_chosen"):
             subprocess.run(
                 [
-                    "python3", str(lethal_py), "execute",
+                    "pythong", str(lethal_py), "execute",
                     json.dumps({**t, "ip": ip, "remote_ip": ip}),
                 ],
                 env={**os.environ, "NEXUS_STATE_DIR": str(STATE), "NEXUS_INSTALL_ROOT": str(INSTALL)},
@@ -223,7 +223,7 @@ def execute(doc: dict[str, Any] | None = None, dry_run: bool = False) -> dict[st
             if kit.is_file():
                 subprocess.run(
                     [
-                        "python3",
+                        "pythong",
                         str(kit),
                         "kill",
                         ip,

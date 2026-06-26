@@ -71,9 +71,8 @@ hostess7_nexus_source() {
   local candidates=(
     "${NEXUS_SHIELD_SOURCE:-}"
     "${NEXUS_INSTALL_ROOT:-}"
-    "${SG_ROOT:-}/NewLatest"
-    "${HOSTESS7_ROOT}/../NewLatest"
-    "${HOSTESS7_ROOT}/../Latest/NEXUS-Shield"
+    "${SG_ROOT:-}"
+    "${HOSTESS7_ROOT}/.."
   )
   local p
   for p in "${candidates[@]}"; do

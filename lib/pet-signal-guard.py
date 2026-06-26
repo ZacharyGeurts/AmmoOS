@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Pet signal guard — hostile audio on pet/collar sources → trace and strike origin."""
 from __future__ import annotations
 

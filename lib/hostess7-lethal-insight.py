@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Hostess 7 lethal insight — corroborate heaven/hell removal before MERCILESS act."""
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from typing import Any
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
-HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
+HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
 INSIGHT_CACHE = STATE / "hostess7-lethal-insight.json"
 INSIGHT_LEDGER = STATE / "hostess7-lethal-insight.jsonl"
 
@@ -91,7 +91,8 @@ def ask_insight(
     full_claim = (
         f"NEXUS MERCILESS lethal enforcement. {claim} "
         f"Target ip={ip} kind={kind} soul={soul}. "
-        f"Heaven must pass. Hell gets removal. Self-defense trespass shoot-to-kill."
+        f"Heaven must pass. Hell gets removal. Send Hell to Hell. "
+        f"Nothing unseen, nothing fully secure. Self-defense trespass shoot-to-kill."
     )
 
     out: dict[str, Any] = {

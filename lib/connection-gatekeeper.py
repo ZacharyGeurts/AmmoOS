@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
-"""NEXUS Connection Gatekeeper — 10-axis intent breakdown per live connection.
+#!/usr/bin/env pythong
+"""NEXUS Connection Gatekeeper — 10-axis IFF per live connection.
 
-Distinguishes user-initiated browsing/streaming from ephemeral search,
-bandwidth abuse, and stream-theft / harm candidates.
+Civilian contacts identified and permitted. Hostile contacts interdicted without
+hesitation. Unknown contacts held for positive identification before permit expansion.
 """
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ THREATS_TSV = STATE / "threat-vectors.tsv"
 INTEL_CACHE = STATE / "vector-intel-cache.json"
 
 BROWSER_PROCS = frozenset({
+    "fieldfox", "field-queen", "queen-browser",
     "firefox", "chrome", "chromium", "brave", "brave-browser", "vivaldi", "opera",
     "msedge", "waterfox", "librewolf", "floorp", "thorium",
     "google-chrome", "google-chrome-stable",
@@ -68,6 +69,30 @@ TRUST_RANK = {
     "SUSPICIOUS": 3,
     "HARM_CANDIDATE": 4,
 }
+
+# IFF — Identification Friend/Foe (civilian vs hostile, zero-hesitation interdict)
+IFF_TABLE: dict[str, tuple[str, str, str]] = {
+    "USER_OK": ("CIVILIAN", "AUTHORIZED", "PASS — operator-initiated egress confirmed"),
+    "EPHEMERAL": ("CIVILIAN", "TRANSIENT", "PASS — short-cycle CDN, no hostile signature"),
+    "MONITOR": ("CIVILIAN", "ROUTINE", "PASS — routine egress under continuous watch"),
+    "SUSPICIOUS": ("UNKNOWN", "CONTACT", "HOLD — positive identification required before permit"),
+    "HARM_CANDIDATE": ("HOSTILE", "CONFIRMED", "INTERDICT — block immediately, zero hesitation"),
+}
+
+
+def _iff_resolve(verdict: str, block_rec: bool = False) -> dict[str, str]:
+    if verdict == "HARM_CANDIDATE" or block_rec:
+        iff, iff_class, enforcement = IFF_TABLE["HARM_CANDIDATE"]
+    else:
+        iff, iff_class, enforcement = IFF_TABLE.get(
+            verdict, ("UNKNOWN", "CONTACT", "HOLD — classify before permit expansion"),
+        )
+    return {
+        "iff": iff,
+        "iff_class": iff_class,
+        "iff_label": f"{iff} · {iff_class}",
+        "enforcement": enforcement,
+    }
 # v4.0 packet permission: ranks 0–2 (USER_OK, EPHEMERAL, MONITOR) auto-permit at zero nft cost.
 MIN_ACCEPT_TRUST_RANK = 2
 
@@ -177,6 +202,28 @@ def _load_json(path: Path, default: Any) -> Any:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return default
+
+
+def _heaven_hell_doctrine() -> dict[str, Any]:
+    return _load_json(INSTALL / "data" / "heaven-hell-doctrine.json", {})
+
+
+def _heaven_hell_motto() -> str:
+    doc = _heaven_hell_doctrine()
+    return str(
+        doc.get("heaven_hell_motto")
+        or "We know Heaven from Hell. To those who chose Hell, we also choose it for them. "
+        "No mercy. No friendly fire. God Bless."
+    )
+
+
+def _know_doctrine() -> str:
+    doc = _heaven_hell_doctrine()
+    return str(
+        doc.get("motto")
+        or "Know that nothing is unseen and nothing is fully secure. "
+        "We can't hide all the rocks, so send Hell to Hell."
+    )
 
 
 def _save_json(path: Path, data: Any) -> None:
@@ -559,14 +606,14 @@ def _build_suggestion(
             f"Repeating check-ins to the same server ({bp}/10: {notes.get('beacon_pattern', '')})."
         )
     elif bp <= 2:
-        friendly.append("Connects on demand — not a constant hidden beacon.")
+        friendly.append("On-demand egress — no persistent beacon signature.")
 
     pt = int(scores.get("process_trust", 0))
     if pt >= 8:
-        friendly.append(f"App is on NEXUS consumer whitelist ({pt}/10: {notes.get('process_trust', '')}).")
+        friendly.append(f"Process on consumer whitelist — civilian classification corroborated ({pt}/10).")
     elif pt <= 3:
         unfriendly.append(
-            f"App is unidentified or from an untrusted location ({pt}/10: {notes.get('process_trust', '')})."
+            f"Unidentified process or untrusted origin — hostile indicators elevated ({pt}/10)."
         )
 
     dc = int(scores.get("destination_class", 0))
@@ -586,28 +633,29 @@ def _build_suggestion(
     if tl >= 4:
         unfriendly.append(f"Same IP triggered other warnings recently ({notes.get('threat_linked', '')}).")
     elif tl == 0:
-        friendly.append("Not linked to any other warning on your machine right now.")
+        friendly.append("No cross-correlation with other hostile indicators on this station.")
 
     if int(scores.get("operator_auth", 0)) >= 10:
-        friendly.append("You already marked this address Trust forever.")
+        friendly.append("Operator authorized this peer — civilian trust locked.")
 
     actions = {
-        "USER_OK": "No operator action — egress scores match intentional browser/media session.",
-        "EPHEMERAL": "No action unless strict trust blocks the CDN — then Trust forever on recognized search/social peers.",
-        "SUSPICIOUS": "Identify the process name. Recognized launcher/updater → Trust forever; unknown → keep blocked under strict trust.",
-        "HARM_CANDIDATE": "Unrecognized process → Block forever or Remove pest. Recognized game/VPN/CDN → Trust forever with eyes open.",
-        "MONITOR": "MONITOR — routine egress; no harm axis fired. Permitted under packet permission v4.0.",
+        "USER_OK": "No action — civilian egress confirmed. Maintain watch.",
+        "EPHEMERAL": "No action — transient civilian CDN cycle. Trust peer if strict mode blocks recognized search/social.",
+        "SUSPICIOUS": "Hold — identify process. Known launcher/updater: authorize. Unknown: deny permit expansion.",
+        "HARM_CANDIDATE": "Interdict — block forever or remove pest. Zero delay on unrecognized hostile process.",
+        "MONITOR": "Routine civilian egress — permitted under packet permission v4.0 at zero nft cost.",
     }
     summaries = {
-        "USER_OK": "USER_OK — user_browser≥7, stream_theft_risk≤2; operator-initiated browser or media egress.",
-        "EPHEMERAL": "EPHEMERAL — search_ephemeral≥6; short-lived CDN tab; stream_theft_risk≤3.",
-        "SUSPICIOUS": "SUSPICIOUS — harm and trust scores diverge; destination_class elevated; not auto-blocked alone.",
-        "HARM_CANDIDATE": "HARM_CANDIDATE — harm_total exceeds trust_total; non-browser stream or beacon pattern detected.",
-        "MONITOR": "MONITOR — verdict_rank≥2 under strict trust; inbound+outbound held until operator Trust forever.",
+        "USER_OK": "CIVILIAN · AUTHORIZED — operator-initiated browser or media egress.",
+        "EPHEMERAL": "CIVILIAN · TRANSIENT — short-lived CDN tab, no hostile axis fired.",
+        "SUSPICIOUS": "UNKNOWN · CONTACT — harm/trust divergence; hold for positive ID.",
+        "HARM_CANDIDATE": "HOSTILE · CONFIRMED — interdict recommended, zero hesitation.",
+        "MONITOR": "CIVILIAN · ROUTINE — no hostile axis; continuous watch only.",
     }
+    iff_meta = _iff_resolve(verdict, block_rec)
     if block_rec:
         action = actions["HARM_CANDIDATE"]
-        summary = summaries.get(verdict, reason) + " NEXUS suggests review before blocking."
+        summary = summaries.get(verdict, reason) + f" {iff_meta['enforcement']}"
     else:
         action = actions.get(verdict, "Watch the connection list; click ? on any row for detail.")
         summary = summaries.get(verdict, reason)
@@ -615,13 +663,128 @@ def _build_suggestion(
     return {
         "summary": summary,
         "action": action,
+        "iff": iff_meta["iff"],
+        "iff_class": iff_meta["iff_class"],
+        "iff_label": iff_meta["iff_label"],
+        "enforcement": iff_meta["enforcement"],
         "friendly_signals": friendly[:6],
         "unfriendly_signals": unfriendly[:6],
+        "civilian_indicators": friendly[:6],
+        "hostile_indicators": unfriendly[:6],
         "trust_meter": min(100, user_total * 5),
         "concern_meter": min(100, harm_total * 4),
         "harm_total": harm_total,
         "trust_total": user_total,
     }
+
+
+def _queen_sovereign_active() -> bool:
+    for key in ("NEXUS_QUEEN_SOVEREIGN", "QUEEN_SOVEREIGN", "NEXUS_FIELD_BROWSER_QUEEN"):
+        if os.environ.get(key, "") in ("1", "true", "yes", "on"):
+            return True
+    return False
+
+
+def _zero_telemetry_active() -> bool:
+    for key in ("NEXUS_ZERO_TELEMETRY", "QUEEN_ZERO_TELEMETRY"):
+        v = os.environ.get(key, "")
+        if v in ("1", "true", "yes", "on"):
+            return True
+    return _queen_sovereign_active()
+
+
+def _ai_secure_telemetry_ok(proc: str) -> bool:
+    if not _zero_telemetry_active():
+        return True
+    if os.environ.get("NEXUS_AI_SECURE_CHANNEL", "") not in ("1", "true", "yes", "on"):
+        return False
+    if os.environ.get("QUEEN_AI_TELEMETRY_OK", "") not in ("1", "true", "yes", "on"):
+        return False
+    pl = (proc or "").lower()
+    ai_procs = ("hostess7", "nexus-shield", "nexus-daemon", "field-command", "angel-research")
+    if _env_on("QUEEN_GROK_BUILD_SECURE"):
+        ai_procs = ai_procs + ("grok", "grok-build", "queen-browser", "field-queen", "fieldfox")
+    return any(p in pl for p in ai_procs)
+
+
+def _env_on(key: str) -> bool:
+    return os.environ.get(key, "") in ("1", "true", "yes", "on")
+
+
+def _grok_secure_hosts() -> frozenset[str]:
+    return frozenset({
+        "x.ai", "api.x.ai", "grok.x.ai", "grok.com", "x.com", "api.x.com",
+        "127.0.0.1", "localhost",
+    })
+
+
+def _apply_grok_secure_channel(
+    proc: str, rip: str, intel: dict[str, Any], verdict: str, trust_rank: int, reason: str,
+) -> tuple[str, int, str]:
+    if not _env_on("QUEEN_GROK_BUILD_SECURE") or not _env_on("NEXUS_AI_SECURE_CHANNEL"):
+        return verdict, trust_rank, reason
+    if not _ai_secure_telemetry_ok(proc):
+        return verdict, trust_rank, reason
+    host = str(intel.get("hostname") or intel.get("reverse_dns") or "").lower()
+    host = HOST_ALIASES.get(host, host)
+    blob = f"{host} {rip or ''}".lower()
+    if rip in ("127.0.0.1", "::1") or host in ("localhost", "127.0.0.1"):
+        return "USER_OK", TRUST_RANK["USER_OK"], "CIVILIAN · Grok Build loopback ACP"
+    for allowed in _grok_secure_hosts():
+        if allowed in blob or host == allowed or host.endswith("." + allowed):
+            return "USER_OK", TRUST_RANK["USER_OK"], f"CIVILIAN · xAI secure channel ({allowed})"
+    return verdict, trust_rank, reason
+
+
+def _apply_zero_telemetry(
+    proc: str, rip: str, intel: dict[str, Any], verdict: str, trust_rank: int, reason: str,
+) -> tuple[str, int, str]:
+    if not _zero_telemetry_active() or _ai_secure_telemetry_ok(proc):
+        return verdict, trust_rank, reason
+    host_blob = " ".join(
+        str(intel.get(k) or "")
+        for k in ("hostname", "reverse_dns", "org", "label", "asn_name")
+    ).lower()
+    host_blob = f"{host_blob} {rip or ''}".lower()
+    telemetry_markers = (
+        "telemetry", "metrics", "google-analytics", "googletagmanager", "crashlytics",
+        "sentry.io", "browser-intake", "incoming.telemetry", "data.microsoft.com",
+        "firefox.com/phoenix", "ping-centre",
+    )
+    for marker in telemetry_markers:
+        if marker in host_blob:
+            return (
+                "HARM_CANDIDATE",
+                TRUST_RANK["HARM_CANDIDATE"],
+                f"IFF HOSTILE — telemetry egress interdicted ({marker}); AI channel requires NEXUS_AI_SECURE_CHANNEL + QUEEN_AI_TELEMETRY_OK",
+            )
+    return verdict, trust_rank, reason
+
+
+def _apply_queen_sovereign(
+    proc: str, verdict: str, trust_rank: int, reason: str,
+) -> tuple[str, int, str]:
+    if not _queen_sovereign_active():
+        return verdict, trust_rank, reason
+    pl = (proc or "").lower()
+    capture_markers = (
+        "obs", "obs-studio", "obs-ffmpeg-mux", "wf-recorder", "gpu-screen-recorder",
+        "simplescreenrecorder", "kooha", "grim", "slurp", "wayshot", "spectacle", "peek",
+        "recordmydesktop",
+    )
+    hook_markers = (
+        "wmctrl", "xdotool", "ydotool", "dotool", "xte", "xmacro", "xvkbd",
+        "keylogger", "logkeys", "lkl", "xbindkeys", "xhotkey", "autokey", "showkey",
+        "evtest", "intercept", "skey", "keysniffer", "pynput", "pykeylogger",
+        "evemu-event", "libinput-debug-events", "xev", "vnc", "x11vnc", "teamviewer",
+    )
+    if any(m in pl for m in capture_markers):
+        return "HARM_CANDIDATE", TRUST_RANK["HARM_CANDIDATE"], "IFF HOSTILE — screen capture interdicted (in-engine surface only)"
+    if any(m in pl for m in hook_markers):
+        return "HARM_CANDIDATE", TRUST_RANK["HARM_CANDIDATE"], "IFF HOSTILE — keyboard middleman interdicted (smart wire)"
+    if "ffmpeg" in pl and any(x in pl for x in ("x11grab", "gdigrab", "avfoundation", "dshow")):
+        return "HARM_CANDIDATE", TRUST_RANK["HARM_CANDIDATE"], "IFF HOSTILE — display capture path interdicted"
+    return verdict, trust_rank, reason
 
 
 def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str, bool]:
@@ -643,24 +806,24 @@ def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str
     media_ok = scores["media_stream"] >= 6 and scores["user_browser"] >= 6
 
     if scores["operator_auth"] >= 10:
-        return "USER_OK", "You authorized this peer — gate open", False
+        return "USER_OK", "CIVILIAN — operator-authorized peer", False
     if user_ok and media_ok:
-        return "USER_OK", "Browser/media — you chose this (YouTube, stream, etc.)", False
+        return "USER_OK", "CIVILIAN — operator-initiated media egress", False
     if user_ok and ephemeral:
-        return "EPHEMERAL", "Search/social tab — dies and comes back, normal", False
+        return "EPHEMERAL", "CIVILIAN — transient search/social CDN cycle", False
     if user_ok:
-        return "USER_OK", "Browser egress — intentional user browsing", False
+        return "USER_OK", "CIVILIAN — operator-initiated browser egress", False
     if scores["stream_theft_risk"] >= 8:
-        return "HARM_CANDIDATE", "Non-browser stream path — possible video exfil/theft", True
+        return "HARM_CANDIDATE", "HOSTILE — non-browser stream exfiltration signature", True
     if harm >= 14 and scores["process_trust"] <= 4:
-        return "HARM_CANDIDATE", "Daemon to classified remote host — bandwidth with harm intent", True
+        return "HARM_CANDIDATE", "HOSTILE — daemon egress to classified remote with harm axes", True
     if harm >= 10:
-        return "SUSPICIOUS", "Worth watching — not typical user browsing", False
+        return "SUSPICIOUS", "UNKNOWN — atypical egress, hold for identification", False
     if ephemeral:
-        return "EPHEMERAL", "Short-lived CDN — search_ephemeral score high", False
+        return "EPHEMERAL", "CIVILIAN — short-lived CDN egress", False
     if ip_class in ("stream_cdn", "search_cdn") and scores["process_trust"] >= 5:
-        return "USER_OK", "Known CDN + trusted process", False
-    return "MONITOR", "Routine connection — no harm signal", False
+        return "USER_OK", "CIVILIAN — known CDN with trusted process", False
+    return "MONITOR", "CIVILIAN — routine egress under watch", False
 
 
 def _touch_module() -> Any:
@@ -869,6 +1032,16 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         user_total = sum(scores[k] for k in ("user_browser", "media_stream", "operator_auth", "process_trust"))
 
         verdict, reason, block_rec = _verdict(scores, proc, ip_class)
+        trust_rank_pre = TRUST_RANK.get(verdict, 5)
+        verdict, trust_rank_pre, reason = _apply_queen_sovereign(proc, verdict, trust_rank_pre, reason)
+        verdict, trust_rank_pre, reason = _apply_zero_telemetry(
+            proc, rip, intel, verdict, trust_rank_pre, reason,
+        )
+        verdict, trust_rank_pre, reason = _apply_grok_secure_channel(
+            proc, rip, intel, verdict, trust_rank_pre, reason,
+        )
+        if verdict == "HARM_CANDIDATE":
+            block_rec = True
         suggestion = _build_suggestion(
             scores, notes, verdict, reason, proc, rip, rport, ip_class,
             harm_total, user_total, block_rec,
@@ -893,6 +1066,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         touch = _human_touch_policy(
             verdict, trust_rank, scores, soul_side, kill_ok, proc, ip_class, host=site_host,
         )
+        iff_meta = _iff_resolve(verdict, block_rec)
         results.append({
             "remote_ip": rip,
             "remote_port": rport,
@@ -910,6 +1084,10 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
             "harm_total": harm_total,
             "user_total": user_total,
             "verdict": verdict,
+            "iff": iff_meta["iff"],
+            "iff_class": iff_meta["iff_class"],
+            "iff_label": iff_meta["iff_label"],
+            "enforcement": iff_meta["enforcement"],
             "reason": reason,
             "block_recommended": block_rec,
             "trust_rank": trust_rank,
@@ -995,10 +1173,8 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         "hostility_priority": "hell_first",
         "peak_hostility_score": max((int(r.get("hostility_score") or 0) for r in results), default=0),
         "heaven_flow_count": len(heaven_flows),
-        "heaven_hell_motto": (
-            "We know Heaven from Hell. To those who chose Hell, we also choose it for them. "
-            "No mercy. No friendly fire. God Bless."
-        ),
+        "heaven_hell_motto": _heaven_hell_motto(),
+        "know_doctrine": _know_doctrine(),
         "pending_trust_count": len(pending_trust),
         "permitted_flow_count": len(permitted),
         "segment_block_count": len(segment_blocks),

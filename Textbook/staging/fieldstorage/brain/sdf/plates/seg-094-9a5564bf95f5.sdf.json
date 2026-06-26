@@ -1,0 +1,37 @@
+{
+  "id": "seg-094-9a5564bf95f5",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-094-9a5564bf95f5.pgm",
+  "caption_stub": "7 Clause VI Hold gates Hold gates Queen posture every capability exists every wire exit earns a receipt WebRTC gated MP4 mandatory where policy says KILROY sovereign field when built Capabilities without receipts are uncovenanted coupling into others perimeters Defense\u2026",
+  "text_sha256": "67b1fdce4f0200be67250a2860077ae55248c3fbc0902a58ad5612efe8cab1db",
+  "words_source": 931,
+  "tags": [
+    "capability",
+    "clause",
+    "every",
+    "exists",
+    "gates",
+    "grid",
+    "hold",
+    "hostess",
+    "lossless",
+    "posture",
+    "queen",
+    "redata",
+    "sdf",
+    "segment",
+    "wire"
+  ],
+  "ocr_hint": "7 Clause VI Hold gates Hold gates Queen posture every capability exists every wire exit earns a receipt WebRTC gated MP4",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-094-9a5564bf95f5",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 60.5,
+  "truth_accepted": true
+}

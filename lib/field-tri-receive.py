@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Three-field GPS compare → pinpoint transmitter → OTA receive to speakers."""
 from __future__ import annotations
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 # field-wave-wav — raw IQ → wav (field wave engine)
-BINDIR="/home/default/Desktop/SG/Latest/NEXUS-Shield/lib/bin"
+BINDIR="/home/default/Desktop/SG/NewLatest/lib/bin"
 VENDOR="$BINDIR/vendor"
 export LD_LIBRARY_PATH="$VENDOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 for c in "$BINDIR/sox" sox /usr/bin/sox; do

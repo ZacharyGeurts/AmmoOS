@@ -6,6 +6,17 @@ NEXUS_AWAIT_MAX_SEC="${NEXUS_AWAIT_MAX_SEC:-5}"
 nexus_await_clamp() {
   local sec="${1:-1}"
   local max="${NEXUS_AWAIT_MAX_SEC:-5}"
+  if declare -f nexus_field_max_enabled >/dev/null 2>&1 && nexus_field_max_enabled; then
+    max="${NEXUS_AWAIT_MAX_SEC:-1}"
+    if [[ "$sec" -gt "$max" ]]; then
+      sec="$max"
+    fi
+    if [[ "$sec" -lt 0 ]]; then
+      sec=0
+    fi
+    printf '%s' "$sec"
+    return 0
+  fi
   if [[ "$sec" -gt "$max" ]]; then
     sec="$max"
   fi
@@ -20,6 +31,9 @@ nexus_await_seconds() {
   sec="$(nexus_await_clamp "${1:-1}")"
   local watch="${2:-${NEXUS_STATE_DIR:-/tmp}}"
   [[ -d "$watch" ]] || watch="/tmp"
+  if [[ "$sec" -eq 0 ]]; then
+    return 0
+  fi
   if command -v inotifywait >/dev/null 2>&1; then
     inotifywait -r -t "$sec" -e modify,create,delete,move,close_write,open "$watch" \
       >/dev/null 2>&1 || true
@@ -33,7 +47,7 @@ nexus_await_curl_ready() {
   local sec retries
   sec="$(nexus_await_clamp "${2:-5}")"
   retries="$(nexus_await_clamp "${3:-$sec}")"
-  curl -sk --connect-timeout 2 --max-time "$sec" \
+  curl -s --connect-timeout 2 --max-time "$sec" \
     --retry "$retries" --retry-all-errors --retry-delay 1 \
     "$url" >/dev/null 2>&1
 }

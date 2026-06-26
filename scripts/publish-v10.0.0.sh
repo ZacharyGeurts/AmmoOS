@@ -57,7 +57,7 @@ if command -v gh >/dev/null 2>&1; then
   RELEASE_URL="$(gh release view "$TAG" --json url -q .url 2>/dev/null || echo "$TAG_URL")"
 elif [[ -n "${GITHUB_TOKEN:-}" ]]; then
   echo "=== GitHub API release create ==="
-  NOTES="$(python3 -c 'import json,sys; print(json.dumps(open(sys.argv[1]).read()))' "$NOTES_FILE")"
+  NOTES="$(pythong -c 'import json,sys; print(json.dumps(open(sys.argv[1]).read()))' "$NOTES_FILE")"
   curl -fsSL -X POST \
     -H "Authorization: token $GITHUB_TOKEN" \
     -H "Accept: application/vnd.github+json" \

@@ -29,7 +29,16 @@ nexus_privacy_is_allowed_reader() {
   local pid="$1"
   local uid
   uid="$(awk '/^Uid:/ {print $2; exit}' "/proc/${pid}/status" 2>/dev/null)"
-  [[ "$uid" == "0" ]] && return 0
+  if [[ "$uid" == "0" ]]; then
+    if [[ "${SG_ROOT_SOVEREIGN_OFF:-}" == "1" ]]; then
+      return 0
+    fi
+    local py="${QUEEN_ROOT:-${SG_ROOT:-}/NewLatest/Queen}/lib/queen-root-sovereign.py"
+    if [[ -f "$py" ]]; then
+      pythong "$py" check-root >/dev/null 2>&1 && return 0
+    fi
+    return 1
+  fi
   local comm=unknown
   if [[ -r "/proc/${pid}/comm" ]]; then
     comm="$(tr -d '\0' <"/proc/${pid}/comm" 2>/dev/null)" || comm=unknown
@@ -69,7 +78,7 @@ nexus_privacy_loop() {
   # shellcheck source=/dev/null
   source "${NEXUS_INSTALL_ROOT}/lib/ultra-stealth.sh"
   while true; do
-    nexus_cpu_budget_ok || { sleep 15; continue; }
+    nexus_cpu_budget_ok || { nexus_field_cpu_wait 15; continue; }
     nexus_privacy_scan_fds
     sleep "$(nexus_adaptive_poll_interval privacy)"
   done

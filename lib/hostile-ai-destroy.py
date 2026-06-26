@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Hostile AI destroy — detect automated evil, score certainty, execute kill/sever."""
 from __future__ import annotations
 

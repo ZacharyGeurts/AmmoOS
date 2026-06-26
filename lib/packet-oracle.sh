@@ -186,12 +186,12 @@ nexus_h7_library_publish() {
 
 nexus_packet_field_capture() {
   [[ "${NEXUS_PACKET_FIELD:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local script="${NEXUS_INSTALL_ROOT}/lib/packet-field.py"
   [[ -f "$script" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     NEXUS_PACKET_FIELD_CAPTURE="${NEXUS_PACKET_FIELD_CAPTURE:-32}" \
-    python3 "$script" capture >/dev/null 2>&1 || true
+    pythong "$script" capture >/dev/null 2>&1 || true
 }
 
 nexus_packet_evaluate() {
@@ -211,7 +211,7 @@ nexus_packet_evaluate() {
   nexus_packet_dpi_sample
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" ]]; then
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" scan >/dev/null 2>&1 || true
+      pythong "${NEXUS_INSTALL_ROOT}/lib/hostile-ai-destroy.py" scan >/dev/null 2>&1 || true
   fi
   nexus_h7_library_publish
   local corr
@@ -233,7 +233,7 @@ nexus_packet_evaluate() {
 
 nexus_connection_gatekeeper_publish() {
   [[ "${NEXUS_CONNECTION_GATEKEEPER:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local out="${NEXUS_STATE_DIR}/connection-intent.json"
   local sig_file="${NEXUS_STATE_DIR}/gatekeeper-conn.sig"
   local snap="${NEXUS_PACKET_SNAPSHOT}"
@@ -263,12 +263,12 @@ nexus_connection_gatekeeper_publish() {
   pp_val="$(nexus_settings_get NEXUS_PACKET_PERMISSION 2>/dev/null || echo "${NEXUS_PACKET_PERMISSION:-1}")"
   if [[ -s "$snap" ]]; then
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_GATEKEEPER_STRICT_TRUST="$strict_val" NEXUS_PACKET_PERMISSION="$pp_val" \
-      python3 "${NEXUS_INSTALL_ROOT}/lib/connection-gatekeeper.py" --stdin \
+      pythong "${NEXUS_INSTALL_ROOT}/lib/connection-gatekeeper.py" --stdin \
       <"$snap" >"${out}.tmp" 2>/dev/null \
       && mv -f "${out}.tmp" "$out"
   else
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_GATEKEEPER_STRICT_TRUST="$strict_val" NEXUS_PACKET_PERMISSION="$pp_val" \
-      python3 "${NEXUS_INSTALL_ROOT}/lib/connection-gatekeeper.py" \
+      pythong "${NEXUS_INSTALL_ROOT}/lib/connection-gatekeeper.py" \
       >"${out}.tmp" 2>/dev/null \
       && mv -f "${out}.tmp" "$out"
   fi
@@ -289,7 +289,7 @@ nexus_packet_loop() {
   [[ -f "${NEXUS_INSTALL_ROOT}/lib/kill-detect.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/kill-detect.sh"
   [[ -f "${NEXUS_INSTALL_ROOT}/lib/heaven-hell.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/heaven-hell.sh"
   while true; do
-    nexus_cpu_budget_ok || { sleep 15; continue; }
+    nexus_cpu_budget_ok || { nexus_field_cpu_wait 15; continue; }
     nexus_packet_evaluate
     nexus_connection_gatekeeper_publish
     nexus_packet_field_capture

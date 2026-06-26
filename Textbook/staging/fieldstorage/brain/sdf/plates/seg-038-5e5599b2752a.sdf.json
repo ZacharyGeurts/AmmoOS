@@ -1,0 +1,40 @@
+{
+  "id": "seg-038-5e5599b2752a",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-038-5e5599b2752a.pgm",
+  "caption_stub": "Presentation path HDR output at binding 0 receives the composed result of die render fabric contribution and AmouranthOS chrome Chapter 17 names the holographic boundary where beauty costs heat Chapter 7 names the mechanism HDR is not free and ThermoAccountant\u2026",
+  "text_sha256": "2e07792c7a0649bfb9d60c0d95f743769a2ae0faf103b33b3f5e3dba667c5d01",
+  "words_source": 922,
+  "tags": [
+    "binding",
+    "composed",
+    "die",
+    "fabric",
+    "grid",
+    "hdr",
+    "hostess",
+    "lossless",
+    "output",
+    "path",
+    "presentation",
+    "receives",
+    "redata",
+    "render",
+    "result",
+    "sdf",
+    "segment",
+    "the"
+  ],
+  "ocr_hint": "Presentation path HDR output at binding 0 receives the composed result of die render fabric contribution and AmouranthOS",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-038-5e5599b2752a",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 63.0,
+  "truth_accepted": true
+}

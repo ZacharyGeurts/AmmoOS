@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field crosstalk — precise start/end points, countermeasures at violator origin."""
 from __future__ import annotations
 
@@ -160,7 +160,7 @@ def _enforce_at_start(ev: dict[str, Any]) -> dict[str, Any]:
         if kit.is_file():
             try:
                 proc = subprocess.run(
-                    [os.environ.get("PYTHON", "python3"), str(kit),
+                    [os.environ.get("PYTHON", "pythong"), str(kit),
                      "forever-disable", ip, "CROSSTALK_LINE", "critical",
                      "line_touch_at_start", json.dumps({"start": start, "end": ev.get("end_point")})],
                     capture_output=True,

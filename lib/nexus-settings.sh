@@ -145,11 +145,11 @@ nexus_settings_apply_extreme_defaults() {
 
 nexus_host_extreme_apply_if_eligible() {
   local tier_json level
-  tier_json="$(python3 "${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/host-security-tier.py" json 2>/dev/null)" || return 0
-  level="$(printf '%s' "$tier_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("security_level",""))' 2>/dev/null)" || return 0
+  tier_json="$(pythong "${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/host-security-tier.py" json 2>/dev/null)" || return 0
+  level="$(printf '%s' "$tier_json" | pythong -c 'import json,sys; d=json.load(sys.stdin); print(d.get("security_level",""))' 2>/dev/null)" || return 0
   if [[ "$level" == "extreme" ]]; then
     nexus_settings_apply_extreme_defaults
-    python3 "${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/host-security-tier.py" publish >/dev/null 2>&1 || true
+    pythong "${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/host-security-tier.py" publish >/dev/null 2>&1 || true
     return 0
   fi
   return 1

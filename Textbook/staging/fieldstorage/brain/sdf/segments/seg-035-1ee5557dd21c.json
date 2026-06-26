@@ -1,0 +1,36 @@
+{
+  "text": "This is not metaphor dressed as engineering. When you run ./linux.sh run , the default path boots the Field Die \u2014 a 64 MiB guest universe on silicon \u2014 and evolves Phi, Thermo, and Flow fabrics through x86.comp . The host opens the window, seals time, enforces CFL guards, packs data_bus[64] , and calls vkCmdDispatch . The GPU runs the world. If you remember one sentence from this chapter, remember this: the spear is vkCmdDispatch , not a motivational poster.\n\nChapter 8 owns the die byte map and bus slots. Chapter 9 owns CFL and Tesla valve constants. Chapter 10 mirrors fabric into hardwareFabric . Chapter 11 teaches you to grep the receipts. Chapter 12 lists every rock. This chapter is the spine that connects them: how dispatch actually happens, what must match between host and shader, and why version skew is desynchronized reality.\n\nThin host, fat GPU \u2014 architectural contract\n\nModern game engines often split work across CPU and GPU in complex ways \u2014 physics on CPU, rendering on GPU, animation trees, job systems. AMOURANTHRTX makes a sharper choice for field evolution: the host never runs a CPU-side PDE solver on the analog fabric. Texel evolution is compute-shader work each dispatch. The C++ layer is deliberately thin: device setup, descriptor binding, push constants, harmonics guard, layer pump, and presentation.\n\nmain.cpp \u2192 navigator_main() \u2192 RayCanvas \u2192 Pipeline::dispatch_canvas() \u2192 vkCmdDispatch\n Read that chain left to right as a timeline. main.cpp enters the navigator. RayCanvas owns the swapchain-facing canvas and fabric creation. Pipeline::dispatch_canvas() is the per-frame heart: it advances sealed time, runs the CFL guard, pumps field layers, packs telemetry, and issues the compute dispatch. vkCmdDispatch is where offense becomes physical \u2014 threads on the GPU write the next state of guest RAM, fabrics, and HDR output.\n\nPlain English: C++ is the conductor. The orchestra is the GPU. The conductor does not play every instrument; the conductor keeps time and refuses to let the hall catch fire.\n\nThis architecture follows from the axioms named in Chapter 1. Reality is 3D means state occupies addressable space \u2014 texels, die bytes, bus words. Time is linear means each dispatch advances one tick with receipts, not retroactive myth. Energy can be moved means coupling between Phi, Thermo, and Flow is how irreversibility travels \u2014 and that movement is shader arithmetic, not host loops.\n\nOperators who come from software emulation backgrounds sometimes ask whether FieldX86Emu contradicts \u201cfat GPU.\u201d It does not. Host assist is an optional path when ControlHostCpu is set in FieldSocket control flags. The default product surface is GPU interpretation via x86.comp . The host assists; it does not replace the dispatch loop. Chapter 8 details the execution model; here we stress the default: GPU-first, host-thin.\n\nFigure 7.1 \u2014 Thin host, fat GPU: one dispatch spine writes guest RAM, fabrics, and HDR each tick.\n\nThe rtx() singleton \u2014 one Vulkan fabric\n\nScattered Vulkan devices across a codebase are a maintenance hazard and an honesty hazard \u2014 two builds can diverge silently, two queues can fight, two memory budgets can lie. AMOURANTHRTX centralizes the runtime in rtx() : one global accessor to device, queues, memory budget, and hardwareFabric . Queen browser and FieldFox link this same spine when QUEEN_BROWSER_BUILD is defined at compile time.\n\nWhy a singleton for a textbook chapter? Because observability assumes a single witness. When Chapter 11 tells you to list Hardware in the prompt terminal, you are reading fields from the same rtx().hardwareFabric that updateHardwareFromAnalogFields() updated last frame. When Chapter 10 discusses spiderweb edges, those edges live on this fabric. When Chapter 9 publishes Tesla bias to data_bus[31] and data_bus[34] , the values were computed in the dispatch loop that owns this singleton.\n\nrtx() responsibility Operator-facing artifact\n\nDevice + queue selection Vulkan init logs under ELLIE category VULKAN\n\nVRAM budget tracking STATUS block VRAM line (~5 s cadence)\n\nhardwareFabric graph Spiderweb util, per-core MHz in prompt list Hardware\n\nShared with Queen In-engine FieldWebPanel thermo context (Chapter 21)\n\nImplemented. You can grep rtx() in Navigator/engine/ and follow references. \u201c96% lies device cannot drift session\u201d is security posture narrative \u2014 useful for team culture, not a sensor reading. Chapter 12 keeps that distinction visible.\n\nCanvas kinds \u2014 X86Fields versus Classic\n\nNot every swipe in Options::Canvas::SwipeList is the same product. Two canvas kinds matter for field literacy:\n\nKind Shader Push block Primary use\n\nX86Fields x86.comp FieldSocket Field Die + AmmoOS (default)\n\nClassic CANVAS.comp (+ swipes) PushConstants Thermo + RT demos, pedagogical fabric\n\nDefault ./linux.sh run sets swipe index 0 to x86 with CanvasUsesX86Die = true . That means your first honest encounter with the engine is the Field Die \u2014 Big Grin HUD at 172\u00d748, guest RAM pumped every frame, AmouranthOS chrome on bindings 11\u201314 \u2014 not a decorative raymarch postcard.\n\nClassic canvas remains vital pedagogy. Chapter 3\u2019s thermodynamics drills \u2014 move the mouse, watch entropyThisFrame \u2014 often happen on CANVAS.comp where Phi/Thermo/Flow evolution is visually obvious. Swipe to energy , Flowers , RetroRTX , Mandelbulb variants, tributes, and you change shaders without losing the die path infrastructure. The swipe list is hot-swap UX; the default is field sovereignty.\n\nCategory error to avoid: Treating a Classic thermo demo as proof the Field Die is absent. The die path is the default product surface. Classic is alternate curriculum on the same spine.\n\nCross-link: Chapter 2 introduced three scales of state \u2014 fabric, die, packet field. X86Fields canvas is where scale 1 and scale 2 converge in one dispatch. Chapter 5\u2019s packet field remains NEXUS-local; it does not live inside this Vulkan loop, but Queen binds them at the operator perimeter (Chapter 21).",
+  "id": "seg-035-1ee5557dd21c",
+  "source": "Field_Primer/content/chapters",
+  "index": 35,
+  "words": 924,
+  "action": "integrate",
+  "scores": {
+    "spatial": 81.0,
+    "procedural": 5.0,
+    "metaphor": 0.0,
+    "words": 924.0
+  },
+  "caption_stub": "This is not metaphor dressed as engineering When you run linux sh run the default path boots the Field Die a 64 MiB guest universe on silicon and evolves Phi Thermo and Flow fabrics through x86 comp The host opens\u2026",
+  "text_sha256": "c2f4594decae5fb73d4dc847677f138652fe619e053e8bbe9a2c4d170b8035e4",
+  "truth_filter": {
+    "truth_score": 58.9,
+    "accepted": true,
+    "reason": "ok",
+    "deception_risk": "medium",
+    "deception_flags": [
+      "absolute_language"
+    ],
+    "word_count": 892,
+    "operator_hits": 89,
+    "honesty_hits": 6,
+    "noise_hits": 0,
+    "marketing_hits": 0,
+    "noise_ratio": 0.94,
+    "truth_ratio": 0.06,
+    "truth_floor": 28,
+    "recommended_action": "redata"
+  },
+  "lossless": true,
+  "ts": "2026-06-25T06:30:19.577981+00:00"
+}

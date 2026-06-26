@@ -1,0 +1,40 @@
+{
+  "id": "seg-090-39fe41a9a6f2",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-090-39fe41a9a6f2.pgm",
+  "caption_stub": "Field note 9 on God at holographic boundary long sessions should end with archived run log optional screenshot and three bullet operator summary what moved what surprised what remains unknown Unknowns stay unknown relabeling Metaphor as Implemented to close a\u2026",
+  "text_sha256": "26d77db74ef02f163d47064428a23889b3ef4af021be28b1023af64c811483d2",
+  "words_source": 935,
+  "tags": [
+    "archived",
+    "boundary",
+    "end",
+    "field",
+    "god",
+    "grid",
+    "holographic",
+    "hostess",
+    "long",
+    "lossless",
+    "note",
+    "redata",
+    "run",
+    "sdf",
+    "segment",
+    "sessions",
+    "should",
+    "with"
+  ],
+  "ocr_hint": "Field note 9 on God at holographic boundary long sessions should end with archived run log optional screenshot and three",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-090-39fe41a9a6f2",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 55.1,
+  "truth_accepted": true
+}

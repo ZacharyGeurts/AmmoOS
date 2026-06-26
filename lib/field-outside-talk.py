@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field Outside Talk — NEXUS egress gate for operator-initiated outbound tools.
 
 Cloned from field-dns / home-protector / gatekeeper-enforce patterns:

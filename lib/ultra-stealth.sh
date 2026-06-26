@@ -15,10 +15,16 @@ NEXUS_PACKET_POLL_STORM="${NEXUS_PACKET_POLL_STORM:-3}"
 NEXUS_VIGIL_MAINTAIN_INTERVAL="${NEXUS_VIGIL_MAINTAIN_INTERVAL:-5}"
 
 nexus_ultra_stealth_enabled() {
+  if declare -f nexus_field_max_enabled >/dev/null 2>&1 && nexus_field_max_enabled; then
+    return 1
+  fi
   [[ "${NEXUS_ULTRA_STEALTH:-1}" == "1" ]]
 }
 
 nexus_apply_cgroup_self() {
+  if declare -f nexus_field_max_enabled >/dev/null 2>&1 && nexus_field_max_enabled; then
+    return 0
+  fi
   nexus_ultra_stealth_enabled || return 0
   if [[ -w /sys/fs/cgroup/cgroup.controllers ]]; then
     local slice="nexus-shield.slice"
@@ -31,6 +37,10 @@ nexus_apply_cgroup_self() {
 
 nexus_adaptive_poll_interval() {
   local module="${1:-behavior}"
+  if declare -f nexus_field_max_enabled >/dev/null 2>&1 && nexus_field_max_enabled; then
+    nexus_await_clamp "${NEXUS_FIELD_LOOP_SEC:-2}"
+    return 0
+  fi
   local mode raw
   mode="$(nexus_vigil_get_mode 2>/dev/null || echo calm)"
   case "$module" in

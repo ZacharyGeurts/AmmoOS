@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Hostess 7 DNS Admin Portal — ports 7, 77, 777.
 
 Read-only DNS information for tired engineers. No remote controls.
@@ -100,7 +100,7 @@ def _hostess_admins() -> list[dict[str, Any]]:
     ):
         for root in (
             Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage")),
-            Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7")) / "cache" / "fieldstorage",
+            Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7"))) / "cache" / "fieldstorage",
             STATE / "hostess7-cache" / "fieldstorage",
         ):
             path = root / rel
@@ -264,13 +264,36 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args: Any) -> None:
         return
 
+    def _peer_loopback(self) -> bool:
+        peer = self.client_address[0] if self.client_address else ""
+        return peer in ("127.0.0.1", "::1", "localhost") or str(peer).startswith("127.")
+
     def _send(self, code: int, body: str, ctype: str = "application/json") -> None:
+        if not self._peer_loopback():
+            self.send_response(403)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         data = body.encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; connect-src 'self' http://127.0.0.1:*; frame-ancestors 'none'; base-uri 'self'",
+        )
+        self.send_header(
+            "Permissions-Policy",
+            "camera=(), microphone=(), display-capture=(), clipboard-read=(), geolocation=()",
+        )
         self.send_header("X-NEXUS-Policy", "dns-information-only")
         self.send_header("X-Remote-Control", "blocked")
+        self.send_header("X-Admin-Shield", "keyboard-hooks-blocked")
         self.end_headers()
         self.wfile.write(data)
 
@@ -337,6 +360,15 @@ class Handler(BaseHTTPRequestHandler):
                 "policy": "information_only",
                 "remote_control": "blocked",
             })
+            return
+
+        if path in ("/assets/front-hook.js", "/assets/hardware-wire.js", "/assets/smart-wire.js", "/assets/admin-window-shield.js"):
+            asset = INSTALL / "panel" / "assets" / path.rsplit("/", 1)[-1]
+            if not asset.is_file():
+                self._send_json(404, {"error": "asset_missing"})
+                return
+            ctype = "application/javascript; charset=utf-8"
+            self._send(200, asset.read_text(encoding="utf-8"), ctype)
             return
 
         if path in ("/", "/portal"):
@@ -535,9 +567,16 @@ class Handler(BaseHTTPRequestHandler):
         self._send_json(404, {"error": "not_found"})
 
 
+def _bind_host() -> str:
+    if os.environ.get("NEXUS_DNS_ADMIN_LOOPBACK_ONLY", "1") not in ("0", "false", "no", "off"):
+        return "127.0.0.1"
+    return "0.0.0.0"
+
+
 def _serve_port(port: int) -> None:
+    host = _bind_host()
     try:
-        server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
+        server = ThreadingHTTPServer((host, port), Handler)
         server.serve_forever()
     except OSError:
         pass

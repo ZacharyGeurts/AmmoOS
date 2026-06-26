@@ -1,0 +1,303 @@
+/* Queen GNU Terminal — terminal + minibrowser + far-right scrollbar */
+.qw-os-panel--terminal {
+  max-height: none;
+  top: 0;
+  bottom: 52px;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #0a0c10;
+}
+
+.qw-os-panel--terminal:not([hidden]) {
+  display: flex !important;
+}
+
+body.qw-terminal-mode .qb-chrome,
+body.qw-terminal-mode .qb-viewport {
+  display: none !important;
+}
+
+.qgt-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  color: #d8e4f0;
+  font-family: "JetBrains Mono", ui-monospace, "Liberation Mono", monospace;
+}
+
+/* GNU-style menubar */
+.qgt-menubar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 6px;
+  background: linear-gradient(180deg, #1e2430 0%, #141820 100%);
+  border-bottom: 1px solid rgba(46, 184, 224, 0.22);
+  font-size: 0.78rem;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.qgt-menu {
+  position: relative;
+}
+
+.qgt-menu-btn {
+  border: none;
+  background: transparent;
+  color: #b8c8d8;
+  padding: 7px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.qgt-menu-btn:hover,
+.qgt-menu-btn[aria-expanded="true"] {
+  background: rgba(46, 184, 224, 0.14);
+  color: #eef6ff;
+}
+
+.qgt-menu-drop {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 168px;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #1a2030;
+  border: 1px solid rgba(46, 184, 224, 0.28);
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  z-index: 40;
+}
+
+.qgt-menu-drop.open {
+  display: block;
+}
+
+.qgt-menu-drop li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: #c8d8e8;
+  padding: 7px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.qgt-menu-drop li button:hover {
+  background: rgba(46, 184, 224, 0.12);
+  color: #fff;
+}
+
+.qgt-menu-drop .sep {
+  height: 1px;
+  margin: 4px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.qgt-titlebar {
+  margin-left: auto;
+  padding: 7px 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(46, 184, 224, 0.85);
+}
+
+/* Status line under menubar */
+.qgt-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  color: rgba(160, 180, 200, 0.85);
+  background: #080a0e;
+  border-bottom: 1px solid rgba(46, 184, 224, 0.12);
+  flex-shrink: 0;
+}
+
+.qgt-statusbar strong {
+  color: #5ecfff;
+  font-weight: 600;
+}
+
+/* Three-column deck: terminal | minibrowser | scrollbar */
+.qgt-deck {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(400px, 34vw) 14px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.qgt-terminal-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid rgba(46, 184, 224, 0.18);
+  background: #050608;
+}
+
+.qgt-terminal-out {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 12px 6px;
+  font-size: var(--qgt-font-size, 0.88rem);
+  line-height: 1.45;
+  scrollbar-width: none;
+}
+
+.qgt-terminal-out::-webkit-scrollbar {
+  display: none;
+}
+
+.qgt-line {
+  margin: 0 0 3px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.qgt-line--banner { color: #5ecfff; }
+.qgt-line--cmd { color: #7ec8ff; }
+.qgt-line--out { color: #8899aa; }
+.qgt-line--err { color: #eb488c; }
+.qgt-line--url { color: #6ab0ff; cursor: pointer; text-decoration: underline; }
+
+.qgt-prompt-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 6px 10px 10px;
+  border-top: 1px solid rgba(46, 184, 224, 0.12);
+  background: #0a0c10;
+  flex-shrink: 0;
+}
+
+.qgt-prompt-label {
+  color: #3eb8e0;
+  white-space: nowrap;
+  font-size: var(--qgt-font-size, 0.88rem);
+}
+
+.qgt-prompt-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: #f0f4ff;
+  font: inherit;
+  font-size: var(--qgt-font-size, 0.88rem);
+  outline: none;
+  padding: 4px 6px;
+}
+
+/* Minibrowser column */
+.qgt-minibrowser-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #0c1018;
+  border-right: 1px solid rgba(46, 184, 224, 0.1);
+}
+
+.qgt-mini-head {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(46, 184, 224, 0.14);
+  background: #121820;
+  flex-shrink: 0;
+}
+
+.qgt-mini-head strong {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #d4b86a;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.qgt-mini-url {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid rgba(46, 184, 224, 0.3);
+  border-radius: 4px;
+  background: #000;
+  color: #e8eef8;
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.qgt-mini-go {
+  padding: 6px 10px;
+  border: 1px solid rgba(46, 184, 224, 0.35);
+  border-radius: 4px;
+  background: #1a2230;
+  color: #2eb8e0;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.qgt-mini-frame {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: none;
+  background: #fff;
+}
+
+/* Far-right scrollbar track */
+.qgt-scrolltrack {
+  position: relative;
+  background: #1a1e26;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.qgt-scrollthumb {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  min-height: 24px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #4a5568 0%, #2d3748 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: background 0.12s ease;
+}
+
+.qgt-scrolltrack:hover .qgt-scrollthumb,
+.qgt-scrolltrack.dragging .qgt-scrollthumb {
+  background: linear-gradient(180deg, #5ecfff 0%, #2eb8e0 100%);
+}
+
+.qw-dock-btn--terminal.active {
+  border-color: #3eb8e0;
+  background: rgba(46, 184, 224, 0.18);
+}
+
+@media (max-width: 900px) {
+  .qgt-deck {
+    grid-template-columns: minmax(0, 1fr) 14px;
+  }
+  .qgt-minibrowser-pane {
+    display: none;
+  }
+}

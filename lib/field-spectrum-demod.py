@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Tri-field FM spectrum capture → WBFM demod → speaker. Old radio, our antenna."""
 from __future__ import annotations
 

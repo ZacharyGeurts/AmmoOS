@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field Generator Triangulator v7.1 — radio station + spectrum receiver via 3 virtual fields.
 
 We are the hardware. Three fields receive OTA; GPS triangulation locks operator place.

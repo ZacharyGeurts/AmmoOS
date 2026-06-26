@@ -39,6 +39,9 @@
   }
 
   function registerClientHook(pluginId, fn) {
+    if (window.NexusFrontHook && typeof window.NexusFrontHook.allowPluginHook === "function") {
+      if (!window.NexusFrontHook.allowPluginHook(pluginId)) return;
+    }
     if (typeof fn === "function") clientHooks[pluginId] = fn;
   }
 

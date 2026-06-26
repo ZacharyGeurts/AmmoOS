@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Host Attack Map — global threat placement with standards-grade geo intel.
 
 Enrichment: IEEE 802 OUI (MAC), RFC 7483 RDAP (registrar), GeoIP lat/lon.

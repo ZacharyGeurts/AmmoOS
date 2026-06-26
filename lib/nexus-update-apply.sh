@@ -62,7 +62,32 @@ _run_with_sudo() {
     return $?
   fi
   if command -v pkexec >/dev/null 2>&1 && [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
-    _log "sudo: pkexec prompt"
+    _log "sudo: field polkit pkexec (bridge)"
+    local polkit_sh bridge action inner_script
+    polkit_sh="${NEXUS_INSTALL_ROOT}/lib/nexus-polkit.sh"
+    [[ -f "$polkit_sh" ]] || polkit_sh="${ROOT}/lib/nexus-polkit.sh"
+    # shellcheck source=/dev/null
+    [[ -f "$polkit_sh" ]] && source "$polkit_sh"
+    bridge="$(nexus_polkit_bridge_path 2>/dev/null || true)"
+    action="$(nexus_polkit_action_for update 2>/dev/null || echo com.nexus.field.update)"
+    if [[ -n "$bridge" && -x "$bridge" ]]; then
+      mkdir -p "$NEXUS_STATE_DIR"
+      inner_script="${NEXUS_STATE_DIR}/update-elevate-inner.sh"
+      {
+        printf '%s\n' '#!/bin/bash' 'set -euo pipefail'
+        printf '%s\n' "export NEXUS_UPDATE_LOCK_TOKEN=$(printf '%q' "${TOKEN}")"
+        printf '%s\n' "export NEXUS_UPDATE_PREVIOUS_VERSION=$(printf '%q' "${PREVIOUS}")"
+        printf '%s\n' "export NEXUS_INSTALL_ROOT=$(printf '%q' "${NEXUS_INSTALL_ROOT}")"
+        printf '%s\n' "export NEXUS_STATE_DIR=$(printf '%q' "${NEXUS_STATE_DIR}")"
+        printf '%s\n' "$inner"
+      } >"$inner_script"
+      chmod 700 "$inner_script"
+      pkexec --action "$action" "$bridge" run-update "$inner_script"
+      local rc=$?
+      rm -f "$inner_script"
+      return $rc
+    fi
+    _log "sudo: pkexec fallback (bridge missing)"
     pkexec env \
       NEXUS_UPDATE_LOCK_TOKEN="${TOKEN}" \
       NEXUS_UPDATE_PREVIOUS_VERSION="${PREVIOUS}" \

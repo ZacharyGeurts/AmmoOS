@@ -1,0 +1,103 @@
+KILL dossier permanence
+
+KILL is operator-authorized permanence — archived with context. Reversible until you say otherwise is policy; KILL is the line where reversibility ends. Philosophy with teeth.
+
+Truth DNS lock — Chapter 20 pointer
+
+Queen and FieldFox inherit Truth DNS — no Google shortcut. Navigation receipts tie to DNS integrity. Packet field without DNS truth is sentence without subject.
+
+Sovereign time at perimeter — Chapter 19 pointer
+
+Gatekeeper timestamps and correlation use operator-owned time when sovereign mode active. SQUIDGIE verdict fail-closes perimeter services. Time and packets couple at receive.
+
+RTX Zero panel mode
+
+?rtx=1 Aqua chrome, cache-first refresh — observability UX, not second engine. Thermo and packets still separate products.
+
+Local jsonl hygiene
+
+Rotate and backup field jsonl like any forensic archive. Disk is your memory; encryption at rest is operator choice outside this chapter's scope but inside your conscience.
+
+WebRTC peer as packet sentence
+
+Queen routes WebRTC peers through gatekeeper — each peer a sentence with direction, ports, verdict. Do not disable; receipt. Chapter 21 doctrine planted in Chapter 5 soil.
+
+Extended treatment — Connection Gatekeeper axis philosophy
+
+Ten axes exist because peers are stories, not packets. Process path anchors identity — same port, different binary, different story. Port habit deviation flags novelty without automatic evil. Direction balance catches asymmetric exfil shapes. Payload hints integrate oracle without conflation. Honorability cross-checks reputation time series. Verdict is summary; axes are explainability for operator review.
+
+Extended treatment — corroboration before KILL
+
+94/6 philosophy: generous truth allowance, narrow permanent punishment. Multiple independent signals before KILL dossier — ss snapshot, tcpdump corroboration, oracle storm, operator narrative. Reversible watchlist until KILL — love as engineering.
+
+Extended treatment — field memory forensics
+
+field jsonl survives reboot — treat as forensic archive. Rotate, backup, encrypt at rest per operator policy. KILL dossiers permanent — legal and moral weight. Panel HTML ephemeral — do not confuse window with memory.
+
+Extended treatment — Queen and packet field 2026
+
+Queen: WebRTC through gatekeeper, MP4 mandatory in-tree, EME held, Truth DNS, sovereign time witness. Navigation becomes packet sentences with thermo receipts. Wrong: disable WebRTC. Right: gate and archive.
+
+Extended treatment — port habit registry
+
+Registry learns your machine — 443 may be browser, 4444 may be shell-class risk context. Port is habit marker, not verdict. Combine with process path and direction for sentence grammar.
+
+Extended panel tour — :9477
+
+Command, packets, threats, signals, DNS, library, system — six faces one perimeter. RTX Zero ?rtx=1 is chrome mode, not second engine. Correlate panel JSON with stderr without product blur.
+
+Packet field narrative — extended scenario writing
+
+Scenario A: EPHEMERAL DNS blip — forgive, no KILL. Scenario B: SUSPICIOUS repeated RX to rare port with stable process path — watchlist, tcpdump corroboration. Scenario C: HARM_CANDIDATE with high H file drop same timeline — operator review, not auto block. Scenario D: USER_OK baseline — archive anyway for habit graph. Writing scenarios trains gatekeeper literacy beyond enum names.
+
+Gatekeeper verdict state machine in prose
+
+Flows enter as candidates. EPHEMERAL exits quickly from attention. USER_OK earns trust with monitoring. SUSPICIOUS enters watchlist — reversible attention debt. HARM_CANDIDATE demands human review — corroboration required. KILL is terminal archive — operator signature on conscience.
+
+jsonl row anatomy lesson
+
+Each row should be readable as: at time T, process P on path PATH, direction D, port habit H, verdict V, because axes A summary. If row lacks PATH or D, sentence incomplete — debug NEXUS intake.
+
+Defense without cloud — threat model paragraph
+
+Adversary on LAN, adversary in browser, adversary in supply chain — packet field sees local manifestation. You still need updates, still need operator judgment, still need Queen gates. You do not need cloud to narrate your sockets.
+
+Packet field capstone — defensive sentences
+
+Template: Flow F from process P direction D port H received verdict V; I will action A because corroboration C. Write five for real rows. Literacy is syntax.
+
+Queen WebRTC peer sentence: Peer P via WebRTC, gated, verdict V, thermo receipt T — Chapter 21 binds browser to same grammar.
+
+KILL dossier sentence: After review date D, operator O KILL peer P because reasons R1 R2 independent signals — permanent archive ethics.
+
+Local-first restated: jsonl on your disk, panel on your loopback, gatekeeper on your processes — not internet panopticon.
+
+Chapter 6 RF follows — separate RF words from packet words before signals panel correlation.
+
+NEXUS install and state directories
+
+NEXUS_INSTALL_ROOT locates lib modules — gatekeeper, sovereign-time, panel assets. NEXUS_STATE_DIR (default /var/lib/nexus-shield) holds jsonl, keys, dossiers. Know paths before incident — literacy includes filesystem map.
+
+Honorability — reputation over time
+
+Honorability tracks process and path reputation — sudden binary swap on trusted path raises eyebrows without auto-KILL. Combine with oracle and direction for story.
+
+WebRTC gate path — Queen 2026 step list
+
+Navigation requests peer. Packet field records intent. Gatekeeper scores. Honorability cross-checks. Operator panel displays. Thermo per context accrues in Queen build. Verdict archived. No step skipped when built correctly.
+
+MP4 mandatory — packet bytes perspective
+
+Media is packets — demux parses locally in-tree — no missing codec excuse to fetch remote blob blindly. Sovereign parsing is defensive surface — Chapter 21; Chapter 5 names packet bytes include media.
+
+Threat panel JSON — field guide
+
+Read threat-panel.json as ephemeral view of durable jsonl — like HTML view of database. Refresh does not replace archive discipline.
+
+Defense exercise — red team local
+
+Simulate suspicious RX with netcat locally — verify gatekeeper picks it up, verify you can archive without KILL, verify corroboration checklist. Local red team beats cloud card guessing.
+
+Chapter 5 extended — defensive perimeter day in the life
+
+Morning: grep jsonl since yesterday, review SUSPICIOUS watchlist, verify sovereign time USER_OK. Afternoon: run AMOURANTHRTX session, correlate THERMO with any flagged flows from morning. Evening: Queen browsing if deployed — verify WebRTC peer through gatekeeper, archive verdict. Night: no cloud dashboard — local perimeter sleeps with jsonl memory intact.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Book cover → R8 SDF on field drive. Reads PNG/JPG from field only — never fetches."""
 from __future__ import annotations
 

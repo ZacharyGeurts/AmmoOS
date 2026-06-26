@@ -30,21 +30,21 @@ nexus_adblock_get_policy() {
 }
 
 nexus_adblock_guardian_scan() {
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local script="${NEXUS_INSTALL_ROOT}/lib/fair-ad-guardian.py"
   [[ -f "$script" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" scan >/dev/null 2>&1 || true
+    pythong "$script" scan >/dev/null 2>&1 || true
 }
 
 nexus_adblock_build_blocklist() {
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local script="${NEXUS_INSTALL_ROOT}/lib/fair-ad-guardian.py"
   [[ -f "$script" ]] || return 0
   local pol
   pol="$(nexus_adblock_get_policy)"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" blocklist "$pol" >/dev/null 2>&1 || true
+    pythong "$script" blocklist "$pol" >/dev/null 2>&1 || true
 }
 
 nexus_adblock_fetch_list() {
@@ -157,19 +157,19 @@ nexus_adblock_set_policy() {
 
 nexus_adblock_site_policy() {
   local domain="${1:-}" policy="${2:-}" note="${3:-}"
-  command -v python3 >/dev/null 2>&1 || return 1
+  command -v pythong >/dev/null 2>&1 || return 1
   local script="${NEXUS_INSTALL_ROOT}/lib/fair-ad-guardian.py"
   [[ -f "$script" ]] || return 1
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" site-policy "$domain" "$policy" "$note" >/dev/null 2>&1
+    pythong "$script" site-policy "$domain" "$policy" "$note" >/dev/null 2>&1
 }
 
 nexus_adblock_guardian_json() {
-  command -v python3 >/dev/null 2>&1 || { printf '{}'; return 0; }
+  command -v pythong >/dev/null 2>&1 || { printf '{}'; return 0; }
   local script="${NEXUS_INSTALL_ROOT}/lib/fair-ad-guardian.py"
   [[ -f "$script" ]] || { printf '{}'; return 0; }
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" status 2>/dev/null || printf '{}'
+    pythong "$script" status 2>/dev/null || printf '{}'
 }
 
 nexus_adblock_status_json() {
@@ -180,7 +180,7 @@ nexus_adblock_status_json() {
   enabled="$(nexus_settings_get NEXUS_ADBLOCK 2>/dev/null || echo "${NEXUS_ADBLOCK:-0}")"
   pol="$(nexus_adblock_get_policy)"
   if [[ -f "$NEXUS_ADBLOCK_STATE" ]]; then
-    ips="$(python3 -c 'import json; print(json.load(open("'"$NEXUS_ADBLOCK_STATE"'")).get("ips_blocked",0))' 2>/dev/null || echo 0)"
+    ips="$(pythong -c 'import json; print(json.load(open("'"$NEXUS_ADBLOCK_STATE"'")).get("ips_blocked",0))' 2>/dev/null || echo 0)"
   fi
   printf '{"enabled":%s,"policy":"%s","domains":%s,"ips":%s,"mode":"fair_guardian"}' \
     "$enabled" "$pol" "${domains:-0}" "${ips:-0}"

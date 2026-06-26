@@ -1,13 +1,14 @@
 #!/bin/bash
-# Global terror Spiderweb — panel publish helpers.
+# Global terror Spiderweb — operator-triggered only (no auto probe storms).
 
 nexus_terror_spiderweb_publish() {
-  [[ "${NEXUS_TERROR_SPIDERWEB:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  # Default OFF — rebuild via /api/terror-spiderweb/rebuild or panel button only.
+  [[ "${NEXUS_TERROR_SPIDERWEB:-0}" == "1" ]] || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local script="${NEXUS_INSTALL_ROOT}/lib/terror-spiderweb.py"
   [[ -f "$script" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" build >/dev/null 2>&1 || true
+    pythong "$script" build >/dev/null 2>&1 || true
 }
 
 nexus_terror_spiderweb_json() {
@@ -17,6 +18,6 @@ nexus_terror_spiderweb_json() {
     return 0
   fi
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$script" json 2>/dev/null \
+    pythong "$script" json 2>/dev/null \
     || printf '{"nodes":[],"edges":[],"focus":{}}'
 }

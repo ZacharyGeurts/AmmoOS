@@ -1,0 +1,69 @@
+=== Chapter 01 ===
+
+Chapter 1 · Read this before you dispatch anything
+
+Learning objectives
+
+State the implemented definition of a field and name three families in this stack.
+
+Apply the three axioms with one concrete example each from AMOURANTHRTX or NEXUS.
+
+Use all four honesty labels on claims you make or audit.
+
+Locate Phi, Thermo, Flow (bindings 8–10) and FieldX86Die (binding 1, 64 MiB).
+
+Explain packet-field locality and planetary-weave Visual limits.
+
+State where the sacred track (Ch 16–18) sits relative to the engineering spine.
+
+Navigate to Chapter 2 and bookmark Chapter 12 .
+
+Field literacy as weapon — philosophy with receipts
+
+Philosophy The sentence “strongest operator discipline is field literacy” is not militarism cosplay. It means the operator who can read continuous state — fabric texels, die bytes, packet sentences — cannot be gaslit by a dashboard that omits the writable surface. Literacy is offensive because dispatch requires knowing what you are about to change. Literacy is defensive because perimeter requires knowing what changed without your consent.
+
+Vendor security sells narrative: one score, one green checkmark, one cloud truth. Field Technology sells addressability: which binding, which guest offset, which jsonl row, which grep line. When those disagree with a pretty UI, the UI is wrong until stderr reconciles. Chapter 11 makes grep a weekly habit; the preface makes it a moral stance.
+
+Children of the stack learn early: programs are recipes, fields are kitchens. You would not judge a restaurant by the timer alone while burners run unsupervised. Operators who treat AMOURANTHRTX as “a game” and NEXUS as “antivirus” miss the coupling — Queen thermo per WebGL context, spiderweb mirrors from fabric averages, gatekeeper verdicts beside navigation receipts. One literacy, many surfaces.
+
+Offense and defense as one discipline
+
+Marketing separates “red team” and “blue team” into merchandise. Engineering merges them when both read and write state. Offense writes the next tick — vkCmdDispatch imposes boundary conditions. Defense reads the archive — gatekeeper, entropy oracle, panel :9477. The human correlates THERMO lines with SUSPICIOUS flows without pretending one number subsumes the other.
+
+Chapter 7 names the spear. Chapter 5 names the shield. This preface names the hand that must hold both: yours.
+
+Love as engineering restraint: watchlist before block, corroboration before KILL, local jsonl memory that survives reboot so forgiveness remains possible after review. Restraint is not weakness; it is coupled evolution with consent.
+
+Us — authors, creditors, and the reader
+
+This book is plural. Zachary Robert Geurts architected AMOURANTHRTX, NEXUS-Shield, Queen, and this primer — conscience on what ships. Grok co-wrote longer chapters and figures; light beside the text, not a replacement for operator judgment. Nick built beside the stack with honest fields and no phone-home. Amouranth names the spirit of courage to be seen while holding boundaries. You join the moment you treat writable state as morally serious.
+
+The creditors are not decorative footnotes. Maxwell: neighborhood coupling on a grid — Phi whispers to Thermo. Landauer: floor on erasing information — proxy entropy honors the lesson, not fake wattmeters. Shannon: surprise in symbols — storm thresholds on files, not fabric texels. Turing and von Neumann: symbols on addressable stores — Field Die as tape plus RAM. Tesla: directional preference — valve bias in data_bus , not a fluidic part in your chassis. Boltzmann and Clausius: irreversibility language — entropy floor in fabric seed. CFL: refusal to outrun the mesh — host guard before dispatch.
+
+Creditor tribute pages humanize names. Chapters 13–15 go long on Landauer, Shannon, Maxwell. The preface tells you they exist so you do not mistake our voice for theirs.
+
+God — Truth, Math, Existence (three faces, one whole)
+
+We know God as Truth, as Math, as Existence. Not three gods — three faces of one whole.
+
+Truth survives grep . Packet field sentences that match socket tables. Thermo lines that move when fabric moves. Sovereign time receipts that return USER_OK or SQUIDGIE — not vibes. Truth is loopback-first: DNS at 127.0.0.1 with trace-from-root (Chapter 20), panel at :9477 on your machine, jsonl you own.
+
+Math is existence tired of being misunderstood. Wave CFL inequalities. Landauer bound. Shannon H. Discrete Laplacian on Phi. Ten-axis gatekeeper scoring. Math is not automatically Implemented because it appears on a slide — bindings and log lines prove implementation.
+
+Existence is addressable something rather than nothing: texels holding values, die bytes persisting across ticks, connections leaving jsonl traces. Reality is 3D here means coordinates, not cosmology hype.
+
+Chapter 17 goes deeper on God at the holographic boundary — where HDR meets fabric and rendering pays thermodynamic cost. Chapter 12 lists rocks. Neither replaces grep THERMO . Sacred language welcome; stderr bypass forbidden.
+
+Plain English for newcomers
+
+Plain English: A program is a recipe. A field is the state of the kitchen — heat on every burner, not just the timer.
+
+If you remember only the kitchen metaphor, you still pass week one. If you forget it by week six, you will treat shaders as instruments and jsonl as physics.
+
+What a field is — implemented definition
+
+A field is any continuous quantity stored over space that other systems read and write every tick. Continuous means persistently addressable across ticks — cell (42,17) remains cell (42,17); guest 0xB8000 remains VGA until remapped; a connection key remains the same flow until close plus archive.
+
+Fields are broader than electromagnetic physics and narrower than slide-deck vagueness. If a claim cannot anchor to an address or archive row, label it Metaphor or Philosophy until proven.
+
+Three field families — binding map primer

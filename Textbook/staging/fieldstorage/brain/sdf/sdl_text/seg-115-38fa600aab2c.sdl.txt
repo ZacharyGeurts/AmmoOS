@@ -1,0 +1,99 @@
+FieldSocket
+
+FieldSocket — Push constants block for x86 canvas dispatch — carries sealed_time among die parameters.
+
+In textbook usage, FieldSocket appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet FieldSocket in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+FieldWebPanel
+
+FieldWebPanel — In-engine web panel host inside queen-browser for Field Primer and operator UI.
+
+In textbook usage, FieldWebPanel appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet FieldWebPanel in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+FIELD_LAYOUT_VERSION
+
+FIELD_LAYOUT_VERSION — Descriptor layout version 5 — host and shader must match.
+
+In textbook usage, FIELD_LAYOUT_VERSION appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet FIELD_LAYOUT_VERSION in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Flow
+
+Flow — Momentum and gradient fabric channel — binding 10, .gb vector components per texel.
+
+In textbook usage, Flow appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Flow in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+freq_sum_khz
+
+freq_sum_khz — Sum of per-CPU sysfs frequencies in pulse — squidgie detection input.
+
+In textbook usage, freq_sum_khz appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet freq_sum_khz in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+G
+
+Gate fidelity
+
+Gate fidelity — Analog knob affecting Phi gate potential coupling — prompt terminal settable.
+
+In textbook usage, Gate fidelity appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Gate fidelity in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Gatekeeper
+
+Gatekeeper — Shorthand for Connection Gatekeeper — connection scoring to verdict.
+
+In textbook usage, Gatekeeper appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Gatekeeper in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+GPS precision
+
+GPS precision — Sub-micron ENU node tooling — requires stable UTC labels from sovereign time.
+
+In textbook usage, GPS precision appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet GPS precision in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Grep discipline
+
+Grep discipline — Operator ethic — truth is what survives grep, not screenshots.
+
+In textbook usage, Grep discipline appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Grep discipline in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Grok
+
+Grok — Co-documentation contributor — light beside text, not operator conscience.
+
+In textbook usage, Grok appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Grok in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Grok Build
+
+Grok Build — Secure build channel referenced in sovereign field package manifests.
+
+In textbook usage, Grok Build appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Grok Build in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+H
+
+hardwareFabric
+
+hardwareFabric — Read-only Spiderweb mirror of averaged fabric channels — dashboard not second sim.
+
+In textbook usage, hardwareFabric appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet hardwareFabric in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Holographic boundary
+
+Holographic boundary — Philosophy chapter 17 motif — God/Truth at die edge, not calorimetry substitute.
+
+In textbook usage, Holographic boundary appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Holographic boundary in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Honest rocks
+
+Honest rocks — Chapter 12 table — claims with Implemented/Metaphor/Philosophy labels.
+
+In textbook usage, Honest rocks appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Honest rocks in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Honorability
+
+Honorability — Site trust database consulted before browser egress proceeds.
+
+In textbook usage, Honorability appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Honorability in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Honorability DB
+
+Honorability DB — Persistent site trust store — browser-awareness and gatekeeper consult it.
+
+In textbook usage, Honorability DB appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Honorability DB in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.

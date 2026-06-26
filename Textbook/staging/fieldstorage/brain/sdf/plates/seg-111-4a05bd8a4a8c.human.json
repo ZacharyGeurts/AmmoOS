@@ -1,0 +1,43 @@
+{
+  "id": "seg-111-4a05bd8a4a8c",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "integrate",
+  "file": "brain/sdf/plates/seg-111-4a05bd8a4a8c.human.pgm",
+  "caption_stub": "Queen operator weekly checklist field queen browser py json QUEEN_READY gates all_held codecs mp4_mandatory Truth DNS lock in profile sovereign time USER_OK Play MP4 sample WebRTC test grep STUN Archive panel slice Review vulnerabilities_retired browser entries with team Capability Queen\u2026",
+  "text_sha256": "9dbc267e098963dbf460457d07ae7d77179d7c5b290200e7e7abb736e87dfb89",
+  "words_source": 902,
+  "tags": [
+    "all_held",
+    "browser",
+    "checklist",
+    "codecs",
+    "field",
+    "gates",
+    "grid",
+    "hostess",
+    "human",
+    "json",
+    "lossless",
+    "operator",
+    "queen",
+    "queen_ready",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "weekly"
+  ],
+  "ocr_hint": "Queen operator weekly checklist field queen browser py json QUEEN_READY gates all_held codecs mp4_mandatory Truth DNS lo",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-111-4a05bd8a4a8c",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-111-4a05bd8a4a8c.json",
+  "truth_score": 54.2,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

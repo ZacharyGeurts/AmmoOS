@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Spatial target geometry — bearing, distance, trespass corridor, approach vectors."""
 from __future__ import annotations
 

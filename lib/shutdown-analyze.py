@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Shutdown forensics — local WAN IP, remote peers, killer attribution."""
 import json
 import os

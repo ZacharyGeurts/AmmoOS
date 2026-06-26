@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field wave engine — our RF listen stack. External tools port into lib/bin/. Field-fast."""
 from __future__ import annotations
 
@@ -230,6 +230,33 @@ def _antenna_fields_ready() -> bool:
         return False
 
 
+def _wave_doctrine() -> dict[str, Any]:
+    path = INSTALL / "data" / "field-wave-doctrine.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"policy": {"voltage_is_voltage": True}}
+
+
+def strip_capture_wav(wav_path: Path | None = None) -> dict[str, Any]:
+    """Strip captured audio to raw voltage wave + potential energy manifest."""
+    wav = wav_path or DEFAULT_AUDIO
+    strip_py = INSTALL / "lib" / "field-wave-strip.py"
+    if not strip_py.is_file() or not wav.is_file():
+        return {"ok": False, "error": "strip_or_wav_missing", "path": str(wav)}
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(strip_py), "strip-wav", str(wav)],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        return json.loads(proc.stdout or "{}")
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 def probe_hardware() -> dict[str, Any]:
     """Field antenna probe — 3 fields + field-wave-fm/play backends."""
     ensure_ported_backends()
@@ -240,6 +267,7 @@ def probe_hardware() -> dict[str, Any]:
     play_ok = _tool_ready(FIELD_PLAY)
     wav_ok = _tool_ready(FIELD_WAV)
     listen = antenna and fm_ok and play_ok
+    doctrine = _wave_doctrine()
     return {
         "schema": "field-wave-engine/v1",
         "engine": "field-wave-engine",
@@ -254,7 +282,9 @@ def probe_hardware() -> dict[str, Any]:
         "field_wave_wav": wav_ok,
         "listen_ready": listen,
         "ported_bin": str(BIN),
-        "ensure_hint": "python3 lib/field-wave-engine.py ensure",
+        "wave_doctrine": doctrine.get("motto", "voltage_is_voltage"),
+        "voltage_is_voltage": doctrine.get("policy", {}).get("voltage_is_voltage", True),
+        "ensure_hint": "pythong lib/field-wave-engine.py ensure",
     }
 
 
@@ -394,8 +424,28 @@ def main() -> int:
         mhz = float(sys.argv[2]) if len(sys.argv) > 2 else 93.1
         print(json.dumps(live_play_wbfm(mhz), ensure_ascii=False))
         return 0
+    if cmd == "strip":
+        wav = Path(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_AUDIO
+        print(json.dumps(strip_capture_wav(wav), ensure_ascii=False))
+        return 0
+    if cmd == "shed":
+        shed_py = INSTALL / "lib" / "field-wave-shed.py"
+        wav = Path(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_AUDIO
+        apply = os.environ.get("NEXUS_WAVE_SHED_APPLY", "1") == "1"
+        if not shed_py.is_file():
+            return 1
+        args = [sys.executable, str(shed_py), "apply" if apply else "shed", str(wav)]
+        proc = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            timeout=90,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        print(proc.stdout or proc.stderr)
+        return 0 if proc.returncode == 0 else 1
     print(json.dumps({
-        "error": "usage: field-wave-engine.py [ensure|probe|capture MHZ|live MHZ]",
+        "error": "usage: field-wave-engine.py [ensure|probe|capture MHZ|live MHZ|strip [WAV]]",
         "engine": "field-wave-engine",
     }, ensure_ascii=False))
     return 1

@@ -1,0 +1,51 @@
+Synthesis question for «Introduction»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 1 on Shannon oracle and storm thresholds: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Introduction»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+2. Shannon entropy — H = −Σ p_i log₂ p_i
+
+For discrete symbols with probabilities p_i, Shannon entropy measures expected surprise in bits per symbol. Uniform random bytes approach 8 bits per byte. English text sits lower. Compressed or encrypted payloads push high.
+
+The formula uses log base 2 because engineers count bits. The negative sign makes positive surprise a positive number — intuitive for thresholds.
+
+In NEXUS, H is computed on file samples and payload windows. It is Implemented as Entropy Oracle behavior — grep-able, tunable, separate from GPU thermodynamics.
+
+Pedagogy for «Shannon entropy»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Shannon oracle and storm thresholds. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 2: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Shannon oracle and storm thresholds is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.
+
+Synthesis question for «Shannon entropy»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 2 on Shannon oracle and storm thresholds: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Shannon entropy»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+3. Storm thresholds — calm, alert, storm
+
+Daemon polling tiers mirror weather discipline:
+
+Calm: baseline cadence when H stays in expected bands for known file types. Alert: increased sampling when H rises above calm ceiling — packed executables, encrypted archives, obfuscated droppers. Storm: aggressive corroboration — more context, more operator attention, still not automatic kill.
+
+Storm is a gauge needle, not a gavel. Field Technology refuses products that treat entropy spikes as verdict without human or multi-signal corroboration.
+
+Pedagogy for «Storm thresholds»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Shannon oracle and storm thresholds. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 3: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Shannon oracle and storm thresholds is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.
+
+Synthesis question for «Storm thresholds»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 3 on Shannon oracle and storm thresholds: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Storm thresholds»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+4. NEXUS layer — where the oracle lives
+
+ThermoAccountant lives in AMOURANTHRTX dispatch_canvas(). Shannon oracle lives in NEXUS-Shield file analysis and related daemon loops. Different products, different bindings, different grep patterns.

@@ -1,0 +1,43 @@
+{
+  "id": "seg-112-d6efada9c860",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-112-d6efada9c860.human.pgm",
+  "caption_stub": "Gamepad API gate matters for browser games held for completeness scored like any device API Web Serial and WebUSB gates protect industrial operator tools disabling would push operators to unsafe binaries Queen weekly checklist should be printed beside Chapter 18\u2026",
+  "text_sha256": "0d8cf98de807ce36f3afe82c8776fbbcdef55d515b4ba2486ba58d06477ec559",
+  "words_source": 912,
+  "tags": [
+    "api",
+    "browser",
+    "completeness",
+    "for",
+    "gamepad",
+    "games",
+    "gate",
+    "grid",
+    "held",
+    "hostess",
+    "human",
+    "like",
+    "lossless",
+    "matters",
+    "redata",
+    "scored",
+    "sdf",
+    "segment",
+    "serviceable"
+  ],
+  "ocr_hint": "Gamepad API gate matters for browser games held for completeness scored like any device API Web Serial and WebUSB gates ",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-112-d6efada9c860",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-112-d6efada9c860.json",
+  "truth_score": 62.8,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

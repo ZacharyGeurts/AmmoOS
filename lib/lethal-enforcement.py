@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS MERCILESS lethal enforcement — heaven/hell, spatial geometry, total removal.
 
 Self defense · governance of body · right to self existence · trespass shoot-to-kill.
@@ -326,7 +326,7 @@ def execute_removal(
             extra_destroy = level in ("lethal", "total_removal")
             subprocess.run(
                 [
-                    "python3", str(kit), "kill", ip,
+                    "pythong", str(kit), "kill", ip,
                     "LETHAL_MERCILESS", severity,
                     f"merciless:{level}:{'destroy' if extra_destroy else 'strike'}",
                 ],

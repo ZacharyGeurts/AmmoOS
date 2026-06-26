@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Sub-micron GPS precision — fixed-point degrees + ENU nanometer placement.
 
 Resolution: FIXED_SCALE = 1e15 per degree (~0.11 nm latitude per LSB).

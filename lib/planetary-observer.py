@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Planetary observation + proactive kills — global sight, local destroy, keep us safe."""
 from __future__ import annotations
 

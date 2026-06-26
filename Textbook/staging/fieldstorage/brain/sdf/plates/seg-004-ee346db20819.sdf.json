@@ -1,0 +1,40 @@
+{
+  "id": "seg-004-ee346db20819",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-004-ee346db20819.pgm",
+  "caption_stub": "Drill 1 A Month one Monday linux sh run 2 1 tee tmp field month1 log 60s mouse move note ELLIE categories that appear grep E MAIN VULKAN CANVAS THERMO STATUS tmp field month1 log tail 25 Success name four\u2026",
+  "text_sha256": "ca4995c43b6ddd0caba4c0fc108802510c9b1332a4af8ae0796eeac5b149a11e",
+  "words_source": 916,
+  "tags": [
+    "60s",
+    "drill",
+    "field",
+    "grid",
+    "hostess",
+    "linux",
+    "log",
+    "lossless",
+    "monday",
+    "month",
+    "month1",
+    "one",
+    "redata",
+    "run",
+    "sdf",
+    "segment",
+    "tee",
+    "tmp"
+  ],
+  "ocr_hint": "Drill 1 A Month one Monday linux sh run 2 1 tee tmp field month1 log 60s mouse move note ELLIE categories that appear gr",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-004-ee346db20819",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 59.2,
+  "truth_accepted": true
+}

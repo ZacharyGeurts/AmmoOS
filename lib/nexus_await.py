@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Event-driven waits — no time.sleep; capped at NEXUS_AWAIT_MAX_SEC (default 5)."""
 from __future__ import annotations
 

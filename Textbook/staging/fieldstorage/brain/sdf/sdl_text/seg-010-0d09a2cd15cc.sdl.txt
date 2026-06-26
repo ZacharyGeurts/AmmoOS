@@ -1,0 +1,98 @@
+Integration homework: draw three boxes labeled fabric, die, packet. Inside each box write three example addresses. On arrows between boxes write what does NOT automatically flow — gatekeeper verdicts do not write texels; fabric coupling does not parse TCP; die bytes do not replace jsonl. Only host rituals and operator correlation connect boxes.
+
+Chapter 2 is the map chapter. You will get lost in Chapter 7 dispatch and Chapter 5 defense without this map drawn once on paper. Paper is technology. Draw the map.
+
+Scale 1-2-3 timeline during one second of operation
+
+Millisecond 0: host begins dispatch_canvas. Millisecond 1: CFL guard scales unsafe knobs. Millisecond 2: layer pump updates guest FAT telemetry into data_bus. Millisecond 3: ThermoAccountant populated binding 2. Millisecond 4: vkCmdDispatch writes fabric and die. Millisecond 5: hardwareFabric mirror samples fabric averages. Same second parallel: NEXUS daemon samples sockets, gatekeeper scores flow, appends jsonl row if changed. Timeline is linear — correlate by wall clock and sealed time, not by merging metrics.
+
+Introduction — three writable surfaces, one operator brain
+
+Chapter 1 named field literacy and three families at binding-map altitude. Chapter 2 lands the plane: three dimensions of state you will read and write for years — GPU analog fabric, Field Die guest map, NEXUS packet field. This is the engineering reading of Reality is 3D : not cosmology slides, but coordinates that persist across ticks. Texel (x,y), byte offset 0xB8000 , socket 127.0.0.1:9477 — three different address spaces, one disciplined human at the panel correlating without metric collapse.
+
+Chapter 7 converges fabric and die in one vkCmdDispatch . Chapter 5 keeps packet field NEXUS-local. Chapter 21 binds Queen at the perimeter. This chapter is the map those chapters assume — draw it once on paper before you grep dispatch.
+
+Prior: Chapter 1 — Preface . Next: Chapter 3 — Thermodynamics . Dispatch spine: Chapter 7 . Honesty rocks: Chapter 12 .
+
+Learning objectives
+
+Distinguish scalar, vector, and telemetry fields with stack examples.
+
+Navigate Options::Canvas::SwipeList as curriculum, not product reset.
+
+Run energy.comp lab drills and label Classic versus X86Fields.
+
+Map guest FAT and VGA subfields inside Field Die addressing.
+
+Explain connection intent on packet field sentences.
+
+Locate ZMM1024 tail and Big Grin HUD in die telemetry.
+
+Complete integration exercise on paper without category errors.
+
+Figure 2.1 — Phi, Thermo, Flow on fabric; die bytes and packet sentences beside — three scales, one literacy.
+
+Scalar, vector, telemetry — vocabulary before addresses
+
+Type Example in stack Addressing
+
+Scalar Thermo binding 9 — heat density per texel Grid (x,y)
+
+Vector Flow binding 10 — gradients in .gb Grid (x,y) + direction components
+
+Telemetry data_bus[64] — FCC floats, thermo mirrors, chrome flags Slot index 0–63
+
+Phi binding 8 behaves as scalar potential in many shader paths — wave and gate stories — while coupling to vector Flow through FieldCoupling . Telemetry is not “less real” than texels — Big Grin HUD reads bus words every frame. Category error is treating telemetry as optional decoration because it is not pretty.
+
+RayCanvas → createAnalogFieldFabric() → CANVAS.comp / x86.comp → hardwareFabric
+ Implemented. Host never runs CPU-side PDE on fabric — evolution is compute work per dispatch. Mirrors to hardwareFabric are read-only spiderweb compression (Chapter 10) — lossy on purpose.
+
+Swipe list table — curriculum chapters as shaders
+
+Options::Canvas::SwipeList hot-swaps shaders without tearing down rtx() singleton, sealed time, ThermoAccountant, or CFL guard. Index 0 remains x86 — Field Die default. Swipes change pedagogy emphasis; they do not opt out of field theory.
+
+Swipe Shader family Canvas kind Pedagogy role
+
+x86 (0) x86.comp X86Fields Product default — die + AmmoOS
+
+Amouranth CANVAS.comp variant Classic Portrait-forward thermo demos
+
+energy energy.comp Classic Phi/Thermo coupling visible
+
+Flowers Classic specialty Classic Organic flow patterns — Ch. 3 lab
+
+GreenWaves Classic specialty Classic Wave interference pedagogy
+
+Frosted Classic specialty Classic Diffusion-heavy thermo read
+
+RetroRTX RT tribute Classic See RetroRTX section — visual RT pedagogy
+
+Mandelbulb variants SDF raymarch Classic 3D address intuition — not die map
+
+planetary weave planetary_weave.comp Classic Visual RF shell — Ch. 6
+
+Category error to avoid: Declaring Field Die absent because you swiped to energy . Die path returns on next default launch; infrastructure persisted.
+
+Teaching pattern from Chapter 7: week one afternoon on Classic thermo, week two operations on die default. Veterans live on die; newcomers need visible heatmaps — both are honest if labeled.
+
+energy.comp laboratory — coupling you can see
+
+The energy swipe is the canonical Phi/Thermo coupling lab — warm colors track field work in ways Big Grin chrome hides. Lab protocol:
+
+Lab 2.A — energy.comp coupling
+
+./linux.sh run
+# Swipe to energy canvas (Options menu or bound key per build)
+set AnalogFields.FieldCoupling 0.2
+set AnalogFields.InjectStrength 1.0
+# Move mouse 60s; then:
+set AnalogFields.FieldCoupling 0.85
+set AnalogFields.InjectStrength 3.0
+grep -E 'THERMO|entropy|Boundary' run.log | tail -20
+ Expect rising entropyThisFrame and boundary thermo when coupling and inject climb — proxy receipts, not joules. CFL guard may scale aggressive knobs — read stderr clamp messages as numerical ethics (Chapter 9), not censorship.
+
+Pair lab with prompt list AnalogFields — host-side FCC mirrors land in data_bus[16–23] on x86 path; Classic path still owns the same analog knobs through overlapping control surfaces. Chapter 3 owns thermo physics story; this lab proves your hands move state.
+
+RetroRTX category — tribute shaders versus product truth
+
+RetroRTX names a family of tribute canvases — retro ray aesthetic, pedagogical nostalgia, Visual -leaning presentation that must not be mistaken for the default Field Die product surface. RetroRTX swipes teach history of RT vocabulary inside the same Vulkan spine; they do not replace x86.comp guest execution truth.

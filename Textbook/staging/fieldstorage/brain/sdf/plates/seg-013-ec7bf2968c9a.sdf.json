@@ -1,0 +1,37 @@
+{
+  "id": "seg-013-ec7bf2968c9a",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-013-ec7bf2968c9a.pgm",
+  "caption_stub": "Phi binding 8 storage image layout Storage image layout matches fabric resolution at adaptive scale texel count changes binding identity stable Addresses index within current resolution Thermo binding 9 scalar heatmap discipline Heatmap display is visualization of binding 9 not\u2026",
+  "text_sha256": "1fd8a54d66dfc6ee4612d1ae2e50e825883074f5c168576368ce3634cc446626",
+  "words_source": 900,
+  "tags": [
+    "adaptive",
+    "binding",
+    "fabric",
+    "grid",
+    "hostess",
+    "image",
+    "layout",
+    "lossless",
+    "matches",
+    "phi",
+    "redata",
+    "resolution",
+    "sdf",
+    "segment",
+    "storage"
+  ],
+  "ocr_hint": "Phi binding 8 storage image layout Storage image layout matches fabric resolution at adaptive scale texel count changes ",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-013-ec7bf2968c9a",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 64.3,
+  "truth_accepted": true
+}

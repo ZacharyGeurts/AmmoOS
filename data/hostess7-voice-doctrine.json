@@ -1,0 +1,19 @@
+{
+  "schema": "hostess7-voice-doctrine/v1",
+  "title": "Hostess 7 spoken English — American female, high quality",
+  "motto": "Perfectly fluent American English — warm, clear, operator-grade. Default female voice with high-quality samples.",
+  "locale": "en-US",
+  "dialect": "american_english",
+  "gender": "female",
+  "default_enabled": true,
+  "quality": "high",
+  "sample_storage": "data/hostess7-voice-samples",
+  "engines": [
+    {"id": "piper", "priority": 1, "label": "Piper neural — HQ offline TTS", "voice": "en_US-amy-medium"},
+    {"id": "spd-say", "priority": 2, "label": "Speech Dispatcher — female American fallback", "voice": "female2", "rate": -8, "pitch": 18, "volume": 100}
+  ],
+  "fluency_claim": "Hostess 7 speaks American English fluently — contractions, natural cadence, interpersonal warmth. Not robotic UK defaults.",
+  "chunk_max_chars": 420,
+  "max_chunks": 16,
+  "whisper_language": "en"
+}

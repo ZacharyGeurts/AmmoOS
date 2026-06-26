@@ -1,0 +1,93 @@
+Drill 1.A — Month-one Monday
+
+./linux.sh run 2>&1 | tee /tmp/field-month1.log
+# 60s mouse move; note ELLIE categories that appear
+grep -E '^(MAIN|VULKAN|CANVAS|THERMO|STATUS)' /tmp/field-month1.log | tail -25
+ Success: name four log categories and which field family each witnesses. Failure: you remember only the wallpaper — reread status labels before Chapter 2.
+
+Teaching another human — covenant without condescension
+
+Field literacy spreads by apprenticeship, not by dropping a wiki link and disappearing. When you teach another human — child, colleague, skeptical physicist — you owe them the same honesty labels you owe yourself. The teaching covenant is simple: definitions before mechanisms, grep before screenshots, rocks before poetry.
+
+Session shape that works in ninety minutes:
+
+Kitchen metaphor (10 min): program as recipe, field as burner state — Chapter 1 Plain English callout.
+
+Three families (20 min): fabric bindings 8–10, die 64 MiB binding 1, packet jsonl — draw three boxes on paper.
+
+Live run (30 min): student drives mouse; you grep THERMO together; refuse to narrate from frame rate alone.
+
+Label drill (15 min): give five claims; student tags Implemented , Metaphor , Philosophy , or Visual .
+
+Homework (15 min): week-one log file; three study questions from Chapter 1; bookmark Chapter 12.
+
+Love in teaching: patience before correction. A student who conflates proxy entropy with joules is not stupid — they were trained by vendor dashboards. Correct with rocks, not ridicule.
+
+Do not teach Queen as “safer Chrome” or NEXUS as “antivirus with vibes.” Teach Queen as all gates held; teach NEXUS as local-first packet sentences. Do not promise KILROY ships tomorrow — teach CONFIG_RTX_FIELD_DIE as syscall boundary aspiration with honest build flags.
+
+When the student asks “is it real,” answer: “which label applies?” When they ask “is it revolutionary,” answer: “which binding number?” Field Technology v5 is serious enough to teach from — that is the covenant authors accept when we publish expanded chapters.
+
+AMOURANTHRTX and GPL — license posture for operators
+
+AMOURANTHRTX ships under GPL v3 or commercial license — dual posture common in engines that must survive both community audit and product packaging. Operators forking the stack need literacy in what GPL demands: source offer, derivative work conscience, patent retaliation clause awareness. Operators packaging commercial builds need literacy in what the commercial path buys: support contract, redistribution rights — details live in LICENSE files, not in this chapter’s prose.
+
+Question GPL path Commercial path
+
+Fork and modify engine Share corresponding source when distributing binaries Contract defines redistribution
+
+Link Queen browser build Follow combined work rules for your packaging Same — read actual grant
+
+NEXUS-Shield beside RTX MIT NEXUS does not infect GPL RTX by mere adjacency Product boundaries still distinct
+
+Ship shader modifications x86.comp changes are part of corresponding source Document layout version bumps
+
+Philosophy: open source here is not merch — it is auditability. A skeptical operator can grep FIELD_LAYOUT_VERSION , read ThermoAccountant packing, and verify no hidden phone-home in dispatch loop. NEXUS-Shield remains MIT — packet field code paths are separable for security review.
+
+Do not conflate Amouranth the namesake spirit with license legal entity in classroom slides — spirit names courage; LICENSE names obligations. Chapter 18 covenant expands pastoral posture; preface names commercial reality so week-four packaging discussions do not surprise you.
+
+ELLIE log categories — stderr as scripture
+
+ELLIE is the structured logging spine in AMOURANTHRTX — categories let you grep without drowning in noise. Chapter 11 owns observability rhythm; preface introduces the vocabulary so week-one operators recognize witnesses.
+
+Category What it proves Typical grep
+
+MAIN Navigator boot, lifecycle Session start receipt
+
+VULKAN Device init, queues, budget GPU path alive
+
+CANVAS Dispatch issued, canvas kind Offense spine witness
+
+THERMO ThermoAccountant population Proxy entropy lines
+
+STATUS FPS, GPU ms, VRAM ~5 s cadence Health block
+
+RTXPROBE Optional GPU timestamps ( RTX_PROBES=1 ) Latency spikes
+
+grep -E '^(MAIN|VULKAN|CANVAS|THERMO|STATUS)' run.log | tail -40
+ Category discipline prevents false panic: silence in THERMO while CANVAS speaks means accountant failure — return to Chapter 7 binding 2, not driver reinstall theater. Burst volume in MAIN without VULKAN success means you are not on GPU path yet.
+
+Plain English: ELLIE categories are chapter headings in your log file. Read the headings before you read the novel.
+
+FieldSocket preview — push constants before Chapter 7
+
+FieldSocket is the per-dispatch push-constant block on the default x86.comp path — small, fast, changes every tick without rebinding descriptor sets. Chapter 7 owns full layout; preface plants fields so first dispatch is not mystery meat.
+
+Field / flag Role
+
+sealed_time Monotonic session genesis from TotalTime::seal()
+
+Probe position Mouse / inject coordinates for fabric offense
+
+ControlHostCpu (8) Optional FieldX86Emu host assist — not default
+
+ControlAmmoExec (1024) Guest program execution active
+
+ControlFieldDebugHud (2048) Die monitor overlay — thermo hidden behind chrome escapes here
+
+Push constants ride the command buffer; they are offense at cadence. Sealed time in FieldSocket is how physics time survives VSYNC stutter — wall clock may hiccup; socket time does not rewrite backward. Chapter 19 extends sealing across machines; session-local sealing is already discipline you can grep this week.
+
+Implemented. Grep FieldSocket in Navigator/engine/ and x86.comp layout comments. Mixed FIELD_LAYOUT_VERSION between host and shader is desynchronized reality — HUD hex lies politely.
+
+Sub-micron honesty — silicon metaphor without fraud
+
+Field Technology uses silicon-gate and sub-micron vocabulary as Metaphor for numerical management — CFL guards, FCC clamps, gate fidelity knobs — not as claims that AMOURANTHRTX measured your fab node or junction temperature. When prose says “intelligent management at sub-micron scale,” translate to: host pre-conditions operator inputs before they reach compute shaders.

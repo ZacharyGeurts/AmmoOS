@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Packet Field — tcpdump capture, TX/RX classification, field jsonl + realtime panel feed."""
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 OUT_JSON = STATE / "packet-field.json"
 RING_PATH = STATE / "packet-field.ring.jsonl"
-HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
+HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
 HOSTESS7_TEAM_FIELD = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
 PACKET_MEMORY_FILE = os.environ.get("NEXUS_PACKET_MEMORY_FILE", "nexus-packets.jsonl")
 CAPTURE_COUNT = int(os.environ.get("NEXUS_PACKET_FIELD_CAPTURE", "32"))

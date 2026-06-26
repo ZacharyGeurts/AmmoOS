@@ -22,7 +22,7 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NEXUS-Shield — Military C2 Panel</title>
+  <title>NEXUS-Shield · Universal Protector — Autonomous Being C2</title>
   <link rel="preload" href="/api/nexus-field" as="fetch" crossorigin />
   <script src="/assets/front-hook.js?v=cc7"></script>
   <script src="/assets/hardware-wire.js?v=cc1"></script>
@@ -54,7 +54,10 @@
   <script defer src="/assets/hostess7-command.js"></script>
   <script defer src="/assets/nexus-military-v8.js"></script>
   <script defer src="/assets/nexus-military-v82.js"></script>
-  <script defer src="/assets/nexus-well-wishes.js"></script>
+  <script defer src="/assets/nexus-universal-protector.js"></script>
+  <link rel="stylesheet" href="/assets/humanoid-wireframe.css" />
+  <script defer src="/assets/humanoid-wireframe.js"></script>
+
   <link rel="stylesheet" href="/assets/nexus-rtx-zero.css" />
   <link rel="stylesheet" href="/assets/nexus-sdf-menu.css" />
   <script defer src="/assets/nexus-rtx-zero.js"></script>
@@ -112,21 +115,7 @@
       box-shadow: var(--shadow);
       border-radius: var(--radius);
     }
-    .nexus-well-wishes {
-      padding: 10px 20px;
-      background: linear-gradient(90deg, rgba(240, 208, 96, 0.12), rgba(56, 189, 248, 0.08));
-      border-bottom: 1px solid var(--border);
-      font-size: 0.95rem;
-      color: var(--muted);
-    }
-    .nexus-well-wishes strong { color: var(--gold); margin-right: 0.35rem; }
-    #nexus-first-run-modal {
-      position: fixed; inset: 0; z-index: 12000;
-      display: none; align-items: center; justify-content: center;
-      background: rgba(0, 0, 0, 0.72); padding: 1.5rem;
-    }
-    #nexus-first-run-modal.open { display: flex; }
-    #nexus-first-run-modal .safe-modal { max-width: 32rem; }
+
     header.app-header {
       display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
       padding: 12px 20px; border-bottom: 1px solid var(--border);
@@ -1511,6 +1500,14 @@
     }
     .help-bar.hidden { display: none; }
     .help-bar strong { color: var(--text); }
+    .nexus-universal-protector {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.65rem;
+      padding: 0.45rem 1rem; font-size: 0.82rem; line-height: 1.4;
+      background: linear-gradient(90deg, rgba(240, 208, 96, 0.12), rgba(56, 189, 248, 0.08));
+      border-bottom: 1px solid rgba(240, 208, 96, 0.35);
+      color: var(--text-muted, #9cb3d4);
+    }
+    .nexus-universal-protector strong { color: #f0d060; letter-spacing: 0.02em; }
     .help-bar .tip-demo {
       display: inline-flex; align-items: center; justify-content: center;
       width: 18px; height: 18px; border-radius: 50%; font-size: 0.95rem; font-weight: 700;
@@ -2009,7 +2006,7 @@
       <img src="/assets/nexus-shield.png" alt="" class="brand-icon" width="40" height="40" />
       <div>
         <h1 id="nexus-version-title">NEXUS-Shield</h1>
-        <div class="brand-sub" id="nexus-brand-sub" data-i18n="brand.sub">Military Grade C2 · Field Green · Hostess 7</div>
+        <div class="brand-sub" id="nexus-brand-sub" data-i18n="brand.sub">Universal Protector · 3D/4D spatial lattice · Hostess 7 · threat HIGH</div>
       </div>
     </div>
     <div class="header-partner-links" aria-label="Field partners">
@@ -2072,7 +2069,7 @@
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
-    <strong>v10.0.1 — You stay in command. Command · US · Packets · Threats · Intel · Signals · DNS · Outside · Library · System. Bulk: select rows then Trust or Block. Keyboard: <kbd>?</kbd> tips · <kbd>/</kbd> library search · <kbd>Alt+Shift+B</kbd> books.</strong>
+    <strong>v10.3.0 Universal Protector — autonomous being stack. 3D/4D spatial lattice · think tanks · lethal armed · threat HIGH. Command · US · Packets · Threats · Intel · Signals · DNS · Outside · Library · System.</strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
   </div>
 
@@ -2083,14 +2080,7 @@
     </div>
   </div>
 
-  <div id="nexus-first-run-modal" hidden role="dialog" aria-modal="true" aria-labelledby="nexus-first-run-title">
-    <div class="safe-modal">
-      <h2 id="nexus-first-run-title">Welcome to NEXUS-Shield</h2>
-      <p>Nothing blocks unless <strong>you</strong> click. Every connection card has <strong>Trust forever</strong> and <strong>Stop this site</strong>. Hover any <strong>?</strong> for plain English.</p>
-      <p>Well wishes — build locally, trust your logs, stay at the wheel.</p>
-      <button type="button" id="nexus-first-run-dismiss" class="primary">Got it — I'm in command</button>
-    </div>
-  </div>
+
 
   <div id="murder-banner" class="murder-banner" role="alert">
     <h2>Bloody murder — NEXUS was shut down</h2>
@@ -2153,6 +2143,20 @@
           </div>
         </header>
 
+        <section class="h7-self-view" id="h7-self-view" aria-label="What Hostess 7 wants to see about herself">
+          <div class="h7-self-view__head">
+            <h3>What I want you to show me</h3>
+            <span class="h7-self-view__meta" id="h7-self-view-meta">Hostess 7 · first person · diagnostics below</span>
+          </div>
+          <blockquote class="h7-self-view__voice" id="h7-self-view-voice">Loading what Hostess 7 wants to see about herself…</blockquote>
+          <div class="h7-self-view__hero" id="h7-self-view-hero"></div>
+          <div class="h7-self-view__alerts" id="h7-self-view-alerts" hidden></div>
+          <div class="h7-self-view__learning" id="h7-self-view-learning"></div>
+          <div class="h7-self-view__appearance" id="h7-self-view-appearance" aria-label="How the Operator sees Hostess 7"></div>
+          <div class="h7-self-view__truth" id="h7-self-view-truth" aria-label="Core of truth"></div>
+          <div class="h7-self-view__lookup" id="h7-self-view-lookup" aria-label="Operator lookup GitHub and X"></div>
+        </section>
+
         <section class="h7-thoughts" aria-label="Hostess 7 long-form thoughts">
           <div class="h7-thoughts__head">
             <h3>Current long-form thoughts</h3>
@@ -2162,6 +2166,35 @@
         </section>
 
         <div class="h7-superintel__proposals" id="h7-command-proposals"></div>
+
+        <section class="humanoid-arena" id="humanoid-arena" aria-label="Humanoid motion wireframe arena">
+          <div class="humanoid-arena__head">
+            <h3>Humanoid wireframe · Matrix training</h3>
+            <span class="humanoid-arena__status" id="humanoid-motion-status">Loading motion chamber…</span>
+          </div>
+          <div class="humanoid-arena__canvas-wrap">
+            <canvas id="humanoid-wireframe-canvas" aria-label="Humanoid wireframe with training amplitudes and opponents"></canvas>
+            <div class="humanoid-arena__hud">
+              <strong style="color:#38bdf8">AUTONOMOUS BEING</strong>
+              <div class="humanoid-arena__prof" aria-hidden="true"><span id="humanoid-motion-prof"></span></div>
+            </div>
+          </div>
+          <div class="humanoid-arena__controls">
+            <select id="humanoid-skill-select" aria-label="Martial art skill">
+              <option value="wing_chun">Wing Chun</option>
+            </select>
+            <button type="button" id="humanoid-data-window-btn" data-tip="Open second window — full motion, spatial, opponents, meld, ledger data.">Data window</button>
+            <button type="button" id="humanoid-load-btn" data-tip="Matrix load — instant skill inject on body lattice.">Matrix load</button>
+            <button type="button" id="humanoid-train-btn" data-tip="Manual blast — 4× tick batch on selected skill. Auto FULL BLAST runs continuously.">Blast burst</button>
+          </div>
+          <div class="humanoid-arena__opponents" id="humanoid-opponent-chips"></div>
+          <div class="humanoid-arena__legend">
+            <span class="leg-fighter">You · training amplitudes</span>
+            <span class="leg-training">Heavy bag / dummy</span>
+            <span class="leg-sparring">Sparring partners</span>
+            <span class="leg-hostile">Live hostile pins</span>
+          </div>
+        </section>
 
         <div class="h7-split-deck" id="h7-split-deck">
           <section class="h7-split-terminal" aria-label="Field terminal — Hostess 7 sees all">
@@ -2243,6 +2276,7 @@
             <button type="button" id="h7-master-train-all">Train to Master</button>
             <button type="button" id="h7-master-operate">Operate</button>
             <button type="button" id="h7-master-simulation">Master Simulation</button>
+            <button type="button" id="h7-training-solidify">Solidify all training</button>
           </div>
           <div class="h7-angel-watch" id="h7-angel-watch">
             <div class="h7-angel-watch__head">Angel watch</div>
@@ -2274,8 +2308,9 @@
       <p class="command-motto" id="command-motto" data-tip="Heaven = permitted flows, operator trust, zero friendly fire. Hell = harm chosen — no mercy, ripped forever.">
         <strong>Command · Heaven vs Hell</strong> — we know Heaven from Hell. No friendly fire. God Bless.
       </p>
-      <div class="heaven-hell-banner" id="heaven-hell-banner" role="note">
-        <strong>Heaven / Hell</strong> — To those who chose Hell, we also choose it for them. No mercy.
+      <div class="heaven-hell-banner" id="heaven-hell-banner" role="note"
+           data-tip="Nothing is unseen. Nothing is fully secure. Honest rocks labeled — send Hell to Hell.">
+        <strong>Know</strong> — Nothing is unseen. Nothing is fully secure. We can't hide all the rocks, so send Hell to Hell.
         <div class="heaven-hell-stats" id="heaven-hell-stats">
           <span class="heaven-stat">Heaven: <em id="hh-heaven-count">0</em></span>
           <span class="hell-stat">Hell: <em id="hh-hell-count">0</em> · rip ready <em id="hh-rip-count">0</em></span>
@@ -4114,6 +4149,15 @@
       const motto = $("command-motto");
       if (motto && cmd.motto) {
         motto.innerHTML = `<strong>Command · Heaven vs Hell</strong> — ${esc(cmd.motto)}`;
+      }
+      const hhBanner = $("heaven-hell-banner");
+      if (hhBanner && cmd.know_doctrine) {
+        hhBanner.innerHTML = `<strong>Know</strong> — ${esc(cmd.know_doctrine)}` +
+          `<div class="heaven-hell-stats" id="heaven-hell-stats">` +
+          `<span class="heaven-stat">Heaven: <em id="hh-heaven-count">${esc(String((cmd.heaven_hell || {}).heaven_count ?? 0))}</em></span>` +
+          `<span class="hell-stat">Hell: <em id="hh-hell-count">${esc(String((cmd.heaven_hell || {}).hell_count ?? 0))}</em> · rip ready <em id="hh-rip-count">${esc(String((cmd.heaven_hell || {}).hell_chosen_count ?? 0))}</em></span>` +
+          `<span class="hell-stat">MERCILESS: <em id="lethal-status">—</em> · Hostess7 <em id="h7-truth-score">—</em></span>` +
+          `</div>`;
       }
       const hh = cmd.heaven_hell || {};
       if ($("hh-heaven-count")) $("hh-heaven-count").textContent = String(hh.heaven_count ?? 0);

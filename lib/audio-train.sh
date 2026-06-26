@@ -3,11 +3,11 @@
 
 nexus_audio_train_publish() {
   [[ "${NEXUS_AUDIO_TRAIN:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local py="${NEXUS_INSTALL_ROOT}/lib/audio-train.py"
   [[ -f "$py" ]] || return 0
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-    python3 "$py" harvest >/dev/null 2>&1 || true
+    pythong "$py" harvest >/dev/null 2>&1 || true
 }
 
 nexus_audio_train_json() {
@@ -18,10 +18,10 @@ nexus_audio_train_json() {
   local cache="${NEXUS_STATE_DIR}/audio-train-panel.json"
   if [[ -f "$py" ]]; then
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$py" json 2>/dev/null && return 0
+      pythong "$py" json 2>/dev/null && return 0
   fi
   if [[ -s "$cache" ]]; then
-    python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$cache" 2>/dev/null
+    pythong -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$cache" 2>/dev/null
     return 0
   fi
   printf '{"schema":"audio-train/v1","stats":{"sources":0},"sources":{},"table":[]}'

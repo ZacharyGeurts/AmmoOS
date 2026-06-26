@@ -38,7 +38,7 @@ source "${NEXUS_INSTALL_ROOT}/lib/hostess7-bridge.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/hostess7-operator.sh"
 # shellcheck source=/dev/null
-source "${NEXUS_INSTALL_ROOT}/lib/panel-tls.sh"
+source "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
 # shellcheck source=/dev/null
@@ -95,6 +95,15 @@ source "${NEXUS_INSTALL_ROOT}/lib/threat-panel.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/panel-launch.sh"
 
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/front-hook.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/front-hook.sh"
+  nexus_front_hook_board
+}
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-perimeter-shield.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/field-perimeter-shield.sh"
+}
 nexus_vigil_init
 nexus_predictive_init
 nexus_shadow_init
@@ -102,7 +111,7 @@ nexus_privacy_harden
 nexus_network_lockdown
 nexus_firewall_takeover
 nexus_firewall_ensure_self_access || true
-nexus_panel_tls_ensure
+nexus_znetwork_publish 2>/dev/null || true
 nexus_hostess7_corroborate_integrity || true
 declare -f nexus_field_dns_takeover_cycle >/dev/null 2>&1 && nexus_field_dns_takeover_cycle || true
 declare -f nexus_dns_admin_firewall_permit >/dev/null 2>&1 && nexus_dns_admin_firewall_permit || true
@@ -125,14 +134,38 @@ start_module() {
 [[ "${NEXUS_ENTROPY_WATCH:-1}" == "1" ]] && start_module entropy nexus_entropy_watch
 [[ "${NEXUS_BEHAVIOR_WATCH:-1}" == "1" ]] && start_module behavior nexus_behavior_loop
 [[ "${NEXUS_PRIVACY_GUARD:-1}" == "1" ]] && start_module privacy nexus_privacy_loop
+[[ "${NEXUS_ADMIN_WINDOW_SHIELD:-1}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/admin-window-shield.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/admin-window-shield.sh"
+  start_module admin-shield nexus_admin_window_shield_loop
+}
+[[ "${NEXUS_HARDWARE_WIRE:-${NEXUS_SMART_WIRE:-1}}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/hardware-wire.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/hardware-wire.sh"
+  start_module hardware-wire nexus_hardware_wire_loop
+}
+[[ "${NEXUS_SMART_WIRE:-1}" == "1" && ! -f "${NEXUS_INSTALL_ROOT}/lib/hardware-wire.sh" && -f "${NEXUS_INSTALL_ROOT}/lib/smart-wire.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/smart-wire.sh"
+  start_module smart-wire nexus_smart_wire_loop
+}
+[[ "${NEXUS_FIELD_OPERATOR:-1}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/field-operator.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/field-operator.sh"
+  start_module field-operator nexus_field_operator_loop
+}
+[[ "${SG_ROOT_SOVEREIGN_GUARD:-1}" == "1" ]] && start_module root-sovereign bash "${NEXUS_INSTALL_ROOT}/lib/root-sovereign-guard.sh"
+[[ "${SG_FIELD_VIRUS_GUARD:-1}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/field-virus-guard.sh" ]] && start_module field-virus bash "${NEXUS_INSTALL_ROOT}/lib/field-virus-guard.sh"
 [[ "${NEXUS_PACKET_ORACLE:-1}" == "1" ]] && start_module packet nexus_packet_loop
 [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] && start_module field-dns nexus_field_dns_serve_loop
 [[ "${NEXUS_FIELD_DHCP:-1}" == "1" ]] && start_module field-dhcp nexus_field_dhcp_serve_loop
+[[ "${NEXUS_SOVEREIGN_TIME:-1}" == "1" ]] && start_module sovereign-time nexus_sovereign_time_serve_loop
+[[ "${NEXUS_FIELD_NTP:-1}" == "1" ]] && start_module field-ntp nexus_field_ntp_serve_loop
 [[ "${NEXUS_DNS_INTERNET_PULL:-1}" == "1" ]] && start_module dns-internet nexus_dns_internet_pull_loop
 [[ "${NEXUS_DNS_ADMIN_PORTAL:-1}" == "1" ]] && start_module dns-admin nexus_dns_admin_serve_loop
 [[ "${NEXUS_THREAT_PANEL:-1}" == "1" ]] && start_module panel nexus_threat_panel_serve_loop
 (
-  nexus_await_curl_ready "$(nexus_panel_app_url 2>/dev/null || nexus_panel_url 2>/dev/null || echo 'https://127.0.0.1:9477/app')" 5 5
+  nexus_await_curl_ready "$(nexus_panel_app_url 2>/dev/null || nexus_panel_url 2>/dev/null || echo 'http://127.0.0.1:9477/app')" 5 5
   nexus_panel_open_browser
 ) &
 
@@ -143,6 +176,11 @@ while true; do
   nexus_vigil_fix_perms 2>/dev/null || true
   nexus_vigil_prune_alerts
   nexus_vigil_recompute_mode
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-stray-task-guard.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/nexus-stray-task-guard.sh"
+    nexus_stray_task_guard_cycle
+  fi
   nexus_predictive_decay
   nexus_network_lockdown_verify
   nexus_firewall_verify
@@ -178,7 +216,29 @@ while true; do
   fi
   if [[ "${NEXUS_THERMAL_GOVERNOR:-1}" == "1" ]] && [[ -f "${NEXUS_INSTALL_ROOT}/lib/thermal-governor.py" ]]; then
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "${NEXUS_INSTALL_ROOT}/lib/thermal-governor.py" cycle >/dev/null 2>&1 || true
+      pythong "${NEXUS_INSTALL_ROOT}/lib/thermal-governor.py" cycle >/dev/null 2>&1 || true
+  fi
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-port-ddos.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/field-port-ddos.sh"
+    nexus_port_ddos_cycle
+  fi
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-packet-deinterlace.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/field-packet-deinterlace.sh"
+    nexus_packet_deinterlace_cycle
+  fi
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-plate-meld.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/field-plate-meld.sh"
+    nexus_plate_meld_cycle
+  elif [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-unified-bus.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/field-unified-bus.sh"
+    nexus_unified_bus_cycle
+  fi
+  if declare -f nexus_perimeter_shield_cycle >/dev/null 2>&1; then
+    nexus_perimeter_shield_cycle
   fi
   nexus_await_seconds "${NEXUS_VIGIL_MAINTAIN_INTERVAL:-5}" "${NEXUS_STATE_DIR}"
 done

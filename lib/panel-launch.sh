@@ -6,7 +6,7 @@ NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
 
 nexus_panel_open_browser() {
   [[ "${NEXUS_PANEL_AUTO_OPEN:-1}" == "1" ]] || return 0
-  local url="https://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/field"
+  local url="http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/field"
   local today
   today="$(date -u '+%Y-%m-%d' 2>/dev/null || date '+%Y-%m-%d')"
 
@@ -24,7 +24,7 @@ nexus_panel_open_browser() {
 
   local opened=0 i
   for i in $(seq 1 30); do
-    if curl -sk --connect-timeout 1 "$url" >/dev/null 2>&1; then
+    if curl -s --connect-timeout 1 "$url" >/dev/null 2>&1; then
       opened=1
       break
     fi
@@ -53,7 +53,7 @@ nexus_panel_install_desktop() {
   local icon_src="${root}/assets/nexus-shield.png"
   local apps_dir="/usr/share/applications"
   local icon_dir="/usr/share/icons/hicolor/256x256/apps"
-  local url="https://127.0.0.1:${port}/field"
+  local url="http://127.0.0.1:${port}/field"
 
   [[ -f "$icon_src" ]] || return 0
   install -d -m 755 "$icon_dir" 2>/dev/null || return 0
@@ -62,16 +62,16 @@ nexus_panel_install_desktop() {
   install -m 755 "${root}/nexus.sh" /usr/local/bin/nexus.sh 2>/dev/null || true
   cat >"${apps_dir}/nexus-shield.desktop" <<EOF
 [Desktop Entry]
-Version=3.0.0
+Version=10.0.0
 Type=Application
-Name=NEXUS-Shield
-GenericName=Network Gatekeeper
-Comment=Open NEXUS connection gatekeeper panel
+Name=Underlay F9 — NEXUS Field
+GenericName=Underlay F9
+Comment=Full field underlay command — black green brown military C2
 Exec=/usr/local/bin/nexus.sh
 Icon=nexus-shield
 Terminal=false
 Categories=Security;Network;System;
-Keywords=security;firewall;network;nexus;shield;
+Keywords=security;firewall;network;nexus;field;znetwork;
 StartupNotify=true
 EOF
   chmod 644 "${apps_dir}/nexus-shield.desktop" 2>/dev/null || true

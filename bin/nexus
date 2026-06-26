@@ -91,13 +91,10 @@ case "$cmd" in
     # shellcheck source=/dev/null
     source "${NEXUS_INSTALL_ROOT}/lib/firewall-sentinel.sh"
     nexus_firewall_status
+    echo "panel=http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT:-9477}/field"
     # shellcheck source=/dev/null
-    source "${NEXUS_INSTALL_ROOT}/lib/panel-tls.sh"
-    if [[ "${NEXUS_PANEL_TLS:-1}" == "1" && -f "${NEXUS_PANEL_TLS_CERT:-}" ]]; then
-      echo "panel=https://127.0.0.1:${NEXUS_THREAT_PANEL_PORT:-9477}/"
-    else
-      echo "panel=http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT:-9477}/"
-    fi
+    [[ -f "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh"
+    declare -f nexus_znetwork_status_line >/dev/null 2>&1 && nexus_znetwork_status_line
     ;;
   shadow)
     nexus_require_install_for_admin "shadow ${sub:-}"
@@ -217,7 +214,7 @@ case "$cmd" in
     if [[ ! -s "$json" ]]; then
       json="${NEXUS_STATE_DIR}/threat-panel.json"
       if [[ -s "$json" ]]; then
-        python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps(d.get('gatekeeper',{}), indent=2))" "$json" 2>/dev/null \
+        pythong -c "import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps(d.get('gatekeeper',{}), indent=2))" "$json" 2>/dev/null \
           || echo '{"connections":[]}'
         exit 0
       fi
@@ -258,7 +255,7 @@ case "$cmd" in
     script="${NEXUS_INSTALL_ROOT}/lib/vector-intel.py"
     [[ -f "$script" ]] || { echo "vector-intel missing"; exit 1; }
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$script" scour
+      pythong "$script" scour
     ;;
   intel)
     ip="${sub:-}"
@@ -266,19 +263,19 @@ case "$cmd" in
     script="${NEXUS_INSTALL_ROOT}/lib/vector-intel.py"
     [[ -f "$script" ]] || { echo "vector-intel missing"; exit 1; }
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$script" lookup "$ip"
+      pythong "$script" lookup "$ip"
     ;;
   dossier)
     script="${NEXUS_INSTALL_ROOT}/lib/angel-dossier.py"
     [[ -f "$script" ]] || { echo '{"dossiers":[]}'; exit 0; }
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$script" dossiers
+      pythong "$script" dossiers
     ;;
   research)
     script="${NEXUS_INSTALL_ROOT}/lib/angel-dossier.py"
     [[ -f "$script" ]] || { echo '{"tables":{}}'; exit 0; }
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-      python3 "$script" research
+      pythong "$script" research
     ;;
   antenna)
     action="${sub:-status}"
@@ -288,15 +285,15 @@ case "$cmd" in
     case "$action" in
       status)
         NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-          python3 "$apy" json
+          pythong "$apy" json
         ;;
       cycle)
         NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-          python3 "$apy" cycle
+          pythong "$apy" cycle
         ;;
       test)
         NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-          python3 "$apy" test
+          pythong "$apy" test
         ;;
       launch|blaster)
         max="${3:-12}"
@@ -305,7 +302,7 @@ case "$cmd" in
             "$launcher" launch "$max"
         else
           NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-            python3 "$apy" launch "$max"
+            pythong "$apy" launch "$max"
         fi
         ;;
       *)
@@ -321,21 +318,21 @@ case "$cmd" in
     case "$action" in
       status)
         NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-          python3 "$fpy" status
+          pythong "$fpy" status
         ;;
       publish)
         NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-          python3 "$fpy" publish
+          pythong "$fpy" publish
         ;;
       sync)
         NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-          python3 "$fpy" sync
+          pythong "$fpy" sync
         ;;
       talk)
         payload="${3:-"{}"}"
         [[ -n "$payload" ]] || payload='{"op":"status"}'
         NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
-          python3 "$fpy" talk "$payload"
+          pythong "$fpy" talk "$payload"
         ;;
       panel)
         port="${NEXUS_THREAT_PANEL_PORT:-9477}"

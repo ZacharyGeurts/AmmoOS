@@ -51,6 +51,21 @@
       "nexus_keys": ["NEXUS_RUST_CORE"],
       "amouranthrtx": "FieldFabric.RustHotPath",
       "role": "Lock-free scoring core via PyO3"
+    },
+    "fabric_encrypt": {
+      "nexus_keys": ["NEXUS_FABRIC_ENCRYPT_SLOTS", "NEXUS_FIELD_SEAL_KEY"],
+      "amouranthrtx": "FieldFabric.dispatchExtended",
+      "role": "Zero-cost 4+ parallel encryption lanes — free when idle"
+    },
+    "port_ddos_shield": {
+      "nexus_keys": ["NEXUS_PORT_DDOS_SHIELD", "NEXUS_HEAT_CRUSH_THRESHOLD", "NEXUS_PORT_DDOS_ENFORCE"],
+      "amouranthrtx": "FieldFabric.dispatchExtended + EntropyPulse + ThermalThrottle",
+      "role": "Wave view thermals + entropy at every port and WiFi edge — heat crush DDoS"
+    },
+    "unified_bus": {
+      "nexus_keys": ["NEXUS_UNIFIED_BUS"],
+      "amouranthrtx": "FieldLayer::BusMap + data_bus[64]",
+      "role": "Pack all lanes once — copilot hot route per subsystem at arithmetic rate"
     }
   }
 }

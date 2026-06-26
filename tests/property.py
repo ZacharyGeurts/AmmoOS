@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Property tests — scoring heat bounds + efficient store Merkle chain."""
 from __future__ import annotations
 

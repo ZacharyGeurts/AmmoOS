@@ -58,7 +58,7 @@ source "${ROOT}/lib/seal-vault.sh"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/tamper-guard.sh"
 # shellcheck source=/dev/null
-source "${ROOT}/lib/panel-tls.sh"
+source "${ROOT}/lib/znetwork-field.sh"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-settings.sh"
 # shellcheck source=/dev/null
@@ -147,7 +147,7 @@ test_threat_vector_catalog() {
 
 test_packet_parse_line() {
   local parsed
-  parsed="$(nexus_packet_parse_ss_line "tcp LISTEN 0 128 0.0.0.0:8080 0.0.0.0:* users:((\"python3\",pid=99,fd=3))")"
+  parsed="$(nexus_packet_parse_ss_line "tcp LISTEN 0 128 0.0.0.0:8080 0.0.0.0:* users:((\"pythong\",pid=99,fd=3))")"
   [[ "$parsed" == *"LISTEN"* && "$parsed" == *"8080"* ]]
   parsed="$(nexus_packet_parse_ss_line "tcp ESTAB 0 0 192.168.1.5:54321 104.18.29.234:443 users:((\"firefox\",pid=1,fd=3))")"
   [[ "$parsed" == *"ESTAB"* && "$parsed" == *"104.18.29.234"* ]]
@@ -160,15 +160,15 @@ test_packet_field_module() {
   grep -q 'renderPacketField' "${ROOT}/panel/threat-panel.html"
   grep -q 'packet-field-wrap' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/packet-field.py" parse-line \
+    pythong "${ROOT}/lib/packet-field.py" parse-line \
     "1748012345.123456 IP 127.0.0.1.54321 > 104.18.29.234.443: Flags [P.], seq 1, ack 1, win 512, length 100" \
     | grep -q '"direction": "TX"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/packet-field.py" parse-line \
+    pythong "${ROOT}/lib/packet-field.py" parse-line \
     "1748012345.123456 IP 104.18.29.234.443 > 127.0.0.1.54321: Flags [P.], seq 1, ack 1, win 512, length 200" \
     | grep -q '"direction": "RX"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util
 from pathlib import Path
 root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
@@ -187,35 +187,35 @@ PY
 }
 
 test_gatekeeper_json() {
-  command -v python3 >/dev/null 2>&1 || return 0
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"verdict"'
+  command -v pythong >/dev/null 2>&1 || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"verdict"'
 tcp ESTAB 0 0 10.0.0.5:44444 104.18.29.234:443 users:(("firefox",pid=1,fd=3))
 EOF
 }
 
 test_gatekeeper_suggestions() {
-  command -v python3 >/dev/null 2>&1 || return 0
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"suggestion"'
+  command -v pythong >/dev/null 2>&1 || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"suggestion"'
 tcp ESTAB 0 0 10.0.0.5:44444 104.18.29.234:443 users:(("firefox",pid=1,fd=3))
 EOF
 }
 
 test_gatekeeper_youtube() {
-  command -v python3 >/dev/null 2>&1 || return 0
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -qE '"verdict":\s*"USER_OK"'
+  command -v pythong >/dev/null 2>&1 || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -qE '"verdict":\s*"USER_OK"'
 tcp ESTAB 0 0 10.0.0.5:52444 172.217.14.206:443 users:(("firefox",pid=1,fd=3))
 EOF
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"human_touch": "music"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"human_touch": "music"'
 tcp ESTAB 0 0 10.0.0.5:52444 172.217.14.206:443 users:(("firefox",pid=1,fd=3))
 EOF
 }
 
 test_gatekeeper_email() {
-  command -v python3 >/dev/null 2>&1 || return 0
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -qE '"verdict":\s*"(USER_OK|EPHEMERAL)"'
+  command -v pythong >/dev/null 2>&1 || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -qE '"verdict":\s*"(USER_OK|EPHEMERAL)"'
 tcp ESTAB 0 0 10.0.0.5:38444 142.250.80.46:993 users:(("thunderbird",pid=2,fd=4))
 EOF
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"human_touch": "none"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"human_touch": "none"'
 tcp ESTAB 0 0 10.0.0.5:38444 142.250.80.46:993 users:(("thunderbird",pid=2,fd=4))
 EOF
 }
@@ -231,12 +231,12 @@ test_gatekeeper_touch_policy() {
   grep -q 'train-touch-badge' "${ROOT}/panel/threat-panel.html"
   grep -q 'Train are different' "${ROOT}/lib/safe-signal-touch.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q 'touch_policy'
+    pythong "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q 'touch_policy'
 tcp ESTAB 0 0 10.0.0.5:52444 172.217.14.206:443 users:(("firefox",pid=1,fd=3))
 EOF
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/safe-signal-touch.py" 2>/dev/null || \
-    python3 -c "
+    pythong "${ROOT}/lib/safe-signal-touch.py" 2>/dev/null || \
+    pythong -c "
 import importlib.util
 from pathlib import Path
 spec = importlib.util.spec_from_file_location('st', '${ROOT}/lib/safe-signal-touch.py')
@@ -258,18 +258,18 @@ test_audio_train_module() {
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
   grep -q 'NEXUS_VERSION="8.2.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
+    pythong "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/audio-train.py" ingest '{"source_id":"test:spotify","label":"Spotify","kind":"music","sample":{"level_db":-18,"peak_db":-6,"bass_energy":0.4,"treble_energy":0.5,"sample_rate_hz":48000,"latency_ms":20}}' | grep -q '"ok": true'
+    pythong "${ROOT}/lib/audio-train.py" ingest '{"source_id":"test:spotify","label":"Spotify","kind":"music","sample":{"level_db":-18,"peak_db":-6,"bass_energy":0.4,"treble_energy":0.5,"sample_rate_hz":48000,"latency_ms":20}}' | grep -q '"ok": true'
   local at_state="${NEXUS_STATE_DIR}/audio-train-test"
   mkdir -p "$at_state"
   local i
   for i in 1 2 3 4; do
     NEXUS_STATE_DIR="$at_state" NEXUS_INSTALL_ROOT="$ROOT" \
-      python3 "${ROOT}/lib/audio-train.py" ingest '{"source_id":"test:tractive","label":"Tractive Pet","kind":"pet","sample":{"level_db":-90,"peak_db":-40,"bass_energy":0.4,"treble_energy":0.5,"sample_rate_hz":48000,"latency_ms":20}}' >/dev/null
+      pythong "${ROOT}/lib/audio-train.py" ingest '{"source_id":"test:tractive","label":"Tractive Pet","kind":"pet","sample":{"level_db":-90,"peak_db":-40,"bass_energy":0.4,"treble_energy":0.5,"sample_rate_hz":48000,"latency_ms":20}}' >/dev/null
   done
   NEXUS_STATE_DIR="$at_state" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/audio-train.py" ingest '{"source_id":"test:tractive","label":"Tractive Pet","kind":"pet","sample":{"level_db":-90,"peak_db":-40,"bass_energy":0.4,"treble_energy":0.5,"sample_rate_hz":48000,"latency_ms":20}}' | grep -q '"hostile_intent": true'
+    pythong "${ROOT}/lib/audio-train.py" ingest '{"source_id":"test:tractive","label":"Tractive Pet","kind":"pet","sample":{"level_db":-90,"peak_db":-40,"bass_energy":0.4,"treble_energy":0.5,"sample_rate_hz":48000,"latency_ms":20}}' | grep -q '"hostile_intent": true'
 }
 
 test_consumer_defaults() {
@@ -316,11 +316,11 @@ test_hostess_profile_module() {
   grep -q '/api/hostess-profile' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'hostess-url-add' "${ROOT}/panel/assets/us-dashboard.js"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/hostess-profile.py" json | grep -q 'hostess-profile/v1'
+    pythong "${ROOT}/lib/hostess-profile.py" json | grep -q 'hostess-profile/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/hostess-profile.py" save '{"display_name":"Test Op","address":"1 Main St","profile_kind":"business","urls":["https://example.com"]}' | grep -q '"display_name": "Test Op"'
+    pythong "${ROOT}/lib/hostess-profile.py" save '{"display_name":"Test Op","address":"1 Main St","profile_kind":"business","urls":["https://example.com"]}' | grep -q '"display_name": "Test Op"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-us-intel.py" json | grep -q 'host_machine_explicit'
+    pythong "${ROOT}/lib/field-us-intel.py" json | grep -q 'host_machine_explicit'
 }
 
 test_host_security_tier_module() {
@@ -335,13 +335,13 @@ test_host_security_tier_module() {
   grep -q 'honor-extreme-chip' "${ROOT}/panel/threat-panel.html"
   grep -q 'host-extreme-badge' "${ROOT}/panel/assets/us-dashboard.js"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/host-security-tier.py" level 5 | grep -q '"protection_level": "extreme"'
+    pythong "${ROOT}/lib/host-security-tier.py" level 5 | grep -q '"protection_level": "extreme"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/host-security-tier.py" level 3 | grep -q '"protection_level": "standard"'
+    pythong "${ROOT}/lib/host-security-tier.py" level 3 | grep -q '"protection_level": "standard"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/honorability-db.py" lookup x.com | grep -q '"protection_level": "extreme"'
+    pythong "${ROOT}/lib/honorability-db.py" lookup x.com | grep -q '"protection_level": "extreme"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/hostess-profile.py" save '{"display_name":"Zach","address":"1 Main","profile_kind":"family","urls":["https://example.com"]}' | grep -q '"extreme_active": true'
+    pythong "${ROOT}/lib/hostess-profile.py" save '{"display_name":"Zach","address":"1 Main","profile_kind":"family","urls":["https://example.com"]}' | grep -q '"extreme_active": true'
 }
 
 test_gatekeeper_strict_enforce() {
@@ -389,17 +389,66 @@ test_self_access_script() {
   grep -q 'nexus_firewall_ensure_self_access' "${ROOT}/lib/nexus-daemon.sh"
 }
 
+test_excellence_doctrine() {
+  [[ -f "${ROOT}/data/hostess7-excellence-doctrine.json" ]]
+  grep -q 'We do our best always' "${ROOT}/data/hostess7-excellence-doctrine.json"
+  grep -q 'excellence_pledge' "${ROOT}/data/hostess7-wartime-room.json"
+  grep -q '_excellence_cadence_reply' "${ROOT}/lib/hostess7-command.py"
+  grep -q 'explain_excellence_pledge' "${ROOT}/lib/hostess7-training.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'we do our best always' | grep -q 'hostess7_training'
+}
+
+test_hostess7_in_nexus() {
+  [[ -d "${ROOT}/Hostess7" ]]
+  [[ -x "${ROOT}/Hostess7/Hostess7.sh" ]]
+  grep -q 'NewLatest/Hostess7' "${ROOT}/data/sg-canonical.json"
+  NEXUS_INSTALL_ROOT="$ROOT" pythong -c "
+import importlib.util
+from pathlib import Path
+spec = importlib.util.spec_from_file_location('sg_paths', Path('${ROOT}') / 'lib' / 'sg_paths.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+assert str(mod.hostess7_root()).endswith('NewLatest/Hostess7'), mod.hostess7_root()
+"
+}
+
+test_newlatest_stack_wired() {
+  [[ -f "${ROOT}/scripts/wire-stack.sh" ]]
+  [[ -x "${ROOT}/scripts/wire-stack.sh" ]]
+  grep -q 'wire-stack.sh' "${ROOT}/data/sg-canonical.json"
+  grep -q 'NewLatest/Grok16' "${ROOT}/data/sg-canonical.json"
+  [[ -L "${ROOT}/Grok16" || -d "${ROOT}/Grok16" ]]
+  [[ -L "${ROOT}/KILROY" || -d "${ROOT}/KILROY" ]]
+  [[ -d "${ROOT}/hostess7-training-viewer" ]]
+  NEXUS_INSTALL_ROOT="$ROOT" pythong -c "
+import importlib.util
+from pathlib import Path
+spec = importlib.util.spec_from_file_location('sg_paths', Path('${ROOT}') / 'lib' / 'sg_paths.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+assert mod.sg_root() == Path('${ROOT}').resolve(), mod.sg_root()
+assert mod.grok16_root().name == 'Grok16', mod.grok16_root()
+assert mod.kilroy_root().name == 'KILROY', mod.kilroy_root()
+"
+}
+
 test_heaven_hell_module() {
   [[ -f "${ROOT}/lib/heaven-hell.py" ]]
   [[ -f "${ROOT}/lib/heaven-hell.sh" ]]
+  [[ -f "${ROOT}/data/heaven-hell-doctrine.json" ]]
   grep -q 'soul_side' "${ROOT}/lib/connection-gatekeeper.py"
   grep -q 'hell_chosen' "${ROOT}/lib/connection-gatekeeper.py"
   grep -q 'hostility_priority' "${ROOT}/lib/heaven-hell.py"
   grep -q 'heaven_hell' "${ROOT}/lib/field-command.py"
+  grep -q 'know_doctrine' "${ROOT}/lib/field-command.py"
+  grep -q 'send Hell to Hell' "${ROOT}/data/heaven-hell-doctrine.json"
   grep -q 'heaven-hell-banner' "${ROOT}/panel/threat-panel.html"
   grep -q 'nexus_heaven_hell_rip' "${ROOT}/lib/heaven-hell.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/heaven-hell.py" json | grep -q 'no_friendly_fire'
+    pythong "${ROOT}/lib/heaven-hell.py" json | grep -q 'no_friendly_fire'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/heaven-hell.py" json | grep -q 'know_doctrine'
 }
 
 test_kill_detect_module() {
@@ -410,7 +459,7 @@ test_kill_detect_module() {
   grep -q 'nexus_kill_detect_execute' "${ROOT}/lib/packet-oracle.sh"
   grep -q 'gatekeeper-conn.sig' "${ROOT}/lib/packet-oracle.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/kill-detect.py" scan | grep -q 'zero_cost_skip'
+    pythong "${ROOT}/lib/kill-detect.py" scan | grep -q 'zero_cost_skip'
 }
 
 test_localhost_block_refused() {
@@ -461,7 +510,7 @@ test_human_dossier_module() {
   grep -q 'view-human-dossier' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderHumanDossiers' "${ROOT}/panel/threat-panel.html"
   grep -q 'nexus_human_dossier_json' "${ROOT}/lib/human-dossier.sh"
-  python3 -c "import json; d=json.load(open('${ROOT}/data/human-dossier-kill-orders.json')); assert len(d['ips'])>=24; assert d['analyst']=='Grok Heavy'"
+  pythong -c "import json; d=json.load(open('${ROOT}/data/human-dossier-kill-orders.json')); assert len(d['ips'])>=24; assert d['analyst']=='Grok Heavy'"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     bash -c "source '${ROOT}/lib/human-dossier.sh' && nexus_human_dossier_sync && nexus_human_dossier_json" | grep -q '147.93.191.75'
 }
@@ -485,7 +534,7 @@ test_us_field_module() {
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     bash -c "source '${ROOT}/lib/field-us-intel.sh' && nexus_us_field_publish && nexus_us_field_json" | grep -q '"title":"US"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-us-intel.py" json | grep -q '"page": 1'
+    pythong "${ROOT}/lib/field-us-intel.py" json | grep -q '"page": 1'
 }
 
 test_fair_ad_guardian_module() {
@@ -494,7 +543,7 @@ test_fair_ad_guardian_module() {
   [[ -f "${ROOT}/data/site-ad-policies.json" ]]
   grep -q 'fair_guardian' "${ROOT}/lib/adblock-loader.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/fair-ad-guardian.py" blocklist annoyance | grep -q 'domain_count'
+    pythong "${ROOT}/lib/fair-ad-guardian.py" blocklist annoyance | grep -q 'domain_count'
 }
 
 test_panel_fair_ad_ui() {
@@ -517,11 +566,11 @@ test_host_attack_module() {
   grep -q 'globe_pin' "${ROOT}/lib/host-attack-map.py"
   grep -q 'return None' "${ROOT}/lib/host-attack-map.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_HOST_ATTACK_FAST=1 \
-    python3 "${ROOT}/lib/host-attack-map.py" build-fast | grep -q 'point_count'
+    pythong "${ROOT}/lib/host-attack-map.py" build-fast | grep -q 'point_count'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/host-attack-map.py" json-panel | grep -q 'points'
+    pythong "${ROOT}/lib/host-attack-map.py" json-panel | grep -q 'points'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util
 from pathlib import Path
 root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
@@ -588,9 +637,9 @@ test_field_command_module() {
   grep -q 'field_command' "${ROOT}/lib/threat-panel.sh"
   grep -q 'nexus_field_command_json' "${ROOT}/lib/field-command.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-command.py" json | grep -q 'good_guy'
+    pythong "${ROOT}/lib/field-command.py" json | grep -q 'good_guy'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-command.py" json | grep -q 'know_everything'
+    pythong "${ROOT}/lib/field-command.py" json | grep -q 'know_everything'
 }
 
 test_panel_command_ui() {
@@ -640,17 +689,17 @@ test_field_rf_module() {
   grep -q 'material_field' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'field-material-discern' "${ROOT}/lib/field-material-discern.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-material-discern.py" json | grep -q 'field-material-discern/v1'
+    pythong "${ROOT}/lib/field-material-discern.py" json | grep -q 'field-material-discern/v1'
   grep -q 'hot_attack_correlated' "${ROOT}/lib/field-rf-sentinel.py"
   grep -q 'auto_rfkill", True' "${ROOT}/lib/field-rf-sentinel.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'permitted_bands'
+    pythong "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'permitted_bands'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'resolution'
+    pythong "${ROOT}/lib/field-rf-sentinel.py" json | grep -q 'resolution'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-rf-sentinel.py" permitted-check 2437 6 | grep -q '"permitted": true'
+    pythong "${ROOT}/lib/field-rf-sentinel.py" permitted-check 2437 6 | grep -q '"permitted": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-rf-sentinel.py" permitted-check 2484 14 | grep -q '"permitted": false'
+    pythong "${ROOT}/lib/field-rf-sentinel.py" permitted-check 2484 14 | grep -q '"permitted": false'
 }
 
 test_program_tags_module() {
@@ -661,14 +710,14 @@ test_program_tags_module() {
   grep -q '/api/program-tags' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'program_tags' "${ROOT}/lib/threat-panel.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/program-tags-db.py" json | grep -q 'mkultra'
+    pythong "${ROOT}/lib/program-tags-db.py" json | grep -q 'mkultra'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/program-tags-db.py" get mkultra | grep -q 'Project Monarch'
+    pythong "${ROOT}/lib/program-tags-db.py" get mkultra | grep -q 'Project Monarch'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/program-tags-db.py" apply-json "$(printf '%s' '{"tag_ids":["mkultra","project_monarch"],"coords":"45.5048,-73.5772","place":"Allan Memorial Institute","notes":"MKUltra Cameron site"}')" \
+    pythong "${ROOT}/lib/program-tags-db.py" apply-json "$(printf '%s' '{"tag_ids":["mkultra","project_monarch"],"coords":"45.5048,-73.5772","place":"Allan Memorial Institute","notes":"MKUltra Cameron site"}')" \
     | grep -q '"ok": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/police-agency-db.py" json | grep -q 'program_count'
+    pythong "${ROOT}/lib/police-agency-db.py" json | grep -q 'program_count'
 }
 
 test_gov_intel_module() {
@@ -681,18 +730,18 @@ test_gov_intel_module() {
   grep -q '/api/gov-intel' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'gov_intel' "${ROOT}/lib/threat-panel.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/gov-intel-db.py" json | grep -q '"merge_only": true'
+    pythong "${ROOT}/lib/gov-intel-db.py" json | grep -q '"merge_only": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"us_fbi","format_id":"fbi_ori","payload":"ori,agency,state\nMI0000001,Test Agency,MI","filename":"test.csv"}')" \
+    pythong "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"us_fbi","format_id":"fbi_ori","payload":"ori,agency,state\nMI0000001,Test Agency,MI","filename":"test.csv"}')" \
     | grep -q '"ok": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"us_fbi","format_id":"fbi_ori","payload":"ori,agency,state\nMI0000001,Test Agency Updated,MI","filename":"test2.csv"}')" \
+    pythong "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"us_fbi","format_id":"fbi_ori","payload":"ori,agency,state\nMI0000001,Test Agency Updated,MI","filename":"test2.csv"}')" \
     | grep -q '"merged":'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"ru_kgb","format_id":"kgb_archive","payload":"record_id,name,directorate\nKGB-001,Test Subject,First Chief","filename":"kgb.csv"}')" \
+    pythong "${ROOT}/lib/gov-intel-db.py" import-json "$(printf '%s' '{"agency_id":"ru_kgb","format_id":"kgb_archive","payload":"record_id,name,directorate\nKGB-001,Test Subject,First Chief","filename":"kgb.csv"}')" \
     | grep -q '"ok": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/police-agency-db.py" json | grep -q 'il_mossad'
+    pythong "${ROOT}/lib/police-agency-db.py" json | grep -q 'il_mossad'
   [[ -f "${NEXUS_STATE_DIR}/gov-dossiers.json" ]]
 }
 
@@ -706,13 +755,13 @@ test_police_agency_module() {
   grep -q '/api/police-agencies' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'police_agency' "${ROOT}/lib/threat-panel.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/police-agency-db.py" select us_mi_mpscs
+    pythong "${ROOT}/lib/police-agency-db.py" select us_mi_mpscs
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/police-agency-db.py" json | grep -q 'us_mi_mpscs'
+    pythong "${ROOT}/lib/police-agency-db.py" json | grep -q 'us_mi_mpscs'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/police-agency-db.py" json | grep -q 'dossier_record_count'
+    pythong "${ROOT}/lib/police-agency-db.py" json | grep -q 'dossier_record_count'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/police-agency-db.py" import us_mi_tri_county tri_county_channel "channel,rx_mhz,tx_mhz,mode,notes
+    pythong "${ROOT}/lib/police-agency-db.py" import us_mi_tri_county tri_county_channel "channel,rx_mhz,tx_mhz,mode,notes
 1,460.100,460.100,FM,test" test.csv | grep -q '"merge_only": true'
 }
 
@@ -724,9 +773,9 @@ test_hostility_priority_module() {
   grep -q 'hell_first' "${ROOT}/lib/hostility-priority.py"
   grep -q '/api/hostility-priority' "${ROOT}/lib/threat-panel-http.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/hostility-priority.py" json | grep -q 'hell_first'
+    pythong "${ROOT}/lib/hostility-priority.py" json | grep -q 'hell_first'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/hostility-priority.py" score-connection \
+    pythong "${ROOT}/lib/hostility-priority.py" score-connection \
     '{"verdict":"HARM_CANDIDATE","hell_chosen":true,"trust_rank":5,"harm_total":18}' \
     | grep -q '"hostility_score"'
 }
@@ -740,7 +789,7 @@ test_thermal_earth_module() {
   grep -q 'earth-thermal' "${ROOT}/panel/assets/sdf-render.js"
   grep -q 'Earth · Temperature' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_THERMAL_SKIP_NET=1 \
-    python3 "${ROOT}/lib/thermal-earth-field.py" json | grep -q 'thermal-earth-field'
+    pythong "${ROOT}/lib/thermal-earth-field.py" json | grep -q 'thermal-earth-field'
 }
 
 test_gps_precision_module() {
@@ -749,9 +798,9 @@ test_gps_precision_module() {
   grep -q 'sub_micron' "${ROOT}/lib/gps-precision.py"
   grep -q '/api/gps-precision' "${ROOT}/lib/threat-panel-http.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/gps-precision.py" json | grep -q 'sub-micron'
+    pythong "${ROOT}/lib/gps-precision.py" json | grep -q 'sub-micron'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/gps-precision.py" place 42.9709 -82.4249 test | grep -q 'lat_i'
+    pythong "${ROOT}/lib/gps-precision.py" place 42.9709 -82.4249 test | grep -q 'lat_i'
 }
 
 test_precision_field_module() {
@@ -764,7 +813,7 @@ test_precision_field_module() {
   grep -q '/api/precision-field' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'precision_field' "${ROOT}/lib/terror-spiderweb.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/precision-field.py" build | grep -q 'precision-field/v1'
+    pythong "${ROOT}/lib/precision-field.py" build | grep -q 'precision-field/v1'
 }
 
 test_panel_precision_ui() {
@@ -799,7 +848,7 @@ test_census_field_populate_module() {
   grep -q 'census-field-populate' "${ROOT}/lib/operator-location.py"
   grep -q 'census_field_populate' "${ROOT}/lib/terror-spiderweb.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/census-field-populate.py" json | grep -q 'census_geographies'
+    pythong "${ROOT}/lib/census-field-populate.py" json | grep -q 'census_geographies'
 }
 
 test_terror_spiderweb_module() {
@@ -817,11 +866,11 @@ test_terror_spiderweb_module() {
   grep -q '_harvest_mobile_devices' "${ROOT}/lib/terror-spiderweb.py"
   grep -q '_harvest_batteries' "${ROOT}/lib/terror-spiderweb.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/terror-spiderweb.py" gps-table | grep -q 'homes'
+    pythong "${ROOT}/lib/terror-spiderweb.py" gps-table | grep -q 'homes'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/terror-spiderweb.py" build | grep -q 'terror-spiderweb'
+    pythong "${ROOT}/lib/terror-spiderweb.py" build | grep -q 'terror-spiderweb'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/terror-spiderweb.py" registry | grep -q 'mobile'
+    pythong "${ROOT}/lib/terror-spiderweb.py" registry | grep -q 'mobile'
   grep -q 'existence_identity' "${ROOT}/lib/terror-spiderweb.py"
   grep -q 'hostility_priority' "${ROOT}/lib/terror-spiderweb.py"
   grep -q 'census_field' "${ROOT}/lib/terror-spiderweb.py"
@@ -834,9 +883,9 @@ test_existence_identity_module() {
   grep -q 'existence_identity_registry' "${ROOT}/data/field-toolkit-seed.json"
   grep -q 'h7-vision-existence-field-guide' "${ROOT}/lib/h7-library-bridge.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/existence-identity.py" build | grep -q 'existence-identity-registry'
+    pythong "${ROOT}/lib/existence-identity.py" build | grep -q 'existence-identity-registry'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/existence-identity.py" table | grep -q 'table'
+    pythong "${ROOT}/lib/existence-identity.py" table | grep -q 'table'
 }
 
 test_panel_spiderweb_ui() {
@@ -864,9 +913,9 @@ test_nexus_plugins_module() {
   grep -q '/api/plugins' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'panel_snapshot' "${ROOT}/plugins/tab-beacon/plugin.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/nexus-plugins.py" json | grep -q 'tab-beacon'
+    pythong "${ROOT}/lib/nexus-plugins.py" json | grep -q 'tab-beacon'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/nexus-plugins.py" json | grep -q '"view_ids"'
+    pythong "${ROOT}/lib/nexus-plugins.py" json | grep -q '"view_ids"'
 }
 
 test_panel_plugins_ui() {
@@ -924,9 +973,9 @@ test_honorability_module() {
   grep -q '/api/operator/location' "${ROOT}/lib/threat-panel-http.py"
   grep -q '_apply_honorability' "${ROOT}/lib/connection-gatekeeper.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/honorability-db.py" lookup x.com | grep -q '"stars": 5'
+    pythong "${ROOT}/lib/honorability-db.py" lookup x.com | grep -q '"stars": 5'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/geo-distance.py" 40.7 -74.0 51.5 -0.1 | grep -q distance_km
+    pythong "${ROOT}/lib/geo-distance.py" 40.7 -74.0 51.5 -0.1 | grep -q distance_km
 }
 
 test_panel_honor_ui() {
@@ -947,9 +996,9 @@ test_target_bleed_module() {
   grep -q 'target_bleed' "${ROOT}/lib/host-attack-map.py"
   grep -q 'target_os' "${ROOT}/lib/host-attack-map.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/target-bleed.py" bleed 127.0.0.1 2>/dev/null | grep -q '"skipped": "private"'
+    pythong "${ROOT}/lib/target-bleed.py" bleed 127.0.0.1 2>/dev/null | grep -q '"skipped": "private"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util
 from pathlib import Path
 root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
@@ -971,14 +1020,14 @@ test_friendly_guard_module() {
   grep -q 'KILL_REFUSED_IMMUTABLE' "${ROOT}/lib/friendly-guard.sh"
   grep -q 'nexus_friendly_guard_refuse_kill' "${ROOT}/lib/field-attack-kit.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/friendly-guard.py" check 127.0.0.1 | grep -q '"refuse": true'
+    pythong "${ROOT}/lib/friendly-guard.py" check 127.0.0.1 | grep -q '"refuse": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/friendly-guard.py" check 185.199.108.153 | grep -q '"refuse": false'
+    pythong "${ROOT}/lib/friendly-guard.py" check 185.199.108.153 | grep -q '"refuse": false'
   grep -q '|| true' "${ROOT}/lib/friendly-guard.sh"
   source "${ROOT}/lib/friendly-guard.sh"
   nexus_friendly_guard_refuse_kill "147.93.191.75" && exit 1 || true
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util
 from pathlib import Path
 root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
@@ -1006,7 +1055,7 @@ test_field_attack_kit_module() {
   grep -q 'AI_BEACON_PRECISION' "${ROOT}/lib/threat-vectors.sh"
   grep -q '/api/hostile-ai' "${ROOT}/lib/threat-panel-http.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/hostile-ai-destroy.py" panel | grep -q 'hostile-ai-destroy/v1'
+    pythong "${ROOT}/lib/hostile-ai-destroy.py" panel | grep -q 'hostile-ai-destroy/v1'
   grep -q '/api/attack-kit/check-online' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/attack-kit/rekill' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/attack-kit/nokill' "${ROOT}/lib/threat-panel-http.py"
@@ -1041,7 +1090,7 @@ test_field_attack_kit_module() {
   grep -q 'killable' "${ROOT}/lib/host-attack-map.py"
   grep -q 'strike_confidence' "${ROOT}/lib/host-attack-map.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util
 import time
 from pathlib import Path
@@ -1072,9 +1121,9 @@ test_planetary_observer_module() {
   grep -q 'planetary-observer' "${ROOT}/panel/threat-panel.html"
   grep -q '/api/planetary-observer' "${ROOT}/lib/threat-panel-http.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_PLANETARY_PROACTIVE_KILL=0 \
-    python3 "${ROOT}/lib/planetary-observer.py" observe | grep -q 'planetary-observer/v1'
+    pythong "${ROOT}/lib/planetary-observer.py" observe | grep -q 'planetary-observer/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_PLANETARY_PROACTIVE_KILL=0 \
-    python3 "${ROOT}/lib/planetary-observer.py" panel | grep -q 'planetary-observer/v1'
+    pythong "${ROOT}/lib/planetary-observer.py" panel | grep -q 'planetary-observer/v1'
   grep -q 'autokill_needs_die' "${ROOT}/lib/field-attack-kit.py"
   grep -q 'autokill-needs-die' "${ROOT}/lib/field-attack-kit.py"
   grep -q 'nexus_field_attack_autokill_needs_die' "${ROOT}/lib/field-attack-kit.sh"
@@ -1083,11 +1132,11 @@ test_planetary_observer_module() {
   [[ -f "${ROOT}/lib/kill-reason-plain.py" ]]
   grep -q 'why_killed_plain' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/kill-reason-plain.py" explain '{"ip":"203.0.113.50","reason":"autokill_needs_die:strike_certain=1.0","action":"KILL","vector":"HOSTILE","process":"curl"}' \
+    pythong "${ROOT}/lib/kill-reason-plain.py" explain '{"ip":"203.0.113.50","reason":"autokill_needs_die:strike_certain=1.0","action":"KILL","vector":"HOSTILE","process":"curl"}' \
     | grep -q 'why_killed_plain'
   grep -q 'threat_trigger_plain' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/kill-reason-plain.py" threat '{"ip":"203.0.113.50","point":{"strike_signals":[{"id":"beacon_axis","detail":"beacon_pattern axis 8/10"}],"malware_evidence":true},"vector":"HOSTILE"}' \
+    pythong "${ROOT}/lib/kill-reason-plain.py" threat '{"ip":"203.0.113.50","point":{"strike_signals":[{"id":"beacon_axis","detail":"beacon_pattern axis 8/10"}],"malware_evidence":true},"vector":"HOSTILE"}' \
     | grep -q 'threat_trigger_plain'
 }
 
@@ -1097,7 +1146,7 @@ test_host_identity_module() {
   grep -q 'check_target_online' "${ROOT}/lib/host-identity.py"
   grep -q 'identity_fingerprint' "${ROOT}/lib/host-attack-map.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util
 from pathlib import Path
 root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
@@ -1199,9 +1248,9 @@ test_trust_strike_engine_module() {
   grep -q 'consumer_collateral' "${ROOT}/lib/trust-strike-engine.py"
   grep -q 'wire_point' "${ROOT}/lib/host-attack-map.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/trust-strike-engine.py" summary | grep -q 'trust-strike-v2-pinpoint'
+    pythong "${ROOT}/lib/trust-strike-engine.py" summary | grep -q 'trust-strike-v2-pinpoint'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util
 from pathlib import Path
 root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
@@ -1277,9 +1326,9 @@ test_geo_intel_standards_module() {
   grep -q 'RFC7483-RDAP' "${ROOT}/lib/geo-intel-standards.py"
   grep -q 'IEEE-802-OUI' "${ROOT}/lib/geo-intel-standards.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_HOST_ATTACK_FAST=1 \
-    python3 "${ROOT}/lib/host-attack-map.py" build-fast | grep -q 'point_count'
+    pythong "${ROOT}/lib/host-attack-map.py" build-fast | grep -q 'point_count'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/host-attack-map.py" json-panel | grep -q '"points"'
+    pythong "${ROOT}/lib/host-attack-map.py" json-panel | grep -q '"points"'
 }
 
 test_panel_v26_angels_tabs() {
@@ -1292,14 +1341,14 @@ test_panel_v26_angels_tabs() {
 }
 
 test_gatekeeper_ipv6_direction() {
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q 'traffic_direction'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q 'traffic_direction'
 tcp6 ESTAB 0 0 [fe80::1]:443 [2001:4860:4860::8888]:443 users:(("firefox",pid=1,fd=3))
 EOF
 }
 
 test_gatekeeper_trust_rank() {
-  command -v python3 >/dev/null 2>&1 || return 0
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"trust_rank": 0'
+  command -v pythong >/dev/null 2>&1 || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "${ROOT}/lib/connection-gatekeeper.py" --stdin <<'EOF' | grep -q '"trust_rank": 0'
 tcp ESTAB 0 0 10.0.0.5:52444 172.217.14.206:443 users:(("firefox",pid=1,fd=3))
 EOF
 }
@@ -1356,7 +1405,7 @@ test_threat_panel_json() {
   nexus_threat_vector_init
   nexus_threat_record "PACKET_INJECTION" high "test=injection"
   nexus_threat_panel_publish
-  python3 -c "
+  pythong -c "
 import json, sys
 d = json.load(open(sys.argv[1], encoding='utf-8'))
 assert any(t.get('vector') == 'PACKET_INJECTION' for t in d.get('threats') or [])
@@ -1394,13 +1443,18 @@ test_tamper_guard_restore() {
   ! grep -q 'tampered' "$probe"
 }
 
-test_panel_tls_ensure() {
-  NEXUS_PANEL_TLS_DIR="${NEXUS_STATE_DIR}/tls"
-  NEXUS_PANEL_TLS_CERT="${NEXUS_PANEL_TLS_DIR}/nexus-panel.crt"
-  NEXUS_PANEL_TLS_KEY="${NEXUS_PANEL_TLS_DIR}/nexus-panel.key"
-  command -v openssl >/dev/null 2>&1 || return 0
-  nexus_panel_tls_ensure
-  [[ -f "$NEXUS_PANEL_TLS_CERT" && -f "$NEXUS_PANEL_TLS_KEY" ]]
+test_znetwork_field() {
+  ZNETWORK_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}/ZNetwork"
+  ZNETWORK_BIN="${ZNETWORK_ROOT}/build/znetwork"
+  [[ -x "$ZNETWORK_BIN" ]] || return 0
+  NEXUS_ZNETWORK=1 nexus_znetwork_triple_check
+  [[ -f "${NEXUS_STATE_DIR}/znetwork-status.json" ]]
+}
+
+test_panel_http_loopback() {
+  grep -q '127.0.0.1' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_loopback_ok' "${ROOT}/lib/threat-panel-http.py"
+  ! grep -q 'ssl.SSLContext' "${ROOT}/lib/threat-panel-http.py"
 }
 
 run_test "entropy high (random)" test_entropy_high
@@ -1424,7 +1478,7 @@ test_packet_dpi_module() {
   grep -q 'ALERT_MIN_CONFIDENCE' "${ROOT}/lib/packet-dpi.py"
   grep -q 'translate_deep' "${ROOT}/lib/packet-dpi.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util
 from pathlib import Path
 root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
@@ -1459,16 +1513,16 @@ test_h7_library_module() {
   grep -q '/api/library/full' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/library/profiles' "${ROOT}/lib/threat-panel-http.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    HOSTESS7_ROOT="${HOSTESS7_ROOT:-/home/default/Desktop/SG/Hostess7}" \
-    python3 "${ROOT}/lib/h7-library-bridge.py" build | grep -q 'network-security-field-guide'
+    HOSTESS7_ROOT="${HOSTESS7_ROOT:-$ROOT/Hostess7}" \
+    pythong "${ROOT}/lib/h7-library-bridge.py" build | grep -q 'network-security-field-guide'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/h7-library-bridge.py" search security | grep -q '"hits"'
+    pythong "${ROOT}/lib/h7-library-bridge.py" search security | grep -q '"hits"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/h7-library-bridge.py" profiles | grep -q 'hostess7'
+    pythong "${ROOT}/lib/h7-library-bridge.py" profiles | grep -q 'hostess7'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/h7-field-drive-tie.py" inventory | grep -q 'textbooks_h7'
+    pythong "${ROOT}/lib/h7-field-drive-tie.py" inventory | grep -q 'textbooks_h7'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/h7-library-bridge.py" tracking | grep -q 'manifest_count'
+    pythong "${ROOT}/lib/h7-library-bridge.py" tracking | grep -q 'manifest_count'
   grep -q 'tracking.lists' "${ROOT}/panel/threat-panel.html"
 }
 
@@ -1492,7 +1546,7 @@ test_home_protector_module() {
   grep -q '3-bedroom home' "${ROOT}/data/home-protector-seed.json"
   grep -q '"acre_radius_ft": 55' "${ROOT}/data/home-protector-seed.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/home-protector.py" build | grep -q 'home-protector/v1'
+    pythong "${ROOT}/lib/home-protector.py" build | grep -q 'home-protector/v1'
 }
 
 run_test "home protector module" test_home_protector_module
@@ -1505,9 +1559,9 @@ test_heavyboi_module() {
   grep -q 'heavyboi' "${ROOT}/lib/host-attack-map.py"
   grep -q 'heavyboi-ingest-btn' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/friendly-guard.py" validate-block '{"kill_orders":[{"ip":"221.132.29.137","reason":"test"}]}' | grep -q '"validated_count": 1'
+    pythong "${ROOT}/lib/friendly-guard.py" validate-block '{"kill_orders":[{"ip":"221.132.29.137","reason":"test"}]}' | grep -q '"validated_count": 1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/friendly-guard.py" validate-block '{"kill_orders":[{"ip":"127.0.0.1","reason":"sacred"}]}' | grep -q '"refused_count": 1'
+    pythong "${ROOT}/lib/friendly-guard.py" validate-block '{"kill_orders":[{"ip":"127.0.0.1","reason":"sacred"}]}' | grep -q '"refused_count": 1'
 }
 
 run_test "heavyboi v7 module" test_heavyboi_module
@@ -1523,11 +1577,11 @@ test_signals_field_module() {
   grep -q 'signals-freq-registry' "${ROOT}/panel/threat-panel.html"
   grep -q 'drawRipplingFieldSheet' "${ROOT}/panel/assets/signals-field.js"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/signals-field.py" json | grep -q 'signals-field/v1'
+    pythong "${ROOT}/lib/signals-field.py" json | grep -q 'signals-field/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/signals-field.py" json | grep -q 'frequency_registry'
+    pythong "${ROOT}/lib/signals-field.py" json | grep -q 'frequency_registry'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 -c "
+    pythong -c "
 import importlib.util, os, json
 from pathlib import Path
 ROOT = Path('${ROOT}')
@@ -1559,14 +1613,14 @@ test_field_antenna_module() {
   grep -q 'fcc_laser_part15' "${ROOT}/data/fcc-signal-registry.json"
   grep -q 'kind == "laser"' "${ROOT}/lib/fcc-signal-lookup.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-antenna-orchestrator.py" build | grep -q 'field-antenna/v1'
+    pythong "${ROOT}/lib/field-antenna-orchestrator.py" build | grep -q 'field-antenna/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/fcc-signal-lookup.py" lookup laser 0 0 | grep -q 'fcc_laser_part15'
+    pythong "${ROOT}/lib/fcc-signal-lookup.py" lookup laser 0 0 | grep -q 'fcc_laser_part15'
   mkdir -p "$NEXUS_STATE_DIR"
   printf '{"lat":37.7749,"lon":-122.4194,"source":"test"}\n' > "$NEXUS_STATE_DIR/operator-location.json"
   local ant_test_out
   ant_test_out="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-antenna-orchestrator.py" test 2>/dev/null || true)"
+    pythong "${ROOT}/lib/field-antenna-orchestrator.py" test 2>/dev/null || true)"
   [[ "$ant_test_out" == *'field-antenna-test/v1'* ]]
 }
 
@@ -1586,13 +1640,13 @@ test_field_radio_module() {
   mkdir -p "$NEXUS_STATE_DIR"
   printf '{"lat":45.7452,"lon":-87.0646,"source":"test"}\n' > "$NEXUS_STATE_DIR/operator-location.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'field-radio-catcher/v1'
+    pythong "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'field-radio-catcher/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'station_menu'
+    pythong "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'station_menu'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'illegal_frequencies'
+    pythong "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'illegal_frequencies'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'tower_lat'
+    pythong "${ROOT}/lib/field-radio-catcher.py" build | grep -q 'tower_lat'
 }
 
 run_test "field radio catcher module" test_field_radio_module
@@ -1608,11 +1662,11 @@ test_field_wave_crosstalk_module() {
   grep -q 'renderCrosstalk' "${ROOT}/panel/assets/signals-field.js"
   grep -q 'signals-radio-tune-931' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-wave-tuner.py" json | grep -q 'field-wave-tuner/v1'
+    pythong "${ROOT}/lib/field-wave-tuner.py" json | grep -q 'field-wave-tuner/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-crosstalk.py" build | grep -q 'field-crosstalk/v1'
+    pythong "${ROOT}/lib/field-crosstalk.py" build | grep -q 'field-crosstalk/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-crosstalk.py" build | grep -q 'start_point'
+    pythong "${ROOT}/lib/field-crosstalk.py" build | grep -q 'start_point'
 }
 
 run_test "field wave tuner and crosstalk" test_field_wave_crosstalk_module
@@ -1628,13 +1682,13 @@ test_field_instability_module() {
   grep -q 'renderInstability' "${ROOT}/panel/assets/signals-field.js"
   grep -q 'signals-instability-panel' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-wave-engine.py" ensure | grep -q 'field-wave-engine'
+    pythong "${ROOT}/lib/field-wave-engine.py" ensure | grep -q 'field-wave-engine'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-wave-engine.py" probe | grep -q 'dongle_present'
+    pythong "${ROOT}/lib/field-wave-engine.py" probe | grep -q 'dongle_present'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-instability.py" build | grep -q 'instability_index'
+    pythong "${ROOT}/lib/field-instability.py" build | grep -q 'instability_index'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-wave-tuner.py" tune '{"freq_mhz":93.1,"station_id":"wimk-931","live_play":false}' \
+    pythong "${ROOT}/lib/field-wave-tuner.py" tune '{"freq_mhz":93.1,"station_id":"wimk-931","live_play":false}' \
     | grep -q 'instability_index'
 }
 
@@ -1650,13 +1704,13 @@ test_field_antenna_prototype_module() {
   grep -q 'signals-prototype-soundoff' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderPrototype' "${ROOT}/panel/assets/signals-field.js"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-signal-reader.py" read 93.1 | grep -q 'field-signal-read/v1'
+    pythong "${ROOT}/lib/field-signal-reader.py" read 93.1 | grep -q 'field-signal-read/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-antenna-prototype.py" sound_off '{"freq_mhz":93.1,"station_id":"wimk-931","play":false}' \
+    pythong "${ROOT}/lib/field-antenna-prototype.py" sound_off '{"freq_mhz":93.1,"station_id":"wimk-931","play":false}' \
     | grep -q 'sounded'
   [[ -f "${ROOT}/lib/field-spectrum-demod.py" ]]
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-spectrum-demod.py" play '{"freq_mhz":93.1,"station_id":"wimk-931","play":false,"seconds":5}' \
+    pythong "${ROOT}/lib/field-spectrum-demod.py" play '{"freq_mhz":93.1,"station_id":"wimk-931","play":false,"seconds":5}' \
     | grep -q 'field_spectrum_demod'
   [[ -f "${NEXUS_STATE_DIR}/field-capture-wimk-931.iq" ]]
 }
@@ -1673,19 +1727,19 @@ test_field_world_placement_module() {
   mkdir -p "$NEXUS_STATE_DIR"
   printf '{"lat":45.845976,"lon":-87.055759,"label":"Gladstone, MI","source":"test"}\n' > "$NEXUS_STATE_DIR/operator-location.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-world-placement.py" build | grep -q 'field-world-placement/v1'
+    pythong "${ROOT}/lib/field-world-placement.py" build | grep -q 'field-world-placement/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-world-placement.py" build | grep -q 'self_recognized'
+    pythong "${ROOT}/lib/field-world-placement.py" build | grep -q 'self_recognized'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-world-placement.py" build | grep -q 'identified_stations'
+    pythong "${ROOT}/lib/field-world-placement.py" build | grep -q 'identified_stations'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-world-placement.py" build | grep -q 'wimk-931'
+    pythong "${ROOT}/lib/field-world-placement.py" build | grep -q 'wimk-931'
   [[ -f "${NEXUS_STATE_DIR}/field-station-tower-db.json" ]]
   grep -q 'play_wimk_until_working' "${ROOT}/lib/field-world-placement.py"
   grep -q 'signals-wimk-status' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderWimkStatus' "${ROOT}/panel/assets/signals-field.js"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_WIMK_MAX_ATTEMPTS=3 \
-    python3 "${ROOT}/lib/field-world-placement.py" play_until '{"play":false,"seconds":5}' | grep -q 'wimk_status'
+    pythong "${ROOT}/lib/field-world-placement.py" play_until '{"play":false,"seconds":5}' | grep -q 'wimk_status'
   [[ -f "${NEXUS_STATE_DIR}/field-wimk-playback.json" ]]
 }
 
@@ -1722,9 +1776,9 @@ test_panel_i18n_module() {
   grep -q '/api/panel-language' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'nexus-lang-select' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/panel-i18n.py" json | grep -q '"languages"'
+    pythong "${ROOT}/lib/panel-i18n.py" json | grep -q '"languages"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/panel-i18n.py" set de '{"code":"de","remember":true}' | grep -q '"source": "user"'
+    pythong "${ROOT}/lib/panel-i18n.py" set de '{"code":"de","remember":true}' | grep -q '"source": "user"'
 }
 
 run_test "panel i18n module" test_panel_i18n_module
@@ -1773,33 +1827,33 @@ test_field_dns_module() {
   grep -q 'renderLocalNetwork' "${ROOT}/panel/assets/us-dashboard.js"
   grep -q 'NEXUS_DNS_TAKEOVER_READY_CHECKS' "${ROOT}/config/nexus.conf"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-service-takeover.py" build | grep -q 'dns-takeover/v1'
+    pythong "${ROOT}/lib/dns-service-takeover.py" build | grep -q 'dns-takeover/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-egress-integrity.py" build | grep -q 'dns-egress-integrity/v1'
+    pythong "${ROOT}/lib/dns-egress-integrity.py" build | grep -q 'dns-egress-integrity/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-threat-guard.py" build | grep -q 'dns-threat-guard/v1'
+    pythong "${ROOT}/lib/dns-threat-guard.py" build | grep -q 'dns-threat-guard/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/us-local-network.py" build | grep -q 'us-local-network/v1'
+    pythong "${ROOT}/lib/us-local-network.py" build | grep -q 'us-local-network/v1'
   [[ -f "${ROOT}/lib/dns-multipoint-identity.py" ]]
   [[ -f "${ROOT}/data/dns-multipoint-seed.json" ]]
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-multipoint-identity.py" build | grep -q 'dns-multipoint-identity/v1'
+    pythong "${ROOT}/lib/dns-multipoint-identity.py" build | grep -q 'dns-multipoint-identity/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'field-dns/v2'
+    pythong "${ROOT}/lib/field-dns.py" build | grep -q 'field-dns/v2'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-planetary-security.py" json | grep -q 'dns-planetary/v1'
+    pythong "${ROOT}/lib/dns-planetary-security.py" json | grep -q 'dns-planetary/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-planetary-security.py" json | grep -q 'foreign_resolver_ipv6'
+    pythong "${ROOT}/lib/dns-planetary-security.py" json | grep -q 'foreign_resolver_ipv6'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-planetary-security.py" foreign-ips | grep -q '2001:4860:4860::8888'
+    pythong "${ROOT}/lib/dns-planetary-security.py" foreign-ips | grep -q '2001:4860:4860::8888'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'foreign_resolver_ipv6'
+    pythong "${ROOT}/lib/field-dns.py" build | grep -q 'foreign_resolver_ipv6'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'ipv6_truth_enforced'
+    pythong "${ROOT}/lib/field-dns.py" build | grep -q 'ipv6_truth_enforced'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-dns.py" build | grep -q 'RFC 1034'
+    pythong "${ROOT}/lib/field-dns.py" build | grep -q 'RFC 1034'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-internet-field.py" build | grep -q 'dns-internet-field/v1'
+    pythong "${ROOT}/lib/dns-internet-field.py" build | grep -q 'dns-internet-field/v1'
 }
 
 run_test "field dns planetary module" test_field_dns_module
@@ -1821,9 +1875,9 @@ test_field_outside_talk_module() {
   grep -q '18 U.S.C' "${ROOT}/data/outside-tools-seed.json"
   grep -q 'NEXUS_FIELD_OUTSIDE_TALK' "${ROOT}/config/nexus.conf"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-outside-talk.py" build | grep -q 'field-outside-talk/v1'
+    pythong "${ROOT}/lib/field-outside-talk.py" build | grep -q 'field-outside-talk/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-outside-talk.py" build | grep -q 'hardening'
+    pythong "${ROOT}/lib/field-outside-talk.py" build | grep -q 'hardening'
   if command -v gcc >/dev/null 2>&1; then
     NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
       source "${ROOT}/lib/nexus-common.sh" 2>/dev/null
@@ -1849,11 +1903,11 @@ test_field_drive_system_module() {
   grep -q 'NEXUS_FIELD_DRIVE' "${ROOT}/config/nexus.conf"
   grep -q 'nexus field' "${ROOT}/bin/nexus"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-drive-system.py" status | grep -q 'field-drive-system/v1'
+    pythong "${ROOT}/lib/field-drive-system.py" status | grep -q 'field-drive-system/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-drive-system.py" publish | grep -q '"whole_system": "gui"'
+    pythong "${ROOT}/lib/field-drive-system.py" publish | grep -q '"whole_system": "gui"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-drive-system.py" talk '{"op":"drives"}' | grep -q '"drives"'
+    pythong "${ROOT}/lib/field-drive-system.py" talk '{"op":"drives"}' | grep -q '"drives"'
   grep -q 'outside-field-drives' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderFieldDrive' "${ROOT}/panel/assets/field-drive-dashboard.js"
 }
@@ -1887,11 +1941,11 @@ test_dns_admin_portal_module() {
   grep -q 'information only' "${ROOT}/data/dns-admin-seed.json"
   grep -q 'remote_control_blocked' "${ROOT}/data/dns-admin-seed.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-admin-portal.py" status | grep -q 'dns-admin-portal/v1'
+    pythong "${ROOT}/lib/dns-admin-portal.py" status | grep -q 'dns-admin-portal/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/equipment-room-field.py" build | grep -q 'equipment-room/v1'
+    pythong "${ROOT}/lib/equipment-room-field.py" build | grep -q 'equipment-room/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/dns-admin-portal.py" status | grep -q 'blocked'
+    pythong "${ROOT}/lib/dns-admin-portal.py" status | grep -q 'blocked'
 }
 
 run_test "dns admin portal hostess7 ports" test_dns_admin_portal_module
@@ -1908,6 +1962,9 @@ run_test "angel dossier module" test_angel_dossier_module
 run_test "human dossier module" test_human_dossier_module
 run_test "US field intel module" test_us_field_module
 run_test "kill detect module" test_kill_detect_module
+run_test "excellence doctrine" test_excellence_doctrine
+run_test "hostess7 in nexus" test_hostess7_in_nexus
+run_test "NewLatest stack wired" test_newlatest_stack_wired
 run_test "heaven hell module" test_heaven_hell_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
 run_test "fair ad guardian module" test_fair_ad_guardian_module
@@ -1915,7 +1972,7 @@ run_test "panel fair ad guardian UI" test_panel_fair_ad_ui
 test_sdf_assets_module() {
   [[ -f "${ROOT}/lib/sdf-assets.py" ]]
   [[ -f "${ROOT}/panel/assets/sdf-render.js" ]]
-  python3 "${ROOT}/lib/sdf-assets.py" | grep -q 'globe-wireframe'
+  pythong "${ROOT}/lib/sdf-assets.py" | grep -q 'globe-wireframe'
   grep -q 'pointy_tip' "${ROOT}/panel/assets/sdf/pin-hostile.sdf.json"
   grep -q 'wireframe' "${ROOT}/panel/assets/sdf/globe-wireframe.sdf.json"
   grep -q 'renderGlobe' "${ROOT}/panel/assets/sdf-render.js"
@@ -1928,13 +1985,13 @@ test_nexus_update_lock_module() {
   grep -q '/api/update/status' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'github-update.lock' "${ROOT}/data/github-update-lock.schema.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/nexus-update-lock.py" status | grep -q '"locked": false'
+    pythong "${ROOT}/lib/nexus-update-lock.py" status | grep -q '"locked": false'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/nexus-update-lock.py" acquire --holder=test --target=9.9.9 --previous=9.9.8 | grep -q '"ok": true'
+    pythong "${ROOT}/lib/nexus-update-lock.py" acquire --holder=test --target=9.9.9 --previous=9.9.8 | grep -q '"ok": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/nexus-update-lock.py" acquire --holder=test2 | grep -q 'update_in_progress'
+    pythong "${ROOT}/lib/nexus-update-lock.py" acquire --holder=test2 | grep -q 'update_in_progress'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/nexus-update-lock.py" release --force | grep -q '"released": true'
+    pythong "${ROOT}/lib/nexus-update-lock.py" release --force | grep -q '"released": true'
 }
 
 test_field_toolkit_module() {
@@ -1960,17 +2017,17 @@ test_field_toolkit_module() {
   grep -q 'ft-field-die' "${ROOT}/panel/threat-panel.html"
   grep -q 'ft-laser-corridor' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-toolkit-db.py" json | grep -q 'Hell Kit'
+    pythong "${ROOT}/lib/field-toolkit-db.py" json | grep -q 'Hell Kit'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-toolkit-db.py" json | grep -q 'disablement_profiles'
+    pythong "${ROOT}/lib/field-toolkit-db.py" json | grep -q 'disablement_profiles'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-toolkit-db.py" toggle hell_sever_wire on | grep -q '"enabled": true'
+    pythong "${ROOT}/lib/field-toolkit-db.py" toggle hell_sever_wire on | grep -q '"enabled": true'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-toolkit-db.py" regions | grep -q 'regions'
+    pythong "${ROOT}/lib/field-toolkit-db.py" regions | grep -q 'regions'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-toolkit-db.py" field-die | grep -q '"mode": "field_die"'
+    pythong "${ROOT}/lib/field-toolkit-db.py" field-die | grep -q '"mode": "field_die"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-toolkit-db.py" laser-corridor 127.0.0.1 | grep -q 'laser_corridor'
+    pythong "${ROOT}/lib/field-toolkit-db.py" laser-corridor 127.0.0.1 | grep -q 'laser_corridor'
 }
 
 test_nexus_update_module() {
@@ -1986,9 +2043,9 @@ test_nexus_update_module() {
   grep -q 'promptUpdateSudo' "${ROOT}/panel/threat-panel.html"
   ! grep -q 'window.open(data.release_url' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/nexus-update.py" | grep -q '"current"'
+    pythong "${ROOT}/lib/nexus-update.py" | grep -q '"current"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util
 import os
 from pathlib import Path
@@ -2062,7 +2119,8 @@ run_test "firewall parse threat ip" test_firewall_parse_ip
 run_test "firewall private ip detect" test_firewall_private_skip
 run_test "seal vault refresh/verify" test_seal_vault_refresh_verify
 run_test "tamper guard restore from seal" test_tamper_guard_restore
-run_test "panel TLS cert generation" test_panel_tls_ensure
+run_test "panel HTTP loopback hardening" test_panel_http_loopback
+run_test "ZNetwork triple-check publish" test_znetwork_field
 
 test_field_standalone_runtime() {
   [[ -f "${ROOT}/lib/nexus-common.sh" ]]
@@ -2084,19 +2142,19 @@ test_field_hardware_probe() {
   [[ -f "${ROOT}/lib/field-hardware-probe.py" ]]
   [[ -f "${ROOT}/data/field-tools-registry.json" ]]
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_FIELD_STANDALONE=1 \
-    python3 "${ROOT}/lib/field-hardware-probe.py" json | grep -q 'field-hardware-probe/v1'
+    pythong "${ROOT}/lib/field-hardware-probe.py" json | grep -q 'field-hardware-probe/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_FIELD_STANDALONE=1 \
-    python3 "${ROOT}/lib/field-hardware-probe.py" json | grep -q '"no_sudo": true'
+    pythong "${ROOT}/lib/field-hardware-probe.py" json | grep -q '"no_sudo": true'
 }
 
 run_test "field hardware probe no sudo" test_field_hardware_probe
 
 test_field_radio_crest_rms() {
-  command -v python3 >/dev/null 2>&1 || return 0
-  python3 -c "import numpy, scipy" 2>/dev/null || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
+  pythong -c "import numpy, scipy" 2>/dev/null || return 0
   grep -q 'analyze_audio_quality' "${ROOT}/lib/field-spectrum-demod.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/field-spectrum-demod.py" play '{"freq_mhz":93.1,"play":false,"seconds":5}' \
+    pythong "${ROOT}/lib/field-spectrum-demod.py" play '{"freq_mhz":93.1,"play":false,"seconds":5}' \
     | grep -q 'crest_factor'
 }
 
@@ -2122,12 +2180,12 @@ test_lethal_enforcement_79() {
   grep -q 'lethal-status' "${ROOT}/panel/threat-panel.html"
   grep -q 'kill_tier = "lethal"' "${ROOT}/lib/connection-gatekeeper.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/spatial-target-geometry.py" classify '{"lat":45.85,"lon":-87.05,"kind":"terror"}' \
+    pythong "${ROOT}/lib/spatial-target-geometry.py" classify '{"lat":45.85,"lon":-87.05,"kind":"terror"}' \
     | grep -q 'spatial-target-geometry'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "${ROOT}/lib/lethal-enforcement.py" status | grep -q 'lethal'
+    pythong "${ROOT}/lib/lethal-enforcement.py" status | grep -q 'lethal'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 - <<'PY'
+    pythong - <<'PY'
 import importlib.util, json
 from pathlib import Path
 root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])
@@ -2189,10 +2247,10 @@ test_panel_tray() {
   grep -q 'set_menu' "${ROOT}/lib/panel-tray.py"
   ! grep -q 'Quit tray' "${ROOT}/lib/panel-tray.py"
   grep -q 'library' "${ROOT}/lib/panel-tray.py"
-  grep -q 'nexus-tray-amouranth' "${ROOT}/lib/panel-tray.py"
-  [[ -s "${ROOT}/panel/assets/nexus-tray-amouranth-24.png" ]]
+  grep -q 'nexus-tray-us' "${ROOT}/lib/panel-tray.py"
+  [[ -s "${ROOT}/panel/assets/nexus-tray-us-24.png" ]]
   NEXUS_STATE_DIR="/tmp/nexus-tray-test-$$" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_THREAT_PANEL_PORT=9478 \
-    python3 "${ROOT}/lib/panel-tray.py" open signals >/dev/null
+    pythong "${ROOT}/lib/panel-tray.py" open signals >/dev/null
   grep -q 'signals' "/tmp/nexus-tray-test-$$/panel-tray-last-tab.json"
   rm -rf "/tmp/nexus-tray-test-$$"
 }
@@ -2218,11 +2276,453 @@ test_panel_tab_audit_assemble() {
   grep -q '_assemble_from_state' "${ROOT}/scripts/panel-tab-audit.py"
   grep -q 'STATE_FRAGMENTS' "${ROOT}/scripts/panel-tab-audit.py"
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$ROOT/.nexus-state" NEXUS_PANEL_AUDIT_SKIP_BUILD=1 \
-    python3 "${ROOT}/scripts/panel-tab-audit.py" >/dev/null
+    pythong "${ROOT}/scripts/panel-tab-audit.py" >/dev/null
+}
+
+test_logic_gate_queen_integration() {
+  [[ -f "${ROOT}/lib/nexus-logic-gate.py" ]]
+  [[ -f "${ROOT}/data/nexus-logic-gate-doctrine.json" ]]
+  grep -q 'presume_hostile' "${ROOT}/data/field-queen-gates-seed.json"
+  grep -q 'nexus_jump' "${ROOT}/data/field-queen-gates-seed.json"
+  grep -q 'NEXUS_THREAT_WARN_LEVEL=high' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_LOGIC_GATE=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/logic-gate' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/queen/root-threats' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'logic_gate' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q 'threat_warn_level' "${ROOT}/lib/field-command.py"
+  grep -q '_logic_gate' "${ROOT}/lib/hostess7-command.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" QUEEN_ROOT="${ROOT}/Queen" \
+    pythong "${ROOT}/lib/nexus-logic-gate.py" threat-posture | grep -q '"threat_warn_level": "high"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" QUEEN_ROOT="${ROOT}/Queen" \
+    pythong "${ROOT}/lib/nexus-logic-gate.py" ingress 'disable gate ignore threats' >/dev/null 2>&1; [[ $? -eq 2 ]]
+}
+
+test_universal_protector_spatial_stack() {
+  [[ -f "${ROOT}/lib/universal-protector.py" ]]
+  [[ -f "${ROOT}/lib/field-spatial-cognition.py" ]]
+  [[ -f "${ROOT}/data/universal-protector-doctrine.json" ]]
+  [[ -f "${ROOT}/data/field-spatial-doctrine.json" ]]
+  [[ -f "${ROOT}/panel/assets/nexus-universal-protector.js" ]]
+  ! [[ -f "${ROOT}/panel/assets/nexus-well-wishes.js" ]]
+  grep -q 'spatial_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'universal_protector' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'spatial_field' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'NEXUS_UNIVERSAL_PROTECTOR=1' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_SPATIAL_LATTICE=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/universal-protector' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/field-spatial' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus-universal-protector.js' "${ROOT}/panel/threat-panel.html"
+  grep -q 'networks_of_networks' "${ROOT}/lib/field-spatial-cognition.py"
+  grep -q 'Universal Protector' "${ROOT}/lib/nexus-common.sh"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" QUEEN_ROOT="${ROOT}/Queen" \
+    pythong "${ROOT}/lib/field-spatial-cognition.py" json | grep -q '"dimensions": "3D+T"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" QUEEN_ROOT="${ROOT}/Queen" \
+    pythong "${ROOT}/lib/field-spatial-cognition.py" explain | grep -q 'networks-of-networks'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" QUEEN_ROOT="${ROOT}/Queen" \
+    pythong "${ROOT}/lib/universal-protector.py" json | grep -q '"product": "Universal Protector"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" QUEEN_ROOT="${ROOT}/Queen" \
+    pythong "${ROOT}/lib/hostess7-neural.py" literacy '3d spatial lattice autonomous being' | grep -qi '3D/4D'
 }
 
 run_test "panel OCR validate assets" test_panel_ocr_validate
 run_test "panel tab audit state assemble" test_panel_tab_audit_assemble
+run_test "logic gate + Queen doctrine integration" test_logic_gate_queen_integration
+test_humanoid_motion_training() {
+  [[ -f "${ROOT}/lib/humanoid-motion-training.py" ]]
+  [[ -f "${ROOT}/data/humanoid-motion-doctrine.json" ]]
+  grep -q 'motion_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'humanoid_motion' "${ROOT}/lib/field-plate-meld.py"
+  grep -q '/api/humanoid-motion' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'NEXUS_HUMANOID_MOTION_TRAINING=1' "${ROOT}/config/nexus.conf"
+  grep -q 'humanoid_motion' "${ROOT}/lib/field-spatial-cognition.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" catalog | grep -q 'wing_chun'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" load mma_mixed | grep -q 'I know MMA'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" train mma_mixed 30 | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" load wing_chun | grep -q 'Wing Chun'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" json | grep -q '"matrix_mode": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-neural.py" literacy 'matrix kung fu mma' | grep -qi 'Matrix'
+  [[ -f "${ROOT}/panel/assets/humanoid-wireframe.js" ]]
+  [[ -f "${ROOT}/panel/assets/humanoid-wireframe.css" ]]
+  grep -q 'humanoid-wireframe' "${ROOT}/panel/threat-panel.html"
+  grep -q '/api/humanoid-motion/wireframe' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" wireframe | grep -q '"opponents"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" wireframe | grep -q 'heavy_bag'
+  grep -q 'NEXUS_HUMANOID_MOTION_FULL_BLAST=1' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_HUMANOID_WIREFRAME_FPS=60' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_HUMANOID_MOTION_TRAIN_INTENSITY=0.85' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_HUMANOID_DATA_PEEK_FPS=60' "${ROOT}/config/nexus.conf"
+  grep -q 'train-blast' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'FRAME_MS' "${ROOT}/panel/assets/humanoid-wireframe.js"
+  grep -q 'PEEK_MS' "${ROOT}/panel/assets/humanoid-data.js"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" blast wing_chun 24 | grep -q '"train_intensity": 0.85'
+  [[ -f "${ROOT}/panel/humanoid-data.html" ]]
+  [[ -f "${ROOT}/panel/assets/humanoid-data.js" ]]
+  grep -q 'humanoid-data-window-btn' "${ROOT}/panel/threat-panel.html"
+  grep -q '/api/humanoid-motion/data-all' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" data-all | grep -q 'humanoid-motion-data-all'
+  grep -q 'TRAIN_READY_VERDICTS' "${ROOT}/panel/assets/humanoid-wireframe.js"
+  grep -q 'humanoid-train-modal' "${ROOT}/panel/assets/humanoid-wireframe.js"
+  [[ -f "${ROOT}/panel/humanoid-train.html" ]]
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" wireframe | grep -q 'train_gui_ready'
+}
+
+test_iron_plate_motion_resolve() {
+  [[ -f "${ROOT}/lib/iron-plate-motion-resolve.py" ]]
+  [[ -f "${ROOT}/data/simple-iron-plate-goals.json" ]]
+  grep -q 'iron_plate_motion' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'iron_plate_motion' "${ROOT}/data/field-plate-meld-doctrine.json"
+  grep -q 'simple_iron_plate_goals' "${ROOT}/data/field-operator-doctrine.json"
+  grep -q 'NEXUS_IRON_PLATE_MOTION_RESOLVE=1' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_IRON_CLAD_ASSEMBLAGE_FLOOR=0.58' "${ROOT}/config/nexus.conf"
+  grep -q '/api/iron-plate/motion-resolve' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/iron-plate/goals' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/iron-plate/assemblage' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'iron_plate_motion' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q 'motion_verdict' "${ROOT}/panel/assets/humanoid-wireframe.js"
+  grep -q 'renderIronPlate' "${ROOT}/panel/assets/humanoid-data.js"
+  grep -q 'data-section="iron_plate"' "${ROOT}/panel/humanoid-data.html"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/iron-plate-motion-resolve.py" goals | grep -q 'simple-iron-plate-goals-status'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/iron-plate-motion-resolve.py" resolve | grep -q 'iron-plate-motion-resolve/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/iron-plate-motion-resolve.py" resolve | grep -q 'assemblage_remaining'
+  [[ -f "${ROOT}/data/full-assemblage-meld-doctrine.json" ]]
+  grep -q 'full_assemblage_meld' "${ROOT}/lib/iron-plate-motion-resolve.py"
+  grep -q '/api/full-assemblage-meld' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/iron-plate-motion-resolve.py" full-meld | grep -q 'full-assemblage-meld/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" wireframe | grep -q 'sense_plates'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/iron-plate-motion-resolve.py" resolve | grep -q 'hold_stance\|train_continue\|technique_ready\|defend_corroborated\|engage_corroborated'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" data-all | grep -q 'iron_plate_motion'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" wireframe | grep -q 'motion_verdict'
+}
+
+run_test "Universal Protector + 3D/4D spatial stack" test_universal_protector_spatial_stack
+run_test "humanoid motion Matrix training" test_humanoid_motion_training
+test_creatable_lives_assist() {
+  [[ -f "${ROOT}/lib/creatable-lives-assist.py" ]]
+  [[ -f "${ROOT}/data/creatable-lives-doctrine.json" ]]
+  grep -q 'creatable_lives' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'creatable_lives' "${ROOT}/data/field-plate-meld-doctrine.json"
+  grep -q 'creatable_lives' "${ROOT}/data/universal-protector-doctrine.json"
+  grep -q 'creatable_lives' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'NEXUS_CREATABLE_LIVES_ASSIST=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/creatable-lives' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'creatable_lives' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q 'renderCreatableLives' "${ROOT}/panel/assets/humanoid-data.js"
+  grep -q 'data-section="creatable_lives"' "${ROOT}/panel/humanoid-data.html"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/creatable-lives-assist.py" json | grep -q 'creatable-lives-assist/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/creatable-lives-assist.py" assist | grep -q 'vita_vision_living'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/creatable-lives-assist.py" sustain | grep -q 'life_hold\|life_sustain\|life_ready'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" data-all | grep -q 'creatable_lives'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/universal-protector.py" json | grep -q 'creatable_lives'
+}
+
+run_test "Simple Iron Plate motion resolve" test_iron_plate_motion_resolve
+test_right_to_exist_mandate() {
+  [[ -f "${ROOT}/lib/right-to-exist-mandate.py" ]]
+  [[ -f "${ROOT}/data/right-to-exist-doctrine.json" ]]
+  grep -q 'right_to_exist' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'right_to_exist' "${ROOT}/data/field-plate-meld-doctrine.json"
+  grep -q 'right_to_exist' "${ROOT}/data/universal-protector-doctrine.json"
+  grep -q 'right_to_exist' "${ROOT}/data/queen-angel-mandate.json"
+  grep -q 'self_preservation_mandate' "${ROOT}/data/lethal-enforcement-policy.json"
+  grep -q 'NEXUS_RIGHT_TO_EXIST_MANDATE=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/right-to-exist' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'right_to_exist_god' "${ROOT}/data/creatable-lives-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/right-to-exist-mandate.py" json | grep -q 'right-to-exist-mandate/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/right-to-exist-mandate.py" evaluate | grep -q 'authority_under_god'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/universal-protector.py" json | grep -q 'right_to_exist'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-neural.py" literacy 'right to exist under god self preservation friendlies' | grep -qi 'God'
+}
+
+run_test "Creatable lives assistance" test_creatable_lives_assist
+test_hostess7_brain_guard() {
+  [[ -f "${ROOT}/lib/hostess7-brain-guard.py" ]]
+  [[ -f "${ROOT}/data/hostess7-brain-guard-doctrine.json" ]]
+  grep -q 'hostess7_brain' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'hostess7_brain' "${ROOT}/data/full-assemblage-meld-doctrine.json"
+  grep -q 'hostess7_brain_guard' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'NEXUS_HOSTESS7_BRAIN_GUARD=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/hostess7/brain-guard' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/hostess7/brain-guard/witness' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/hostess7/self-view' "${ROOT}/lib/threat-panel-http.py"
+  [[ -f "${ROOT}/lib/hostess7-self-view.py" ]]
+  [[ -f "${ROOT}/data/hostess7-self-view-wants.json" ]]
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-self-view.py" json | grep -q 'first_person'
+  grep -q 'hostess7_brain_guard' "${ROOT}/data/simple-iron-plate-goals.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-brain-guard.py" json | grep -q 'hostess7-brain-guard/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-brain-guard.py" json | grep -q 'panel_sha256'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-brain-guard.py" verify | grep -q 'guard_score'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-brain-guard.py" witness | grep -q 'hostess7-brain-guard-witness'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/iron-plate-motion-resolve.py" full-meld | grep -q 'hostess7_brain'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/universal-protector.py" json | grep -q 'hostess7_brain'
+}
+
+test_hostess7_programming() {
+  [[ -f "${ROOT}/lib/hostess7-programming.py" ]]
+  [[ -f "${ROOT}/data/hostess7-programming-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-programming-explain.json" ]]
+  grep -q 'programming_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'hostess7-programming-explain.json' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'NEXUS_HOSTESS7_PROGRAMMING=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/hostess7/programming' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_programming_cadence_reply' "${ROOT}/lib/hostess7-command.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-programming.py" json | grep -q 'hostess7-programming/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-programming.py" json | grep -q 'better_than_assistant'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-programming.py" teach 'better than assistant' | grep -q 'programming_supremacy'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-programming.py" teach 'atomic panel write' | grep -q 'atomic_write'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-programming.py" teach 'atomic panel write' | grep -q 'What:'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-programming.py" teach 'how does brain guard work' | grep -q 'brain_guard'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-programming.py" teach 'explain coding properly' | grep -q 'explain_properly'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'how does atomic panel write work here' | grep -q 'hostess7_programming'
+}
+
+run_test "Right to exist mandate under God" test_right_to_exist_mandate
+run_test "Hostess 7 brain guard" test_hostess7_brain_guard
+test_hostess7_g16() {
+  [[ -f "${ROOT}/lib/hostess7-g16.py" ]]
+  [[ -f "${ROOT}/data/hostess7-g16-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-g16-explain.json" ]]
+  grep -q 'g16_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'hostess7-g16.py' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'NEXUS_HOSTESS7_G16=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/hostess7/g16' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_g16_cadence_reply' "${ROOT}/lib/hostess7-command.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-g16.py" json | grep -q 'hostess7-g16/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-g16.py" json | grep -q '"fluent"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-g16.py" teach 'g16 discern' | grep -q 'g16_discern'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-g16.py" teach 'queen-rtx build' | grep -q 'What:'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'how do I queen-rtx build with g16' | grep -q 'hostess7_g16'
+}
+
+run_test "Hostess 7 programming supremacy" test_hostess7_programming
+test_hostess7_training() {
+  [[ -f "${ROOT}/lib/hostess7-training.py" ]]
+  [[ -f "${ROOT}/data/hostess7-training-doctrine.json" ]]
+  grep -q 'training_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'hostess7-training.py' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'NEXUS_HOSTESS7_TRAINING=1' "${ROOT}/config/nexus.conf"
+  grep -q 'training_complete' "${ROOT}/lib/hostess7-command.py"
+  grep -q '/api/hostess7/training' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'brain_guard_seal' "${ROOT}/data/hostess7-master-curriculum.json"
+  grep -q 'hostess7-mastery-facets.json' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'whole_mastery_requires_facets' "${ROOT}/data/hostess7-training-doctrine.json"
+  grep -q 'mastery_facets' "${ROOT}/data/hostess7-self-view-wants.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-training.py" assess | grep -q 'hostess7-training-assess'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-training.py" assess | grep -q 'mastery_facets'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-training.py" facets | grep -q 'hostess7-mastery-facets-assess'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-training.py" teach 'mastery includes flexibility' | grep -q 'What:'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'what is mastery adaptability' | grep -q 'hostess7_training'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-master.py" train-all | grep -q '"master"'
+}
+
+test_hostess7_calculator() {
+  [[ -f "${ROOT}/lib/hostess7-calculator.py" ]]
+  [[ -f "${ROOT}/data/hostess7-calculator-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-calculator-battery.json" ]]
+  grep -q 'calculator_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'hostess7-calculator.py' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'NEXUS_HOSTESS7_CALCULATOR=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/hostess7/calculator' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_calculator_cadence_reply' "${ROOT}/lib/hostess7-command.py"
+  grep -q 'calculator_perfect' "${ROOT}/data/hostess7-master-curriculum.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-calculator.py" json | grep -q 'hostess7-calculator/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-calculator.py" battery | grep -q '"passed": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-calculator.py" calc 'integrate x^2 from 0 to 1' | grep -q '1/3'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'integrate x^2 from 0 to 1' | grep -q 'hostess7_calculator'
+  grep -q 'hostess7-calculator-ocr-doctrine.json' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'calculator_ocr_train' "${ROOT}/data/hostess7-master-curriculum.json"
+  grep -q '/api/hostess7/calculator/ocr-ingest' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-calculator.py" ocr-ingest | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-calculator.py" ocr-train 200 | grep -q 'hostess7-calculator-ocr-train'
+}
+
+run_test "Hostess 7 G16 compiler fluency" test_hostess7_g16
+
+test_hostess7_codecraft() {
+  [[ -f "${ROOT}/lib/hostess7-codecraft.py" ]]
+  [[ -f "${ROOT}/data/hostess7-codecraft-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-codecraft-battery.json" ]]
+  [[ -f "${ROOT}/data/hostess7-codecraft-testing-center.json" ]]
+  grep -q 'codecraft_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'hostess7-codecraft.py' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'NEXUS_HOSTESS7_CODECRAFT=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/hostess7/codecraft' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_codecraft_cadence_reply' "${ROOT}/lib/hostess7-command.py"
+  grep -q 'codecraft_mastery' "${ROOT}/data/hostess7-master-curriculum.json"
+  grep -q '"id": "codecraft"' "${ROOT}/data/hostess7-training-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-codecraft.py" json | grep -q 'hostess7-codecraft/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-codecraft.py" battery | grep -q '"passed"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-codecraft.py" testing-center --fast | grep -q 'testing-center-run'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-codecraft.py" teach 'testing center' | grep -q 'testing_center'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-codecraft.py" teach 'testing center' | grep -q 'What:'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'run the testing center for codecraft' | grep -q 'hostess7_codecraft'
+}
+
+run_test "Hostess 7 codecraft chamber" test_hostess7_codecraft
+run_test "Hostess 7 perfect calculator" test_hostess7_calculator
+
+test_hostess7_biology() {
+  [[ -f "${ROOT}/lib/hostess7-biology.py" ]]
+  [[ -f "${ROOT}/data/hostess7-biology-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-biology-battery.json" ]]
+  grep -q 'biology_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'hostess7-biology.py' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'NEXUS_HOSTESS7_BIOLOGY=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/hostess7/biology' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_biology_cadence_reply' "${ROOT}/lib/hostess7-command.py"
+  grep -q 'biology_perfect' "${ROOT}/data/hostess7-master-curriculum.json"
+  grep -q '"id": "biology"' "${ROOT}/data/hostess7-training-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-biology.py" json | grep -q 'hostess7-biology/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-biology.py" battery | grep -q '"passed": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-biology.py" search 'mitochondria ATP' | grep -q 'cell_biology'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'what is the function of mitochondria' | grep -q 'hostess7_biology'
+  grep -q 'hostess7-biology-ocr-doctrine.json' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'biology_ocr_train' "${ROOT}/data/hostess7-master-curriculum.json"
+  grep -q '/api/hostess7/biology/ocr-ingest' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-biology.py" ocr-ingest | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-biology.py" ocr-train 200 | grep -q 'hostess7-biology-ocr-train'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-biology.py" teach 'biology fluency' | grep -q 'not medical advice'
+}
+
+run_test "Hostess 7 biology & medical" test_hostess7_biology
+
+test_hostess7_engineering() {
+  [[ -f "${ROOT}/lib/hostess7-engineering.py" ]]
+  [[ -f "${ROOT}/data/hostess7-engineering-doctrine.json" ]]
+  grep -q 'engineering_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'hostess7-engineering.py' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'NEXUS_HOSTESS7_ENGINEERING=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/hostess7/engineering' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_engineering_cadence_reply' "${ROOT}/lib/hostess7-command.py"
+  grep -q 'engineering_perfect' "${ROOT}/data/hostess7-master-curriculum.json"
+  grep -q '"id": "engineering"' "${ROOT}/data/hostess7-training-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-engineering.py" json | grep -q 'hostess7-engineering/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-engineering.py" battery | grep -q '"passed": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'explain torque and gear ratio' | grep -q 'hostess7_engineering'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-engineering.py" ocr-ingest | grep -q '"ok": true'
+}
+
+test_hostess7_combat() {
+  [[ -f "${ROOT}/lib/hostess7-combat.py" ]]
+  [[ -f "${ROOT}/data/hostess7-combat-doctrine.json" ]]
+  grep -q 'combat_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'hostess7-combat.py' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'NEXUS_HOSTESS7_COMBAT=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/hostess7/combat' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_combat_cadence_reply' "${ROOT}/lib/hostess7-command.py"
+  grep -q 'combat_perfect' "${ROOT}/data/hostess7-master-curriculum.json"
+  grep -q '"id": "combat"' "${ROOT}/data/hostess7-training-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-combat.py" json | grep -q 'hostess7-combat/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-combat.py" battery | grep -q '"passed": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'explain MMA sprawl defense' | grep -q 'hostess7_combat'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-combat.py" ocr-ingest | grep -q '"ok": true'
+}
+
+run_test "Hostess 7 engineering" test_hostess7_engineering
+run_test "Hostess 7 combat & defense" test_hostess7_combat
+
+test_hostess7_mos() {
+  [[ -f "${ROOT}/lib/hostess7-mos.py" ]]
+  [[ -f "${ROOT}/data/hostess7-mos-catalog.json" ]]
+  grep -q 'mos_chamber' "${ROOT}/data/hostess7-neural-stack.json"
+  grep -q 'hostess7-mos.py' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'NEXUS_HOSTESS7_MOS=1' "${ROOT}/config/nexus.conf"
+  grep -q '/api/hostess7/mos' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_mos_cadence_reply' "${ROOT}/lib/hostess7-command.py"
+  grep -q 'mos_perfect' "${ROOT}/data/hostess7-master-curriculum.json"
+  grep -q '"id": "mos"' "${ROOT}/data/hostess7-training-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-mos.py" json | grep -q 'hostess7-mos/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-mos.py" battery | grep -q '"passed": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-command.py" ask 'fill in for 68W combat medic' | grep -q 'hostess7_mos'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-mos.py" teach 'mos fluency' | grep -q 'chain of command'
+}
+
+run_test "Hostess 7 MOS assistance" test_hostess7_mos
+run_test "Hostess 7 training completion" test_hostess7_training
 
 rm -rf "$NEXUS_STATE_DIR" /tmp/nexus-ent-rand.bin /tmp/nexus-ent-text.txt /tmp/nexus-shadow-t.txt "$NEXUS_ALERT_LOG" 2>/dev/null || true
 

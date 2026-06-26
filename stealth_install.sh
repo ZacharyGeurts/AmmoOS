@@ -23,10 +23,8 @@ OS="$(detect_os)"
 
 case "$OS" in
   linux)
-    if [[ "$(id -u)" -ne 0 ]]; then
-      exec sudo -E bash "$0" "$@"
-    fi
-    bash "${ROOT}/genius_shield.sh"
+    export SG_ROOT="${SG_ROOT:-${ROOT}}"
+    exec bash "${ROOT}/install-all.sh"
     ;;
   windows)
     powershell.exe -ExecutionPolicy Bypass -File "${ROOT}/stealth.ps1"

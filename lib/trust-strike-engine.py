@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Trust Strike Engine — pinpoint wire-point strikes with dossier-backed certainty.
 
 Resolves the ACTUAL end wire endpoint (LAN MAC device or remote C2 host identity),
@@ -40,6 +40,7 @@ CDN_IP_CLASSES = frozenset({"stream_cdn", "search_cdn"})
 CONSUMER_PORTS = frozenset({80, 443, 8080, 8443, 853})
 
 BROWSER_PROCS = frozenset({
+    "fieldfox", "field-queen", "queen-browser",
     "firefox", "chrome", "chromium", "brave", "brave-browser", "vivaldi", "opera",
     "msedge", "waterfox", "librewolf", "floorp", "thorium", "google-chrome", "google-chrome-stable",
 })
@@ -137,7 +138,7 @@ def _ip_class(point: dict[str, Any]) -> str:
 
 
 def _dossier_paths() -> list[Path]:
-    hostess7 = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
+    hostess7 = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
     team_field = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
     return [
         hostess7 / "cache" / "fieldstorage" / "brain" / "security" / DOSSIER_FILE,
@@ -847,7 +848,7 @@ def main() -> int:
         print("usage: trust-strike-engine.py [summary|score|gate|wire] ...", file=sys.stderr)
         return 2
     cmd = sys.argv[1]
-    if cmd == "summary":
+    if cmd in ("summary", "json"):
         json.dump(trust_strike_summary(), sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0

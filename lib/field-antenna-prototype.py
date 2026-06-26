@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field antenna prototype — we are the hardware. Generated fields sound off OTA."""
 from __future__ import annotations
 

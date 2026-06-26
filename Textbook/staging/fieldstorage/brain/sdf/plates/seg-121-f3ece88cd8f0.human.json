@@ -1,0 +1,43 @@
+{
+  "id": "seg-121-f3ece88cd8f0",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-121-f3ece88cd8f0.human.pgm",
+  "caption_stub": "Big Grin HUD 172 48 character HUD rendered by x86 comp inside Field Die operator facing die resident display browser awareness NEXUS module reporting active tab honorability feeds Queen panel slice CANVAS comp Classic canvas compute shader thermo and RT\u2026",
+  "text_sha256": "4f6d7ec0e991a5a7d81ed5ba03730241087aff7f70558e4776f3fbb73071dae1",
+  "words_source": 904,
+  "tags": [
+    "172",
+    "big",
+    "character",
+    "comp",
+    "die",
+    "field",
+    "grid",
+    "grin",
+    "hostess",
+    "hud",
+    "human",
+    "inside",
+    "lossless",
+    "redata",
+    "rendered",
+    "sdf",
+    "segment",
+    "serviceable",
+    "x86"
+  ],
+  "ocr_hint": "Big Grin HUD 172 48 character HUD rendered by x86 comp inside Field Die operator facing die resident display browser awa",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-121-f3ece88cd8f0",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-121-f3ece88cd8f0.json",
+  "truth_score": 61.1,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

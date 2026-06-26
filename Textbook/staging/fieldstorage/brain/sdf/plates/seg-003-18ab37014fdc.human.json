@@ -1,0 +1,43 @@
+{
+  "id": "seg-003-18ab37014fdc",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-003-18ab37014fdc.human.pgm",
+  "caption_stub": "KILROY Field OS 7 1 1 kilroy provides proc kilroy_field at syscall boundary when kernel path is active FCC scale entropy feedback Field Die vocabulary continue in kernel space Queen Forge packages kernel browser secure stack in field sovereign Userspace\u2026",
+  "text_sha256": "e12aec1c4c47bb75143e437921b0990d12d2746f31bfb37fded54800e1078ee6",
+  "words_source": 904,
+  "tags": [
+    "active",
+    "boundary",
+    "field",
+    "grid",
+    "hostess",
+    "human",
+    "kernel",
+    "kilroy",
+    "kilroy_field",
+    "lossless",
+    "path",
+    "proc",
+    "provides",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "syscall",
+    "when"
+  ],
+  "ocr_hint": "KILROY Field OS 7 1 1 kilroy provides proc kilroy_field at syscall boundary when kernel path is active FCC scale entropy",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-003-18ab37014fdc",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-003-18ab37014fdc.json",
+  "truth_score": 53.1,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

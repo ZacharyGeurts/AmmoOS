@@ -1,15 +1,18 @@
 {
-  "schema": "hostess7-neural-stack/v2",
-  "title": "Series of Series · Truth-Gated Intelligence",
+  "schema": "hostess7-field-cognition-stack/v3",
+  "legacy_schema_alias": "hostess7-neural-stack/v2",
+  "title": "Field cognition — series-of-series amplitude chambers",
   "truth_adapt_floor": 58,
   "truth_genius_floor": 72,
   "expandable": true,
-  "on_the_fly": "Hostess 7 understands neural networks and grows utility nets from operator context without restart.",
-  "philosophy": "94% noise · 6% truth until corroborated. No adaptation without self-test pass. Utility nets spawn on demand.",
+  "field_native": true,
+  "on_the_fly": "Hostess 7 grows field utility chambers from operator context — no retrain, no backprop epoch, truth-gated before adapt.",
+  "philosophy": "Field amplitude over fixed neural layers. 94% noise · 6% truth until corroborated. Infinite dimensions via plate meld — not slow matrix nets.",
+  "cognition_doctrine": "data/field-cognition-doctrine.json",
   "series": [
     {
       "id": "perception",
-      "label": "Perception nets (corpus ingest)",
+      "label": "Perception field (corpus ingest)",
       "nets": [
         {"id": "legal", "corpus": "field_legal_corpus", "lane": "Counsel"},
         {"id": "medical", "corpus": "field_medical_corpus", "lane": "Clinic"},
@@ -27,7 +30,7 @@
     },
     {
       "id": "truth_gates",
-      "label": "Truth gate nets (self-test before adapt)",
+      "label": "Truth gate field (self-test before adapt)",
       "nets": [
         {"id": "detective_truth", "engine": "analyze_truth", "weight": 0.45},
         {"id": "field_evidence", "engine": "nexus_field_snapshot", "weight": 0.20},
@@ -37,7 +40,7 @@
     },
     {
       "id": "fusion",
-      "label": "Fusion nets (hemisphere + callosum)",
+      "label": "Fusion field (hemisphere + callosum amplitude)",
       "nets": [
         {"id": "callosum", "engine": "field_brain_core", "role": "cross-hemisphere transfer"},
         {"id": "chemistry", "engine": "field_brain_chemistry", "role": "synapse pools"},
@@ -46,14 +49,39 @@
     },
     {
       "id": "mandate",
-      "label": "Angel mandate net",
+      "label": "Angel mandate field",
       "nets": [
         {"id": "angel_align", "engine": "hostess7-angel-mandate", "role": "God authority alignment"}
       ]
     },
     {
+      "id": "think_tanks",
+      "label": "Secure think tanks — field amplitude chambers (any purpose)",
+      "dynamic": true,
+      "nets": [
+        {"id": "eyes_chamber", "engine": "queen-eyeball", "role": "Final_Eye · targeting · mesh"},
+        {"id": "ears_chamber", "engine": "queen-earball", "role": "Final Ear · Auditus · mouth correlation"},
+        {"id": "mouth_chamber", "engine": "queen-sense-neural", "role": "Speech · egress · truth filter"},
+        {"id": "weapons_chamber", "engine": "field-attack-kit", "role": "Targeting training · autokill · rekill"},
+        {"id": "spatial_chamber", "engine": "field-spatial-cognition", "role": "3D/4D lattice · movement · networks-of-networks"},
+        {"id": "motion_chamber", "engine": "humanoid-motion-training", "role": "Matrix skill load — kung fu · MMA · grappling · body lattice"},
+        {"id": "universal_protector", "engine": "universal-protector", "role": "Autonomous being — Super Intelligence · persona · kill"},
+        {"id": "creatable_lives", "engine": "creatable-lives-assist", "role": "Creatable lives — Vita · Auditus · registry · sustain assist"},
+        {"id": "hostess7_brain_guard", "engine": "hostess7-brain-guard", "role": "Our brains — checksum · verify · hardened · no corruptions"},
+        {"id": "programming_chamber", "engine": "hostess7-programming", "role": "Operator-grade code — better than the assistant on live NEXUS stack"},
+        {"id": "g16_chamber", "engine": "hostess7-g16", "role": "Grok16 g16 compiler — fluent and mastered @ field_opt"},
+        {"id": "codecraft_chamber", "engine": "hostess7-codecraft", "role": "Self code analysis, testing center, validated improvement — programming + G16 composite"},
+        {"id": "training_chamber", "engine": "hostess7-training", "role": "Training completion — all tracks solid to Master"},
+        {"id": "calculator_chamber", "engine": "hostess7-calculator", "role": "Perfect calculator — arithmetic through advanced math and technology", "feed_from": ["vision", "plate_ocr", "zocr_manifest"]},
+        {"id": "biology_chamber", "engine": "hostess7-biology", "role": "Biology & medical — cell through human anatomy, physiology, and clinical corpus", "feed_from": ["vision", "medical", "zocr_manifest", "plate_ocr"]},
+        {"id": "engineering_chamber", "engine": "hostess7-engineering", "role": "Engineering — mechanical, electrical, civil, robotics, field stack", "feed_from": ["vision", "physics", "code", "zocr_manifest"]},
+        {"id": "combat_chamber", "engine": "hostess7-combat", "role": "Combat & defense — martial arts, tactics, warfare corpus, motion lattice", "feed_from": ["vision", "warfare", "motion_chamber", "zocr_manifest"]},
+        {"id": "mos_chamber", "engine": "hostess7-mos", "role": "MOS assistance — fill in for or assist any military occupational specialty", "feed_from": ["warfare", "combat_chamber", "medical", "engineering", "code"]}
+      ]
+    },
+    {
       "id": "adapt",
-      "label": "Adapt net (growth ledger write)",
+      "label": "Adapt field (growth ledger write)",
       "nets": [
         {"id": "growth_adapt", "engine": "hostess7-growth", "gate": "truth_adapt_floor"},
         {"id": "quarantine", "engine": "hostess7-neural-quarantine", "gate": "below_floor"}
@@ -61,7 +89,7 @@
     },
     {
       "id": "utility",
-      "label": "Utility nets (on-the-fly expansion)",
+      "label": "Utility chambers (on-the-fly expansion)",
       "dynamic": true,
       "nets": []
     }

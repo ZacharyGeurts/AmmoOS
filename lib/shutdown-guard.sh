@@ -51,7 +51,7 @@ nexus_shutdown_analyze() {
     tmp="$(mktemp "${NEXUS_STATE_DIR}/sd-analyze.XXXXXX")"
     printf '%s' "$forensics" >"$tmp"
   fi
-  python3 "$script" "$tmp" "$who" "$journal" "$signal" 2>/dev/null || printf '{}'
+  pythong "$script" "$tmp" "$who" "$journal" "$signal" 2>/dev/null || printf '{}'
   [[ "$keep" -eq 1 ]] && rm -f "$tmp" 2>/dev/null || true
 }
 
@@ -72,7 +72,7 @@ nexus_shutdown_merge_forensics() {
   analysis="$(nexus_shutdown_analyze "$tmp_raw" "$who" "$journal" "$signal")"
   tmp_analysis="$(mktemp "${NEXUS_STATE_DIR}/sd-merge.XXXXXX")"
   printf '%s' "$analysis" >"$tmp_analysis"
-  SD_RAW_FILE="$tmp_raw" SD_ANALYSIS_FILE="$tmp_analysis" python3 -c '
+  SD_RAW_FILE="$tmp_raw" SD_ANALYSIS_FILE="$tmp_analysis" pythong -c '
 import json, os
 from pathlib import Path
 fore = {}
@@ -106,7 +106,7 @@ nexus_shutdown_write_incident() {
   printf '%s' "$enriched" >"$tmp_fore"
   printf '%s' "$journal_hint" >"$tmp_journal"
   SID="$id" STS="$ts" SSIG="$signal" SWHO="$who" \
-    SD_FORE_FILE="$tmp_fore" SD_JOURNAL_FILE="$tmp_journal" python3 -c '
+    SD_FORE_FILE="$tmp_fore" SD_JOURNAL_FILE="$tmp_journal" pythong -c '
 import json, os
 from pathlib import Path
 fore = {}
@@ -200,7 +200,7 @@ nexus_shutdown_heartbeat() {
   proc_blob="$(ps -eo pid,user,comm,args --sort=-%cpu 2>/dev/null | head -n 20)"
   local_wan="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '/src/ {print $7; exit}')"
   CONN_BLOB="$conn" ARP_BLOB="$arp_blob" PROC_BLOB="$proc_blob" HB_WAN="${local_wan:-}" \
-    HB_TS="$ts" HB_PID="$$" python3 -c '
+    HB_TS="$ts" HB_PID="$$" pythong -c '
 import json, os
 from datetime import datetime, timezone
 def lines(key):
@@ -271,7 +271,7 @@ nexus_shutdown_startup_check() {
 
 nexus_shutdown_recent_json() {
   local limit="${1:-10}"
-  SD_INCIDENTS="$NEXUS_SHUTDOWN_INCIDENTS" SD_LIMIT="$limit" python3 <<'PYEOF' 2>/dev/null || printf '[]'
+  SD_INCIDENTS="$NEXUS_SHUTDOWN_INCIDENTS" SD_LIMIT="$limit" pythong <<'PYEOF' 2>/dev/null || printf '[]'
 import json, os, re, subprocess
 from collections import Counter
 from pathlib import Path
@@ -485,7 +485,7 @@ nexus_shutdown_ack() {
   local id="${1:-}"
   [[ -n "$id" ]] || return 1
   local tmp="${NEXUS_SHUTDOWN_INCIDENTS}.tmp"
-  python3 -c "
+  pythong -c "
 import json, sys
 id=sys.argv[1]
 for line in open(sys.argv[2]):

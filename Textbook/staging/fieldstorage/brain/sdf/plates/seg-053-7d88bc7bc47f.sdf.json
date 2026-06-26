@@ -1,0 +1,40 @@
+{
+  "id": "seg-053-7d88bc7bc47f",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-053-7d88bc7bc47f.pgm",
+  "caption_stub": "simulatedChipCycles Accumulated cycles are comparative telemetry useful for session shape not billing Headless CI can track monotonic increase as dispatch health Mirror anatomy 18 units edges and sysfs Depth pass 18 on hardwareFabric literacy Per core units Each unit entry\u2026",
+  "text_sha256": "6a1603317cc3dc70e2522f390d0dc0d9da006c9cac630efc977ac44d7765db43",
+  "words_source": 902,
+  "tags": [
+    "accumulated",
+    "are",
+    "billing",
+    "comparative",
+    "cycles",
+    "for",
+    "grid",
+    "hostess",
+    "lossless",
+    "not",
+    "redata",
+    "sdf",
+    "segment",
+    "session",
+    "shape",
+    "simulatedchipcycles",
+    "telemetry",
+    "useful"
+  ],
+  "ocr_hint": "simulatedChipCycles Accumulated cycles are comparative telemetry useful for session shape not billing Headless CI can tr",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-053-7d88bc7bc47f",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 48.2,
+  "truth_accepted": true
+}

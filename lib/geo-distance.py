@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Haversine distance — operator to threat peer (km/mi)."""
 from __future__ import annotations
 

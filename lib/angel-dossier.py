@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Angel Dossier — full attack-path chains, research tables, IPv4/IPv6.
 
 They look at us or from us — we look back HARD.

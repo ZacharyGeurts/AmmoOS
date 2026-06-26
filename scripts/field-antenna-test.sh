@@ -17,7 +17,7 @@ echo "--- Result ---"
 "$ROOT/lib/field-antenna-launcher.sh" status
 
 panel="$NEXUS_STATE_DIR/field-antenna-panel.json"
-if python3 -c "
+if pythong -c "
 import json
 p=json.load(open('$panel'))
 ready=p.get('blaster_ready') or (p.get('readiness') or {}).get('blaster_ready')

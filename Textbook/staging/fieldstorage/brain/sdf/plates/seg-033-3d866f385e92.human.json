@@ -1,0 +1,43 @@
+{
+  "id": "seg-033-3d866f385e92",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-033-3d866f385e92.human.pgm",
+  "caption_stub": "Failure catalog RF edition Failure mode Symptom Fix Weave as instrument HF propagation forecast from shader Visual rock Ch 12 Phi as MHz Tune binding 8 to 2 4G FCC floats are field knobs not carrier FSPL in GLSL fantasy\u2026",
+  "text_sha256": "4f8f7ce47cdfac878e3c45127d62d2f8bc20d7bba577b0a0bbe49203004234b0",
+  "words_source": 921,
+  "tags": [
+    "catalog",
+    "edition",
+    "failure",
+    "fix",
+    "forecast",
+    "from",
+    "grid",
+    "hostess",
+    "human",
+    "instrument",
+    "lossless",
+    "mode",
+    "propagation",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "symptom",
+    "weave"
+  ],
+  "ocr_hint": "Failure catalog RF edition Failure mode Symptom Fix Weave as instrument HF propagation forecast from shader Visual rock ",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-033-3d866f385e92",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-033-3d866f385e92.json",
+  "truth_score": 54.3,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Content-addressable append-only field store — blake3 Merkle chain (uncompressed payloads)."""
 from __future__ import annotations
 

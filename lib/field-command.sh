@@ -8,6 +8,6 @@ nexus_field_command_json() {
     return 0
   fi
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-    python3 "$script" json 2>/dev/null \
+    pythong "$script" json 2>/dev/null \
     || printf '{"good_guy":{"count":0},"bad_guy":{"count":0},"pulse":{}}'
 }

@@ -1,0 +1,65 @@
+Slot-by-slot narrative — words 0 through 15
+
+Slot 0 is pump generation — heartbeat of layer registry. If you log slot 0 across one second of STATUS cadence and see flatline while FAT words change, your pump is partial. Slot 1 carries cycles-per-frame story — compare to FPS in STATUS for sanity. Slots 2–7 are RAM family: HD ready, mirror bytes, boot vector, floppy size, guest RAM size, mirror offset — each word is a sentence in “does storage exist?” Slots 8–11 are VGA family: mode from BDA, DAC path, viewport cols/rows habit — “does the guest see what it thinks it sees?” Slots 12–15 are FAT family: AMMOFAT geometry — “can directory tables be trusted this tick?”
+
+Operators building custom HUD shaders should read but not invent — if your shader reads slot 9, grep vgaPack to learn bit layout. Inventing bitfields without grep is how forks ship pretty lies.
+
+Slot-by-slot narrative — words 16 through 41
+
+Slots 16–23 are FCC floats — TimeScale, ThermoAlpha, WaveSpeed, GateFidelity, EntropyFloor, InjectStrength, PropalacticScale, FieldCoupling — admitted post-CLF guard Chapter 9. Slots 24–28 are ThermoAccountant mirrors — entropy, boundary, maintenance, income, steps — Chapter 4 receipts on the bus. Slot 31 Tesla coherence; slot 34 Tesla bias strength — directional story with constants 0.18 forward and 3.2 reverse. Slots 32–41 input family — keyboard scancodes, mouse position and buttons, joystick axes — operator fingers as boundary conditions.
+
+Changing FieldCoupling in prompt without watching slot 23 and THERMO together is week-one homework unfinished. Changing GateFidelity without watching Flow fabric and spiderweb util is week-two homework unfinished.
+
+Slot-by-slot narrative — words 42 through 63
+
+Slots 42–56 viewport and AmouranthOS compositor region — slot 42 chrome flags are the famous word in June 2026 research traces; higher slots carry layer strip, compositor header, glow/sharpen telemetry per viewport headers. Slots 57–59 audio rack — ear story beside eye. Slots 60–61 BIOS boot flags — shell state. Slot 62 IO hub. Slot 63 drive mask — which drive letter habit is live. Sixty-four words, one dashboard — telemetry field Chapter 2 named.
+
+Guest launch case study — DOOM path addresses
+
+When operator launches DOOM-class guest images, RamMap regions matter: palette near 0x90000 , framebuffer at 0xA0000 , VGA mode via BDA. Dispatch still runs pump, CFL, thermo, Tesla — retro is not escape from field literacy. Watch entropy rise with input slots active and maintenance cost with framebuffer persistence. If guest runs but thermo flat, dispatch path failed — not “old games don’t count.”
+
+Guest launch case study — RTX-DOS panel
+
+ControlRtxDos flag 64 enables RTX-DOS panel surface — still inside same SSBO map. Panel is boundary condition on chrome and guest, not separate emulator. Grep control flags in FieldSocket when panel state disagrees with slot 42.
+
+Field Die SSBO memory layout — binding 1
+
+Descriptor binding 1 is not only 64 MiB linear guest — tail holds ZMM1024 tile cache for fabric samples. Total allocation is guest map plus cache tail per headers. Forks that shrink tail without updating shader see HUD hex garbage at fabric peek region — layout version 5 contract again.
+
+Data bus and ELLIE logging correlation
+
+ELLIE does not print all 64 words each frame — that would drown operators. THERMO and STATUS carry aggregates. When debugging bus, use prompt list AnalogFields for FCC, grep THERMO for accountant, enable debug HUD for hex peeks. Chapter 11 observability doctrine: right witness for right question.
+
+Local-first die ethics
+
+Die telemetry stays on machine — no phone-home in pump. Packet field jsonl also local-first Chapter 5. Queen Chapter 21 holds gates without cloud perimeter mythology. Field Die literacy supports sovereign operator posture — your bytes, your bus, your grep.
+
+Operator journal — week two prompts
+
+Draw RAM map from memory; check against Figure 8.1 notes.
+
+Copy one THERMO line; label entropy, boundary, maintenance fields.
+
+Change one FCC float; record which bus slot should move.
+
+Note slot 42 semantics after clicking start menu.
+
+Correlate dispatch session time with one NEXUS jsonl timestamp.
+
+Explain to a friend why Field Die is not DOSBox without being rude.
+
+Grep FIELD_LAYOUT_VERSION in host and shader; record value.
+
+List three layers from L0–L9 and their pack slot ranges.
+
+Teaching the die to another operator — long-form
+
+When you teach Field Die, start with addresses, not aesthetics. Show ./linux.sh run default x86, point at Big Grin, then open FieldLayer.hpp RamMap on disk. Walk one guest offset: B8000 text. Walk one bus slot: 42 chrome. Walk one stderr line: THERMO entropy. Only then swipe to Classic for pretty thermo colors — pedagogy order matters. Newcomers who start on Mandelbulb swipes think engine is raymarch toy; you failed them if you skip die default.
+
+Second lesson: pump generation slot 0. Increment means layers walked. No increment means pump broken. Third lesson: FIELD_LAYOUT_VERSION 5 — host and x86.comp match. Fourth: data_bus is not magic array; it is contract renewed every dispatch. Fifth: optional FieldX86Emu — assist, not default. Sixth: tile cache tail — fabric peek, not second world. Seventh: correlate with panel jsonl when teaching defense — offense and defense couple at human, not at SSBO.
+
+Teaching mistakes to avoid: calling it DOSBox; calling HUD hex calorimetry; ignoring CFL because die “is not fabric focus”; claiming packet field inside Vulkan; skipping sealed time when discussing thermo income. Each mistake is Chapter 12 honesty row waiting to happen.
+
+Revision history posture — v5 die map
+
+Field Technology v5 consolidates June 2026 main-branch facts: default x86.comp, 64 MiB guest, 64-word bus, layout version 5, Tesla slots 31/34, AmouranthOS chrome on 11–14 and bus 42. Older marketing that said decorative CANVAS default is wrong — Chapter 12 trust rule three: ./linux.sh run default is Field Die. Wiki quick reference may lag; grep and this chapter carry v5 contract.

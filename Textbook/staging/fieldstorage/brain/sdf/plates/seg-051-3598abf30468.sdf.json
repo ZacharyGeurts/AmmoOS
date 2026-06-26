@@ -1,0 +1,40 @@
+{
+  "id": "seg-051-3598abf30468",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-051-3598abf30468.pgm",
+  "caption_stub": "Compare list Hardware output to grep STATUS numbers should move together when fabric injected Spiderweb edges Edges carry currentUtil as fabric driven story Tesla reverse damping from Chapter 9 modifies edge update forward ease reverse resist Tidewalker tier EnableSpiderwebGraph allows\u2026",
+  "text_sha256": "fedbe70f636ab4366180f1079690984b3e57b8c7a75d1810a10ba370050e1b19",
+  "words_source": 901,
+  "tags": [
+    "compare",
+    "fabric",
+    "grep",
+    "grid",
+    "hardware",
+    "hostess",
+    "list",
+    "lossless",
+    "move",
+    "numbers",
+    "output",
+    "redata",
+    "sdf",
+    "segment",
+    "should",
+    "status",
+    "together",
+    "when"
+  ],
+  "ocr_hint": "Compare list Hardware output to grep STATUS numbers should move together when fabric injected Spiderweb edges Edges carr",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-051-3598abf30468",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 48.2,
+  "truth_accepted": true
+}

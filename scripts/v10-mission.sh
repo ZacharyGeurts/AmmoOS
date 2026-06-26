@@ -22,12 +22,12 @@ log "3. SANDBOX — military_sandbox.sh ready"
 test -x "$ROOT/scripts/military_sandbox.sh"
 
 log "4. STORAGE + ENERGY — efficient_store + thermal governor"
-NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "$ROOT/lib/efficient_store.py" panel
-NEXUS_STATE_DIR="$NEXUS_STATE_DIR" python3 "$ROOT/lib/thermal-governor.py" panel
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "$ROOT/lib/efficient_store.py" panel
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" pythong "$ROOT/lib/thermal-governor.py" panel
 
 log "5. TESTS + UNIFY — property tests + field fabric"
-python3 "$ROOT/tests/property.py" -v
-python3 "$ROOT/lib/field-fabric-bridge.py" panel | head -c 400
+pythong "$ROOT/tests/property.py" -v
+pythong "$ROOT/lib/field-fabric-bridge.py" panel | head -c 400
 echo ""
 
 log "6. GUI — field inspector wired in panel/threat-panel.html"

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Audio Train — learn acceptable ranges per source; outside range = hostile intent."""
 from __future__ import annotations
 

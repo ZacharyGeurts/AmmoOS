@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Global terror Spiderweb — identify every home and every internet endpoint everywhere."""
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from typing import Any
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
+DOCTRINE = INSTALL / "data" / "terror-spiderweb-doctrine.json"
 SEED_TSV = INSTALL / "data" / "home-gps-correlation.tsv"
 GPS_TABLE = STATE / "home-gps-correlation.json"
 UNIVERSAL_REGISTRY = STATE / "universal-field-registry.json"
@@ -72,6 +73,115 @@ MOBILE_IFACE_TYPES = frozenset({"gsm", "cdma", "wwan", "lte", "5g", "bluetooth",
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _deep_harvest() -> bool:
+    return os.environ.get("NEXUS_SPIDERWEB_DEEP", "0").strip().lower() in ("1", "true", "yes")
+
+
+def _idle_panel() -> dict[str, Any]:
+    return {
+        "schema": "terror-spiderweb/v2",
+        "mode": "idle",
+        "auto_run": False,
+        "updated": None,
+        "motto": "Operator-triggered only — press Rebuild web when you want a fresh survey.",
+        "tagline": "No automatic probe storms. Cached sections shown when available.",
+        "nodes": [],
+        "edges": [],
+        "focus": {"label": "Idle — awaiting operator rebuild", "lat": 20.0, "lon": 0.0, "zoom": 2},
+        "registry": {"homes": [], "internet": [], "mobile": [], "batteries": [], "unplaced_internet": []},
+        "stats": {"idle": True, "identified_everywhere": 0},
+        "sections_diagram": _sections_diagram({}),
+    }
+
+
+def _section_samples(registry: dict[str, Any], key: str, *, limit: int = 3) -> list[str]:
+    rows = registry.get(key) or []
+    out: list[str] = []
+    for row in rows[:limit]:
+        if not isinstance(row, dict):
+            continue
+        label = row.get("label") or row.get("ip") or row.get("id") or row.get("address")
+        if label:
+            out.append(str(label)[:48])
+    return out
+
+
+def _sections_diagram(doc: dict[str, Any]) -> dict[str, Any]:
+    stats = doc.get("stats") or {}
+    reg = doc.get("registry") or {}
+    sources = stats.get("sources") or {}
+    sections: list[dict[str, Any]] = [
+        {
+            "id": "homes",
+            "title": "Homes & neighbors",
+            "total": int(stats.get("total_homes") or len(reg.get("homes") or [])),
+            "placed": int(stats.get("homes_placed") or 0),
+            "samples": _section_samples(reg, "homes"),
+        },
+        {
+            "id": "internet",
+            "title": "Internet catalog",
+            "total": int(stats.get("total_internet") or len(reg.get("internet") or [])),
+            "placed": int(stats.get("internet_placed") or 0),
+            "unplaced": int(stats.get("internet_unplaced") or 0),
+            "samples": _section_samples(reg, "internet"),
+        },
+        {
+            "id": "mobile",
+            "title": "Cellphones & radios",
+            "total": int(stats.get("total_mobile") or len(reg.get("mobile") or [])),
+            "placed": int(stats.get("mobile_placed") or 0),
+            "moving": int(stats.get("mobile_moving") or 0),
+            "samples": _section_samples(reg, "mobile"),
+        },
+        {
+            "id": "batteries",
+            "title": "Batteries",
+            "total": int(stats.get("total_battery") or len(reg.get("batteries") or [])),
+            "placed": int(stats.get("battery_placed") or 0),
+            "samples": _section_samples(reg, "batteries"),
+        },
+        {
+            "id": "edges",
+            "title": "Spiderweb edges",
+            "total": int(stats.get("edges") or len(doc.get("edges") or [])),
+            "pipe_up": int(stats.get("pipe_up") or 0),
+            "pipe_down": int(stats.get("pipe_down") or 0),
+        },
+        {
+            "id": "terror",
+            "title": "Terror / hostile",
+            "total": int(stats.get("terror_nodes") or 0) + int(stats.get("hostile_nodes") or 0),
+            "terror": int(stats.get("terror_nodes") or 0),
+            "hostile": int(stats.get("hostile_nodes") or 0),
+        },
+    ]
+    idle = bool(stats.get("idle"))
+    h = sections[0]["placed"] if not idle else 0
+    i = sections[1]["placed"] if not idle else 0
+    m = sections[2]["placed"] if not idle else 0
+    b = sections[3]["placed"] if not idle else 0
+    e = sections[4]["total"] if not idle else 0
+    t = sections[5]["terror"] if not idle else 0
+    ascii_lines = [
+        "┌─ HOME (" + str(h) + ") ────────────────┐",
+        "│  ├─ neighbor / LAN                     │",
+        "│  ├─ internet (" + str(i) + ") ── terror (" + str(t) + ")   │",
+        "│  ├─ mobile (" + str(m) + ") · battery (" + str(b) + ")      │",
+        "│  └─ edges (" + str(e) + ") pipe↑" + str(sections[4].get("pipe_up", 0)) + " pipe↓" + str(sections[4].get("pipe_down", 0)) + " │",
+        "└────────────────────────────────────────┘",
+    ]
+    if idle:
+        ascii_lines.insert(0, "[ idle — operator rebuild required ]")
+    return {
+        "schema": "terror-spiderweb-sections/v1",
+        "sections": sections,
+        "ascii": "\n".join(ascii_lines),
+        "sources": sources,
+        "idle": idle,
+    }
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -977,21 +1087,24 @@ def _find_hottest_cluster(nodes: list[dict[str, Any]], *, grid: float = 8.0) -> 
 
 def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
     panel_doc = panel_doc if isinstance(panel_doc, dict) else _panel_doc()
+    deep = _deep_harvest()
     census_doc: dict[str, Any] = {}
-    try:
-        census_mod = _mod("census_field_populate", "census-field-populate.py")
-        census_doc = census_mod.populate_from_operator()
-    except Exception:
-        pass
+    if deep:
+        try:
+            census_mod = _mod("census_field_populate", "census-field-populate.py")
+            census_doc = census_mod.populate_from_operator()
+        except Exception:
+            pass
     op = panel_doc.get("operator_location") or {}
-    try:
-        live_op = _mod("operator_location", "operator-location.py").panel_json()
-        if live_op.get("gps_ready"):
-            op = {**live_op, **op}
-    except Exception:
-        pass
+    if deep:
+        try:
+            live_op = _mod("operator_location", "operator-location.py").panel_json()
+            if live_op.get("gps_ready"):
+                op = {**live_op, **op}
+        except Exception:
+            pass
     if not op:
-        op = {}
+        op = _load_json(STATE / "operator-location.json", {})
 
     gps_doc = build_gps_table(op)
     home_rows = _home_registry(_harvest_homes(panel_doc, op))
@@ -1154,18 +1267,21 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         pass
 
     thermal_doc: dict[str, Any] = {}
-    try:
-        thermal_mod = _mod("thermal_earth_field", "thermal-earth-field.py")
-        thermal_doc = thermal_mod.build_thermal_field()
-        op_loc = _load_json(STATE / "operator-location.json", {})
-        if op_loc.get("lat") is not None:
-            thermal_doc["operator_focus"] = {
-                "lat": op_loc.get("lat"),
-                "lon": op_loc.get("lon"),
-                "label": op_loc.get("label") or "Operator",
-            }
-    except Exception:
-        pass
+    if deep:
+        try:
+            thermal_mod = _mod("thermal_earth_field", "thermal-earth-field.py")
+            thermal_doc = thermal_mod.build_thermal_field()
+            op_loc = _load_json(STATE / "operator-location.json", {})
+            if op_loc.get("lat") is not None:
+                thermal_doc["operator_focus"] = {
+                    "lat": op_loc.get("lat"),
+                    "lon": op_loc.get("lon"),
+                    "label": op_loc.get("label") or "Operator",
+                }
+        except Exception:
+            pass
+    else:
+        thermal_doc = _load_json(STATE / "thermal-earth-field.json", {})
 
     stats = {
         "total_homes": len(home_rows),
@@ -1218,25 +1334,29 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
     _save_json(UNIVERSAL_REGISTRY, registry_doc)
 
     precision_doc: dict[str, Any] = {}
-    try:
-        precision_doc = _mod("precision_field", "precision-field.py").build_precision_field()
-        stats["precision_placed"] = (precision_doc.get("stats") or {}).get("placed", 0)
-        stats["precision_sub_micron"] = (precision_doc.get("stats") or {}).get("sub_micron", 0)
-    except Exception:
-        pass
+    if deep:
+        try:
+            precision_doc = _mod("precision_field", "precision-field.py").build_precision_field()
+            stats["precision_placed"] = (precision_doc.get("stats") or {}).get("placed", 0)
+            stats["precision_sub_micron"] = (precision_doc.get("stats") or {}).get("sub_micron", 0)
+        except Exception:
+            pass
+    else:
+        precision_doc = _load_json(STATE / "precision-field-panel.json", {})
 
     existence_doc: dict[str, Any] = {}
-    try:
-        ex_mod = _mod("existence_identity", "existence-identity.py")
-        existence_doc = ex_mod.build_existence_registry(registry_doc)
-        stats["existence_total"] = (existence_doc.get("stats") or {}).get("total", 0)
-        stats["existence_existing"] = (existence_doc.get("stats") or {}).get("existing", 0)
-        stats["existence_vision"] = (existence_doc.get("stats") or {}).get("vision_corroborated", 0)
-        stats["existence_ocr"] = (existence_doc.get("stats") or {}).get("ocr_corroborated", 0)
-    except Exception:
-        pass
+    if deep:
+        try:
+            ex_mod = _mod("existence_identity", "existence-identity.py")
+            existence_doc = ex_mod.build_existence_registry(registry_doc)
+            stats["existence_total"] = (existence_doc.get("stats") or {}).get("total", 0)
+            stats["existence_existing"] = (existence_doc.get("stats") or {}).get("existing", 0)
+            stats["existence_vision"] = (existence_doc.get("stats") or {}).get("vision_corroborated", 0)
+            stats["existence_ocr"] = (existence_doc.get("stats") or {}).get("ocr_corroborated", 0)
+        except Exception:
+            pass
 
-    return {
+    out = {
         "schema": "terror-spiderweb/v2",
         "updated": _now(),
         "motto": "Every home. Every internet endpoint. Every moving cellphone & battery. Everywhere identified.",
@@ -1275,18 +1395,42 @@ def build_spiderweb(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "census_field": census_doc if census_doc.get("ok") else panel_doc.get("census_field") or {},
         "thermal_earth": thermal_doc,
         "precision_field": precision_doc,
+        "tempered": not deep,
+        "auto_run": False,
     }
+    out["sections_diagram"] = _sections_diagram(out)
+    return out
 
 
 def panel_json(*, force: bool = False) -> dict[str, Any]:
-    """Fast path: published cache. Rebuild only on miss or explicit build/rebuild."""
-    if not force and PANEL_CACHE.is_file():
+    """Cache-only read — never rebuild on json probe (stops probe storms)."""
+    if PANEL_CACHE.is_file():
         doc = _load_json(PANEL_CACHE, {})
-        if isinstance(doc, dict) and doc.get("schema") and doc.get("updated") is not None:
+        if isinstance(doc, dict) and doc.get("schema"):
+            if "sections_diagram" not in doc:
+                doc = {**doc, "sections_diagram": _sections_diagram(doc)}
+            doc.setdefault("auto_run", False)
+            doc.setdefault("_probe", {"cached": True})
             return doc
-    doc = build_spiderweb()
-    _save_json(PANEL_CACHE, doc)
-    return doc
+    if force:
+        doc = build_spiderweb()
+        _save_json(PANEL_CACHE, doc)
+        return doc
+    idle = _idle_panel()
+    idle["_probe"] = {"cached": False, "idle": True}
+    return idle
+
+
+def _cached_gps_table() -> dict[str, Any]:
+    if GPS_TABLE.is_file():
+        doc = _load_json(GPS_TABLE, {})
+        if isinstance(doc, dict) and doc.get("schema"):
+            return doc
+    panel = panel_json()
+    gps = panel.get("gps_table")
+    if isinstance(gps, dict) and gps.get("schema"):
+        return gps
+    return {"schema": "home-gps-correlation/v2", "homes": [], "count": 0, "with_coords": 0, "idle": True}
 
 
 def main() -> int:
@@ -1302,14 +1446,21 @@ def main() -> int:
         print(json.dumps(doc, ensure_ascii=False))
         return 0
     if cmd == "gps-table":
-        print(json.dumps(build_gps_table(), ensure_ascii=False))
+        if _deep_harvest():
+            print(json.dumps(build_gps_table(), ensure_ascii=False))
+        else:
+            print(json.dumps(_cached_gps_table(), ensure_ascii=False))
         return 0
     if cmd == "registry":
-        doc = build_spiderweb()
+        doc = panel_json()
         print(json.dumps(doc.get("registry") or {}, ensure_ascii=False))
         return 0
+    if cmd == "sections":
+        doc = panel_json()
+        print(json.dumps(doc.get("sections_diagram") or _sections_diagram(doc), ensure_ascii=False))
+        return 0
     print(json.dumps({
-        "error": "usage: terror-spiderweb.py [json|build|gps-table|registry]",
+        "error": "usage: terror-spiderweb.py [json|build|gps-table|registry|sections]",
     }, ensure_ascii=False))
     return 1
 

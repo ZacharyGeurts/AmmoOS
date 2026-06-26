@@ -15,7 +15,7 @@
 ## Scripts
 
 - `./scripts/sync-dewey-github.sh` — rebuild catalog + GitHub Dewey tree
-- `python3 lib/h7-field-drive-tie.py inventory` — field drive asset report
+- `pythong lib/h7-field-drive-tie.py inventory` — field drive asset report
 
 Install: `sudo ./stealth_install.sh`  
 Panel: https://127.0.0.1:9477/field

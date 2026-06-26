@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Packet DPI — deep inspection, English translation, high-confidence heuristics only."""
 from __future__ import annotations
 

@@ -1,0 +1,38 @@
+{
+  "id": "seg-093-ceeaca70144e",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-093-ceeaca70144e.pgm",
+  "caption_stub": "4 Clause III Honor creditors Honor creditors Maxwell Landauer Shannon Turing Tesla Boltzmann von Neumann CFL collaborators with portraits at creditors Science is not anonymous extraction Zachary Grok Nick Amouranth named beside engine work Cite Landauer and Shannon from primary\u2026",
+  "text_sha256": "d90f56750ce7e69858f650229888313a731f84d6ff1f8cb7813145f9e5a3871d",
+  "words_source": 932,
+  "tags": [
+    "boltzmann",
+    "clause",
+    "creditors",
+    "grid",
+    "honor",
+    "hostess",
+    "iii",
+    "landauer",
+    "lossless",
+    "maxwell",
+    "redata",
+    "sdf",
+    "segment",
+    "shannon",
+    "tesla",
+    "turing"
+  ],
+  "ocr_hint": "4 Clause III Honor creditors Honor creditors Maxwell Landauer Shannon Turing Tesla Boltzmann von Neumann CFL collaborato",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-093-ceeaca70144e",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 60.2,
+  "truth_accepted": true
+}

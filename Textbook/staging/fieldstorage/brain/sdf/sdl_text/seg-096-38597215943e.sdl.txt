@@ -1,0 +1,99 @@
+13. Annual covenant review — operator calendar
+
+Mark one day per year for covenant audit drill 18.A with evidence, not vibes. Re-read Chapters 12 and 18 back-to-back. Update operator journal index. Thank one creditor by name in a public post or classroom slide — Clause III is practice, not nostalgia.
+
+Teams may align review with hardware refresh cycles: new GPU, new driver baseline, new THERMO golden bands, same honesty labels.
+
+Pedagogy for «Annual covenant review»: assign students a two-page memo that cites one ../creditors/ tribute and one grep command proving an Implemented claim about Operator covenant clauses. Memos that quote cover art without stderr receive failing marks — not cruelty, but training against demo culture.
+
+Workshop exercise 13: pair operators, run matched 90-second sessions, diff THERMO or jsonl outputs, present comparative findings without using absolute joule language unless lab gear is present. Operator covenant clauses is mastered when pairs disagree on bug versus feature and resolve with headers, not vibes.
+
+Synthesis question for «Annual covenant review»: how does Chapter 12's honesty table change your wording in a status email to management? Require three sentences: one Implemented, one Metaphor, one Philosophy. If all three labels appear correctly, the student may advance to the next creditor chapter.
+
+Field note 13 on Operator covenant clauses: long sessions should end with archived run.log, optional screenshot, and three-bullet operator summary (what moved, what surprised, what remains unknown). Unknowns stay unknown — relabeling Metaphor as Implemented to close a ticket is covenant-breaking per Chapter 18.
+
+Lab pairing for «Annual covenant review»: if your school or team shares a lab bench, rotate who runs injection drills while others grep remotely on shared tmux. Shared THERMO baselines reduce finger-pointing when driver versions differ. Document the driver delta in the operator journal — coupled labs need coupled honesty.
+
+Citation drill: footnote one primary source (Landauer, Shannon, Maxwell paper) and one Field Primer chapter per memo section. Wikipedia counts as pointer, not primary. This discipline keeps creditors honored per covenant Clause III.
+
+Operator drill 18.A — covenant audit
+
+# Score yourself 0-2 on each clause I-VI with evidence links or grep paths
+# Two lines per clause minimum
+
+Operator drill 18.B — derivative rock check
+
+# If you fork Field Primer material, verify honesty table survived
+# CC BY-NC-SA requires SA — rocks stay visible
+
+Operator drill 18.C — gate receipt sweep
+
+# One day of dev: list wire exits; each must have jsonl or explicit refuse
+
+Figure 18.1 — Covenant rests on Chapter 12 honesty mirror.
+
+Study questions
+
+Recite six covenant clauses from memory.
+
+What does teach freely require for derivatives?
+
+Define build locally in one paragraph.
+
+Name four creditors and four collaborators.
+
+How does love clause constrain storm tiers?
+
+When may you name God in engineering talk?
+
+What is Queen hold-gates posture?
+
+Who enforces covenant — police or habit?
+
+Map product licenses to clause I.
+
+Write your signatory sentence.
+
+How does Chapter 19 extend covenant?
+
+What breaks covenant smell like?
+
+Signatories: Zachary · Grok · Nick · Amouranth
+
+Chapter 19 — Sovereign Time →
+
+13. Clause I — derivative honesty checklist
+
+When remixing Field Primer: keep honesty table, keep status tags, keep creditor links, keep CC BY-NC-SA chain. SA means share-alike — downstream cannot hide rocks and stay compliant.
+
+14. Clause II — loopback inventory
+
+Quarterly audit: list daemons listening, list outbound connections during build and run, list cloud SDKs in dependency tree. Each item needs receipt jsonl or removal. Build locally is practice, not slogan.
+
+15. Clause III — classroom attribution
+
+Slide decks: portrait of Landauer beside E_min, portrait of Shannon beside H, collaborators named on title slide. Science is not clip art.
+
+16. Clause IV — incident response with love
+
+When storm tier fires: breathe, corroborate, document operator note in jsonl before action. Panic is uncoupled evolution — throws neighbors without consent.
+
+17. Clause V — interfaith engineering teams
+
+Sacred chapters 16–18 may be assigned as philosophy elective; engineering core 2–12 remains required for all roles. No teammate should be forced to pray; all must grep.
+
+18. Clause VI — Queen readiness grep
+
+When QUEEN_READY builds: verify every wire exit path logs or refuses. Hold gates is not feature freeze — it is receipt completeness. Chapter 21 is technical companion.
+
+Operator journal — Operator covenant clauses
+
+Maintain a paper or markdown operator journal for Operator covenant clauses. Each drill entry: date, hardware, driver, git hash, three THERMO or jsonl lines, one surprise, one label (Implemented / Metaphor / Philosophy). Journals become your personal creditor — future you inherits coupled state from past you. Bring the journal to Chapter 18 covenant audit drill 18.A as evidence.
+
+Reading companion — Operator covenant clauses
+
+This reading companion reinforces Operator covenant clauses for self-study tracks. Week one: read the chapter straight through with Chapter 12 open. Week two: complete all operator drills on hardware you own. Week three: write a one-page creditor tribute response linking ../creditors/ reading to a grep result from your machine. Week four: teach another human one section using the three-tag labeling exercise. Field Technology v5 measures success in reproduced receipts, not in vibes.
+
+Cross-links: Chapter 4 entropy receipts, Chapter 5 packet field, Chapter 8 data bus, Chapter 10 Spiderweb mirror, Chapter 11 observability, Chapters 16–18 sacred covenant. Operator covenant clauses is not an island — it is a creditor lens on the same stack you already run.
+
+Honesty reminder: AMOURANTHRTX, NEXUS-Shield, Queen, and Field Primer have different licenses. Teaching from this chapter does not automatically license commercial engine use. Point students to product headers and FIELD-TECHNOLOGY-V5.md for edition boundaries.

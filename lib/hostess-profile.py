@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Hostess profile — operator name, address, URLs, business/person/family for US page."""
 from __future__ import annotations
 

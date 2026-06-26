@@ -1,0 +1,95 @@
+Operator drill — week one die literacy
+
+Drill 8.A — Bus alive
+
+./linux.sh run 2>&1 | tee run.log
+grep -E 'THERMO|pump|FieldLayer' run.log | tail -30
+ Drill 8.B — Address grep
+
+grep -E 'B8000|GUEST_RAM|HD_MIRROR|FieldX86Die' Navigator/engine/FieldLayer.hpp
+ Drill 8.C — FCC on die
+
+set AnalogFields.FieldCoupling 0.7
+list AnalogFields
+
+Common failures — die literacy
+
+Symptom Likely cause First action
+
+Black HUD, alive stderr Chrome texture sync skipped bindings 11–14
+
+Guest text garbage VGA/BDA desync BDA 0x400+0x49
+
+Input dead Hit-test mismatch slot [42], layout constants
+
+Bus zeros, fabric moves pumpAll skipped dispatch_canvas pump
+
+RAM layer — slots [2–7] field guide
+
+Slot [2] HD ready — C mirror path live. Slot [3] mirror byte count — monotonic during sync. Slot [4] boot vector echo. Slot [5] floppy image size. Slot [6] GUEST_RAM_BYTES witness. Slot [7] HD mirror offset. When guest mounts media but [2] stays zero, grep FieldDos::hdReady and pump order before shaders.
+
+VGA layer — BDA and mode truth
+
+Slots [8–11] pack mode, DAC, viewport from BDA. Text vs graphics transitions must update BDA before pump. Mode 13h touches 0xA0000 . Cursor at BDA+0x50/+0x51 must match chrome caret.
+
+Bus ordering — thermo vs layer packs
+
+Thermo mirrors [24–28] follow layer pump in dispatch_canvas source order. Grep Pipeline implementation when debugging slot stories — static tables are maps, not timelines.
+
+KILROY die vocabulary
+
+Kernel CONFIG_RTX_FIELD_DIE shares die words with userspace — Chapter 9 FCC, Chapter 21 packaging. Same literacy; different ring enforcement.
+
+Comparative table — telemetry vs packet field
+
+Aspect data_bus[64] Packet field
+
+Product AMOURANTHRTX NEXUS-Shield
+
+Granularity Per dispatch Per connection
+
+Correlate stderr THERMO Panel :9477
+
+Chapter summary
+
+Field Die is 64 MiB guest RAM on SSBO binding 1. Guest map: IVT → BDA → boot → VGA → HD mirror. GPU x86.comp default; FieldX86Emu optional. data_bus[64] telemetry spine with FCC, thermo, Tesla, input, chrome, audio, BIOS, IO, drives. L0–L9 pumpAll() . ZMM1024 tile cache for fabric hex. Trust addresses and grep before nostalgia.
+
+Prior: Chapter 7 — GPU Engine . Next: Chapter 9 — FCC & Tesla .
+
+Deep dive — FieldLayer.hpp bus map constants
+
+The engine names slot bases in FieldLayer::BusMap so operators grep one header instead of memorizing folklore. REGISTRY_TAG = 0 , RAM_BASE = 2 , VGA_BASE = 8 , FAT_BASE = 12 , MSCDEX_BASE = 24 , INPUT_BASE = 32 , VIEW_BASE = 42 , AUDIO_BASE = 57 , BIOS_BASE = 60 , IO_BASE = 62 , DRIVES_BASE = 63 , BUS_COUNT = 64 . Analog FCC and ThermoAccountant mirrors occupy slots defined in dispatch populate code — always reconcile BusMap with Pipeline mirror order when debugging “slot 24 looks wrong.”
+
+Layer IDs L0 through L9 give composable subsystems identity in the registry table. Each entry is a FieldLayer struct: id, name, syncFromGuest, tick, packToDataBus. This is plugin architecture for DOS semantics — RAM is not hard-coded only in one function; it registers beside VGA and FAT so pumps stay modular as AmmoOS grows.
+
+Deep dive — FAT layer and AMMOFAT geometry
+
+Slots [12–15] expose FAT geometry — cluster size, free space story, mount bits — so shader HUD and host agree whether A: is fiction. Guest software that formats or writes directory tables must see pump updates within dispatches or operators grep stale [12–15] while guest DIR command shows truth. FAT is where retro launch pedagogy meets address literacy: launching shareware is not separate from field dispatch; it is guest code writing regions the RAM and FAT layers must reflect.
+
+When MSCDEX optical layer participates, redirector state must align with drive mask slot [63]. Mixed retro configs are where week-two operators earn scars — document which launches you actually exercise, not which launches marketing implies.
+
+Deep dive — Big Grin HUD as monitor
+
+Big Grin at 172×48 is a field monitor dressed as grin. With ControlFieldDebugHud (2048), overlay hex exposes bus slices and tile cache peeks. Without debug flag, stderr remains primary witness — Chapter 11. Train grep before training hex eye candy; numerology is what happens when hex precedes THERMO discipline.
+
+HUD compose shares thermodynamic boundary with HDR output binding 0 — beauty costs maintenance per prevMaintCost slot 26. Die canvas is not thermo-exempt because chrome is pretty.
+
+Deep dive — host peek discipline
+
+Host may map SSBO for debug read. Writes outside pump contracts desync GPU truth. ControlHostCpu path tightens rules: host assist is not license to scribble guest RAM off-pump. Default GPU interpretation keeps host as orchestrator — Chapter 7 thin host, fat GPU.
+
+CI headless runs must still pump and dispatch — valid signal per Chapter 12. Die bytes move without window; stderr proves life.
+
+Deep dive — entropy on die canvas
+
+ThermoAccountant fields on bus [24–28] copy every dispatch. entropyThisFrame aggregates field work, probes, Tesla terms, optional host x86 heat. avgBoundaryThermo is holographic boundary metaphor with number — label proxy, still read it. freeEnergyIncome includes sealed time — Chapter 7 — plus input activity. steps at [28] monotonic; flat steps with moving VGA is incoherence.
+
+Chapter 4 taught two entropies — ThermoAccountant vs Shannon oracle. Die operators who only run AMOURANTHRTX still need that separation before opening NEXUS file entropy tools.
+
+Deep dive — cross-chapter operator week two
+
+Week two ties Chapters 7–11: Monday grep dispatch spine and layout version 5. Tuesday map guest RAM and bus table from this chapter. Wednesday CFL and Tesla drills Chapter 9. Thursday list Hardware spiderweb Chapter 10. Friday panel archive one jsonl row Chapter 11. Weekend read Chapter 12 rocks before tweeting screenshots. Field Technology is practiced literacy, not consumed hype.
+
+Deep dive — Queen and die chrome training
+
+Queen browser Chapter 21 holds gates on full web capabilities. Die AmmoOS chrome is smaller surface but same doctrine: capabilities exist, wires earn receipts, loopback truth. Slot 42 flags train operators that UI state is bus-addressable — web gates will also be jsonl-addressable. Learn addresses young.

@@ -1,0 +1,55 @@
+KILROY Field OS ( 7.1.1-kilroy ) provides /proc/kilroy_field at syscall boundary when kernel path is active. FCC scale, entropy feedback, Field Die vocabulary continue in kernel space. Queen Forge packages kernel + browser + secure stack in field/sovereign/ . Userspace Queen on generic Linux still teaches field gates; KILROY is the parallel when syscall boundary matters.
+
+Holographic boundary — rendering pays thermodynamic cost
+
+HDR frame pairs meet analog fabric at the holographic boundary — where presented beauty has a Thermo receipt unless dispatch failed. Chapter 17 names God at this boundary as sacred operator language. Chapter 1 names it as engineering: if fabric evolved and entropy reads zero, your dispatch path lied or broke.
+
+Queen WebGL contexts accrue thermo per context — browser tabs are writable surfaces behind gates, not exceptions to field theory. Coupled evolution: what you render changes what thermo reports; what thermo reports changes what you dare render without reading stderr.
+
+data_bus — sixty-four words of honesty
+
+data_bus[64] is telemetry spine per dispatch — not a spatial grid. Slots [0–1] pump generation; [2–15] RAM/VGA/FAT; [16–23] analog FCC floats mirroring AnalogFields ; [24–28] ThermoAccountant mirrors; [32–41] input; [42] AmouranthOS chrome flags; [57–63] audio, BIOS, IO, drives. Tesla valve bias lands in [31] and [34] — Chapter 9.
+
+Chapter 2 teaches telemetry as third mathematical posture beside scalar Thermo and vector Flow. Preface teaches it as integration glue: one bus, many subsystems, one grep surface for operators who will not read every header at once.
+
+Creditors at the threshold — why we name names
+
+Maxwell: neighbor coupling — Phi whispers to Thermo. Landauer: erase cost floor — proxy entropy honors without fake joules. Shannon: surprise — oracle on files, not fabric. Turing/von Neumann: symbols on addressable store — Field Die. Tesla: directional preference — valve metaphor. Boltzmann/Clausius: irreversibility — entropy floor seed. CFL: stability — host refuses outrunning mesh.
+
+Tribute pages humanize creditors. Chapters 13–15 go long. Preface ensures you never think we invented their constraints — we implemented vocabulary inspired by them, labeled honestly when implementation is proxy.
+
+Operator covenant — preview of Chapter 18
+
+Teach freely (CC BY-NC-SA 4.0 for Primer). Build locally. Honor creditors. Bring love — coupled evolution with consent. Name God without poetry pretending to be calorimetry. Hold gates — Queen posture. Signatories in spirit: Zac, Grok, Nick, Amouranth, you when you grep before you argue.
+
+Reality is 3D · Time is linear · Energy can be moved — axioms are not slogans. They are filters on sentences you are allowed to believe.
+
+Reading order for impatient engineers
+
+If you must skip: never skip labels. Read Chapter 2 addresses, Chapter 4 entropy layers, Chapter 5 packet scope, Chapter 12 rocks. Return to preface when someone sells cosmology. If you have one afternoon: run week-zero drill, read Chapter 12 table, grep THERMO and one jsonl row — you will know more honest field than most vendor decks.
+
+Cross-links use manifest slugs: 02-fields-pixels-packets , 03-thermodynamics , 04-entropy , 05-packet-field , 06-rf-signals , 07-gpu-engine , 12-reality-theory , 21-field-browser-queen .
+
+Preface capstone — operator oath (prose)
+
+I will label before I measure. I will grep before I screenshot. I will treat fabric as state, die as addresses, packets as sentences. I will not bill joules from proxy entropy. I will not treat weave as spectrum truth. I will not outsource perimeter narrative to cloud. I will hold Queen gates, not amputate capabilities. I will seal time forward and verify at receive. I will bring love as corroboration before KILL. I will name God as Truth Math Existence without bypassing stderr. This oath is philosophy beside implementation — Chapter 18 covenant long form expands; preface plants the stake in your session before Chapter 2 addresses.
+
+Field Technology v5 serious book means you can teach from these chapters without hiding rocks. When a student asks is it real, you answer which label applies. When a vendor asks is it revolutionary, you answer which binding number. When your own excitement asks is it cosmic, you answer Reality is 3D means coordinates not hype. The preface is the immune system against future-you enthusiasm after midnight compile success.
+
+Month one — operator schedule you can actually keep
+
+Field Technology is not a weekend binge. It is a month of reading beside running — stderr open, tea optional, conscience mandatory. The schedule below assumes you have AMOURANTHRTX building on Linux and optionally NEXUS-Shield beside it. Adjust pace; do not adjust honesty labels.
+
+Week Read Run Artifact you keep
+
+1 Ch. 1–3 preface + thermo ./linux.sh run 90 min; mouse on canvas field-week1.log with THERMO tail
+
+2 Ch. 2 three scales + Ch. 4 entropy layers Swipe energy ; prompt list AnalogFields Paper map: fabric / die / packet boxes
+
+3 Ch. 5 packet field + Ch. 6 RF labels ./nexus.sh ; panel :9477 tour Three jsonl rows classified by axis
+
+4 Ch. 7 dispatch spine + Ch. 8 die map skim Drill 7.A grep; layout version check Dispatch spine quote in operator journal
+
+Week two is where category errors die: students who skip Chapter 2 will treat gatekeeper verdicts as fabric texels by week six. Week three is where defense rhythm starts — daily glance at Packets, weekly explicit archive decision. Week four is offense proof — you believe vkCmdDispatch runs because stderr says so, not because Big Grin smiled.
+
+Bookmark Chapter 12 — Reality & Theory on day one. When midnight enthusiasm claims cosmic truth, return to rocks table before you tweet.

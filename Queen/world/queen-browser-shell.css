@@ -1,0 +1,178 @@
+/* Queen Browser Shell — tabs are the OS; dock retired in shell mode */
+body.qw-browser-shell {
+  grid-template-rows: auto 1fr;
+}
+
+body.qw-browser-shell .qw-dock {
+  display: none !important;
+}
+
+body.qw-browser-shell .qw-os-panel {
+  display: none !important;
+}
+
+/* Embedded app surface inside a tab iframe */
+body.qw-embed {
+  grid-template-rows: 1fr;
+  overflow: hidden;
+}
+
+body.qw-embed .qb-chrome,
+body.qw-embed .qb-viewport,
+body.qw-embed .qw-dock,
+body.qw-embed .qw-boot {
+  display: none !important;
+}
+
+body.qw-embed .qw-os-panel {
+  position: fixed;
+  inset: 0;
+  max-height: none;
+  bottom: 0;
+  display: block !important;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+body.qw-embed .qw-os-panel[hidden] {
+  display: none !important;
+}
+
+body.qw-browser-shell.qw-viewport-fs .qb-chrome {
+  display: none !important;
+}
+
+.qb-tab--start .qb-tab-title::before {
+  content: "⊞ ";
+  color: #5ecfff;
+}
+
+.qb-tab--files .qb-tab-title::before {
+  content: "📁 ";
+  filter: grayscale(0.2);
+}
+
+.qb-tab-pinned .qb-tab-close {
+  display: none;
+}
+
+.qb-tab-popout,
+.qb-tab-fs {
+  opacity: 0.55;
+  font-size: 0.75rem;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.qb-tab-popout:hover,
+.qb-tab-fs:hover {
+  opacity: 1;
+  color: var(--aqua);
+}
+
+.qb-start-btn {
+  border-color: rgba(46, 184, 224, 0.45);
+  color: #5ecfff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.qb-start-btn:hover,
+.qb-start-btn.active {
+  background: rgba(46, 184, 224, 0.18);
+  border-color: var(--aqua);
+}
+
+.qb-viewport {
+  position: relative;
+  overflow: hidden;
+}
+
+.qb-tab-panes {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.qb-tab-pane {
+  display: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.qb-tab-pane.active {
+  display: flex;
+  flex-direction: column;
+}
+
+.qb-tab-pane .qb-frame {
+  flex: 1;
+  min-height: 0;
+}
+
+.qb-tab-pane.popped {
+  display: none !important;
+}
+
+.qb-security-strip {
+  margin-left: auto;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: rgba(61, 214, 140, 0.85);
+  padding: 4px 8px;
+  border: 1px solid rgba(61, 214, 140, 0.25);
+  border-radius: 4px;
+}
+
+/* Popout window */
+.qbp {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #050608;
+  color: #e8eef8;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.qbp-chrome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #0f1218;
+  border-bottom: 1px solid rgba(46, 184, 224, 0.2);
+}
+
+.qbp-title {
+  flex: 1;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qbp-btn {
+  border: 1px solid rgba(46, 184, 224, 0.3);
+  background: transparent;
+  color: #b8c8d8;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.qbp-viewport {
+  min-height: 0;
+  display: flex;
+}
+
+.qbp-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: #fff;
+}

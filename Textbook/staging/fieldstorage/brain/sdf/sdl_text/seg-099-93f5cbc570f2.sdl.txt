@@ -1,0 +1,91 @@
+ThermoAccountant entropyThisFrame is the per-frame receipt that time ran forward in fabric. Clock tamper does not directly spoof thermo — but mis-ordered logs make thermo spikes look like network causes. Fix time first; then grep thermo.
+
+Coupling to NEXUS panel and field-ntp-2026
+
+Threat panel merges sovereign slice from field-services-2026.py : posture flags, last pulse, last verify, squidgie blocks on NTP side.
+
+field-ntp-2026.py serves RFC 5905 mode-4 on UDP 123, gated on sovereign pulse health. Stratum defaults to 2; NEXUS_LAST_HOST=1 can elevate stratum 1 on sole survivor node.
+
+When sovereign cache is dirty, NTP replies may stop — clients should fail visibly rather than drift to pool silently. That is sovereign-first ethics.
+
+Panel DNS tab time column should match grep-able receipts. If panel says OK but jsonl says SQUIDGIE, trust jsonl and file a panel stale-cache bug — not the other way around.
+
+Single-source discipline — grok_world.sh flow 20
+
+Gradient chaos from many NTP sources helps adversaries hide micron nudges. Flow 20 enforces single source when NEXUS_SOVEREIGN_TIME_FIRST=1 : your signed pulses win.
+
+This is not anti-NTP ideology. Stratum labels still matter — but must trace to verifiable pulses. Pool fallback remains opt-in via NEXUS_POOL_NTP_FALLBACK=1 , never default in 2026 seed.
+
+Operators document upstream when last-host mode serves global TIME. Sole survivor is not casual toggle — it is covenant posture (Chapter 20).
+
+ELLIE alignment — seal forward across covenant
+
+Captain Ellie's TotalTime::verify() abort posture is the spiritual parent of sovereign SQUIDGIE. Session entropy corruption triggers apocalypse handler fail-closed in C++.
+
+ellie-last-host.py verify checks entropy covenant; sovereign-time.py sync checks clock covenant. Under NEXUS_LAST_HOST=1 , both run on sole survivor — DNS, DHCP, TIME, grep one story.
+
+FieldSocket::sealed_time in engine push constants parallels sovereign pulse → NTP stratum chain in perimeter. Teach both in onboarding.
+
+Forensic workflow — week-two operator lab
+
+Start operator timeserver: pythong sovereign-time.py serve . Issue baseline: pythong sovereign-time.py pulse . Sync from second context: pythong sovereign-time.py sync 127.0.0.1 9123 . Confirm verdict: USER_OK .
+
+Archive sovereign-time-receipts.jsonl with threat-panel exports. Correlate with LOG_THERMO during same window. Lab-only: induce VM skew; confirm SQUIDGIE and issues list populated.
+
+Document recovery steps in runbook: stop serve, fix clock source, re-pulse, verify three consecutive OK, then re-enable NTP gate.
+
+Troubleshooting common operator mistakes
+
+Mistake: running serve on 0.0.0.0 without firewall story. Fix: bind loopback or LAN IP explicitly; document in covenant.
+
+Mistake: copying key.bin between hosts without enrollment procedure. Fix: treat key as operator root; rotate on compromise.
+
+Mistake: ignoring SQUIDGIE because browsing still works. Fix: browsing is not time truth; perimeter may be lying quietly.
+
+Mistake: max skew set to seconds to silence alerts. Fix: you built a squidgie muffler; restore bounds or admit defeat in writing.
+
+Honest rocks
+
+UDP signed pulses on localhost: Implemented . HMAC verify + micron witness + freq fingerprint: Implemented .
+
+Tamper abort like TotalTime::verify() in all NEXUS daemons: Posture — engine abort is C++. Sub-micron SEM from clock sync alone: Correlation discipline .
+
+Pool NTP fully retired globally: Operator policy — sovereign-first is default, not universal law.
+
+Case study — correlating thermo spikes with clock skew
+
+An operator notices entropy spikes in LOG_THERMO coinciding with unexplained packet field bursts. Screenshots blame a browser tab. Sovereign grep shows SQUIDGIE entries 200 ms before the spike cluster — wall labels were wrong, not the fabric.
+
+Recovery: stop NTP serve to clients, re-sync sovereign, confirm three USER_OK pulses, re-export jsonl with corrected timeline. The tab may still be guilty — but time truth comes first in forensic ordering.
+
+Lesson: thermo is forward-running receipt; sovereign time is correlatable wall label. Neither replaces the other. Together they beat screenshots.
+
+Case study — lab VM clock nudge
+
+In a controlled lab VM, advance guest realtime by 400 ms without touching monotonic. Next sovereign sync returns receive_wall_skew and possibly mono_real_skew issues. Verdict SQUIDGIE.
+
+Document issues list in incident notes. Revert VM clock. Re-pulse until USER_OK. This drill proves the stack works — run it before production enrollment.
+
+Pulse chain integrity and entropy_tag
+
+Each pulse increments a monotonic pulse counter stored in sovereign-time-pulse.json. Chain labels record whether pulse was operator-local or serve:client issued.
+
+entropy_tag is 12 hex chars from SHA-256 over mono_ns and pulse number — lightweight tie between thermo ethic and time receipts. Grep entropy_tag beside LOG_THERMO hashes when building cross-subsystem timelines.
+
+Key rotation and compromise posture
+
+sovereign-time-key.bin is operator root for HMAC. Compromise requires rotate: stop serve, archive old jsonl, generate new key, re-enroll receivers, document rotation in covenant file.
+
+Do not chmod key world-readable. Do not store key in git. Treat loss of key like loss of DNS admin passkey — full perimeter re-seal.
+
+Integration checklist — before declaring production time
+
+Confirm NEXUS_SOVEREIGN_TIME_FIRST=1 in daemon env. Confirm serve bind matches network diagram. Confirm field-ntp-2026 squidgie_blocks visible in panel. Confirm chrony disabled or hooked per policy.
+
+Confirm Queen browser slice shows sovereign_time_witness true. Confirm gps-precision scripts read UTC from same receipt chain. Archive baseline receipts.jsonl.
+
+Reading receipts.jsonl — field forensic grammar
+
+Each jsonl row has ts ISO and receipt object. Sort by pulse number for chain analysis. Diff freq_sum_khz between consecutive pulses during CPU stress — expect gradual change, not step discontinuities without workload.
+
+Pair micron_witness changes with Spiderweb STATUS lines. Mismatch between witness and Puny-tier sysfs manual read indicates deeper kernel spoof — escalate, do not tune skew.

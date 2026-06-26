@@ -1,0 +1,39 @@
+{
+  "id": "seg-096-38597215943e",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-096-38597215943e.pgm",
+  "caption_stub": "13 Annual covenant review operator calendar Mark one day per year for covenant audit drill 18 A with evidence not vibes Re read Chapters 12 and 18 back to back Update operator journal index Thank one creditor by name in\u2026",
+  "text_sha256": "fccc70f92cd3b4fb44db9767b4442dead244a45cc80a8828180c89520fc0bac8",
+  "words_source": 922,
+  "tags": [
+    "annual",
+    "calendar",
+    "covenant",
+    "day",
+    "for",
+    "grid",
+    "hostess",
+    "lossless",
+    "mark",
+    "one",
+    "operator",
+    "per",
+    "redata",
+    "review",
+    "sdf",
+    "segment",
+    "year"
+  ],
+  "ocr_hint": "13 Annual covenant review operator calendar Mark one day per year for covenant audit drill 18 A with evidence not vibes ",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-096-38597215943e",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 64.0,
+  "truth_accepted": true
+}

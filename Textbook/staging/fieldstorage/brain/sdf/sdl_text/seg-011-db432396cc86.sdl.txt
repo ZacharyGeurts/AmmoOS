@@ -1,0 +1,98 @@
+Question RetroRTX swipe Default x86 canvas
+
+Primary shader CANVAS.comp tribute variant x86.comp
+
+Push block PushConstants FieldSocket
+
+Guest RAM SSBO Not product focus Binding 1 — 64 MiB map
+
+Honest use RT pedagogy, shader art literacy Operations, AmmoOS, dispatch proof
+
+Operators demoing AMOURANTHRTX to sponsors should lead with die default, then show RetroRTX as curriculum dessert — order matters for honesty. Chapter 12 rock: screenshots of tribute shaders are not proof of guest program execution.
+
+Guest FAT and VGA subfields — die is not flat RAM
+
+Field Die is 64 MiB linear guest map — but linear does not mean homogeneous. Layer pump (Chapter 8) walks L0–L9 composable subfields syncing into data_bus slots: RAM, VGA text frame, FAT tables, MSCDEX, audio, IO, BIOS regions. Operators who treat die as “one array” miss why HUD hex disagrees with FAT corruption stories.
+
+Subfield Typical guest anchor Bus / layer note
+
+VGA text 0xB8000 color cells Big Grin reads through shader; C mirror near 0x01000000
+
+Guest RAM Low linear map AmmoOS launch images land here
+
+FAT / filesystem Layer L3 pump Telemetry slots — stale FAT lies on HUD
+
+BIOS / boot vector High policy region Boot offense imposes initial conditions
+
+VGA is a subfield with cell semantics — two bytes per character, attribute nybble — not a texture you paint arbitrarily without layer sync. FAT is a subfield with cluster semantics — guest programs scribble; layer pump must resync or data_bus telemetry invents fiction.
+
+Plain English: Die is a dollhouse with rooms — kitchen RAM, parlor VGA, attic FAT — not a single undifferentiated blob.
+
+Cross-link Chapter 8 for full slot map; this chapter seats subfield vocabulary so Chapter 7 layer pump lines land with meaning.
+
+Connection intent — packet field semantics
+
+Scale three — packet field — stores sentences about sockets. Beyond TX/RX (Chapter 5), intent captures why a flow exists in operator-readable language: health check, sovereign pulse, WebRTC media, DNS trace, panel poll. Intent is not psychic — it is structured inference from port, path, habit, and honorability axes.
+
+ss / intent / DPI → gatekeeper → threat-panel.json → :9477 + field jsonl
+ Example intents an examiner expects you to articulate:
+
+Panel poll: loopback :9477, short dwell, browser or curl path — usually USER_OK after habit learns.
+
+DNS truth query: port 53 to 127.0.0.1 — corroboration for navigation (Chapter 20).
+
+Shell-class egress: ephemeral port to global :4444 — elevated axis weight; watchlist not auto-KILL.
+
+Intent vocabulary prevents metric collapse: do not merge “intent=health” into thermo proxy. Correlate timestamps — Chapter 5 rhythm — without summing scores.
+
+Implemented in NEXUS gatekeeper + jsonl schema habits. Not written into fabric texels by default.
+
+ZMM1024 tail — die map does not end at 64 MiB headline
+
+Marketing says 64 MiB guest universe; engineering says 64 MiB map plus tail for tile cache and ZMM1024-class extensions in Field Die SSBO binding 1. The tail is where micro-architecture metaphors become addressable — grep ZMM1024 in engine headers for exact layout; chapter teaches there is more after the headline guest RAM so you do not stop reading SSBO at byte 64M−1.
+
+Why operators care: layout version skew in tail packing corrupts HUD overlays and debug hex without touching VGA cells you memorized. FIELD_LAYOUT_VERSION = 5 handshake includes tail contract — bump version in lockstep when tail fields move.
+
+Spiderweb mirror (Chapter 10) does not replace tail literacy — hardware graph compresses fabric averages, not per-ZMM lane truth.
+
+Big Grin HUD — 172×48 telemetry theater
+
+Big Grin is the die-forward HUD overlay — 172×48 character grid semantics in operator lore — reading data_bus words through shader chrome on x86 path. It is Implemented product theater with honest mirrors: thermo slots, FCC floats, chrome flags in data_bus[42] , generation counter slot 0 from layer pump.
+
+HUD read Bus / source Common mistake
+
+Thermo hex strip data_bus[24–28] mirrors Treating as room temperature
+
+FCC knobs data_bus[16–23] Assuming HUD edits bypass CFL guard
+
+Chrome flags data_bus[42] Layout version skew silent lie
+
+Pump generation Slot 0 increment Ignoring stale pump — frozen FAT story
+
+Enable ControlFieldDebugHud in FieldSocket when chrome hides thermo pedagogy — Chapter 7 flag. stderr THERMO still authoritative; HUD is parallel witness for die-scale literacy.
+
+NEXUS panel anatomy — correlating scale three at :9477
+
+Panel https://127.0.0.1:9477/ is HTML shell over jsonl memory — Chapter 5 tour. Chapter 2 adds anatomy for integration : which tab witnesses which scale.
+
+Panel tab Primary scale Never confuse with
+
+Packets Packet field sentences Phi texel heatmap
+
+Threats Gatekeeper verdicts ThermoAccountant proxy
+
+Signals Field Antenna JSON planetary weave colors
+
+DNS Truth resolution receipts Guest DNS in die
+
+System Service registry ports data_bus slot map
+
+Correlation narrative template: “At sealed time T, THERMO showed rising boundary thermo; jsonl showed RX burst on port 443; gatekeeper axis habit broke — three witnesses, one paragraph, no super-score.” Chapter 11 grep rhythm marries stderr tail with jsonl tail same session.
+
+Adaptive resolution — fabric Δx changes CFL headroom
+
+RayCanvas adaptive scale from 320×200 heritage toward 4K preference changes texel count — therefore Δx — therefore admissible Δt and wave speed via CFL (Chapter 9). Higher resolution is not free offense; harmonics guard may scale FCC floats down to protect fabric.
+
+Scale 1 operators track: when you crank resolution, watch for silent clamp messages and rising prevMaintCost (Chapter 4). Scale 2 operators track: die byte map unchanged by resolution — guest addresses stable; only fabric and presentation scale. Scale 3 unaffected by Vulkan resize — packet field is OS sockets.
+
+Integration exercise on paper — mandatory homework

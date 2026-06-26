@@ -8,7 +8,7 @@ nexus_honorability_json() {
     return 0
   fi
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-    python3 "$script" json 2>/dev/null || printf '{"active_sites":[],"honorability":{"entries":[]}}'
+    pythong "$script" json 2>/dev/null || printf '{"active_sites":[],"honorability":{"entries":[]}}'
 }
 
 nexus_operator_location_json() {
@@ -18,5 +18,5 @@ nexus_operator_location_json() {
     return 0
   fi
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
-    python3 "$script" json 2>/dev/null || printf '{"lat":null,"lon":null,"source":"unset"}'
+    pythong "$script" json 2>/dev/null || printf '{"lat":null,"lon":null,"source":"unset"}'
 }

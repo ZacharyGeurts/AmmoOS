@@ -1,0 +1,43 @@
+{
+  "id": "seg-065-a37058e1c4d0",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-065-a37058e1c4d0.human.pgm",
+  "caption_stub": "Trust ordering grep FieldRtxFieldAbs hpp beats marketing PDF run log THERMO beats influencer stream Default x86 die beats rumor about decorative engine Capstone equation layer Landauer E_min is theory anchor entropyThisFrame remains proxy Shannon H on executable is NEXUS not\u2026",
+  "text_sha256": "6e8279fcd7a29f920bb247ceeeb94977e39caf5c5e6d2804e1fd86e91cd27bc5",
+  "words_source": 938,
+  "tags": [
+    "beats",
+    "fieldrtxfieldabs",
+    "grep",
+    "grid",
+    "hostess",
+    "hpp",
+    "human",
+    "log",
+    "lossless",
+    "marketing",
+    "ordering",
+    "pdf",
+    "redata",
+    "run",
+    "sdf",
+    "segment",
+    "serviceable",
+    "thermo",
+    "trust"
+  ],
+  "ocr_hint": "Trust ordering grep FieldRtxFieldAbs hpp beats marketing PDF run log THERMO beats influencer stream Default x86 die beat",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-065-a37058e1c4d0",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-065-a37058e1c4d0.json",
+  "truth_score": 54.8,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

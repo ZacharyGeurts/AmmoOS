@@ -13,7 +13,7 @@ FAIL=0
 
 mkdir -p "$NEXUS_STATE_DIR"
 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-  python3 "$ROOT/lib/operator-default.py" seed >/dev/null 2>&1 || true
+  pythong "$ROOT/lib/operator-default.py" seed >/dev/null 2>&1 || true
 
 echo "=== NEXUS Field Antenna Stringent Eval ($ROUNDS rounds) ==="
 echo "State: $NEXUS_STATE_DIR"
@@ -22,16 +22,16 @@ for i in $(seq 1 "$ROUNDS"); do
   echo ""
   echo "--- Round $i/$ROUNDS ---"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "$ROOT/lib/field-antenna-orchestrator.py" launch 3 >/dev/null || true
+    pythong "$ROOT/lib/field-antenna-orchestrator.py" launch 3 >/dev/null || true
 
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "$ROOT/lib/field-antenna-orchestrator.py" test > "$NEXUS_STATE_DIR/.eval-test.json"
+    pythong "$ROOT/lib/field-antenna-orchestrator.py" test > "$NEXUS_STATE_DIR/.eval-test.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "$ROOT/lib/field-radio-catcher.py" build > "$NEXUS_STATE_DIR/.eval-radio.json"
+    pythong "$ROOT/lib/field-radio-catcher.py" build > "$NEXUS_STATE_DIR/.eval-radio.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    python3 "$ROOT/lib/signals-field.py" build > "$NEXUS_STATE_DIR/.eval-signals.json"
+    pythong "$ROOT/lib/signals-field.py" build > "$NEXUS_STATE_DIR/.eval-signals.json"
 
-  if ! NEXUS_STATE_DIR="$NEXUS_STATE_DIR" MIN_SCORE="$MIN_SCORE" ROUND="$i" python3 - <<'PY'
+  if ! NEXUS_STATE_DIR="$NEXUS_STATE_DIR" MIN_SCORE="$MIN_SCORE" ROUND="$i" pythong - <<'PY'
 import json, os, sys
 from pathlib import Path
 state = Path(os.environ["NEXUS_STATE_DIR"])

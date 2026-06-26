@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """DNS multipoint secure identification — trusted local listeners only, never untrusted."""
 from __future__ import annotations
 

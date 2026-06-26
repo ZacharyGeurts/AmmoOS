@@ -1,0 +1,99 @@
+S
+
+Seal forward
+
+Seal forward — Monotonic genesis and pulse chains only advance — never rewrite physics time.
+
+In textbook usage, Seal forward appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Seal forward in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Sealed time
+
+Sealed time — Monotonic session clock in FieldSocket — immune to frame-rate drift.
+
+In textbook usage, Sealed time appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Sealed time in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Servo
+
+Servo — Mozilla layout engine — millennium track beside Ladybird.
+
+In textbook usage, Servo appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Servo in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Shannon H
+
+Shannon H — Entropy Oracle surprise measure — creditor Shannon honored in NEXUS tooling.
+
+In textbook usage, Shannon H appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Shannon H in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Sovereign time
+
+Sovereign time — Operator-owned signed pulses on UDP 9123 — sovereign-time.py.
+
+In textbook usage, Sovereign time appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Sovereign time in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Spiderweb
+
+Spiderweb — hardwareFabric graph mirroring fabric averages — Puny/Adept/Tidewalker tiers.
+
+In textbook usage, Spiderweb appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Spiderweb in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+SQUIDGIE
+
+SQUIDGIE — Sovereign time tamper verdict — clocks disagree at receive; grep it.
+
+In textbook usage, SQUIDGIE appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet SQUIDGIE in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Stratum
+
+Stratum — NTP hierarchy level — must trace to signed sovereign pulses in 2026 stack.
+
+In textbook usage, Stratum appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Stratum in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Sub-micron
+
+Sub-micron — Spiderweb Adept simulation tier — procedural detail, not lab SEM promise.
+
+In textbook usage, Sub-micron appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Sub-micron in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+T
+
+Terror-threat posture
+
+Terror-threat posture — Assume adversary knows field literacy — verify at receive, loopback-first.
+
+In textbook usage, Terror-threat posture appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Terror-threat posture in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Tesla valve
+
+Tesla valve — Directional flow resistance bias in fabric — forward ease, reverse resist.
+
+In textbook usage, Tesla valve appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Tesla valve in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Thermal Governor
+
+Thermal Governor — Per-tab energy honesty layer in Queen browser stack.
+
+In textbook usage, Thermal Governor appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Thermal Governor in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Thermo
+
+Thermo — Heat and entropy density fabric channel — binding 9.
+
+In textbook usage, Thermo appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Thermo in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Thermo boundary
+
+Thermo boundary — Maintains coherence with previous frame — prevMaintCost in receipts.
+
+In textbook usage, Thermo boundary appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Thermo boundary in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+ThermoAccountant
+
+ThermoAccountant — Per-frame entropy ledger SSBO binding 2 — entropyThisFrame receipt.
+
+In textbook usage, ThermoAccountant appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet ThermoAccountant in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Threat panel
+
+Threat panel — https://127.0.0.1:9477/ — command, packets, threats, DNS, library, system.
+
+In textbook usage, Threat panel appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Threat panel in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.

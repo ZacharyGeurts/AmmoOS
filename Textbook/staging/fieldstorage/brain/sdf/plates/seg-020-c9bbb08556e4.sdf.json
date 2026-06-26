@@ -1,0 +1,40 @@
+{
+  "id": "seg-020-c9bbb08556e4",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-020-c9bbb08556e4.pgm",
+  "caption_stub": "clearFieldImages seeds 0 015 minimum thermo prevents zero entropy unphysical baseline Combined with EntropyFloor knob and diffusion injection fabric refuses perfect reversibility You cannot wish away last frame Extended treatment Landauer and proxy honesty contract Landauer E_min k_B T ln\u2026",
+  "text_sha256": "d4295e8297cb48ce371ee3bcfc3e303018a3e4644d5e1b2d014e4fd4b5781aca",
+  "words_source": 918,
+  "tags": [
+    "015",
+    "baseline",
+    "clearfieldimages",
+    "combined",
+    "entropy",
+    "grid",
+    "hostess",
+    "lossless",
+    "minimum",
+    "prevents",
+    "redata",
+    "sdf",
+    "seeds",
+    "segment",
+    "thermo",
+    "unphysical",
+    "with",
+    "zero"
+  ],
+  "ocr_hint": "clearFieldImages seeds 0 015 minimum thermo prevents zero entropy unphysical baseline Combined with EntropyFloor knob an",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-020-c9bbb08556e4",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 59.4,
+  "truth_accepted": true
+}

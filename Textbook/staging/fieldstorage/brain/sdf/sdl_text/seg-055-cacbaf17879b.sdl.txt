@@ -1,0 +1,184 @@
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 34 — units, edges, and sysfs
+
+Depth pass 34 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 33 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 35 — units, edges, and sysfs
+
+Depth pass 35 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 34 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 36 — units, edges, and sysfs
+
+Depth pass 36 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 35 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+=== Chapter 11 ===
+
+Chapter 11 · Observability — Reading the Battlefield
+
+Learning objectives
+
+Use ELLIE categories and STATUS block fields as primary witnesses.
+
+Operate prompt set / list for AnalogFields and Hardware.
+
+Enable RTXProbe with zero cost when off.
+
+Navigate NEXUS panel https://127.0.0.1:9477/ and RTX Zero mode.
+
+Execute week-one lab correlating stderr, die bus, and packet field jsonl.
+
+Introduction — grep is forensic defense
+
+Trust stderr before screenshots. Time is linear — logs are timeline. Chapter 11 unifies ELLIE logging, prompt terminal, RTXProbe, NEXUS panel into one observability doctrine spanning AMOURANTHRTX and NEXUS-Shield.
+
+Figure 11.1 — Logs, probes, panel — one battlefield.
+
+ELLIE logging categories
+
+MAIN, VULKAN, CANVAS, THERMO, STATUS, RTXPROBE. STATUS ~5s: FPS, GPU ms, VRAM, adaptive scale, entropy, boundary thermo, maintenance cost.
+
+grep -E '^(MAIN|VULKAN|CANVAS|THERMO|STATUS)' run.log
+
+Prompt terminal — partial but real
+
+set AnalogFields.GateFidelity 0.85
+list Hardware
+guide
+ set/list AnalogFields + Hardware. Glassmorphism sliders / ImGui ESC — feasibility doc only, not hidden as shipped.
+
+RTXProbe
+
+RTX_PROBES=1 → GPU timestamps, invocation counts. Zero cost when off.
+
+NEXUS panel
+
+https://127.0.0.1:9477/ — command, packets, threats, signals, DNS, library, system. RTX Zero ?rtx=1 — Aqua chrome, cache-first refresh.
+
+Week-one operator lab
+
+./linux.sh run or ./nexus.sh
+
+Read STATUS/THERMO 60s
+
+Mouse on classic — entropyThisFrame
+
+Archive gatekeeper decision at panel
+
+Sovereign time preview
+
+Run your timeserver, verify at receive, grep SQUIDGIE — Chapter 19 .
+
+Chapter summary
+
+Observability is weapon. Prior: Ch 10 . Next: Ch 12 .
+
+Study questions
+
+Six ELLIE categories?
+
+STATUS fields?
+
+RTXProbe enable?
+
+RTX Zero?
+
+Panel port?
+
+ELLIE STATUS block — field by field
+
+FPS — presentation cadence. GPU ms — dispatch cost witness. VRAM — budget Chapter 7. Adaptive scale — CFL interaction Chapter 9. Entropy — ThermoAccountant proxy. Boundary thermo — holographic boundary metaphor with number. Maintenance — prevMaintCost story.
+
+Correlating three scales at panel
+
+stderr THERMO + data_bus concept + NEXUS jsonl row + sealed time — Chapter 2 integration. Panel :9477 is human correlate surface, not automatic merge engine.
+
+RTX Zero idle posture
+
+?rtx=1 Aqua chrome cache-first — zero-cost idle when honored. Observability includes knowing when refresh paused vs threat stale.
+
+Observability drill block 1
+
+Structured grep and panel exercise 1 for muscle memory.
+
+stderr rhythm
+
+Session 1: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.
+
+Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.
+
+panel archive
+
+Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.
+
+RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.
+
+cross-product correlation
+
+Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.
+
+Observability drill block 2
+
+Structured grep and panel exercise 2 for muscle memory.
+
+stderr rhythm
+
+Session 2: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.

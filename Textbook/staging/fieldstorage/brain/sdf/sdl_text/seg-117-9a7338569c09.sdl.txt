@@ -1,0 +1,103 @@
+Metaphor tag
+
+Metaphor tag — Honesty label for poetic knobs not yet SI-calibrated.
+
+In textbook usage, Metaphor tag appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Metaphor tag in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Micron witness
+
+Micron witness — SHA-256 fingerprint binding monotonic instant to sysfs CPU frequencies in sovereign pulses.
+
+In textbook usage, Micron witness appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Micron witness in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+MP4
+
+MP4 — Mandatory container in Queen — H.264/AAC in-tree via Gecko media and FFmpeg.
+
+In textbook usage, MP4 appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet MP4 in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+MSE
+
+MSE — Media Source Extensions — mandatory for Queen MP4 path.
+
+In textbook usage, MSE appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet MSE in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+N
+
+Native messaging
+
+Native messaging — FieldFox bridge to NEXUS gatekeeper from browser extension channel.
+
+In textbook usage, Native messaging appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Native messaging in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+NEXUS
+
+NEXUS — Local-first defense stack — packet field, panel :9477, DNS, DHCP, time, Queen slices.
+
+In textbook usage, NEXUS appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet NEXUS in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+NEXUS-Shield
+
+NEXUS-Shield — Distribution and daemon wrapping NEXUS lib modules — nexus.sh entry.
+
+In textbook usage, NEXUS-Shield appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet NEXUS-Shield in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+NEXUS_FIELD_BROWSER_QUEEN
+
+NEXUS_FIELD_BROWSER_QUEEN — Enable Queen browser posture — hold all gates.
+
+In textbook usage, NEXUS_FIELD_BROWSER_QUEEN appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet NEXUS_FIELD_BROWSER_QUEEN in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+NEXUS_FIELD_SERVICES_PUBLIC
+
+NEXUS_FIELD_SERVICES_PUBLIC — Explicit WAN exposure opt-in for DNS, DHCP, NTP — never default.
+
+In textbook usage, NEXUS_FIELD_SERVICES_PUBLIC appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet NEXUS_FIELD_SERVICES_PUBLIC in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+NEXUS_LAST_HOST
+
+NEXUS_LAST_HOST — Environment flag for ELLIE sole survivor — global services on last machine.
+
+In textbook usage, NEXUS_LAST_HOST appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet NEXUS_LAST_HOST in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Nick
+
+Nick — Builder beside stack — honest fields, no phone-home.
+
+In textbook usage, Nick appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Nick in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+O
+
+Operator
+
+Operator — Human at keyboard — final authority; daemons assist, do not inherit conscience.
+
+In textbook usage, Operator appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Operator in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Operator covenant
+
+Operator covenant — Chapter 18 clauses — teach, build local, honor creditors, hold gates.
+
+In textbook usage, Operator covenant appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Operator covenant in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+P
+
+Packet field
+
+Packet field — NEXUS jsonl telemetry turning sockets into sentences — TX/RX, ports, paths, verdicts.
+
+In textbook usage, Packet field appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Packet field in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Phi
+
+Phi — Wave and gate potential fabric channel — binding 8.
+
+In textbook usage, Phi appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Phi in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Philosophy tag
+
+Philosophy tag — Honesty label for operator discipline not a sensor reading.
+
+In textbook usage, Philosophy tag appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Philosophy tag in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Pool NTP

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS Target Bleed — host-to-hostile quick intel extraction.
 
 End-to-end chain: our OS/process → live socket → target PTR/TTL/OS/service bleed.

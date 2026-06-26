@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS panel plugin registry — unlimited installable plugins with per-tab dock slots."""
 from __future__ import annotations
 

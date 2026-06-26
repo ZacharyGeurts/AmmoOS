@@ -1,0 +1,101 @@
+Deep dive — creditor CFL
+
+CFL condition names Courant, Friedrichs, and Lewy — the men who told the world explicit time steps must respect mesh spacing. Chapter 9 owns the equation; Chapter 7 owns the placement: before vkCmdDispatch . Offense without CFL disrespects their creditor debt. CFL creditor page links history; harmonics guard links implementation.
+
+=== Chapter 08 ===
+
+Chapter 8 · Die-Resident Universe — Field Die & Data Bus
+
+Learning objectives
+
+After this chapter you should be able to:
+
+State why the Field Die is 64 MiB of addressable guest RAM on the GPU, not a userspace DOS emulator cosplay.
+
+Draw the guest linear map from IVT through VGA at 0xB8000 to the C mirror at 0x01000000 .
+
+Enumerate all data_bus[64] slot families and explain how host and shader stay coherent each dispatch.
+
+Describe the L0–L9 layer pump, GPU x86.comp execution, and optional FieldX86Emu host assist.
+
+Read ZMM1024 tile cache hex on the Big Grin HUD without confusing visual chrome for instrumentation.
+
+Introduction — the die-resident universe
+
+Chapter 7 named the dispatch spear: vkCmdDispatch on a thin host that seals time, enforces CFL, and binds FieldX86Die at descriptor slot 1. Chapter 8 names what lives inside that SSBO . The Field Die is 64 MiB of addressable reality on the GPU — guest RAM where RTX-DOS, AmmoOS, and operator-launched programs execute, VGA text renders, FAT layers mount, and telemetry packs into data_bus[64] every tick.
+
+Reality is 3D in this stack means: bytes have offsets, layers have slot bases, HUD fields have indices. Time is linear means: pump generation increments, dispatch steps accrue in ThermoAccountant, sealed time in FieldSocket does not rewind. Energy can be moved means: fabric coupling heats the story the die tells — thermo mirrors land in bus slots the Big Grin HUD reads.
+
+This is not DOSBox in a trench coat. DOSBox is a userspace machine with its own timing myths. Field Die is the same SSBO mapped host and GPU , pumped via FieldLayer::pumpAll() , interpreted by x86.comp on the default canvas. The host can assist with FieldX86Emu when ControlHostCpu is set; the product default remains GPU interpretation. Chapter 12’s honesty table will remind you: headers over nostalgia.
+
+Cross-links: Chapter 2 introduced scale 2 — die bytes beside texels and packets. Chapter 4 placed ThermoAccountant mirrors at data_bus[24–28] . Chapter 9 publishes Tesla bias to slots 31 and 34. Chapter 10 reads fabric averages that were visible on the bus one tick earlier. Chapter 11 teaches grep; this chapter teaches addresses .
+
+Figure 8.1 — Guest RAM, holographic boundary, fabric channels: one SSBO, two witnesses (HUD and stderr).
+
+Field Die — what is implemented
+
+64 MiB guest RAM ( GUEST_RAM_BYTES / FieldPlatform::GUEST_RAM_BYTES )
+
+VGA color text at guest 0xB8000 (80×25 heritage; Big Grin HUD 172×48 in shader compose)
+
+C hot mirror at 0x01000000 ( HD_MIRROR_BYTE / FieldPlatform::HD_MIRROR_BYTE )
+
+Boot vector at 0x7C00 , IVT at 0, BDA at 0x400
+
+Same SSBO for host peek and GPU write — not a forked emulator core
+
+FIELD_LAYOUT_VERSION = 5 must match host and x86.comp — Chapter 7
+
+Operators grep GUEST_RAM_BYTES and FieldX86Die in Navigator/engine/ to see allocation constants. Version skew on layout version breaks HUD hex before it breaks your nostalgia — layout is physics.
+
+Plain English: The Field Die is a computer inside your GPU dispatch — a neighborhood with street addresses, not a screenshot of someone else’s neighborhood.
+
+Guest linear RAM map — addresses operators memorize
+
+From FieldLayer::RamMap namespace — offsets within the guest map:
+
+Offset Region Operator note
+
+0x00000000 IVT base Interrupt vector table — real x86 layout discipline
+
+0x00000400 BDA BIOS Data Area — video mode, cursor, drive count
+
+0x00007C00 Boot vector MBR / boot sector staging
+
+0x00020000 Disk image base A: floppy image staging
+
+0x00090000 DOOM palette Game-path palette byte (when launched)
+
+0x000A0000 VGA graphics / DOOM FB Planar mode 13h framebuffer region
+
+0x000B8000 VGA text Color text buffer — DOS habit
+
+0x01000000 HD mirror C: hot mirror — host/guest coherence
+
+BDA fields matter for layers: BDA_VIDEO_MODE at BDA+0x49 , columns at +0x4A , cursor col/row at +0x50/+0x51 , drive count at +0x75 . VGA layer sync reads these each pump so data_bus VGA slots reflect mode truth.
+
+When an operator says “I see text at B8000,” they are speaking field literacy — address-first, not “it looks like DOS.” Chapter 12 rewards that habit.
+
+Execution model — GPU first, host assist optional
+
+GPU: x86.comp interprets guest instructions, composes Big Grin HUD (172×48), applies AmouranthOS chrome from bindings 11–14, reads/writes FieldX86Die SSBO.
+
+Host assist: FieldX86Emu when ControlHostCpu (flag 8) in FieldSocket — 8086 path on CPU for debug or hybrid scenarios.
+
+Launch path: FieldAmouranthLaunch / FieldAmouranthExec when ControlAmmoExec (1024) — guest programs enter address space with receipts.
+
+Default ./linux.sh run does not require host CPU emulation. ThermoAccountant still adds hostHeat from FieldX86Emu::hostCyclesLastFrame() when assist runs — comparative signal, not billing.
+
+GPU interpretation is offense at silicon speed: each dispatch may advance guest IP, touch VGA bytes, update FAT tables, pack bus words. The host’s job is pump, seal, guard — not pretend GPU work did not happen.
+
+data_bus[64] — telemetry spine
+
+Sixty-four packed words per dispatch. Mirrored host-side in Options::Canvas::DataBus and exposed to shaders through FieldSocket pathways. This is the telemetry field Chapter 2 named — not SI units, but operator-grep-able agreement surface.
+
+Slots Content Pack source
+
+[0] Pump generation tag FieldLayer::pumpAll registry
+
+[1] Cycles per frame / pump cadence Dispatch counters
+
+[2–7] RAM layer — HD ready, mirror bytes, boot vector, floppy size, guest RAM size, mirror offset ramPack

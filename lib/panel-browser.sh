@@ -3,20 +3,12 @@
 
 nexus_panel_url() {
   local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
-  if [[ "${NEXUS_PANEL_TLS:-1}" == "1" ]]; then
-    printf 'https://127.0.0.1:%s/field' "$port"
-  else
-    printf 'http://127.0.0.1:%s/field' "$port"
-  fi
+  printf 'http://127.0.0.1:%s/field' "$port"
 }
 
 nexus_panel_app_url() {
   local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
-  if [[ "${NEXUS_PANEL_TLS:-1}" == "1" ]]; then
-    printf 'https://127.0.0.1:%s/app' "$port"
-  else
-    printf 'http://127.0.0.1:%s/app' "$port"
-  fi
+  printf 'http://127.0.0.1:%s/app' "$port"
 }
 
 nexus_panel_desired_version() {
@@ -28,9 +20,11 @@ nexus_panel_desired_version() {
 nexus_panel_served_version() {
   local port="${NEXUS_THREAT_PANEL_PORT:-9477}"
   local html
-  html="$(curl -sk --connect-timeout 2 "https://127.0.0.1:${port}/field" 2>/dev/null \
-    || curl -sk --connect-timeout 2 "http://127.0.0.1:${port}/field" 2>/dev/null)" || return 1
+  html="$(curl -s --connect-timeout 2 "http://127.0.0.1:${port}/field" 2>/dev/null)" || return 1
   [[ -n "$html" ]] || return 1
+  if grep -q 'underlay-f9' <<<"$html" 2>/dev/null; then
+    grep -oE 'NEXUS-Shield v[0-9]+\.[0-9]+\.[0-9]+' <<<"$html" 2>/dev/null | head -1 | sed 's/.*v//' && return 0
+  fi
   grep -oE 'NEXUS-Shield v[0-9]+\.[0-9]+\.[0-9]+' <<<"$html" 2>/dev/null | head -1 | sed 's/.*v//'
 }
 
@@ -64,8 +58,7 @@ nexus_panel_pick_port() {
   local fallback="${NEXUS_THREAT_PANEL_FALLBACK_PORT:-9478}"
   local served
 
-  if ! curl -sk --connect-timeout 1 "https://127.0.0.1:${primary}/field" >/dev/null 2>&1 \
-    && ! curl -sk --connect-timeout 1 "http://127.0.0.1:${primary}/field" >/dev/null 2>&1; then
+  if ! curl -s --connect-timeout 1 "http://127.0.0.1:${primary}/field" >/dev/null 2>&1; then
     printf '%s' "$primary"
     return 0
   fi
@@ -121,6 +114,9 @@ nexus_panel_wait_ready() {
 nexus_panel_detect_browsers() {
   local c
   for c in \
+    fieldfox \
+    field-queen \
+    queen-browser \
     xdg-open \
     firefox \
     google-chrome-stable \
@@ -141,14 +137,38 @@ nexus_panel_open_browser() {
   local url="${1:-$(nexus_panel_url)}"
   local browser opened=0
   local ready_url
+  local ff_launch="${NEXUS_INSTALL_ROOT}/lib/fieldfox-launch.sh"
+  local queen_launch="${QUEEN_ROOT:-${NEXUS_INSTALL_ROOT}/../Queen}/build/queen-browser"
   ready_url="$(nexus_panel_app_url)"
+
+  if [[ "${NEXUS_QUEEN_SOVEREIGN:-1}" == "1" || "${NEXUS_FIELD_BROWSER_QUEEN:-1}" == "1" ]]; then
+    if [[ -x "${queen_launch}" ]]; then
+      DISPLAY="${DISPLAY:-:0}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+        "${queen_launch}" --sovereign --extended-field "${url}" >/dev/null 2>&1 &
+      nexus_log "INFO" "panel-browser" "QUEEN_RTX_SOVEREIGN url=${url}"
+      echo "Opened Queen RTX (sovereign): ${url}"
+      return 0
+    fi
+  fi
+  if [[ "${NEXUS_NO_OS_BROWSER_HOOK:-1}" == "1" ]]; then
+    nexus_log "WARN" "panel-browser" "SOVEREIGN_NO_OS_HOOK url=${url}"
+    return 1
+  fi
+  if [[ "${NEXUS_FIELD_BROWSER_QUEEN:-1}" == "1" && -x "${ff_launch}" ]]; then
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      "${ff_launch}" "${url}" >/dev/null 2>&1 && {
+      nexus_log "INFO" "panel-browser" "FIELD_WINDOW_OPENED url=${url}"
+      echo "Opened Queen browser: ${url}"
+      return 0
+    }
+  fi
 
   if ! nexus_panel_wait_ready "$ready_url" 5; then
     nexus_panel_wait_ready "$url" 5 || true
     nexus_panel_wait_ready "${url%/field}/" 5 || true
   fi
-  if ! curl -sk --connect-timeout 2 "$url" >/dev/null 2>&1 \
-    && ! curl -sk --connect-timeout 2 "$ready_url" >/dev/null 2>&1; then
+  if ! curl -s --connect-timeout 2 "$url" >/dev/null 2>&1 \
+    && ! curl -s --connect-timeout 2 "$ready_url" >/dev/null 2>&1; then
     nexus_log "WARN" "panel-browser" "PANEL_NOT_READY url=${url}"
     return 1
   fi
@@ -158,10 +178,8 @@ nexus_panel_open_browser() {
     if [[ "$browser" == "xdg-open" ]]; then
       DISPLAY="${DISPLAY:-:0}" xdg-open "$url" >/dev/null 2>&1 &
     elif [[ "$browser" == "google-chrome-stable" || "$browser" == "google-chrome" || "$browser" == "chromium-browser" || "$browser" == "chromium" ]]; then
-      DISPLAY="${DISPLAY:-:0}" "$browser" --ignore-certificate-errors --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
-        || DISPLAY="${DISPLAY:-:0}" "$browser" --ignore-certificate-errors --new-window "$url" >/dev/null 2>&1 &
-    elif [[ "$browser" == "firefox" ]]; then
-      DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
+      DISPLAY="${DISPLAY:-:0}" "$browser" --app="$url" --window-size=1440,900 --new-window >/dev/null 2>&1 \
+        || DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 &
     else
       DISPLAY="${DISPLAY:-:0}" "$browser" --new-window "$url" >/dev/null 2>&1 \
         || DISPLAY="${DISPLAY:-:0}" "$browser" "$url" >/dev/null 2>&1 &
@@ -184,7 +202,6 @@ Browser could not be opened automatically. Try one of:
 
   xdg-open '${url}'
   firefox '${url}'
-  google-chrome-stable --ignore-certificate-errors '${url}'
 
 Tray icon (right-click near clock → pick a tab):
 

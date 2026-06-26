@@ -1,0 +1,40 @@
+{
+  "id": "seg-095-273a76cbaa56",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-095-273a76cbaa56.pgm",
+  "caption_stub": "10 Product boundaries under covenant AMOURANTHRTX GPL v3 or commercial NEXUS Shield MIT Queen field sovereign browser Field Primer CC BY NC SA 4 0 License choices are part of teach freely clause read headers not only cover art Pedagogy\u2026",
+  "text_sha256": "eb23e29b7f21b7e4371370ab4e088e31f2ce3dbfbc659afa37f6aa05e092377f",
+  "words_source": 922,
+  "tags": [
+    "amouranthrtx",
+    "boundaries",
+    "commercial",
+    "covenant",
+    "field",
+    "gpl",
+    "grid",
+    "hostess",
+    "lossless",
+    "mit",
+    "nexus",
+    "product",
+    "queen",
+    "redata",
+    "sdf",
+    "segment",
+    "shield",
+    "under"
+  ],
+  "ocr_hint": "10 Product boundaries under covenant AMOURANTHRTX GPL v3 or commercial NEXUS Shield MIT Queen field sovereign browser Fi",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-095-273a76cbaa56",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 59.9,
+  "truth_accepted": true
+}

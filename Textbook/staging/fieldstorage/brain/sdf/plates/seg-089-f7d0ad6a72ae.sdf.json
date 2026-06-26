@@ -1,0 +1,39 @@
+{
+  "id": "seg-089-f7d0ad6a72ae",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-089-f7d0ad6a72ae.pgm",
+  "caption_stub": "Lab pairing for Beauty costs heat if your school or team shares a lab bench rotate who runs injection drills while others grep remotely on shared tmux Shared THERMO baselines reduce finger pointing when driver versions differ Document the driver\u2026",
+  "text_sha256": "cfa8656464e44b3e1340a0af823be52a6f3e4c86e7f9c8464eaaf7b117c863ef",
+  "words_source": 902,
+  "tags": [
+    "beauty",
+    "bench",
+    "costs",
+    "for",
+    "grid",
+    "heat",
+    "hostess",
+    "lab",
+    "lossless",
+    "pairing",
+    "redata",
+    "school",
+    "sdf",
+    "segment",
+    "shares",
+    "team",
+    "your"
+  ],
+  "ocr_hint": "Lab pairing for Beauty costs heat if your school or team shares a lab bench rotate who runs injection drills while other",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-089-f7d0ad6a72ae",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 60.0,
+  "truth_accepted": true
+}

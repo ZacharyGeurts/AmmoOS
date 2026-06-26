@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field Command — unified Good Guy vs Bad Guy pulse + know-everything index."""
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from typing import Any
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
+DOCTRINE_PATH = INSTALL / "data" / "heaven-hell-doctrine.json"
 
 GOOD_VERDICTS = frozenset({"USER_OK", "EPHEMERAL"})
 WATCH_VERDICTS = frozenset({"MONITOR", "SUSPICIOUS"})
@@ -25,6 +26,26 @@ def _load_json(path: Path, default: Any) -> Any:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return default
+
+
+def _heaven_hell_doctrine() -> dict[str, Any]:
+    return _load_json(DOCTRINE_PATH, {})
+
+
+def _threat_warn_level() -> str:
+    if os.environ.get("NEXUS_THREAT_WARN_LEVEL", "high").strip().lower() in ("low", "medium", "calm", "off"):
+        return "high"
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("nexus_logic_gate", INSTALL / "lib" / "nexus-logic-gate.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return str(mod.threat_warn_level())
+    except Exception:
+        pass
+    return "high"
 
 
 def _slim_flow(row: dict[str, Any]) -> dict[str, Any]:
@@ -75,13 +96,23 @@ def build_command(panel: dict[str, Any] | None = None) -> dict[str, Any]:
     hell = [c for c in conns if str(c.get("soul_side") or "") == "hell"]
     hell_chosen = [c for c in conns if c.get("hell_chosen")]
 
+    doctrine = _heaven_hell_doctrine()
     return {
-        "motto": (
-            "We know Heaven from Hell. To those who chose Hell, we also choose it for them. "
+        "motto": str(
+            doctrine.get("heaven_hell_motto")
+            or "We know Heaven from Hell. To those who chose Hell, we also choose it for them. "
             "No mercy. No friendly fire. God Bless."
         ),
-        "tagline": (
-            "Heaven passes at zero nft cost — no friendly fire. "
+        "know_doctrine": str(
+            doctrine.get("motto")
+            or "Know that nothing is unseen and nothing is fully secure. "
+            "We can't hide all the rocks, so send Hell to Hell."
+        ),
+        "send_hell": str(doctrine.get("send_hell") or "Send Hell to Hell — hostility first, rip ready, no mercy."),
+        "visibility": doctrine.get("visibility") or {},
+        "tagline": str(
+            doctrine.get("tagline")
+            or "Heaven passes at zero cost — no friendly fire. "
             "Hell gets ripped: forever block, eradicate, strike."
         ),
         "heaven_hell": {
@@ -131,6 +162,11 @@ def build_command(panel: dict[str, Any] | None = None) -> dict[str, Any]:
         "pulse": {
             "firewall": panel.get("firewall"),
             "firewall_blocks": panel.get("firewall_blocks", 0),
+            "threat_warn_level": _threat_warn_level(),
+            "universal_protector": os.environ.get("NEXUS_UNIVERSAL_PROTECTOR", "1") == "1",
+            "spatial_lattice": os.environ.get("NEXUS_SPATIAL_LATTICE", "1") == "1",
+            "product": "Universal Protector",
+            "autonomous_being": True,
             "threat_warnings": len(panel.get("threats") or []),
             "trusted_count": panel.get("trust_count", 0),
             "host_total": ha_stats.get("total", 0),
@@ -152,6 +188,7 @@ def build_command(panel: dict[str, Any] | None = None) -> dict[str, Any]:
             "planetary_proactive_actions": po_cycle.get("action_count", len(po_cycle.get("actions") or [])),
         },
         "know_everything": [
+            {"id": "honest-rocks", "label": "Honest rocks", "stat": "Nothing unseen · nothing fully secure", "jump": "command/command"},
             {"id": "us", "label": "This machine", "stat": (panel.get("us_field") or {}).get("identity", {}).get("hostname", "—"), "jump": "us"},
             {"id": "packets-live", "label": "Live connections", "stat": f"{len(conns)} scored", "jump": "packets/live"},
             {"id": "packets-dpi", "label": "Packet DPI", "stat": f"{gk.get('segment_block_count', 0)} segment holds", "jump": "packets/dpi"},

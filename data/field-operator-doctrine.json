@@ -10,9 +10,12 @@
     "amplitude_process": "superposition_normalize",
     "doctrine": "data/field-plate-field-doctrine.json"
   },
+  "simple_iron_plate_goals": "data/simple-iron-plate-goals.json",
+  "motion_resolve": "lib/iron-plate-motion-resolve.py",
   "iron_plate": {
     "name": "Smart Connective Iron Plate",
     "policy": "Field stack owns hardware wires — no third-party middlemen on IRQ/DMA/bus paths",
+    "assemblage_remaining": "Iron-clad motion verdict from remaining slots after storm exclusion",
     "layers": ["irq", "dma", "pci", "usb", "net", "input", "storage"],
     "arithmetic": {
       "route_word": "bus|channel<<4|tier<<8|slot<<10|quality<<22|board_direct<<30|storm<<31",

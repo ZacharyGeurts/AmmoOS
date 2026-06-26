@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Honorability database — 5 gold-star trust for domains/sites.
 
 Default: 3 stars (moderate). Stars ≤4 require operator acceptance only when

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field Radio Catcher — crystal clarity · GPS-scoped legal stations · FM tune · tower GPS."""
 from __future__ import annotations
 

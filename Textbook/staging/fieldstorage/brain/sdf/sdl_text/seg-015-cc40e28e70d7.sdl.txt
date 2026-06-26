@@ -1,0 +1,90 @@
+Energy.comp swipe is coupled channel laboratory — run one hour with FieldCoupling 0.7 and journal slopes — graduate exercise before Chapter 4 entropy algebra.
+
+Tesla relaxation in Flow links thermodynamics chapter to stability chapter — forward ease, reverse drag — energy can be moved directionally in metaphor space.
+
+Body-temperature seeding is labeled meta — not BIOS sensor — repeat until newcomers stop citing seed as hardware truth.
+
+AnalogFields TimeScale is global tempo — not wall clock override — sealed time still linear in session genesis.
+
+CFL wave and diffusion inequalities are Courant-Friedrichs-Lewy legacy — host enforces before dispatch — numerical ethics, not optional.
+
+Chapter 3 summary sentence: thermodynamics here is honest bookkeeping of irreversibility in Phi/Thermo/Flow with proxy receipts and CFL guards — read Chapter 4 for entropy layer separation.
+
+Thermodynamics glossary in chapter
+
+ThermoAlpha: diffusivity alpha. WaveSpeed: c in wave CFL. GateFidelity: soft vs sharp gates. EntropyFloor: minimum noise. InjectStrength: probe power. PropalacticScale: large Phi forcing. FieldCoupling: cross channel. TimeScale: global dt multiplier.
+
+Every term is knob in headers and often in prompt — literacy is spelling plus effect.
+
+Chapter 3 extended — thermodynamic storyboard frame by frame
+
+Frame N begins with Phi field carrying potential from frame N-1 plus forcing. Thermo field carries heat density seeded above entropy floor. Flow field carries gradients from prior advection. Host sealed time advances; CFL guard approves dt. Shader runs Phi Laplacian step — neighbors exchange potential information — Thermo diffuses — Flow relaxes with Tesla bias — coupling terms exchange energy stories between channels. ThermoAccountant integrates proxy entropy from work done. Host mirrors to data_bus and stderr. Frame N+1 begins — linear time, no rewind.
+
+Storyboard discipline trains operators to narrate dispatch without mysticism. Each frame is receipt. Long sessions are novels of receipts — grep tail is last paragraph, not whole book.
+
+Knobs alter storyboard: high FieldCoupling makes chapters bleed together — Phi motion immediately warms Thermo; low coupling isolates chapters for pedagogy. High InjectStrength makes mouse protagonist; high GateFidelity makes gates snap digital; low fidelity keeps analog softness. PropalacticScale adds large wavelength weather on Phi — cosmic naming, local effect.
+
+Thermodynamics laboratory ethics: always note starting knob state in lab journal; always restore defaults after session; always label proxy when sharing screenshots externally. Science reputation is honesty reputation.
+
+Coupling to Chapter 4 entropy layers preview
+
+Frame proxy entropy rises when storyboard work rises — Chapter 4 names layers. Fabric floor ensures Thermo never pretends zero — Chapter 4 second law. File oracle unrelated to frame storyboard unless you conflate — Chapter 4 forbids. Chapter 3 moves energy; Chapter 4 records irreversibility receipts. Read order sacred.
+
+Introduction — thermodynamics as accounting, not calorimetry
+
+Every frame destroys information — diffusion, probes, maintenance, optional host assist. AMOURANTHRTX tracks that cost as accounting with honest labels, not as a laboratory calorimeter pretending to be nvidia-smi . Chapter 3 teaches Energy can be moved on the analog fabric: Phi whispers to Thermo through coupling; Flow carries gradients; CFL guards refuse numerical arson. This is Maxwell’s neighborhood on a grid — Chapter 15 goes long; here you learn to move knobs and read receipts.
+
+Prior: Chapter 2 — Three Scales . Next: Chapter 4 — Entropy Receipts . Dispatch placement: Chapter 7 . CFL deep dive: Chapter 9 . Creditor: Clausius .
+
+Learning objectives
+
+Explain CFL inequalities as mesh-speed ethics, not bureaucracy.
+
+Apply WaveSpeed caps and read clamp stderr.
+
+Interpret avgBoundaryThermo and mouse inject boundary stories.
+
+Separate host x86 heat from GPU fabric proxy in ThermoAccountant.
+
+Run coupling sweep lab on Classic and compare die-default stderr.
+
+Articulate Clausius spirit beside entropy floor without joule fraud.
+
+Contrast thermo pedagogy on Flowers / GreenWaves versus x86 HUD.
+
+Figure 3.1 — Coupled Phi, Thermo, Flow: energy moves; receipts accumulate.
+
+Fabric channels — bindings 8, 9, 10
+
+Fabric Binding Evolution sketch
+
+Phi 8 fieldPhi Laplacian wave + WaveSpeed + PropalacticScale
+
+Thermo 9 fieldThermo Diffusion ThermoAlpha + floor + coupling
+
+Flow 10 fieldFlow Gradients + GateFidelity + Tesla relaxation
+
+newPhi ∈ [-2.0, 2.0] · newThermo ∈ [0.0, 1.5] · newFlow ∈ [0.0, 1.0]
+ Clamps are numerical embodiment of kitchen realism — the shader refuses infinite temperature because the UI got excited. Host CFL guard and shader clamps are coupled defenses (Chapter 9).
+
+CFL derivation intuition — why explicit schemes demand humility
+
+Explicit time stepping updates each texel from neighbor information that arrived at time t. If information travels farther than one cell per step — wave speed × Δt > Δx — the scheme invents neighbors that have not spoken yet. That is NaN theology. Courant, Friedrichs, and Lewy named the inequality operators inherit as CFL condition .
+
+Wave channel intuition: disturbance crosses grid at speed c. One step advances Δt. Distance traveled c·Δt must not exceed cell spacing Δx — else dependency graph lies.
+
+waveCFL = c·Δt/Δx ≤ 1
+
+Thermo channel intuition: diffusion spreads heat wider each step — parabolic scaling. Distance grows like √(α·Δt), leading to:
+
+thermoCFL = α·Δt/Δx² ≤ 1
+
+Chapter 9 owns constants; Chapter 7 owns placement — CFL runs before vkCmdDispatch every frame. Intuition operators need: finer mesh (smaller Δx) tightens allowed Δt or forces lower c and α. Adaptive resolution (Chapter 2) therefore interacts with thermo headroom — not vanity scaling.
+
+Time is linear. CFL does not rewrite past frames — it refuses unsafe next frames.
+
+Science posture: CFL is real numerical analysis. Host harmonics guard is Implemented enforcement — grep clamp messages.
+
+WaveSpeed caps — offense within mesh ethics
+
+Options::AnalogFields::WaveSpeed maps to FCC slot data_bus[18] on x86 path. Host enforces hard caps (e.g. waveSpeed ∈ [0.01, 2.0] , dT ≤ 0.033 ) before fabric sees operator enthusiasm. Caps are not punishment — they preserve fabric existence for next tick.

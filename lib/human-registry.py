@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Truth ID — prioritized human registry. Internet connections tie to people; identity sticks once known.
 
 No census required: field learns humans from live connections, dossiers, gov intel, and operator anchor.

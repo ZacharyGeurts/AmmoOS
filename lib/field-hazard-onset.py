@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Proactive hazard onset — microsecond IQ guard + cease traffic at the point.
 
 Detects hazardous signal rise at sample onset, then shoot (zero from point) or
@@ -354,7 +354,7 @@ def cease_traffic_at_point(
 
             proc = subprocess.run(
                 [
-                    "python3", str(lethal_py), "execute",
+                    "pythong", str(lethal_py), "execute",
                     json.dumps({
                         "remote_ip": conn_rows[0].get("remote_ip") if conn_rows else "",
                         "hell_chosen": True,

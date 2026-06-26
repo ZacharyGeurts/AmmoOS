@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS SDF asset generator — compact signed-distance imagery for the host attack map.
 
 All panel map graphics ship as R8 SDF PNG + JSON manifest (anchor, pointy-tip accuracy).

@@ -1,0 +1,40 @@
+{
+  "id": "seg-063-f3d087597b22",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-063-f3d087597b22.pgm",
+  "caption_stub": "Example 14 A vendor claims sub micron SEM fidelity from spiderweb screenshot Operator opens Chapter 12 table procedural pixel detail Metaphor label Resolution screenshot is Visual pedagogy not lab Second dispute jsonl shows SUSPICIOUS colleague says GPU is compromised Operator\u2026",
+  "text_sha256": "482ce864385cb2661a5eacbab099617f2e6c5869f776557713c12fdedf844419",
+  "words_source": 917,
+  "tags": [
+    "claims",
+    "example",
+    "fidelity",
+    "from",
+    "grid",
+    "hostess",
+    "lossless",
+    "micron",
+    "opens",
+    "operator",
+    "redata",
+    "screenshot",
+    "sdf",
+    "segment",
+    "sem",
+    "spiderweb",
+    "sub",
+    "vendor"
+  ],
+  "ocr_hint": "Example 14 A vendor claims sub micron SEM fidelity from spiderweb screenshot Operator opens Chapter 12 table procedural ",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-063-f3d087597b22",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 52.2,
+  "truth_accepted": true
+}

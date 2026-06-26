@@ -400,14 +400,16 @@
         -88.041
       ],
       "gps": "45.820000, -88.041000",
-      "timestamp": "2026-06-24T06:28:23Z",
-      "accuracy_pct": 87.6,
+      "timestamp": "2026-06-26T06:49:14Z",
+      "accuracy_pct": 87.5,
+      "cep_m": 0.25,
+      "precision": "0.25m CEP",
       "fields_used": [
         "field_gladstone",
         "field_escanaba",
         "field_iron_mountain"
       ],
-      "tri_confidence": 0.188,
+      "tri_confidence": 0.177,
       "pinpoint": {
         "lat": 45.82,
         "lon": -88.041,
@@ -417,9 +419,9 @@
         "lon_i": "-88041000000000000",
         "precision": "sub_micron",
         "resolution_nm": 0.111,
-        "enu_e_nm": "0",
-        "enu_n_nm": "0",
-        "enu_u_nm": "0",
+        "enu_e_nm": "-17598471396864",
+        "enu_n_nm": "-722209149397",
+        "enu_u_nm": "-24277900948",
         "anchor_id": "operator",
         "source": "field_tri_3gps",
         "label": "pinpoint",

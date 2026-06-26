@@ -1,0 +1,42 @@
+{
+  "id": "seg-117-9a7338569c09",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-117-9a7338569c09.human.pgm",
+  "caption_stub": "Metaphor tag Metaphor tag Honesty label for poetic knobs not yet SI calibrated In textbook usage Metaphor tag appears wherever operators cross engine NEXUS and Queen boundaries If you meet Metaphor tag in a panel slice jsonl receipt or shader\u2026",
+  "text_sha256": "dcfd7c1ebdb4e65a37f5887044e395577748290ca4ff51600aba84f2cf3fecda",
+  "words_source": 900,
+  "tags": [
+    "calibrated",
+    "for",
+    "grid",
+    "honesty",
+    "hostess",
+    "human",
+    "knobs",
+    "label",
+    "lossless",
+    "metaphor",
+    "not",
+    "poetic",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "tag",
+    "yet"
+  ],
+  "ocr_hint": "Metaphor tag Metaphor tag Honesty label for poetic knobs not yet SI calibrated In textbook usage Metaphor tag appears wh",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-117-9a7338569c09",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-117-9a7338569c09.json",
+  "truth_score": 48.5,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

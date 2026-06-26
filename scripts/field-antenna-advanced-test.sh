@@ -9,7 +9,7 @@ export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 
 mkdir -p "$NEXUS_STATE_DIR"
 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-  python3 "$ROOT/lib/operator-default.py" seed >/dev/null 2>&1 || true
+  pythong "$ROOT/lib/operator-default.py" seed >/dev/null 2>&1 || true
 
 ANCHORS='[
   {"id":"anchor_gladstone","lat":45.845976,"lon":-87.055759,"label":"Gladstone MI · operator"},
@@ -19,8 +19,8 @@ ANCHORS='[
 
 echo "=== Advanced: 3-GPS planetary triangulation ==="
 PLANET="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-  python3 "$ROOT/lib/gps-precision.py" planet "$ANCHORS" 10)"
-echo "$PLANET" | python3 -c "
+  pythong "$ROOT/lib/gps-precision.py" planet "$ANCHORS" 10)"
+echo "$PLANET" | pythong -c "
 import json, sys
 d = json.load(sys.stdin)
 assert d.get('ok'), d
@@ -36,9 +36,9 @@ print('planet OK:', d.get('point_count'), 'points · centroid', d.get('centroid'
 echo ""
 echo "=== Advanced: antenna cycle + on-point placement audit ==="
 NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-  python3 "$ROOT/lib/field-antenna-orchestrator.py" launch 3 >/dev/null
+  pythong "$ROOT/lib/field-antenna-orchestrator.py" launch 3 >/dev/null
 
-NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" python3 - <<'PY'
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" pythong - <<'PY'
 import json, os
 from pathlib import Path
 state = Path(os.environ["NEXUS_STATE_DIR"])
@@ -60,7 +60,7 @@ PY
 
 echo ""
 echo "=== Advanced: radio stations are tower GPS points ==="
-NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" python3 - <<'PY'
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" pythong - <<'PY'
 import json, os
 from pathlib import Path
 state = Path(os.environ["NEXUS_STATE_DIR"])

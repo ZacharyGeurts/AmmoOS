@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Field Antenna Orchestrator — RF + audio + wired + laser watch + sub-µm GPS.
 
 Runs the full detection cycle, builds field-antenna-panel.json, and scores readiness.

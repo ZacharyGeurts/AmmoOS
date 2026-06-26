@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """US local network — learn from existing NEXUS tables; show LAN on US field."""
 from __future__ import annotations
 

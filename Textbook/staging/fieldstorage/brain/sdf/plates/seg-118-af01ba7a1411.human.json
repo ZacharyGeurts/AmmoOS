@@ -1,0 +1,43 @@
+{
+  "id": "seg-118-af01ba7a1411",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-118-af01ba7a1411.human.pgm",
+  "caption_stub": "Pool NTP Public NTP pools not sole authority under sovereign first policy In textbook usage Pool NTP appears wherever operators cross engine NEXUS and Queen boundaries If you meet Pool NTP in a panel slice jsonl receipt or shader header\u2026",
+  "text_sha256": "24327b2e4bf92c5a80a2a71b42a617be7d0190d86b3b8cc7b9c7e4270cf060d4",
+  "words_source": 920,
+  "tags": [
+    "authority",
+    "first",
+    "grid",
+    "hostess",
+    "human",
+    "lossless",
+    "not",
+    "ntp",
+    "policy",
+    "pool",
+    "pools",
+    "public",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "sole",
+    "sovereign",
+    "under"
+  ],
+  "ocr_hint": "Pool NTP Public NTP pools not sole authority under sovereign first policy In textbook usage Pool NTP appears wherever op",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-118-af01ba7a1411",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-118-af01ba7a1411.json",
+  "truth_score": 48.4,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

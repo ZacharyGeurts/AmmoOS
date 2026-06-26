@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Hostess 7 Infinite Growth — learning, comprehension, reciprocation (append-only, never capped)."""
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from typing import Any
 
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
-HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", "/home/default/Desktop/SG/Hostess7"))
+HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
 GROWTH_LEDGER = STATE / "hostess7-growth.jsonl"
 RECIPROCATION_LEDGER = STATE / "hostess7-reciprocation.jsonl"
 COMPREHENSION = STATE / "hostess7-comprehension.json"

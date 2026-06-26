@@ -1,0 +1,43 @@
+{
+  "id": "seg-040-69dc551fdc9a",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-040-69dc551fdc9a.human.pgm",
+  "caption_stub": "Deep dive creditor CFL CFL condition names Courant Friedrichs and Lewy the men who told the world explicit time steps must respect mesh spacing Chapter 9 owns the equation Chapter 7 owns the placement before vkCmdDispatch Offense without CFL disrespects\u2026",
+  "text_sha256": "4aa6640711f35e409019abb607e4b3753d1be4ec2c0b0dadf7818f93ba5e0ca5",
+  "words_source": 906,
+  "tags": [
+    "and",
+    "cfl",
+    "condition",
+    "courant",
+    "creditor",
+    "deep",
+    "dive",
+    "friedrichs",
+    "grid",
+    "hostess",
+    "human",
+    "lewy",
+    "lossless",
+    "names",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "the"
+  ],
+  "ocr_hint": "Deep dive creditor CFL CFL condition names Courant Friedrichs and Lewy the men who told the world explicit time steps mu",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-040-69dc551fdc9a",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-040-69dc551fdc9a.json",
+  "truth_score": 56.7,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

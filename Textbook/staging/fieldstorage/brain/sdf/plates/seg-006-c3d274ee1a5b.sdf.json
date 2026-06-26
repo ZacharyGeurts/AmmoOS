@@ -1,0 +1,40 @@
+{
+  "id": "seg-006-c3d274ee1a5b",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-006-c3d274ee1a5b.pgm",
+  "caption_stub": "Where does Queen appear on the integration roadmap Run Drill 1 A classify four grep lines by category Operator drill week zero linux sh run 2 1 tee tmp field week0 log Move mouse 60s on canvas grep E THERMO\u2026",
+  "text_sha256": "0ad1c4f0fe5bebddc23132efaf6b53a8cf88911685f39cd0ad4165f5aaa1a532",
+  "words_source": 940,
+  "tags": [
+    "appear",
+    "classify",
+    "does",
+    "drill",
+    "four",
+    "grep",
+    "grid",
+    "hostess",
+    "integration",
+    "lossless",
+    "queen",
+    "redata",
+    "roadmap",
+    "run",
+    "sdf",
+    "segment",
+    "the",
+    "where"
+  ],
+  "ocr_hint": "Where does Queen appear on the integration roadmap Run Drill 1 A classify four grep lines by category Operator drill wee",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-006-c3d274ee1a5b",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 60.2,
+  "truth_accepted": true
+}

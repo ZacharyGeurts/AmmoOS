@@ -3,11 +3,11 @@
 
 nexus_human_dossier_sync() {
   [[ "${NEXUS_HUMAN_DOSSIER:-1}" == "1" ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
+  command -v pythong >/dev/null 2>&1 || return 0
   local src="${NEXUS_INSTALL_ROOT}/data/human-dossier-kill-orders.json"
   local dst="${NEXUS_STATE_DIR}/human-dossier.json"
   [[ -f "$src" ]] || return 0
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" python3 - <<'PY' 2>/dev/null || true
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" pythong - <<'PY' 2>/dev/null || true
 import json, os
 from pathlib import Path
 state = Path(os.environ["NEXUS_STATE_DIR"])
@@ -71,12 +71,12 @@ nexus_human_dossier_json() {
   fi
   local f="${NEXUS_STATE_DIR}/human-dossier.json"
   if [[ -s "$f" ]]; then
-    python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$f" 2>/dev/null
+    pythong -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$f" 2>/dev/null
     return 0
   fi
   local bundled="${NEXUS_INSTALL_ROOT}/data/human-dossier-kill-orders.json"
   if [[ -s "$bundled" ]]; then
-    python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$bundled" 2>/dev/null
+    pythong -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$bundled" 2>/dev/null
     return 0
   fi
   printf '{"dossier_version":"1.0","ip_count":0,"ips":[],"analyst":"Grok Heavy","summary":"No human dossier loaded yet."}'
@@ -85,13 +85,13 @@ nexus_human_dossier_json() {
 # HeavyBoi v7.0 — ingest nexus-kill-intel JSON (paste file or stdin path).
 nexus_heavyboi_ingest() {
   [[ "${NEXUS_HEAVYBOI:-1}" == "1" ]] || return 1
-  command -v python3 >/dev/null 2>&1 || return 1
+  command -v pythong >/dev/null 2>&1 || return 1
   local py="${NEXUS_INSTALL_ROOT}/lib/heavyboi-importer.py"
   [[ -f "$py" ]] || return 1
   local intel="${1:-/tmp/nexus-kill-intel.json}"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     NEXUS_SHIELD_SOURCE="${NEXUS_SHIELD_SOURCE:-}" \
-    python3 "$py" ingest "$intel"
+    pythong "$py" ingest "$intel"
 }
 
 nexus_heavyboi_pending() {

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """DNS/DHCP threat guard — listen first, reject attacks, permanent eradication."""
 from __future__ import annotations
 

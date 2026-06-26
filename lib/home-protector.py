@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Immediate Home Protector — 3-bedroom home airspace detector (WiFi, LAN, ARP)."""
 from __future__ import annotations
 
@@ -326,7 +326,7 @@ def build_home_protector(harvest: bool = True) -> dict[str, Any]:
         rf_script = INSTALL / "lib" / "field-rf-sentinel.py"
         if rf_script.is_file():
             subprocess.run(
-                [os.environ.get("PYTHON", "python3"), str(rf_script), "cycle"],
+                [os.environ.get("PYTHON", "pythong"), str(rf_script), "cycle"],
                 capture_output=True, timeout=120, env=os.environ.copy(),
             )
 

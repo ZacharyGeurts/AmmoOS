@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Hell Kit — field toolkit with sever, regional disable, and human threat sweep."""
 from __future__ import annotations
 

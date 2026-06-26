@@ -1,0 +1,39 @@
+{
+  "id": "seg-011-db432396cc86",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-011-db432396cc86.pgm",
+  "caption_stub": "Question RetroRTX swipe Default x86 canvas Primary shader CANVAS comp tribute variant x86 comp Push block PushConstants FieldSocket Guest RAM SSBO Not product focus Binding 1 64 MiB map Honest use RT pedagogy shader art literacy Operations AmmoOS dispatch proof\u2026",
+  "text_sha256": "90e583a90c005ea8290459ad410b66fc26e9361282e8f5d68628a08f64199f3a",
+  "words_source": 901,
+  "tags": [
+    "canvas",
+    "comp",
+    "default",
+    "grid",
+    "hostess",
+    "lossless",
+    "primary",
+    "question",
+    "redata",
+    "retrortx",
+    "sdf",
+    "segment",
+    "shader",
+    "swipe",
+    "tribute",
+    "variant",
+    "x86"
+  ],
+  "ocr_hint": "Question RetroRTX swipe Default x86 canvas Primary shader CANVAS comp tribute variant x86 comp Push block PushConstants ",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-011-db432396cc86",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 59.5,
+  "truth_accepted": true
+}

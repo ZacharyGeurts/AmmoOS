@@ -1,0 +1,43 @@
+{
+  "id": "seg-110-6d15e46ff738",
+  "format": "human-serviceable-pgm",
+  "kind": "grid",
+  "action": "integrate",
+  "file": "brain/sdf/plates/seg-110-6d15e46ff738.human.pgm",
+  "caption_stub": "KILROY field package Queen Forge bundles kernel browser services under field sovereign KILROY 7 1 1 kilroy CONFIG_RTX_FIELD_DIE provides proc kilroy_field syscall boundary telemetry Userspace Queen runs atop one field sealed manifest Grok Build secure channel inside Kernel FCC parallel\u2026",
+  "text_sha256": "0dc5819602f6a77ba701965049050666d8b399ff4ce39cd3ac0c39fa542b5f9b",
+  "words_source": 948,
+  "tags": [
+    "browser",
+    "bundles",
+    "field",
+    "forge",
+    "grid",
+    "hostess",
+    "human",
+    "kernel",
+    "kilroy",
+    "lossless",
+    "package",
+    "queen",
+    "redata",
+    "sdf",
+    "segment",
+    "serviceable",
+    "services",
+    "sovereign",
+    "under"
+  ],
+  "ocr_hint": "KILROY field package Queen Forge bundles kernel browser services under field sovereign KILROY 7 1 1 kilroy CONFIG_RTX_FI",
+  "human_serviceable": true,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-110-6d15e46ff738",
+  "canvas": [
+    512,
+    384
+  ],
+  "sdf_region": 256,
+  "segment_json": "brain/sdf/segments/seg-110-6d15e46ff738.json",
+  "truth_score": 60.8,
+  "truth_accepted": true,
+  "deception_risk": "medium"
+}

@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore brain from zac
+        run: pythong scripts/field_zac.py restore || true
+      - name: QA tests
+        run: |
+          pythong scripts/qa_field_fly_codec_test.py
+          pythong scripts/qa_h7_library_test.py
+          pythong scripts/qa_imagine_corpus_test.py
+          pythong scripts/qa_world_fast_test.py
+          pythong scripts/qa_compression_lossless_test.py
+      - name: Install Flask
+        run: pip install -r requirements.txt
+      - name: Web import smoke
+        run: pythong -c "import sys; sys.path.insert(0,'scripts'); from hostess7_web import create_app; create_app()"

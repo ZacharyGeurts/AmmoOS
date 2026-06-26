@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Safe signal touch policy — silent unless music, normal traffic, or animals."""
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ MUSIC_CLIENT_PROCS = frozenset({
     "rhythmbox", "audacious", "clementine", "amarok", "deadbeef",
 })
 BROWSER_PROCS = frozenset({
+    "fieldfox", "field-queen", "queen-browser",
     "firefox", "chrome", "chromium", "brave", "brave-browser", "vivaldi", "opera",
     "msedge", "waterfox", "librewolf", "floorp", "thorium",
     "google-chrome", "google-chrome-stable",

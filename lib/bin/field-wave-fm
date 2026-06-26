@@ -1,6 +1,6 @@
 #!/bin/sh
 # field-wave-fm — OTA WBFM demod (NEXUS field wave engine)
-BINDIR="/home/default/Desktop/SG/Latest/NEXUS-Shield/lib/bin"
+BINDIR="/home/default/Desktop/SG/NewLatest/lib/bin"
 VENDOR="$BINDIR/vendor"
 export LD_LIBRARY_PATH="$VENDOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 for c in "$BINDIR/rtl_fm" rtl_fm /usr/bin/rtl_fm /usr/local/bin/rtl_fm; do

@@ -1,0 +1,89 @@
+Cross-link Chapter 15 Maxwell: binding 8 Phi participates in discrete Laplacian coupling on the fabric — neighborhood whispers, not ionospheric whistlers. Cross-link Chapter 9: FIELD_PHI_MILLI = 618 and GateFidelity sharpen gates — folklore mnemonic with a number, not a claim the universe prefers φ because the HUD said so.
+
+Cross-link Chapter 12 honesty table: claiming the weave shader predicts HF skip zones is Visual accident marketed as instrument — refuse.
+
+Field Antenna orchestrator — JSON panels that are real
+
+NEXUS Field Antenna is Implemented local orchestration across RF, audio, wired, and optical reference bands. It watches flows and anchors meaningful to your machine — not global spectrum survey.
+
+Optical / laser reference entries: 405–1550 nm teaching bands
+
+LIDAR flow ports registered beside socket habits
+
+GPS field anchors for triangulation metaphor — not replacement for survey grade receivers
+
+Outputs: field-antenna-panel.json , field-rf-panel.json , signals-field-panel.json
+
+Panel :9477 Signals tab (Chapter 5) surfaces these artifacts. Correlate JSON rows with field jsonl sentences — same peer, same sealed time column, different views. No merged super-score. Field Antenna does not replace gatekeeper verdicts; packet field does not replace FSPL homework.
+
+JSON artifact Typical content Correlate with
+
+field-antenna-panel.json Antenna path registry, band tags Signals tab, local hardware
+
+field-rf-panel.json RF flow summaries, habit notes Packet field port axis
+
+signals-field-panel.json Cross-domain signal map Chapter 5 defense rhythm
+
+FSPL teaching worksheet — path loss on paper, not in shaders
+
+Free-space path loss (FSPL) belongs in operator notebooks and NEXUS teaching docs — not inside AMOURANTHRTX fabric shaders. ITU-R and FCC contexts use:
+
+FSPL ∝ 20·log₁₀(d) + 20·log₁₀(f)
+
+Distance d grows loss with twenty log ten; frequency f does the same. Double distance costs ~6 dB; double frequency costs ~6 dB. The worksheet builds intuition before you touch hardware.
+
+Worksheet 6.A — FSPL estimates
+
+# Given: f = 2.4 GHz Wi-Fi, d = 10 m (free space teaching model)
+# FSPL ≈ 20*log10(10) + 20*log10(2.4e9) [use consistent units in your notebook]
+# Compare: d = 100 m — how many dB added vs 10 m?
+# Label answer: teaching estimate — not measured in planetary_weave.comp
+ Worksheet 6.B: repeat for 915 MHz ISM at 1 km. Worksheet 6.C: explain why attic copper foil does not change shader R_RF constant — visual shell unchanged by real-world sheet metal.
+
+Chapter 6 honesty: FSPL exercises train judgment for Field Antenna context. They do not authorize claims that Classic canvas color maps predict link margin.
+
+Phi versus RF — disambiguation clinic
+
+fieldPhi on binding 8 is the analog fabric’s wave and gate potential channel. Shaders read and write Φ per texel; host packs WaveSpeed , GateFidelity , PropalacticScale into FCC floats. This is Maxwell neighborhood on a grid — Chapter 15 — not literal RF carrier tracking.
+
+Question Phi / binding 8 RF / Field Antenna Weave shader
+
+Measured in MHz? No — arbitrary field units Band labels for orchestration No — art scale
+
+Where grep? THERMO + fabric + FCC slots NEXUS JSON + jsonl Canvas swipe only
+
+Honest label Implemented metaphor Implemented local Visual
+
+Couples to Thermo? Yes — FieldCoupling Indirect via machine activity No — decor
+
+Clinic sentence: “Phi gradient steepened, so RF must be jammed” is category error. “Field Antenna noted 2.4 GHz habit breakage on RX, gatekeeper SUSPICIOUS” is legible defense. “Ionosphere glow red on weave” is art critique, not propagation measurement.
+
+Workshop protocol — afternoon lab
+
+Label pass (15 min): List three RF meanings from memory; tag each Visual , Implemented , or metaphor .
+
+Weave swipe (20 min): Open AMOURANTHRTX planetary weave canvas; sketch shell stack on paper with R_RF noted; refuse FSPL claims from colors.
+
+FSPL worksheet (25 min): Complete 6.A–6.C on paper; photograph page for operator journal — not for vendor slide deck.
+
+NEXUS panels (30 min): ./nexus.sh ; open :9477 Signals; read three JSON artifacts; tail matching field jsonl rows.
+
+Phi grep (20 min): ./linux.sh run ; set AnalogFields.GateFidelity 0.9 ; grep THERMO + FCC; confirm fabric offense path alive — handoff prep.
+
+Disambiguation drill (10 min): Write three sentences — one correct per layer; one deliberate category error; fix the error aloud.
+
+Plain English: The workshop teaches you to point at the right receipt — jsonl, stderr, or screenshot — before you argue about signals.
+
+Ionosphere and magnetosphere — teachable shells, not predictions
+
+In the weave narrative, ionosphere and magnetosphere rings sit outside troposphere weather and inside exosphere breath. They exist so instructors can point at a screen and say: “HF stories live in sky vocabulary; your loopback panel lives in operator vocabulary.” The shader does not compute critical frequency, foF2, or K-index. It paints teachable regions.
+
+When a student asks whether red ionosphere glow means solar storm, answer with labels: Visual pedagogy. Then open :9477 and show jsonl habits — defense receipts. Then run ./linux.sh run and grep THERMO — offense receipts. Three layers, three answers, one disciplined operator.
+
+Chapter 10 spiderweb mirror uses fabric averages, not ionosphere colors. Chapter 6 refuses the shortcut that makes pretty globes feel like NOAA products.
+
+Queen, WebRTC, and RF words in UI
+
+Queen holds WebRTC gates (Chapter 21). RF vocabulary in UI still passes Connection Gatekeeper — honorability axis asks whether navigation context matches socket reality. Field Antenna may tag RF bands; packet field records peers; thermo proxy records dispatch cost on Queen build — parallel witnesses, not one score.
+
+MP4 mandatory in-tree means media paths are not outsourced to CDN conscience — local archive discipline matches jsonl ethos. EME held, not omitted, because sovereign browser doctrine refuses hole-poking.

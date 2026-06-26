@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """Generate NEXUS-Shield 256x256 PNG icon (no external deps beyond zlib)."""
 import math
 import struct

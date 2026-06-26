@@ -1,0 +1,185 @@
+Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.
+
+Interpretation
+
+If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.
+
+If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.
+
+Tesla witness
+
+After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.
+
+Case study 27 — operator adjusts FCC under load
+
+Pedagogical scenario 27 for harmonics internalization.
+
+Scenario setup
+
+Operator session 27 begins on default x86 die. Sealed time T26. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.
+
+Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.
+
+Interpretation
+
+If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.
+
+If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.
+
+Tesla witness
+
+After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.
+
+Case study 28 — operator adjusts FCC under load
+
+Pedagogical scenario 28 for harmonics internalization.
+
+Scenario setup
+
+Operator session 28 begins on default x86 die. Sealed time T27. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.
+
+Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.
+
+Interpretation
+
+If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.
+
+If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.
+
+Tesla witness
+
+After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.
+
+=== Chapter 10 ===
+
+Chapter 10 · Hardware Spiderweb — Sub-Micron Mirror
+
+Learning objectives
+
+Explain hardwareFabric as read-only mirror of fabric averages.
+
+Trace updateHardwareFromAnalogFields() six-step frame ritual.
+
+Define voltageFactor, thermalThrottle, parallelEff roles.
+
+Operate mastery tiers Puny, Adept, Tidewalker with honest expectations.
+
+Apply sub-micron honesty table before marketing language.
+
+Introduction — dashboard, not microscope
+
+updateHardwareFromAnalogFields() mirrors averaged Phi/Thermo/Flow into hardwareFabric — per-core MHz, util, temp, power, spiderweb edge currents. Read-only mirror — not second simulation, not SEM imaging. Chapter 9 Tesla constants damp reverse edges; Chapter 7 dispatch calls mirror every frame after fabric evolution.
+
+Figure 10.1 — Fabric averages drive util graph.
+
+Six-step frame ritual
+
+Sample avg Phi, Thermo, Flow
+
+Apply fluid velocity/density + Tesla bias
+
+Compute voltageFactor, thermalThrottle, parallelEff
+
+Update hardwareFabric.units[] — operationalFreqMHz, util, voltage, temp, power
+
+Update spiderweb edges[].currentUtil
+
+Accumulate simulatedChipCycles
+
+Derived factors
+
+Factor Story Label
+
+voltageFactor Phi-linked electrical metaphor Metaphor + fabric witness
+
+thermalThrottle Thermo-linked heat story Proxy
+
+parallelEff Flow-linked utilization shape Proxy
+
+Mastery tiers
+
+Tier Controls
+
+Puny ShowInStatusLog, AutoUseRealClocks — sysfs MHz Linux
+
+Adept TargetCoreClockMHz, ThermalSensitivity, SimulateSubMicron
+
+Tidewalker EnableSpiderwebGraph, ForcedVendor, SubMicronDetail
+
+Sub-micron honesty table
+
+Claim Reality Label
+
+Adaptive 320×200 → 4K+ Implemented Implemented
+
+SDF epsilons + accumulation Implemented Implemented
+
+Zero-cost SEM fidelity Procedural pixel detail Metaphor
+
+precision-field.py — NEXUS cousin
+
+GPS-anchored entity map, spiderweb nodes, thermal-earth bodies — separate codebase, cousin metaphor. Correlate at operator mind with engine spiderweb, not automatic merge.
+
+Operator drills
+
+Drill 10.A
+
+list Hardware
+set Hardware.SimulateSubMicron 1
+grep -i spiderweb run.log
+
+Chapter summary
+
+Spiderweb mirrors fabric. Six steps each frame. Tiers unlock controls. SEM is metaphor. Prior: Ch 9 . Next: Ch 11 .
+
+Study questions
+
+List six mirror steps.
+
+What does Puny tier read for clocks?
+
+Label SimulateSubMicron honesty.
+
+How does Tesla reach edges?
+
+What is precision-field cousin?
+
+Coupling fabric averages to sysfs Puny tier
+
+Puny AutoUseRealClocks reads Linux sysfs MHz as freq witness — Chapter 19 sovereign time extends witness doctrine. Spiderweb simulated MHz should not be confused with sysfs — honesty table: mirror vs hardware read.
+
+SimulateSubMicron — what changes
+
+Adept tier SimulateSubMicron enables procedural detail path — still not SEM. SDF epsilons accumulate; label Metaphor when presenting screenshots externally.
+
+Tidewalker responsibility
+
+Graph override is power — Chapter 18 covenant: operator conscience, not daemon. ForcedVendor and SubMicronDetail can lie beautifully; stderr and sysfs Puny tier anchor honesty.
+
+Mirror anatomy 1 — units, edges, and sysfs
+
+Depth pass 1 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 0 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.
+
+Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.
+
+Spiderweb edges
+
+Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.
+
+Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.
+
+simulatedChipCycles
+
+Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.
+
+Mirror anatomy 2 — units, edges, and sysfs
+
+Depth pass 2 on hardwareFabric literacy.
+
+Per-core units[]
+
+Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 1 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.

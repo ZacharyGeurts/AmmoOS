@@ -1,0 +1,93 @@
+In textbook usage, EME appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet EME in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Energy can be moved
+
+Energy can be moved — Axiom — coupling moves irreversibility; accounting stays honest.
+
+In textbook usage, Energy can be moved appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Energy can be moved in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Entropy Oracle
+
+Entropy Oracle — NEXUS Shannon H file analyzer — surprise measurement on local files.
+
+In textbook usage, Entropy Oracle appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Entropy Oracle in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+entropyThisFrame
+
+entropyThisFrame — ThermoAccountant per-dispatch entropy increment — receipt time ran forward in fabric.
+
+In textbook usage, entropyThisFrame appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet entropyThisFrame in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+entropy_tag
+
+entropy_tag — 12-hex tag on sovereign pulses — hashes mono_ns and pulse number.
+
+In textbook usage, entropy_tag appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet entropy_tag in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+F
+
+Fair Ad Guardian
+
+Fair Ad Guardian — First-party vs junk ad scoring — Queen browser egress layer.
+
+In textbook usage, Fair Ad Guardian appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Fair Ad Guardian in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+FCC
+
+FCC — Field Control Coupling floats in data_bus slots 16–23 — stability knobs.
+
+In textbook usage, FCC appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet FCC in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Field DHCP
+
+Field DHCP — NEXUS DHCP v3 — LAN bind, option-50 match, ping conflict, DNS option to Truth Resolver.
+
+In textbook usage, Field DHCP appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Field DHCP in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Field Die
+
+Field Die — GPU SSBO simulating x86 guest with 64 MiB RAM — addressable universe on silicon.
+
+In textbook usage, Field Die appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Field Die in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+field jsonl
+
+field jsonl — Append-only packet field log — grep forensic backbone.
+
+In textbook usage, field jsonl appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet field jsonl in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Field layer
+
+Field layer — Composable L0–L9 die layers — RAM, VGA, FAT, audio, BIOS pumped via FieldLayer::pumpAll.
+
+In textbook usage, Field layer appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Field layer in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+Field literacy
+
+Field literacy — Reading continuous state, imposing boundary conditions — greatest operator weapon.
+
+In textbook usage, Field literacy appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet Field literacy in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+field package
+
+field package — Sealed sovereign manifest under field/sovereign/ — kernel, Queen, services, grep discipline.
+
+In textbook usage, field package appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet field package in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+field-ntp-2026
+
+field-ntp-2026 — NTP mode-4 server gated on sovereign pulse health — UDP 123.
+
+In textbook usage, field-ntp-2026 appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet field-ntp-2026 in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+field-services-2026
+
+field-services-2026 — Unified 2026 public services panel manifest — DNS, DHCP, NTP, sovereign slices.
+
+In textbook usage, field-services-2026 appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet field-services-2026 in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.
+
+FieldFox
+
+FieldFox — Hardened Gecko fork — telemetry stripped, Truth DNS, full codec tree, NEXUS native bridge.
+
+In textbook usage, FieldFox appears wherever operators cross engine, NEXUS, and Queen boundaries. If you meet FieldFox in a panel slice, jsonl receipt, or shader header, this definition is the canonical Field Technology v5 reading — not generic industry jargon unless explicitly noted.

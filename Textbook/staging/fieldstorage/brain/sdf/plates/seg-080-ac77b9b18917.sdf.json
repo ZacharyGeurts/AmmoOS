@@ -1,0 +1,40 @@
+{
+  "id": "seg-080-ac77b9b18917",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-080-ac77b9b18917.pgm",
+  "caption_stub": "Synthesis question for CFL and Maxwell stability how does Chapter 12 s honesty table change your wording in a status email to management Require three sentences one Implemented one Metaphor one Philosophy If all three labels appear correctly the student\u2026",
+  "text_sha256": "adfeba4b37424354583829339732b0a4ec1a8b065c88e60c3b2c6f8a29c057af",
+  "words_source": 925,
+  "tags": [
+    "and",
+    "cfl",
+    "chapter",
+    "does",
+    "for",
+    "grid",
+    "honesty",
+    "hostess",
+    "how",
+    "lossless",
+    "maxwell",
+    "question",
+    "redata",
+    "sdf",
+    "segment",
+    "stability",
+    "synthesis",
+    "table"
+  ],
+  "ocr_hint": "Synthesis question for CFL and Maxwell stability how does Chapter 12 s honesty table change your wording in a status ema",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-080-ac77b9b18917",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 59.8,
+  "truth_accepted": true
+}

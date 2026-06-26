@@ -1,0 +1,39 @@
+{
+  "id": "seg-039-00629e5652e0",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-039-00629e5652e0.pgm",
+  "caption_stub": "Security posture beside dispatch local first Dispatch does not phone home Session logs stay local Sealed time is not DRM Chapter 12 honesty table Tamper abort narratives refer to host verify posture and sovereign sync Chapter 19 not hidden telemetry\u2026",
+  "text_sha256": "2310200d66cc8c25cbcd79c6ca147c14f32ce2a7bed7055fae3c9572697adb65",
+  "words_source": 914,
+  "tags": [
+    "beside",
+    "dispatch",
+    "does",
+    "first",
+    "grid",
+    "home",
+    "hostess",
+    "local",
+    "lossless",
+    "not",
+    "phone",
+    "posture",
+    "redata",
+    "sdf",
+    "security",
+    "segment",
+    "session"
+  ],
+  "ocr_hint": "Security posture beside dispatch local first Dispatch does not phone home Session logs stay local Sealed time is not DRM",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-039-00629e5652e0",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 59.4,
+  "truth_accepted": true
+}

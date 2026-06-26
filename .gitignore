@@ -15,3 +15,44 @@ gov-dossiers.json
 human-dossier-kill-orders.json
 home-gps-correlation.json
 operator-location.json
+
+# Stack siblings — symlinked via scripts/wire-stack.sh (not vendored)
+/AMOURANTHRTX
+/Grok16
+/GrokPy
+/PythonG
+/KILROY
+/Final_Eye
+/Final_Ear
+/ZNEWOCR
+/ZOCR
+/ZNetwork
+/World_Redata
+/World_Repack
+/Field_Primer
+/Spiderweb
+
+# Runtime caches / field storage images
+/cache/
+*.img
+*.zac
+
+# Queen runtime / build artifacts
+Queen/build/
+Queen/build-*/
+Queen/vendor/
+Queen/cache/
+Queen/field/sovereign/
+Queen/.venv*/
+Queen/.grok/
+Queen/.final-eye.*
+Queen/.queen-*
+Queen/*.log
+Queen/amouranth_engine.log
+Queen/data/*.log
+MANIFEST.sha256.bak
+
+# Hostess7 cache + field storage (source lives in-tree)
+Hostess7/cache/
+Hostess7/zac/
+Hostess7/.git/.github/workflows/

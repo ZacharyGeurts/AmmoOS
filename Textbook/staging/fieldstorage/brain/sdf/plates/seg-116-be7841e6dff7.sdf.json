@@ -1,0 +1,37 @@
+{
+  "id": "seg-116-be7841e6dff7",
+  "format": "R8-analytic-pgm",
+  "kind": "grid",
+  "action": "sdl_store",
+  "file": "brain/sdf/plates/seg-116-be7841e6dff7.pgm",
+  "caption_stub": "Hostess 7 Hostess 7 Watchguard persona in Queen chrome deck Forever Watchguard split UI motif In textbook usage Hostess 7 appears wherever operators cross engine NEXUS and Queen boundaries If you meet Hostess 7 in a panel slice jsonl receipt\u2026",
+  "text_sha256": "49f2da2a1f3948fe81c0182091228e676a31937d0b8a08c94ac5c497461f9f32",
+  "words_source": 914,
+  "tags": [
+    "chrome",
+    "deck",
+    "forever",
+    "grid",
+    "hostess",
+    "lossless",
+    "motif",
+    "persona",
+    "queen",
+    "redata",
+    "sdf",
+    "segment",
+    "split",
+    "textbook",
+    "watchguard"
+  ],
+  "ocr_hint": "Hostess 7 Hostess 7 Watchguard persona in Queen chrome deck Forever Watchguard split UI motif In textbook usage Hostess ",
+  "human_serviceable": false,
+  "verify": "./Hostess7.sh sdf-verify-redata seg-116-be7841e6dff7",
+  "size": 64,
+  "anchor": [
+    32,
+    32
+  ],
+  "truth_score": 53.5,
+  "truth_accepted": true
+}

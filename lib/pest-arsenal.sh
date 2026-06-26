@@ -18,7 +18,7 @@ nexus_pest_is_sacred_comm() {
   local comm="${1:-}"
   case "$comm" in
     systemd|init|kthreadd|sshd|dbus-daemon|NetworkManager|pipewire|wireplumber|\
-    nexus-genius|nexus-daemon|python3|firefox|chrome|chromium|brave|vivaldi|msedge|\
+    nexus-genius|nexus-daemon|pythong|firefox|chrome|chromium|brave|vivaldi|msedge|\
     thunderbird|evolution|gnome-shell|Xorg|wayland|sddm|gdm|lightdm|polkitd|\
     containerd|dockerd|kubelet|systemd-journald|systemd-logind|systemd-resolved|\
     systemd-networkd|systemd-udevd|rsyslogd|cron|atd|agetty|login|bash|sudo|su)

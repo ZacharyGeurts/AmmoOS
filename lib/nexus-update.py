@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pythong
 """NEXUS update checker — live GitHub release/tag compare (no stubs)."""
 from __future__ import annotations
 
