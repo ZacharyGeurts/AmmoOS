@@ -2,25 +2,38 @@
 
 **Live wiki:** https://github.com/ZacharyGeurts/NEXUS-Shield/wiki
 
-## Pages
+**GitHub Pages manual (illustrated):** https://zacharygeurts.github.io/NEXUS-Shield/
+
+---
+
+## Pages (v10.4.0)
 
 | Page | Topic |
 |------|-------|
-| [Home](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Home) | Friendly overview |
-| [Panel Guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Panel-Guide) | Screenshots + every tab explained |
+| [Home](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Home) | Overview |
+| [Installers](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Installers) | Release tarballs + scripts |
+| [Field I/O](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Field-IO) | API, state, diagrams |
+| [Panel Guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Panel-Guide) | Tabs + screenshots |
 | [Linux Installation](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Linux-Installation) | Install & verify |
-| [Configuration](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Configuration) | Panel settings vs config files |
+| [Boot Implementation](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Boot-Implementation) | Reboot reload |
+| [Underlay F9 Tristate](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Underlay-F9-Tristate) | 2026 installer |
 | [Architecture](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Architecture) | Module map |
-| [Ultra-Stealth](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Ultra-Stealth) | cgroup + event-driven |
-| [Self-Defense](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Self-Defense) | Script signing |
-| [AMOURANTHRTX Integration](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/AMOURANTHRTX-Integration) | Device whitelist |
-| [Licensing](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Licensing) | NEXUS = MIT · AMOURANTHRTX = GPL/commercial |
-| [Windows Installation](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Windows-Installation) | `stealth.ps1` |
+| [Configuration](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Configuration) | Config layers |
+| [Self-Defense](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Self-Defense) | Manifest signing |
+| [Licensing](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Licensing) | MIT vs GPL |
 
-## Publish wiki from repo
+---
+
+## Publish wiki
+
+```bash
+./scripts/publish-wiki.sh
+```
+
+Or manually:
 
 ```bash
 git clone https://github.com/ZacharyGeurts/NEXUS-Shield.wiki.git
-cp -r ../NEXUS-Shield/wiki/*.md NEXUS-Shield.wiki/
-cd NEXUS-Shield.wiki && git add -A && git commit -m "Sync wiki" && git push
+rsync -a --delete wiki/ NEXUS-Shield.wiki/
+cd NEXUS-Shield.wiki && git add -A && git commit -m "wiki: v10.4.0 rewrite" && git push
 ```

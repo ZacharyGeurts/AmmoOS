@@ -1,74 +1,56 @@
 # Linux Installation
 
-Install once. Use forever with `./nexus.sh` or the desktop icon.
+**v10.4.0** — Recommended path uses release tarball + `install-all.sh`.
+
+→ **[Installers](Installers)** for full script reference.
 
 ---
 
 ## Requirements
 
 - Linux with systemd
-- Root/sudo for install
-- `curl`, Python 3 (installed automatically on Debian/Ubuntu via apt)
+- `python3`, `curl`, `nftables`, `inotify-tools`
+- Optional: `zenity` (Tristate fallback), `cmake` (ZNetwork build)
 
 ---
 
-## Install (recommended)
+## Install from release
+
+```bash
+tar -xzf nexus-shield-10.4.0-source.tar.gz
+cd nexus-shield-10.4.0
+sudo ./install-all.sh
+```
+
+Installs to `/usr/local/lib/nexus-shield`, state in `/var/lib/nexus-shield`, service `nexus-genius.service`.
+
+---
+
+## Install from git clone
 
 ```bash
 git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
 cd NEXUS-Shield
-chmod +x stealth_install.sh nexus.sh
-sudo ./stealth_install.sh
+chmod +x install-all.sh nexus.sh
+sudo ./install-all.sh
 ```
 
-This installs:
-
-| Piece | Where |
-|-------|-------|
-| Daemon + libs | `/usr/local/lib/nexus-shield` |
-| CLI | `/usr/local/bin/nexus` |
-| Launcher | `/usr/local/bin/nexus.sh` |
-| State | `/var/lib/nexus-shield` |
-| Service | `nexus-genius.service` |
-| Desktop entry | **NEXUS-Shield** in app menu |
-| Panel | `https://127.0.0.1:9477/` |
-
-Packages pulled on Debian/Ubuntu: `inotify-tools`, `nftables`, `openssl`, `iproute2`, `tcpdump`.
-
----
-
-## First run
+Dev tree without full install:
 
 ```bash
+export NEXUS_FIELD_STANDALONE=1
 ./nexus.sh
 ```
 
-Or click **NEXUS-Shield** in your application launcher.
-
-The panel opens in your default browser. If the service wasn't running, the launcher starts it for you.
-
 ---
 
-## Verify install
+## Verify
 
 ```bash
-sudo systemctl is-active nexus-genius.service   # should print: active
 nexus status
 nexus verify
-nexus test
-```
-
-`nexus verify` checks the signed manifest — if you edited libs, run `sudo nexus sign` then restart.
-
----
-
-## Add yourself to the nexus group (optional)
-
-Install adds your user to group `nexus` so you can read state files without sudo:
-
-```bash
-# log out/in, or:
-sg nexus -c 'nexus status'
+systemctl is-active nexus-genius.service
+curl -s http://127.0.0.1:9477/api/status | jq .
 ```
 
 ---
@@ -76,39 +58,22 @@ sg nexus -c 'nexus status'
 ## Uninstall
 
 ```bash
-sudo systemctl disable --now nexus-genius.service
+sudo systemctl stop nexus-genius.service
+sudo systemctl disable nexus-genius.service
 sudo rm -f /etc/systemd/system/nexus-genius.service
-sudo rm -f /usr/local/bin/nexus /usr/local/bin/nexus.sh
-sudo rm -rf /usr/local/lib/nexus-shield /var/lib/nexus-shield
-sudo rm -f /usr/share/applications/nexus-shield.desktop
+sudo rm -rf /usr/local/lib/nexus-shield
+sudo rm -rf /var/lib/nexus-shield   # optional — removes trust/block memory
+sudo systemctl daemon-reload
 ```
 
----
-
-## Direct install (same stack)
-
-```bash
-sudo ./genius_shield.sh
-```
-
-Same as `stealth_install.sh` on Linux — use whichever you prefer.
+Keep `/var/lib/nexus-shield` if you plan to reinstall and preserve trust memory.
 
 ---
 
-## Troubleshooting
+## Desktop entries
 
-| Problem | Fix |
-|---------|-----|
-| Panel won't open | `sudo systemctl start nexus-genius.service` then `./nexus.sh` |
-| Browser TLS warning | Expected — self-signed localhost cert. Proceed once for 127.0.0.1 |
-| Daemon won't start | `nexus verify` — manifest mismatch? `sudo nexus sign` |
-| High CPU | `systemctl show nexus-genius` — confirm `CPUQuota=5%` |
-| False behavior alert | Settings → check whitelist in `device-whitelist.conf` |
-| "Broke internet" | Settings → ensure Paranoia auto-block and Firewall auto-block are OFF unless you want them |
+After install (via `genius_shield.sh` + os-assist):
 
----
-
-## Next steps
-
-- [Panel Guide](Panel-Guide) — what every screen means
-- [Configuration](Configuration) — settings in the panel vs config files
+- `/usr/share/applications/nexus-shield.desktop`
+- `/usr/share/applications/nexus-tristate-installer.desktop`
+- `~/.local/share/applications/` copies for install user

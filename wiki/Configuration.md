@@ -1,79 +1,47 @@
 # Configuration
 
-**You don't need to edit config files.** Open the panel → **Settings** tab.
-
-Every checkbox writes to `/var/lib/nexus-shield/settings.override`, which overrides defaults from `config/nexus.conf` on the next daemon read.
+Two layers: **shipped defaults** and **runtime overrides**.
 
 ---
 
-## Panel settings (recommended)
+## Files
 
-| Setting | Default | What it does |
-|---------|---------|--------------|
-| Paranoia auto-block | OFF | Block after logging forensics |
-| Firewall auto-block | OFF | Auto-block threat vectors |
-| Autosanitize | OFF | Legacy auto-sanitize |
-| Shutdown guard | ON | Forensics on unclean kill |
-| Connection gatekeeper | ON | 10-axis connection scoring |
-| Packet oracle | ON | Connection snapshots for panel |
-| Shadow / Entropy / Behavior / Privacy | ON | File & process watchers |
-| Hostess7 corroborate | ON | Field memory cross-check |
-| Auto-open panel on boot | ON | Once per day when daemon starts |
-| Adblock | OFF | Filter-list domain blocking |
+| File | Role |
+|------|------|
+| `config/nexus.conf` | Shipped defaults (640 root:nexus) |
+| `$NEXUS_STATE_DIR/settings.override` | Panel-written toggles |
+| `config/device-whitelist.conf` | Sacred IPs / devices |
 
-See [Panel Guide](Panel-Guide#settings-tab) for adblock loader steps.
-
----
-
-## Config file (advanced)
-
-Installed copy: `/usr/local/lib/nexus-shield/config/nexus.conf`
-
-Use this for defaults on fresh install or automation — not day-to-day tuning.
-
-### Ultra-stealth
-
-| Toggle | Default | Purpose |
-|--------|---------|---------|
-| `NEXUS_ULTRA_STEALTH` | `1` | cgroup + adaptive pacing |
-| `NEXUS_CPU_QUOTA_PCT` | `5` | max CPU percent |
-| `NEXUS_SELF_DEFENSE` | `1` | verify MANIFEST on load |
-| `NEXUS_PREDICTIVE` | `1` | correlate alerts pre-tighten |
-
-### Polling cadence
-
-| Setting | Calm default |
-|---------|--------------|
-| `NEXUS_BEHAVIOR_POLL_CALM` | 30 |
-| `NEXUS_PRIVACY_POLL_CALM` | 60 |
-| `NEXUS_VIGIL_MAINTAIN_INTERVAL` | 300 |
-
----
-
-## Device whitelist
-
-Consumer-safe apps live in `config/device-whitelist.conf`:
+Restart after manual `nexus.conf` edits:
 
 ```bash
-NEXUS_DEVICE_WHITELIST_COMM+=(
-  my-custom-app
-)
-```
-
-After edits:
-
-```bash
-sudo nexus sign
 sudo systemctl restart nexus-genius.service
 ```
 
+Panel settings apply immediately to override file — daemon reads on vigil cycle.
+
 ---
 
-## Apply file-based changes
+## Key defaults (v10.4.0)
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `NEXUS_THREAT_PANEL` | 1 | Panel HTTP server |
+| `NEXUS_PANEL_AUTO_OPEN` | 1 | Browser on boot |
+| `NEXUS_NO_OS_BROWSER_HOOK` | 0 | Allow OS browser fallback |
+| `NEXUS_BOOT_IMPL` | 1 | Boot tech reload |
+| `NEXUS_NETWORK_LOCKDOWN` | 0 | Off for everyday users |
+| `NEXUS_UNDERLAY_HOTKEY` | 1 | F9 Tristate hotkey |
+
+---
+
+## Environment
 
 ```bash
-sudo nexus sign          # re-sign after lib/ edits
-sudo systemctl restart nexus-genius.service
+export NEXUS_STATE_DIR=/var/lib/nexus-shield
+export NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield
+export NEXUS_THREAT_PANEL_PORT=9477
+export SG_ROOT=/path/to/NewLatest
 ```
 
-Panel-only changes apply immediately for paranoia/autosanitize/adblock; module restarts may need the service bounce above.
+→ **[Panel Guide](Panel-Guide#settings)** for UI toggles.

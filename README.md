@@ -76,6 +76,8 @@ Operator browser ↔ panel HTTP `:9477` ↔ `nexus-genius.service` ↔ `/var/lib
 
 See [Field I/O manual](docs/io.html) for boot flow, API tables, and state file map (all illustrated).
 
+**Wiki:** https://github.com/ZacharyGeurts/NEXUS-Shield/wiki (sync via `./scripts/publish-wiki.sh`)
+
 ---
 
 ## Project layout

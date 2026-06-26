@@ -1,0 +1,72 @@
+# Field I/O
+
+NEXUS I/O is **loopback-first**: panel HTTP on `:9477`, state under `NEXUS_STATE_DIR`, CLI mirrors trust/block.
+
+**Full manual:** https://zacharygeurts.github.io/NEXUS-Shield/io.html
+
+---
+
+## Architecture
+
+![Architecture I/O](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/io-architecture.svg)
+
+Operator browser ↔ panel HTTP ↔ `nexus-genius.service` ↔ `/var/lib/nexus-shield` ↔ nftables perimeter.
+
+---
+
+## Boot I/O
+
+![Boot flow](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/io-boot-flow.svg)
+
+| Marker | Meaning |
+|--------|---------|
+| `first-boot.complete` | First full impl done |
+| `boot-impl.last` | `mode=first` or `mode=refresh` |
+| `panel-launched.boot` | Browser opened this boot |
+
+→ **[Boot Implementation](Boot-Implementation)**
+
+---
+
+## State files
+
+![State file map](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/io-state-files.svg)
+
+Production: `/var/lib/nexus-shield` · Dev: `.nexus-state/` — **never commit state**.
+
+| File | Role |
+|------|------|
+| `threat-panel.json` | Panel publish blob |
+| `firewall-trusted.tsv` | Trust memory |
+| `firewall-blocks.tsv` | Active blocks |
+| `hostess7-training-panel.json` | Training tracks |
+
+---
+
+## Panel API (sample)
+
+![API surface](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/io-api-surface.svg)
+
+```bash
+curl -s http://127.0.0.1:9477/api/status | jq .
+curl -s http://127.0.0.1:9477/api/gatekeeper | jq .
+curl -s http://127.0.0.1:9477/api/hostess7/training/bundle | jq .
+```
+
+| Route | Purpose |
+|-------|---------|
+| `/api/threat-panel.json` | Full panel state |
+| `/api/field-underlay` | Underlay F9 JSON |
+| `/api/tristate-installer` | Tristate wizard API |
+| `/api/hostess7/training/bundle` | Training tab |
+
+---
+
+## CLI
+
+```bash
+nexus trust 203.0.113.10
+nexus block 203.0.113.10
+nexus verify
+./nexus.sh --no-browser
+```

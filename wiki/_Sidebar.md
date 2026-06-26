@@ -1,25 +1,28 @@
 **[Home](Home)**
 
-### Start here
-- [Panel Guide](Panel-Guide)
+### Install & I/O
+- [Installers](Installers)
+- [Field I/O](Field-IO)
 - [Linux Installation](Linux-Installation)
+- [Boot Implementation](Boot-Implementation)
+- [Underlay F9 Tristate](Underlay-F9-Tristate)
+
+### Operator
+- [Panel Guide](Panel-Guide)
 - [Configuration](Configuration)
 
 ### Modules
+- [Architecture](Architecture)
 - [Shadow Reality](Shadow-Reality)
 - [Entropy Oracle](Entropy-Oracle)
 - [Behavior Symphony](Behavior-Symphony)
 - [Eternal Vigil](Eternal-Vigil)
 - [Privacy Guard](Privacy-Guard)
-
-### Deep dive
-- [Architecture](Architecture)
-- [Ultra-Stealth](Ultra-Stealth)
 - [Self-Defense](Self-Defense)
-- [AMOURANTHRTX Integration](AMOURANTHRTX-Integration)
+
+### Platform
 - [Windows Installation](Windows-Installation)
+- [AMOURANTHRTX Integration](AMOURANTHRTX-Integration)
+- [Licensing](Licensing)
 
-### Legal
-- [Licensing](Licensing) — NEXUS = MIT · AMOURANTHRTX = GPL/commercial
-
-**[NEXUS-Shield MIT License](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE)**
+**[GitHub Pages Manual](https://zacharygeurts.github.io/NEXUS-Shield/)**

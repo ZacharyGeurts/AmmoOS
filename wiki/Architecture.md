@@ -1,85 +1,48 @@
 # Architecture
 
-NEXUS-Shield v2.0.2 — genius-only, connection gatekeeper, ultra-stealth.
+**v10.4.0** — Event-driven genius layer under `nexus-genius.service`.
+
+![Architecture](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/io-architecture.svg)
 
 ---
 
-## How you interact with it
+## Runtime stack
 
-```
-You → ./nexus.sh or desktop icon
-         ↓
-    Browser panel (HTTPS localhost :9477)
-         ↓
-    Monitor / Settings / Logs
-         ↓
-    API → nft firewall, settings.override, Hostess7 trust memory
-```
-
-The daemon runs whether or not the panel is open. The panel is the control surface.
+| Layer | Path | Role |
+|-------|------|------|
+| Panel HTTP | `lib/threat-panel-http.py` | Loopback C2 `:9477` |
+| Daemon | `lib/nexus-daemon.sh` | Watchers + vigil loop |
+| Boot impl | `lib/nexus-boot-impl.sh` | Reload tech each boot |
+| State | `/var/lib/nexus-shield` | JSON/TSV publish |
+| Perimeter | `lib/firewall-sentinel.sh` | nftables takeover |
 
 ---
 
-## Daemon stack
+## Core modules
 
-```
-nexus-genius.service (CPUQuota=5%, Nice=19, MemoryMax=256M)
-  └── nexus-daemon.sh
-        ├── verify MANIFEST.sha256 (self-defense)
-        ├── Connection Gatekeeper (10-axis intent, JSON state)
-        ├── Packet Oracle (ss snapshots)
-        ├── Threat Panel HTTP (local TLS)
-        ├── Firewall Sentinel + Trust (nft + Hostess7 JSONL)
-        ├── Shadow Reality (inotify) — event-driven
-        ├── Entropy Oracle (inotify) — event-driven
-        ├── Behavior Symphony (adaptive procfs)
-        ├── Privacy Guard (adaptive fd scan)
-        ├── Predictive Guard (alert correlation)
-        ├── Paranoia + Shutdown Guard
-        ├── Adblock Loader (filter lists → nft block_out)
-        └── Eternal Vigil (calm / alert / storm)
-```
+| Module | File | Role |
+|--------|------|------|
+| Shadow Reality | `lib/shadow-reality.sh` | File integrity inotify |
+| Entropy Oracle | `lib/entropy-oracle.sh` | Payload entropy scoring |
+| Behavior Symphony | `lib/behavior-symphony.sh` | Process behavior loop |
+| Eternal Vigil | `lib/eternal-vigil.sh` | Alert mode + maintenance |
+| Privacy Guard | `lib/privacy-guard.sh` | Sensitive path watch |
+| Connection Gatekeeper | `lib/connection-gatekeeper.py` | 10-axis flow scoring |
+| Threat Panel | `lib/threat-panel.sh` | State publish |
+| Hostess7 bridge | `lib/hostess7-bridge.sh` | Brain corroboration |
 
 ---
 
-## Data flow
+## Field stack (wired)
 
-```
-  live TCP flows ──► Connection Gatekeeper ──► panel Monitor tab
-  inotify events ──► Shadow / Entropy ──► threat vectors
-  procfs snapshot  ──► Behavior Symphony (whitelisted comms skipped)
-  /proc/fd scan    ──► Privacy Guard
-  alert correlation──► Predictive Guard ──► Eternal Vigil tighten
-                              │
-                              ▼
-                   /var/log/nexus-alerts.log
-```
+`scripts/wire-stack.sh` symlinks siblings: Grok16, KILROY, Final_Eye, ZNetwork, Hostess7, etc.
+
+Sense package meld: `lib/field-sense-package-meld.py` — Eye · Ear · ZOCR · Redata · Hostess7.
 
 ---
 
-## Key paths
+## Stealth / CPU
 
-| Path | Purpose |
-|------|---------|
-| `/var/log/nexus-alerts.log` | Unified alerts |
-| `/var/lib/nexus-shield/` | State, TLS, settings.override |
-| `/var/lib/nexus-shield/connection-intent.json` | Gatekeeper scores |
-| `/var/lib/nexus-shield/settings.override` | Panel toggles |
-| `/usr/local/lib/nexus-shield/MANIFEST.sha256` | Self-defense signatures |
-| `/usr/local/bin/nexus.sh` | User launcher |
+`NEXUS_FIELD_MAX=1` — workstation profile (not 5% stealth cap). Thermal governor optional. Event-driven inotify reduces polling.
 
----
-
-## Consumer guarantee
-
-- No desktop notifications (except shutdown modal in panel)
-- Whitelisted consumer apps and USB/audio/display devices
-- `<5%` CPU cgroup cap
-- Event-driven file integrity — no hourly full-home scans
-- Gatekeeper does **not** auto-block browser/CDN traffic
-
----
-
-## Predictive Guard
-
-Correlates recent module alerts. Score ≥ 6 pre-triggers Eternal Vigil **alert** mode before a full storm — tightening without visible UX changes.
+→ Module pages: [Shadow Reality](Shadow-Reality) · [Entropy Oracle](Entropy-Oracle) · [Behavior Symphony](Behavior-Symphony)

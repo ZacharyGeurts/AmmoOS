@@ -1,100 +1,79 @@
-# Welcome to NEXUS-Shield
+# NEXUS-Shield · Universal Protector
 
-**NEXUS ∞** is a quiet network bodyguard for Linux. It watches connections, spots weird behavior, and lets **you** decide what to trust — without killing your internet over a false alarm.
+**v10.4.0** — Field C2 for Linux. Gatekeeper scoring, loopback panel, boot-impl reload, Underlay F9 Tristate installer, Hostess7 training.
 
-> **TL;DR:** Install once, then run `./nexus.sh` or click the desktop icon. Everything else is in the web panel. **v2.1:** click any **?** for plain-English help on every button.
-
----
-
-## What does it actually do?
-
-Think of NEXUS as a smart bouncer for outbound traffic:
-
-1. **Watches** live connections (which app, which IP, which port).
-2. **Scores** each one — "probably you browsing" vs "might be exfil or theft."
-3. **Asks you** before blocking anything important. CDNs and normal browser traffic stay safe by default.
-4. **Remembers** when you click **Authorize** — that peer is trusted forever (stored in Hostess7 field memory).
-5. **Runs silently** — capped CPU, no popups, whitelisted consumer apps.
-
-No bloated antivirus suite. Pure heuristics: file integrity, entropy, process behavior, privacy guard, firewall, and a connection gatekeeper.
+> **TL;DR:** Download release → `sudo ./install-all.sh` → browser opens **http://127.0.0.1:9477/field** on every boot.
 
 ---
 
-## Quick start
+## What it does
+
+NEXUS is a field command layer — not a traditional AV suite:
+
+1. **Scores** live connections on 10 axes (gatekeeper).
+2. **You decide** — Trust forever · Stop this site · KILL when corroborated.
+3. **Publishes** everything to a loopback panel (`:9477`) — no cloud required.
+4. **Reloads** field tech on every reboot (`nexus-boot-impl`).
+5. **Installs** underlay via **Underlay F9** / 2026 Tristate installer.
+
+---
+
+## Quick install
 
 ```bash
-git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
-cd NEXUS-Shield
-sudo ./stealth_install.sh
-./nexus.sh
+tar -xzf nexus-shield-10.4.0-source.tar.gz
+cd nexus-shield-10.4.0
+sudo ./install-all.sh
 ```
 
-Your browser opens `https://127.0.0.1:9477/`.
+Full guide → **[Installers](Installers)**
 
 ---
 
-## The three panel tabs
+## Live surfaces
 
-| Tab | For… |
-|-----|------|
-| **[Monitor](Panel-Guide#monitor-tab)** | Live connections, authorize/block, active threats |
-| **[Settings](Panel-Guide#settings-tab)** | All toggles, adblock lists, paranoia history |
-| **[Logs](Panel-Guide#logs-tab)** | Alert and vigil log tails |
-
-Full walkthrough → **[Panel Guide](Panel-Guide)**
+| URL | Purpose |
+|-----|---------|
+| http://127.0.0.1:9477/field | Main C2 panel |
+| http://127.0.0.1:9477/underlay-f9?sector=underlay | Tristate / Underlay F9 |
+| http://127.0.0.1:9477/field#training | Hostess7 training tab |
 
 ---
 
-## When something looks scary
-
-| Situation | What to do |
-|-----------|------------|
-| Browser/CDN flagged | Click **Authorize** — permanent trust |
-| Real harm candidate | Click **Block harm** — outbound block for that IP |
-| NEXUS was killed | Red banner → review forensics → pick restart option |
-| Too many alerts | Settings → turn down paranoia auto-block (default is log-only) |
-
-NEXUS is designed **OFF-first** for blocking. Detection and logging always run; crushing traffic is your choice.
-
----
-
-## Learn more
+## Documentation map
 
 | Guide | Topic |
 |-------|-------|
-| [Panel Guide](Panel-Guide) | Screenshots + plain-English tour |
-| [Linux Installation](Linux-Installation) | Install, verify, uninstall |
-| [Configuration](Configuration) | Panel settings vs config files |
-| [Architecture](Architecture) | How modules connect |
-| [Ultra-Stealth](Ultra-Stealth) | CPU limits, event-driven design |
-| [Self-Defense](Self-Defense) | Signed manifest |
+| **[Installers](Installers)** | Release tarballs, scripts, boot, troubleshoot |
+| **[Field I/O](Field-IO)** | API, state files, diagrams |
+| **[Panel Guide](Panel-Guide)** | Every tab + screenshots |
+| **[Linux Installation](Linux-Installation)** | systemd, verify, uninstall |
+| **[Underlay F9 Tristate](Underlay-F9-Tristate)** | 2026 installer, F9 hotkey |
+| **[Boot Implementation](Boot-Implementation)** | First install vs reboot refresh |
+| **[Architecture](Architecture)** | Daemon modules |
+| **[Configuration](Configuration)** | Panel vs config files |
+
+**GitHub Pages manual** (same content, illustrated): https://zacharygeurts.github.io/NEXUS-Shield/
 
 ---
 
 ## Handy commands
 
 ```bash
-./nexus.sh          # open panel
-nexus status        # health
-nexus verify        # integrity check
-nexus alerts        # recent log lines
-nexus test          # run tests
+./nexus.sh                  # dev tree — panel + browser
+nexus-install-gui.sh        # Tristate installer in browser
+nexus status                # health
+nexus trust <ip>            # trust forever
+nexus verify                # manifest integrity
 ```
 
 ---
 
 ## License
 
-| Project | License | Free like MIT? |
-|---------|---------|----------------|
-| **NEXUS-Shield** (this repo) | [MIT](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE) | Yes |
-| **AMOURANTHRTX** (Field Die) | [GPL v3 or commercial](https://github.com/ZacharyGeurts/AMOURANTHRTX/blob/main/LICENSE) | **No** |
+| Project | License |
+|---------|---------|
+| **NEXUS-Shield** | [MIT](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE) |
+| **AMOURANTHRTX** | GPL v3 or commercial — [separate repo](https://github.com/ZacharyGeurts/AMOURANTHRTX) |
 
-NEXUS-Shield is MIT — free to use with attribution. AMOURANTHRTX is a **separate product**: dual-licensed under **GPL v3** (copyleft) or **commercial** (3% profit share). That technology is **not MIT-free**.
-
-Full breakdown → **[Licensing](Licensing)**
-
-## Related
-
-- [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — Field Die runtime (GPL v3 or commercial — not MIT)
-- [GitHub README](https://github.com/ZacharyGeurts/NEXUS-Shield#readme) — screenshots and feature summary
+→ **[Licensing](Licensing)**

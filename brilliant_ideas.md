@@ -1,6 +1,6 @@
 # NEXUS-Shield — Brilliant Ideas
 
-Five core modules + Privacy Guard + Predictive Guard + Self-Defense. **[Live Wiki](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki)**
+Five core modules + Privacy Guard + Predictive Guard + Self-Defense. **[Wiki v10.4](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki)** · **[Pages manual](https://zacharygeurts.github.io/NEXUS-Shield/)**
 
 | # | Module | Status | Wiki |
 |---|--------|--------|------|
