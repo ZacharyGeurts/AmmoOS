@@ -121,6 +121,7 @@ def bundle_training_data(*, refresh: bool = False) -> dict[str, Any]:
         "engineering": _load(STATE / "hostess7-engineering-panel.json", {}),
         "combat": _load(STATE / "hostess7-combat-panel.json", {}),
         "mos": _load(STATE / "hostess7-mos-panel.json", {}),
+        "reality_physics": _load(STATE / "hostess7-reality-physics-panel.json", {}),
         "brain_guard": _load(STATE / "hostess7-brain-guard-panel.json", {}),
         "iq_test": _load(STATE / "hostess7-iq-test-panel.json", {}),
         "turing": _load(STATE / "hostess7-questionnaire-panel.json", {}),

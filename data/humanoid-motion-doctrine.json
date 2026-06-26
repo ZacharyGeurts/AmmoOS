@@ -1,17 +1,22 @@
 {
   "schema": "humanoid-motion-doctrine/v1",
-  "title": "Humanoid motion training — Matrix skill load",
-  "motto": "I know kung fu — amplitude inject, not epoch backprop. Train on the body lattice.",
+  "title": "Humanoid motion training — gravity-coupled physics lattice",
+  "motto": "Train on the body under gravity — Newtonian mechanics, ground contact, energy receipts. No Matrix instant proficiency.",
+  "physics_mode": true,
   "matrix_load": {
-    "instant_proficiency": 0.72,
-    "train_tick_proficiency": 0.018,
+    "instant_proficiency": 0.0,
+    "train_tick_proficiency": 0.012,
+    "physics_tick_bonus": 0.006,
     "max_proficiency": 1.0,
     "default_session_ticks": 120,
     "blast_ticks": 48,
     "train_intensity": 0.85,
     "full_blast": true,
     "wireframe_fps": 60,
-    "data_peek_fps": 60
+    "data_peek_fps": 60,
+    "gravity_m_s2": 9.80665,
+    "ground_y_norm": 0.12,
+    "mass_kg": 68.0
   },
   "body_zones": {
     "head": {"z": 0.92},

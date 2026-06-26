@@ -54,7 +54,25 @@
       authored_material: slice.authored_material || slice.training_author?.catalog || [],
       curriculum_steps: slice.curriculum_steps || [],
       wireframe: slice.wireframe || {},
+      reality_physics: slice.reality_physics || {},
     };
+  }
+
+  function renderPhysics(bundle) {
+    const el = $("h7-physics-summary");
+    if (!el) return;
+    const rp = bundle.reality_physics || {};
+    const sim = rp.physics_sim || {};
+    const tracks = rp.tracks || {};
+    const g = Number(rp.gravity_m_s2 ?? sim.gravity_m_s2 ?? 9.80665).toFixed(2);
+    const landauer = rp.landauer_j_per_bit != null ? String(rp.landauer_j_per_bit) : "2.87e-21";
+    const prof = Math.round((rp.proficiency || 0) * 100);
+    const rows = Object.entries(tracks).map(([id, t]) =>
+      `${t.label || id}: ${t.pass_rate ?? Math.round((t.score || 0) * 100)}% · ${t.level || "pending"}`
+    );
+    el.innerHTML = `
+      <p class="h7-sub"><strong>Reality foundation</strong> — gravity <strong>${g} m/s²</strong> · Landauer <strong>${landauer} J/bit</strong> · sim proficiency <strong>${prof}%</strong>${sim.grounded === false ? " · airborne" : " · grounded"}</p>
+      <p class="h7-sub">${rows.length ? rows.join(" · ") : "Press Assess, then train reality_physics or gravity_mechanics tracks."}</p>`;
   }
 
   async function fetchBundle(refresh) {
@@ -85,7 +103,7 @@
     if (!list.length) {
       ctx.fillStyle = "#8fb4d9";
       ctx.font = "24px system-ui,sans-serif";
-      ctx.fillText("No data — press Assess", 20, h / 2);
+      ctx.fillText("No data — press Assess for physics tracks", 20, h / 2);
       return;
     }
     const pad = 28;
@@ -122,7 +140,7 @@
     if (!nodes.length) {
       ctx.fillStyle = "#8fb4d9";
       ctx.font = "26px system-ui,sans-serif";
-      ctx.fillText("Field graph loads after Assess", 24, h / 2);
+      ctx.fillText("Reality model graph loads after Assess", 24, h / 2);
       return;
     }
 
@@ -298,6 +316,7 @@
   function render(bundle) {
     lastWireframe = bundle.wireframe || lastWireframe;
     renderHero(bundle);
+    renderPhysics(bundle);
     renderTracks(bundle);
     renderAuthored(bundle);
     renderCurriculum(bundle);

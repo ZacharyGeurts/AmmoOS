@@ -72,8 +72,46 @@ def _matrix_policy(doctrine: dict[str, Any]) -> dict[str, Any]:
     return doctrine.get("matrix_load") or {}
 
 
+def _physics_mod() -> Any | None:
+    import importlib.util
+
+    py = INSTALL / "lib" / "hostess7-reality-physics-training.py"
+    if not py.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("h7reality_physics", py)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _physics_state() -> dict[str, Any]:
+    rp = _physics_mod()
+    if rp and hasattr(rp, "gravity_sim_state"):
+        return rp.gravity_sim_state()
+    policy = _matrix_policy(_load(DOCTRINE, {}))
+    return {
+        "com_y": float(policy.get("ground_y_norm") or 0.12),
+        "com_vy": 0.0,
+        "grounded": True,
+        "gravity_m_s2": float(policy.get("gravity_m_s2") or 9.80665),
+        "stance_stability": 0.0,
+    }
+
+
+def _physics_train_tick() -> dict[str, Any]:
+    rp = _physics_mod()
+    if not rp or not hasattr(rp, "gravity_sim_step"):
+        return {"ok": False, "skipped": True}
+    return rp.gravity_sim_step(impulse_vy=0.04, write=True)
+
+
 def load_skill(skill_id: str, *, write: bool = True) -> dict[str, Any]:
-    """Matrix inject — instant skill amplitude on body lattice."""
+    """Skill scaffold on body lattice — physics floor, not Matrix instant proficiency."""
     doctrine = _load(DOCTRINE, {})
     catalog = _skill_catalog(doctrine)
     sid = (skill_id or "").strip().lower().replace(" ", "_")
@@ -82,21 +120,25 @@ def load_skill(skill_id: str, *, write: bool = True) -> dict[str, Any]:
         return {"ok": False, "error": "unknown_skill", "skill_id": sid, "available": sorted(catalog.keys())}
 
     policy = _matrix_policy(doctrine)
-    instant = float(policy.get("instant_proficiency", 0.72))
+    physics_mode = bool(doctrine.get("physics_mode", True))
+    instant = 0.0 if physics_mode else float(policy.get("instant_proficiency", 0.72))
+    floor = float(policy.get("physics_tick_bonus", 0.06)) if physics_mode else instant
     rt = _runtime()
     loaded = rt.setdefault("loaded", {})
     prev = loaded.get(sid) or {}
-    proficiency = max(float(prev.get("proficiency") or 0), instant)
+    proficiency = max(float(prev.get("proficiency") or 0), instant, floor if not prev else 0.0)
     loaded[sid] = {
         "id": sid,
         "label": skill.get("label"),
         "family": skill.get("family"),
         "proficiency": round(min(1.0, proficiency), 4),
-        "matrix_loaded": True,
+        "matrix_loaded": not physics_mode,
+        "physics_loaded": physics_mode,
         "loaded_at": _now(),
         "ticks": int(prev.get("ticks") or 0),
         "primitives": skill.get("primitives") or [],
         "matrix_quote": skill.get("matrix_quote") or f"I know {skill.get('label')}.",
+        "training_quote": f"Training {skill.get('label')} under gravity — receipts, not instant load.",
     }
     rt["active_skill"] = sid
     rt["updated"] = _now()
@@ -108,7 +150,13 @@ def load_skill(skill_id: str, *, write: bool = True) -> dict[str, Any]:
         "event": "matrix_load",
         "skill": loaded[sid],
         "matrix_quote": loaded[sid]["matrix_quote"],
-        "message": f"{loaded[sid]['matrix_quote']} Skill amplitude injected.",
+        "training_quote": loaded[sid].get("training_quote"),
+        "physics_mode": physics_mode,
+        "message": (
+            loaded[sid].get("training_quote")
+            if physics_mode
+            else f"{loaded[sid]['matrix_quote']} Skill amplitude injected."
+        ),
     }
 
 
@@ -117,7 +165,10 @@ def train_ticks(skill_id: str | None = None, *, ticks: int = 1, write: bool = Tr
     doctrine = _load(DOCTRINE, {})
     catalog = _skill_catalog(doctrine)
     policy = _matrix_policy(doctrine)
+    doctrine_doc = doctrine
+    physics_mode = bool(doctrine_doc.get("physics_mode", True))
     rate = float(policy.get("train_tick_proficiency", 0.018)) * TRAIN_INTENSITY
+    phys_bonus = float(policy.get("physics_tick_bonus", 0.006)) if physics_mode else 0.0
     max_prof = float(policy.get("max_proficiency", 1.0))
     rt = _runtime()
     sid = (skill_id or rt.get("active_skill") or "").strip().lower()
@@ -135,8 +186,16 @@ def train_ticks(skill_id: str | None = None, *, ticks: int = 1, write: bool = Tr
     })
 
     n = max(1, min(int(ticks), 10_000))
+    last_phys: dict[str, Any] = {}
     for _ in range(n):
-        row["proficiency"] = round(min(max_prof, float(row.get("proficiency") or 0) + rate), 4)
+        tick_rate = rate
+        if physics_mode:
+            last_phys = _physics_train_tick()
+            sim = last_phys.get("physics_sim") or {}
+            stability = float(sim.get("stance_stability") or 0)
+            if sim.get("grounded") and sim.get("energy_ok"):
+                tick_rate += phys_bonus * (0.5 + stability * 0.5)
+        row["proficiency"] = round(min(max_prof, float(row.get("proficiency") or 0) + tick_rate), 4)
         row["ticks"] = int(row.get("ticks") or 0) + 1
     rt["total_ticks"] = int(rt.get("total_ticks") or 0) + n
     rt["active_skill"] = sid
@@ -144,8 +203,12 @@ def train_ticks(skill_id: str | None = None, *, ticks: int = 1, write: bool = Tr
         "skill": sid,
         "ticks_ran": n,
         "proficiency": row["proficiency"],
+        "physics_mode": physics_mode,
+        "physics_sim": last_phys.get("physics_sim") if physics_mode else None,
         "updated": _now(),
     }
+    if physics_mode:
+        rt["physics_state"] = _physics_state()
     rt["updated"] = _now()
     if write:
         _save(RUNTIME, rt)
@@ -360,8 +423,11 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "enabled": ENABLED,
         "product": "Universal Protector",
         "autonomous_being": True,
-        "matrix_mode": True,
+        "matrix_mode": not bool(doctrine.get("physics_mode", True)),
+        "physics_mode": bool(doctrine.get("physics_mode", True)),
         "motto": doctrine.get("motto"),
+        "physics_state": _physics_state(),
+        "gravity_m_s2": float((_matrix_policy(doctrine)).get("gravity_m_s2") or 9.80665),
         "catalog_count": len(catalog),
         "loaded_count": len(loaded),
         "active_skill": active,

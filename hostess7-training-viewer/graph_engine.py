@@ -440,6 +440,48 @@ def build_wireframe_graph(
                 add_node(id=tid, label=target, group="link", level="pending", score=0.3, x=mx * 0.5, y=my * 0.5, z=mz * 0.5, kind="link")
             add_edge(f"ext_{mid}", tid, "connected")
 
+    rp_panel = _load(state / "hostess7-reality-physics-panel.json", {})
+    rp_tracks = (rp_panel.get("tracks") or {}) if isinstance(rp_panel, dict) else {}
+    rp_sim = rp_panel.get("physics_sim") or {}
+    add_node(
+        id="reality_physics_hub",
+        label="Reality physics",
+        group="physics_core",
+        level=str((rp_tracks.get("reality_physics") or {}).get("level") or "training"),
+        score=float((rp_tracks.get("reality_physics") or {}).get("score") or 0.35),
+        x=0, y=5.2, z=-2.4,
+        color="#f4a261",
+        detail=str(rp_panel.get("foundation") or "Gravity · thermodynamics · entropy · field technology")[:120],
+        kind="physics_hub",
+        payload={
+            "gravity_m_s2": rp_panel.get("gravity_m_s2"),
+            "landauer_j_per_bit": rp_panel.get("landauer_j_per_bit"),
+            "grounded": rp_sim.get("grounded"),
+            "under_god": rp_panel.get("under_god"),
+        },
+    )
+    add_edge("reality_physics_hub", "hostess7_core", "physics")
+    for pi, (pid, plabel, pcolor) in enumerate((
+        ("gravity_mechanics", "Gravity", "#38bdf8"),
+        ("thermodynamics_entropy", "Thermo·entropy", "#c084fc"),
+        ("field_technology", "Field tech", "#4ade80"),
+    )):
+        pt = rp_tracks.get(pid) or tracks.get(pid) or {}
+        px, py, pz = _ring_pos(pi, 3, 3.6, 5.2, 0.6)
+        add_node(
+            id=f"physics_{pid}",
+            label=plabel,
+            group="physics_track",
+            level=level_from_track(pt) if pt else "pending",
+            score=float(pt.get("score") or 0.2),
+            x=px, y=py, z=pz,
+            color=pcolor,
+            detail=json.dumps({k: pt.get(k) for k in ("pass_rate", "proficiency", "physics_ticks") if pt.get(k) is not None}, ensure_ascii=False)[:120],
+            kind="physics_track",
+        )
+        add_edge("reality_physics_hub", f"physics_{pid}", "physics")
+        add_edge(f"physics_{pid}", "hostess7_core", "training")
+
     meld = _load(state / "field-plate-meld.json", {})
     if meld.get("chain_hash"):
         add_node(

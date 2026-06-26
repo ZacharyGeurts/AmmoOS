@@ -25,7 +25,11 @@
     {"id": "turing_battery", "label": "Turing / human questionnaire", "weight": 0.85, "complete_when": "pass_rate >= 85"},
     {"id": "neural_suite", "label": "Neural self-test suite", "weight": 0.88, "complete_when": "pass_rate >= 75"},
     {"id": "omnibus", "label": "Omnibus field array", "weight": 0.80, "complete_when": "simulation_master set"},
-    {"id": "author_material", "label": "Self-authored training", "weight": 0.75, "complete_when": "authored_total >= 1 when gaps exist"}
+    {"id": "author_material", "label": "Self-authored training", "weight": 0.75, "complete_when": "authored_total >= 1 when gaps exist"},
+    {"id": "reality_physics", "label": "Reality foundation", "weight": 0.98, "complete_when": "fluent && tier in reality_physics_fluent,reality_physics_master"},
+    {"id": "gravity_mechanics", "label": "Gravity & mechanics", "weight": 0.96, "complete_when": "fluent && pass_rate >= 85"},
+    {"id": "thermodynamics_entropy", "label": "Thermodynamics & entropy", "weight": 0.95, "complete_when": "fluent && pass_rate >= 85"},
+    {"id": "field_technology", "label": "Field technology", "weight": 0.92, "complete_when": "fluent && pass_rate >= 85"}
   ],
   "solid_threshold": 0.92,
   "mastered_threshold": 1.0

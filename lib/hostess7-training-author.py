@@ -131,6 +131,7 @@ def detect_training_gaps(
         if tid not in meta and tid not in (
             "programming", "g16", "codecraft", "calculator",
             "biology", "engineering", "combat", "mos",
+            "reality_physics", "gravity_mechanics", "thermodynamics_entropy", "field_technology",
         ):
             continue
         score = float(row.get("score") or 0)

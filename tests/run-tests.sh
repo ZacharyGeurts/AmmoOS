@@ -2475,7 +2475,7 @@ test_humanoid_motion_training() {
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
     pythong "${ROOT}/lib/humanoid-motion-training.py" load wing_chun | grep -q 'Wing Chun'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
-    pythong "${ROOT}/lib/humanoid-motion-training.py" json | grep -q '"matrix_mode": true'
+    pythong "${ROOT}/lib/humanoid-motion-training.py" json | grep -q '"physics_mode": true'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
     pythong "${ROOT}/lib/hostess7-neural.py" literacy 'matrix kung fu mma' | grep -qi 'Matrix'
   [[ -f "${ROOT}/panel/assets/humanoid-wireframe.js" ]]
@@ -2858,6 +2858,26 @@ test_hostess7_mos() {
 }
 
 run_test "Hostess 7 MOS assistance" test_hostess7_mos
+test_reality_physics_training() {
+  [[ -f "${ROOT}/lib/hostess7-reality-physics-training.py" ]]
+  [[ -f "${ROOT}/data/hostess7-reality-physics-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-reality-physics-battery.json" ]]
+  grep -q 'reality_physics' "${ROOT}/data/hostess7-training-doctrine.json"
+  grep -q 'gravity_mechanics' "${ROOT}/data/hostess7-training-doctrine.json"
+  grep -q 'physics_mode' "${ROOT}/data/humanoid-motion-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-reality-physics-training.py" battery gravity | grep -q '"battery": "gravity"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-reality-physics-training.py" train 24 | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-reality-physics-training.py" json | grep -q 'hostess7-reality-physics/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-training.py" assess | grep -q 'reality_physics'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/humanoid-motion-training.py" load wing_chun | grep -q 'physics_mode'
+}
+
+run_test "reality physics training" test_reality_physics_training
 run_test "Hostess 7 training completion" test_hostess7_training
 
 rm -rf "$NEXUS_STATE_DIR" /tmp/nexus-ent-rand.bin /tmp/nexus-ent-text.txt /tmp/nexus-shadow-t.txt "$NEXUS_ALERT_LOG" 2>/dev/null || true

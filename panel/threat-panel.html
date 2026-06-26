@@ -2179,7 +2179,7 @@
         <section class="humanoid-arena" id="humanoid-arena" aria-label="Humanoid motion wireframe arena">
           <div class="humanoid-arena__head">
             <h3>Humanoid wireframe · Matrix training</h3>
-            <span class="humanoid-arena__status" id="humanoid-motion-status">Loading motion chamber…</span>
+            <span class="humanoid-arena__status" id="humanoid-motion-status">Loading physics motion chamber…</span>
           </div>
           <div class="humanoid-arena__canvas-wrap">
             <canvas id="humanoid-wireframe-canvas" aria-label="Humanoid wireframe with training amplitudes and opponents"></canvas>
@@ -2193,8 +2193,8 @@
               <option value="wing_chun">Wing Chun</option>
             </select>
             <button type="button" id="humanoid-data-window-btn" data-tip="Open second window — full motion, spatial, opponents, meld, ledger data.">Data window</button>
-            <button type="button" id="humanoid-load-btn" data-tip="Matrix load — instant skill inject on body lattice.">Matrix load</button>
-            <button type="button" id="humanoid-train-btn" data-tip="Manual blast — 4× tick batch on selected skill. Auto FULL BLAST runs continuously.">Blast burst</button>
+            <button type="button" id="humanoid-load-btn" data-tip="Load skill scaffold — physics floor, not instant Matrix proficiency.">Load skill</button>
+            <button type="button" id="humanoid-train-btn" data-tip="Physics blast — gravity-ticked training batch. Auto FULL BLAST runs continuously.">Physics blast</button>
           </div>
           <div class="humanoid-arena__opponents" id="humanoid-opponent-chips"></div>
           <div class="humanoid-arena__legend">
@@ -2699,7 +2699,7 @@
       <div class="h7-head">
         <div class="h7-head-text">
           <h1 class="h7-title">Hostess 7 Training</h1>
-          <p class="h7-sub">Live evaluations · curriculum · mastery pillars</p>
+          <p class="h7-sub">Reality physics · gravity · thermodynamics · entropy · field technology — under God, trained on live state</p>
         </div>
         <div class="h7-toolbar">
           <label class="h7-chip"><input type="checkbox" id="h7-auto-refresh" checked /> Auto</label>
@@ -2710,7 +2710,7 @@
           <button type="button" id="h7-btn-author" data-tip="Hostess 7 detects training gaps and writes six-section lessons into STATE.">Write material</button>
         </div>
       </div>
-      <p class="h7-status" id="h7-training-status">Open this tab to load training data.</p>
+      <p class="h7-status" id="h7-training-status">Loading reality models and training tracks…</p>
 
       <div class="h7-top-row">
         <div class="h7-ring" id="h7-score-ring" style="--pct: 0">
@@ -2726,14 +2726,14 @@
       <div class="h7-graph-row">
         <div class="h7-wire-wrap">
           <div class="h7-wire-toolbar">
-            <span id="nexus-training-wireframe-hud">Field graph</span>
+            <span id="nexus-training-wireframe-hud">Reality model graph · physics tracks</span>
             <button type="button" id="h7-btn-focus">Focus</button>
           </div>
           <canvas id="nexus-training-wireframe-canvas"></canvas>
         </div>
         <aside class="h7-inspector" id="nexus-training-node-detail">
           <h3 class="h7-inspector-title">Evaluation</h3>
-          <pre class="h7-eval-box h7-eval-inline" id="h7-eval-detail">Run a track to see detailed evaluation.</pre>
+          <pre class="h7-eval-box h7-eval-inline" id="h7-eval-detail">Run a physics or training track for live evaluation receipts.</pre>
         </aside>
       </div>
 
@@ -2741,6 +2741,8 @@
         <div class="h7-chart-card"><h3>Track scores</h3><canvas id="h7-chart-tracks"></canvas></div>
         <div class="h7-chart-card"><h3>Pillars</h3><canvas id="h7-chart-facets"></canvas></div>
       </div>
+
+      <div id="h7-physics-summary" class="h7-chart-card" style="margin-bottom:14px;padding:12px 14px"></div>
 
       <h2 class="h7-section-title">Training tracks</h2>
       <div class="h7-tracks" id="h7-tracks-grid"></div>

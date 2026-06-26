@@ -199,9 +199,25 @@
 
   function trainReadyLabel(doc) {
     const v = motionVerdict(doc);
-    if (v === "technique_ready") return "Technique ready — Matrix chamber saturated";
-    if (v === "train_continue") return "Assemblage supports continued Matrix training";
-    return "Motion chamber ready";
+    const phys = doc?.physics_mode !== false;
+    if (v === "technique_ready") {
+      return phys ? "Technique ready — gravity-coupled chamber saturated" : "Technique ready — Matrix chamber saturated";
+    }
+    if (v === "train_continue") {
+      return phys ? "Assemblage supports physics training under gravity" : "Assemblage supports continued Matrix training";
+    }
+    return phys ? "Physics motion chamber ready" : "Motion chamber ready";
+  }
+
+  function gravityOffsetY(doc, scale) {
+    const ps = doc?.physics_state || doc?.training?.physics_sim || {};
+    const ground = 0.12;
+    const comY = Number(ps.com_y ?? ground);
+    const grounded = ps.grounded !== false;
+    const vy = Number(ps.com_vy ?? 0);
+    const lift = grounded ? 0 : Math.max(-0.08, Math.min(0.12, (ground - comY) * 0.35));
+    const bounce = grounded && Math.abs(vy) > 0.02 ? Math.sin(phase * 2) * vy * scale * 0.08 : 0;
+    return (lift + bounce) * scale;
   }
 
   function trainDismissedVerdict() {
@@ -245,8 +261,30 @@
     const arena = doc?.arena || {};
     const anchor = arena.fighter_anchor || { x: 0.32, y: 0.58 };
     const fighterX = w * anchor.x;
-    const fighterY = h * anchor.y;
     const scale = Math.min(w, h) * 0.42;
+    const gravDy = doc?.physics_mode !== false ? gravityOffsetY(doc, 1) : 0;
+    const fighterY = h * anchor.y + gravDy;
+
+    if (doc?.physics_mode !== false) {
+      const g = Number(doc?.gravity_m_s2 ?? doc?.physics_state?.gravity_m_s2 ?? 9.80665);
+      const gx = fighterX - scale * 0.55;
+      const gy = fighterY - scale * 0.35;
+      ctx.strokeStyle = "rgba(56,189,248,0.55)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx, gy + scale * 0.22);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(56,189,248,0.85)";
+      ctx.beginPath();
+      ctx.moveTo(gx, gy + scale * 0.22);
+      ctx.lineTo(gx - 5, gy + scale * 0.14);
+      ctx.lineTo(gx + 5, gy + scale * 0.14);
+      ctx.fill();
+      ctx.font = "10px system-ui,sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`g ${g.toFixed(2)} m/s²`, gx - 8, gy - 6);
+    }
 
     drawHumanoid(ctx, fighterX, fighterY, scale, {
       stroke: "#38bdf8",
@@ -339,8 +377,8 @@
       <div class="humanoid-train-modal__panel">
         <div class="humanoid-train-modal__head">
           <div>
-            <h2 id="humanoid-train-modal-title">Motion ready — Matrix training</h2>
-            <p id="humanoid-train-modal-sub">Iron-clad assemblage supports training.</p>
+            <h2 id="humanoid-train-modal-title">Motion ready — physics training</h2>
+            <p id="humanoid-train-modal-sub">Gravity-coupled body lattice — iron-clad assemblage supports training.</p>
           </div>
           <span class="humanoid-train-modal__badge" id="humanoid-train-modal-badge">TRAIN READY</span>
         </div>
@@ -471,8 +509,16 @@
       const profPct = Math.round((doc?.active_proficiency || 0) * 100);
       const ticks = doc?.total_training_ticks ?? 0;
       const oppN = doc?.opponent_count ?? 0;
-      const quote = doc?.matrix_quote || "Matrix skill load ready";
+      const phys = doc?.physics_mode !== false;
+      const ps = doc?.physics_state || {};
+      const quote = phys
+        ? (doc?.training?.physics_sim?.grounded ? "Grounded stance" : "Airborne — gravity sim")
+        : (doc?.matrix_quote || "Matrix skill load ready");
       const trainPct = Math.round(trainIntensity * 100);
+      const gTag = phys ? ` · g ${Number(doc?.gravity_m_s2 ?? ps.gravity_m_s2 ?? 9.81).toFixed(1)} m/s²` : "";
+      const stabTag = phys && ps.stance_stability != null
+        ? ` · stability ${Math.round(Number(ps.stance_stability) * 100)}%`
+        : "";
       const verdict = doc?.motion_verdict || doc?.iron_plate_motion?.motion_verdict;
       const ironClad = doc?.iron_clad ?? doc?.iron_plate_motion?.iron_clad;
       const asm = doc?.assemblage_score ?? doc?.assemblage_remaining?.assemblage_score;
@@ -486,7 +532,7 @@
       const ear = doc?.hearing_live ?? sp?.hearing?.live;
       const h7 = doc?.brain_verified ?? doc?.hostess7_brain?.verification?.verified;
       const senseTag = ` · H7 ${h7 ? "verified" : "…"} · eye ${vis ? "live" : "…"} · ear ${ear ? "live" : "…"}`;
-      status.textContent = `${quote} · ${profPct}% · ${ticks} ticks · ${oppN} opponents · training ${trainPct}% · ${wireframeFps}fps${senseTag}${motionTag}${lifeTag}`;
+      status.textContent = `${quote} · ${profPct}% · ${ticks} ticks · ${oppN} opponents · training ${trainPct}% · ${wireframeFps}fps${gTag}${stabTag}${senseTag}${motionTag}${lifeTag}`;
     }
     if (prof) {
       prof.style.width = `${Math.round((doc?.active_proficiency || 0) * 100)}%`;

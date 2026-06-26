@@ -492,6 +492,45 @@ def _assess_neural() -> dict[str, Any]:
     }
 
 
+def _assess_reality_physics_track(track_id: str) -> dict[str, Any]:
+    rp = _mod("h7reality", "hostess7-reality-physics-training.py")
+    if not rp or not hasattr(rp, "assess_track"):
+        return {"ok": False, "level": "pending", "complete": False, "mastered": False, "score": 0.0}
+    row = rp.assess_track(track_id)
+    score = float(row.get("score") or 0)
+    complete = bool(row.get("complete"))
+    mastered = bool(row.get("mastered"))
+    fluent = bool(row.get("fluent"))
+    return {
+        "ok": bool(row.get("ok")),
+        "level": row.get("level") or _level_id(score, complete=complete, mastered=mastered),
+        "complete": complete,
+        "mastered": mastered,
+        "fluent": fluent,
+        "score": round(score, 4),
+        "pass_rate": row.get("pass_rate"),
+        "tier": row.get("tier"),
+        "proficiency": row.get("proficiency"),
+        "physics_ticks": row.get("physics_ticks"),
+    }
+
+
+def _assess_reality_physics() -> dict[str, Any]:
+    return _assess_reality_physics_track("reality_physics")
+
+
+def _assess_gravity_mechanics() -> dict[str, Any]:
+    return _assess_reality_physics_track("gravity_mechanics")
+
+
+def _assess_thermodynamics_entropy() -> dict[str, Any]:
+    return _assess_reality_physics_track("thermodynamics_entropy")
+
+
+def _assess_field_technology() -> dict[str, Any]:
+    return _assess_reality_physics_track("field_technology")
+
+
 def _assess_omnibus() -> dict[str, Any]:
     st = _load(STATE / "hostess7-master-state.json", {})
     sim = _load(STATE / "hostess7-master-sim-panel.json", {})
@@ -740,6 +779,10 @@ ASSESSORS: dict[str, Callable[[], dict[str, Any]]] = {
     "turing_battery": _assess_turing,
     "neural_suite": _assess_neural,
     "omnibus": _assess_omnibus,
+    "reality_physics": _assess_reality_physics,
+    "gravity_mechanics": _assess_gravity_mechanics,
+    "thermodynamics_entropy": _assess_thermodynamics_entropy,
+    "field_technology": _assess_field_technology,
 }
 
 
@@ -1010,6 +1053,27 @@ SELF_INTERACTION_QUERIES = (
 )
 
 
+def _run_reality_physics(track_id: str = "reality_physics") -> dict[str, Any]:
+    rp = _mod("h7reality", "hostess7-reality-physics-training.py")
+    if not rp:
+        return {"ok": False, "error": "reality_physics_missing"}
+    _write_runtime(
+        phase="reality_physics",
+        active_track=track_id,
+        progress_pct=15,
+        detail=f"Physics training — gravity, thermodynamics, entropy ({track_id})…",
+    )
+    session = rp.train_physics_session() if hasattr(rp, "train_physics_session") else {"ok": False}
+    _write_runtime(
+        phase="reality_physics",
+        progress_pct=85,
+        detail="Building reality physics panel…",
+    )
+    panel = rp.build_panel(write=True) if hasattr(rp, "build_panel") else {}
+    _write_runtime(phase="idle", progress_pct=100, detail=f"{track_id} physics session complete")
+    return {"ok": bool(session.get("ok")), "panel": panel, "session": session, "track": track_id}
+
+
 def _run_author_material() -> dict[str, Any]:
     """Hostess 7 writes her own training material when tracks need more."""
     author = _mod("h7author", "hostess7-training-author.py")
@@ -1115,6 +1179,10 @@ def run_track(track_id: str, *, ocr_train: bool = False) -> dict[str, Any]:
         "author_material": _run_author_material,
         "author_training": _run_author_material,
         "write_training": _run_author_material,
+        "reality_physics": lambda: _run_reality_physics("reality_physics"),
+        "gravity_mechanics": lambda: _run_reality_physics("gravity_mechanics"),
+        "thermodynamics_entropy": lambda: _run_reality_physics("thermodynamics_entropy"),
+        "field_technology": lambda: _run_reality_physics("field_technology"),
     }
     fn = runners.get(canonical) or runners.get(track_id)
     if not fn:
