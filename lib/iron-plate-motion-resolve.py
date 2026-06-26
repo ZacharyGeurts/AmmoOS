@@ -50,10 +50,20 @@ def _check_goal(goal_id: str, ctx: dict[str, Any]) -> bool:
     arithmetic = iron.get("arithmetic") or {}
     summary = meld.get("summary") or meld_rt.get("summary") or {}
 
+    net_stack = summary.get("network_stack") or {}
     checks: dict[str, bool] = {
         "meld_generation_positive": int(meld.get("generation") or meld_rt.get("generation") or 0) > 0,
         "iron_plate_direct_routes": int(arithmetic.get("direct_count") or summary.get("direct") or 0) > 0,
-        "logic_gate_high": str(logic.get("threat_warn_level") or "high").lower() == "high",
+        "network_stack_melded": bool(
+            net_stack.get("network_stack_melded")
+            or summary.get("network_stack_melded")
+            or (
+                int(summary.get("connections") or iron.get("connection_count") or 0) > 0
+                and bool(summary.get("gatekeeper_connections") or net_stack.get("gatekeeper_connections"))
+                and bool(summary.get("logic_gate_high") or net_stack.get("logic_gate_high"))
+            )
+        ),
+        "logic_gate_high": str(logic.get("threat_warn_level") or summary.get("logic_gate_high") or "high").lower() == "high",
         "threat_warn_high": str(protector.get("threat_warn_level") or logic.get("threat_warn_level") or "high").lower() == "high",
         "meld_chain_present": bool(meld.get("chain_hash") or meld_rt.get("chain_hash")),
         "spatial_body_net": "body" in ((spatial.get("networks_of_networks") or {})),
@@ -242,6 +252,41 @@ def _logic_protector_score(ctx: dict[str, Any]) -> tuple[float, dict[str, Any]]:
     }
 
 
+def _network_stack_score(ctx: dict[str, Any]) -> tuple[float, dict[str, Any]]:
+    meld = ctx.get("meld") or ctx.get("meld_runtime") or {}
+    summary = meld.get("summary") or {}
+    net_stack = summary.get("network_stack") or {}
+    iron = ctx.get("iron") or _meld_snapshots(ctx).get("iron_plate") or {}
+    gk = _meld_snapshots(ctx).get("gatekeeper") or {}
+    znet = _meld_snapshots(ctx).get("znetwork") or {}
+    net_count = int(net_stack.get("net_iface_count") or 0)
+    iron_total = int(iron.get("connection_count") or summary.get("connections") or 0)
+    gk_count = int(net_stack.get("gatekeeper_connections") or gk.get("connection_count") or 0)
+    direct = int(net_stack.get("direct_routes") or summary.get("direct") or 0)
+    melded = bool(net_stack.get("network_stack_melded") or summary.get("network_stack_melded"))
+    score = 0.0
+    if iron_total > 0:
+        score += 0.35
+    if net_count > 0:
+        score += 0.2
+    if gk_count > 0:
+        score += 0.2
+    if direct > 0:
+        score += 0.15
+    if melded:
+        score += 0.1
+    if znet and not znet.get("missing"):
+        score = min(1.0, score + 0.05)
+    return min(1.0, score), {
+        "network_stack_melded": melded,
+        "net_iface_count": net_count,
+        "gatekeeper_connections": gk_count,
+        "direct_routes": direct,
+        "znetwork_present": bool(znet and not znet.get("missing")),
+        "plate": "network_stack",
+    }
+
+
 def full_assemblage_meld(*, ctx: dict[str, Any] | None = None) -> dict[str, Any]:
     """Fuse vision, hearing, sense, spatial, motion, iron slots, meld chain."""
     if ctx is None:
@@ -278,6 +323,7 @@ def full_assemblage_meld(*, ctx: dict[str, Any] | None = None) -> dict[str, Any]
     sense_s, sense_meta = _sense_meld_score(ctx)
     meld_s, meld_meta = _meld_chain_score(ctx)
     lp_s, lp_meta = _logic_protector_score(ctx)
+    ns_s, ns_meta = _network_stack_score(ctx)
     cl_s, cl_meta = _creatable_lives_score(ctx)
 
     weight_sum = sum(weights.values()) or 1.0
@@ -293,8 +339,9 @@ def full_assemblage_meld(*, ctx: dict[str, Any] | None = None) -> dict[str, Any]
         "hearing": round(ear_s * weights.get("hearing", 0.10) * norm, 4),
         "sense_package": round(sense_s * weights.get("sense_package", 0.08) * norm, 4),
         "meld_chain": round(meld_s * weights.get("meld_chain", 0.08) * norm, 4),
-        "logic_protector": round(lp_s * weights.get("logic_protector", 0.08) * norm, 4),
-        "creatable_lives": round(cl_s * weights.get("creatable_lives", 0.06) * norm, 4),
+        "logic_protector": round(lp_s * weights.get("logic_protector", 0.07) * norm, 4),
+        "network_stack": round(ns_s * weights.get("network_stack", 0.06) * norm, 4),
+        "creatable_lives": round(cl_s * weights.get("creatable_lives", 0.05) * norm, 4),
     }
     fused = round(sum(contributions.values()), 4)
     plates_live = sum(1 for m in (h7_meta, vis_meta, ear_meta, sense_meta) if m.get("live") or m.get("verified") or m.get("present_count", 0) >= 2)
@@ -315,6 +362,7 @@ def full_assemblage_meld(*, ctx: dict[str, Any] | None = None) -> dict[str, Any]
             "sense_package": sense_meta,
             "meld_chain": meld_meta,
             "logic_protector": lp_meta,
+            "network_stack": ns_meta,
             "creatable_lives": cl_meta,
             "motion": {
                 "active_skill": motion.get("active_skill"),

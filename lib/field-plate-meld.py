@@ -39,6 +39,7 @@ PLATE_SOURCES: tuple[tuple[str, str], ...] = (
     ("sovereign_sync", "sovereign-sync-manifest.json"),
     ("packet_field", "packet-field.json"),
     ("gatekeeper", "connection-intent.json"),
+    ("znetwork", "znetwork-status.json"),
     ("spatial_field", "field-spatial-panel.json"),
     ("logic_gate", "nexus-logic-gate-runtime.json"),
     ("universal_protector", "universal-protector-panel.json"),
@@ -112,9 +113,28 @@ def _digest(plates: dict[str, Any], prev_chain: str) -> str:
 
 def _meld_lock() -> int:
     LOCK.parent.mkdir(parents=True, exist_ok=True)
+    stale_sec = int(os.environ.get("NEXUS_PLATE_MELD_LOCK_STALE_SEC", "300") or "300")
+    if LOCK.is_file() and stale_sec > 0:
+        try:
+            if time.time() - LOCK.stat().st_mtime > stale_sec:
+                LOCK.unlink(missing_ok=True)
+        except OSError:
+            pass
     fd = os.open(str(LOCK), os.O_CREAT | os.O_RDWR, 0o644)
-    fcntl.flock(fd, fcntl.LOCK_EX)
-    return fd
+    deadline = time.time() + min(30, max(5, stale_sec // 10))
+    while True:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return fd
+        except BlockingIOError:
+            if time.time() >= deadline:
+                try:
+                    LOCK.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                fcntl.flock(fd, fcntl.LOCK_EX)
+                return fd
+            time.sleep(0.25)
 
 
 def _meld_unlock(fd: int) -> None:
@@ -123,6 +143,211 @@ def _meld_unlock(fd: int) -> None:
         os.close(fd)
     except OSError:
         pass
+
+
+def _import_call(script: Path, mod_name: str, fn: str, *args: Any, **kwargs: Any) -> Any:
+    if not script.is_file():
+        return None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(mod_name, script)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        call = getattr(mod, fn, None)
+        if not callable(call):
+            return None
+        return call(*args, **kwargs)
+    except Exception:
+        return None
+
+
+def _iron_plate_fresh(max_age: int) -> bool:
+    if max_age <= 0:
+        return False
+    for fname in ("field-operator-iron-plate.json", "field-operator-plate-runtime.json"):
+        path = STATE / fname
+        if not path.is_file():
+            continue
+        try:
+            age = time.time() - path.stat().st_mtime
+            if age >= max_age:
+                continue
+            cached = _load(path, {})
+            if int(cached.get("connection_count") or 0) > 0:
+                return True
+            if len(cached.get("route_words") or []) > 0:
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def _refresh_iron_plate() -> None:
+    if os.environ.get("NEXUS_IRON_PLATE_MELD_REFRESH", "1") != "1":
+        return
+    max_age = int(os.environ.get("NEXUS_IRON_PLATE_MELD_MAX_AGE_SEC", "60") or "60")
+    if _iron_plate_fresh(max_age):
+        return
+    fast: dict[str, Any] | None = None
+    scan_cache = STATE / "field-operator-scan-cache.json"
+    if scan_cache.is_file():
+        cached = _load(scan_cache, {})
+        if cached.get("profiles"):
+            fast = cached
+    _import_call(
+        INSTALL / "lib" / "field-operator.py",
+        "field_operator",
+        "build_iron_plate",
+        fast=fast,
+    )
+
+
+def _refresh_gatekeeper() -> None:
+    if os.environ.get("NEXUS_CONNECTION_GATEKEEPER", "1") != "1":
+        return
+    if os.environ.get("NEXUS_NETWORK_STACK_MELD", "1") != "1":
+        return
+    py = INSTALL / "lib" / "connection-gatekeeper.py"
+    if not py.is_file():
+        return
+    try:
+        import subprocess
+        snap = STATE / "packet.snapshot"
+        if snap.is_file() and snap.stat().st_size > 0:
+            with snap.open("r", encoding="utf-8", errors="replace") as fh:
+                lines = fh.read().splitlines()
+        else:
+            proc = subprocess.run(
+                ["ss", "-H", "-tunap"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            lines = proc.stdout.splitlines()
+        if not lines:
+            return
+        env = os.environ.copy()
+        env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
+        env["NEXUS_STATE_DIR"] = str(STATE)
+        proc = subprocess.run(
+            [sys.executable, str(py), "--stdin"],
+            input="\n".join(lines) + "\n",
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=env,
+        )
+        if proc.returncode != 0 or not (proc.stdout or "").strip():
+            return
+        payload = proc.stdout if proc.stdout.endswith("\n") else proc.stdout + "\n"
+        _fsync_write(STATE / "connection-intent.json", payload)
+    except Exception:
+        pass
+
+
+def _refresh_logic_gate() -> None:
+    if os.environ.get("NEXUS_LOGIC_GATE", "1") != "1":
+        return
+    if os.environ.get("NEXUS_NETWORK_STACK_MELD", "1") != "1":
+        return
+    doc = _import_call(INSTALL / "lib" / "nexus-logic-gate.py", "nexus_logic_gate", "status_json")
+    if isinstance(doc, dict) and doc.get("schema"):
+        _fsync_write(
+            STATE / "nexus-logic-gate-runtime.json",
+            json.dumps(doc, ensure_ascii=False, indent=2) + "\n",
+        )
+
+
+def _refresh_port_ddos() -> None:
+    if os.environ.get("NEXUS_NETWORK_STACK_MELD", "1") != "1":
+        return
+    _import_call(
+        INSTALL / "lib" / "field-port-ddos-shield.py",
+        "field_port_ddos",
+        "build_panel",
+        enforce=os.environ.get("NEXUS_PORT_DDOS_ENFORCE", "1") == "1",
+    )
+
+
+def _refresh_packet_deinterlace() -> None:
+    if os.environ.get("NEXUS_NETWORK_STACK_MELD", "1") != "1":
+        return
+    _import_call(INSTALL / "lib" / "field-packet-deinterlace.py", "field_packet_deinterlace", "build_panel")
+
+
+def _refresh_znetwork_status() -> None:
+    if os.environ.get("NEXUS_ZNETWORK", "1") != "1":
+        return
+    if os.environ.get("NEXUS_NETWORK_STACK_MELD", "1") != "1":
+        return
+    out = STATE / "znetwork-status.json"
+    if out.is_file() and out.stat().st_size > 32:
+        return
+    sh = INSTALL / "lib" / "znetwork-field.sh"
+    if not sh.is_file():
+        return
+    try:
+        import subprocess
+        env = os.environ.copy()
+        env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
+        env["NEXUS_STATE_DIR"] = str(STATE)
+        subprocess.run(
+            ["bash", "-c", f'source "{sh}" && nexus_znetwork_publish'],
+            timeout=45,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+    except Exception:
+        pass
+
+
+def _net_stack_summary(plates: dict[str, Any]) -> dict[str, Any]:
+    iron = plates.get("iron_plate") or {}
+    gk = plates.get("gatekeeper") or {}
+    logic = plates.get("logic_gate") or {}
+    znet = plates.get("znetwork") or {}
+    ddos = plates.get("port_ddos") or {}
+    deint = plates.get("deinterlace") or {}
+    kernel = plates.get("kernel") or {}
+    rt = plates.get("plate_runtime") or {}
+    net_conns = [
+        c for c in (iron.get("connections") or [])
+        if str(c.get("bus") or "").lower() == "net"
+    ]
+    iron_total = int(
+        iron.get("connection_count")
+        or rt.get("connection_count")
+        or len(rt.get("route_words") or [])
+        or 0
+    )
+    return {
+        "iron_plate_connections": iron_total,
+        "net_iface_count": len(net_conns),
+        "route_words": len((plates.get("plate_runtime") or {}).get("route_words") or []),
+        "direct_routes": int(
+            (iron.get("arithmetic") or {}).get("direct_count")
+            or rt.get("direct_count")
+            or 0
+        ),
+        "gatekeeper_connections": int(gk.get("connection_count") or len(gk.get("connections") or [])),
+        "gatekeeper_harm_candidates": int(gk.get("harm_candidates") or 0),
+        "gatekeeper_updated": bool(gk.get("updated")),
+        "logic_gate_high": str(logic.get("threat_warn_level") or "high").lower() == "high",
+        "logic_gate_ok": logic.get("ok") is not False and not logic.get("missing"),
+        "znetwork_present": not znet.get("missing") and bool(znet),
+        "znetwork_mode": znet.get("mode") or os.environ.get("ZNETWORK_MODE", "REVIEW_ONLY"),
+        "kernel_meld_live": bool(kernel.get("kilroy_live")),
+        "port_ddos_shield": ddos.get("schema") or (None if ddos.get("missing") else "present"),
+        "packet_deinterlace": deint.get("schema") or (None if deint.get("missing") else "present"),
+        "network_stack_melded": (
+            iron_total > 0
+            and bool(gk.get("updated") or gk.get("connections"))
+            and (logic.get("ok") is not False)
+        ),
+    }
 
 
 def _refresh_firmware_threats() -> None:
@@ -157,7 +382,34 @@ def _refresh_kernel_meld() -> None:
         pass
 
 
+def _meld_light() -> bool:
+    return os.environ.get("NEXUS_PLATE_MELD_LIGHT", "1") == "1"
+
+
+def _field_plate_fresh(max_age: int) -> bool:
+    if max_age <= 0:
+        return False
+    path = STATE / "field-plate-field-runtime.json"
+    if not path.is_file():
+        return False
+    try:
+        age = time.time() - path.stat().st_mtime
+        if age >= max_age:
+            return False
+        cached = _load(path, {})
+        return bool(cached.get("schema")) and (
+            cached.get("field_energy") is not None
+            or cached.get("dimension_count") is not None
+            or cached.get("peak_amplitude") is not None
+        )
+    except OSError:
+        return False
+
+
 def _refresh_field_plate() -> None:
+    max_age = int(os.environ.get("NEXUS_FIELD_PLATE_MELD_MAX_AGE_SEC", "120") or "120")
+    if _field_plate_fresh(max_age):
+        return
     py = INSTALL / "lib" / "field-panel-field.py"
     if not py.is_file():
         return
@@ -429,30 +681,43 @@ def _refresh_sense_package() -> None:
         pass
 
 
-def meld(*, refresh_bus: bool = True) -> dict[str, Any]:
+def fuse(*, refresh_bus: bool = False) -> dict[str, Any]:
+    """Fast fuse — collect on-disk plates only, no refresh storm."""
+    return meld(refresh_bus=refresh_bus, refresh_plates=False)
+
+
+def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, Any]:
     """Fuse all plates under flock — uninterruptable chain generation."""
     global _GEN, _LAST_CHAIN
     fd = _meld_lock()
     try:
-        _refresh_firmware_threats()
-        _refresh_kernel_meld()
-        _refresh_sense_package()
-        _refresh_field_plate()
-        _refresh_spatial()
-        _refresh_humanoid_motion()
-        _refresh_hostess7_brain()
-        _refresh_hostess7_programming()
-        _refresh_hostess7_g16()
-        _refresh_hostess7_calculator()
-        _refresh_hostess7_biology()
-        _refresh_hostess7_engineering()
-        _refresh_hostess7_combat()
-        _refresh_hostess7_mos()
-        _refresh_hostess7_training()
-        _refresh_iron_plate_motion()
-        _refresh_creatable_lives()
-        _refresh_right_to_exist()
-        _refresh_universal_protector()
+        if refresh_plates:
+            _refresh_iron_plate()
+            _refresh_gatekeeper()
+            _refresh_logic_gate()
+            _refresh_port_ddos()
+            _refresh_packet_deinterlace()
+            _refresh_znetwork_status()
+            _refresh_firmware_threats()
+            _refresh_kernel_meld()
+            _refresh_sense_package()
+            _refresh_field_plate()
+            _refresh_spatial()
+            _refresh_humanoid_motion()
+            _refresh_hostess7_brain()
+            if not _meld_light():
+                _refresh_hostess7_programming()
+                _refresh_hostess7_g16()
+                _refresh_hostess7_calculator()
+                _refresh_hostess7_biology()
+                _refresh_hostess7_engineering()
+                _refresh_hostess7_combat()
+                _refresh_hostess7_mos()
+            _refresh_hostess7_training()
+            _refresh_iron_plate_motion()
+            _refresh_creatable_lives()
+            _refresh_right_to_exist()
+            _refresh_universal_protector()
         prev = _load(MELD_RUNTIME, {})
         prev_chain = str(prev.get("chain_hash") or "")
         prev_gen = int(prev.get("generation") or 0)
@@ -465,7 +730,11 @@ def meld(*, refresh_bus: bool = True) -> dict[str, Any]:
         iron = plates.get("iron_plate") or {}
         rt = plates.get("plate_runtime") or {}
         bus = plates.get("unified_bus") or {}
+        gk = plates.get("gatekeeper") or {}
+        znet = plates.get("znetwork") or {}
+        logic = plates.get("logic_gate") or {}
         kernel = plates.get("kernel") or {}
+        net_stack = _net_stack_summary(plates)
         firmware = plates.get("firmware") or {}
         sense = plates.get("sense_package") or {}
         field_plate = plates.get("field_plate") or {}
@@ -493,6 +762,13 @@ def meld(*, refresh_bus: bool = True) -> dict[str, Any]:
                 "bus_checksum": bus.get("checksum"),
                 "direct": rt.get("direct_count"),
                 "storm": rt.get("storm_count"),
+                "network_stack": net_stack,
+                "gatekeeper_connections": net_stack.get("gatekeeper_connections"),
+                "gatekeeper_harm_candidates": net_stack.get("gatekeeper_harm_candidates"),
+                "net_iface_count": net_stack.get("net_iface_count"),
+                "logic_gate_high": net_stack.get("logic_gate_high"),
+                "znetwork_present": net_stack.get("znetwork_present"),
+                "network_stack_melded": net_stack.get("network_stack_melded"),
                 "kernel_live": kernel.get("kilroy_live"),
                 "bzimage_ready": kernel.get("bzimage_ready"),
                 "boot_vector": kernel.get("boot_vector"),
@@ -606,7 +882,12 @@ def panel_json() -> dict[str, Any]:
     doc = read_meld()
     if doc.get("schema"):
         return doc
-    return meld()
+    return {
+        "schema": "field-plate-meld/v1",
+        "ok": False,
+        "error": "meld_not_published",
+        "hint": "Run field-plate-meld.py meld or POST /api/plate-meld/cycle",
+    }
 
 
 def main() -> int:
@@ -616,6 +897,9 @@ def main() -> int:
         return 0
     if cmd in ("meld", "cycle", "build"):
         print(json.dumps(meld(), ensure_ascii=False, indent=2))
+        return 0
+    if cmd in ("fuse", "fast"):
+        print(json.dumps(fuse(), ensure_ascii=False, indent=2))
         return 0
     if cmd == "recover":
         doc = read_meld()

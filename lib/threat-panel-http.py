@@ -16,6 +16,74 @@ STATUS_JSON = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("threat-panel.jso
 STATE_DIR = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL_ROOT = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 ZNETWORK_STATUS = STATE_DIR / "znetwork-status.json"
+
+
+def _resolve_hostess7_root() -> Path:
+    env = os.environ.get("HOSTESS7_ROOT", "").strip()
+    if env:
+        return Path(env).expanduser()
+    try:
+        if str(INSTALL_ROOT / "lib") not in sys.path:
+            sys.path.insert(0, str(INSTALL_ROOT / "lib"))
+        import sg_paths  # noqa: PLC0415
+
+        return sg_paths.hostess7_root()
+    except Exception:
+        return INSTALL_ROOT / "Hostess7"
+
+
+def _h7_library_snapshot_paths() -> list[Path]:
+    roots: list[Path] = []
+    h7 = _resolve_hostess7_root()
+    roots.append(h7 / "cache" / "fieldstorage" / "brain" / "library" / "catalog_snapshot.json")
+    team = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
+    if team.is_dir():
+        roots.append(team / "brain" / "library" / "catalog_snapshot.json")
+    return roots
+
+
+def _load_h7_library_catalog_fast() -> dict | None:
+    cached = _panel_slice("h7_library", default={})
+    if isinstance(cached, dict) and cached.get("books") and not cached.get("_partial"):
+        return cached
+    for path in _h7_library_snapshot_paths():
+        if not path.is_file():
+            continue
+        try:
+            snap = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(snap, dict) and snap.get("books"):
+            snap = dict(snap)
+            snap["_catalog_snapshot"] = True
+            snap.setdefault("_partial", False)
+            snap.setdefault("_incomplete", False)
+            return snap
+    return None
+
+
+def _load_plate_meld_cached() -> dict:
+    """Hot read — never run full meld() on panel GET (that can take minutes)."""
+    candidates = (
+        STATE_DIR / "field-plate-meld.json",
+        STATE_DIR / "field-plate-meld-runtime.json",
+        STATE_DIR / "plate-meld-redundant" / "field-plate-meld.json",
+        STATE_DIR / "plate-meld-redundant" / "field-plate-meld.json.bak",
+    )
+    for path in candidates:
+        if not path.is_file():
+            continue
+        try:
+            doc = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(doc, dict) and doc.get("schema"):
+            doc = dict(doc)
+            doc["_field_cache"] = True
+            return doc
+    return {}
+
+
 _LOOPBACK_CLIENTS = frozenset({"127.0.0.1", "::1", "::ffff:127.0.0.1"})
 
 DATA_FILES = {
@@ -501,7 +569,7 @@ def _slice_populated(key: str, val: dict) -> bool:
     if not isinstance(val, dict) or not val:
         return False
     if key == "host_attacks":
-        return bool(val.get("points")) or bool(val.get("updated"))
+        return bool(val.get("updated")) or bool(val.get("schema")) or isinstance(val.get("points"), list)
     if key == "human_registry":
         return bool(val.get("table")) or bool(val.get("humans"))
     if key == "police_agency":
@@ -518,7 +586,10 @@ def _slice_populated(key: str, val: dict) -> bool:
     if key == "program_tags":
         return bool(val.get("tags")) or bool(val.get("recent"))
     if key == "hostess7_command":
-        return bool(val.get("intel_digest")) and bool(val.get("capabilities"))
+        return (
+            val.get("schema") == "hostess7-command/v1"
+            and (bool(val.get("intel_digest")) or bool(val.get("self_view")) or bool(val.get("transcript")))
+        )
     return True
 
 
@@ -1303,7 +1374,7 @@ class Handler(BaseHTTPRequestHandler):
             payload = _panel_slice(
                 "host_attacks",
                 live=_nexus_py_json(INSTALL_ROOT / "lib" / "host-attack-map.py", ["json-panel"]),
-                default={"points": [], "updated": None},
+                default={"schema": "host-attacks/v1", "points": [], "updated": None, "stats": {"total": 0}},
             )
             self._send(200, json.dumps(payload), "application/json")
             return
@@ -1659,12 +1730,40 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/plate-meld":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-plate-meld.py", ["json"], timeout=20)
-            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            cached = _load_plate_meld_cached()
+            if not refresh:
+                if cached.get("schema"):
+                    self._send(200, json.dumps(cached), "application/json")
+                    return
+                self._send(
+                    200,
+                    json.dumps({
+                        "schema": "field-plate-meld/v1",
+                        "ok": False,
+                        "error": "meld_not_published",
+                        "hint": "POST /api/plate-meld/cycle or wait for vigil meld tick",
+                    }),
+                    "application/json",
+                )
+                return
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-plate-meld.py",
+                ["meld"],
+                timeout=180,
+            )
+            if not payload or not payload.get("schema"):
+                if cached.get("schema"):
+                    payload = cached
+            self._send(200, json.dumps(payload or {"ok": False, "error": "meld_unavailable"}), "application/json")
             return
 
         if path == "/api/plate-meld/cycle":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-plate-meld.py", ["meld"], timeout=45)
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-plate-meld.py",
+                ["meld"],
+                timeout=180,
+            )
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -1704,7 +1803,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path in ("/api/hostess7/self-view", "/api/hostess7-self-view"):
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-self-view.py", ["json"], timeout=25)
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-self-view.py", ["json"], timeout=60)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -1776,8 +1875,23 @@ class Handler(BaseHTTPRequestHandler):
 
         if path in ("/api/hostess7/training/bundle", "/api/hostess7-training/bundle"):
             refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            cache_path = STATE_DIR / "hostess7-training-bundle-cache.json"
+            if not refresh and cache_path.is_file():
+                try:
+                    cached = json.loads(cache_path.read_text(encoding="utf-8"))
+                    if isinstance(cached, dict) and cached.get("schema"):
+                        cached["_panel_cache"] = True
+                        self._send(200, json.dumps(cached), "application/json")
+                        return
+                except (OSError, json.JSONDecodeError):
+                    pass
             args = ["bundle"] + (["--refresh"] if refresh else [])
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training-bundle.py", args, timeout=60)
+            if isinstance(payload, dict) and payload.get("schema"):
+                try:
+                    cache_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+                except OSError:
+                    pass
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -2532,6 +2646,17 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/hostess7-command":
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            cache_path = STATE_DIR / "hostess7-command-panel.json"
+            if not refresh and cache_path.is_file():
+                try:
+                    cached = json.loads(cache_path.read_text(encoding="utf-8"))
+                    if isinstance(cached, dict) and cached.get("schema") == "hostess7-command/v1":
+                        cached["_panel_cache"] = True
+                        self._send(200, json.dumps(cached), "application/json")
+                        return
+                except (OSError, json.JSONDecodeError):
+                    pass
             payload = _nexus_py_json(
                 INSTALL_ROOT / "lib" / "hostess7-command.py",
                 ["panel"],
@@ -2608,7 +2733,7 @@ class Handler(BaseHTTPRequestHandler):
             payload = _panel_slice(
                 "field_brain",
                 live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-brain-panel.py", ["json"]),
-                default={"schema": "field-brain/v1", "ok": False},
+                default={"schema": "field-brain/v1", "ok": True, "github_library_books": 0, "manifest_count": 0},
             )
             self._send(200, json.dumps(payload), "application/json")
             return
@@ -2735,7 +2860,7 @@ class Handler(BaseHTTPRequestHandler):
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
-            env.setdefault("HOSTESS7_ROOT", str(__import__("sg_paths", fromlist=["hostess7_root"]).hostess7_root()))
+            env.setdefault("HOSTESS7_ROOT", str(_resolve_hostess7_root()))
             env.setdefault("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage")
 
             def _lib_json(args: list[str], *, timeout: int = 45) -> dict:
@@ -2777,14 +2902,18 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
             if path == "/api/library/catalog":
-                cached = _panel_slice("h7_library", default={})
-                if cached.get("_field_cache") and cached.get("books"):
-                    self._send(200, json.dumps(cached), "application/json")
-                    return
+                refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
                 profile = str(query.get("profile", [""])[0]).strip()
+                if not refresh and not profile:
+                    fast = _load_h7_library_catalog_fast()
+                    if fast:
+                        self._send(200, json.dumps(fast), "application/json")
+                        return
                 args = ["build"]
                 if profile:
                     args.extend(["--profile", profile])
+                if refresh:
+                    args.append("--force")
                 payload = _lib_json(args, timeout=90)
                 self._send(200, json.dumps(payload), "application/json")
                 return
@@ -3193,7 +3322,7 @@ class Handler(BaseHTTPRequestHandler):
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
-            env.setdefault("HOSTESS7_ROOT", str(__import__("sg_paths", fromlist=["hostess7_root"]).hostess7_root()))
+            env.setdefault("HOSTESS7_ROOT", str(_resolve_hostess7_root()))
             env.setdefault("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage")
 
             if path == "/api/library/upload":
@@ -3991,6 +4120,30 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path in ("/api/hostess7/training/author", "/api/hostess7-training/author"):
+            track = str(body.get("track") or body.get("track_id") or "").strip()
+            args = ["author"]
+            if track:
+                args.append(track)
+            if body.get("force"):
+                args.append("--force")
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-training-author.py",
+                args,
+                timeout=120,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/training/gaps", "/api/hostess7-training/gaps"):
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-training-author.py",
+                ["gaps"],
+                timeout=90,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path in ("/api/hostess7/training/curriculum-step", "/api/hostess7-training/curriculum-step"):
             payload = _nexus_py_json(
                 INSTALL_ROOT / "lib" / "hostess7-training.py",
@@ -4034,7 +4187,7 @@ class Handler(BaseHTTPRequestHandler):
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
-            env.setdefault("HOSTESS7_ROOT", str(__import__("sg_paths", fromlist=["hostess7_root"]).hostess7_root()))
+            env.setdefault("HOSTESS7_ROOT", str(_resolve_hostess7_root()))
             if os.environ.get("NEXUS_LOGIC_GATE", "1") == "1":
                 msg = str(body.get("message") or body.get("query") or "")
                 if msg.strip() and str(body.get("action") or "ask").lower() in ("ask", "message", "chat"):

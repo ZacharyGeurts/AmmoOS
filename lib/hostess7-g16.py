@@ -231,8 +231,22 @@ def g16_score(*, battery: dict[str, Any] | None = None, probe: dict[str, Any] | 
     }
 
 
+def _merge_explain_overlay(track: str, base: dict[str, Any]) -> dict[str, Any]:
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("h7overlay", INSTALL / "lib" / "hostess7-explain-overlay.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.merge_explain_doc(track, base)
+    except Exception:
+        pass
+    return base
+
+
 def _load_explain_doc() -> dict[str, Any]:
-    return _load(EXPLAIN, {"topics": [], "introduction": "", "format": [s[0] for s in _SECTION_LABELS]})
+    base = _load(EXPLAIN, {"topics": [], "introduction": "", "format": [s[0] for s in _SECTION_LABELS]})
+    return _merge_explain_overlay("g16", base)
 
 
 def _topic_match_score(topic: dict[str, Any], q: str) -> int:

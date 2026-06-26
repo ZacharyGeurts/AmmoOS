@@ -66,6 +66,12 @@
       "panel": "field-kernel-meld-panel.json",
       "role": "KILROY linux-7.1.1 witness + bzImage in-place manifest",
       "refresh_before_fuse": true
+    },
+    "network_stack": {
+      "plates": ["iron_plate", "gatekeeper", "logic_gate", "znetwork", "port_ddos", "deinterlace", "kernel"],
+      "role": "Smart Connective Iron Plate scores every connection; gatekeeper IFF + logic gate on meld chain",
+      "refresh_before_fuse": true,
+      "meld_summary_key": "network_stack"
     }
   },
   "architecture": {

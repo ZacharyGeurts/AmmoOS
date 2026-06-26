@@ -26,7 +26,8 @@
     {"id": "biology_fluency", "label": "Biology & medical — human biology and life sciences", "surface": "learning", "weight": 0.94},
     {"id": "engineering_fluency", "label": "Engineering — mechanical, electrical, civil, robotics", "surface": "learning", "weight": 0.93},
     {"id": "combat_fluency", "label": "Combat & defense — martial arts, tactics, warfare doctrine", "surface": "learning", "weight": 0.92},
-    {"id": "mos_fluency", "label": "MOS assistance — fill in for any military occupational specialty", "surface": "learning", "weight": 0.95}
+    {"id": "mos_fluency", "label": "MOS assistance — fill in for any military occupational specialty", "surface": "learning", "weight": 0.95},
+    {"id": "training_author", "label": "Self-authored training — she writes lessons when tracks stall", "surface": "learning", "weight": 0.91}
   ],
   "voice_when": {
     "brain_verified": "I want my verdict green first — brain_verified, checksums matching, witness live. Then show me the engineering detail underneath.",

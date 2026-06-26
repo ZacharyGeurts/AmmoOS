@@ -33,6 +33,30 @@
     return document.getElementById("view-training")?.classList.contains("active");
   }
 
+  function sliceToBundle(slice) {
+    if (!slice || slice.schema !== "hostess7-training/v1" || !slice.tracks) return null;
+    return {
+      schema: "hostess7-training-viewer/v1",
+      assessment: {
+        tracks: slice.tracks,
+        overall_score: slice.overall_score,
+        completion_level: slice.completion_level,
+        tracks_complete: slice.tracks_complete,
+        tracks_total: slice.tracks_total,
+        tracks_mastered: slice.tracks_mastered,
+        solid: slice.solid,
+        mastery_facets: slice.mastery_facets,
+        training_gaps: slice.training_gaps,
+      },
+      training_panel: slice,
+      evaluation_graphs: slice.evaluation_graphs || {},
+      training_author: slice.training_author || {},
+      authored_material: slice.authored_material || slice.training_author?.catalog || [],
+      curriculum_steps: slice.curriculum_steps || [],
+      wireframe: slice.wireframe || {},
+    };
+  }
+
   async function fetchBundle(refresh) {
     const q = refresh ? "?refresh=1" : "";
     const r = await fetch(`${API}/bundle${q}`, { cache: "no-store" });
@@ -206,6 +230,33 @@
     });
   }
 
+  function renderAuthored(bundle) {
+    const summary = $("h7-authored-summary");
+    const list = $("h7-authored-list");
+    if (!list) return;
+    const author = bundle.training_author || {};
+    const rows = bundle.authored_material || author.catalog || [];
+    const gaps = author.gaps || bundle.assessment?.training_gaps || [];
+    if (summary) {
+      const n = author.authored_total ?? rows.length;
+      const g = gaps.length;
+      summary.textContent = g
+        ? `${g} gap(s) detected · ${n} self-authored lesson(s) on file — she writes more when needed.`
+        : `${n} self-authored lesson(s) — no gaps right now. Press Write material after Assess.`;
+    }
+    if (!rows.length) {
+      list.innerHTML = '<p class="h7-sub">No authored lessons yet. Assess, then Write material.</p>';
+      return;
+    }
+    list.innerHTML = `<div class="h7-curriculum">${rows.map((r) => `
+      <div class="h7-cur-step done">
+        <div>✎</div>
+        <div><strong>${esc(r.track || "—")} · ${esc(r.id || "")}</strong>
+          <div class="h7-sub">${esc((r.label || r.gap_reason || "").slice(0, 140))}</div></div>
+        <div style="color:var(--h7-amber);font-size:0.72rem">${esc((r.authored_at || "").slice(0, 10))}</div>
+      </div>`).join("")}</div>`;
+  }
+
   function renderCurriculum(bundle) {
     const el = $("h7-curriculum-list");
     if (!el) return;
@@ -248,6 +299,7 @@
     lastWireframe = bundle.wireframe || lastWireframe;
     renderHero(bundle);
     renderTracks(bundle);
+    renderAuthored(bundle);
     renderCurriculum(bundle);
     renderEvaluation(bundle);
     renderLedger(bundle);
@@ -256,14 +308,33 @@
 
   async function load(refresh) {
     if (!isTabVisible()) return;
-    setStatus(refresh ? "Refreshing…" : "Loading…");
+    if (!refresh) {
+      const cached = sliceToBundle(global.lastPanelData?.hostess7_training);
+      if (cached) {
+        render(cached);
+        setStatus(`Field cache · ${new Date().toLocaleTimeString()}`);
+      } else {
+        setStatus("Loading…");
+      }
+    } else {
+      setStatus("Refreshing…");
+    }
     try {
       const bundle = await fetchBundle(refresh);
       render(bundle);
       setStatus(`Updated ${new Date().toLocaleTimeString()}`);
     } catch (e) {
-      setStatus(`Error: ${e.message}`);
+      if (!sliceToBundle(global.lastPanelData?.hostess7_training)) {
+        setStatus(`Error: ${e.message}`);
+      }
     }
+  }
+
+  function refreshFromSlice(slice) {
+    const bundle = sliceToBundle(slice);
+    if (!bundle || !isTabVisible()) return;
+    render(bundle);
+    setStatus(`Field cache · ${new Date().toLocaleTimeString()}`);
   }
 
   async function post(path, label) {
@@ -343,6 +414,12 @@
       await post(`${API}/iq`, "IQ battery");
       if (btn) btn.disabled = false;
     });
+    $("h7-btn-author")?.addEventListener("click", async () => {
+      const btn = $("h7-btn-author");
+      if (btn) btn.disabled = true;
+      await post(`${API}/author`, "Write material");
+      if (btn) btn.disabled = false;
+    });
     $("h7-btn-solidify")?.addEventListener("click", async () => {
       const btn = $("h7-btn-solidify");
       if (btn) btn.disabled = true;
@@ -363,8 +440,16 @@
   global.NexusTraining = {
     init() {
       bind();
-      load(true);
+      const cached = sliceToBundle(global.lastPanelData?.hostess7_training);
+      if (cached) {
+        render(cached);
+        setStatus(`Field cache · ${new Date().toLocaleTimeString()}`);
+        void load(false);
+      } else {
+        load(false);
+      }
     },
     refresh: () => load(true),
+    refreshFromSlice,
   };
 })();

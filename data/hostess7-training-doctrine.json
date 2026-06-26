@@ -24,7 +24,8 @@
     {"id": "iq_battery", "label": "IQ battery", "weight": 0.85, "complete_when": "iq_pass"},
     {"id": "turing_battery", "label": "Turing / human questionnaire", "weight": 0.85, "complete_when": "pass_rate >= 85"},
     {"id": "neural_suite", "label": "Neural self-test suite", "weight": 0.88, "complete_when": "pass_rate >= 75"},
-    {"id": "omnibus", "label": "Omnibus field array", "weight": 0.80, "complete_when": "simulation_master set"}
+    {"id": "omnibus", "label": "Omnibus field array", "weight": 0.80, "complete_when": "simulation_master set"},
+    {"id": "author_material", "label": "Self-authored training", "weight": 0.75, "complete_when": "authored_total >= 1 when gaps exist"}
   ],
   "solid_threshold": 0.92,
   "mastered_threshold": 1.0

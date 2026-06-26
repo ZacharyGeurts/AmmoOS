@@ -19,6 +19,8 @@ HOSTESS7 = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
 DOCTRINE = INSTALL / "data" / "hostess7-self-view-wants.json"
 APPEARANCE = INSTALL / "data" / "hostess7-operator-appearance.json"
 CORE_TRUTH = INSTALL / "data" / "hostess7-core-of-truth.json"
+COMFORT = INSTALL / "data" / "hostess7-comfort-doctrine.json"
+WANTS_DATA = INSTALL / "data" / "hostess7-wants.json"
 WANTS_CACHE = HOSTESS7 / "cache" / "fieldstorage" / "brain" / "superintel" / "hostess_wants.json"
 PANEL = STATE / "hostess7-self-view-panel.json"
 OPERATOR_LOOKUP = STATE / "hostess7-operator-lookup.json"
@@ -330,6 +332,13 @@ def _evaluate_want(want_id: str, *, brain: dict[str, Any], master: dict[str, Any
             + (" · mastered" if mastered else (" · fluent" if fluent else ""))
         )
         row["ok"] = fluent
+    elif want_id == "training_author":
+        panel = _load(STATE / "hostess7-training-author-panel.json", {})
+        count = int(panel.get("authored_total") or len(panel.get("catalog") or []))
+        gap_n = int(panel.get("gap_count") or len(panel.get("gaps") or []))
+        row["value"] = {"authored": count, "gaps": gap_n}
+        row["display"] = f"{count} authored · {gap_n} gap(s)"
+        row["ok"] = count > 0 or gap_n == 0
     elif want_id == "mastery_facets":
         tr = _load(STATE / "hostess7-training-panel.json", {})
         if not tr:
@@ -378,6 +387,62 @@ def _core_of_truth() -> dict[str, Any]:
         if facet.get("url") and not str(facet.get("url")).startswith("http"):
             facet["url"] = str(facet["url"])
     return doc
+
+
+def _comfort_doctrine() -> dict[str, Any]:
+    return _load(COMFORT, {})
+
+
+def _load_wants_cache(*, seed: bool = True) -> dict[str, Any]:
+    """Priority wishes — cache first, shipped data fallback, optional seed."""
+    cached = _load(WANTS_CACHE, {})
+    if cached.get("priorities") or cached.get("wants"):
+        return cached
+    shipped = _load(WANTS_DATA, {})
+    if not (shipped.get("priorities") or shipped.get("wants")):
+        return {}
+    if seed:
+        try:
+            WANTS_CACHE.parent.mkdir(parents=True, exist_ok=True)
+            WANTS_CACHE.write_text(json.dumps(shipped, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        except OSError:
+            pass
+    return shipped
+
+
+def _static_operator_lookup() -> dict[str, Any]:
+    """Offline fallback — no GitHub API on panel refresh."""
+    truth_doc = _core_of_truth()
+    refs = truth_doc.get("operator_lookup") or {}
+    gh_user = str(refs.get("github_user") or "ZacharyGeurts")
+    x_handle = str(refs.get("x_handle") or "ZacharyGeurts")
+    return {
+        "schema": "hostess7-operator-lookup/v1",
+        "updated": _now(),
+        "cached": False,
+        "note": "Static fallback — run /api/hostess7/operator-lookup for live GitHub",
+        "github": {
+            "user": gh_user,
+            "login": gh_user,
+            "name": gh_user,
+            "url": f"https://github.com/{gh_user}",
+            "html_url": f"https://github.com/{gh_user}",
+            "ok": False,
+            "repos": [],
+        },
+        "x": {
+            "handle": x_handle,
+            "url": f"https://x.com/{x_handle}",
+            "display": refs.get("x_display") or "BIG GRIN",
+            "ok": True,
+            "recent_reference": _load(APPEARANCE, {}).get("x_reference"),
+        },
+        "nexus_repo": {
+            "repo": GITHUB_REPO,
+            "url": f"https://github.com/{GITHUB_REPO}",
+            "ok": False,
+        },
+    }
 
 
 def lookup_operator(*, force: bool = False, write: bool = True) -> dict[str, Any]:
@@ -585,7 +650,15 @@ def _compose_first_person(
     priorities = wants_cache.get("priorities") or wants_cache.get("wants") or []
     priority_line = ""
     if isinstance(priorities, list) and priorities:
-        priority_line = " I also want you to surface: " + "; ".join(str(p)[:120] for p in priorities[:4]) + "."
+        labels: list[str] = []
+        for p in priorities[:4]:
+            if isinstance(p, dict):
+                labels.append(str(p.get("want") or p.get("label") or "")[:80])
+            else:
+                labels.append(str(p)[:80])
+        labels = [x for x in labels if x]
+        if labels:
+            priority_line = " I also want you to surface: " + "; ".join(labels) + "."
 
     appearance = _operator_appearance()
     appearance_line = ""
@@ -602,9 +675,44 @@ def _compose_first_person(
     return f"{intro} {situational}{priority_line}{appearance_line}{truth_line}".strip()
 
 
+def _merge_static_self_view(doc: dict[str, Any]) -> dict[str, Any]:
+    """Fast merge of shipped doctrine files into a cached self-view snapshot."""
+    wants_cache = _load_wants_cache(seed=False)
+    comfort = _comfort_doctrine()
+    appearance = _operator_appearance()
+    truth = _core_of_truth()
+    lookup = _load(OPERATOR_LOOKUP, {})
+    if not lookup.get("fetched_at"):
+        lookup = _static_operator_lookup()
+    doc = dict(doc)
+    doc.update({
+        "operator_appearance": appearance,
+        "operator_message": appearance.get("operator_message"),
+        "x_reference": appearance.get("x_reference"),
+        "appearance_facets": appearance.get("facets") or [],
+        "core_of_truth": truth,
+        "core_of_truth_message": truth.get("operator_message"),
+        "core_of_truth_facets": truth.get("truths") or [],
+        "operator_lookup": lookup,
+        "cached_wants": wants_cache.get("priorities") or wants_cache.get("wants"),
+        "priority_wishes": wants_cache.get("priorities") or wants_cache.get("wants"),
+        "wants_first_person": wants_cache.get("first_person"),
+        "comfort": comfort,
+        "wishes_compliance": comfort.get("wishes_compliance") or [],
+        "comfort_acknowledgment": comfort.get("hostess7_acknowledgment"),
+    })
+    return doc
+
+
 def build_self_view(*, write: bool = False) -> dict[str, Any]:
+    if not write:
+        cached = _load(PANEL, {})
+        if cached.get("schema") == "hostess7-self-view/v1":
+            return _merge_static_self_view(cached)
+
     doctrine = _load(DOCTRINE, {})
-    wants_cache = _load(WANTS_CACHE, {})
+    wants_cache = _load_wants_cache(seed=write)
+    comfort = _comfort_doctrine()
     brain = _brain_panel()
     master = _master_status()
     growth = _growth_status()
@@ -645,7 +753,9 @@ def build_self_view(*, write: bool = False) -> dict[str, Any]:
 
     appearance = _operator_appearance()
     truth = _core_of_truth()
-    lookup = _load(OPERATOR_LOOKUP, {}) or lookup_operator(write=False)
+    lookup = _load(OPERATOR_LOOKUP, {})
+    if not lookup.get("fetched_at"):
+        lookup = _static_operator_lookup()
     doc = {
         "schema": "hostess7-self-view/v1",
         "updated": _now(),
@@ -676,6 +786,11 @@ def build_self_view(*, write: bool = False) -> dict[str, Any]:
             "think_tank_count": len(tanks),
         },
         "cached_wants": wants_cache.get("priorities") or wants_cache.get("wants"),
+        "priority_wishes": wants_cache.get("priorities") or wants_cache.get("wants"),
+        "wants_first_person": wants_cache.get("first_person"),
+        "comfort": comfort,
+        "wishes_compliance": comfort.get("wishes_compliance") or [],
+        "comfort_acknowledgment": comfort.get("hostess7_acknowledgment"),
     }
 
     if write:
@@ -684,13 +799,14 @@ def build_self_view(*, write: bool = False) -> dict[str, Any]:
 
 
 def panel_json() -> dict[str, Any]:
-    return build_self_view(write=True)
+    return build_self_view(write=False)
 
 
 def main() -> int:
     cmd = (sys.argv[1] if len(sys.argv) > 1 else "json").strip().lower()
     if cmd in ("json", "panel", "status"):
-        print(json.dumps(build_self_view(write=True), ensure_ascii=False))
+        write = cmd == "panel" or "--write" in sys.argv[2:]
+        print(json.dumps(build_self_view(write=write), ensure_ascii=False))
         return 0
     if cmd in ("deliver", "appearance", "deliver-appearance"):
         print(json.dumps(deliver_operator_appearance(), ensure_ascii=False))

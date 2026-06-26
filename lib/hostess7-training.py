@@ -1010,6 +1010,34 @@ SELF_INTERACTION_QUERIES = (
 )
 
 
+def _run_author_material() -> dict[str, Any]:
+    """Hostess 7 writes her own training material when tracks need more."""
+    author = _mod("h7author", "hostess7-training-author.py")
+    if not author or not hasattr(author, "run_author_cycle"):
+        return {"ok": False, "error": "author_module_missing"}
+    _write_runtime(
+        phase="author_material",
+        active_track="author_material",
+        progress_pct=10,
+        detail="Detecting gaps and authoring lessons…",
+    )
+    out = author.run_author_cycle()
+    _write_runtime(
+        phase="idle",
+        active_track=None,
+        progress_pct=100,
+        last_track="author_material",
+        detail=f"Authored {out.get('authored', 0)} lesson(s)",
+    )
+    _append_ledger({
+        "ts": _now(),
+        "event": "author_material",
+        "authored": out.get("authored"),
+        "gaps": [g.get("track") for g in (out.get("gaps") or [])[:6]],
+    })
+    return {"ok": True, **out}
+
+
 def run_self_interaction_train(*, rounds: int = 6, truth_floor: float = 75.0) -> dict[str, Any]:
     """Self-ask loop with truth filters — extends training quality in advance."""
     truth = _mod("h7truth", "hostess7-truth-rating.py")
@@ -1084,6 +1112,9 @@ def run_track(track_id: str, *, ocr_train: bool = False) -> dict[str, Any]:
         "neural_suite": _run_neural,
         "omnibus": lambda: _run_omnibus(fast=True),
         "self_interaction": lambda: run_self_interaction_train(),
+        "author_material": _run_author_material,
+        "author_training": _run_author_material,
+        "write_training": _run_author_material,
     }
     fn = runners.get(canonical) or runners.get(track_id)
     if not fn:
@@ -1316,6 +1347,12 @@ def explain_excellence_pledge(query: str) -> str | None:
 
 def build_panel(*, write: bool = True) -> dict[str, Any]:
     assessment = assess_all()
+    author = _mod("h7author", "hostess7-training-author.py")
+    author_panel = (
+        author.build_author_panel(assessment=assessment, gaps=author.detect_training_gaps(assessment))
+        if author and hasattr(author, "build_author_panel")
+        else {}
+    )
     doc = {
         "schema": "hostess7-training/v1",
         "updated": _now(),
@@ -1333,6 +1370,9 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "excellence_pledge": _load(FACETS, {}).get("excellence_pledge") or "We do our best always.",
         "evaluation_graphs": build_evaluation_graphs(),
         "training_runtime": _load(RUNTIME, {}),
+        "training_author": author_panel,
+        "authored_material_count": author_panel.get("authored_total") or 0,
+        "training_gaps": author_panel.get("gaps") or [],
     }
     cached = _load(PANEL, {})
     if cached.get("phases"):
@@ -1379,6 +1419,24 @@ def main() -> int:
             if arg.isdigit():
                 rounds = int(arg)
         print(json.dumps(run_self_interaction_train(rounds=rounds), ensure_ascii=False))
+        return 0
+    if cmd in ("author", "author-material", "author_material", "write-material"):
+        author = _mod("h7author", "hostess7-training-author.py")
+        if not author:
+            print(json.dumps({"ok": False, "error": "author_module_missing"}, ensure_ascii=False))
+            return 1
+        track = None
+        force = "--force" in sys.argv
+        for arg in sys.argv[2:]:
+            if not arg.startswith("--"):
+                track = arg
+        print(json.dumps(author.run_author_cycle(track=track, force=force), ensure_ascii=False))
+        return 0
+    if cmd in ("gaps", "training-gaps"):
+        author = _mod("h7author", "hostess7-training-author.py")
+        assess = assess_all()
+        gaps = author.detect_training_gaps(assess) if author else []
+        print(json.dumps({"gaps": gaps, "assessment": assess.get("completion_level")}, ensure_ascii=False))
         return 0
     if cmd in ("track", "run-track") and len(sys.argv) > 2:
         ocr = "--ocr-train" in sys.argv

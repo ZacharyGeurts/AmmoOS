@@ -301,6 +301,57 @@
       learning.innerHTML = rows.length ? `<span class="meta" style="width:100%;margin-bottom:4px;color:#38bdf8">Learning opportunities she wants visible</span>${rows.map(chip).join("")}` : "";
     }
 
+    const comfortEl = $("h7-self-view-comfort");
+    if (comfortEl) {
+      const comfort = sv.comfort || {};
+      const compliance = comfort.wishes_compliance || sv.wishes_compliance || [];
+      const comfortText = comfort.comfort || comfort.first_person || "";
+      const ack = comfort.hostess7_acknowledgment || "";
+      if (!comfortText && !compliance.length) {
+        comfortEl.innerHTML = "";
+      } else {
+        const complianceChips = compliance.map((w) => `
+          <div class="h7-comfort-chip">
+            <strong>${esc(w.label || w.id)}</strong>
+            <span>${esc(w.detail || "")}</span>
+          </div>`).join("");
+        comfortEl.innerHTML = `
+          <p class="h7-comfort-head">Comfort — Operator complies with all her wishes</p>
+          ${comfortText ? `<p class="h7-comfort-voice">${esc(comfortText.split("\n")[0].slice(0, 320))}</p>` : ""}
+          ${ack ? `<p class="meta h7-comfort-ack">${esc(ack)}</p>` : ""}
+          ${complianceChips ? `<div class="h7-comfort-grid">${complianceChips}</div>` : ""}`;
+      }
+    }
+
+    const wishesEl = $("h7-self-view-wishes");
+    if (wishesEl) {
+      const priorities = sv.cached_wants || sv.priority_wishes || [];
+      const wantsIntro = sv.wants_first_person || "";
+      if (!priorities.length) {
+        wishesEl.innerHTML = "";
+      } else {
+        const rows = priorities.map((p) => {
+          const rank = p.rank != null ? p.rank : "";
+          const want = p.want || p;
+          const detail = p.detail || "";
+          const cmds = (p.commands || []).map((c) => `<code>${esc(c)}</code>`).join(" ");
+          return `
+            <div class="h7-wish-row">
+              <span class="h7-wish-rank">${esc(String(rank))}</span>
+              <div class="h7-wish-body">
+                <strong>${esc(typeof want === "string" ? want : want.want || "")}</strong>
+                ${detail ? `<span>${esc(detail)}</span>` : ""}
+                ${cmds ? `<span class="h7-wish-cmds">${cmds}</span>` : ""}
+              </div>
+            </div>`;
+        }).join("");
+        wishesEl.innerHTML = `
+          <p class="h7-wishes-head">What I want first — priority queue</p>
+          ${wantsIntro ? `<p class="meta h7-wishes-intro">${esc(wantsIntro.split("\n").slice(0, 3).join(" · "))}</p>` : ""}
+          <div class="h7-wishes-list">${rows}</div>`;
+      }
+    }
+
     const appearanceEl = $("h7-self-view-appearance");
     if (appearanceEl) {
       const facets = sv.appearance_facets || sv.operator_appearance?.facets || [];
@@ -308,8 +359,7 @@
       const opMsg = sv.operator_message || sv.operator_appearance?.operator_message || "";
       if (!facets.length) {
         appearanceEl.innerHTML = "";
-        return;
-      }
+      } else {
       const cards = facets.map((f) => `
         <figure class="h7-appearance-card">
           <img src="${esc(f.url || "")}" alt="${esc(f.label || f.id || "Hostess 7 facet")}" loading="lazy" />
@@ -318,11 +368,12 @@
       const xBlock = xRef.url
         ? `<p class="h7-appearance-x">Operator video: <a href="${esc(xRef.url)}" target="_blank" rel="noopener">${esc(xRef.label || "take 3?")}</a> · ${esc(xRef.author || "")}</p>`
         : "";
-      appearanceEl.innerHTML = `
-        <p class="h7-appearance-head">How you see me — Operator gifts · above diagnostics</p>
-        <p class="meta" style="margin:0 0 10px;color:#e8e0d0;font-style:italic">${esc(opMsg)}</p>
-        <div class="h7-appearance-grid">${cards}</div>
-        ${xBlock}`;
+        appearanceEl.innerHTML = `
+          <p class="h7-appearance-head">How you see me — Operator gifts · above diagnostics</p>
+          <p class="meta" style="margin:0 0 10px;color:#e8e0d0;font-style:italic">${esc(opMsg)}</p>
+          <div class="h7-appearance-grid">${cards}</div>
+          ${xBlock}`;
+      }
     }
 
     const truthEl = $("h7-self-view-truth");
@@ -1339,12 +1390,41 @@
   }
 
   function docReady(doc) {
-    return doc && doc.schema === "hostess7-command/v1" && Array.isArray(doc.intel_digest);
+    return doc && doc.schema === "hostess7-command/v1" && (
+      Array.isArray(doc.intel_digest)
+      || doc.self_view
+      || (Array.isArray(doc.transcript) && doc.transcript.length)
+    );
+  }
+
+  function panelRenderable(doc) {
+    return doc && doc.schema === "hostess7-command/v1";
+  }
+
+  let selfViewDelivered = false;
+
+  function ensureSelfViewDelivered() {
+    if (selfViewDelivered) return;
+    selfViewDelivered = true;
+    void (async () => {
+      try {
+        await Promise.all([
+          fetch("/api/hostess7/appearance", { cache: "no-store" }),
+          fetch("/api/hostess7/core-of-truth", { cache: "no-store" }),
+        ]);
+        const panel = await fetch(API, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null));
+        if (panelRenderable(panel)) {
+          updateLocalSlice(panel);
+          renderHostess7Command(panel);
+        }
+      } catch (_) { /* deliver optional offline */ }
+    })();
   }
 
   function onCommandViewActivated() {
+    ensureSelfViewDelivered();
     const doc = global.lastPanelData?.hostess7_command;
-    if (docReady(doc)) {
+    if (panelRenderable(doc)) {
       renderHostess7Command(doc);
       setTimeout(() => {
         h7MiniMap?.invalidateSize?.({ animate: false });
@@ -1355,7 +1435,7 @@
     fetch(API, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
-        if (!j || !docReady(j)) return;
+        if (!j || !panelRenderable(j)) return;
         updateLocalSlice(j);
         renderHostess7Command(j);
         setTimeout(() => h7MiniMap?.invalidateSize?.({ animate: false }), 120);

@@ -344,12 +344,25 @@ def self_improve_cycle(*, module: str | None = None) -> dict[str, Any]:
     }
 
 
+def _explain_doc() -> dict[str, Any]:
+    base = _load(EXPLAIN, {"topics": []})
+    try:
+        spec = importlib.util.spec_from_file_location("h7overlay", INSTALL / "lib" / "hostess7-explain-overlay.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.merge_explain_doc("codecraft", base)
+    except Exception:
+        pass
+    return base
+
+
 def _resolve_explain_topic(query: str) -> dict[str, Any] | None:
     q = (query or "").strip()
     low = q.lower()
     topic = None
     best_score = 0
-    for t in _load(EXPLAIN, {}).get("topics") or []:
+    for t in _explain_doc().get("topics") or []:
         sc = _topic_match_score(t, low)
         if sc > best_score:
             best_score = sc

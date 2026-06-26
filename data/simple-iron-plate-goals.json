@@ -29,6 +29,14 @@
       "tech": "hostess7-brain-guard.py · MANIFEST.sha256 · quarantine ledger"
     },
     {
+      "id": "network_stack_melded",
+      "priority": 3,
+      "effectiveness": 0.96,
+      "label": "Network stack fused — iron plate + gatekeeper + meld chain",
+      "check": "network_stack_melded",
+      "tech": "field-plate-meld · field-operator iron plate · connection-gatekeeper · znetwork"
+    },
+    {
       "id": "logic_gate_comms",
       "priority": 4,
       "effectiveness": 0.95,

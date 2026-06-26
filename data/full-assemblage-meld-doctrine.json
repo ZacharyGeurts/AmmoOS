@@ -12,8 +12,9 @@
     {"id": "hearing", "label": "Final_Ear · Auditus hearing plate", "weight": 0.10, "source": "queen-earball · sense-package"},
     {"id": "sense_package", "label": "Eyes·Ears·Mouth sense meld witness", "weight": 0.08, "source": "field-sense-package-panel"},
     {"id": "meld_chain", "label": "Plate meld generation + chain-hash", "weight": 0.08, "source": "field-plate-meld"},
-    {"id": "logic_protector", "label": "Logic gate + Universal Protector posture", "weight": 0.08, "source": "nexus-logic-gate · universal-protector"},
-    {"id": "creatable_lives", "label": "Creatable lives + right to exist sustain", "weight": 0.06, "source": "creatable-lives · right-to-exist"}
+    {"id": "logic_protector", "label": "Logic gate + Universal Protector posture", "weight": 0.07, "source": "nexus-logic-gate · universal-protector"},
+    {"id": "network_stack", "label": "Iron plate net routes + gatekeeper IFF + znetwork witness", "weight": 0.06, "source": "field-plate-meld network_stack"},
+    {"id": "creatable_lives", "label": "Creatable lives + right to exist sustain", "weight": 0.05, "source": "creatable-lives · right-to-exist"}
   ],
   "corroboration": {
     "defend_min_plates": 2,

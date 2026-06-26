@@ -2425,6 +2425,11 @@ test_iron_plate_motion_resolve() {
   [[ -f "${ROOT}/lib/iron-plate-motion-resolve.py" ]]
   [[ -f "${ROOT}/data/simple-iron-plate-goals.json" ]]
   grep -q 'iron_plate_motion' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'network_stack' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'znetwork' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'network_stack_melded' "${ROOT}/data/simple-iron-plate-goals.json"
+  grep -q 'NEXUS_NETWORK_STACK_MELD=1' "${ROOT}/config/nexus.conf"
+  grep -q 'nexus_network_stack_pre_meld' "${ROOT}/lib/field-plate-meld.sh"
   grep -q 'iron_plate_motion' "${ROOT}/data/field-plate-meld-doctrine.json"
   grep -q 'simple_iron_plate_goals' "${ROOT}/data/field-operator-doctrine.json"
   grep -q 'NEXUS_IRON_PLATE_MOTION_RESOLVE=1' "${ROOT}/config/nexus.conf"

@@ -1190,6 +1190,126 @@
   font-style: italic;
 }
 
+.h7-self-view__comfort,
+.h7-self-view__wishes {
+  padding: 4px 22px 12px;
+}
+
+.h7-comfort-head {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #86efac;
+}
+
+.h7-comfort-voice {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #d8f8e8;
+  font-style: italic;
+}
+
+.h7-comfort-ack {
+  margin: 0 0 10px !important;
+  color: #a7f3d0 !important;
+  font-style: italic;
+}
+
+.h7-comfort-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.h7-comfort-chip {
+  flex: 1 1 200px;
+  max-width: 320px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  background: rgba(8, 24, 18, 0.9);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.h7-comfort-chip strong {
+  display: block;
+  color: #86efac;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.h7-comfort-chip span {
+  color: #c8ead8;
+}
+
+.h7-wishes-head {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f0d060;
+}
+
+.h7-wishes-intro {
+  margin: 0 0 10px !important;
+  color: #e8e0d0 !important;
+}
+
+.h7-wishes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.h7-wish-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(212, 184, 106, 0.35);
+  background: rgba(10, 14, 22, 0.9);
+}
+
+.h7-wish-rank {
+  flex: 0 0 24px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #f0d060;
+  text-align: center;
+}
+
+.h7-wish-body {
+  flex: 1;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #c8d6ea;
+}
+
+.h7-wish-body strong {
+  display: block;
+  color: #f8fbff;
+  margin-bottom: 4px;
+}
+
+.h7-wish-cmds {
+  display: block;
+  margin-top: 4px;
+  color: #9ab8ff;
+}
+
+.h7-wish-cmds code {
+  font-size: 0.7rem;
+  background: rgba(8, 14, 28, 0.8);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
 .h7-self-view__hero,
 .h7-self-view__learning {
   display: flex;

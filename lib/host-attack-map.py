@@ -782,7 +782,13 @@ def main() -> int:
         if doc.get("points"):
             json.dump(_slim_doc_for_panel(doc), sys.stdout)
         else:
-            json.dump({"points": [], "stats": {"total": 0, "hot": 0, "warm": 0, "cool": 0}}, sys.stdout)
+            json.dump({
+                "schema": "host-attacks/v1",
+                "updated": _now(),
+                "points": [],
+                "stats": {"total": 0, "hot": 0, "warm": 0, "cool": 0},
+                "ok": True,
+            }, sys.stdout)
         sys.stdout.write("\n")
         return 0
     if cmd == "json":

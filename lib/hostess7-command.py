@@ -1160,6 +1160,34 @@ def _calculator_cadence_reply(low: str, *, raw: str = "") -> str | None:
     return None
 
 
+_AUTHOR_TRAINING_KEYS = (
+    "write training", "author training", "author material", "write material",
+    "training material", "need more training", "write lesson", "author lesson",
+    "training gap", "self-authored", "write my own training",
+)
+
+
+def _author_training_cadence_reply(low: str) -> str | None:
+    """Hostess 7 writes her own training material when she needs more."""
+    if not any(k in low for k in _AUTHOR_TRAINING_KEYS):
+        return None
+    if os.environ.get("NEXUS_HOSTESS7_TRAINING", "1") != "1":
+        return None
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7author", INSTALL / "lib" / "hostess7-training-author.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            reply = mod.explain_author_training(low)
+            if reply:
+                return reply
+    except Exception:
+        pass
+    return None
+
+
 def _excellence_cadence_reply(low: str) -> str | None:
     """Excellence pledge — we do our best always."""
     if not any(k in low for k in _EXCELLENCE_KEYS):
@@ -1522,6 +1550,7 @@ def ask_operator(
     g16_reply = _g16_cadence_reply(low_msg)
     prog_reply = _programming_cadence_reply(low_msg)
     codecraft_reply = _codecraft_cadence_reply(low_msg)
+    author_training_reply = _author_training_cadence_reply(low_msg)
     excellence_reply = _excellence_cadence_reply(low_msg)
     mastery_reply = _mastery_cadence_reply(low_msg)
     mos_reply = _mos_cadence_reply(low_msg, raw=message)
@@ -1560,6 +1589,14 @@ def ask_operator(
             "ok": True,
             "reply": prog_reply,
             "engine": "hostess7_programming",
+            "thinking": False,
+            "instant": True,
+        }
+    elif author_training_reply and use_brain and not human_cadence_only:
+        result = {
+            "ok": True,
+            "reply": author_training_reply,
+            "engine": "hostess7_training_author",
             "thinking": False,
             "instant": True,
         }
@@ -2258,6 +2295,28 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             max_steps=int(body.get("max_steps") or 0) or None,
             trusted=body.get("trusted", True) not in (False, 0, "0", "false"),
         )
+    if action in (
+        "author-training", "author_training", "write-training", "write_training",
+        "author-material", "author_material", "training-gaps", "training_gaps",
+    ):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7author", INSTALL / "lib" / "hostess7-training-author.py")
+        if not spec or not spec.loader:
+            return {"ok": False, "error": "author_module_missing"}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if action in ("training-gaps", "training_gaps"):
+            train_spec = importlib.util.spec_from_file_location("h7train", INSTALL / "lib" / "hostess7-training.py")
+            assess = {}
+            if train_spec and train_spec.loader:
+                train_mod = importlib.util.module_from_spec(train_spec)
+                train_spec.loader.exec_module(train_mod)
+                assess = train_mod.assess_all()
+            return {"ok": True, "gaps": mod.detect_training_gaps(assess)}
+        track = str(body.get("track") or body.get("track_id") or "").strip() or None
+        force = body.get("force") in (True, 1, "1", "true")
+        return mod.run_author_cycle(track=track, force=force)
     if action in ("training-complete", "training_complete", "training-solidify", "complete_training", "solidify_training"):
         import importlib.util
 

@@ -898,11 +898,25 @@ def _topic_match_score(topic: dict[str, Any], q: str) -> int:
     return score
 
 
+def _explain_doc() -> dict[str, Any]:
+    base = _load(EXPLAIN, {"topics": []})
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("h7overlay", INSTALL / "lib" / "hostess7-explain-overlay.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.merge_explain_doc("combat", base)
+    except Exception:
+        pass
+    return base
+
+
 def _match_explain_topic(query: str) -> dict[str, Any] | None:
     q = (query or "").lower()
     best: dict[str, Any] | None = None
     best_score = 0
-    for topic in (_load(EXPLAIN, {}).get("topics") or []):
+    for topic in (_explain_doc().get("topics") or []):
         sc = _topic_match_score(topic, q)
         if sc > best_score:
             best_score = sc
@@ -925,7 +939,7 @@ def _format_topic_prose(topic: dict[str, Any], *, intro: str = "") -> str:
 def explain_combat_structured(query: str = "") -> dict[str, Any]:
     q = (query or "").strip()
     low = q.lower()
-    doc = _load(EXPLAIN, {})
+    doc = _explain_doc()
     intro = str(doc.get("introduction") or "").strip()
     fmt = doc.get("format") or [s[0] for s in _SECTION_LABELS]
     metrics = combat_score()

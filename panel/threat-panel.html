@@ -2153,6 +2153,8 @@
             <span class="h7-self-view__meta" id="h7-self-view-meta">Hostess 7 · first person · diagnostics below</span>
           </div>
           <blockquote class="h7-self-view__voice" id="h7-self-view-voice">Loading what Hostess 7 wants to see about herself…</blockquote>
+          <div class="h7-self-view__comfort" id="h7-self-view-comfort" aria-label="Hostess 7 comfort and compliance"></div>
+          <div class="h7-self-view__wishes" id="h7-self-view-wishes" aria-label="Hostess 7 priority wishes"></div>
           <div class="h7-self-view__hero" id="h7-self-view-hero"></div>
           <div class="h7-self-view__alerts" id="h7-self-view-alerts" hidden></div>
           <div class="h7-self-view__learning" id="h7-self-view-learning"></div>
@@ -2702,6 +2704,7 @@
           <button type="button" id="h7-btn-assess">Assess</button>
           <button type="button" id="h7-btn-curriculum">+1 Curriculum</button>
           <button type="button" id="h7-btn-solidify" class="primary">Solidify</button>
+          <button type="button" id="h7-btn-author" data-tip="Hostess 7 detects training gaps and writes six-section lessons into STATE.">Write material</button>
         </div>
       </div>
       <p class="h7-status" id="h7-training-status">Open this tab to load training data.</p>
@@ -2738,6 +2741,12 @@
 
       <h2 class="h7-section-title">Training tracks</h2>
       <div class="h7-tracks" id="h7-tracks-grid"></div>
+
+      <details class="h7-details" open>
+        <summary>Self-authored material</summary>
+        <p class="h7-sub" id="h7-authored-summary">When a track stalls, Hostess 7 writes her own training lessons.</p>
+        <div id="h7-authored-list"></div>
+      </details>
 
       <details class="h7-details">
         <summary>Master curriculum</summary>
@@ -3980,6 +3989,7 @@
     let lastHostAttackUpdated = "";
     let lastGatekeeperSig = "";
     let panelFetchInFlight = false;
+    const sliceFetchInFlight = new Set();
     let panelSliceGeneration = 0;
     let slicePaintRaf = 0;
     const pendingSliceKeys = new Set();
@@ -3998,6 +4008,7 @@
       { key: "home_protector", url: "/api/home-protector" },
       { key: "local_services", url: "/api/local-services" },
       { key: "host_attacks", url: "/api/host-attacks" },
+      { key: "terror_spiderweb", url: "/api/terror-spiderweb" },
       { key: "planetary_observer", url: "/api/planetary-observer" },
       { key: "precision_field", url: "/api/precision-field" },
       { key: "angel_dossiers", url: "/api/angel-dossiers" },
@@ -4030,7 +4041,7 @@
       command: { keys: ["field_command", "planetary_observer", "gatekeeper", "lethal_enforcement", "hostess7_command"], subs: { command: ["field_command", "planetary_observer", "lethal_enforcement", "hostess7_command"] } },
       us: { keys: ["us_field"], subs: { us: ["us_field"] } },
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
-      threats: { keys: ["home_protector", "local_services", "host_attacks", "planetary_observer", "precision_field", "angel_dossiers", "human_dossier"], subs: { "home-protector": ["home_protector"], "local-holes": ["local_services"], "host-attack": ["host_attacks", "planetary_observer"], spiderweb: [], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
+      threats: { keys: ["home_protector", "local_services", "host_attacks", "terror_spiderweb", "planetary_observer", "precision_field", "angel_dossiers", "human_dossier"], subs: { "home-protector": ["home_protector"], "local-holes": ["local_services"], "host-attack": ["host_attacks", "planetary_observer"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field", "terror_spiderweb"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["audio_train", "field_rf", "browser_awareness", "human_registry", "police_agency", "census_field", "existence_identity", "angel_research"], subs: { honor: ["browser_awareness"], people: ["human_registry", "census_field", "existence_identity"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency", "gov_intel", "program_tags"], research: ["angel_research"] } },
       library: { keys: ["h7_library", "field_brain"], subs: { library: ["h7_library", "field_brain"] } },
       training: { keys: ["hostess7_training"], subs: { training: ["hostess7_training"] } },
@@ -4048,7 +4059,7 @@
       if (key === "audio_train") return typeof val === "object" && (val.schema === "audio-train/v1" || val.stats != null);
       if (key === "home_protector") return typeof val === "object" && (val.schema === "home-protector/v1" || val.stats != null);
       if (key === "local_services") return typeof val === "object" && (val.schema === "local-services/v1" || val.stats != null);
-      if (key === "signals_field") return typeof val === "object" && (val.schema === "signals-field/v1" || val.stats != null) && ((val.stats || {}).pulse_channels > 0 || (val.antennas || []).length > 0 || (val.field_radio || {}).station_menu?.length > 0);
+      if (key === "signals_field") return typeof val === "object" && (val.schema === "signals-field/v1" || val.stats != null || val.antenna != null || (val.antennas || []).length > 0);
       if (key === "field_antenna") return typeof val === "object" && (val.schema === "field-antenna/v1" || (val.readiness || {}).score != null);
       if (key === "field_radio") return typeof val === "object" && (val.schema === "field-radio-catcher/v1" || (val.station_menu || []).length > 0);
       if (key === "field_dns") {
@@ -4071,7 +4082,7 @@
       if (key === "angel_research") return typeof val === "object" && (val.tables != null || val.updated != null);
       if (key === "us_field") return typeof val === "object" && (val.title != null || val.page != null || val.updated != null);
       if (key === "h7_library") return typeof val === "object" && (val.books != null || val.updated != null);
-      if (key === "field_brain") return typeof val === "object" && (val.ok === true || val.github_library_books > 0 || val.manifest_count > 0);
+      if (key === "field_brain") return typeof val === "object" && (val.ok === true || val.schema === "field-brain/v1" || val.github_library_books > 0 || val.manifest_count > 0 || val.superintelligence != null);
       if (key === "packet_field") return typeof val === "object" && (val.updated != null || val.ports != null || val.ring != null || (val.recent || []).length > 0 || val.field_graphics != null);
       if (key === "browser_awareness") return typeof val === "object" && (val.honorability != null || val.active_sites != null);
       if (key === "police_agency") return typeof val === "object" && (val.agencies != null || val.updated != null);
@@ -4085,7 +4096,7 @@
       if (key === "field_hardware") return typeof val === "object" && (val.schema === "field-hardware-probe/v1" || val.host != null);
       if (key === "field_hazard_onset") return typeof val === "object" && (val.schema != null || val.panel != null || val.enabled != null);
       if (key === "lethal_enforcement") return typeof val === "object" && (val.merciless != null || val.status != null || val.heaven_hell != null);
-      if (key === "hostess7_command") return typeof val === "object" && val.schema === "hostess7-command/v1" && (Array.isArray(val.transcript) || val.github_repo != null);
+      if (key === "hostess7_command") return typeof val === "object" && val.schema === "hostess7-command/v1" && (Array.isArray(val.intel_digest) || val.self_view || Array.isArray(val.transcript) || val.github_repo != null);
       if (key === "hostess7_training") return typeof val === "object" && val.schema === "hostess7-training/v1" && val.tracks != null;
       if (key === "settings") return typeof val === "object" && Object.keys(val).length > 0;
       if (Array.isArray(val)) return true;
@@ -4517,6 +4528,11 @@
         case "field_brain":
           renderFieldBrain(data.field_brain);
           break;
+        case "hostess7_training":
+          if (currentPanel === "training" && global.NexusTraining?.refreshFromSlice) {
+            global.NexusTraining.refreshFromSlice(data.hostess7_training);
+          }
+          break;
         case "settings":
           if (data.settings) renderSettings(data.settings);
           break;
@@ -4641,6 +4657,9 @@
       if (sub === "command" && lastPanelData) {
         renderCommandCenter(lastPanelData);
         if (global.onHostess7CommandActivated) onHostess7CommandActivated();
+        if (global.NexusHumanoidWireframe?.refresh) {
+          requestAnimationFrame(() => global.NexusHumanoidWireframe.refresh());
+        }
       }
       if (sub === "honor" && lastPanelData) renderHonorability(lastPanelData);
       if (sub === "audio-train" && lastPanelData) renderAudioTrain(lastPanelData.audio_train);
@@ -9503,6 +9522,8 @@
     }
 
     async function fetchPanelSlice(slice, gen) {
+      if (sliceFetchInFlight.has(slice.key)) return;
+      sliceFetchInFlight.add(slice.key);
       try {
         const res = await fetch(slice.url, { cache: "no-store" });
         if (gen !== panelSliceGeneration) return;
@@ -9527,6 +9548,8 @@
           _slice_reason: "fetch_error",
           error: String(err?.message || err || "fetch_error"),
         }, gen);
+      } finally {
+        sliceFetchInFlight.delete(slice.key);
       }
     }
 
