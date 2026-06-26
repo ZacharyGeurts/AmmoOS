@@ -228,6 +228,10 @@ while true; do
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
       pythong "${NEXUS_INSTALL_ROOT}/lib/thermal-governor.py" cycle >/dev/null 2>&1 || true
   fi
+  if [[ "${NEXUS_FIELD_SWITCH_SAFETY:-1}" == "1" ]] && [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-switch-safety.py" ]]; then
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      pythong "${NEXUS_INSTALL_ROOT}/lib/field-switch-safety.py" cycle >/dev/null 2>&1 || true
+  fi
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-port-ddos.sh" ]]; then
     # shellcheck source=/dev/null
     source "${NEXUS_INSTALL_ROOT}/lib/field-port-ddos.sh"

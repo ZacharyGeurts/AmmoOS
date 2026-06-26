@@ -273,7 +273,14 @@ def posture() -> dict[str, Any]:
         "drive_converter": _drive_converter_py("json", timeout=30),
         "znetwork": znetwork_posture(refresh_offer=False),
         "operator": _operator_posture(),
+        "switch_safety": _switch_safety(phase),
     }
+
+
+def _switch_safety(phase: str) -> dict[str, Any]:
+    if os.environ.get("NEXUS_FIELD_SWITCH_SAFETY", "1") != "1":
+        return {"schema": "field-switch-safety/v1", "enabled": False, "switch_allowed": True}
+    return _run_py("field-switch-safety.py", "preflight", f"--phase={phase}", timeout=12)
 
 
 def _operator_posture() -> dict[str, Any]:
@@ -337,6 +344,14 @@ def scan_wrdt() -> dict[str, Any]:
 def apply_wrdt(*, confirm: bool = False, elevated: bool = False) -> dict[str, Any]:
     if not confirm:
         return {"ok": False, "error": "confirm_required", "doctrine": "type YES in GUI or pass --confirm"}
+    safety = _switch_safety("wrdt_apply")
+    if not safety.get("switch_allowed"):
+        return {
+            "ok": False,
+            "error": "thermal_hotspot_block",
+            "safety": safety,
+            "doctrine": "Defer WRDT apply until thermal cool — painless, non-destructive",
+        }
     if _virtual_mode() and os.environ.get("TRISTATE_VIRTUAL_APPLY", "").strip().lower() not in ("1", "true", "yes"):
         return {
             "ok": False,
@@ -398,6 +413,14 @@ def grok_prep(*, elevated: bool = False) -> dict[str, Any]:
 def commit(*, elevated: bool = False) -> dict[str, Any]:
     if lock_state().get("committed"):
         return {"ok": True, "already": True, "posture": posture()}
+    safety = _switch_safety("commit")
+    if not safety.get("switch_allowed"):
+        return {
+            "ok": False,
+            "error": "thermal_hotspot_block",
+            "safety": safety,
+            "doctrine": "Commit blocked while hotspot risk — cool down or run wave shed first",
+        }
     underlay = (
         {"ok": True, "verdict": "PARTIAL", "skipped": "virtual"}
         if _virtual_mode()
@@ -443,6 +466,15 @@ def reboot_field(*, elevated: bool = False) -> dict[str, Any]:
             "ok": False,
             "error": "virtual_no_reboot",
             "doctrine": "virtual test on KILROY_FIELD — host reboot blocked",
+            "posture": posture(),
+        }
+    safety = _switch_safety("reboot")
+    if not safety.get("switch_allowed"):
+        return {
+            "ok": False,
+            "error": "thermal_hotspot_block",
+            "safety": safety,
+            "doctrine": "Reboot to field blocked while hotspot risk — wait for thermal ok",
             "posture": posture(),
         }
     lock = lock_state()

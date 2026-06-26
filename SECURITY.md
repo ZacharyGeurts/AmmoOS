@@ -25,6 +25,18 @@ The panel and field daemons bind to local ports (default **9477**). They do not 
 
 When `NEXUS_SELF_DEFENSE=1` (default), `lib/self-defense.sh` verifies `MANIFEST.sha256` before the main daemon loads protected modules. Tampered files are refused and logged.
 
+## Field switch safety (no hotspots)
+
+When switching to field mode (Tristate Installer: arrive → transform → commit), `lib/field-switch-safety.py` gates destructive steps:
+
+- **Thermal governor** samples hwmon before commit, reboot, or WRDT apply
+- **Hotspot risk** blocks transition at warn/crit temps, rapid peak rise (Δ°C), or wave-shed crit
+- **Wave shed** runs automatically on hotspot — stops capture, lowers quota advisory, sheds excess draw
+- **Speedup admission** (up to **857×** ceiling) only when `thermal_ok` — measured bench never bypasses thermal gate
+- **Non-destructive**: no GRUB/kernel cmdline edits; guest OS passthrough; marker-driven refresh stays light
+
+Override only with `NEXUS_FIELD_SWITCH_FORCE=1` (operator emergency).
+
 ## Reporting
 
 Report security issues privately to the repository maintainer. Do not open public issues for undisclosed vulnerabilities.

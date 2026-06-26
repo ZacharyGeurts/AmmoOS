@@ -483,6 +483,20 @@ test_nexus_boot_impl() {
   rm -rf "$tmp_state"
 }
 
+test_field_switch_safety() {
+  [[ -f "${ROOT}/lib/field-switch-safety.py" ]]
+  [[ -f "${ROOT}/data/field-switch-safety-doctrine.json" ]]
+  grep -q 'NEXUS_FIELD_SWITCH_SAFETY' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_FIELD_SPEEDUP_CEILING' "${ROOT}/config/nexus.conf"
+  grep -q 'hotspot_risk' "${ROOT}/lib/thermal-governor.py"
+  grep -q 'field_switch_safe' "${ROOT}/lib/thermal-governor.py"
+  grep -q '_switch_safety' "${ROOT}/lib/field-underlay-switch.py"
+  grep -q 'thermal_hotspot_block' "${ROOT}/lib/field-underlay-switch.py"
+  grep -q 'field-switch-safety' "${ROOT}/lib/nexus-daemon.sh"
+  pythong "${ROOT}/lib/field-switch-safety.py" evaluate --phase=arrive 2>/dev/null | grep -q 'switch_allowed'
+  pythong "${ROOT}/lib/field-switch-safety.py" evaluate --phase=arrive 2>/dev/null | grep -q 'speedup'
+}
+
 test_release_tooling() {
   [[ -x "${ROOT}/scripts/pack-release.sh" ]]
   [[ -x "${ROOT}/scripts/nexus-release-finalize.sh" ]]
@@ -2028,6 +2042,7 @@ run_test "hostess7 in nexus" test_hostess7_in_nexus
 run_test "NewLatest stack wired" test_newlatest_stack_wired
 run_test "panel browser boot open" test_panel_browser_boot_open
 run_test "nexus boot impl" test_nexus_boot_impl
+run_test "field switch safety" test_field_switch_safety
 run_test "release tooling" test_release_tooling
 run_test "heaven hell module" test_heaven_hell_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs

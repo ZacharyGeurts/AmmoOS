@@ -560,6 +560,20 @@ def copilot_status(*, bench: bool = True) -> dict[str, Any]:
     if bench and cpu.hot:
         doc["bench"] = cpu.bench(samples=20_000)
         doc["faster_than_cpu"] = doc["bench"].get("faster_than_cpu")
+        ceiling = float(os.environ.get("NEXUS_FIELD_SPEEDUP_CEILING", "857"))
+        measured = float(doc["bench"].get("speedup_x") or 0)
+        thermal = _load(STATE / "thermal-advisory.json", {})
+        thermal_ok = str(thermal.get("level") or "ok") in ("ok", "unknown") and not thermal.get(
+            "hotspot_risk"
+        )
+        admitted = round(min(measured, ceiling), 1) if thermal_ok and measured > 1 else None
+        doc["speedup"] = {
+            "ceiling_x": ceiling,
+            "measured_x": round(measured, 1) if measured else None,
+            "admitted_x": admitted,
+            "thermal_ok": thermal_ok,
+            "policy": "Admit up to ceiling only when thermally safe — no hotspot boost",
+        }
     return doc
 
 

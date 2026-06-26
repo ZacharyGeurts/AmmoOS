@@ -1,0 +1,28 @@
+{
+  "schema": "field-switch-safety-doctrine/v1",
+  "title": "Field switch safety — painless, cool, final underlay",
+  "motto": "Move under without damage. No hotspots. Speed admits only when thermally safe.",
+  "policy": {
+    "non_destructive": true,
+    "no_grub_edit": true,
+    "no_kernel_cmdline_edit": true,
+    "guest_passthrough": true,
+    "hotspot_block_commit": true,
+    "hotspot_block_reboot": true,
+    "wave_shed_before_boost": true,
+    "speedup_honest_ceiling_x": 857,
+    "speedup_requires_thermal_ok": true,
+    "final_technology": "marker-driven underlay — arrive, transform, commit; refresh path stays light"
+  },
+  "phases": {
+    "arrive": "read-only posture — always allowed",
+    "transform": "blocked at thermal crit unless forced",
+    "commit": "blocked when hotspot_risk unless forced",
+    "reboot": "blocked when hotspot_risk unless forced",
+    "wrdt_apply": "blocked at thermal crit unless forced"
+  },
+  "hotspot": {
+    "sources": ["thermal_warn", "thermal_crit", "peak_delta_c", "wave_shed_crit", "power_ledger_warn"],
+    "mitigation": ["wave_shed", "quota_lower", "capture_halt", "defer_commit"]
+  }
+}
