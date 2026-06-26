@@ -827,7 +827,7 @@ def _load_nexus_shield_source() -> str:
 
 
 def _resolve_nexus_source_root() -> Path | None:
-    """Locate git tree with stealth_install.sh for panel UPDATE apply."""
+    """Locate git/dev tree with install-all.sh for UPDATE git fallback."""
     candidates: list[Path] = []
     src = _load_nexus_shield_source()
     if src:
@@ -836,6 +836,11 @@ def _resolve_nexus_source_root() -> Path | None:
         INSTALL_ROOT,
         INSTALL_ROOT.parent,
     ])
+    staging = STATE_DIR / "update-staging"
+    if staging.is_dir():
+        for child in sorted(staging.glob("extract-*"), reverse=True):
+            if (child / "install-all.sh").is_file() or any(child.rglob("install-all.sh")):
+                candidates.append(child)
     seen: set[str] = set()
     for base in candidates:
         if not base:
@@ -849,10 +854,11 @@ def _resolve_nexus_source_root() -> Path | None:
             continue
         seen.add(key)
         cur = resolved
-        for _ in range(5):
-            install = cur / "stealth_install.sh"
-            if install.is_file():
-                return cur
+        for _ in range(6):
+            for name in ("install-all.sh", "stealth_install.sh"):
+                install = cur / name
+                if install.is_file():
+                    return cur
             parent = cur.parent
             if parent == cur:
                 break
@@ -894,17 +900,20 @@ def _nexus_update_needs_sudo() -> dict | None:
 
 def _spawn_nexus_update_apply(
     *,
-    git_dir: Path,
-    install_sh: Path,
+    git_dir: Path | None,
+    install_sh: Path | None,
     token: str,
     target: str,
     previous: str,
+    tarball_url: str = "",
+    update_mode: str = "release",
 ) -> bool:
     apply_sh = INSTALL_ROOT / "lib" / "nexus-update-apply.sh"
-    if not apply_sh.is_file():
+    if not apply_sh.is_file() and git_dir:
         apply_sh = git_dir / "lib" / "nexus-update-apply.sh"
     if not apply_sh.is_file():
         return False
+    work_cwd = str(git_dir) if git_dir else str(INSTALL_ROOT)
     log_fp = STATE_DIR / "update-apply.log"
     try:
         log_fp.parent.mkdir(parents=True, exist_ok=True)
@@ -917,11 +926,16 @@ def _spawn_nexus_update_apply(
         "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT),
         "NEXUS_STATE_DIR": str(STATE_DIR),
         "NEXUS_UPDATE_LOCK_TOKEN": token,
-        "NEXUS_UPDATE_GIT_DIR": str(git_dir),
         "NEXUS_UPDATE_TARGET": target,
         "NEXUS_UPDATE_PREVIOUS": previous,
-        "NEXUS_UPDATE_INSTALL_SH": str(install_sh),
+        "NEXUS_UPDATE_MODE": update_mode or "release",
     })
+    if tarball_url:
+        env["NEXUS_UPDATE_TARBALL_URL"] = tarball_url
+    if git_dir:
+        env["NEXUS_UPDATE_GIT_DIR"] = str(git_dir)
+    if install_sh and install_sh.is_file():
+        env["NEXUS_UPDATE_INSTALL_SH"] = str(install_sh)
     for key in ("DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "XDG_CURRENT_DESKTOP", "DBUS_SESSION_BUS_ADDRESS"):
         if key in os.environ:
             env[key] = os.environ[key]
@@ -933,7 +947,7 @@ def _spawn_nexus_update_apply(
                 stderr=subprocess.STDOUT,
                 env=env,
                 start_new_session=True,
-                cwd=str(git_dir),
+                cwd=work_cwd,
             )
         return True
     except OSError:
@@ -3381,10 +3395,11 @@ class Handler(BaseHTTPRequestHandler):
                 return
             target = str(upd.get("latest") or "")
             previous = str(upd.get("previous") or upd.get("current") or "")
+            lock_phase = "download_tarball" if str(upd.get("update_mode") or "release") == "release" else "git_fetch"
             acq = _nexus_update_lock([
                 "acquire",
                 "--holder=panel",
-                "--phase=git_fetch",
+                f"--phase={lock_phase}",
                 f"--target={target}",
                 f"--previous={previous}",
             ])
@@ -3401,17 +3416,39 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 return
             token = str(acq.get("token") or "")
+            update_mode = str(upd.get("update_mode") or os.environ.get("NEXUS_UPDATE_MODE", "release"))
+            tarball_url = str(upd.get("source_tarball") or "")
             git_dir = _resolve_nexus_source_root()
-            install_sh = (git_dir / "stealth_install.sh") if git_dir else None
-            if not git_dir or not install_sh or not install_sh.is_file():
+            install_sh = None
+            if git_dir:
+                for name in ("install-all.sh", "stealth_install.sh"):
+                    candidate = git_dir / name
+                    if candidate.is_file():
+                        install_sh = candidate
+                        break
+            if update_mode == "release" and not tarball_url:
                 _nexus_update_lock(["release", f"--token={token}"])
                 self._send(
                     500,
                     json.dumps({
                         "ok": False,
                         "applied": False,
-                        "error": "stealth_install_missing",
-                        "message": "stealth_install.sh not found — set NEXUS_SHIELD_SOURCE in config/nexus.conf",
+                        "error": "release_tarball_missing",
+                        "message": "No release tarball URL — check GitHub release assets",
+                        "release_url": upd.get("release_url"),
+                    }),
+                    "application/json",
+                )
+                return
+            if update_mode != "release" and (not git_dir or not install_sh):
+                _nexus_update_lock(["release", f"--token={token}"])
+                self._send(
+                    500,
+                    json.dumps({
+                        "ok": False,
+                        "applied": False,
+                        "error": "install_tree_missing",
+                        "message": "install-all.sh not found — set NEXUS_SHIELD_SOURCE or use release mode",
                         "install_root": str(INSTALL_ROOT),
                     }),
                     "application/json",
@@ -3423,6 +3460,8 @@ class Handler(BaseHTTPRequestHandler):
                 token=token,
                 target=target,
                 previous=previous,
+                tarball_url=tarball_url,
+                update_mode=update_mode,
             )
             if not started:
                 _nexus_update_lock(["release", f"--token={token}"])
@@ -3444,10 +3483,18 @@ class Handler(BaseHTTPRequestHandler):
                     "started": True,
                     "update_in_progress": True,
                     "reload_panel": True,
-                    "message": f"Update started — github-update.lock held · {previous} → {target}",
+                    "message": (
+                        f"Release installer started — {previous} → {target}"
+                        if update_mode == "release"
+                        else f"Update started — {previous} → {target}"
+                    ),
                     "previous": previous,
                     "latest": target,
-                    "source_root": str(git_dir),
+                    "update_mode": update_mode,
+                    "apply_via": upd.get("apply_via") or ("release_tarball" if update_mode == "release" else "git_tree"),
+                    "source_tarball": tarball_url or None,
+                    "tristate_installer_url": upd.get("tristate_installer_url"),
+                    "source_root": str(git_dir) if git_dir else None,
                     "update_lock": lock_now,
                     "log": str(STATE_DIR / "update-apply.log"),
                 }),
@@ -3466,27 +3513,36 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 return
             git_dir = _resolve_nexus_source_root()
-            install_sh = (git_dir / "stealth_install.sh") if git_dir else None
+            install_sh = None
+            if git_dir:
+                for name in ("install-all.sh", "stealth_install.sh"):
+                    candidate = git_dir / name
+                    if candidate.is_file():
+                        install_sh = candidate
+                        break
             token = str(lock.get("token") or os.environ.get("NEXUS_UPDATE_LOCK_TOKEN", ""))
-            previous = str(lock.get("previous_version") or needs.get("previous") if needs else "")
-            target = str(lock.get("target_version") or needs.get("target") if needs else "")
-            if not git_dir or not install_sh or not install_sh.is_file():
-                self._send(
-                    500,
-                    json.dumps({"ok": False, "error": "stealth_install_missing"}),
-                    "application/json",
-                )
-                return
+            previous = str(lock.get("previous_version") or (needs.get("previous") if needs else ""))
+            target = str(lock.get("target_version") or (needs.get("target") if needs else ""))
+            update_mode = str(
+                os.environ.get("NEXUS_UPDATE_MODE", "release")
+                if not needs else needs.get("update_mode") or os.environ.get("NEXUS_UPDATE_MODE", "release")
+            )
             env = os.environ.copy()
             env.update({
                 "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT),
                 "NEXUS_STATE_DIR": str(STATE_DIR),
                 "NEXUS_UPDATE_LOCK_TOKEN": token,
-                "NEXUS_UPDATE_GIT_DIR": str(git_dir),
                 "NEXUS_UPDATE_TARGET": target,
                 "NEXUS_UPDATE_PREVIOUS": previous,
-                "NEXUS_UPDATE_INSTALL_SH": str(install_sh),
+                "NEXUS_UPDATE_MODE": update_mode,
             })
+            if git_dir:
+                env["NEXUS_UPDATE_GIT_DIR"] = str(git_dir)
+            if install_sh and install_sh.is_file():
+                env["NEXUS_UPDATE_INSTALL_SH"] = str(install_sh)
+            cache_upd = _nexus_update_check()
+            if cache_upd.get("source_tarball"):
+                env["NEXUS_UPDATE_TARBALL_URL"] = str(cache_upd["source_tarball"])
             helper = INSTALL_ROOT / "lib" / "nexus-update-apply.sh"
             try:
                 subprocess.Popen(

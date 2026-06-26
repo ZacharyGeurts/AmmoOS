@@ -2163,11 +2163,18 @@ test_nexus_update_module() {
   grep -q '_spawn_nexus_update_apply' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'github-update.lock' "${ROOT}/lib/nexus-update-lock.py"
   grep -q '_resolve_nexus_source_root' "${ROOT}/lib/threat-panel-http.py"
-  grep -q 'stealth_install.sh' "${ROOT}/genius_shield.sh"
+  grep -q 'NEXUS_UPDATE_TARBALL_URL' "${ROOT}/lib/nexus-update-apply.sh"
+  grep -q 'download_tarball' "${ROOT}/lib/nexus-update-apply.sh"
+  grep -q 'install-all.sh' "${ROOT}/lib/nexus-update-apply.sh"
+  grep -q 'NEXUS_UPDATE_MODE' "${ROOT}/config/nexus.conf"
+  grep -q 'source_tarball' "${ROOT}/lib/nexus-update.py"
+  grep -q 'INSTALL UPDATE' "${ROOT}/panel/threat-panel.html"
   grep -q 'promptUpdateSudo' "${ROOT}/panel/threat-panel.html"
   ! grep -q 'window.open(data.release_url' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     pythong "${ROOT}/lib/nexus-update.py" | grep -q '"current"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/nexus-update.py" | grep -q 'release_tarball'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     pythong - <<'PY'
 import importlib.util
@@ -2178,7 +2185,7 @@ spec = importlib.util.spec_from_file_location("tph", root / "lib" / "threat-pane
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 src = mod._resolve_nexus_source_root()
-assert src and (src / "stealth_install.sh").is_file(), src
+assert src and ((src / "install-all.sh").is_file() or (src / "stealth_install.sh").is_file()), src
 PY
 }
 

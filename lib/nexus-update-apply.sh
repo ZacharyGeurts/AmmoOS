@@ -1,18 +1,22 @@
 #!/bin/bash
-# NEXUS GitHub update apply — holds github-update.lock, git pull, install, restart.
+# NEXUS update apply — release installer tarball (default) or git tree fallback.
+# Holds github-update.lock, downloads release, install-all.sh, restart.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
 export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 
+UPDATE_MODE="${NEXUS_UPDATE_MODE:-release}"
 GIT_DIR="${NEXUS_UPDATE_GIT_DIR:-$ROOT}"
-INSTALL_SH="${NEXUS_UPDATE_INSTALL_SH:-${GIT_DIR}/stealth_install.sh}"
-TOKEN="${NEXUS_UPDATE_LOCK_TOKEN:-}"
+INSTALL_SH="${NEXUS_UPDATE_INSTALL_SH:-${GIT_DIR}/install-all.sh}"
+TARBALL_URL="${NEXUS_UPDATE_TARBALL_URL:-}"
 TARGET="${NEXUS_UPDATE_TARGET:-}"
 PREVIOUS="${NEXUS_UPDATE_PREVIOUS:-}"
+TOKEN="${NEXUS_UPDATE_LOCK_TOKEN:-}"
 LOG="${NEXUS_STATE_DIR}/update-apply.log"
 NEEDS_SUDO_JSON="${NEXUS_STATE_DIR}/update-needs-sudo.json"
+STAGING="${NEXUS_STATE_DIR}/update-staging"
 
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh" 2>/dev/null || true
@@ -99,7 +103,7 @@ _run_with_sudo() {
   if command -v zenity >/dev/null 2>&1 && [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
     local pw
     pw="$(zenity --password --title="NEXUS-Shield Update" \
-      --text="Administrator password required to install ${PREVIOUS} → ${TARGET} and restart NEXUS." 2>/dev/null || true)"
+      --text="Administrator password required to install release ${PREVIOUS} → ${TARGET}." 2>/dev/null || true)"
     if [[ -n "$pw" ]]; then
       _log "sudo: zenity password"
       printf '%s\n' "$pw" | sudo -S -E bash -c "$inner"
@@ -110,7 +114,7 @@ _run_with_sudo() {
   fi
   if command -v kdialog >/dev/null 2>&1 && [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
     local pw
-    pw="$(kdialog --password "NEXUS-Shield needs sudo to install ${PREVIOUS} → ${TARGET}" 2>/dev/null || true)"
+    pw="$(kdialog --password "NEXUS-Shield needs sudo to install release ${PREVIOUS} → ${TARGET}" 2>/dev/null || true)"
     if [[ -n "$pw" ]]; then
       _log "sudo: kdialog password"
       printf '%s\n' "$pw" | sudo -S -E bash -c "$inner"
@@ -129,8 +133,8 @@ _run_with_sudo() {
   fi
   _log "sudo: no prompt method — needs manual sudo"
   mkdir -p "$(dirname "$NEEDS_SUDO_JSON")"
-  printf '{"needs_sudo":true,"message":"Administrator password required","command":"cd %s && sudo bash %s","target":"%s","previous":"%s"}\n' \
-    "$GIT_DIR" "$INSTALL_SH" "$TARGET" "$PREVIOUS" >"$NEEDS_SUDO_JSON"
+  printf '{"needs_sudo":true,"message":"Administrator password required","command":"%s","target":"%s","previous":"%s","update_mode":"%s"}\n' \
+    "cd '${STAGING}' && sudo bash install-all.sh" "$TARGET" "$PREVIOUS" "$UPDATE_MODE" >"$NEEDS_SUDO_JSON"
   return 3
 }
 
@@ -150,28 +154,102 @@ _restart_standalone_panel() {
   nexus_update_lock_phase restarting "--token=${TOKEN}" 2>/dev/null || true
   nexus_panel_stop 2>/dev/null || true
   sleep 1
-  if [[ -f "${GIT_DIR}/nexus.sh" ]]; then
-    (cd "$GIT_DIR" && nohup env NEXUS_INSTALL_ROOT="$GIT_DIR" NEXUS_FIELD_STANDALONE=1 \
+  local launch_root="${NEXUS_UPDATE_EXTRACT_ROOT:-$GIT_DIR}"
+  if [[ -f "${launch_root}/nexus.sh" ]]; then
+    (cd "$launch_root" && nohup env NEXUS_INSTALL_ROOT="$launch_root" NEXUS_FIELD_STANDALONE=1 \
       NEXUS_STATE_DIR="$NEXUS_STATE_DIR" bash ./nexus.sh --no-browser --no-tray \
       >>"${NEXUS_STATE_DIR}/update-restart.log" 2>&1 &) || true
     sleep 2
   fi
 }
 
-main() {
-  mkdir -p "$NEXUS_STATE_DIR"
-  : >>"$LOG"
-  _log "update apply start target=${TARGET} previous=${PREVIOUS} git=${GIT_DIR}"
+_download_release() {
+  local url="$1" dest="$2"
+  _log "download release tarball: $url"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL --retry 3 --retry-delay 2 -o "$dest" "$url"
+    return $?
+  fi
+  if command -v wget >/dev/null 2>&1; then
+    wget -q -O "$dest" "$url"
+    return $?
+  fi
+  _log "curl/wget missing"
+  return 1
+}
 
-  trap _cleanup EXIT
-  [[ -n "$TOKEN" ]] || { _log "missing NEXUS_UPDATE_LOCK_TOKEN"; exit 1; }
+_extract_release() {
+  local archive="$1" dest="$2"
+  mkdir -p "$dest"
+  tar -xzf "$archive" -C "$dest"
+}
 
-  nexus_update_lock_adopt "$TOKEN" "nexus-update-apply" "git_fetch" | grep -q '"ok": true' \
-    || { _log "lock adopt failed"; exit 1; }
+_find_extract_root() {
+  local dest="$1"
+  local ver="${TARGET#v}"
+  local candidates=(
+    "${dest}/nexus-shield-${ver}"
+    "${dest}/nexus-shield-${TARGET}"
+  )
+  local c
+  for c in "${candidates[@]}"; do
+    if [[ -f "${c}/install-all.sh" ]]; then
+      printf '%s' "$c"
+      return 0
+    fi
+  done
+  local found
+  found="$(find "$dest" -maxdepth 2 -name install-all.sh -print -quit 2>/dev/null || true)"
+  if [[ -n "$found" ]]; then
+    dirname "$found"
+    return 0
+  fi
+  return 1
+}
 
-  _heartbeat_loop &
-  HB_PID=$!
+_apply_release_installer() {
+  [[ -n "$TARBALL_URL" ]] || { _log "missing NEXUS_UPDATE_TARBALL_URL"; return 1; }
+  local archive="${STAGING}/nexus-shield-${TARGET}-source.tar.gz"
+  mkdir -p "$STAGING"
+  nexus_update_lock_phase download_tarball "--token=${TOKEN}" 2>/dev/null || true
+  if ! _download_release "$TARBALL_URL" "$archive"; then
+    _log "tarball download failed"
+    return 1
+  fi
+  nexus_update_lock_phase extract_tarball "--token=${TOKEN}" 2>/dev/null || true
+  local extract_base="${STAGING}/extract-${TARGET}"
+  rm -rf "$extract_base"
+  if ! _extract_release "$archive" "$extract_base"; then
+    _log "tarball extract failed"
+    return 1
+  fi
+  local extract_root
+  extract_root="$(_find_extract_root "$extract_base")" || {
+    _log "install-all.sh not found in extracted tree"
+    return 1
+  }
+  export NEXUS_UPDATE_EXTRACT_ROOT="$extract_root"
+  INSTALL_SH="${extract_root}/install-all.sh"
+  [[ -f "$INSTALL_SH" ]] || { _log "install-all.sh missing in ${extract_root}"; return 1; }
+  _log "release extract root=${extract_root}"
+  nexus_update_lock_phase install_all "--token=${TOKEN}" 2>/dev/null || true
+  local inner
+  inner="export NEXUS_UPDATE_LOCK_TOKEN='${TOKEN}'; export NEXUS_UPDATE_PREVIOUS_VERSION='${PREVIOUS}'; export NEXUS_INSTALL_SRC='${extract_root}'; export SG_ROOT='${extract_root}'; cd '${extract_root}' && bash '${INSTALL_SH}'"
+  _log "running install-all.sh from release tarball"
+  if ! _run_with_sudo "$inner"; then
+    local rc=$?
+    if [[ $rc -eq 3 ]]; then
+      _log "awaiting sudo — wrote ${NEEDS_SUDO_JSON}"
+      nexus_update_lock_phase awaiting_sudo "--token=${TOKEN}" 2>/dev/null || true
+      exit 3
+    fi
+    _log "install-all failed rc=${rc}"
+    return 1
+  fi
+  return 0
+}
 
+_apply_git_tree() {
   if [[ -d "${GIT_DIR}/.git" ]]; then
     nexus_update_lock_phase git_fetch "--token=${TOKEN}" 2>/dev/null || true
     _log "git fetch"
@@ -180,11 +258,42 @@ main() {
     _log "git pull"
     git -C "$GIT_DIR" pull --ff-only origin main 2>&1 | tee -a "$LOG" || {
       _log "git pull failed"
-      exit 1
+      return 1
     }
   fi
+  INSTALL_SH="${GIT_DIR}/install-all.sh"
+  [[ -f "$INSTALL_SH" ]] || INSTALL_SH="${GIT_DIR}/stealth_install.sh"
+  [[ -f "$INSTALL_SH" ]] || { _log "install script missing in git tree"; return 1; }
+  nexus_update_lock_phase install_all "--token=${TOKEN}" 2>/dev/null || true
+  local inner
+  inner="export NEXUS_UPDATE_LOCK_TOKEN='${TOKEN}'; export NEXUS_UPDATE_PREVIOUS_VERSION='${PREVIOUS}'; export NEXUS_INSTALL_SRC='${GIT_DIR}'; cd '${GIT_DIR}' && bash '${INSTALL_SH}'"
+  _log "running ${INSTALL_SH} from git tree"
+  if ! _run_with_sudo "$inner"; then
+    local rc=$?
+    if [[ $rc -eq 3 ]]; then
+      nexus_update_lock_phase awaiting_sudo "--token=${TOKEN}" 2>/dev/null || true
+      exit 3
+    fi
+    return 1
+  fi
+  return 0
+}
 
-  if _tree_standalone && ! _systemd_nexus_active; then
+main() {
+  mkdir -p "$NEXUS_STATE_DIR" "$STAGING"
+  : >>"$LOG"
+  _log "update apply start mode=${UPDATE_MODE} target=${TARGET} previous=${PREVIOUS}"
+
+  trap _cleanup EXIT
+  [[ -n "$TOKEN" ]] || { _log "missing NEXUS_UPDATE_LOCK_TOKEN"; exit 1; }
+
+  nexus_update_lock_adopt "$TOKEN" "nexus-update-apply" "download_tarball" | grep -q '"ok": true' \
+    || { _log "lock adopt failed"; exit 1; }
+
+  _heartbeat_loop &
+  HB_PID=$!
+
+  if _tree_standalone && ! _systemd_nexus_active && [[ "$UPDATE_MODE" != "release" || -z "$TARBALL_URL" ]]; then
     _log "standalone tree update — restart panel (no system install)"
     nexus_update_lock_phase restarting "--token=${TOKEN}" 2>/dev/null || true
     _restart_standalone_panel || true
@@ -192,21 +301,21 @@ main() {
     exit 0
   fi
 
-  [[ -f "$INSTALL_SH" ]] || { _log "stealth_install missing: $INSTALL_SH"; exit 1; }
-
-  nexus_update_lock_phase stealth_install "--token=${TOKEN}" 2>/dev/null || true
-  local inner
-  inner="export NEXUS_UPDATE_LOCK_TOKEN='${TOKEN}'; export NEXUS_UPDATE_PREVIOUS_VERSION='${PREVIOUS}'; cd '${GIT_DIR}' && bash '${INSTALL_SH}'"
-  _log "running stealth_install"
-  if ! _run_with_sudo "$inner"; then
-    rc=$?
-    if [[ $rc -eq 3 ]]; then
-      _log "awaiting sudo — wrote ${NEEDS_SUDO_JSON}"
-      nexus_update_lock_phase awaiting_sudo "--token=${TOKEN}" 2>/dev/null || true
-      exit 3
+  local applied=0
+  if [[ "$UPDATE_MODE" == "release" && -n "$TARBALL_URL" ]]; then
+    if _apply_release_installer; then
+      applied=1
+    else
+      _log "release installer failed — trying git fallback if available"
     fi
-    _log "stealth_install failed rc=${rc}"
-    exit 1
+  fi
+  if [[ $applied -eq 0 ]]; then
+    if [[ -d "${GIT_DIR}/.git" ]] || [[ -f "${GIT_DIR}/install-all.sh" ]]; then
+      _apply_git_tree || exit 1
+    else
+      _log "no release tarball and no git tree"
+      exit 1
+    fi
   fi
 
   nexus_update_lock_phase starting_service "--token=${TOKEN}" 2>/dev/null || true
@@ -223,7 +332,7 @@ main() {
     _restart_standalone_panel || true
   fi
 
-  _log "update apply complete ${PREVIOUS} → ${TARGET}"
+  _log "update apply complete ${PREVIOUS} → ${TARGET} mode=${UPDATE_MODE}"
   exit 0
 }
 

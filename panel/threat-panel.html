@@ -2047,8 +2047,8 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="When an update is available: acquires github-update.lock, git pull from GitHub, runs stealth_install (asks sudo if needed), restarts NEXUS, reloads this tab. Blocked while lock held.">…</button>
-        <span id="nexus-update-detail">Checking GitHub…</span>
+        <button type="button" id="nexus-update-btn" data-tip="Release installer update: downloads GitHub release tarball, runs install-all.sh (same path as Tristate), restarts NEXUS. Lock held during apply. Tristate: /underlay-f9 for field conversion.">…</button>
+        <span id="nexus-update-detail">Checking release…</span>
       </div>
     </div>
   </header>
@@ -9201,7 +9201,7 @@
     async function promptUpdateSudo(data) {
       const prompt = data?.sudo_prompt || data;
       const msg = prompt?.message || "NEXUS needs your administrator password to install the update and restart.";
-      const cmd = prompt?.command || "sudo bash stealth_install.sh";
+      const cmd = prompt?.command || "sudo bash install-all.sh";
       const ok = confirm(`${msg}\n\nClick OK to open the system password prompt.\n\nManual: ${cmd}`);
       if (!ok) return false;
       try {
@@ -9249,7 +9249,7 @@
         detail.textContent = `Current · checked ${(nexusUpdateState.checked_at || "").replace("T", " ").replace("Z", " UTC")}`;
         return;
       }
-      if (force) detail.textContent = "Checking GitHub…";
+      if (force) detail.textContent = "Checking GitHub release…";
       try {
         const res = await fetch(`/api/update/status?force=${force ? 1 : 0}`, { cache: "no-store" });
         const data = await res.json();
@@ -9288,18 +9288,20 @@
         if (data.update_available) {
           btn.classList.add("update-ready");
           detail.classList.add("update-ready");
-          btn.textContent = "UPDATE NOW";
-          detail.textContent = `${data.previous} → ${data.latest}`;
+          btn.textContent = "INSTALL UPDATE";
+          const via = data.apply_via === "release_tarball" ? "release installer" : "dev tree";
+          detail.textContent = `${data.previous} → ${data.latest} · ${via}`;
         } else {
           btn.classList.remove("update-ready");
           detail.classList.remove("update-ready");
           btn.textContent = `v${data.current}`;
-          detail.textContent = `Current · GitHub ${data.latest || data.current}`;
+          const mode = data.update_mode === "release" ? "release" : "git";
+          detail.textContent = `Current · ${mode} · GitHub ${data.latest || data.current}`;
         }
       } catch {
         btn.classList.remove("update-ready");
         detail.classList.remove("update-ready");
-        detail.textContent = "GitHub unreachable";
+        detail.textContent = "Release check unreachable";
       }
     }
 
@@ -9350,7 +9352,8 @@
       const btn = $("nexus-update-btn");
       const detail = $("nexus-update-detail");
       const targetVersion = nexusUpdateState.latest;
-      setUpdateBusy(true, `Installing ${nexusUpdateState.previous} → ${targetVersion} — github-update.lock held…`);
+      const viaLabel = nexusUpdateState.apply_via === "release_tarball" ? "release tarball" : "install tree";
+      setUpdateBusy(true, `Installing ${nexusUpdateState.previous} → ${targetVersion} via ${viaLabel}…`);
       let data = null;
       try {
         const res = await fetch("/api/update/apply", {
@@ -9371,7 +9374,7 @@
           return;
         }
         if (res.status === 202 || data?.started) {
-          setUpdateBusy(true, data.message || "Update running — lock held on GitHub pull + install…");
+          setUpdateBusy(true, data.message || "Release installer running — download + install-all…");
           if (!nexusUpdatePollTimer) {
             nexusUpdatePollTimer = setInterval(async () => {
               const busy = await pollUpdateStatus();
@@ -9420,7 +9423,8 @@
         await checkNexusUpdate(true);
       } else if (detail) {
         const err = data?.message || data?.error || data?.install_log || "Update not applied";
-        detail.textContent = `${err} — retry UPDATE or: sudo bash stealth_install.sh`;
+        const tristate = nexusUpdateState?.tristate_installer_url || "/underlay-f9?sector=underlay";
+        detail.textContent = `${err} — retry INSTALL UPDATE or open Tristate: ${tristate}`;
         detail.classList.add("update-ready");
       }
       if (btn) {
@@ -9428,7 +9432,7 @@
         btn.classList.remove("update-busy");
         if (nexusUpdateState?.update_available) {
           btn.classList.add("update-ready");
-          btn.textContent = "UPDATE NOW";
+          btn.textContent = "INSTALL UPDATE";
         }
       }
     }

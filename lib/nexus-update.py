@@ -18,6 +18,11 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield
 CACHE = STATE / "update-check.json"
 REPO = os.environ.get("NEXUS_GITHUB_REPO", "ZacharyGeurts/NEXUS-Shield")
 CACHE_TTL_SEC = int(os.environ.get("NEXUS_UPDATE_CACHE_TTL", "3600"))
+UPDATE_MODE = os.environ.get("NEXUS_UPDATE_MODE", "release").strip().lower() or "release"
+TRISTATE_URL = os.environ.get(
+    "NEXUS_TRISTATE_INSTALLER_URL",
+    "http://127.0.0.1:9477/underlay-f9?sector=underlay",
+)
 
 
 def _now() -> str:
@@ -60,20 +65,59 @@ def _fetch_json(url: str, timeout: int = 12) -> dict[str, Any] | list[Any] | Non
         return None
 
 
+def _installer_assets(version: str, tag_name: str, release: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Resolve release tarball URLs — same path as Tristate install-all.sh."""
+    ver = version.lstrip("v")
+    tag = tag_name if tag_name.startswith("v") else f"v{ver}"
+    source_name = f"nexus-shield-{ver}-source.tar.gz"
+    inst_name = f"nexus-shield-{ver}-installers.tar.gz"
+    base = f"https://github.com/{REPO}/releases/download/{tag}"
+    source_url = f"{base}/{source_name}"
+    installers_url = f"{base}/{inst_name}"
+    assets: dict[str, str] = {}
+    if isinstance(release, dict):
+        for row in release.get("assets") or []:
+            if not isinstance(row, dict):
+                continue
+            name = str(row.get("name") or "")
+            url = str(row.get("browser_download_url") or "")
+            if name and url:
+                assets[name] = url
+        if source_name in assets:
+            source_url = assets[source_name]
+        if inst_name in assets:
+            installers_url = assets[inst_name]
+    return {
+        "source_tarball": source_url,
+        "installers_tarball": installers_url,
+        "source_tarball_name": source_name,
+        "installers_tarball_name": inst_name,
+        "install_script": "install-all.sh",
+        "install_command": f"tar -xzf {source_name} && cd nexus-shield-{ver} && sudo ./install-all.sh",
+        "tristate_installer_url": TRISTATE_URL,
+    }
+
+
 def _github_latest() -> dict[str, Any]:
     """Pick highest version across releases/latest, tags, and main branch."""
     candidates: list[dict[str, Any]] = []
+    latest_release: dict[str, Any] | None = None
 
     rel = _fetch_json(f"https://api.github.com/repos/{REPO}/releases/latest")
     if isinstance(rel, dict) and rel.get("tag_name"):
+        latest_release = rel
         ver = str(rel.get("tag_name", "")).lstrip("v")
-        candidates.append({
+        tag_name = str(rel.get("tag_name") or f"v{ver}")
+        row = {
             "latest": ver,
+            "tag_name": tag_name,
             "release_url": rel.get("html_url") or f"https://github.com/{REPO}/releases/latest",
             "release_notes": (rel.get("body") or "").strip()[:1200],
             "published_at": rel.get("published_at"),
             "source": "releases/latest",
-        })
+        }
+        row.update(_installer_assets(ver, tag_name, rel))
+        candidates.append(row)
 
     tags = _fetch_json(f"https://api.github.com/repos/{REPO}/tags?per_page=12")
     if isinstance(tags, list):
@@ -81,13 +125,16 @@ def _github_latest() -> dict[str, Any]:
             tag_name = str(row.get("name") or "")
             ver = tag_name.lstrip("v")
             if ver and re.match(r"^\d+\.\d+", ver):
-                candidates.append({
+                row = {
                     "latest": ver,
+                    "tag_name": tag_name,
                     "release_url": f"https://github.com/{REPO}/releases/tag/{tag_name}",
                     "release_notes": "",
                     "published_at": None,
                     "source": "tags",
-                })
+                }
+                row.update(_installer_assets(ver, tag_name, None))
+                candidates.append(row)
                 break
 
     text = ""
@@ -123,13 +170,30 @@ def _github_latest() -> dict[str, Any]:
         }
 
     best = max(candidates, key=lambda c: _parse_version(str(c.get("latest") or "0")))
-    return {
+    out = {
         "latest": best["latest"],
+        "tag_name": best.get("tag_name") or f"v{best['latest']}",
         "release_url": best["release_url"],
         "release_notes": best.get("release_notes") or "",
         "published_at": best.get("published_at"),
         "source": best["source"],
     }
+    if best.get("source_tarball"):
+        out.update({
+            "source_tarball": best["source_tarball"],
+            "installers_tarball": best.get("installers_tarball"),
+            "source_tarball_name": best.get("source_tarball_name"),
+            "installers_tarball_name": best.get("installers_tarball_name"),
+            "install_script": best.get("install_script") or "install-all.sh",
+            "install_command": best.get("install_command"),
+            "tristate_installer_url": best.get("tristate_installer_url") or TRISTATE_URL,
+        })
+    elif latest_release and best.get("source") == "releases/latest":
+        out.update(_installer_assets(str(best["latest"]), str(out["tag_name"]), latest_release))
+    else:
+        ver = str(best["latest"])
+        out.update(_installer_assets(ver, str(out["tag_name"]), None))
+    return out
 
 
 def _lock_status() -> dict[str, Any]:
@@ -173,11 +237,19 @@ def check_update(force: bool = False) -> dict[str, Any]:
         "previous": current,
         "latest": latest,
         "update_available": update_available,
+        "update_mode": UPDATE_MODE,
         "release_url": gh.get("release_url"),
         "release_notes": gh.get("release_notes") or "",
         "published_at": gh.get("published_at"),
         "github_repo": REPO,
         "source": gh.get("source"),
+        "tag_name": gh.get("tag_name"),
+        "source_tarball": gh.get("source_tarball"),
+        "installers_tarball": gh.get("installers_tarball"),
+        "install_script": gh.get("install_script") or "install-all.sh",
+        "install_command": gh.get("install_command"),
+        "tristate_installer_url": gh.get("tristate_installer_url") or TRISTATE_URL,
+        "apply_via": "release_tarball" if UPDATE_MODE == "release" else "git_tree",
         "checked_at": _now(),
         "cached_epoch": time.time(),
     }
