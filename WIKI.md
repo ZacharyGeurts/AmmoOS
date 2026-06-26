@@ -6,7 +6,7 @@
 
 ---
 
-## Pages (v10.4.0)
+## Pages (v10.4.2)
 
 | Page | Topic |
 |------|-------|
@@ -35,5 +35,5 @@ Or manually:
 ```bash
 git clone https://github.com/ZacharyGeurts/NEXUS-Shield.wiki.git
 rsync -a --delete wiki/ NEXUS-Shield.wiki/
-cd NEXUS-Shield.wiki && git add -A && git commit -m "wiki: v10.4.0 rewrite" && git push
+cd NEXUS-Shield.wiki && git add -A && git commit -m "wiki: v10.4.2 rewrite" && git push
 ```

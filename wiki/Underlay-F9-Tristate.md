@@ -34,6 +34,10 @@ API: `GET/POST /api/tristate-installer`
 - **F9 hotkey** — normally unused on Linux desktops
 - **Permanent after commit** — underlay cannot be switched off
 - **Non-destructive migration** — incumbent OS remains guest substrate until KILROY boot
+- **Painless conversion** — wave shed on advisory heat; quota holds unless thermal crit
+- **No surprise slowdowns** — see **[Field Switch Safety](Field-Switch-Safety)**
+
+![Field switch safety](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/field-switch-safety.svg)
 
 ---
 

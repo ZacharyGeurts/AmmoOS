@@ -1,6 +1,6 @@
 # Boot Implementation
 
-Every **startup and reboot** reloads field tech before the normal daemon loop. **First install** runs a heavier path once.
+Every **startup and reboot** reloads field tech before the normal daemon loop. **First install** runs a heavier path once. **v10.4.2** hardens the path for non-destructive, marker-driven operation.
 
 ---
 
@@ -9,10 +9,23 @@ Every **startup and reboot** reloads field tech before the normal daemon loop. *
 ![Boot I/O](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/io-boot-flow.svg)
 
 1. **systemd** `ExecStartPre` → `scripts/nexus-boot-impl.sh`
-2. **First install** (`first-boot.complete` missing): wire-stack, migrate state, sign manifest, sense meld
-3. **Every boot** (refresh): re-wire, export paths, front-hook, verify, meld
-4. **Daemon** starts watchers + panel
-5. **Browser** opens `/field` once per `boot_id`
+2. **Validate** `NEXUS_INSTALL_ROOT` (absolute path, no traversal)
+3. **First install** (`first-boot.complete` missing): wire-stack, migrate, sign manifest, sense meld, training viewer
+4. **Every boot** (refresh): re-wire, export paths, front-hook, verify — **no** migrate, sign, or training viewer
+5. **Daemon** starts watchers + panel + field-switch-safety cycle
+6. **Browser** opens `/field` once per `boot_id`
+
+---
+
+## Hardening (v10.4.2)
+
+| Guard | Behavior |
+|-------|----------|
+| Trusted scripts | External scripts must resolve under install root |
+| Timeouts | wire-stack, migrate, meld capped (default 30s) |
+| Log rotation | `boot-impl.log` truncated when > 5 MB |
+| Integrity | Failures logged explicitly — not masked with `\|\| true` |
+| Python | `nexus_resolve_pythong` → `python3` fallback |
 
 ---
 
@@ -22,6 +35,7 @@ Every **startup and reboot** reloads field tech before the normal daemon loop. *
 |------|------|
 | `lib/nexus-boot-impl.sh` | Core first vs refresh logic |
 | `scripts/nexus-boot-impl.sh` | Standalone entry (ExecStartPre) |
+| `scripts/nexus-release-finalize.sh` | Pre-deploy smoke test |
 
 Hooked from: `nexus-daemon.sh`, `nexus.sh`, `genius_shield.sh` (first install).
 
@@ -32,7 +46,7 @@ Hooked from: `nexus-daemon.sh`, `nexus.sh`, `genius_shield.sh` (first install).
 ```
 first-boot.complete    # written after first full impl
 boot-impl.last         # mode=first|refresh, version, ts
-boot-impl.log          # wire-stack output
+boot-impl.log          # wire-stack output (rotated)
 panel-launched.boot    # kernel boot_id — browser once per reboot
 ```
 
@@ -52,3 +66,5 @@ Or one-shot: `NEXUS_BOOT_FORCE_FIRST=1 bash scripts/nexus-boot-impl.sh`
 ## Disable
 
 Set `NEXUS_BOOT_IMPL=0` in `config/nexus.conf` or `settings.override`.
+
+→ **[Field Switch Safety](Field-Switch-Safety)** · **[SECURITY.md](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/SECURITY.md)**

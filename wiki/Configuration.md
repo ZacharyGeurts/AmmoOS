@@ -22,7 +22,7 @@ Panel settings apply immediately to override file — daemon reads on vigil cycl
 
 ---
 
-## Key defaults (v10.4.0)
+## Key defaults (v10.4.2)
 
 | Variable | Default | Meaning |
 |----------|---------|---------|

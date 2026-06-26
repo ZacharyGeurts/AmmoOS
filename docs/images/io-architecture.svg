@@ -26,5 +26,5 @@
 <text x="620.0" y="109.0" text-anchor="middle" fill="#6e7d62" font-family="Segoe UI,sans-serif" font-size="10">assist</text><line x1="460" y1="190" x2="460" y2="240" stroke="#5a7a3a" stroke-width="2" marker-end="url(#arrow)"/>
 <text x="460.0" y="209.0" text-anchor="middle" fill="#6e7d62" font-family="Segoe UI,sans-serif" font-size="10">supervise</text><line x1="240" y1="300" x2="360" y2="295" stroke="#5a7a3a" stroke-width="2" marker-end="url(#arrow)"/>
 <text x="300.0" y="291.5" text-anchor="middle" fill="#6e7d62" font-family="Segoe UI,sans-serif" font-size="10">read/write</text><line x1="560" y1="305" x2="680" y2="300" stroke="#5a7a3a" stroke-width="2" marker-end="url(#arrow)"/>
-<text x="620.0" y="296.5" text-anchor="middle" fill="#6e7d62" font-family="Segoe UI,sans-serif" font-size="10">enforce</text><text x="460" y="395" text-anchor="middle" fill="#a08050" font-family="Segoe UI,sans-serif" font-size="12">NEXUS-Shield 10.4.0 — loopback-first field C2</text>
+<text x="620.0" y="296.5" text-anchor="middle" fill="#6e7d62" font-family="Segoe UI,sans-serif" font-size="10">enforce</text><text x="460" y="395" text-anchor="middle" fill="#a08050" font-family="Segoe UI,sans-serif" font-size="12">NEXUS-Shield 10.4.2 — loopback-first field C2</text>
 </svg>

@@ -28,6 +28,20 @@ Operator browser ↔ panel HTTP ↔ `nexus-genius.service` ↔ `/var/lib/nexus-s
 
 ---
 
+## Field switch safety
+
+![Field switch safety](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/field-switch-safety.svg)
+
+| File | Role |
+|------|------|
+| `field-switch-safety.json` | Last preflight panel |
+| `thermal-advisory.json` | hwmon peak, quota advisory |
+| `wave-shed-advisory.json` | Excess draw shed receipt |
+
+→ **[Field Switch Safety](Field-Switch-Safety)**
+
+---
+
 ## State files
 
 ![State file map](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/io-state-files.svg)

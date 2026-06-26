@@ -94,7 +94,7 @@ def arch_diagram() -> str:
     s += _arrow(560, 305, 680, 300, "enforce")
     s += (
         f'<text x="460" y="395" text-anchor="middle" fill="{C["tan"]}" '
-        f'font-family="Segoe UI,sans-serif" font-size="12">NEXUS-Shield 10.4.0 — loopback-first field C2</text>\n'
+        f'font-family="Segoe UI,sans-serif" font-size="12">NEXUS-Shield 10.4.2 — loopback-first field C2</text>\n'
     )
     return s + "</svg>\n"
 
@@ -198,9 +198,39 @@ def hero_banner() -> str:
         f'<path d="M600,40 L680,70 L680,160 Q600,240 520,160 L520,70 Z" fill="{C["panel"]}" stroke="{C["green_hi"]}" stroke-width="2"/>\n'
         f'<text x="600" y="130" text-anchor="middle" fill="{C["blue"]}" font-family="Consolas,monospace" font-size="28" font-weight="700">N</text>\n'
         f'<text x="600" y="200" text-anchor="middle" fill="{C["text"]}" font-family="Segoe UI,sans-serif" font-size="36" font-weight="700">NEXUS-Shield</text>\n'
-        f'<text x="600" y="235" text-anchor="middle" fill="{C["green_hi"]}" font-family="Segoe UI,sans-serif" font-size="16">Universal Protector · v10.4.0 · Field I/O Manual</text>\n'
+        f'<text x="600" y="235" text-anchor="middle" fill="{C["green_hi"]}" font-family="Segoe UI,sans-serif" font-size="16">Universal Protector · v10.4.2 · Field I/O Manual</text>\n'
         f'<text x="600" y="275" text-anchor="middle" fill="{C["dim"]}" font-family="Segoe UI,sans-serif" font-size="13">Panel · API · State · Installers · Underlay F9</text>\n'
     )
+    return s + "</svg>\n"
+
+
+def field_switch_safety_diagram() -> str:
+    w, h = 920, 360
+    s = _svg_header(w, h)
+    s += (
+        '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">'
+        f'<path d="M0,0 L6,3 L0,6 Z" fill="{C["green"]}"/></marker></defs>\n'
+    )
+    s += _box(40, 40, 200, 90, "Arrive", ["posture · scan", "always allowed"], fill=C["panel2"])
+    s += _box(260, 40, 200, 90, "Transform", ["WRDT dry-run", "wave shed if warm"], fill=C["panel"])
+    s += _box(480, 40, 200, 90, "Commit", ["underlay lock", "blocked only at crit"], fill=C["panel2"])
+    s += _box(700, 40, 180, 90, "Reboot", ["KILROY Field", "crit gate only"], stroke=C["ok"])
+    s += _arrow(240, 85, 260, 85)
+    s += _arrow(460, 85, 480, 85)
+    s += _arrow(680, 85, 700, 85)
+    s += _box(40, 160, 400, 100, "No surprise slowdowns", [
+        "NEXUS_FIELD_NO_UNEXPECTED_SLOWDOWN=1",
+        "quota holds at field-max unless crit",
+        "wave shed — not quota cuts at warn",
+    ], stroke=C["ok"])
+    s += _box(460, 160, 420, 100, "Thermal + conversion", [
+        "field-switch-safety.py preflight",
+        "conversion_ok · slowdown_guard",
+        "non-destructive · same paths",
+    ], stroke=C["blue"])
+    s += _box(40, 280, 840, 60, "Markers", [
+        "hotspot_advisory → wave shed  |  thermal_crit → defer commit/reboot  |  refresh stays light",
+    ], fill=C["panel2"])
     return s + "</svg>\n"
 
 
@@ -211,6 +241,7 @@ def main():
         "io-boot-flow.svg": boot_io_diagram(),
         "io-state-files.svg": state_io_diagram(),
         "io-api-surface.svg": api_io_diagram(),
+        "field-switch-safety.svg": field_switch_safety_diagram(),
     }
     for name, content in files.items():
         path = OUT / name

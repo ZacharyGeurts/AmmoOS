@@ -11,7 +11,7 @@
 <body>
   <nav>
     <div class="nav-top">
-      <div class="nav-brand"><strong>NEXUS-Shield Manual</strong> <span class="nav-version">v10.4.0</span></div>
+      <div class="nav-brand"><strong>NEXUS-Shield Manual</strong> <span class="nav-version">v10.4.2</span></div>
     </div>
     <div class="nav-links">
       <a href="index.html">Index</a>
@@ -103,6 +103,15 @@ nexus verify</code></pre>
     <tr><td><code>nexus trust &lt;ip&gt;</code></td><td>Append <code>firewall-trusted.tsv</code></td></tr>
     <tr><td><code>nexus block &lt;ip&gt;</code></td><td>Append <code>firewall-blocks.tsv</code></td></tr>
   </table>
+
+  <h2 id="safety">Field switch safety</h2>
+  <p>Painless Tristate conversion — wave shed on advisory heat, quota holds at field-max unless thermal <strong>crit</strong>. No GRUB edits, no surprise slowdowns.</p>
+  <figure class="figure">
+    <img src="images/field-switch-safety.svg" width="920" height="360" alt="Field switch safety flow" />
+    <figcaption>Figure 5 — Arrive → transform → commit; conversion blocked only at thermal crit</figcaption>
+  </figure>
+  <pre><code>pythong lib/field-switch-safety.py evaluate --phase=commit
+./scripts/nexus-release-finalize.sh</code></pre>
 
   <h2 id="env">Environment I/O</h2>
   <table>

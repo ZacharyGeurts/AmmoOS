@@ -3,6 +3,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=/dev/null
+source "${ROOT}/lib/nexus-common.sh"
 WIKI_SRC="${ROOT}/wiki"
 WIKI_REPO="${WIKI_REPO:-${ROOT}/.wiki-publish}"
 WIKI_REMOTE="${WIKI_REMOTE:-https://github.com/ZacharyGeurts/NEXUS-Shield.wiki.git}"
@@ -28,6 +30,6 @@ if git diff --cached --quiet; then
   echo "Wiki already up to date."
   exit 0
 fi
-git commit -m "wiki: v10.4.0 rewrite — installers, field I/O, boot-impl, Underlay F9"
+git commit -m "wiki: v${NEXUS_VERSION} — boot hardening, field switch safety, painless conversion"
 git push origin master 2>/dev/null || git push origin main 2>/dev/null || git push
 echo "Wiki published: https://github.com/ZacharyGeurts/NEXUS-Shield/wiki"

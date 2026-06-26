@@ -1,6 +1,6 @@
 # NEXUS-Shield · Universal Protector
 
-**v10.4.0** — Field C2 for Linux. Gatekeeper scoring, loopback panel, boot-impl reload, Underlay F9 Tristate installer, Hostess7 training.
+**v10.4.2** — Field C2 for Linux. Gatekeeper scoring, loopback panel, hardened boot-impl, painless field conversion, Underlay F9 Tristate installer.
 
 > **TL;DR:** Download release → `sudo ./install-all.sh` → browser opens **http://127.0.0.1:9477/field** on every boot.
 
@@ -13,16 +13,16 @@ NEXUS is a field command layer — not a traditional AV suite:
 1. **Scores** live connections on 10 axes (gatekeeper).
 2. **You decide** — Trust forever · Stop this site · KILL when corroborated.
 3. **Publishes** everything to a loopback panel (`:9477`) — no cloud required.
-4. **Reloads** field tech on every reboot (`nexus-boot-impl`).
-5. **Installs** underlay via **Underlay F9** / 2026 Tristate installer.
+4. **Reloads** field tech on every reboot (`nexus-boot-impl` — hardened, non-destructive).
+5. **Converts** to field underlay via **Underlay F9** — painless, no surprise slowdowns.
 
 ---
 
 ## Quick install
 
 ```bash
-tar -xzf nexus-shield-10.4.0-source.tar.gz
-cd nexus-shield-10.4.0
+tar -xzf nexus-shield-10.4.2-source.tar.gz
+cd nexus-shield-10.4.2
 sudo ./install-all.sh
 ```
 
@@ -46,6 +46,7 @@ Full guide → **[Installers](Installers)**
 |-------|-------|
 | **[Installers](Installers)** | Release tarballs, scripts, boot, troubleshoot |
 | **[Field I/O](Field-IO)** | API, state files, diagrams |
+| **[Field Switch Safety](Field-Switch-Safety)** | Painless conversion, no hotspots |
 | **[Panel Guide](Panel-Guide)** | Every tab + screenshots |
 | **[Linux Installation](Linux-Installation)** | systemd, verify, uninstall |
 | **[Underlay F9 Tristate](Underlay-F9-Tristate)** | 2026 installer, F9 hotkey |
@@ -53,7 +54,7 @@ Full guide → **[Installers](Installers)**
 | **[Architecture](Architecture)** | Daemon modules |
 | **[Configuration](Configuration)** | Panel vs config files |
 
-**GitHub Pages manual** (same content, illustrated): https://zacharygeurts.github.io/NEXUS-Shield/
+**GitHub Pages manual** (illustrated): https://zacharygeurts.github.io/NEXUS-Shield/
 
 ---
 
@@ -65,6 +66,7 @@ nexus-install-gui.sh        # Tristate installer in browser
 nexus status                # health
 nexus trust <ip>            # trust forever
 nexus verify                # manifest integrity
+pythong lib/field-switch-safety.py evaluate --phase=commit
 ```
 
 ---

@@ -5,6 +5,7 @@
 - [Field I/O](Field-IO)
 - [Linux Installation](Linux-Installation)
 - [Boot Implementation](Boot-Implementation)
+- [Field Switch Safety](Field-Switch-Safety)
 - [Underlay F9 Tristate](Underlay-F9-Tristate)
 
 ### Operator
