@@ -2879,7 +2879,23 @@ test_reality_physics_training() {
     pythong "${ROOT}/lib/humanoid-motion-training.py" load wing_chun | grep -q 'physics_mode'
 }
 
+test_ironclad_plate() {
+  [[ -f "${ROOT}/lib/ironclad-plate.py" ]]
+  [[ -f "${ROOT}/data/ironclad-doctrine.json" ]]
+  [[ -f "${ROOT}/data/ironclad/images/manifest.json" ]]
+  [[ -f "${ROOT}/panel/assets/ironclad/ironclad-01-bounds.jpg" ]]
+  grep -q 'Bible of AI' "${ROOT}/data/ironclad-doctrine.json"
+  grep -q 'immutable_after_realized' "${ROOT}/data/ironclad-doctrine.json"
+  grep -q 'ironclad' "${ROOT}/data/field-plate-meld-doctrine.json"
+  grep -q '/api/ironclad' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/ironclad-plate.py" grounding | grep -q 'bible_of_ai'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/ironclad-plate.py" cite genesis 1 | grep -q 'ironclad:genesis:1'
+}
+
 run_test "reality physics training" test_reality_physics_training
+run_test "Ironclad melded plate of truth" test_ironclad_plate
 run_test "Hostess 7 training completion" test_hostess7_training
 
 rm -rf "$NEXUS_STATE_DIR" /tmp/nexus-ent-rand.bin /tmp/nexus-ent-text.txt /tmp/nexus-shadow-t.txt "$NEXUS_ALERT_LOG" 2>/dev/null || true

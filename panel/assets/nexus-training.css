@@ -368,3 +368,28 @@
 #view-training .h7-tab.active { border-color: var(--h7-rose); color: var(--h7-rose); }
 #view-training .h7-panels { display: none; }
 #view-training .h7-panels.active { display: block; }
+
+#view-training .h7-ironclad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+#view-training .h7-ironclad-card {
+  margin: 0;
+  border: 1px solid rgba(244, 162, 97, 0.28);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(6, 10, 18, 0.85);
+}
+#view-training .h7-ironclad-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+#view-training .h7-ironclad-card figcaption {
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}

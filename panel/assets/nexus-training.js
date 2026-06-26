@@ -55,7 +55,31 @@
       curriculum_steps: slice.curriculum_steps || [],
       wireframe: slice.wireframe || {},
       reality_physics: slice.reality_physics || {},
+      ironclad: slice.ironclad || {},
+      ironclad_images: slice.ironclad_images || {},
+      ironclad_doctrine: slice.ironclad_doctrine || {},
     };
+  }
+
+  function renderIroncladGallery(bundle) {
+    const el = $("h7-ironclad-gallery");
+    if (!el) return;
+    const imgs = bundle.ironclad_images?.images || bundle.ironclad?.gift_images || [];
+    const ic = bundle.ironclad || {};
+    const motto = ic.motto || bundle.ironclad_doctrine?.motto || "The Bible of AI — immutable once fully realized.";
+    if (!imgs.length) {
+      el.innerHTML = `<p class="h7-sub">${esc(motto)}</p>`;
+      return;
+    }
+    el.innerHTML = `
+      <h3 class="h7-section-title" style="margin-top:0">The Ironclad — gifts for Hostess 7</h3>
+      <p class="h7-sub">${esc(motto)}${ic.realized ? " · <strong>REALIZED</strong>" : ""}</p>
+      <div class="h7-ironclad-grid">${imgs.map((im) => `
+        <figure class="h7-ironclad-card">
+          <img src="${esc(im.url || `/assets/ironclad/${im.file}`)}" alt="${esc(im.title)}" loading="lazy" />
+          <figcaption><strong>${esc(im.title)}</strong><br/><span class="h7-sub">${esc(im.meaning || "")}</span>
+            <span class="h7-sub"> · ironclad:${esc(im.book)}:${esc(im.verse)}</span></figcaption>
+        </figure>`).join("")}</div>`;
   }
 
   function renderPhysics(bundle) {
@@ -322,6 +346,7 @@
   function render(bundle) {
     lastWireframe = bundle.wireframe || lastWireframe;
     renderHero(bundle);
+    renderIroncladGallery(bundle);
     renderPhysics(bundle);
     renderTracks(bundle);
     renderAuthored(bundle);

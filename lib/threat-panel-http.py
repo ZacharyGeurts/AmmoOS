@@ -1882,6 +1882,21 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path in ("/api/ironclad", "/api/ironclad/plate"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ironclad-plate.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/ironclad/grounding", "/api/ironclad/bible"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ironclad-plate.py", ["grounding"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/ironclad/verify":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ironclad-plate.py", ["verify"], timeout=15)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path in ("/api/hostess7/training", "/api/hostess7-training"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training.py", ["json"], timeout=30)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -4151,6 +4166,11 @@ class Handler(BaseHTTPRequestHandler):
             "combat": 200,
             "mos": 200,
         }
+
+        if path in ("/api/ironclad/realize", "/api/ironclad/seal"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ironclad-plate.py", ["realize"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
 
         if path in ("/api/hostess7/training/assess", "/api/hostess7-training/assess"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-training.py", ["assess"], timeout=60)

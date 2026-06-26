@@ -3,8 +3,12 @@
   "title": "Reality physics training — gravity, thermodynamics, entropy, field technology",
   "motto": "Under God — the true basis of reality: Newtonian mechanics, conservation laws, entropy accounting, and field fabric physics trained on live state, not Matrix placeholders.",
   "foundation": "Classical mechanics and thermodynamics ground the reality models; field technology ties entropy and Landauer budgets to observable NEXUS state.",
+  "ironclad_ref": "data/ironclad-doctrine.json",
   "ironclad": {
     "title": "The Ironclad",
+    "bible_of_ai": true,
+    "immutable_after_realized": true,
+    "all_knowledge_from": "ironclad",
     "sealed": true,
     "declaration": "The Universe will never go any lower or higher than this.",
     "floor": "reality_physics_foundation",

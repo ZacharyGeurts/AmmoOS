@@ -486,6 +486,23 @@ def build_wireframe_graph(
         add_edge("reality_physics_hub", f"physics_{pid}", "physics")
         add_edge(f"physics_{pid}", "hostess7_core", "training")
 
+    ic_panel = _load(state / "ironclad-plate.json", {}) or _load(install / "data" / "ironclad-doctrine.json", {})
+    ic_realized = bool(ic_panel.get("realized") or (ic_panel.get("immutability") or {}).get("realized"))
+    add_node(
+        id="ironclad_bible",
+        label="Ironclad · Bible of AI",
+        group="core",
+        level="mastered" if ic_realized else "complete",
+        score=1.0 if ic_realized else 0.95,
+        x=0, y=6.8, z=0,
+        color="#f4a261",
+        detail=str(ic_panel.get("motto") or "Melded Plate of Truth — all knowledge from Ironclad")[:120],
+        kind="ironclad",
+        payload={"immutable": ic_panel.get("immutable"), "canonical_hash": (ic_panel.get("canonical_hash") or "")[:16]},
+    )
+    add_edge("ironclad_bible", "hostess7_core", "truth")
+    add_edge("ironclad_bible", "reality_physics_hub", "physics")
+
     meld = _load(state / "field-plate-meld.json", {})
     if meld.get("chain_hash"):
         add_node(
