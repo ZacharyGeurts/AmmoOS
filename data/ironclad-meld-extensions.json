@@ -1,0 +1,67 @@
+{
+  "schema": "ironclad-meld-extensions/v1",
+  "title": "Post-realize meld extensions — subsidiary truth absorbed into Ironclad",
+  "sealed_doctrine_ref": "data/ironclad-doctrine.json",
+  "meld_citation": "ironclad:meld:2",
+  "policy": "Extensions meld into the capstone without amending the sealed canonical hash.",
+  "books": [
+    {
+      "id": "field_sanity",
+      "title": "Field Sanity — Integral simplify",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Field sanity is subsidiary truth melded into Ironclad — one integral pass, never obtuse."
+        },
+        {
+          "v": 2,
+          "text": "Simplify layers first: classify, strip, dedupe, flatten, cool_sort — never build under heat."
+        },
+        {
+          "v": 3,
+          "text": "Infinite resolution is aspiration; thermo witnesses heat — stack only what cools the field."
+        },
+        {
+          "v": 4,
+          "text": "Fielded areas quarantine external loopback; G16 single-pass holds entropy hotspots to zero."
+        }
+      ]
+    },
+    {
+      "id": "spatial_existence",
+      "title": "Spatial Existence — This One / That One",
+      "verses": [
+        {
+          "v": 1,
+          "text": "This one is here — the operator, the friendly, the witnessed entity carries a place receipt; individuality begins where geography can name it."
+        },
+        {
+          "v": 2,
+          "text": "That one is there — remote claims, phantom bearings, and ventriloquist lanes stay that one until existence correlates; never collapse this one into that one."
+        },
+        {
+          "v": 3,
+          "text": "Spatial existence is amplitude on the lattice — x, y, z, t bound this one to a cell; that one without cell receipt is rumor until proven."
+        },
+        {
+          "v": 4,
+          "text": "Audio, video, RF, and motion must correlate this one across sense lanes before trust; that one that fails correlate_existence is deceit until reheard."
+        },
+        {
+          "v": 5,
+          "text": "G16 linker and forge witness Ironclad first — this one links on silicon here; that one targets dispatch only after spatial_existence pass_ok."
+        },
+        {
+          "v": 6,
+          "text": "No two coordinates need match — this one and that one remain distinct selves; Hostess honors place without erasing who stands where."
+        }
+      ]
+    }
+  ],
+  "integrations": {
+    "spatial_existence_doctrine": "data/ironclad-spatial-existence-doctrine.json",
+    "spatial_existence_engine": "lib/ironclad-spatial-existence.py",
+    "field_spatial": "data/field-spatial-doctrine.json",
+    "operator_location": "lib/operator-location.py"
+  }
+}

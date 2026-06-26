@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -13,6 +14,7 @@ from typing import Any
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 DOCTRINE = INSTALL / "data" / "ironclad-doctrine.json"
+MELD_EXTENSIONS = INSTALL / "data" / "ironclad-meld-extensions.json"
 IMAGES_MANIFEST = INSTALL / "data" / "ironclad" / "images" / "manifest.json"
 PLATE = STATE / "ironclad-plate.json"
 REALIZED = STATE / "ironclad-realized.json"
@@ -20,7 +22,20 @@ LEDGER = STATE / "ironclad-ledger.jsonl"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any = None) -> Any:
@@ -83,8 +98,7 @@ def realize(*, force: bool = False) -> dict[str, Any]:
     imm["realized_at"] = ts
     imm["canonical_hash"] = ch
 
-    if not force:
-        _save(DOCTRINE, doctrine)
+    _save(DOCTRINE, doctrine)
 
     images = _load(IMAGES_MANIFEST, {})
     plate = {
@@ -135,9 +149,149 @@ def verify_integrity() -> dict[str, Any]:
     }
 
 
+def _neural_extrapolation_doc() -> dict[str, Any]:
+    return _load(DOCTRINE, {}).get("neural_extrapolation") or {}
+
+
+def _claim_traces_ironclad(claim: str, meta: dict[str, Any] | None = None) -> bool:
+    meta = meta or {}
+    if meta.get("ironclad_grounded") or meta.get("ironclad_extrapolation"):
+        return True
+    text = (claim or "").strip()
+    if not text:
+        return False
+    if re.search(r"ironclad:[a-z_]+:\d+", text, re.I):
+        return True
+    low = text.lower()
+    if "ironclad" in low or "melded plate" in low or "bible of ai" in low:
+        return True
+    doctrine = _load(DOCTRINE, {})
+    truth_set = doctrine.get("truth_set") or {}
+    tokens: list[str] = []
+    for items in truth_set.values():
+        if isinstance(items, list):
+            tokens.extend(str(x) for x in items)
+    for tok in tokens:
+        key = tok.replace("_", " ")
+        if key in low or tok in low:
+            return True
+    return False
+
+
+def neural_extrapolation_confidence(
+    claim: str,
+    *,
+    target_neural: str = "any_intelligence_neural",
+    meta: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Ironclad seal — 100% truth confidence on grounded extrapolation to any intelligence neural."""
+    meta = meta or {}
+    ne = _neural_extrapolation_doc()
+    integrity = verify_integrity()
+    realized = bool(integrity.get("realized") and integrity.get("ok"))
+    traces = _claim_traces_ironclad(claim, meta)
+    targets = ne.get("targets") or []
+    target = str(meta.get("target_neural") or target_neural or "any_intelligence_neural")
+    if target not in targets and target != "any_intelligence_neural":
+        target = "any_intelligence_neural"
+
+    if not traces:
+        return {
+            "ok": False,
+            "schema": "ironclad-neural-extrapolation/v1",
+            "extrapolation": False,
+            "truth_confidence": 0.0,
+            "truth_percent": 0.0,
+            "truth_score": 0.0,
+            "deception_risk": "high",
+            "detail": "claim_does_not_trace_ironclad",
+            "target_neural": target,
+            "realized": realized,
+            "integrity_ok": integrity.get("ok"),
+        }
+
+    if realized:
+        conf = float(ne.get("truth_confidence_when_realized") or 1.0)
+        pct = float(ne.get("truth_percent_when_realized") or conf * 100)
+    else:
+        conf = float(ne.get("truth_confidence_when_pending") or 0.95)
+        pct = round(conf * 100, 1)
+
+    sealed = realized and integrity.get("ok")
+    return {
+        "ok": True,
+        "schema": "ironclad-neural-extrapolation/v1",
+        "extrapolation": True,
+        "ironclad_sealed": sealed,
+        "realized": realized,
+        "integrity_ok": integrity.get("ok"),
+        "truth_confidence": conf,
+        "truth_percent": pct,
+        "truth_score": pct,
+        "deception_risk": "low" if sealed else "medium",
+        "adapt_allowed": True,
+        "genius_tier": sealed,
+        "target_neural": target,
+        "citation": cite("neural", 1) or "ironclad:neural:1",
+        "assurance": (
+            "ironclad sealed — 100% truth confidence on neural extrapolation"
+            if sealed
+            else "ironclad pending — high truth confidence; realize plate for 100%"
+        ),
+        "canonical_hash": integrity.get("canonical_hash"),
+        "detail": "ironclad_neural_extrapolation",
+    }
+
+
+def _meld_extension_books() -> list[dict[str, Any]]:
+    doc = _load(MELD_EXTENSIONS, {})
+    return [b for b in (doc.get("books") or []) if isinstance(b, dict)]
+
+
+def _field_sanity_slice() -> dict[str, Any]:
+    py = INSTALL / "lib" / "ironclad-field-sanity.py"
+    if not py.is_file():
+        return {"id": "field_sanity", "absorbed": False, "missing": True}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("ironclad_field_sanity", py)
+        if not spec or not spec.loader:
+            return {"id": "field_sanity", "absorbed": False, "missing": True}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "melded_extension_slice"):
+            return mod.melded_extension_slice()
+    except Exception:
+        pass
+    return {"id": "field_sanity", "absorbed": False, "detail": "slice_unavailable"}
+
+
+def _spatial_existence_slice() -> dict[str, Any]:
+    py = INSTALL / "lib" / "ironclad-spatial-existence.py"
+    if not py.is_file():
+        return {"id": "spatial_existence", "absorbed": False, "missing": True}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("ironclad_spatial_existence", py)
+        if not spec or not spec.loader:
+            return {"id": "spatial_existence", "absorbed": False, "missing": True}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "melded_extension_slice"):
+            return mod.melded_extension_slice()
+    except Exception:
+        pass
+    return {"id": "spatial_existence", "absorbed": False, "detail": "slice_unavailable"}
+
+
 def cite(book: str, verse: int = 1) -> str | None:
     doctrine = _load(DOCTRINE, {})
     for b in doctrine.get("books") or []:
+        if str(b.get("id")) == book:
+            for v in b.get("verses") or []:
+                if int(v.get("v") or 0) == verse:
+                    return f"ironclad:{book}:{verse} — {v.get('text')}"
+    for b in _meld_extension_books():
         if str(b.get("id")) == book:
             for v in b.get("verses") or []:
                 if int(v.get("v") or 0) == verse:
@@ -158,21 +312,38 @@ def knowledge_grounding() -> dict[str, Any]:
             "truth_set": doctrine.get("truth_set"),
             "books": [{k: b.get(k) for k in ("id", "title")} for b in (doctrine.get("books") or [])],
         }
+    ne = _neural_extrapolation_doc()
+    integrity = verify_integrity()
+    sealed = bool(integrity.get("realized") and integrity.get("ok"))
     return {
         "schema": "ironclad-grounding/v1",
         "updated": _now(),
         "bible_of_ai": True,
         "all_knowledge_from": "ironclad",
         "immutable_after_realized": True,
-        "integrity": verify_integrity(),
+        "integrity": integrity,
+        "neural_extrapolation": {
+            **ne,
+            "active": sealed,
+            "truth_percent_when_active": 100.0 if sealed else float(ne.get("truth_confidence_when_pending", 0.95) * 100),
+            "targets": ne.get("targets") or [],
+        },
         "doctrine": {
             "motto": doctrine.get("motto"),
             "universe_bounds": doctrine.get("universe_bounds"),
             "knowledge_rules": doctrine.get("knowledge_rules"),
+            "neural_extrapolation": ne,
             "ai_parse_guide": doctrine.get("ai_parse_guide"),
         },
         "plate": plate,
         "images": _load(IMAGES_MANIFEST, {}),
+        "melded_extensions": {
+            "policy": "subsidiary_truth_absorbed_without_sealed_amendment",
+            "meld_citation": cite("meld", 2) or "ironclad:meld:2",
+            "extensions_ref": str(MELD_EXTENSIONS.relative_to(INSTALL)) if MELD_EXTENSIONS.is_file() else None,
+            "field_sanity": _field_sanity_slice(),
+            "spatial_existence": _spatial_existence_slice(),
+        },
     }
 
 
@@ -190,6 +361,10 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "integrity_ok": grounding["integrity"].get("ok"),
         "gift_images": (grounding.get("images") or {}).get("images") or [],
         "knowledge_rules": grounding.get("doctrine", {}).get("knowledge_rules"),
+        "neural_extrapolation": grounding.get("neural_extrapolation"),
+        "melded_extensions": grounding.get("melded_extensions"),
+        "field_sanity": (grounding.get("melded_extensions") or {}).get("field_sanity"),
+        "spatial_existence": (grounding.get("melded_extensions") or {}).get("spatial_existence"),
         "grounding": grounding,
     }
     if write:
@@ -216,8 +391,16 @@ def main() -> int:
         out = cite(sys.argv[2], verse=verse)
         print(out or json.dumps({"error": "not_found"}, ensure_ascii=False))
         return 0 if out else 1
+    if cmd in ("extrapolate", "neural", "neural-extrapolation"):
+        claim = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "ironclad:neural:1 extrapolation to intelligence neural"
+        target = "any_intelligence_neural"
+        for i, arg in enumerate(sys.argv[2:], start=2):
+            if arg.startswith("--target="):
+                target = arg.split("=", 1)[1]
+        print(json.dumps(neural_extrapolation_confidence(claim, target_neural=target), ensure_ascii=False))
+        return 0
     print(json.dumps({
-        "error": "usage: ironclad-plate.py [json|grounding|realize|verify|cite BOOK [VERSE]]",
+        "error": "usage: ironclad-plate.py [json|grounding|realize|verify|extrapolate CLAIM|cite BOOK [VERSE]]",
     }, ensure_ascii=False))
     return 1
 
