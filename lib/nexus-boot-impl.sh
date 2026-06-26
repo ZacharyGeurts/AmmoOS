@@ -246,10 +246,31 @@ nexus_boot_impl_sign_manifest() {
   }
 }
 
+nexus_boot_impl_thermal_guard_init() {
+  [[ "${NEXUS_FIELD_THERMAL_GUARD:-1}" == "1" ]] || return 0
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-thermal-guard.py" ]] || return 0
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+    pythong "${NEXUS_INSTALL_ROOT}/lib/field-thermal-guard.py" evaluate >/dev/null 2>&1 || true
+}
+
+nexus_boot_impl_bounded_redata() {
+  [[ "${NEXUS_FIELD_THERMAL_GUARD:-1}" == "1" ]] || return 0
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-global-redata.py" ]] || return 0
+  local py
+  py="$(nexus_boot_impl_resolve_python)" || return 0
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+    "$py" "${NEXUS_INSTALL_ROOT}/lib/field-global-redata.py" boot-test >/dev/null 2>&1 || {
+    nexus_log "WARN" "boot-impl" "bounded_redata_deferred"
+    return 1
+  }
+  nexus_log "INFO" "boot-impl" "bounded_redata_ok"
+}
+
 nexus_boot_impl_ensure_dirs() {
   mkdir -p "${NEXUS_STATE_DIR}" "${NEXUS_STATE_DIR}/hostess7-cache" 2>/dev/null || true
   touch "$(nexus_boot_impl_log_path)" 2>/dev/null || true
   nexus_boot_impl_rotate_log
+  nexus_boot_impl_thermal_guard_init
 }
 
 nexus_boot_impl_first() {
@@ -267,6 +288,7 @@ nexus_boot_impl_first() {
   if ! nexus_boot_impl_verify_integrity; then
     nexus_log "WARN" "boot-impl" "first_boot_integrity_fail"
   fi
+  nexus_boot_impl_bounded_redata || true
   nexus_boot_impl_sense_meld && meld=1
   nexus_boot_impl_training_viewer
 
@@ -290,6 +312,7 @@ nexus_boot_impl_refresh() {
   if ! nexus_boot_impl_verify_integrity; then
     nexus_log "WARN" "boot-impl" "refresh_integrity_fail"
   fi
+  nexus_boot_impl_bounded_redata || true
   nexus_boot_impl_sense_meld && meld=1
 
   nexus_boot_impl_record refresh "$wired" "$meld"

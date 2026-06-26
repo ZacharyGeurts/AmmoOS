@@ -1,6 +1,6 @@
 # Panel Guide
 
-**v10.4.2** — Loopback C2 at `http://127.0.0.1:9477/field`. Click **?** on any control for plain-English help.
+**v10.4.3** — Loopback C2 at `http://127.0.0.1:9477/field`. Click **?** on any control for plain-English help.
 
 **Open:** `./nexus.sh` · desktop icon · auto-opens on boot.
 

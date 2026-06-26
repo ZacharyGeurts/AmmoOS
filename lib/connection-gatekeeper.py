@@ -226,6 +226,20 @@ def _know_doctrine() -> str:
     )
 
 
+def _field_thermal_meta() -> dict[str, Any]:
+    """NEXUS-Shield thermal guard — headroom + stealth rate limit for gatekeeper."""
+    guard = _load_json(STATE / "field-thermal-guard.json", {})
+    rate = _load_json(STATE / "field-thermal-rate-limit.json", {})
+    active = bool(rate.get("active"))
+    return {
+        "headroom_pct": guard.get("headroom_pct"),
+        "rate_limit_active": active,
+        "max_joules_per_second": rate.get("max_joules_per_second") or guard.get("max_joules_per_second"),
+        "incremental_only": guard.get("incremental_only", True),
+        "monolithic_blast_forbidden": guard.get("monolithic_blast_forbidden", True),
+    }
+
+
 def _save_json(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
@@ -878,8 +892,16 @@ def _kill_signal(
     proc: str,
     threats: dict[str, list[str]],
     peer_history: dict[str, Any],
+    thermal_meta: dict[str, Any] | None = None,
 ) -> tuple[bool, str, str]:
     """Return kill_eligible, kill_reason, kill_tier (block|eradicate|strike)."""
+    thermal = thermal_meta or _field_thermal_meta()
+    if thermal.get("rate_limit_active"):
+        vecs_hold = [v for v in threats.get(rip, []) if v in KILL_VECTORS]
+        if not vecs_hold and verdict != "HARM_CANDIDATE":
+            return False, "thermal_rate_limit_hold", "hold"
+        if verdict == "HARM_CANDIDATE" and int(scores.get("threat_linked", 0)) < 6:
+            return False, "thermal_rate_limit_hold", "hold"
     vecs = [v for v in threats.get(rip, []) if v in KILL_VECTORS]
     if vecs:
         return True, f"threat_vector:{vecs[0]}", "strike"
@@ -949,6 +971,7 @@ def _flow_policy(verdict: str, trust_rank: int, rip: str, rport: str, proc: str,
 
 
 def analyze_connections(lines: list[str]) -> dict[str, Any]:
+    thermal_meta = _field_thermal_meta()
     trusted = _load_trusted()
     threats = _recent_threat_ips()
     intel_cache = _load_intel_cache()
@@ -1054,7 +1077,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         flow_policy = _flow_policy(verdict, trust_rank, rip, rport, proc, direction)
         intent = _flow_intent(proc, verdict, reason, intel, direction_label)
         kill_ok, kill_reason, kill_tier = _kill_signal(
-            verdict, block_rec, scores, rip, rport, proc, threats, peer_hist,
+            verdict, block_rec, scores, rip, rport, proc, threats, peer_hist, thermal_meta,
         )
         soul_side, hell_chosen = _soul_side(verdict, trust_rank, scores, kill_ok)
         if hell_chosen:
@@ -1165,6 +1188,7 @@ def analyze_connections(lines: list[str]) -> dict[str, Any]:
         )
     return {
         "updated": _now(),
+        "field_thermal": thermal_meta,
         "touch_policy": _touch_module().aggregate_counts(results),
         "connection_count": len(results),
         "harm_candidates": len(harm_candidates),

@@ -94,7 +94,7 @@ def arch_diagram() -> str:
     s += _arrow(560, 305, 680, 300, "enforce")
     s += (
         f'<text x="460" y="395" text-anchor="middle" fill="{C["tan"]}" '
-        f'font-family="Segoe UI,sans-serif" font-size="12">NEXUS-Shield 10.4.2 — loopback-first field C2</text>\n'
+        f'font-family="Segoe UI,sans-serif" font-size="12">NEXUS-Shield 10.4.3 — loopback-first field C2</text>\n'
     )
     return s + "</svg>\n"
 
@@ -198,7 +198,7 @@ def hero_banner() -> str:
         f'<path d="M600,40 L680,70 L680,160 Q600,240 520,160 L520,70 Z" fill="{C["panel"]}" stroke="{C["green_hi"]}" stroke-width="2"/>\n'
         f'<text x="600" y="130" text-anchor="middle" fill="{C["blue"]}" font-family="Consolas,monospace" font-size="28" font-weight="700">N</text>\n'
         f'<text x="600" y="200" text-anchor="middle" fill="{C["text"]}" font-family="Segoe UI,sans-serif" font-size="36" font-weight="700">NEXUS-Shield</text>\n'
-        f'<text x="600" y="235" text-anchor="middle" fill="{C["green_hi"]}" font-family="Segoe UI,sans-serif" font-size="16">Universal Protector · v10.4.2 · Field I/O Manual</text>\n'
+        f'<text x="600" y="235" text-anchor="middle" fill="{C["green_hi"]}" font-family="Segoe UI,sans-serif" font-size="16">Universal Protector · v10.4.3 · Field I/O Manual</text>\n'
         f'<text x="600" y="275" text-anchor="middle" fill="{C["dim"]}" font-family="Segoe UI,sans-serif" font-size="13">Panel · API · State · Installers · Underlay F9</text>\n'
     )
     return s + "</svg>\n"
@@ -234,6 +234,46 @@ def field_switch_safety_diagram() -> str:
     return s + "</svg>\n"
 
 
+def field_thermal_guard_diagram() -> str:
+    w, h = 920, 400
+    s = _svg_header(w, h)
+    s += (
+        '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">'
+        f'<path d="M0,0 L6,3 L0,6 Z" fill="{C["green"]}"/></marker></defs>\n'
+    )
+    s += _box(40, 40, 220, 100, "FieldWave update", [
+        "entropyFabricPredict",
+        "allow_update(num_ops)",
+        "record_ops on pass",
+    ], fill=C["panel2"])
+    s += _box(300, 40, 220, 100, "Work budget", [
+        "joules_per_field_op proxy",
+        "max_joules_per_second",
+        "1s rolling window",
+    ], stroke=C["ok"])
+    s += _box(560, 40, 320, 100, "Global redata", [
+        "safe_global_redata — chunked",
+        "max_global_redata_chunk",
+        "NO monolithic blast",
+    ], stroke=C["alert"])
+    s += _arrow(260, 90, 300, 90)
+    s += _arrow(520, 90, 560, 90)
+    s += _box(40, 170, 400, 110, "Back-off path", [
+        "projected_power > budget → sleep 5ms",
+        "skip chunk this pass · quality scaling",
+        "cold path: one atomic + timestamp",
+    ], stroke=C["brown"])
+    s += _box(460, 170, 420, 110, "NEXUS-Shield observability", [
+        "hwmon + RAPL anomaly → gatekeeper tighten",
+        "field thermal headroom X% log",
+        "boot-test redata on first + refresh",
+    ], stroke=C["blue"])
+    s += _box(40, 310, 840, 70, "Landauer", [
+        "kT ln 2 per bit erased — field entropy paths budget irreversible work before hard-drive global refresh",
+    ], fill=C["panel2"])
+    return s + "</svg>\n"
+
+
 def main():
     files = {
         "hero-banner.svg": hero_banner(),
@@ -242,6 +282,7 @@ def main():
         "io-state-files.svg": state_io_diagram(),
         "io-api-surface.svg": api_io_diagram(),
         "field-switch-safety.svg": field_switch_safety_diagram(),
+        "field-thermal-guard.svg": field_thermal_guard_diagram(),
     }
     for name, content in files.items():
         path = OUT / name

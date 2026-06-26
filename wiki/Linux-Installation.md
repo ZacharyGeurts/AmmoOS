@@ -1,6 +1,6 @@
 # Linux Installation
 
-**v10.4.2** — Recommended path uses release tarball + `install-all.sh`.
+**v10.4.3** — Recommended path uses release tarball + `install-all.sh`.
 
 → **[Installers](Installers)** for full script reference.
 
@@ -17,8 +17,8 @@
 ## Install from release
 
 ```bash
-tar -xzf nexus-shield-10.4.2-source.tar.gz
-cd nexus-shield-10.4.2
+tar -xzf nexus-shield-10.4.3-source.tar.gz
+cd nexus-shield-10.4.3
 sudo ./install-all.sh
 ```
 

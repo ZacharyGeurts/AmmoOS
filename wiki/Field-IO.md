@@ -42,6 +42,20 @@ Operator browser ↔ panel HTTP ↔ `nexus-genius.service` ↔ `/var/lib/nexus-s
 
 ---
 
+## Field thermal guard
+
+![Field thermal guard](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/field-thermal-guard.svg)
+
+| File | Role |
+|------|------|
+| `field-thermal-guard.json` | Headroom, budget, anomaly panel |
+| `field-global-redata.json` | Last incremental redata receipt |
+| `field-thermal-rate-limit.json` | Gatekeeper stealth limit when active |
+
+→ **[Field Thermal Guard](Field-Thermal-Guard)**
+
+---
+
 ## State files
 
 ![State file map](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/io-state-files.svg)

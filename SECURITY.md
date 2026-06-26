@@ -37,6 +37,18 @@ When switching to field mode (Tristate Installer: arrive → transform → commi
 
 Override only with `NEXUS_FIELD_SWITCH_FORCE=1` (operator emergency).
 
+## Field thermal guard (Landauer budget)
+
+Field layers that perform entropy management produce irreversible work (Landauer limit). `lib/field-thermal-guard.py` budgets that work before any global redata:
+
+- **Incremental redata only** — chunked passes via `field-global-redata.py`; monolithic canvas blast forbidden
+- **Work estimator** — `joules_per_field_op` proxy per wave/region; 1-second rolling power window
+- **Back-off** — yields when projected power exceeds `NEXUS_FIELD_MAX_JOULES_PER_SEC` (default 45 W headroom)
+- **Gatekeeper tie-in** — on thermal/RAPL anomaly, stealth rate limits tighten field budget and hold marginal interdicts
+- **Boot path** — first install and every refresh run a bounded `boot-test` redata with guard enabled
+
+Cold path cost is one atomic + timestamp check; no overhead when idle.
+
 ## Reporting
 
 Report security issues privately to the repository maintainer. Do not open public issues for undisclosed vulnerabilities.

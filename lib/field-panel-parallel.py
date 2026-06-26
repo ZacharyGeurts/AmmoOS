@@ -61,6 +61,7 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "operator_location": ("operator-location.py", ["json"]),
     "field_fabric": ("field-fabric-bridge.py", ["panel"]),
     "thermal_governor": ("thermal-governor.py", ["panel"]),
+    "field_thermal_guard": ("field-thermal-guard.py", ["json"]),
     "port_ddos_shield": ("field-port-ddos-shield.py", ["json"]),
     "packet_deinterlace": ("field-packet-deinterlace.py", ["json"]),
     "kernel_meld": ("field-kernel-meld.py", ["json"]),

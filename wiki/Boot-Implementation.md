@@ -1,6 +1,6 @@
 # Boot Implementation
 
-Every **startup and reboot** reloads field tech before the normal daemon loop. **First install** runs a heavier path once. **v10.4.2** hardens the path for non-destructive, marker-driven operation.
+Every **startup and reboot** reloads field tech before the normal daemon loop. **First install** runs a heavier path once. **v10.4.3** hardens the path for non-destructive, marker-driven operation with bounded thermal-guard redata.
 
 ---
 
@@ -10,14 +10,25 @@ Every **startup and reboot** reloads field tech before the normal daemon loop. *
 
 1. **systemd** `ExecStartPre` → `scripts/nexus-boot-impl.sh`
 2. **Validate** `NEXUS_INSTALL_ROOT` (absolute path, no traversal)
-3. **First install** (`first-boot.complete` missing): wire-stack, migrate, sign manifest, sense meld, training viewer
-4. **Every boot** (refresh): re-wire, export paths, front-hook, verify — **no** migrate, sign, or training viewer
-5. **Daemon** starts watchers + panel + field-switch-safety cycle
+3. **First install** (`first-boot.complete` missing): wire-stack, migrate, sign manifest, **bounded thermal redata**, sense meld, training viewer
+4. **Every boot** (refresh): re-wire, export paths, front-hook, verify, **bounded thermal redata** — **no** migrate, sign, or training viewer
+5. **Daemon** starts watchers + panel + field-switch-safety + field-thermal-guard cycle
 6. **Browser** opens `/field` once per `boot_id`
 
 ---
 
-## Hardening (v10.4.2)
+## Thermal guard (v10.4.3)
+
+| Step | Behavior |
+|------|----------|
+| `thermal_guard_init` | `field-thermal-guard.py evaluate` — headroom + policy env |
+| `bounded_redata` | `field-global-redata.py boot-test` — 3-region incremental pass |
+
+→ **[Field Thermal Guard](Field-Thermal-Guard)**
+
+---
+
+## Hardening (v10.4.2+)
 
 | Guard | Behavior |
 |-------|----------|

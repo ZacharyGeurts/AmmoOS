@@ -1,6 +1,6 @@
 # Installers
 
-Guide for **v10.4.2** release tarballs and in-tree scripts.
+Guide for **v10.4.3** release tarballs and in-tree scripts.
 
 **Also:** [INSTALL-README.md](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/INSTALL-README.md) in the repo.
 
@@ -8,20 +8,20 @@ Guide for **v10.4.2** release tarballs and in-tree scripts.
 
 ## Release assets
 
-Download: https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.2
+Download: https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.3
 
 | File | Use |
 |------|-----|
-| `nexus-shield-10.4.2-source.tar.gz` | Full tree — **recommended** |
-| `nexus-shield-10.4.2-installers.tar.gz` | Scripts only |
+| `nexus-shield-10.4.3-source.tar.gz` | Full tree — **recommended** |
+| `nexus-shield-10.4.3-installers.tar.gz` | Scripts only |
 
 ---
 
 ## Full install
 
 ```bash
-tar -xzf nexus-shield-10.4.2-source.tar.gz
-cd nexus-shield-10.4.2
+tar -xzf nexus-shield-10.4.3-source.tar.gz
+cd nexus-shield-10.4.3
 chmod +x install-all.sh genius_shield.sh nexus.sh nexus-install-gui.sh
 sudo ./install-all.sh
 ```

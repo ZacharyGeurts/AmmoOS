@@ -1,6 +1,6 @@
 # NEXUS-Shield · Universal Protector
 
-**v10.4.2** — Field C2 for Linux. Gatekeeper scoring, loopback panel, hardened boot-impl, painless field conversion, Underlay F9 Tristate installer.
+**v10.4.3** — Field C2 for Linux. Gatekeeper scoring, loopback panel, hardened boot-impl, field thermal guard, painless field conversion, Underlay F9 Tristate installer.
 
 > **TL;DR:** Download release → `sudo ./install-all.sh` → browser opens **http://127.0.0.1:9477/field** on every boot.
 
@@ -21,8 +21,8 @@ NEXUS is a field command layer — not a traditional AV suite:
 ## Quick install
 
 ```bash
-tar -xzf nexus-shield-10.4.2-source.tar.gz
-cd nexus-shield-10.4.2
+tar -xzf nexus-shield-10.4.3-source.tar.gz
+cd nexus-shield-10.4.3
 sudo ./install-all.sh
 ```
 
@@ -47,6 +47,7 @@ Full guide → **[Installers](Installers)**
 | **[Installers](Installers)** | Release tarballs, scripts, boot, troubleshoot |
 | **[Field I/O](Field-IO)** | API, state files, diagrams |
 | **[Field Switch Safety](Field-Switch-Safety)** | Painless conversion, no hotspots |
+| **[Field Thermal Guard](Field-Thermal-Guard)** | Landauer budget, incremental redata |
 | **[Panel Guide](Panel-Guide)** | Every tab + screenshots |
 | **[Linux Installation](Linux-Installation)** | systemd, verify, uninstall |
 | **[Underlay F9 Tristate](Underlay-F9-Tristate)** | 2026 installer, F9 hotkey |

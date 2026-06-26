@@ -30,6 +30,6 @@ if git diff --cached --quiet; then
   echo "Wiki already up to date."
   exit 0
 fi
-git commit -m "wiki: v${NEXUS_VERSION} — boot hardening, field switch safety, painless conversion"
+git commit -m "wiki: v${NEXUS_VERSION} — field thermal guard, incremental redata, Landauer budget"
 git push origin master 2>/dev/null || git push origin main 2>/dev/null || git push
 echo "Wiki published: https://github.com/ZacharyGeurts/NEXUS-Shield/wiki"

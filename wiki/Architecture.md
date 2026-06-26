@@ -1,6 +1,6 @@
 # Architecture
 
-**v10.4.2** — Event-driven genius layer under `nexus-genius.service`.
+**v10.4.3** — Event-driven genius layer under `nexus-genius.service`.
 
 ![Architecture](https://raw.githubusercontent.com/ZacharyGeurts/NEXUS-Shield/main/docs/images/io-architecture.svg)
 

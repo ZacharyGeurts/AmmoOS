@@ -6,13 +6,14 @@
 
 ---
 
-## Pages (v10.4.2)
+## Pages (v10.4.3)
 
 | Page | Topic |
 |------|-------|
 | [Home](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Home) | Overview |
 | [Installers](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Installers) | Release tarballs + scripts |
 | [Field I/O](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Field-IO) | API, state, diagrams |
+| [Field Thermal Guard](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Field-Thermal-Guard) | Landauer budget, incremental redata |
 | [Panel Guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Panel-Guide) | Tabs + screenshots |
 | [Linux Installation](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Linux-Installation) | Install & verify |
 | [Boot Implementation](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Boot-Implementation) | Reboot reload |
@@ -35,5 +36,5 @@ Or manually:
 ```bash
 git clone https://github.com/ZacharyGeurts/NEXUS-Shield.wiki.git
 rsync -a --delete wiki/ NEXUS-Shield.wiki/
-cd NEXUS-Shield.wiki && git add -A && git commit -m "wiki: v10.4.2 rewrite" && git push
+cd NEXUS-Shield.wiki && git add -A && git commit -m "wiki: v10.4.3 field thermal guard" && git push
 ```

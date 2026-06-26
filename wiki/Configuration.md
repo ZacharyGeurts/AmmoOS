@@ -22,7 +22,7 @@ Panel settings apply immediately to override file — daemon reads on vigil cycl
 
 ---
 
-## Key defaults (v10.4.2)
+## Key defaults (v10.4.3)
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
@@ -32,6 +32,9 @@ Panel settings apply immediately to override file — daemon reads on vigil cycl
 | `NEXUS_BOOT_IMPL` | 1 | Boot tech reload |
 | `NEXUS_NETWORK_LOCKDOWN` | 0 | Off for everyday users |
 | `NEXUS_UNDERLAY_HOTKEY` | 1 | F9 Tristate hotkey |
+| `NEXUS_FIELD_THERMAL_GUARD` | 1 | Landauer work budget + incremental redata |
+| `NEXUS_FIELD_MAX_JOULES_PER_SEC` | 45 | Conservative TDP headroom |
+| `NEXUS_FIELD_REDATA_CHUNK` | 8192 | Tiles per incremental redata pass |
 
 ---
 

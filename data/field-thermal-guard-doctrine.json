@@ -1,0 +1,27 @@
+{
+  "schema": "field-thermal-guard-doctrine/v1",
+  "title": "Field thermal guard — Landauer-aware incremental redata",
+  "motto": "Quality job 1: bounded work, observable headroom, back-off before global blast.",
+  "landauer": {
+    "kt_ln2_j_per_bit": 2.87e-21,
+    "note": "Irreversible bit erase produces heat; field entropy paths must budget it."
+  },
+  "defaults": {
+    "max_joules_per_second": 45.0,
+    "joules_per_field_op": 1.2e-9,
+    "max_global_redata_chunk": 8192,
+    "backoff_ms": 5
+  },
+  "policy": {
+    "incremental_redata_only": true,
+    "monolithic_global_blast_forbidden": true,
+    "anomaly_tighten_factor": 0.75,
+    "gatekeeper_rate_limit_on_anomaly": true
+  },
+  "sources": [
+    "sys/class/hwmon",
+    "rapl_cpu_package",
+    "field-power-ledger",
+    "behavior-symphony"
+  ]
+}

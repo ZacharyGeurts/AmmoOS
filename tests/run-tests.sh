@@ -500,6 +500,33 @@ test_field_switch_safety() {
   pythong "${ROOT}/lib/field-switch-safety.py" evaluate --phase=commit 2>/dev/null | grep -q 'conversion_ok'
 }
 
+test_field_thermal_guard() {
+  [[ -f "${ROOT}/lib/field-thermal-guard.py" ]]
+  [[ -f "${ROOT}/lib/field-global-redata.py" ]]
+  [[ -f "${ROOT}/data/field-thermal-guard-doctrine.json" ]]
+  grep -q 'NEXUS_FIELD_THERMAL_GUARD' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_FIELD_MAX_JOULES_PER_SEC' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_FIELD_REDATA_CHUNK' "${ROOT}/config/nexus.conf"
+  grep -q 'nexus_boot_impl_thermal_guard_init' "${ROOT}/lib/nexus-boot-impl.sh"
+  grep -q 'nexus_boot_impl_bounded_redata' "${ROOT}/lib/nexus-boot-impl.sh"
+  grep -q 'field-thermal-guard' "${ROOT}/lib/nexus-daemon.sh"
+  grep -q 'safe_global_redata' "${ROOT}/lib/field-thermal-guard.py"
+  grep -q 'headroom_pct' "${ROOT}/lib/field-thermal-guard.py"
+  grep -q 'gatekeeper_tighten' "${ROOT}/lib/field-thermal-guard.py"
+  grep -q '_field_thermal_meta' "${ROOT}/lib/connection-gatekeeper.py"
+  grep -q 'field_thermal_guard' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q 'monolithic_blast' "${ROOT}/lib/field-global-redata.py"
+  local tmp_state
+  tmp_state="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/field-thermal-guard.py" json 2>/dev/null | grep -q 'headroom_pct'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/field-global-redata.py" boot-test 2>/dev/null | grep -q 'incremental'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/field-global-redata.py" boot-test 2>/dev/null | grep -q 'monolithic_blast'
+  rm -rf "$tmp_state"
+}
+
 test_release_tooling() {
   [[ -x "${ROOT}/scripts/pack-release.sh" ]]
   [[ -x "${ROOT}/scripts/nexus-release-finalize.sh" ]]
@@ -2046,6 +2073,7 @@ run_test "NewLatest stack wired" test_newlatest_stack_wired
 run_test "panel browser boot open" test_panel_browser_boot_open
 run_test "nexus boot impl" test_nexus_boot_impl
 run_test "field switch safety" test_field_switch_safety
+run_test "field thermal guard" test_field_thermal_guard
 run_test "release tooling" test_release_tooling
 run_test "heaven hell module" test_heaven_hell_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
