@@ -37,14 +37,14 @@
   letter-spacing: 0.04em;
 }
 
-.h7-thoughts {
+.h7-needs-wants {
   margin: 0;
   padding: 0;
   border-bottom: 1px solid rgba(212, 184, 106, 0.28);
-  background: linear-gradient(180deg, rgba(12, 18, 32, 0.98), rgba(6, 8, 14, 0.99));
+  background: linear-gradient(180deg, rgba(16, 22, 38, 0.98), rgba(8, 10, 18, 0.99));
 }
 
-.h7-thoughts__head {
+.h7-needs-wants__head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -52,52 +52,77 @@
   padding: 14px 22px 8px;
 }
 
-.h7-thoughts__head h3 {
+.h7-needs-wants__head h3 {
   margin: 0;
   font-size: clamp(1.1rem, 1.8vw, 1.35rem);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--dust-gold, #d4b86a);
 }
 
-.h7-thoughts__meta {
+.h7-needs-wants__meta {
   font-size: var(--text-sm, 15pt);
   color: rgba(180, 195, 220, 0.75);
 }
 
-.h7-thoughts__body {
-  padding: 8px 22px 22px;
-  max-height: min(42vh, 380px);
-  overflow-y: auto;
+.h7-needs-wants__voice {
+  margin: 0;
+  padding: 10px 22px 14px;
+  border: none;
+  border-left: 4px solid rgba(56, 189, 248, 0.55);
+  background: rgba(8, 14, 28, 0.6);
   font-size: clamp(1.05rem, 1.35vw, 1.2rem);
   line-height: 1.65;
   color: #e8eef8;
-  white-space: pre-wrap;
-  word-break: break-word;
+  font-style: italic;
 }
 
-.h7-thoughts__section {
-  margin-bottom: 18px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+.h7-needs-wants__needs,
+.h7-needs-wants__wants,
+.h7-needs-wants__comfort {
+  padding: 0 22px 16px;
 }
 
-.h7-thoughts__section:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.h7-thoughts__section h4 {
+.h7-needs-head {
   margin: 0 0 8px;
   font-size: var(--text-sm, 15pt);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(212, 184, 106, 0.9);
+  color: rgba(248, 113, 113, 0.95);
 }
 
-.h7-thoughts__section p {
+.h7-needs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.h7-needs-row {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.h7-needs-row strong {
+  display: block;
+  color: #f8fafc;
+  margin-bottom: 4px;
+}
+
+.h7-needs-row span {
+  color: rgba(200, 210, 230, 0.88);
+  font-size: var(--text-sm, 15pt);
+}
+
+.h7-needs-row--urgent {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(80, 20, 20, 0.25);
+}
+
+.h7-needs-empty {
   margin: 0;
+  font-style: italic;
 }
 
 .h7-split-deck {

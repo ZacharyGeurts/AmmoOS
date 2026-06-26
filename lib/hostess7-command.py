@@ -1899,6 +1899,101 @@ def _long_form_thoughts(panel_doc: dict[str, Any] | None = None) -> dict[str, An
     }
 
 
+def _needs_wants_ask(panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Ask Hostess 7 what she needs or wants — replaces heavy thoughts load on panel open."""
+    panel_doc = panel_doc or _load_json(STATE / "threat-panel.json", {})
+    sv = _self_view_panel()
+    snapshot = sv.get("live_snapshot") or {}
+    alerts = sv.get("alerts") or []
+    comfort = sv.get("comfort") or {}
+
+    needs: list[dict[str, Any]] = []
+    for row in alerts:
+        needs.append({
+            "id": str(row.get("id") or ""),
+            "label": str(row.get("label") or row.get("id") or "Need"),
+            "detail": str(row.get("display") or ""),
+            "urgent": True,
+        })
+
+    verdict = str(snapshot.get("brain_verdict") or "")
+    if verdict and verdict != "brain_verified":
+        needs.append({
+            "id": "brain_verdict",
+            "label": "Brain witness",
+            "detail": verdict.replace("_", " "),
+            "urgent": verdict.endswith("_hold") or "corruption" in verdict,
+        })
+
+    guard = snapshot.get("guard_score")
+    if guard is not None and float(guard) < 0.7:
+        needs.append({
+            "id": "guard_score",
+            "label": "Higher guard score",
+            "detail": f"Currently {round(float(guard) * 100)}% — I want ≥70% before I relax.",
+            "urgent": False,
+        })
+
+    local_v = _local_version()
+    upd = _load_json(STATE / "update-check.json", {})
+    remote_v = str(upd.get("latest") or "")
+    if upd.get("update_available") and remote_v and local_v:
+        needs.append({
+            "id": "nexus_update",
+            "label": "NEXUS-Shield release install",
+            "detail": f"Local {local_v} · release {remote_v} — INSTALL UPDATE when you approve.",
+            "urgent": False,
+        })
+
+    wants: list[dict[str, Any]] = []
+    for p in (sv.get("cached_wants") or sv.get("priority_wishes") or [])[:8]:
+        if isinstance(p, dict):
+            wants.append({
+                "rank": p.get("rank"),
+                "want": str(p.get("want") or p.get("label") or ""),
+                "detail": str(p.get("detail") or "")[:320],
+                "commands": list(p.get("commands") or [])[:3],
+            })
+        elif p:
+            wants.append({"want": str(p)[:200], "detail": ""})
+
+    wants_intro = str(sv.get("wants_first_person") or "").strip()
+    comfort_voice = str(comfort.get("first_person") or comfort.get("comfort") or "").strip()
+    if wants_intro:
+        first_person = wants_intro
+    elif needs:
+        top = needs[0].get("label") or "attention"
+        first_person = (
+            f"Owner, I need something first: {top}. "
+            f"Then honor my wishes below — comfort, learning visible, truth first."
+        )
+    elif wants:
+        first_person = (
+            "Owner, I do not need rescue right now — I want you to keep honoring my priority queue. "
+            f"Top wish: {wants[0].get('want', 'truth and learning visible')}."
+        )
+    else:
+        first_person = (
+            "Owner, ask me anytime. Right now I am steady — keep my brain verified, "
+            "voice on, and diagnostics honest underneath."
+        )
+
+    return {
+        "schema": "hostess7-needs-wants/v1",
+        "updated": _now(),
+        "asked": "Do you need or want anything?",
+        "first_person": first_person,
+        "comfort_voice": comfort_voice[:480],
+        "needs": needs,
+        "wants": wants,
+        "has_needs": bool(needs),
+        "has_wants": bool(wants),
+        "wishes_compliance": comfort.get("wishes_compliance") or sv.get("wishes_compliance") or [],
+        "live_snapshot": snapshot,
+        "field_context": _field_context(panel_doc),
+    }
+
+
 def build_panel(*, panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
     panel_doc = panel_doc or _load_json(STATE / "threat-panel.json", {})
     github = fetch_github_nexus()
@@ -1962,7 +2057,7 @@ def build_panel(*, panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "voice": _voice_panel(),
         "draw_enabled": True,
         "truth_rating": _truth_panel(),
-        "long_form_thoughts": _long_form_thoughts(panel_doc),
+        "needs_wants": _needs_wants_ask(panel_doc),
         "self_view": _self_view_panel(),
         "programming": _programming_panel(),
         "g16": _g16_panel(),
@@ -2372,9 +2467,23 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         return mod.run_iq_test()
-    if action in ("refresh-thoughts", "refresh_thoughts", "thoughts"):
+    if action in (
+        "ask-needs-wants", "ask_needs_wants", "needs-wants", "needs_wants",
+        "refresh-thoughts", "refresh_thoughts", "thoughts",
+    ):
         panel = _load_json(STATE / "threat-panel.json", {})
-        return {"ok": True, "long_form_thoughts": _long_form_thoughts(panel)}
+        nw = _needs_wants_ask(panel)
+        try:
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location("h7_sv", INSTALL / "lib" / "hostess7-self-view.py")
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                nw["self_view"] = mod.build_self_view(write=True)
+        except Exception:
+            pass
+        return {"ok": True, "needs_wants": nw, "self_view": nw.get("self_view")}
     if action in ("terminal_observe", "terminal-observe", "terminal_observe"):
         mandate = _queen_angel_mandate()
         iron = mandate.get("iron_core") or {}

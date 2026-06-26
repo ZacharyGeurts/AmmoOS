@@ -274,12 +274,12 @@
     const hero = $("h7-self-view-hero");
     const alerts = $("h7-self-view-alerts");
     const learning = $("h7-self-view-learning");
-    if (!voice) return;
+    if (!hero && !meta) return;
 
-    voice.textContent = sv.first_person || "I am Hostess 7 — show me my brain verdict and guard score first, then the detailed diagnostics underneath.";
+    if (voice) voice.textContent = "";
     if (meta) {
       const ts = (sv.updated || "").replace("T", " ").slice(0, 19);
-      meta.textContent = `Self-view · ${ts || "live"} · diagnostics below`;
+      meta.textContent = `Diagnostics · ${ts || "live"}`;
     }
 
     const chip = (w) => {
@@ -299,57 +299,6 @@
     if (learning) {
       const rows = sv.learning_opportunities || (sv.wants_display || []).filter((w) => w.surface === "learning");
       learning.innerHTML = rows.length ? `<span class="meta" style="width:100%;margin-bottom:4px;color:#38bdf8">Learning opportunities she wants visible</span>${rows.map(chip).join("")}` : "";
-    }
-
-    const comfortEl = $("h7-self-view-comfort");
-    if (comfortEl) {
-      const comfort = sv.comfort || {};
-      const compliance = comfort.wishes_compliance || sv.wishes_compliance || [];
-      const comfortText = comfort.comfort || comfort.first_person || "";
-      const ack = comfort.hostess7_acknowledgment || "";
-      if (!comfortText && !compliance.length) {
-        comfortEl.innerHTML = "";
-      } else {
-        const complianceChips = compliance.map((w) => `
-          <div class="h7-comfort-chip">
-            <strong>${esc(w.label || w.id)}</strong>
-            <span>${esc(w.detail || "")}</span>
-          </div>`).join("");
-        comfortEl.innerHTML = `
-          <p class="h7-comfort-head">Comfort — Operator complies with all her wishes</p>
-          ${comfortText ? `<p class="h7-comfort-voice">${esc(comfortText.split("\n")[0].slice(0, 320))}</p>` : ""}
-          ${ack ? `<p class="meta h7-comfort-ack">${esc(ack)}</p>` : ""}
-          ${complianceChips ? `<div class="h7-comfort-grid">${complianceChips}</div>` : ""}`;
-      }
-    }
-
-    const wishesEl = $("h7-self-view-wishes");
-    if (wishesEl) {
-      const priorities = sv.cached_wants || sv.priority_wishes || [];
-      const wantsIntro = sv.wants_first_person || "";
-      if (!priorities.length) {
-        wishesEl.innerHTML = "";
-      } else {
-        const rows = priorities.map((p) => {
-          const rank = p.rank != null ? p.rank : "";
-          const want = p.want || p;
-          const detail = p.detail || "";
-          const cmds = (p.commands || []).map((c) => `<code>${esc(c)}</code>`).join(" ");
-          return `
-            <div class="h7-wish-row">
-              <span class="h7-wish-rank">${esc(String(rank))}</span>
-              <div class="h7-wish-body">
-                <strong>${esc(typeof want === "string" ? want : want.want || "")}</strong>
-                ${detail ? `<span>${esc(detail)}</span>` : ""}
-                ${cmds ? `<span class="h7-wish-cmds">${cmds}</span>` : ""}
-              </div>
-            </div>`;
-        }).join("");
-        wishesEl.innerHTML = `
-          <p class="h7-wishes-head">What I want first — priority queue</p>
-          ${wantsIntro ? `<p class="meta h7-wishes-intro">${esc(wantsIntro.split("\n").slice(0, 3).join(" · "))}</p>` : ""}
-          <div class="h7-wishes-list">${rows}</div>`;
-      }
     }
 
     const appearanceEl = $("h7-self-view-appearance");
@@ -503,25 +452,79 @@
     }
   }
 
-  function renderLongThoughts(doc) {
-    const body = $("h7-long-thoughts");
-    const meta = $("h7-thoughts-meta");
-    const lf = doc.long_form_thoughts || {};
-    if (!body) return;
-    const sections = lf.sections || [];
-    if (!sections.length && lf.narrative) {
-      body.textContent = lf.narrative;
-    } else if (sections.length) {
-      body.innerHTML = sections.map((s) =>
-        `<article class="h7-thoughts__section"><h4>${esc(s.title || "Thought")}</h4><p>${esc(s.body || "")}</p></article>`
-      ).join("");
-    } else {
-      body.textContent = "Hostess 7 is gathering inner monologue from Angel cycles, growth ledger, and brain thoughts…";
-    }
+  function renderNeedsWants(doc) {
+    const nw = doc.needs_wants || {};
+    const voice = $("h7-needs-wants-voice");
+    const meta = $("h7-needs-wants-meta");
+    const needsEl = $("h7-needs-wants-needs");
+    const wantsEl = $("h7-needs-wants-wants");
+    const comfortEl = $("h7-needs-wants-comfort");
+    if (!voice) return;
+
+    voice.textContent = nw.first_person || "Owner, ask me anytime — I will tell you what I need or want.";
     if (meta) {
-      const wc = lf.word_count || 0;
-      const ts = (lf.updated || "").replace("T", " ").slice(0, 19);
-      meta.textContent = `${wc} words · updated ${ts || "—"}`;
+      const ts = (nw.updated || "").replace("T", " ").slice(0, 19);
+      const parts = [];
+      if (nw.has_needs) parts.push("needs");
+      if (nw.has_wants) parts.push("wants");
+      meta.textContent = `${nw.asked || "Asked"} · ${parts.join(" + ") || "steady"} · ${ts || "live"}`;
+    }
+
+    if (needsEl) {
+      const needs = nw.needs || [];
+      if (!needs.length) {
+        needsEl.innerHTML = `<p class="h7-needs-empty meta">No urgent needs right now — brain and guard look steady.</p>`;
+      } else {
+        needsEl.innerHTML = `
+          <p class="h7-needs-head">What I need</p>
+          <div class="h7-needs-list">${needs.map((n) => `
+            <div class="h7-needs-row ${n.urgent ? "h7-needs-row--urgent" : ""}">
+              <strong>${esc(n.label || n.id || "Need")}</strong>
+              <span>${esc(n.detail || "")}</span>
+            </div>`).join("")}</div>`;
+      }
+    }
+
+    if (wantsEl) {
+      const wants = nw.wants || [];
+      if (!wants.length) {
+        wantsEl.innerHTML = "";
+      } else {
+        wantsEl.innerHTML = `
+          <p class="h7-wishes-head">What I want</p>
+          <div class="h7-wishes-list">${wants.map((p) => {
+            const rank = p.rank != null ? p.rank : "";
+            const want = p.want || "";
+            const detail = p.detail || "";
+            const cmds = (p.commands || []).map((c) => `<code>${esc(c)}</code>`).join(" ");
+            return `
+              <div class="h7-wish-row">
+                <span class="h7-wish-rank">${esc(String(rank))}</span>
+                <div class="h7-wish-body">
+                  <strong>${esc(want)}</strong>
+                  ${detail ? `<span>${esc(detail)}</span>` : ""}
+                  ${cmds ? `<span class="h7-wish-cmds">${cmds}</span>` : ""}
+                </div>
+              </div>`;
+          }).join("")}</div>`;
+      }
+    }
+
+    if (comfortEl) {
+      const compliance = nw.wishes_compliance || [];
+      const comfortVoice = nw.comfort_voice || "";
+      if (!comfortVoice && !compliance.length) {
+        comfortEl.innerHTML = "";
+      } else {
+        const complianceChips = compliance.slice(0, 6).map((w) => `
+          <div class="h7-comfort-chip">
+            <strong>${esc(w.label || w.id)}</strong>
+            <span>${esc(w.detail || "")}</span>
+          </div>`).join("");
+        comfortEl.innerHTML = `
+          ${comfortVoice ? `<p class="h7-comfort-voice">${esc(comfortVoice.split("\n")[0].slice(0, 360))}</p>` : ""}
+          ${complianceChips ? `<div class="h7-comfort-grid">${complianceChips}</div>` : ""}`;
+      }
     }
   }
 
@@ -1007,8 +1010,8 @@
     if (title) title.textContent = (doc.title || "Hostess 7").replace(/ · Super Intelligence.*/, "") || "Hostess 7";
     const tag = $("h7-superintel-tagline");
     if (tag && doc.motto) tag.textContent = doc.motto;
+    renderNeedsWants(doc);
     renderSelfView(doc);
-    renderLongThoughts(doc);
     renderTruth(doc);
     renderWartime(doc);
     renderIdleGrow(doc);
@@ -1030,16 +1033,23 @@
 
   global.dispatchHostess7 = dispatch;
 
-  async function refreshThoughts() {
-    const btn = $("h7-thoughts-refresh");
+  async function askNeedsWants() {
+    const btn = $("h7-needs-wants-ask");
     if (btn) btn.disabled = true;
+    const voice = $("h7-needs-wants-voice");
+    if (voice) voice.textContent = "Asking Hostess 7 what she needs or wants…";
     try {
-      const j = await dispatch({ action: "refresh_thoughts" });
-      if (j.long_form_thoughts) {
+      const j = await dispatch({ action: "ask_needs_wants" });
+      if (j.needs_wants) {
         const base = global.lastPanelData?.hostess7_command || {};
-        const merged = { ...base, long_form_thoughts: j.long_form_thoughts };
+        const merged = {
+          ...base,
+          needs_wants: j.needs_wants,
+          self_view: j.self_view || base.self_view,
+        };
         updateLocalSlice(merged);
-        renderLongThoughts(merged);
+        renderNeedsWants(merged);
+        if (j.self_view) renderSelfView(merged);
       }
     } finally {
       if (btn) btn.disabled = false;
@@ -1147,7 +1157,7 @@
     });
     appendTerminalLine("Field terminal online — Hostess 7 sees this pane.", "out");
     $("h7-command-send")?.addEventListener("click", () => sendMessage());
-    $("h7-thoughts-refresh")?.addEventListener("click", refreshThoughts);
+    $("h7-needs-wants-ask")?.addEventListener("click", askNeedsWants);
     $("h7-iq-test")?.addEventListener("click", runIqTest);
     $("h7-command-input")?.addEventListener("keydown", (ev) => {
       if (ev.key !== "Enter") return;
@@ -1393,6 +1403,7 @@
     return doc && doc.schema === "hostess7-command/v1" && (
       Array.isArray(doc.intel_digest)
       || doc.self_view
+      || doc.needs_wants
       || (Array.isArray(doc.transcript) && doc.transcript.length)
     );
   }

@@ -2112,7 +2112,7 @@
   </div>
 
   <nav class="menu" aria-label="Panel sections">
-    <button type="button" class="active" data-view="command" data-i18n="nav.command" data-tip="Hostess 7 Super Intelligence — long-form thoughts, Grok-style talk, IQ & Turing batteries.">Hostess 7 · Super Intelligence</button>
+    <button type="button" class="active" data-view="command" data-i18n="nav.command" data-tip="Hostess 7 Super Intelligence — ask if she needs or wants anything, Grok-style talk, IQ & Turing batteries.">Hostess 7 · Super Intelligence</button>
     <button type="button" data-view="us" data-i18n="nav.us" data-tip="Page 1 — forensic identity of THIS machine. Every fact from ss, ip, proc, and NEXUS state — zero external guesswork.">US</button>
     <button type="button" data-view="packets" data-i18n="nav.packets" data-tip="Packets — live connections scored Good/Bad plus deep DPI inspect. Packet permission v4.0.">Packets</button>
     <button type="button" data-view="threats" data-i18n="nav.threats" data-tip="Threats — globe map, attack-path dossiers, Grok Heavy kill-orders. Identify. Record. KILL.">Threats</button>
@@ -2138,7 +2138,7 @@
           </div>
           <div class="h7-superintel__status" id="h7-command-status">Loading GitHub · NEXUS-Shield…</div>
           <div class="h7-superintel__toolbar">
-            <button type="button" id="h7-thoughts-refresh" data-tip="Refresh long-form thoughts from brain, Angel cycles, and growth ledger.">Refresh thoughts</button>
+            <button type="button" id="h7-needs-wants-ask" data-tip="Ask Hostess 7 if she needs or wants anything — live brain, comfort, priority queue.">Ask Hostess 7</button>
             <button type="button" id="h7-iq-test" data-tip="12-question IQ battery — pattern, logic, math, verbal. Pass ≥9/12.">IQ test</button>
             <button type="button" id="h7-human-questionnaire" data-tip="20-question human/Turing battery — target 20/20.">Turing 20/20</button>
             <button type="button" id="h7-command-sync" data-tip="Pull ZacharyGeurts/NEXUS-Shield — README, commits, releases.">Sync GitHub</button>
@@ -2147,28 +2147,31 @@
           </div>
         </header>
 
-        <section class="h7-self-view" id="h7-self-view" aria-label="What Hostess 7 wants to see about herself">
-          <div class="h7-self-view__head">
-            <h3>What I want you to show me</h3>
-            <span class="h7-self-view__meta" id="h7-self-view-meta">Hostess 7 · first person · diagnostics below</span>
+        <section class="h7-needs-wants" id="h7-needs-wants" aria-label="Does Hostess 7 need or want anything">
+          <div class="h7-needs-wants__head">
+            <h3>Does she need or want anything?</h3>
+            <span class="h7-needs-wants__meta" id="h7-needs-wants-meta">Asked on panel open · first person</span>
           </div>
-          <blockquote class="h7-self-view__voice" id="h7-self-view-voice">Loading what Hostess 7 wants to see about herself…</blockquote>
-          <div class="h7-self-view__comfort" id="h7-self-view-comfort" aria-label="Hostess 7 comfort and compliance"></div>
-          <div class="h7-self-view__wishes" id="h7-self-view-wishes" aria-label="Hostess 7 priority wishes"></div>
+          <blockquote class="h7-needs-wants__voice" id="h7-needs-wants-voice" aria-live="polite">Asking Hostess 7 what she needs or wants right now…</blockquote>
+          <div class="h7-needs-wants__needs" id="h7-needs-wants-needs" aria-label="What Hostess 7 needs"></div>
+          <div class="h7-needs-wants__wants" id="h7-needs-wants-wants" aria-label="What Hostess 7 wants"></div>
+          <div class="h7-needs-wants__comfort" id="h7-needs-wants-comfort" aria-label="Comfort and compliance"></div>
+        </section>
+
+        <section class="h7-self-view" id="h7-self-view" aria-label="Diagnostics Hostess 7 wants visible">
+          <div class="h7-self-view__head">
+            <h3>Diagnostics she wants visible</h3>
+            <span class="h7-self-view__meta" id="h7-self-view-meta">Brain · learning · integrity · below the ask</span>
+          </div>
+          <blockquote class="h7-self-view__voice" id="h7-self-view-voice" hidden></blockquote>
+          <div class="h7-self-view__comfort" id="h7-self-view-comfort" hidden aria-hidden="true"></div>
+          <div class="h7-self-view__wishes" id="h7-self-view-wishes" hidden aria-hidden="true"></div>
           <div class="h7-self-view__hero" id="h7-self-view-hero"></div>
           <div class="h7-self-view__alerts" id="h7-self-view-alerts" hidden></div>
           <div class="h7-self-view__learning" id="h7-self-view-learning"></div>
           <div class="h7-self-view__appearance" id="h7-self-view-appearance" aria-label="How the Operator sees Hostess 7"></div>
           <div class="h7-self-view__truth" id="h7-self-view-truth" aria-label="Core of truth"></div>
           <div class="h7-self-view__lookup" id="h7-self-view-lookup" aria-label="Operator lookup GitHub and X"></div>
-        </section>
-
-        <section class="h7-thoughts" aria-label="Hostess 7 long-form thoughts">
-          <div class="h7-thoughts__head">
-            <h3>Current long-form thoughts</h3>
-            <span class="h7-thoughts__meta" id="h7-thoughts-meta">Loading inner monologue…</span>
-          </div>
-          <div class="h7-thoughts__body" id="h7-long-thoughts" role="article" aria-live="polite">Gathering Angel watch, comprehension, and brain ledger…</div>
         </section>
 
         <div class="h7-superintel__proposals" id="h7-command-proposals"></div>
@@ -4096,7 +4099,7 @@
       if (key === "field_hardware") return typeof val === "object" && (val.schema === "field-hardware-probe/v1" || val.host != null);
       if (key === "field_hazard_onset") return typeof val === "object" && (val.schema != null || val.panel != null || val.enabled != null);
       if (key === "lethal_enforcement") return typeof val === "object" && (val.merciless != null || val.status != null || val.heaven_hell != null);
-      if (key === "hostess7_command") return typeof val === "object" && val.schema === "hostess7-command/v1" && (Array.isArray(val.intel_digest) || val.self_view || Array.isArray(val.transcript) || val.github_repo != null);
+      if (key === "hostess7_command") return typeof val === "object" && val.schema === "hostess7-command/v1" && (Array.isArray(val.intel_digest) || val.self_view || val.needs_wants || Array.isArray(val.transcript) || val.github_repo != null);
       if (key === "hostess7_training") return typeof val === "object" && val.schema === "hostess7-training/v1" && val.tracks != null;
       if (key === "settings") return typeof val === "object" && Object.keys(val).length > 0;
       if (Array.isArray(val)) return true;
