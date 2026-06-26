@@ -4,3 +4,14 @@ __pycache__/
 .nexus-state-test/
 .build/
 *.pyc
+
+# Runtime state — machine-specific; never commit
+*.jsonl
+nexus-trusted.jsonl
+/var/lib/nexus-shield/
+
+# Local operator intel (created at runtime)
+gov-dossiers.json
+human-dossier-kill-orders.json
+home-gps-correlation.json
+operator-location.json

@@ -1,30 +1,24 @@
-# NEXUS-Shield
+# NEXUS-Shield ∞
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+**Your invisible network bodyguard. Zero interference. You stay in command.**
 
-**Your network bodyguard that stays out of the way.**
+NEXUS watches every outbound connection, scores intent on 10 axes, and shows clean cards. Click **Trust Forever** or **Stop This Site**. Nothing blocks unless you say.
 
-NEXUS-Shield watches what's leaving your machine, scores every live connection for intent (browsing vs sketchy), and puts you in control with two clicks: **Trust forever** or **Stop this site**. Every button has a **?** tooltip in plain English. No bloated antivirus. No config-file archaeology. Just run it and use the panel.
+**?** tooltips everywhere in plain English. Under 5% CPU in stealth mode. Daemon auto-starts. Panel at `https://127.0.0.1:9477/`.
 
-Built by [Zachary Geurts](https://github.com/ZacharyGeurts). Companion to the [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) field stack — **different licenses** (see below).
-
-> **NEXUS-Shield = MIT (free to use).** **AMOURANTHRTX = GPL v3 or commercial — not MIT-free.** NEXUS borrows field principles; it does not ship the AMOURANTHRTX engine.
+Built by [Zachary Geurts](https://github.com/ZacharyGeurts) · MIT License · Companion to [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) (separate GPL/commercial license — NEXUS ships none of its engine).
 
 ---
 
-## Start here (30 seconds)
+## 30-Second Start
 
-**Already installed?** Pick one:
+**Already installed?**
 
 ```bash
 ./nexus.sh
 ```
 
-…or click **NEXUS-Shield** in your app menu / desktop.
-
-That's it. Your browser opens the local panel at `https://127.0.0.1:9477/`. The daemon starts itself if it isn't running.
-
-**First time?** Install once:
+**First time:**
 
 ```bash
 git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
@@ -34,217 +28,95 @@ sudo ./stealth_install.sh
 ./nexus.sh
 ```
 
----
-
-## v3.0.0 — Field Attack Kit
-
-- **Permanent hostile disable** — firewall block forever (in + out) + field drive memory (`nexus-hostile.jsonl`)
-- **Field technology** — Hostess7 cache, team field drive, local field-storage mirror
-- **Crush all hot** — one action disables every heat ≥ 0.7 signal with full intel metadata
-- **Auto-crush** (optional setting) — disciplined automatic permanent disable for hot hosts
-- **Tone** — operational, widely distributed: *intelligence is a bullet*
-
-## v2.9.0 — Host Attack Globe (real satellite zoom)
-
-- **Leaflet + Esri World Imagery** — Google Earth-style infinite zoom (street + offline NASA globe fallback)
-- **Standards intel** — IEEE 802 OUI (MAC vendor), RFC 7483 RDAP (registrar/network), GeoIP city lat/lon
-- **Rich popups** — registrar, ASN, org, hostname, abuse contact, MAC vendor per dot
-- **RFC 7946 GeoJSON** — `host_attacks.geojson` in panel API for map consumers
-
-## v2.8.0 — Host Attack Map
-
-- **Global globe** — pulsing dots on Earth for every hostile host signal (green → yellow → red)
-- **Infinite variety** — each data point gets unique hue, pulse speed, and size from its threat fingerprint
-- **Zachary Geurts** — Army Specialist, Iraq War Veteran, Honorable Discharge
-- **Sources** — gatekeeper harm candidates, threat log, dossier chains, firewall blocks + ip-api geo
-
-## v2.7.0 — Fair Ad Guardian
-
-- **Non-intrusive by default** — Annoyance mode blocks popups, lockouts, and complained-about third parties (not blunt full-web blocking)
-- **Fair to advertisers** — sites with ads-required policy keep first-party ads; opt out means leave the site
-- **Browser-aware** — proactive feed from live connections; blocks not-the-guy widgets and anti-adblock walls
-- **Policies** — Annoyance (recommended) · Fair · Strict (legacy full lists)
-
-## v2.6.0 — Let's Be Angels (dossiers & research)
-
-- **Dossier tab** — full attack-path chains: vector → peer (IPv4/IPv6) → process → MAC vendor → CVE/MITRE
-- **Research tab** — MAC OUI table, IP intel cache, CVE/exploit map (legacy, recent, zero-day watch)
-- **Direction aware** — **At us** (inbound/listening) vs **From us** (outbound) — we look back HARD
-- **CLI** — `nexus dossier`, `nexus research`
-
-## v2.5.0 — vector intelligence (never unknown)
-
-- **Never unknown** — every peer gets a classified label (CDN, org, PTR, or inferred remote peer)
-- **Vector scour** — when online, enriches active connections via intelligence lookup (cached)
-- **Pest arsenal** — Remove pest: block peer, stop process, quarantine temp binaries (operator-initiated)
-- **CLI** — `nexus scour`, `nexus intel <ip>`, `nexus eradicate <ip> [pid]`
-
-## v2.4.1 — settings you can see
-
-- **Settings mirror reality** — each row shows ON/OFF badges and green (on) vs muted (off) styling that matches saved choices
-- **Profile banner** — Everyday vs Custom profile with group counts (Protection, Watchers, Adblock)
-- **Self-access guard** — localhost and the panel (`127.0.0.1:9477`) are never firewall-blocked; the operator always keeps access
-
-## v2.4.0 — full control on every connection
-
-- **Three actions on every row** — Trust forever · Block 1 day · Block forever · Unblock 1 day (when blocked)
-- **First-run lockdown** — unknown public peers blocked on install; list sorted **recommended to allow first** (email, YouTube, browsers)
-- **Full CLI** — `nexus trust/block/unblock/connections` if the browser won't open; `nexus panel --wait` and browser detection in `./nexus.sh`
-
-## v2.2.0 — everyday mode
-
-- **Auto settings on install** — everyday profile for email, YouTube, and browsing (no auto-block, light watchers)
-- **10-bar score layout** — all axis bars visible per connection; trust/concern as compact chips (no fat twin meters)
-- **Consumer whitelist** — Thunderbird, Evolution, Chrome, Slack, Zoom, Spotify, and more pre-trusted
-
-## v2.1.4 — licensing clarity
-
-- **NEXUS-Shield = MIT** called out in README, panel footer, install output, and [Licensing wiki](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Licensing)
-- **AMOURANTHRTX = GPL v3 or commercial** — explicitly **not MIT-free** wherever the field stack is referenced
-
-## v2.1.3 — taller threat cards
-
-- **~10% more vertical room** on connection and warning cards — padding, line-height, and section gaps
-- **NEXUS suggests** summary moved above score meters so text doesn't crowd the bars
-
-## v2.1.2 — layout polish
-
-- **Cleaner menu** — Monitor · Settings · Logs (short labels; long help stays in ? tooltips)
-- **No overlapping text** — grid layouts for stats, connection cards, and settings rows
-- **Fixed-position tooltips** — ? help floats above the panel instead of clipping inside cards
-
-## v2.1.1 — scoring explained
-
-- **NEXUS suggests** box on every connection — trust vs concern meters, friendly/cautious bullet lists, specific what-to-do
-- **Warning cards** explain each threat type in plain English (LISTENER_SURGE, etc.)
-- **Polished UI** — card layout, gradients, collapsible score breakdown, refreshed icon
-
-## v2.1 — help for everyone
-
-- **? flyouts everywhere** — hover or tap any question mark for a plain-English explanation
-- **Friendly names** — What's happening, Trust forever, Stop this site (not engineer jargon)
-- **Welcome tip bar** — reminds you nothing blocks unless you say so
-- **Settings renamed** — Auto-block after logging, Watchers, Ad blocking
+That's it. Browser opens the local panel. Daemon starts if it isn't running.
 
 ---
 
-## The panel — three tabs, everything you need
+## Well Wishes
 
-### Monitor — see what's happening right now
+NEXUS is built for operators who carry the stack home, to school, and back — not for a vendor dashboard.
 
-![NEXUS Monitor tab — connection gatekeeper and threats](docs/screenshots/panel-monitor.png)
+On panel boot you get a personal greeting: **Shield online. Full command. You decide.** Every connection row stays yours: trust, block, or ignore. We name what we cannot measure. We do not hide the rocks.
 
-| Area | What you're looking at |
-|------|------------------------|
-| **Left — Internet / Gatekeeper** | Every live connection scored on 10 axes: user browsing, media, search, bandwidth abuse, beacons, etc. |
-| **Verdict badges** | `USER_OK` = normal. `HARM_CANDIDATE` = review before blocking. NEXUS does **not** auto-block your CDN or browser traffic. |
-| **Trust forever** (? explains it) | One click → permanent allow. Saved on your machine. NEXUS stops nagging that site. |
-| **Stop this site** (? explains it) | Only on "might be harmful" rows — blocks outbound when **you** say so. |
-| **Right — Threats** | Active threat vectors, correlation score, firewall status. Calm field = empty list. |
+Field Technology v5 textbook: [Field Primer](https://zacharygeurts.github.io/Field_Primer/)
 
 ---
 
-### Settings — every toggle, no terminal required
+## The Panel — Three Tabs
 
-![NEXUS Settings tab — protection, modules, adblock](docs/screenshots/panel-settings.png)
+### Monitor
 
-| Section | What it does |
-|---------|----------------|
-| **Protection** | Paranoia auto-block, firewall auto-block, autosanitize, shutdown guard — all checkboxes. |
-| **Modules** | Turn gatekeeper, packet oracle, shadow/entropy/behavior watchers, privacy guard, etc. on or off. |
-| **Adblock loader** | Pull **EasyList**, **EasyPrivacy**, or **Fanboy** filter lists (or paste a custom URL), then apply to the firewall. |
-| **Paranoia incidents** | Full forensics when something looked wrong — who, what IP, which process. |
-| **Autosanitize actions** | Past auto-blocks you can undo with a checkbox. |
+Live connections scored on 10 axes. **Trust forever** · **Stop this site** · verdict badges in plain English.
 
-No editing `nexus.conf` by hand unless you want to. The panel writes `settings.override` for you.
+![Monitor](docs/screenshots/panel-monitor.png)
 
----
+### Settings
 
-### Logs — when you need the paper trail
+Protection, watchers, adblock, paranoia — every toggle visible. Panel writes `settings.override`; no config archaeology required.
 
-![NEXUS Logs tab — alerts and vigil output](docs/screenshots/panel-logs.png)
+![Settings](docs/screenshots/panel-settings.png)
 
-| Log | Contents |
-|-----|----------|
-| **Alerts** | Unified `/var/log/nexus-alerts.log` — everything NEXUS noticed. |
-| **Vigil** | Eternal Vigil mode changes and maintenance events. |
+### Logs
 
-Refresh anytime. If logs say "offline", run `./nexus.sh` or `sudo systemctl start nexus-genius.service`.
+Unified alerts and vigil output. Refresh anytime.
+
+![Logs](docs/screenshots/panel-logs.png)
+
+**Keyboard:** `?` tooltips · `/` search in library · `Alt+Shift+B` → Books · `+`/`−` reader size on Field Primer links.
 
 ---
 
-## What makes NEXUS different
-
-- **Click-first security** — Gatekeeper scores connections; you authorize or block. No surprise internet outages from false positives.
-- **Invisible daemon** — Under 5% CPU cap, `Nice=19`, event-driven file watchers. Whitelists normal apps (browsers, PipeWire, game launchers).
-- **Genius-only** — Pure heuristics: shadow integrity, entropy, behavior chains, privacy guard, predictive correlation. No ClamAV / no third-party AV bundle.
-- **Shutdown guard** — If something kills NEXUS, forensics are captured and a safe restart modal walks you through options.
-- **Self-defense** — Signed `MANIFEST.sha256`; daemon refuses to load tampered scripts.
-
----
-
-## Everyday commands
+## Everyday Commands
 
 | Command | Purpose |
 |---------|---------|
-| `./nexus.sh` | Open the panel (starts daemon if needed) |
-| `nexus status` | Quick health check |
-| `nexus verify` | Manifest / integrity check |
-| `nexus alerts` | Tail recent alerts |
-| `nexus test` | Run the test suite |
+| `./nexus.sh` | Open panel (starts daemon if needed) |
+| `nexus status` | Health + firewall + panel URL |
+| `nexus verify` | Manifest integrity check |
+| `nexus trust <ip>` | Trust forever |
+| `nexus block <ip>` | Block outbound |
+| `nexus test` | Run test suite |
 
 ---
 
-## Project layout
+## Portable Paths
+
+Runtime state lives outside the git tree:
+
+| Variable | Default |
+|----------|---------|
+| `NEXUS_STATE_DIR` | `/var/lib/nexus-shield` (prod) or `.nexus-state` (dev checkout) |
+| `NEXUS_INSTALL_ROOT` | `/usr/local/lib/nexus-shield` or source tree |
+| `SG_ROOT` | Parent of install root (auto-discovered via `lib/sg-paths.sh`) |
+
+Set env vars before install on non-default layouts. Never commit `.nexus-state/` — it holds machine-specific intel.
+
+---
+
+## Project Layout
 
 ```
-nexus.sh              ← you run this
+nexus.sh              ← run this
 stealth_install.sh    ← one-shot install
 lib/                  ← daemon modules
-panel/                ← web UI
-config/nexus.conf     ← defaults (panel overrides these)
-docs/screenshots/     ← README visuals
+panel/                ← web UI (threat-panel.html = main C2)
+config/nexus.conf     ← defaults (panel can override)
+CHANGELOG.md          ← release history
 ```
 
 ---
 
-## Docs & wiki
+## Docs
 
-- **[Wiki home](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki)** — friendly guides for humans
-- **[Panel guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Panel-Guide)** — walkthrough of every screen
-- **[Linux install](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Linux-Installation)** — step-by-step
-- **[Architecture](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Architecture)** — how modules fit together
-
-Regenerate screenshots after UI changes:
-
-```bash
-python3 -m venv .venv-screenshots && .venv-screenshots/bin/pip install playwright
-.venv-screenshots/bin/python -m playwright install chromium
-.venv-screenshots/bin/python docs/capture-screenshots.py
-```
+- [Wiki](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki)
+- [Panel guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Panel-Guide)
+- [Linux install](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Linux-Installation)
+- [Self-defense](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Self-Defense)
 
 ---
 
 ## License
 
-### NEXUS-Shield — MIT
+**NEXUS-Shield — MIT** (Copyright 2026 Zachary Geurts). See [LICENSE](LICENSE).
 
-MIT License — Copyright (c) 2026 Zachary Geurts. See [LICENSE](LICENSE).
-
-Free to use, modify, and distribute with attribution. Provided **as is**, without warranty.
-
-### AMOURANTHRTX — not MIT-free
-
-[AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) (Field Die / Zero Engine) is a **separate product**, dual-licensed:
-
-- **GPL v3** (copyleft), or
-- **Commercial** — 3% profit share ([gzac5314@gmail.com](mailto:gzac5314@gmail.com))
-
-That technology is **not** free in the MIT sense. Full terms: [AMOURANTHRTX LICENSE](https://github.com/ZacharyGeurts/AMOURANTHRTX/blob/main/LICENSE). Wiki: **[Licensing guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Licensing)**.
-
----
-
-## Related
-
-- [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX) — Field Die runtime (GPL v3 or commercial)
-- [Design notes](NEXUS-DESIGN-IMPROVEMENT.md) — engineering history
+**AMOURANTHRTX — GPL v3 or commercial.** Not MIT-free. See [AMOURANTHRTX LICENSE](https://github.com/ZacharyGeurts/AMOURANTHRTX/blob/main/LICENSE).

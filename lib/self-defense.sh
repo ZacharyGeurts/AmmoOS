@@ -35,20 +35,50 @@ nexus_sign_manifest() {
   [[ "$out" == "$NEXUS_MANIFEST" ]] && nexus_manifest_lock
 }
 
+nexus_manifest_resolve_path() {
+  local path="$1"
+  [[ -f "$path" ]] && { printf '%s' "$path"; return 0; }
+  local base="${path##*/}"
+  [[ -n "$base" && -f "${NEXUS_INSTALL_ROOT}/lib/${base}" ]] && {
+    printf '%s' "${NEXUS_INSTALL_ROOT}/lib/${base}"
+    return 0
+  }
+  [[ -n "$base" && -f "${NEXUS_INSTALL_ROOT}/bin/${base}" ]] && {
+    printf '%s' "${NEXUS_INSTALL_ROOT}/bin/${base}"
+    return 0
+  }
+  local rel="${path#*${NEXUS_INSTALL_ROOT}/}"
+  if [[ "$rel" != "$path" && -f "${NEXUS_INSTALL_ROOT}/${rel}" ]]; then
+    printf '%s' "${NEXUS_INSTALL_ROOT}/${rel}"
+    return 0
+  fi
+  rel="${path#*/panel/}"
+  if [[ "$rel" != "$path" && -f "${NEXUS_INSTALL_ROOT}/panel/${rel}" ]]; then
+    printf '%s' "${NEXUS_INSTALL_ROOT}/panel/${rel}"
+    return 0
+  fi
+  printf '%s' "$path"
+  return 1
+}
+
 nexus_verify_integrity() {
   [[ "${NEXUS_SELF_DEFENSE:-1}" == "1" ]] || return 0
   [[ -f "$NEXUS_MANIFEST" ]] || {
     nexus_log "ALERT" "self-defense" "MANIFEST_MISSING"
     return 1
   }
-  local fail=0 line hash path
+  local fail=0 hash path resolved current
   while read -r hash path; do
     [[ -n "$hash" && -n "$path" ]] || continue
-    [[ -f "$path" ]] || { fail=1; break; }
-    local current
-    current="$(sha256sum "$path" | awk '{print $1}')"
+    resolved="$(nexus_manifest_resolve_path "$path" || true)"
+    [[ -f "$resolved" ]] || {
+      nexus_log "ALERT" "self-defense" "INTEGRITY_MISSING path=${path}"
+      fail=1
+      continue
+    }
+    current="$(sha256sum "$resolved" | awk '{print $1}')"
     if [[ "$current" != "$hash" ]]; then
-      nexus_log "ALERT" "self-defense" "INTEGRITY_FAIL path=${path}"
+      nexus_log "ALERT" "self-defense" "INTEGRITY_FAIL path=${resolved}"
       fail=1
     fi
   done <"$NEXUS_MANIFEST"

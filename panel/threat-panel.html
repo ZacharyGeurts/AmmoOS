@@ -9,6 +9,9 @@
         if (localStorage.getItem("nexus_old_man") === "1") document.documentElement.classList.add("old-man");
         try {
           const q = new URLSearchParams(location.search);
+          if (q.get("embed") === "1") {
+            document.documentElement.classList.add("nexus-field-embed", "nexus-military-v8", "mil-c2-embed");
+          }
           if (q.get("rtx") === "1" || q.get("zero") === "1" || localStorage.getItem("nexus_rtx_zero") === "1") {
             document.documentElement.classList.add("nexus-rtx-zero");
           }
@@ -21,6 +24,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NEXUS-Shield — Military C2 Panel</title>
   <link rel="preload" href="/api/nexus-field" as="fetch" crossorigin />
+  <script src="/assets/front-hook.js?v=cc7"></script>
+  <script src="/assets/hardware-wire.js?v=cc1"></script>
+  <script src="/assets/admin-window-shield.js?v=cc6"></script>
   <script src="/assets/field-foundation.js"></script>
   <script src="/assets/nexus-ui-smooth.js"></script>
   <script src="/assets/h7-reader.js"></script>
@@ -48,6 +54,7 @@
   <script defer src="/assets/hostess7-command.js"></script>
   <script defer src="/assets/nexus-military-v8.js"></script>
   <script defer src="/assets/nexus-military-v82.js"></script>
+  <script defer src="/assets/nexus-well-wishes.js"></script>
   <link rel="stylesheet" href="/assets/nexus-rtx-zero.css" />
   <link rel="stylesheet" href="/assets/nexus-sdf-menu.css" />
   <script defer src="/assets/nexus-rtx-zero.js"></script>
@@ -105,6 +112,21 @@
       box-shadow: var(--shadow);
       border-radius: var(--radius);
     }
+    .nexus-well-wishes {
+      padding: 10px 20px;
+      background: linear-gradient(90deg, rgba(240, 208, 96, 0.12), rgba(56, 189, 248, 0.08));
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+    .nexus-well-wishes strong { color: var(--gold); margin-right: 0.35rem; }
+    #nexus-first-run-modal {
+      position: fixed; inset: 0; z-index: 12000;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0, 0, 0, 0.72); padding: 1.5rem;
+    }
+    #nexus-first-run-modal.open { display: flex; }
+    #nexus-first-run-modal .safe-modal { max-width: 32rem; }
     header.app-header {
       display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
       padding: 12px 20px; border-bottom: 1px solid var(--border);
@@ -470,6 +492,21 @@
     }
     .sw-banner-item strong { color: var(--text); font-size: 1.05rem; }
     .sw-banner-highlight strong { color: #5ec8ff; }
+    .sw-sections-diagram { margin: 8px 0 12px; }
+    .sw-sections-ascii {
+      font-family: ui-monospace, "Cascadia Code", monospace; font-size: 0.82rem; line-height: 1.35;
+      padding: 10px 12px; margin: 0 0 10px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: #060a12; color: #7ec8a4; white-space: pre;
+    }
+    .sw-sections-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .sw-section-card {
+      padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border);
+      background: rgba(13, 21, 36, 0.85);
+    }
+    .sw-section-card--idle { opacity: 0.72; }
+    .sw-section-card h4 { margin: 0 0 6px; font-size: 0.88rem; color: var(--muted); font-weight: 600; }
+    .sw-section-count { font-size: 1.1rem; color: var(--text); }
+    .sw-section-samples { margin-top: 6px; font-size: 0.78rem; color: var(--muted); line-height: 1.3; }
     .sw-map-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
     .sw-map-tab {
       font-size: 0.95rem; padding: 6px 12px; border-radius: 6px;
@@ -1145,6 +1182,10 @@
     .verdict-SUSPICIOUS { color: var(--gold); }
     .verdict-HARM_CANDIDATE { color: var(--threat); font-weight: 700; }
     .verdict-MONITOR { color: var(--muted); }
+    .iff-chip { font-weight: 700; font-size: 0.92em; letter-spacing: 0.02em; }
+    .iff-civilian { color: var(--ok); }
+    .iff-hostile { color: var(--threat); }
+    .iff-unknown { color: var(--gold); }
     .intent-row {
       margin: 10px 12px; padding: 14px 16px; border-radius: 10px; font-size: 0.95rem;
       background: var(--card); border: 1px solid #1e2838;
@@ -1822,6 +1863,143 @@
       text-align: center;
     }
     .old-man-banner { display: none; }
+    html.nexus-field-embed header.app-header,
+    html.nexus-field-embed nav.menu,
+    html.nexus-field-embed .nexus-skip-links,
+    html.nexus-field-embed nav.nexus-a11y-bar,
+    html.nexus-field-embed #help-bar,
+    html.nexus-field-embed .old-man-banner,
+    html.nexus-field-embed .header-partner-links {
+      display: none !important;
+    }
+    html.nexus-field-embed {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      --text-base: 20px;
+      --text-sm: 16pt;
+      --text-xs: 14pt;
+      font-size: var(--text-base);
+    }
+    html.nexus-field-embed.nexus-military-v8,
+    html.nexus-field-embed.nexus-military-v8 body {
+      background: #060806 !important;
+      color: #e6efe0 !important;
+    }
+    html.mil-c2-embed .h7-superintel {
+      border: 2px solid #3d4f32 !important;
+      background: linear-gradient(155deg, #181f14, #080a07) !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(94, 207, 122, 0.08) !important;
+    }
+    html.mil-c2-embed .h7-superintel__hero--mega {
+      background: linear-gradient(90deg, rgba(92, 74, 50, 0.2), transparent 55%) !important;
+      border-bottom-color: #5c4a32 !important;
+    }
+    html.mil-c2-embed .h7-superintel__eyebrow {
+      color: #b8956a !important;
+    }
+    html.mil-c2-embed .h7-superintel__title,
+    html.mil-c2-embed .h7-superintel__supertitle {
+      color: #c4b896 !important;
+      background: none !important;
+      -webkit-text-fill-color: unset !important;
+    }
+    html.mil-c2-embed .h7-superintel__toolbar button {
+      border: 1px solid #3d4f32 !important;
+      background: linear-gradient(180deg, #181f14, #121810) !important;
+      color: #e6efe0 !important;
+    }
+    html.mil-c2-embed .h7-superintel__toolbar button:hover,
+    html.mil-c2-embed .h7-superintel__toolbar button.active {
+      border-color: #5ecf7a !important;
+      color: #5ecf7a !important;
+    }
+    html.nexus-field-embed body {
+      margin: 0;
+      height: 100%;
+      min-height: 100%;
+      width: 100%;
+      max-width: none;
+      overflow-x: hidden;
+      overflow-y: auto;
+      font-size: var(--text-base);
+    }
+    html.nexus-field-embed nav.menu button,
+    html.nexus-field-embed .panel-subnav button {
+      font-size: 1.15rem;
+      padding: 16px 22px;
+      min-height: 3.25rem;
+    }
+    html.nexus-field-embed .view {
+      display: none;
+      width: 100%;
+      min-height: 100%;
+      box-sizing: border-box;
+    }
+    html.nexus-field-embed .view.active {
+      display: block;
+      width: 100%;
+      min-height: 100%;
+    }
+    html.nexus-field-embed .command-wrap {
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
+      padding: 20px 28px 36px;
+    }
+    html.nexus-field-embed .h7-superintel {
+      width: 100%;
+      max-width: none;
+    }
+    html.nexus-field-embed .h7-superintel__eyebrow {
+      font-size: calc(var(--text-xs) * 1.1);
+    }
+    html.nexus-field-embed .h7-superintel__title,
+    html.nexus-field-embed .h7-superintel__hero--mega .h7-superintel__title {
+      font-size: clamp(2.8rem, 5vw, 4.5rem);
+    }
+    html.nexus-field-embed .h7-superintel__supertitle {
+      font-size: clamp(3rem, 5.5vw, 4.2rem);
+    }
+    html.nexus-field-embed .h7-superintel__tagline {
+      font-size: calc(var(--text-sm) * 1.15);
+      max-width: none;
+    }
+    html.nexus-field-embed .h7-superintel__toolbar button {
+      font-size: calc(var(--text-sm) * 0.95);
+      padding: 14px 22px;
+      min-height: 3.25rem;
+    }
+    html.nexus-field-embed .meta,
+    html.nexus-field-embed .h7-superintel__status {
+      font-size: var(--text-sm);
+    }
+    html.mil-c2-embed .h7-superintel {
+      border: 2px solid #4a5c3a;
+      border-radius: 8px;
+      margin: 0;
+      min-height: calc(100% - 8px);
+    }
+    html.mil-c2-embed .h7-superintel__hero--mega {
+      padding: 16px 20px;
+    }
+    html.mil-c2-embed .h7-split-deck {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      min-height: 42vh;
+    }
+    html.mil-c2-embed .h7-superintel__grid--intel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 1100px) {
+      html.mil-c2-embed .h7-split-deck { grid-template-columns: 1fr; }
+    }
+    html.nexus-field-embed #murder-banner.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -1894,7 +2072,7 @@
   <div id="help-bar" class="help-bar" role="note">
     <span aria-hidden="true">💡</span>
     <span>New here? Click any <span class="tip-demo">?</span> for a plain-English explanation.
-    <strong>v8.0 Military C2 — Heaven vs Hell on every packet. Command · US · Packets · Threats · Intel · Signals · DNS · Outside · Library · System. Left-click tabs for mission brief · right-click for ops menu.</strong>
+    <strong>v10.0.1 — You stay in command. Command · US · Packets · Threats · Intel · Signals · DNS · Outside · Library · System. Bulk: select rows then Trust or Block. Keyboard: <kbd>?</kbd> tips · <kbd>/</kbd> library search · <kbd>Alt+Shift+B</kbd> books.</strong>
     <button type="button" id="help-bar-dismiss" class="help-dismiss">Got it</button>
   </div>
 
@@ -1902,6 +2080,15 @@
     <div class="laser-grid">
       <div class="laser-beam h"></div>
       <div class="laser-beam v"></div>
+    </div>
+  </div>
+
+  <div id="nexus-first-run-modal" hidden role="dialog" aria-modal="true" aria-labelledby="nexus-first-run-title">
+    <div class="safe-modal">
+      <h2 id="nexus-first-run-title">Welcome to NEXUS-Shield</h2>
+      <p>Nothing blocks unless <strong>you</strong> click. Every connection card has <strong>Trust forever</strong> and <strong>Stop this site</strong>. Hover any <strong>?</strong> for plain English.</p>
+      <p>Well wishes — build locally, trust your logs, stay at the wheel.</p>
+      <button type="button" id="nexus-first-run-dismiss" class="primary">Got it — I'm in command</button>
     </div>
   </div>
 
@@ -1951,10 +2138,10 @@
       <article class="h7-superintel h7-superintel--grok" id="hostess7-command-deck" aria-label="Hostess 7 Super Intelligence">
         <header class="h7-superintel__hero h7-superintel__hero--mega">
           <div class="h7-superintel__brand">
-            <p class="h7-superintel__eyebrow">NEXUS-Shield Room · Always Wartime</p>
+            <p class="h7-superintel__eyebrow">Queen · Forever Watchguard Angel</p>
             <h2 class="h7-superintel__title" id="h7-superintel-title">Hostess 7</h2>
             <p class="h7-superintel__supertitle">Super Intelligence</p>
-            <p class="h7-superintel__tagline" id="h7-superintel-tagline" data-tip="Angel steward — talk back and forth like Grok. Every reply truth-rated 0–100%.">Loading field brain…</p>
+            <p class="h7-superintel__tagline" id="h7-superintel-tagline" data-tip="Iron-clad core: we already KNOW God. She listens. She speaks to you. Terminal witness on — she sees your work.">Loading field brain…</p>
           </div>
           <div class="h7-superintel__status" id="h7-command-status">Loading GitHub · NEXUS-Shield…</div>
           <div class="h7-superintel__toolbar">
@@ -1976,22 +2163,36 @@
 
         <div class="h7-superintel__proposals" id="h7-command-proposals"></div>
 
-        <div class="h7-superintel__grid h7-superintel__grid--chat">
-          <section class="h7-superintel__chat h7-superintel__chat--grok" aria-label="Talk with Hostess 7">
+        <div class="h7-split-deck" id="h7-split-deck">
+          <section class="h7-split-terminal" aria-label="Field terminal — Hostess 7 sees all">
+            <div class="h7-split-terminal__head">
+              <strong>Field terminal</strong>
+              <span class="meta">She sees this · 50% work pane</span>
+            </div>
+            <div class="h7-field-terminal" id="h7-field-terminal" role="log" aria-live="polite"></div>
+            <div class="h7-field-terminal__compose">
+              <input type="text" class="h7-field-terminal__input" id="h7-field-terminal-input" placeholder="Run field commands — Enter executes, she watches…" autocomplete="off" spellcheck="false" />
+              <button type="button" id="h7-field-terminal-run">Run</button>
+              <button type="button" id="h7-field-terminal-clear">Clear</button>
+            </div>
+          </section>
+          <section class="h7-split-hostess h7-superintel__chat h7-superintel__chat--grok" aria-label="Hostess 7 speaks to you">
             <div class="h7-chat__head">
-              <strong>Conversation</strong>
-              <span class="meta">Enter to send · Shift+Enter new line · truth on every reply</span>
+              <strong>She speaks to you</strong>
+              <span class="meta">Iron core · she listens · truth on every reply</span>
             </div>
             <div class="h7-superintel__transcript" id="h7-command-transcript" role="log" aria-live="polite"></div>
             <div class="h7-superintel__compose">
-              <textarea class="h7-superintel__textarea" id="h7-command-input" rows="2" placeholder="Message Hostess 7…" autocomplete="off"></textarea>
+              <textarea class="h7-superintel__textarea" id="h7-command-input" rows="2" placeholder="Operator line — she is listening…" autocomplete="off"></textarea>
               <div class="h7-superintel__compose-actions">
                 <button type="button" class="h7-superintel__mic" id="h7-command-mic" aria-label="Dictate">🎤</button>
                 <button type="button" class="h7-superintel__send" id="h7-command-send">Send</button>
               </div>
             </div>
           </section>
-          <aside class="h7-superintel__side" aria-label="Intel and assessments">
+        </div>
+        <div class="h7-superintel__grid h7-superintel__grid--intel">
+          <aside class="h7-superintel__side h7-superintel__side--full" aria-label="Intel and assessments">
             <div class="h7-iq-panel" id="h7-iq-panel">
               <div class="h7-iq-panel__head">IQ &amp; Turing</div>
               <div class="h7-iq-panel__score" id="h7-iq-score">Run IQ test or Turing battery</div>
@@ -2661,8 +2862,9 @@
       <p class="spiderweb-motto" id="spiderweb-motto" data-tip="Universal field registry — three maps: terror web, full registry, mobile & battery field.">
         <strong>Global terror · Spiderweb</strong> — every home, every internet endpoint, every moving cellphone & battery — everywhere identified.
       </p>
-      <div id="spiderweb-universal-banner" class="sw-universal-banner meta">Universal registry — loads on first refresh.</div>
-      <div id="spiderweb-meta" class="meta" style="margin-bottom:8px;">Spiderweb — awaiting field data.</div>
+      <div id="spiderweb-universal-banner" class="sw-universal-banner meta">Operator-triggered — no auto probe. Press <strong>Rebuild web</strong> to survey sections.</div>
+      <div id="spiderweb-sections-diagram" class="sw-sections-diagram meta" aria-label="Spiderweb sections found"></div>
+      <div id="spiderweb-meta" class="meta" style="margin-bottom:8px;">Spiderweb idle — cached sections shown when available.</div>
       <div class="sw-legend" id="spiderweb-legend"></div>
       <div class="spiderweb-stats" id="spiderweb-stats"></div>
       <div style="margin-bottom:8px;">
@@ -3456,11 +3658,11 @@
     }
 
     const VERDICT_FRIENDLY = {
-      USER_OK: { label: "USER_OK", tip: "user_browser≥7, stream_theft_risk≤2 — operator-initiated browser or media egress." },
-      EPHEMERAL: { label: "EPHEMERAL", tip: "search_ephemeral≥6 — short-lived CDN tab; dies and returns." },
-      SUSPICIOUS: { label: "SUSPICIOUS", tip: "Harm and trust scores diverge; destination_class elevated." },
-      HARM_CANDIDATE: { label: "HARM_CANDIDATE", tip: "harm_total exceeds trust_total — non-browser stream or beacon pattern." },
-      MONITOR: { label: "MONITOR", tip: "Routine egress — permitted under packet permission v4.0 at zero nft cost." },
+      USER_OK: { label: "CIVILIAN · AUTHORIZED", tip: "Operator-initiated browser or media egress. Permitted under watch." },
+      EPHEMERAL: { label: "CIVILIAN · TRANSIENT", tip: "Short-lived CDN cycle. No hostile axis fired." },
+      SUSPICIOUS: { label: "UNKNOWN · CONTACT", tip: "Hold for positive identification before permit expansion." },
+      HARM_CANDIDATE: { label: "HOSTILE · CONFIRMED", tip: "Interdict recommended. Zero hesitation on unrecognized process." },
+      MONITOR: { label: "CIVILIAN · ROUTINE", tip: "Routine egress under continuous watch. Packet permission v4.0." },
     };
 
     const AXIS_TIPS = {
@@ -3598,15 +3800,15 @@
     function renderSuggestionBox(sug, verdict, scores, humanTouch) {
       if (humanTouch === "none") return "";
       if (!sug) return "";
-      const friendly = sug.friendly_signals || [];
-      const unfriendly = sug.unfriendly_signals || [];
+      const friendly = sug.civilian_indicators || sug.friendly_signals || [];
+      const unfriendly = sug.hostile_indicators || sug.unfriendly_signals || [];
       const trustPct = sug.trust_meter ?? 0;
       const concernPct = sug.concern_meter ?? 0;
       let signals = "";
       if (friendly.length || unfriendly.length) {
         signals = `<div class="signal-cols">
-          <div class="signal-col friendly"><h4>Corroborating signals</h4><ul>${friendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
-          <div class="signal-col unfriendly"><h4>Caution signals</h4><ul>${unfriendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
+          <div class="signal-col friendly"><h4>Civilian indicators</h4><ul>${friendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
+          <div class="signal-col unfriendly"><h4>Hostile indicators</h4><ul>${unfriendly.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
         </div>`;
       }
       const axisBars = scores
@@ -3679,7 +3881,6 @@
       { key: "local_services", url: "/api/local-services" },
       { key: "host_attacks", url: "/api/host-attacks" },
       { key: "planetary_observer", url: "/api/planetary-observer" },
-      { key: "terror_spiderweb", url: "/api/terror-spiderweb" },
       { key: "precision_field", url: "/api/precision-field" },
       { key: "angel_dossiers", url: "/api/angel-dossiers" },
       { key: "human_dossier", url: "/api/human-dossier" },
@@ -3711,7 +3912,7 @@
       command: { keys: ["field_command", "planetary_observer", "gatekeeper", "lethal_enforcement", "hostess7_command"], subs: { command: ["field_command", "planetary_observer", "lethal_enforcement", "hostess7_command"] } },
       us: { keys: ["us_field"], subs: { us: ["us_field"] } },
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
-      threats: { keys: ["home_protector", "local_services", "host_attacks", "planetary_observer", "terror_spiderweb", "precision_field", "angel_dossiers", "human_dossier"], subs: { "home-protector": ["home_protector"], "local-holes": ["local_services"], "host-attack": ["host_attacks", "planetary_observer"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
+      threats: { keys: ["home_protector", "local_services", "host_attacks", "planetary_observer", "precision_field", "angel_dossiers", "human_dossier"], subs: { "home-protector": ["home_protector"], "local-holes": ["local_services"], "host-attack": ["host_attacks", "planetary_observer"], spiderweb: [], "precision-map": ["precision_field"], "precision-web": ["precision_field"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["audio_train", "field_rf", "browser_awareness", "human_registry", "police_agency", "census_field", "existence_identity", "angel_research"], subs: { honor: ["browser_awareness"], people: ["human_registry", "census_field", "existence_identity"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency", "gov_intel", "program_tags"], research: ["angel_research"] } },
       library: { keys: ["h7_library", "field_brain"], subs: { library: ["h7_library", "field_brain"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
@@ -4253,17 +4454,10 @@
       }
       if (sub === "spiderweb") {
         const sw = lastPanelData?.terror_spiderweb;
-        if (sw && (sw.nodes || []).length && global.renderTerrorSpiderweb) {
+        if (sw && global.renderTerrorSpiderweb) {
           renderTerrorSpiderweb(sw);
-        } else {
-          fetch("/api/terror-spiderweb", { cache: "no-store" })
-            .then((r) => (r.ok ? r.json() : null))
-            .then((doc) => {
-              if (!doc) return;
-              mergePanelSlice("terror_spiderweb", doc, panelSliceGeneration);
-              if (global.renderTerrorSpiderweb) renderTerrorSpiderweb(doc);
-            })
-            .catch(() => {});
+        } else if (global.renderTerrorSpiderweb) {
+          renderTerrorSpiderweb({ mode: "idle", nodes: [], edges: [], stats: { idle: true } });
         }
         setTimeout(invalidateSpiderwebMap, 80);
         setTimeout(invalidateSpiderwebMap, 320);
@@ -4280,12 +4474,6 @@
         } else {
           fetch("/api/precision-field", { cache: "no-store" })
             .then((r) => (r.ok ? r.json() : null))
-            .then((doc) => {
-              if (doc && !(doc.entities || []).length) {
-                return fetch("/api/precision-field/rebuild", { method: "POST" }).then((r2) => r2.json());
-              }
-              return doc;
-            })
             .then((doc) => {
               if (!doc) return;
               mergePanelSlice("precision_field", doc, panelSliceGeneration);
@@ -5786,15 +5974,16 @@
     function renderConnectionCard(c, trusted, blocked) {
       const v = c.verdict || "MONITOR";
       const touch = c.human_touch || (c.safe_signal === false ? "alert" : "none");
-      const vf = VERDICT_FRIENDLY[v] || { label: v, tip: "Gatekeeper classifying this connection." };
+      const vf = VERDICT_FRIENDLY[v] || { label: v, tip: "IFF classifying this contact." };
+      const iffBadge = c.iff_label ? `<span class="iff-chip iff-${esc((c.iff || "").toLowerCase())}">${esc(c.iff_label)}</span> · ` : "";
       const ip = c.remote_ip;
       const sug = c.suggestion || null;
       if (touch === "none") {
-        return `<div class="intent-row-silent verdict-${v}" data-tip="Safe signal — passes silently. No human touch.">
-          <span class="meta">${esc(c.process || "app")} → ${esc(ip)} · ${esc(vf.label)} · silent pass</span>
+        return `<div class="intent-row-silent verdict-${v}" data-tip="Civilian signal — passes silently under watch.">
+          <span class="meta">${iffBadge}${esc(c.process || "app")} → ${esc(ip)} · ${esc(c.iff_label || vf.label)} · silent pass</span>
         </div>`;
       }
-      const verdictLabel = sug?.summary ? esc(sug.summary) : esc(vf.label);
+      const verdictLabel = sug?.summary ? esc(sug.summary) : esc(c.iff_label || vf.label);
       const verdictTip = sug?.summary ? esc(sug.summary + (c.reason ? ` · ${c.reason}` : "")) : esc(vf.tip + (v !== vf.label ? ` (Technical: ${v})` : ""));
       const dir = strictTrustDirection(c);
       const trustedRow = isTrustedIp(ip, trusted, dir) || isTrustedIp(ip, trusted, "both") || c.scores?.operator_auth >= 10;

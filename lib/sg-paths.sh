@@ -79,10 +79,29 @@ sg_paths_znewocr_root() {
   printf '%s\n' "${sg}/ZNEWOCR"
 }
 
+sg_paths_znetwork_root() {
+  if [[ -n "${ZNETWORK_ROOT:-}" ]]; then
+    printf '%s\n' "$(cd "${ZNETWORK_ROOT}" 2>/dev/null && pwd || echo "${ZNETWORK_ROOT}")"
+    return 0
+  fi
+  local sg
+  sg="$(sg_paths_root)"
+  for candidate in "${sg}/ZNetwork" "${sg}/znetwork"; do
+    [[ -d "$candidate" ]] || continue
+    printf '%s\n' "$candidate"
+    return 0
+  done
+  printf '%s\n' "${sg}/ZNetwork"
+}
+
 sg_paths_export_defaults() {
   export SG_ROOT="${SG_ROOT:-$(sg_paths_root)}"
   export HOSTESS7_ROOT="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root)}"
+  export HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-$(sg_paths_hostess7_team_field)}"
   export HOSTESS7_NEXUS_CACHE="${HOSTESS7_NEXUS_CACHE:-$(sg_paths_hostess7_nexus_cache)}"
   export ZNEWOCR_ROOT="${ZNEWOCR_ROOT:-$(sg_paths_znewocr_root)}"
   export ZOCR_ROOT="${ZOCR_ROOT:-${ZNEWOCR_ROOT}}"
+  export ZNETWORK_ROOT="${ZNETWORK_ROOT:-$(sg_paths_znetwork_root)}"
+  export NEXUS_SHIELD_SOURCE="${NEXUS_SHIELD_SOURCE:-${NEXUS_INSTALL_ROOT:-}}"
+  export FINAL_EYE_ROOT="${FINAL_EYE_ROOT:-${SG_ROOT}/Final_Eye}"
 }

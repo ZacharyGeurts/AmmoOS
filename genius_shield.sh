@@ -4,10 +4,19 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
+export NEXUS_INSTALL_SRC="${NEXUS_INSTALL_SRC:-$ROOT}"
+export SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  exec sudo -E bash "$0" "$@"
+  if [[ "${NEXUS_ELEVATED_ROOT:-}" == "1" ]]; then
+    echo "Elevation incomplete — expected root after admin approval." >&2
+    exit 1
+  fi
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/nexus-elevate.sh"
+  nexus_elevate_acquire "$0" "$@"
 fi
+export NEXUS_ELEVATED_ROOT=1
 
 echo 'Deploying NEXUS-Shield (genius-only, ultra-stealth)...'
 
@@ -31,7 +40,7 @@ fi
 if command -v apt-get >/dev/null 2>&1; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -qq
-  apt-get install -y -qq inotify-tools tcpdump iproute2 nftables openssl e2fsprogs
+  apt-get install -y -qq inotify-tools tcpdump iproute2 nftables e2fsprogs zenity
 fi
 
 declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase stopping_services
@@ -53,6 +62,12 @@ printf 'mode=1\nblock=0\nautosanitize_override=0\nupdated=%s\n' "$(date -u '+%Y-
 declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase copying_files
 install -d -m 750 -o root -g nexus /usr/local/lib/nexus-shield /usr/local/lib/nexus-shield/bin /usr/local/bin
 cp -a "${ROOT}/lib" "${ROOT}/config" "${ROOT}/tests" "${ROOT}/panel" "${ROOT}/assets" "${ROOT}/data" /usr/local/lib/nexus-shield/
+[[ -d "${ROOT}/install" ]] && cp -a "${ROOT}/install" /usr/local/lib/nexus-shield/
+[[ -d "${ROOT}/Queen" ]] && cp -a "${ROOT}/Queen" /usr/local/lib/nexus-shield/
+for _nx_ship in install-all.sh nexus-install-gui.sh; do
+  [[ -f "${ROOT}/${_nx_ship}" ]] && install -m 755 "${ROOT}/${_nx_ship}" "/usr/local/lib/nexus-shield/${_nx_ship}"
+done
+unset _nx_ship
 install -m 755 -o root -g nexus "${ROOT}/stealth_install.sh" /usr/local/lib/nexus-shield/stealth_install.sh
 mkdir -p /usr/local/lib/nexus-shield/scripts
 install -m 755 -o root -g nexus "${ROOT}/scripts/play-wimk-ota.sh" /usr/local/lib/nexus-shield/scripts/play-wimk-ota.sh 2>/dev/null || true
@@ -108,7 +123,7 @@ if [[ -f /usr/local/lib/nexus-shield/lib/field-wave-asm.sh ]]; then
   # shellcheck source=/dev/null
   source /usr/local/lib/nexus-shield/lib/field-wave-asm.sh
   nexus_field_wave_asm_build 2>/dev/null || true
-  python3 /usr/local/lib/nexus-shield/lib/field-wave-engine.py ensure 2>/dev/null || true
+  pythong /usr/local/lib/nexus-shield/lib/field-wave-engine.py ensure 2>/dev/null || true
 fi
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/lib/nexus-shield/bin/nexus
 install -m 750 -o root -g nexus "${ROOT}/bin/nexus" /usr/local/bin/nexus
@@ -116,9 +131,13 @@ install -m 755 -o root -g nexus "${ROOT}/nexus.sh" /usr/local/bin/nexus.sh
 chmod 755 "${ROOT}/nexus.sh" 2>/dev/null || true
 install -m 750 -o root -g nexus "${ROOT}/lib/nexus-daemon.sh" /usr/local/lib/nexus-shield/lib/
 mkdir -p /var/lib/nexus-shield/shadow /var/lib/nexus-shield/behavior /var/lib/nexus-shield/hostess7-cache
+if [[ -f "${ROOT}/scripts/migrate-nexus-state.sh" ]]; then
+  NEXUS_STATE_DIR=/var/lib/nexus-shield NEXUS_INSTALL_ROOT="${ROOT}" \
+    bash "${ROOT}/scripts/migrate-nexus-state.sh" 2>/dev/null || true
+fi
 touch /var/log/nexus-alerts.log
 NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield NEXUS_STATE_DIR=/var/lib/nexus-shield \
-  python3 /usr/local/lib/nexus-shield/lib/operator-default.py seed 2>/dev/null || true
+  pythong /usr/local/lib/nexus-shield/lib/operator-default.py seed 2>/dev/null || true
 
 # Ship canonical config (paranoia + shutdown guard included)
 install -m 640 -o root -g nexus "${ROOT}/config/nexus.conf" /usr/local/lib/nexus-shield/config/nexus.conf
@@ -130,10 +149,33 @@ declare -f nexus_update_lock_phase >/dev/null 2>&1 && nexus_update_lock_phase si
 nexus_sign_manifest /usr/local/lib/nexus-shield/MANIFEST.sha256
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/seal-vault.sh"
+# ZNetwork — build + ship binary for startup Yes/No/Skip dialog
+ZN_SRC="$(cd "${ROOT}/../ZNetwork" 2>/dev/null && pwd)"
+[[ -d "$ZN_SRC" ]] || ZN_SRC="$(cd "${SG_ROOT:-${ROOT}/..}/ZNetwork" 2>/dev/null && pwd)"
+if [[ -d "$ZN_SRC" ]]; then
+  install -d -m 755 /usr/local/lib/nexus-shield/bin /usr/local/lib/nexus-shield/znetwork/data
+  cp -a "${ZN_SRC}/scripts" /usr/local/lib/nexus-shield/znetwork/ 2>/dev/null || true
+  [[ -f "${ZN_SRC}/data/review-checklist.json" ]] && \
+    install -m 644 "${ZN_SRC}/data/review-checklist.json" /usr/local/lib/nexus-shield/znetwork/data/ 2>/dev/null || true
+  if command -v cmake >/dev/null 2>&1; then
+    (cd "$ZN_SRC" && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build) 2>/dev/null || true
+    [[ -x "${ZN_SRC}/build/znetwork" ]] && \
+      install -m 755 "${ZN_SRC}/build/znetwork" /usr/local/lib/nexus-shield/bin/znetwork
+  fi
+  if [[ -f /usr/local/lib/nexus-shield/config/nexus.conf ]]; then
+    sed -i 's|^ZNETWORK_ROOT=.*|ZNETWORK_ROOT=/usr/local/lib/nexus-shield/znetwork|' \
+      /usr/local/lib/nexus-shield/config/nexus.conf 2>/dev/null || true
+    grep -q '^ZNETWORK_BIN=' /usr/local/lib/nexus-shield/config/nexus.conf 2>/dev/null || \
+      printf '\nZNETWORK_BIN=/usr/local/lib/nexus-shield/bin/znetwork\n' \
+        >>/usr/local/lib/nexus-shield/config/nexus.conf
+  fi
+fi
+install -m 755 -o root -g nexus "${ROOT}/nexus-launch.sh" /usr/local/lib/nexus-shield/nexus-launch.sh 2>/dev/null || true
+
 # shellcheck source=/dev/null
-source "${NEXUS_INSTALL_ROOT}/lib/panel-tls.sh"
+source "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh"
 nexus_seal_refresh
-nexus_panel_tls_ensure
+nexus_znetwork_publish 2>/dev/null || true
 nexus_apply_permissions
 
 # shellcheck source=/dev/null
@@ -170,7 +212,19 @@ source "${NEXUS_INSTALL_ROOT}/lib/nexus-settings.sh"
 nexus_settings_apply_consumer_defaults
 nexus_host_extreme_apply_if_eligible || true
 
-cat >/etc/systemd/system/nexus-genius.service <<'EOF'
+H7_ROOT=""
+for _h7 in "${SG_ROOT}/Hostess7" "${ROOT}/../Hostess7" "${HOME}/Desktop/SG/Hostess7"; do
+  [[ -d "$_h7" ]] && H7_ROOT="$(cd "$_h7" && pwd)" && break
+done
+unset _h7
+H7_BIND_RO=""
+H7_BIND_RW=""
+if [[ -n "$H7_ROOT" ]]; then
+  H7_BIND_RO="BindReadOnlyPaths=-${H7_ROOT}"
+  H7_BIND_RW="BindPaths=/var/lib/nexus-shield/hostess7-cache:${H7_ROOT}/cache"
+fi
+
+cat >/etc/systemd/system/nexus-genius.service <<EOF
 [Unit]
 Description=NEXUS-Shield Genius Layer (ultra-stealth, event-driven)
 After=network.target
@@ -180,8 +234,9 @@ StartLimitBurst=5
 [Service]
 Type=simple
 Environment=NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield
+Environment=SG_ROOT=${SG_ROOT}
 ExecStart=/usr/local/lib/nexus-shield/lib/nexus-daemon.sh
-ExecStop=/bin/bash -c 'source /usr/local/lib/nexus-shield/lib/nexus-common.sh; source /usr/local/lib/nexus-shield/lib/shutdown-guard.sh 2>/dev/null; nexus_shutdown_mark_clean 2>/dev/null; pkill -9 -f threat-panel-http.py 2>/dev/null; pkill -9 -f dns-admin-portal.py 2>/dev/null; pkill -9 -P $MAINPID 2>/dev/null; exit 0'
+ExecStop=/bin/bash -c 'source /usr/local/lib/nexus-shield/lib/nexus-common.sh; source /usr/local/lib/nexus-shield/lib/shutdown-guard.sh 2>/dev/null; nexus_shutdown_mark_clean 2>/dev/null; pkill -9 -f threat-panel-http.py 2>/dev/null; pkill -9 -f dns-admin-portal.py 2>/dev/null; pkill -9 -P \$MAINPID 2>/dev/null; exit 0'
 KillMode=control-group
 TimeoutStopSec=8
 Restart=on-failure
@@ -193,8 +248,8 @@ MemoryMax=256M
 ProtectSystem=strict
 ProtectHome=read-only
 ReadWritePaths=/var/lib/nexus-shield /var/log/nexus-alerts.log
-BindReadOnlyPaths=-/home/default/Desktop/SG/Hostess7
-BindPaths=/var/lib/nexus-shield/hostess7-cache:/home/default/Desktop/SG/Hostess7/cache
+${H7_BIND_RO}
+${H7_BIND_RW}
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_DAC_OVERRIDE CAP_SETGID CAP_SETUID CAP_SYS_ADMIN
 NoNewPrivileges=true
@@ -238,8 +293,17 @@ if [[ -n "$INSTALL_USER" && "$INSTALL_USER" != "root" ]]; then
   echo "Log out/in (or: sg nexus -c 'nexus status') — no further sudo needed."
 fi
 
-echo "NEXUS-Shield v${NEXUS_VERSION:-2.0.1} active — panel https://127.0.0.1:9477/ (browser opens on startup)."
-echo 'Start menu: NEXUS-Shield'
+# Board hooks, polkit, perimeter, tristate installer, desktop entries.
+if [[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-os-assist.sh" ]]; then
+  export NEXUS_PERIMETER_APPLY="${NEXUS_PERIMETER_APPLY:-1}"
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/nexus-os-assist.sh"
+  nexus_os_assist_all "${ROOT}"
+fi
+
+echo "NEXUS-Shield v${NEXUS_VERSION:-2.0.1} active — panel http://127.0.0.1:9477/field (browser opens on startup)."
+echo "Tristate Installer: http://127.0.0.1:9477/tristate-installer"
+echo 'Start menu: NEXUS-Shield · 2026 Tristate Installer'
 echo 'License: NEXUS-Shield = MIT. AMOURANTHRTX (Field Die) = GPL v3 or commercial — not MIT-free.'
 echo 'Profile: Packet permission v4.0 — DPI knows intent; harmful sections blocked; good flows pass.'
 echo 'First-run lockdown applied — trust recommended connections in panel or: nexus trust <ip>'
