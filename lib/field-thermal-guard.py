@@ -199,12 +199,19 @@ def gatekeeper_tighten() -> dict[str, Any]:
     return {"ok": True, "tightened": True, "max_joules_per_second": guard.max_joules_per_second}
 
 
+def _calibration_receipt() -> dict[str, Any]:
+    path = STATE / "field-thermal-calibration.json"
+    return _load(path, {})
+
+
 def evaluate() -> dict[str, Any]:
     guard = FieldThermalGuard()
     anom = detect_anomaly()
     peak = _read_hwmon_peak_c()
     rapl_w = _rapl_watts()
     headroom = round(guard.headroom_pct(), 1)
+    cal = _calibration_receipt()
+    max_ops = 45.0 / guard.joules_per_field_op if guard.joules_per_field_op > 0 else 0
     doc = {
         "schema": "field-thermal-guard/v1",
         "ts": _now(),
@@ -218,6 +225,9 @@ def evaluate() -> dict[str, Any]:
         "anomaly": anom,
         "incremental_only": True,
         "monolithic_blast_forbidden": True,
+        "speed_impact": "none_under_normal_load",
+        "max_ops_per_second_at_budget": cal.get("max_ops_per_second_at_budget") or max_ops,
+        "calibration": cal if cal else {"status": "pending", "tool": "lib/field-thermal-calibrate.py"},
     }
     publish_policy(guard)
     _save(PANEL, doc)

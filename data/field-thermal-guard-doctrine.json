@@ -12,6 +12,12 @@
     "max_global_redata_chunk": 8192,
     "backoff_ms": 5
   },
+  "calibration": {
+    "tool": "lib/field-thermal-calibrate.py",
+    "receipt": "field-thermal-calibration.json",
+    "speed_impact": "none_under_normal_load",
+    "note": "At 45 W and 1.2e-9 J/op the guard allows ~3.75e10 ops/s before back-off. Normal field dispatch stays at 100% headroom; back-off only on monolithic blast or thermal anomaly."
+  },
   "policy": {
     "incremental_redata_only": true,
     "monolithic_global_blast_forbidden": true,

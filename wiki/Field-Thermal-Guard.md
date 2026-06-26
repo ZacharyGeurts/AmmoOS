@@ -79,6 +79,37 @@ Daemon vigil cycle calls `field-thermal-guard.py cycle` each tick.
 
 ---
 
+## Does this kill speeds?
+
+**No — under normal field work you will not notice it.** The guard is a safety net, not a throttle.
+
+| Situation | Effect |
+|-----------|--------|
+| Normal dispatch / waves | **Zero slowdown** — cold path is one atomic + timestamp check |
+| Under 45 W budget | **100% headroom** — at `1.2e-9` J/op that's ~37.5 billion ops/s before any back-off |
+| Monolithic global blast | **Prevented** — spread into chunks; avoids worse thermal throttling |
+| Thermal/RAPL anomaly | Budget tightens 25%; gatekeeper holds marginal interdicts only |
+| Sustained crit heat | Back-off + wave shed (same as field-switch-safety) — protects silicon |
+
+Incremental redata may take slightly longer to finish a *full* canvas refresh, but you avoid the thermal pads / TDP cliff that **would** kill sustained speeds.
+
+---
+
+## JOULES calibration
+
+```bash
+# RAPL read needs root on most hosts
+sudo NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield \
+  NEXUS_STATE_DIR=/var/lib/nexus-shield \
+  pythong lib/field-thermal-calibrate.py calibrate --apply
+```
+
+Receipt: `field-thermal-calibration.json` · Policy: `field-thermal-guard-policy.env`
+
+Clean VM: idle host, no panel meld, 3 rounds default. Calibrated value never goes **below** doctrine default (conservative).
+
+---
+
 ## Verify
 
 ```bash

@@ -527,6 +527,19 @@ test_field_thermal_guard() {
   rm -rf "$tmp_state"
 }
 
+test_field_thermal_calibrate() {
+  [[ -f "${ROOT}/lib/field-thermal-calibrate.py" ]]
+  grep -q 'speed_impact' "${ROOT}/data/field-thermal-guard-doctrine.json"
+  grep -q 'max_ops_per_second_at_budget' "${ROOT}/lib/field-thermal-guard.py"
+  local tmp_state
+  tmp_state="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/field-thermal-calibrate.py" calibrate 2>/dev/null | grep -q 'joules_per_field_op'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/field-thermal-calibrate.py" calibrate 2>/dev/null | grep -q 'none_under_normal_load'
+  rm -rf "$tmp_state"
+}
+
 test_release_tooling() {
   [[ -x "${ROOT}/scripts/pack-release.sh" ]]
   [[ -x "${ROOT}/scripts/nexus-release-finalize.sh" ]]
@@ -2074,6 +2087,7 @@ run_test "panel browser boot open" test_panel_browser_boot_open
 run_test "nexus boot impl" test_nexus_boot_impl
 run_test "field switch safety" test_field_switch_safety
 run_test "field thermal guard" test_field_thermal_guard
+run_test "field thermal calibrate" test_field_thermal_calibrate
 run_test "release tooling" test_release_tooling
 run_test "heaven hell module" test_heaven_hell_module
 run_test "panel v2.6 angels tabs" test_panel_v26_angels_tabs
