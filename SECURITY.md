@@ -25,15 +25,15 @@ The panel and field daemons bind to local ports (default **9477**). They do not 
 
 When `NEXUS_SELF_DEFENSE=1` (default), `lib/self-defense.sh` verifies `MANIFEST.sha256` before the main daemon loads protected modules. Tampered files are refused and logged.
 
-## Field switch safety (no hotspots)
+## Field switch safety (painless conversion)
 
-When switching to field mode (Tristate Installer: arrive → transform → commit), `lib/field-switch-safety.py` gates destructive steps:
+When switching to field mode (Tristate Installer: arrive → transform → commit), `lib/field-switch-safety.py` keeps conversion smooth:
 
-- **Thermal governor** samples hwmon before commit, reboot, or WRDT apply
-- **Hotspot risk** blocks transition at warn/crit temps, rapid peak rise (Δ°C), or wave-shed crit
-- **Wave shed** runs automatically on hotspot — stops capture, lowers quota advisory, sheds excess draw
-- **Speedup admission** (up to **857×** ceiling) only when `thermal_ok` — measured bench never bypasses thermal gate
-- **Non-destructive**: no GRUB/kernel cmdline edits; guest OS passthrough; marker-driven refresh stays light
+- **Non-destructive**: no GRUB/kernel cmdline edits; in-place WRDT; guest OS passthrough
+- **No unexpected slowdowns**: with `NEXUS_FIELD_NO_UNEXPECTED_SLOWDOWN=1`, quota holds at field-max baseline unless thermal **crit**
+- **Wave shed** handles warn/advisory heat — stops capture, USB autosuspend, sheds excess draw without throttling conversion
+- **Block only at crit**: commit, reboot, and WRDT apply defer only when peak temp hits crit threshold
+- **Conversion checks**: in-place, same-path, marker-driven refresh verified on every preflight
 
 Override only with `NEXUS_FIELD_SWITCH_FORCE=1` (operator emergency).
 

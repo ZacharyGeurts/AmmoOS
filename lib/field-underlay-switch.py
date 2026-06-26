@@ -348,9 +348,9 @@ def apply_wrdt(*, confirm: bool = False, elevated: bool = False) -> dict[str, An
     if not safety.get("switch_allowed"):
         return {
             "ok": False,
-            "error": "thermal_hotspot_block",
+            "error": "thermal_crit_block" if safety.get("thermal_crit") else "conversion_blocked",
             "safety": safety,
-            "doctrine": "Defer WRDT apply until thermal cool — painless, non-destructive",
+            "doctrine": "Defer WRDT apply only at thermal crit — conversion stays non-destructive",
         }
     if _virtual_mode() and os.environ.get("TRISTATE_VIRTUAL_APPLY", "").strip().lower() not in ("1", "true", "yes"):
         return {
@@ -417,9 +417,9 @@ def commit(*, elevated: bool = False) -> dict[str, Any]:
     if not safety.get("switch_allowed"):
         return {
             "ok": False,
-            "error": "thermal_hotspot_block",
+            "error": "thermal_crit_block" if safety.get("thermal_crit") else "conversion_blocked",
             "safety": safety,
-            "doctrine": "Commit blocked while hotspot risk — cool down or run wave shed first",
+            "doctrine": "Commit blocked only at thermal crit — warn uses wave shed, not slowdown",
         }
     underlay = (
         {"ok": True, "verdict": "PARTIAL", "skipped": "virtual"}
@@ -472,9 +472,9 @@ def reboot_field(*, elevated: bool = False) -> dict[str, Any]:
     if not safety.get("switch_allowed"):
         return {
             "ok": False,
-            "error": "thermal_hotspot_block",
+            "error": "thermal_crit_block" if safety.get("thermal_crit") else "conversion_blocked",
             "safety": safety,
-            "doctrine": "Reboot to field blocked while hotspot risk — wait for thermal ok",
+            "doctrine": "Reboot blocked only at thermal crit — conversion path stays fast",
             "posture": posture(),
         }
     lock = lock_state()

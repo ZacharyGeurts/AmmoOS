@@ -487,14 +487,17 @@ test_field_switch_safety() {
   [[ -f "${ROOT}/lib/field-switch-safety.py" ]]
   [[ -f "${ROOT}/data/field-switch-safety-doctrine.json" ]]
   grep -q 'NEXUS_FIELD_SWITCH_SAFETY' "${ROOT}/config/nexus.conf"
-  grep -q 'NEXUS_FIELD_SPEEDUP_CEILING' "${ROOT}/config/nexus.conf"
-  grep -q 'hotspot_risk' "${ROOT}/lib/thermal-governor.py"
-  grep -q 'field_switch_safe' "${ROOT}/lib/thermal-governor.py"
+  grep -q 'NEXUS_FIELD_NO_UNEXPECTED_SLOWDOWN' "${ROOT}/config/nexus.conf"
+  ! grep -q 'NEXUS_FIELD_SPEEDUP_CEILING' "${ROOT}/config/nexus.conf"
+  grep -q 'hotspot_advisory' "${ROOT}/lib/thermal-governor.py"
+  grep -q 'no_unexpected_slowdown' "${ROOT}/lib/thermal-governor.py"
   grep -q '_switch_safety' "${ROOT}/lib/field-underlay-switch.py"
-  grep -q 'thermal_hotspot_block' "${ROOT}/lib/field-underlay-switch.py"
+  grep -q 'thermal_crit_block' "${ROOT}/lib/field-underlay-switch.py"
   grep -q 'field-switch-safety' "${ROOT}/lib/nexus-daemon.sh"
-  pythong "${ROOT}/lib/field-switch-safety.py" evaluate --phase=arrive 2>/dev/null | grep -q 'switch_allowed'
-  pythong "${ROOT}/lib/field-switch-safety.py" evaluate --phase=arrive 2>/dev/null | grep -q 'speedup'
+  grep -q 'slowdown_guard' "${ROOT}/lib/field-switch-safety.py"
+  grep -q 'conversion_ok' "${ROOT}/lib/field-switch-safety.py"
+  pythong "${ROOT}/lib/field-switch-safety.py" evaluate --phase=commit 2>/dev/null | grep -q 'switch_allowed'
+  pythong "${ROOT}/lib/field-switch-safety.py" evaluate --phase=commit 2>/dev/null | grep -q 'conversion_ok'
 }
 
 test_release_tooling() {

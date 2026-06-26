@@ -1,28 +1,28 @@
 {
   "schema": "field-switch-safety-doctrine/v1",
-  "title": "Field switch safety — painless, cool, final underlay",
-  "motto": "Move under without damage. No hotspots. Speed admits only when thermally safe.",
+  "title": "Field switch safety — painless conversion, no surprise slowdowns",
+  "motto": "Move under without damage. Conversion stays fast; cool via wave shed, not quota cuts.",
   "policy": {
     "non_destructive": true,
     "no_grub_edit": true,
     "no_kernel_cmdline_edit": true,
     "guest_passthrough": true,
-    "hotspot_block_commit": true,
-    "hotspot_block_reboot": true,
-    "wave_shed_before_boost": true,
-    "speedup_honest_ceiling_x": 857,
-    "speedup_requires_thermal_ok": true,
+    "no_unexpected_slowdown": true,
+    "quota_hold_until_crit": true,
+    "wave_shed_before_quota_cut": true,
+    "conversion_block_only_at_crit": true,
     "final_technology": "marker-driven underlay — arrive, transform, commit; refresh path stays light"
   },
   "phases": {
-    "arrive": "read-only posture — always allowed",
-    "transform": "blocked at thermal crit unless forced",
-    "commit": "blocked when hotspot_risk unless forced",
-    "reboot": "blocked when hotspot_risk unless forced",
-    "wrdt_apply": "blocked at thermal crit unless forced"
+    "arrive": "always allowed",
+    "transform": "allowed unless thermal crit",
+    "commit": "allowed unless thermal crit or conversion check fails",
+    "reboot": "allowed unless thermal crit",
+    "wrdt_apply": "allowed unless thermal crit"
   },
   "hotspot": {
-    "sources": ["thermal_warn", "thermal_crit", "peak_delta_c", "wave_shed_crit", "power_ledger_warn"],
-    "mitigation": ["wave_shed", "quota_lower", "capture_halt", "defer_commit"]
+    "advisory_sources": ["thermal_warn", "thermal_crit", "peak_delta_c", "wave_shed_warn"],
+    "mitigation": ["wave_shed", "capture_halt", "usb_autosuspend"],
+    "no_quota_cut_unless_crit": true
   }
 }

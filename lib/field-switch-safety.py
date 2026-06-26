@@ -1,9 +1,9 @@
 #!/usr/bin/env pythong
-"""Field switch safety — thermal/hotspot gate for painless underlay transitions.
+"""Field switch safety — painless tech conversion, no hotspots, no surprise slowdowns.
 
-Ensures field switches never create hotspots: thermal governor + wave shed couple
-before commit/reboot/WRDT apply. Speedup admits up to ceiling (default 857×) only
-when thermally safe — no harm, damage, slowdown, or thermal runaway.
+Thermal governor + wave shed keep conversion cool without blocking arrive/transform/commit
+except at critical temperature. Quota stays at field-max baseline unless crit — conversion
+never gets an unexpected performance haircut.
 """
 from __future__ import annotations
 
@@ -20,10 +20,12 @@ STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 DOCTRINE = INSTALL / "data" / "field-switch-safety-doctrine.json"
 PANEL = STATE / "field-switch-safety.json"
 
-SPEEDUP_CEILING = float(os.environ.get("NEXUS_FIELD_SPEEDUP_CEILING", "857"))
 HOTSPOT_DELTA_C = float(os.environ.get("NEXUS_FIELD_HOTSPOT_DELTA_C", "4"))
 FORCE = os.environ.get("NEXUS_FIELD_SWITCH_FORCE", "0") == "1"
 ENABLED = os.environ.get("NEXUS_FIELD_SWITCH_SAFETY", "1") == "1"
+FIELD_MAX = os.environ.get("NEXUS_FIELD_MAX", "0") == "1"
+NO_SLOWDOWN = os.environ.get("NEXUS_FIELD_NO_UNEXPECTED_SLOWDOWN", "1" if FIELD_MAX else "0") == "1"
+BASELINE_QUOTA = int(os.environ.get("NEXUS_CPU_QUOTA_PCT", "85" if FIELD_MAX else "5"))
 
 
 def _now() -> str:
@@ -92,6 +94,7 @@ def _apply_wave_shed() -> dict[str, Any]:
         "NEXUS_INSTALL_ROOT": str(INSTALL),
         "NEXUS_STATE_DIR": str(STATE),
         "NEXUS_WAVE_SHED_APPLY": "1",
+        "NEXUS_FIELD_NO_UNEXPECTED_SLOWDOWN": "1" if NO_SLOWDOWN else "0",
     }
     py = INSTALL / "lib" / "field-wave-shed.py"
     if not py.is_file():
@@ -111,33 +114,61 @@ def _apply_wave_shed() -> dict[str, Any]:
     return {"ok": False, "error": "wave_shed_empty"}
 
 
-def _estimate_speedup_x() -> float | None:
-    rt = _load(STATE / "field-operator-plate-runtime.json", {})
-    per_ns = rt.get("per_route_ns")
-    if per_ns is None:
-        bench = rt.get("bench") or {}
-        per_ns = bench.get("per_route_ns")
+def _conversion_checks() -> dict[str, Any]:
+    doctrine = _load(INSTALL / "data" / "field-underlay-switch-doctrine.json", {})
+    policy = doctrine.get("policy") or {}
+    drive = doctrine.get("drive_converter") or {}
+    return {
+        "non_destructive": policy.get("destructive_migration") is False,
+        "in_place_conversion": drive.get("in_place") is True,
+        "same_paths": drive.get("same_paths") is True,
+        "no_grub_touch": True,
+        "no_kernel_cmdline_touch": True,
+        "marker_driven_refresh": True,
+        "guest_passthrough": policy.get("guest_passthrough") is True,
+    }
+
+
+def _slowdown_guard(thermal: dict[str, Any], level: str) -> dict[str, Any]:
+    quota = thermal.get("quota_pct")
     try:
-        per_ns = float(per_ns)
+        quota_i = int(quota) if quota is not None else BASELINE_QUOTA
     except (TypeError, ValueError):
-        return None
-    if per_ns <= 0:
-        return None
-    cpu_ns = float(os.environ.get("NEXUS_FIELD_CPU_BASELINE_NS", "850"))
-    return cpu_ns / per_ns
+        quota_i = BASELINE_QUOTA
+    unexpected = (
+        NO_SLOWDOWN
+        and FIELD_MAX
+        and level != "crit"
+        and quota_i < BASELINE_QUOTA
+    )
+    return {
+        "enabled": NO_SLOWDOWN,
+        "baseline_quota_pct": BASELINE_QUOTA,
+        "current_quota_pct": quota_i,
+        "unexpected_slowdown": unexpected,
+        "policy": "Quota holds at field-max baseline unless thermal crit",
+    }
 
 
-def _phase_allowed(phase: str, level: str, hotspot: bool) -> bool:
+def _phase_allowed(phase: str, level: str) -> bool:
     if FORCE or not ENABLED:
         return True
     phase = (phase or "refresh").strip().lower()
-    if phase in ("arrive", "refresh", "posture"):
-        return True
-    if phase == "transform":
+    if phase in ("arrive", "refresh", "posture", "transform", "commit", "reboot", "wrdt_apply", "wrdt-apply"):
         return level != "crit"
-    if phase in ("commit", "reboot", "wrdt_apply", "wrdt-apply"):
-        return not hotspot and level != "crit"
-    return not hotspot
+    return level != "crit"
+
+
+def _needs_wave_shed(level: str, delta: float, wave_level: str, thermal: dict[str, Any]) -> bool:
+    if level == "crit":
+        return True
+    if wave_level == "crit":
+        return True
+    if delta >= HOTSPOT_DELTA_C:
+        return True
+    if level == "warn":
+        return True
+    return bool(thermal.get("hotspot_advisory"))
 
 
 def evaluate(*, phase: str = "refresh", refresh_thermal: bool = False) -> dict[str, Any]:
@@ -148,6 +179,8 @@ def evaluate(*, phase: str = "refresh", refresh_thermal: bool = False) -> dict[s
     thermal = _thermal()
     power = _power()
     wave = _wave_shed()
+    conversion = _conversion_checks()
+    slowdown = _slowdown_guard(thermal, str(thermal.get("level") or "unknown"))
 
     peak = thermal.get("peak_c")
     level = str(thermal.get("level") or "unknown")
@@ -162,20 +195,15 @@ def evaluate(*, phase: str = "refresh", refresh_thermal: bool = False) -> dict[s
     wave_level = str(wave.get("level") or "unknown")
     power_verdict = str(power.get("verdict") or "GREEN")
 
-    hotspot_risk = (
+    hotspot_advisory = (
         level in ("warn", "crit")
-        or wave_level == "crit"
-        or (delta >= HOTSPOT_DELTA_C)
-        or (power_verdict == "WARN" and level != "ok")
-        or bool(thermal.get("hotspot_risk"))
+        or wave_level in ("warn", "crit")
+        or delta >= HOTSPOT_DELTA_C
+        or bool(thermal.get("hotspot_advisory"))
     )
-    thermal_ok = level in ("ok", "unknown") and not hotspot_risk
-
-    switch_allowed = _phase_allowed(phase, level, hotspot_risk)
-    measured = _estimate_speedup_x()
-    speedup_admitted = None
-    if thermal_ok and measured and measured > 1:
-        speedup_admitted = round(min(measured, SPEEDUP_CEILING), 1)
+    thermal_crit = level == "crit"
+    conversion_ok = all(conversion.values()) and not slowdown.get("unexpected_slowdown")
+    switch_allowed = _phase_allowed(phase, level) and conversion_ok
 
     doc: dict[str, Any] = {
         "schema": "field-switch-safety/v1",
@@ -186,9 +214,9 @@ def evaluate(*, phase: str = "refresh", refresh_thermal: bool = False) -> dict[s
         "motto": doctrine.get("motto", ""),
         "painless": True,
         "non_destructive": True,
-        "final_underlay": True,
-        "thermal_ok": thermal_ok,
-        "hotspot_risk": hotspot_risk,
+        "conversion_ok": conversion_ok,
+        "thermal_crit": thermal_crit,
+        "hotspot_advisory": hotspot_advisory,
         "switch_allowed": switch_allowed,
         "forced": FORCE,
         "thermal": {
@@ -209,48 +237,48 @@ def evaluate(*, phase: str = "refresh", refresh_thermal: bool = False) -> dict[s
             "net_draw_w": power.get("net_draw_w"),
             "headroom_w": power.get("headroom_w"),
         },
-        "speedup": {
-            "ceiling_x": SPEEDUP_CEILING,
-            "measured_x": round(measured, 1) if measured else None,
-            "admitted_x": speedup_admitted,
-            "requires_thermal_ok": True,
-            "honest_limit": "Admitted speedup is arithmetic-route bench vs baseline — not RF or GPU fabric claim.",
-        },
+        "conversion": conversion,
+        "slowdown_guard": slowdown,
         "checks": {
-            "no_grub_touch": True,
-            "no_kernel_cmdline_touch": True,
-            "marker_driven_refresh": True,
+            **conversion,
             "thermal_governor": thermal.get("enabled", True),
-            "wave_shed_coupled": bool(wave) or wave_level != "unknown",
+            "wave_shed_coupled": True,
+            "no_unexpected_slowdown": not slowdown.get("unexpected_slowdown"),
         },
     }
     if not switch_allowed:
-        doc["block_reason"] = (
-            "thermal_hotspot" if hotspot_risk else f"thermal_{level}"
-        )
+        if thermal_crit:
+            doc["block_reason"] = "thermal_crit"
+        elif slowdown.get("unexpected_slowdown"):
+            doc["block_reason"] = "unexpected_slowdown"
+        else:
+            doc["block_reason"] = "conversion_check_failed"
         doc["mitigation"] = [
-            "wait_for_cooldown",
             "run_field_wave_shed",
-            "reduce_field_capture",
-            "defer_commit_until_thermal_ok",
+            "wait_for_thermal_crit_clear",
+            "restore_field_max_quota",
         ]
     _save(PANEL, doc)
     return doc
 
 
 def cycle() -> dict[str, Any]:
-    """Daemon tick — refresh thermal, shed excess if hotspot risk."""
+    """Daemon tick — refresh thermal, shed excess on advisory without slowing conversion."""
     doc = evaluate(phase="refresh", refresh_thermal=True)
-    if doc.get("hotspot_risk"):
-        shed = _apply_wave_shed()
-        doc["wave_shed_action"] = shed
-        doc = evaluate(phase="refresh", refresh_thermal=False)
+    if _needs_wave_shed(
+        str(doc.get("thermal", {}).get("level") or "ok"),
+        float(doc.get("thermal", {}).get("delta_c") or 0),
+        str(doc.get("wave_shed", {}).get("level") or "unknown"),
+        doc.get("thermal") or {},
+    ):
+        doc["wave_shed_action"] = _apply_wave_shed()
+        doc = evaluate(phase="refresh", refresh_thermal=True)
     return doc
 
 
 def preflight(phase: str) -> dict[str, Any]:
     doc = evaluate(phase=phase, refresh_thermal=True)
-    if doc.get("hotspot_risk") and phase in ("commit", "reboot", "wrdt_apply", "wrdt-apply"):
+    if doc.get("hotspot_advisory"):
         doc["wave_shed_action"] = _apply_wave_shed()
         doc = evaluate(phase=phase, refresh_thermal=True)
     return doc

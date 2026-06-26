@@ -85,7 +85,8 @@ def _usb_rtl_autosuspend() -> list[str]:
 
 
 def _thermal_quota_bump(*, level: str) -> dict[str, Any]:
-    """Lower CPU quota advisory when excess is high — less system draw."""
+    """Advise wave shed level — hold quota unless crit when no-unexpected-slowdown is on."""
+    no_slowdown = os.environ.get("NEXUS_FIELD_NO_UNEXPECTED_SLOWDOWN", "1") == "1"
     adv = STATE / "thermal-advisory.json"
     doc: dict[str, Any] = {"schema": "thermal-governor/v1", "quota_pct": 85}
     if adv.is_file():
@@ -94,18 +95,25 @@ def _thermal_quota_bump(*, level: str) -> dict[str, Any]:
         except (OSError, json.JSONDecodeError):
             pass
     base = int(doc.get("quota_pct") or 85)
-    if level == "crit":
+    if level == "crit" and not no_slowdown:
         doc["quota_pct"] = max(25, base // 3)
         doc["wave_shed"] = "crit"
-    elif level == "warn":
+    elif level == "warn" and not no_slowdown:
         doc["quota_pct"] = max(40, int(base * 0.7))
         doc["wave_shed"] = "warn"
     else:
-        doc["wave_shed"] = "ok"
+        doc["wave_shed"] = level if level != "ok" else "ok"
+        if no_slowdown:
+            doc["quota_pct"] = base
+    doc["hotspot_advisory"] = level in ("warn", "crit")
     doc["updated"] = _now()
     STATE.mkdir(parents=True, exist_ok=True)
     adv.write_text(json.dumps(doc, ensure_ascii=False) + "\n", encoding="utf-8")
-    return {"thermal_advisory": str(adv), "quota_pct": doc["quota_pct"]}
+    return {
+        "thermal_advisory": str(adv),
+        "quota_pct": doc["quota_pct"],
+        "quota_held": no_slowdown and level != "crit",
+    }
 
 
 def shed_from_wav(wav_path: Path, *, apply: bool = False) -> dict[str, Any]:
