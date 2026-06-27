@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,7 +12,23 @@ from typing import Any
 
 QUEEN = Path(__file__).resolve().parents[1]
 DOCTRINE = QUEEN / "data" / "queen-field-sanity-doctrine.json"
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(QUEEN.parent)))
+SINGLE_DEPTH_DOCTRINE = INSTALL / "data" / "single-field-depth-doctrine.json"
 MAX_LAYERS = 64
+
+
+def _single_field_depth_max() -> int:
+    if os.environ.get("NEXUS_SINGLE_FIELD_DEPTH", "1").strip().lower() in ("0", "false", "no", "off"):
+        return MAX_LAYERS
+    doc = _load(DOCTRINE, {})
+    sfd = doc.get("single_field_depth") or {}
+    if sfd.get("always"):
+        return int(sfd.get("max_depth") or 0)
+    sdoc = _load(SINGLE_DEPTH_DOCTRINE, {})
+    pol = sdoc.get("policy") or {}
+    if pol.get("field_on_field_forbidden"):
+        return int(pol.get("single_field_depth") or 0)
+    return MAX_LAYERS
 
 
 def _now() -> str:
@@ -88,11 +105,13 @@ def _flatten_depth(layers: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], 
     sorted_layers = sorted(layers, key=lambda x: x.get("thermo_proxy", 0))
     out: list[dict[str, Any]] = []
     flattened = 0
+    max_depth = _single_field_depth_max()
     for i, layer in enumerate(sorted_layers):
         old = int(layer.get("depth") or 0)
-        if old != i:
+        new_depth = 0 if max_depth <= 0 else i
+        if old != new_depth:
             flattened += 1
-        out.append({**layer, "depth": i, "paint_priority": i})
+        out.append({**layer, "depth": new_depth, "paint_priority": i})
     return out, flattened
 
 
@@ -105,12 +124,25 @@ def simplify_layers(raw_layers: list[dict[str, Any]], *, fielded: bool) -> dict[
 
     for i, layer in enumerate(raw_layers[:MAX_LAYERS]):
         url = str(layer.get("url") or "").strip()
+        layer_depth = int(layer.get("depth") or 0)
         c = net.classify_url(url)
+        enforced = str(c.get("enforced_url") or url)
+        if enforced != url:
+            url = enforced
         depth = int(layer.get("depth") if layer.get("depth") is not None else c.get("field_depth") or 0)
+        if c.get("depth_field_forbidden") or c.get("depth_field_requested", 0) > 0 or layer_depth > 0:
+            stripped += 1
+            depth = 0
+            layer_depth = 0
         verdict = str(c.get("verdict") or "")
         internal = bool(c.get("internal"))
 
         if verdict == "BLOCK_EXTERNAL":
+            stripped += 1
+            quarantined += 1
+            continue
+        max_depth = _single_field_depth_max()
+        if depth > max_depth:
             stripped += 1
             quarantined += 1
             continue
@@ -159,12 +191,36 @@ def simplify_layers(raw_layers: list[dict[str, Any]], *, fielded: bool) -> dict[
             for L in simplified
         ],
         "simplified_stack": [L["id"] for L in simplified],
-        "rule": "simplify_never_obtuse · infinite_resolution_aspiration · never_build_under_heat",
+        "rule": "depth_fields_sealed_and_destroyed · single_field_depth_always · simplify_never_obtuse · never_build_under_heat",
+        "single_field_depth": _single_field_depth_max() <= 0,
+        "max_field_depth": _single_field_depth_max(),
+        "depth_field_impossible": _single_field_depth_max() <= 0,
+        "depth_fields_sealed_and_destroyed": _single_field_depth_max() <= 0,
+        "depth_fields_destroyed": stripped > 0,
+        "creation_forbidden": _single_field_depth_max() <= 0,
     }
+
+
+def _preflight_singularize(body: dict[str, Any]) -> tuple[dict[str, Any], int]:
+    sing_py = INSTALL / "lib" / "field-depth-singularizer.py"
+    if not sing_py.is_file():
+        return body, 0
+    try:
+        spec = importlib.util.spec_from_file_location("field_depth_singularizer", sing_py)
+        if not spec or not spec.loader:
+            return body, 0
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "pre_singularize_body"):
+            return mod.pre_singularize_body(body)
+    except (ImportError, OSError, AttributeError, ValueError):
+        pass
+    return body, 0
 
 
 def sanity_pass(body: dict[str, Any] | None = None) -> dict[str, Any]:
     body = body or {}
+    body, preflight_fixes = _preflight_singularize(body)
     gate = _security_gate("field_route")
     doctrine = _load(DOCTRINE, {})
     layers = body.get("layers") or []
@@ -181,6 +237,8 @@ def sanity_pass(body: dict[str, Any] | None = None) -> dict[str, Any]:
         "gate": gate,
         "gate_ok": gate.get("ok") is not False,
         "doctrine": doctrine,
+        "preflight_fixes": preflight_fixes,
+        "depth_singularized": preflight_fixes > 0,
         **result,
     }
 

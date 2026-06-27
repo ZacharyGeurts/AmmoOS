@@ -11,6 +11,7 @@
     "max_depth": 0,
     "always": true,
     "depth_field_impossible": true,
+    "depth_fields_sealed_and_destroyed": true,
     "creation_forbidden": true,
     "doctrine": "data/single-field-depth-doctrine.json",
     "rule": "One field depth — parallel I/O, single amplitude truth; field-on-field forbidden; depth fields sealed and destroyed"

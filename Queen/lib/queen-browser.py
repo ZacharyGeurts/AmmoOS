@@ -210,9 +210,15 @@ def _merged_bookmarks(doc: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+def _code_page() -> str:
+    return f"{_world_base()}/world/queen-code.html"
+
+
 BOOKMARKS = [
     {"id": "nexus", "title": "NEXUS Field", "url": _nexus_field_url()},
     {"id": "queen", "title": "Queen", "url": f"{_world_base()}/world/browser.html"},
+    {"id": "queen-code", "title": "Queen Code", "url": _code_page()},
+    {"id": "queen-files", "title": "Files", "url": _files_page()},
     {"id": "queen-home", "title": "Queen", "url": _queen_field_home()},
     {"id": "forge", "title": "Forge", "url": f"http://127.0.0.1:{os.environ.get('QUEEN_WORLD_PORT', '9481')}/gui/queen-build-deck.html"},
     {"id": "hostess", "title": "Hostess 7", "url": "queen://hostess"},
@@ -253,6 +259,26 @@ def _run_panel(*args: str, timeout: int = 30) -> dict[str, Any]:
     if args and args[0] == "json":
         return mod.panel_json(timeout=timeout)
     return mod.panel_json(timeout=timeout)
+
+
+def _enforce_single_field_url(url: str) -> str:
+    """Depth fields sealed and destroyed — eradicate field_depth before navigation persists."""
+    sing = SG / "NewLatest" / "lib" / "field-depth-singularizer.py"
+    if not sing.is_file():
+        sing = QUEEN.parent / "lib" / "field-depth-singularizer.py"
+    if not sing.is_file():
+        return url
+    try:
+        spec = importlib.util.spec_from_file_location("field_depth_singularizer_browser", sing)
+        if not spec or not spec.loader:
+            return url
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "enforce_depth_field_impossible"):
+            return str(mod.enforce_depth_field_impossible(url).get("url") or url)
+    except Exception:
+        pass
+    return url
 
 
 def _normalize_url(raw: str) -> str:
@@ -649,6 +675,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
 
     if action == "navigate":
         url = _normalize_url(str(body.get("url") or ""))
+        url = _enforce_single_field_url(url)
         tab_id = str(body.get("tab_id") or doc.get("active_tab") or "")
         tab = _find_tab(doc, tab_id) or _find_tab(doc, doc.get("active_tab", ""))
         if not tab:
@@ -690,7 +717,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
     if action == "new_tab":
         if len(doc.get("tabs") or []) >= MAX_TABS:
             return {"ok": False, "error": "max_tabs", "max": MAX_TABS}
-        url = _normalize_url(str(body.get("url") or DEFAULT_HOME))
+        url = _enforce_single_field_url(_normalize_url(str(body.get("url") or DEFAULT_HOME)))
         tab = _new_tab(url)
         _apply_compat(tab, url, body)
         _push_history(tab, url)

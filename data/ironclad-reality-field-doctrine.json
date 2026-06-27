@@ -33,6 +33,11 @@
       "rule": "Integral simplify — classify, strip, dedupe, flatten, cool_sort; never build under heat",
       "engine": "lib/ironclad-field-sanity.py",
       "meld_citation": "ironclad:meld:2"
+    },
+    "single_field_depth": {
+      "doctrine": "data/single-field-depth-doctrine.json",
+      "rule": "Soft touch — parallel I/O, single field amplitude; depth zero always; depth fields sealed and destroyed",
+      "panel_publish": "lib/field-panel-field.py"
     }
   },
   "targets": [

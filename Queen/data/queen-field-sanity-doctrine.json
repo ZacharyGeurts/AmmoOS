@@ -20,10 +20,18 @@
     "no_entropy_hotspots": true,
     "max_layers": 64
   },
+  "single_field_depth": {
+    "max_depth": 0,
+    "always": true,
+    "declaration": "Depth fields are to be sealed and destroyed.",
+    "doctrine": "data/single-field-depth-doctrine.json",
+    "soft_touch": true,
+    "parallel_single_field": "lib/field-panel-field.py"
+  },
   "fielded_areas": {
     "simplify_first": true,
     "external_quarantine": true,
-    "field_on_field": "allowed only when simplified — never redundant nested loopback"
+    "field_on_field": "sealed and destroyed — single field depth always"
   },
   "pass": ["classify", "strip", "dedupe", "flatten", "cool_sort"]
 }

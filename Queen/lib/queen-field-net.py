@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, urlparse
 
 QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(SG / "NewLatest")))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", QUEEN / ".nexus-state"))
 MANDATE = QUEEN / "data" / "queen-field-net.json"
 WORLD_PORT = int(os.environ.get("QUEEN_WORLD_PORT", "9481"))
@@ -151,22 +152,72 @@ def _resolve_queen_scheme(url: str) -> str:
     return world_base() + path
 
 
+def _single_field_depth_max() -> int:
+    """Ironclad safety — one field, depth zero always (soft touch)."""
+    if os.environ.get("NEXUS_SINGLE_FIELD_DEPTH", "1").strip().lower() in ("0", "false", "no", "off"):
+        return 64
+    return 0
+
+
 def _field_depth_from_url(url: str) -> int:
+    cap = _single_field_depth_max()
+    if cap <= 0:
+        return 0
     try:
         q = parse_qs(urlparse(url).query)
         d = int((q.get("field_depth") or ["0"])[0])
-        return max(0, min(d, 64))
+        return max(0, min(d, cap))
     except (ValueError, TypeError, IndexError):
         return 0
 
 
-def _nested_field_meta(url: str) -> dict[str, Any]:
+def _depth_singularizer_mod() -> Any | None:
+    sing = INSTALL / "lib" / "field-depth-singularizer.py"
+    if not sing.is_file():
+        return None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("field_depth_singularizer_net", sing)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _nested_field_meta(url: str, *, layer_depth: int | None = None) -> dict[str, Any]:
+    cap = _single_field_depth_max()
+    sing = _depth_singularizer_mod()
+    if sing and hasattr(sing, "enforce_depth_field_impossible"):
+        rec = sing.enforce_depth_field_impossible(url, layer_depth=layer_depth)
+        depth = 0 if cap <= 0 else _field_depth_from_url(rec.get("url") or url)
+        return {
+            "field_depth": depth,
+            "single_field_depth": cap <= 0,
+            "max_field_depth": cap,
+            "nested_field_safe": depth == 0,
+            "field_on_field": False,
+            "depth_field_requested": rec.get("depth_field_requested"),
+            "depth_field_forbidden": rec.get("forbidden"),
+            "depth_field_impossible": rec.get("depth_field_impossible"),
+            "depth_fields_sealed_and_destroyed": rec.get("depth_fields_sealed_and_destroyed"),
+            "depth_field_destroyed": rec.get("depth_field_destroyed"),
+            "creation_forbidden": rec.get("creation_forbidden"),
+            "depth_field_stripped": rec.get("depth_field_stripped"),
+            "enforced_url": rec.get("url"),
+            "rule": rec.get("rule") or ("single_field_depth_always" if cap <= 0 else "legacy_depth_cap"),
+            "citation": rec.get("citation"),
+        }
     depth = _field_depth_from_url(url)
     return {
         "field_depth": depth,
-        "nested_field_safe": depth < 64,
-        "field_on_field": depth > 0,
-        "infinite_stack": "each layer gate-held — practical cap 64",
+        "single_field_depth": cap <= 0,
+        "max_field_depth": cap,
+        "nested_field_safe": depth <= cap and depth == 0,
+        "field_on_field": False if cap <= 0 else depth > 0,
+        "rule": "single_field_depth_always" if cap <= 0 else "legacy_depth_cap",
     }
 
 

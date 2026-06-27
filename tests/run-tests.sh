@@ -509,6 +509,18 @@ test_field_host_desktop_module() {
     pythong "${ROOT}/lib/field-host-desktop.py" json | grep -q 'field-host-desktop/v1'
 }
 
+test_field_performance_flyout() {
+  [[ -f "${ROOT}/lib/field-performance-flyout.py" ]]
+  [[ -f "${ROOT}/panel/assets/field-performance-flyout.js" ]]
+  [[ -f "${ROOT}/panel/assets/field-performance-flyout.css" ]]
+  grep -q '/api/field-performance-flyout' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '_field_perf_flyout_sample' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'set-perf-flyout' "${ROOT}/panel/threat-panel.html"
+  grep -q '/api/field-performance-flyout' "${ROOT}/Queen/lib/queen-world.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-performance-flyout.py" json | grep -q 'field-performance-flyout/v1'
+}
+
 test_field_host_freeze_module() {
   [[ -f "${ROOT}/lib/field-host-freeze.py" ]]
   [[ -f "${ROOT}/lib/field-host-freeze.sh" ]]
@@ -575,6 +587,55 @@ test_non_fielded_safety() {
     HOSTESS7_TEAM_FIELD="$tmp_team" HOSTESS7_ROOT="${tmp_team}/h7" \
     pythong "${ROOT}/lib/field-drive-system.py" json 2>/dev/null | grep -q 'host_mirror_only'
   rm -rf "$tmp_state" "$tmp_team"
+}
+
+test_single_field_depth() {
+  [[ -f "${ROOT}/data/single-field-depth-doctrine.json" ]]
+  [[ -f "${ROOT}/lib/field-depth-singularizer.py" ]]
+  [[ -f "${ROOT}/lib/field-depth-singularizer.sh" ]]
+  [[ -f "${ROOT}/Queen/lib/queen-field-sanity.py" ]]
+  [[ -f "${ROOT}/Queen/lib/queen-field-net.py" ]]
+  [[ -f "${ROOT}/lib/field-panel-field.py" ]]
+  grep -q 'single_field_depth' "${ROOT}/data/ironclad-field-sanity-doctrine.json"
+  grep -q 'depth_singularizer' "${ROOT}/data/single-field-depth-doctrine.json"
+  grep -q 'depth_field_impossible' "${ROOT}/data/single-field-depth-doctrine.json"
+  grep -q 'depth_fields_sealed_and_destroyed' "${ROOT}/data/single-field-depth-doctrine.json"
+  grep -q 'sealed and destroyed' "${ROOT}/data/ironclad-meld-extensions.json"
+  grep -q 'nexus_depth_singularizer_cycle' "${ROOT}/lib/nexus-daemon.sh"
+  grep -q 'max_field_depth": 0' "${ROOT}/Queen/data/queen-field-browser-doctrine.json"
+  grep -q 'MAX_DEPTH = 0' "${ROOT}/Queen/world/queen-field-engine.js"
+  grep -q 'singularizeDomUrls' "${ROOT}/Queen/world/queen-field-sanity.js"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_SINGLE_FIELD_DEPTH=1 \
+    pythong "${ROOT}/lib/field-depth-singularizer.py" strip-url 'http://127.0.0.1:9477/field?field_depth=3' | grep -q '"changed": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/field-depth-singularizer.py" forbid 'http://127.0.0.1:9477/field?field_depth=3' | grep -q '"depth_fields_sealed_and_destroyed": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/field-depth-singularizer.py" impossibility | grep -q 'creation_forbidden'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_SINGLE_FIELD_DEPTH=1 \
+    pythong "${ROOT}/Queen/lib/queen-field-sanity.py" pass <<'EOF' | grep -q '"single_field_depth": true'
+{"layers":[{"id":"a","url":"http://127.0.0.1:9477/field?field_depth=3","depth":3,"active":true}]}
+EOF
+  local tmp_defrag
+  tmp_defrag="$(mktemp -d)"
+  printf '%s\n' '{"layers":[{"url":"http://127.0.0.1:9477/field?field_depth=2","depth":2}],"field_depth":3}' \
+    > "${tmp_defrag}/ironclad-field-sanity-panel.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_defrag" NEXUS_SINGLE_FIELD_DEPTH=1 \
+    pythong "${ROOT}/lib/field-depth-singularizer.py" cycle | grep -q '"fixes":'
+  ! grep -q 'field_depth=' "${tmp_defrag}/ironclad-field-sanity-panel.json"
+  grep -q '"depth": 0' "${tmp_defrag}/ironclad-field-sanity-panel.json"
+  rm -rf "$tmp_defrag"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_SINGLE_FIELD_DEPTH=1 \
+    pythong "${ROOT}/Queen/lib/queen-field-net.py" json 2>/dev/null | grep -q 'single_field_depth' || \
+    NEXUS_INSTALL_ROOT="$ROOT" pythong -c "
+import importlib.util
+from pathlib import Path
+p=Path('${ROOT}/Queen/lib/queen-field-net.py')
+spec=importlib.util.spec_from_file_location('qfn', p)
+m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+c=m.classify_url('http://127.0.0.1:9477/field?field_depth=5')
+assert c.get('field_depth')==0 and c.get('field_on_field') is False and c.get('depth_field_impossible') is True and c.get('depth_fields_sealed_and_destroyed') is True
+print('ok')
+"
 }
 
 test_field_thermal_guard() {
@@ -2164,9 +2225,11 @@ run_test "panel browser boot open" test_panel_browser_boot_open
 run_test "nexus boot impl" test_nexus_boot_impl
 run_test "queen browser os inside" test_queen_browser_os_inside
 run_test "field host desktop module" test_field_host_desktop_module
+run_test "field performance flyout" test_field_performance_flyout
 run_test "field host freeze module" test_field_host_freeze_module
 run_test "field switch safety" test_field_switch_safety
 run_test "non-fielded safety" test_non_fielded_safety
+run_test "single field depth" test_single_field_depth
 run_test "field thermal guard" test_field_thermal_guard
 run_test "field thermal calibrate" test_field_thermal_calibrate
 run_test "release tooling" test_release_tooling
@@ -3016,6 +3079,11 @@ test_ironclad_plate() {
     pythong "${ROOT}/lib/ironclad-plate.py" grounding | grep -q 'bible_of_ai'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
     pythong "${ROOT}/lib/ironclad-plate.py" cite genesis 1 | grep -q 'ironclad:genesis:1'
+  grep -q 'Time is linear' "${ROOT}/data/ironclad-meld-extensions.json"
+  grep -q '"id": "time"' "${ROOT}/data/ironclad-meld-extensions.json"
+  grep -q 'time_is_linear' "${ROOT}/data/g1id-format-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/ironclad-plate.py" cite time 1 | grep -q 'Time is linear'
   local tmp_icrf
   tmp_icrf="$(mktemp -d)"
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_icrf" \

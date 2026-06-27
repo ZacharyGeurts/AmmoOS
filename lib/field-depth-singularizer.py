@@ -142,6 +142,7 @@ def impossibility_posture() -> dict[str, Any]:
         "ts": _now(),
         "ok": True,
         "depth_field_impossible": enabled,
+        "depth_fields_sealed_and_destroyed": enabled,
         "field_on_field_forbidden": enabled,
         "creation_forbidden": enabled,
         "single_field_depth": enabled,
@@ -225,8 +226,10 @@ def pre_singularize_body(body: dict[str, Any] | None) -> tuple[dict[str, Any], i
         body["fielded"] = any(int(L.get("depth") or 0) > 0 for L in body["layers"] if isinstance(L, dict))
     body["single_field_depth"] = True
     body["depth_field_impossible"] = True
+    body["depth_fields_sealed_and_destroyed"] = True
     body["creation_forbidden"] = True
     body["depth_singularized"] = fixes > 0
+    body["depth_field_destroyed"] = fixes > 0
     body["depth_fixes"] = fixes
     return body, fixes
 
@@ -383,6 +386,7 @@ def cycle(*, batch: int | None = None) -> dict[str, Any]:
         "active_operation": True,
         "single_field_depth": True,
         "depth_field_impossible": True,
+        "depth_fields_sealed_and_destroyed": True,
         "creation_forbidden": True,
     }
     _save(PANEL, receipt)

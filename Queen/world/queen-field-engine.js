@@ -6,7 +6,7 @@
   "use strict";
 
   const POLL_MS = 30000;
-  const MAX_DEPTH = 64;
+  const MAX_DEPTH = 0;
   const HOME_FRAG = "queen-field-home.html";
   const BLANK = new Set(["", "about:blank", "about:srcdoc"]);
 
@@ -18,20 +18,7 @@
   }
 
   function fieldDepth() {
-    try {
-      const params = new URLSearchParams(location.search);
-      const d = parseInt(params.get("field_depth") || "0", 10);
-      if (Number.isFinite(d) && d >= 0) return Math.min(d, MAX_DEPTH);
-    } catch (_) {
-      /* ignore */
-    }
-    if (global.parent !== global) {
-      try {
-        return Math.min((global.parent.QueenFieldEngine?.depth?.() ?? 0) + 1, MAX_DEPTH);
-      } catch (_) {
-        return 1;
-      }
-    }
+    /* Single field depth always — Ironclad safety; no field-on-field stack. */
     return 0;
   }
 
@@ -88,15 +75,14 @@
   }
 
   function renderDepthLabels(depth) {
-    const label = depth === 0 ? "layer 0 · root field" : `layer ${depth} · field on field`;
+    const label = "layer 0 · single field · depth sealed and destroyed";
     $("qb-field-depth") && ($("qb-field-depth").textContent = `Field depth · ${label}`);
     $("qfh-depth") && ($("qfh-depth").textContent = `Field depth · ${label}`);
     $("qfh-nested") &&
-      ($("qfh-nested").textContent =
-        depth > 0
-          ? `Nested field ${depth} — each layer gate-held`
-          : "Each layer gate-held — fields on fields safe");
-    document.body.dataset.fieldDepth = String(depth);
+      ($("qfh-nested").textContent = "Depth fields sealed and destroyed — one amplitude at layer 0");
+    document.body.dataset.fieldDepth = "0";
+    document.body.dataset.depthFieldImpossible = "1";
+    document.body.dataset.depthFieldsSealedAndDestroyed = "1";
   }
 
   function renderRtx(doc) {
@@ -154,8 +140,8 @@
     if (!data || typeof data !== "object") return;
     if (data.origin && data.origin !== "queen-field-engine" && data.origin !== "queen-field-sanity") return;
     if (!FIELD_MSG.has(data.type)) return;
-    if (data.type === "queen_field_ping" && typeof data.depth === "number") {
-      renderDepthLabels(Math.min(data.depth + 1, MAX_DEPTH));
+    if (data.type === "queen_field_ping" && typeof data.depth === "number" && data.depth > 0) {
+      renderDepthLabels(0);
     }
     if (data.type === "queen_field_sanity" && data.gate_ok === false) {
       document.body.dataset.fieldSanity = "hold";

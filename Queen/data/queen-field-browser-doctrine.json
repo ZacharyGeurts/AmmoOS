@@ -1,12 +1,13 @@
 {
   "schema": "queen-field-browser/v1",
   "name": "Queen",
-  "motto": "Our field web engine — plated, loopback-held, AMOURANTHRTX RTX wired. Fields on fields forever; each layer gate-held.",
+  "motto": "Our field web engine — plated, loopback-held, AMOURANTHRTX RTX wired. Depth fields sealed and destroyed; soft touch; Ironclad.",
   "g16": {
     "mandate": "G16_FIELD_SAFETY_MANDATE_v1",
     "no_entropy_hotspots": true,
     "status_poll_ms": 30000,
-    "max_field_depth": 64
+    "max_field_depth": 0,
+    "single_field_depth_always": true
   },
   "plating": {
     "portrait": "/world/assets/branding/amouranth-plate.png",
@@ -20,11 +21,17 @@
     "root_env": "AMOURANTHRTX_ROOT"
   },
   "nested_fields": {
-    "rule": "field_on_field_safe",
+    "rule": "depth_fields_sealed_and_destroyed",
+    "declaration": "Depth fields are to be sealed and destroyed.",
     "depth_param": "field_depth",
+    "max_depth": 0,
+    "depth_field_impossible": true,
+    "depth_fields_sealed_and_destroyed": true,
+    "creation_forbidden": true,
+    "field_on_field": false,
     "each_layer_gated": true,
     "external_blocked_when_internal_only": true,
-    "infinite_stack": "conceptual — practical cap at g16.max_field_depth"
+    "doctrine": "data/single-field-depth-doctrine.json"
   },
   "field_sanity": {
     "api": "/api/field-sanity",

@@ -52,7 +52,7 @@
     "module": "lib/field-depth-singularizer.py",
     "daemon_cycle": "lib/field-depth-singularizer.sh",
     "batch_per_cycle": 3,
-    "live_preflight": "Every field-sanity pass strips field_depth before simplify",
+    "live_preflight": "Every field-sanity pass seals and destroys field_depth before simplify",
     "dom_fix": "Queen/world/queen-field-sanity.js singularizeDomUrls on each pass",
     "ledger": "field-depth-singularizer.jsonl"
   },

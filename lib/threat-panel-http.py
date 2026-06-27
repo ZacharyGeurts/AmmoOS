@@ -1214,6 +1214,63 @@ def _nexus_py_json(script: Path, args: list[str], timeout: int = 25) -> dict:
 
 
 _FIELD_OPERATOR_MOD: Any = None
+_FIELD_PERF_FLYOUT_MOD: Any = None
+_FIELD_DEPTH_SING_MOD: Any = None
+
+
+def _field_depth_singularizer_mod():
+    global _FIELD_DEPTH_SING_MOD
+    if _FIELD_DEPTH_SING_MOD is not None:
+        return _FIELD_DEPTH_SING_MOD
+    script = INSTALL_ROOT / "lib" / "field-depth-singularizer.py"
+    if not script.is_file():
+        return None
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("field_depth_singularizer_panel", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _FIELD_DEPTH_SING_MOD = mod
+    return mod
+
+
+def _enforce_depth_field_http_path(raw_path: str) -> str | None:
+    """Redirect when field_depth is present — depth fields sealed and destroyed."""
+    if "field_depth" not in raw_path:
+        return None
+    mod = _field_depth_singularizer_mod()
+    if not mod or not hasattr(mod, "single_field_depth_enabled") or not mod.single_field_depth_enabled():
+        return None
+    rec = mod.enforce_depth_field_impossible(f"http://127.0.0.1{raw_path}")
+    if not rec.get("violation"):
+        return None
+    parsed = urlparse(str(rec.get("url") or ""))
+    out = parsed.path or "/"
+    if parsed.query:
+        out += "?" + parsed.query
+    return out
+
+
+def _field_perf_flyout_sample(*, reset: bool = False) -> dict:
+    global _FIELD_PERF_FLYOUT_MOD
+    script = INSTALL_ROOT / "lib" / "field-performance-flyout.py"
+    if not script.is_file():
+        return {"schema": "field-performance-flyout/v1", "ok": False, "error": "perf_flyout_missing"}
+    if _FIELD_PERF_FLYOUT_MOD is None:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("field_performance_flyout_panel", script)
+        if not spec or not spec.loader:
+            return _nexus_py_json(script, ["json"], timeout=10)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _FIELD_PERF_FLYOUT_MOD = mod
+    try:
+        return _FIELD_PERF_FLYOUT_MOD.sample(reset=reset)
+    except Exception as exc:
+        return {"schema": "field-performance-flyout/v1", "ok": False, "error": str(exc)}
 
 
 def _field_operator_inproc():
@@ -1493,6 +1550,15 @@ class Handler(BaseHTTPRequestHandler):
             return {}
 
     def do_GET(self):
+        depth_redirect = _enforce_depth_field_http_path(self.path)
+        if depth_redirect is not None:
+            self.send_response(302)
+            self.send_header("Location", depth_redirect)
+            self.send_header("X-Nexus-Depth-Field", "forbidden")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            return
+
         path = unquote(self.path.split("?", 1)[0])
         query = parse_qs(urlparse(self.path).query)
 
@@ -2588,6 +2654,26 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path in ("/api/field-depth-singularizer", "/api/field-depth-singularizer/cycle", "/api/field-depth-impossibility"):
+            script = INSTALL_ROOT / "lib" / "field-depth-singularizer.py"
+            if path.endswith("/cycle"):
+                verb = "cycle"
+            elif path.endswith("/impossibility"):
+                verb = "impossibility"
+            else:
+                verb = "json"
+            if script.is_file():
+                payload = _nexus_py_json(script, [verb], timeout=30)
+            else:
+                payload = {"schema": "field-depth-singularizer/v1", "ok": False, "error": "singularizer_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-performance-flyout":
+            payload = _field_perf_flyout_sample()
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path.startswith("/api/field-host-desktop/icon/"):
             token = unquote(path.split("/api/field-host-desktop/icon/", 1)[-1].split("?", 1)[0])
             script = INSTALL_ROOT / "lib" / "field-host-desktop.py"
@@ -3570,6 +3656,12 @@ class Handler(BaseHTTPRequestHandler):
                 payload = _nexus_py_json(script, ["enforce"], timeout=25)
             code = 200 if payload.get("ok", True) and not payload.get("error") else 400
             self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-performance-flyout":
+            reset = bool((body or {}).get("reset"))
+            payload = _field_perf_flyout_sample(reset=reset)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
         if path == "/api/ai-integration":

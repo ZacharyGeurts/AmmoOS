@@ -59,6 +59,13 @@ def publish_field(*, max_workers: int | None = None) -> dict[str, Any]:
     panel["field_load"] = True
     panel["infinite_dimension"] = True
     panel["parallel_load"] = False
+    panel["single_field_depth"] = {
+        "max_depth": 0,
+        "soft_touch": True,
+        "parallel_io_single_field_truth": True,
+        "depth_fields_sealed_and_destroyed": True,
+        "doctrine": "data/single-field-depth-doctrine.json",
+    }
     panel["field_amplitude"] = {
         "energy": field_doc.get("field_energy"),
         "norm": field_doc.get("field_norm"),
@@ -74,6 +81,10 @@ def publish_field(*, max_workers: int | None = None) -> dict[str, Any]:
         "ok": True,
         "mode": "field",
         "infinite_dimension": True,
+        "single_field_depth": 0,
+        "depth_fields_sealed_and_destroyed": True,
+        "soft_touch": True,
+        "parallel_io_single_field_truth": True,
         "amplitude_process": field_doc.get("amplitude_process"),
         "updated": result.get("updated") or [],
         "failed": result.get("failed") or [],

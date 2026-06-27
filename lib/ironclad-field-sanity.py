@@ -126,8 +126,16 @@ def _truth_receipt(
     heat = int(result.get("heat_avoided") or 0)
     layers_out = int(result.get("layers_out") or 0)
     gate_ok = result.get("gate_ok") is not False and result.get("ok")
+    max_depth = int(result.get("max_field_depth") if result.get("max_field_depth") is not None else 0)
+    single_depth = bool(result.get("single_field_depth", max_depth <= 0))
     never_under_heat = gate_ok and heat >= 0 and layers_out <= 64
     integral = bool(result.get("integral")) and gate_ok
+    reorganized = result.get("reorganized") or []
+    if not single_depth:
+        single_field_ok = True
+    else:
+        single_field_ok = all(int(L.get("depth") or 0) == 0 for L in reorganized)
+    depth_impossible = bool(result.get("depth_field_impossible", single_depth))
     return {
         "schema": "ironclad-field-sanity-receipt/v1",
         "meld_citation": _load(DOCTRINE, {}).get("meld_citation") or "ironclad:meld:2",
@@ -141,14 +149,37 @@ def _truth_receipt(
         "never_build_under_heat": never_under_heat,
         "simplify_never_obtuse": True,
         "infinite_resolution_aspiration": True,
-        "pass_ok": gate_ok and integral,
-        "detail": "field_sanity_melded" if gate_ok else "field_sanity_hold",
+        "single_field_depth": single_depth,
+        "single_field_depth_ok": single_field_ok,
+        "depth_field_impossible": depth_impossible,
+        "depth_fields_sealed_and_destroyed": depth_impossible,
+        "creation_forbidden": depth_impossible,
+        "pass_ok": gate_ok and integral and single_field_ok and (not single_depth or depth_impossible),
+        "detail": "field_sanity_melded" if gate_ok and single_field_ok else "field_sanity_hold",
     }
+
+
+def _preflight_singularize(body: dict[str, Any]) -> tuple[dict[str, Any], int]:
+    sing_py = INSTALL / "lib" / "field-depth-singularizer.py"
+    if not sing_py.is_file():
+        return body, 0
+    try:
+        spec = importlib.util.spec_from_file_location("field_depth_singularizer_ic", sing_py)
+        if not spec or not spec.loader:
+            return body, 0
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "pre_singularize_body"):
+            return mod.pre_singularize_body(body)
+    except (ImportError, OSError, AttributeError, ValueError):
+        pass
+    return body, 0
 
 
 def field_sanity_operator(body: dict[str, Any] | None = None) -> dict[str, Any]:
     """Run Queen simplify pass and meld receipt into Ironclad truth."""
     body = body or {}
+    body, preflight_fixes = _preflight_singularize(body)
     doctrine = _load(DOCTRINE, {})
     queen = _queen_sanity_mod()
     if not queen or not hasattr(queen, "sanity_pass"):
@@ -200,6 +231,8 @@ def field_sanity_operator(body: dict[str, Any] | None = None) -> dict[str, Any]:
             )
             if k in queen_result
         },
+        "preflight_fixes": preflight_fixes,
+        "depth_singularized": preflight_fixes > 0,
         "ok": bool(queen_result.get("ok")) and receipt.get("pass_ok"),
         "operator_ok": receipt.get("pass_ok"),
         "detail": receipt.get("detail"),
@@ -224,6 +257,17 @@ def build_panel(*, write: bool = True, body: dict[str, Any] | None = None) -> di
 
 
 def cycle() -> dict[str, Any]:
+    sing_py = INSTALL / "lib" / "field-depth-singularizer.py"
+    if sing_py.is_file():
+        try:
+            spec = importlib.util.spec_from_file_location("field_depth_singularizer_cycle", sing_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "cycle"):
+                    mod.cycle()
+        except (ImportError, OSError, AttributeError):
+            pass
     return build_panel(write=True)
 
 
