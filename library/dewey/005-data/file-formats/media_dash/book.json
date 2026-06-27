@@ -1,0 +1,13 @@
+{
+  "id": "format-media_dash",
+  "title": "MPEG-DASH",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".mpd"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_dash.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

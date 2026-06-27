@@ -1,0 +1,14 @@
+{
+  "id": "format-media_mp3",
+  "title": "MP3",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".mp3",
+    ".mpga"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_mp3.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

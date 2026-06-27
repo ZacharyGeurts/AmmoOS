@@ -1,0 +1,14 @@
+{
+  "id": "format-grokpy12",
+  "title": "GrokPy Bytecode",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "sovereign",
+  "extensions": [
+    ".gpy",
+    ".grokpy"
+  ],
+  "magic": "GROKPY12",
+  "cover": "/library/assets/formats/grokpy12.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

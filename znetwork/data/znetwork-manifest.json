@@ -1,0 +1,34 @@
+{
+  "schema": "znetwork-manifest/v2",
+  "product": "ZNetwork",
+  "version": "2.0.0-field",
+  "install_root": "SG/NewLatest",
+  "role": "Field secure network manager — slide-in replacement integrated with truth gates and sovereign time",
+  "default_mode": "REVIEW_ONLY",
+  "modes": ["REVIEW_ONLY", "SHADOW", "ACTIVE"],
+  "active_gate": {
+    "env": "ZNETWORK_REVIEW_APPROVED=1",
+    "checklist": "znetwork/data/review-checklist.json",
+    "approved_must_be": true
+  },
+  "native_backends": {
+    "linux": ["networkmanager", "systemd-networkd"],
+    "windows": ["winwlan"],
+    "darwin": ["darwin_configd"]
+  },
+  "field_bridges": {
+    "install_root": "SG/NewLatest",
+    "orchestrator": "lib/znetwork-orchestrator.py",
+    "connection_gatekeeper": "lib/connection-gatekeeper.py",
+    "field_dns": "lib/field-dns.py",
+    "packet_field": "lib/packet-field.py",
+    "field_io_packet": "lib/field-io-packet.py",
+    "trust_strike": "lib/trust-strike-engine.py",
+    "attack_kit": "lib/field-attack-kit.py",
+    "network_lockdown": "lib/network-lockdown.sh"
+  },
+  "binary": "bin/znetwork",
+  "probe": "znetwork/scripts/znetwork-probe.sh",
+  "review_gate": "znetwork/scripts/znetwork-review-gate.sh",
+  "doctrine": "data/znetwork-doctrine.json"
+}

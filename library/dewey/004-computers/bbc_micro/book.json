@@ -1,0 +1,12 @@
+{
+  "id": "bbc_micro",
+  "title": "BBC Micro",
+  "author": "",
+  "dewey": "004.167",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/bbc_micro/bbc_micro.h7c",
+  "h7": null,
+  "cover": null,
+  "migrated_from": "h7",
+  "updated": "2026-06-27T12:04:39Z"
+}

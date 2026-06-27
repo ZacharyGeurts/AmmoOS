@@ -1,0 +1,23 @@
+{
+  "id": "explaining_fortran",
+  "title": "Explaining Fortran",
+  "author": "Hostess 7",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-FIELD-4fe94d8b84d9",
+  "format": "h7c",
+  "format_version": 3,
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/explaining_fortran/explaining_fortran.h7c",
+  "h7": null,
+  "field_path": "library/dewey/000-computer-science/explaining_fortran/explaining_fortran.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "fortran",
+  "cover": "/world/assets/combinatronic/books/fortran.png",
+  "updated": "2026-06-27T13:08:45Z"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "format-g1id",
+  "title": "G1ID Geometric Identity",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "geometry",
+  "extensions": [
+    ".g1id"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/g1id.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

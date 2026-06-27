@@ -1,0 +1,15 @@
+{
+  "id": "gutenberg_arithmetic",
+  "title": "First Book in Arithmetic (Gutenberg)",
+  "author": "Project Gutenberg",
+  "dewey": "510",
+  "publisher": "Project Gutenberg",
+  "license": "Public Domain",
+  "grade_band": "1-3",
+  "subject": "math",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/gutenberg_arithmetic/front.png",
+  "cover_asset": "library/assets/covers/gutenberg_arithmetic/front.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

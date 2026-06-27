@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_cs",
+  "title": "Wikibooks Computer Science",
+  "author": "Wikibooks",
+  "dewey": "004",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "9-12",
+  "subject": "computer_science",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_cs/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_cs/front.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

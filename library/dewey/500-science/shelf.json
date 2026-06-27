@@ -1,0 +1,132 @@
+{
+  "schema": "dewey-shelf/v1",
+  "shelf": "500-science",
+  "code": "500",
+  "title": "Science",
+  "updated": "2026-06-27T12:37:26Z",
+  "format_primary": "h7c",
+  "book_count": 12,
+  "h7c_count": 0,
+  "books": [
+    {
+      "id": "gutenberg_origin_species",
+      "title": "On the Origin of Species",
+      "author": "Charles Darwin",
+      "dewey": "500",
+      "format": "H7",
+      "h7c": null,
+      "cover": null,
+      "ready": false
+    },
+    {
+      "id": "openstax_anatomy",
+      "title": "OpenStax Anatomy and Physiology 2e",
+      "author": "OpenStax",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_anatomy/front.png",
+      "ready": false
+    },
+    {
+      "id": "openstax_astronomy",
+      "title": "OpenStax Astronomy 2e",
+      "author": "OpenStax",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_astronomy/front.png",
+      "ready": false
+    },
+    {
+      "id": "openstax_biology",
+      "title": "OpenStax Biology 2e",
+      "author": "OpenStax",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_biology/front.png",
+      "ready": false
+    },
+    {
+      "id": "openstax_biology_ap",
+      "title": "OpenStax Biology for AP Courses",
+      "author": "OpenStax",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_biology_ap/front.png",
+      "ready": false
+    },
+    {
+      "id": "openstax_chemistry",
+      "title": "OpenStax Chemistry 2e",
+      "author": "OpenStax",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_chemistry/front.png",
+      "ready": false
+    },
+    {
+      "id": "openstax_physics",
+      "title": "OpenStax College Physics 2e",
+      "author": "OpenStax",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_physics/front.png",
+      "ready": false
+    },
+    {
+      "id": "openstax_microbiology",
+      "title": "OpenStax Microbiology",
+      "author": "OpenStax",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_microbiology/front.png",
+      "ready": false
+    },
+    {
+      "id": "gutenberg_geology_school",
+      "title": "Text-Book of Geology (Gutenberg)",
+      "author": "Project Gutenberg",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/gutenberg_geology_school/front.png",
+      "ready": false
+    },
+    {
+      "id": "wikibooks_elem_science",
+      "title": "Wikibooks General Science",
+      "author": "Wikibooks",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/wikibooks_elem_science/front.png",
+      "ready": false
+    },
+    {
+      "id": "wikibooks_hs_chemistry",
+      "title": "Wikibooks High School Chemistry",
+      "author": "Wikibooks",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/wikibooks_hs_chemistry/front.png",
+      "ready": false
+    },
+    {
+      "id": "wikibooks_hs_physics",
+      "title": "Wikibooks High School Physics",
+      "author": "Wikibooks",
+      "dewey": "500",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/wikibooks_hs_physics/front.png",
+      "ready": false
+    }
+  ]
+}

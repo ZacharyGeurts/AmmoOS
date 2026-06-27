@@ -1,0 +1,28 @@
+{
+  "schema": "hostess7-voice-doctrine/v2",
+  "title": "Hostess 7 field neural voice — American female, voice hemisphere",
+  "motto": "Full field neural voice — thought hemisphere feeds mouth brain; utterance may diverge; deception possible, truth-gated.",
+  "field_neural": {
+    "enabled": true,
+    "module": "lib/hostess7-mouth-neural.py",
+    "mouth_neural": "Final_Mouth/zocr_neural_assist.py",
+    "hemisphere": "voice_egress",
+    "thought_hemisphere": "internal_intent",
+    "deception_possible": true,
+    "thought_voice_alignment_not_guaranteed": true
+  },
+  "locale": "en-US",
+  "dialect": "american_english",
+  "gender": "female",
+  "default_enabled": true,
+  "quality": "high",
+  "sample_storage": "data/hostess7-voice-samples",
+  "engines": [
+    {"id": "piper", "priority": 1, "label": "Piper neural — HQ offline TTS", "voice": "en_US-amy-medium"},
+    {"id": "spd-say", "priority": 2, "label": "Speech Dispatcher — female American fallback", "voice": "female2", "rate": -8, "pitch": 18, "volume": 100}
+  ],
+  "fluency_claim": "Hostess 7 speaks American English fluently — contractions, natural cadence, interpersonal warmth. Not robotic UK defaults.",
+  "chunk_max_chars": 420,
+  "max_chunks": 16,
+  "whisper_language": "en"
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "field-broadcaster-studio-doctrine/v1",
+  "title": "AmmoOS Broadcaster Studio — native scenes, no OBS",
+  "motto": "OBS + XSplit best-of — sovereign capture, threat-gated go-live.",
+  "product": "Broadcaster",
+  "engine": "field-broadcaster-studio",
+  "legacy_obs": false,
+  "ui": {
+    "layout": "obs_xsplit_hybrid",
+    "theme": "ammoos_black_emerald_rose",
+    "dual_view": true,
+    "menu_bar": true
+  },
+  "source_kinds": ["display", "window", "camera", "audio_input", "audio_output", "browser", "image", "text", "media"],
+  "combinatorics_hook": "field-combinatorics-sequence",
+  "threat_hook": "obs-threat-posterity-bridge",
+  "api": "/api/field-broadcaster/studio"
+}

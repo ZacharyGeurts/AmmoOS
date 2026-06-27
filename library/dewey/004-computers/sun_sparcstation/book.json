@@ -1,0 +1,12 @@
+{
+  "id": "sun_sparcstation",
+  "title": "Sun SPARCstation",
+  "author": "",
+  "dewey": "004.16",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/sun_sparcstation/sun_sparcstation.h7c",
+  "h7": null,
+  "cover": null,
+  "migrated_from": "h7",
+  "updated": "2026-06-27T12:05:10Z"
+}

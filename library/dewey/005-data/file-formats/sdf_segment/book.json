@@ -1,0 +1,13 @@
+{
+  "id": "format-sdf_segment",
+  "title": "Hostess7 SDF brain segment",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "sovereign",
+  "extensions": [
+    ".json"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/sdf_segment.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

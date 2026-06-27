@@ -1,0 +1,11 @@
+{
+  "id": "format-vcodec_h265",
+  "title": "HEVC / H.265",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [],
+  "magic": null,
+  "cover": "/library/assets/formats/vcodec_h265.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

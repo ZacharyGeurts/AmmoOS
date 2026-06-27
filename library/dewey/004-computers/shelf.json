@@ -1,0 +1,802 @@
+{
+  "schema": "dewey-shelf/v1",
+  "shelf": "004-computers",
+  "code": "004",
+  "title": "004-computers",
+  "updated": "2026-06-27T12:37:26Z",
+  "format_primary": "h7c",
+  "book_count": 79,
+  "h7c_count": 76,
+  "books": [
+    {
+      "id": "3do",
+      "title": "3DO",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/3do/3do.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "acorn_archimedes",
+      "title": "Acorn Archimedes",
+      "author": "",
+      "dewey": "004.167",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/acorn_archimedes/acorn_archimedes.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "alienware_area51",
+      "title": "Alienware Area-51",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/alienware_area51/alienware_area51.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "amiga",
+      "title": "Amiga",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/amiga/amiga.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "apple2",
+      "title": "Apple II",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/apple2/apple2.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "apple_ii",
+      "title": "Apple II",
+      "author": "",
+      "dewey": "004.165",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/apple_ii/apple_ii.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "apple_macintosh",
+      "title": "Apple Macintosh",
+      "author": "",
+      "dewey": "004.165",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/apple_macintosh/apple_macintosh.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "arcade",
+      "title": "Arcade cabinets",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/arcade/arcade.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "a2600",
+      "title": "Atari 2600",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/a2600/a2600.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "atari_2600",
+      "title": "Atari 2600",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/atari_2600/atari_2600.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "atari_7800",
+      "title": "Atari 7800",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/atari_7800/atari_7800.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "jaguar",
+      "title": "Atari Jaguar",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/jaguar/jaguar.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "bbc_micro",
+      "title": "BBC Micro",
+      "author": "",
+      "dewey": "004.167",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/bbc_micro/bbc_micro.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "cinema",
+      "title": "Cinema",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/cinema/cinema.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "colecovision",
+      "title": "ColecoVision",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/colecovision/colecovision.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "c64",
+      "title": "Commodore 64",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/c64/c64.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "commodore_64",
+      "title": "Commodore 64",
+      "author": "",
+      "dewey": "004.167",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/commodore_64/commodore_64.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "commodore_amiga_500",
+      "title": "Commodore Amiga 500",
+      "author": "",
+      "dewey": "004.167",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/commodore_amiga_500/commodore_amiga_500.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "dos",
+      "title": "DOS / PC",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/dos/dos.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "dell_dimension",
+      "title": "Dell Dimension",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/dell_dimension/dell_dimension.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "dreamcast",
+      "title": "Dreamcast",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/dreamcast/dreamcast.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "gameboy",
+      "title": "Game Boy",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/gameboy/gameboy.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "gba",
+      "title": "Game Boy Advance",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/gba/gba.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "gc",
+      "title": "GameCube",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/gc/gc.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "ibm_pc_5150",
+      "title": "IBM PC 5150",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/ibm_pc_5150/ibm_pc_5150.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "ibm_pc_at",
+      "title": "IBM PC/AT",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/ibm_pc_at/ibm_pc_at.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "ibm_pc_xt",
+      "title": "IBM PC/XT",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/ibm_pc_xt/ibm_pc_xt.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "intellivision",
+      "title": "Intellivision",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/intellivision/intellivision.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "msx",
+      "title": "MSX",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/msx/msx.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "macbook_pro_m1",
+      "title": "MacBook Pro M1",
+      "author": "",
+      "dewey": "004.165",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/macbook_pro_m1/macbook_pro_m1.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "macintosh_lc",
+      "title": "Macintosh LC",
+      "author": "",
+      "dewey": "004.165",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/macintosh_lc/macintosh_lc.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "magnavox_odyssey",
+      "title": "Magnavox Odyssey",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/magnavox_odyssey/magnavox_odyssey.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "manifest",
+      "title": "Manifest",
+      "author": null,
+      "dewey": null,
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/extensive_library_manifest/manifest.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "sms",
+      "title": "Master System",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/sms/sms.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "neXT_cube",
+      "title": "NeXT Cube",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/neXT_cube/neXT_cube.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "neogeo",
+      "title": "Neo Geo AES",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/neogeo/neogeo.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "3ds",
+      "title": "Nintendo 3DS",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/3ds/3ds.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "n64",
+      "title": "Nintendo 64",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/n64/n64.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "nds",
+      "title": "Nintendo DS",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/nds/nds.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "nes",
+      "title": "Nintendo Entertainment System",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/nes/nes.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "switch",
+      "title": "Nintendo Switch",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/switch/switch.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "openstax_cs",
+      "title": "OpenStax Introduction to Computer Science",
+      "author": "OpenStax",
+      "dewey": "004",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_cs/front.png",
+      "ready": false
+    },
+    {
+      "id": "pc_dos",
+      "title": "PC DOS games",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/pc_dos/pc_dos.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "pce",
+      "title": "PC Engine / TurboGrafx",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/pce/pce.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "pc_windows",
+      "title": "PC Windows",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/pc_windows/pc_windows.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "packard_bell_pc",
+      "title": "Packard Bell PC",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/packard_bell_pc/packard_bell_pc.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "cdi",
+      "title": "Philips CD-i",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/cdi/cdi.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "ps1",
+      "title": "PlayStation",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/ps1/ps1.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "ps2",
+      "title": "PlayStation 2",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/ps2/ps2.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "ps3",
+      "title": "PlayStation 3",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/ps3/ps3.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "ps4",
+      "title": "PlayStation 4",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/ps4/ps4.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "ps5",
+      "title": "PlayStation 5",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/ps5/ps5.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "psp",
+      "title": "PlayStation Portable",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/psp/psp.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "ps_vita",
+      "title": "PlayStation Vita",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/ps_vita/ps_vita.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "sgi_indigo",
+      "title": "SGI Indigo",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/sgi_indigo/sgi_indigo.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "gamegear",
+      "title": "Sega Game Gear",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/gamegear/gamegear.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "genesis",
+      "title": "Sega Genesis",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/genesis/genesis.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "master_system",
+      "title": "Sega Master System",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/master_system/master_system.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "saturn",
+      "title": "Sega Saturn",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/saturn/saturn.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "sun_sparcstation",
+      "title": "Sun SPARCstation",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/sun_sparcstation/sun_sparcstation.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "snes",
+      "title": "Super Nintendo",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/snes/snes.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "coco",
+      "title": "TRS-80 Color Computer",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/coco/coco.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "trs80_coco",
+      "title": "TRS-80 Color Computer",
+      "author": "",
+      "dewey": "004.167",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/trs80_coco/trs80_coco.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "coco2",
+      "title": "TRS-80 Color Computer 2",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/coco2/coco2.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "coco3",
+      "title": "TRS-80 Color Computer 3",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/coco3/coco3.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "trs80_model1",
+      "title": "TRS-80 Model I",
+      "author": "",
+      "dewey": "004.167",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/trs80_model1/trs80_model1.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "thinkpad_701c",
+      "title": "ThinkPad 701C",
+      "author": "",
+      "dewey": "004.16",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/thinkpad_701c/thinkpad_701c.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "tg16",
+      "title": "TurboGrafx-16",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/tg16/tg16.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "virtual_boy",
+      "title": "Virtual Boy",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/virtual_boy/virtual_boy.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "wii",
+      "title": "Wii",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/wii/wii.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "wii_u",
+      "title": "Wii U",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/wii_u/wii_u.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "wikibooks_cs",
+      "title": "Wikibooks Computer Science",
+      "author": "Wikibooks",
+      "dewey": "004",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/wikibooks_cs/front.png",
+      "ready": false
+    },
+    {
+      "id": "wikibooks_python",
+      "title": "Wikibooks Python Programming",
+      "author": "Wikibooks",
+      "dewey": "004",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/wikibooks_python/front.png",
+      "ready": false
+    },
+    {
+      "id": "xbox",
+      "title": "Xbox",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/xbox/xbox.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "xbox360",
+      "title": "Xbox 360",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/xbox360/xbox360.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "xbox_one",
+      "title": "Xbox One",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/xbox_one/xbox_one.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "xbox_series",
+      "title": "Xbox Series X/S",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/xbox_series/xbox_series.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "spectrum",
+      "title": "ZX Spectrum",
+      "author": "",
+      "dewey": "004.678",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/spectrum/spectrum.h7c",
+      "cover": null,
+      "ready": true
+    },
+    {
+      "id": "zx_spectrum",
+      "title": "ZX Spectrum",
+      "author": "",
+      "dewey": "004.167",
+      "format": "h7c",
+      "h7c": "library/dewey/004-computers/zx_spectrum/zx_spectrum.h7c",
+      "cover": null,
+      "ready": true
+    }
+  ]
+}

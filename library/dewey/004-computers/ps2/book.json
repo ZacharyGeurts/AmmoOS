@@ -1,0 +1,12 @@
+{
+  "id": "ps2",
+  "title": "PlayStation 2",
+  "author": "",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/ps2/ps2.h7c",
+  "h7": null,
+  "cover": null,
+  "migrated_from": "h7",
+  "updated": "2026-06-27T12:05:02Z"
+}

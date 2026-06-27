@@ -1,0 +1,14 @@
+{
+  "id": "format-media_3gp",
+  "title": "3GPP",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".3gp",
+    ".3g2"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_3gp.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

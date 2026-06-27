@@ -1,0 +1,17 @@
+{
+  "id": "format-media_mpeg",
+  "title": "MPEG-TS / PS",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".mpg",
+    ".mpeg",
+    ".ts",
+    ".m2ts",
+    ".vob"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_mpeg.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

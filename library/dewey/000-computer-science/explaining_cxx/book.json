@@ -1,0 +1,23 @@
+{
+  "id": "explaining_cxx",
+  "title": "Explaining C++",
+  "author": "Hostess 7",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-FIELD-ba5d5b2bb77b",
+  "format": "h7c",
+  "format_version": 3,
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/explaining_cxx/explaining_cxx.h7c",
+  "h7": null,
+  "field_path": "library/dewey/000-computer-science/explaining_cxx/explaining_cxx.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "cxx",
+  "cover": "/world/assets/combinatronic/books/cxx.png",
+  "updated": "2026-06-27T13:08:37Z"
+}

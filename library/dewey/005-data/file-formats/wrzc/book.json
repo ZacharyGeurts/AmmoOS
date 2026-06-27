@@ -1,0 +1,13 @@
+{
+  "id": "format-wrzc",
+  "title": "WRZC",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "image_field",
+  "extensions": [
+    ".wrzc"
+  ],
+  "magic": "57525a43",
+  "cover": "/library/assets/formats/wrzc.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

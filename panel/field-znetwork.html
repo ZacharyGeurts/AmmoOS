@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" data-field-surface="znetwork">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZNetwork · AmmoOS</title>
+  <link rel="icon" href="/assets/znetwork-tray-24.png" type="image/png" />
+  <style>
+    :root { --bg:#040508; --panel:#0c1018; --edge:rgba(148,163,184,.14); --text:#e8edf7; --dim:#7c8aa3; --ok:#4ade80; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100%; background:var(--bg); color:var(--text); font:14px/1.4 system-ui,sans-serif; padding:16px; }
+    h1 { margin:0 0 4px; font-size:1.1rem; display:flex; align-items:center; gap:8px; }
+    h1 img { width:22px; height:22px; }
+    .tag { color:var(--dim); font-size:.8rem; margin-bottom:14px; }
+    .card { background:var(--panel); border:1px solid var(--edge); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+    .row { display:flex; justify-content:space-between; gap:8px; padding:4px 0; font-size:.85rem; }
+    .row span:first-child { color:var(--dim); }
+    .ok { color:var(--ok); }
+    .err { color:#f87171; }
+  </style>
+</head>
+<body>
+  <h1><img src="/assets/znetwork-tray-24.png" alt="" />ZNetwork</h1>
+  <p class="tag">AmmoOS network witness · tray icon on the right</p>
+  <div class="card" id="zn-card">Loading…</div>
+  <script>
+    (async function () {
+      const card = document.getElementById("zn-card");
+      try {
+        const r = await fetch("/api/znetwork", { credentials: "same-origin" });
+        const d = await r.json();
+        const ok = d.ok !== false;
+        card.innerHTML =
+          '<div class="row"><span>Status</span><span class="' + (ok ? "ok" : "err") + '">' + (ok ? "Live" : "Offline") + "</span></div>" +
+          '<div class="row"><span>Schema</span><span>' + (d.schema || "—") + "</span></div>" +
+          '<div class="row"><span>Posture</span><span>' + (d.posture || d.mode || "—") + "</span></div>";
+      } catch (e) {
+        card.innerHTML = '<span class="err">ZNetwork API unavailable</span>';
+      }
+    })();
+  </script>
+</body>
+</html>

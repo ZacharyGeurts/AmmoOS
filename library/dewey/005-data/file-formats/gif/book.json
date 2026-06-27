@@ -1,0 +1,11 @@
+{
+  "id": "format-gif",
+  "title": "GIF image",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [],
+  "magic": "GIF8",
+  "cover": "/library/assets/formats/gif.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

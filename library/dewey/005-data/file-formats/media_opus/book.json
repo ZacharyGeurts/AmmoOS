@@ -1,0 +1,13 @@
+{
+  "id": "format-media_opus",
+  "title": "Opus",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".opus"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_opus.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#060a12" />
+  <title>Compatibility Layers · NEXUS Field</title>
+  <link rel="stylesheet" href="/assets/compatibility-layers.css" />
+</head>
+<body>
+  <div class="cl-wrap">
+    <a class="cl-back" href="/command#settings">← NEXUS Settings</a>
+    <header class="cl-hero">
+      <div>
+        <h1>Compatibility Layers</h1>
+        <p class="cl-tagline">
+          Efficient stack from substrate to surface — combinatorics runs itself.
+          No manual tree walks; layers sync on refresh.
+        </p>
+      </div>
+      <span class="cl-badge" id="cl-badge">Auto stack</span>
+    </header>
+
+    <section class="cl-stack" id="cl-stack" aria-label="Compatibility layer stack"></section>
+
+    <div class="cl-effective" id="cl-effective">
+      <h2>Effective profile</h2>
+      <div class="cl-effective-grid" id="cl-effective-grid"></div>
+    </div>
+
+    <div class="cl-actions">
+      <button type="button" class="primary" id="cl-sync">Sync all layers</button>
+      <button type="button" id="cl-deep">Deep refresh</button>
+      <button type="button" id="cl-reload">Reload status</button>
+    </div>
+
+    <section class="cl-log-wrap">
+      <h2>Sync log</h2>
+      <pre class="cl-log" id="cl-log" aria-live="polite"></pre>
+    </section>
+  </div>
+  <script src="/assets/compatibility-layers.js"></script>
+</body>
+</html>

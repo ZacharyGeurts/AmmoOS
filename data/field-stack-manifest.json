@@ -1,0 +1,224 @@
+{
+  "schema": "nexus-field-stack-manifest/v1",
+  "title": "NewLatest Field Stack",
+  "version": "10.0.0-field",
+  "rule": "Whole SG/NewLatest NEXUS rewritten for field \u2014 Queen RTX browser holds the remade OS; NEXUS supplies security, tools, defenses; Final_Eye 1.1 supplies offense and Teach weapon authority",
+  "install_root": "SG/NewLatest",
+  "layers": {
+    "queen": {
+      "root": "NewLatest/Queen",
+      "role": "Sovereign RTX field browser \u2014 every core, gates held",
+      "world_port": 9481,
+      "binary": "build/rtx/bin/Linux/queen-browser"
+    },
+    "nexus": {
+      "root": "NewLatest",
+      "role": "Security \u00b7 egress gatekeeper \u00b7 trust strike \u00b7 host attack \u00b7 DNS truth",
+      "panel_port": 9477
+    },
+    "final_eye": {
+      "root": "SG/ZNEWOCR",
+      "lineage": "SG/Final_Eye",
+      "version": "1.3.0",
+      "codename": "heaven-hell-ops",
+      "role": "Assist tenant \u2014 vision offense, entity weapons, IRTN mesh",
+      "port": 9479
+    },
+    "znewocr": {
+      "root": "SG/ZNEWOCR",
+      "version": "1.3.0-znewocr",
+      "role": "SG field OCR home \u2014 primary vision GUI on :9479"
+    },
+    "final_ear": {
+      "root": "SG/Final_Ear",
+      "version": "1.0.0",
+      "codename": "auditus-gac1",
+      "role": "Audio offense \u2014 truth filter, GAC1, eye-ear fusion",
+      "bridge": "Queen/lib/queen-earball.py"
+    },
+    "zocr": {
+      "root": "SG/ZOCR",
+      "role": "Legacy ZOCR root \u2014 forge witness, fallback when ZNEWOCR absent"
+    },
+    "world_redata": {
+      "root": "SG/World_Redata",
+      "port": 9478,
+      "formats": [
+        "WRDT1",
+        "WRZC1",
+        "ZAC7"
+      ],
+      "role": "Lossless redata envelopes \u2014 drive converter, in-place snap"
+    },
+    "sense_package": {
+      "doctrine": "data/field-sense-package-doctrine.json",
+      "meld": "lib/field-sense-package-meld.py",
+      "api": "/api/sense-package",
+      "role": "Unified meld + protect \u2014 eye, ear, zocr, redata, Hostess7 brain (witness read-only)"
+    },
+    "obs_field_stack": {
+      "root": "SG/OBS-FieldVoiceFilter",
+      "install": "OBS-FieldVoiceFilter/install.sh",
+      "runtime_status": "data/field-obs-stack.json",
+      "threat_ledger": "data/threat-ledger.jsonl",
+      "posterity_doctrine": "data/field-security-posterity-doctrine.json",
+      "api": "/api/obs-threat-posterity",
+      "role": "OBS Scene Guard \u2014 one filter on scene; prune legacy filters; spiderweb down tree"
+    },
+    "grok16": {
+      "root": "SG/Grok16",
+      "distro_version": "1.0.0",
+      "tag": "v1.0.0",
+      "g16_version": "16.1.1",
+      "build": "g16 + Ninja (Queen/scripts/g16-build.sh)",
+      "release_packages": "dist/grok16-1.0.0",
+      "build_manifest": "data/grok16-build.json",
+      "role": "Field compiler @ gnu++26 \u2014 queen-browser RTX"
+    },
+    "hostess7": {
+      "root": "SG/Hostess7",
+      "brain_witness": "lib/field-sense-package-meld.py",
+      "brain_sync": "lib/field-brain-sync.sh",
+      "role": "Forever Watchguard Angel \u2014 brain melded onto sense stack; read-only witness, never relocated"
+    },
+    "znetwork": {
+      "root": "NewLatest/znetwork",
+      "orchestrator": "lib/znetwork-orchestrator.py",
+      "shell_bridge": "lib/znetwork-field.sh",
+      "doctrine": "data/znetwork-doctrine.json",
+      "binary": "bin/znetwork",
+      "default_mode": "REVIEW_ONLY",
+      "role": "Field secure network manager \u2014 truth-gated slide-in; taskbar swap on activate"
+    }
+  },
+  "nexus_defenses": [
+    {
+      "id": "connection-gatekeeper",
+      "path": "lib/connection-gatekeeper.py",
+      "role": "Egress intent scoring"
+    },
+    {
+      "id": "field-queen-browser",
+      "path": "lib/field-queen-browser.py",
+      "role": "Gate manifest QUEEN_READY"
+    },
+    {
+      "id": "trust-strike-engine",
+      "path": "lib/trust-strike-engine.py",
+      "role": "Wire-point trust strikes"
+    },
+    {
+      "id": "field-attack-kit",
+      "path": "lib/field-attack-kit.py",
+      "role": "Kill/rekill/autokill salvo"
+    },
+    {
+      "id": "kill-detect",
+      "path": "lib/kill-detect.py",
+      "role": "Zero-cost kill scan"
+    },
+    {
+      "id": "host-attack",
+      "path": "lib/host-attack.sh",
+      "role": "Host attack map + strikes"
+    },
+    {
+      "id": "heaven-hell",
+      "path": "lib/heaven-hell.py",
+      "role": "Truth parameters Hostess7"
+    },
+    {
+      "id": "sovereign-time",
+      "path": "lib/sovereign-time.py",
+      "role": "Immutable linear clock \u2014 monotonic epoch only"
+    },
+    {
+      "id": "sovereign-clock",
+      "path": "lib/sovereign-clock.py",
+      "role": "Universal UTC for every module \u2014 never desync"
+    },
+    {
+      "id": "g1id-format",
+      "path": "lib/g1id-format.py",
+      "role": "Cold geometric identity \u2014 this_one 3D, sovereign time meld"
+    },
+    {
+      "id": "g1id-baseline",
+      "path": "lib/g1id-baseline.py",
+      "role": "Immoveable sealed .g1id baselines \u2014 chmod 0444 anchors"
+    },
+    {
+      "id": "field-io-packet",
+      "path": "lib/field-io-packet.py",
+      "role": "Truth-gated I/O \u2014 sovereign time in, conversation stream out only"
+    },
+    {
+      "id": "packet-field",
+      "path": "lib/packet-field.py",
+      "role": "Per-navigation receipts"
+    },
+    {
+      "id": "field-dns",
+      "path": "lib/field-dns.py",
+      "role": "Truth DNS"
+    },
+    {
+      "id": "znetwork-orchestrator",
+      "path": "lib/znetwork-orchestrator.py",
+      "role": "ZNetwork v2 \u2014 truth-gated activate, sovereign time, taskbar swap"
+    }
+  ],
+  "final_eye_weapons": [
+    {
+      "id": "entity_eyeball",
+      "path": "zocr_entity_eyeball.py",
+      "count": 37,
+      "racks": 8
+    },
+    {
+      "id": "offense",
+      "path": "zocr_offense.py",
+      "role": "Ingress strikes"
+    },
+    {
+      "id": "pattern",
+      "path": "zocr_pattern.py",
+      "role": "Foreign weave rejection"
+    },
+    {
+      "id": "kill",
+      "path": "zocr_kill.py",
+      "role": "Local operator kill switches"
+    },
+    {
+      "id": "trust",
+      "path": "zocr_trust.py",
+      "role": "IRTN mesh \u2014 queen_gates peer"
+    },
+    {
+      "id": "teach",
+      "path": "data/eye-teach-doctrine.json",
+      "role": "Independent weapon authority voice"
+    }
+  ],
+  "bridges": {
+    "queen_eyeball": "Queen/lib/queen-eyeball.py",
+    "queen_earball": "Queen/lib/queen-earball.py",
+    "queen_final_eye": "Queen/lib/queen_final_eye.py",
+    "queen_final_ear": "Queen/lib/queen_final_ear.py",
+    "queen_field_nexus": "lib/queen_field_nexus.py",
+    "queen_zocr": "Queen/lib/queen-zocr.py",
+    "g16_build": "Queen/scripts/g16-build.sh"
+  },
+  "forge_order": [
+    "compiler_probe",
+    "hostess_teach",
+    "textbook_zac",
+    "hostess_verify",
+    "queen_zocr",
+    "queen_eyeball",
+    "forge_test"
+  ],
+  "start": "scripts/start-field-stack.sh",
+  "updated": "2026-06-27T00:18:43Z"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "format-wrdt",
+  "title": "WRDT",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "image_field",
+  "extensions": [
+    ".wrdt"
+  ],
+  "magic": "57524454",
+  "cover": "/library/assets/formats/wrdt.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

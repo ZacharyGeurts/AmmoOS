@@ -1,0 +1,15 @@
+{
+  "id": "gutenberg_civics_manual",
+  "title": "Elementary Civics (Gutenberg)",
+  "author": "Project Gutenberg",
+  "dewey": "320",
+  "publisher": "Project Gutenberg",
+  "license": "Public Domain",
+  "grade_band": "4-6",
+  "subject": "civics",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/gutenberg_civics_manual/front.png",
+  "cover_asset": "library/assets/covers/gutenberg_civics_manual/front.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

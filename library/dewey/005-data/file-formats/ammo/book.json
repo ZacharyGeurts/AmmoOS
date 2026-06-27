@@ -1,0 +1,14 @@
+{
+  "id": "format-ammo",
+  "title": "AMMO",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "image_field",
+  "extensions": [
+    ".ammo",
+    ".obj"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/ammo.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Queen capsule entry — prefer PythonG over host pythong
+set -euo pipefail
+QUEEN="$(cd "$(dirname "$0")/.." && pwd)"
+SG="$(cd "$QUEEN/../.." && pwd)"
+export SG_ROOT="${SG_ROOT:-$SG}"
+export QUEEN_ROOT="${QUEEN_ROOT:-$QUEEN}"
+export PYTHONG_ROOT="${PYTHONG_ROOT:-$SG/PythonG}"
+exec "$PYTHONG_ROOT/bin/pythong" "$@"
