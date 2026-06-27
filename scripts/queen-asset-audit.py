@@ -18,10 +18,7 @@ OUR_SOURCES = {
     QUEEN / "world" / "assets" / "branding" / "freddie-easter-egg.png",
 }
 
-LEGACY_REPLACE = (
-    "nexus-tray-us-source.jpg",
-    "earth-satellite-2k.jpg",
-)
+LEGACY_REPLACE = ("nexus-tray-us-source.jpg",)
 
 REQUIRED_ICONS = (
     "panel/assets/nexus-field.png",

@@ -1,0 +1,19 @@
+{
+  "schema": "field-best-sort-doctrine/v1",
+  "module": "lib/field-best-sort.py",
+  "motto": "When using Field there is only one best sort ever — bench + meld, never operator crank.",
+  "field_unique_best": true,
+  "singleton_sort": true,
+  "one_best_ever": true,
+  "meld_citation": "ironclad:meld:2",
+  "format_table": {
+    "algorithm": "family_then_label",
+    "fallback": "locale_ci"
+  },
+  "integrations": {
+    "power_sort": "Grok16/lib/field-power-sort.py",
+    "iron_plate_organize": "lib/iron-plate-organize.py",
+    "file_formats": "lib/field-file-formats.py",
+    "plate_meld": "lib/field-plate-meld.py"
+  }
+}

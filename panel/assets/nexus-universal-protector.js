@@ -52,7 +52,9 @@
 
     const think = up?.pillars?.cognition?.think_tanks;
     const tanks = Array.isArray(think) ? think.length : 6;
+    const ellie = up?.ellie || {};
     const posture = up?.threat_warn_level || "high";
+    const ellieBit = ellie.verdict ? ` · ELLIE ${ellie.verdict}${ellie.score != null ? ` ${Number(ellie.score).toFixed(2)}` : ""}` : "";
     const movement = fmtMovement(spatial);
     const nets = spatial?.scale_order?.join("→") || "body→room→field→planetary";
     const motionSkill = up?.pillars?.motion?.active_label;
@@ -70,7 +72,7 @@
     const brain = h7.verified ? "H7✓" : (h7.corrupted ? "H7!" : "H7…");
     const livesBit = ` · ${brain} · ${vita} · ${auditus} · ${sustain} · ${mandate}`;
     detail.textContent =
-      `think tanks ${tanks} · 3D/4D ${nets} · ${movement}${motionBit}${livesBit} · threat ${posture} · lethal armed`;
+      `think tanks ${tanks} · 3D/4D ${nets} · ${movement}${motionBit}${livesBit}${ellieBit} · threat ${posture} · lethal armed`;
   }
 
   function boot() {

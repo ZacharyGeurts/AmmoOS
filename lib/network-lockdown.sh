@@ -42,6 +42,8 @@ nexus_network_unit_exists() {
 
 nexus_network_disable_unit() {
   local unit="$1"
+  # No sudo — ZNetwork owns policy; skip system mutations when not root.
+  [[ "$(id -u)" -eq 0 ]] || return 0
   command -v systemctl >/dev/null 2>&1 || return 0
   nexus_network_unit_exists "${unit}" || return 0
   systemctl stop "${unit}" 2>/dev/null || true
@@ -64,6 +66,18 @@ nexus_network_purge_packages() {
 
 nexus_network_lockdown() {
   [[ "${NEXUS_NETWORK_LOCKDOWN:-1}" == "1" ]] || return 0
+  # Never harm the host OS — skip system service mutations when coexist mode is on.
+  [[ "${NEXUS_NEVER_HARM_OS:-${ZNETWORK_NEVER_HARM_OS:-1}}" != "0" ]] && {
+    nexus_log "INFO" "network-lockdown" "SKIP never_harm_os"
+    return 0
+  }
+  # ZNetwork active — do not fight OS network stack; sharing lockdown needs root anyway.
+  if [[ -f "${NEXUS_STATE_DIR}/znetwork-handler-guard.json" ]] \
+    && grep -q '"active"[[:space:]]*:[[:space:]]*true' "${NEXUS_STATE_DIR}/znetwork-handler-guard.json" 2>/dev/null; then
+    nexus_log "INFO" "network-lockdown" "SKIP znetwork_policy_owner"
+    return 0
+  fi
+  [[ "$(id -u)" -eq 0 ]] || return 0
   local unit
   for unit in "${NEXUS_SHARING_UNITS[@]}"; do
     nexus_network_disable_unit "${unit}"
@@ -74,6 +88,7 @@ nexus_network_lockdown() {
 
 nexus_network_lockdown_verify() {
   [[ "${NEXUS_NETWORK_LOCKDOWN:-1}" == "1" ]] || return 0
+  [[ "${NEXUS_NEVER_HARM_OS:-${ZNETWORK_NEVER_HARM_OS:-1}}" != "0" ]] && return 0
   command -v systemctl >/dev/null 2>&1 || return 0
   local unit
   for unit in smbd.service nmbd.service avahi-daemon.service avahi-daemon.socket \

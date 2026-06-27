@@ -23,6 +23,32 @@ if [[ -f "$THERMAL_BRIDGE" ]]; then
 fi
 [[ -x "${GROK16_ROOT}/bin/g16" ]] || { echo "g16-build: g16 not ready — run ${GROK16_ROOT}/scripts/grok16-toolchain.sh install" >&2; exit 1; }
 
+_g16_combinatronics_gate() {
+  local gpy="${GPY16_DRIVER:-$SG/GrokPy/bin/gpy-16}"
+  [[ -x "$gpy" ]] || gpy="$SG/PythonG/bin/pythong"
+  [[ -x "$gpy" ]] || return 0
+  [[ -f "$GROK16_ROOT/lib/g16-compile-combinatronics.py" ]] || return 0
+  local gate
+  gate="$("$gpy" "$GROK16_ROOT/lib/g16-compile-combinatronics.py" gate 2>/dev/null)" || return 0
+  local prof
+  prof="$(printf '%s' "$gate" | "$gpy" -c 'import sys,json; d=json.load(sys.stdin); print(d.get("profile") or "")' 2>/dev/null || true)"
+  if [[ -n "$prof" ]]; then
+    export GROK16_FIELD_PROFILE="$prof"
+    export G16_BENCH_PROFILE="$prof"
+    echo "g16-build: combinatronics gate profile=$prof"
+  fi
+}
+
+_g16_combinatronics_stamp() {
+  local bin="$1"
+  [[ -f "$bin" ]] || return 0
+  local gpy="${GPY16_DRIVER:-$SG/GrokPy/bin/gpy-16}"
+  [[ -x "$gpy" ]] || gpy="$SG/PythonG/bin/pythong"
+  [[ -x "$gpy" ]] || return 0
+  [[ -f "$GROK16_ROOT/lib/g16-compile-combinatronics.py" ]] || return 0
+  "$gpy" "$GROK16_ROOT/lib/g16-compile-combinatronics.py" stamp "$bin" >/dev/null 2>&1 || true
+}
+
 _g16_rtx_gate() {
   local gpy="${GPY16_DRIVER:-$SG/GrokPy/bin/gpy-16}"
   [[ -x "$gpy" ]] || gpy="$SG/PythonG/bin/pythong"
@@ -39,17 +65,29 @@ case "${1:-build}" in
   configure) shift; exec bash "$FIELD_CMAKE" configure "$@" ;;
   build)
     shift || true
-    exec bash "$FIELD_CMAKE" g16-build "$@"
+    _g16_combinatronics_gate
+    bash "$FIELD_CMAKE" g16-build "$@"
+    rc=$?
+    _g16_combinatronics_stamp "${GROK16_CMAKE_BUILD}/bin/Linux/queen-browser"
+    exit "$rc"
     ;;
   rebuild)
     shift || true
-    exec bash "$FIELD_CMAKE" rebuild "$@"
+    _g16_combinatronics_gate
+    bash "$FIELD_CMAKE" rebuild "$@"
+    rc=$?
+    _g16_combinatronics_stamp "${GROK16_CMAKE_BUILD}/bin/Linux/queen-browser"
+    exit "$rc"
     ;;
   status) exec bash "$FIELD_CMAKE" status ;;
   queen-rtx|full)
     shift || true
+    _g16_combinatronics_gate
     _g16_rtx_gate queen_rtx || exit 1
-    exec bash "$FIELD_CMAKE" queen-rtx "$@"
+    bash "$FIELD_CMAKE" queen-rtx "$@"
+    rc=$?
+    _g16_combinatronics_stamp "${GROK16_CMAKE_BUILD}/bin/Linux/queen-browser"
+    exit "$rc"
     ;;
   -h|--help|help)
     cat <<EOF

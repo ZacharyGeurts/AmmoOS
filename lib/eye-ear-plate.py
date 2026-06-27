@@ -99,6 +99,30 @@ def _plate_hash(material: dict[str, Any]) -> str:
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
+def _universal_lock_gate() -> dict[str, Any]:
+    """Universal Protector + combinatorics lock — sense stack must be sealed before GREEN."""
+    sense_py = INSTALL / "lib" / "field-sense-package-meld.py"
+    if sense_py.is_file():
+        try:
+            spec = importlib.util.spec_from_file_location("sense_universal_gate", sense_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "sense_universal_slice"):
+                    return mod.sense_universal_slice(state_dir=STATE)
+        except Exception:
+            pass
+    universal = _load(STATE / "universal-protector-panel.json", {})
+    comb = _load(STATE / "g16-field-combinatorics-panel.json", {})
+    lock_verify = comb.get("combinatorics_lock_verify") or {}
+    return {
+        "schema": "field-sense-universal-slice/v1",
+        "universal_lock": bool(universal.get("equipment_holds_gate")) and bool(lock_verify.get("ok", True)),
+        "combinatorics_lock_ok": bool(lock_verify.get("ok", True)),
+        "equipment_holds_gate": bool(universal.get("equipment_holds_gate")),
+    }
+
+
 def _mouth_slice() -> dict[str, Any]:
     sense = _load(STATE / "field-sense-package-panel.json", {})
     members = sense.get("members") or {}
@@ -132,7 +156,11 @@ def build_plate(*, evidence: dict[str, Any] | None = None, require_sync: bool = 
         or str(mouth_doc.get("verdict") or "").upper() in ("GREEN", "OK")
         or fusion_out.get("cross_agree")
     )
+    lock_gate = _universal_lock_gate()
     plated = fusion_out.get("ok") or (eye_ok and ear_ok and mouth_ok) or (eye_ok and ear_ok)
+    universal_lock = bool(lock_gate.get("universal_lock"))
+    if plated and not universal_lock and lock_gate.get("combinatorics_lock_ok") is not False:
+        plated = eye_ok and ear_ok
     material = {
         "fusion_ok": fusion_out.get("ok"),
         "sync": (fusion_out.get("sync") or {}).get("ok"),
@@ -151,7 +179,13 @@ def build_plate(*, evidence: dict[str, Any] | None = None, require_sync: bool = 
         "meld_citation": doctrine.get("meld_citation") or "ironclad:meld:2",
         "ok": plated,
         "plated": plated,
-        "verdict": "GREEN" if (eye_ok and ear_ok and mouth_ok) else ("WATCH" if eye_ok or ear_ok or mouth_ok else "HOLD"),
+        "verdict": (
+            "GREEN"
+            if (eye_ok and ear_ok and mouth_ok and universal_lock)
+            else ("WATCH" if (eye_ok or ear_ok or mouth_ok) else "HOLD")
+        ),
+        "universal_lock": universal_lock,
+        "combinatorics_lock_ok": lock_gate.get("combinatorics_lock_ok"),
         "chain_hash": chain,
         "products": doctrine.get("products") or ["Final_Eye", "Final_Ear", "Final_Mouth"],
         "mouth": {

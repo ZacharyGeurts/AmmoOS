@@ -180,11 +180,13 @@ def rebuild_core() -> dict[str, Any]:
 
 def reboot_queen(*, detach: bool = True) -> dict[str, Any]:
     launcher = QUEEN / "scripts" / "run-queen.sh"
-    binary = QUEEN / "build" / "rtx/bin/Linux/queen-browser"
-    if not binary.is_file() and not launcher.is_file():
-        return {"ok": False, "error": "queen_binary_missing", "hint": "Run rebuild first"}
+    if not launcher.is_file():
+        return {"ok": False, "error": "queen_launcher_missing", "hint": "Queen/scripts/run-queen.sh missing"}
     _log("reboot_queen")
-    cmd = [str(launcher)] if launcher.is_file() else [str(binary), "--sovereign", "--queen"]
+    retire = INSTALL / "lib" / "amouranthrtx-window-retire.sh"
+    if retire.is_file():
+        subprocess.run(["bash", "-c", f"source '{retire}' && amouranthrtx_window_retire_cycle"], check=False, timeout=10)
+    cmd = [str(launcher)]
     env = {
         **os.environ,
         "NEXUS_INSTALL_ROOT": str(INSTALL),

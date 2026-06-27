@@ -137,55 +137,55 @@ def open_in_queen_tab(url: str, *, new_tab: bool = True, tab_id: str = "") -> di
     }
 
 
+def _launch_integrated_browser() -> dict[str, Any]:
+    """Queen Field Gecko — integrated shell, isolated profile, no OS browser / no comp shader."""
+    py = INSTALL / "lib" / "queen-integrated-browser.py"
+    if not py.is_file():
+        return {
+            "ok": True,
+            "display": "queen_browser_shell",
+            "url": _browser_shell_url(),
+            "hint": "queen-integrated-browser.py missing — world daemon only",
+        }
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(py), "open"],
+            env={
+                **os.environ,
+                "NEXUS_INSTALL_ROOT": str(INSTALL),
+                "QUEEN_ROOT": str(QUEEN),
+                "QUEEN_NO_OS_BROWSER": "1",
+                "QUEEN_WEB_SHELL": "1",
+                "QUEEN_SKIP_RTX_BOOT": "1",
+            },
+            capture_output=True,
+            text=True,
+            timeout=45,
+            check=False,
+        )
+        doc = json.loads(proc.stdout or "{}") if (proc.stdout or "").strip().startswith("{") else {}
+        if doc:
+            return doc
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        pass
+    return {"ok": False, "error": "integrated_browser_launch_failed"}
+
+
 def launch_queen_display(*, focus_url: str = "") -> dict[str, Any]:
-    """RTX queen-browser opens NEXUS directly; web fallback is browser-only shell (not Queen OS world)."""
-    panel_url = (focus_url or _panel_field_url()).strip()
+    """Open Queen integrated field browser — Webbrowser shell + startup tabs, never comp shader."""
     browser_shell = _browser_shell_url()
-    candidates = [
-        QUEEN / "build" / "rtx" / "bin" / "Linux" / "queen-browser",
-        QUEEN / "build" / "queen-browser",
-    ]
-    env = {
-        **os.environ,
-        "QUEEN_ROOT": str(QUEEN),
-        "NEXUS_INSTALL_ROOT": str(INSTALL),
-        "NEXUS_EMBED_PANEL_IN_ENGINE": "0",
-        "QUEEN_INSTANT_BROWSER": "1",
-        "QUEEN_BROWSER_URL": browser_shell,
-    }
-    for binary in candidates:
-        if not binary.is_file() or not os.access(binary, os.X_OK):
-            continue
-        try:
-            subprocess.Popen(
-                [
-                    str(binary),
-                    "--sovereign",
-                    "--queen",
-                    "--extended-field",
-                    f"--url={panel_url}",
-                ],
-                env=env,
-                cwd=str(QUEEN),
-                start_new_session=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            return {
-                "ok": True,
-                "binary": str(binary),
-                "url": panel_url,
-                "shell_url": browser_shell,
-                "display": "queen-browser-rtx",
-            }
-        except OSError as exc:
-            return {"ok": False, "error": str(exc), "binary": str(binary)}
+    panel_url = (focus_url or _panel_field_url()).strip()
+    world = ensure_queen_world()
+    display = _launch_integrated_browser()
     return {
-        "ok": True,
-        "display": "queen_browser_shell",
-        "url": browser_shell,
+        **display,
+        "ok": display.get("ok") is not False and world.get("ok") is not False,
+        "world": world,
         "panel_url": panel_url,
-        "hint": "Queen browser shell — NEXUS tab already queued (not Queen OS world)",
+        "shell_url": browser_shell,
+        "surface": "queen-webbrowser",
+        "spawn_rtx": False,
+        "comp_shader_boot": False,
     }
 
 
@@ -194,7 +194,7 @@ def open_nexus_panel(*, route: str = "", new_tab: bool = True, launch_display: b
     tab = open_in_queen_tab(url, new_tab=new_tab)
     out = {"ok": tab.get("ok"), "nexus_url": url, "tab": tab}
     if launch_display:
-        out["display"] = launch_queen_display(focus_url=url)
+        out["display"] = launch_queen_display()
     return out
 
 

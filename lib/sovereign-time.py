@@ -681,6 +681,26 @@ def serve_udp(*, host: str = "127.0.0.1", port: int = DEFAULT_PORT) -> None:
         sock.sendto(json.dumps(receipt).encode(), addr)
 
 
+def melded_extension_slice() -> dict[str, Any]:
+    """Ironclad meld slice — time is linear."""
+    lin = linear_status()
+    return {
+        "id": "time",
+        "absorbed": True,
+        "declaration": "Time is linear.",
+        "meld_citation": "ironclad:meld:2",
+        "citation": "ironclad:time:1 — Time is linear — one axis, one direction, monotonic forever; no rewind, no branch, no pause on the sovereign clock.",
+        "immutable_linear": True,
+        "not_geometry_t": True,
+        "linear_ns": lin.get("linear_ns"),
+        "derived_utc": lin.get("derived_utc"),
+        "sealed": lin.get("sealed"),
+        "clock_paused": False,
+        "witness_only": ["wall_clock", "ntp", "rtc", "thermal", "cpufreq"],
+        "updated": derived_utc(),
+    }
+
+
 def status() -> dict[str, Any]:
     sample = _witness_sample()
     prev = _load_json(PULSE_STATE, {})
@@ -713,7 +733,9 @@ def status() -> dict[str, Any]:
         "receipt_log": str(RECEIPT_LOG),
         "red_flag_ledger": str(RED_FLAG_LEDGER),
         "cycle_ledger": str(CYCLE_LEDGER),
-        "posture": "Sovereign linear time — immutable; take time out = gap or red flag; temperature changes nothing on the timer",
+        "declaration": "Time is linear.",
+        "ironclad_citation": "ironclad:time:1",
+        "posture": "Time is linear — sovereign clock immutable; take time out = gap or red flag; temperature changes nothing on the timer",
     }
 
 

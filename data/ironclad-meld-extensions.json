@@ -91,6 +91,152 @@
       ]
     },
     {
+      "id": "locational_sitrep",
+      "title": "Locational Sitrep — place receipt fused plate",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Locational sitrep is employed on every meld — operator location, spatial existence, field lattice, threat geometry in one plate."
+        },
+        {
+          "v": 2,
+          "text": "This one is here — GPS or postal receipt; that one stays there until correlate_existence passes; never collapse this one into that one."
+        },
+        {
+          "v": 3,
+          "text": "Section availability passes to combinatorics bridge, compatibility layers, and panel API /api/locational-sitrep."
+        },
+        {
+          "v": 4,
+          "text": "Ironclad spatial_existence witnesses the sitrep plate — meld citation ironclad:meld:2; plate_not_wire true."
+        }
+      ]
+    },
+    {
+      "id": "c2_taskbar",
+      "title": "C2 Taskbar Quint — Start · Files · Terminal · Broadcaster · Lock",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Five icons on the bar — Start opens the tree; Files, Terminal, Broadcaster, and Lock are the only quick pins; full field power stays in Start."
+        },
+        {
+          "v": 2,
+          "text": "C2 taskbar plate fuses shell dock, host desktop, lock, and broadcaster postures — one quint truth for combinatorics condense."
+        },
+        {
+          "v": 3,
+          "text": "BSP stages c2_taskbar_plate on g16_field_opt — reuse exec plane before native compile; Ironclad field_sanity witnesses every meld."
+        },
+        {
+          "v": 4,
+          "text": "Combinatorics condense group c2_taskbar passes to bridge exec_hook, meld summary, and /api/field-c2-taskbar."
+        }
+      ]
+    },
+    {
+      "id": "iron_plate_organize",
+      "title": "Iron Plate Organize — BSP sort fused to Simple Iron Plate",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Simple Iron Plate delegates ordering to composite_bsp — Start categories, monitor wall, condense groups, tray icons."
+        },
+        {
+          "v": 2,
+          "text": "Power sort plate witnesses recombinatorics_algorithm composite_bsp; C2 taskbar BSP stages c2_taskbar_plate on g16_field_opt."
+        },
+        {
+          "v": 3,
+          "text": "Combinatorics bridge condense + H7 Dewey organize ride the same iron-plate-organize panel — meld reads organize before desktop consumers."
+        },
+        {
+          "v": 4,
+          "text": "Ironclad chain replates through equation organize_gain = truth_percent × composite_bsp_weight × bridge_condense — extension repurposes condense when grounded."
+        }
+      ]
+    },
+    {
+      "id": "iron_plate_spot",
+      "title": "Iron Plate Spot — cool detect without heat",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Plate spot detector gates before scan — thermal_entropy_gate, cache-only reads, no heavy bridge rebuild under heat."
+        },
+        {
+          "v": 2,
+          "text": "cool_sort meld spots by thermo_proxy — coolest attachment points first; low_power default saves joules over milliseconds."
+        },
+        {
+          "v": 3,
+          "text": "Iron plate organize consumes spot slice — combinatorics condense, ironclad chain, operator connections without reheating host."
+        }
+      ]
+    },
+    {
+      "id": "c2_browser_embed",
+      "title": "C2 Browser Embed — display tech without launcher",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Queen browser display stack — queen-syntax.css, queen-browser-shell.js, queen-viewer — rides inside NEXUS C2; no separate browser launcher."
+        },
+        {
+          "v": 2,
+          "text": "C2 routes navigation and shell windows; Queen browser holds CSS and rendering tech only — launcher_visible false, browser_in_c2 true."
+        },
+        {
+          "v": 3,
+          "text": "Tray minimize-desktop replaces power-off on the C2 bar — show desktop minimizes all shell windows; power stays in Start menu foot."
+        }
+      ]
+    },
+    {
+      "id": "power_sort",
+      "title": "Power Sort — bench-driven ordering under Ironclad",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Power sort is a plate — bench receipts pick the fastest fit per context; never operator crank."
+        },
+        {
+          "v": 2,
+          "text": "classify, strip, dedupe, flatten, cool_sort — thermal layers always cool_sort; never bench heavy radix under heat."
+        },
+        {
+          "v": 3,
+          "text": "Section availability passes to Queen Files, drive indexer, combinatorics bridge, and compatibility layers."
+        },
+        {
+          "v": 4,
+          "text": "Ironclad field sanity witnesses power sort — meld citation ironclad:meld:2; plate_not_wire true."
+        },
+        {
+          "v": 5,
+          "text": "Field unique best — when using Field there is only one best sort ever; format tables use family_then_label melded through Ironclad."
+        }
+      ]
+    },
+    {
+      "id": "file_formats",
+      "title": "File Format Tables — icons and Ironclad sort",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Every field format has a row in the table — extension, magic, mime, family, description."
+        },
+        {
+          "v": 2,
+          "text": "Each format gets a procedural icon — family color, extension badge, sovereign and ironclad markers."
+        },
+        {
+          "v": 3,
+          "text": "Format table sort melds field-best-sort — one best ever, never operator crank."
+        }
+      ]
+    },
+    {
       "id": "g1id",
       "title": "G1ID — Geometric Identity (This One)",
       "verses": [

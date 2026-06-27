@@ -319,12 +319,25 @@ def capture_wbfm(
 
     try:
         if hw.get("field_wave_wav"):
-            ppm_s = f" -p {ppm_val}" if ppm_val else ""
-            cmd = (
-                f"timeout {int(seconds) + 3} {FIELD_FM} -f {hz} -M wbfm -s {WBFM_RATE} -E deemp{ppm_s} - 2>/dev/null | "
-                f"{FIELD_WAV} -t raw -r {WBFM_RATE} -esigned-integer -b16 -c1 - -t wav '{wav}' trim 0 {seconds}"
+            fm = subprocess.Popen(
+                _fm_cmd(hz, ppm_val),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
             )
-            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=seconds + 12)
+            sox_args = [
+                str(FIELD_WAV),
+                "-t", "raw", "-r", str(WBFM_RATE), "-esigned-integer", "-b16", "-c1", "-",
+                "-t", "wav", str(wav), "trim", "0", str(seconds),
+            ]
+            proc = subprocess.run(
+                sox_args,
+                stdin=fm.stdout,
+                capture_output=True,
+                text=True,
+                timeout=seconds + 12,
+            )
+            fm.stdout.close()
+            fm.wait(timeout=3)
         else:
             proc = subprocess.run(
                 _fm_cmd(hz, ppm_val),
@@ -365,17 +378,41 @@ def live_play_wbfm(
 
     hz = int(freq_hz if freq_hz is not None else round(freq_mhz * 1_000_000))
     ppm_val = int(ppm if ppm is not None else hw.get("ppm_correction") or 0)
-    ppm_s = f" -p {ppm_val}" if ppm_val else ""
     try:
+        fm = subprocess.Popen(
+            _fm_cmd(hz, ppm_val),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
         if hw.get("field_wave_wav"):
-            cmd = (
-                f"timeout {int(seconds)} {FIELD_FM} -f {hz} -M wbfm -s {WBFM_RATE} -E deemp{ppm_s} - 2>/dev/null | "
-                f"{FIELD_WAV} -t raw -r {WBFM_RATE} -esigned-integer -b16 -c1 - -t wav - 2>/dev/null | "
-                f"{FIELD_PLAY} --raw --rate={WBFM_RATE} --format=s16le --channels=1"
+            sox = subprocess.Popen(
+                [
+                    str(FIELD_WAV),
+                    "-t", "raw", "-r", str(WBFM_RATE), "-esigned-integer", "-b16", "-c1", "-",
+                    "-t", "wav", "-",
+                ],
+                stdin=fm.stdout,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
             )
+            fm.stdout.close()
+            proc = subprocess.Popen(
+                [str(FIELD_PLAY), "--raw", f"--rate={WBFM_RATE}", "--format=s16le", "--channels=1"],
+                stdin=sox.stdout,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            sox.stdout.close()
         else:
-            cmd = f"timeout {int(seconds)} {FIELD_FM} -f {hz} -M wbfm -s {WBFM_RATE} -E deemp{ppm_s} - 2>/dev/null | {FIELD_PLAY}"
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            proc = subprocess.Popen(
+                [str(FIELD_PLAY)],
+                stdin=fm.stdout,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            fm.stdout.close()
         return {
             "ok": True,
             "method": "field_wave_engine_live",

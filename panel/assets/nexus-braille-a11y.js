@@ -355,7 +355,7 @@
     const labels = {
       "view-command": "Command center",
       "view-us": "US field identity",
-      "view-sweet-anita": "Sweet_Anita broadcasting",
+
       "view-monitor": "Live connections monitor",
       "view-inspect": "Packet inspect",
       "view-home-protector": "Home protector airspace",

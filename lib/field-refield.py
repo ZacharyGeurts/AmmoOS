@@ -164,6 +164,9 @@ nexus_shadow_init
 source "{INSTALL}/lib/nexus-core.sh"
 source "{INSTALL}/lib/znetwork-field.sh"
 export ZNETWORK_MODE=SHADOW
+export NEXUS_ZNETWORK_NO_SUDO=1
+nexus_znetwork_retire_legacy_handlers || true
+nexus_znetwork_replace_connection || true
 nexus_znetwork_triple_check || true
 nexus_znetwork_user_attach || true
 nexus_znetwork_write_operator yes true

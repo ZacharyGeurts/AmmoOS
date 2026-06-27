@@ -7,6 +7,8 @@ import json
 import os
 import subprocess
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -20,11 +22,15 @@ LEDGER = STATE / "znetwork-ledger.jsonl"
 ACTIVATE_LOG = STATE / "znetwork-activate.jsonl"
 SHADOW = STATE / "znetwork-shadow.json"
 SOCK = STATE / "znetwork-field.sock"
+RUNNING_MARKER = STATE / "znetwork-running.marker"
 SCHEMA = "znetwork-orchestrator/v2"
 MELD_CITATION = "ironclad:meld:2"
 
 _MOD_CACHE: dict[str, Any] = {}
 _SOVEREIGN_CLOCK_MOD = None
+_TRUTH_GATE_CACHE: dict[str, Any] | None = None
+_TRUTH_GATE_CACHE_AT = 0.0
+_TRUTH_GATE_TTL_SEC = 4.0
 
 
 def _load(path: Path, default: Any = None) -> Any:
@@ -96,8 +102,16 @@ def znetwork_bin() -> Path | None:
     return None
 
 
-def truth_gate() -> dict[str, Any]:
+def truth_gate(*, refresh: bool = False) -> dict[str, Any]:
     """Gate ZNetwork activate on Ironclad + field sanity + G1ID baselines + voltage."""
+    global _TRUTH_GATE_CACHE, _TRUTH_GATE_CACHE_AT
+    if (
+        not refresh
+        and _TRUTH_GATE_CACHE is not None
+        and (time.monotonic() - _TRUTH_GATE_CACHE_AT) < _TRUTH_GATE_TTL_SEC
+    ):
+        return dict(_TRUTH_GATE_CACHE)
+
     gates: dict[str, Any] = {}
     io = _mod(INSTALL / "lib" / "field-io-packet.py", "field_io_znet_gate")
     if io and hasattr(io, "truth_gate"):
@@ -122,7 +136,7 @@ def truth_gate() -> dict[str, Any]:
     else:
         ok = core_ok and voltage_ok
         voltage_required = True
-    return {
+    rep = {
         "schema": "znetwork-truth-gate/v2",
         "ok": ok,
         "gates": gates,
@@ -132,6 +146,9 @@ def truth_gate() -> dict[str, Any]:
         "meld_citation": MELD_CITATION,
         "checked_at": _now(),
     }
+    _TRUTH_GATE_CACHE = dict(rep)
+    _TRUTH_GATE_CACHE_AT = time.monotonic()
+    return rep
 
 
 def _run_bin(args: list[str], *, timeout: int = 30) -> tuple[int, str, str]:
@@ -205,35 +222,107 @@ def triple_check() -> dict[str, Any]:
     return rep
 
 
+def _handler_retire_mod() -> Any | None:
+    return _mod(INSTALL / "lib" / "znetwork-handler-retire.py", "znetwork_handler_retire")
+
+
+def _bridge_field_dns() -> dict[str, Any]:
+    dns_sh = INSTALL / "lib" / "field-dns.sh"
+    if not dns_sh.is_file():
+        return {"ok": False, "skipped": True}
+    try:
+        subprocess.run(
+            ["bash", "-c", f'source "{dns_sh}" && nexus_field_dns_publish'],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        return {"ok": True}
+    except (subprocess.SubprocessError, OSError) as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _bridge_gatekeeper() -> dict[str, Any]:
+    gk_sh = INSTALL / "lib" / "gatekeeper-enforce.sh"
+    if not gk_sh.is_file():
+        return {"ok": False, "skipped": True}
+    try:
+        subprocess.run(
+            ["bash", "-c", f'source "{gk_sh}" && nexus_gatekeeper_enforce_strict'],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        return {"ok": True}
+    except (subprocess.SubprocessError, OSError) as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _bridge_field_io_packet() -> dict[str, Any]:
+    io = _mod(INSTALL / "lib" / "field-io-packet.py", "field_io_packet")
+    if not io or not hasattr(io, "truth_gate"):
+        return {"ok": False, "skipped": True}
+    try:
+        return {"ok": bool(io.truth_gate().get("ok"))}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 def _attach_bridges() -> dict[str, Any]:
     bridges: dict[str, Any] = {}
-    dns_sh = INSTALL / "lib" / "field-dns.sh"
-    if dns_sh.is_file():
-        try:
-            subprocess.run(
-                ["bash", "-c", f'source "{dns_sh}" && nexus_field_dns_publish'],
-                capture_output=True,
-                text=True,
-                timeout=15,
-                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
-            )
-            bridges["field_dns"] = {"ok": True}
-        except (subprocess.SubprocessError, OSError) as exc:
-            bridges["field_dns"] = {"ok": False, "error": str(exc)}
-    gk_sh = INSTALL / "lib" / "gatekeeper-enforce.sh"
-    if gk_sh.is_file():
-        try:
-            subprocess.run(
-                ["bash", "-c", f'source "{gk_sh}" && nexus_gatekeeper_enforce_strict'],
-                capture_output=True,
-                text=True,
-                timeout=15,
-                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
-            )
-            bridges["gatekeeper"] = {"ok": True}
-        except (subprocess.SubprocessError, OSError) as exc:
-            bridges["gatekeeper"] = {"ok": False, "error": str(exc)}
+    parallel: dict[str, Any] = {}
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = {
+            pool.submit(_bridge_field_dns): "field_dns",
+            pool.submit(_bridge_gatekeeper): "gatekeeper",
+            pool.submit(_bridge_field_io_packet): "field_io_packet",
+        }
+        for fut in as_completed(futures):
+            parallel[futures[fut]] = fut.result()
+    bridges.update(parallel)
+    for rel, key in (
+        ("lib/connection-gatekeeper.py", "connection_gatekeeper"),
+        ("lib/packet-field.py", "packet_field"),
+        ("lib/trust-strike-engine.py", "trust_strike"),
+        ("lib/field-attack-kit.py", "attack_kit"),
+    ):
+        bridges[key] = {"ok": (INSTALL / rel).is_file()}
     return bridges
+
+
+def _hostile_mod() -> Any | None:
+    return _mod(INSTALL / "lib" / "znetwork-hostile-threat.py", "znetwork_hostile_threat")
+
+
+def hostile_scan(*, publish: bool = True) -> dict[str, Any]:
+    mod = _hostile_mod()
+    if not mod or not hasattr(mod, "scan"):
+        return {"ok": False, "error": "hostile_threat_missing"}
+    return mod.scan(publish=publish)
+
+
+def hostile_countermeasures(*, force: bool = False) -> dict[str, Any]:
+    mod = _hostile_mod()
+    if not mod or not hasattr(mod, "countermeasures"):
+        return {"ok": False, "error": "hostile_threat_missing"}
+    report = mod.scan(publish=True) if hasattr(mod, "scan") else None
+    return mod.countermeasures(report, force=force)
+
+
+def retire_legacy_handlers() -> dict[str, Any]:
+    mod = _handler_retire_mod()
+    if not mod or not hasattr(mod, "retire_legacy_handlers"):
+        return {"ok": True, "skipped": True, "reason": "handler_retire_missing"}
+    return mod.retire_legacy_handlers(znetwork_active=True)
+
+
+def replace_connection() -> dict[str, Any]:
+    mod = _handler_retire_mod()
+    if not mod or not hasattr(mod, "replace_connection"):
+        return {"ok": True, "skipped": True, "reason": "handler_retire_missing"}
+    return mod.replace_connection()
 
 
 def tray_swap(*, force: bool = False) -> dict[str, Any]:
@@ -249,7 +338,7 @@ def tray_swap(*, force: bool = False) -> dict[str, Any]:
         "app_id": swap_policy.get("app_id", "znetwork-field-panel"),
         "icon": swap_policy.get("icon", "znetwork-tray"),
         "swapped_at": _now(),
-        "title": "ZNetwork — field secure network",
+        "title": "Bypassed OS Networking",
         "active": True,
     }
     _save(TRAY_MODE, doc)
@@ -314,11 +403,17 @@ def mark_running(choice: str = "yes") -> dict[str, Any]:
     }
     _save(OPERATOR, doc)
     STATE.mkdir(parents=True, exist_ok=True)
-    try:
-        SOCK.touch()
-        os.chmod(SOCK, 0o600)
-    except OSError:
-        pass
+    if choice == "yes":
+        try:
+            RUNNING_MARKER.write_text(f"running=1\nupdated={_now()}\n", encoding="utf-8")
+            os.chmod(RUNNING_MARKER, 0o600)
+        except OSError:
+            pass
+    else:
+        try:
+            RUNNING_MARKER.unlink(missing_ok=True)
+        except OSError:
+            pass
     if STATUS.is_file():
         try:
             _save(SHADOW, _load(STATUS))
@@ -340,6 +435,28 @@ def activate(*, elevated: bool = False) -> dict[str, Any]:
 
     _append_jsonl(ACTIVATE_LOG, {"ts": _now(), "step": "truth_gate", "status": "OK", "detail": "all_gates_green"})
 
+    retire = retire_legacy_handlers()
+    _append_jsonl(
+        ACTIVATE_LOG,
+        {
+            "ts": _now(),
+            "step": "handler_retire",
+            "status": "OK" if retire.get("ok") else "PARTIAL",
+            "detail": json.dumps(retire)[:400],
+        },
+    )
+
+    replace = replace_connection()
+    _append_jsonl(
+        ACTIVATE_LOG,
+        {
+            "ts": _now(),
+            "step": "replace_connection",
+            "status": "OK" if replace.get("ok") else "PARTIAL",
+            "detail": json.dumps(replace)[:400],
+        },
+    )
+
     triple = triple_check()
     if not triple.get("ok"):
         _append_jsonl(
@@ -359,6 +476,37 @@ def activate(*, elevated: bool = False) -> dict[str, Any]:
         {"ts": _now(), "step": "bridges", "status": "OK", "detail": json.dumps(bridges)[:400]},
     )
 
+    hostile = hostile_scan(publish=True)
+    hostile_status = "OK" if hostile.get("ok") else "PARTIAL"
+    _append_jsonl(
+        ACTIVATE_LOG,
+        {
+            "ts": _now(),
+            "step": "hostile_scan",
+            "status": hostile_status,
+            "detail": json.dumps(
+                {
+                    "hostile_count": hostile.get("hostile_count"),
+                    "immediate_count": hostile.get("immediate_count"),
+                }
+            )[:400],
+        },
+    )
+    counter = {"ok": True, "skipped": True, "reason": "no_immediate_hostiles"}
+    if hostile.get("immediate_count"):
+        counter = hostile_countermeasures(force=True)
+        _append_jsonl(
+            ACTIVATE_LOG,
+            {
+                "ts": _now(),
+                "step": "hostile_countermeasure",
+                "status": "OK" if counter.get("ok") else "PARTIAL",
+                "detail": json.dumps(
+                    {"executed_count": counter.get("executed_count", 0)}
+                )[:400],
+            },
+        )
+
     op = mark_running("yes")
     tray = tray_swap()
     _append_jsonl(
@@ -375,6 +523,8 @@ def activate(*, elevated: bool = False) -> dict[str, Any]:
         "truth_gate": gate,
         "triple_check": triple,
         "bridges": bridges,
+        "hostile_scan": hostile,
+        "hostile_countermeasure": counter,
         "operator": op,
         "tray_swap": tray,
         "elevated": elevated,
@@ -385,6 +535,7 @@ def activate(*, elevated: bool = False) -> dict[str, Any]:
 def posture() -> dict[str, Any]:
     op = _load(OPERATOR, {})
     tray = _load(TRAY_MODE, {})
+    hostile_state = _load(STATE / "znetwork-hostile-state.json", {})
     return {
         "schema": SCHEMA,
         "ok": True,
@@ -392,6 +543,7 @@ def posture() -> dict[str, Any]:
         "status": _load(STATUS) or None,
         "tray_mode": tray,
         "truth_gate": truth_gate(),
+        "hostile_threat": hostile_state or None,
         "binary": str(znetwork_bin() or ""),
         "doctrine": str(DOCTRINE),
         "checked_at": _now(),
@@ -410,11 +562,18 @@ def main() -> int:
         "tray-swap": tray_swap,
         "tray-revert": tray_revert,
         "mark-running": lambda: mark_running("yes"),
+        "retire": retire_legacy_handlers,
+        "replace": replace_connection,
+        "handler-retire": retire_legacy_handlers,
+        "replace-connection": replace_connection,
+        "hostile-scan": lambda: hostile_scan(publish=True),
+        "hostile-respond": lambda: hostile_countermeasures(force="--force" in sys.argv),
+        "hostile-watch": lambda: (_hostile_mod().watch() if _hostile_mod() and hasattr(_hostile_mod(), "watch") else {"ok": False}),
     }
     fn = handlers.get(mode)
     if not fn:
         print(
-            "usage: znetwork-orchestrator.py [json|truth-gate|triple-check|activate|tray-swap|tray-revert]",
+            "usage: znetwork-orchestrator.py [json|truth-gate|triple-check|activate|hostile-scan|hostile-respond|tray-swap|tray-revert]",
             file=sys.stderr,
         )
         return 2

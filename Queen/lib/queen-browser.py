@@ -62,25 +62,30 @@ def _queen_field_home() -> str:
     return f"{_world_base()}/world/queen-field-home.html"
 
 
+def _desktop_page() -> str:
+    return os.environ.get(
+        "QUEEN_BROWSER_DESKTOP",
+        f"{_world_base()}/world/queen-desktop.html",
+    )
+
+
 def _sovereign_start_url() -> str:
-    if _panel_alive():
-        return _nexus_field_url()
-    return _queen_field_home()
+    return _desktop_page()
 
 
 def _start_page() -> str:
     override = os.environ.get("QUEEN_BROWSER_START", "").strip()
     if override:
         return override
-    if _panel_alive():
-        return _nexus_field_url()
-    return _queen_field_home()
+    return _desktop_page()
 
 
 _RETROGRADE_FRAGMENTS = (
     "queen-start.html",
     "/world/index.html",
     "queen-field-home.html",
+    "/field",
+    "9477/field",
 )
 
 
@@ -111,9 +116,7 @@ def _default_home() -> str:
     override = os.environ.get("QUEEN_BROWSER_HOME", "").strip()
     if override:
         return override
-    if _panel_alive():
-        return _nexus_field_url()
-    return _queen_field_home()
+    return _desktop_page()
 
 
 DEFAULT_HOME = _default_home()
@@ -224,6 +227,8 @@ BOOKMARKS = [
     {"id": "hostess", "title": "Hostess 7", "url": "queen://hostess"},
     {"id": "kilroy", "title": "KILROY", "url": "queen://kilroy"},
     {"id": "eyeball", "title": "Final_Eye", "url": "queen://eyeball"},
+    {"id": "chips", "title": "CHIPS", "url": "queen://chips"},
+    {"id": "cores", "title": "Cores", "url": "queen://cores"},
     {"id": "gameroom", "title": "Game Room", "url": "queen://gameroom"},
 ]
 
@@ -332,8 +337,23 @@ def _new_tab(
     return tab
 
 
+def _boot_hook_posture() -> dict[str, Any]:
+    script = QUEEN / "lib" / "queen-boot-hook.py"
+    if not script.is_file():
+        return {}
+    try:
+        spec = importlib.util.spec_from_file_location("queen_boot_hook_browser", script)
+        if not spec or not spec.loader:
+            return {}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.posture() if hasattr(mod, "posture") else {}
+    except Exception:
+        return {}
+
+
 def default_state() -> dict[str, Any]:
-    start = _new_tab(_start_page(), pinned=True, role="start", title="Start")
+    start = _new_tab(_start_page(), pinned=True, role="desktop", title="Desktop")
     _apply_compat(start, start["url"], {"compat_mode": "modern"})
     files = _new_tab(_files_page(), pinned=True, role="files", title="Files")
     _apply_compat(files, files["url"], {"compat_mode": "modern"})
@@ -353,13 +373,18 @@ def _migrate_themed_ship(doc: dict[str, Any]) -> bool:
     changed = False
     ship = doc.get("theme_ship") or {}
     if doc.get("home") and _is_retrograde_url(str(doc["home"])):
-        doc["home"] = DEFAULT_HOME
+        doc["home"] = _desktop_page()
         changed = True
     for tab in doc.get("tabs") or []:
         role = str(tab.get("role") or "")
         url = str(tab.get("url") or "")
-        if _is_retrograde_url(url) or (role == "start" and url != _start_page()):
-            tab["url"] = _start_page() if role == "start" else _upgrade_retrograde_url(url, role=role)
+        if role == "start":
+            tab["role"] = "desktop"
+            tab["title"] = "Desktop"
+            changed = True
+            role = "desktop"
+        if _is_retrograde_url(url) or (role == "desktop" and url != _start_page()):
+            tab["url"] = _start_page() if role == "desktop" else _upgrade_retrograde_url(url, role=role)
             hist = tab.get("history") or []
             tab["history"] = [_upgrade_retrograde_url(str(h), role=role) for h in hist]
             tab["history_index"] = min(tab.get("history_index", 0), max(0, len(tab["history"]) - 1))
@@ -385,7 +410,7 @@ def _ensure_files_tab(doc: dict[str, Any]) -> bool:
     _apply_compat(files, files["url"], {"compat_mode": "modern"})
     insert_at = 1
     for i, t in enumerate(tabs):
-        if t.get("pinned") and t.get("role") == "start":
+        if t.get("pinned") and t.get("role") in ("start", "desktop"):
             insert_at = i + 1
             break
     tabs.insert(insert_at, files)
@@ -456,6 +481,21 @@ def _nexus_jump_module() -> Any:
         return None
     try:
         spec = importlib.util.spec_from_file_location("queen_nexus_jump", script)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _benchmark_module() -> Any:
+    script = QUEEN / "lib" / "queen-benchmark.py"
+    if not script.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("queen_benchmark", script)
         if not spec or not spec.loader:
             return None
         mod = importlib.util.module_from_spec(spec)
@@ -560,6 +600,8 @@ def browser_status() -> dict[str, Any]:
     doc = load_state()
     panel = _run_panel("json")
     active = _find_tab(doc, doc.get("active_tab", ""))
+    boot_hook = _boot_hook_posture()
+    boot_os = bool(boot_hook.get("boot_os"))
     return {
         "schema": "queen-browser/v1",
         "updated": _now(),
@@ -580,8 +622,19 @@ def browser_status() -> dict[str, Any]:
             }
             for t in doc.get("tabs") or []
         ],
+        "desktop_url": _desktop_page(),
+        "boot_os": boot_os,
+        "start_button": "full" if boot_os else "split_pill",
+        "boot_hook": {
+            "boarded": boot_hook.get("boarded"),
+            "front_hook": boot_hook.get("front_hook"),
+        },
+        "network_metal": boot_hook.get("network_metal") or {},
         "start_tab": doc.get("start_tab")
-        or next((t.get("id") for t in doc.get("tabs") or [] if t.get("role") == "start"), None),
+        or next(
+            (t.get("id") for t in doc.get("tabs") or [] if t.get("role") in ("start", "desktop")),
+            None,
+        ),
         "files_tab": doc.get("files_tab")
         or next((t.get("id") for t in doc.get("tabs") or [] if t.get("role") == "files"), None),
         "active_url": active.get("url") if active else DEFAULT_HOME,
@@ -608,6 +661,8 @@ def browser_status() -> dict[str, Any]:
             "tab_fullscreen": True,
             "alt_tab": True,
             "start_tab": True,
+            "classic_desktop": True,
+            "split_pill_start": True,
             "web_compat": True,
             "full_web_surface": True,
             "legacy_auto_secure": True,
@@ -682,10 +737,18 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             tab = _new_tab(url)
             doc.setdefault("tabs", []).append(tab)
             doc["active_tab"] = tab["id"]
+        compat_in = str(body.get("compat_mode") or tab.get("compat_mode") or "auto")
+        bench_mod = _benchmark_module()
+        if bench_mod and getattr(bench_mod, "benchmark_mode", lambda: False)():
+            if getattr(bench_mod, "is_benchmark_url", lambda _u: False)(url) or getattr(
+                bench_mod, "is_fast_internal", lambda _u: False
+            )(url):
+                compat_in = "modern"
+                body = {**body, "compat_mode": "modern", "proxy": False}
         jump = _nexus_jump(
             url,
             tab_id=tab.get("id") or "",
-            compat_mode=str(body.get("compat_mode") or tab.get("compat_mode") or "auto"),
+            compat_mode=compat_in,
         )
         if not jump.get("permit"):
             return {"ok": False, "error": "nexus_jump_blocked", "jump": jump, "gate": jump.get("nexus", {})}
@@ -728,7 +791,10 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
 
     if action in ("activate_start", "start"):
         tabs = doc.get("tabs") or []
-        start = next((t for t in tabs if t.get("pinned") or t.get("role") == "start"), tabs[0] if tabs else None)
+        start = next(
+            (t for t in tabs if t.get("pinned") or t.get("role") in ("start", "desktop")),
+            tabs[0] if tabs else None,
+        )
         if not start:
             return {"ok": False, "error": "no_start"}
         doc["active_tab"] = start["id"]

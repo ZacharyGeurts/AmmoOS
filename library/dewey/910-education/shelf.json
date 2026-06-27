@@ -1,0 +1,32 @@
+{
+  "schema": "dewey-shelf/v1",
+  "shelf": "910-education",
+  "code": "910",
+  "title": "910-education",
+  "updated": "2026-06-27T12:37:26Z",
+  "format_primary": "h7c",
+  "book_count": 2,
+  "h7c_count": 0,
+  "books": [
+    {
+      "id": "gutenberg_physical_geo",
+      "title": "Physical Geography (Gutenberg)",
+      "author": "Project Gutenberg",
+      "dewey": "910",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/gutenberg_physical_geo/front.png",
+      "ready": false
+    },
+    {
+      "id": "wikibooks_world_geography",
+      "title": "Wikibooks World Regional Geography",
+      "author": "Wikibooks",
+      "dewey": "910",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/wikibooks_world_geography/front.png",
+      "ready": false
+    }
+  ]
+}

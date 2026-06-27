@@ -84,6 +84,7 @@ def _check_goal(goal_id: str, ctx: dict[str, Any]) -> bool:
         "wireframe_fps_configured": int(motion.get("wireframe_fps") or 60) == 60,
         "sense_package_present": bool(sense.get("verdict") or (sense.get("summary") or {}).get("present_count")),
         "assemblage_resolve_ok": ENABLED,
+        "bsp_sort_organize_ok": _organize_ok(ctx),
         "universal_protector_plate": protector.get("product") == "Universal Protector",
         "operator_clock_doctrine": _load(INSTALL / "data" / "field-operator-doctrine.json", {}).get("clock") is not None,
         "hostess7_brain_verified": _hostess7_brain_ok(ctx),
@@ -99,6 +100,35 @@ def _hostess7_brain_ok(ctx: dict[str, Any]) -> bool:
         and not bool(brain.get("corrupted") or v.get("corrupted"))
         and int(brain.get("removal_count") or v.get("removal_count") or 0) == 0
     )
+
+
+def _organize_mod():
+    py = INSTALL / "lib" / "iron-plate-organize.py"
+    if not py.is_file():
+        return None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("iron_plate_organize", py)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _organize_ok(ctx: dict[str, Any]) -> bool:
+    org = ctx.get("iron_plate_organize") or {}
+    if org:
+        return bool(org.get("ok"))
+    mod = _organize_mod()
+    if mod and hasattr(mod, "organize_ok"):
+        try:
+            return bool(mod.organize_ok(ctx))
+        except Exception:
+            pass
+    return bool(_load(STATE / "iron-plate-organize-panel.json", {}).get("ok"))
 
 
 def _refresh_hostess7_brain() -> None:
@@ -443,6 +473,12 @@ def assemblage_remaining(*, ctx: dict[str, Any] | None = None) -> dict[str, Any]
 def resolve_motion(*, write: bool = True) -> dict[str, Any]:
     """Iron-clad motion verdict from assemblage remaining + spatial movement."""
     _refresh_hostess7_brain()
+    org_mod = _organize_mod()
+    if org_mod and hasattr(org_mod, "build_panel"):
+        try:
+            org_mod.build_panel(write=True)
+        except Exception:
+            pass
     ctx = _live_context()
     asm = assemblage_remaining(ctx=ctx)
     spatial = ctx.get("spatial") or {}
@@ -542,6 +578,7 @@ def resolve_motion(*, write: bool = True) -> dict[str, Any]:
         },
         "advance_tech": advance,
         "iron_clad": iron_clad,
+        "iron_plate_organize": (org_mod.slice_for_motion() if org_mod and hasattr(org_mod, "slice_for_motion") else _load(STATE / "iron-plate-organize-runtime.json", {})),
     }
 
     if write:
@@ -578,6 +615,10 @@ def _live_context() -> dict[str, Any]:
         "sense_neural": _load(STATE / "queen-sense-neural-panel.json", {}),
         "hostess7_brain": snaps.get("hostess7_brain") or _load(STATE / "hostess7-brain-guard-panel.json", {}),
         "creatable_lives": snaps.get("creatable_lives") or _load(STATE / "creatable-lives-panel.json", {}),
+        "iron_plate_organize": snaps.get("iron_plate_organize") or _load(STATE / "iron-plate-organize-panel.json", {}),
+        "g16_power_sort": snaps.get("g16_power_sort") or _load(STATE / "g16-power-sort-plate.json", {}),
+        "combinatorics_bridge": snaps.get("combinatorics_bridge") or _load(STATE / "field-plate-combinatorics-bridge.json", {}),
+        "c2_taskbar": snaps.get("c2_taskbar") or _load(STATE / "field-c2-taskbar-panel.json", {}),
     }
 
 

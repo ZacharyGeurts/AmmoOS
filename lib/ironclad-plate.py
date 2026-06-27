@@ -284,6 +284,24 @@ def _spatial_existence_slice() -> dict[str, Any]:
     return {"id": "spatial_existence", "absorbed": False, "detail": "slice_unavailable"}
 
 
+def _sovereign_time_slice() -> dict[str, Any]:
+    py = INSTALL / "lib" / "sovereign-time.py"
+    if not py.is_file():
+        return {"id": "time", "absorbed": False, "missing": True, "declaration": "Time is linear."}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("sovereign_time_plate", py)
+        if not spec or not spec.loader:
+            return {"id": "time", "absorbed": False, "missing": True, "declaration": "Time is linear."}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "melded_extension_slice"):
+            return mod.melded_extension_slice()
+    except Exception:
+        pass
+    return {"id": "time", "absorbed": False, "declaration": "Time is linear.", "detail": "slice_unavailable"}
+
+
 def _g1id_slice() -> dict[str, Any]:
     py = INSTALL / "lib" / "g1id-format.py"
     if not py.is_file():
@@ -396,6 +414,7 @@ def knowledge_grounding() -> dict[str, Any]:
             "meld_citation": cite("meld", 2) or "ironclad:meld:2",
             "extensions_ref": str(MELD_EXTENSIONS.relative_to(INSTALL)) if MELD_EXTENSIONS.is_file() else None,
             "field_sanity": _field_sanity_slice(),
+            "time": _sovereign_time_slice(),
             "spatial_existence": _spatial_existence_slice(),
             "g1id": _g1id_slice(),
             "g1id_baselines": _g1id_baseline_slice(),
@@ -421,6 +440,8 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "neural_extrapolation": grounding.get("neural_extrapolation"),
         "melded_extensions": grounding.get("melded_extensions"),
         "field_sanity": (grounding.get("melded_extensions") or {}).get("field_sanity"),
+        "time": (grounding.get("melded_extensions") or {}).get("time"),
+        "time_is_linear": True,
         "spatial_existence": (grounding.get("melded_extensions") or {}).get("spatial_existence"),
         "g1id": (grounding.get("melded_extensions") or {}).get("g1id"),
         "g1id_baselines": (grounding.get("melded_extensions") or {}).get("g1id_baselines"),

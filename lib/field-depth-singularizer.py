@@ -399,6 +399,104 @@ def cycle(*, batch: int | None = None) -> dict[str, Any]:
     return receipt
 
 
+def is_dimensional_pit(layer: dict[str, Any]) -> bool:
+    """Bad nested depth — field_depth query, layer depth > 0, or field-on-field."""
+    if not isinstance(layer, dict):
+        return False
+    depth = int(layer.get("depth") or 0)
+    url = str(layer.get("url") or "")
+    requested = parse_requested_field_depth(url)
+    return depth > 0 or requested > 0 or bool(layer.get("field_on_field"))
+
+
+def snap_dimensional_pits(
+    layers: list[dict[str, Any]] | None = None,
+    *,
+    body: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Instant O(n) snap — no disk I/O. Field die hot path."""
+    if not single_field_depth_enabled():
+        return {
+            "ok": True,
+            "skipped": "single_field_depth_off",
+            "schema": "field-depth-instant-snap/v1",
+            "instant": True,
+        }
+
+    src_body = dict(body or {})
+    raw_layers = list(layers) if layers is not None else list(src_body.get("layers") or [])
+    pits: list[dict[str, Any]] = []
+    cleaned: list[Any] = []
+    snapped = 0
+
+    for item in raw_layers:
+        if not isinstance(item, dict):
+            cleaned.append(item)
+            continue
+        if is_dimensional_pit(item):
+            pits.append({
+                "id": item.get("id"),
+                "url": str(item.get("url") or "")[:240],
+                "depth": int(item.get("depth") or 0),
+                "field_on_field": bool(item.get("field_on_field")),
+            })
+        fixed, n = singularize_layer(item)
+        cleaned.append(fixed)
+        snapped += n
+
+    body_fixes = 0
+    if int(src_body.get("field_depth") or 0) > 0:
+        src_body["field_depth"] = 0
+        body_fixes += 1
+    if src_body.get("field_on_field"):
+        src_body["field_on_field"] = False
+        body_fixes += 1
+    if src_body.get("fielded") and snapped + body_fixes > 0:
+        src_body["fielded"] = False
+
+    total = snapped + body_fixes
+    receipt = {
+        "schema": "field-depth-instant-snap/v1",
+        "ts": _now(),
+        "ok": True,
+        "instant": True,
+        "mode": "snap_dimensional_pits",
+        "pits_found": len(pits),
+        "pits_snapped": total,
+        "pits": pits,
+        "layers": cleaned,
+        "single_field_depth": True,
+        "max_field_depth": 0,
+        "depth_field_impossible": True,
+        "depth_fields_sealed_and_destroyed": True,
+        "creation_forbidden": True,
+        "field_on_field_forbidden": True,
+        "message": (
+            f"snapped {total} dimensional pit(s)"
+            if total
+            else "depth zero — no pits"
+        ),
+    }
+    if total > 0:
+        _append_ledger({
+            "ts": receipt["ts"],
+            "event": "dimensional_pits_snapped",
+            "pits_found": len(pits),
+            "pits_snapped": total,
+            "instant": True,
+        })
+    return receipt
+
+
+def instant_field_die_check(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Field die hook — instant depth check, snap bad dimensional pits."""
+    snap = snap_dimensional_pits(body=body)
+    snap["field_die"] = True
+    snap["mode"] = "field_die_instant"
+    snap["rule"] = "single_field_depth_instant_on_field_die"
+    return snap
+
+
 def posture() -> dict[str, Any]:
     cached = _load(PANEL, {})
     if cached.get("schema") == "field-depth-singularizer/v1":
@@ -439,8 +537,16 @@ def main() -> int:
     if cmd == "impossibility":
         print(json.dumps(impossibility_posture(), ensure_ascii=False))
         return 0
+    if cmd in ("instant", "snap", "field_die"):
+        raw = sys.stdin.read()
+        body = json.loads(raw) if raw.strip() else {}
+        if cmd == "field_die":
+            print(json.dumps(instant_field_die_check(body), ensure_ascii=False))
+        else:
+            print(json.dumps(snap_dimensional_pits(body=body), ensure_ascii=False))
+        return 0
     print(json.dumps({
-        "error": "usage: field-depth-singularizer.py [json|cycle|preflight|strip-url URL|forbid URL [layer]|impossibility]",
+        "error": "usage: field-depth-singularizer.py [json|cycle|preflight|instant|snap|field_die|strip-url URL|forbid URL [layer]|impossibility]",
     }, ensure_ascii=False))
     return 1
 

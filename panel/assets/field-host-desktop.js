@@ -21,14 +21,23 @@
       .replace(/>/g, "&gt;");
   }
 
+  const QUEEN_ICON = "/assets/queen-favicon-48.png";
+
   function iconHtml(app) {
-    if (app.icon_url) {
-      return '<img src="' + esc(app.icon_url) + '" alt="" loading="lazy" decoding="async" />';
+    const src = app.icon_url || QUEEN_ICON;
+    if (app.live) {
+      return (
+        '<span class="hd-icon-live-wrap">' +
+        '<img src="' +
+        esc(src) +
+        '" alt="" width="40" height="40" class="hd-app-icon hd-app-icon--live" loading="lazy" decoding="async" />' +
+        '<span class="hd-live-badge">LIVE</span></span>'
+      );
     }
     return (
-      '<span class="hd-icon-fallback" aria-hidden="true">' +
-      esc((app.name || "?").charAt(0).toUpperCase()) +
-      "</span>"
+      '<img src="' +
+      esc(src) +
+      '" alt="" width="40" height="40" class="hd-app-icon" loading="lazy" decoding="async" />'
     );
   }
 
@@ -56,8 +65,22 @@
     }
   }
 
+  function shellLaunch(app) {
+    if (window.NexusFieldShell?.launch) {
+      window.NexusFieldShell.launch(app);
+      return true;
+    }
+    return false;
+  }
+
   function launchApp(app) {
     const exec = app.exec || app.url || "";
+    if (app.shell !== false && (app.shell || exec.includes("embed=1") || app.view)) {
+      if (shellLaunch(app)) {
+        toast("Opened · " + (app.name || exec));
+        return;
+      }
+    }
     if (inQueenFrame() && exec.startsWith("/")) {
       const action = exec === "/field" ? "home" : "new_tab";
       if (queenShell(action, exec)) {
@@ -72,11 +95,24 @@
         return;
       }
     }
+    if (shellLaunch(app)) {
+      toast("Opened · " + (app.name || exec));
+      return;
+    }
     window.FieldStartbar?.launchApp?.(app);
     window.FieldStartbar?.trackRunning?.(app);
   }
 
   function handlePower(action) {
+    if (window.NexusFieldShell?.handlePower) {
+      const delegated = [
+        "sign-out", "restart-nexus", "restart", "power-off", "shutdown",
+      ];
+      if (delegated.indexOf(action) >= 0) {
+        window.NexusFieldShell.handlePower(action);
+        return;
+      }
+    }
     if (action === "underlay-drop" || action === "underlay-rise") {
       const verb = action === "underlay-drop" ? "drop" : "rise";
       fetch("/api/field-underlay-surface/" + verb, {
@@ -121,6 +157,10 @@
     const grid = document.getElementById("hd-icons");
     if (!grid) return;
     const desktop = (programs || []).filter(function (p) {
+      if (p.ghost || p.clipboard_ghost) return false;
+      if (p.display_tech) return false;
+      if (p.desktop === true) return true;
+      if (p.launcher_visible === false) return false;
       return p.pinned || p.source === "field" || p.category === "Field";
     });
     const show = desktop.length ? desktop : (programs || []).slice(0, 24);
@@ -175,10 +215,22 @@
   }
 
   function openDesktopCtx(x, y, app) {
+    if (window.NexusFieldShell?.openDesktopContext) {
+      window.NexusFieldShell.openDesktopContext(x, y, app);
+      return;
+    }
     const ctx = document.getElementById("fsb-ctx");
     if (!ctx) return;
+    const isLaunch =
+      app.id === "field-launch-explorer" ||
+      (app.file_assoc && app.file_assoc.indexOf(".launch") >= 0) ||
+      (app.native_launch === "field-launch-explorer");
     ctx.innerHTML =
       '<button type="button" data-daction="open">Open</button>' +
+      (isLaunch
+        ? '<button type="button" data-daction="explore-launch">Explore .launch chambers</button>' +
+          '<button type="button" data-daction="scan-launch">Rescan SG chambers</button>'
+        : "") +
       '<button type="button" data-daction="pin">Pin to taskbar</button>' +
       (app.exec && app.exec.startsWith("/")
         ? '<button type="button" data-daction="newtab">Open in new tab</button>'
@@ -193,10 +245,28 @@
       const act = b.dataset.daction;
       ctx.classList.remove("open");
       if (act === "open") launchApp(app);
-      else if (act === "pin") trackRunning(app);
-      else if (act === "newtab" && app.exec) window.open(app.exec, "_blank");
+      else if (act === "explore-launch") {
+        launchApp({ id: "field-launch-explorer", name: "Launch Explorer", exec: "/field-launch-explorer", shell: true });
+      } else if (act === "scan-launch") {
+        fetch("/api/field-g16-launch?rescan=1", { credentials: "same-origin" })
+          .then(function () { toast("Rescanned .launch chambers"); })
+          .catch(function () { toast("Scan failed"); });
+      } else if (act === "pin") trackRunning(app);
+      else if (act === "newtab" && app.exec) {
+        if (window.FieldQueenNav?.open) window.FieldQueenNav.open(app.exec);
+        else launchApp(app);
+      }
       else if (act === "props") toast((app.name || "") + " · " + (app.exec || "").slice(0, 60));
     };
+  }
+
+  function bootHashView(data) {
+    const view = (location.hash || "").replace(/^#/, "").trim();
+    if (!view || !window.NexusFieldShell?.launch) return;
+    const app = (data?.programs || []).find(function (a) {
+      return a.view === view || a.id === view || String(a.exec || "").includes("#" + view);
+    });
+    if (app) window.NexusFieldShell.launch(app);
   }
 
   async function refresh() {
@@ -213,11 +283,36 @@
         label.textContent =
           (g.system || "Host") + " · " + (state.data.program_count || 0) + " programs · " + (state.data.theme || "");
       }
-      renderDesktopIcons(state.data.programs);
+      const sortKey = (state.data.shell?.settings?.sort_desktop || "name").toLowerCase();
+      let programs = state.data.programs || [];
+      if (sortKey === "name") {
+        programs = programs.slice().sort(function (a, b) {
+          return (a.name || "").localeCompare(b.name || "");
+        });
+      }
+      const showIcons = state.data.shell?.settings?.show_desktop_icons !== false;
+      renderDesktopIcons(programs);
+      const grid = document.getElementById("hd-icons");
+      if (grid) grid.classList.toggle("hidden", !showIcons);
+      if (window.NexusFieldShell) {
+        window.NexusFieldShell.mount(state.data);
+      }
       const barRoot = document.getElementById("fsb-mount");
       if (barRoot && window.FieldStartbar) {
         window.FieldStartbar.mount(barRoot, state.data);
       }
+      const mon = document.getElementById("hd-monitor");
+      const dash = state.data?.monitor_dashboard || {};
+      if (mon && dash.enabled !== false && window.FieldMonitorDashboard) {
+        mon.classList.remove("hidden");
+        window.FieldMonitorDashboard.mount(mon, dash);
+      } else if (mon) {
+        mon.classList.add("hidden");
+      }
+      if (state.data?.policy?.auto_import_bookmarks !== false) {
+        fetch("/api/field-c2-bookmarks", { method: "POST", credentials: "same-origin" }).catch(function () {});
+      }
+      bootHashView(state.data);
     } catch (e) {
       toast("Desktop load failed: " + e.message);
     } finally {

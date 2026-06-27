@@ -243,19 +243,24 @@ def lattice_amplitude(
     x: float = 0.0,
     y: float = 0.0,
     z: float = 0.0,
-    t: float = 0.0,
+    linear_ns: int | None = None,
     scale: str = "body",
+    t: float | None = None,
 ) -> dict[str, Any]:
-    """Spatial existence as lattice amplitude — this one occupies a cell."""
+    """Spatial existence as lattice amplitude — place is x,y,z; time is linear sovereign receipt."""
     doc = _load(DOCTRINE, {})
-    amp = round(math.sqrt(x * x + y * y + z * z + t * t * 0.01), 4)
+    amp = round(math.sqrt(x * x + y * y + z * z), 4)
+    if linear_ns is None and t is not None:
+        linear_ns = int(t)
     return {
         "schema": "ironclad-spatial-lattice/v1",
         "updated": _now(),
-        "cell": {"x": x, "y": y, "z": z, "t": t},
+        "place": {"x": x, "y": y, "z": z},
+        "linear_receipt": {"linear_ns": linear_ns, "citation": "ironclad:time:1"},
         "scale": scale,
         "amplitude": amp,
         "kind": "this_one",
+        "time_is_linear": True,
         "citation": cite(3) or "ironclad:spatial_existence:3",
     }
 

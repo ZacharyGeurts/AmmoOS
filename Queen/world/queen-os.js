@@ -325,6 +325,12 @@
   }
 
   async function navigate(url, extra) {
+    if (global.QueenFieldSanity?.stripFieldDepth) {
+      url = global.QueenFieldSanity.stripFieldDepth(url);
+    } else if (typeof url === "string" && url.includes("field_depth")) {
+      url = url.replace(/([?&])field_depth=\d+/g, "").replace(/\?&/, "?").replace(/[?&]$/, "");
+    }
+    global.QueenFieldSanity?.snapPitsInstant?.();
     try {
       url = await resolveUrl(url);
     } catch (e) {
@@ -353,6 +359,8 @@
         `NEXUS ${jump.verdict} · IFF ${jump.iff || "CONTACT_HOSTILE"} · ${jump.countermeasures_ready ?? 0} armed · ${out.tab?.url || url}`;
     }
     loadFrame(out.tab?.url || url, { compat, compatMode: out.tab?.compat_mode });
+    global.QueenFieldSanity?.snapPitsInstant?.();
+    document.dispatchEvent(new CustomEvent("queen-navigate", { detail: { url: out.tab?.url || url } }));
     return out;
   }
 
@@ -531,6 +539,14 @@
     return r.json();
   }
 
+  function openWebbrowserTab(url, opts) {
+    const target = url || "/world/queen-chips-cores.html";
+    setDockTab("browser");
+    const nav = opts?.newTab === false ? navigate : newTab;
+    if (nav) return nav(target);
+    return Promise.resolve({ ok: false, error: "browser_unavailable" });
+  }
+
   function setDockTab(name) {
     const isBrowser = name === "browser";
     const isTheater = name === "gameroom";
@@ -554,8 +570,7 @@
       globalThis.QueenGameRoom.refresh();
     }
     if (isTerminal && globalThis.QueenGnuTerminal?.init) {
-      globalThis.QueenGnuTerminal.init();
-      $("qgt-prompt-input")?.focus();
+      void globalThis.QueenGnuTerminal.init();
     }
   }
 
@@ -580,21 +595,22 @@
     const doc = gr || {};
     const chips = doc.chips || {};
     const g16 = doc.grok16 || {};
-    const rtx = doc.rtx || {};
     const hot = g16.chips_optimizations || [];
     el.innerHTML = [
       `<p><strong>${chips.headers || 0}</strong> headers · ${(chips.platforms || []).length} platforms</p>`,
       `<p>Grok16 <code>${esc(g16.profile || "field_opt")}</code> ${g16.ready ? "✓" : "…"} · v${esc(g16.version || "16")}</p>`,
-      `<p>RTX queen-browser ${rtx.queen_binary_ready ? "✓" : "build"} · CHIPS_G16_ACCURATE</p>`,
+      `<p>Surface <code>webbrowser</code> · CHIPS_G16_ACCURATE · no desktop comp shader</p>`,
       hot.length
         ? `<ul class="qw-hot-list">${hot.slice(0, 5).map((h) => `<li><code>${esc(h.chip || h.header)}</code></li>`).join("")}</ul>`
         : "",
       `<div class="qw-actions qw-actions--tight">`,
-      `<button type="button" class="qw-btn qw-btn--primary" id="qw-chips-launch">Enter Game Room</button>`,
+      `<button type="button" class="qw-btn qw-btn--primary" id="qw-chips-launch">Open CHIPS &amp; Cores</button>`,
+      `<button type="button" class="qw-btn" id="qw-chips-gameroom">Game Room</button>`,
       `<button type="button" class="qw-btn" id="qw-chips-rebuild">Rebuild CHIPS</button>`,
       `</div>`,
     ].join("");
-    $("qw-chips-launch")?.addEventListener("click", () => setDockTab("gameroom"));
+    $("qw-chips-launch")?.addEventListener("click", () => openWebbrowserTab("queen://chips"));
+    $("qw-chips-gameroom")?.addEventListener("click", () => openWebbrowserTab("queen://gameroom"));
     $("qw-chips-rebuild")?.addEventListener("click", async () => {
       const r = await fetch(API.chips, {
         method: "POST",
@@ -620,8 +636,9 @@
       .join("");
     el.querySelectorAll("[data-sys]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        setDockTab("gameroom");
-        globalThis.QueenGameRoom?.selectSystem?.(btn.dataset.sys);
+        openWebbrowserTab("queen://gameroom").then(() => {
+          globalThis.QueenGameRoom?.selectSystem?.(btn.dataset.sys);
+        });
       });
     });
   }
@@ -638,7 +655,11 @@
       `<p><strong>Die chips</strong></p>`,
       `<ul>${chips.map((c) => `<li>${esc(c.name || c.id)}</li>`).join("")}</ul>`,
       mem.length ? `<p><strong>Guest RAM</strong> — ${mem.map((m) => esc(m.label)).join(", ")}</p>` : "",
+      `<div class="qw-actions qw-actions--tight">`,
+      `<button type="button" class="qw-btn qw-btn--primary" id="qw-cores-open">Open Cores (Webbrowser)</button>`,
+      `</div>`,
     ].join("");
+    $("qw-cores-open")?.addEventListener("click", () => openWebbrowserTab("queen://cores"));
   }
 
   function renderRtx(doc) {
@@ -1155,7 +1176,7 @@
     document.querySelectorAll(".qw-os-subnav .qw-tab").forEach((t) => {
       t.addEventListener("click", () => setOsSubPane(t.dataset.osPane));
     });
-    $("qw-open-gameroom")?.addEventListener("click", () => setDockTab("gameroom"));
+    $("qw-open-gameroom")?.addEventListener("click", () => openWebbrowserTab("queen://gameroom"));
     $("qw-refresh")?.addEventListener("click", () => worldRefresh());
     $("qw-arm-dishes")?.addEventListener("click", () => runWorldAction(() => dispatchEye("arm-dishes")));
     $("qw-arm-person")?.addEventListener("click", () => runWorldAction(() => dispatchEye("arm-person")));
@@ -1284,7 +1305,9 @@
       document.querySelector(".qb-viewport")?.setAttribute("hidden", "");
       document.querySelector(".qw-dock")?.setAttribute("hidden", "");
     }
-    if (dock === "gameroom") setDockTab("gameroom");
+    if (dock === "gameroom") openWebbrowserTab("queen://gameroom");
+    else if (dock === "chips") openWebbrowserTab("queen://chips");
+    else if (dock === "cores") openWebbrowserTab("queen://cores");
     else if (dock === "terminal") setDockTab("terminal");
     else if (dock === "earball") setDockTab("earball");
     else if (dock === "field") setDockTab("field");
@@ -1326,7 +1349,7 @@
     phaseSeal()
       .then((s) => {
         if ($("qb-status") && s) {
-          $("qb-status").textContent = `${s.grok16?.ready ? "Grok16 in Queen" : "Grok16 …"} · ${s.sealed ? "RTX sealed" : "RTX …"}`;
+          $("qb-status").textContent = `${s.grok16?.ready ? "Grok16 in Queen" : "Grok16 …"} · ${s.sealed ? "Webbrowser sealed" : "Webbrowser …"}`;
         }
       })
       .catch((e) => console.warn("[queen-os] seal", e));
@@ -1351,7 +1374,7 @@
       doc: browser,
       loadFrame,
     },
-    world: { refresh: worldRefresh, setDockTab },
+    world: { refresh: worldRefresh, setDockTab, openWebbrowserTab },
   };
   globalThis.QueenBrowser = globalThis.QueenOS.browser;
   globalThis.QueenRtxBoot = { boot: phaseSeal, sealSecureSpace, probeWebGpu };

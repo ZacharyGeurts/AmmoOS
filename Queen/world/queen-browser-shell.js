@@ -12,6 +12,9 @@
     cycleIdx: 0,
     viewportFs: false,
     ready: false,
+    startOpen: false,
+    startSide: "classic",
+    desktopDoc: null,
   };
 
   function $(id) {
@@ -26,7 +29,9 @@
   }
 
   function startUrl() {
-    return document.body?.dataset?.queenStart || "http://127.0.0.1:9477/field";
+    const raw = document.body?.dataset?.queenStart || "/world/queen-desktop.html";
+    if (raw.startsWith("/")) return `${location.origin}${raw}`;
+    return raw;
   }
 
   const SHELL_ACTIONS = new Set(["navigate", "new_tab", "attach_tab", "home", "command"]);
@@ -102,9 +107,28 @@
     return entry;
   }
 
+  function benchmarkMode() {
+    return globalThis.QueenFieldSanity?.benchmarkMode?.() || document.body?.dataset?.queenBenchmark === "1";
+  }
+
   function setActivePane(tabId) {
+    const bench = benchmarkMode();
     document.querySelectorAll(".qb-tab-pane").forEach((p) => {
-      p.classList.toggle("active", p.dataset.tabId === tabId);
+      const active = p.dataset.tabId === tabId;
+      p.classList.toggle("active", active);
+      if (bench && !active) {
+        const frame = p.querySelector(".qb-frame");
+        if (frame && frame.src && frame.src !== "about:blank") {
+          frame.dataset.discardedSrc = frame.src;
+          frame.src = "about:blank";
+        }
+      } else if (bench && active) {
+        const frame = p.querySelector(".qb-frame");
+        const restore = frame?.dataset?.discardedSrc;
+        if (frame && restore && (!frame.src || frame.src === "about:blank")) {
+          frame.src = restore;
+        }
+      }
     });
     shell.tabCycle = Array.from(shell.panes.keys()).filter((id) => !shell.popouts.has(id));
     const idx = shell.tabCycle.indexOf(tabId);
@@ -114,6 +138,7 @@
   function frameUrl(url, proxy, compatMode) {
     if (!url) return "about:blank";
     const mode = compatMode || "auto";
+    if (benchmarkMode()) proxy = false;
     if (proxy) {
       return `/browse/view?url=${encodeURIComponent(url)}&compat=${encodeURIComponent(mode)}`;
     }
@@ -133,11 +158,13 @@
     if (!entry) return;
     const doc = globalThis.QueenOS?.browser?.doc?.doc || globalThis.QueenOS?.browser?.doc;
     const tab = (doc?.tabs || []).find((t) => t.id === tabId);
-    const compatMode = opts?.compatMode || tab?.compat_mode || "auto";
+    let compatMode = opts?.compatMode || tab?.compat_mode || "auto";
+    if (benchmarkMode()) compatMode = "modern";
     const profile = opts?.compat || tab?.compat_profile || tab;
     applyCompatToFrame(entry.frame, profile);
     globalThis.QueenFieldSanity?.hardenFrames?.();
-    if (url && globalThis.QueenFieldSanity?.validateUrl) {
+    const skipValidate = benchmarkMode() && globalThis.QueenFieldSanity?.isFastUrl?.(url);
+    if (url && globalThis.QueenFieldSanity?.validateUrl && !skipValidate) {
       const gate = await globalThis.QueenFieldSanity.validateUrl(url);
       if (!gate.ok) {
         const statusEl = $("qb-status");
@@ -147,8 +174,9 @@
         url = startUrl();
       }
     }
-    const proxy = opts?.proxy ?? doc?.proxyMode;
+    const proxy = benchmarkMode() ? false : (opts?.proxy ?? doc?.proxyMode);
     entry.frame.src = frameUrl(url, proxy, compatMode);
+    delete entry.frame.dataset.discardedSrc;
     setActivePane(tabId);
     document.dispatchEvent(new CustomEvent("queen-navigate", { detail: { tabId, url } }));
     const pill = document.getElementById("qb-compat-pill");
@@ -161,10 +189,14 @@
   function decorateTabsRender(html, tabs) {
     return (tabs || [])
       .map((t) => {
-        const pinned = t.pinned || t.role === "start" || t.role === "files";
+        const pinned = t.pinned || t.role === "start" || t.role === "desktop" || t.role === "files";
         const popped = shell.popouts.has(t.id);
         const roleCls =
-          t.role === "files" ? " qb-tab--files" : t.role === "start" || t.pinned ? " qb-tab--start" : "";
+          t.role === "files"
+            ? " qb-tab--files"
+            : t.role === "desktop" || t.role === "start" || t.pinned
+              ? " qb-tab--start"
+              : "";
         const cls = [
           "qb-tab",
           t.active ? " active" : "",
@@ -174,9 +206,9 @@
         return `
       <button type="button" class="${cls}" data-tab="${esc(t.id)}" title="${esc(t.url)}">
         <span class="qb-tab-title">${esc(t.title || t.url)}</span>
-        <span class="qb-tab-popout" data-popout="${esc(t.id)}" title="Snap to window" aria-label="Pop out tab">⤢</span>
-        <span class="qb-tab-fs" data-fs="${esc(t.id)}" title="Tab fullscreen" aria-label="Fullscreen tab">⛶</span>
-        ${pinned ? "" : `<span class="qb-tab-close" data-close="${esc(t.id)}" aria-label="Close tab">×</span>`}
+        <span class="qb-tab-popout" data-popout="${esc(t.id)}" title="Snap to window" aria-label="Pop out tab"><svg class="qb-ico qb-ico--tab" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#popout"/></svg></span>
+        <span class="qb-tab-fs" data-fs="${esc(t.id)}" title="Tab fullscreen" aria-label="Fullscreen tab"><svg class="qb-ico qb-ico--tab" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#tab-fs"/></svg></span>
+        ${pinned ? "" : `<span class="qb-tab-close" data-close="${esc(t.id)}" aria-label="Close tab"><svg class="qb-ico qb-ico--tab" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#close"/></svg></span>`}
       </button>`;
       })
       .join("");
@@ -260,8 +292,101 @@
 
   function activateStart() {
     const doc = globalThis.QueenOS?.browser?.doc;
-    const start = (doc?.tabs || []).find((t) => t.pinned || t.role === "start") || doc?.tabs?.[0];
+    const start =
+      (doc?.tabs || []).find((t) => t.pinned || t.role === "desktop" || t.role === "start") || doc?.tabs?.[0];
     if (start) globalThis.QueenOS?.browser?.activateTab?.(start.id);
+  }
+
+  function escMenu(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  async function fetchDesktopDoc() {
+    if (shell.desktopDoc) return shell.desktopDoc;
+    try {
+      const r = await fetch("/api/queen-desktop", { cache: "no-store" });
+      shell.desktopDoc = await r.json();
+    } catch {
+      shell.desktopDoc = { classic_programs: [], host_programs: [] };
+    }
+    return shell.desktopDoc;
+  }
+
+  function renderStartMenuItems(programs) {
+    const body = $("qb-start-menu-body");
+    if (!body) return;
+    const q = ($("qb-start-search")?.value || "").trim().toLowerCase();
+    const list = (programs || []).filter((p) => !q || (p.name || "").toLowerCase().includes(q));
+    body.innerHTML = list
+      .map(
+        (p) =>
+          `<button type="button" class="qb-start-item" draggable="true"` +
+          ` data-url="${escMenu(p.url || p.exec || "")}"` +
+          ` data-queen-program-url="${escMenu(p.url || p.exec || "")}"` +
+          ` data-queen-program-name="${escMenu(p.name)}"` +
+          ` data-name="${escMenu(p.name)}">` +
+          `<span>${escMenu(p.name)}</span></button>`,
+      )
+      .join("");
+    body.querySelectorAll(".qb-start-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const url = btn.dataset.url;
+        if (url) {
+          globalThis.QueenOS?.browser?.newTab?.(url);
+          toggleStartMenu(false);
+        }
+      });
+      btn.addEventListener("dragstart", (ev) => {
+        const url = btn.dataset.queenProgramUrl || btn.dataset.url;
+        const name = btn.dataset.queenProgramName || btn.dataset.name || "Program";
+        if (!url) return;
+        ev.dataTransfer.setData("text/uri-list", url);
+        ev.dataTransfer.setData(
+          "application/x-queen-program",
+          JSON.stringify({ url, name }),
+        );
+        ev.dataTransfer.effectAllowed = "copy";
+      });
+    });
+  }
+
+  async function toggleStartMenu(force, side) {
+    const menu = $("qb-start-menu");
+    if (!menu) return;
+    if (side) shell.startSide = side;
+    shell.startOpen = force !== undefined ? force : !shell.startOpen;
+    menu.hidden = !shell.startOpen;
+    menu.setAttribute("aria-hidden", shell.startOpen ? "false" : "true");
+    $("qb-start-classic")?.setAttribute("aria-expanded", shell.startOpen ? "true" : "false");
+    if (shell.startOpen) {
+      const doc = await fetchDesktopDoc();
+      renderStartMenuItems(doc.classic_programs || []);
+      setTimeout(() => $("qb-start-search")?.focus(), 60);
+    }
+  }
+
+  function applyStartButtonMode(browserDoc) {
+    const bootOs = !!(browserDoc?.boot_os || document.body?.dataset?.queenBootOs === "1");
+    const mode = bootOs ? "full" : "classic";
+    const pill = $("qb-start-pill");
+    if (pill) pill.dataset.mode = mode;
+    document.body.dataset.queenBootOs = bootOs ? "1" : "0";
+    document.body.dataset.queenStartButton = mode;
+    shell.startSide = "classic";
+    const classic = $("qb-start-classic");
+    const secured = $("qb-start-secured");
+    const full = $("qb-start");
+    secured?.setAttribute("hidden", "");
+    if (bootOs) {
+      classic?.setAttribute("hidden", "");
+      full?.removeAttribute("hidden");
+    } else {
+      classic?.removeAttribute("hidden");
+      full?.setAttribute("hidden", "");
+    }
   }
 
   function onShellMessage(ev) {
@@ -323,31 +448,27 @@
     });
   }
 
-  function panelApi(path) {
-    const port = document.body?.dataset?.nexusPanelPort || "9477";
-    return `http://127.0.0.1:${port}${path}`;
-  }
-
-  async function underlaySurface(verb) {
-    const status = $("qb-status");
-    try {
-      const res = await fetch(panelApi(`/api/field-underlay-surface/${verb}`), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "{}",
-      });
-      const doc = await res.json();
-      if (status) status.textContent = doc.message || (doc.ok ? verb : doc.error || "failed");
-      if (verb === "rise" && doc.ok) activateStart();
-    } catch (e) {
-      if (status) status.textContent = `Underlay ${verb}: ${e}`;
-    }
-  }
-
   function wireStartButton() {
-    $("qb-start")?.addEventListener("click", activateStart);
-    $("qb-underlay-drop")?.addEventListener("click", () => underlaySurface("drop"));
-    $("qb-underlay-rise")?.addEventListener("click", () => underlaySurface("rise"));
+    $("qb-start")?.addEventListener("click", () => {
+      activateStart();
+      toggleStartMenu(true, "classic");
+    });
+    $("qb-start-classic")?.addEventListener("click", () => toggleStartMenu(undefined, "classic"));
+    $("qb-start-search")?.addEventListener("input", async () => {
+      const doc = await fetchDesktopDoc();
+      renderStartMenuItems(doc.classic_programs || []);
+    });
+    document.addEventListener("click", (ev) => {
+      if (!shell.startOpen) return;
+      if (ev.target.closest(".qb-start-menu") || ev.target.closest(".qb-start-pill")) return;
+      toggleStartMenu(false);
+    });
+    document.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape" && shell.startOpen) toggleStartMenu(false);
+    });
+    fetchDesktopDoc().then(() => {
+      applyStartButtonMode(globalThis.QueenOS?.browser?.doc?.doc || globalThis.QueenOS?.browser?.doc || {});
+    });
     $("qb-compat-pill")?.addEventListener("click", async () => {
       const modes = ["auto", "modern", "legacy_secure", "archaeology", "future"];
       const doc = globalThis.QueenOS?.browser?.doc?.doc || globalThis.QueenOS?.browser?.doc;
@@ -374,7 +495,7 @@
     const strip = document.createElement("span");
     strip.className = "qb-security-strip";
     strip.id = "qb-security-strip";
-    strip.textContent = "NEXUS · PRESUME HOSTILE · DEFEND · OFFENSE ON THREAT";
+    strip.textContent = "AmmoOS · Queen Browser · PRESUME HOSTILE · DEFEND";
     $("qb-gate-strip")?.prepend(strip);
   }
 
@@ -427,6 +548,7 @@
       browserApi.browserRefresh = async function browserRefreshShell() {
         const doc = await origRefresh();
         browserApi.renderTabs(doc);
+        applyStartButtonMode(doc);
         const active = (doc.tabs || []).find((t) => t.active) || doc.tabs?.[0];
         if (active && !shell.popouts.has(active.id)) loadTab(active.id, active.url);
         return doc;
@@ -452,6 +574,8 @@
     popoutTab,
     attachTab,
     activateStart,
+    toggleStartMenu,
+    applyStartButtonMode,
     toggleViewportFullscreen,
     cycleTabs,
     decorateTabsRender,

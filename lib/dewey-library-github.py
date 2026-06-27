@@ -89,7 +89,7 @@ def _shelf_readme(code: str, title: str, books: list[dict[str, Any]]) -> str:
         )
     lines.extend([
         "",
-        "Content lives on the Hostess 7 field drive (`.h7` / `.txt`). This GitHub tree is the catalog manifest.",
+        "Content lives on the Hostess 7 field drive (`.h7c` / `.txt`). This GitHub tree is the catalog manifest.",
         "",
         "Hot-swap library profiles: `library/profiles/` — LOC, British Library, OCLC WorldCat.",
     ])
@@ -166,6 +166,7 @@ def build_github_tree(*, catalog: dict[str, Any] | None = None) -> dict[str, Any
                 "gutenberg_id": b.get("gutenberg_id", ""),
                 "format": b.get("format", "H7"),
                 "field_path": b.get("path", ""),
+                "cover": b.get("cover", ""),
                 "github_shelf": slug,
                 "updated": _now(),
             }

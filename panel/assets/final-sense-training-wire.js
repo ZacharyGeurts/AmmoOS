@@ -184,7 +184,7 @@
     const doctrine = st.doctrine || {};
     const sessIds = ["final_eye", "final_ear", "final_mouth", "sense_neural_wire"];
     if (!rows.length) {
-      el.innerHTML = `<p class="h7-sub">Sense training wires — run Assess, then train Final Eye, Ear, or Mouth from their tabs or here.</p>
+      el.innerHTML = `<p class="h7-sub">Sense training wires — run Assess, then train Final Eye, Ear, or Mouth from their tabs or here. <span style="color:#e8c878">Music theory steps are woven into each sense session (ear · mouth · brain especially).</span></p>
         <ul class="sense-track-list" style="margin:8px 0">${sessIds.map((id) => {
           const s = (doctrine.sessions || {})[id] || {};
           const label = s.label || id.replace(/_/g, " ");
@@ -209,7 +209,7 @@
       });
       return;
     }
-    el.innerHTML = `<p class="h7-sub"><strong>Sense package wires</strong> — Eye · Ear · Mouth fused to Hostess 7 matrix.</p>
+    el.innerHTML = `<p class="h7-sub"><strong>Sense package wires</strong> — Eye · Ear · Mouth fused to Hostess 7 matrix · <span style="color:#e8c878">♪ music theory on every session</span>.</p>
       <div class="h7-tracks" style="margin-top:10px">${rows.map(([id, t]) => {
         const tab = id.replace("final_", "final-").replace("sense_neural_wire", "training");
         const score = pct(t.score);

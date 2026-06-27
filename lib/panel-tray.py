@@ -105,11 +105,28 @@ def _app_id() -> str:
 
 def _tray_title() -> str:
     if _tray_mode() == "znetwork":
-        return "ZNetwork — field secure network — click for status & controls"
+        try:
+            doc = json.loads(TRAY_MODE_FILE.read_text(encoding="utf-8"))
+            title = str(doc.get("title") or "").strip()
+            if title:
+                return title
+        except (OSError, json.JSONDecodeError, TypeError):
+            pass
+        return "Bypassed OS Networking"
     return "NEXUS Field Command Center — click or right-click for tabs"
 
 
 def _tray_icon_source() -> Path:
+    if _tray_mode() == "znetwork":
+        for rel in (
+            "panel/assets/znetwork-tray-24.png",
+            "panel/assets/znetwork-tray-32.png",
+            "panel/assets/znetwork-tray-22.png",
+        ):
+            p = INSTALL / rel
+            if p.is_file() and p.stat().st_size > 0:
+                return p
+        return INSTALL / "panel" / "assets" / "znetwork-tray-24.png"
     for rel in (
         "panel/assets/queen-tray-24.png",
         "panel/assets/nexus-tray-us-24.png",
@@ -325,7 +342,7 @@ class TabPickerPopup(Gtk.Window):
         self.listbox = Gtk.ListBox()
         self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
         self.listbox.set_activate_on_single_click(True)
-        for label, route in TAB_CHOICES:
+        for label, route in _tab_choices():
             row = Gtk.ListBoxRow()
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             box.set_margin_top(6)

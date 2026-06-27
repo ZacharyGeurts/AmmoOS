@@ -1,0 +1,21 @@
+{
+  "schema": "field-ammolang-doctrine/v1",
+  "title": "AmmoLang — AI-native combinatorics sequence language",
+  "motto": "Pure combinatorics for AI operators — boil, sequence, wire, execute, no gaps.",
+  "product": "AmmoOS",
+  "version": "1",
+  "extension": ".aml",
+  "module": "lib/field-ammolang.py",
+  "combinators": ["I", "K", "S", "SEQ", "PAR", "LEAF", "BOIL", "GROW", "SURFACE", "WIDTH", "WIRE", "GAP", "EXEC", "COMBINE", "BIND", "COMBINATOR"],
+  "grok16": {
+    "driver": "g16-aml",
+    "discern": "ammolang",
+    "registry": "Grok16/data/grok16-languages.json"
+  },
+  "canonical_target": "field-program-combinatronic-seed.json",
+  "examples": [
+    "library/dewey/000-computer-science/ammolang/boot_sequence.aml",
+    "library/dewey/000-computer-science/ammolang/gapless_cycle.aml"
+  ],
+  "api": "/api/ammolang"
+}

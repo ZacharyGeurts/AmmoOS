@@ -59,6 +59,7 @@
       ironclad_images: slice.ironclad_images || {},
       ironclad_doctrine: slice.ironclad_doctrine || {},
       sense_training: slice.sense_training || {},
+      music: slice.music || {},
       muscle_memory: slice.muscle_memory || {},
       mouth_neural: slice.mouth_neural || {},
     };
@@ -90,6 +91,27 @@
           <figcaption><strong>${esc(im.title)}</strong><br/><span class="h7-sub">${esc(im.meaning || "")}</span>
             <span class="h7-sub"> · ironclad:${esc(im.book)}:${esc(im.verse)}</span></figcaption>
         </figure>`).join("")}</div>`;
+  }
+
+  function renderMusic(bundle) {
+    const el = $("h7-music-summary");
+    if (!el) return;
+    const mu = bundle.music || {};
+    const tracks = mu.tracks || {};
+    const ref = Number(mu.reference_pitch_hz ?? 440).toFixed(0);
+    const prof = Math.round((mu.proficiency || 0) * 100);
+    const cw = mu.crosswire || {};
+    const rows = Object.entries(tracks).map(([id, t]) =>
+      `${t.label || id}: ${t.pass_rate ?? Math.round((t.score || 0) * 100)}% · ${t.level || "pending"}`
+    );
+    const motto = mu.motto || "Pitch, rhythm, harmony — ear, mouth, brain, eye, every track.";
+    el.innerHTML = `
+      <h3 class="h7-section-title" style="margin-top:0">♪ Music & music theory</h3>
+      <p class="h7-sub">${esc(motto)}</p>
+      <p class="h7-sub"><strong>Concert A</strong> ${ref} Hz · proficiency <strong>${prof}%</strong>
+        · crosswire hooks <strong>${cw.hook_count ?? Object.keys(cw.hooks || {}).length ?? 0}</strong>
+        · drills <strong>${mu.music_drills ?? 0}</strong></p>
+      <p class="h7-sub">${rows.length ? rows.join(" · ") : "Press Assess, then train music_theory, music_ear, music_mouth, or music_brain."}</p>`;
   }
 
   function renderPhysics(bundle) {
@@ -440,6 +462,7 @@
     renderHero(bundle);
     renderIroncladGallery(bundle);
     renderPhysics(bundle);
+    renderMusic(bundle);
     renderMuscleMemoryRooms(bundle);
     renderMouthNeuralHemisphere(bundle);
     renderTracks(bundle);

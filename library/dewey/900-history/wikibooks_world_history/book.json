@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_world_history",
+  "title": "Wikibooks World History",
+  "author": "Wikibooks",
+  "dewey": "900",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "6-12",
+  "subject": "history",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_world_history/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_world_history/front.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

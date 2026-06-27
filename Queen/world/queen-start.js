@@ -1,11 +1,15 @@
 (function () {
   "use strict";
 
+  const ICON = (id) => `assets/icons/prog-${id}-48.png`;
+
   const PROGRAMS = [
-    { id: "nexus", label: "NEXUS", hint: "Field C2 · Queen tab", url: "queen://nexus" },
+    { id: "ammoos", label: "AmmoOS", hint: "Field C2 · Queen Browser", url: "queen://ammoos" },
     { id: "browser", label: "Web", hint: "New tab", url: "queen://world" },
     { id: "os", label: "Queen OS", hint: "Capsule & cores", url: "/world/?embed=1&dock=overview" },
     { id: "terminal", label: "Terminal", hint: "GNU shell", url: "queen://terminal" },
+    { id: "chips", label: "CHIPS", hint: "Headers · Webbrowser", url: "queen://chips" },
+    { id: "cores", label: "Cores", hint: "Die cores · Webbrowser", url: "queen://cores" },
     { id: "gameroom", label: "Game Room", hint: "CHIPS theater", url: "queen://gameroom" },
     { id: "forge", label: "Forge", hint: "Build deck", url: "/gui/queen-build-deck.html" },
     { id: "hostess", label: "Hostess 7", hint: "Watchguard", url: "queen://hostess" },
@@ -34,6 +38,7 @@
     grid.innerHTML = PROGRAMS.map(
       (p) =>
         `<button type="button" class="qs-tile" data-url="${p.url}" data-new="1">` +
+        `<img class="qs-tile-icon" src="${ICON(p.id)}" alt="" width="40" height="40" loading="lazy" decoding="async" />` +
         `<strong>${p.label}</strong><span>${p.hint}</span></button>`,
     ).join("");
     grid.querySelectorAll(".qs-tile").forEach((btn) => {

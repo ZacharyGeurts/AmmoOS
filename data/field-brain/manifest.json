@@ -9,7 +9,9 @@
   "fast_policy": {
     "max_bytes": 3145728,
     "min_bps": 0,
-    "fast_only": true
+    "fast_only": true,
+    "field_depth": 0,
+    "non_fielded": true
   },
   "note": "Lossless .H7 — every character and line; fast fetch ≤3 MiB per book",
   "books": [
@@ -24,7 +26,9 @@
       "line_count": 49,
       "compression_ratio": 5.31,
       "title": "OpenStax Elementary Algebra 2e",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_prealgebra",
@@ -37,7 +41,9 @@
       "line_count": 49,
       "compression_ratio": 5.29,
       "title": "OpenStax Prealgebra 2e",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_algebra",
@@ -50,7 +56,9 @@
       "line_count": 49,
       "compression_ratio": 5.26,
       "title": "OpenStax Algebra and Trigonometry 2e",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_precalculus",
@@ -63,7 +71,9 @@
       "line_count": 49,
       "compression_ratio": 5.29,
       "title": "OpenStax Precalculus 2e",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_calculus_vol1",
@@ -76,7 +86,9 @@
       "line_count": 49,
       "compression_ratio": 5.28,
       "title": "OpenStax Calculus Volume 1",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_hs_math",
@@ -89,7 +101,9 @@
       "line_count": 268,
       "compression_ratio": 4.17,
       "title": "Wikibooks High School Mathematics Extensions",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_basic_algebra",
@@ -102,7 +116,9 @@
       "line_count": 204,
       "compression_ratio": 4.4,
       "title": "Wikibooks Basic Algebra",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_biology",
@@ -115,7 +131,9 @@
       "line_count": 49,
       "compression_ratio": 5.32,
       "title": "OpenStax Biology 2e",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_biology_ap",
@@ -128,7 +146,9 @@
       "line_count": 49,
       "compression_ratio": 5.28,
       "title": "OpenStax Biology for AP Courses",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_physics",
@@ -141,7 +161,9 @@
       "line_count": 49,
       "compression_ratio": 5.23,
       "title": "OpenStax College Physics 2e",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_microbiology",
@@ -154,7 +176,9 @@
       "line_count": 49,
       "compression_ratio": 5.29,
       "title": "OpenStax Microbiology",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_hs_physics",
@@ -167,7 +191,9 @@
       "line_count": 89,
       "compression_ratio": 2.35,
       "title": "Wikibooks High School Physics",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_hs_chemistry",
@@ -180,7 +206,9 @@
       "line_count": 110,
       "compression_ratio": 2.6,
       "title": "Wikibooks High School Chemistry",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_geology_school",
@@ -193,7 +221,9 @@
       "line_count": 601,
       "compression_ratio": 2.05,
       "title": "Text-Book of Geology (Gutenberg)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_rhetoric",
@@ -206,7 +236,9 @@
       "line_count": 210,
       "compression_ratio": 5.15,
       "title": "Wikibooks Rhetoric and Composition",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_poetry",
@@ -219,7 +251,9 @@
       "line_count": 100,
       "compression_ratio": 2.95,
       "title": "Wikibooks Poetry",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_writing_guide",
@@ -232,7 +266,9 @@
       "line_count": 49,
       "compression_ratio": 5.27,
       "title": "OpenStax Writing Guide with Handbook",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_grammar_land",
@@ -245,7 +281,9 @@
       "line_count": 1307,
       "compression_ratio": 2.02,
       "title": "Grammar-Land (Gutenberg children's grammar)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_mcgruffey_1",
@@ -258,7 +296,9 @@
       "line_count": 1271,
       "compression_ratio": 1.93,
       "title": "McGuffey's First Eclectic Reader",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_mcgruffey_2",
@@ -271,7 +311,9 @@
       "line_count": 1119,
       "compression_ratio": 1.92,
       "title": "McGuffey's Second Eclectic Reader",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_world_history_1",
@@ -284,7 +326,9 @@
       "line_count": 49,
       "compression_ratio": 5.26,
       "title": "OpenStax World History Volume 1",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_world_history_2",
@@ -297,13 +341,17 @@
       "line_count": 49,
       "compression_ratio": 5.26,
       "title": "OpenStax World History Volume 2",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_first_algebra",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_us_history",
@@ -316,7 +364,9 @@
       "line_count": 137,
       "compression_ratio": 5.26,
       "title": "Wikibooks US History",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_world_history",
@@ -329,7 +379,9 @@
       "line_count": 137,
       "compression_ratio": 2.64,
       "title": "Wikibooks World History",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_civics_manual",
@@ -342,13 +394,17 @@
       "line_count": 561,
       "compression_ratio": 2.02,
       "title": "Elementary Civics (Gutenberg)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_statistics",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_physical_geo",
@@ -361,13 +417,17 @@
       "line_count": 1010,
       "compression_ratio": 1.87,
       "title": "Physical Geography (Gutenberg)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_college_algebra",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_sex_ed",
@@ -380,7 +440,9 @@
       "line_count": 81,
       "compression_ratio": 2.39,
       "title": "Wikibooks Sexual Health",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_cs",
@@ -393,7 +455,9 @@
       "line_count": 49,
       "compression_ratio": 5.26,
       "title": "OpenStax Introduction to Computer Science",
-      "license": "CC BY 4.0"
+      "license": "CC BY 4.0",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_python",
@@ -406,7 +470,9 @@
       "line_count": 115,
       "compression_ratio": 7.35,
       "title": "Wikibooks Python Programming",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_cs",
@@ -419,7 +485,9 @@
       "line_count": 152,
       "compression_ratio": 3.22,
       "title": "Wikibooks Computer Science",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_art_history",
@@ -432,7 +500,9 @@
       "line_count": 88,
       "compression_ratio": 3.07,
       "title": "Wikibooks Art History",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_music",
@@ -445,7 +515,9 @@
       "line_count": 145,
       "compression_ratio": 8.45,
       "title": "Wikibooks Music Theory",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_spanish",
@@ -458,7 +530,9 @@
       "line_count": 68,
       "compression_ratio": 3.01,
       "title": "Wikibooks Spanish",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_french",
@@ -471,13 +545,17 @@
       "line_count": 235,
       "compression_ratio": 3.63,
       "title": "Wikibooks French",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_us_history",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_elem_math",
@@ -490,7 +568,9 @@
       "line_count": 76,
       "compression_ratio": 2.32,
       "title": "Wikibooks Mathematics K-12",
-      "license": "CC BY-SA"
+      "license": "CC BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_arithmetic",
@@ -503,31 +583,41 @@
       "line_count": 892,
       "compression_ratio": 1.9,
       "title": "First Book in Arithmetic (Gutenberg)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_chemistry",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_astronomy",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_am_gov",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_anatomy",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_alice",
@@ -540,7 +630,9 @@
       "line_count": 3763,
       "compression_ratio": 2.15,
       "title": "Alice's Adventures in Wonderland",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_pride_prejudice",
@@ -553,7 +645,9 @@
       "line_count": 14916,
       "compression_ratio": 2.13,
       "title": "Pride and Prejudice",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_frankenstein",
@@ -566,7 +660,9 @@
       "line_count": 7742,
       "compression_ratio": 2.07,
       "title": "Frankenstein",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_sherlock_study",
@@ -579,7 +675,9 @@
       "line_count": 5124,
       "compression_ratio": 2.03,
       "title": "A Study in Scarlet",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_tom_sawyer",
@@ -592,7 +690,9 @@
       "line_count": 9273,
       "compression_ratio": 2.03,
       "title": "The Adventures of Tom Sawyer",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_art_of_war",
@@ -605,7 +705,9 @@
       "line_count": 7142,
       "compression_ratio": 2.02,
       "title": "The Art of War",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_declaration",
@@ -618,7 +720,9 @@
       "line_count": 607,
       "compression_ratio": 2.06,
       "title": "The Declaration of Independence",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_wizard_oz",
@@ -631,7 +735,9 @@
       "line_count": 5134,
       "compression_ratio": 2.19,
       "title": "The Wonderful Wizard of Oz",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_child_garden",
@@ -644,7 +750,9 @@
       "line_count": 9852,
       "compression_ratio": 2.14,
       "title": "The Secret Garden",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_peter_pan",
@@ -657,7 +765,9 @@
       "line_count": 6647,
       "compression_ratio": 2.05,
       "title": "Peter Pan",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_pinocchio",
@@ -670,7 +780,9 @@
       "line_count": 6226,
       "compression_ratio": 2.09,
       "title": "The Adventures of Pinocchio",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_wind_willows",
@@ -683,7 +795,9 @@
       "line_count": 6536,
       "compression_ratio": 2.03,
       "title": "The Wind in the Willows",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_treasure_island",
@@ -696,7 +810,9 @@
       "line_count": 7860,
       "compression_ratio": 2.05,
       "title": "Treasure Island",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_little_women",
@@ -709,7 +825,9 @@
       "line_count": 22851,
       "compression_ratio": 2.01,
       "title": "Little Women",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_bible_kjv",
@@ -722,7 +840,9 @@
       "line_count": 45440,
       "compression_ratio": 2.43,
       "title": "King James Bible",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_bible_kjv_complete",
@@ -735,7 +855,9 @@
       "line_count": 48279,
       "compression_ratio": 2.49,
       "title": "King James Bible (complete alt)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_bible_web",
@@ -748,7 +870,9 @@
       "line_count": 34356,
       "compression_ratio": 2.63,
       "title": "World English Bible",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_bible_apocrypha",
@@ -761,13 +885,17 @@
       "line_count": 20286,
       "compression_ratio": 2.19,
       "title": "Deuterocanonical Books (Apocrypha)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_health",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_douay_rheims",
@@ -780,7 +908,9 @@
       "line_count": 49769,
       "compression_ratio": 2.33,
       "title": "Douay-Rheims Bible",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_paradise_lost",
@@ -793,19 +923,25 @@
       "line_count": 11107,
       "compression_ratio": 1.92,
       "title": "Paradise Lost",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_psychology",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_sociology",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_book_mormon",
@@ -818,13 +954,17 @@
       "line_count": 31573,
       "compression_ratio": 2.46,
       "title": "Book of Mormon",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "openstax_economics",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_sound_music",
@@ -837,7 +977,9 @@
       "line_count": 2446,
       "compression_ratio": 2.14,
       "title": "The Standard Operaglass",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_quran_rodwell",
@@ -850,7 +992,9 @@
       "line_count": 26982,
       "compression_ratio": 2.06,
       "title": "The Koran (Rodwell)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_acoustics",
@@ -863,7 +1007,9 @@
       "line_count": 90,
       "compression_ratio": 2.9,
       "title": "Wikibooks Acoustics",
-      "license": "CC-BY-SA"
+      "license": "CC-BY-SA",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_lovelace_notes",
@@ -876,7 +1022,9 @@
       "line_count": 975,
       "compression_ratio": 2.02,
       "title": "Sketch of the Analytical Engine (Notes by Ada Lovelace)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_symbolic_logic",
@@ -889,7 +1037,9 @@
       "line_count": 4587,
       "compression_ratio": 2.04,
       "title": "Symbolic Logic",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_flatland",
@@ -902,7 +1052,9 @@
       "line_count": 4225,
       "compression_ratio": 2.08,
       "title": "Flatland",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_story_of_siegfried",
@@ -915,7 +1067,9 @@
       "line_count": 14033,
       "compression_ratio": 2.24,
       "title": "The Story of Siegfried",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_einstein_relativity",
@@ -928,7 +1082,9 @@
       "line_count": 2952,
       "compression_ratio": 2.08,
       "title": "Relativity: The Special and General Theory",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_huygens_light",
@@ -941,7 +1097,9 @@
       "line_count": 4165,
       "compression_ratio": 2.31,
       "title": "Treatise on Light",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_faraday_candle",
@@ -954,7 +1112,9 @@
       "line_count": 1453,
       "compression_ratio": 2.07,
       "title": "The Chemical History of a Candle",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_babbage_economy",
@@ -967,7 +1127,9 @@
       "line_count": 13391,
       "compression_ratio": 2.04,
       "title": "On the Economy of Machinery and Manufactures",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_divine_comedy",
@@ -980,19 +1142,25 @@
       "line_count": 71691,
       "compression_ratio": 1.96,
       "title": "The Divine Comedy",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_elem_science",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "wikibooks_world_geography",
       "ok": false,
       "error": "no text (fast_fetch_fail:HTTP Error 404: Not Found)",
-      "source": "fast_fetch_fail:HTTP Error 404: Not Found"
+      "source": "fast_fetch_fail:HTTP Error 404: Not Found",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_maxwell_matter",
@@ -1005,7 +1173,9 @@
       "line_count": 13252,
       "compression_ratio": 2.0,
       "title": "Matter and Motion",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_elementary_chemistry",
@@ -1018,7 +1188,9 @@
       "line_count": 4468,
       "compression_ratio": 2.03,
       "title": "An Elementary Study of Chemistry",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_chemical_lectures",
@@ -1031,7 +1203,9 @@
       "line_count": 3681,
       "compression_ratio": 2.06,
       "title": "Chemical Lectures (1809)",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_first_aid_manual",
@@ -1044,7 +1218,9 @@
       "line_count": 6745,
       "compression_ratio": 2.02,
       "title": "First Aid to the Injured",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_alchemy_chemistry",
@@ -1057,7 +1233,9 @@
       "line_count": 5187,
       "compression_ratio": 2.11,
       "title": "The Story of Alchemy and the Beginnings of Chemistry",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_lavoisier_elements",
@@ -1070,7 +1248,9 @@
       "line_count": 10568,
       "compression_ratio": 2.0,
       "title": "Elements of Chemistry",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_nightingale_nursing",
@@ -1083,7 +1263,9 @@
       "line_count": 7805,
       "compression_ratio": 2.04,
       "title": "Notes on Nursing",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_hygiene_brain",
@@ -1096,7 +1278,9 @@
       "line_count": 1536,
       "compression_ratio": 1.93,
       "title": "Hygiene of the Brain and Nerves",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_forensic_medicine",
@@ -1109,7 +1293,9 @@
       "line_count": 5019,
       "compression_ratio": 2.0,
       "title": "Aids to Forensic Medicine and Toxicology",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_physics_beginners",
@@ -1122,7 +1308,9 @@
       "line_count": 23705,
       "compression_ratio": 2.29,
       "title": "Physics for Beginners",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     },
     {
       "id": "gutenberg_home_treatment",
@@ -1135,7 +1323,11 @@
       "line_count": 22184,
       "compression_ratio": 1.97,
       "title": "The Home Medical Library",
-      "license": "Public Domain"
+      "license": "Public Domain",
+      "field_depth": 0,
+      "non_fielded": true
     }
-  ]
+  ],
+  "field_depth": 0,
+  "non_fielded": true
 }

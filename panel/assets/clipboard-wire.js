@@ -17,6 +17,9 @@
     chordsHandled: 0,
     blockedUntrusted: 0,
     vaultOps: 0,
+    ghostMode: true,
+    historicCount: 0,
+    historyCursor: 0,
   };
 
   function onWireSurface(target) {
@@ -176,6 +179,27 @@
       ev.stopImmediatePropagation();
       state.chordsHandled += 1;
       vaultAction("clear");
+      return;
+    }
+    if (action === "history" || action === "historic") {
+      const text = selectionText();
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      state.chordsHandled += 1;
+      if (text) vaultAction("copy", text);
+      vaultAction("history").then((doc) => {
+        if (doc && typeof doc.count === "number") state.historicCount = doc.count;
+      });
+      return;
+    }
+    if (action === "history_paste" || action === "historic_paste" || action === "paste_history") {
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      state.chordsHandled += 1;
+      vaultAction("history_paste", "").then((doc) => {
+        const text = (doc && doc.stdout) || "";
+        if (text) insertText(text);
+      });
     }
   }
 
@@ -222,6 +246,8 @@
       .then((r) => r.json())
       .then((doc) => {
         state.scheme = doc.scheme || "standard";
+        state.ghostMode = doc.ghost_mode !== false;
+        state.historicCount = doc.historic_count || 0;
         state.bindings = (doc.bindings || []).map((b) => ({
           ...b,
           parsed: b.parsed || parseChord(b.chord),

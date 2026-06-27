@@ -78,6 +78,7 @@ _dewey_tree: dict[str, Any] | None = None
 _library_profiles: dict[str, Any] | None = None
 _librarian_mod: Any = None
 _field_tie_mod: Any = None
+_balance_mod: Any = None
 
 
 def _field_tie() -> Any:
@@ -92,6 +93,129 @@ def _field_tie() -> Any:
     spec.loader.exec_module(mod)
     _field_tie_mod = mod
     return mod
+
+
+def _balance() -> Any:
+    global _balance_mod
+    if _balance_mod is not None:
+        return _balance_mod
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "field_combinatronic_balance", INSTALL / "lib" / "field-combinatronic-balance.py"
+    )
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _balance_mod = mod
+    return mod
+
+
+def _content_balance(
+    book_id: str,
+    meta: dict[str, Any],
+    *,
+    read_stats: dict[str, Any] | None = None,
+    elapsed_ms: float | None = None,
+) -> dict[str, Any]:
+    bal = _balance()
+    if not bal or not hasattr(bal, "read_content_balance"):
+        return {}
+    try:
+        return bal.read_content_balance(
+            book_id,
+            fmt=str(meta.get("format", "")),
+            collection=str(meta.get("collection", "")),
+            read_stats=read_stats,
+            elapsed_ms=elapsed_ms,
+        )
+    except Exception:
+        return {}
+
+
+def _dewey_lib() -> Any:
+    import importlib.util
+    path = INSTALL / "lib" / "field-dewey-library.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("field_dewey_library", path)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _find_h7c_path(book_id: str) -> Path | None:
+    dewey = _dewey_lib()
+    if dewey and hasattr(dewey, "find_h7c"):
+        hit = dewey.find_h7c(book_id)
+        if hit:
+            return hit
+    return None
+
+
+def _read_content(
+    book_id: str,
+    meta: dict[str, Any],
+) -> tuple[str, dict[str, Any]]:
+    """Read book text from H7c anywhere in Dewey tree."""
+    import time
+
+    dewey = _dewey_lib()
+    if dewey and hasattr(dewey, "read_h7c_text"):
+        try:
+            t0 = time.perf_counter()
+            text, header, stats = dewey.read_h7c_text(book_id)
+            if text:
+                stats = dict(stats or {})
+                stats["text_sha256"] = (header or {}).get("text_sha256")
+                stats["elapsed_ms"] = stats.get("elapsed_ms") or round((time.perf_counter() - t0) * 1000, 3)
+                return text, stats
+        except Exception:
+            pass
+
+    if dewey and hasattr(dewey, "ensure_h7c_for_book"):
+        ensured = dewey.ensure_h7c_for_book(book_id)
+        if ensured and ensured.is_file():
+            h7c_py = INSTALL / "lib" / "field-h7c-compression.py"
+            if h7c_py.is_file():
+                try:
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location("h7c_read", h7c_py)
+                    if spec and spec.loader:
+                        mod = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(mod)
+                        t0 = time.perf_counter()
+                        header, text, stats = mod.decompress_h7c(ensured.read_bytes(), verify=True)
+                        stats = dict(stats)
+                        stats["text_sha256"] = header.get("text_sha256")
+                        stats["elapsed_ms"] = stats.get("elapsed_ms") or round((time.perf_counter() - t0) * 1000, 3)
+                        stats["auto_converted"] = True
+                        return text, stats
+                except Exception:
+                    pass
+
+    h7c_path = _find_h7c_path(book_id)
+    if h7c_path and h7c_path.is_file():
+        h7c_py = INSTALL / "lib" / "field-h7c-compression.py"
+        if h7c_py.is_file():
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("h7c_read", h7c_py)
+                if spec and spec.loader:
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)
+                    t0 = time.perf_counter()
+                    header, text, stats = mod.decompress_h7c(h7c_path.read_bytes(), verify=True)
+                    stats = dict(stats)
+                    stats["text_sha256"] = header.get("text_sha256")
+                    stats["elapsed_ms"] = stats.get("elapsed_ms") or round((time.perf_counter() - t0) * 1000, 3)
+                    return text, stats
+            except Exception:
+                pass
+    text = _source_text_legacy(book_id)
+    return text, {}
 
 
 def _librarian() -> Any:
@@ -334,6 +458,47 @@ def _dewey_dir(dewey_code: str, *, root: Path | None = None) -> Path:
     return base / main
 
 
+def _library_shelf_dir(dewey_code: str) -> Path:
+    """Resolve Dewey shelf under library/dewey — glob tree, room for every book ever."""
+    code = re.sub(r"[^\d.]", "", str(dewey_code or "000")).strip() or "000"
+    root = GITHUB_LIBRARY
+    root.mkdir(parents=True, exist_ok=True)
+    tree = _load_dewey_tree()
+    best_slug = ""
+    best_len = -1
+    for subdiv in (tree.get("subdivisions") or {}).values():
+        sc = str(subdiv.get("code", ""))
+        slug = str(subdiv.get("slug") or "")
+        if slug and code.startswith(sc) and len(sc) > best_len and (root / slug).is_dir():
+            best_slug = slug
+            best_len = len(sc)
+    if best_slug:
+        return root / best_slug
+    main = code.split(".")[0][:3].ljust(3, "0")
+    candidates: list[str] = []
+    if main in ("004", "005"):
+        candidates.append("004-computers")
+    for cls in tree.get("classes") or []:
+        if str(cls.get("code")) == main:
+            candidates.append(str(cls.get("slug") or ""))
+    candidates.extend([
+        f"{main}-computers",
+        f"{main}-education",
+        f"{main}-science",
+        f"{main}-mathematics",
+        f"{main}-history",
+        main,
+    ])
+    for slug in candidates:
+        if slug and (root / slug).is_dir():
+            return root / slug
+    for shelf in sorted(root.iterdir()):
+        if shelf.is_dir() and shelf.name.startswith(main):
+            return shelf
+    slug = next((s for s in candidates if s), f"{main}-shelf")
+    return root / slug
+
+
 def _safe_id(book_id: str) -> str:
     return re.sub(r"[^\w.-]", "_", book_id)
 
@@ -364,9 +529,36 @@ def _vision_corpus_text() -> str:
     return ""
 
 
+def _iter_h7c_files() -> list[Path]:
+    dewey = _dewey_lib()
+    if dewey and hasattr(dewey, "glob_h7c_files"):
+        return dewey.glob_h7c_files()
+    if not GITHUB_LIBRARY.is_dir():
+        return []
+    return sorted(GITHUB_LIBRARY.rglob("*.h7c"))
+
+
+def _h7c_meta(path: Path) -> dict[str, Any] | None:
+    dewey = _dewey_lib()
+    if dewey and hasattr(dewey, "h7c_meta"):
+        return dewey.h7c_meta(path)
+    return None
+
+
+def _glob_dewey_books() -> list[dict[str, Any]]:
+    dewey = _dewey_lib()
+    if dewey and hasattr(dewey, "glob_books"):
+        try:
+            return dewey.glob_books()
+        except Exception:
+            pass
+    return []
+
+
 def _iter_h7_files() -> list[Path]:
     seen: set[str] = set()
     paths: list[Path] = []
+    dewey_mod = _dewey_lib()
     for tb in _textbook_roots():
         for pattern in ("**/*.h7", "*.h7"):
             for path in sorted(tb.glob(pattern)):
@@ -374,6 +566,14 @@ def _iter_h7_files() -> list[Path]:
                 if key in seen:
                     continue
                 seen.add(key)
+                if dewey_mod and hasattr(dewey_mod, "ensure_h7c_path"):
+                    h7c = dewey_mod.ensure_h7c_path(path)
+                    if h7c.suffix.lower() == ".h7c" and h7c.is_file():
+                        key2 = str(h7c.resolve())
+                        if key2 not in seen:
+                            seen.add(key2)
+                            paths.append(h7c)
+                    continue
                 paths.append(path)
         dewey = tb / "dewey"
         if dewey.is_dir():
@@ -382,11 +582,26 @@ def _iter_h7_files() -> list[Path]:
                 if key in seen:
                     continue
                 seen.add(key)
+                if dewey_mod and hasattr(dewey_mod, "ensure_h7c_path"):
+                    h7c = dewey_mod.ensure_h7c_path(path)
+                    if h7c.suffix.lower() == ".h7c" and h7c.is_file():
+                        key2 = str(h7c.resolve())
+                        if key2 not in seen:
+                            seen.add(key2)
+                            paths.append(h7c)
+                    continue
                 paths.append(path)
     return paths
 
 
 def _h7_meta(path: Path) -> dict[str, Any] | None:
+    dewey = _dewey_lib()
+    if dewey and hasattr(dewey, "ensure_h7c_path") and path.suffix.lower() == ".h7":
+        h7c_path = dewey.ensure_h7c_path(path)
+        if h7c_path.suffix.lower() == ".h7c":
+            row = _h7c_meta(h7c_path)
+            if row:
+                return row
     mod = _h7_book_module()
     if not mod:
         return None
@@ -507,6 +722,73 @@ def _library_only(books: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [b for b in books if tie.is_library_book(b)]
 
 
+def _registry_entries() -> list[dict[str, Any]]:
+    """Unified library registry — devices, games, textbooks, file formats, all collections."""
+    path = INSTALL / "lib" / "field-library-registry.py"
+    if not path.is_file():
+        return _extensive_library_entries()
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("field_library_registry", path)
+    if not spec or not spec.loader:
+        return _extensive_library_entries()
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    try:
+        rows = mod.registry_entries()
+    except Exception:
+        return _extensive_library_entries()
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        bid = str(row.get("id", ""))
+        if not bid:
+            continue
+        dewey = row.get("dewey", "004")
+        fmt = row.get("format") or "h7c"
+        out.append({
+            **row,
+            "ready": row.get("ready", True),
+            "format": fmt,
+            "dewey": dewey,
+            "dewey_label": translate_dewey_label(str(dewey)),
+            "source": row.get("source", "field-library-registry"),
+        })
+    return out
+
+
+def _extensive_library_entries() -> list[dict[str, Any]]:
+    """Legacy catalog hook — delegates to field-library-registry when available."""
+    path = INSTALL / "lib" / "field-extensive-library.py"
+    if not path.is_file():
+        return []
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("field_extensive_library", path)
+    if not spec or not spec.loader:
+        return []
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    try:
+        rows = mod.catalog_for_h7_bridge()
+    except Exception:
+        return []
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        bid = str(row.get("id", ""))
+        if not bid:
+            continue
+        dewey = row.get("dewey", "004")
+        out.append({
+            **row,
+            "ready": True,
+            "format": row.get("format", "h7c"),
+            "dewey": dewey,
+            "dewey_label": translate_dewey_label(str(dewey)),
+            "source": row.get("source", "field-extensive-library"),
+        })
+    return out
+
+
 def _scan_github_library() -> list[dict[str, Any]]:
     """Zero-cost catalog from GitHub tree library/dewey/**/book.json (shipped with NEXUS-Shield)."""
     if not GITHUB_LIBRARY.is_dir():
@@ -566,8 +848,18 @@ def _scan_books() -> list[dict[str, Any]]:
         row = {**book, **_txt_meta_from_text(bid, book, text)}
         by_id[bid] = row
 
-    for path in _iter_h7_files():
-        row = _h7_meta(path)
+    for row in _glob_dewey_books():
+        bid = str(row.get("id") or "")
+        if not bid:
+            continue
+        prev = by_id.get(bid) or {}
+        merged = {**prev, **row, "format": row.get("format") or "h7c", "ready": True}
+        if row.get("h7c"):
+            merged["path"] = str(INSTALL / str(row["h7c"])) if not str(row["h7c"]).startswith("/") else row["h7c"]
+        by_id[bid] = merged
+
+    for path in _iter_h7c_files():
+        row = _h7c_meta(path)
         if not row:
             continue
         bid = row["id"]
@@ -611,6 +903,14 @@ def _scan_books() -> list[dict[str, Any]]:
             merged["format"] = prev.get("format", merged.get("format"))
         by_id[bid] = merged
 
+    for row in _registry_entries():
+        bid = row["id"]
+        prev = by_id.get(bid) or {}
+        merged = {**prev, **row}
+        if row.get("cover") and not merged.get("cover"):
+            merged["cover"] = row["cover"]
+        by_id[bid] = merged
+
     tie = _field_tie()
     if tie:
         on_disk_ids = set(by_id.keys())
@@ -644,7 +944,7 @@ def _txt_meta_from_text(bid: str, book: dict[str, Any], text: str) -> dict[str, 
     }
 
 
-def _source_text(book_id: str) -> str:
+def _source_text_legacy(book_id: str) -> str:
     if book_id == "h7-vision-existence-field-guide":
         text = _vision_corpus_text()
         if text:
@@ -655,19 +955,6 @@ def _source_text(book_id: str) -> str:
         tied_text = tie.source_text_for_id(book_id)
         if tied_text:
             return tied_text
-
-    mod = _h7_book_module()
-    for path in _iter_h7_files():
-        if mod:
-            try:
-                header, _ = mod.unpack_h7(path.read_bytes(), verify=False)
-                if str(header.get("id", path.stem)) == book_id or path.stem == book_id:
-                    doc = mod.read_h7_file(path)
-                    return str(doc.get("text", ""))
-            except (OSError, ValueError):
-                pass
-        elif path.stem == book_id or path.stem == _safe_id(book_id):
-            continue
 
     for base in (BOOKS_SRC, STATE / "field-books"):
         path = base / f"{book_id}.txt"
@@ -683,6 +970,11 @@ def _source_text(book_id: str) -> str:
             elif path.is_file():
                 return path.read_text(encoding="utf-8", errors="replace")
     return ""
+
+
+def _source_text(book_id: str) -> str:
+    text, _ = _read_content(book_id, {"format": "h7c"})
+    return text
 
 
 def _paginate(text: str, *, page_chars: int | None = None) -> list[str]:
@@ -720,6 +1012,21 @@ def _search_blob(book: dict[str, Any]) -> str:
     return " ".join(str(p) for p in parts).lower()
 
 
+def _atlas_mod() -> Any:
+    import importlib.util
+    path = INSTALL / "lib" / "h7-library-atlas.py"
+    if not path.is_file():
+        path = Path(__file__).resolve().parent / "h7-library-atlas.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("h7_library_atlas", path)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def search_books(query: str, *, limit: int = 24) -> list[dict[str, Any]]:
     toks = [t for t in re.split(r"\W+", query.lower()) if len(t) > 1]
     if not toks:
@@ -727,6 +1034,8 @@ def search_books(query: str, *, limit: int = 24) -> list[dict[str, Any]]:
     scored: list[tuple[int, dict[str, Any]]] = []
     for book in _scan_books():
         blob = _search_blob(book)
+        blob += " " + " ".join(str(x) for x in (book.get("summary", ""), book.get("for_humans", "")))
+        blob += " " + " ".join(book.get("topics") or [])
         score = 0
         for t in toks:
             if t in str(book.get("id", "")).lower():
@@ -737,12 +1046,21 @@ def search_books(query: str, *, limit: int = 24) -> list[dict[str, Any]]:
                 score += 6
             if t in str(book.get("dewey", "")):
                 score += 8
+            if t in (book.get("topics") or []):
+                score += 9
             if t in blob:
                 score += 4
         if score > 0:
             scored.append((score, book))
     scored.sort(key=lambda x: (-x[0], x[1].get("title", "")))
     return [{**b, "score": s} for s, b in scored[:limit]]
+
+
+def search_library(query: str, *, limit: int = 24) -> dict[str, Any]:
+    atlas = _atlas_mod()
+    if atlas:
+        return atlas.search_unified(query, _scan_books(), book_search_fn=search_books, limit=limit)
+    return {"ok": True, "query": query, "books": search_books(query, limit=limit), "passages": [], "topics": []}
 
 
 def dewey_shelves(*, profile_id: str | None = None) -> list[dict[str, Any]]:
@@ -818,6 +1136,27 @@ def war_shelves(*, profile_id: str | None = None) -> list[dict[str, Any]]:
     return out
 
 
+def _attach_book_knowledge(doc: dict[str, Any], books: list[dict[str, Any]]) -> None:
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "h7_secure_reader",
+            INSTALL / "lib" / "h7-library-secure-reader.py",
+        )
+        if spec and spec.loader:
+            reader_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(reader_mod)
+            sync = reader_mod.sync_book_knowledge(books)
+            doc["book_knowledge"] = {
+                "book_count": sync.get("book_count", 0),
+                "path": sync.get("path"),
+            }
+            return
+    except Exception:
+        pass
+    doc["book_knowledge"] = {"book_count": len(books)}
+
+
 def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict[str, Any]:
     pid = profile_id or DEFAULT_PROFILE
     lib = _librarian()
@@ -836,6 +1175,8 @@ def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict
                 snap["books"] = apply_library_profile(snap.get("books") or [], profile_id=pid)
                 snap["shelves"] = dewey_shelves(profile_id=pid)
                 snap["war_shelves"] = war_shelves(profile_id=pid)
+                _attach_book_knowledge(snap, snap.get("books") or [])
+                snap["librarian_corps"] = (lib.librarian_status().get("corps") if lib else {}) or {}
                 return snap
 
     if lib:
@@ -845,7 +1186,14 @@ def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict
     if tie and force:
         tie.organize_h7_to_dewey(classify_fn=classify_dewey)
 
-    books = apply_library_profile(_scan_books(), profile_id=pid)
+    raw_books = _scan_books()
+    atlas_mod = _atlas_mod()
+    atlas_doc: dict[str, Any] = {}
+    if atlas_mod:
+        atlas_doc = atlas_mod.build_atlas(raw_books, text_for_id=_source_text, force=force)
+        raw_books = atlas_mod.apply_atlas_to_books(raw_books, atlas_doc)
+
+    books = apply_library_profile(raw_books, profile_id=pid)
     if lib and (force or not lib.field_unchanged()):
         lib.build_bibliography_field(write=True)
 
@@ -854,9 +1202,9 @@ def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict
 
     doc = {
         "updated": _now(),
-        "library_version": 4,
+        "library_version": 5,
         "page_chars": PAGE_CHARS,
-        "motto": "World's Best Dewey Library — Hostess7 field drive, hot-swappable catalog profiles.",
+        "motto": "Read like a person. Retrieve like a model. — Hostess7 Library Atlas",
         "field_root": str(_primary_field_root()),
         "field_fingerprint": lib.compute_field_fingerprint() if lib else "",
         "unchanged": False,
@@ -884,9 +1232,26 @@ def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict
         "shelves": dewey_shelves(profile_id=pid),
         "war_shelves": war_shelves(profile_id=pid),
         "librarian": lib.librarian_status() if lib else {},
+        "atlas": {
+            "schema": atlas_doc.get("schema", ""),
+            "path": str(atlas_mod.atlas_dir() / "atlas.json") if atlas_mod else "",
+            "passage_count": atlas_doc.get("passage_count", 0),
+            "topic_count": atlas_doc.get("topic_count", 0),
+            "collection_count": atlas_doc.get("collection_count", 0),
+        },
+        "collections": atlas_doc.get("collections", []),
+        "topics": atlas_doc.get("topics", []),
+        "human": atlas_doc.get("human", {}),
+        "ai": atlas_doc.get("ai", {}),
     }
     if lib:
         lib.save_fingerprint(catalog=doc)
+        lib.librarian_corps_learn(
+            "catalog_build",
+            detail=f"book_count={len(books)} shelves={len(doc.get('shelves') or [])}",
+        )
+    doc["librarian_corps"] = (lib.librarian_status().get("corps") if lib else {}) or {}
+    _attach_book_knowledge(doc, books)
     return doc
 
 
@@ -898,12 +1263,40 @@ def read_page(book_id: str, page: int, *, page_chars: int | None = None) -> dict
     if not meta:
         return {"ok": False, "error": "unknown_book"}
 
-    text = _source_text(book_id)
+    import time
+    t0 = time.perf_counter()
+    text, read_stats = _read_content(book_id, meta)
     if not text:
         return {"ok": False, "error": "empty_book", "book": meta}
 
     pages = _paginate(text, page_chars=page_chars)
     page = max(1, min(page, len(pages)))
+    lib = _librarian()
+    librarian: dict[str, Any] = {}
+    if lib:
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(
+                "nexus_librarian_corps",
+                INSTALL / "lib" / "nexus-librarian-corps.py",
+            )
+            if spec and spec.loader:
+                corps = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(corps)
+                route = corps.dispense_route(
+                    book_id=book_id,
+                    dewey=str(meta.get("dewey", "")),
+                    page=page,
+                )
+                librarian = route.get("librarian") or {}
+        except Exception:
+            pass
+    cb = _content_balance(
+        book_id,
+        meta,
+        read_stats=read_stats,
+        elapsed_ms=round((time.perf_counter() - t0) * 1000, 3),
+    )
     return {
         "ok": True,
         "book": meta,
@@ -914,6 +1307,12 @@ def read_page(book_id: str, page: int, *, page_chars: int | None = None) -> dict
         "has_prev": page > 1,
         "has_next": page < len(pages),
         "format": meta.get("format", "field-txt"),
+        "librarian": librarian,
+        "combinatronic_balance": cb,
+        "balance_id": cb.get("balance_id"),
+        "best_identifier": cb.get("best_identifier"),
+        "precise_file": cb.get("precise_file"),
+        "no_cost": cb.get("no_cost"),
     }
 
 
@@ -922,10 +1321,59 @@ def read_full(book_id: str) -> dict[str, Any]:
     meta = next((b for b in books if b["id"] == book_id), None)
     if not meta:
         return {"ok": False, "error": "unknown_book"}
-    text = _source_text(book_id)
+    import time
+    t0 = time.perf_counter()
+    text, read_stats = _read_content(book_id, meta)
     if not text:
         return {"ok": False, "error": "empty_book", "book": meta}
-    return {"ok": True, "book": meta, "text": text, "char_count": len(text)}
+    cb = _content_balance(
+        book_id,
+        meta,
+        read_stats=read_stats,
+        elapsed_ms=round((time.perf_counter() - t0) * 1000, 3),
+    )
+    figures: dict[str, Any] = {}
+    figure_ids: list[str] = []
+    if isinstance(read_stats, dict):
+        raw_figs = read_stats.get("_figures_raw") or {}
+        if raw_figs:
+            import base64
+            for fid, spec in raw_figs.items():
+                data = spec.get("data") or b""
+                mime = spec.get("mime") or "image/png"
+                figures[fid] = {
+                    "id": fid,
+                    "mime": mime,
+                    "alt": spec.get("alt") or fid,
+                    "data_url": f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}" if data else "",
+                }
+            figure_ids = sorted(figures.keys())
+    return {
+        "ok": True,
+        "book": meta,
+        "text": text,
+        "char_count": len(text),
+        "figures": figures,
+        "figure_ids": figure_ids,
+        "combinatronic_balance": cb,
+        "balance_id": cb.get("balance_id"),
+        "best_identifier": cb.get("best_identifier"),
+        "precise_file": cb.get("precise_file"),
+        "no_cost": cb.get("no_cost"),
+    }
+
+
+def _h7c_module() -> Any:
+    import importlib.util
+    path = INSTALL / "lib" / "field-h7c-compression.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("field_h7c_compression", path)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def write_h7_book(
@@ -935,9 +1383,9 @@ def write_h7_book(
     *,
     dewey_code: str | None = None,
 ) -> dict[str, Any]:
-    mod = _h7_book_module()
-    if not mod:
-        return {"ok": False, "error": "h7_module_missing"}
+    h7c_mod = _h7c_module()
+    if not h7c_mod:
+        return {"ok": False, "error": "h7c_module_missing"}
 
     dewey = classify_dewey(
         category=str(meta.get("category", meta.get("subject", ""))),
@@ -947,26 +1395,60 @@ def write_h7_book(
         text_sample=text[:3000],
     )
     code = dewey_code or dewey["code"]
-    dest_dir = _dewey_dir(code)
+    dest_dir = _library_shelf_dir(code)
     dest_dir.mkdir(parents=True, exist_ok=True)
     safe = _safe_id(book_id)
-    path = dest_dir / f"{safe}.h7"
+    book_subdir = dest_dir / safe
+    book_subdir.mkdir(parents=True, exist_ok=True)
+    path = book_subdir / f"{safe}.h7c"
     pack_meta = {
         "id": book_id,
         "title": meta.get("title", book_id),
         "author": meta.get("author", ""),
         "license": meta.get("license", "Field"),
         "subject": meta.get("category", meta.get("subject", "")),
+        "category": str(meta.get("category", meta.get("subject", ""))),
         "dewey": code,
         "dewey_label": dewey["label"],
         "uploaded": _now(),
-        "reader": "NEXUS_H7",
+        "reader": "NEXUS_H7C",
     }
-    stats = mod.write_h7(path, text, pack_meta)
+    packed = h7c_mod.pack_h7c(text, pack_meta, use_optimizer=True, format_version=2)
+    path.write_bytes(packed)
+    book_doc = {
+        "id": book_id,
+        "title": pack_meta["title"],
+        "author": pack_meta["author"],
+        "dewey": code,
+        "dewey_label": dewey["label"],
+        "format": "h7c",
+        "h7c": str(path.relative_to(INSTALL)) if path.is_relative_to(INSTALL) else str(path),
+        "h7": None,
+        "cover": meta.get("cover"),
+        "updated": _now(),
+    }
+    (book_subdir / "book.json").write_text(
+        json.dumps(book_doc, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     lib = _librarian()
     if lib:
-        lib.touch_book(book_id)
-    return {"ok": True, "path": str(path), "dewey": code, "dewey_label": dewey["label"], **stats}
+        lib.touch_book(book_id, dewey=code, title=str(meta.get("title", book_id)))
+        lib.librarian_corps_learn(
+            "upload",
+            book_id=book_id,
+            dewey=code,
+            title=str(meta.get("title", book_id)),
+            detail=dewey["label"],
+        )
+    return {
+        "ok": True,
+        "path": str(path),
+        "format": "h7c",
+        "bytes": len(packed),
+        "dewey": code,
+        "dewey_label": dewey["label"],
+    }
 
 
 def upload_book(
@@ -1042,8 +1524,53 @@ def main() -> int:
 
     if cmd == "search" and len(sys.argv) >= 3:
         q = " ".join(sys.argv[2:])
-        json.dump({"ok": True, "query": q, "hits": search_books(q)}, sys.stdout, indent=2)
+        unified = search_library(q)
+        json.dump({**unified, "hits": unified.get("books", [])}, sys.stdout, indent=2)
         sys.stdout.write("\n")
+        return 0
+
+    if cmd in ("atlas", "collections"):
+        atlas = _atlas_mod()
+        if atlas:
+            doc = atlas.load_atlas() or atlas.build_atlas(_scan_books(), text_for_id=_source_text, force="--force" in sys.argv)
+            json.dump(doc, sys.stdout, indent=2)
+        else:
+            json.dump({"ok": False, "error": "atlas_module_missing"}, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "passages" and len(sys.argv) >= 3:
+        q = " ".join(sys.argv[2:])
+        atlas = _atlas_mod()
+        hits = atlas.search_passages(q) if atlas else []
+        json.dump({"ok": True, "query": q, "hits": hits}, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "topics":
+        atlas = _atlas_mod()
+        doc = atlas.load_atlas() if atlas else None
+        json.dump({"ok": True, "topics": (doc or {}).get("topics", [])}, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "truth" and len(sys.argv) >= 3:
+        truth_py = INSTALL / "lib" / "h7-library-truth.py"
+        if not truth_py.is_file():
+            json.dump({"ok": False, "error": "truth_module_missing"}, sys.stdout)
+            sys.stdout.write("\n")
+            return 1
+        import subprocess
+        proc = subprocess.run(
+            [sys.executable, str(truth_py), "book", sys.argv[2]],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env=os.environ.copy(),
+        )
+        sys.stdout.write(proc.stdout or "{}")
+        if not proc.stdout.endswith("\n"):
+            sys.stdout.write("\n")
         return 0
 
     if cmd == "dewey":
@@ -1107,6 +1634,102 @@ def main() -> int:
         sys.stdout.write("\n")
         return 0
 
+    if cmd == "reader-issue" and len(sys.argv) >= 3:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "h7_secure_reader",
+            INSTALL / "lib" / "h7-library-secure-reader.py",
+        )
+        if not spec or not spec.loader:
+            json.dump({"ok": False, "error": "secure_reader_missing"}, sys.stdout, indent=2)
+        else:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            book_id = sys.argv[2]
+            meta = next((b for b in _scan_books() if b["id"] == book_id), None)
+            json.dump(mod.issue_session(book_id, book_meta=meta), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "reader" and len(sys.argv) >= 3:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "h7_secure_reader",
+            INSTALL / "lib" / "h7-library-secure-reader.py",
+        )
+        if not spec or not spec.loader:
+            json.dump({"ok": False, "error": "secure_reader_missing"}, sys.stdout, indent=2)
+            sys.stdout.write("\n")
+            return 1
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        sub = sys.argv[2]
+        if sub == "knowledge":
+            bid = sys.argv[3] if len(sys.argv) > 3 else ""
+            q = sys.argv[4] if len(sys.argv) > 4 else ""
+            json.dump(mod.knowledge_query(book_id=bid, q=q), sys.stdout, indent=2)
+        elif sub == "bookmarks" and len(sys.argv) >= 4:
+            body = json.loads(sys.argv[3]) if sys.argv[3].startswith("{") else {}
+            bid = str(body.get("book_id", ""))
+            tok = str(body.get("token", ""))
+            sig = str(body.get("signature", ""))
+            if body.get("action") == "add":
+                json.dump(mod.save_bookmark(
+                    bid, page=int(body.get("page", 1)), label=str(body.get("label", "")),
+                    token=tok, signature=sig,
+                ), sys.stdout, indent=2)
+            elif body.get("action") == "delete":
+                json.dump(mod.delete_bookmark(
+                    bid, bookmark_id=str(body.get("bookmark_id", "")),
+                    token=tok, signature=sig,
+                ), sys.stdout, indent=2)
+            else:
+                json.dump(mod.list_bookmarks(bid, token=tok, signature=sig), sys.stdout, indent=2)
+        elif sub == "progress" and len(sys.argv) >= 4:
+            body = json.loads(sys.argv[3])
+            json.dump(mod.save_progress(
+                str(body.get("book_id", "")),
+                page=int(body.get("page", 1)),
+                page_count=int(body.get("page_count", 0)),
+                token=str(body.get("token", "")),
+                signature=str(body.get("signature", "")),
+            ), sys.stdout, indent=2)
+        elif sub == "layout" and len(sys.argv) >= 4:
+            body = json.loads(sys.argv[3])
+            json.dump(mod.save_layout(
+                str(body.get("book_id", "")),
+                layout=body.get("layout") or {},
+                token=str(body.get("token", "")),
+                signature=str(body.get("signature", "")),
+            ), sys.stdout, indent=2)
+        else:
+            json.dump({"ok": False, "error": "reader_subcommand"}, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd in ("librarians", "corps"):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "nexus_librarian_corps",
+            INSTALL / "lib" / "nexus-librarian-corps.py",
+        )
+        if not spec or not spec.loader:
+            json.dump({"ok": False, "error": "corps_missing"}, sys.stdout, indent=2)
+        else:
+            corps = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(corps)
+            if "--teach" in sys.argv:
+                lid = None
+                if "--id" in sys.argv:
+                    idx = sys.argv.index("--id")
+                    if idx + 1 < len(sys.argv):
+                        lid = sys.argv[idx + 1]
+                json.dump(corps.teach_doctrine(librarian_id=lid), sys.stdout, indent=2)
+            else:
+                json.dump(corps.corps_status(), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
     if cmd == "upload" and len(sys.argv) >= 3:
         try:
             payload = json.loads(sys.argv[2])
@@ -1130,7 +1753,7 @@ def main() -> int:
 
     print(
         "usage: h7-library-bridge.py [build [--force] [--profile <id>]|fingerprint|page <id> <n> [chars]|"
-        "full <id>|search <q>|dewey [--profile <id>]|profiles|war|organize [--dry-run]|tracking|fonts|upload <json>]",
+        "full <id>|search <q>|atlas|passages <q>|topics|dewey [--profile <id>]|profiles|war|organize [--dry-run]|tracking|fonts|upload <json>]",
         file=sys.stderr,
     )
     return 1

@@ -1,0 +1,14 @@
+{
+  "id": "format-media_quicktime",
+  "title": "QuickTime",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".mov",
+    ".qt"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_quicktime.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

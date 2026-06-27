@@ -270,6 +270,8 @@ def check_update(force: bool = False) -> dict[str, Any]:
         if lock.get("locked"):
             nxf["update_available"] = False
             nxf["label"] = lock.get("message") or "Update in progress"
+        elif nxf.get("update_available") and nxf.get("catalog_url"):
+            nxf["apply_via"] = "incremental"
         try:
             CACHE.parent.mkdir(parents=True, exist_ok=True)
             tmp = CACHE.with_suffix(".tmp")

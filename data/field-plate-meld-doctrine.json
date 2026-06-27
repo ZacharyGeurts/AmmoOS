@@ -47,6 +47,11 @@
       "doctrine": "data/simple-iron-plate-goals.json",
       "role": "Simple Iron Plate goals · iron-clad motion from assemblage remaining"
     },
+    "iron_plate_organize": {
+      "panel": "iron-plate-organize-panel.json",
+      "doctrine": "data/iron-plate-organize-doctrine.json",
+      "role": "Iron plate → composite_bsp power sort · C2 BSP · combinatorics · H7 organize"
+    },
     "creatable_lives": {
       "panel": "creatable-lives-panel.json",
       "doctrine": "data/creatable-lives-doctrine.json",

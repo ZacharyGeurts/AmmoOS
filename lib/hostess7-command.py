@@ -27,6 +27,24 @@ ART_LOG = STATE / "hostess7-art-operations.jsonl"
 UA = "NEXUS-Shield-Hostess7-Command/2.0"
 
 
+def _ellie_threat_warn_level() -> str:
+    cached = _load_json(STATE / "field-ellie-security-authority.json", {})
+    if cached.get("threat_warn_level"):
+        return str(cached["threat_warn_level"])
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("ellie_h7", INSTALL / "lib" / "field-ellie-fier.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "threat_warn_level"):
+                return str(mod.threat_warn_level())
+    except Exception:
+        pass
+    return "high"
+
+
 def _now() -> str:
     global _SOVEREIGN_CLOCK_MOD
     if _SOVEREIGN_CLOCK_MOD is None:
@@ -1618,7 +1636,7 @@ def ask_operator(
             "logic_gate": ingress,
             "reply": held,
             "engine": "logic_gate",
-            "threat_warn_level": "high",
+            "threat_warn_level": _ellie_threat_warn_level(),
         }
     panel = panel or _load_json(STATE / "threat-panel.json", {})
     github = fetch_github_nexus(cache_only=True)
@@ -1851,7 +1869,7 @@ def ask_operator(
         result["reply_body"] = result["reply"]
     else:
         result["logic_gate_egress"] = egress
-    result["threat_warn_level"] = "high"
+    result["threat_warn_level"] = _ellie_threat_warn_level()
     result["proposed_updates"] = _proposed_updates(github, panel)
     result["github"] = {
         "repo": GITHUB_REPO,

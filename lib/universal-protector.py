@@ -117,6 +117,15 @@ def build_status(*, meld: bool = False, write: bool = True) -> dict[str, Any]:
     meld_mod = _mod("plate_meld", "field-plate-meld.py")
     ironclad_rf = _mod("ironclad_rf", "ironclad-reality-field.py")
 
+    ellie = _mod("ellie_up", "field-ellie-fier.py")
+    ellie_doc = _load(STATE / "field-ellie-fier-panel.json", {})
+    if ellie and hasattr(ellie, "read_authority"):
+        try:
+            ellie_auth = ellie.read_authority()
+        except Exception:
+            ellie_auth = ellie_doc.get("security_authority") or {}
+    else:
+        ellie_auth = ellie_doc.get("security_authority") or _load(STATE / "field-ellie-security-authority.json", {})
     logic_doc = logic.status_json() if logic and hasattr(logic, "status_json") else {}
     spatial_doc = spatial.build_spatial(write=write) if spatial and hasattr(spatial, "build_spatial") else {}
     motion_doc = motion.build_panel(write=write) if motion and hasattr(motion, "build_panel") else _load(STATE / "humanoid-motion-panel.json", {})
@@ -124,6 +133,15 @@ def build_status(*, meld: bool = False, write: bool = True) -> dict[str, Any]:
     rte_doc = right_exist.build_panel(write=write) if right_exist and hasattr(right_exist, "build_panel") else _load(STATE / "right-to-exist-panel.json", {})
     h7_doc = h7_brain.build_panel(write=write) if h7_brain and hasattr(h7_brain, "build_panel") else _load(STATE / "hostess7-brain-guard-panel.json", {})
     meld_doc = meld_mod.meld(refresh_bus=False) if meld and meld_mod and hasattr(meld_mod, "meld") else _load(STATE / "field-plate-meld.json", {})
+    sense_mod = _mod("sense_package", "field-sense-package-meld.py")
+    sense_slice: dict[str, Any] = {}
+    if sense_mod and hasattr(sense_mod, "sense_universal_slice"):
+        try:
+            sense_slice = sense_mod.sense_universal_slice(state_dir=STATE)
+        except Exception:
+            sense_slice = {}
+    comb_doc = _load(STATE / "g16-field-combinatorics-panel.json", {})
+    bridge_doc = _load(STATE / "field-plate-combinatorics-bridge.json", {})
     ironclad_doc = _load(STATE / "ironclad-reality-field-panel.json", {})
     if meld and ironclad_rf and hasattr(ironclad_rf, "cycle"):
         ironclad_doc = ironclad_rf.cycle()
@@ -143,8 +161,16 @@ def build_status(*, meld: bool = False, write: bool = True) -> dict[str, Any]:
         "edition": doctrine.get("edition", "Autonomous Being Stack"),
         "motto": doctrine.get("motto"),
         "autonomous_being": True,
-        "threat_warn_level": logic_doc.get("threat_warn_level") or "high",
-        "posture_floor": logic_doc.get("threat_posture_floor") or "alert",
+        "threat_warn_level": ellie_auth.get("threat_warn_level") or ellie_doc.get("threat_warn_level") or "high",
+        "posture_floor": ellie_auth.get("posture_floor") or ellie_doc.get("posture_floor") or "alert",
+        "ellie": {
+            "verdict": ellie_doc.get("systemwide", {}).get("verdict") or ellie_auth.get("verdict"),
+            "score": ellie_doc.get("systemwide", {}).get("score") or ellie_auth.get("score"),
+            "pillar_verdicts": ellie_auth.get("pillar_verdicts") or (ellie_doc.get("systemwide") or {}).get("pillar_verdicts"),
+            "authority": "ellie",
+            "feeds_live": (ellie_doc.get("security_slices") or {}).get("live_count"),
+            "role": "Unified security authority — all protections consolidate here",
+        },
         "equipment_holds_gate": True,
         "pillars": {
             "cognition": {
@@ -225,6 +251,32 @@ def build_status(*, meld: bool = False, write: bool = True) -> dict[str, Any]:
                 "never_wrong": (ironclad_doc.get("human_condition") or {}).get("never_wrong"),
                 "principle": (ironclad_doc.get("human_condition") or {}).get("principle"),
             },
+            "sense_stack": {
+                "verdict": sense_slice.get("sense_verdict"),
+                "eye_ear_verdict": sense_slice.get("eye_ear_verdict"),
+                "leaf_count": sense_slice.get("leaf_count"),
+                "locked_members": sense_slice.get("locked_members") or [],
+                "counts": sense_slice.get("counts") or {},
+                "zocr_present": bool((sense_slice.get("counts") or {}).get("zocr")),
+                "ellie_verdict": sense_slice.get("ellie_verdict"),
+                "role": "Final Eye · Final Ear · ZOCR · Mouth — combinatorics universal lock",
+            },
+            "combinatorics": {
+                "lock_ok": sense_slice.get("combinatorics_lock_ok"),
+                "universal_lock": sense_slice.get("universal_lock"),
+                "condense_group": sense_slice.get("condense_group") or "universal_lock",
+                "cardinality": (comb_doc.get("combinatoric_space") or {}).get("cardinality_estimate"),
+                "bridge_ok": bridge_doc.get("combinatorics_ok"),
+                "sense_universal_leaves": sense_slice.get("leaf_count"),
+                "role": "Combinatorics engine lock — sense facets condense under universal protector",
+            },
+        },
+        "universal_lock": {
+            "locked": bool(sense_slice.get("universal_lock")),
+            "equipment_holds_gate": True,
+            "sense_universal": sense_slice,
+            "combinatorics_chain": sense_slice.get("combinatorics_chain"),
+            "condense_group": "universal_lock",
         },
         "meld": {
             "generation": meld_doc.get("generation"),

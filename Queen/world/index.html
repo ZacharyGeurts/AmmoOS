@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="queen-world.css" />
   <link rel="stylesheet" href="queen-gnu-terminal.css" />
   <link rel="stylesheet" href="queen-browser-shell.css" />
-  <link rel="icon" href="assets/branding/amouranth-gentle.png" type="image/png" />
+  <link rel="icon" href="assets/branding/queen-favicon-48.png" type="image/png" sizes="48x48" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:*; frame-src 'self' http://127.0.0.1:* https:; object-src 'none'; base-uri 'self'; form-action 'self'" />
 </head>
 <body class="qw qw-os qw-browser-shell" data-queen-surface="os">
@@ -28,26 +28,44 @@
   <header class="qb-chrome" id="qb-chrome" aria-label="Queen browser">
     <div class="qb-row qb-row--tabs">
       <div class="qb-tabs" id="qb-tabs" role="tablist"></div>
-      <button type="button" class="qb-icon-btn" id="qb-new-tab" title="New tab (Ctrl+T)">+</button>
-      <button type="button" class="qb-icon-btn qb-chrome-min-btn" id="qb-chrome-min" title="Minimize browser bar (_)" aria-label="Minimize browser bar" aria-pressed="false">_</button>
+      <button type="button" class="qb-icon-btn" id="qb-new-tab" title="New tab (Ctrl+T)" aria-label="New tab">
+        <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#new-tab"/></svg>
+      </button>
+      <button type="button" class="qb-icon-btn qb-chrome-min-btn" id="qb-chrome-min" title="Minimize browser bar" aria-label="Minimize browser bar" aria-pressed="false">
+        <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#minimize"/></svg>
+      </button>
     </div>
     <div class="qb-row qb-row--nav">
-      <button type="button" class="qb-icon-btn" id="qb-back" title="Back">←</button>
-      <button type="button" class="qb-icon-btn" id="qb-forward" title="Forward">→</button>
-      <button type="button" class="qb-icon-btn" id="qb-reload" title="Reload (Ctrl+R)">↻</button>
-      <button type="button" class="qb-icon-btn qb-start-btn" id="qb-start" title="Start — first tab (programs)">⊞</button>
-      <button type="button" class="qb-icon-btn" id="qb-fullscreen" title="Fullscreen (F11 · Alt+Enter)">⛶</button>
+      <button type="button" class="qb-icon-btn" id="qb-back" title="Back" aria-label="Back">
+        <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#back"/></svg>
+      </button>
+      <button type="button" class="qb-icon-btn" id="qb-forward" title="Forward" aria-label="Forward">
+        <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#forward"/></svg>
+      </button>
+      <button type="button" class="qb-icon-btn" id="qb-reload" title="Reload (Ctrl+R)" aria-label="Reload">
+        <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#reload"/></svg>
+      </button>
+      <button type="button" class="qb-icon-btn qb-start-btn" id="qb-start" title="Start — first tab (programs)" aria-label="Start menu">
+        <svg class="qb-ico qb-ico--start" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#start"/></svg>
+      </button>
+      <button type="button" class="qb-icon-btn" id="qb-fullscreen" title="Fullscreen (F11 · Alt+Enter)" aria-label="Fullscreen">
+        <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#fullscreen"/></svg>
+      </button>
       <input type="url" class="qb-url" id="qb-url" placeholder="Search or enter address — gates held" spellcheck="false" />
       <button type="button" class="qb-btn qb-btn--go" id="qb-go">Go</button>
       <button type="button" class="qb-compat-pill" id="qb-compat-pill" title="Web compat — auto secures legacy">auto</button>
       <button type="button" class="qb-gate-pill" id="qb-gate-pill" title="Queen gate verdict">…</button>
-      <button type="button" class="qb-icon-btn" id="qb-proxy" title="Queen proxy fallback">⎋</button>
-      <button type="button" class="qb-icon-btn" id="qb-gates" title="Gate manifest">◇</button>
+      <button type="button" class="qb-icon-btn" id="qb-proxy" title="Queen proxy fallback" aria-label="Queen proxy">
+        <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#proxy"/></svg>
+      </button>
+      <button type="button" class="qb-icon-btn" id="qb-gates" title="Gate manifest" aria-label="Gate manifest">
+        <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#gates"/></svg>
+      </button>
     </div>
     <div class="qb-row qb-row--bookmarks">
       <nav class="qb-bookmarks" id="qb-bookmarks" aria-label="Bookmarks"></nav>
       <span class="qb-brand-strip" title="Gentle Amouranth touch · Queen emerald rose">
-        <img class="qb-brand-avatar" src="assets/branding/amouranth-gentle.png" alt="" width="28" height="28" />
+        <img class="qb-brand-avatar" src="assets/branding/queen-favicon-48.png" alt="" width="28" height="28" />
         <span>Queen · emerald rose</span>
       </span>
       <span class="qb-security-strip" id="qb-security-strip" title="AMOURANTHRTX zero-cost 4-slot · Queen jail">4-slot · 0% tax</span>
@@ -230,74 +248,7 @@
   </section>
 
   <section class="qw-os-panel qw-os-panel--terminal" data-pane="terminal" hidden>
-    <div class="qgt-shell" id="qgt-shell">
-      <nav class="qgt-menubar" aria-label="Terminal menus">
-        <div class="qgt-menu">
-          <button type="button" class="qgt-menu-btn" aria-haspopup="true" aria-expanded="false">File</button>
-          <ul class="qgt-menu-drop" role="menu">
-            <li><button type="button" data-action="clear" role="menuitem">Clear terminal</button></li>
-            <li><button type="button" data-action="about" role="menuitem">About Queen Terminal</button></li>
-          </ul>
-        </div>
-        <div class="qgt-menu">
-          <button type="button" class="qgt-menu-btn" aria-haspopup="true" aria-expanded="false">Edit</button>
-          <ul class="qgt-menu-drop" role="menu">
-            <li><button type="button" data-action="copy" role="menuitem">Copy buffer</button></li>
-            <li><button type="button" data-action="paste" role="menuitem">Paste</button></li>
-            <li class="sep" role="separator"></li>
-            <li><button type="button" data-action="select-all" role="menuitem">Select all</button></li>
-          </ul>
-        </div>
-        <div class="qgt-menu">
-          <button type="button" class="qgt-menu-btn" aria-haspopup="true" aria-expanded="false">View</button>
-          <ul class="qgt-menu-drop" role="menu">
-            <li><button type="button" data-action="font-larger" role="menuitem">Larger font</button></li>
-            <li><button type="button" data-action="font-smaller" role="menuitem">Smaller font</button></li>
-            <li class="sep" role="separator"></li>
-            <li><button type="button" data-action="toggle-wrap" role="menuitem">Toggle wrap</button></li>
-            <li><button type="button" data-action="mini-home" role="menuitem">Minibrowser → Queen home</button></li>
-          </ul>
-        </div>
-        <div class="qgt-menu">
-          <button type="button" class="qgt-menu-btn" aria-haspopup="true" aria-expanded="false">Options</button>
-          <ul class="qgt-menu-drop" role="menu">
-            <li><button type="button" data-action="toggle-bell" role="menuitem">Bell on error</button></li>
-            <li><button type="button" data-action="mini-docs" role="menuitem">Minibrowser → GNU Bash manual</button></li>
-          </ul>
-        </div>
-        <div class="qgt-menu">
-          <button type="button" class="qgt-menu-btn" aria-haspopup="true" aria-expanded="false">Help</button>
-          <ul class="qgt-menu-drop" role="menu">
-            <li><button type="button" data-action="about" role="menuitem">Queen GNU Terminal</button></li>
-          </ul>
-        </div>
-        <span class="qgt-titlebar">Queen · GNU-style terminal</span>
-      </nav>
-      <div class="qgt-statusbar">
-        <span>Cwd: <strong id="qgt-cwd">~/SG</strong></span>
-        <span id="qgt-profile">field-native</span>
-      </div>
-      <div class="qgt-deck" id="qgt-deck">
-        <section class="qgt-terminal-pane" aria-label="Field terminal">
-          <div class="qgt-terminal-out" id="qgt-terminal-out" role="log" aria-live="polite"></div>
-          <div class="qgt-prompt-row">
-            <span class="qgt-prompt-label" id="qgt-prompt-label">~/SG $ </span>
-            <input type="text" class="qgt-prompt-input" id="qgt-prompt-input" autocomplete="off" spellcheck="false" aria-label="Command line" />
-          </div>
-        </section>
-        <section class="qgt-minibrowser-pane" aria-label="Minibrowser">
-          <div class="qgt-mini-head">
-            <strong>Mini</strong>
-            <input type="url" class="qgt-mini-url" id="qgt-mini-url" placeholder="URL or queen://…" spellcheck="false" />
-            <button type="button" class="qgt-mini-go" id="qgt-mini-go">Go</button>
-          </div>
-          <iframe class="qgt-mini-frame" id="qgt-mini-frame" title="Queen minibrowser" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads allow-presentation"></iframe>
-        </section>
-        <aside class="qgt-scrolltrack" id="qgt-scrolltrack" aria-label="Terminal scrollbar">
-          <div class="qgt-scrollthumb" id="qgt-scrollthumb"></div>
-        </aside>
-      </div>
-    </div>
+    <div class="qgt-shell" id="qgt-shell" data-qgt-secured="1"></div>
   </section>
 
   <section class="qw-os-panel" data-pane="hostess" hidden>

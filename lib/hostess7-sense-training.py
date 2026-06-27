@@ -19,6 +19,10 @@ PANEL = STATE / "hostess7-sense-training-panel.json"
 LEDGER = STATE / "hostess7-sense-training-ledger.jsonl"
 
 TRACKS = ("final_eye", "final_ear", "final_mouth")
+MUSIC_ACTIONS = frozenset({
+    "music_drill", "music_interval", "music_pitch", "music_rhythm",
+    "music_notation", "music_brain_pattern", "music_crosswire",
+})
 BRIDGE = {
     "final_eye": QUEEN / "lib" / "queen-eyeball.py",
     "final_ear": QUEEN / "lib" / "queen-earball.py",
@@ -107,8 +111,37 @@ def _dispatch(bridge: Path, body: dict[str, Any], *, timeout: int = 120) -> dict
         return {"ok": False, "error": "dispatch_failed", "stderr": (proc.stderr or "")[:200]}
 
 
+def _music_mod() -> Any | None:
+    import importlib.util
+    py = INSTALL / "lib" / "hostess7-music-training.py"
+    if not py.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("h7music", py)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _run_music_step(step: dict[str, Any]) -> dict[str, Any]:
+    music = _music_mod()
+    if not music or not hasattr(music, "run_sense_step"):
+        return {"ok": False, "error": "music_training_missing"}
+    return music.run_sense_step(step)
+
+
 def _step_ok(result: dict[str, Any], *, action: str = "") -> bool:
     """Training pass — verify steps accept sealed ZOCR code when mesh/bench is advisory."""
+    if str(action).startswith("music_"):
+        if result.get("ok") is False:
+            return False
+        if result.get("pass_rate") is not None:
+            return float(result["pass_rate"]) >= 75.0
+        return True
     if str(action) in ("verify", "verify_earball", "verify-eyeball"):
         seal = result.get("verify") or result.get("code_seal") or {}
         if seal.get("ok") and not seal.get("tampered") and not seal.get("missing"):
@@ -138,7 +171,10 @@ def run_sense_track(track_id: str) -> dict[str, Any]:
         if "action" not in body:
             continue
         action = str(body.get("action") or "")
-        result = _dispatch(bridge, body, timeout=180 if action in ("eye_ear_fusion", "fused_analyze") else 90)
+        if action in MUSIC_ACTIONS:
+            result = _run_music_step(step)
+        else:
+            result = _dispatch(bridge, body, timeout=180 if action in ("eye_ear_fusion", "fused_analyze") else 90)
         ok = _step_ok(result, action=action)
         if ok:
             passed += 1

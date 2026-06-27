@@ -1,0 +1,12 @@
+{
+  "id": "xbox_one",
+  "title": "Xbox One",
+  "author": "",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/xbox_one/xbox_one.h7c",
+  "h7": null,
+  "cover": null,
+  "migrated_from": "h7",
+  "updated": "2026-06-27T12:05:16Z"
+}

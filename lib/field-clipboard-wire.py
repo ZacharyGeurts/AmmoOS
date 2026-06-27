@@ -23,6 +23,7 @@ SG_ROOT = Path(os.environ.get("GROK16_SG_ROOT", os.environ.get("SG_ROOT", INSTAL
 DOCTRINE = INSTALL / "data" / "field-clipboard-doctrine.json"
 PANEL_JSON = STATE / "field-clipboard-wire.json"
 SCHEME_JSON = STATE / "field-clipboard-scheme.json"
+HISTORY_JSON = STATE / "field-clipboard-history.json"
 ALERTS = STATE / "field-clipboard-alerts.jsonl"
 
 EV_KEY = 0x01
@@ -117,6 +118,85 @@ def _run_sclip(cmd: str, text: str | None = None, *, timeout: int = 12) -> dict[
         }
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {"ok": False, "error": str(exc), "cmd": cmd}
+
+
+def _policy() -> dict[str, Any]:
+    return (_doctrine().get("policy") or {})
+
+
+def _historic_max() -> int:
+    return int(_policy().get("historic_ring_max") or 32)
+
+
+def _historic_preview_len() -> int:
+    return int(_policy().get("historic_preview_chars") or 48)
+
+
+def _ghost_mode() -> bool:
+    return bool(_policy().get("ghost_mode", True))
+
+
+def _load_history() -> dict[str, Any]:
+    doc = _load(HISTORY_JSON, {})
+    if doc.get("schema") != "field-clipboard-history/v1":
+        return {"schema": "field-clipboard-history/v1", "entries": [], "cursor": 0}
+    return doc
+
+
+def _save_history(doc: dict[str, Any]) -> None:
+    doc["schema"] = "field-clipboard-history/v1"
+    doc["updated"] = _now()
+    _save(HISTORY_JSON, doc)
+
+
+def _push_history(text: str, *, action: str = "copy") -> dict[str, Any]:
+    if not _policy().get("historic_ring", True):
+        return {"ok": False, "skipped": "historic_ring_disabled"}
+    if not text or not str(text).strip():
+        return {"ok": False, "skipped": "empty"}
+    doc = _load_history()
+    entries: list[dict[str, Any]] = list(doc.get("entries") or [])
+    preview = str(text)[: _historic_preview_len()]
+    entry = {
+        "ts": _now(),
+        "action": action,
+        "preview": preview,
+        "length": len(str(text)),
+        "secured": True,
+    }
+    if entries and entries[0].get("preview") == preview and entries[0].get("length") == entry["length"]:
+        return {"ok": True, "deduped": True, "count": len(entries)}
+    entries.insert(0, entry)
+    entries = entries[: _historic_max()]
+    doc["entries"] = entries
+    doc["cursor"] = 0
+    _save_history(doc)
+    vault = _run_sclip("copy", str(text))
+    return {"ok": True, "count": len(entries), "vault": vault.get("ok", False)}
+
+
+def historic_list(*, limit: int = 32) -> dict[str, Any]:
+    doc = _load_history()
+    entries = list(doc.get("entries") or [])[:limit]
+    return {
+        "schema": "field-clipboard-history/v1",
+        "ok": True,
+        "ghost_mode": _ghost_mode(),
+        "count": len(entries),
+        "entries": entries,
+        "cursor": doc.get("cursor", 0),
+    }
+
+
+def historic_paste(index: int = 0) -> dict[str, Any]:
+    doc = _load_history()
+    entries = list(doc.get("entries") or [])
+    if not entries:
+        return {"ok": False, "error": "history_empty"}
+    idx = max(0, min(int(index), len(entries) - 1))
+    doc["cursor"] = idx
+    _save_history(doc)
+    return _run_sclip("paste")
 
 
 def _active_scheme() -> str:
@@ -269,6 +349,10 @@ def enforce(*, kill: bool | None = None) -> dict[str, Any]:
         "hits": hits[:32],
         "wire_chain": (_doctrine().get("wire_chain") or []),
         "policy": "Clipboard wire secured — RAM vault, TTL wipe, all chords wired",
+        "ghost_mode": _ghost_mode(),
+        "ghost_visible": bool(_policy().get("ghost_visible", False)),
+        "historic_ring": bool(_policy().get("historic_ring", True)),
+        "historic_count": len((_load_history().get("entries") or [])),
     }
     _save(PANEL_JSON, doc)
     return doc
@@ -290,24 +374,38 @@ def set_scheme(scheme: str) -> dict[str, Any]:
     return {"ok": True, "scheme": scheme, "bindings": len(_resolve_scheme_bindings(scheme))}
 
 
-def action(name: str, text: str | None = None) -> dict[str, Any]:
+def action(name: str, text: str | None = None, *, history_index: int | None = None) -> dict[str, Any]:
     name = name.strip().lower()
     if name in ("copy", "cut"):
         if text is None:
             return {"ok": False, "error": "missing_text"}
-        return _run_sclip("copy", text)
+        res = _run_sclip("copy", text)
+        if res.get("ok") and _policy().get("historic_ring", True):
+            ring = _push_history(str(text), action=name)
+            res["historic"] = ring
+        return res
     if name in ("paste", "yank", "paste_primary"):
         return _run_sclip("paste")
     if name == "paste_clip":
         return _run_sclip("paste-clip")
     if name == "clear":
+        hist = _load_history()
+        hist["entries"] = []
+        _save_history(hist)
         return _run_sclip("clear")
     if name == "break":
         return {"ok": True, "action": "break", "note": "apple2e BREAK — no clipboard side effect"}
     if name in ("kill_region",):
         if text is None:
             return {"ok": False, "error": "missing_text"}
-        return _run_sclip("copy", text)
+        res = _run_sclip("copy", text)
+        if res.get("ok"):
+            _push_history(str(text), action="kill_region")
+        return res
+    if name in ("history", "historic"):
+        return historic_list()
+    if name in ("history_paste", "historic_paste", "paste_history"):
+        return historic_paste(history_index if history_index is not None else 0)
     return {"ok": False, "error": "unknown_action", "action": name}
 
 
@@ -460,7 +558,15 @@ def main() -> int:
     if cmd == "action":
         act = sys.argv[2] if len(sys.argv) > 2 else ""
         text = sys.stdin.read() if not sys.stdin.isatty() else (sys.argv[3] if len(sys.argv) > 3 else None)
-        print(json.dumps(action(act, text), ensure_ascii=False))
+        hist_idx = int(sys.argv[4]) if len(sys.argv) > 4 and str(sys.argv[4]).isdigit() else None
+        print(json.dumps(action(act, text, history_index=hist_idx), ensure_ascii=False))
+        return 0
+    if cmd == "history":
+        print(json.dumps(historic_list(), ensure_ascii=False))
+        return 0
+    if cmd == "history-paste":
+        idx = int(sys.argv[2]) if len(sys.argv) > 2 and str(sys.argv[2]).lstrip("-").isdigit() else 0
+        print(json.dumps(historic_paste(idx), ensure_ascii=False))
         return 0
     if cmd == "listen":
         once = "--once" in sys.argv[2:]

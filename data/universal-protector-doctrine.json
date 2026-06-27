@@ -73,5 +73,20 @@
   "meld": {
     "plate": "field-plate-meld.py",
     "read_meld_first": true
+  },
+  "sense_stack": {
+    "sense_package": "lib/field-sense-package-meld.py",
+    "eye_ear_plate": "lib/eye-ear-plate.py",
+    "products": ["Final_Eye", "Final_Ear", "ZNEWOCR", "ZOCR", "Final_Mouth"],
+    "condense_group": "universal_lock",
+    "role": "Eye · Ear · ZOCR · Mouth — universal lock pillar"
+  },
+  "combinatorics": {
+    "engine": "Grok16/lib/field_combinatorics.py",
+    "bridge": "lib/field-plate-combinatorics-bridge.py",
+    "condense_groups": ["sense_stack", "universal_lock"],
+    "facet": "sense_universal",
+    "equipment_holds_gate": true,
+    "motto": "Combinatorics engine lock — sense facets condense under universal protector everywhere."
   }
 }

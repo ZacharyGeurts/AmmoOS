@@ -34,6 +34,13 @@ operator-location.json
 
 # Runtime caches / field storage images
 /cache/
+/state/
+.nexus-field-drive/
+Textbook/staging/
+Queen/field-gecko/profile/
+.wiki-publish/
+.pages-publish/
+__pycache__/
 *.img
 *.zac
 

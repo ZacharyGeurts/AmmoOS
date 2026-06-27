@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_spanish",
+  "title": "Wikibooks Spanish",
+  "author": "Wikibooks",
+  "dewey": "400",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "6-12",
+  "subject": "foreign_language",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_spanish/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_spanish/front.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

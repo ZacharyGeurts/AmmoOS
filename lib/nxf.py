@@ -149,7 +149,11 @@ def from_release(version: str, tag_name: str, release: dict[str, Any] | None = N
             "world": 9481,
         },
         "channels": ["release", "portable", "github"],
-        "update": {"mode": "release", "lock": "github-update.lock"},
+        "catalog": {
+            "name": f"nexus-file-catalog-{ver}.json",
+            "url": f"{base}/nexus-file-catalog-{ver}.json",
+        },
+        "update": {"mode": "release", "lock": "github-update.lock", "incremental": True},
     })
 
 
@@ -270,9 +274,15 @@ def check_update(force: bool = False) -> dict[str, Any]:
         "checked_at": _now(),
         "cached_epoch": time.time(),
     }
+    catalog = nxf.get("catalog") or {}
+    catalog_url = str(catalog.get("url") or "")
     if update_available:
         out["previous"] = current
         out["label"] = f"{current} → {latest}"
+        if catalog_url and nxf.get("update", {}).get("incremental"):
+            out["apply_via"] = "incremental"
+            out["catalog_url"] = catalog_url
+            out["catalog_name"] = catalog.get("name")
     else:
         out["label"] = f"v{current}"
 

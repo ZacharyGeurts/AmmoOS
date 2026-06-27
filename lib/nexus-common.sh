@@ -2,7 +2,7 @@
 # NEXUS-Shield shared runtime — invisible to consumers, root-only state.
 # shellcheck disable=SC2034
 
-NEXUS_VERSION="g16-1.0"
+NEXUS_VERSION="0.9.0"
 NEXUS_EDITION="Universal Protector"
 HOSTESS_VERSION="7"
 

@@ -16,11 +16,45 @@ html, body {
   color: var(--hd-text);
 }
 
-.hd-desktop {
+.hd-shell {
   position: fixed;
   inset: 0;
-  padding-bottom: calc(52px + env(safe-area-inset-bottom, 0));
+  display: flex;
+  flex-direction: row;
   overflow: hidden;
+}
+
+.hd-desktop {
+  position: relative;
+  flex: 1 1 50%;
+  min-width: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  overflow: hidden;
+}
+
+.hd-monitor {
+  flex: 0 0 50%;
+  max-width: 50%;
+  min-width: 280px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hd-monitor.hidden {
+  display: none;
+}
+
+html:not(.nfs-taskbar-hidden) .hd-shell {
+  padding-bottom: calc(52px + env(safe-area-inset-bottom, 0));
+}
+
+html:not(.nfs-taskbar-hidden) .hd-desktop,
+html:not(.nfs-taskbar-hidden) .hd-monitor {
+  height: calc(100% - 52px - env(safe-area-inset-bottom, 0));
+}
+
+.hd-icons.hidden {
+  display: none;
 }
 
 /* Wallpapers per OS theme */
@@ -102,6 +136,38 @@ html[data-os-theme="macos"] .hd-desktop {
   height: 40px;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.hd-icon-live-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.hd-app-icon--live {
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(255, 100, 140, 0.45), 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.hd-live-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  animation: hd-live-blink 1.5s ease-in-out infinite;
+}
+
+@keyframes hd-live-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
 }
 
 .hd-icon-fallback {

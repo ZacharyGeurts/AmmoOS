@@ -8,12 +8,22 @@ NEXUS_FIELD_OUTSIDE_ASM_SRC="${NEXUS_INSTALL_ROOT}/lib/field-outside-asm.c"
 
 nexus_field_outside_asm_build() {
   [[ "${NEXUS_FIELD_OUTSIDE_TALK:-1}" == "1" ]] || return 0
-  command -v gcc >/dev/null 2>&1 || {
+  local g16="${GROK16_ROOT:-${SG_ROOT:-}/Grok16}/bin/g16"
+  local compiler="gcc"
+  local flags=(-O2 -pipe -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fPIE -pie)
+  if [[ -x "$g16" ]]; then
+    compiler="$g16"
+    flags=(-std=gnu17 -O3 -march=native -fPIE -pie)
+    local gpy="${NEXUS_PYTHONG:-pythong}"
+    if [[ -f "${GROK16_ROOT}/lib/g16-compile-combinatronics.py" ]] && command -v "$gpy" >/dev/null 2>&1; then
+      "$gpy" "${GROK16_ROOT}/lib/g16-compile-combinatronics.py" gate >/dev/null 2>&1 || true
+    fi
+  elif ! command -v gcc >/dev/null 2>&1; then
     if declare -f nexus_log >/dev/null 2>&1; then
       nexus_log "WARN" "field-outside-asm" "gcc missing — ASM probe unavailable; socket fallback only"
     fi
     return 1
-  }
+  fi
   local src="${NEXUS_FIELD_OUTSIDE_ASM_SRC}"
   [[ -f "$src" ]] || src="${NEXUS_INSTALL_ROOT}/lib/field-outside-asm.c"
   [[ -f "$src" ]] || return 1
@@ -21,16 +31,20 @@ nexus_field_outside_asm_build() {
   out_dir="$(dirname "$NEXUS_FIELD_OUTSIDE_ASM")"
   mkdir -p "$out_dir" 2>/dev/null || true
   local err
-  err="$(gcc -O2 -pipe -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fPIE -pie \
-    -o "$NEXUS_FIELD_OUTSIDE_ASM" "$src" 2>&1)" || {
+  err="$("$compiler" "${flags[@]}" -o "$NEXUS_FIELD_OUTSIDE_ASM" "$src" 2>&1)" || {
     if declare -f nexus_log >/dev/null 2>&1; then
       nexus_log "WARN" "field-outside-asm" "build failed: ${err}"
     fi
     return 1
   }
   chmod 755 "$NEXUS_FIELD_OUTSIDE_ASM" 2>/dev/null || true
+  if [[ -x "$g16" ]] && [[ -f "${GROK16_ROOT}/lib/g16-compile-combinatronics.py" ]]; then
+    local gpy="${NEXUS_PYTHONG:-pythong}"
+    command -v "$gpy" >/dev/null 2>&1 && \
+      "$gpy" "${GROK16_ROOT}/lib/g16-compile-combinatronics.py" stamp "$NEXUS_FIELD_OUTSIDE_ASM" >/dev/null 2>&1 || true
+  fi
   if declare -f nexus_log >/dev/null 2>&1; then
-    nexus_log "INFO" "field-outside-asm" "ASM probe built path=${NEXUS_FIELD_OUTSIDE_ASM}"
+    nexus_log "INFO" "field-outside-asm" "ASM probe built compiler=${compiler} path=${NEXUS_FIELD_OUTSIDE_ASM}"
   fi
   return 0
 }

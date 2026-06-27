@@ -19,6 +19,17 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().par
 ACKS_PATH = STATE / "monitor-jockey-acks.jsonl"
 ALERTS_PANEL = STATE / "monitor-jockey-alerts.json"
 
+
+def _ellie_threat_warn_level() -> str:
+    try:
+        cached = json.loads((STATE / "field-ellie-security-authority.json").read_text(encoding="utf-8"))
+        if cached.get("threat_warn_level"):
+            return str(cached["threat_warn_level"])
+    except (OSError, json.JSONDecodeError):
+        pass
+    return "high"
+
+
 VERDICT_PRIORITY = {
     "HARM_CANDIDATE": 90,
     "SUSPICIOUS": 70,
@@ -330,7 +341,7 @@ def build_alerts(*, write: bool = True) -> dict[str, Any]:
         "schema": "monitor-jockey-alerts/v1",
         "updated": _now(),
         "posture": posture,
-        "threat_warn_level": "high",
+        "threat_warn_level": _ellie_threat_warn_level(),
         "motto": "Instant alerts require operator response — presume hostile injection until verified.",
         "pending_count": len(jockey_alerts),
         "h7_count": len(h7_alerts),

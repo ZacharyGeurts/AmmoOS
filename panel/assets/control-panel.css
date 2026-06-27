@@ -1,0 +1,201 @@
+/* NEXUS Field OS Control Panel */
+
+:root {
+  --cp-bg: #0d1117;
+  --cp-panel: #141a24;
+  --cp-edge: rgba(255, 255, 255, 0.1);
+  --cp-text: #eef4ff;
+  --cp-dim: #94a3b8;
+  --cp-accent: #3b82f6;
+  --cp-font: "Segoe UI", system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--cp-font);
+  background: var(--cp-bg);
+  color: var(--cp-text);
+}
+
+.cp-root {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100%;
+}
+
+.cp-nav {
+  background: var(--cp-panel);
+  border-right: 1px solid var(--cp-edge);
+  padding: 20px 0;
+}
+
+.cp-brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--cp-edge);
+  margin-bottom: 12px;
+}
+
+.cp-brand h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.cp-brand p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--cp-dim);
+}
+
+.cp-nav nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+.cp-nav button {
+  text-align: left;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cp-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cp-nav button:hover,
+.cp-nav button.active {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--cp-text);
+}
+
+.cp-main {
+  padding: 28px 32px;
+  overflow: auto;
+}
+
+.cp-loading {
+  color: var(--cp-dim);
+}
+
+.cp-section h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.cp-section .cp-lead {
+  margin: 0 0 20px;
+  color: var(--cp-dim);
+  font-size: 13px;
+}
+
+.cp-card {
+  background: var(--cp-panel);
+  border: 1px solid var(--cp-edge);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.cp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cp-row:last-child { border-bottom: none; }
+
+.cp-row label { color: var(--cp-dim); font-size: 13px; }
+
+.cp-row input[type="range"] { width: 160px; }
+
+.cp-row select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--cp-edge);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--cp-text);
+  font: inherit;
+}
+
+.cp-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.cp-actions button {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--cp-edge);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cp-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cp-actions button.primary {
+  border-color: var(--cp-accent);
+  background: rgba(59, 130, 246, 0.22);
+}
+
+.cp-actions button.danger {
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+.cp-hw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.cp-hw-chip {
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--cp-edge);
+  font-size: 12px;
+}
+
+.cp-hw-chip strong { display: block; margin-bottom: 4px; }
+
+.cp-prog-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.cp-prog-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 12px;
+}
+
+.cp-prog-item img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+@media (max-width: 720px) {
+  .cp-root { grid-template-columns: 1fr; }
+  .cp-nav nav { flex-direction: row; flex-wrap: wrap; }
+}

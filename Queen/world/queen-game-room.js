@@ -1,5 +1,5 @@
 /**
- * Queen Game Room — full-width theater, CHIPS systems, cinema, gamepad, RTX bridge.
+ * Queen Game Room — Webbrowser theater, CHIPS systems, cinema, gamepad (no RTX comp shader).
  */
 (function () {
   "use strict";
@@ -17,7 +17,7 @@
     mode: "emulator",
     gamepad: null,
     fullscreen: false,
-    rtxLive: false,
+    webLive: false,
     curtainsOpen: false,
     lastPadBtn: {},
   };
@@ -52,7 +52,7 @@
   async function refresh() {
     const r = await fetch(API, { cache: "no-store" });
     state.doc = r.ok ? await r.json() : await api({ action: "status" });
-    state.rtxLive = !!(state.doc?.rtx?.programs_canvas_ready || state.doc?.rtx?.queen_process);
+    state.webLive = !!(state.doc?.surface === "webbrowser" || state.doc?.web_surface);
     render();
     return state.doc;
   }
@@ -77,7 +77,7 @@
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w;
       canvas.height = h;
-      if (!state.rtxLive) drawCanvasIdle();
+      if (!state.webLive) drawCanvasIdle();
     }
   }
 
@@ -146,19 +146,19 @@
     el.innerHTML = [
       `<span class="gr-pill${chips.present ? " ok" : ""}">CHIPS ${chips.headers || 0} headers</span>`,
       `<span class="gr-pill${g16.ready ? " ok" : ""}">G16 ${g16.profile || "field_opt"}</span>`,
-      `<span class="gr-pill${rtx.queen_binary_ready ? " ok" : ""}">RTX ${rtx.queen_binary_ready ? "ready" : "build"}</span>`,
-      state.rtxLive
-        ? `<span class="gr-pill ok">● RTX live</span>`
-        : `<span class="gr-pill">RTX idle</span>`,
+      `<span class="gr-pill ok">Webbrowser</span>`,
+      state.webLive
+        ? `<span class="gr-pill ok">● CHIPS live</span>`
+        : `<span class="gr-pill">CHIPS idle</span>`,
       state.gamepad
         ? `<span class="gr-pill ok">🎮 ${esc(state.gamepad.id)}</span>`
         : `<span class="gr-pill">🎮 controller</span>`,
     ].join("");
     const hud = $("gr-hud");
     if (hud) {
-      if (state.rtxLive) {
+      if (state.webLive) {
         hud.hidden = false;
-        hud.textContent = "RTX framebuffer · FieldWebPanel 320×200";
+        hud.textContent = "Queen Webbrowser canvas · CHIPS web surface";
       } else if (state.mode === "cinema") {
         hud.hidden = false;
         hud.textContent = "Cinema · any movie format";
@@ -230,41 +230,46 @@
       system: state.system,
       host_cpu: state.cpu,
       memory: state.memory,
-      spawn_rtx: opts?.spawn !== false,
+      spawn_rtx: false,
+      surface: "webbrowser",
     });
     const log = $("gr-log");
     if (log) log.textContent = JSON.stringify(out, null, 2);
     if (out.mode === "cinema") {
       $("gr-movie-input")?.click();
     } else if (out.ok) {
-      state.rtxLive = !!out.spawned;
+      state.webLive = true;
+      drawCanvasActive(out);
       renderStatus();
-      pollFramebuffer();
     }
     return out;
   }
 
-  async function pollFramebuffer() {
-    try {
-      const r = await fetch(FB_API, { cache: "no-store" });
-      if (!r.ok) return;
-      const j = await r.json();
-      state.rtxLive = !!(j.ready || j.queen_process);
-      if (j.image_url) {
-        const img = $("gr-fb");
-        const canvas = $("gr-canvas");
-        const video = $("gr-video");
-        if (img) {
-          img.src = j.image_url + (j.image_url.includes("?") ? "&" : "?") + "t=" + Date.now();
-          img.hidden = false;
-          if (canvas) canvas.hidden = true;
-          if (video) video.hidden = true;
-        }
-      }
-      renderStatus();
-    } catch (_) {
-      /* quiet */
-    }
+  function drawCanvasActive(out) {
+    const canvas = $("gr-canvas");
+    if (!canvas) return;
+    canvas.hidden = false;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    const sys = out.system?.label || state.system || "CHIPS";
+    ctx.fillStyle = "#0a0806";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "#d4a853";
+    ctx.font = `bold ${Math.max(16, w / 32)}px Georgia, serif`;
+    ctx.textAlign = "center";
+    ctx.fillText(sys, w / 2, h / 2 - 8);
+    ctx.font = `${Math.max(11, w / 48)}px Inter, sans-serif`;
+    ctx.fillStyle = "#9a8b72";
+    ctx.fillText("Queen Webbrowser · web canvas", w / 2, h / 2 + 16);
+  }
+
+  function pageActive() {
+    return (
+      document.body.classList.contains("queen-game-room-page") ||
+      !!document.querySelector('[data-pane="gameroom"]:not([hidden])')
+    );
   }
 
   function toggleFullscreen() {
@@ -295,7 +300,7 @@
       state.gamepad = gp;
       renderStatus();
     }
-    if (!gp || !document.querySelector('[data-pane="gameroom"]:not([hidden])')) return;
+    if (!gp || !pageActive()) return;
 
     if (padPressed(gp, 0)) launch();
     if (padPressed(gp, 9) || padPressed(gp, 8)) toggleFullscreen();
@@ -374,7 +379,7 @@
       resizeCanvas();
     });
     document.addEventListener("keydown", (e) => {
-      if (!document.querySelector('[data-pane="gameroom"]:not([hidden])')) return;
+      if (!pageActive()) return;
       if (document.activeElement?.tagName === "INPUT") return;
       if (e.key === "f" && !e.ctrlKey) toggleFullscreen();
       if (e.key === "ArrowLeft") cycleSystem(-1);
@@ -419,7 +424,7 @@
     drawCanvasIdle();
     refresh();
     setInterval(refresh, 30000);
-    setInterval(pollFramebuffer, 4000);
+
   }
 
   globalThis.QueenGameRoom = { state, refresh, launch, selectSystem, toggleFullscreen, init };

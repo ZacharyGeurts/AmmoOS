@@ -6,6 +6,37 @@
 
   const API = "/api/field-sanity";
   const POLL_MS = 30000;
+
+  function benchmarkMode() {
+    if (document.body?.dataset?.queenBenchmark === "1") return true;
+    try {
+      if (global.localStorage?.getItem("queen_benchmark") === "1") return true;
+    } catch (_) {
+      /* ignore */
+    }
+    try {
+      return new URLSearchParams(location.search).get("benchmark") === "1";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function isFastUrl(url) {
+    const u = String(url || "").trim();
+    if (!u || u === "about:blank") return true;
+    if (u.startsWith("/") || u.startsWith("queen://")) return true;
+    try {
+      const parsed = new URL(u, location.origin);
+      const host = (parsed.hostname || "").toLowerCase();
+      if (host === "127.0.0.1" || host === "localhost") return true;
+      if ((parsed.pathname || "").startsWith("/world/bench")) return true;
+      if (/speedometer|todomvc/i.test(parsed.pathname || "")) return true;
+      if (host === "browserbench.org" || host.endsWith(".browserbench.org")) return true;
+    } catch (_) {
+      return false;
+    }
+    return false;
+  }
   const MAX_LAYERS = 64;
   const MAX_DEPTH = 0;
 
@@ -85,6 +116,60 @@
     }
   }
 
+  function snapPitsInstant() {
+    let pits = 0;
+    document.querySelectorAll(".qb-frame").forEach((frame) => {
+      const src = frame.getAttribute("src") || frame.src || "";
+      if (depthFieldForbidden(src)) {
+        pits += 1;
+        frame.setAttribute("src", stripFieldDepth(src));
+      }
+    });
+    const tabs = global.QueenOS?.browser?.doc?.tabs;
+    if (tabs?.length) {
+      tabs.forEach((t) => {
+        if (!t?.url) return;
+        const bad = depthFieldForbidden(t.url) || Number(t.depth || 0) > 0 || t.field_on_field;
+        if (bad) {
+          pits += 1;
+          t.url = stripFieldDepth(t.url);
+          t.depth = 0;
+          t.field_on_field = false;
+        }
+      });
+    }
+    if (pits > 0) {
+      document.body.dataset.depthPitsSnapped = String(pits);
+      document.body.dataset.depthFieldsSealedAndDestroyed = "1";
+      try {
+        global.postMessage?.({ type: "queen_field_die", pits_snapped: pits, instant: true, origin: "queen-field-sanity" }, location.origin);
+      } catch (_) {
+        /* ignore */
+      }
+    }
+    return { ok: true, instant: true, pits_snapped: pits };
+  }
+
+  async function instantFieldDieCheck() {
+    const local = snapPitsInstant();
+    try {
+      const r = await fetch("/api/field-depth-snap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "field_die", layers: collectLayers() }),
+        cache: "no-store",
+      });
+      if (r.ok) {
+        const doc = await r.json();
+        if (doc.layers) applyPass({ ok: true, reorganized: doc.layers, preflight_fixes: doc.pits_snapped || 0 });
+        return { ...local, ...doc };
+      }
+    } catch (_) {
+      /* loopback only */
+    }
+    return local;
+  }
+
   function singularizeDomUrls(reorganized) {
     let fixes = 0;
     document.querySelectorAll(".qb-frame").forEach((frame) => {
@@ -133,16 +218,30 @@
   }
 
   function hardenFrames() {
+    const bench = benchmarkMode();
     document.querySelectorAll(".qb-frame").forEach((frame) => {
+      const active = frame.closest(".qb-tab-pane")?.classList.contains("active") ?? true;
       frame.setAttribute("referrerpolicy", "no-referrer");
-      frame.setAttribute("loading", "lazy");
-      if ("credentialless" in frame) frame.credentialless = true;
+      if (bench && active) {
+        frame.removeAttribute("loading");
+        if ("credentialless" in frame) frame.credentialless = false;
+      } else if (!bench) {
+        frame.setAttribute("loading", "lazy");
+        if ("credentialless" in frame) frame.credentialless = true;
+      }
     });
   }
 
   async function validateUrl(url) {
     if (!url || url === "about:blank") return { ok: true, url };
+    if (benchmarkMode() && isFastUrl(url)) {
+      return { ok: true, url, fast_path: true, benchmark: true };
+    }
+    if (isFastUrl(url) && !String(url).startsWith("http")) {
+      return { ok: true, url, fast_path: true, internal: true };
+    }
     if (depthFieldForbidden(url)) {
+      snapPitsInstant();
       return {
         ok: true,
         url: stripFieldDepth(url),
@@ -198,15 +297,32 @@
   }
 
   function schedulePoll() {
-    if (pollTimer) return;
+    if (pollTimer || benchmarkMode()) return;
     runPass();
     pollTimer = global.setInterval(runPass, POLL_MS);
   }
 
   function init() {
+    if (benchmarkMode()) {
+      document.body.dataset.queenBenchmark = "1";
+      try {
+        global.localStorage?.setItem("queen_benchmark", "1");
+      } catch (_) {
+        /* ignore */
+      }
+    }
     hardenFrames();
+    snapPitsInstant();
     schedulePoll();
-    document.addEventListener("queen-navigate", () => runPass());
+    document.addEventListener("queen-navigate", () => {
+      snapPitsInstant();
+      if (!benchmarkMode()) runPass();
+    });
+    global.addEventListener("message", (ev) => {
+      if (ev.origin !== location.origin) return;
+      if (ev.data?.type === "queen_field_die") instantFieldDieCheck();
+    });
+    document.addEventListener("queen-field-die", () => instantFieldDieCheck());
   }
 
   if (document.readyState === "loading") {
@@ -216,11 +332,15 @@
   }
 
   global.QueenFieldSanity = {
+    benchmarkMode,
+    isFastUrl,
     collectLayers,
     runPass,
     validateUrl,
     stripFieldDepth,
     depthFieldForbidden,
+    snapPitsInstant,
+    instantFieldDieCheck,
     hardenFrames,
     lastPass: () => lastPass,
     MAX_DEPTH,

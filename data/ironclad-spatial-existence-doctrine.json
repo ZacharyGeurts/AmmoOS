@@ -21,8 +21,15 @@
     }
   },
   "spatial_existence": {
-    "dimensions": ["x", "y", "z", "t"],
-    "receipt_order": ["operator_location", "postal_address", "gps_lat_lon", "bearing_deg", "distance_m", "lattice_scale"],
+    "place_axes": ["x", "y", "z"],
+    "time_axis": {
+      "kind": "linear",
+      "declaration": "Time is linear.",
+      "rule": "Sovereign linear_ns only — monotonic, immutable; not a fourth spatial dimension in G1ID or lattice geometry.",
+      "citation": "ironclad:time:1",
+      "source": "lib/sovereign-time.py"
+    },
+    "receipt_order": ["operator_location", "postal_address", "gps_lat_lon", "bearing_deg", "distance_m", "lattice_scale", "linear_ns"],
     "correlation_floor": 0.65,
     "bearing_tolerance_deg": 45,
     "rule": "This one must correlate across sense lanes before that one may influence motion or lethal posture."
@@ -53,7 +60,7 @@
         },
         {
           "v": 3,
-          "text": "Spatial existence is amplitude on the lattice — x, y, z, t bound this one to a cell; that one without cell receipt is rumor until proven."
+          "text": "Place is x, y, z on the lattice — this one occupies a cell; time is linear (ironclad:time:1) and seals separately via sovereign linear_ns — never t in G1ID geometry."
         },
         {
           "v": 4,

@@ -12,6 +12,13 @@
     "seal_before_analyze": true,
     "plate_not_wire": true
   },
+  "universal_lock": {
+    "required": true,
+    "gate": "field-sense-package-meld.sense_universal_slice",
+    "combinatorics_condense_group": "universal_lock",
+    "green_requires_lock": true,
+    "motto": "GREEN only when Universal Protector + combinatorics lock seal eye-ear-mouth quorum."
+  },
   "matrix_plates": [
     {"from": "final_eye_node", "to": "eye_ear_plate", "kind": "plate"},
     {"from": "final_ear_node", "to": "eye_ear_plate", "kind": "plate"},

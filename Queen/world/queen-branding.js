@@ -48,8 +48,8 @@
     const avatar = document.querySelector(".qb-brand-avatar");
     if (avatar) {
       avatar.title =
-        "Queen — Amouranth plate, local only. Double-click for the Freddie easter egg. Data never leaves this machine.";
-      avatar.setAttribute("aria-label", "Queen — local plated portrait, emerald and rose");
+        "Queen — black · emerald · rose. Local icon kit only. Double-click for the Freddie easter egg.";
+      avatar.setAttribute("aria-label", "Queen — field web engine, emerald and rose");
     }
     const strip = document.querySelector(".qb-brand-strip span:last-child");
     if (strip) strip.textContent = "Queen";

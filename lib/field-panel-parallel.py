@@ -44,13 +44,32 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "field_rf": ("field-rf-sentinel.py", ["json"]),
 
     "h7_library": ("h7-library-bridge.py", ["build"]),
+    "h7_corpus_sync": ("field-h7-corpus-sync.py", ["sync"]),
+    "combinatorics_bridge": ("field-plate-combinatorics-bridge.py", ["build"]),
+    "plate_meld_orchestrator": ("field-plate-meld-orchestrator.py", ["json"]),
+    "compatibility_layers": ("field-compatibility-layers.py", ["json"]),
+    "field_filesystem": ("field-filesystem-update.py", ["json"]),
+    "always_files": ("field-always-files.py", ["json"]),
+    "field_diagnostic": ("field-diagnostic-mode.py", ["json"]),
     "packet_field": ("packet-field.py", ["json"]),
     "host_attacks": ("host-attack-map.py", ["json-panel"]),
     "us_field": ("field-us-intel.py", ["json"]),
-    "sweet_anita_broadcast": ("field-sweet-anita-broadcast.py", ["json"]),
-    "us_obs_field": ("field-sweet-anita-broadcast.py", ["us"]),
+    "us_obs_field": ("field-obs.py", ["us"]),
+    "field_broadcaster": ("field-broadcaster.py", ["json"]),
+    "field_obs": ("field-obs.py", ["json"]),
+    "field_gpu": ("field-gpu-control.py", ["json"]),
+    "c2_taskbar": ("field-c2-taskbar-plate.py", ["json"]),
+    "field_shell_dock": ("field-shell-dock.py", ["json"]),
+    "field_popcorn": ("field-popcorn-player.py", ["json"]),
+    "field_ellie_fier": ("field-ellie-fier.py", ["json"]),
+    "field_g16_launch": ("field-g16-launch.py", ["json"]),
+    "field_audio": ("field-audio-settings.py", ["json"]),
+    "field_lock": ("field-keepass.py", ["json"]),
+    "code_bugfinder": ("field-code-bugfinder.py", ["json"]),
     "field_voltage_regulation": ("field-voltage-regulation.py", ["json"]),
     "us_voltage_regulation": ("field-voltage-regulation.py", ["us"]),
+    "field_clean_juice": ("field-clean-juice.py", ["json"]),
+    "field_power_ledger": ("field-power-ledger.py", ["json"]),
     "field_command": ("field-command.py", ["json"]),
     "browser_awareness": ("browser-awareness.py", ["json"]),
     "field_queen_browser": ("field-queen-browser.py", ["json"]),
@@ -78,10 +97,26 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "plate_compiler": ("plate-compiler.py", ["json"]),
     "field_bus": ("field-unified-bus.py", ["json"]),
     "logic_gate": ("nexus-logic-gate.py", ["json"]),
+    "znetwork": ("znetwork-orchestrator.py", ["json"]),
     "spatial_field": ("field-spatial-cognition.py", ["json"]),
     "universal_protector": ("universal-protector.py", ["json"]),
     "humanoid_motion": ("humanoid-motion-training.py", ["json"]),
     "iron_plate_motion": ("iron-plate-motion-resolve.py", ["resolve"]),
+    "iron_plate_organize": ("iron-plate-organize.py", ["json"]),
+    "iron_plate_spot": ("iron-plate-spot-detector.py", ["json"]),
+    "chip_battery": ("field-chip-battery.py", ["json"]),
+    "program_combinatronic": ("field-program-combinatronic.py", ["json"]),
+    "g16_universal": ("field-g16-universal-combinatronic.py", ["json"]),
+    "cpu_library": ("field-cpu-library.py", ["json"]),
+    "extensive_library": ("field-extensive-library.py", ["panel"]),
+    "library_registry": ("field-library-registry.py", ["panel"]),
+    "dewey_library": ("field-dewey-library.py", ["panel"]),
+    "h7c_compression": ("field-h7c-compression.py", ["panel"]),
+    "file_formats": ("field-file-formats.py", ["panel"]),
+    "field_best_sort": ("field-best-sort.py", ["panel"]),
+    "combinatronic_balance": ("field-combinatronic-balance.py", ["panel"]),
+    "steel_neural_plates": ("field-steel-neural-plates.py", ["panel"]),
+    "field_font": ("field-font-kit.py", ["panel"]),
     "creatable_lives": ("creatable-lives-assist.py", ["json"]),
     "right_to_exist": ("right-to-exist-mandate.py", ["json"]),
     "hostess7_brain": ("hostess7-brain-guard.py", ["json"]),
@@ -208,6 +243,48 @@ def _save_panel(doc: dict[str, Any]) -> None:
     tmp.replace(PANEL_JSON)
 
 
+def _maybe_auto_engage_diagnostic() -> dict[str, Any] | None:
+    try:
+        import importlib.util
+
+        diag_py = INSTALL / "lib" / "field-diagnostic-mode.py"
+        if not diag_py.is_file():
+            return None
+        spec = importlib.util.spec_from_file_location("field_diagnostic_mode_engage", diag_py)
+        if not spec or not spec.loader:
+            return None
+        dmod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(dmod)
+        if dmod.active():
+            return dmod.status(write=False)
+        prob = dmod.detect_problems()
+        policy = (dmod._doctrine() if hasattr(dmod, "_doctrine") else {}).get("policy") or {}
+        if prob.get("should_engage") and policy.get("auto_engage_on_fault", True):
+            return dmod.engage()
+    except Exception:
+        pass
+    return None
+
+
+def _diagnostic_filter_slices() -> dict[str, tuple[str, list[str]]]:
+    try:
+        import importlib.util
+
+        diag_py = INSTALL / "lib" / "field-diagnostic-mode.py"
+        if not diag_py.is_file():
+            return FIELD_SLICES
+        spec = importlib.util.spec_from_file_location("field_diagnostic_mode", diag_py)
+        if not spec or not spec.loader:
+            return FIELD_SLICES
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "filter_field_slices"):
+            return mod.filter_field_slices(FIELD_SLICES)
+    except Exception:
+        pass
+    return FIELD_SLICES
+
+
 def publish_parallel(*, max_workers: int | None = None) -> dict[str, Any]:
     if max_workers is None:
         max_workers = int(os.environ.get("NEXUS_PANEL_PARALLEL_WORKERS", "8"))
@@ -216,11 +293,15 @@ def publish_parallel(*, max_workers: int | None = None) -> dict[str, Any]:
     doc["parallel_load"] = True
     updated: list[str] = []
     failed: list[str] = []
+    diag_status = _maybe_auto_engage_diagnostic()
+    if diag_status:
+        doc["diagnostic_mode"] = diag_status
+    slices = _diagnostic_filter_slices()
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures: dict[Any, str] = {
             pool.submit(_run_slice, key, script, args): key
-            for key, (script, args) in FIELD_SLICES.items()
+            for key, (script, args) in slices.items()
         }
         queen = _queen_root()
         for key, (script, args) in QUEEN_SLICES.items():

@@ -37,5 +37,68 @@
   "orchestrator": "lib/znetwork-orchestrator.py",
   "shell_bridge": "lib/znetwork-field.sh",
   "binary_probe": "bin/znetwork",
-  "plate_slot": "znetwork"
+  "plate_slot": "znetwork",
+  "coexist_os": {
+    "never_harm_os": true,
+    "bypass_not_replace": true,
+    "default_env": {
+      "ZNETWORK_NEVER_HARM_OS": "1",
+      "NEXUS_NEVER_HARM_OS": "1"
+    },
+    "motto": "ZNetwork bypasses OS networking in user space — host stack untouched, link preserved."
+  },
+  "handler_retire": {
+    "module": "lib/znetwork-handler-retire.py",
+    "no_sudo": true,
+    "detect_by": "runtime_behavior",
+    "graceful_signal": "SIGTERM",
+    "guard_file": "znetwork-handler-guard.json",
+    "connection_file": "znetwork-connection.json",
+    "motto": "Retire only our field duplicates — never kill NetworkManager or host OS networking."
+  },
+  "activate_path": {
+    "no_sudo_default": true,
+    "steps": [
+      "truth_gate",
+      "handler_retire",
+      "replace_connection",
+      "triple_check",
+      "bridges",
+      "hostile_scan",
+      "hostile_countermeasure",
+      "mark_running",
+      "tray_swap"
+    ]
+  },
+  "hostile_threat": {
+    "module": "lib/znetwork-hostile-threat.py",
+    "schema": "znetwork-hostile-threat/v1",
+    "ledger": "znetwork-hostile-ledger.jsonl",
+    "state_file": "znetwork-hostile-state.json",
+    "immediate_detection": {
+      "sources": [
+        "connection_gatekeeper_iff",
+        "threat_vectors_tsv",
+        "field_hostile_tsv",
+        "trust_strike_corpus"
+      ],
+      "fast_path_verdicts": ["HARM_CANDIDATE", "BLOCK_RECOMMENDED"],
+      "zero_hesitation": true
+    },
+    "countermeasures": {
+      "pipeline": [
+        "append_field_hostile_tsv",
+        "gatekeeper_enforce_strict",
+        "firewall_block_immediate",
+        "trust_strike_attack_kit"
+      ],
+      "policy": "INTERDICT — block immediately, zero hesitation",
+      "never_harm_os": true
+    },
+    "watch": {
+      "on_publish": true,
+      "on_ensure_tray": true,
+      "on_startup_with_us": true
+    }
+  }
 }

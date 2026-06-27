@@ -2,6 +2,7 @@
 """Safe signal touch policy — silent unless music, normal traffic, or animals."""
 from __future__ import annotations
 
+import os
 import re
 from typing import Any
 
@@ -197,6 +198,31 @@ def field_entity_touch(
     if moving:
         return touch_fields("traffic", safe_signal=True)
     return touch_fields("none", safe_signal=True)
+
+
+def discern_stress_terror(
+    *,
+    text: str = "",
+    source: str = "operator",
+    evidence: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Classify stress/terror — block external direction and illegal recreational shoot."""
+    try:
+        import importlib.util
+        from pathlib import Path
+
+        install = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
+        script = install / "lib" / "field-stress-terror-discern.py"
+        if not script.is_file():
+            return {"ok": False, "error": "discern_unavailable"}
+        spec = importlib.util.spec_from_file_location("field_stress_terror_discern", script)
+        if not spec or not spec.loader:
+            return {"ok": False, "error": "discern_unavailable"}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.discern({"text": text, "source": source, "evidence": evidence or {}})
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)[:120]}
 
 
 def aggregate_counts(rows: list[dict[str, Any]]) -> dict[str, Any]:

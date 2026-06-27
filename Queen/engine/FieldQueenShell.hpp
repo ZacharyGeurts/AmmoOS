@@ -1,5 +1,5 @@
 #pragma once
-// Queen Browser 2026 — sovereign shell (SDL3 + optional RTX compshader boot)
+// Queen Browser 2026 — sovereign shell (SDL3 · Webbrowser default · optional RTX legacy)
 
 #include <SDL3/SDL.h>
 

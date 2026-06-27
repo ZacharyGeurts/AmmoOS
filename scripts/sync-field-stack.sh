@@ -33,6 +33,14 @@ read_version() {
   [[ -f "$f" ]] && tr -d '[:space:]' <"$f" || echo ""
 }
 
+echo "=== grok16 integrate + combinatronics balance ==="
+if [[ -x "${GROK16_ROOT}/scripts/grok16-integrate.sh" ]]; then
+  bash "${GROK16_ROOT}/scripts/grok16-integrate.sh" integrate || echo "WARN: grok16 integrate partial" >&2
+fi
+if [[ -f "${ROOT}/lib/nexus-g16-recompile.py" ]]; then
+  "${PY}" "${ROOT}/lib/nexus-g16-recompile.py" balance || echo "WARN: combinatronics balance partial" >&2
+fi
+
 echo "=== sync-field-stack — eye · ear · g16 ==="
 echo "  NewLatest: ${ROOT}"
 echo "  Queen:     ${QUEEN}"

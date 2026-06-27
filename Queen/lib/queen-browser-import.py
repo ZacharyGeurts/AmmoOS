@@ -34,6 +34,10 @@ AUTO_IMPORT = os.environ.get("QUEEN_BROWSER_AUTO_IMPORT", "1") == "1"
 IMPORT_CREDENTIALS = os.environ.get("QUEEN_BROWSER_IMPORT_CREDENTIALS", "1") == "1"
 NO_ASK = os.environ.get("QUEEN_BROWSER_IMPORT_NO_ASK", "1") == "1"
 IMPORT_DROP_DIR = STATE / "imports"
+SCRUB_ROOT = STATE / "browser-scrub"
+SCRUB_OTHER = SCRUB_ROOT / "other-browsers"
+SCRUB_OLD = SCRUB_ROOT / "old-data"
+SCRUB_PRIMARY = SCRUB_ROOT / "primary-browser"
 
 SKIP_SCHEMES = frozenset({"javascript", "vbscript", "jar", "chrome", "about", "moz-extension"})
 TELEMETRY_MARKERS = (
@@ -194,6 +198,77 @@ def _discover_chromium_profiles(root: Path) -> list[Path]:
     if not found and (root / "Bookmarks").is_file():
         found.append(root)
     return found
+
+
+def detect_primary_browser() -> dict[str, Any]:
+    """Host default browser — we become Queen; others go to scrub/other-browsers."""
+    label = ""
+    browser_id = ""
+    try:
+        proc = subprocess.run(
+            ["xdg-settings", "get", "default-web-browser"],
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        if proc.returncode == 0:
+            raw = (proc.stdout or "").strip().lower()
+            for src in BROWSER_SOURCES:
+                if src["id"] in raw or src["label"].lower() in raw:
+                    browser_id = src["id"]
+                    label = src["label"]
+                    break
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    profiles = discover_profiles()
+    if not browser_id and profiles:
+        top = max(profiles, key=lambda p: float(p.get("signature_mtime") or 0))
+        browser_id = str(top.get("browser_id") or "")
+        label = str(top.get("label") or browser_id)
+    return {
+        "browser_id": browser_id or "unknown",
+        "label": label or "Primary",
+        "queen_replaces": True,
+        "profiles_seen": len(profiles),
+    }
+
+
+def organize_scrub(manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Scrub folder: primary-browser · other-browsers · old-data · imports drop."""
+    SCRUB_ROOT.mkdir(parents=True, exist_ok=True)
+    SCRUB_OTHER.mkdir(parents=True, exist_ok=True)
+    SCRUB_OLD.mkdir(parents=True, exist_ok=True)
+    SCRUB_PRIMARY.mkdir(parents=True, exist_ok=True)
+    primary = detect_primary_browser()
+    primary_doc = {
+        "schema": "browser-scrub/primary/v1",
+        "updated": _now(),
+        "primary": primary,
+        "manifest": manifest or _load_json(MANIFEST, {}),
+        "doctrine": "Queen replaces primary host browser; other profiles archived under other-browsers/",
+    }
+    _save_json(SCRUB_PRIMARY / "primary.json", primary_doc)
+    other_rows: list[dict[str, Any]] = []
+    old_rows: list[dict[str, Any]] = []
+    for prof in discover_profiles():
+        row = dict(prof)
+        if str(prof.get("browser_id")) == primary.get("browser_id"):
+            _save_json(SCRUB_PRIMARY / f"{prof.get('browser_id')}-{Path(prof['path']).name}.json", row)
+        else:
+            other_rows.append(row)
+            _save_json(SCRUB_OTHER / f"{prof.get('browser_id')}-{Path(prof['path']).name}.json", row)
+    if IMPORT_DROP_DIR.is_dir():
+        for fp in sorted(IMPORT_DROP_DIR.iterdir()):
+            if fp.is_file():
+                old_rows.append({"name": fp.name, "path": str(fp), "size": fp.stat().st_size})
+    _save_json(SCRUB_OLD / "drop-inventory.json", {"updated": _now(), "files": old_rows})
+    return {
+        "ok": True,
+        "scrub_root": str(SCRUB_ROOT),
+        "primary": primary,
+        "other_count": len(other_rows),
+        "old_drop_count": len(old_rows),
+    }
 
 
 def discover_profiles() -> list[dict[str, Any]]:
@@ -713,6 +788,8 @@ def sweep_all(*, apply: bool = True) -> dict[str, Any]:
     }
     if apply:
         result["applied"] = apply_to_browser_state(bookmarks, history, manifest)
+    result["primary_browser"] = detect_primary_browser()
+    result["scrub"] = organize_scrub(manifest)
     return result
 
 

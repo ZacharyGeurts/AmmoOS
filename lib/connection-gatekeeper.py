@@ -730,12 +730,25 @@ def _zero_telemetry_active() -> bool:
     return _queen_sovereign_active()
 
 
+def _settings_override_flag(key: str, *, default: str = "") -> str:
+    override = STATE / "settings.override"
+    if override.is_file():
+        try:
+            for line in override.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line.startswith(f"{key}="):
+                    return line.split("=", 1)[1].strip()
+        except OSError:
+            pass
+    return os.environ.get(key, default)
+
+
 def _ai_secure_telemetry_ok(proc: str) -> bool:
     if not _zero_telemetry_active():
         return True
-    if os.environ.get("NEXUS_AI_SECURE_CHANNEL", "") not in ("1", "true", "yes", "on"):
+    if _settings_override_flag("NEXUS_AI_SECURE_CHANNEL", default="1") not in ("1", "true", "yes", "on"):
         return False
-    if os.environ.get("QUEEN_AI_TELEMETRY_OK", "") not in ("1", "true", "yes", "on"):
+    if _settings_override_flag("QUEEN_AI_TELEMETRY_OK", default="1") not in ("1", "true", "yes", "on"):
         return False
     pl = (proc or "").lower()
     ai_procs = ("hostess7", "nexus-shield", "nexus-daemon", "field-command", "angel-research")

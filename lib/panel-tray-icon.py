@@ -102,35 +102,67 @@ def install_xdg_tray_icons(install: Path, home: Path | None = None) -> None:
             subprocess.run(["gtk-update-icon-cache", "-f", str(px_dir)], capture_output=True, timeout=8)
 
 
+def _znetwork_z_points(cx: int, cy: int, w: int, h: int) -> list[tuple[int, int]]:
+    """Bold Z polygon for tray overlay."""
+    x0, x1 = cx - w // 2, cx + w // 2
+    y0, y1 = cy - h // 2, cy + h // 2
+    thick = max(2, w // 5)
+    return [
+        (x0, y0),
+        (x1, y0),
+        (x1, y0 + thick),
+        (x0 + thick * 2, y1 - thick),
+        (x1, y1 - thick),
+        (x1, y1),
+        (x0, y1),
+        (x0, y1 - thick),
+        (x1 - thick * 2, y0 + thick),
+        (x0, y0 + thick),
+    ]
+
+
 def render_znetwork_tray_icon(size: int) -> Image.Image:
-    """ZNetwork taskbar glyph — shield + network node (no external assets)."""
+    """ZNetwork taskbar glyph — network graph with Z overlay (no external assets)."""
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(canvas)
-    margin = max(1, size // 12)
-    w = size - 2 * margin
-    cx = size // 2
-    top = margin
-    bottom = margin + w - 1
-    shield = [
-        (cx, top),
-        (margin + w - 1, top + w // 4),
-        (margin + w - 1, top + (w * 2) // 3),
-        (cx, bottom),
-        (margin, top + (w * 2) // 3),
-        (margin, top + w // 4),
-    ]
-    draw.polygon(shield, fill=ZNETWORK_FILL, outline=ZNETWORK_EDGE)
-    node_r = max(2, size // 8)
-    draw.ellipse(
-        (cx - node_r, cx - node_r, cx + node_r, cx + node_r),
-        fill=ZNETWORK_CORE,
-        outline=ZNETWORK_GLOW,
+    margin = max(1, size // 10)
+    radius = max(2, size // 6)
+    draw.rounded_rectangle(
+        (0, 0, size - 1, size - 1),
+        radius=radius,
+        fill=ZNETWORK_FILL,
+        outline=ZNETWORK_EDGE,
+        width=1,
     )
-    for dx, dy in ((-node_r * 2, 0), (node_r * 2, 0), (0, -node_r * 2)):
-        nx, ny = cx + dx, cx + dy
-        draw.line((cx, cx, nx, ny), fill=ZNETWORK_GLOW, width=1)
-        draw.ellipse((nx - 1, ny - 1, nx + 1, ny + 1), fill=ZNETWORK_GLOW)
-    draw.rounded_rectangle((0, 0, size - 1, size - 1), radius=max(2, size // 6), outline=ZNETWORK_EDGE, width=1)
+
+    cx, cy = size // 2, size // 2
+    node_r = max(1, size // 10)
+    nodes = [
+        (margin + node_r, margin + node_r * 2),
+        (size - margin - node_r, margin + node_r * 2),
+        (margin + node_r, size - margin - node_r),
+        (size - margin - node_r, size - margin - node_r),
+        (cx, cy - node_r),
+        (cx, cy + node_r),
+    ]
+    edges = (
+        (0, 4), (1, 4), (2, 5), (3, 5), (0, 2), (1, 3), (4, 5), (0, 1), (2, 3),
+    )
+    for a, b in edges:
+        x0, y0 = nodes[a]
+        x1, y1 = nodes[b]
+        draw.line((x0, y0, x1, y1), fill=ZNETWORK_GLOW, width=max(1, size // 16))
+    for nx, ny in nodes:
+        draw.ellipse(
+            (nx - node_r, ny - node_r, nx + node_r, ny + node_r),
+            fill=ZNETWORK_CORE,
+            outline=ZNETWORK_GLOW,
+        )
+
+    zw = max(6, size - 2 * margin - 2)
+    zh = max(6, int(zw * 0.72))
+    z_pts = _znetwork_z_points(cx, cy, zw, zh)
+    draw.polygon(z_pts, fill=(240, 249, 255, 245), outline=ZNETWORK_EDGE)
     return canvas
 
 
@@ -154,7 +186,7 @@ def install_znetwork_xdg_icons(install: Path, home: Path | None = None) -> None:
 def build_znetwork_tray_icons(install: Path, state: Path, *, force: bool = False) -> Path:
     icon = state / "znetwork-tray.png"
     stamp_file = state / "znetwork-tray-icon.stamp"
-    tag = "znetwork-v2:procedural"
+    tag = "znetwork-v3:z-over-network"
     state.mkdir(parents=True, exist_ok=True)
     assets = install / "panel" / "assets"
     assets.mkdir(parents=True, exist_ok=True)

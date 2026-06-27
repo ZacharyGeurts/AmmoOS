@@ -2,7 +2,7 @@
 """Queen Web Compat — full HTML/JS/CSS spectrum, pre-1.0 through future drafts.
 
 Auto modes secure legacy code: isolate old JS from OS/memory while preserving surface behavior.
-Engine targets (FieldFox/Gecko, Ladybird, Servo) honor these profiles at render time.
+Engine targets (Queen Browser, Ladybird, Servo) honor these profiles at render time.
 """
 from __future__ import annotations
 
@@ -209,7 +209,7 @@ def resolve_profile(
 
     ua_era = era["id"]
     user_agent = (
-        f"Mozilla/5.0 (compatible; QueenBrowser/2026; FieldFox; compat/{ua_era}; "
+        f"Mozilla/5.0 (compatible; QueenBrowser/2026; AmmoOS; compat/{ua_era}; "
         f"mode/{mode_key}) Gecko/20100101 Firefox/128.0"
     )
     if era["year"] < 1998:
@@ -261,7 +261,7 @@ def compat_status() -> dict[str, Any]:
         "motto": "Full gamut: pre-1.0 HTML through future drafts. Auto modes secure old code.",
         "modes": {k: {"label": v["label"]} for k, v in MODES.items()},
         "eras": ERAS,
-        "engine_targets": ["fieldfox", "gecko", "ladybird", "servo", "queen-shell+proxy"],
+        "engine_targets": ["queen-browser", "queen-shell+proxy", "ladybird", "servo"],
         "doctrine": {
             "omit_capabilities": False,
             "hold_all_gates": True,

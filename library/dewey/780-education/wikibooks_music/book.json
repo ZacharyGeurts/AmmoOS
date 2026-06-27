@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_music",
+  "title": "Wikibooks Music Theory",
+  "author": "Wikibooks",
+  "dewey": "780",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "6-12",
+  "subject": "music",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_music/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_music/front.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

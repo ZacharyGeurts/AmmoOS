@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" data-field-surface="audio">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Field Audio Settings</title>
+  <link rel="stylesheet" href="/assets/field-shell-dock.css?v=1" />
+  <link rel="stylesheet" href="/assets/field-audio-settings.css?v=1" />
+</head>
+<body>
+  <div class="fa-root">
+    <header class="fsd-dock fg-dock" aria-label="Field dock">
+      <div class="fsd-dock-left" id="fsd-dock-left"></div>
+      <div class="fsd-dock-right" id="fsd-dock-right"></div>
+    </header>
+
+    <div class="fa-body">
+      <aside class="fa-rail" id="fa-rail" aria-label="Audio backend"></aside>
+
+      <main class="fa-main" id="fa-main">
+        <div class="fa-head">
+          <div>
+            <h1>Audio Settings</h1>
+            <p class="fa-sub" id="fa-subtitle">Output · input · routing · advanced pipeline</p>
+          </div>
+          <label class="fa-advanced-toggle">
+            <input type="checkbox" id="fa-advanced" />
+            <span>Advanced</span>
+          </label>
+        </div>
+
+        <section class="fa-grid" id="fa-devices"></section>
+        <section class="fa-grid" id="fa-volume"></section>
+        <section class="fa-advanced" id="fa-advanced-panel" hidden aria-label="Advanced audio"></section>
+      </main>
+    </div>
+  </div>
+  <script src="/assets/field-shell-dock.js?v=1" defer></script>
+  <script src="/assets/field-audio-settings.js?v=1" defer></script>
+</body>
+</html>

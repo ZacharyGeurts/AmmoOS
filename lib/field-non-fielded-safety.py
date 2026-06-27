@@ -39,6 +39,7 @@ DENY_REL_PARTS = frozenset({
 # File suffixes / names that are already field archives — never double-field
 FIELD_ARCHIVE_SUFFIXES = (".zac", ".h7")
 FIELD_TAIL_MAGICS = (b"WRZC", b"WRDT", b"ZAC7", b"FLD1")
+H7_TEXTBOOK_MAGICS = (b"H7B\x01", b"H7B\x02")
 
 
 def _now() -> str:
@@ -98,6 +99,37 @@ def publish_field_root(selected: Path | None = None) -> Path:
     return host_mirror_root()
 
 
+def is_legitimate_h7_textbook(path: Path) -> bool:
+    """Lossless H7B library books under textbooks/ — not WRDT/ZAC field archives."""
+    try:
+        head = path.read_bytes()[:4]
+    except OSError:
+        return False
+    if head not in H7_TEXTBOOK_MAGICS:
+        return False
+    try:
+        return "textbooks" in path.resolve().parts
+    except OSError:
+        return False
+
+
+def is_field_archive_path(path: Path) -> bool:
+    name = path.name.lower()
+    if name.endswith(".zac"):
+        return True
+    if name.endswith(".h7"):
+        if is_legitimate_h7_textbook(path):
+            return False
+        try:
+            head = path.read_bytes()[:4]
+            if head in H7_TEXTBOOK_MAGICS:
+                return False
+        except OSError:
+            pass
+        return True
+    return False
+
+
 def is_denied_rel_path(path: Path) -> str | None:
     try:
         parts = path.resolve().parts
@@ -108,9 +140,8 @@ def is_denied_rel_path(path: Path) -> str | None:
             return f"nested field path: {part}"
         if part.endswith(".zac"):
             return "zac archive on drive"
-    name = path.name.lower()
-    if name.endswith(FIELD_ARCHIVE_SUFFIXES):
-        return f"field archive: {name}"
+    if is_field_archive_path(path):
+        return f"field archive: {path.name.lower()}"
     return None
 
 

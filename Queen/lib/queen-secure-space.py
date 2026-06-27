@@ -121,7 +121,7 @@ def rtx_memory_map() -> dict[str, Any]:
             "address_bus_slots": 16,
             "queen_marker_slot": 1,
             "queen_marker_byte": 0x51,
-            "boot_shader": "QueenBoot.comp",
+            "boot_surface": "webbrowser",
         },
         "guest_die": {
             "name": "FieldX86Die",

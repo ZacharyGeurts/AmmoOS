@@ -1,0 +1,15 @@
+{
+  "id": "format-media_mkv",
+  "title": "Matroska",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".mkv",
+    ".mk3d",
+    ".mka"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_mkv.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

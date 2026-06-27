@@ -16,14 +16,28 @@ from typing import Any
 from urllib.parse import quote
 
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
+SG = Path(os.environ.get("SG_ROOT", INSTALL.parent.parent))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 DOCTRINE = INSTALL / "data" / "field-host-desktop-doctrine.json"
 PANEL_FILE = STATE / "field-host-desktop.json"
 STAMP = STATE / "field-host-desktop.stamp"
+BOOT_MARKER = STATE / "boot-impl.last"
 ICON_CACHE = STATE / "field-host-desktop-icons"
 
 DESKTOP_SKIP = frozenset({"Hidden", "NoDisplay", "DBusActivatable"})
 ICON_EXTS = (".png", ".svg", ".xpm", ".jpg", ".jpeg", ".webp")
+HOST_BROWSER_MARKERS = (
+    "firefox",
+    "mozilla",
+    "org.mozilla",
+    "chromium",
+    "chrome",
+    "brave",
+    "vivaldi",
+    "waterfox",
+    "librewolf",
+)
+HOST_BROWSER_ICON = "queen-prog-browser"
 
 
 def _now() -> str:
@@ -132,6 +146,20 @@ def _parse_desktop(path: Path) -> dict[str, Any] | None:
     }
 
 
+def _queen_asset_dirs() -> list[Path]:
+    roots = [
+        INSTALL / "Queen" / "world" / "assets" / "icons",
+        INSTALL / "Queen" / "world" / "assets" / "branding",
+        INSTALL / "panel" / "assets",
+        INSTALL / "assets",
+    ]
+    out: list[Path] = []
+    for p in roots:
+        if p.is_dir() and p not in out:
+            out.append(p)
+    return out
+
+
 def _icon_search_dirs() -> list[Path]:
     doctrine = _load(DOCTRINE, {})
     out: list[Path] = []
@@ -155,6 +183,16 @@ def _resolve_icon_file(icon_name: str, desktop_path: str | None = None) -> Path 
     icon_path = Path(icon_name)
     if icon_path.is_file():
         return icon_path.resolve()
+    queen_names = [icon_name]
+    if icon_name.startswith("queen-prog-"):
+        queen_names.append(f"prog-{icon_name.removeprefix('queen-prog-')}")
+        queen_names.append(f"prog-{icon_name.removeprefix('queen-prog-')}-48")
+    for base in _queen_asset_dirs():
+        for name in queen_names:
+            for ext in ("", *ICON_EXTS):
+                cand = base / (f"{name}{ext}" if ext else name)
+                if cand.is_file():
+                    return cand.resolve()
     if desktop_path:
         sibling = Path(desktop_path).parent / icon_name
         for ext in ("", *ICON_EXTS):
@@ -176,6 +214,50 @@ def _resolve_icon_file(icon_name: str, desktop_path: str | None = None) -> Path 
             if cand.is_file():
                 return cand.resolve()
     return None
+
+
+def _rebrand_host_browser(app: dict[str, Any]) -> dict[str, Any]:
+    doctrine = _load(DOCTRINE, {})
+    if not doctrine.get("policy", {}).get("rebrand_host_browsers", True):
+        return app
+    hay = " ".join(
+        [
+            str(app.get("name") or ""),
+            str(app.get("icon") or ""),
+            str(app.get("desktop_path") or ""),
+            str(app.get("exec") or ""),
+        ]
+    ).lower()
+    if not any(marker in hay for marker in HOST_BROWSER_MARKERS):
+        return app
+    out = dict(app)
+    out["icon"] = HOST_BROWSER_ICON
+    out["icon_key"] = f"{out.get('id', out.get('name', 'browser'))}:{HOST_BROWSER_ICON}"
+    queen_url = "http://127.0.0.1:9481/world/browser.html"
+    if any(m in hay for m in HOST_BROWSER_MARKERS):
+        out["name"] = "Queen Browser"
+        out["category"] = "NEXUS · Operator"
+        out["exec"] = queen_url
+        out["id"] = "queen-browser-host"
+        out["source"] = "field"
+        out["shell"] = True
+    return out
+
+
+def _skip_host_app(app: dict[str, Any]) -> bool:
+    """Host browsers map to Queen Browser in field_apps — do not duplicate in menu."""
+    doctrine = _load(DOCTRINE, {})
+    if not doctrine.get("policy", {}).get("rebrand_host_browsers", True):
+        return False
+    hay = " ".join(
+        [
+            str(app.get("name") or ""),
+            str(app.get("icon") or ""),
+            str(app.get("desktop_path") or ""),
+            str(app.get("exec") or ""),
+        ]
+    ).lower()
+    return any(marker in hay for marker in HOST_BROWSER_MARKERS)
 
 
 def _safe_icon_path(token: str) -> Path | None:
@@ -221,6 +303,9 @@ def _scan_linux_apps() -> list[dict[str, Any]]:
             if key in seen:
                 continue
             seen.add(key)
+            if _skip_host_app(app):
+                continue
+            app = _rebrand_host_browser(app)
             resolved = _resolve_icon_file(app["icon"], app.get("desktop_path"))
             if resolved:
                 token = _cache_icon(app["icon_key"], resolved)
@@ -230,6 +315,44 @@ def _scan_linux_apps() -> list[dict[str, Any]]:
     return sorted(apps, key=lambda x: x["name"].lower())
 
 
+def _launcher_visible(app: dict[str, Any]) -> bool:
+    """Hide display-tech engines (Queen browser CSS shell) from Start/desktop — C2 owns launch."""
+    if app.get("ghost") or app.get("clipboard_ghost"):
+        return False
+    if app.get("start_menu") is False:
+        return False
+    if app.get("launcher_visible") is False:
+        return False
+    if app.get("display_tech") and not app.get("launcher_visible", True):
+        return False
+    return True
+
+
+def _launcher_apps(apps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [a for a in apps if _launcher_visible(a)]
+
+
+def _browser_display_slice(apps: list[dict[str, Any]], policy: dict[str, Any]) -> dict[str, Any]:
+    display = [a for a in apps if a.get("display_tech") or a.get("browser_shell")]
+    c2 = next((a for a in apps if a.get("id") == "nexus-c2-desktop"), None)
+    queen = next((a for a in apps if a.get("id") == "queen-browser"), None)
+    tech: list[str] = []
+    if c2:
+        tech.extend(list(c2.get("display_tech") or []))
+    if queen:
+        tech.append("queen-browser-shell.js")
+        tech.append("queen-syntax.css")
+    return {
+        "browser_in_c2": bool(policy.get("browser_in_c2", True)),
+        "launcher_visible": bool(policy.get("browser_launcher_visible", False)),
+        "engine_id": queen.get("id") if queen else "queen-browser",
+        "c2_id": c2.get("id") if c2 else "nexus-c2-desktop",
+        "queen_url": queen.get("exec") if queen else "http://127.0.0.1:9481/world/browser.html",
+        "display_tech": sorted({str(t) for t in tech if t}),
+        "role": "C2 routes navigation — Queen browser holds CSS/display stack only",
+    }
+
+
 def _field_apps() -> list[dict[str, Any]]:
     doctrine = _load(DOCTRINE, {})
     out: list[dict[str, Any]] = []
@@ -237,13 +360,16 @@ def _field_apps() -> list[dict[str, Any]]:
         app = dict(row)
         app.setdefault("source", "field")
         app.setdefault("category", "Field")
+        preset_icon_url = app.get("icon_url")
         icon_name = app.get("icon") or "nexus-field"
         resolved = _resolve_icon_file(icon_name)
         if not resolved:
             for candidate in (
-                INSTALL / "panel/assets/nexus-field.png",
+                INSTALL / "panel/assets" / f"{icon_name}.png",
                 INSTALL / "panel/assets/nexus-field-48.png",
-                INSTALL.parent / "Queen/world/icons/queen-browser.png",
+                INSTALL / "panel/assets/queen-favicon-48.png",
+                INSTALL / "panel/assets/nexus-field.png",
+                INSTALL / "Queen/world/assets/icons" / f"{icon_name}.png",
             ):
                 if candidate.is_file():
                     resolved = candidate
@@ -252,6 +378,8 @@ def _field_apps() -> list[dict[str, Any]]:
             token = _cache_icon(app.get("id", icon_name), resolved)
             if token:
                 app["icon_url"] = f"/api/field-host-desktop/icon/{quote(token, safe='')}"
+        elif preset_icon_url:
+            app["icon_url"] = str(preset_icon_url)
         out.append(app)
     return out
 
@@ -261,7 +389,7 @@ def _running_programs() -> list[dict[str, Any]]:
         "nexus-genius": "NEXUS Daemon",
         "threat-panel-http": "Field Panel",
         "queen-world": "Queen World",
-        "firefox": "Firefox",
+        "firefox": "Queen Browser",
         "chromium": "Chromium",
         "google-chrome": "Chrome",
         "code": "VS Code",
@@ -281,16 +409,136 @@ def _running_programs() -> list[dict[str, Any]]:
 
 def _power_actions() -> list[dict[str, Any]]:
     return [
-        {"id": "underlay-drop", "label": "Drop under host desktop", "action": "underlay-drop"},
-        {"id": "underlay-rise", "label": "Rise field OS", "action": "underlay-rise"},
+        {"id": "sign-out", "label": "Sign out", "action": "sign-out"},
+        {"id": "restart-nexus", "label": "Restart NEXUS", "action": "restart-nexus"},
+        {"id": "power-off", "label": "Shut down", "action": "power-off", "danger": True},
         {"id": "freeze-soft", "label": "Soft freeze host", "action": "freeze-soft"},
         {"id": "sleep", "label": "Sleep", "action": "freeze-mem"},
         {"id": "underlay", "label": "Underlay F9", "exec": "/underlay-f9"},
-        {"id": "command", "label": "NEXUS Command", "exec": "/command"},
+        {"id": "control-panel", "label": "Control Panel", "exec": "/control-panel"},
     ]
 
 
+def _category_order() -> list[str]:
+    doctrine = _load(DOCTRINE, {})
+    order = doctrine.get("category_order") or []
+    return [str(c) for c in order if c]
+
+
+def _iron_plate_organize(
+    *,
+    menu: dict[str, Any],
+    monitor: dict[str, Any],
+    tray_icons: list[dict[str, Any]] | None = None,
+) -> dict[str, Any] | None:
+    script = INSTALL / "lib" / "iron-plate-organize.py"
+    if not script.is_file() or os.environ.get("NEXUS_IRON_PLATE_ORGANIZE", "1") != "1":
+        return None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("iron_plate_organize_desktop", script)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "apply_to_desktop"):
+            return mod.apply_to_desktop(menu=menu, monitor=monitor, tray_icons=tray_icons)
+    except Exception:
+        pass
+    return None
+
+
+def _programmatic_monitor_panels() -> list[dict[str, Any]]:
+    script = SG / "Queen" / "lib" / "queen-nexus-c2.py"
+    if not script.is_file():
+        return []
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("queen_nexus_c2_desktop", script)
+        if not spec or not spec.loader:
+            return []
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "monitor_panels"):
+            return mod.monitor_panels(pinned_only=True)
+    except Exception:
+        pass
+    return []
+
+
+def _taskbar_quick(apps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    doctrine = _load(DOCTRINE, {})
+    by_id = {str(a.get("id")): a for a in apps if a.get("id")}
+    doctrine_quick = doctrine.get("taskbar_quick") or []
+    pins_py = INSTALL / "lib" / "field-taskbar-pins.py"
+    if pins_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("field_taskbar_pins", pins_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "apply_quick"):
+                    return mod.apply_quick(doctrine_quick, by_id)
+        except Exception:
+            pass
+    out: list[dict[str, Any]] = []
+    for row in doctrine_quick:
+        if not isinstance(row, dict):
+            continue
+        app_id = str(row.get("id") or "")
+        app = by_id.get(app_id)
+        if not app:
+            continue
+        quick = dict(app)
+        if row.get("glyph"):
+            quick["glyph"] = row["glyph"]
+        if row.get("live"):
+            quick["live"] = True
+        if row.get("unpinnable"):
+            quick["unpinnable"] = True
+        out.append(quick)
+    return out
+
+
+def _menu_nexus_c2_tree(apps: list[dict[str, Any]]) -> dict[str, Any]:
+    doctrine = _load(DOCTRINE, {})
+    order = _category_order()
+    visible = _launcher_apps(apps)
+    categories: dict[str, list[dict[str, Any]]] = {}
+    for app in visible:
+        cat = str(app.get("category") or "Other")
+        categories.setdefault(cat, []).append(app)
+    for cat in categories:
+        categories[cat] = sorted(categories[cat], key=lambda x: x["name"].lower())
+    ordered_cats = [c for c in order if c in categories]
+    for c in sorted(categories.keys()):
+        if c not in ordered_cats:
+            ordered_cats.append(c)
+    field_cats = {k: v for k, v in categories.items() if k.startswith("NEXUS")}
+    host_cats = {k: v for k, v in categories.items() if k.startswith("Host")}
+    pinned = [a for a in visible if a.get("pinned")]
+    return {
+        "style": "nexus_c2",
+        "layout": "tree_sidebar",
+        "categories": field_cats,
+        "host_categories": host_cats,
+        "category_order": ordered_cats,
+        "pinned": pinned,
+        "programs": visible,
+        "power": _power_actions(),
+        "search": True,
+        "tree": True,
+        "nexus_c2_priority": bool(doctrine.get("policy", {}).get("nexus_c2_priority", True)),
+    }
+
+
 def _menu_for_theme(theme: str, apps: list[dict[str, Any]]) -> dict[str, Any]:
+    doctrine = _load(DOCTRINE, {})
+    layout = str(doctrine.get("policy", {}).get("menu_layout") or "")
+    if layout == "nexus_c2_tree" or doctrine.get("policy", {}).get("nexus_c2_priority"):
+        return _menu_nexus_c2_tree(apps)
     categories: dict[str, list[dict[str, Any]]] = {}
     for app in apps:
         cat = app.get("category") or "Other"
@@ -335,15 +583,63 @@ def _menu_for_theme(theme: str, apps: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _shell_settings() -> dict[str, Any]:
+    script = INSTALL / "lib" / "field-shell-settings.py"
+    if not script.is_file():
+        return {}
+    try:
+        proc = subprocess.run(
+            [os.environ.get("PYTHON", "pythong"), str(script), "json"],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        if proc.returncode == 0:
+            doc = json.loads(proc.stdout or "{}")
+            return doc.get("settings") or {}
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        pass
+    return {}
+
+
 def build_panel() -> dict[str, Any]:
     guest = _guest_system()
     theme = _theme_id()
-    host_apps = _scan_linux_apps() if guest in ("linux", "windows") else []
+    policy = _load(DOCTRINE, {}).get("policy") or {}
+    mirror_host = bool(policy.get("mirror_guest_os", False))
+    host_sidebar = bool(policy.get("host_programs_sidebar", False))
+    scan_host = bool(policy.get("scan_host_desktop", False))
+    host_apps = (
+        _scan_linux_apps()
+        if guest in ("linux", "windows") and (mirror_host or host_sidebar or scan_host)
+        else []
+    )
     field_apps = _field_apps()
+    for app in host_apps:
+        cat = app.get("category") or "Other"
+        app["category"] = f"Host · {cat}"
     merged: dict[str, dict[str, Any]] = {}
-    for app in field_apps + host_apps:
+    for app in field_apps:
         merged[app["name"].lower()] = app
-    apps = sorted(merged.values(), key=lambda x: x["name"].lower())
+    for app in host_apps:
+        key = f"host:{app['name'].lower()}"
+        merged[key] = app
+    apps = sorted(merged.values(), key=lambda x: (x.get("category") or "", x["name"].lower()))
+    launcher_apps = _launcher_apps(apps)
+    menu = _menu_for_theme(theme, launcher_apps)
+    monitor_dashboard = _load(DOCTRINE, {}).get("monitor_dashboard") or {}
+    if monitor_dashboard.get("programmatic"):
+        prog = _programmatic_monitor_panels()
+        if prog:
+            monitor_dashboard = {**monitor_dashboard, "panels": prog, "source": "queen-nexus-c2-panels"}
+    tray_icons = _load(DOCTRINE, {}).get("tray_icons") or []
+    organized = _iron_plate_organize(menu=menu, monitor=monitor_dashboard, tray_icons=tray_icons)
+    if organized:
+        menu = organized.get("menu") or menu
+        monitor_dashboard = organized.get("monitor_dashboard") or monitor_dashboard
+        if organized.get("tray_icons"):
+            tray_icons = organized.get("tray_icons") or tray_icons
     doc = {
         "schema": "field-host-desktop/v1",
         "ts": _now(),
@@ -356,32 +652,77 @@ def build_panel() -> dict[str, Any]:
         },
         "theme": theme,
         "linux_de": _linux_de() if guest == "linux" else None,
-        "program_count": len(apps),
-        "programs": apps,
+        "program_count": len(launcher_apps),
+        "programs": launcher_apps,
+        "programs_all": apps,
         "field_apps": field_apps,
         "host_apps": host_apps,
         "running": _running_programs(),
-        "menu": _menu_for_theme(theme, apps),
+        "menu": menu,
         "startbar": {
             "position": "bottom",
             "start_corner": "left",
             "show_clock": True,
-            "show_running": True,
+            "show_running": bool(policy.get("taskbar_show_running", True)),
+            "quick_only": bool(policy.get("taskbar_quick_only", False)),
+            "quick": _taskbar_quick(apps),
+            "tray_icons": tray_icons,
+            "g16": bool(policy.get("g16_taskbar", False)),
+            "auto_hide_default": bool(
+                _load(DOCTRINE, {}).get("policy", {}).get("startbar_auto_hide_default", True)
+            ),
             "long_press_ms": int(_load(DOCTRINE, {}).get("policy", {}).get("touch_long_press_ms", 480)),
+            "start_menu_folders": bool(policy.get("start_menu_folders", True)),
+            "start_menu_collapsed": bool(policy.get("start_menu_collapsed", True)),
         },
+        "monitor_dashboard": monitor_dashboard,
+        "iron_plate_organize": bool(organized),
+        "product": _load(DOCTRINE, {}).get("product") or "AmmoOS",
+        "shell": {
+            "programs_as_windows": bool(_load(DOCTRINE, {}).get("policy", {}).get("programs_as_windows", True)),
+            "integrated_launch": bool(_load(DOCTRINE, {}).get("policy", {}).get("nexus_integrated_launch", True)),
+            "no_client_browser": bool(_load(DOCTRINE, {}).get("policy", {}).get("no_client_browser", True)),
+            "queen_browser_only": bool(_load(DOCTRINE, {}).get("policy", {}).get("queen_browser_only", True)),
+            "browser_in_c2": bool(policy.get("browser_in_c2", True)),
+            "browser_display": _browser_display_slice(apps, policy),
+            "boot_program": policy.get("boot_program", ""),
+            "fullscreen_desktop": bool(_load(DOCTRINE, {}).get("policy", {}).get("fullscreen_desktop", True)),
+            "kiosk_launch": bool(_load(DOCTRINE, {}).get("policy", {}).get("kiosk_launch", True)),
+            "launch_at_c2_desktop": bool(_load(DOCTRINE, {}).get("policy", {}).get("launch_at_c2_desktop", True)),
+            "launch_url": _load(DOCTRINE, {}).get("policy", {}).get("launch_url", "/field"),
+            "settings_api": "/api/field-shell-settings",
+            "settings": _shell_settings(),
+        },
+        "policy": _load(DOCTRINE, {}).get("policy") or {},
         "routes": {
             "command": "/command",
             "underlay": "/underlay-f9",
             "tristate": "/tristate-installer",
         },
-        "posture": "Host desktop mirrors incumbent OS — programs, icons, start menu, field startbar overlay",
+        "posture": "AmmoOS C2 — category folders in Start, monitor wall right, legacy panel dissolved",
     }
     _save_atomic(PANEL_FILE, doc)
     STAMP.write_text(_now() + "\n", encoding="utf-8")
     return doc
 
 
+def _needs_rescan() -> bool:
+    if os.environ.get("NEXUS_HOST_DESKTOP_REFRESH") == "1":
+        return True
+    if not PANEL_FILE.is_file() or not STAMP.is_file():
+        return True
+    if BOOT_MARKER.is_file():
+        try:
+            if BOOT_MARKER.stat().st_mtime > STAMP.stat().st_mtime:
+                return True
+        except OSError:
+            return True
+    return False
+
+
 def posture() -> dict[str, Any]:
+    if _needs_rescan():
+        return build_panel()
     if PANEL_FILE.is_file():
         try:
             cached = json.loads(PANEL_FILE.read_text(encoding="utf-8"))

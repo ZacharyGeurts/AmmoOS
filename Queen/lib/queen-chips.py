@@ -1,5 +1,5 @@
 #!/usr/bin/env pythong
-"""Queen CHIPS / Game Room bridge — retro systems, G16-optimized silicon, RTX launch."""
+"""Queen CHIPS / Game Room bridge — retro systems, G16-optimized silicon, Webbrowser surface."""
 from __future__ import annotations
 
 import json
@@ -13,6 +13,8 @@ from typing import Any
 
 QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
+NEXUS = Path(os.environ.get("NEXUS_INSTALL_ROOT", SG / "NewLatest"))
+NEXUS_STATE = Path(os.environ.get("NEXUS_STATE_DIR", NEXUS / ".nexus-state"))
 RTX = Path(os.environ.get("AMOURANTHRTX_ROOT", SG / "NewLatest" / "AMOURANTHRTX"))
 GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
 MANIFEST = QUEEN / "data" / "queen-game-room.json"
@@ -109,9 +111,75 @@ def _qa_hint() -> dict[str, Any]:
     }
 
 
+def _chip_battery_script() -> Path:
+    for root in (NEXUS, SG / "NewLatest"):
+        p = root / "lib" / "field-chip-battery.py"
+        if p.is_file():
+            return p
+    return NEXUS / "lib" / "field-chip-battery.py"
+
+
+def _chip_battery_env() -> dict[str, str]:
+    return {
+        **os.environ,
+        "SG_ROOT": str(SG),
+        "QUEEN_ROOT": str(QUEEN),
+        "NEXUS_INSTALL_ROOT": str(NEXUS),
+        "NEXUS_STATE_DIR": str(NEXUS_STATE),
+        "GROK16_ROOT": str(GROK16),
+    }
+
+
+def combinatronic_status(*, refresh: bool = False) -> dict[str, Any]:
+    script = _chip_battery_script()
+    if not script.is_file():
+        return {
+            "schema": "field-chips-combinatronic/v1",
+            "ok": False,
+            "error": "chip_battery_missing",
+            "path": str(script),
+        }
+    args = ["combinatronic"]
+    if refresh:
+        args.append("--refresh")
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), *args],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=str(QUEEN),
+            env=_chip_battery_env(),
+        )
+        return json.loads(proc.stdout or "{}")
+    except json.JSONDecodeError:
+        return {"schema": "field-chips-combinatronic/v1", "ok": False, "error": "bad_json"}
+    except subprocess.TimeoutExpired:
+        return {"schema": "field-chips-combinatronic/v1", "ok": False, "error": "timeout"}
+
+
+def chip_battery_panel() -> dict[str, Any]:
+    script = _chip_battery_script()
+    if not script.is_file():
+        return {"schema": "field-chip-battery-panel/v1", "ok": False, "error": "chip_battery_missing"}
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "json"],
+            capture_output=True,
+            text=True,
+            timeout=90,
+            cwd=str(QUEEN),
+            env=_chip_battery_env(),
+        )
+        return json.loads(proc.stdout or "{}")
+    except (json.JSONDecodeError, subprocess.TimeoutExpired):
+        return {"schema": "field-chip-battery-panel/v1", "ok": False, "error": "chip_battery_failed"}
+
+
 def game_room_status() -> dict[str, Any]:
     room = _load(MANIFEST)
-    bin_path = _rtx_binary()
+    comb = combinatronic_status()
+    pred = comb.get("path_prediction") or {}
     return {
         "schema": "queen-chips/v1",
         "updated": _now(),
@@ -124,15 +192,24 @@ def game_room_status() -> dict[str, Any]:
         "aspect": room.get("aspect") or {},
         "chips": _chips_tree_stats(),
         "grok16": _g16_status(),
+        "surface": "webbrowser",
+        "web_surface": True,
+        "game_room_url": "/world/queen-game-room.html",
+        "chips_cores_url": "/world/queen-chips-cores.html",
+        "combinatronic_url": "/world/queen-chips-cores.html#combinatronic",
+        "combinatronic": comb,
+        "chip_battery": {
+            "counts": comb.get("counts"),
+            "leaf_count": comb.get("leaf_count"),
+            "path_total_pct": pred.get("total_pct"),
+            "narrow_band_width": (comb.get("line_safety") or {}).get("narrow_band_width"),
+            "band_count": len(pred.get("bands") or []),
+        },
         "rtx": {
             "root": str(RTX),
             "present": RTX.is_dir(),
-            "queen_binary": str(bin_path) if bin_path else None,
-            "queen_binary_ready": bin_path is not None,
-            "queen_process": _queen_process_running(),
-            "programs_canvas_ready": _queen_process_running(),
-            "fb_snap": str(_fb_snap_paths()[0]) if _fb_snap_paths() else None,
-            "note": "Framebuffer streams via queen-browser FieldWebPanel when ./linux.sh run is live",
+            "desktop_comp_shader": False,
+            "note": "CHIPS/cores route through Queen Webbrowser — no RTX comp shader boot",
         },
         "qa": _qa_hint(),
         "selected": {
@@ -181,41 +258,19 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
                 "system": sel,
                 "message": "Cinema mode — load a movie file in the Game Room theater",
             }
-        bin_path = _rtx_binary()
         app_id = sel.get("app_id", system.upper())
-        env = {
-            **os.environ,
-            "AMOURANTHRTX_APP": app_id,
-            "QUEEN_GAME_ROOM_SYSTEM": system,
-            "QUEEN_HOST_CPU": host_cpu,
-            "QUEEN_GUEST_MEMORY": memory,
-            "GROK16_PROFILE": "field_opt",
-        }
-        linux_sh = RTX / "linux.sh"
-        if bin_path:
-            return {
-                "ok": True,
-                "mode": "chips",
-                "system": sel,
-                "host_cpu": host_cpu,
-                "memory": memory,
-                "binary": str(bin_path),
-                "isolation": "horizon7",
-                "doctrine": "Queen lives in isolation with Horizon 7 — go there via AMOURANTHRTX, no loopback port",
-                "launch_cmd": f"cd {RTX} && AMOURANTHRTX_APP={app_id} ./linux.sh run",
-                "nes_qa_cmd": f"cd {RTX} && ./linux.sh nes-qa",
-                "linux_sh": str(linux_sh) if linux_sh.is_file() else None,
-                "env": {"AMOURANTHRTX_APP": app_id, "GROK16_PROFILE": "field_opt"},
-                "grok16_profile": status["grok16"].get("profile"),
-                "message": f"Go to Horizon 7 / AMOURANTHRTX for {sel.get('label')} — ./linux.sh run (Queen does not bind a port)",
-            }
         return {
             "ok": True,
-            "mode": "chips_deferred",
+            "mode": "chips",
+            "surface": "webbrowser",
+            "spawned": False,
+            "spawn_rtx": False,
             "system": sel,
-            "message": "Build AMOURANTHRTX queen-browser first — CHIPS silicon ready in headers",
-            "build": str(RTX / "linux.sh") + " build",
-            "g16_cmake": str(QUEEN / "cmake" / "g16-chips-field-opt.cmake"),
+            "host_cpu": host_cpu,
+            "memory": memory,
+            "url": "/world/queen-game-room.html",
+            "grok16_profile": status["grok16"].get("profile"),
+            "message": f"{sel.get('label')} armed on Queen Webbrowser canvas — no desktop comp shader",
         }
 
     if action in ("rebuild", "rebuild_chips", "g16_rebuild"):
@@ -249,7 +304,16 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
     if action in ("fullscreen", "aspect"):
         return {"ok": True, "aspect": aspect, "fullscreen": body.get("fullscreen", True)}
 
-    return {"ok": False, "error": "unknown_action", "actions": ["status", "configure", "launch", "rebuild"]}
+    if action in ("combinatronic", "chips_combinatronic", "chip_battery", "chip-battery"):
+        refresh = bool(body.get("refresh"))
+        panel = combinatronic_status(refresh=refresh) if action != "chip-battery" else chip_battery_panel()
+        return {"ok": True, **panel}
+
+    return {
+        "ok": False,
+        "error": "unknown_action",
+        "actions": ["status", "configure", "launch", "rebuild", "combinatronic", "chip_battery"],
+    }
 
 
 def _fb_image_path() -> Path | None:
@@ -269,9 +333,12 @@ def framebuffer_status() -> dict[str, Any]:
     out: dict[str, Any] = {
         "schema": "queen-game-room-fb/v1",
         "updated": _now(),
-        "ready": running or img is not None,
+        "surface": "webbrowser",
+        "web_surface": True,
+        "desktop_comp_shader": False,
+        "ready": True,
+        "programs_canvas_ready": True,
         "queen_process": running,
-        "programs_canvas_ready": running,
         "snap": str(snaps[0]) if snaps else None,
         "image": str(img) if img else None,
     }
@@ -294,6 +361,13 @@ def framebuffer_image_bytes() -> tuple[bytes, str] | None:
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "fb":
         print(json.dumps(framebuffer_status(), ensure_ascii=False))
+        return 0
+    if len(sys.argv) > 1 and sys.argv[1] in ("combinatronic", "chip-battery"):
+        refresh = "--refresh" in sys.argv[2:]
+        if sys.argv[1] == "chip-battery":
+            print(json.dumps(chip_battery_panel(), ensure_ascii=False))
+        else:
+            print(json.dumps(combinatronic_status(refresh=refresh), ensure_ascii=False))
         return 0
     if len(sys.argv) > 1 and sys.argv[1] == "dispatch":
         try:

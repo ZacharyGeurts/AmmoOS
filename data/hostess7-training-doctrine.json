@@ -38,7 +38,13 @@
     {"id": "geography", "label": "Geography & postal addresses", "weight": 0.90, "complete_when": "fluent && tier in geography_fluent,geography_master"},
     {"id": "postal_addresses", "label": "Postal address formats", "weight": 0.88, "complete_when": "fluent && pass_rate >= 85"},
     {"id": "world_geography", "label": "World geography", "weight": 0.86, "complete_when": "fluent && pass_rate >= 85"},
-    {"id": "flat_earth_geography", "label": "Flat earth section", "weight": 0.84, "complete_when": "fluent && pass_rate >= 85"}
+    {"id": "flat_earth_geography", "label": "Flat earth section", "weight": 0.84, "complete_when": "fluent && pass_rate >= 85"},
+    {"id": "music_theory", "label": "Music theory core", "weight": 0.93, "complete_when": "fluent && tier in music_fluent,music_master"},
+    {"id": "music_ear", "label": "Ear training · intervals", "weight": 0.94, "complete_when": "fluent && pass_rate >= 85"},
+    {"id": "music_mouth", "label": "Vocal music · mouth", "weight": 0.93, "complete_when": "fluent && pass_rate >= 85"},
+    {"id": "music_brain", "label": "Brain · music memory", "weight": 0.97, "complete_when": "fluent && pass_rate >= 85"},
+    {"id": "music_eye", "label": "Notation · sight reading", "weight": 0.90, "complete_when": "fluent && pass_rate >= 85"},
+    {"id": "music_sense_wire", "label": "Music sense wire", "weight": 0.92, "complete_when": "pass_rate >= 75"}
   ],
   "solid_threshold": 0.92,
   "mastered_threshold": 1.0

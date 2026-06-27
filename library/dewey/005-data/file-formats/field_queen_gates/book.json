@@ -1,0 +1,13 @@
+{
+  "id": "format-field_queen_gates",
+  "title": "Field Queen gates seed",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "sovereign",
+  "extensions": [
+    ".json"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/field_queen_gates.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

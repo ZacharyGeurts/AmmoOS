@@ -374,8 +374,8 @@
         title: "Hold All Gates",
         track: "perimeter",
         forEveryone:
-          "Queen doctrine: nothing optional, hold all gates, MP4 in-tree. Wrong posture disables WebRTC; right posture scores WebRTC through gatekeeper. Wrong posture tells users to install Chrome; right posture ships H.264+AAC via MSE and FFmpeg. field-queen-gates-seed.json lists every capability held:true. queen-browser on RTX is in-engine FieldWebPanel; FieldFox is hardened Gecko now. Hostess 7 SDF plates recall textbook beats — procedural brain metaphor, not fMRI. Navigation → packet field → gatekeeper → honorability → thermo receipt.",
-        teaches: "QUEEN_READY · gate manifest · FieldFox vs queen-browser · Hostess brain lane",
+          "Queen doctrine: nothing optional, hold all gates, MP4 in-tree. Wrong posture disables WebRTC; right posture scores WebRTC through gatekeeper. Wrong posture tells users to install Chrome; right posture ships H.264+AAC via MSE and FFmpeg. field-queen-gates-seed.json lists every capability held:true. queen-browser on RTX is in-engine FieldWebPanel; Queen Browser is hardened Gecko now. Hostess 7 SDF plates recall textbook beats — procedural brain metaphor, not fMRI. Navigation → packet field → gatekeeper → honorability → thermo receipt.",
+        teaches: "QUEEN_READY · gate manifest · Queen Browser · Hostess brain lane",
         keyPoints: [
           "WebGL/WebGPU stay on — thermo per context via Thermal Governor",
           "MP4 mandatory — queen_verdict returns MP4_MISSING if absent",

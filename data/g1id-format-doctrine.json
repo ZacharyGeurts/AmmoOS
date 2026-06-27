@@ -3,7 +3,13 @@
   "title": "G1ID — Geometric Identity (This One)",
   "extension": ".g1id",
   "media_type": "application/vnd.ironclad.g1id+json",
-  "motto": "Cold file, 3D proportions only — this one hardened, plate preserved.",
+  "motto": "Cold file, 3D proportions only — this one hardened, plate preserved. Time is linear; sovereign-time seals, never t in geometry.",
+  "time_is_linear": {
+    "declaration": "Time is linear.",
+    "citation": "ironclad:time:1",
+    "geometry_axes": ["x", "y", "z"],
+    "forbidden_in_geometry": ["t", "timestamp", "wall_clock"]
+  },
   "thermal": {
     "policy": "cold_only",
     "hot_forbidden": true,

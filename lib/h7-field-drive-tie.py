@@ -28,6 +28,11 @@ BRAIN_CORPUS_BOOKS: tuple[dict[str, str], ...] = (
     {"id": "h7-imagine-field-corpus", "corpus": "imagine", "title": "Hostess7 Imagine Field Corpus", "author": "Hostess7", "category": "art", "dewey": "700"},
     {"id": "h7-beyond-field-corpus", "corpus": "beyond", "title": "Hostess7 Beyond Field Corpus", "author": "Hostess7", "category": "philosophy", "dewey": "100"},
     {"id": "h7-world-field-corpus", "corpus": "world", "title": "Hostess7 World Brief Corpus", "author": "Hostess7", "category": "civics", "dewey": "320"},
+    {"id": "h7-k12-field-corpus", "corpus": "k12", "title": "Hostess7 K-12 Textbook Corpus", "author": "Hostess7 Education", "category": "education", "dewey": "370"},
+    {"id": "h7-security-field-corpus", "corpus": "security", "title": "Hostess7 Security & Network Corpus", "author": "Hostess7 / NEXUS-Shield", "category": "security", "dewey": "005.8"},
+    {"id": "h7-vision-field-corpus", "corpus": "vision", "title": "Hostess7 Vision & Motion Corpus", "author": "Hostess7", "category": "vision", "dewey": "006.3"},
+    {"id": "h7-memes-field-corpus", "corpus": "memes", "title": "Hostess7 Memes Corpus", "author": "Hostess7", "category": "culture", "dewey": "302"},
+    {"id": "h7-people-field-corpus", "corpus": "people", "title": "Hostess7 People Registry Corpus", "author": "Hostess7", "category": "social", "dewey": "305"},
 )
 
 
@@ -139,7 +144,26 @@ def corpus_text(corpus_id: str) -> str:
             f"Source: {path}",
             "",
         ]
-        for dom in _corpus_domains(doc):
+        domains = _corpus_domains(doc)
+        if not domains:
+            if doc.get("disclaimer"):
+                lines.append(str(doc["disclaimer"]))
+                lines.append("")
+            stats = []
+            for key in ("textbook_count", "fetched_count", "entity_count", "file_count"):
+                if doc.get(key) is not None:
+                    stats.append(f"{key}: {doc[key]}")
+            if stats:
+                lines.append("## Corpus stats")
+                lines.append(", ".join(stats))
+                lines.append("")
+            for key in ("by_grade", "by_subject", "training"):
+                val = doc.get(key)
+                if val:
+                    lines.append(f"## {key}")
+                    lines.append(json.dumps(val, ensure_ascii=False) if isinstance(val, dict) else str(val))
+                    lines.append("")
+        for dom in domains:
             title = dom.get("title") or dom.get("name") or dom.get("id") or "Section"
             body = dom.get("body") or dom.get("text") or dom.get("summary") or dom.get("why") or ""
             if not body and dom.get("url"):
@@ -380,6 +404,22 @@ def organize_h7_to_dewey(*, dry_run: bool = False, classify_fn: Any = None) -> d
         try:
             dest_dir.mkdir(parents=True, exist_ok=True)
             path.rename(dest)
+            dewey_lib = None
+            try:
+                tie_py = INSTALL / "lib" / "field-dewey-library.py"
+                if tie_py.is_file():
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location("field_dewey_tie", tie_py)
+                    if spec and spec.loader:
+                        dewey_lib = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(dewey_lib)
+            except Exception:
+                dewey_lib = None
+            if dewey_lib and hasattr(dewey_lib, "ensure_h7c_path"):
+                h7c = dewey_lib.ensure_h7c_path(dest)
+                if h7c.suffix.lower() == ".h7c":
+                    row["h7c"] = str(h7c)
+                    row["converted"] = True
             moved.append(row)
         except OSError as exc:
             errors.append({**row, "error": str(exc)})

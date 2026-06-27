@@ -10,15 +10,26 @@ FINAL_EAR="${FINAL_EAR_ROOT:-${SG}/Final_Ear}"
 ZOCR="${ZOCR_ROOT:-${SG}/ZNEWOCR}"
 ZNEWOCR="${ZNEWOCR_ROOT:-${ZOCR}}"
 WORLD_REDATA="${WORLD_REDATA_ROOT:-${SG}/World_Redata}"
-STATE="${NEXUS_STATE_DIR:-${QUEEN}/.nexus-state}"
+_state_explicit=0
+[[ -n "${NEXUS_STATE_DIR:-}" ]] && _state_explicit=1
+_state_saved="${NEXUS_STATE_DIR:-}"
+# shellcheck source=/dev/null
+source "${ROOT}/lib/nexus-common.sh"
+export NEXUS_INSTALL_ROOT="${ROOT}"
+export NEXUS_FIELD_STANDALONE=1
+nexus_init_runtime_paths
+if [[ "$_state_explicit" -eq 1 ]]; then
+  export NEXUS_STATE_DIR="$_state_saved"
+fi
+unset _state_explicit _state_saved
+STATE="${NEXUS_STATE_DIR}"
+
 PY="${QUEEN}/scripts/queen-py"
 PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
 EYE_PORT="${ZOCR_PORT:-${FINAL_EYE_PORT:-9479}}"
 WORLD_PORT="${QUEEN_WORLD_PORT:-9481}"
 
 export SG_ROOT="${SG}"
-export NEXUS_INSTALL_ROOT="${ROOT}"
-export NEXUS_STATE_DIR="${STATE}"
 export NEXUS_FIELD_STANDALONE=1
 export QUEEN_ROOT="${QUEEN}"
 export FINAL_EYE_ROOT="${FINAL_EYE}"
@@ -34,8 +45,26 @@ export GROK16_ROOT="${GROK16_ROOT:-${SG}/Grok16}"
 export NEXUS_FIELD_BROWSER_QUEEN=1
 export HOSTESS7_ANGEL_MANDATE=1
 export FINAL_EYE_ASSIST=1
+export QUEEN_WEB_SHELL=1
+export QUEEN_SKIP_RTX_BOOT=1
+export NEXUS_EMBED_PANEL_IN_ENGINE=0
+export QUEEN_BROWSER_URL="http://127.0.0.1:${WORLD_PORT}/world/browser.html"
+export QUEEN_BROWSER_START="http://127.0.0.1:${PANEL_PORT}/field"
+export QUEEN_BROWSER_HOME="http://127.0.0.1:${PANEL_PORT}/field"
 
 mkdir -p "${STATE}"
+
+# EXTREME host tier — enable offensive defenses (autokill, re-kill, paranoia, Hell Kit).
+# shellcheck source=/dev/null
+source "${ROOT}/lib/nexus-settings.sh"
+if grep -q '"security_level": "extreme"' "${ROOT}/state/host-security-tier.json" 2>/dev/null; then
+  nexus_settings_apply_extreme_defaults || true
+else
+  nexus_host_extreme_apply_if_eligible || nexus_settings_apply_consumer_defaults || true
+fi
+if [[ "$(nexus_settings_get NEXUS_PARANOIA_MODE)" == "1" ]]; then
+  "${PY:-python3}" "${ROOT}/lib/field-toolkit-db.py" toggle paranoia_mode on >/dev/null 2>&1 || true
+fi
 
 # Legacy Latest/NEXUS-Shield panel (often root-owned) blocks :9477 until stopped.
 if pgrep -f '/Latest/NEXUS-Shield/lib/threat-panel-http.py' >/dev/null 2>&1; then
@@ -60,8 +89,23 @@ echo "  World_Redata ${WORLD_REDATA}"
 echo "  Install     ${ROOT}"
 echo ""
 
+# Vestigial cleanup + ZNetwork with us — replace legacy networking on stack start.
+if [[ -f "${ROOT}/lib/nexus-vestigial-cleanup.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/nexus-vestigial-cleanup.sh"
+  nexus_vestigial_cleanup_run 2>/dev/null || true
+fi
+# shellcheck source=/dev/null
+source "${ROOT}/lib/znetwork-field.sh"
+export NEXUS_ZNETWORK_PROMPT=0
+nexus_znetwork_startup_with_us 2>/dev/null || nexus_znetwork_publish 2>/dev/null || true
+
 echo "=== sense package meld ==="
 "${PY}" "${ROOT}/lib/field-sense-package-meld.py" meld 2>/dev/null || true
+
+export NEXUS_ZNETWORK=1
+export NEXUS_ZNETWORK_PROMPT=0
+export NEXUS_ZNETWORK_NO_SUDO=1
 
 NEXUS_ZNETWORK_PROMPT=0 bash "${ROOT}/nexus.sh" --no-browser --no-tray || {
   echo "WARN: NEXUS panel start failed — see ${STATE}/panel-http.log" >&2
@@ -70,6 +114,12 @@ NEXUS_ZNETWORK_PROMPT=0 bash "${ROOT}/nexus.sh" --no-browser --no-tray || {
 "${QUEEN}/scripts/run-queen.sh" || {
   echo "WARN: Queen start failed — see ${QUEEN}/.final-eye.log" >&2
 }
+
+if [[ -f "${ROOT}/lib/queen-layer-boot.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/queen-layer-boot.sh"
+  nexus_queen_layer_install_autostart 2>/dev/null || true
+fi
 
 ready=0
 for _ in $(seq 1 40); do
@@ -101,17 +151,21 @@ echo "  Queen Browser  http://127.0.0.1:${WORLD_PORT}/world/browser.html"
 
 if [[ "${NEXUS_FIELD_LAUNCH_BROWSER:-1}" == "1" ]]; then
   echo ""
-  echo "=== Launch integrated Queen browser ==="
+  echo "=== Launch Queen integrated field browser ==="
   pkill -f "${QUEEN}/build/rtx/bin/Linux/queen-browser" 2>/dev/null || true
-  sleep 0.35
+  export QUEEN_NO_OS_BROWSER=1
+  export QUEEN_WEB_SHELL=1
+  export QUEEN_SKIP_RTX_BOOT=1
+  export NEXUS_EMBED_PANEL_IN_ENGINE=0
+  export NEXUS_C2_DESKTOP_LAUNCH=1
+  export NEXUS_C2_KIOSK=1
   PY_LAUNCH="${PY:-pythong}"
   if command -v "${PY_LAUNCH}" >/dev/null 2>&1; then
-    launch_out="$("${PY_LAUNCH}" "${ROOT}/lib/field-queen-browser-open.py" open 2>/dev/null || true)"
+    launch_out="$("${PY_LAUNCH}" "${ROOT}/lib/queen-integrated-browser.py" open 2>/dev/null || true)"
     if echo "${launch_out}" | grep -q '"ok": true'; then
-      echo "  Integrated browser launched (RTX shell or Queen tab queue)"
+      echo "  Queen Field Gecko + Webbrowser shell (no comp shader · no OS browser)"
     else
-      echo "  WARN: integrated browser launch incomplete — open manually:" >&2
-      echo "    http://127.0.0.1:${WORLD_PORT}/world/browser.html" >&2
+      echo "  WARN: integrated browser launch incomplete — ${launch_out}" >&2
     fi
   fi
 fi

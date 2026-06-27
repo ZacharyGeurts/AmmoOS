@@ -1,19 +1,22 @@
 {
+  "schema": "dewey-shelf/v1",
+  "shelf": "700-arts",
   "code": "700",
   "title": "Arts & recreation",
-  "slug": "700-arts",
-  "count": 1,
-  "updated": "2026-06-24T03:12:05Z",
+  "updated": "2026-06-27T12:37:26Z",
+  "format_primary": "h7c",
+  "book_count": 1,
+  "h7c_count": 0,
   "books": [
     {
       "id": "h7-imagine-field-corpus",
       "title": "Hostess7 Imagine Field Corpus",
       "author": "Hostess7",
       "dewey": "700",
-      "ein": "H7-FIELD-bc069fa2981d",
       "format": "field-corpus",
-      "ready": true,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     }
   ]
 }

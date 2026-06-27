@@ -1,10 +1,12 @@
 #!/usr/bin/env pythong
 """Local threat panel server — HTTP on loopback only (Hostess7-secured)."""
 
+import importlib.util
 import json
 import os
 import subprocess
 import sys
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -999,6 +1001,8 @@ def _spawn_nexus_update_apply(
     previous: str,
     tarball_url: str = "",
     update_mode: str = "release",
+    apply_via: str = "",
+    catalog_url: str = "",
 ) -> bool:
     apply_sh = INSTALL_ROOT / "lib" / "nexus-update-apply.sh"
     if not apply_sh.is_file() and git_dir:
@@ -1024,6 +1028,10 @@ def _spawn_nexus_update_apply(
     })
     if tarball_url:
         env["NEXUS_UPDATE_TARBALL_URL"] = tarball_url
+    if apply_via:
+        env["NEXUS_UPDATE_APPLY_VIA"] = apply_via
+    if catalog_url:
+        env["NEXUS_UPDATE_CATALOG_URL"] = catalog_url
     if git_dir:
         env["NEXUS_UPDATE_GIT_DIR"] = str(git_dir)
     if install_sh and install_sh.is_file():
@@ -1168,12 +1176,24 @@ def _queen_ball_dispatch(script: Path, body: dict | None = None, *, timeout: int
         return {"ok": False, "error": "dispatch_failed"}
 
 
+def _grok16_root() -> Path:
+    env = os.environ.get("GROK16_ROOT", "").strip()
+    if env:
+        return Path(env).expanduser()
+    sg = Path(os.environ.get("SG_ROOT", "")).expanduser()
+    if not sg.is_dir():
+        sg = INSTALL_ROOT.parent if INSTALL_ROOT.name == "NewLatest" else INSTALL_ROOT.parent.parent
+    return sg / "Grok16"
+
+
 def _field_stack_env() -> dict[str, str]:
     env = os.environ.copy()
     env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
     env["NEXUS_STATE_DIR"] = str(STATE_DIR)
     sg = INSTALL_ROOT.parent if INSTALL_ROOT.name == "NewLatest" else INSTALL_ROOT.parent.parent
     env.setdefault("SG_ROOT", str(sg))
+    env.setdefault("GROK16_ROOT", str(_grok16_root()))
+    env.setdefault("GROK16_SG_ROOT", str(sg))
     queen = _queen_root()
     env.setdefault("QUEEN_ROOT", str(queen))
     env.setdefault("FINAL_EYE_ROOT", str(sg / "Final_Eye"))
@@ -1211,6 +1231,27 @@ def _nexus_py_json(script: Path, args: list[str], timeout: int = 25) -> dict:
         return json.loads(proc.stdout or "{}")
     except json.JSONDecodeError:
         return {"ok": False, "error": "script_failed", "detail": (proc.stderr or "")[:200]}
+
+
+def _field_always_files_dispatch(body: dict[str, Any] | None = None, *, timeout: int = 120) -> dict:
+    script = INSTALL_ROOT / "lib" / "field-always-files.py"
+    if not script.is_file():
+        return {"ok": False, "error": "field_always_files_missing", "schema": "field-always-files/v1"}
+    env = _field_stack_env()
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "dispatch"],
+            input=json.dumps(body if isinstance(body, dict) else {}),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+        return json.loads(proc.stdout or "{}")
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "field_always_files_timeout"}
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "field_always_files_dispatch_failed"}
 
 
 _FIELD_OPERATOR_MOD: Any = None
@@ -1465,6 +1506,97 @@ def _tail_file(path: Path, lines: int = 120) -> str:
         return ""
 
 
+_FIELD_POPCORN_MOD: Any = None
+
+
+def _field_popcorn_mod():
+    global _FIELD_POPCORN_MOD
+    if _FIELD_POPCORN_MOD is not None:
+        return _FIELD_POPCORN_MOD
+    script = INSTALL_ROOT / "lib" / "field-popcorn-player.py"
+    if not script.is_file():
+        return None
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("field_popcorn_panel", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _FIELD_POPCORN_MOD = mod
+    return mod
+
+
+def _serve_popcorn_stream(handler: "Handler", query: dict[str, list[str]]) -> None:
+    mod = _field_popcorn_mod()
+    if not mod:
+        handler._send(404, '{"ok":false,"error":"popcorn_missing"}', "application/json")
+        return
+    media_id = str((query.get("id") or [""])[0]).strip()
+    item = mod.resolve_media(media_id) if media_id else None
+    if not item:
+        handler._send(404, '{"ok":false,"error":"media_not_found"}', "application/json")
+        return
+    path = Path(str(item["path"]))
+    try:
+        size = path.stat().st_size
+    except OSError:
+        handler._send(404, '{"ok":false,"error":"media_unreadable"}', "application/json")
+        return
+    mime = str(item.get("mime") or "application/octet-stream")
+    range_hdr = handler.headers.get("Range", "")
+    parsed = mod.parse_range_header(range_hdr, size) if range_hdr else None
+    if parsed:
+        start, end = parsed
+        data = mod.read_range(path, start, end)
+        handler.send_response(206)
+        handler.send_header("Content-Type", mime)
+        handler.send_header("Content-Length", str(len(data)))
+        handler.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        handler.send_header("Accept-Ranges", "bytes")
+        handler.send_header("Cache-Control", "no-store")
+        handler.end_headers()
+        handler.wfile.write(data)
+        return
+    handler.send_response(200)
+    handler.send_header("Content-Type", mime)
+    handler.send_header("Content-Length", str(size))
+    handler.send_header("Accept-Ranges", "bytes")
+    handler.send_header("Cache-Control", "no-store")
+    handler.end_headers()
+    try:
+        with path.open("rb") as fh:
+            while True:
+                chunk = fh.read(1024 * 512)
+                if not chunk:
+                    break
+                handler.wfile.write(chunk)
+    except OSError:
+        pass
+
+
+def _serve_popcorn_thumb(handler: "Handler", query: dict[str, list[str]]) -> None:
+    mod = _field_popcorn_mod()
+    if not mod:
+        handler._send(404, '{"ok":false,"error":"popcorn_missing"}', "application/json")
+        return
+    media_id = str((query.get("id") or [""])[0]).strip()
+    mode = str((query.get("mode") or ["viewing"])[0]).strip().lower()
+    if not media_id:
+        handler._send(400, '{"ok":false,"error":"id_required"}', "application/json")
+        return
+    data = mod.thumb_read(media_id, mode)
+    if not data:
+        handler._send(404, '{"ok":false,"error":"thumb_missing"}', "application/json")
+        return
+    handler.send_response(200)
+    handler.send_header("Content-Type", "image/jpeg")
+    handler.send_header("Content-Length", str(len(data)))
+    handler.send_header("Cache-Control", "no-store")
+    handler.end_headers()
+    handler.wfile.write(data)
+
+
 def _panel_static_mime(path: Path) -> str:
     ext = path.suffix.lower()
     return {
@@ -1614,22 +1746,34 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
-        if path == "/api/sweet-anita":
-            payload = _panel_slice(
-                "sweet_anita_broadcast",
-                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-sweet-anita-broadcast.py", ["json"]),
-                default={"schema": "sweet-anita-broadcast/v1", "status": {"broadcast_ready": False}},
-            )
-            self._send(200, json.dumps(payload), "application/json")
+        if path in ("/api/us-obs-field", "/api/us-broadcaster-field"):
+            script = INSTALL_ROOT / "lib" / "field-broadcaster.py"
+            if not script.is_file():
+                script = INSTALL_ROOT / "lib" / "field-obs.py"
+            if script.is_file():
+                cmd = "us" if script.name == "field-obs.py" else "us"
+                payload = _nexus_py_json(script, [cmd], timeout=45)
+            else:
+                payload = {"schema": "us-broadcaster-field/v1", "ok": False, "error": "broadcaster_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
-        if path == "/api/us-obs-field":
-            payload = _panel_slice(
-                "us_obs_field",
-                live=_nexus_py_json(INSTALL_ROOT / "lib" / "field-sweet-anita-broadcast.py", ["us"]),
-                default={"schema": "us-obs-field/v2"},
-            )
-            self._send(200, json.dumps(payload), "application/json")
+        if path == "/api/field-broadcaster":
+            script = INSTALL_ROOT / "lib" / "field-broadcaster.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            else:
+                payload = {"schema": "field-broadcaster/v1", "ok": False, "error": "broadcaster_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-broadcaster/audio":
+            script = INSTALL_ROOT / "lib" / "field-broadcaster-audio.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=30)
+            else:
+                payload = {"schema": "field-broadcaster-audio/v1", "ok": False, "error": "broadcaster_audio_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
         if path == "/api/obs-threat-posterity":
@@ -1772,6 +1916,48 @@ class Handler(BaseHTTPRequestHandler):
                 default={},
             )
             self._send(200, json.dumps(payload or {}), "application/json")
+            return
+
+        if path == "/api/nexus/catalog":
+            script = INSTALL_ROOT / "lib" / "nexus-file-catalog.py"
+            catalog_fp = INSTALL_ROOT / "data" / "nexus-file-catalog.json"
+            summary = str(query.get("summary", ["0"])[0]).strip() in ("1", "true", "yes")
+            refresh = str(query.get("refresh", ["0"])[0]).strip() in ("1", "true", "yes")
+            if not script.is_file():
+                self._send(500, json.dumps({"ok": False, "error": "catalog_script_missing"}), "application/json")
+                return
+            if summary:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "stats"],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT), "NEXUS_STATE_DIR": str(STATE_DIR)},
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                    payload["ok"] = True
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "catalog_failed", "stderr": (proc.stderr or "")[:400]}
+                self._send(200 if payload.get("ok") else 500, json.dumps(payload), "application/json")
+                return
+            if refresh or not catalog_fp.is_file():
+                proc = subprocess.run(
+                    [sys.executable, str(script), "build", str(catalog_fp)],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                    env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT), "NEXUS_STATE_DIR": str(STATE_DIR)},
+                )
+                if proc.returncode != 0 and not catalog_fp.is_file():
+                    self._send(500, json.dumps({"ok": False, "error": "catalog_build_failed"}), "application/json")
+                    return
+            try:
+                payload = json.loads(catalog_fp.read_text(encoding="utf-8"))
+                payload["ok"] = True
+            except (OSError, json.JSONDecodeError):
+                payload = {"ok": False, "error": "catalog_read_failed"}
+            self._send(200 if payload.get("ok") else 500, json.dumps(payload), "application/json")
             return
 
         if path in ("/api/update/check", "/api/update/status"):
@@ -2060,6 +2246,42 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path == "/api/plate-meld-orchestrator":
+            orch = INSTALL_ROOT / "lib" / "field-plate-meld-orchestrator.py"
+            if orch.is_file():
+                sub = str(query.get("cmd", ["json"])[0]).strip().lower() or "json"
+                if sub in ("run", "cycle", "full", "fast"):
+                    payload = _nexus_py_json(orch, [sub], timeout=240)
+                else:
+                    payload = _nexus_py_json(orch, [sub if sub != "status" else "json"], timeout=120)
+            else:
+                payload = {"schema": "field-plate-meld-orchestrator/v1", "ok": False, "error": "orchestrator_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/plate-meld-orchestrator/"):
+            orch = INSTALL_ROOT / "lib" / "field-plate-meld-orchestrator.py"
+            sub = path[len("/api/plate-meld-orchestrator/") :].strip("/").lower().replace("-", "_")
+            cmd_map = {
+                "audit": "audit",
+                "improve": "improve",
+                "improvements": "improve",
+                "connect": "connect",
+                "bottom": "bottom",
+                "bottom_cpu": "bottom",
+                "report": "report",
+                "cycle": "cycle",
+                "full": "full",
+                "fast": "fast",
+            }
+            cli = cmd_map.get(sub, "json")
+            if orch.is_file():
+                payload = _nexus_py_json(orch, [cli], timeout=240 if cli in ("cycle", "full", "fast") else 120)
+            else:
+                payload = {"ok": False, "error": "orchestrator_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path in ("/api/g16-compiler-sense", "/api/compiler-sense-plate"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "g16-compiler-sense-plate.py", ["json"], timeout=40)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -2087,6 +2309,15 @@ class Handler(BaseHTTPRequestHandler):
 
         if path in ("/api/iron-plate/full-meld", "/api/full-assemblage-meld"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "iron-plate-motion-resolve.py", ["full-meld"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/iron-plate/organize", "/api/iron-plate-organize"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "iron-plate-organize.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload), "application/json")
+            return
+        if path in ("/api/iron-plate/spots", "/api/iron-plate-spot"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "iron-plate-spot-detector.py", ["json"], timeout=20)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -2654,12 +2885,21 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
-        if path in ("/api/field-depth-singularizer", "/api/field-depth-singularizer/cycle", "/api/field-depth-impossibility"):
+        if path in (
+            "/api/field-depth-snap",
+            "/api/field-depth/instant",
+            "/api/field-depth-singularizer/instant",
+            "/api/field-depth-singularizer",
+            "/api/field-depth-singularizer/cycle",
+            "/api/field-depth-impossibility",
+        ):
             script = INSTALL_ROOT / "lib" / "field-depth-singularizer.py"
             if path.endswith("/cycle"):
                 verb = "cycle"
             elif path.endswith("/impossibility"):
                 verb = "impossibility"
+            elif path.endswith("/instant") or path in ("/api/field-depth-snap", "/api/field-depth/instant"):
+                verb = "instant"
             else:
                 verb = "json"
             if script.is_file():
@@ -2700,12 +2940,262 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, "icon not found", "text/plain")
             return
 
+        if path == "/api/field-shell-settings":
+            script = INSTALL_ROOT / "lib" / "field-shell-settings.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=30)
+            else:
+                payload = {"schema": "field-shell-settings/v1", "ok": False, "error": "field_shell_settings_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-c2-bookmarks", "/api/ammo-bookmarks"):
+            script = INSTALL_ROOT / "lib" / "field-c2-bookmark-boot.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=120)
+            else:
+                payload = {"ok": False, "error": "field_c2_bookmark_boot_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-gimp":
+            script = INSTALL_ROOT / "lib" / "field-gimp-bridge.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            else:
+                payload = {"schema": "field-gimp-bridge/v1", "ok": False, "error": "field_gimp_bridge_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-lock", "/api/field-keepass"):
+            script = INSTALL_ROOT / "lib" / "field-keepass.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            else:
+                payload = {"schema": "field-lock/v1", "ok": False, "error": "field_lock_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-obs":
+            script = INSTALL_ROOT / "lib" / "field-obs.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            else:
+                payload = {"schema": "field-obs/v1", "ok": False, "error": "field_obs_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-gpu":
+            script = INSTALL_ROOT / "lib" / "field-gpu-control.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            else:
+                payload = {"schema": "field-gpu-control/v1", "ok": False, "error": "field_gpu_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-c2-taskbar":
+            script = INSTALL_ROOT / "lib" / "field-c2-taskbar-plate.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=30)
+            else:
+                payload = {"schema": "field-c2-taskbar-plate/v1", "ok": False, "error": "field_c2_taskbar_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-vfs", "/api/always-files"):
+            payload = _field_always_files_dispatch({"action": "status"})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-vfs/ai", "/api/always-files/ai"):
+            payload = _field_always_files_dispatch({"action": "ai"})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-vfs/status", "/api/always-files/status"):
+            payload = _field_always_files_dispatch({"action": "status"})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-vfs/sync", "/api/always-files/sync"):
+            payload = _field_always_files_dispatch({"action": "sync"})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-vfs/ghosts", "/api/always-files/ghosts"):
+            limit = int(str(query.get("limit", ["64"])[0]) or "64")
+            payload = _field_always_files_dispatch({"action": "ghosts", "limit": limit})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-vfs/resolve", "/api/always-files/resolve"):
+            rel = str(query.get("path", query.get("file", [""]))[0]).strip()
+            if not rel:
+                self._send(400, json.dumps({"ok": False, "error": "path_required"}), "application/json")
+                return
+            payload = _field_always_files_dispatch({
+                "action": "resolve",
+                "path": rel,
+                "hash": str(query.get("hash", ["0"])[0]).strip().lower() in ("1", "true", "yes"),
+                "inspect": str(query.get("inspect", ["1"])[0]).strip().lower() not in ("0", "false", "no"),
+            })
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-vfs/search", "/api/always-files/search"):
+            q = str(query.get("q", query.get("query", [""]))[0]).strip()
+            if not q:
+                self._send(400, json.dumps({"ok": False, "error": "query_required"}), "application/json")
+                return
+            limit = int(str(query.get("limit", ["48"])[0]) or "48")
+            payload = _field_always_files_dispatch({"action": "search", "query": q, "limit": limit})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-timeshift", "/api/field-timeshift/list"):
+            payload = _field_always_files_dispatch({"action": "timeshift_list"})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-shell-dock":
+            script = INSTALL_ROOT / "lib" / "field-shell-dock.py"
+            if script.is_file():
+                active = str(query.get("active_icon", [""])[0]).strip()
+                args = ["json"] + ([active] if active else [])
+                payload = _nexus_py_json(script, args, timeout=20)
+            else:
+                payload = {"schema": "field-shell-dock/v1", "ok": False, "error": "field_shell_dock_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-audio-settings":
+            script = INSTALL_ROOT / "lib" / "field-audio-settings.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=20)
+            else:
+                payload = {"ok": False, "error": "field_audio_settings_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-popcorn/stream":
+            _serve_popcorn_stream(self, query)
+            return
+
+        if path == "/api/field-popcorn/thumb":
+            _serve_popcorn_thumb(self, query)
+            return
+
+        if path == "/api/field-popcorn":
+            script = INSTALL_ROOT / "lib" / "field-popcorn-player.py"
+            if script.is_file():
+                rescan = str(query.get("rescan", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+                args = ["json"] + (["--rescan"] if rescan else [])
+                payload = _nexus_py_json(script, args, timeout=120)
+            else:
+                payload = {"schema": "field-popcorn/v1", "ok": False, "error": "field_popcorn_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-g16-launch":
+            script = INSTALL_ROOT / "lib" / "field-g16-launch.py"
+            if script.is_file():
+                rescan = str(query.get("rescan", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+                args = ["json"] + (["--rescan"] if rescan else [])
+                payload = _nexus_py_json(script, args, timeout=120)
+            else:
+                payload = {"schema": "field-g16-launch/v1", "ok": False, "error": "field_g16_launch_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-g16-launch/index":
+            script = INSTALL_ROOT / "lib" / "field-g16-launch.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["discover"], timeout=120)
+            else:
+                payload = {"ok": False, "error": "field_g16_launch_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-g16-launch/explore":
+            script = INSTALL_ROOT / "lib" / "field-g16-launch.py"
+            path_arg = str(query.get("path", [""])[0]).strip()
+            if script.is_file() and path_arg:
+                payload = _nexus_py_json(script, ["explore", path_arg], timeout=45)
+            else:
+                payload = {"ok": False, "error": "explore_path_required"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-popcorn/library":
+            script = INSTALL_ROOT / "lib" / "field-popcorn-player.py"
+            kind = str(query.get("kind", ["all"])[0]).strip() or "all"
+            q = str(query.get("q", [""])[0]).strip() or None
+            if script.is_file():
+                args = ["library"] + ([] if kind in ("", "all") else [kind]) + ([q] if q else [])
+                payload = _nexus_py_json(script, args, timeout=90)
+            else:
+                payload = {"ok": False, "error": "field_popcorn_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-popcorn/inspect":
+            script = INSTALL_ROOT / "lib" / "field-popcorn-player.py"
+            media_id = str(query.get("id", [""])[0]).strip()
+            deep = str(query.get("deep", ["1"])[0]).strip().lower() not in ("0", "false", "no")
+            if script.is_file() and media_id:
+                args = ["inspect", media_id] + ([] if deep else ["--light"])
+                payload = _nexus_py_json(script, args, timeout=120)
+            else:
+                payload = {"ok": False, "error": "id_required" if not media_id else "field_popcorn_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-popcorn/details":
+            script = INSTALL_ROOT / "lib" / "field-popcorn-player.py"
+            media_id = str(query.get("id", [""])[0]).strip()
+            if script.is_file() and media_id:
+                payload = _nexus_py_json(script, ["details", media_id], timeout=120)
+            else:
+                payload = {"ok": False, "error": "id_required" if not media_id else "field_popcorn_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-ellie-fier":
+            script = INSTALL_ROOT / "lib" / "field-ellie-fier.py"
+            if script.is_file():
+                do_scan = str(query.get("scan", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+                args = ["json"] + (["--scan"] if do_scan else [])
+                payload = _nexus_py_json(script, args, timeout=180)
+            else:
+                payload = {"schema": "field-ellie-fier/v1", "ok": False, "error": "field_ellie_fier_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-gdb":
+            script = INSTALL_ROOT / "lib" / "field-gdb.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            else:
+                payload = {"schema": "field-gdb/v1", "ok": False, "error": "field_gdb_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path == "/api/field-host-desktop":
             script = INSTALL_ROOT / "lib" / "field-host-desktop.py"
             if script.is_file():
                 payload = _nexus_py_json(script, ["json"], timeout=60)
             else:
                 payload = {"schema": "field-host-desktop/v1", "ok": False, "error": "field_host_desktop_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-taskbar-pins":
+            pins_py = INSTALL_ROOT / "lib" / "field-taskbar-pins.py"
+            if pins_py.is_file():
+                payload = _nexus_py_json(pins_py, ["json"], timeout=15)
+            else:
+                payload = {"schema": "field-taskbar-pins/v1", "ok": False, "error": "taskbar_pins_missing"}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -2718,7 +3208,679 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path in ("/api/compatibility", "/api/compatibility-layers"):
+            layers = INSTALL_ROOT / "lib" / "field-compatibility-layers.py"
+            payload = _nexus_py_json(layers, ["json"], timeout=45) if layers.is_file() else {
+                "schema": "field-compatibility-layers/v1",
+                "ok": False,
+                "hint": "compatibility layers missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/always-optimal", "/api/g16/always-optimal"):
+            ao = _grok16_root() / "lib" / "field-always-optimal.py"
+            payload = _nexus_py_json(ao, ["json"], timeout=30) if ao.is_file() else {
+                "schema": "g16-always-optimal-panel/v1",
+                "ok": False,
+                "hint": "always-optimal module missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/locational-sitrep", "/api/sitrep", "/api/field/locational-sitrep"):
+            ls = INSTALL_ROOT / "lib" / "field-locational-sitrep-plate.py"
+            payload = _nexus_py_json(ls, ["json"], timeout=45) if ls.is_file() else {
+                "schema": "field-locational-sitrep-plate/v1",
+                "ok": False,
+                "hint": "locational-sitrep plate missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/physics-witness", "/api/field/physics-witness"):
+            pw = INSTALL_ROOT / "lib" / "field-physics-witness.py"
+            payload = _nexus_py_json(pw, ["json"], timeout=30) if pw.is_file() else {
+                "schema": "field-physics-witness/v1",
+                "ok": False,
+                "hint": "physics-witness module missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/power-sort", "/api/g16/power-sort"):
+            ps = _grok16_root() / "lib" / "field-power-sort.py"
+            payload = _nexus_py_json(ps, ["json"], timeout=30) if ps.is_file() else {
+                "schema": "g16-power-sort-panel/v1",
+                "ok": False,
+                "hint": "power-sort module missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/combinatorics":
+            layers = INSTALL_ROOT / "lib" / "field-compatibility-layers.py"
+            if layers.is_file():
+                payload = _nexus_py_json(layers, ["json"], timeout=45)
+            else:
+                studio = INSTALL_ROOT / "lib" / "field-combinatorics-studio.py"
+                payload = _nexus_py_json(studio, ["json"], timeout=45) if studio.is_file() else {
+                    "schema": "field-combinatorics-studio/v1",
+                    "ok": False,
+                    "hint": "combinatorics studio missing",
+                }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/chip-battery", "/api/combinatorics/chip-battery"):
+            chip_py = INSTALL_ROOT / "lib" / "field-chip-battery.py"
+            payload = _nexus_py_json(chip_py, ["json"], timeout=45) if chip_py.is_file() else {
+                "schema": "field-chip-battery-panel/v1",
+                "ok": False,
+                "hint": "field-chip-battery missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/chips/combinatronic", "/api/chip-battery/combinatronic"):
+            chip_py = INSTALL_ROOT / "lib" / "field-chip-battery.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            argv = ["combinatronic"]
+            if refresh:
+                argv.append("--refresh")
+            payload = _nexus_py_json(chip_py, argv, timeout=90) if chip_py.is_file() else {
+                "schema": "field-chips-combinatronic/v1",
+                "ok": False,
+                "hint": "field-chip-battery missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/combinatronics/growth", "/api/combinatronics-growth"):
+            gr_py = INSTALL_ROOT / "lib" / "field-combinatronics-growth.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            argv = ["grow"] if refresh else ["panel"]
+            if refresh:
+                argv.append("--refresh")
+            payload = _nexus_py_json(gr_py, argv, timeout=180) if gr_py.is_file() else {
+                "schema": "field-combinatronics-growth/v1",
+                "ok": False,
+                "hint": "field-combinatronics-growth missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/combinatorics/sequence", "/api/combinatorics-sequence"):
+            seq_py = INSTALL_ROOT / "lib" / "field-combinatorics-sequence.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            argv = ["build"] if refresh else ["panel"]
+            if refresh:
+                argv.append("--refresh")
+            if (qparams.get("no_fill") or ["0"])[0] in ("1", "true", "yes"):
+                argv.append("--no-fill")
+            payload = _nexus_py_json(seq_py, argv, timeout=180) if seq_py.is_file() else {
+                "schema": "field-combinatorics-sequence/v1",
+                "ok": False,
+                "hint": "field-combinatorics-sequence missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/plate-dimensions", "/api/plate/dimensions"):
+            dim_py = INSTALL_ROOT / "lib" / "field-plate-dimensions.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            full = (qparams.get("full") or ["0"])[0] in ("1", "true", "yes")
+            argv = ["build"] if refresh else ["panel"]
+            if full:
+                argv.append("--full")
+            payload = _nexus_py_json(dim_py, argv, timeout=120) if dim_py.is_file() else {
+                "schema": "field-plate-dimensions/v1",
+                "ok": False,
+                "hint": "field-plate-dimensions missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/ammolang"):
+            aml_py = INSTALL_ROOT / "lib" / "field-ammolang.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            sub = path.split("/api/ammolang", 1)[-1].strip("/") or "panel"
+            if sub in ("compile", "interpret", "trace", "run") and self.command == "POST":
+                try:
+                    length = int(self.headers.get("Content-Length", "0") or "0")
+                    raw = self.rfile.read(length).decode("utf-8", errors="replace") if length else "{}"
+                    body = json.loads(raw or "{}")
+                except (json.JSONDecodeError, ValueError):
+                    body = {}
+                if aml_py.is_file():
+                    spec = importlib.util.spec_from_file_location("ammolang_http", aml_py)
+                    if spec and spec.loader:
+                        mod = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(mod)
+                        body["action"] = sub
+                        body["refresh"] = refresh
+                        payload = mod.dispatch(body) if hasattr(mod, "dispatch") else {"ok": False}
+                    else:
+                        payload = {"ok": False, "error": "ammolang_load_failed"}
+                else:
+                    payload = {"schema": "field-ammolang/v1", "ok": False, "hint": "field-ammolang missing"}
+                self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+                return
+            argv = ["panel"]
+            if refresh:
+                argv.append("--refresh")
+            payload = _nexus_py_json(aml_py, argv, timeout=120) if aml_py.is_file() else {
+                "schema": "field-ammolang/v1",
+                "ok": False,
+                "hint": "field-ammolang missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/combinatronic/spider-wire") or path.startswith("/api/combinatronic-spider-wire"):
+            sw_py = INSTALL_ROOT / "lib" / "field-combinatronic-spider-wire.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            optimize = (qparams.get("optimize") or ["1"])[0] in ("1", "true", "yes")
+            argv = ["build" if refresh else "panel"]
+            if not optimize:
+                argv.append("--no-optimize")
+            if refresh:
+                argv.append("--refresh")
+            payload = _nexus_py_json(sw_py, argv, timeout=120) if sw_py.is_file() else {
+                "schema": "field-combinatronic-spider-wire/v1",
+                "ok": False,
+                "hint": "field-combinatronic-spider-wire missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/combinatronic/visuals") or path.startswith("/api/combinatronic-visuals"):
+            vis_py = INSTALL_ROOT / "lib" / "field-combinatronic-visuals.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            sub = path.split("/api/combinatronic/visuals", 1)[-1].strip("/") or path.split("/api/combinatronic-visuals", 1)[-1].strip("/")
+            refresh = (qparams.get("refresh") or qparams.get("generate") or ["0"])[0] in ("1", "true", "yes")
+            repair = (qparams.get("repair") or ["0"])[0] in ("1", "true", "yes")
+            argv = ["manifest"]
+            if sub in ("inventory", "verify", "registry", "repair", "pattern"):
+                argv = [sub]
+                if sub == "repair":
+                    if (qparams.get("mirror") or ["0"])[0] in ("1", "true", "yes"):
+                        argv = ["repair", "mirror"]
+                    elif (qparams.get("all") or ["0"])[0] in ("1", "true", "yes"):
+                        argv = ["repair", "--all"]
+                if sub == "pattern":
+                    pat = str((qparams.get("id") or qparams.get("pattern") or ["chip_png"])[0])
+                    argv = ["pattern", pat]
+            elif refresh:
+                argv = ["generate"]
+            elif repair:
+                argv = ["repair"]
+            payload = _nexus_py_json(vis_py, argv, timeout=240) if vis_py.is_file() else {
+                "schema": "field-combinatronic-visuals-manifest/v1",
+                "ok": False,
+                "hint": "field-combinatronic-visuals missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/g16/universal-combinatronic", "/api/g16-universal-combinatronic"):
+            uni_py = INSTALL_ROOT / "lib" / "field-g16-universal-combinatronic.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            argv = ["combinatronic"]
+            if refresh:
+                argv.append("--refresh")
+            payload = _nexus_py_json(uni_py, argv, timeout=120) if uni_py.is_file() else {
+                "schema": "field-g16-universal-combinatronic/v1",
+                "ok": False,
+                "hint": "field-g16-universal-combinatronic missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/steel-neural-plates") or path.startswith("/api/combinatronic/steel-plates"):
+            snp_py = INSTALL_ROOT / "lib" / "field-steel-neural-plates.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes") or path.endswith("/build")
+            force = (qparams.get("force") or ["0"])[0] in ("1", "true", "yes")
+            sub = path.split("/api/steel-neural-plates", 1)[-1].strip("/") or path.split("/api/combinatronic/steel-plates", 1)[-1].strip("/") or "panel"
+            if sub in ("build", "publish", "battery"):
+                argv = ["build"]
+            elif sub in ("slice",):
+                argv = ["slice"]
+            elif sub in ("verify",):
+                argv = ["verify"]
+            else:
+                argv = ["panel"]
+            if refresh:
+                argv.append("--refresh")
+            if force:
+                argv.append("--force")
+            payload = _nexus_py_json(snp_py, argv, timeout=180) if snp_py.is_file() else {
+                "schema": "field-steel-neural-plates/v1",
+                "ok": False,
+                "hint": "field-steel-neural-plates missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/combinamatrix", "/api/combinamatrix/build"):
+            cm_py = INSTALL_ROOT / "lib" / "field-combinamatrix.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes") or path.endswith("/build")
+            argv = ["build"] if refresh else ["panel"]
+            if refresh:
+                argv.append("--refresh")
+            payload = _nexus_py_json(cm_py, argv, timeout=180) if cm_py.is_file() else {
+                "schema": "field-combinamatrix/v1",
+                "ok": False,
+                "hint": "field-combinamatrix missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/universal-neural"):
+            un_py = INSTALL_ROOT / "lib" / "field-universal-neural.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            sub = path.split("/api/universal-neural", 1)[-1].strip("/") or "panel"
+            teach = (qparams.get("teach") or ["0"])[0] in ("1", "true", "yes") or sub == "teach"
+            force = (qparams.get("force") or ["0"])[0] in ("1", "true", "yes")
+            if not un_py.is_file():
+                self._send(200, json.dumps({"schema": "field-universal-neural/v1", "ok": False, "hint": "field-universal-neural missing"}, ensure_ascii=False), "application/json")
+                return
+            if sub in ("teach", "curriculum"):
+                argv = ["teach"] + (["--force"] if force else [])
+            elif sub in ("build", "universal"):
+                argv = ["build"] + (["--teach"] if teach else [])
+            else:
+                argv = ["panel"] + (["--teach"] if teach else [])
+            payload = _nexus_py_json(un_py, argv, timeout=300)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/combinatronic/balance", "/api/combinatronic-balance"):
+            bal_py = INSTALL_ROOT / "lib" / "field-combinatronic-balance.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            sub = str((qparams.get("cmd") or ["panel"])[0]).strip().lower()
+            force = (qparams.get("force") or ["0"])[0] in ("1", "true", "yes")
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            if sub in ("fingerprint", "fp"):
+                argv = ["fingerprint"]
+            elif sub in ("sync", "sync_all", "entries"):
+                argv = ["sync"]
+                if refresh:
+                    argv.append("--refresh")
+                if force:
+                    argv.append("--force")
+            elif sub in ("gate", "should"):
+                argv = ["gate"] + (["--force"] if force else [])
+            elif sub in ("verify",):
+                argv = ["verify"]
+            elif sub in ("content", "read", "identify", "id"):
+                cid = str((qparams.get("id") or qparams.get("book") or [""])[0]).strip()
+                fmt = str((qparams.get("format") or [""])[0]).strip()
+                collection = str((qparams.get("collection") or [""])[0]).strip()
+                argv = [sub if sub in ("identify", "id") else "content", cid] if cid else ["panel"]
+                if fmt:
+                    argv.extend(["--format", fmt])
+                if collection:
+                    argv.extend(["--collection", collection])
+            elif sub in ("lookup",):
+                bid = str((qparams.get("balance_id") or qparams.get("id") or [""])[0]).strip()
+                argv = ["lookup", bid] if bid else ["panel"]
+            else:
+                argv = ["panel"]
+            timeout = 300 if sub in ("sync", "sync_all", "entries") else 60
+            payload = _nexus_py_json(bal_py, argv, timeout=timeout) if bal_py.is_file() else {
+                "schema": "field-combinatronic-balance-panel/v1",
+                "ok": False,
+                "hint": "field-combinatronic-balance missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/g16/combinatronic-rebalance", "/api/g16-combinatronic-rebalance"):
+            reb_py = INSTALL_ROOT / "lib" / "g16-combinatronic-rebalance.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            action = str((qparams.get("action") or ["optimal"])[0]).strip().lower()
+            refresh = (qparams.get("refresh") or ["1"])[0] in ("1", "true", "yes")
+            full = (qparams.get("full") or ["0"])[0] in ("1", "true", "yes")
+            argv = [action]
+            if refresh:
+                argv.append("--refresh")
+            if full:
+                argv.append("--full")
+            payload = _nexus_py_json(reb_py, argv, timeout=300) if reb_py.is_file() else {
+                "schema": "g16-combinatronic-rebalance/v1",
+                "ok": False,
+                "hint": "g16-combinatronic-rebalance missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/program/combinatronic", "/api/program-combinatronic"):
+            prog_py = INSTALL_ROOT / "lib" / "field-program-combinatronic.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            lang = str((qparams.get("lang") or [""])[0]).strip()
+            command = str((qparams.get("command") or [""])[0]).strip()
+            if lang and command:
+                argv = ["boil", lang, command]
+            else:
+                argv = ["combinatronic"]
+                if refresh:
+                    argv.append("--refresh")
+            payload = _nexus_py_json(prog_py, argv, timeout=90) if prog_py.is_file() else {
+                "schema": "field-program-combinatronic/v1",
+                "ok": False,
+                "hint": "field-program-combinatronic missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/dewey-library"):
+            dewey_py = INSTALL_ROOT / "lib" / "field-dewey-library.py"
+            if not dewey_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-dewey-library/v1",
+                    "ok": False,
+                    "hint": "field-dewey-library missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            if path.endswith("/migrate") or path.endswith("/convert"):
+                argv = ["migrate"]
+            elif path.endswith("/tree") or path.endswith("/shelves"):
+                argv = ["tree"]
+            elif path.endswith("/books"):
+                argv = ["books"]
+            else:
+                argv = ["panel"]
+            payload = _nexus_py_json(dewey_py, argv, timeout=300)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/library-registry"):
+            reg_py = INSTALL_ROOT / "lib" / "field-library-registry.py"
+            if not reg_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-library-registry/v1",
+                    "ok": False,
+                    "hint": "field-library-registry missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            if path.startswith("/api/library-registry/search"):
+                q = str(qparams.get("q", [""])[0])
+                payload = _nexus_py_json(reg_py, ["search", q], timeout=60)
+            elif path.endswith("/build") or path.endswith("/sync"):
+                payload = _nexus_py_json(reg_py, ["build"], timeout=300)
+            else:
+                payload = _nexus_py_json(reg_py, ["panel"], timeout=120)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/extensive-library"):
+            ext_py = INSTALL_ROOT / "lib" / "field-extensive-library.py"
+            if not ext_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-extensive-library/v1",
+                    "ok": False,
+                    "hint": "field-extensive-library missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            if path.startswith("/api/extensive-library/search"):
+                q = str(qparams.get("q", [""])[0])
+                payload = _nexus_py_json(ext_py, ["search", q], timeout=60)
+            elif path.endswith("/build") or path.endswith("/sync"):
+                refresh = (qparams.get("refresh") or ["1"])[0] in ("1", "true", "yes")
+                argv = ["build"] if refresh else ["panel"]
+                payload = _nexus_py_json(ext_py, argv, timeout=300)
+            else:
+                payload = _nexus_py_json(ext_py, ["panel"], timeout=90)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/h7c"):
+            h7c_py = INSTALL_ROOT / "lib" / "field-h7c-compression.py"
+            if not h7c_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-h7c-panel/v1",
+                    "ok": False,
+                    "hint": "field-h7c-compression missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            sub = path.split("/api/h7c", 1)[-1].strip("/") or "panel"
+            if sub in ("balance", "table"):
+                argv = ["balance"]
+            elif sub in ("verify",):
+                argv = ["verify"]
+            elif sub in ("optimize", "optimizer"):
+                argv = ["optimize"]
+            elif sub == "pack" and qparams.get("src"):
+                src = str((qparams.get("src") or [""])[0])
+                dest = str((qparams.get("dest") or [src + ".h7c"])[0])
+                argv = ["pack", src, dest]
+            elif sub == "unpack" and qparams.get("file"):
+                argv = ["unpack", str((qparams.get("file") or [""])[0])]
+            else:
+                argv = ["panel"]
+            timeout = 120 if sub in ("pack", "unpack", "optimize", "optimizer") else 60
+            payload = _nexus_py_json(h7c_py, argv, timeout=timeout)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/file-formats"):
+            ff_py = INSTALL_ROOT / "lib" / "field-file-formats.py"
+            if not ff_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-file-formats-panel/v1",
+                    "ok": False,
+                    "hint": "field-file-formats missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            sub = path.split("/api/file-formats", 1)[-1].strip("/") or "panel"
+            if sub in ("build", "icons") or (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes"):
+                argv = ["build"] if sub != "icons" else ["icons"]
+            elif sub == "table":
+                argv = ["table"]
+            elif sub.startswith("detail"):
+                fid = str(qparams.get("id", [""])[0])
+                argv = ["detail", fid] if fid else ["panel"]
+            else:
+                argv = ["panel"]
+            payload = _nexus_py_json(ff_py, argv, timeout=180)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/best-sort"):
+            bs_py = INSTALL_ROOT / "lib" / "field-best-sort.py"
+            if not bs_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-best-sort-panel/v1",
+                    "ok": False,
+                    "hint": "field-best-sort missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            sub = path.split("/api/best-sort", 1)[-1].strip("/") or "panel"
+            if sub == "meld":
+                argv = ["meld"]
+            elif sub == "resolve":
+                ctx = str(qparams.get("context", ["format_table"])[0])
+                argv = ["resolve", ctx]
+            else:
+                argv = ["panel"]
+            payload = _nexus_py_json(bs_py, argv, timeout=60)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/device-visuals"):
+            dv_py = INSTALL_ROOT / "lib" / "field-device-visuals.py"
+            if not dv_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-device-visuals-panel/v1",
+                    "ok": False,
+                    "hint": "field-device-visuals missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or qparams.get("generate") or ["0"])[0] in ("1", "true", "yes")
+            sub = path.split("/api/device-visuals", 1)[-1].strip("/") or "panel"
+            if sub in ("generate", "build") or refresh:
+                argv = ["generate"]
+            elif sub == "inventory":
+                argv = ["inventory"]
+            else:
+                argv = ["panel"]
+            payload = _nexus_py_json(dv_py, argv, timeout=300)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/cpu-library"):
+            cpu_py = INSTALL_ROOT / "lib" / "field-cpu-library.py"
+            if not cpu_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-cpu-library/v1",
+                    "ok": False,
+                    "hint": "field-cpu-library missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            if path.startswith("/api/cpu-library/search"):
+                q = str(qparams.get("q", [""])[0])
+                payload = _nexus_py_json(cpu_py, ["search", q], timeout=45)
+            elif path.startswith("/api/cpu-library/detail"):
+                eid = str(qparams.get("id", [""])[0])
+                payload = _nexus_py_json(cpu_py, ["detail", eid], timeout=30)
+            else:
+                payload = _nexus_py_json(cpu_py, ["library"], timeout=60)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-font":
+            font_py = INSTALL_ROOT / "lib" / "field-font-kit.py"
+            payload = _nexus_py_json(font_py, ["panel"], timeout=45) if font_py.is_file() else {
+                "schema": "field-font-panel/v1",
+                "ok": False,
+                "hint": "field-font-kit missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/combinatorics/comb", "/api/combinatorics/charts", "/api/combinatorics/cpus", "/api/combinatorics/meld-design"):
+            comb_py = INSTALL_ROOT / "lib" / "field-combinatorics-comb.py"
+            cmd = {
+                "/api/combinatorics/comb": "json",
+                "/api/combinatorics/charts": "charts",
+                "/api/combinatorics/cpus": "cpus",
+                "/api/combinatorics/meld-design": "meld",
+            }.get(path, "json")
+            payload = _nexus_py_json(comb_py, [cmd], timeout=30) if comb_py.is_file() else {
+                "schema": "field-combinatorics-comb/v1",
+                "ok": False,
+                "hint": "field-combinatorics-comb missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/combinatorics-threat", "/api/combinatorics/rejections"):
+            sg = Path(os.environ.get("SG_ROOT", str(INSTALL_ROOT.parent.parent)))
+            combo = sg / "Grok16" / "lib" / "field_combinatorics.py"
+            payload = _nexus_py_json(combo, ["threat"], timeout=30) if combo.is_file() else {
+                "schema": "field-combinatorics-threat/v1",
+                "ok": False,
+                "hint": "field_combinatorics missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/lang-manuals" or path == "/api/lang-manuals/":
+            lm = INSTALL_ROOT / "lib" / "field-lang-manual-reader.py"
+            if lm.is_file():
+                payload = _nexus_py_json(lm, ["catalog", "--save"], timeout=60)
+                if isinstance(payload, dict):
+                    self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+                    return
+            self._send(200, json.dumps({"schema": "field-lang-manuals/v1", "ok": False, "manuals": []}), "application/json")
+            return
+
+        if path.startswith("/api/lang-manuals/"):
+            lm = INSTALL_ROOT / "lib" / "field-lang-manual-reader.py"
+            sub = path[len("/api/lang-manuals/") :].strip("/")
+            parts = sub.split("/") if sub else []
+            lang_id = parts[0] if parts else ""
+            action = parts[1] if len(parts) > 1 else ""
+            if lm.is_file() and lang_id:
+                if action == "text":
+                    proc = subprocess.run(
+                        [sys.executable, str(lm), "text", lang_id],
+                        capture_output=True,
+                        text=True,
+                        timeout=90,
+                        env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT), "NEXUS_STATE_DIR": str(STATE_DIR)},
+                    )
+                    self._send(200, proc.stdout or "", "text/plain; charset=utf-8")
+                    return
+                if action == "figure" and len(parts) > 2:
+                    fig_id = parts[2]
+                    payload = _nexus_py_json(lm, ["read", lang_id], timeout=90)
+                    fig = (payload.get("figures") or {}).get(fig_id) if isinstance(payload, dict) else None
+                    if fig and fig.get("data_url"):
+                        self._send(200, json.dumps(fig), "application/json")
+                        return
+                    self._send(404, '{"ok":false,"error":"figure_missing"}', "application/json")
+                    return
+                if action == "generate" and self.command == "POST":
+                    payload = _nexus_py_json(
+                        INSTALL_ROOT / "lib" / "field-combinatronic-visuals.py",
+                        ["book", lang_id],
+                        timeout=120,
+                    )
+                    self._send(200, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+                    return
+                payload = _nexus_py_json(lm, ["read", lang_id], timeout=90)
+                if isinstance(payload, dict):
+                    payload.pop("_figures_raw", None)
+                    self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+                    return
+            self._send(404, json.dumps({"ok": False, "error": "manual_not_found"}), "application/json")
+            return
+
+        if path == "/api/znetwork/hostile":
+            hostile_py = INSTALL_ROOT / "lib" / "znetwork-hostile-threat.py"
+            if hostile_py.is_file():
+                payload = _nexus_py_json(hostile_py, ["json"], timeout=25)
+                if isinstance(payload, dict):
+                    self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+                    return
+            self._send(
+                200,
+                json.dumps({
+                    "schema": "znetwork-hostile-threat/v1",
+                    "ok": False,
+                    "hint": "znetwork-hostile-threat.py missing",
+                }),
+                "application/json",
+            )
+            return
+
         if path == "/api/znetwork":
+            orch = INSTALL_ROOT / "lib" / "znetwork-orchestrator.py"
+            if orch.is_file():
+                posture = _nexus_py_json(orch, ["json"], timeout=35)
+                if isinstance(posture, dict) and posture.get("schema"):
+                    self._send(200, json.dumps(posture, ensure_ascii=False), "application/json")
+                    return
             if ZNETWORK_STATUS.is_file():
                 try:
                     self._send(200, ZNETWORK_STATUS.read_text(encoding="utf-8"), "application/json")
@@ -2971,6 +4133,15 @@ class Handler(BaseHTTPRequestHandler):
                 default={"schema": "signals-field/v1", "stats": {}, "antennas": []},
             )
             self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/stress-terror-discern":
+            script = INSTALL_ROOT / "lib" / "field-stress-terror-discern.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=20)
+            else:
+                payload = {"schema": "field-stress-terror-discern/v1", "ok": False, "error": "stress_terror_discern_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
         if path in ("/api/field/field", "/api/field/plate-field"):
@@ -3238,6 +4409,26 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path in ("/api/field-filesystem", "/api/filesystem-update"):
+            fs_py = INSTALL_ROOT / "lib" / "field-filesystem-update.py"
+            payload = _nexus_py_json(fs_py, ["json"], timeout=45) if fs_py.is_file() else {
+                "schema": "field-filesystem-update/v1",
+                "ok": False,
+                "hint": "field-filesystem-update missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/diagnostic-mode", "/api/field-diagnostic"):
+            diag_py = INSTALL_ROOT / "lib" / "field-diagnostic-mode.py"
+            payload = _nexus_py_json(diag_py, ["json"], timeout=120) if diag_py.is_file() else {
+                "schema": "field-diagnostic-mode/v1",
+                "ok": False,
+                "hint": "field-diagnostic-mode missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path == "/api/hostess-profile":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess-profile.py", ["json"])
             self._send(200, json.dumps(payload), "application/json")
@@ -3420,12 +4611,185 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(payload), "application/json")
                 return
 
+            if path == "/api/library/librarians":
+                teach = str(query.get("teach", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+                args = ["librarians"]
+                if teach:
+                    args.append("--teach")
+                    lib_id = str(query.get("id", [""])[0]).strip()
+                    if lib_id:
+                        args.extend(["--id", lib_id])
+                payload = _lib_json(args, timeout=60)
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/knowledge":
+                book_id = str(query.get("book", [""])[0]).strip()
+                q = str(query.get("q", [""])[0]).strip()
+                args = ["reader", "knowledge"]
+                if book_id:
+                    args.append(book_id)
+                elif q:
+                    args.extend(["", q])
+                payload = _lib_json(args, timeout=45)
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
             if path == "/api/library/search":
                 q = str(query.get("q", query.get("query", [""]))[0]).strip()
                 if not q:
                     self._send(400, json.dumps({"ok": False, "error": "missing query"}), "application/json")
                     return
                 payload = _lib_json(["search", q])
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/atlas":
+                payload = _lib_json(["atlas"], timeout=90)
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/passages":
+                q = str(query.get("q", query.get("query", [""]))[0]).strip()
+                if not q:
+                    self._send(400, json.dumps({"ok": False, "error": "missing query"}), "application/json")
+                    return
+                payload = _lib_json(["passages", q], timeout=60)
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/topics":
+                payload = _lib_json(["topics"], timeout=45)
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path in ("/api/bugfinder", "/api/code-bugfinder"):
+                bug_py = INSTALL_ROOT / "lib" / "field-code-bugfinder.py"
+                if not bug_py.is_file():
+                    self._send(500, json.dumps({"ok": False, "error": "bugfinder_missing"}), "application/json")
+                    return
+                proc = subprocess.run(
+                    [sys.executable, str(bug_py), "json"],
+                    capture_output=True,
+                    text=True,
+                    timeout=45,
+                    env=env,
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "bugfinder_parse_failed"}
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/bugfinder/scan":
+                target = str(query.get("path", query.get("target", [""]))[0]).strip()
+                if not target:
+                    self._send(400, json.dumps({"ok": False, "error": "missing path"}), "application/json")
+                    return
+                bug_py = INSTALL_ROOT / "lib" / "field-code-bugfinder.py"
+                max_raw = str(query.get("max", ["256"])[0]).strip()
+                max_c = int(max_raw) if max_raw.isdigit() else 256
+                proc = subprocess.run(
+                    [sys.executable, str(bug_py), "scan", target, "--max", str(max_c)],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    env=env,
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "bugfinder_scan_failed", "detail": (proc.stderr or "")[:300]}
+                self._send(200 if payload.get("ok", True) else 500, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/bugfinder/ironclad-cycle":
+                bug_py = INSTALL_ROOT / "lib" / "field-code-bugfinder.py"
+                if not bug_py.is_file():
+                    self._send(500, json.dumps({"ok": False, "error": "bugfinder_missing"}), "application/json")
+                    return
+                max_t = str(query.get("max_targets", ["6"])[0]).strip()
+                max_c = str(query.get("max_compares", ["48"])[0]).strip()
+                args = [sys.executable, str(bug_py), "ironclad-cycle"]
+                if max_t.isdigit():
+                    args.extend(["--max-targets", max_t])
+                if max_c.isdigit():
+                    args.extend(["--max-compares", max_c])
+                proc = subprocess.run(
+                    args,
+                    capture_output=True,
+                    text=True,
+                    timeout=180,
+                    env=env,
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "bugfinder_ironclad_cycle_failed", "detail": (proc.stderr or "")[:300]}
+                self._send(200 if payload.get("ok") else 500, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/bugfinder/kb":
+                q = str(query.get("q", query.get("query", [""]))[0]).strip()
+                if not q:
+                    self._send(400, json.dumps({"ok": False, "error": "missing query"}), "application/json")
+                    return
+                bug_py = INSTALL_ROOT / "lib" / "field-code-bugfinder.py"
+                proc = subprocess.run(
+                    [sys.executable, str(bug_py), "kb", q],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    env=env,
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "bugfinder_kb_failed"}
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/truth":
+                book_id = str(query.get("book", [""])[0]).strip()
+                idx_raw = str(query.get("index", [""])[0]).strip()
+                sentence_text = str(query.get("text", [""])[0]).strip()
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book"}), "application/json")
+                    return
+                truth_script = INSTALL_ROOT / "lib" / "h7-library-truth.py"
+                args = ["sentence", book_id]
+                if idx_raw.isdigit():
+                    args.append(idx_raw)
+                if sentence_text:
+                    args.append(sentence_text)
+                proc = subprocess.run(
+                    [sys.executable, str(truth_script), *args],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    env=env,
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "truth_parse_failed", "detail": (proc.stderr or "")[:300]}
+                self._send(200 if payload.get("ok") else 404, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/library/truth/unknown":
+                truth_script = INSTALL_ROOT / "lib" / "h7-library-truth.py"
+                proc = subprocess.run(
+                    [sys.executable, str(truth_script), "unknown"],
+                    capture_output=True,
+                    text=True,
+                    timeout=45,
+                    env=env,
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "unknown_queue_failed"}
                 self._send(200, json.dumps(payload), "application/json")
                 return
 
@@ -3568,7 +4932,47 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(500, json.dumps({"ok": False, "error": "lookup failed"}), "application/json")
             return
 
-        if path in ("/field-talk", "/field-talk/"):
+        if path in ("/control-panel", "/control-panel/"):
+            target = PANEL_DIR / "control-panel.html"
+        elif path in ("/amouranth-live", "/amouranth-live/"):
+            target = PANEL_DIR / "amouranth-live.html"
+        elif path in ("/nexus-calc", "/nexus-calc/"):
+            target = PANEL_DIR / "nexus-calc.html"
+        elif path in ("/nexus-calendar", "/nexus-calendar/"):
+            target = PANEL_DIR / "nexus-calendar.html"
+        elif path in ("/field-gimp", "/field-gimp/"):
+            target = PANEL_DIR / "field-gimp.html"
+        elif path in ("/field-lock", "/field-lock/"):
+            target = PANEL_DIR / "field-lock.html"
+        elif path in ("/field-keepass", "/field-keepass/"):
+            target = PANEL_DIR / "field-lock.html"
+        elif path in ("/field-znetwork", "/field-znetwork/"):
+            target = PANEL_DIR / "field-znetwork.html"
+        elif path in ("/field-lang-manuals", "/field-lang-manuals/"):
+            target = PANEL_DIR / "field-lang-manuals.html"
+        elif path in ("/field-broadcaster", "/field-broadcaster/"):
+            target = PANEL_DIR / "field-broadcaster.html"
+        elif path in ("/field-obs", "/field-obs/"):
+            target = PANEL_DIR / "field-broadcaster.html"
+        elif path in ("/field-gpu", "/field-gpu/"):
+            target = PANEL_DIR / "field-gpu.html"
+        elif path in ("/field-audio-settings", "/field-audio-settings/"):
+            target = PANEL_DIR / "field-audio-settings.html"
+        elif path in ("/field-ellie-fier", "/field-ellie-fier/"):
+            target = PANEL_DIR / "field-ellie-fier.html"
+        elif path in ("/field-popcorn", "/field-popcorn/"):
+            target = PANEL_DIR / "field-popcorn.html"
+        elif path in ("/field-launch-explorer", "/field-launch-explorer/"):
+            target = PANEL_DIR / "field-launch-explorer.html"
+        elif path in ("/field-font-editor", "/field-font-editor/"):
+            target = PANEL_DIR / "field-font-editor.html"
+        elif path in ("/compatibility", "/compatibility/", "/compatibility-layers", "/compatibility-layers/"):
+            target = PANEL_DIR / "compatibility-layers.html"
+        elif path in ("/combinatorics", "/combinatorics/", "/combinatorics-studio", "/combinatorics-studio/"):
+            target = PANEL_DIR / "compatibility-layers.html"
+            if not target.is_file():
+                target = PANEL_DIR / "combinatorics-studio.html"
+        elif path in ("/field-talk", "/field-talk/"):
             target = PANEL_DIR / "field-talk.html"
         elif path in (
             "/tristate-installer", "/tristate-installer/",
@@ -3582,12 +4986,21 @@ class Handler(BaseHTTPRequestHandler):
             target = PANEL_DIR / "underlay-f9.html"
         elif path in (
             "/command", "/command/", "/panel", "/panel/",
-            "/field-legacy", "/field-legacy/",
+            "/field-legacy", "/field-legacy/", "/threat-panel", "/threat-panel/",
         ):
-            target = PANEL_DIR / "threat-panel.html"
-            if target.is_file():
-                _serve_panel_html(self, target)
-                return
+            loc = "/field"
+            frag = (query.get("embed", [""])[0] or "").strip()
+            if frag == "1":
+                view = (query.get("view", [""])[0] or "").strip()
+                if not view and "#" in self.path:
+                    view = self.path.split("#", 1)[-1].split("?")[0]
+                if view:
+                    loc = f"/field#{view}"
+            self.send_response(302)
+            self.send_header("Location", loc)
+            self.send_header("X-AmmoOS-Legacy", "dissolved")
+            self.end_headers()
+            return
         elif path in (
             "/field", "/field/", "/app", "/app/", "/", "/index.html",
         ):
@@ -3630,8 +5043,14 @@ class Handler(BaseHTTPRequestHandler):
             action = str((body or {}).get("action") or "").strip().lower()
             scheme = str((body or {}).get("scheme") or "").strip()
             text = (body or {}).get("text")
+            hist_idx = (body or {}).get("history_index")
             if scheme:
                 payload = _nexus_py_json(script, ["scheme", scheme], timeout=20)
+            elif action in ("history", "historic"):
+                payload = _nexus_py_json(script, ["history"], timeout=20)
+            elif action in ("history_paste", "historic_paste", "paste_history"):
+                idx = str(hist_idx if hist_idx is not None else (body or {}).get("index", "0"))
+                payload = _nexus_py_json(script, ["history-paste", idx], timeout=20)
             elif action:
                 argv = ["action", action]
                 if text is not None and str(text):
@@ -3658,9 +5077,368 @@ class Handler(BaseHTTPRequestHandler):
             self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path.startswith("/api/field-lock") or path.startswith("/api/field-keepass"):
+            script = INSTALL_ROOT / "lib" / "field-keepass.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_lock_missing"}), "application/json")
+                return
+            prefix = "/api/field-lock" if path.startswith("/api/field-lock") else "/api/field-keepass"
+            sub = path[len(prefix) :].strip("/")
+            if sub in ("", "status", "json"):
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            elif sub == "launch":
+                vault = str((body or {}).get("vault") or "")
+                argv = ["launch", vault] if vault else ["launch"]
+                payload = _nexus_py_json(script, argv, timeout=30)
+            elif sub == "new":
+                payload = _nexus_py_json(script, ["new"], timeout=30)
+            elif sub == "settings":
+                patch = body if isinstance(body, dict) else {}
+                payload = _nexus_py_json(script, ["settings", json.dumps(patch)], timeout=30)
+            elif sub == "import":
+                imp = INSTALL_ROOT / "lib" / "field-lock-import.py"
+                req = body if isinstance(body, dict) else {}
+                req.setdefault("action", "import")
+                if imp.is_file():
+                    try:
+                        proc = subprocess.run(
+                            [sys.executable, str(imp), "dispatch", json.dumps(req)],
+                            capture_output=True,
+                            text=True,
+                            timeout=120,
+                            env=_field_stack_env(),
+                        )
+                        payload = json.loads(proc.stdout or "{}")
+                    except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                        payload = {"ok": False, "error": "lock_import_failed"}
+                else:
+                    payload = {"ok": False, "error": "lock_import_missing"}
+            elif sub in ("import-scan", "import_scan"):
+                imp = INSTALL_ROOT / "lib" / "field-lock-import.py"
+                payload = _nexus_py_json(imp, ["scan"], timeout=90) if imp.is_file() else {"ok": False, "error": "lock_import_missing"}
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_field_keepass_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-gdb"):
+            script = INSTALL_ROOT / "lib" / "field-gdb.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_gdb_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-gdb") :].strip("/")
+            if sub in ("", "status", "json"):
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            else:
+                req = {"action": sub, **(body if isinstance(body, dict) else {})}
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(script), "dispatch"],
+                        input=json.dumps(req),
+                        capture_output=True,
+                        text=True,
+                        timeout=120,
+                        env=env,
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except subprocess.TimeoutExpired:
+                    payload = {"ok": False, "error": "field_gdb_timeout"}
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "field_gdb_parse_failed"}
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-gpu"):
+            script = INSTALL_ROOT / "lib" / "field-gpu-control.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_gpu_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-gpu") :].strip("/")
+            if sub in ("", "status", "json"):
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            elif sub == "settings":
+                patch = body if isinstance(body, dict) else {}
+                payload = _nexus_py_json(script, ["settings", json.dumps(patch)], timeout=30)
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_field_gpu_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-shell-dock"):
+            script = INSTALL_ROOT / "lib" / "field-shell-dock.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_shell_dock_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-shell-dock") :].strip("/")
+            active = str((body or {}).get("active_icon") or "").strip() if isinstance(body, dict) else ""
+            if sub in ("", "status", "json"):
+                args = ["json"] + ([active] if active else [])
+                payload = _nexus_py_json(script, args, timeout=20)
+            elif sub == "settings":
+                patch = body if isinstance(body, dict) else {}
+                payload = _nexus_py_json(script, ["settings", json.dumps(patch)], timeout=15)
+            elif sub == "sync":
+                args = ["sync"] + ([active] if active else [])
+                payload = _nexus_py_json(script, args, timeout=25)
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_field_shell_dock_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-audio-settings"):
+            script = INSTALL_ROOT / "lib" / "field-audio-settings.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_audio_settings_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-audio-settings") :].strip("/")
+            if sub in ("apply", "settings") or (not sub and isinstance(body, dict) and body):
+                patch = body if isinstance(body, dict) else {}
+                payload = _nexus_py_json(script, ["apply", json.dumps(patch)], timeout=20)
+            elif sub in ("", "status", "json"):
+                payload = _nexus_py_json(script, ["json"], timeout=20)
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_field_audio_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-g16-launch"):
+            script = INSTALL_ROOT / "lib" / "field-g16-launch.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_g16_launch_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-g16-launch") :].strip("/")
+            if sub == "run" or (not sub and isinstance(body, dict) and body.get("path")):
+                path_arg = str((body or {}).get("path") or "").strip()
+                if not path_arg:
+                    self._send(400, json.dumps({"ok": False, "error": "path_required"}), "application/json")
+                    return
+                timeout = int((body or {}).get("timeout") or 180)
+                payload = _nexus_py_json(
+                    script,
+                    ["run", path_arg],
+                    timeout=min(timeout + 30, 300),
+                )
+            elif sub == "discover":
+                payload = _nexus_py_json(script, ["discover"], timeout=120)
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_field_g16_launch_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-popcorn"):
+            script = INSTALL_ROOT / "lib" / "field-popcorn-player.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_popcorn_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-popcorn") :].strip("/")
+            if sub == "thumb":
+                payload = _nexus_py_json(script, ["thumb", json.dumps(body if isinstance(body, dict) else {})], timeout=30)
+            elif sub == "thumb-mode":
+                payload = _nexus_py_json(script, ["thumb-mode", json.dumps(body if isinstance(body, dict) else {})], timeout=15)
+            elif sub == "position":
+                payload = _nexus_py_json(script, ["position", json.dumps(body if isinstance(body, dict) else {})], timeout=15)
+            elif sub in ("settings",) or (not sub and isinstance(body, dict) and body and not body.get("data_url")):
+                patch = body if isinstance(body, dict) else {}
+                payload = _nexus_py_json(script, ["settings", json.dumps(patch)], timeout=30)
+            elif sub == "scan":
+                payload = _nexus_py_json(script, ["scan"], timeout=120)
+            elif sub == "inspect":
+                media_id = str((body or {}).get("media_id") or (body or {}).get("id") or "").strip()
+                deep = not bool((body or {}).get("light"))
+                if media_id:
+                    args = ["inspect", media_id] + ([] if deep else ["--light"])
+                    payload = _nexus_py_json(script, args, timeout=120)
+                else:
+                    payload = {"ok": False, "error": "id_required"}
+            elif sub == "details":
+                media_id = str((body or {}).get("media_id") or (body or {}).get("id") or "").strip()
+                if media_id:
+                    payload = _nexus_py_json(script, ["details", media_id], timeout=120)
+                else:
+                    payload = {"ok": False, "error": "id_required"}
+            elif not sub and isinstance(body, dict) and body.get("data_url"):
+                payload = _nexus_py_json(script, ["thumb", json.dumps(body)], timeout=30)
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_field_popcorn_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-ellie-fier"):
+            script = INSTALL_ROOT / "lib" / "field-ellie-fier.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_ellie_fier_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-ellie-fier") :].strip("/")
+            if sub in ("", "status", "json"):
+                do_scan = bool((body or {}).get("scan")) if isinstance(body, dict) else False
+                args = ["json"] + (["--scan"] if do_scan else [])
+                payload = _nexus_py_json(script, args, timeout=180)
+            elif sub == "scan":
+                payload = _nexus_py_json(script, ["scan"], timeout=300)
+            elif sub == "threat":
+                payload = _nexus_py_json(script, ["threat"], timeout=300)
+            elif sub == "slices":
+                payload = _nexus_py_json(script, ["slices"], timeout=120)
+            elif sub == "authority":
+                payload = _nexus_py_json(script, ["authority"], timeout=60)
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_ellie_fier_action"}), "application/json")
+                return
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-broadcaster") or path.startswith("/api/field-obs"):
+            script = INSTALL_ROOT / "lib" / "field-broadcaster.py"
+            if not script.is_file():
+                script = INSTALL_ROOT / "lib" / "field-obs.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "broadcaster_missing"}), "application/json")
+                return
+            prefix = "/api/field-broadcaster" if path.startswith("/api/field-broadcaster") else "/api/field-obs"
+            sub = path[len(prefix) :].strip("/")
+            if sub in ("", "status", "json"):
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            elif sub in ("launch", "go-live", "golive"):
+                cmd = "go-live" if sub in ("go-live", "golive") else "launch"
+                payload = _nexus_py_json(script, [cmd], timeout=30)
+            elif sub == "record":
+                payload = _nexus_py_json(script, ["record"], timeout=30)
+            elif sub == "virtualcam":
+                payload = _nexus_py_json(script, ["virtualcam"], timeout=30)
+            elif sub == "studio":
+                payload = _nexus_py_json(script, ["studio"], timeout=30)
+            elif sub in ("clear-filters", "clear_filters", "passthrough"):
+                payload = _nexus_py_json(script, ["clear-filters"], timeout=30)
+            elif sub == "audio":
+                audio_py = INSTALL_ROOT / "lib" / "field-broadcaster-audio.py"
+                if body and isinstance(body, dict) and body.get("clear"):
+                    payload = _nexus_py_json(audio_py, ["clear"], timeout=30)
+                elif body and isinstance(body, dict) and body:
+                    payload = _nexus_py_json(audio_py, ["settings", json.dumps(body)], timeout=30)
+                else:
+                    payload = _nexus_py_json(audio_py, ["json"], timeout=30)
+            elif sub == "settings":
+                patch = body if isinstance(body, dict) else {}
+                payload = _nexus_py_json(script, ["settings", json.dumps(patch)], timeout=30)
+            elif sub == "studio":
+                studio_py = INSTALL_ROOT / "lib" / "field-broadcaster-studio.py"
+                req = body if isinstance(body, dict) else {}
+                if studio_py.is_file():
+                    try:
+                        proc = subprocess.run(
+                            [sys.executable, str(studio_py), "dispatch", json.dumps(req)],
+                            capture_output=True,
+                            text=True,
+                            timeout=90,
+                            env=_field_stack_env(),
+                        )
+                        payload = json.loads(proc.stdout or "{}")
+                    except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                        payload = {"ok": False, "error": "studio_dispatch_failed"}
+                else:
+                    payload = {"ok": False, "error": "studio_missing"}
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_broadcaster_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-taskbar-pins":
+            pins_py = INSTALL_ROOT / "lib" / "field-taskbar-pins.py"
+            req = body if isinstance(body, dict) else {}
+            if pins_py.is_file():
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(pins_py), "dispatch", json.dumps(req)],
+                        capture_output=True,
+                        text=True,
+                        timeout=15,
+                        env=_field_stack_env(),
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    payload = {"ok": False, "error": "taskbar_pins_failed"}
+            else:
+                payload = {"ok": False, "error": "taskbar_pins_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-shell-settings":
+            script = INSTALL_ROOT / "lib" / "field-shell-settings.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_shell_settings_missing"}), "application/json")
+                return
+            patch = body if isinstance(body, dict) else {}
+            if patch.get("resolution") and patch.get("display_id"):
+                payload = _nexus_py_json(
+                    script,
+                    ["resolution", str(patch.get("display_id")), str(patch.get("resolution"))],
+                    timeout=20,
+                )
+            else:
+                env = os.environ.copy()
+                env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+                env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(script), "apply"],
+                        input=json.dumps(patch, ensure_ascii=False),
+                        capture_output=True,
+                        text=True,
+                        timeout=20,
+                        env=env,
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+                    payload = {"ok": False, "error": str(exc)}
+            code = 200 if payload.get("ok", True) and not payload.get("error") else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path == "/api/field-performance-flyout":
             reset = bool((body or {}).get("reset"))
             payload = _field_perf_flyout_sample(reset=reset)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-depth-snap",
+            "/api/field-depth/instant",
+            "/api/field-depth-singularizer/instant",
+        ):
+            script = INSTALL_ROOT / "lib" / "field-depth-singularizer.py"
+            verb = "field_die" if str((body or {}).get("action") or "").lower() == "field_die" else "instant"
+            if script.is_file():
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(script), verb],
+                        input=json.dumps(body or {}, ensure_ascii=False),
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        env=env,
+                    )
+                    payload = json.loads(proc.stdout.strip() or "{}") if proc.stdout.strip() else {"ok": False}
+                except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+                    payload = {"ok": False, "error": str(exc), "instant": True}
+            else:
+                payload = {"ok": False, "error": "singularizer_missing", "instant": True}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -3985,6 +5763,62 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200 if proc.returncode == 0 else 500, json.dumps(doc), "application/json")
             return
 
+        if path in ("/api/bugfinder/scan", "/api/bugfinder/text", "/api/bugfinder/ironclad-cycle", "/api/code-bugfinder/scan"):
+            bug_py = INSTALL_ROOT / "lib" / "field-code-bugfinder.py"
+            if not bug_py.is_file():
+                self._send(500, json.dumps({"ok": False, "error": "bugfinder_missing"}), "application/json")
+                return
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            env.setdefault("SG_ROOT", str(INSTALL_ROOT.parent.parent))
+            env.setdefault("HOSTESS7_ROOT", str(_resolve_hostess7_root()))
+            if path.endswith("/ironclad-cycle"):
+                max_t = int(body.get("max_targets") or 6)
+                max_c = int(body.get("max_compares") or 48)
+                proc = subprocess.run(
+                    [
+                        sys.executable, str(bug_py), "ironclad-cycle",
+                        "--max-targets", str(max_t),
+                        "--max-compares", str(max_c),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=180,
+                    env=env,
+                )
+            elif path.endswith("/text"):
+                snippet = str(body.get("text", body.get("code", ""))).strip()
+                if not snippet:
+                    self._send(400, json.dumps({"ok": False, "error": "missing text"}), "application/json")
+                    return
+                proc = subprocess.run(
+                    [sys.executable, str(bug_py), "text", snippet[:12000]],
+                    capture_output=True,
+                    text=True,
+                    timeout=90,
+                    env=env,
+                )
+            else:
+                target = str(body.get("path", body.get("target", ""))).strip()
+                if not target:
+                    self._send(400, json.dumps({"ok": False, "error": "missing path"}), "application/json")
+                    return
+                max_c = int(body.get("max_compares") or body.get("max") or 256)
+                proc = subprocess.run(
+                    [sys.executable, str(bug_py), "scan", target, "--max", str(max_c)],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    env=env,
+                )
+            try:
+                payload = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "bugfinder_scan_failed", "detail": (proc.stderr or "")[:300]}
+            self._send(200 if payload.get("ok", True) else 500, json.dumps(payload), "application/json")
+            return
+
         if path.startswith("/api/library/"):
             script = INSTALL_ROOT / "lib" / "h7-library-bridge.py"
             env = os.environ.copy()
@@ -3992,6 +5826,84 @@ class Handler(BaseHTTPRequestHandler):
             env["NEXUS_STATE_DIR"] = str(STATE_DIR)
             env.setdefault("HOSTESS7_ROOT", str(_resolve_hostess7_root()))
             env.setdefault("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage")
+
+            reader_py = INSTALL_ROOT / "lib" / "h7-library-secure-reader.py"
+
+            if path == "/api/library/reader/issue":
+                book_id = str(body.get("book_id", body.get("book", ""))).strip()
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book_id"}), "application/json")
+                    return
+                if not script.is_file():
+                    self._send(500, json.dumps({"ok": False, "error": "library_bridge_missing"}), "application/json")
+                    return
+                proc = subprocess.run(
+                    [sys.executable, str(script), "reader-issue", book_id],
+                    capture_output=True,
+                    text=True,
+                    timeout=45,
+                    env=env,
+                )
+                try:
+                    payload = json.loads(proc.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "reader_issue_failed"}
+                self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+                return
+
+            if path in ("/api/library/reader/bookmarks", "/api/library/reader/progress", "/api/library/reader/layout"):
+                if not reader_py.is_file():
+                    self._send(500, json.dumps({"ok": False, "error": "secure_reader_missing"}), "application/json")
+                    return
+                book_id = str(body.get("book_id", "")).strip()
+                token = str(body.get("token", self.headers.get("X-Reader-Token", ""))).strip()
+                signature = str(body.get("signature", self.headers.get("X-Reader-Signature", ""))).strip()
+                if not book_id or not token or not signature:
+                    self._send(403, json.dumps({"ok": False, "error": "invalid_session"}), "application/json")
+                    return
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("h7_secure_reader", reader_py)
+                if not spec or not spec.loader:
+                    self._send(500, json.dumps({"ok": False, "error": "secure_reader_missing"}), "application/json")
+                    return
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if path.endswith("/bookmarks"):
+                    action = str(body.get("action", "list")).strip().lower()
+                    if action == "add":
+                        payload = mod.save_bookmark(
+                            book_id,
+                            page=int(body.get("page", 1)),
+                            label=str(body.get("label", "")),
+                            token=token,
+                            signature=signature,
+                        )
+                    elif action == "delete":
+                        payload = mod.delete_bookmark(
+                            book_id,
+                            bookmark_id=str(body.get("bookmark_id", "")),
+                            token=token,
+                            signature=signature,
+                        )
+                    else:
+                        payload = mod.list_bookmarks(book_id, token=token, signature=signature)
+                elif path.endswith("/progress"):
+                    payload = mod.save_progress(
+                        book_id,
+                        page=int(body.get("page", 1)),
+                        page_count=int(body.get("page_count", 0)),
+                        token=token,
+                        signature=signature,
+                    )
+                else:
+                    payload = mod.save_layout(
+                        book_id,
+                        layout=body.get("layout") if isinstance(body.get("layout"), dict) else {},
+                        token=token,
+                        signature=signature,
+                    )
+                self._send(200 if payload.get("ok") else 403, json.dumps(payload), "application/json")
+                return
 
             if path == "/api/library/upload":
                 if not script.is_file():
@@ -4108,6 +6020,8 @@ class Handler(BaseHTTPRequestHandler):
                     "application/json",
                 )
                 return
+            apply_via = str(upd.get("apply_via") or "")
+            catalog_url = str(upd.get("catalog_url") or "")
             started = _spawn_nexus_update_apply(
                 git_dir=git_dir,
                 install_sh=install_sh,
@@ -4116,6 +6030,8 @@ class Handler(BaseHTTPRequestHandler):
                 previous=previous,
                 tarball_url=tarball_url,
                 update_mode=update_mode,
+                apply_via=apply_via,
+                catalog_url=catalog_url,
             )
             if not started:
                 _nexus_update_lock(["release", f"--token={token}"])
@@ -4302,6 +6218,31 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/signals-field":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "signals-field.py", ["build"])
             self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/stress-terror-discern":
+            script = INSTALL_ROOT / "lib" / "field-stress-terror-discern.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "stress_terror_discern_missing"}), "application/json")
+                return
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            req = body if isinstance(body, dict) else {}
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    env=env,
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+                payload = {"ok": False, "error": str(exc)}
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
         if path in ("/api/field/field", "/api/field/plate-field", "/api/field/parallel"):
@@ -5600,6 +7541,159 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200 if ok else 500, json.dumps({"ok": ok, "key": key, "value": val}), "application/json")
             return
 
+        if path in ("/api/field-filesystem", "/api/filesystem-update"):
+            fs_py = INSTALL_ROOT / "lib" / "field-filesystem-update.py"
+            if not fs_py.is_file():
+                payload = {"ok": False, "error": "field_filesystem_missing"}
+            else:
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(fs_py), "dispatch"],
+                        input=json.dumps(body if isinstance(body, dict) else {}),
+                        capture_output=True,
+                        text=True,
+                        timeout=120,
+                        env=env,
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    payload = {"ok": False, "error": "field_filesystem_dispatch_failed"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-c2-bookmarks", "/api/ammo-bookmarks"):
+            script = INSTALL_ROOT / "lib" / "field-c2-bookmark-boot.py"
+            force = bool((body or {}).get("force"))
+            args = ["json"] if not force else ["json", "--force"]
+            if script.is_file():
+                payload = _nexus_py_json(script, args, timeout=180)
+            else:
+                payload = {"ok": False, "error": "field_c2_bookmark_boot_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-vfs", "/api/always-files"):
+            payload = _field_always_files_dispatch(body if isinstance(body, dict) else {})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-timeshift/checkpoint":
+            note = str((body or {}).get("note") or "panel checkpoint")
+            payload = _field_always_files_dispatch({"action": "timeshift_checkpoint", "note": note})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-timeshift/rollback":
+            cid = str((body or {}).get("id") or (body or {}).get("checkpoint_id") or "")
+            if not cid:
+                self._send(400, json.dumps({"ok": False, "error": "checkpoint_id_required"}), "application/json")
+                return
+            payload = _field_always_files_dispatch({
+                "action": "timeshift_rollback",
+                "id": cid,
+                "confirm": bool((body or {}).get("confirm")),
+            }, timeout=180)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-timeshift", "/api/field-timeshift/list"):
+            action = str((body or {}).get("action") or "timeshift_list").strip().lower().replace("-", "_")
+            payload = _field_always_files_dispatch({"action": action, **(body or {})})
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/diagnostic-mode", "/api/field-diagnostic"):
+            diag_py = INSTALL_ROOT / "lib" / "field-diagnostic-mode.py"
+            if not diag_py.is_file():
+                payload = {"ok": False, "error": "field_diagnostic_missing"}
+            else:
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(diag_py), "dispatch"],
+                        input=json.dumps(body if isinstance(body, dict) else {}),
+                        capture_output=True,
+                        text=True,
+                        timeout=180,
+                        env=env,
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    payload = {"ok": False, "error": "field_diagnostic_dispatch_failed"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/compatibility/refresh", "/api/compatibility-layers/refresh"):
+            layers = INSTALL_ROOT / "lib" / "field-compatibility-layers.py"
+            deep = bool(body.get("deep") or body.get("full"))
+            cmd = "full" if deep else "refresh"
+            timeout = 300 if deep else 150
+            payload = _nexus_py_json(layers, [cmd], timeout=timeout) if layers.is_file() else {
+                "ok": False,
+                "error": "compatibility_layers_missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/always-optimal/apply", "/api/g16/always-optimal/apply"):
+            ao = _grok16_root() / "lib" / "field-always-optimal.py"
+            skip_layers = bool(body.get("no_layers"))
+            args = ["apply"] + (["--no-layers"] if skip_layers else [])
+            timeout = 90 if skip_layers else 180
+            payload = _nexus_py_json(ao, args, timeout=timeout) if ao.is_file() else {
+                "schema": "g16-always-optimal-panel/v1",
+                "ok": False,
+                "error": "always_optimal_missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/power-sort/apply", "/api/g16/power-sort/apply", "/api/power-sort/bench"):
+            ps = _grok16_root() / "lib" / "field-power-sort.py"
+            if path.endswith("/bench"):
+                args = ["bench"]
+                timeout = 60
+            else:
+                skip_bench = bool(body.get("no_bench"))
+                args = ["apply"] + (["--no-bench"] if skip_bench else [])
+                timeout = 60 if skip_bench else 120
+            payload = _nexus_py_json(ps, args, timeout=timeout) if ps.is_file() else {
+                "schema": "g16-power-sort-panel/v1",
+                "ok": False,
+                "error": "power_sort_missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/combinatorics/run":
+            layers = INSTALL_ROOT / "lib" / "field-compatibility-layers.py"
+            if layers.is_file():
+                deep = str(body.get("action") or "cycle").strip().lower() == "full"
+                cmd = "full" if deep else "refresh"
+                timeout = 300 if deep else 150
+                payload = _nexus_py_json(layers, [cmd], timeout=timeout)
+            else:
+                action = str(body.get("action") or "cycle").strip().lower()
+                studio = INSTALL_ROOT / "lib" / "field-combinatorics-studio.py"
+                timeout = 300 if action == "full" else 120
+                payload = _nexus_py_json(studio, ["run", action], timeout=timeout) if studio.is_file() else {
+                    "ok": False,
+                    "error": "combinatorics_studio_missing",
+                }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/combinatorics/brain-try":
+            comb_py = INSTALL_ROOT / "lib" / "field-combinatorics-comb.py"
+            intent = str(body.get("intent") or "").strip() or None
+            payload = _nexus_py_json(comb_py, ["try-brain", intent] if intent else ["try-brain"], timeout=45) if comb_py.is_file() else {
+                "ok": False,
+                "error": "field-combinatorics-comb_missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path == "/api/adblock/load":
             preset = str(body.get("preset", "")).strip()
             url = str(body.get("url", "")).strip()
@@ -5679,8 +7773,25 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, "not found", "text/plain")
 
 
+def _startup_always_optimal() -> None:
+    ao = _grok16_root() / "lib" / "field-always-optimal.py"
+    if not ao.is_file():
+        return
+    try:
+        subprocess.run(
+            [sys.executable, str(ao), "apply"],
+            capture_output=True,
+            text=True,
+            timeout=180,
+            env=_field_stack_env(),
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+
+
 def main():
     os.chdir(PANEL_DIR)
+    threading.Thread(target=_startup_always_optimal, daemon=True, name="always-optimal-boot").start()
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     server.serve_forever()
 

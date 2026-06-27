@@ -1,5 +1,5 @@
 #!/bin/bash
-# Queen browser launcher — hardened Queen shell only (no Firefox/Chrome/FieldFox fallback).
+# Queen integrated field browser launcher — Field Gecko profile, Webbrowser shell (no OS browser).
 set -euo pipefail
 
 ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
@@ -13,6 +13,14 @@ nexus_fieldfox_launch() {
   local route=""
   if [[ "$url" == *"#"* ]]; then
     route="${url#*#}"
+  fi
+  if [[ -f "${ROOT}/lib/queen-integrated-browser.py" ]]; then
+    NEXUS_INSTALL_ROOT="${ROOT}" NEXUS_STATE_DIR="${STATE}" QUEEN_ROOT="${QUEEN}" \
+      QUEEN_NO_OS_BROWSER=1 QUEEN_WEB_SHELL=1 QUEEN_SKIP_RTX_BOOT=1 \
+      NEXUS_C2_DESKTOP_LAUNCH=1 NEXUS_C2_KIOSK=1 \
+      "$PY" "${ROOT}/lib/queen-integrated-browser.py" open 2>/dev/null \
+      && echo "{\"launched\":true,\"engine\":\"queen-field-gecko\",\"url\":\"${url}\",\"queen\":true}" \
+      && return 0
   fi
   if [[ -f "${ROOT}/lib/queen-panel-open.py" ]]; then
     NEXUS_INSTALL_ROOT="${ROOT}" NEXUS_STATE_DIR="${STATE}" QUEEN_ROOT="${QUEEN}" \

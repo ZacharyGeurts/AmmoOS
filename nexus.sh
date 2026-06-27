@@ -5,6 +5,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 export NEXUS_INSTALL_ROOT="$ROOT"
 export NEXUS_FIELD_STANDALONE=1
+export NEXUS_NEVER_HARM_OS="${NEXUS_NEVER_HARM_OS:-1}"
+export ZNETWORK_NEVER_HARM_OS="${ZNETWORK_NEVER_HARM_OS:-1}"
 
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-common.sh"
@@ -177,7 +179,7 @@ Usage:
   ./nexus.sh --restart       Stop and start panel immediately (--restart-immediate)
 
 Tab views (for --tab):
-  command, us, sweet-anita, packets, threats, intel, final-eye, final-ear, final-mouth, signals, dns, outside, library, training, system
+  command, us, field-broadcaster, field-obs, packets, threats, intel, final-eye, final-ear, final-mouth, signals, dns, outside, library, training, system
   Sub-views: packets/monitor, threats/map, intel/honor, system/settings, …
 
 Environment:
@@ -185,6 +187,7 @@ Environment:
   NEXUS_PANEL_ROOT     Override panel install tree
   NEXUS_THREAT_PANEL_PORT  Panel HTTP port (default 9477)
   NEXUS_ZNETWORK_PROMPT    ZNetwork Yes/No/Skip on start (default 1)
+  NEXUS_DIAGNOSTIC_MODE    Force diagnostic on (1) or off (0); unset = auto-engage on fault
 
 CLI without browser:
   ./bin/nexus status
@@ -230,7 +233,8 @@ case "${1:-}" in
       echo "Panel restarted: ${URL}"
       echo "Version: $(nexus_panel_served_version 2>/dev/null || nexus_panel_desired_version 2>/dev/null || echo unknown)"
       if [[ "${NEXUS_FIELD_LAUNCH_BROWSER:-1}" == "1" ]] && [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py" ]]; then
-        pythong "${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py" open 2>/dev/null \
+        NEXUS_C2_DESKTOP_LAUNCH=1 NEXUS_C2_KIOSK=1 \
+          pythong "${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py" open 2>/dev/null \
           | grep -q '"ok": true' && echo "Integrated Queen browser launched" \
           || echo "WARN: integrated browser launch incomplete — ./scripts/start-field-stack.sh" >&2
       fi
@@ -257,9 +261,15 @@ nexus_load_config 2>/dev/null || true
   source "${ROOT}/lib/front-hook.sh"
   nexus_front_hook_board 2>/dev/null || true
 }
+# Vestigial cleanup — old start menus, duplicate locations, legacy panels.
+if [[ -f "${ROOT}/lib/nexus-vestigial-cleanup.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/nexus-vestigial-cleanup.sh"
+  nexus_vestigial_cleanup_run 2>/dev/null || true
+fi
 # shellcheck source=/dev/null
 [[ -f "${ROOT}/lib/znetwork-field.sh" ]] && source "${ROOT}/lib/znetwork-field.sh"
-nexus_znetwork_startup_prompt || true
+nexus_znetwork_startup_with_us || true
 
 nexus_field_standalone_ensure_panel || {
   echo "Try: ./nexus.sh --no-browser" >&2
@@ -316,6 +326,12 @@ if [[ "${1:-}" == "--no-browser" ]]; then
   echo "Tools: ${NEXUS_FIELD_TOOLS_DIR:-${NEXUS_INSTALL_ROOT}/lib/bin}"
   nexus_panel_tray_install_autostart 2>/dev/null || true
   nexus_panel_tray_ensure_once 2>/dev/null || true
+  [[ -f "${ROOT}/lib/queen-layer-boot.sh" ]] && {
+    # shellcheck source=/dev/null
+    source "${ROOT}/lib/queen-layer-boot.sh"
+    nexus_queen_layer_install_autostart 2>/dev/null || true
+    nexus_queen_layer_refresh 2>/dev/null || true
+  }
   nexus_panel_open_help "$URL"
   exit 0
 fi
@@ -323,6 +339,11 @@ fi
 if [[ "${1:-}" == "--tray" ]]; then
   nexus_panel_tray_icon_refresh 2>/dev/null || true
   nexus_panel_tray_install_autostart 2>/dev/null || true
+  [[ -f "${ROOT}/lib/queen-layer-boot.sh" ]] && {
+    # shellcheck source=/dev/null
+    source "${ROOT}/lib/queen-layer-boot.sh"
+    nexus_queen_layer_install_autostart 2>/dev/null || true
+  }
   nexus_panel_tray_ensure_once
   exit $?
 fi
@@ -337,14 +358,44 @@ if [[ "${1:-}" == "--tab" && -n "${2:-}" ]]; then
   exit 0
 fi
 
+_nexus_queen_layer_autostart() {
+  [[ -f "${ROOT}/lib/queen-layer-boot.sh" ]] || return 0
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/queen-layer-boot.sh"
+  nexus_queen_layer_install_autostart 2>/dev/null || true
+  nexus_queen_layer_refresh 2>/dev/null || true
+}
+
+_nexus_launch_c2_desktop() {
+  local py="${NEXUS_PYTHONG:-pythong}"
+  if [[ ! -f "${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py" ]]; then
+    return 1
+  fi
+  NEXUS_C2_DESKTOP_LAUNCH=1 NEXUS_C2_KIOSK=1 \
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+    QUEEN_ROOT="${QUEEN_ROOT:-${NEXUS_INSTALL_ROOT}/Queen}" \
+    NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}" \
+    "$py" "${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py" open 2>/dev/null \
+    | grep -q '"ok": true'
+}
+
+if _nexus_launch_c2_desktop; then
+  echo "NEXUS C2 desktop — fullscreen kiosk at ${URL}"
+  nexus_panel_tray_install_autostart 2>/dev/null || true
+  nexus_panel_tray_ensure_once 2>/dev/null || true
+  _nexus_queen_layer_autostart
+  exit 0
+fi
 if declare -f nexus_panel_open_on_boot >/dev/null 2>&1 && nexus_panel_open_on_boot "$URL"; then
   nexus_panel_tray_install_autostart 2>/dev/null || true
   nexus_panel_tray_ensure_once 2>/dev/null || true
+  _nexus_queen_layer_autostart
   exit 0
 fi
 if nexus_panel_open_browser "$URL"; then
   nexus_panel_tray_install_autostart 2>/dev/null || true
   nexus_panel_tray_ensure_once 2>/dev/null || true
+  _nexus_queen_layer_autostart
   exit 0
 fi
 

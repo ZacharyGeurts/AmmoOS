@@ -159,12 +159,30 @@ def _thermal() -> dict[str, Any]:
     return _load(STATE / "thermal-advisory.json", {})
 
 
+def _clean_juice() -> dict[str, Any]:
+    script = INSTALL / "lib" / "field-clean-juice.py"
+    if not script.is_file():
+        return {}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("field_clean_juice_ledger", script)
+        if not spec or not spec.loader:
+            return {}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.posture() if hasattr(mod, "posture") else {}
+    except Exception:
+        return {}
+
+
 def ledger(*, sample_rapl: bool = True) -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     supply = _power_supply()
     rapl = _rapl_watts() if sample_rapl else {"available": False, "watts": None}
     shed = _shed_credits()
     thermal = _thermal()
+    juice = _clean_juice()
 
     measured_w = rapl.get("watts")
     if measured_w is None and supply.get("draw_w") is not None:
@@ -180,24 +198,39 @@ def ledger(*, sample_rapl: bool = True) -> dict[str, Any]:
         if net_w < 0:
             export_equiv_w = round(-net_w, 3)
 
+    pool = juice.get("pool") or {}
+    available_j = pool.get("available_joules")
+    if available_j is not None and headroom_w is not None:
+        headroom_w = round(float(headroom_w) + float(available_j), 3)
+
     grid = {
         "hardware_declared": GRID_HARDWARE,
         "meter_witness_w": GRID_METER_W if GRID_HARDWARE and GRID_METER_W else None,
         "utility_sellback": "requires_inverter_and_net_metering",
-        "software_role": "witness_draw_optimize_shed_credit_headroom",
+        "software_role": "witness_only_no_trust_talk",
+        "grid_talk": False,
+        "trust_layer": "blocked",
     }
 
     doc = {
-        "schema": "field-power-ledger/v1",
+        "schema": "field-power-ledger/v2",
         "ts": _now(),
         "doctrine": doctrine.get("title", "field-power"),
+        "clean_juice_primary": bool((doctrine.get("policy") or {}).get("clean_juice_primary", True)),
+        "unit_primary": "joules",
         "cord": "connected" if supply.get("ac_online") else ("battery" if supply.get("battery_pct") is not None else "unknown"),
         "measured_draw_w": measured_w,
         "shed_credit_w": credit_w,
         "net_draw_w": net_w,
         "headroom_w": headroom_w,
         "export_equivalent_w": export_equiv_w,
-        "can_handle_more_load": export_equiv_w is not None and export_equiv_w > 0,
+        "can_handle_more_load": (available_j or 0) > 0 or (export_equiv_w is not None and export_equiv_w > 0),
+        "clean_juice": {
+            "pool_joules": pool.get("available_joules"),
+            "charge_joules": pool.get("charge_joules"),
+            "no_double_voltage": (juice.get("circuit") or {}).get("no_double_voltage"),
+            "bsp_leaves": (juice.get("field_3d") or {}).get("bsp_leaves"),
+        },
         "rapl": rapl,
         "power_supply": supply,
         "shed": shed,
@@ -208,6 +241,7 @@ def ledger(*, sample_rapl: bool = True) -> dict[str, Any]:
             "wave_shed": thermal.get("wave_shed"),
         },
         "grid": grid,
+        "performance": juice.get("performance") or {},
         "verdict": _verdict(net_w, supply, thermal),
     }
     return doc

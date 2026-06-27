@@ -4,6 +4,8 @@
 NEXUS_SETTINGS_OVERRIDE="${NEXUS_SETTINGS_OVERRIDE:-${NEXUS_STATE_DIR}/settings.override}"
 
 NEXUS_SETTINGS_KEYS=(
+  NEXUS_AI_SECURE_CHANNEL
+  QUEEN_AI_TELEMETRY_OK
   NEXUS_PARANOIA_BLOCK
   NEXUS_PARANOIA_MODE
   NEXUS_FIREWALL_AUTO_BLOCK
@@ -44,6 +46,10 @@ nexus_settings_get() {
     printf '%s' "${val:-annoyance}"
     return 0
   fi
+  if [[ "$key" == "NEXUS_AI_SECURE_CHANNEL" || "$key" == "QUEEN_AI_TELEMETRY_OK" ]]; then
+    printf '%s' "${val:-1}"
+    return 0
+  fi
   printf '%s' "${val:-0}"
 }
 
@@ -72,7 +78,7 @@ nexus_settings_set() {
   local key="$1" val="$2" tmp
   nexus_settings_init
   case "$key" in
-    NEXUS_PARANOIA_BLOCK|NEXUS_PARANOIA_MODE|NEXUS_FIREWALL_AUTO_BLOCK|NEXUS_AUTOSANITIZE|NEXUS_ADBLOCK|NEXUS_ADBLOCK_RESPECT_POLICY|NEXUS_PANEL_AUTO_OPEN|NEXUS_CONNECTION_GATEKEEPER|NEXUS_PACKET_ORACLE|NEXUS_SHADOW_WATCH|NEXUS_ENTROPY_WATCH|NEXUS_BEHAVIOR_WATCH|NEXUS_PRIVACY_GUARD|NEXUS_SHUTDOWN_GUARD|NEXUS_HOSTESS7_CORROBORATE|NEXUS_ATTACK_KIT_AUTO_CRUSH|NEXUS_FIELD_AUTO_REKILL|NEXUS_GATEKEEPER_STRICT_TRUST|NEXUS_PACKET_PERMISSION) ;;
+    NEXUS_AI_SECURE_CHANNEL|QUEEN_AI_TELEMETRY_OK|NEXUS_PARANOIA_BLOCK|NEXUS_PARANOIA_MODE|NEXUS_FIREWALL_AUTO_BLOCK|NEXUS_AUTOSANITIZE|NEXUS_ADBLOCK|NEXUS_ADBLOCK_RESPECT_POLICY|NEXUS_PANEL_AUTO_OPEN|NEXUS_CONNECTION_GATEKEEPER|NEXUS_PACKET_ORACLE|NEXUS_SHADOW_WATCH|NEXUS_ENTROPY_WATCH|NEXUS_BEHAVIOR_WATCH|NEXUS_PRIVACY_GUARD|NEXUS_SHUTDOWN_GUARD|NEXUS_HOSTESS7_CORROBORATE|NEXUS_ATTACK_KIT_AUTO_CRUSH|NEXUS_FIELD_AUTO_REKILL|NEXUS_GATEKEEPER_STRICT_TRUST|NEXUS_PACKET_PERMISSION) ;;
     *) return 1 ;;
   esac
   [[ "$val" == "1" || "$val" == "0" ]] || return 1
@@ -161,6 +167,13 @@ nexus_settings_json() {
   printf '{'
   for key in "${NEXUS_SETTINGS_KEYS[@]}"; do
     val="$(nexus_settings_get "$key")"
+    if [[ "$key" == "NEXUS_AI_SECURE_CHANNEL" || "$key" == "QUEEN_AI_TELEMETRY_OK" ]]; then
+      [[ -n "$val" ]] || val="1"
+      [[ "$first" -eq 1 ]] || printf ','
+      first=0
+      printf '"%s":%s' "$key" "$val"
+      continue
+    fi
     if [[ "$key" == "NEXUS_ADBLOCK_POLICY" ]]; then
       [[ -n "$val" ]] || val="annoyance"
       [[ "$first" -eq 1 ]] || printf ','
@@ -188,6 +201,14 @@ nexus_settings_json() {
     first=0
     printf '"adblock_guardian":'
     nexus_adblock_guardian_json
+  fi
+  local ai_py="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/nexus-ai-telemetry.py"
+  if [[ -f "$ai_py" ]]; then
+    [[ "$first" -eq 1 ]] || printf ','
+    first=0
+    printf '"ai_telemetry":'
+    NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+      pythong "$ai_py" json 2>/dev/null | sed -n '1,999p' || printf '{"ai_telemetry_on":true,"data_release":false}'
   fi
   printf '}'
 }

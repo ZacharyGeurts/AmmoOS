@@ -15,12 +15,13 @@ Version=1.0
 Type=Application
 Name=Queen Browser
 Comment=Queen sovereign web browser — secured imports · field gates
-Exec=${NEXUS_ROOT}/Queen/scripts/run-queen.sh
+Exec=env NEXUS_INSTALL_ROOT=${NEXUS_ROOT} ${NEXUS_ROOT}/Queen/scripts/queen-py ${NEXUS_ROOT}/lib/queen-integrated-browser.py open
 Icon=queen-browser
 Terminal=false
 Categories=Network;WebBrowser;
 MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
 StartupNotify=true
+StartupWMClass=Queen
 EOF
 chmod 644 "$DESKTOP"
 

@@ -1,5 +1,5 @@
 /**
- * Queen — field web engine (plated viewport, nested field safety, AMOURANTHRTX RTX).
+ * Queen — field web engine (plated viewport, nested field safety, CHIPS/cores via Webbrowser).
  * G16: no entropy hotspots — status poll 30s, bounded depth stack, no tight loops.
  */
 (function (global) {
@@ -11,7 +11,7 @@
   const BLANK = new Set(["", "about:blank", "about:srcdoc"]);
 
   let pollTimer = 0;
-  let rtxCache = null;
+  let chipsCache = null;
 
   function $(id) {
     return document.getElementById(id);
@@ -85,23 +85,27 @@
     document.body.dataset.depthFieldsSealedAndDestroyed = "1";
   }
 
-  function renderRtx(doc) {
+  function renderChips(doc) {
     if (!doc || typeof doc !== "object") return;
-    rtxCache = doc;
-    const ready = doc.present || doc.ok || doc.queen_binary_ready;
+    chipsCache = doc;
+    const chips = doc.chips || {};
+    const g16 = doc.grok16 || {};
+    const headers = chips.headers || 0;
+    const ready = doc.surface === "webbrowser" || doc.web_surface || chips.present;
+    const profile = g16.profile || "field_opt";
     const line = ready
-      ? `AMOURANTHRTX · RTX ${doc.profile || "field_opt"} · connected`
-      : "AMOURANTHRTX · RTX standby · loopback held";
+      ? `CHIPS · ${headers} headers · ${profile} · Webbrowser`
+      : "CHIPS · wiring… · Webbrowser surface";
     $("qb-field-rtx") && ($("qb-field-rtx").textContent = line);
     $("qfh-rtx") && ($("qfh-rtx").textContent = line);
     $("qfh-rtx-card") &&
-      ($("qfh-rtx-card").textContent = `${doc.root ? "root sealed" : "engine"} · ${doc.profile || "G16 field_opt"}`);
+      ($("qfh-rtx-card").textContent = `${headers} headers · ${(chips.platforms || []).length} platforms · web`);
   }
 
-  async function pollRtx() {
+  async function pollChips() {
     try {
-      const r = await fetch("/api/amouranthrtx", { cache: "no-store" });
-      if (r.ok) renderRtx(await r.json());
+      const r = await fetch("/api/chips", { cache: "no-store" });
+      if (r.ok) renderChips(await r.json());
     } catch (_) {
       /* loopback only — quiet */
     }
@@ -109,14 +113,31 @@
 
   function schedulePoll() {
     if (pollTimer) return;
-    pollRtx();
+    pollChips();
     pollTimer = global.setInterval(() => {
-      pollRtx();
+      pollChips();
       global.QueenFieldSanity?.runPass?.();
     }, POLL_MS);
   }
 
+  function snapDimensionalPits() {
+    if (global.QueenFieldSanity?.snapPitsInstant) {
+      return global.QueenFieldSanity.snapPitsInstant();
+    }
+    let pits = 0;
+    document.querySelectorAll(".qb-frame").forEach((frame) => {
+      const src = frame.getAttribute("src") || frame.src || "";
+      if (/[?&]field_depth=[1-9]\d*/.test(src)) {
+        pits += 1;
+        const clean = src.replace(/([?&])field_depth=\d+/g, "").replace(/\?&/, "?").replace(/[?&]$/, "");
+        frame.setAttribute("src", clean);
+      }
+    });
+    return { ok: true, instant: true, pits_snapped: pits };
+  }
+
   function nestedFieldGuard() {
+    snapDimensionalPits();
     const depth = fieldDepth();
     renderDepthLabels(depth);
     if (depth >= MAX_DEPTH) {
@@ -132,7 +153,7 @@
     }
   }
 
-  const FIELD_MSG = new Set(["queen_field_ping", "queen_field_sanity"]);
+  const FIELD_MSG = new Set(["queen_field_ping", "queen_field_sanity", "queen_field_die"]);
 
   function onFieldMessage(ev) {
     if (ev.origin !== location.origin) return;
@@ -140,7 +161,14 @@
     if (!data || typeof data !== "object") return;
     if (data.origin && data.origin !== "queen-field-engine" && data.origin !== "queen-field-sanity") return;
     if (!FIELD_MSG.has(data.type)) return;
+    if (data.type === "queen_field_die") {
+      snapDimensionalPits();
+      global.QueenFieldSanity?.instantFieldDieCheck?.();
+      renderDepthLabels(0);
+      return;
+    }
     if (data.type === "queen_field_ping" && typeof data.depth === "number" && data.depth > 0) {
+      snapDimensionalPits();
       renderDepthLabels(0);
     }
     if (data.type === "queen_field_sanity" && data.gate_ok === false) {
@@ -168,9 +196,11 @@
 
   global.QueenFieldEngine = {
     depth: fieldDepth,
+    snapDimensionalPits,
     setPlateVisible,
     syncFramePlate,
-    pollRtx,
+    pollChips,
+    pollRtx: pollChips,
     MAX_DEPTH,
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -483,8 +483,49 @@ def run_rtx_configure(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
     return _fail(engine, "rtx_configure", "field-cmake.sh unavailable — install Grok16")
 
 
+def _combinatronics_compile_gate(ctx: ForgeContext, engine: ForgeEngine) -> dict:
+    comb_py = grok16_root(ctx) / "lib" / "g16-compile-combinatronics.py"
+    if not comb_py.is_file():
+        return {}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("g16_compile_combinatronics", comb_py)
+        if not spec or not spec.loader:
+            return {}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "compile_gate"):
+            gate = mod.compile_gate(profile=os.environ.get("GROK16_FIELD_PROFILE"))
+            engine.log(f"forge:combinatronics_gate profile={gate.get('profile')} ok={gate.get('ok')}")
+            return gate
+    except Exception as exc:
+        engine.log(f"forge:combinatronics_gate warn — {exc}")
+    return {}
+
+
+def _stamp_compiled_binary(ctx: ForgeContext, engine: ForgeEngine, path: Path, gate: dict, meta: dict) -> None:
+    comb_py = grok16_root(ctx) / "lib" / "g16-compile-combinatronics.py"
+    if not comb_py.is_file() or not path.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("g16_compile_combinatronics", comb_py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "stamp_compiled_artifact"):
+            stamp = mod.stamp_compiled_artifact(path, comb=gate.get("combinatronics"), compile_meta=meta)
+            engine.log(f"forge:combinatronics_stamp ok={stamp.get('ok')} path={stamp.get('stamp')}")
+    except Exception as exc:
+        engine.log(f"forge:combinatronics_stamp warn — {exc}")
+
+
 def run_rtx_build(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
     engine.log("=== forge:rtx_build (g16 + Ninja — no cmake --build) ===")
+    comb_gate = _combinatronics_compile_gate(ctx, engine)
+    if comb_gate.get("profile"):
+        os.environ["GROK16_FIELD_PROFILE"] = str(comb_gate["profile"])
     g16_bin = queen_g16_bin(ctx)
     if not g16_bin:
         return _fail(engine, "rtx_build", "g16 not ready — run scripts/g16-toolchain.sh install")
@@ -519,6 +560,7 @@ def run_rtx_build(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
                     if link.exists() or link.is_symlink():
                         link.unlink()
                     link.symlink_to(bin_path.name)
+                _stamp_compiled_binary(ctx, engine, bin_path, comb_gate, {"target": "queen-browser", "toolchain": "field-cmake"})
                 engine.log(f"=== QUEEN BINARY READY: {bin_path} ===")
                 return _ok(engine, "rtx_build", str(bin_path))
         return _fail(engine, "rtx_build", "g16 ninja build failed", rc, engine.tail_buffer())
@@ -540,6 +582,7 @@ def run_rtx_build(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
         if link.exists() or link.is_symlink():
             link.unlink()
         link.symlink_to(bin_path.name)
+    _stamp_compiled_binary(ctx, engine, bin_path, comb_gate, {"target": "queen-browser", "toolchain": "g16-build"})
     engine.log(f"=== QUEEN BINARY READY: {bin_path} ===")
     return _ok(engine, "rtx_build", str(bin_path))
 
@@ -681,7 +724,7 @@ def run_verify(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
         engine.log("WARN: field package not sealed — pythong lib/queen-forge.py field")
 
     theme = json.loads((root / "gui/queen-theme-2026.json").read_text(encoding="utf-8"))
-    checks.append(("theme QueenBoot", "QueenBoot" in json.dumps(theme.get("compshader_boot", ""))))
+    checks.append(("theme web_boot", "browser.html" in json.dumps(theme.get("web_boot", ""))))
     checks.append(("theme aqua", '"aqua"' in json.dumps(theme)))
 
     try:

@@ -148,6 +148,7 @@ def bundle_training_data(*, refresh: bool = False) -> dict[str, Any]:
         "mos": _load(STATE / "hostess7-mos-panel.json", {}),
         "reality_physics": _load(STATE / "hostess7-reality-physics-panel.json", {}),
         "geography": _load(STATE / "hostess7-geography-panel.json", {}),
+        "music": _load(STATE / "hostess7-music-panel.json", {}),
         "sense_training": _load(STATE / "hostess7-sense-training-panel.json", {}),
         "ironclad": _load(STATE / "ironclad-panel.json", {}),
         "ironclad_doctrine": _load(INSTALL / "data" / "ironclad-doctrine.json", {}),

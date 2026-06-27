@@ -86,28 +86,107 @@ def run_tests() -> list[tuple[str, str]]:
         "data-queen-surface=\"browser\"",
         "data-queen-theme=\"black_emerald_rose_2026\"",
         "queen-theme-2026.js",
+        "queen-styles.js",
+        "queen-styles.css",
+        "qb-styles",
         "queen-media-egress.js",
         "data-media-egress",
         "Queen",
+        "queen-branding.css",
+        "amouranth-gentle.png",
     ):
         assert_true(needle in text, f"shell contains {needle}", results)
+    bjs, bjst = _get("/world/queen-branding.js")
+    assert_true(bjs == 200 and b"qb-freddie-egg" in bjst and b"rhap" in bjst, "Freddie easter egg wired", results)
     assert_true("qw-dock" not in text, "default /world/ is browser-only (no Queen OS dock)", results)
 
     for asset in (
+        "/world/queen-branding.css",
+        "/world/queen-branding.js",
+        "/world/assets/branding/queen-favicon-48.png",
+        "/world/assets/branding/freddie-easter-egg.png",
+        "/world/assets/branding/amouranth-plate.png",
         "/world/queen-os.js",
         "/world/queen-world.css",
         "/world/queen-gnu-terminal.js",
         "/world/queen-gnu-terminal.css",
+        "/world/queen-gnu-terminal-embed.html",
         "/world/queen-browser-shell.js",
         "/world/queen-theme-2026.js",
+        "/world/queen-styles.js",
+        "/world/queen-styles.css",
         "/gui/queen-theme-2026.json",
+        "/gui/queen-styles-themes.json",
         "/world/queen-start.html",
+        "/world/queen-desktop.html",
+        "/world/queen-desktop.js",
+        "/world/queen-desktop.css",
+        "/world/queen-sdf-icons.js",
+        "/world/queen-front-hook.js",
         "/world/queen-files.html",
         "/world/queen-files.js",
         "/world/queen-files.css",
+        "/world/queen-nexus-c2.html",
+        "/world/queen-nexus-c2.js",
+        "/world/queen-nexus-c2.css",
+        "/world/queen-dashboard.html",
+        "/world/queen-dashboard.js",
+        "/world/queen-dashboard.css",
+        "/world/queen-dashboard-flyout.js",
+        "/world/queen-dashboard-flyout.css",
+        "/world/queen-diagnostic-pane.html",
+        "/world/queen-diagnostic-pane.js",
+        "/world/queen-diagnostic-pane.css",
+        "/world/field-performance-flyout.js",
+        "/world/field-performance-flyout.css",
     ):
         ac, _ = _get(asset)
         assert_true(ac == 200, f"asset {asset} loads", results)
+
+    code, c2_html = _get("/world/queen-nexus-c2.html")
+    assert_true(code == 200, "nexus c2 page HTTP 200", results)
+    c2_text = c2_html.decode("utf-8", errors="replace")
+    for needle in (
+        "qnc2-window",
+        "qnc2-grid",
+        "qnc2-cols",
+        "qnc2-fs-layer",
+        "queen-nexus-c2.js",
+        'data-queen-surface="nexus-c2"',
+        "nexus-military-v8",
+    ):
+        assert_true(needle in c2_text, f"nexus c2 contains {needle}", results)
+    code, c2_js = _get("/world/queen-nexus-c2.js")
+    assert_true(code == 200 and b"QueenNexusC2" in c2_js and b"/api/nexus-c2" in c2_js, "nexus c2 JS API", results)
+
+    code, dash_html = _get("/world/queen-dashboard.html")
+    assert_true(code == 200, "legacy dashboard redirect HTTP 200", results)
+    dash_text = dash_html.decode("utf-8", errors="replace")
+    assert_true("queen-nexus-c2.html" in dash_text, "dashboard redirects to nexus c2", results)
+
+    code, desk_raw = _get("/api/queen-desktop")
+    desk = json.loads(desk_raw.decode("utf-8"))
+    assert_true(code == 200 and desk.get("schema") == "queen-desktop/v1", "queen-desktop API", results)
+    desk_ids = {p.get("id") for p in desk.get("classic_programs") or []}
+    assert_true("nexus-c2" in desk_ids or "dashboard" in desk_ids, "nexus c2 in classic programs", results)
+
+    code, c2_api_raw = _get("/api/nexus-c2")
+    c2_api = json.loads(c2_api_raw.decode("utf-8"))
+    assert_true(code == 200 and c2_api.get("schema") == "queen-nexus-c2/v1", "nexus-c2 API", results)
+    assert_true(c2_api.get("programmatic") is True, "nexus-c2 programmatic", results)
+    panel_ids = {s.get("id") for s in (c2_api.get("panels") or c2_api.get("screens") or [])}
+    for sid in ("field-sanity", "physics-witness", "g16-forge", "combinatorics", "c2-taskbar"):
+        assert_true(sid in panel_ids, f"nexus c2 panel {sid}", results)
+    g16 = c2_api.get("g16") or {}
+    assert_true("field_opt_defs" in g16 and isinstance(g16.get("field_opt_defs"), list), "nexus c2 g16 field_opt posture", results)
+
+    code, dash_api_raw = _get("/api/queen-dashboard")
+    dash_api = json.loads(dash_api_raw.decode("utf-8"))
+    assert_true(code == 200 and dash_api.get("schema") == "queen-dashboard/v1", "legacy dashboard API alias", results)
+
+    code, fly_raw = _get("/api/nexus-c2?flyout=1")
+    fly = json.loads(fly_raw.decode("utf-8"))
+    assert_true(code == 200 and fly.get("flyout") is True and len(fly.get("panels") or fly.get("screens") or []) >= 6, "nexus c2 flyout panels", results)
 
     # --- Status ---
     code, doc = _post("/api/queen-browser", {"action": "status"})
@@ -126,6 +205,9 @@ def run_tests() -> list[tuple[str, str]]:
     assert_true((sec.get("iff") or {}).get("presume_hostile") is True, "browser presume hostile IFF", results)
     assert_true((sec.get("iff") or {}).get("never_presume_correct_contact") is True, "never presume correct contact", results)
     assert_true(doc.get("capabilities", {}).get("start_tab") is True, "start tab capability", results)
+    assert_true(doc.get("capabilities", {}).get("classic_desktop") is True, "classic desktop capability", results)
+    assert_true(doc.get("capabilities", {}).get("split_pill_start") is True, "split pill start capability", results)
+    assert_true("queen-desktop.html" in (doc.get("desktop_url") or ""), "desktop URL in status", results)
     assert_true(doc.get("capabilities", {}).get("full_web_surface") is True, "full web surface capability", results)
     assert_true((doc.get("web_compat") or {}).get("schema") == "queen-web-compat/v1", "web compat catalog", results)
     assert_true(doc.get("capabilities", {}).get("nexus_jump") is True, "nexus jump capability", results)
@@ -176,7 +258,9 @@ def run_tests() -> list[tuple[str, str]]:
     code, back = _post("/api/queen-browser", {"action": "back", "tab_id": tab1})
     assert_true(code == 200 and back.get("ok"), "history back", results)
     assert_true(
-        "/field" in (back.get("tab", {}).get("url") or "") or "/world/" in (back.get("tab", {}).get("url") or ""),
+        "queen-desktop.html" in (back.get("tab", {}).get("url") or "")
+        or "/field" in (back.get("tab", {}).get("url") or "")
+        or "/world/" in (back.get("tab", {}).get("url") or ""),
         "back returns home tab URL",
         results,
     )
@@ -362,6 +446,21 @@ def run_tests() -> list[tuple[str, str]]:
     assert_true(fj == 200 and fjail.get("ok"), "jail verify", results)
     bad = next((s for s in (fjail.get("samples") or []) if "/etc/passwd" in (s.get("input") or "")), {})
     assert_true(bad.get("ok") is False, "etc/passwd jailed", results)
+    caps = fbdoc.get("capabilities") or {}
+    assert_true(caps.get("context_menu") is True, "file browser context menu", results)
+    assert_true(caps.get("file_type_inspect") is True, "file type inspect", results)
+    assert_true(caps.get("launch_spv") is True, "launch_spv capability", results)
+    ft, ftdoc = _post("/api/queen-file-browser", {"action": "file_types"})
+    assert_true(ft == 200 and ftdoc.get("ok") and len(ftdoc.get("types") or {}) > 10, "file types registry", results)
+    insp_path = "SG/NewLatest/Queen/shaders/compute/QueenBoot.comp"
+    fi, fidoc = _post("/api/queen-file-browser", {"action": "inspect", "path": insp_path})
+    assert_true(fi == 200 and fidoc.get("ok"), "inspect QueenBoot.comp", results)
+    assert_true((fidoc.get("inspect") or {}).get("type_id") == "queen_boot_comp", "QueenBoot name disambiguation", results)
+    assert_true((fidoc.get("inspect") or {}).get("action") == "open_code", "QueenBoot opens in code", results)
+    ffc, ffhtml = _get("/world/queen-files.html")
+    assert_true(ffc == 200 and b"qf-ctx" in ffhtml, "queen-files context menu markup", results)
+    fjc, fjjs = _get("/world/queen-files.js")
+    assert_true(fjc == 200 and b"contextmenu" in fjjs and b"launch_spv" in fjjs, "queen-files actions wired", results)
     eco = kdoc.get("ecosystem") or {}
     assert_true(eco.get("field_primer", {}).get("present") is True, "Field_Primer in ecosystem", results)
     assert_true(eco.get("final_eye", {}).get("present") is True, "Final_Eye in ecosystem", results)
@@ -393,7 +492,14 @@ def run_tests() -> list[tuple[str, str]]:
     gc, grdoc_raw = _get("/api/game-room")
     grdoc = json.loads(grdoc_raw.decode("utf-8"))
     assert_true(gc == 200 and grdoc.get("schema") == "queen-chips/v1", "game room API", results)
+    assert_true(grdoc.get("surface") == "webbrowser" and grdoc.get("web_surface") is True, "game room web surface", results)
+    assert_true((grdoc.get("rtx") or {}).get("desktop_comp_shader") is False, "no desktop comp shader", results)
     assert_true(len(grdoc.get("systems") or []) >= 10, "game room systems catalog", results)
+
+    grc, grhtml = _get("/world/queen-game-room.html")
+    assert_true(grc == 200 and b"queen-game-room.js" in grhtml, "game room web page", results)
+    ccc, cchtml = _get("/world/queen-chips-cores.html")
+    assert_true(ccc == 200 and b"queen-chips-cores.js" in cchtml, "chips/cores web page", results)
     assert_true(any(c.get("id") == "cyrix_6x86" for c in (grdoc.get("host_cpus") or [])), "Cyrix CPU option", results)
     assert_true(b"gr-deck" in os_html and b"gr-stage" in os_html, "theater stage + deck layout", results)
     assert_true(b"qw-systems-grid" in os_html, "OS computer systems grid", results)
@@ -401,8 +507,37 @@ def run_tests() -> list[tuple[str, str]]:
     assert_true(b"qw-sov-rebuild" in os_html and b"qw-sov-reboot" in os_html, "capsule rebuild + reboot controls", results)
     assert_true(b'data-tab="earball"' in os_html and b"qw-ear-body" in os_html, "Final Ear dock panel", results)
     assert_true(
-        b'data-tab="terminal"' in os_html and b"qgt-deck" in os_html and b"qgt-scrolltrack" in os_html,
-        "GNU terminal dock + minibrowser + scrollbar",
+        b'data-tab="terminal"' in os_html and b'id="qgt-shell"' in os_html and b"data-qgt-secured" in os_html,
+        "GNU terminal dock shell mount point",
+        results,
+    )
+    tjs, tjst = _get("/world/queen-gnu-terminal.js")
+    tcss, tcsst = _get("/world/queen-gnu-terminal.css")
+    assert_true(
+        tjs == 200
+        and b"TAB_THRESHOLD" in tjst
+        and b"qgt-miniview" in tjst
+        and b"qgt-scrolltrack" in tjst
+        and b"split-4" in tjst
+        and (b'layout: "tabs"' in tjst or b"layout: 'tabs'" in tjst),
+        "GNU terminal tabs/split/miniview/scrollbar JS",
+        results,
+    )
+    assert_true(
+        tcss == 200
+        and b"qgt-topbar" in tcsst
+        and b"qgt-miniview" in tcsst
+        and b"qgt-scrolltrack" in tcsst
+        and b"split-4" in tcsst
+        and b"backdrop-filter" not in tcsst
+        and b"filter: blur" not in tcsst,
+        "GNU terminal green glow CSS (no blur filters)",
+        results,
+    )
+    emb, embhtml = _get("/world/queen-gnu-terminal-embed.html")
+    assert_true(
+        emb == 200 and b"QueenGnuTerminal" in embhtml and b"data-qgt-secured" in embhtml,
+        "GNU terminal embed page",
         results,
     )
 
@@ -556,6 +691,23 @@ def run_tests() -> list[tuple[str, str]]:
     fbc, fbdoc_raw = _get("/api/game-room/fb")
     fbdoc = json.loads(fbdoc_raw.decode("utf-8"))
     assert_true(fbc == 200 and fbdoc.get("schema") == "queen-game-room-fb/v1", "game room framebuffer API", results)
+    assert_true(fbdoc.get("web_surface") is True and fbdoc.get("ready") is True, "web canvas framebuffer ready", results)
+
+    bc, bdoc_raw = _get("/api/queen-benchmark")
+    bdoc = json.loads(bdoc_raw.decode("utf-8"))
+    assert_true(bc == 200 and bdoc.get("schema") == "queen-benchmark/v1", "queen benchmark API", results)
+    bench_html_code, bench_html = _get("/world/bench/")
+    assert_true(bench_html_code == 200 and b"Speedometer" in bench_html, "bench launcher page", results)
+    bench_py = subprocess.run(
+        [sys.executable, str(QUEEN / "lib" / "queen-benchmark.py"), "check", "http://127.0.0.1:9481/world/bench/"],
+        capture_output=True,
+        text=True,
+        timeout=15,
+        env={**os.environ, "QUEEN_BENCHMARK_MODE": "1"},
+    )
+    assert_true(bench_py.returncode == 0, "queen-benchmark check CLI", results)
+    bench_out = json.loads(bench_py.stdout or "{}")
+    assert_true(bench_out.get("fast_jump", {}).get("permit") is True, "benchmark fast jump permit", results)
 
     return results
 

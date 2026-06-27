@@ -95,12 +95,29 @@ def _member_ok(doc: dict[str, Any]) -> bool:
     return False
 
 
+def _combinatorics_posture() -> dict[str, Any]:
+    bridge = _load(STATE / "field-plate-combinatorics-bridge.json", {})
+    posture = bridge.get("exec_posture") or {}
+    comb = _load(STATE / "g16-field-combinatorics-panel.json", {})
+    return {
+        "bridge_ok": bridge.get("ok"),
+        "pattern": posture.get("pattern_id"),
+        "runner": posture.get("runner"),
+        "belt_profile": posture.get("belt_profile"),
+        "native_ceiling": posture.get("native_ceiling_ops_per_sec")
+        or (comb.get("speed_cap") or {}).get("estimated_cap_ops_per_sec"),
+        "free_meld": posture.get("free_meld"),
+        "iron_exec": posture.get("iron_exec_recommended"),
+    }
+
+
 def optimize_profile() -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     eem = _eye_ear_mouth_plate()
     members = _sense_members()
     stack = _g16_stack()
     meld_gen = _meld_gen()
+    comb = _combinatorics_posture()
     eye_ok = bool(eem.get("eye_ok") or _member_ok(members["eye"]))
     ear_ok = bool(eem.get("ear_ok") or _member_ok(members["ear"]))
     mouth_ok = bool(eem.get("mouth_ok") or _member_ok(members["mouth"]))
@@ -129,6 +146,18 @@ def optimize_profile() -> dict[str, Any]:
             profile = "field_opt"
             reason = "rtx_gate_fallback"
 
+    belt = str(comb.get("belt_profile") or "belt_1_0")
+    if comb.get("iron_exec") and comb.get("bridge_ok") and eye_ok and iron_ok:
+        if belt == "belt_2_0" and g16_ready:
+            profile = "forever"
+            reason = "combinatorics_belt_2_native_bsp"
+        elif comb.get("free_meld"):
+            profile = "expert" if profile == "hostess_secure" else profile
+            reason = f"combinatorics_{comb.get('pattern') or 'iron_exec'}"
+        elif (comb.get("native_ceiling") or 0) > 500_000:
+            profile = "heavy" if profile in ("field_opt", "hostess_secure") else profile
+            reason = "combinatorics_speed_cap"
+
     weights = doctrine.get("sense_weight") or {}
     score = (
         (weights.get("final_eye", 0.4) if eye_ok else 0.0)
@@ -146,6 +175,9 @@ def optimize_profile() -> dict[str, Any]:
         "g16_ready": g16_ready,
         "meld_generation": meld_gen,
         "rtx_satisfied": bool(rtx.get("satisfied")),
+        "combinatorics": comb,
+        "belt_profile": belt,
+        "emulator": comb.get("runner"),
     }
 
 

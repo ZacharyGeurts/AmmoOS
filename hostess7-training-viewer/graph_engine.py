@@ -485,6 +485,55 @@ def build_wireframe_graph(
         },
     )
     add_edge("geography_hub", "hostess7_core", "geography")
+
+    music_panel = _load(state / "hostess7-music-panel.json", {})
+    music_tracks = (music_panel.get("tracks") or {}) if isinstance(music_panel, dict) else {}
+    add_node(
+        id="music_theory_hub",
+        label="Music theory",
+        group="music_core",
+        level=str((music_tracks.get("music_theory") or {}).get("level") or "training"),
+        score=float((music_tracks.get("music_theory") or {}).get("score") or 0.3),
+        x=-4.2, y=5.2, z=-1.8,
+        color="#c8a030",
+        detail=str(music_panel.get("motto") or "Pitch · rhythm · harmony · crosswire all tracks")[:120],
+        kind="music_hub",
+        payload={
+            "reference_hz": music_panel.get("reference_pitch_hz"),
+            "music_drills": music_panel.get("music_drills"),
+            "crosswire_hooks": (music_panel.get("crosswire") or {}).get("hook_count"),
+        },
+    )
+    add_edge("music_theory_hub", "hostess7_core", "music")
+    add_edge("music_theory_hub", "sense_package_hub", "music")
+    for mi, (mid, mlabel, mcolor) in enumerate((
+        ("music_ear", "Ear", "#4de88a"),
+        ("music_mouth", "Mouth", "#f0a060"),
+        ("music_brain", "Brain", "#c084fc"),
+        ("music_eye", "Eye", "#7ec8ff"),
+        ("music_sense_wire", "Sense wire", "#e8c878"),
+    )):
+        mt = music_tracks.get(mid) or tracks.get(mid) or {}
+        mx, my, mz = _ring_pos(mi, 5, 2.8, 5.2, -0.8)
+        add_node(
+            id=f"music_{mid}",
+            label=mlabel,
+            group="music_track",
+            level=level_from_track(mt) if mt else "pending",
+            score=float(mt.get("score") or 0.2),
+            x=mx, y=my, z=mz,
+            color=mcolor,
+            detail=json.dumps({k: mt.get(k) for k in ("pass_rate", "music_drills", "proficiency") if mt.get(k) is not None}, ensure_ascii=False)[:120],
+            kind="music_track",
+        )
+        add_edge("music_theory_hub", f"music_{mid}", "music")
+        add_edge(f"music_{mid}", "hostess7_core", "training")
+        if mid in ("music_ear", "music_mouth", "music_eye"):
+            sense_nid = {"music_ear": "final_ear_node", "music_mouth": "final_mouth_node", "music_eye": "final_eye_node"}.get(mid)
+            if sense_nid:
+                add_edge(f"music_{mid}", sense_nid, "music")
+        if mid == "music_sense_wire":
+            add_edge(f"music_{mid}", "sense_neural_wire", "music")
     for gi, (gid, glabel, gcolor) in enumerate((
         ("postal_addresses", "Postal", "#e9c46a"),
         ("world_geography", "World", "#264653"),
@@ -618,6 +667,7 @@ def build_wireframe_graph(
     add_edge("ironclad_bible", "reality_physics_hub", "physics")
     add_edge("ironclad_bible", "sense_neural_wire", "neural_extrapolation")
     add_edge("ironclad_bible", "sense_package_hub", "neural_extrapolation")
+    add_edge("ironclad_bible", "music_theory_hub", "harmony")
     for sense_nid in ("final_eye_node", "final_ear_node", "final_mouth_node"):
         add_edge("ironclad_bible", sense_nid, "neural_extrapolation")
 

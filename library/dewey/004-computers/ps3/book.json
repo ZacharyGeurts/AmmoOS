@@ -1,0 +1,12 @@
+{
+  "id": "ps3",
+  "title": "PlayStation 3",
+  "author": "",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/ps3/ps3.h7c",
+  "h7": null,
+  "cover": null,
+  "migrated_from": "h7",
+  "updated": "2026-06-27T12:05:03Z"
+}

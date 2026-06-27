@@ -4,6 +4,13 @@
   "field_technology_book": true,
   "primer_palette": "Field_Primer/docs/css/field-primer.css",
   "chrome_name": "black_emerald_rose_2026",
+  "styles": {
+    "engine": "world/queen-styles.js",
+    "panel": "world/queen-styles.css",
+    "catalog": "gui/queen-styles-themes.json",
+    "storage": "queen-styles-v1",
+    "rebrand": "Styles — full CSS theming (was theme seal only)"
+  },
   "branding": {
     "amouranth_gentle": "world/assets/branding/amouranth-gentle.png",
     "freddie_easter_egg": "world/assets/branding/freddie-easter-egg.png",
@@ -12,9 +19,15 @@
     "local_only_assets": true,
     "humans_ai_strip": true,
     "icon_kit": "Queen/scripts/queen-icon-kit.py",
-    "taskbar_icon": "panel/assets/nexus-field.png",
+    "taskbar_icon": "panel/assets/ammoos-field.png",
+    "taskbar_aliases": ["panel/assets/queen-browser.png", "panel/assets/ammoos-panel.png", "panel/assets/nexus-field.png", "assets/ammoos-field.png"],
+    "product": "AmmoOS",
+    "browser": "Queen Browser",
     "tray_icon": "panel/assets/queen-tray-24.png",
-    "panel_avatar": "panel/assets/amouranth-panel-avatar.png"
+    "favicon": "world/assets/branding/queen-favicon-48.png",
+    "panel_avatar": "panel/assets/amouranth-panel-avatar.png",
+    "wordmark": "world/assets/branding/ammoos-wordmark.svg",
+    "wordmark_alt": "world/assets/branding/queen-wordmark.svg"
   },
   "colors": {
     "void": "#020403",
@@ -41,8 +54,9 @@
     "tab_height": 40,
     "url_bar_height": 44,
     "corner_radius": 8,
-    "compshader_boot": "QueenBoot.comp",
-    "fallback_boot_ms": 1800
+    "web_boot": "/world/browser.html",
+    "compshader_boot": null,
+    "fallback_boot_ms": 0
   },
   "typography": {
     "ui_font": "Inter, system-ui, sans-serif",

@@ -639,6 +639,28 @@ def build_status() -> dict[str, Any]:
 
     nf = _non_fielded()
     audit = nf.defield_audit() if nf else {}
+    index_now: dict[str, Any] = {}
+    timeshift: dict[str, Any] = {}
+    try:
+        import importlib.util
+        for mod_name, rel in (
+            ("field_drive_indexer", "field-drive-indexer.py"),
+            ("field_timeshift", "field-timeshift.py"),
+        ):
+            py = Path(__file__).resolve().parent / rel
+            if not py.is_file():
+                continue
+            spec = importlib.util.spec_from_file_location(mod_name, py)
+            if not spec or not spec.loader:
+                continue
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if mod_name == "field_drive_indexer" and hasattr(mod, "now_snapshot"):
+                index_now = mod.now_snapshot()
+            if mod_name == "field_timeshift" and hasattr(mod, "status"):
+                timeshift = mod.status()
+    except Exception:
+        pass
     return {
         "schema": "field-drive-system/v1",
         "updated": _now(),
@@ -673,6 +695,8 @@ def build_status() -> dict[str, Any]:
         },
         "panel_url": f"http://127.0.0.1:{os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477')}/field",
         "talk_panel_url": f"http://127.0.0.1:{os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477')}/field-talk",
+        "field_index": index_now,
+        "timeshift": timeshift,
     }
 
 

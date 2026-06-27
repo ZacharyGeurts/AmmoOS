@@ -52,7 +52,8 @@
   <link rel="stylesheet" href="/assets/nexus-training.css" />
   <link rel="stylesheet" href="/assets/final-sense-tabs.css" />
   <link rel="stylesheet" href="/assets/field-inspector.css" />
-  <link rel="stylesheet" href="/assets/sweet-anita-broadcast.css" />
+  <link rel="stylesheet" href="/assets/field-performance-flyout.css" />
+  <link rel="stylesheet" href="/assets/field-broadcaster.css" />
   <script defer src="/assets/nexus-person-system.js"></script>
   <script defer src="/assets/nexus-map-interact.js"></script>
   <script defer src="/assets/hostess7-command.js"></script>
@@ -179,29 +180,44 @@
     }
     html.nexus-rtl nav.menu { flex-direction: row-reverse; }
     .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .nexus-update-chip { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-    #nexus-update-btn {
-      background: #0d1828; border: 1px solid #2a4060; color: var(--muted);
-      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600;
-      letter-spacing: 0.04em; white-space: nowrap; transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+    .nexus-update-chip { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .nexus-version-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    #nexus-version-btn {
+      background: #0a1018; border: 1px solid #1e2a3a; color: #5a6a7a;
+      padding: 8px 14px; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+      letter-spacing: 0.04em; white-space: nowrap; opacity: 0.72; cursor: default; user-select: none;
     }
-    #nexus-update-btn:hover { border-color: var(--internet); color: var(--text); }
-    #nexus-update-btn.update-ready {
+    #nexus-upgrade-btn {
+      background: #0d1828; border: 1px solid #2a4060; color: var(--muted);
+      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 700;
+      letter-spacing: 0.06em; white-space: nowrap; transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      display: none;
+    }
+    #nexus-upgrade-btn.update-ready {
+      display: inline-flex; align-items: center;
       background: linear-gradient(135deg, #1a2840, #2a1848);
       border-color: var(--gold); color: #ffe8a8;
       box-shadow: 0 0 18px rgba(212, 175, 55, 0.45);
       animation: update-pulse 1.6s ease-in-out infinite;
     }
+    #nexus-upgrade-btn:hover.update-ready { color: #fff4cc; border-color: #f0d060; }
+    #nexus-upgrade-btn.update-busy {
+      display: inline-flex; border-color: var(--internet); color: var(--internet);
+      animation: none; cursor: wait; opacity: 0.85;
+    }
+    #nexus-restart-btn {
+      background: #101c2c; border: 1px solid #3a5070; color: var(--text);
+      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+      letter-spacing: 0.04em; white-space: nowrap; transition: border-color 0.2s, background 0.2s;
+    }
+    #nexus-restart-btn:hover { border-color: var(--internet); background: #142438; }
+    #nexus-restart-btn:disabled { opacity: 0.55; cursor: wait; }
     @keyframes update-pulse {
       0%, 100% { box-shadow: 0 0 12px rgba(212, 175, 55, 0.35); }
       50% { box-shadow: 0 0 22px rgba(212, 175, 55, 0.65); }
     }
-    #nexus-update-detail { font-size: 14pt; color: var(--muted); max-width: 220px; text-align: right; }
+    #nexus-update-detail { font-size: 14pt; color: var(--muted); max-width: 280px; text-align: right; }
     #nexus-update-detail.update-ready { color: var(--gold); }
-    #nexus-update-btn.update-busy {
-      border-color: var(--internet); color: var(--internet);
-      animation: none; cursor: wait; opacity: 0.85;
-    }
     .field-toolkit-panel {
       margin: 12px 0 0; padding: 12px 14px; border: 1px solid var(--border);
       border-radius: 10px; background: rgba(12, 18, 28, 0.85);
@@ -1124,6 +1140,11 @@
     .library-profile-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 14pt; }
     .library-profile-row select { flex: 1; min-width: 180px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); background: #0d1520; color: var(--text); }
     .library-profile-hint { color: var(--muted); font-size: 14pt; line-height: 1.35; margin-bottom: 8px; }
+    .library-collections { border: 1px solid #2a4060; border-radius: 10px; padding: 8px; background: rgba(12,20,36,0.55); margin-bottom: 8px; max-height: 200px; overflow: auto; }
+    .library-collections-label { font-size: 14pt; color: var(--internet); margin-bottom: 6px; letter-spacing: 0.04em; }
+    .library-human-blurb { font-size: 0.95rem; line-height: 1.45; color: var(--text); padding: 10px 12px; border-radius: 8px; background: rgba(14,22,34,0.7); border: 1px solid var(--border); min-height: 3.2em; }
+    .library-passage-hits { font-size: 0.88rem; color: var(--muted); max-height: 140px; overflow: auto; border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 4px; }
+    .library-passage-hits .hit { margin-bottom: 8px; padding: 6px 8px; border-radius: 6px; background: rgba(8,14,24,0.5); }
     .library-war-shelves { border: 1px solid #4a3020; border-radius: 10px; padding: 8px; background: rgba(24,16,8,0.45); margin-bottom: 8px; max-height: 160px; overflow: auto; }
     .library-war-label { font-size: 14pt; color: var(--gold); margin-bottom: 6px; letter-spacing: 0.04em; }
     .library-dewey { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: rgba(8,14,24,0.6); max-height: 220px; overflow: auto; }
@@ -1163,6 +1184,17 @@
     .h7r-controls select { padding: 3px 6px; border-radius: 4px; border: 1px solid var(--border); background: #0d1520; color: var(--text); }
     .h7r-body-wrap { flex: 1; overflow: hidden; padding: 12px 16px; }
     .h7r-body { height: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; hyphens: auto; padding: 8px 4px; }
+    .h7r-sentence { cursor: pointer; border-radius: 3px; padding: 0 2px; }
+    .h7r-sentence:hover, .h7r-sentence:focus { background: rgba(80,120,180,0.25); outline: 1px solid var(--internet); }
+    .h7r-sentence.h7r-verdict-clear { box-shadow: inset 0 -2px 0 rgba(60,160,90,0.35); }
+    .h7r-sentence.h7r-verdict-questionable { box-shadow: inset 0 -2px 0 rgba(200,160,40,0.45); }
+    .h7r-sentence.h7r-verdict-unknown { box-shadow: inset 0 -2px 0 rgba(160,100,200,0.45); }
+    .h7r-truth-panel { margin-top: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(10,16,28,0.85); font-size: 0.9rem; line-height: 1.4; max-height: 200px; overflow: auto; }
+    .h7r-truth-panel[hidden] { display: none; }
+    .h7r-truth-verdict { font-weight: 600; text-transform: capitalize; }
+    .h7r-truth-verdict.clear { color: var(--ok); }
+    .h7r-truth-verdict.questionable { color: var(--gold); }
+    .h7r-truth-verdict.unknown { color: #b090e0; }
     .h7r-bottom { padding: 10px 16px; border-top: 1px solid #1e2838; background: #0a1018; display: flex; align-items: center; gap: 12px; }
     .h7r-slider-wrap { flex: 1; display: flex; align-items: center; gap: 10px; }
     .h7r-slider { flex: 1; }
@@ -1171,6 +1203,20 @@
     .h7r-nav:disabled { opacity: 0.35; cursor: not-allowed; }
     .h7r-close { position: absolute; top: 8px; right: 10px; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #1a2430; color: var(--text); cursor: pointer; z-index: 2; }
     .h7r-error { color: #ffb0b8; padding: 20px; }
+    .h7r-title-wrap { flex: 1; min-width: 200px; }
+    .h7r-librarian { font-size: 0.8rem; color: var(--gold); margin-top: 2px; }
+    .h7r-desc { font-size: 0.78rem; color: var(--muted); margin-top: 4px; max-width: 520px; line-height: 1.35; }
+    .h7r-bm-toolbar { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: #1a2430; cursor: pointer; }
+    .h7r-bookmarks { padding: 8px 14px; border-top: 1px solid #1e2838; background: rgba(8,14,24,0.9); max-height: 120px; overflow: auto; }
+    .h7r-bookmarks[hidden] { display: none; }
+    .h7r-bm-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+    .h7r-bm-add { padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); background: #142030; color: var(--text); cursor: pointer; font-size: 0.8rem; }
+    .h7r-bm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+    .h7r-bm-list li { display: flex; align-items: center; gap: 4px; }
+    .h7r-bm-jump { padding: 4px 10px; border-radius: 6px; border: 1px solid #2a4060; background: #101c2c; color: var(--text); cursor: pointer; font-size: 0.82rem; }
+    .h7r-bm-del { padding: 2px 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; }
+    .h7r-bm-empty { color: var(--muted); font-size: 0.82rem; }
+    .h7r-braille-strip { padding: 6px 14px; font-family: monospace; font-size: 0.9rem; border-top: 1px solid #1e2838; background: #080e18; color: var(--gold); overflow-x: auto; white-space: nowrap; }
     @media (max-width: 900px) { .library-layout { grid-template-columns: 1fr; } }
     .verdict-USER_OK { color: var(--ok); }
     .verdict-EPHEMERAL { color: var(--internet); }
@@ -1469,6 +1515,46 @@
     .settings-profile-stats .chip.on { color: var(--ok); border-color: #2a5040; background: rgba(61, 214, 140, 0.1); }
     .settings-profile-stats .chip.off { color: var(--muted); }
     .settings-profile-stats .chip.profile { color: var(--internet); border-color: #3a5070; }
+    .znetwork-status-card {
+      margin-bottom: 18px; padding: 14px 16px; border-radius: 10px;
+      background: linear-gradient(135deg, #061018 0%, #0a1a28 55%, #081220 100%);
+      border: 1px solid #1e4a68; box-shadow: 0 2px 16px rgba(14, 165, 233, 0.08);
+    }
+    .znetwork-status-card h3 span:first-child { color: #7dd3fc; }
+    .znetwork-status-card .chip.on { color: #7dd3fc; border-color: #1e4a68; background: rgba(14, 165, 233, 0.12); }
+    .znetwork-status-card .chip.off { color: var(--muted); }
+    .znetwork-actions button { font-size: 0.92rem; }
+    .compatibility-layers-card {
+      margin-bottom: 18px; padding: 14px 16px; border-radius: 10px;
+      background: linear-gradient(135deg, #061018 0%, #0c1a28 55%, #081420 100%);
+      border: 1px solid #2d6a8f; box-shadow: 0 2px 16px rgba(94, 234, 212, 0.12);
+    }
+    .compatibility-layers-card h3 span:first-child { color: #5eead4; }
+    .compatibility-layers-card .chip.on { color: #5eead4; border-color: #2d6a8f; background: rgba(94, 234, 212, 0.1); }
+    .diagnostic-mode-banner {
+      display: none; margin: 0 0 12px; padding: 12px 16px; border-radius: 10px;
+      background: linear-gradient(135deg, #1a1208 0%, #2a1a0a 55%, #1a1008 100%);
+      border: 1px solid #b45309; box-shadow: 0 2px 16px rgba(245, 158, 11, 0.15);
+    }
+    .diagnostic-mode-banner.active { display: block; }
+    .diagnostic-mode-banner h2 { margin: 0 0 6px; color: #fbbf24; font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .diagnostic-mode-banner .diag-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .diagnostic-mode-card {
+      margin-bottom: 18px; padding: 14px 16px; border-radius: 10px;
+      background: linear-gradient(135deg, #1a1208 0%, #221508 55%, #181008 100%);
+      border: 1px solid #b45309; box-shadow: 0 2px 16px rgba(245, 158, 11, 0.1);
+    }
+    .diagnostic-mode-card.engaged { border-color: #f59e0b; }
+    .diagnostic-mode-card h3 span:first-child { color: #fbbf24; }
+    .diagnostic-mode-card .chip.on { color: #fbbf24; border-color: #b45309; background: rgba(251, 191, 36, 0.12); }
+    .diagnostic-mode-card .chip.off { color: var(--muted); }
+    .diagnostic-mode-card .chip.crit { color: #fca5a5; border-color: #7f1d1d; background: rgba(248, 113, 113, 0.1); }
+    .ai-telemetry-card {
+      margin-bottom: 18px; padding: 14px 16px; border-radius: 10px;
+      background: linear-gradient(135deg, #061018 0%, #0c1a24 55%, #081420 100%);
+      border: 1px solid #1e5a48; box-shadow: 0 2px 16px rgba(52, 211, 153, 0.08);
+    }
+    .ai-telemetry-card h3 span:first-child { color: #6ee7b7; }
     .setting-row { transition: background 0.2s ease, border-color 0.2s ease; }
     .setting-row.setting-on {
       background: linear-gradient(90deg, rgba(61, 214, 140, 0.07) 0%, transparent 100%);
@@ -1846,7 +1932,9 @@
     html.old-man .ha-nokill-btn,
     html.old-man .ha-check-online-btn,
     html.old-man .setting-row .toggle,
-    html.old-man #nexus-update-btn {
+    html.old-man #nexus-version-btn,
+    html.old-man #nexus-upgrade-btn,
+    html.old-man #nexus-restart-btn {
       min-height: 42px;
     }
     html.old-man .brand-sub::after {
@@ -2052,7 +2140,11 @@
         </span>
       </div>
       <div class="nexus-update-chip">
-        <button type="button" id="nexus-update-btn" data-tip="Release installer update: downloads GitHub release tarball, runs install-all.sh (same path as Tristate), restarts NEXUS. Lock held during apply. Tristate: /underlay-f9 for field conversion.">…</button>
+        <div class="nexus-version-controls">
+          <span id="nexus-version-btn" data-tip="Installed NEXUS version — dim indicator, always current tree.">v…</span>
+          <button type="button" id="nexus-upgrade-btn" data-tip="Upgrade when GitHub release is ahead — incremental catalog diff when available, else full installer. Lock held during apply.">Upgrade</button>
+          <button type="button" id="nexus-restart-btn" data-tip="Restart NEXUS panel and services (log-only, no firewall block).">Restart</button>
+        </div>
         <span id="nexus-update-detail">Checking release…</span>
       </div>
     </div>
@@ -2089,6 +2181,16 @@
 
 
 
+  <div id="diagnostic-mode-banner" class="diagnostic-mode-banner" role="alert" aria-live="polite">
+    <h2>Diagnostic mode — secure baseline only</h2>
+    <div id="diagnostic-banner-detail">Problems detected. Non-baseline systems locked away from fault.</div>
+    <div class="diag-actions">
+      <button type="button" id="diag-debug-self" class="ghost">Debug self</button>
+      <button type="button" id="diag-reorganize" class="ghost">Reorganize fault</button>
+      <button type="button" id="diag-clear" class="ghost">Clear (after debug_self)</button>
+    </div>
+  </div>
+
   <div id="murder-banner" class="murder-banner" role="alert">
     <h2>Bloody murder — NEXUS was shut down</h2>
     <div id="murder-detail">We were killed. Forensics captured. Review what hit us, then restart.</div>
@@ -2120,8 +2222,8 @@
     <div class="nav-group">
       <span class="nav-group-label">Operator</span>
       <button type="button" class="active" data-view="command" data-i18n="nav.command" data-tip="Hostess 7 Super Intelligence — ask if she needs or wants anything, Grok-style talk, IQ & Turing batteries.">Hostess 7 · Super Intelligence</button>
-      <button type="button" data-view="us" data-i18n="nav.us" data-tip="Page 1 — forensic identity of THIS machine plus Field OBS stack summary.">US</button>
-      <button type="button" data-view="sweet-anita" data-tip="Sweet_Anita — Twitch-style video tab: OBS Field stack, decks, every major platform, embedded preview (no desktop tunnel), best dB for everyone.">Sweet_Anita</button>
+      <button type="button" data-view="us" data-i18n="nav.us" data-tip="Page 1 — forensic identity of THIS machine plus Broadcaster stack summary.">US</button>
+
     </div>
     <div class="nav-group">
       <span class="nav-group-label">Network</span>
@@ -2395,8 +2497,8 @@
       <section id="us-voltage-regulation" class="us-obs-card" aria-label="Voltage regulation — present rail" style="border-color:rgba(90,248,170,0.35);">
         <p class="meta">Loading voltage regulation…</p>
       </section>
-      <section id="us-obs-field" class="us-obs-card" aria-label="Field OBS broadcasting on this host">
-        <p class="meta">Loading Field OBS stack…</p>
+      <section id="us-broadcaster-field" class="us-obs-card" aria-label="Broadcaster capture on this host">
+        <p class="meta">Loading Broadcaster stack…</p>
       </section>
       <div id="us-host-machine"></div>
       <div id="us-hostess-profile"></div>
@@ -2433,81 +2535,12 @@
         <button type="button" data-view-jump="threats/map">Threat map →</button>
         <button type="button" data-view-jump="intel/trust">Honorability →</button>
         <button type="button" data-view-jump="intel/rf">Field RF →</button>
-        <button type="button" data-view-jump="sweet-anita">Sweet_Anita broadcast →</button>
+        <button type="button" onclick="location.href='/field-broadcaster'">Broadcaster →</button>
       </div>
     </div>
   </section>
 
-  <section id="view-sweet-anita" class="view sa-twitch-room" aria-label="Sweet_Anita Broadcasting" role="region">
-    <div class="sa-wrap">
-      <header class="sa-channel-header" id="sa-hero">
-        <div class="sa-channel-identity">
-          <img class="sa-channel-avatar" src="/assets/sweet-anita-avatar.svg" alt="Sweet_Anita channel avatar" width="56" height="56" loading="lazy" />
-          <div>
-            <h2 class="sa-channel-name" id="sa-title">Sweet_Anita</h2>
-            <p class="sa-channel-game" id="sa-subtitle">Field Broadcasting · OBS stack · embedded panel preview — never tunnel desktop.</p>
-          </div>
-        </div>
-        <div class="sa-channel-meta">
-          <span class="sa-live-badge" id="sa-live-badge" aria-live="polite">LIVE</span>
-          <span class="sa-viewer-pill" id="sa-viewer-pill">Panel preview</span>
-        </div>
-        <div id="sa-hero-status" class="sa-pills"></div>
-      </header>
 
-      <div class="sa-stream-stage">
-        <div class="sa-video-column">
-          <div class="sa-preview-panel">
-            <div class="sa-preview-canvas-wrap">
-              <span class="sa-live-dot" id="sa-live-dot" aria-hidden="true">LIVE</span>
-              <span class="sa-preview-badge" id="sa-preview-badge">Panel preview · no tunnel</span>
-              <canvas id="sa-preview-canvas" aria-label="Sweet_Anita broadcast preview — embedded in NEXUS panel"></canvas>
-            </div>
-            <div class="sa-vu-row">
-              <div class="sa-vu-block">
-                <div class="sa-vu-label">Mic · L</div>
-                <div class="sa-vu"><div class="sa-vu-fill" id="sa-vu-l" style="height:35%"></div></div>
-                <div class="sa-vu-target" id="sa-vu-target">Target −12 dBFS</div>
-              </div>
-              <div class="sa-vu-block">
-                <div class="sa-vu-label">Mic · R</div>
-                <div class="sa-vu"><div class="sa-vu-fill" id="sa-vu-r" style="height:32%"></div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <aside class="sa-chat-rail" aria-label="Field operator chat">
-          <div class="sa-chat-header">Stream chat · Field operator</div>
-          <div class="sa-chat-body" id="sa-chat-feed" aria-live="polite"></div>
-          <div class="sa-chat-input-mock">Send a message…</div>
-        </aside>
-      </div>
-
-      <div class="sa-layout">
-        <article class="sa-card">
-          <h4>Best dB · everyone always</h4>
-          <div id="sa-audio-best"></div>
-        </article>
-        <article class="sa-card">
-          <h4>Field OBS filter stack</h4>
-          <div id="sa-obs-stack"></div>
-          <div class="sa-actions">
-            <button type="button" class="primary" data-view-jump="us">US host identity →</button>
-            <button type="button" id="sa-refresh">Refresh stack</button>
-          </div>
-        </article>
-      </div>
-      <article class="sa-card" style="margin-bottom:14px">
-        <h4>Streaming platforms · RTMP / RTMPS</h4>
-        <div class="sa-grid-2" id="sa-platforms"></div>
-      </article>
-      <article class="sa-card">
-        <h4>Decks &amp; control surfaces</h4>
-        <div id="sa-decks"></div>
-      </article>
-      <pre class="sense-log" id="sa-log" style="margin-top:10px;max-height:120px;overflow:auto"></pre>
-    </div>
-  </section>
 
   <section id="view-honor" class="view">
     <div class="honor-wrap">
@@ -2843,6 +2876,7 @@
 
       <div id="h7-ironclad-gallery" class="h7-chart-card" style="margin-bottom:14px;padding:12px 14px"></div>
       <div id="h7-physics-summary" class="h7-chart-card" style="margin-bottom:14px;padding:12px 14px"></div>
+      <div id="h7-music-summary" class="h7-chart-card" style="margin-bottom:14px;padding:12px 14px;border-color:rgba(200,160,48,0.45)"></div>
 
       <div id="h7-sense-training" class="h7-chart-card" style="margin-bottom:14px;padding:12px 14px;border-color:rgba(56,189,248,0.35)"></div>
 
@@ -2887,10 +2921,11 @@
         </div>
         <div class="library-profile-hint" id="library-profile-hint"></div>
         <div class="library-search-row">
-          <input type="search" id="library-search" placeholder="Search title, author, EIN, ISBN, Dewey…" autocomplete="off" aria-label="Search library books" aria-describedby="library-search-status" aria-keyshortcuts="Alt+Shift+S Slash">
+          <input type="search" id="library-search" placeholder="Search books, topics, or ask a question…" autocomplete="off" aria-label="Search library books and passages" aria-describedby="library-search-status" aria-keyshortcuts="Alt+Shift+S Slash">
           <button type="button" id="library-search-btn" aria-label="Run library search">Search</button>
         </div>
         <div id="library-search-status" class="library-search-status" role="status" aria-live="polite"></div>
+        <div class="library-collections" id="library-collections" aria-label="Browse by collection"></div>
         <div class="library-war-shelves" id="library-war-shelves" aria-label="War studies shelves"></div>
         <div class="library-dewey" id="library-dewey" aria-label="Dewey decimal shelves"></div>
         <div class="library-shelf" id="library-shelf" aria-label="Books alphabetically A to Z" tabindex="0"></div>
@@ -2912,6 +2947,8 @@
         </div>
         <div class="library-sync-bar" id="field-brain-banner"></div>
         <div class="library-sync-bar" id="library-sync-bar"></div>
+        <div class="library-human-blurb" id="library-human-blurb" aria-live="polite">Pick a collection or book — plain-language summaries help you choose what to read.</div>
+        <div class="library-passage-hits" id="library-passage-hits" hidden aria-label="Passage search results for AI retrieval"></div>
         <div class="library-covers" id="library-covers"></div>
         <div class="library-ein" id="library-ein"></div>
         <div class="library-upload-panel" id="library-upload-panel">
@@ -3679,6 +3716,42 @@
         <p id="settings-profile-desc">Loading current choices…</p>
         <div id="settings-profile-stats" class="settings-profile-stats"></div>
       </div>
+      <div id="znetwork-status-card" class="settings-group znetwork-status-card" data-settings-group="znetwork">
+        <h3><span>ZNetwork</span><span data-tip="Field secure network manager — truth-gated activate, tray swap, connection replace."></span></h3>
+        <div class="group-summary" id="summary-znetwork">—</div>
+        <div id="znetwork-status-body" class="meta">Loading ZNetwork posture…</div>
+        <div id="znetwork-status-actions" class="znetwork-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+      </div>
+      <div class="settings-group ai-telemetry-card" data-settings-group="ai-telemetry">
+        <h3><span>AI telemetry</span><span data-tip="Local secure channel for Grok Build and field AI — ON by default. Zero phone-home; we never release your data."></span></h3>
+        <div class="group-summary" id="summary-ai-telemetry">—</div>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" id="set-ai-telemetry" />
+            <span><strong>Local AI telemetry</strong><span class="hint">Loopback secure channel only — blocks all other telemetry egress.</span></span>
+          </label>
+          <span class="has-tip-row" data-tip="When ON, NEXUS allows AI tools on this machine to use the secure channel. Nothing leaves your box unless you explicitly grant capture. External analytics stay blocked."></span>
+        </div>
+        <p id="ai-telemetry-meta" class="meta" style="margin:8px 16px 0;">Loading posture…</p>
+      </div>
+      <div id="diagnostic-mode-card" class="settings-group diagnostic-mode-card" data-settings-group="diagnostic">
+        <h3><span>Diagnostic Mode</span><span data-tip="On fault: drop to secure baseline only. All systems lock away from the fault; it is reorganized out. Clear only after debug_self passes."></span></h3>
+        <div class="group-summary" id="summary-diagnostic">—</div>
+        <div id="diagnostic-mode-body" class="meta">Loading diagnostic posture…</div>
+        <div id="diagnostic-mode-actions" class="diag-actions" style="margin-top:10px;">
+          <button type="button" class="ghost" id="diag-card-debug">Debug self</button>
+          <button type="button" class="ghost" id="diag-card-engage">Engage</button>
+          <button type="button" class="ghost" id="diag-card-clear">Clear</button>
+        </div>
+      </div>
+      <div id="compatibility-layers-card" class="settings-group compatibility-layers-card" data-settings-group="compatibility">
+        <h3><span>Compatibility Layers</span><span data-tip="Auto-stacked substrate → exec → program → web → CHIPS → surface. Sync bumps .launch seal — secured chambers refresh only after layer sync."></span></h3>
+        <div class="group-summary" id="summary-compatibility">—</div>
+        <div id="compatibility-layers-body" class="meta">Loading compatibility stack…</div>
+        <div id="compatibility-layers-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
+          <a class="ghost" href="/compatibility" target="_blank" rel="noopener" style="padding:8px 14px;border-radius:8px;border:1px solid #2d6a8f;text-decoration:none;color:#5eead4;">Open layers →</a>
+        </div>
+      </div>
       <div class="settings-group field-clarity-group" id="field-clarity" data-settings-group="field-clarity">
         <details class="field-clarity-fold">
           <summary>Field clarity — all slices &amp; live values</summary>
@@ -3849,6 +3922,17 @@
         </div>
       </div>
 
+      <div class="settings-group" data-settings-group="debug">
+        <h3><span>Debug</span><span data-tip="Developer overlays — loopback only, no telemetry. Flyout closes when you leave or close the panel."></span></h3>
+        <div class="setting-row">
+          <label class="toggle">
+            <input type="checkbox" id="set-perf-flyout" />
+            <span><strong>Performance Flyout</strong><span class="hint">Live CPU, memory, thermal, and energy graphs — floating overlay with 3D field wave.</span></span>
+          </label>
+          <span class="has-tip-row" data-tip="Opens a draggable metrics panel (bottom-right). Polls /api/field-performance-flyout every 500ms. Auto-closes when the program or tab exits."></span>
+        </div>
+      </div>
+
       <div class="settings-group">
         <h3><span>Suspicious event history</span><span data-tip="A diary of things NEXUS thought were odd enough to write down. Empty is good."></span></h3>
         <div class="list" id="paranoia-list"><div class="empty">Nothing recorded yet — quiet is good.</div></div>
@@ -3884,13 +3968,14 @@
   <script defer src="/assets/sdf-render.js"></script>
   <script defer src="/assets/final-sense-training-wire.js"></script>
   <script defer src="/assets/final-eye-tab.js"></script>
-  <script defer src="/assets/sweet-anita-broadcast.js"></script>
+  <script defer src="/assets/field-broadcaster.js"></script>
   <script defer src="/assets/final-ear-tab.js"></script>
   <script defer src="/assets/final-mouth-tab.js"></script>
   <script defer src="/assets/signals-field.js"></script>
   <script defer src="/assets/dns-dashboard.js"></script>
   <script defer src="/assets/outside-tools.js"></script>
   <script defer src="/assets/field-inspector.js"></script>
+  <script defer src="/assets/field-performance-flyout.js"></script>
   <script defer src="/assets/field-drive-dashboard.js"></script>
   <script defer src="/assets/us-dashboard.js"></script>
   <script>
@@ -4200,7 +4285,7 @@
     const TAB_GROUPS = {
       command: { panel: "command", default: "command", subs: { command: "Hostess 7" } },
       us: { panel: "us", default: "us", subs: { us: "US" } },
-      "sweet-anita": { panel: "sweet-anita", default: "broadcast", subs: { broadcast: "Broadcast", preview: "Preview", platforms: "Platforms" } },
+
       packets: { panel: "packets", default: "monitor", subs: { monitor: "Live · Good/Bad", inspect: "DPI · Deep inspect" } },
       threats: { panel: "threats", default: "home-protector", subs: { "home-protector": "Home · Airspace", "local-holes": "Local · Holes", "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", "precision-map": "Precision · Map", "precision-web": "Precision · Web", dossier: "Attack paths", "human-dossier": "Kill orders" } },
       intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", people: "People · Registry", "audio-train": "Audio · Train", "field-rf": "Field RF", research: "Research" } },
@@ -4246,8 +4331,8 @@
       { key: "hostess7_command", url: "/api/hostess7-command" },
       { key: "hostess7_training", url: "/api/hostess7/training" },
       { key: "us_field", url: "/api/us-field" },
-      { key: "sweet_anita_broadcast", url: "/api/sweet-anita" },
       { key: "us_obs_field", url: "/api/us-obs-field" },
+      { key: "field_obs", url: "/api/field-obs" },
       { key: "us_voltage_regulation", url: "/api/us-voltage-regulation" },
       { key: "packet_field", url: "/api/data/packet-field" },
       { key: "home_protector", url: "/api/home-protector" },
@@ -4273,6 +4358,9 @@
       { key: "h7_library", url: "/api/library/catalog" },
       { key: "field_brain", url: "/api/field-brain" },
       { key: "settings", url: "/api/settings" },
+      { key: "znetwork", url: "/api/znetwork" },
+      { key: "compatibility", url: "/api/compatibility" },
+      { key: "diagnostic_mode", url: "/api/diagnostic-mode" },
       { key: "police_agency", url: "/api/police-agencies" },
       { key: "human_registry", url: "/api/human-registry" },
       { key: "gov_intel", url: "/api/gov-intel" },
@@ -4288,7 +4376,7 @@
     const TAB_LOAD_MODULES = {
       command: { keys: ["field_command", "planetary_observer", "gatekeeper", "lethal_enforcement", "hostess7_command"], subs: { command: ["field_command", "planetary_observer", "lethal_enforcement", "hostess7_command"] } },
       us: { keys: ["us_field", "us_voltage_regulation", "us_obs_field"], subs: { us: ["us_field", "us_voltage_regulation", "us_obs_field"] } },
-      "sweet-anita": { keys: ["sweet_anita_broadcast", "audio_train"], subs: { broadcast: ["sweet_anita_broadcast", "audio_train"], preview: ["sweet_anita_broadcast"], platforms: ["sweet_anita_broadcast"] } },
+
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
       threats: { keys: ["home_protector", "local_services", "host_attacks", "terror_spiderweb", "planetary_observer", "precision_field", "angel_dossiers", "human_dossier"], subs: { "home-protector": ["home_protector"], "local-holes": ["local_services"], "host-attack": ["host_attacks", "planetary_observer"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field", "terror_spiderweb"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["audio_train", "field_rf", "browser_awareness", "human_registry", "police_agency", "census_field", "existence_identity", "angel_research"], subs: { honor: ["browser_awareness"], people: ["human_registry", "census_field", "existence_identity"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency", "gov_intel", "program_tags"], research: ["angel_research"] } },
@@ -4297,7 +4385,7 @@
       "final-eye": { keys: ["field_eyeball"], subs: { "final-eye": ["field_eyeball"] } },
       "final-ear": { keys: ["field_earball"], subs: { "final-ear": ["field_earball"] } },
       "final-mouth": { keys: ["field_mouthball"], subs: { "final-mouth": ["field_mouthball"] } },
-      system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
+      system: { keys: ["settings", "znetwork", "diagnostic_mode", "compatibility"], subs: { settings: ["settings", "znetwork", "diagnostic_mode", "compatibility"], logs: ["settings"] } },
       signals: { keys: ["signals_field", "field_antenna", "field_radio", "field_hardware", "field_hazard_onset"], subs: { signals: ["signals_field", "field_antenna", "field_radio", "field_hardware"] } },
       dns: { keys: ["field_dns"], subs: { dns: ["field_dns"] } },
       outside: { keys: ["field_outside_talk", "field_drive"], subs: { outside: ["field_outside_talk", "field_drive"] } },
@@ -4333,8 +4421,8 @@
       if (key === "human_dossier") return typeof val === "object" && (val.generated_at != null || val.ip_count != null || Array.isArray(val.ips));
       if (key === "angel_research") return typeof val === "object" && (val.tables != null || val.updated != null);
       if (key === "us_field") return typeof val === "object" && (val.title != null || val.page != null || val.updated != null);
-      if (key === "sweet_anita_broadcast") return typeof val === "object" && val.schema === "sweet-anita-broadcast/v1";
-      if (key === "us_obs_field") return typeof val === "object" && val.schema === "us-obs-field/v1";
+      if (key === "us_obs_field") return typeof val === "object" && /^(us-obs-field\/v[23]|us-broadcaster-field\/v1)$/.test(val.schema || "");
+      if (key === "field_obs") return typeof val === "object" && /^(field-obs\/v[12]|field-broadcaster\/v1)$/.test(val.schema || "");
       if (key === "us_voltage_regulation") return typeof val === "object" && val.schema === "us-voltage-regulation/v1";
       if (key === "h7_library") return typeof val === "object" && (val.books != null || val.updated != null);
       if (key === "field_brain") return typeof val === "object" && (val.ok === true || val.schema === "field-brain/v1" || val.github_library_books > 0 || val.manifest_count > 0 || val.superintelligence != null);
@@ -4348,6 +4436,9 @@
       if (key === "program_tags") return typeof val === "object" && (val.tags != null || val.recent != null);
       if (key === "operator_location") return typeof val === "object" && (val.lat != null || val.address != null);
       if (key === "field_command") return typeof val === "object" && (val.updated != null || val.good_guy != null || val.pulse != null || val.motto != null);
+      if (key === "znetwork") return typeof val === "object" && (val.schema === "znetwork-orchestrator/v2" || val.operator != null || val.status != null);
+      if (key === "compatibility") return typeof val === "object" && (val.schema === "field-compatibility-layers/v1" || (val.layers && val.layers.length));
+      if (key === "diagnostic_mode") return typeof val === "object" && (val.schema === "field-diagnostic-mode/v1" || val.problems != null || val.engaged != null);
       if (key === "field_hardware") return typeof val === "object" && (val.schema === "field-hardware-probe/v1" || val.host != null);
       if (key === "field_hazard_onset") return typeof val === "object" && (val.schema != null || val.panel != null || val.enabled != null);
       if (key === "lethal_enforcement") return typeof val === "object" && (val.merciless != null || val.status != null || val.heaven_hell != null);
@@ -4628,6 +4719,9 @@
       if (data.threats) renderThreats(data.threats);
       if (data.vectors) renderVectors(data.vectors);
       if (data.settings) renderSettings(data.settings);
+      if (data.znetwork) renderZnetworkStatus(data.znetwork);
+      if (data.compatibility) renderCompatibilityLayers(data.compatibility);
+      if (data.diagnostic_mode) renderDiagnosticMode(data.diagnostic_mode);
       if (data.adblock_guardian) renderGuardianFeed(data.adblock_guardian, data.settings);
       if (data.autosanitize) renderSanitize(data.autosanitize);
       if (data.paranoia) renderParanoia(data.paranoia);
@@ -4662,14 +4756,12 @@
         if (global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
       }
       renderUSField(data.us_field, data.h7_library);
-      if (global.SweetAnitaBroadcast?.renderUSVoltage) global.SweetAnitaBroadcast.renderUSVoltage(data.us_voltage_regulation);
-      if (global.SweetAnitaBroadcast?.renderUSObs) global.SweetAnitaBroadcast.renderUSObs(data.us_obs_field);
+      if (global.FieldObsPanel?.renderUSVoltage) global.FieldObsPanel.renderUSVoltage(data.us_voltage_regulation);
+      if (global.FieldObsPanel?.renderUSObs) global.FieldObsPanel.renderUSObs(data.us_obs_field);
       if (currentSubView === "us" && data.us_field && global.paintUSTraffic) {
         paintUSTraffic(data.us_field);
       }
-      if (currentPanel === "sweet-anita" && global.SweetAnitaBroadcast?.render) {
-        global.SweetAnitaBroadcast.render(data.sweet_anita_broadcast);
-      }
+
       renderDossiers(data.angel_dossiers);
       renderHumanDossiers(data.human_dossier);
       renderHumanRegistry(data.human_registry, data);
@@ -4726,16 +4818,12 @@
           if (currentSubView === "us" && data.us_field && global.paintUSTraffic) paintUSTraffic(data.us_field);
           break;
         case "us_voltage_regulation":
-          if (global.SweetAnitaBroadcast?.renderUSVoltage) global.SweetAnitaBroadcast.renderUSVoltage(data.us_voltage_regulation);
+          if (global.FieldObsPanel?.renderUSVoltage) global.FieldObsPanel.renderUSVoltage(data.us_voltage_regulation);
           break;
         case "us_obs_field":
-          if (global.SweetAnitaBroadcast?.renderUSObs) global.SweetAnitaBroadcast.renderUSObs(data.us_obs_field);
+          if (global.FieldObsPanel?.renderUSObs) global.FieldObsPanel.renderUSObs(data.us_obs_field);
           break;
-        case "sweet_anita_broadcast":
-          if (currentPanel === "sweet-anita" && global.SweetAnitaBroadcast?.render) {
-            global.SweetAnitaBroadcast.render(data.sweet_anita_broadcast);
-          }
-          break;
+
         case "packet_field":
           renderPacketField(data.packet_field || {});
           renderInspect(data.packet_field || {});
@@ -4838,6 +4926,15 @@
         case "settings":
           if (data.settings) renderSettings(data.settings);
           break;
+        case "znetwork":
+          if (data.znetwork) renderZnetworkStatus(data.znetwork);
+          break;
+        case "compatibility":
+          if (data.compatibility) renderCompatibilityLayers(data.compatibility);
+          break;
+        case "diagnostic_mode":
+          if (data.diagnostic_mode) renderDiagnosticMode(data.diagnostic_mode);
+          break;
         case "human_registry":
         case "census_field":
         case "existence_identity":
@@ -4887,11 +4984,7 @@
           global.SenseTrainingWire?.initForPanel?.("final-mouth");
         });
       }
-      if (currentPanel === "sweet-anita") {
-        requestAnimationFrame(() => {
-          global.SweetAnitaBroadcast?.onPanelShow?.();
-        });
-      }
+
       if (sub === "logs") loadLog(currentLog);
       if (sub === "home-protector" && lastPanelData) renderHomeProtector(lastPanelData.home_protector);
       if (sub === "local-holes" && lastPanelData) renderLocalServices(lastPanelData.local_services);
@@ -5077,8 +5170,8 @@
 
     const TAB_DOM_REQUIRED = {
       command: ["command-motto", "command-know"],
-      us: ["us-motto", "us-hostess-profile", "us-voltage-regulation", "us-obs-field"],
-      "sweet-anita": ["sa-hero", "sa-preview-canvas"],
+      us: ["us-motto", "us-hostess-profile", "us-voltage-regulation", "us-broadcaster-field"],
+
       packets: ["connections"],
       threats: ["home-protector-stats"],
       intel: ["people-meta", "audio-train-motto"],
@@ -5089,7 +5182,7 @@
       "final-eye": ["fe-status"],
       "final-ear": ["fer-status"],
       "final-mouth": ["fm-status"],
-      system: ["settings-profile"],
+      system: ["settings-profile", "znetwork-status-body", "diagnostic-mode-body", "compatibility-layers-body", "ai-telemetry-meta"],
     };
 
     function tabDomReady(panel) {
@@ -5164,7 +5257,22 @@
     });
     document.body.addEventListener("click", (ev) => {
       const jump = ev.target.closest?.("[data-view-jump]");
-      if (jump) showView(jump.dataset.viewJump, { fromNav: true });
+      if (!jump) return;
+      try {
+        if (new URLSearchParams(location.search).get("embed") === "1" && window.parent !== window) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          window.parent.postMessage({ type: "nexus:launch", view: jump.dataset.viewJump }, "*");
+          return;
+        }
+      } catch (_) {}
+      showView(jump.dataset.viewJump, { fromNav: true });
+    });
+
+    window.addEventListener("message", (ev) => {
+      const msg = ev.data;
+      if (!msg || msg.type !== "nexus:navigate" || !msg.view) return;
+      showView(msg.view, { force: true });
     });
 
     function applyHashView() {
@@ -5200,6 +5308,32 @@
 
     $("set-old-man")?.addEventListener("change", (e) => applyOldManMode(e.target.checked));
     applyOldManMode(localStorage.getItem("nexus_old_man") === "1");
+
+    $("set-ai-telemetry")?.addEventListener("change", async (e) => {
+      const on = e.target.checked;
+      const row = e.target.closest(".setting-row");
+      applySettingRowVisual(row, on);
+      const val = on ? "1" : "0";
+      try {
+        const res = await fetch("/api/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            settings: {
+              NEXUS_AI_SECURE_CHANNEL: val,
+              QUEEN_AI_TELEMETRY_OK: val,
+            },
+          }),
+        });
+        const j = await res.json();
+        if (!j.ok) throw new Error("settings failed");
+        refresh();
+      } catch {
+        e.target.checked = !on;
+        applySettingRowVisual(row, !on);
+        alert("Could not save AI telemetry setting");
+      }
+    });
 
     async function setSetting(key, value) {
       const res = await fetch("/api/settings", {
@@ -5678,8 +5812,168 @@
       });
     }
 
+    function renderAiTelemetry(s) {
+      const ai = s?.ai_telemetry || {};
+      const on = settingIsOn(s?.NEXUS_AI_SECURE_CHANNEL) && settingIsOn(s?.QUEEN_AI_TELEMETRY_OK);
+      const cb = $("set-ai-telemetry");
+      if (cb && document.activeElement !== cb) cb.checked = on;
+      applySettingRowVisual(cb?.closest(".setting-row"), on);
+      const summary = $("summary-ai-telemetry");
+      if (summary) {
+        summary.innerHTML = on
+          ? "<strong>ON</strong> · local secure channel · zero data release"
+          : "<strong>OFF</strong> · AI channel blocked (external telemetry still blocked)";
+      }
+      const meta = $("ai-telemetry-meta");
+      if (meta) {
+        meta.textContent = ai.motto || (on
+          ? "Loopback only — we never release your data."
+          : "Turn ON to allow local Grok Build / field AI telemetry on this machine.");
+      }
+    }
+
+    async function diagnosticDispatch(action, extra) {
+      const body = { action, ...(extra || {}) };
+      const res = await fetch("/api/diagnostic-mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const doc = await res.json();
+      renderDiagnosticMode(doc);
+      return doc;
+    }
+
+    function bindDiagnosticActions() {
+      const map = [
+        ["diag-debug-self", "debug_self"],
+        ["diag-reorganize", "reorganize"],
+        ["diag-clear", "clear"],
+        ["diag-card-debug", "debug_self"],
+        ["diag-card-engage", "engage"],
+        ["diag-card-clear", "clear"],
+      ];
+      map.forEach(([id, action]) => {
+        const el = $(id);
+        if (el && !el.dataset.bound) {
+          el.dataset.bound = "1";
+          el.onclick = () => diagnosticDispatch(action).catch(() => {});
+        }
+      });
+    }
+
+    function renderDiagnosticMode(doc) {
+      const body = $("diagnostic-mode-body");
+      const summary = $("summary-diagnostic");
+      const card = $("diagnostic-mode-card");
+      const banner = $("diagnostic-mode-banner");
+      const bannerDetail = $("diagnostic-banner-detail");
+      if (!body || !summary) return;
+      bindDiagnosticActions();
+      if (!doc || (doc.ok === false && doc.problems == null && doc.engaged == null)) {
+        body.textContent = doc?.hint || "Run ./nexus.sh --restart to publish diagnostic slice";
+        summary.textContent = "Pending";
+        if (card) card.classList.remove("engaged");
+        if (banner) banner.classList.remove("active");
+        return;
+      }
+      const engaged = Boolean(doc.engaged);
+      const prob = doc.problems || {};
+      const faults = prob.faults || [];
+      const locked = doc.locked_slices || [];
+      const chips = [
+        `<span class="chip ${engaged ? "on" : "off"}">${engaged ? "ENGAGED" : "Normal"}</span>`,
+        `<span class="chip ${faults.length ? "crit" : "off"}">${prob.fault_count || 0} fault(s)</span>`,
+        `<span class="chip ${locked.length ? "on" : "off"}">${locked.length} locked slice(s)</span>`,
+      ];
+      const faultLines = faults.slice(0, 4).map((f) =>
+        `<span class="chip crit">${esc(f.id || "?")} · ${esc(f.severity || "")}</span>`
+      );
+      body.innerHTML =
+        `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">${chips.join("")}</div>` +
+        (faultLines.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${faultLines.join("")}</div>` : "") +
+        `<div>${esc(doc.message || doc.motto || "")}</div>` +
+        (locked.length ? `<div class="meta" style="margin-top:6px;">Locked: ${esc(locked.slice(0, 8).join(", "))}${locked.length > 8 ? "…" : ""}</div>` : "");
+      summary.textContent = engaged
+        ? `Baseline only · ${prob.fault_count || 0} fault(s)`
+        : (faults.length ? `${faults.length} fault(s) — auto-engage on publish` : "Field runtime normal");
+      if (card) card.classList.toggle("engaged", engaged);
+      if (banner) {
+        banner.classList.toggle("active", engaged);
+        if (bannerDetail && engaged) {
+          bannerDetail.textContent = doc.message || "Secure baseline only while debugging self.";
+        }
+      }
+    }
+
+    function renderCompatibilityLayers(doc) {
+      const body = $("compatibility-layers-body");
+      const summary = $("summary-compatibility");
+      if (!body || !summary) return;
+      if (!doc || (doc.ok === false && !(doc.layers || []).length)) {
+        body.textContent = doc?.hint || "Sync compatibility layers or ./nexus.sh --restart";
+        summary.textContent = "Pending";
+        return;
+      }
+      const layers = doc.layers || [];
+      const eff = doc.effective_profile || {};
+      const live = doc.live_layers ?? layers.filter((l) => l.live).length;
+      const chips = layers.slice(0, 4).map((l) =>
+        `<span class="chip ${l.live ? "on" : "off"}">L${l.index} ${esc(l.label || l.id)}</span>`
+      );
+      body.innerHTML =
+        `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">${chips.join("")}</div>` +
+        `<div><strong>${live}/${doc.total_layers || 6}</strong> layers live · ` +
+        `${esc(eff.pattern_id || "—")} · ${esc(eff.belt_profile || "")} · ${eff.die_slots || 256} die</div>`;
+      summary.textContent = doc.gates_held ? `Stack ready · ${eff.runner || "auto"}` : `${live} layers live — sync recommended`;
+    }
+
+    function renderZnetworkStatus(zn) {
+      const body = $("znetwork-status-body");
+      const summary = $("summary-znetwork");
+      const actions = $("znetwork-status-actions");
+      if (!body || !summary) return;
+      if (!zn || zn.ok === false && !zn.operator && !zn.status) {
+        body.textContent = zn?.hint || zn?.error || "ZNetwork not published — run installer or ./nexus.sh --restart";
+        summary.textContent = "Pending";
+        if (actions) actions.innerHTML = "";
+        return;
+      }
+      const op = zn.operator || {};
+      const tray = zn.tray_mode || {};
+      const st = zn.status || {};
+      const gate = zn.truth_gate || {};
+      const choice = String(op.choice || "").toLowerCase();
+      const running = choice === "yes" && (op.running === true || String(op.running).toLowerCase() === "true");
+      const trayOn = tray.active && String(tray.mode || "").toLowerCase() === "znetwork";
+      const mode = op.mode || st.mode || zn.mode || "REVIEW_ONLY";
+      const iface = st.iface || st.interface || "—";
+      const chips = [
+        `<span class="chip ${running ? "on" : "off"}">${running ? "Running" : "Not running"}</span>`,
+        `<span class="chip profile">${mode}</span>`,
+        `<span class="chip ${trayOn ? "on" : "off"}">Tray ${trayOn ? "Z" : "NEXUS"}</span>`,
+        `<span class="chip ${gate.ok ? "on" : "off"}">Truth gate ${gate.ok ? "OK" : "blocked"}</span>`,
+      ];
+      body.innerHTML =
+        `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">${chips.join("")}</div>` +
+        `<div>Choice: <strong>${choice || "unset"}</strong> · iface <strong>${iface}</strong>` +
+        (zn.binary ? ` · binary present` : " · binary missing") + `</div>`;
+      summary.textContent = running ? `Active · ${mode}` : (choice === "skip" ? "Skipped" : "Ready");
+      if (actions) {
+        actions.innerHTML = running
+          ? `<button type="button" class="ghost" id="zn-open-packets">Packets</button>` +
+            `<button type="button" class="ghost" id="zn-open-dns">DNS truth</button>`
+          : `<span class="meta">Use Tristate installer or tray to activate ZNetwork.</span>`;
+        const pkt = $("zn-open-packets");
+        const dns = $("zn-open-dns");
+        if (pkt) pkt.onclick = () => showView("packets/monitor");
+        if (dns) dns.onclick = () => showView("dns");
+      }
+    }
+
     function renderSettings(s) {
       if (!s) return;
+      renderAiTelemetry(s);
       document.querySelectorAll("[data-setting]").forEach((cb) => {
         const key = cb.dataset.setting;
         if (s[key] === undefined) return;
@@ -5897,6 +6191,7 @@
     let libraryCatalog = { books: [], shelves: [], war_shelves: [], fonts: [], profiles: [] };
     let libraryDeweyFilter = null;
     let libraryWarFilter = null;
+    let libraryCollectionFilter = null;
     let libraryProfile = localStorage.getItem("nexus_library_profile") || "hostess7";
     let librarySearchMode = false;
     let libraryFingerprint = null;
@@ -5951,6 +6246,11 @@
 
     function libraryBooksForShelf() {
       if (librarySearchMode) return libraryCatalog.searchHits || [];
+      if (libraryCollectionFilter) {
+        const coll = (libraryCatalog.collections || []).find((c) => c.id === libraryCollectionFilter);
+        const ids = new Set(coll?.book_ids || []);
+        return (libraryCatalog.books || []).filter((b) => ids.has(b.id));
+      }
       if (libraryWarFilter) {
         const shelf = (libraryCatalog.war_shelves || []).find((s) => s.code === libraryWarFilter);
         return shelf?.books || [];
@@ -5960,6 +6260,50 @@
         return shelf?.books || [];
       }
       return libraryCatalog.books || [];
+    }
+
+    function renderLibraryCollections(lib) {
+      const el = $("library-collections");
+      if (!el) return;
+      const cols = lib?.collections || [];
+      if (!cols.length) {
+        el.innerHTML = "";
+        return;
+      }
+      el.innerHTML = `<div class="library-collections-label">Browse collections</div>` +
+        cols.map((c) =>
+          `<button type="button" class="library-dewey-btn${libraryCollectionFilter === c.id ? " active" : ""}" data-collection="${esc(c.id)}">
+            <strong>${esc(c.icon || "•")} ${esc(c.title)}</strong><span>${c.count} · ${esc((c.subtitle || "").split("—")[0].trim())}</span>
+          </button>`
+        ).join("");
+      el.querySelectorAll("[data-collection]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          librarySearchMode = false;
+          libraryDeweyFilter = null;
+          libraryWarFilter = null;
+          libraryCollectionFilter = libraryCollectionFilter === btn.dataset.collection ? null : btn.dataset.collection;
+          renderLibraryCollections(libraryCatalog);
+          renderLibraryWarShelves(libraryCatalog);
+          renderLibraryDewey(libraryCatalog);
+          renderLibraryShelf(libraryCatalog);
+        });
+      });
+    }
+
+    function renderLibraryPassageHits(passages) {
+      const el = $("library-passage-hits");
+      if (!el) return;
+      const hits = passages || [];
+      if (!hits.length) {
+        el.hidden = true;
+        el.innerHTML = "";
+        return;
+      }
+      el.hidden = false;
+      el.innerHTML = `<strong>Passages</strong> · ${hits.length} grounded excerpt${hits.length === 1 ? "" : "s"} for AI retrieval` +
+        hits.slice(0, 5).map((p) =>
+          `<div class="hit"><em>${esc(p.title || p.book_id)}</em>${p.heading ? ` · ${esc(p.heading)}` : ""}<br>${esc((p.excerpt || p.text || "").slice(0, 220))}</div>`
+        ).join("");
     }
 
     function renderLibraryProfiles(lib) {
@@ -6001,7 +6345,9 @@
         btn.addEventListener("click", () => {
           librarySearchMode = false;
           libraryDeweyFilter = null;
+          libraryCollectionFilter = null;
           libraryWarFilter = libraryWarFilter === btn.dataset.war ? null : btn.dataset.war;
+          renderLibraryCollections(libraryCatalog);
           renderLibraryWarShelves(libraryCatalog);
           renderLibraryDewey(libraryCatalog);
           renderLibraryShelf(libraryCatalog);
@@ -6026,7 +6372,9 @@
         btn.addEventListener("click", () => {
           librarySearchMode = false;
           libraryWarFilter = null;
+          libraryCollectionFilter = null;
           libraryDeweyFilter = libraryDeweyFilter === btn.dataset.dewey ? null : btn.dataset.dewey;
+          renderLibraryCollections(libraryCatalog);
           renderLibraryWarShelves(libraryCatalog);
           renderLibraryDewey(libraryCatalog);
           renderLibraryShelf(libraryCatalog);
@@ -6107,9 +6455,16 @@
       $("library-meta").textContent = [
         book?.author || "",
         book?.dewey ? `Dewey ${book.dewey} — ${book.dewey_label || ""}` : "",
+        book?.reading_time_min ? `~${book.reading_time_min} min read` : "",
         book?.char_count ? `${book.char_count.toLocaleString()} chars` : "",
         book?.format || "",
+        (book?.topics || []).slice(0, 3).join(", "),
       ].filter(Boolean).join(" · ");
+      const blurb = $("library-human-blurb");
+      if (blurb) {
+        blurb.textContent = book?.for_humans || book?.summary || book?.description
+          || "Select a book to see a plain-language summary.";
+      }
       const einEl = $("library-ein");
       if (einEl) {
         const parts = [
@@ -6164,7 +6519,11 @@
       const same = !!lib?.unchanged;
       const touched = lib?.last_touched || "";
       const touchedSame = lib?.last_touched_same !== false;
-      const libName = lib?.library_profile_name || lib?.librarian?.name || "Hostess7 Librarian";
+      const corps = lib?.librarian_corps || lib?.librarian?.corps || {};
+      const corpsList = corps?.librarians || [];
+      const corpsLine = corpsList.length
+        ? corpsList.map((l) => `${l.name || l.id} (${l.lessons || 0})`).join(" · ")
+        : (lib?.library_profile_name || lib?.librarian?.name || "Hostess7 Librarian");
       const warN = lib?.war_book_count || 0;
       const fd = lib?.field_drive || {};
       const trackN = fd.tracking?.total || 0;
@@ -6172,10 +6531,10 @@
         ? `Library: ${fd.textbooks_h7_dewey || fd.textbooks_h7 || 0} H7 shelved · ${fd.brain_corpus_count || 0} virtual · Home tracks ${trackN}`
         : "";
       el.innerHTML = `
-        <span><strong>${esc(libName)}</strong> · World's Best Dewey · <code>${esc((fd.primary_root || "field drive").split("/").slice(-2).join("/"))}</code></span>
+        <span><strong>Librarians</strong> · ${esc(corpsLine)} · Dewey ${corps?.dewey?.subject_count || 10} subjects · <code>${esc((fd.primary_root || "field drive").split("/").slice(-2).join("/"))}</code></span>
         <span class="${same ? "same" : "changed"}">${same ? "Field exact same" : "Field updated"} · sig ${esc(fp)}</span>
         ${touched ? `<span class="${touchedSame ? "same" : "changed"}">Last touched: ${esc(touched)}${touchedSame ? " (unchanged)" : " (changed)"}</span>` : ""}
-        <span>${(lib?.ready_count || 0)} books · ${lib?.github_library_books || 0} GitHub · ${warN} war · ${(lib?.librarian?.isbn_count || 0)} ISBN</span>
+        <span>${(lib?.ready_count || 0)} books · ${lib?.book_knowledge?.book_count || corps?.book_knowledge_count || 0} known to librarians · ${lib?.atlas?.passage_count || 0} passages · ${warN} war</span>
         ${fdLine ? `<span>${esc(fdLine)}</span>` : ""}
         <span><a href="https://github.com/ZacharyGeurts/NEXUS-Shield/tree/main/library/dewey" target="_blank" rel="noopener">GitHub Dewey shelves</a></span>`;
     }
@@ -6198,8 +6557,12 @@
         books: lib?.books || [],
         shelves: lib?.shelves || [],
         war_shelves: lib?.war_shelves || [],
+        collections: lib?.collections || [],
+        topics: lib?.topics || [],
+        atlas: lib?.atlas || {},
         fonts: lib?.fonts || [],
         librarian: lib?.librarian || {},
+        librarian_corps: lib?.librarian_corps || lib?.librarian?.corps || {},
         library_profiles: lib?.library_profiles || [],
         library_profile: lib?.library_profile || libraryProfile,
         library_profile_name: lib?.library_profile_name || "",
@@ -6217,6 +6580,7 @@
       if (window.H7Reader?.setFonts) H7Reader.setFonts(libraryCatalog.fonts);
       renderLibraryProfiles(lib);
       renderLibrarySyncBar(lib);
+      renderLibraryCollections(lib);
       renderLibraryWarShelves(lib);
       renderLibraryDewey(lib);
       renderLibraryShelf(lib);
@@ -6231,6 +6595,7 @@
       libraryFingerprint = null;
       libraryWarFilter = null;
       libraryDeweyFilter = null;
+      libraryCollectionFilter = null;
       try {
         const res = await fetch(`/api/library/catalog?profile=${encodeURIComponent(profileId)}`, { cache: "no-store" });
         const data = await res.json();
@@ -6246,6 +6611,7 @@
       if (!q) {
         librarySearchMode = false;
         libraryCatalog.searchHits = [];
+        renderLibraryPassageHits([]);
         if (status) status.textContent = "Search cleared — showing all books A to Z";
         global.NexusBraille?.announce?.("Search cleared.");
         renderLibraryShelf(libraryCatalog);
@@ -6259,10 +6625,13 @@
         librarySearchMode = true;
         libraryDeweyFilter = null;
         libraryWarFilter = null;
-        libraryCatalog.searchHits = data.hits || [];
+        libraryCollectionFilter = null;
+        libraryCatalog.searchHits = data.books || data.hits || [];
+        renderLibraryCollections(libraryCatalog);
         renderLibraryWarShelves(libraryCatalog);
         renderLibraryDewey(libraryCatalog);
         renderLibraryShelf(libraryCatalog);
+        renderLibraryPassageHits(data.passages || []);
         const n = (libraryCatalog.searchHits || []).length;
         global.NexusBraille?.announce?.(`${n} book${n === 1 ? "" : "s"} found for ${q}`);
       } catch {
@@ -6961,9 +7330,20 @@
             body: JSON.stringify(ip ? { ip } : {}),
           });
           const data = await res.json();
+          try {
+            await fetch("/api/field-depth-snap", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "field_die" }),
+            });
+          } catch (_) { /* instant snap best-effort */ }
+          if (window.parent?.QueenFieldSanity?.instantFieldDieCheck) {
+            window.parent.QueenFieldSanity.instantFieldDieCheck();
+          }
           if (readout) {
+            const snap = data.pits_snapped > 0 ? ` · pits ${data.pits_snapped}` : "";
             readout.textContent = data.roll != null
-              ? `d20=${data.roll} · ${data.verdict || "—"}`
+              ? `d20=${data.roll} · ${data.verdict || "—"}${snap}`
               : "d20 —";
           }
           const msg = data.signal
@@ -9513,14 +9893,28 @@
     let nexusUpdateApplying = false;
     let nexusUpdatePollTimer = null;
 
+    function setVersionLabel(ver) {
+      const versionBtn = $("nexus-version-btn");
+      if (versionBtn && ver) versionBtn.textContent = `v${ver}`;
+    }
+
     function setUpdateBusy(busy, message) {
-      const btn = $("nexus-update-btn");
+      const upgradeBtn = $("nexus-upgrade-btn");
+      const restartBtn = $("nexus-restart-btn");
       const detail = $("nexus-update-detail");
-      if (btn) {
-        btn.disabled = !!busy;
-        btn.classList.toggle("update-busy", !!busy);
-        if (busy) btn.textContent = "UPDATING…";
+      if (upgradeBtn) {
+        upgradeBtn.disabled = !!busy;
+        upgradeBtn.classList.toggle("update-busy", !!busy);
+        if (busy) {
+          upgradeBtn.style.display = "inline-flex";
+          upgradeBtn.textContent = "UPDATING…";
+        } else if (!nexusUpdateState?.update_available) {
+          upgradeBtn.classList.remove("update-ready", "update-busy");
+          upgradeBtn.style.display = "none";
+          upgradeBtn.textContent = "Upgrade";
+        }
       }
+      if (restartBtn) restartBtn.disabled = !!busy;
       if (detail && message) {
         detail.textContent = message;
         detail.classList.add("update-ready");
@@ -9569,12 +9963,15 @@
     }
 
     async function checkNexusUpdate(force = false) {
-      const btn = $("nexus-update-btn");
+      const versionBtn = $("nexus-version-btn");
+      const upgradeBtn = $("nexus-upgrade-btn");
       const detail = $("nexus-update-detail");
-      if (!btn || !detail) return;
+      if (!versionBtn || !upgradeBtn || !detail) return;
       if (nexusUpdateApplying) return;
       if (!force && nexusUpdateState && !nexusUpdateState.update_available && !nexusUpdateState.update_in_progress) {
-        btn.textContent = `v${nexusUpdateState.current}`;
+        setVersionLabel(nexusUpdateState.current);
+        upgradeBtn.classList.remove("update-ready", "update-busy");
+        upgradeBtn.style.display = "none";
         detail.textContent = `Current · checked ${(nexusUpdateState.checked_at || "").replace("T", " ").replace("Z", " UTC")}`;
         return;
       }
@@ -9584,10 +9981,12 @@
         const data = await res.json();
         nexusUpdateState = data;
         if (data.update_in_progress) {
-          btn.classList.remove("update-ready");
-          btn.classList.add("update-busy");
-          btn.disabled = true;
-          btn.textContent = "UPDATING…";
+          setVersionLabel(data.current || nexusUpdateState?.current);
+          upgradeBtn.classList.remove("update-ready");
+          upgradeBtn.classList.add("update-busy");
+          upgradeBtn.style.display = "inline-flex";
+          upgradeBtn.disabled = true;
+          upgradeBtn.textContent = "UPDATING…";
           detail.classList.add("update-ready");
           detail.textContent = data.message || data.update_lock?.message || "Update in progress — lock held";
           if (!nexusUpdatePollTimer) {
@@ -9605,30 +10004,35 @@
           }
           return;
         }
-        btn.classList.remove("update-busy");
-        btn.disabled = false;
+        upgradeBtn.classList.remove("update-busy");
+        upgradeBtn.disabled = false;
+        setVersionLabel(data.current);
         if (!data.ok) {
-          btn.classList.remove("update-ready");
+          upgradeBtn.classList.remove("update-ready");
+          upgradeBtn.style.display = "none";
           detail.classList.remove("update-ready");
-          btn.textContent = data.current ? `v${data.current}` : "v?";
           detail.textContent = data.error || "Update check failed";
           return;
         }
         if (data.update_available) {
-          btn.classList.add("update-ready");
+          upgradeBtn.classList.add("update-ready");
+          upgradeBtn.style.display = "inline-flex";
+          upgradeBtn.textContent = "Upgrade";
           detail.classList.add("update-ready");
-          btn.textContent = "INSTALL UPDATE";
-          const via = data.apply_via === "release_tarball" ? "release installer" : "dev tree";
+          const via = data.apply_via === "incremental" ? "incremental catalog"
+            : data.apply_via === "release_tarball" || data.apply_via === "nxf_release" ? "release installer"
+            : "dev tree";
           detail.textContent = `${data.previous} → ${data.latest} · ${via}`;
         } else {
-          btn.classList.remove("update-ready");
+          upgradeBtn.classList.remove("update-ready");
+          upgradeBtn.style.display = "none";
           detail.classList.remove("update-ready");
-          btn.textContent = `v${data.current}`;
           const mode = data.update_mode === "release" ? "release" : "git";
           detail.textContent = `Current · ${mode} · GitHub ${data.latest || data.current}`;
         }
       } catch {
-        btn.classList.remove("update-ready");
+        upgradeBtn.classList.remove("update-ready");
+        upgradeBtn.style.display = "none";
         detail.classList.remove("update-ready");
         detail.textContent = "Release check unreachable";
       }
@@ -9657,10 +10061,12 @@
       nexusUpdateApplying = false;
       setUpdateBusy(false);
       if (restarted?.version) {
-        const btn = $("nexus-update-btn");
-        if (btn) {
-          btn.textContent = `v${restarted.version}`;
-          btn.classList.remove("update-ready", "update-busy");
+        setVersionLabel(restarted.version);
+        const upgradeBtn = $("nexus-upgrade-btn");
+        if (upgradeBtn) {
+          upgradeBtn.classList.remove("update-ready", "update-busy");
+          upgradeBtn.style.display = "none";
+          upgradeBtn.textContent = "Upgrade";
         }
         if (detail) detail.textContent = `Updated to v${restarted.version} — refreshing…`;
       }
@@ -9678,10 +10084,12 @@
         return;
       }
       nexusUpdateApplying = true;
-      const btn = $("nexus-update-btn");
+      const upgradeBtn = $("nexus-upgrade-btn");
       const detail = $("nexus-update-detail");
       const targetVersion = nexusUpdateState.latest;
-      const viaLabel = nexusUpdateState.apply_via === "release_tarball" ? "release tarball" : "install tree";
+      const viaLabel = nexusUpdateState.apply_via === "incremental" ? "incremental catalog"
+        : nexusUpdateState.apply_via === "release_tarball" || nexusUpdateState.apply_via === "nxf_release" ? "release tarball"
+        : "install tree";
       setUpdateBusy(true, `Installing ${nexusUpdateState.previous} → ${targetVersion} via ${viaLabel}…`);
       let data = null;
       try {
@@ -9753,18 +10161,23 @@
       } else if (detail) {
         const err = data?.message || data?.error || data?.install_log || "Update not applied";
         const tristate = nexusUpdateState?.tristate_installer_url || "/underlay-f9?sector=underlay";
-        detail.textContent = `${err} — retry INSTALL UPDATE or open Tristate: ${tristate}`;
+        detail.textContent = `${err} — retry Upgrade or open Tristate: ${tristate}`;
         detail.classList.add("update-ready");
       }
-      if (btn) {
-        btn.disabled = false;
-        btn.classList.remove("update-busy");
+      if (upgradeBtn) {
+        upgradeBtn.disabled = false;
+        upgradeBtn.classList.remove("update-busy");
         if (nexusUpdateState?.update_available) {
-          btn.classList.add("update-ready");
-          btn.textContent = "INSTALL UPDATE";
+          upgradeBtn.classList.add("update-ready");
+          upgradeBtn.style.display = "inline-flex";
+          upgradeBtn.textContent = "Upgrade";
         }
       }
     }
+
+    $("nexus-restart-btn")?.addEventListener("click", () => {
+      nexusRestart("permissive", { skipConfirm: false });
+    });
 
     $("spiderweb-refocus")?.addEventListener("click", () => {
       if (typeof refocusSpiderweb === "function") refocusSpiderweb();
@@ -9782,7 +10195,7 @@
       }
     });
 
-    $("nexus-update-btn")?.addEventListener("click", () => {
+    $("nexus-upgrade-btn")?.addEventListener("click", () => {
       if (nexusUpdateApplying || nexusUpdateState?.update_in_progress) {
         pollUpdateStatus();
         return;

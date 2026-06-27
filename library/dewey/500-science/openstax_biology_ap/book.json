@@ -1,14 +1,15 @@
 {
   "id": "openstax_biology_ap",
   "title": "OpenStax Biology for AP Courses",
-  "author": "",
+  "author": "OpenStax",
   "dewey": "500",
-  "dewey_label": "Science",
-  "ein": "H7-FIELD-d466cdf4cce1",
-  "isbn_13": "",
-  "gutenberg_id": "",
-  "format": "H7",
-  "field_path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/openstax_biology_ap.h7",
-  "github_shelf": "500-science",
-  "updated": "2026-06-24T03:12:05Z"
+  "publisher": "OpenStax",
+  "license": "CC BY 4.0",
+  "grade_band": "10-12",
+  "subject": "science",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/openstax_biology_ap/front.png",
+  "cover_asset": "library/assets/covers/openstax_biology_ap/front.png",
+  "updated": "2026-06-27T12:17:36Z"
 }

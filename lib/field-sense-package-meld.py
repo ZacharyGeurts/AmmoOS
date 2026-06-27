@@ -864,6 +864,9 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
             "ironclad_goldmine": goldmine,
             "plate_to_sense": goldmine,
         }
+        combo_slice = sense_universal_slice(state_dir=STATE, sense_doc=doc)
+        doc["combinatorics"] = combo_slice
+        doc["universal_lock"] = bool(combo_slice.get("universal_lock"))
 
         payload = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
         _fsync_write(PANEL, payload)
@@ -889,6 +892,75 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
         return doc
     finally:
         _meld_unlock(fd)
+
+
+def sense_universal_slice(
+    *,
+    state_dir: Path | None = None,
+    sense_doc: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Light combinatorics facet — Eye · Ear · ZOCR · Mouth locked under Universal Protector."""
+    state = state_dir or STATE
+    sense = sense_doc if sense_doc is not None else read_panel()
+    if not sense.get("schema"):
+        sense = _load(state / "field-sense-package-panel.json", {})
+    eye_ear = _load(state / "eye-ear-plate.json", {})
+    universal = _load(state / "universal-protector-panel.json", {})
+    bridge = _load(state / "field-plate-combinatorics-bridge.json", {})
+    comb = _load(state / "g16-field-combinatorics-panel.json", {})
+    ellie = _load(state / "field-ellie-fier-panel.json", {})
+    iron = _load(state / "ironclad-immediate.json", {})
+    obs = _load(state / "obs-threat-posterity-panel.json", {})
+    members = sense.get("members") or {}
+    counts = {
+        "final_eye": 1 if (members.get("final_eye") or {}).get("present") else 0,
+        "final_ear": 1 if (members.get("final_ear") or {}).get("present") else 0,
+        "zocr": 1 if (members.get("zocr") or {}).get("present") else 0,
+        "mouth_neural": 1 if (members.get("mouth_neural") or {}).get("present") else 0,
+        "hostess7": 1 if (members.get("hostess7") or {}).get("present") else 0,
+        "eye_ear_plate": 1 if eye_ear.get("ok") or eye_ear.get("plated") else 0,
+        "universal_protector": 1 if universal.get("equipment_holds_gate") else 0,
+        "combinatorics_bridge": 1 if bridge.get("combinatorics_ok") else 0,
+        "ironclad_immediate": 1 if iron.get("plate_to_sense") or iron.get("goldmine") else 0,
+        "obs_threat_posterity": 1 if obs.get("ok") else 0,
+        "field_ellie_fier": 1 if ellie.get("ok") else 0,
+    }
+    lock_verify = comb.get("combinatorics_lock_verify") or bridge.get("combinatorics_lock_verify") or {}
+    comb_lock_ok = bool(lock_verify.get("ok", True)) and not comb.get("rejected")
+    eye_ok = bool((members.get("final_eye") or {}).get("present"))
+    ear_ok = bool((members.get("final_ear") or {}).get("present"))
+    zocr_ok = bool((members.get("zocr") or {}).get("present"))
+    mouth_ok = bool((members.get("mouth_neural") or {}).get("present")) or bool(eye_ear.get("mouth_ok"))
+    universal_lock = (
+        comb_lock_ok
+        and bool(universal.get("equipment_holds_gate"))
+        and bool(eye_ear.get("ok") or eye_ear.get("plated"))
+        and str(sense.get("verdict") or "") in ("GREEN", "WATCH")
+        and eye_ok
+        and ear_ok
+        and (zocr_ok or mouth_ok)
+    )
+    return {
+        "schema": "field-sense-universal-slice/v1",
+        "facet": "sense_universal",
+        "updated": _now(),
+        "counts": counts,
+        "leaf_count": sum(counts.values()),
+        "universal_lock": universal_lock,
+        "combinatorics_lock_ok": comb_lock_ok,
+        "sense_verdict": sense.get("verdict"),
+        "eye_ear_verdict": eye_ear.get("verdict"),
+        "eye_ear_chain": (eye_ear.get("chain_hash") or "")[:16],
+        "sense_chain": (sense.get("chain_hash") or "")[:16],
+        "combinatorics_chain": ((comb.get("combinatorics_lock") or {}).get("engine_sha256") or "")[:16],
+        "ellie_verdict": (ellie.get("systemwide") or {}).get("verdict"),
+        "ellie_score": (ellie.get("systemwide") or {}).get("score"),
+        "ellie_threat_warn_level": ellie.get("threat_warn_level") or (ellie.get("security_authority") or {}).get("threat_warn_level"),
+        "ellie_authority": ellie.get("security_authority") or _load(state / "field-ellie-security-authority.json", {}),
+        "locked_members": [k for k, v in counts.items() if v],
+        "condense_group": "universal_lock",
+        "motto": "Eye · Ear · ZOCR · Mouth — universal lock through combinatorics condense.",
+    }
 
 
 def read_panel() -> dict[str, Any]:
@@ -926,7 +998,10 @@ def main() -> int:
         meld()
         print(MANIFEST.read_text(encoding="utf-8"))
         return 0
-    print(json.dumps({"error": "usage: field-sense-package-meld.py [json|meld|manifest|witness]"}))
+    if cmd == "slice":
+        print(json.dumps(sense_universal_slice(), ensure_ascii=False, indent=2))
+        return 0
+    print(json.dumps({"error": "usage: field-sense-package-meld.py [json|meld|manifest|witness|slice]"}))
     return 1
 
 

@@ -2,7 +2,8 @@
   "schema": "sg-canonical/v1",
   "updated": "2026-06-27",
   "canonical_root": "NewLatest",
-  "motto": "SG/NewLatest is the operational tree \u2014 Queen + NEXUS + Field Technology + wired stack",
+  "motto": "SG/NewLatest is AmmoOS \u2014 Queen Browser + Field Technology + wired stack",
+  "product": "AmmoOS",
   "sg_root_semantics": "SG_ROOT defaults to NEXUS_INSTALL_ROOT (NewLatest). Stack siblings are symlinked inside NewLatest via scripts/wire-stack.sh.",
   "stack": {
     "operator_surface": "NewLatest/Queen",

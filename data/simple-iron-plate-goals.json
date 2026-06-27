@@ -37,6 +37,14 @@
       "tech": "field-operator iron plate v3 · slot+AND/SHR"
     },
     {
+      "id": "bsp_power_sort_organize",
+      "priority": 2,
+      "effectiveness": 0.93,
+      "label": "Iron plate → BSP composite_bsp sort + proven organize tools",
+      "check": "bsp_sort_organize_ok",
+      "tech": "iron-plate-organize.py · g16-power-sort · c2_taskbar BSP · combinatorics bridge · H7 Dewey"
+    },
+    {
       "id": "hostess7_brain_guard",
       "priority": 3,
       "effectiveness": 0.96,
@@ -159,6 +167,11 @@
       "id": "hostess7_brain_guard",
       "status": "active",
       "role": "Hostess 7 brain guard — checksum · removal witness · quarantine · motion hold on corruption"
+    },
+    {
+      "id": "iron_plate_bsp_organize",
+      "status": "active",
+      "role": "Fuse Simple Iron Plate with composite_bsp power sort, C2 taskbar BSP, combinatorics condense, H7 library organize"
     }
   ],
   "motion_verdicts": [

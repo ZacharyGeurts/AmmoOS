@@ -270,6 +270,26 @@ nexus_boot_impl_thermal_guard_init() {
     pythong "${NEXUS_INSTALL_ROOT}/lib/field-thermal-guard.py" evaluate >/dev/null 2>&1 || true
 }
 
+nexus_boot_impl_always_optimal() {
+  local sg grok16 py ao_py
+  sg="${SG_ROOT:-}"
+  if [[ -z "$sg" && -n "${NEXUS_INSTALL_ROOT:-}" ]]; then
+    sg="$(dirname "$(dirname "${NEXUS_INSTALL_ROOT}")")"
+  fi
+  [[ -n "$sg" ]] || return 0
+  grok16="${sg}/Grok16"
+  ao_py="${grok16}/lib/field-always-optimal.py"
+  [[ -f "$ao_py" ]] || return 0
+  py="$(nexus_boot_impl_resolve_python)" || return 0
+  GROK16_SG_ROOT="$sg" SG_ROOT="$sg" GROK16_ROOT="$grok16" \
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+    "$py" "$ao_py" apply >>"$(nexus_boot_impl_log_path)" 2>&1 || {
+    nexus_log "WARN" "boot-impl" "always_optimal_partial"
+    return 1
+  }
+  nexus_log "INFO" "boot-impl" "always_optimal_ok"
+}
+
 nexus_boot_impl_bounded_redata() {
   [[ "${NEXUS_FIELD_THERMAL_GUARD:-1}" == "1" ]] || return 0
   [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-global-redata.py" ]] || return 0
@@ -290,10 +310,19 @@ nexus_boot_impl_ensure_dirs() {
   nexus_boot_impl_thermal_guard_init
 }
 
+nexus_boot_impl_vestigial_cleanup() {
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-vestigial-cleanup.sh" ]] || return 0
+  nexus_boot_impl_script_trusted "${NEXUS_INSTALL_ROOT}/lib/nexus-vestigial-cleanup.sh" || return 1
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/nexus-vestigial-cleanup.sh"
+  nexus_vestigial_cleanup_run || true
+}
+
 nexus_boot_impl_first() {
   local wired=0 meld=0
   nexus_boot_impl_ensure_dirs
   nexus_boot_impl_host_freeze_resume || true
+  nexus_boot_impl_vestigial_cleanup
   nexus_boot_impl_log_path >/dev/null
   nexus_log "INFO" "boot-impl" "FIRST_INSTALL begin root=${NEXUS_INSTALL_ROOT}"
 
@@ -315,6 +344,13 @@ nexus_boot_impl_first() {
   nexus_boot_impl_sense_meld && meld=1
   nexus_boot_impl_training_viewer
 
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh" ]]; then
+    nexus_boot_impl_script_trusted "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh" || true
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh"
+    nexus_queen_layer_refresh || true
+  fi
+
   printf 'completed=1\nmode=first\nts=%s\nversion=%s\n' \
     "$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)" \
     "$(nexus_read_version 2>/dev/null || echo unknown)" \
@@ -328,6 +364,7 @@ nexus_boot_impl_refresh() {
   local wired=0 meld=0
   nexus_boot_impl_ensure_dirs
   nexus_boot_impl_host_freeze_resume || true
+  nexus_boot_impl_vestigial_cleanup
   nexus_log "INFO" "boot-impl" "BOOT_REFRESH begin root=${NEXUS_INSTALL_ROOT}"
 
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh" ]]; then
@@ -343,6 +380,14 @@ nexus_boot_impl_refresh() {
   fi
   nexus_boot_impl_bounded_redata || true
   nexus_boot_impl_sense_meld && meld=1
+  nexus_boot_impl_always_optimal || true
+
+    if [[ -f "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh" ]]; then
+    nexus_boot_impl_script_trusted "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh" || true
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh"
+    nexus_queen_layer_refresh || true
+  fi
 
   nexus_boot_impl_record refresh "$wired" "$meld"
   nexus_log "INFO" "boot-impl" "BOOT_REFRESH done wired=${wired} meld=${meld}"

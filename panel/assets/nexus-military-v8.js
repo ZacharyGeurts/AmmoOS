@@ -22,7 +22,7 @@
   function stampVersion(ver) {
     const v = ver || resolveVersion("…");
     const title = document.getElementById("nexus-version-title");
-    const btn = document.getElementById("nexus-update-btn");
+    const btn = document.getElementById("nexus-version-btn");
     const edition = global.NEXUS_FIELD?.edition || "Universal Protector";
     if (title) title.textContent = `NEXUS-Shield v${v} · ${edition}`;
     document.title = `NEXUS-Shield v${v} · ${edition}`;
@@ -31,9 +31,7 @@
       sub.textContent = `${edition} · 3D/4D spatial lattice · Hostess 7 · threat HIGH`;
       sub.dataset.upStamped = "1";
     }
-    if (btn && !btn.classList.contains("update-ready") && !btn.classList.contains("update-busy")) {
-      btn.textContent = `v${v}`;
-    }
+    if (btn) btn.textContent = `v${v}`;
   }
 
   function ensureOpsBar() {

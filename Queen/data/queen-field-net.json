@@ -19,6 +19,7 @@
   "routes": [
     {"id": "nexus", "path": "http://127.0.0.1:9477/field", "title": "NEXUS Field C2", "layer": "shell"},
     {"id": "queen", "path": "/world/browser.html", "title": "Queen", "layer": "shell"},
+    {"id": "queen-code", "path": "/world/queen-code.html", "title": "Queen Code", "layer": "editor"},
     {"id": "queen_home", "path": "/world/queen-field-home.html", "title": "Queen", "layer": "engine"},
     {"id": "forge", "path": "/gui/queen-build-deck.html", "title": "Queen Forge", "layer": "build"},
     {"id": "hostess", "path": "/api/field-brain", "title": "Hostess 7 Brain", "layer": "brain"},

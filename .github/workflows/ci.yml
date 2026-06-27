@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax check
+        run: |
+          find lib -maxdepth 1 -name '*.sh' -print0 | xargs -0 -n1 bash -n
+          bash -n nexus.sh stealth_install.sh genius_shield.sh
+          bash -n scripts/migrate-nexus-state.sh
+
+      - name: Python compile check
+        run: |
+          python3 -m compileall -q lib scripts tests 2>/dev/null || python3 -m compileall -q lib scripts
+
+      - name: Config sanity
+        run: |
+          test "$(grep -c '^NEXUS_I18N_DIR=' config/nexus.conf)" -eq 1
+          ! grep -q '/home/default' config/nexus.conf
+          ! grep -q '/media/default' config/nexus.conf
+
+      - name: State not tracked
+        run: |
+          test -z "$(git ls-files '.nexus-state' 2>/dev/null | head -1 || true)"
+
+      - name: Boot impl hardening
+        run: |
+          bash -n lib/nexus-boot-impl.sh
+          bash -n scripts/nexus-boot-impl.sh
+          grep -q nexus_boot_impl_validate_install_root lib/nexus-boot-impl.sh
+          grep -q INTEGRITY_VERIFY_FAILED lib/nexus-boot-impl.sh
+          ! grep -q 'nexus_boot_impl_training_viewer' <(sed -n '/^nexus_boot_impl_refresh/,/^}/p' lib/nexus-boot-impl.sh)
+
+      - name: Boot marker simulation
+        run: |
+          tmp_state="$(mktemp -d)"
+          NEXUS_INSTALL_ROOT="$PWD" NEXUS_STATE_DIR="$tmp_state" NEXUS_BOOT_IMPL=1 \
+            NEXUS_FRONT_HOOK=0 NEXUS_SELF_DEFENSE=0 \
+            bash scripts/nexus-boot-impl.sh >/dev/null 2>&1
+          test -f "$tmp_state/first-boot.complete"
+          grep -q mode=first "$tmp_state/boot-impl.last"
+          NEXUS_INSTALL_ROOT="$PWD" NEXUS_STATE_DIR="$tmp_state" NEXUS_BOOT_IMPL=1 \
+            NEXUS_FRONT_HOOK=0 NEXUS_SELF_DEFENSE=0 \
+            bash scripts/nexus-boot-impl.sh >/dev/null 2>&1
+          grep -q mode=refresh "$tmp_state/boot-impl.last"
+          rm -rf "$tmp_state"

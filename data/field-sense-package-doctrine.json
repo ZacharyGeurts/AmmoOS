@@ -51,12 +51,13 @@
       "single_filter": "sg_field_scene_guard",
       "role": "OBS-native sense lane — Scene Guard on scene; spiderweb + tree prune; bridges eye/ear/Hostess7"
     },
-    "sweet_anita_broadcast": {
-      "doctrine": "NewLatest/data/field-sweet-anita-broadcast-doctrine.json",
-      "panel_tab": "sweet-anita",
-      "api": "/api/sweet-anita",
+    "field_obs_capture": {
+      "doctrine": "OBS-Field/data/field-obs-doctrine.json",
+      "panel_tab": "field-obs",
+      "api": "/api/field-obs",
       "us_slice": "/api/us-obs-field",
-      "rule": "Embedded panel preview — never tunnel desktop; best dB for everyone; decks + all major platforms"
+      "g16_toolchain": "OBS-Field/data/g16-field-obs-toolchain.json",
+      "rule": "AmmoOS Field OBS — g16 portable capture; US tab slice; Scene Guard stack via OBS-FieldVoiceFilter"
     }
   },
   "products": {
@@ -141,5 +142,20 @@
     "fsync": true,
     "triple_mirror": true,
     "witness": ["VERSION", "data/code-seal.json", "data/field-manual-index.json"]
+  },
+  "combinatorics": {
+    "facet": "sense_universal",
+    "condense_group": "universal_lock",
+    "module": "lib/field-sense-package-meld.py",
+    "slice_cmd": "slice",
+    "chain_with_plate_meld": true,
+    "universal_lock": true,
+    "members": ["final_eye", "final_ear", "zocr", "mouth_neural", "eye_ear_plate", "universal_protector"]
+  },
+  "universal_lock": {
+    "gate": "universal-protector.equipment_holds_gate",
+    "combinatorics_bridge": "field-plate-combinatorics-bridge.json",
+    "combinatorics_panel": "g16-field-combinatorics-panel.json",
+    "motto": "Eye · Ear · ZOCR · Mouth locked everywhere through combinatorics universal condense."
   }
 }

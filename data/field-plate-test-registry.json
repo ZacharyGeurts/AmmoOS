@@ -73,6 +73,22 @@
       "tier": "optimize"
     },
     {
+      "id": "locational_sitrep_plate",
+      "plate": "locational_sitrep",
+      "script": "NewLatest/lib/field-locational-sitrep-plate.py",
+      "args": ["cycle"],
+      "requires": ["operator_location"],
+      "tier": "sense"
+    },
+    {
+      "id": "g16_power_sort_plate",
+      "plate": "g16_power_sort",
+      "script": "Grok16/lib/g16-power-sort-plate.py",
+      "args": ["cycle"],
+      "requires": ["g16", "ironclad"],
+      "tier": "optimize"
+    },
+    {
       "id": "clipboard_wire_enforce",
       "plate": "clipboard_wire",
       "script": "NewLatest/lib/field-clipboard-wire.py",
@@ -87,6 +103,15 @@
       "args": ["bindings", "all"],
       "requires": [],
       "tier": "smoke"
+    },
+    {
+      "id": "legacy_isolation_chamber",
+      "plate": "legacy_isolation",
+      "script": "NewLatest/lib/field-legacy-isolation-chamber.py",
+      "args": ["verify"],
+      "requires": [],
+      "tier": "legacy",
+      "timeout": 120
     }
   ]
 }

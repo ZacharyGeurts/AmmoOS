@@ -2,7 +2,7 @@
 
 **Nothing optional. Hold all gates. MP4. We want it ALL.**
 
-Sovereign browser stack for NEXUS-Shield: full web surface, every egress gated, codecs in-tree.
+Sovereign browser stack for **AmmoOS** (Amouranth): full web surface, every egress gated, codecs in-tree.
 
 ## Vendor clones
 
@@ -20,9 +20,9 @@ Sovereign browser stack for NEXUS-Shield: full web surface, every egress gated, 
 ## Queen shell (`engine/`)
 
 - **2026 GUI** — aqua/rose field chrome, compshader boot (`shaders/compute/QueenBoot.comp`)
-- **AMOURANTHRTX RTX** — loads `QueenBoot.spv` via same FieldSocket push-constant layout as NEXUS panel
+- **AMOURANTHRTX RTX** — loads `QueenBoot.spv` via same FieldSocket push-constant layout as AmmoOS panel
 - **Plugins** — `plugins/builtin-manifest.json` (all built-in; external plugins supported)
-- **NEXUS** — Truth DNS, gatekeeper, honorability via `nexus/` symlinks + env
+- **AmmoOS field** — Truth DNS, gatekeeper, honorability via `nexus/` symlinks + env (legacy paths retained)
 
 ## Build stages
 
@@ -49,6 +49,6 @@ export NEXUS_INSTALL_ROOT="$(cd .. && pwd)"
 ./build/rtx/bin/Linux/queen-browser --queen --extended-field
 ```
 
-No external Firefox/Chrome. UI + NEXUS panel load **inside** the RTX engine (`FieldWebPanel` + `QueenBoot.comp` compshader boot). NEXUS panel API auto-starts on `:9477` if needed.
+No external Firefox/Chrome. UI + AmmoOS panel load **inside** the RTX engine (`FieldWebPanel` + `QueenBoot.comp` compshader boot). Threat panel API auto-starts on `:9477` if needed.
 
-Binary names: `queen-browser`, `fieldfox`, `field-queen` — all recognized by NEXUS gatekeeper.
+Binary names: `queen-browser`, `field-queen` — Queen Browser is the web engine (`fieldfox` retained as legacy alias).

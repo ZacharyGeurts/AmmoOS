@@ -273,6 +273,10 @@ def _countermeasures(
     return cms
 
 
+def _benchmark_mod() -> Any | None:
+    return _queen_mod("queen_benchmark", "queen-benchmark.py")
+
+
 def nexus_jump(
     url: str,
     *,
@@ -282,6 +286,13 @@ def nexus_jump(
 ) -> dict[str, Any]:
     u = (url or "").strip()
     host = _host(u)
+
+    bench = _benchmark_mod()
+    if bench is not None and hasattr(bench, "fast_jump"):
+        fast = bench.fast_jump(u, tab_id=tab_id, compat_mode=compat_mode)
+        if fast:
+            _append_jump({**fast, "ts": _ts(), "event": "nexus_jump_fast"})
+            return fast
 
     # FieldNet classify (Queen capsule boundary)
     field_net: dict[str, Any] = {}

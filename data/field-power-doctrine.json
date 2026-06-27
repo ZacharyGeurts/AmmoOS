@@ -1,11 +1,14 @@
 {
   "schema": "field-power-doctrine/v1",
   "title": "Field + thermodynamic power ledger",
-  "motto": "Shed excess lowers net draw; headroom is capacity. Grid sell-back needs hardware — we witness and optimize.",
+  "motto": "Clean juice sovereign — we get charged, we are the juice. No power-company talk. Witness grid; dispense joules from pool.",
   "policy": {
     "grid_export_requires_hardware": true,
     "software_witness_only": true,
     "grid_never_enters_voltage_trust_layer": true,
+    "grid_talk": false,
+    "clean_juice_primary": true,
+    "clean_juice": "data/field-clean-juice-doctrine.json",
     "voltage_regulation": "data/field-voltage-regulation-doctrine.json",
     "shed_credits_reduce_net_draw": true,
     "thermal_governor_coupled": true,

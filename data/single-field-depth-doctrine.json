@@ -53,7 +53,10 @@
     "daemon_cycle": "lib/field-depth-singularizer.sh",
     "batch_per_cycle": 3,
     "live_preflight": "Every field-sanity pass seals and destroys field_depth before simplify",
-    "dom_fix": "Queen/world/queen-field-sanity.js singularizeDomUrls on each pass",
+    "instant_field_die": "Field die rolls trigger instant snap_dimensional_pits — no disk, no wait",
+    "dimensional_pits": "field_depth>0, layer depth>0, field_on_field — snapped out immediately on field die",
+    "api": "/api/field-depth-snap",
+    "dom_fix": "Queen/world/queen-field-sanity.js snapPitsInstant on navigate + field die",
     "ledger": "field-depth-singularizer.jsonl"
   },
   "integrations": {

@@ -42,7 +42,7 @@
         <button type="button" class="qm-btn" data-rt="audit">Audit root</button>
         <button type="button" class="qm-btn qm-btn--danger" data-rt="rekill">RE-KILL</button>
         <button type="button" class="qm-btn qm-btn--danger" data-rt="crush">Crush hot</button>
-        <button type="button" class="qm-btn qm-btn--primary" data-rt="nexus">NEXUS C2</button>
+        <button type="button" class="qm-btn qm-btn--primary" data-rt="nexus">AmmoOS C2</button>
       </div>`;
 
     bar.querySelectorAll("[data-rt]").forEach((btn) => {

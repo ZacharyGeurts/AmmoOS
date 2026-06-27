@@ -42,6 +42,38 @@ nexus_stray_kill_json_probes() {
   bash "$script" >/dev/null 2>&1 || true
 }
 
+nexus_stray_prune_duplicate_guards() {
+  python3 <<'PY' || true
+import os, signal, subprocess
+
+def prune(substr, keep=1):
+    out = subprocess.check_output(["ps", "-eo", "pid=,args="], text=True)
+    hits = []
+    for line in out.splitlines():
+        parts = line.split(None, 1)
+        if len(parts) < 2:
+            continue
+        pid, cmd = int(parts[0]), parts[1]
+        if substr in cmd and "python3 <<" not in cmd:
+            hits.append(pid)
+    if len(hits) <= keep:
+        return
+    hits.sort()
+    for pid in hits[keep:]:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+
+for pat in (
+    "queen-root-sovereign.py guard",
+    "queen-field-virus.py guard",
+    "field-queen-browser.py json",
+):
+    prune(pat, 1)
+PY
+}
+
 nexus_stray_kill_hung_pythong() {
   local max_age="${NEXUS_STRAY_PYTHONG_MAX_AGE:-90}"
   python3 <<PY || true
@@ -110,12 +142,23 @@ nexus_stray_kill_orphan_daemon_roots() {
   done
 }
 
+nexus_stray_kill_amouranthrtx_window() {
+  local retire="${NEXUS_INSTALL_ROOT}/lib/amouranthrtx-window-retire.sh"
+  [[ -f "$retire" ]] || return 0
+  # shellcheck source=/dev/null
+  source "$retire"
+  declare -f amouranthrtx_window_retire_cycle >/dev/null 2>&1 || return 0
+  amouranthrtx_window_retire_cycle
+}
+
 nexus_stray_task_guard_cycle() {
   nexus_stray_guard_enabled || return 0
   nexus_stray_guard_due || return 0
   nexus_stray_prune_tray_watchdogs
+  nexus_stray_prune_duplicate_guards
   nexus_stray_kill_json_probes
   nexus_stray_kill_hung_pythong
   nexus_stray_kill_orphan_daemon_roots
+  nexus_stray_kill_amouranthrtx_window
   nexus_stray_guard_mark
 }

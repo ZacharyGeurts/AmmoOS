@@ -242,7 +242,7 @@ Environment=NEXUS_INSTALL_ROOT=/usr/local/lib/nexus-shield
 Environment=SG_ROOT=${SG_ROOT}
 ExecStartPre=/usr/local/lib/nexus-shield/scripts/nexus-boot-impl.sh
 ExecStart=/usr/local/lib/nexus-shield/lib/nexus-daemon.sh
-ExecStop=/bin/bash -c 'source /usr/local/lib/nexus-shield/lib/nexus-common.sh; source /usr/local/lib/nexus-shield/lib/shutdown-guard.sh 2>/dev/null; nexus_shutdown_mark_clean 2>/dev/null; pkill -9 -f threat-panel-http.py 2>/dev/null; pkill -9 -f dns-admin-portal.py 2>/dev/null; pkill -9 -P \$MAINPID 2>/dev/null; exit 0'
+ExecStop=/bin/bash -c 'source /usr/local/lib/nexus-shield/lib/nexus-common.sh; source /usr/local/lib/nexus-shield/lib/shutdown-guard.sh 2>/dev/null; nexus_shutdown_mark_clean 2>/dev/null; pkill -9 -f threat-panel-http.py 2>/dev/null; pkill -9 -f queen-world.py 2>/dev/null; pkill -9 -f dns-admin-portal.py 2>/dev/null; pkill -9 -P \$MAINPID 2>/dev/null; exit 0'
 KillMode=control-group
 TimeoutStopSec=8
 Restart=on-failure

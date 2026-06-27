@@ -38,7 +38,7 @@ INST_NAME="nexus-shield-${VER}-installers.tar.gz"
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
   echo "dry-run: would pack ${VER} → ${DIST}/${PKG_NAME}"
-  echo "excludes: .git dist Hostess7/cache Hostess7/zac Queen/data Queen/build Queen/vendor *.log *.jsonl"
+  echo "excludes: .git dist cache state .nexus-* Queen/build Queen/vendor Hostess7/cache *.log"
   exit 0
 fi
 
@@ -51,17 +51,31 @@ rsync -a \
   --exclude='.git' \
   --exclude='.nexus-state' \
   --exclude='.nexus-state-test' \
+  --exclude='.nexus-field-drive' \
   --exclude='dist' \
+  --exclude='cache' \
+  --exclude='state' \
   --exclude='Hostess7/cache' \
   --exclude='Hostess7/zac' \
   --exclude='Queen/build' \
   --exclude='Queen/build-*' \
   --exclude='Queen/vendor' \
   --exclude='Queen/cache' \
-  --exclude='Queen/data' \
+  --exclude='Queen/field/sovereign' \
+  --exclude='Queen/field-gecko/profile' \
   --exclude='Queen/.venv*' \
+  --exclude='Textbook/staging' \
+  --exclude='__pycache__' \
+  --exclude='*.pyc' \
+  --exclude='.wiki-publish' \
+  --exclude='.pages-publish' \
+  --exclude='Queen/data/*.log' \
   --exclude='*.log' \
   --exclude='*.jsonl' \
+  --exclude='*.img' \
+  --exclude='hostess7-training-viewer/viewer.log' \
+  --exclude='hostess7-training-viewer/.viewer.pid' \
+  --exclude='MANIFEST.sha256.bak' \
   --exclude='AMOURANTHRTX' \
   --exclude='Grok16' \
   --exclude='GrokPy' \
@@ -101,9 +115,16 @@ if tar -tzf "${DIST}/${PKG_NAME}" | grep -qE '(first-boot\.complete|amouranth_en
 fi
 echo "PASS: source tarball clean"
 
+echo "=== file catalog ==="
+CATALOG_NAME="nexus-file-catalog-${VER}.json"
+NEXUS_INSTALL_ROOT="$ROOT" pythong "${ROOT}/lib/nexus-file-catalog.py" build "${ROOT}/data/nexus-file-catalog.json" >/dev/null
+cp "${ROOT}/data/nexus-file-catalog.json" "${DIST}/${CATALOG_NAME}"
+NEXUS_INSTALL_ROOT="$ROOT" pythong "${ROOT}/lib/nxf.py" write "${DIST}/nexus-shield-${VER}.nxf" >/dev/null
+cp "${DIST}/nexus-shield-${VER}.nxf" "${ROOT}/nxf/latest.nxf"
+
 (
   cd "$DIST"
-  sha256sum "${PKG_NAME}" "${INST_NAME}" >"MANIFEST.sha256"
+  sha256sum "${PKG_NAME}" "${INST_NAME}" "${CATALOG_NAME}" "nexus-shield-${VER}.nxf" >"MANIFEST.sha256"
 )
 echo "wrote ${DIST}/MANIFEST.sha256"
 

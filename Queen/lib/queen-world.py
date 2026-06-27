@@ -6,6 +6,7 @@ Replaces external NEXUS :9477 for Queen sovereign mode.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import mimetypes
 import os
@@ -31,14 +32,55 @@ PORT = int(os.environ.get("QUEEN_WORLD_PORT", "9481"))
 
 # Seal Grok16 + RTX secure space once per queen-world process (browser load = boot).
 _SECURE_BOOT: dict[str, Any] | None = None
+_BOOT_HOOK: dict[str, Any] | None = None
 _WORLD_FULL_CACHE: dict[str, Any] | None = None
 _WORLD_FULL_CACHE_TS: float = 0.0
+_PERF_FLYOUT_MOD: Any = None
+
+
+def _nexus_lib_script(name: str) -> Path:
+    for root in (SG / "NewLatest", Path(os.environ.get("NEXUS_INSTALL_ROOT", str(QUEEN)))):
+        p = root / "lib" / name
+        if p.is_file():
+            return p
+    return SG / "NewLatest" / "lib" / name
+
+
+def _perf_flyout_sample(*, reset: bool = False) -> dict[str, Any]:
+    global _PERF_FLYOUT_MOD
+    script = _nexus_lib_script("field-performance-flyout.py")
+    if not script.is_file():
+        return {"schema": "field-performance-flyout/v1", "ok": False, "error": "perf_flyout_missing"}
+    if _PERF_FLYOUT_MOD is None:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("field_performance_flyout_queen", script)
+        if not spec or not spec.loader:
+            return _run_json(script, "json", timeout=10)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _PERF_FLYOUT_MOD = mod
+    try:
+        return _PERF_FLYOUT_MOD.sample(reset=reset)
+    except Exception as exc:
+        return {"schema": "field-performance-flyout/v1", "ok": False, "error": str(exc)}
+
+
+def _boot_hook() -> dict[str, Any]:
+    """Board front hook + network metal before host daemons attach."""
+    global _BOOT_HOOK
+    if _BOOT_HOOK is not None:
+        return _BOOT_HOOK
+    doc = _run_json(_LIB / "queen-boot-hook.py", "board", timeout=90)
+    _BOOT_HOOK = doc if doc.get("boarded") else _run_json(_LIB / "queen-boot-hook.py", "json", timeout=30)
+    return _BOOT_HOOK
 
 
 def _secure_boot() -> dict[str, Any]:
     global _SECURE_BOOT
     if _SECURE_BOOT is not None:
         return _SECURE_BOOT
+    _boot_hook()
     doc = _run_json(_LIB / "queen-secure-space.py", "boot", timeout=60)
     _SECURE_BOOT = doc if doc.get("sealed") else _run_json(_LIB / "queen-secure-space.py", "json", timeout=30)
     return _SECURE_BOOT
@@ -58,13 +100,17 @@ def _final_eye_root() -> Path:
 
 def _env() -> dict[str, str]:
     fe = _final_eye_root()
+    nexus_root = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(SG / "NewLatest")))
+    if not (nexus_root / "lib").is_dir():
+        nexus_root = QUEEN
+    nexus_state = Path(os.environ.get("NEXUS_STATE_DIR", str(nexus_root / ".nexus-state")))
     return {
         **os.environ,
         "SG_ROOT": str(SG),
         "QUEEN_ROOT": str(QUEEN),
         "FINAL_EYE_ROOT": str(fe),
-        "NEXUS_INSTALL_ROOT": os.environ.get("NEXUS_INSTALL_ROOT", str(QUEEN)),
-        "NEXUS_STATE_DIR": os.environ.get("NEXUS_STATE_DIR", str(QUEEN / ".nexus-state")),
+        "NEXUS_INSTALL_ROOT": str(nexus_root),
+        "NEXUS_STATE_DIR": str(nexus_state),
         "HOSTESS7_ROOT": os.environ.get("HOSTESS7_ROOT", str(SG / "Hostess7")),
         "GROK16_ROOT": os.environ.get("GROK16_ROOT", str(SG / "Grok16")),
         "KILROY_ROOT": os.environ.get("KILROY_ROOT", str(SG / "KILROY")),
@@ -138,6 +184,202 @@ def dispatch_kilroy(body: dict[str, Any]) -> dict[str, Any]:
 
 def _game_room_status() -> dict[str, Any]:
     return _run_json(_LIB / "queen-chips.py", "json", timeout=60)
+
+
+def _chip_battery_status() -> dict[str, Any]:
+    script = _nexus_lib_script("field-chip-battery.py")
+    return _run_json(script, "json", timeout=90)
+
+
+def _combinatronic_status(*, refresh: bool = False) -> dict[str, Any]:
+    args: list[str] = ["combinatronic"]
+    if refresh:
+        args.append("--refresh")
+    script = _nexus_lib_script("field-chip-battery.py")
+    if script.is_file():
+        return _run_json(script, *args, timeout=120)
+    return _run_json(_LIB / "queen-chips.py", "combinatronic", *args, timeout=120)
+
+
+def _steel_neural_plates(*, refresh: bool = False, force: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-steel-neural-plates.py")
+    argv: list[str] = ["build" if refresh else "panel"]
+    if refresh:
+        argv.append("--refresh")
+    if force:
+        argv.append("--force")
+    if script.is_file():
+        return _run_json(script, *argv, timeout=180)
+    return {"schema": "field-steel-neural-plates/v1", "ok": False, "hint": "field-steel-neural-plates missing"}
+
+
+def _combinatronic_balance(*, cmd: str = "panel", force: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-combinatronic-balance.py")
+    argv = [cmd if cmd in ("panel", "fingerprint", "gate", "verify", "should") else "panel"]
+    if force and argv[0] in ("gate", "should"):
+        argv.append("--force")
+    if script.is_file():
+        return _run_json(script, *argv, timeout=60)
+    return {"schema": "field-combinatronic-balance-panel/v1", "ok": False, "hint": "field-combinatronic-balance missing"}
+
+
+def _combinatronic_spider_wire(*, refresh: bool = False, optimize: bool = True) -> dict[str, Any]:
+    script = _nexus_lib_script("field-combinatronic-spider-wire.py")
+    args: list[str] = ["build" if refresh else "panel"]
+    if refresh:
+        args.append("--refresh")
+    if not optimize:
+        args.append("--no-optimize")
+    if script.is_file():
+        return _run_json(script, *args, timeout=120)
+    return {"schema": "field-combinatronic-spider-wire/v1", "ok": False, "hint": "field-combinatronic-spider-wire missing"}
+
+
+def _combinatronics_growth(*, refresh: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-combinatronics-growth.py")
+    args: list[str] = ["grow" if refresh else "panel"]
+    if refresh:
+        args.append("--refresh")
+    if script.is_file():
+        return _run_json(script, *args, timeout=180)
+    return {"schema": "field-combinatronics-growth/v1", "ok": False, "hint": "field-combinatronics-growth missing"}
+
+
+def _combinatorics_sequence(*, refresh: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-combinatorics-sequence.py")
+    args: list[str] = ["build" if refresh else "panel"]
+    if refresh:
+        args.append("--refresh")
+    if script.is_file():
+        return _run_json(script, *args, timeout=180)
+    return {"schema": "field-combinatorics-sequence/v1", "ok": False, "hint": "field-combinatorics-sequence missing"}
+
+
+def _combinamatrix(*, refresh: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-combinamatrix.py")
+    args: list[str] = ["build" if refresh else "panel"]
+    if refresh:
+        args.append("--refresh")
+    if script.is_file():
+        return _run_json(script, *args, timeout=180)
+    return {"schema": "field-combinamatrix/v1", "ok": False, "hint": "field-combinamatrix missing"}
+
+
+def _universal_neural(*, sub: str = "panel", teach: bool = False, force: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-universal-neural.py")
+    if sub in ("teach", "curriculum"):
+        args = ["teach"] + (["--force"] if force else [])
+    elif sub in ("build", "universal"):
+        args = ["build"] + (["--teach"] if teach else [])
+    else:
+        args = ["panel"] + (["--teach"] if teach else [])
+    if script.is_file():
+        return _run_json(script, *args, timeout=300)
+    return {"schema": "field-universal-neural/v1", "ok": False, "hint": "field-universal-neural missing"}
+
+
+def _plate_dimensions(*, refresh: bool = False, full: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-plate-dimensions.py")
+    args: list[str] = ["build" if refresh else "panel"]
+    if full:
+        args.append("--full")
+    if script.is_file():
+        return _run_json(script, *args, timeout=120)
+    return {"schema": "field-plate-dimensions/v1", "ok": False, "hint": "field-plate-dimensions missing"}
+
+
+def _ammolang_status(*, refresh: bool = False, body: dict[str, Any] | None = None) -> dict[str, Any]:
+    script = _nexus_lib_script("field-ammolang.py")
+    if body and script.is_file():
+        spec = importlib.util.spec_from_file_location("ammolang_qw", script)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "dispatch"):
+                body = {**body, "refresh": refresh}
+                return mod.dispatch(body)
+    args: list[str] = ["panel"]
+    if refresh:
+        args.append("--refresh")
+    if script.is_file():
+        return _run_json(script, *args, timeout=120)
+    return {"schema": "field-ammolang/v1", "ok": False, "hint": "field-ammolang missing"}
+
+
+def _combinatronic_visuals(
+    *,
+    refresh: bool = False,
+    sub: str = "manifest",
+    repair: bool = False,
+    pattern_id: str = "",
+) -> dict[str, Any]:
+    script = _nexus_lib_script("field-combinatronic-visuals.py")
+    args: list[str]
+    if sub == "inventory":
+        args = ["inventory"]
+    elif sub == "verify":
+        args = ["verify"]
+    elif sub == "registry":
+        args = ["registry"]
+    elif sub == "repair":
+        args = ["repair"]
+    elif sub == "pattern":
+        args = ["pattern", pattern_id or "chip_png"]
+    elif refresh:
+        args = ["generate"]
+    elif repair:
+        args = ["repair"]
+    else:
+        args = ["manifest"]
+    if script.is_file():
+        return _run_json(script, *args, timeout=240)
+    return {"schema": "field-combinatronic-visuals-manifest/v1", "ok": False, "hint": "field-combinatronic-visuals missing"}
+
+
+def _cpu_library_status(*, sub: str = "library", arg: str = "") -> dict[str, Any]:
+    script = _nexus_lib_script("field-cpu-library.py")
+    argv = [sub]
+    if arg:
+        argv.append(arg)
+    return _run_json(script, *argv, timeout=90)
+
+
+def _extensive_library_status(*, sub: str = "panel", arg: str = "") -> dict[str, Any]:
+    script = _nexus_lib_script("field-extensive-library.py")
+    argv = [sub]
+    if arg:
+        argv.append(arg)
+    return _run_json(script, *argv, timeout=300)
+
+
+def _h7c_status(*, sub: str = "panel") -> dict[str, Any]:
+    script = _nexus_lib_script("field-h7c-compression.py")
+    cmd = sub if sub in ("panel", "balance", "verify", "optimize", "optimizer") else "panel"
+    timeout = 120 if cmd in ("optimize", "optimizer") else 60
+    return _run_json(script, cmd, timeout=timeout)
+
+
+def _file_formats_status(*, sub: str = "panel", refresh: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-file-formats.py")
+    if refresh or sub in ("build", "icons"):
+        return _run_json(script, "build" if sub != "icons" else "icons", timeout=180)
+    return _run_json(script, sub if sub in ("table", "meld") else "panel", timeout=120)
+
+
+def _best_sort_status(*, sub: str = "panel", ctx: str = "format_table") -> dict[str, Any]:
+    script = _nexus_lib_script("field-best-sort.py")
+    if sub == "meld":
+        return _run_json(script, "meld", timeout=60)
+    if sub == "resolve":
+        return _run_json(script, "resolve", ctx, timeout=60)
+    return _run_json(script, "panel", timeout=60)
+
+
+def _device_visuals_status(*, sub: str = "panel", refresh: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-device-visuals.py")
+    if refresh or sub in ("generate", "build"):
+        return _run_json(script, "generate", timeout=300)
+    return _run_json(script, sub, timeout=120)
 
 
 def dispatch_game_room(body: dict[str, Any]) -> dict[str, Any]:
@@ -459,10 +701,25 @@ def _field_sanity_status() -> dict[str, Any]:
 
 
 def dispatch_field_sanity(body: dict[str, Any]) -> dict[str, Any]:
+    action = str(body.get("action") or "").strip().lower()
+    if action in ("instant_snap", "snap", "field_die", "instant"):
+        return dispatch_field_depth_snap(body)
     ic = _ironclad_field_sanity_script()
     if ic:
         return _run_json(ic, "pass", body=body, timeout=30)
     return _run_json(_LIB / "queen-field-sanity.py", "pass", body=body, timeout=30)
+
+
+def dispatch_field_depth_snap(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    body = body or {}
+    for candidate in (
+        QUEEN.parent / "lib" / "field-depth-singularizer.py",
+        SG / "NewLatest" / "lib" / "field-depth-singularizer.py",
+    ):
+        if candidate.is_file():
+            cmd = "field_die" if str(body.get("action") or "").lower() in ("field_die",) else "instant"
+            return _run_json(candidate, cmd, body=body, timeout=5)
+    return {"ok": False, "error": "field_depth_singularizer_missing", "instant": True}
 
 
 def _external_wire_status() -> dict[str, Any]:
@@ -569,6 +826,10 @@ _BROWSER_STATUS_CACHE: dict[str, Any] | None = None
 _BROWSER_STATUS_CACHE_TS: float = 0.0
 
 
+def _benchmark_status() -> dict[str, Any]:
+    return _run_json(_LIB / "queen-benchmark.py", "json", timeout=15)
+
+
 def _browser_status() -> dict[str, Any]:
     import time
 
@@ -589,6 +850,42 @@ def dispatch_browser(body: dict[str, Any]) -> dict[str, Any]:
     script = _LIB / "queen-browser.py"
     if not script.is_file():
         return {"ok": False, "error": "queen_browser_missing"}
+    return _run_json(script, "dispatch", body=body, timeout=60)
+
+
+def _desktop_status() -> dict[str, Any]:
+    return _run_json(_LIB / "queen-desktop.py", "json", timeout=60)
+
+
+def _nexus_c2_status(*, flyout: bool = False) -> dict[str, Any]:
+    script = _LIB / "queen-nexus-c2.py"
+    if not script.is_file():
+        script = _LIB / "queen-dashboard.py"
+    if not script.is_file():
+        return {"schema": "queen-nexus-c2/v1", "ok": False, "error": "queen_nexus_c2_missing"}
+    cmd = "flyout" if flyout else "json"
+    return _run_json(script, cmd, timeout=45)
+
+
+def _dashboard_status(*, flyout: bool = False) -> dict[str, Any]:
+    return _nexus_c2_status(flyout=flyout)
+
+
+def dispatch_nexus_c2(body: dict[str, Any]) -> dict[str, Any]:
+    script = _LIB / "queen-nexus-c2.py"
+    if not script.is_file():
+        return {"ok": False, "error": "queen_nexus_c2_missing"}
+    return _run_json(script, "dispatch", body=body, timeout=45)
+
+
+def dispatch_dashboard(body: dict[str, Any]) -> dict[str, Any]:
+    return dispatch_nexus_c2(body)
+
+
+def dispatch_desktop(body: dict[str, Any]) -> dict[str, Any]:
+    script = _LIB / "queen-desktop.py"
+    if not script.is_file():
+        return {"ok": False, "error": "queen_desktop_missing"}
     return _run_json(script, "dispatch", body=body, timeout=60)
 
 
@@ -661,6 +958,14 @@ def _file_browser_status() -> dict[str, Any]:
 
 def dispatch_file_browser(body: dict[str, Any]) -> dict[str, Any]:
     return _run_json(_LIB / "queen-file-browser.py", "dispatch", body=body, timeout=60)
+
+
+def _queen_code_status() -> dict[str, Any]:
+    return _run_json(_LIB / "queen-code.py", "json", timeout=45)
+
+
+def dispatch_queen_code(body: dict[str, Any]) -> dict[str, Any]:
+    return _run_json(_LIB / "queen-code.py", "dispatch", body=body, timeout=120)
 
 
 def _field_virus_status() -> dict[str, Any]:
@@ -909,6 +1214,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/field-status":
             self._send_json(200, _queen_gates())
             return
+        if path == "/api/field-performance-flyout":
+            self._send_json(200, _perf_flyout_sample())
+            return
         if path == "/api/queen-build":
             self._send_json(200, _build_status())
             return
@@ -935,6 +1243,20 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/queen-browser":
             self._send_json(200, _browser_status())
             return
+        if path in ("/api/queen-benchmark", "/api/benchmark"):
+            self._send_json(200, _benchmark_status())
+            return
+        if path in ("/api/queen-desktop", "/api/desktop"):
+            self._send_json(200, _desktop_status())
+            return
+        if path in ("/api/nexus-c2", "/api/nexus-c2-panels", "/api/queen-dashboard", "/api/dashboard"):
+            qs = parse_qs(urlparse(self.path).query)
+            flyout = (qs.get("flyout") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _nexus_c2_status(flyout=flyout))
+            return
+        if path in ("/api/queen-boot-hook", "/api/boot-hook"):
+            self._send_json(200, _boot_hook())
+            return
         if path in ("/api/queen-browser-import", "/api/browser-import"):
             self._send_json(200, _browser_import_status())
             return
@@ -943,6 +1265,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/api/queen-file-browser", "/api/file-browser", "/api/files"):
             self._send_json(200, _file_browser_status())
+            return
+        if path in ("/api/queen-code", "/api/code", "/api/code-viewer"):
+            self._send_json(200, _queen_code_status())
             return
         if path in ("/api/field-virus", "/api/queen-field-virus", "/api/virus"):
             self._send_json(200, _field_virus_status())
@@ -957,6 +1282,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/api/field-sanity", "/api/queen-field-sanity"):
             self._send_json(200, _field_sanity_status())
+            return
+        if path in ("/api/field-depth-snap", "/api/field-depth/instant", "/api/field-depth-singularizer/instant"):
+            self._send_json(200, dispatch_field_depth_snap({}))
             return
         if path in ("/api/external-wire", "/api/field-external-wire", "/api/queen-external-wire"):
             self._send_json(200, _external_wire_status())
@@ -991,8 +1319,134 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/api/pythong", "/api/pythong-runtime", "/api/python"):
             self._send_json(200, _pythong_status())
             return
+        if path.startswith("/api/extensive-library"):
+            qparams = parse_qs(urlparse(self.path).query)
+            if path.startswith("/api/extensive-library/search"):
+                q = str(qparams.get("q", [""])[0])
+                self._send_json(200, _extensive_library_status(sub="search", arg=q))
+            elif path.endswith("/build") or path.endswith("/sync"):
+                self._send_json(200, _extensive_library_status(sub="build"))
+            else:
+                self._send_json(200, _extensive_library_status())
+            return
+        if path.startswith("/api/h7c"):
+            sub = path.split("/api/h7c", 1)[-1].strip("/") or "panel"
+            self._send_json(200, _h7c_status(sub=sub if sub in ("balance", "verify") else "panel"))
+            return
+        if path.startswith("/api/file-formats"):
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            sub = path.split("/api/file-formats", 1)[-1].strip("/") or "panel"
+            self._send_json(200, _file_formats_status(sub=sub, refresh=refresh))
+            return
+        if path.startswith("/api/best-sort"):
+            qparams = parse_qs(urlparse(self.path).query)
+            sub = path.split("/api/best-sort", 1)[-1].strip("/") or "panel"
+            ctx = str(qparams.get("context", ["format_table"])[0])
+            self._send_json(200, _best_sort_status(sub=sub, ctx=ctx))
+            return
+        if path.startswith("/api/device-visuals"):
+            qparams = parse_qs(urlparse(self.path).query)
+            refresh = (qparams.get("refresh") or qparams.get("generate") or ["0"])[0] in ("1", "true", "yes")
+            sub = path.split("/api/device-visuals", 1)[-1].strip("/") or "panel"
+            self._send_json(200, _device_visuals_status(sub=sub, refresh=refresh))
+            return
+        if path.startswith("/api/cpu-library"):
+            qparams = parse_qs(urlparse(self.path).query)
+            if path.startswith("/api/cpu-library/search"):
+                q = str(qparams.get("q", [""])[0])
+                self._send_json(200, _cpu_library_status(sub="search", arg=q))
+            elif path.startswith("/api/cpu-library/detail"):
+                eid = str(qparams.get("id", [""])[0])
+                self._send_json(200, _cpu_library_status(sub="detail", arg=eid))
+            else:
+                self._send_json(200, _cpu_library_status())
+            return
         if path in ("/api/game-room", "/api/gameroom", "/api/chips"):
             self._send_json(200, _game_room_status())
+            return
+        if path in ("/api/chip-battery", "/api/combinatorics/chip-battery"):
+            self._send_json(200, _chip_battery_status())
+            return
+        if path in ("/api/chips/combinatronic", "/api/chip-battery/combinatronic"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _combinatronic_status(refresh=refresh))
+            return
+        if path in ("/api/combinatronics/growth", "/api/combinatronics-growth"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _combinatronics_growth(refresh=refresh))
+            return
+        if path in ("/api/combinatorics/sequence", "/api/combinatorics-sequence"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _combinatorics_sequence(refresh=refresh))
+            return
+        if path in ("/api/combinamatrix", "/api/combinamatrix/build"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes") or path.endswith("/build")
+            self._send_json(200, _combinamatrix(refresh=refresh))
+            return
+        if path.startswith("/api/universal-neural"):
+            qs = parse_qs(urlparse(self.path).query)
+            sub = path.split("/api/universal-neural", 1)[-1].strip("/") or "panel"
+            teach = (qs.get("teach") or ["0"])[0] in ("1", "true", "yes") or sub == "teach"
+            force = (qs.get("force") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _universal_neural(sub=sub, teach=teach, force=force))
+            return
+        if path in ("/api/plate-dimensions", "/api/plate/dimensions"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            full = (qs.get("full") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _plate_dimensions(refresh=refresh, full=full))
+            return
+        if path.startswith("/api/ammolang"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            sub = path.split("/api/ammolang", 1)[-1].strip("/") or "panel"
+            if sub in ("compile", "interpret", "trace", "run") and self.command == "POST":
+                body = self._read_json_body() or {}
+                body["action"] = sub
+                self._send_json(200, _ammolang_status(refresh=refresh, body=body))
+                return
+            self._send_json(200, _ammolang_status(refresh=refresh))
+            return
+        if path.startswith("/api/steel-neural-plates") or path.startswith("/api/combinatronic/steel-plates"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes") or path.endswith("/build")
+            force = (qs.get("force") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _steel_neural_plates(refresh=refresh, force=force))
+            return
+        if path in ("/api/combinatronic/balance", "/api/combinatronic-balance"):
+            qs = parse_qs(urlparse(self.path).query)
+            cmd = str((qs.get("cmd") or ["panel"])[0]).strip().lower()
+            force = (qs.get("force") or ["0"])[0] in ("1", "true", "yes")
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            if cmd in ("sync", "sync_all", "entries"):
+                script = _nexus_lib_script("field-combinatronic-balance.py")
+                argv = ["sync"]
+                if refresh:
+                    argv.append("--refresh")
+                if force:
+                    argv.append("--force")
+                self._send_json(200, _run_json(script, *argv, timeout=300) if script.is_file() else {"ok": False})
+                return
+            self._send_json(200, _combinatronic_balance(cmd=cmd, force=force))
+            return
+        if path.startswith("/api/combinatronic/spider-wire") or path.startswith("/api/combinatronic-spider-wire"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            optimize = (qs.get("optimize") or ["1"])[0] in ("1", "true", "yes")
+            self._send_json(200, _combinatronic_spider_wire(refresh=refresh, optimize=optimize))
+            return
+        if path.startswith("/api/combinatronic/visuals") or path.startswith("/api/combinatronic-visuals"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or qs.get("generate") or ["0"])[0] in ("1", "true", "yes")
+            repair = (qs.get("repair") or ["0"])[0] in ("1", "true", "yes")
+            sub = path.split("/api/combinatronic/visuals", 1)[-1].strip("/") or path.split("/api/combinatronic-visuals", 1)[-1].strip("/") or "manifest"
+            pat = str((qs.get("id") or qs.get("pattern") or ["chip_png"])[0])
+            self._send_json(200, _combinatronic_visuals(refresh=refresh, sub=sub, repair=repair, pattern_id=pat))
             return
         if path in ("/api/game-room/fb", "/api/gameroom/fb"):
             self._send_json(200, _game_room_fb())
@@ -1086,6 +1540,10 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         path = urlparse(self.path).path
         body = self._read_json_body()
+        if path == "/api/field-performance-flyout":
+            reset = bool((body or {}).get("reset"))
+            self._send_json(200, _perf_flyout_sample(reset=reset))
+            return
         if path == "/api/queen-build":
             self._send_json(200, dispatch_build(body))
             return
@@ -1139,11 +1597,23 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/queen-browser":
             self._send_json(200, dispatch_browser(body))
             return
+        if path in ("/api/queen-desktop", "/api/desktop"):
+            self._send_json(200, dispatch_desktop(body))
+            return
+        if path in ("/api/nexus-c2", "/api/nexus-c2-panels", "/api/queen-dashboard", "/api/dashboard"):
+            self._send_json(200, dispatch_nexus_c2(body))
+            return
+        if path in ("/api/queen-boot-hook", "/api/boot-hook"):
+            self._send_json(200, _boot_hook())
+            return
         if path in ("/api/queen-browser-import", "/api/browser-import"):
             self._send_json(200, dispatch_browser_import(body))
             return
         if path in ("/api/queen-file-browser", "/api/file-browser", "/api/files"):
             self._send_json(200, dispatch_file_browser(body))
+            return
+        if path in ("/api/queen-code", "/api/code", "/api/code-viewer"):
+            self._send_json(200, dispatch_queen_code(body))
             return
         if path in ("/api/field-virus", "/api/queen-field-virus", "/api/virus"):
             self._send_json(200, dispatch_field_virus(body))
@@ -1160,8 +1630,22 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/api/field-sanity", "/api/queen-field-sanity"):
             self._send_json(200, dispatch_field_sanity(body))
             return
+        if path in ("/api/field-depth-snap", "/api/field-depth/instant", "/api/field-depth-singularizer/instant"):
+            self._send_json(200, dispatch_field_depth_snap(body))
+            return
         if path in ("/api/game-room", "/api/gameroom", "/api/chips"):
             self._send_json(200, dispatch_game_room(body))
+            return
+        if path in ("/api/chips/combinatronic", "/api/chip-battery/combinatronic"):
+            refresh = bool((body or {}).get("refresh"))
+            self._send_json(200, _combinatronic_status(refresh=refresh))
+            return
+        if path in ("/api/chip-battery", "/api/combinatorics/chip-battery"):
+            action = str((body or {}).get("action") or "panel").strip().lower()
+            if action in ("combinatronic", "refresh"):
+                self._send_json(200, _combinatronic_status(refresh=action == "refresh" or bool((body or {}).get("refresh"))))
+                return
+            self._send_json(200, _chip_battery_status())
             return
         if path in ("/api/kilroy", "/api/kilroy-field", "/api/field-kilroy", "/api/amouranthrtx"):
             self._send_json(200, dispatch_kilroy(body))
@@ -1276,6 +1760,11 @@ def main() -> int:
         return 1
 
     try:
+        hook = _boot_hook()
+        print(
+            f"[queen-world] boot hook boarded — boot_os={hook.get('boot_os')} network_metal=BIOS",
+            flush=True,
+        )
         boot = _secure_boot()
         print(
             f"[queen-world] secure space sealed — Grok16 ready={boot.get('grok16', {}).get('ready')}",

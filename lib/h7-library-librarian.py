@@ -23,6 +23,31 @@ LIBRARIAN = {
 }
 
 
+def _corps_mod() -> Any | None:
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "nexus_librarian_corps",
+            INSTALL / "lib" / "nexus-librarian-corps.py",
+        )
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def librarian_corps_learn(event: str, **kwargs: Any) -> None:
+    corps = _corps_mod()
+    if corps:
+        try:
+            corps.learn(event, **kwargs)
+        except Exception:
+            pass
+
+
 def _now() -> str:
     global _SOVEREIGN_CLOCK_MOD
     if _SOVEREIGN_CLOCK_MOD is None:
@@ -318,6 +343,9 @@ def enrich_record(book_id: str, base: dict[str, Any] | None = None) -> dict[str,
 def cover_paths(book_id: str) -> dict[str, Path | None]:
     safe = _safe_id(book_id)
     roots = [covers_dir()]
+    lib_assets = INSTALL / "library" / "assets" / "covers" / safe
+    if lib_assets.is_dir():
+        roots.insert(0, lib_assets)
     for r in _field_roots():
         roots.append(r / "brain" / "library" / "covers" / safe)
     out: dict[str, Path | None] = {"front": None, "back": None}
@@ -379,8 +407,8 @@ def merge_into_book(book: dict[str, Any]) -> dict[str, Any]:
     for key in (
         "ein", "isbn_10", "isbn_13", "isbn_13_valid", "oclc", "lccn",
         "gutenberg_id", "openstax_slug", "publisher", "published_year",
-        "language", "lc_class", "pages", "covers", "dewey", "dewey_label",
-        "subject", "study_note",
+        "language", "lc_class", "pages", "covers", "cover", "dewey", "dewey_label",
+        "subject", "study_note", "grade_band", "license", "collection",
     ):
         if bib.get(key):
             out[key] = bib[key]
@@ -451,6 +479,13 @@ def librarian_status() -> dict[str, Any]:
     index = load_bibliography_index()
     with_covers = sum(1 for r in index.values() if r.get("covers"))
     with_isbn = sum(1 for r in index.values() if r.get("isbn_13") or r.get("isbn_10"))
+    corps_doc: dict[str, Any] = {}
+    corps = _corps_mod()
+    if corps:
+        try:
+            corps_doc = corps.corps_status()
+        except Exception:
+            corps_doc = {}
     return {
         **LIBRARIAN,
         "updated": _now(),
@@ -466,6 +501,8 @@ def librarian_status() -> dict[str, Any]:
         "field_unchanged": field_unchanged(),
         "last_touched": load_fingerprint_doc().get("last_touched", ""),
         "last_touched_same": last_touched_unchanged(),
+        "corps": corps_doc,
+        "corps_count": corps_doc.get("count", 0),
     }
 
 
@@ -477,8 +514,26 @@ def _micro_sig(path: Path) -> str:
         return "err:0:"
     name = path.name.lower()
     ext = path.suffix.lower()
+    sig_path = path
+    if ext == ".h7" or name.endswith(".h7"):
+        try:
+            dewey_py = INSTALL / "lib" / "field-dewey-library.py"
+            if dewey_py.is_file():
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("field_dewey_lib", dewey_py)
+                if spec and spec.loader:
+                    dmod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(dmod)
+                    if hasattr(dmod, "ensure_h7c_path"):
+                        sig_path = dmod.ensure_h7c_path(path)
+                        ext = sig_path.suffix.lower()
+        except Exception:
+            pass
     try:
-        with path.open("rb") as fh:
+        with sig_path.open("rb") as fh:
+            if ext == ".h7c" or name.endswith(".h7c"):
+                blob = fh.read(12)
+                return f"h7c:{size}:{blob.hex()}"
             if ext == ".h7" or name.endswith(".h7"):
                 blob = fh.read(12)
                 return f"h7:{size}:{blob.hex()}"
@@ -537,6 +592,7 @@ def _library_paths() -> list[Path]:
     seen: set[str] = set()
     for root in _field_roots():
         for pattern in (
+            "textbooks/**/*.h7c",
             "textbooks/**/*.h7",
             "textbooks/**/*.txt",
             "textbooks/**/*.meta.json",
@@ -578,6 +634,10 @@ def micro_sig_for_book(book_id: str) -> str:
     safe = _safe_id(book_id)
     for root in _field_roots():
         for path in (
+            root.glob(f"textbooks/**/{safe}.h7c"),
+            root.glob(f"textbooks/{safe}.h7c"),
+            root.glob(f"textbooks/**/{book_id}.h7c"),
+            root.glob(f"textbooks/{book_id}.h7c"),
             root.glob(f"textbooks/**/{safe}.h7"),
             root.glob(f"textbooks/{safe}.h7"),
             root.glob(f"textbooks/**/{book_id}.h7"),
@@ -616,8 +676,9 @@ def field_unchanged() -> bool:
     return bool(doc.get("fingerprint")) and doc.get("fingerprint") == compute_field_fingerprint()
 
 
-def touch_book(book_id: str) -> None:
+def touch_book(book_id: str, *, dewey: str = "", title: str = "") -> None:
     """Record last book touched + its micro-sig (few bytes)."""
+    librarian_corps_learn("classify", book_id=book_id, dewey=dewey, title=title)
     doc = load_fingerprint_doc()
     doc["last_touched"] = book_id
     doc["last_touched_at"] = _now()
@@ -672,7 +733,19 @@ def load_catalog_snapshot() -> dict[str, Any] | None:
 
 
 def sync_covers_for_touched(bib: dict[str, dict[str, Any]], *, force_all: bool = False) -> int:
-    """Build cover SDF only when last-touched micro-sig changed."""
+    """Build cover SDF — textbooks get publisher covers; others on last-touched."""
+    import importlib.util
+    tb_spec = importlib.util.spec_from_file_location(
+        "field_textbook_covers", INSTALL / "lib" / "field-textbook-covers.py"
+    )
+    if tb_spec and tb_spec.loader:
+        try:
+            tb_mod = importlib.util.module_from_spec(tb_spec)
+            tb_spec.loader.exec_module(tb_mod)
+            if hasattr(tb_mod, "sync_textbook_covers"):
+                tb_mod.sync_textbook_covers()
+        except Exception:
+            pass
     if not force_all and last_touched_unchanged():
         return 0
     import importlib.util
@@ -715,6 +788,7 @@ def build_bibliography_field(*, write: bool = True) -> dict[str, Any]:
     built_covers = 0
     if write:
         built_covers = sync_covers_for_touched(index)
+    librarian_corps_learn("catalog_build", detail=f"bibliography_count={len(index)}")
     return {
         "ok": True,
         "count": len(index),

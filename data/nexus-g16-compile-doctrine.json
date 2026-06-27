@@ -27,5 +27,15 @@
     "nexus-g16-stack-panel.json",
     "plate-compiler-panel.json"
   ],
-  "pass": ["probe_g16", "ironclad_witness", "field_sanity", "linker_targets", "rtx_gate", "plate_compile", "meld"]
+  "pass": ["probe_g16", "ironclad_witness", "field_sanity", "linker_targets", "rtx_gate", "plate_compile", "meld"],
+  "integrate": {
+    "schema": "nexus-g16-integrate-doctrine/v1",
+    "module": "lib/nexus-g16-recompile.py",
+    "doctrine": "data/nexus-g16-integrate-doctrine.json",
+    "script": "scripts/nexus-g16-recompile.sh",
+    "combinatronics_gate": "Grok16/lib/g16-compile-combinatronics.py",
+    "balance_before_compile": true,
+    "stamp_after_compile": true,
+    "statement": "Recompile NewLatest only after combinatronics balance — Queen browser and ASM probes born optimal."
+  }
 }

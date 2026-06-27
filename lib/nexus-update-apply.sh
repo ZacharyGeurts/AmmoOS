@@ -8,6 +8,8 @@ export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
 export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 
 UPDATE_MODE="${NEXUS_UPDATE_MODE:-release}"
+APPLY_VIA="${NEXUS_UPDATE_APPLY_VIA:-}"
+CATALOG_URL="${NEXUS_UPDATE_CATALOG_URL:-}"
 GIT_DIR="${NEXUS_UPDATE_GIT_DIR:-$ROOT}"
 INSTALL_SH="${NEXUS_UPDATE_INSTALL_SH:-${GIT_DIR}/install-all.sh}"
 TARBALL_URL="${NEXUS_UPDATE_TARBALL_URL:-}"
@@ -249,6 +251,26 @@ _apply_release_installer() {
   return 0
 }
 
+_apply_incremental() {
+  [[ -n "$CATALOG_URL" && -n "$TARBALL_URL" && -n "$TARGET" ]] || {
+    _log "incremental: missing catalog url, tarball, or target"
+    return 1
+  }
+  local inc_py="${NEXUS_INSTALL_ROOT}/lib/nexus-incremental-update.py"
+  [[ -f "$inc_py" ]] || inc_py="${ROOT}/lib/nexus-incremental-update.py"
+  [[ -f "$inc_py" ]] || { _log "incremental: nexus-incremental-update.py missing"; return 1; }
+  nexus_update_lock_phase download_tarball "--token=${TOKEN}" 2>/dev/null || true
+  _log "incremental apply catalog=${CATALOG_URL}"
+  local py="${NEXUS_PYTHONG:-pythong}"
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+    NEXUS_UPDATE_CATALOG_URL="${CATALOG_URL}" \
+    NEXUS_UPDATE_TARBALL_URL="${TARBALL_URL}" \
+    NEXUS_UPDATE_TARGET="${TARGET}" \
+    "$py" "$inc_py" apply 2>&1 | tee -a "$LOG" || return 1
+  nexus_update_lock_phase install_all "--token=${TOKEN}" 2>/dev/null || true
+  return 0
+}
+
 _apply_git_tree() {
   if [[ -d "${GIT_DIR}/.git" ]]; then
     nexus_update_lock_phase git_fetch "--token=${TOKEN}" 2>/dev/null || true
@@ -302,7 +324,14 @@ main() {
   fi
 
   local applied=0
-  if [[ "$UPDATE_MODE" == "release" && -n "$TARBALL_URL" ]]; then
+  if [[ "$APPLY_VIA" == "incremental" && -n "$CATALOG_URL" && -n "$TARBALL_URL" ]]; then
+    if _apply_incremental; then
+      applied=1
+    else
+      _log "incremental apply failed — falling back to full release installer"
+    fi
+  fi
+  if [[ $applied -eq 0 && "$UPDATE_MODE" == "release" && -n "$TARBALL_URL" ]]; then
     if _apply_release_installer; then
       applied=1
     else

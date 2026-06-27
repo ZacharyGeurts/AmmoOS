@@ -45,6 +45,8 @@ PLATE_SOURCES: tuple[tuple[str, str], ...] = (
     ("universal_protector", "universal-protector-panel.json"),
     ("humanoid_motion", "humanoid-motion-panel.json"),
     ("iron_plate_motion", "iron-plate-motion-resolve-panel.json"),
+    ("iron_plate_organize", "iron-plate-organize-panel.json"),
+    ("iron_plate_spot", "iron-plate-spot-panel.json"),
     ("creatable_lives", "creatable-lives-panel.json"),
     ("right_to_exist", "right-to-exist-panel.json"),
     ("hostess7_brain", "hostess7-brain-guard-panel.json"),
@@ -58,6 +60,30 @@ PLATE_SOURCES: tuple[tuple[str, str], ...] = (
     ("plate_test_runner", "field-plate-test-runner.json"),
     ("g1id_baselines", "g1id-baseline-panel.json"),
     ("field_io_packet", "field-io-packet-panel.json"),
+    ("truth_blocks", "g16-truth-blocks-panel.json"),
+    ("field_combinatorics", "g16-field-combinatorics-panel.json"),
+    ("combinatorics_bridge", "field-plate-combinatorics-bridge.json"),
+    ("chip_battery", "field-chip-battery-panel.json"),
+    ("program_combinatronic", "field-program-combinatronic-panel.json"),
+    ("g16_universal", "field-g16-universal-combinatronic-panel.json"),
+    ("cpu_library", "field-cpu-library-panel.json"),
+    ("field_font", "field-font-panel.json"),
+    ("g16_power_sort", "g16-power-sort-plate.json"),
+    ("file_formats", "field-file-formats-panel.json"),
+    ("field_best_sort", "field-best-sort-panel.json"),
+    ("physics_witness", "field-physics-witness.json"),
+    ("locational_sitrep", "field-locational-sitrep-plate.json"),
+    ("c2_taskbar", "field-c2-taskbar-panel.json"),
+    ("shell_dock", "field-shell-dock-panel.json"),
+    ("field_popcorn", "field-popcorn-panel.json"),
+    ("field_ellie_fier", "field-ellie-fier-panel.json"),
+    ("field_g16_launch", "field-g16-launch-panel.json"),
+    ("field_gpu", "field-gpu-control-panel.json"),
+    ("field_audio", "field-audio-settings-panel.json"),
+    ("field_broadcaster", "field-broadcaster-panel.json"),
+    ("field_lock", "field-keepass-panel.json"),
+    ("field_host_desktop", "field-host-desktop.json"),
+    ("code_bugfinder", "field-code-bugfinder-panel.json"),
 )
 
 _GEN = 0
@@ -205,6 +231,79 @@ def _iron_plate_fresh(max_age: int) -> bool:
         except OSError:
             continue
     return False
+
+
+_DIAG_MOD: Any = None
+_PREDICTIVE_MELD_MOD: Any = False
+
+
+def _predictive_meld_mod() -> Any:
+    global _PREDICTIVE_MELD_MOD
+    if _PREDICTIVE_MELD_MOD is not False:
+        return _PREDICTIVE_MELD_MOD or None
+    try:
+        import importlib.util
+
+        py = INSTALL / "lib" / "field-predictive-meld.py"
+        if not py.is_file():
+            _PREDICTIVE_MELD_MOD = None
+            return None
+        spec = importlib.util.spec_from_file_location("field_predictive_meld", py)
+        if not spec or not spec.loader:
+            _PREDICTIVE_MELD_MOD = None
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _PREDICTIVE_MELD_MOD = mod
+    except Exception:
+        _PREDICTIVE_MELD_MOD = None
+    return _PREDICTIVE_MELD_MOD
+
+
+def _predictive_skip_refresh(*, force: bool = False) -> dict[str, Any]:
+    mod = _predictive_meld_mod()
+    if mod and hasattr(mod, "predictive_meld"):
+        return mod.predictive_meld(force=force)
+    return {"skip_refresh": False}
+
+
+_DIAG_MOD: Any = None
+
+
+def _diagnostic_mod() -> Any:
+    global _DIAG_MOD
+    if _DIAG_MOD is not None:
+        return _DIAG_MOD
+    try:
+        import importlib.util
+
+        py = INSTALL / "lib" / "field-diagnostic-mode.py"
+        if not py.is_file():
+            _DIAG_MOD = False
+            return _DIAG_MOD
+        spec = importlib.util.spec_from_file_location("field_diagnostic_mode", py)
+        if not spec or not spec.loader:
+            _DIAG_MOD = False
+            return _DIAG_MOD
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _DIAG_MOD = mod
+    except Exception:
+        _DIAG_MOD = False
+    return _DIAG_MOD
+
+
+def _diagnostic_active() -> bool:
+    mod = _diagnostic_mod()
+    return bool(mod and hasattr(mod, "active") and mod.active())
+
+
+def _refresh_if_allowed(refresh_id: str, fn: Any) -> None:
+    mod = _diagnostic_mod()
+    if mod and hasattr(mod, "active") and mod.active() and hasattr(mod, "refresh_allowed"):
+        if not mod.refresh_allowed(refresh_id):
+            return
+    fn()
 
 
 def _refresh_iron_plate() -> None:
@@ -540,6 +639,154 @@ def _refresh_g16_compiler_sense() -> None:
     )
 
 
+def _refresh_physics_witness() -> None:
+    _import_call(INSTALL / "lib" / "field-physics-witness.py", "field_physics_witness", "publish")
+
+
+def _refresh_locational_sitrep() -> None:
+    if os.environ.get("NEXUS_LOCATIONAL_SITREP", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-locational-sitrep-plate.py", "locational_sitrep", "cycle")
+
+
+def _refresh_g16_power_sort() -> None:
+    if os.environ.get("G16_POWER_SORT", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    sg = Path(os.environ.get("GROK16_ROOT", str(INSTALL.parent.parent / "Grok16")))
+    plate_py = sg / "lib" / "g16-power-sort-plate.py"
+    if not plate_py.is_file():
+        plate_py = INSTALL.parent.parent / "Grok16" / "lib" / "g16-power-sort-plate.py"
+    _import_call(plate_py, "g16_power_sort_plate", "cycle")
+
+
+def _refresh_truth_blocks() -> None:
+    if os.environ.get("NEXUS_TRUTH_BLOCKS", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    sg = Path(os.environ.get("GROK16_ROOT", str(INSTALL.parent.parent / "Grok16")))
+    tb_py = sg / "lib" / "field_truth_blocks.py"
+    if not tb_py.is_file():
+        tb_py = INSTALL.parent.parent / "Grok16" / "lib" / "field_truth_blocks.py"
+    _import_call(tb_py, "field_truth_blocks", "publish_panel", state_dir=STATE)
+
+
+def _combinatorics_operator_running() -> bool:
+    sg = Path(os.environ.get("GROK16_ROOT", str(INSTALL.parent.parent / "Grok16")))
+    comb_py = sg / "lib" / "field_combinatorics.py"
+    if not comb_py.is_file():
+        comb_py = INSTALL.parent.parent / "Grok16" / "lib" / "field_combinatorics.py"
+    if not comb_py.is_file():
+        return False
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("meld_combo_op", comb_py)
+        if not spec or not spec.loader:
+            return False
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "operator_running"):
+            return bool(mod.operator_running(state_dir=STATE).get("running"))
+    except Exception:
+        pass
+    return False
+
+
+def _refresh_field_combinatorics() -> None:
+    if os.environ.get("NEXUS_FIELD_COMBINATORICS", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    if _combinatorics_operator_running():
+        return
+    sg = Path(os.environ.get("GROK16_ROOT", str(INSTALL.parent.parent / "Grok16")))
+    comb_py = sg / "lib" / "field_combinatorics.py"
+    if not comb_py.is_file():
+        comb_py = INSTALL.parent.parent / "Grok16" / "lib" / "field_combinatorics.py"
+    _import_call(comb_py, "field_combinatorics", "publish_panel", state_dir=STATE)
+
+
+def _refresh_combinatorics_bridge() -> None:
+    if os.environ.get("NEXUS_PLATE_COMBINATORICS_BRIDGE", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    if _combinatorics_operator_running():
+        return
+    _import_call(INSTALL / "lib" / "field-plate-combinatorics-bridge.py", "field_plate_combinatorics_bridge", "build_bridge", write=True)
+
+
+def _refresh_c2_taskbar() -> None:
+    if os.environ.get("NEXUS_C2_TASKBAR_PLATE", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-c2-taskbar-plate.py", "field_c2_taskbar_plate", "posture")
+
+
+def _refresh_field_host_desktop() -> None:
+    if os.environ.get("NEXUS_HOST_DESKTOP_PLATE", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-host-desktop.py", "field_host_desktop", "posture")
+
+
+def _refresh_field_lock() -> None:
+    if os.environ.get("NEXUS_FIELD_LOCK", os.environ.get("NEXUS_FIELD_KEEPASS", "1")).strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-keepass.py", "field_keepass", "posture")
+
+
+def _refresh_shell_dock() -> None:
+    if os.environ.get("NEXUS_FIELD_SHELL_DOCK", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-shell-dock.py", "field_shell_dock", "posture")
+
+
+def _refresh_field_popcorn() -> None:
+    if os.environ.get("NEXUS_FIELD_POPCORN", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-popcorn-player.py", "field_popcorn_player", "posture", rescan=False)
+
+
+def _refresh_field_ellie_fier() -> None:
+    if os.environ.get("NEXUS_FIELD_ELLIE_FIER", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-ellie-fier.py", "field_ellie_fier", "posture", scan=False)
+
+
+def _refresh_field_g16_launch() -> None:
+    if os.environ.get("NEXUS_FIELD_G16_LAUNCH", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-g16-launch.py", "field_g16_launch", "posture", rescan=False)
+
+
+def _refresh_field_gpu() -> None:
+    if os.environ.get("NEXUS_FIELD_GPU", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-gpu-control.py", "field_gpu_control", "posture")
+
+
+def _refresh_field_audio() -> None:
+    if os.environ.get("NEXUS_FIELD_AUDIO", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-audio-settings.py", "field_audio_settings", "posture")
+
+
+def _refresh_field_broadcaster() -> None:
+    if os.environ.get("NEXUS_FIELD_BROADCASTER", os.environ.get("NEXUS_FIELD_OBS", "1")).strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-broadcaster.py", "field_broadcaster", "posture")
+
+
+def _refresh_code_bugfinder() -> None:
+    if os.environ.get("NEXUS_CODE_BUGFINDER", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    if _combinatorics_operator_running():
+        return
+    _import_call(INSTALL / "lib" / "field-code-bugfinder.py", "field_code_bugfinder", "build_panel")
+
+
+def _refresh_compatibility_layers() -> None:
+    if os.environ.get("NEXUS_COMPATIBILITY_LAYERS", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    if _combinatorics_operator_running():
+        return
+    _import_call(INSTALL / "lib" / "field-compatibility-layers.py", "field_compatibility_layers", "refresh", deep=False)
+
+
 def _refresh_g1id_baselines() -> None:
     if os.environ.get("NEXUS_G1ID_BASELINE", "1") != "1":
         return
@@ -750,6 +997,18 @@ def _refresh_iron_plate_motion() -> None:
         pass
 
 
+def _refresh_iron_plate_organize() -> None:
+    if os.environ.get("NEXUS_IRON_PLATE_ORGANIZE", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "iron-plate-organize.py", "iron_plate_organize", "build_panel", write=True)
+
+
+def _refresh_iron_plate_spot() -> None:
+    if os.environ.get("NEXUS_IRON_PLATE_SPOT", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "iron-plate-spot-detector.py", "iron_plate_spot", "build_panel", write=True)
+
+
 def _refresh_humanoid_motion() -> None:
     py = INSTALL / "lib" / "humanoid-motion-training.py"
     if not py.is_file():
@@ -847,45 +1106,81 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
     """Fuse all plates under flock — uninterruptable chain generation."""
     global _GEN, _LAST_CHAIN
     fd = _meld_lock()
+    t0 = time.perf_counter()
+    meld_force = os.environ.get("NEXUS_PLATE_MELD_FORCE", "").strip().lower() in ("1", "true", "yes")
+    predictive: dict[str, Any] = {}
     try:
+        if refresh_plates and not meld_force:
+            predictive = _predictive_skip_refresh(force=False)
+            if predictive.get("skip_refresh"):
+                refresh_plates = False
         if refresh_plates:
-            _refresh_eye_ear_plate()
-            _refresh_ironclad_field_sanity()
-            _refresh_ironclad_reality_field()
-            _refresh_iron_plate()
-            _refresh_gatekeeper()
-            _refresh_logic_gate()
-            _refresh_port_ddos()
-            _refresh_packet_deinterlace()
-            _refresh_znetwork_status()
-            _refresh_firmware_threats()
-            _refresh_kernel_meld()
-            _refresh_sense_package()
-            _refresh_field_plate()
-            _refresh_spatial()
-            _refresh_humanoid_motion()
-            _refresh_hostess7_brain()
+            _refresh_if_allowed("eye_ear_plate", _refresh_eye_ear_plate)
+            _refresh_if_allowed("ironclad_field_sanity", _refresh_ironclad_field_sanity)
+            _refresh_if_allowed("ironclad_reality_field", _refresh_ironclad_reality_field)
+            _refresh_if_allowed("iron_plate", _refresh_iron_plate)
+            _refresh_if_allowed("gatekeeper", _refresh_gatekeeper)
+            _refresh_if_allowed("logic_gate", _refresh_logic_gate)
+            _refresh_if_allowed("port_ddos", _refresh_port_ddos)
+            _refresh_if_allowed("packet_deinterlace", _refresh_packet_deinterlace)
+            _refresh_if_allowed("znetwork", _refresh_znetwork_status)
+            _refresh_if_allowed("firmware", _refresh_firmware_threats)
+            _refresh_if_allowed("kernel", _refresh_kernel_meld)
+            _refresh_if_allowed("sense_package", _refresh_sense_package)
+            _refresh_if_allowed("field_plate", _refresh_field_plate)
+            _refresh_if_allowed("spatial", _refresh_spatial)
+            _refresh_if_allowed("humanoid_motion", _refresh_humanoid_motion)
+            _refresh_if_allowed("hostess7_brain", _refresh_hostess7_brain)
             if not _meld_light():
-                _refresh_hostess7_programming()
-                _refresh_hostess7_g16()
-                _refresh_hostess7_calculator()
-                _refresh_hostess7_biology()
-                _refresh_hostess7_engineering()
-                _refresh_hostess7_combat()
-                _refresh_hostess7_mos()
-            _refresh_hostess7_training()
-            _refresh_iron_plate_motion()
-            _refresh_creatable_lives()
-            _refresh_right_to_exist()
-            _refresh_universal_protector()
-            _refresh_g16_stack()
-            _refresh_g16_compiler_sense()
-            _refresh_drop_in()
-            _refresh_plate_compiler()
-            _refresh_g1id_baselines()
-            _refresh_field_io_packet()
+                _refresh_if_allowed("hostess7_programming", _refresh_hostess7_programming)
+                _refresh_if_allowed("hostess7_g16", _refresh_hostess7_g16)
+                _refresh_if_allowed("hostess7_calculator", _refresh_hostess7_calculator)
+                _refresh_if_allowed("hostess7_biology", _refresh_hostess7_biology)
+                _refresh_if_allowed("hostess7_engineering", _refresh_hostess7_engineering)
+                _refresh_if_allowed("hostess7_combat", _refresh_hostess7_combat)
+                _refresh_if_allowed("hostess7_mos", _refresh_hostess7_mos)
+            _refresh_if_allowed("hostess7_training", _refresh_hostess7_training)
+            _refresh_if_allowed("iron_plate_motion", _refresh_iron_plate_motion)
+            _refresh_if_allowed("iron_plate_organize", _refresh_iron_plate_organize)
+            _refresh_if_allowed("iron_plate_spot", _refresh_iron_plate_spot)
+            _refresh_if_allowed("creatable_lives", _refresh_creatable_lives)
+            _refresh_if_allowed("right_to_exist", _refresh_right_to_exist)
+            _refresh_if_allowed("universal_protector", _refresh_universal_protector)
+            _refresh_if_allowed("g16_stack", _refresh_g16_stack)
+            _refresh_if_allowed("g16_compiler_sense", _refresh_g16_compiler_sense)
+            _refresh_if_allowed("physics_witness", _refresh_physics_witness)
+            _refresh_if_allowed("locational_sitrep", _refresh_locational_sitrep)
+            _refresh_if_allowed("g16_power_sort", _refresh_g16_power_sort)
+            _refresh_if_allowed("truth_blocks", _refresh_truth_blocks)
+            _refresh_if_allowed("c2_taskbar", _refresh_c2_taskbar)
+            _refresh_if_allowed("field_host_desktop", _refresh_field_host_desktop)
+            _refresh_if_allowed("shell_dock", _refresh_shell_dock)
+            _refresh_if_allowed("field_popcorn", _refresh_field_popcorn)
+            _refresh_if_allowed("field_ellie_fier", _refresh_field_ellie_fier)
+            _refresh_if_allowed("field_g16_launch", _refresh_field_g16_launch)
+            _refresh_if_allowed("field_gpu", _refresh_field_gpu)
+            _refresh_if_allowed("field_audio", _refresh_field_audio)
+            _refresh_if_allowed("field_broadcaster", _refresh_field_broadcaster)
+            _refresh_if_allowed("field_lock", _refresh_field_lock)
+            _refresh_if_allowed("code_bugfinder", _refresh_code_bugfinder)
+            _refresh_if_allowed("field_combinatorics", _refresh_field_combinatorics)
+            _refresh_if_allowed("combinatorics_bridge", _refresh_combinatorics_bridge)
+            _refresh_if_allowed("compatibility_layers", _refresh_compatibility_layers)
+            _refresh_if_allowed("drop_in", _refresh_drop_in)
+            tb_panel_path = STATE / "g16-truth-blocks-panel.json"
+            skip_compiler = False
+            if tb_panel_path.is_file():
+                try:
+                    tb_panel = json.loads(tb_panel_path.read_text(encoding="utf-8"))
+                    skip_compiler = bool(tb_panel.get("free_meld")) and not bool(tb_panel.get("compile_gate"))
+                except (OSError, json.JSONDecodeError):
+                    skip_compiler = False
+            if not skip_compiler:
+                _refresh_if_allowed("plate_compiler", _refresh_plate_compiler)
+            _refresh_if_allowed("g1id_baselines", _refresh_g1id_baselines)
+            _refresh_if_allowed("field_io_packet", _refresh_field_io_packet)
             if not _meld_light():
-                _refresh_plate_tests()
+                _refresh_if_allowed("plate_tests", _refresh_plate_tests)
         prev = _load(MELD_RUNTIME, {})
         prev_chain = str(prev.get("chain_hash") or "")
         prev_gen = int(prev.get("generation") or 0)
@@ -920,7 +1215,23 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
         plate_compiler = plates.get("plate_compiler") or {}
         g16_stack = plates.get("g16_stack") or {}
         g16_sense = plates.get("g16_compiler_sense") or {}
+        g16_power_sort = plates.get("g16_power_sort") or {}
+        physics_witness = plates.get("physics_witness") or {}
+        locational_sitrep = plates.get("locational_sitrep") or {}
         plate_tests = plates.get("plate_test_runner") or {}
+        truth_blocks = plates.get("truth_blocks") or {}
+        combinatorics = plates.get("field_combinatorics") or {}
+        comb_bridge = plates.get("combinatorics_bridge") or {}
+        exec_posture = comb_bridge.get("exec_posture") or {}
+        shell_dock = plates.get("shell_dock") or {}
+        field_popcorn = plates.get("field_popcorn") or {}
+        field_ellie_fier = plates.get("field_ellie_fier") or {}
+        field_g16_launch = plates.get("field_g16_launch") or {}
+        field_gpu = plates.get("field_gpu") or {}
+        field_audio = plates.get("field_audio") or {}
+        field_broadcaster_plate = plates.get("field_broadcaster") or {}
+        c2_taskbar = plates.get("c2_taskbar") or {}
+        field_lock_plate = plates.get("field_lock") or {}
 
         doc: dict[str, Any] = {
             "schema": "field-plate-meld/v1",
@@ -973,6 +1284,27 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
                 "motion_verdict": iron_motion.get("motion_verdict"),
                 "iron_clad": iron_motion.get("iron_clad"),
                 "simple_iron_goals_met": (iron_motion.get("simple_iron_plate_goals") or {}).get("met"),
+                "truth_block_count": truth_blocks.get("truth_block_count"),
+                "truth_blocks_eligible": truth_blocks.get("eligible_count"),
+                "truth_blocks_bytes": truth_blocks.get("total_bytes"),
+                "free_meld": truth_blocks.get("free_meld"),
+                "free_meld_compile_gate": truth_blocks.get("compile_gate"),
+                "combinatorics_native_ceiling": (combinatorics.get("speed_cap") or {}).get("native_ceiling_ops_per_sec"),
+                "combinatorics_lattice_dots": ((combinatorics.get("hard_limits") or {}).get("boxes_of_boxes") or {}).get("total_lattice_dots"),
+                "combinatorics_cardinality": (combinatorics.get("combinatoric_space") or {}).get("cardinality_estimate"),
+                "combinatoric_tree_complete": comb_bridge.get("combinatoric_tree_complete")
+                or (combinatorics.get("tree_walk") or {}).get("tree_complete"),
+                "combinatoric_tree_leaves": (combinatorics.get("tree_walk") or {}).get("leaves_reached"),
+                "condensed_plate_groups": comb_bridge.get("condensed_group_count")
+                or (combinatorics.get("plate_condense") or {}).get("group_count"),
+                "library_truth_clear": truth_blocks.get("library_clear_sentences"),
+                "exec_runner": exec_posture.get("runner"),
+                "exec_emulator": exec_posture.get("emulator"),
+                "exec_die_slots": exec_posture.get("die_slots"),
+                "exec_belt_profile": exec_posture.get("belt_profile"),
+                "exec_iron_exec": exec_posture.get("iron_exec_recommended"),
+                "exec_larger_plate": exec_posture.get("larger_plate"),
+                "thermal_entropy_ok": (comb_bridge.get("gate") or {}).get("ok"),
                 "creatable_lives_sustain": (creatable.get("sustain") or {}).get("score"),
                 "creatable_lives_verdict": (creatable.get("sustain") or {}).get("verdict"),
                 "creatable_lives_assist": (creatable.get("assistance") or {}).get("active"),
@@ -1024,9 +1356,48 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
                 "g16_compiler_sense_ok": g16_sense.get("plated") or g16_sense.get("ok"),
                 "g16_sense_profile": g16_sense.get("effective_profile"),
                 "g16_sense_score": g16_sense.get("sense_score"),
+                "g16_power_sort_ok": g16_power_sort.get("plated") or g16_power_sort.get("ok"),
+                "g16_power_sort_verdict": g16_power_sort.get("verdict"),
+                "g16_power_sort_cool": (g16_power_sort.get("thermal") or {}).get("cool_ok"),
+                "g16_power_sort_sections": sum(
+                    1 for s in (g16_power_sort.get("sections") or {}).values() if s.get("available")
+                ),
+                "physics_witness_ok": physics_witness.get("ok"),
+                "thermal_cool_ok": (physics_witness.get("thermal") or {}).get("cool_ok"),
+                "entropy_ok": (physics_witness.get("entropy") or {}).get("entropy_ok"),
+                "isotope_ok": (physics_witness.get("isotope") or {}).get("ok"),
+                "locational_sitrep_ok": locational_sitrep.get("plated") or locational_sitrep.get("ok"),
+                "locational_sitrep_verdict": locational_sitrep.get("verdict"),
+                "gps_ready": locational_sitrep.get("gps_ready"),
+                "spatial_pass_ok": locational_sitrep.get("spatial_pass_ok"),
+                "sitrep_geometry": (locational_sitrep.get("movement") or {}).get("geometry"),
                 "plate_tests_ran": plate_tests.get("ran"),
                 "plate_tests_passed": plate_tests.get("passed"),
                 "plate_tests_incomplete": plate_tests.get("incomplete"),
+                "shell_dock_ok": shell_dock.get("ok"),
+                "sovereign_synced": (shell_dock.get("sovereign") or {}).get("all_synced"),
+                "session_drift_ns": (shell_dock.get("session") or {}).get("drift_since_session_ns"),
+                "popcorn_count": (field_popcorn.get("library") or {}).get("count"),
+                "popcorn_ok": field_popcorn.get("ok"),
+                "ellie_fier_ok": field_ellie_fier.get("ok"),
+                "ellie_fier_verdict": (field_ellie_fier.get("systemwide") or {}).get("verdict"),
+                "ellie_fier_score": (field_ellie_fier.get("systemwide") or {}).get("score"),
+                "g16_launch_count": (field_g16_launch.get("index") or {}).get("count"),
+                "g16_launch_ready": (field_g16_launch.get("g16") or {}).get("ok"),
+                "field_gpu_count": field_gpu.get("detected_count"),
+                "field_gpu_ok": field_gpu.get("ok"),
+                "field_audio_ok": field_audio.get("ok"),
+                "field_audio_backend": field_audio.get("backend"),
+                "broadcaster_ok": field_broadcaster_plate.get("ok"),
+                "broadcaster_streaming": field_broadcaster_plate.get("streaming"),
+                "field_surfaces_live": comb_bridge.get("field_surfaces_live"),
+                "operator_surfaces_condensed": comb_bridge.get("operator_surfaces_condensed"),
+                "c2_taskbar_ok": c2_taskbar.get("ok"),
+                "c2_quint_live": c2_taskbar.get("quint_live"),
+                "c2_quint_total": c2_taskbar.get("quint_total"),
+                "c2_bsp_hit": (c2_taskbar.get("bsp") or {}).get("bsp_hit"),
+                "c2_taskbar_condensed": comb_bridge.get("c2_taskbar_condensed"),
+                "field_lock_ok": field_lock_plate.get("ok"),
             },
             "snapshots": plates,
         }
@@ -1052,6 +1423,21 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
 
         if refresh_bus:
             _refresh_unified_bus()
+
+        elapsed_ms = round((time.perf_counter() - t0) * 1000, 3)
+        if predictive:
+            doc["predictive_meld"] = predictive
+        doc["predictive_skip_refresh"] = bool(predictive.get("skip_refresh"))
+        doc["refresh_plates"] = refresh_plates
+        doc["elapsed_ms"] = elapsed_ms
+        pm = _predictive_meld_mod()
+        if pm and hasattr(pm, "record_meld_cycle"):
+            pm.record_meld_cycle(
+                refreshed_plates=refresh_plates,
+                elapsed_ms=elapsed_ms,
+                plate_hash=str(predictive.get("plate_hash") or ""),
+                corpus_hash=str(predictive.get("corpus_hash") or ""),
+            )
 
         return doc
     finally:

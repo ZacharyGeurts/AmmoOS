@@ -168,6 +168,11 @@ start_module() {
 [[ "${NEXUS_DNS_INTERNET_PULL:-1}" == "1" ]] && start_module dns-internet nexus_dns_internet_pull_loop
 [[ "${NEXUS_DNS_ADMIN_PORTAL:-1}" == "1" ]] && start_module dns-admin nexus_dns_admin_serve_loop
 [[ "${NEXUS_THREAT_PANEL:-1}" == "1" ]] && start_module panel nexus_threat_panel_serve_loop
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh"
+  nexus_queen_world_ensure || true
+}
 # shellcheck source=/dev/null
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh"
 (
@@ -202,6 +207,11 @@ while true; do
     nexus_friendly_guard_verify_seal || nexus_log "ALERT" "friendly-guard" "SEAL_VERIFY_FAIL"
   fi
   nexus_threat_panel_publish
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/queen-layer-boot.sh"
+    nexus_queen_world_ensure || true
+  fi
   if declare -f nexus_field_drive_publish >/dev/null 2>&1; then
     nexus_field_drive_publish
     nexus_field_drive_inbox_loop
@@ -236,6 +246,11 @@ while true; do
     export NEXUS_FIELD_THERMAL_POLICY="${NEXUS_STATE_DIR}/field-thermal-guard-policy.env"
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
       pythong "${NEXUS_INSTALL_ROOT}/lib/field-thermal-guard.py" cycle >/dev/null 2>&1 || true
+  fi
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-depth-singularizer.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/field-depth-singularizer.sh"
+    nexus_depth_singularizer_cycle
   fi
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-port-ddos.sh" ]]; then
     # shellcheck source=/dev/null

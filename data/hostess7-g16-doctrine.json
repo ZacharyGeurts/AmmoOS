@@ -16,7 +16,7 @@
     {"id": "g16_linker_pass", "label": "g16-ld field linker — linux/android/darwin/windows", "files": ["Grok16/forge/g16-linker.py", "Grok16/data/g16-linker-doctrine.json"]},
     {"id": "g16_ironclad_sanity", "label": "Ironclad + field sanity meld on every g16 build", "files": ["Grok16/forge/g16-ironclad.py", "Grok16/cmake/g16-field-mandate.cmake"]},
     {"id": "g16_rtx_gate", "label": "queen_rtx / vulkan_rtx gated on RTX GPU", "files": ["Grok16/forge/rtx_gate.py", "Grok16/cmake/grok16-rtx-gate.cmake"]},
-    {"id": "nexus_g16_bridge", "label": "NEXUS stack optimized through Grok16", "files": ["NewLatest/lib/nexus-g16-bridge.py", "NewLatest/data/nexus-g16-compile-doctrine.json"]}
+    {"id": "nexus_g16_bridge", "label": "NEXUS stack optimized through Grok16", "files": ["NewLatest/lib/nexus-g16-bridge.py", "NewLatest/lib/nexus-g16-recompile.py", "NewLatest/data/nexus-g16-compile-doctrine.json", "NewLatest/data/nexus-g16-integrate-doctrine.json"]}
   ],
   "assistant_ceiling": {
     "label": "Generic coding assistant",

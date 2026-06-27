@@ -3,20 +3,29 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+NEXUS_ROOT="$(cd "$ROOT/.." && pwd)"
 SG="$(cd "$ROOT/../.." && pwd)"
+_state_explicit=0
+[[ -n "${NEXUS_STATE_DIR:-}" ]] && _state_explicit=1
+_state_saved="${NEXUS_STATE_DIR:-}"
+# shellcheck source=/dev/null
+source "${NEXUS_ROOT}/lib/nexus-common.sh"
+export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${NEXUS_ROOT}}"
+export NEXUS_FIELD_STANDALONE=1
+nexus_init_runtime_paths
+if [[ "$_state_explicit" -eq 1 ]]; then
+  export NEXUS_STATE_DIR="$_state_saved"
+fi
+unset _state_explicit _state_saved
+
 export SG_ROOT="${SG_ROOT:-$SG}"
 export PATH="${SG}/GrokPy/bin:${SG}/PythonG/bin:${ROOT}/bin:${ROOT}/scripts:${PATH}"
 export GPY16_ROOT="${GPY16_ROOT:-${SG}/GrokPy}"
 PY="${ROOT}/scripts/queen-py"
-SG="$(cd "${ROOT}/../.." && pwd)"
 BIN="${ROOT}/build/rtx/bin/Linux/queen-browser"
 FINAL_EYE="${FINAL_EYE_ROOT:-${SG}/Final_Eye}"
 FINAL_EAR="${FINAL_EAR_ROOT:-${SG}/Final_Ear}"
 FINAL_EYE_PORT="${ZOCR_PORT:-${FINAL_EYE_PORT:-9479}}"
-
-export SG_ROOT="${SG_ROOT:-${SG}}"
-export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${ROOT}}"
-export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${ROOT}/.nexus-state}"
 export QUEEN_ROOT="${ROOT}"
 export FINAL_EYE_ROOT="${FINAL_EYE}"
 export FINAL_EAR_ROOT="${FINAL_EAR}"
@@ -49,6 +58,14 @@ fi
 export AMOURANTHRTX_ROOT="${AMOURANTHRTX_ROOT:-${SG}/AMOURANTHRTX}"
 export QUEEN_INTERNAL_ONLY="${QUEEN_INTERNAL_ONLY:-1}"
 export QUEEN_INSTANT_BROWSER="${QUEEN_INSTANT_BROWSER:-1}"
+export NEXUS_RETIRE_AMOURANTHRTX_WINDOW="${NEXUS_RETIRE_AMOURANTHRTX_WINDOW:-1}"
+export QUEEN_RETIRE_RTX_WINDOW="${QUEEN_RETIRE_RTX_WINDOW:-1}"
+export QUEEN_RTX_CHROME="${QUEEN_RTX_CHROME:-0}"
+if [[ -f "${NEXUS_ROOT}/lib/amouranthrtx-window-retire.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${NEXUS_ROOT}/lib/amouranthrtx-window-retire.sh"
+  declare -f amouranthrtx_window_retire_cycle >/dev/null 2>&1 && amouranthrtx_window_retire_cycle || true
+fi
 export QUEEN_DISPLAY_REFRESH="${QUEEN_DISPLAY_REFRESH:-120}"
 export NEXUS_FIELD_BROWSER_QUEEN="${NEXUS_FIELD_BROWSER_QUEEN:-0}"
 export FINAL_EYE_ASSIST="${FINAL_EYE_ASSIST:-1}"
@@ -96,9 +113,6 @@ if [[ "${SG_FIELD_VIRUS_GUARD:-1}" == "1" && -f "${ROOT}/lib/queen-field-virus.p
 fi
 
 # NEXUS field panel (:9477) — Start tab + field C2; queen-world alone is not enough.
-NEXUS_ROOT="${ROOT}/.."
-export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${NEXUS_ROOT}}"
-export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${NEXUS_ROOT}/.nexus-state}"
 export NEXUS_FIELD_STANDALONE=1
 export NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
 
@@ -139,35 +153,58 @@ fi
 export QUEEN_WEB_SHELL="${QUEEN_WEB_SHELL:-1}"
 export QUEEN_SKIP_RTX_BOOT="${QUEEN_SKIP_RTX_BOOT:-1}"
 export NEXUS_EMBED_PANEL_IN_ENGINE=0
+# Internal Queen shell only — never spawn Firefox/Chrome/xdg-open unless explicitly opted in.
+export QUEEN_NO_OS_BROWSER="${QUEEN_NO_OS_BROWSER:-1}"
 
-pythong "${ROOT}/lib/queen-world.py" --daemon
+# shellcheck source=/dev/null
+[[ -f "${NEXUS_ROOT}/lib/queen-layer-boot.sh" ]] && source "${NEXUS_ROOT}/lib/queen-layer-boot.sh"
+if declare -f nexus_queen_world_ensure >/dev/null 2>&1; then
+  nexus_queen_world_ensure || pythong "${ROOT}/lib/queen-world.py" --daemon
+else
+  pythong "${ROOT}/lib/queen-world.py" --daemon
+fi
 
-open_web_shell() {
+queen_internal_urls() {
+  local port="${QUEEN_WORLD_PORT}"
+  echo "Queen Browser (internal shell) → http://127.0.0.1:${port}/world/browser.html"
+  echo "Queen Code (g16 · no telemetry) → http://127.0.0.1:${port}/world/queen-code.html"
+  echo "Queen Files → http://127.0.0.1:${port}/world/queen-files.html"
+  echo "Open from NEXUS field panel link or navigate inside Queen tabs — no OS browser."
+}
+
+launch_integrated_browser() {
   local url="${QUEEN_BROWSER_URL}"
-  echo "Queen Web Browser → ${url}"
-  echo "(RTX boot canvas disabled — use QUEEN_RTX_CHROME=1 to opt into legacy RTX chrome)"
-  if command -v firefox >/dev/null 2>&1; then
-    exec firefox --new-window "${url}" --class QueenBrowser "$@"
+  local launcher="${ROOT}/field-gecko/bin/launch-field-gecko.sh"
+  local py_launch="${ROOT}/../lib/queen-integrated-browser.py"
+  echo "Queen integrated field browser → ${url}"
+  if [[ -f "${py_launch}" ]]; then
+    pythong "${py_launch}" open 2>/dev/null && return 0
   fi
-  if command -v google-chrome >/dev/null 2>&1; then
-    exec google-chrome --app="${url}" --class=QueenBrowser "$@"
+  if [[ -x "${launcher}" ]]; then
+    exec bash "${launcher}" "$@"
   fi
-  if command -v chromium >/dev/null 2>&1; then
-    exec chromium --app="${url}" --class=QueenBrowser "$@"
-  fi
-  if command -v xdg-open >/dev/null 2>&1; then
-    exec xdg-open "${url}"
-  fi
-  echo "No system browser — serving shell only. Open: ${url}"
+  echo "Queen World serving on :${QUEEN_WORLD_PORT} — field-gecko launcher missing"
   exec pythong "${ROOT}/lib/queen-world.py" --host 127.0.0.1 --port "${QUEEN_WORLD_PORT}"
 }
 
 if [[ "${QUEEN_WEB_SHELL}" == "1" && "${QUEEN_RTX_CHROME:-0}" != "1" ]]; then
-  open_web_shell
+  queen_internal_urls
+  if [[ "${QUEEN_NO_OS_BROWSER}" == "1" ]]; then
+    echo "Queen launch: PASS (world daemon · internal only)"
+    exit 0
+  fi
+  launch_integrated_browser
 fi
 
 if [[ ! -x "${BIN}" ]]; then
-  open_web_shell
+  queen_internal_urls
+  if [[ "${QUEEN_NO_OS_BROWSER}" == "1" ]]; then
+    echo "Queen launch: PASS (no RTX binary · world daemon · integrated shell)"
+    exit 0
+  fi
+  launch_integrated_browser
 fi
 
-exec "${BIN}" --sovereign --queen --extended-field "--url=${QUEEN_BROWSER_URL}" "$@"
+echo "Queen launch: RTX binary present but disabled — use integrated field browser (QUEEN_WEB_SHELL=1)" >&2
+queen_internal_urls
+exit 0

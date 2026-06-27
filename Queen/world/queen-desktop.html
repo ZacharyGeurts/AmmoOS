@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" data-queen-surface="desktop">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Desktop</title>
+  <link rel="stylesheet" href="queen-desktop.css" />
+  <link rel="stylesheet" href="queen-dashboard-flyout.css" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: http://127.0.0.1:*; connect-src 'self' http://127.0.0.1:*; object-src 'none'; base-uri 'self'" />
+</head>
+<body>
+  <div class="qd-root" id="qd-root">
+    <div class="qd-wallpaper" id="qd-wallpaper" hidden aria-hidden="true"></div>
+    <div class="qd-net-seal" id="qd-net-seal" title="Network metal security">NET·METAL …</div>
+    <main class="qd-work" aria-label="Desktop">
+      <div class="qd-icons" id="qd-icons" aria-label="Desktop icons"></div>
+    </main>
+    <nav class="qd-taskbar" aria-label="Taskbar">
+      <button type="button" class="qd-taskbar-start" id="qd-taskbar-start" aria-label="Start">Start</button>
+      <div class="qd-tasks" id="qd-tasks" role="list"></div>
+      <div class="qd-tray" id="qd-clock" role="timer">--:--</div>
+    </nav>
+  </div>
+  <div class="qd-ctx" id="qd-ctx" role="menu"></div>
+  <div class="qd-toast" id="qd-toast" role="status" aria-live="polite"></div>
+  <script src="queen-sdf-icons.js"></script>
+  <script src="queen-dashboard-flyout.js"></script>
+  <script src="queen-desktop.js"></script>
+</body>
+</html>

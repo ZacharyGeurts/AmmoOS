@@ -46,16 +46,18 @@ def _heaven_hell_doctrine() -> dict[str, Any]:
 
 
 def _threat_warn_level() -> str:
-    if os.environ.get("NEXUS_THREAT_WARN_LEVEL", "high").strip().lower() in ("low", "medium", "calm", "off"):
-        return "high"
+    cached = _load_json(STATE / "field-ellie-security-authority.json", {})
+    if cached.get("threat_warn_level"):
+        return str(cached["threat_warn_level"])
     try:
         import importlib.util
 
-        spec = importlib.util.spec_from_file_location("nexus_logic_gate", INSTALL / "lib" / "nexus-logic-gate.py")
+        spec = importlib.util.spec_from_file_location("ellie_cmd", INSTALL / "lib" / "field-ellie-fier.py")
         if spec and spec.loader:
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
-            return str(mod.threat_warn_level())
+            if hasattr(mod, "threat_warn_level"):
+                return str(mod.threat_warn_level())
     except Exception:
         pass
     return "high"

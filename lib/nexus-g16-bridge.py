@@ -213,10 +213,29 @@ def _sense_plate_profile() -> str | None:
     return prof or None
 
 
+def _combinatronics_profile(requested: str | None = None) -> str | None:
+    comb = grok16_root() / "lib" / "g16-compile-combinatronics.py"
+    if not comb.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("g16_compile_combinatronics", comb)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "resolve_compile_profile"):
+            prof = str(mod.resolve_compile_profile(requested) or "").strip()
+            return prof or None
+    except Exception:
+        pass
+    return None
+
+
 def effective_profile(requested: str | None = None) -> str:
+    comb_prof = _combinatronics_profile(requested)
     env_prof = (requested or os.environ.get("GROK16_FIELD_PROFILE") or "").strip()
     sense_prof = _sense_plate_profile() if os.environ.get("NEXUS_G16_SENSE_PLATE", "1") == "1" else None
-    req = env_prof or sense_prof or "field_opt"
+    req = comb_prof or env_prof or sense_prof or "field_opt"
     if profile_allowed(req):
         return req
     return str(_load(DOCTRINE, {}).get("compile", {}).get("profile_default") or "field_opt")
@@ -303,11 +322,59 @@ def meld_slice() -> dict[str, Any]:
     return meld_slice()
 
 
+def combinatronics_gate(*, full: bool = False) -> dict[str, Any]:
+    comb = grok16_root() / "lib" / "g16-compile-combinatronics.py"
+    if not comb.is_file():
+        return {"ok": False, "error": "combinatronics_missing"}
+    try:
+        spec = importlib.util.spec_from_file_location("g16_compile_combinatronics", comb)
+        if not spec or not spec.loader:
+            return {"ok": False, "error": "combinatronics_load_failed"}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "compile_gate"):
+            return mod.compile_gate(full=full)
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)[:200]}
+    return {"ok": False, "error": "compile_gate_missing"}
+
+
 def main() -> int:
     cmd = (sys.argv[1] if len(sys.argv) > 1 else "json").strip().lower()
     if cmd in ("json", "panel", "status"):
         print(json.dumps(build_panel(), ensure_ascii=False))
         return 0
+    if cmd in ("balance", "combinatronics", "gate"):
+        recompile = INSTALL / "lib" / "nexus-g16-recompile.py"
+        if recompile.is_file():
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(recompile), "balance"],
+                    capture_output=True,
+                    text=True,
+                    timeout=180,
+                    env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+                    check=False,
+                )
+                if proc.stdout.strip():
+                    print(proc.stdout.strip())
+                    return 0 if proc.returncode == 0 else 1
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+        print(json.dumps(combinatronics_gate(full="--full" in sys.argv), ensure_ascii=False))
+        return 0
+    if cmd in ("integrate", "recompile"):
+        recompile = INSTALL / "lib" / "nexus-g16-recompile.py"
+        if not recompile.is_file():
+            print(json.dumps({"ok": False, "error": "nexus_g16_recompile_missing"}, ensure_ascii=False))
+            return 1
+        sub = "integrate" if cmd == "integrate" else "recompile"
+        proc = subprocess.run(
+            [sys.executable, str(recompile), sub, *sys.argv[2:]],
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+            check=False,
+        )
+        return proc.returncode
     if cmd == "probe":
         print(json.dumps(_probe_g16(), ensure_ascii=False))
         return 0
@@ -324,7 +391,10 @@ def main() -> int:
     if cmd == "slice":
         print(json.dumps(meld_slice(), ensure_ascii=False))
         return 0
-    print(json.dumps({"error": "usage: nexus-g16-bridge.py [json|probe|linker|rtx|profile NAME|slice]"}, ensure_ascii=False))
+    print(json.dumps({
+        "error": "usage",
+        "cmds": ["json", "probe", "linker", "rtx", "profile NAME", "slice", "balance", "integrate", "recompile"],
+    }, ensure_ascii=False))
     return 1
 
 

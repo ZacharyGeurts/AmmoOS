@@ -23,8 +23,10 @@ ZNETWORK_BIN="${ZNETWORK_BIN:-}"
 ZNETWORK_MODE="${ZNETWORK_MODE:-REVIEW_ONLY}"
 ZNETWORK_OPERATOR_JSON="${NEXUS_STATE_DIR}/znetwork-operator.json"
 ZNETWORK_SKIP_MARKER="${NEXUS_STATE_DIR}/znetwork-skip.marker"
+ZNETWORK_RUNNING_MARKER="${NEXUS_STATE_DIR}/znetwork-running.marker"
 ZNETWORK_SOCK="${NEXUS_STATE_DIR}/znetwork-field.sock"
 ZNETWORK_ORCHESTRATOR="${NEXUS_INSTALL_ROOT}/lib/znetwork-orchestrator.py"
+ZNETWORK_HOSTILE_PY="${NEXUS_INSTALL_ROOT}/lib/znetwork-hostile-threat.py"
 
 nexus_znetwork_bin() {
   local candidate
@@ -55,6 +57,41 @@ nexus_znetwork_review_gate_script() {
   return 1
 }
 
+nexus_znetwork_hostile_py() {
+  local runner="${NEXUS_PYTHONG:-pythong}"
+  command -v "$runner" >/dev/null 2>&1 || runner="python3"
+  [[ -f "${ZNETWORK_HOSTILE_PY}" ]] || return 1
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+  NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+    "$runner" "${ZNETWORK_HOSTILE_PY}" "$@"
+}
+
+nexus_znetwork_hostile_scan() {
+  if nexus_znetwork_hostile_py scan >/dev/null 2>&1; then
+    nexus_znetwork_activate_log "hostile_scan" "OK" "immediate_iff"
+    return 0
+  fi
+  if nexus_znetwork_orchestrator_py hostile-scan >/dev/null 2>&1; then
+    nexus_znetwork_activate_log "hostile_scan" "OK" "via=orchestrator"
+    return 0
+  fi
+  nexus_znetwork_activate_log "hostile_scan" "SKIP" "hostile_module_unavailable"
+  return 0
+}
+
+nexus_znetwork_hostile_respond() {
+  if nexus_znetwork_hostile_py countermeasure >/dev/null 2>&1; then
+    nexus_znetwork_activate_log "hostile_respond" "OK" "zero_hesitation"
+    return 0
+  fi
+  if nexus_znetwork_orchestrator_py hostile-respond >/dev/null 2>&1; then
+    nexus_znetwork_activate_log "hostile_respond" "OK" "via=orchestrator"
+    return 0
+  fi
+  nexus_znetwork_activate_log "hostile_respond" "SKIP" "hostile_module_unavailable"
+  return 0
+}
+
 nexus_znetwork_orchestrator_py() {
   local runner="${NEXUS_PYTHONG:-pythong}"
   command -v "$runner" >/dev/null 2>&1 || runner="python3"
@@ -73,9 +110,16 @@ nexus_znetwork_write_operator() {
   printf '{"choice":"%s","running":%s,"mode":"%s","updated":"%s","orchestrator":"znetwork-orchestrator/v2"}\n' \
     "$choice" "$running" "${ZNETWORK_MODE}" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
     >"${ZNETWORK_OPERATOR_JSON}" 2>/dev/null || true
+  if [[ "$choice" == "yes" && "$running" == "true" ]]; then
+    : >"${ZNETWORK_RUNNING_MARKER}" 2>/dev/null || true
+    chmod 600 "${ZNETWORK_RUNNING_MARKER}" 2>/dev/null || true
+  else
+    rm -f "${ZNETWORK_RUNNING_MARKER}" 2>/dev/null || true
+  fi
 }
 
 nexus_znetwork_is_running() {
+  [[ -f "${ZNETWORK_RUNNING_MARKER}" ]] && return 0
   [[ -S "${ZNETWORK_SOCK}" ]] && return 0
   if [[ -f "${ZNETWORK_OPERATOR_JSON}" ]]; then
     grep -q '"running"[[:space:]]*:[[:space:]]*true' "${ZNETWORK_OPERATOR_JSON}" 2>/dev/null \
@@ -94,8 +138,8 @@ nexus_znetwork_mark_running() {
   nexus_znetwork_write_operator "yes" "true"
   mkdir -p "${NEXUS_STATE_DIR}" 2>/dev/null || true
   rm -f "${ZNETWORK_SKIP_MARKER}" 2>/dev/null || true
-  : >"${ZNETWORK_SOCK}" 2>/dev/null || true
-  chmod 600 "${ZNETWORK_SOCK}" 2>/dev/null || true
+  : >"${ZNETWORK_RUNNING_MARKER}" 2>/dev/null || true
+  chmod 600 "${ZNETWORK_RUNNING_MARKER}" 2>/dev/null || true
 }
 
 nexus_znetwork_activate_log() {
@@ -126,8 +170,49 @@ nexus_znetwork_tray_swap() {
   return 1
 }
 
-# Pol root gate — Linux uid 0 / Windows admin; secure sudo when elevation required.
+nexus_znetwork_handler_retire_py() {
+  local runner="${NEXUS_PYTHONG:-pythong}"
+  command -v "$runner" >/dev/null 2>&1 || runner="python3"
+  local py="${NEXUS_INSTALL_ROOT}/lib/znetwork-handler-retire.py"
+  [[ -f "$py" ]] || return 1
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+  NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+  ZNETWORK_BIN="$(nexus_znetwork_bin 2>/dev/null || true)" \
+    "$runner" "$py" "$@"
+}
+
+nexus_znetwork_never_harm_os() {
+  [[ "${ZNETWORK_NEVER_HARM_OS:-${NEXUS_NEVER_HARM_OS:-1}}" != "0" ]]
+}
+
+nexus_znetwork_retire_legacy_handlers() {
+  nexus_znetwork_handler_retire_py retire >/dev/null 2>&1 && {
+    if nexus_znetwork_never_harm_os; then
+      nexus_znetwork_activate_log "handler_retire" "OK" "coexist_os_bypass_only"
+    else
+      nexus_znetwork_activate_log "handler_retire" "OK" "graceful_no_sudo"
+    fi
+    return 0
+  }
+  nexus_znetwork_activate_log "handler_retire" "SKIP" "handler_retire_unavailable"
+  return 0
+}
+
+nexus_znetwork_replace_connection() {
+  nexus_znetwork_handler_retire_py replace >/dev/null 2>&1 && {
+    nexus_znetwork_activate_log "replace_connection" "OK" "policy_owner=znetwork"
+    return 0
+  }
+  nexus_znetwork_activate_log "replace_connection" "SKIP" "replace_unavailable"
+  return 0
+}
+
+# Pol root gate — optional; skipped when NEXUS_ZNETWORK_NO_SUDO=1 (default).
 nexus_znetwork_pol_root_gate() {
+  [[ "${NEXUS_ZNETWORK_NO_SUDO:-1}" == "1" ]] && {
+    nexus_znetwork_activate_log "pol_root" "SKIP" "no_sudo_user_space"
+    return 0
+  }
   local pol_json root_ok=0
   if ! declare -f nexus_pol_ensure_root >/dev/null 2>&1; then
     nexus_znetwork_activate_log "pol_root" "SKIP" "nexus-polkit.sh missing"
@@ -179,12 +264,33 @@ nexus_znetwork_user_attach() {
     nexus_znetwork_activate_log "gatekeeper_iff" "OK" "user_space_scoring"
   fi
 
-  nexus_znetwork_activate_log "native_manager" "UNCHANGED" "iface=${iface:-unknown} swap=software_and_tray"
+  nexus_znetwork_replace_connection || true
+  nexus_znetwork_activate_log "native_manager" "BYPASSED_ALONGSIDE" "iface=${iface:-unknown} coexist_os=1"
   return 0
+}
+
+nexus_znetwork_ensure_tray() {
+  [[ "${NEXUS_PANEL_TRAY:-1}" == "1" ]] || return 0
+  nexus_znetwork_is_running || return 0
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-tray.sh" ]] || return 0
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/panel-tray.sh"
+  local mode
+  mode="$(nexus_panel_tray_mode)"
+  if [[ "$mode" != "znetwork" ]] || ! nexus_panel_tray_is_running; then
+    export NEXUS_TRAY_MODE=znetwork
+    export NEXUS_TRAY_ICON_REFRESH=1
+    nexus_panel_tray_znetwork_swap 2>/dev/null || true
+    nexus_znetwork_activate_log "ensure_tray" "OK" "mode=znetwork running=$(nexus_panel_tray_is_running && echo 1 || echo 0)"
+  fi
+  nexus_znetwork_hostile_scan || true
+  nexus_znetwork_hostile_respond || true
 }
 
 nexus_znetwork_activate_on_yes() {
   nexus_znetwork_pol_root_gate || return 1
+  nexus_znetwork_retire_legacy_handlers || true
+  nexus_znetwork_replace_connection || true
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/front-hook.sh" ]]; then
     # shellcheck source=/dev/null
     source "${NEXUS_INSTALL_ROOT}/lib/front-hook.sh"
@@ -195,7 +301,7 @@ nexus_znetwork_activate_on_yes() {
   # Prefer v2 orchestrator (truth gate + sovereign time + tray swap).
   if nexus_znetwork_orchestrator_py activate --elevated >/dev/null 2>&1; then
     nexus_znetwork_activate_log "orchestrator" "OK" "v2_activate"
-    nexus_znetwork_tray_swap || true
+    nexus_znetwork_ensure_tray || true
     nexus_znetwork_activate_log "complete" "OK" "running=true swap=tray_and_bridges"
     return 0
   fi
@@ -213,9 +319,35 @@ nexus_znetwork_activate_on_yes() {
   return 0
 }
 
+# ZNetwork with us — auto-activate and replace legacy networking (no dialog unless prompted).
+nexus_znetwork_startup_with_us() {
+  [[ "${NEXUS_ZNETWORK:-1}" == "1" ]] || return 0
+  if nexus_znetwork_is_running; then
+    nexus_znetwork_ensure_tray || true
+    nexus_znetwork_publish 2>/dev/null || true
+    return 0
+  fi
+  [[ -f "${ZNETWORK_SKIP_MARKER}" ]] && return 0
+  if [[ "${NEXUS_ZNETWORK_PROMPT:-0}" == "1" ]]; then
+    nexus_znetwork_startup_prompt
+    return $?
+  fi
+  nexus_znetwork_bin >/dev/null 2>&1 || {
+    nexus_log "WARN" "znetwork" "STARTUP_WITH_US_SKIP reason=binary_missing"
+    return 0
+  }
+  nexus_log "INFO" "znetwork" "STARTUP_WITH_US auto_activate replace_legacy=1"
+  nexus_znetwork_activate_on_yes || {
+    nexus_znetwork_write_operator "no" "false"
+    return 1
+  }
+  nexus_znetwork_ensure_tray || true
+  return 0
+}
+
 nexus_znetwork_startup_prompt() {
   [[ "${NEXUS_ZNETWORK:-1}" == "1" ]] || return 0
-  [[ "${NEXUS_ZNETWORK_PROMPT:-1}" == "1" ]] || return 0
+  [[ "${NEXUS_ZNETWORK_PROMPT:-0}" == "1" ]] || return 0
   nexus_znetwork_is_running && return 0
   [[ -f "${ZNETWORK_SKIP_MARKER}" ]] && return 0
 
@@ -307,6 +439,11 @@ nexus_znetwork_triple_check() {
 nexus_znetwork_publish() {
   [[ "${NEXUS_ZNETWORK:-1}" == "1" ]] || return 0
   nexus_znetwork_triple_check || return 1
+  if nexus_znetwork_is_running; then
+    nexus_znetwork_hostile_scan || true
+    nexus_znetwork_hostile_respond || true
+  fi
+  nexus_znetwork_ensure_tray 2>/dev/null || true
 }
 
 nexus_znetwork_build() {

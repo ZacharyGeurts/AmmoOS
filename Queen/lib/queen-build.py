@@ -158,7 +158,7 @@ def build_status() -> dict[str, Any]:
         "gui": {
             "theme": "gui/queen-theme-2026.json",
             "build_deck": "gui/queen-build-deck.html",
-            "boot_shader": "shaders/compute/QueenBoot.comp",
+            "boot_surface": "/world/browser.html",
         },
         "stages": stages,
         "forge_status": forge,

@@ -159,7 +159,7 @@ Name=NEXUS Field Command Center
 GenericName=Field C2
 Comment=Queen field browser — NEXUS opens in Queen tabs — tray + ZNetwork
 Exec=${exec}
-Icon=queen-browser
+Icon=nexus-field
 Path=${root}
 Terminal=false
 Categories=Security;Network;System;
@@ -199,6 +199,10 @@ nexus_install_linux_desktop() {
   ver="$(grep -o 'NEXUS_VERSION="[^"]*"' "${root}/lib/nexus-common.sh" 2>/dev/null | head -1 | cut -d'"' -f2)"
   ver="${ver:-10.4.1}"
 
+  if [[ -f "${root}/Queen/scripts/queen-icon-kit.py" ]]; then
+    NEXUS_INSTALL_ROOT="$root" python3 "${root}/Queen/scripts/queen-icon-kit.py" >/dev/null 2>&1 \
+      || NEXUS_INSTALL_ROOT="$root" pythong "${root}/Queen/scripts/queen-icon-kit.py" >/dev/null 2>&1 || true
+  fi
   nexus_install_icon_theme "$root" "$scope" "$user"
 
   if [[ "$scope" == "system" && "$(id -u)" -eq 0 ]]; then
@@ -216,6 +220,9 @@ nexus_install_linux_desktop() {
   rm -f "${apps}/nexus-shield.desktop" "${apps}/nexus-tristate-installer.desktop" 2>/dev/null || true
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps" 2>/dev/null || true
   nexus_install_desktop_shortcut "$home" "$exec" "$root"
+  if [[ -f "${root}/Queen/scripts/queen-browser-primary.sh" ]]; then
+    bash "${root}/Queen/scripts/queen-browser-primary.sh" >/dev/null 2>&1 || true
+  fi
   echo "Start menu: ${apps}/nexus-field.desktop"
   echo "Launcher: ${exec}"
 }

@@ -1,7 +1,7 @@
 {
   "schema": "queen-field-browser/v1",
   "name": "Queen",
-  "motto": "Our field web engine — plated, loopback-held, AMOURANTHRTX RTX wired. Depth fields sealed and destroyed; soft touch; Ironclad.",
+  "motto": "Integrated field browser — Webbrowser shell, loopback-held, no comp shader boot.",
   "g16": {
     "mandate": "G16_FIELD_SAFETY_MANDATE_v1",
     "no_entropy_hotspots": true,
@@ -9,16 +9,28 @@
     "max_field_depth": 0,
     "single_field_depth_always": true
   },
+  "surface": {
+    "engine": "queen-webbrowser",
+    "shell": "/world/browser.html",
+    "backend": "queen-field-gecko",
+    "comp_shader_boot": false,
+    "os_browser_fallback": false,
+    "startup_tabs": "field-gecko/manifest.json",
+    "syntax_css": "/world/queen-syntax.css",
+    "viewer": "/world/queen-viewer.js",
+    "highlight": "/world/queen-code-highlight.js",
+    "secure_in_browser": true,
+    "format_policy": "every_extension_mapped_inspection_disambiguates"
+  },
   "plating": {
     "portrait": "/world/assets/branding/amouranth-plate.png",
     "vignette": "emerald_rose_radial",
-    "home": "/world/queen-field-home.html"
+    "home": "/world/browser.html"
   },
-  "amouranthrtx": {
-    "api": "/api/amouranthrtx",
-    "scheme": "queen://rtx",
-    "slots": ["TIME", "MEMORY", "THERMO", "CONTEXT"],
-    "root_env": "AMOURANTHRTX_ROOT"
+  "chips": {
+    "api": "/api/chips",
+    "scheme": "queen://chips",
+    "url": "/world/queen-chips-cores.html"
   },
   "nested_fields": {
     "rule": "depth_fields_sealed_and_destroyed",

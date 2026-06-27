@@ -43,12 +43,19 @@ def _load_panel_open() -> Any:
 
 
 def open_sovereign_browser(*, route: str = "", focus_url: str = "") -> dict[str, Any]:
-    """F9 target — Queen world + browser shell; RTX binary when built."""
+    """F9 target — Queen world + Webbrowser shell; CHIPS/cores via web (no RTX comp shader)."""
     queen = _resolve_queen_root()
     port = int(os.environ.get("QUEEN_WORLD_PORT", "9481"))
-    shell_url = os.environ.get(
-        "QUEEN_BROWSER_URL",
-        f"http://127.0.0.1:{port}/world/browser.html",
+    panel_port = int(os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477"))
+    c2_url = f"http://127.0.0.1:{panel_port}/field"
+    c2_launch = os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+    shell_url = os.environ.get("QUEEN_BROWSER_URL", "").strip() or (
+        c2_url if c2_launch else f"http://127.0.0.1:{port}/world/browser.html"
     )
     env = {
         **os.environ,
@@ -64,15 +71,12 @@ def open_sovereign_browser(*, route: str = "", focus_url: str = "") -> dict[str,
         "QUEEN_SKIP_RTX_BOOT": "1",
         "NEXUS_EMBED_PANEL_IN_ENGINE": "0",
         "NEXUS_FIELD_BROWSER_QUEEN": "1",
+        "NEXUS_C2_DESKTOP_LAUNCH": os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "1"),
+        "NEXUS_C2_KIOSK": os.environ.get("NEXUS_C2_KIOSK", "1"),
+        "NEXUS_C2_LAUNCH_URL": os.environ.get("NEXUS_C2_LAUNCH_URL", c2_url),
         "QUEEN_BROWSER_URL": shell_url,
-        "QUEEN_BROWSER_START": os.environ.get(
-            "QUEEN_BROWSER_START",
-            f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
-        ),
-        "QUEEN_BROWSER_HOME": os.environ.get(
-            "QUEEN_BROWSER_HOME",
-            f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
-        ),
+        "QUEEN_BROWSER_START": os.environ.get("QUEEN_BROWSER_START", c2_url),
+        "QUEEN_BROWSER_HOME": os.environ.get("QUEEN_BROWSER_HOME", c2_url),
         "QUEEN_NO_OS_BROWSER": os.environ.get("QUEEN_NO_OS_BROWSER", "1"),
     }
     opener = _load_panel_open()
@@ -93,31 +97,25 @@ def open_sovereign_browser(*, route: str = "", focus_url: str = "") -> dict[str,
     panel_url = focus_url.strip()
     if not panel_url and route:
         panel_url = opener._panel_field_url(route)  # noqa: SLF001
-    display = opener.launch_queen_display(focus_url=panel_url or shell_url)
-    if not display.get("ok") and display.get("display") == "queen_browser_shell":
-        run_script = queen / "scripts" / "run-queen.sh"
-        if run_script.is_file() and os.environ.get("QUEEN_NO_OS_BROWSER", "1") == "1":
-            env["QUEEN_RTX_CHROME"] = "1"
-            try:
-                subprocess.Popen(
-                    ["bash", str(run_script)],
-                    env=env,
-                    cwd=str(queen),
-                    start_new_session=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                display = {
-                    "ok": True,
-                    "display": "queen_rtx_or_shell",
-                    "url": shell_url,
-                    "spawned": "run-queen.sh",
-                }
-            except OSError as exc:
-                display = {"ok": False, "error": str(exc)}
-    tab = None
-    if panel_url and panel_url != shell_url:
-        tab = opener.open_in_queen_tab(panel_url, new_tab=True)
+    if not panel_url:
+        panel_url = env.get("QUEEN_BROWSER_START", "").strip() or opener._panel_field_url()  # noqa: SLF001
+    integrated_py = INSTALL / "lib" / "queen-integrated-browser.py"
+    if integrated_py.is_file():
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(integrated_py), "open"],
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=50,
+                check=False,
+            )
+            display = json.loads(proc.stdout or "{}") if (proc.stdout or "").strip().startswith("{") else {}
+        except (subprocess.SubprocessError, json.JSONDecodeError):
+            display = opener.launch_queen_display()
+    else:
+        display = opener.launch_queen_display()
+    tab = opener.open_in_queen_tab(panel_url, new_tab=True) if panel_url else None
     return {
         "ok": bool(world.get("ok") or display.get("ok")),
         "engine": "queen-browser",

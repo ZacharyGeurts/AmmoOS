@@ -6,12 +6,19 @@
     "mandatory_secure_vault": true,
     "block_untrusted_clipboard": true,
     "no_third_party_managers": true,
+    "sovereign_password_manager": "field-lock",
+    "field_keepass_offline_only": true,
     "os_clipboard_ttl_sec": 45,
     "vault_ttl_sec": 300,
     "hardware_evdev_wire": true,
     "browser_wire": true,
     "default_scheme": "standard",
-    "emulator_schemes": ["apple2e", "apple2e_prodos", "c64", "nes_keyboard"],
+    "ghost_mode": true,
+    "ghost_visible": false,
+    "historic_ring": true,
+    "historic_ring_max": 32,
+    "historic_preview_chars": 48,
+    "emulator_schemes": ["apple2e", "apple2e_prodos", "c64", "nes_keyboard", "clipboard_master", "emacs"],
     "config_env": "NEXUS_CLIPBOARD_SCHEME",
     "config_file": "state/field-clipboard-scheme.json"
   },
@@ -157,11 +164,26 @@
         {"action": "yank", "chord": "Control+y"}
       ]
     },
+    "clipboard_master": {
+      "label": "Clipboard Master — famous ring + quick paste",
+      "bindings": [
+        {"action": "copy", "chord": "Control+c"},
+        {"action": "copy", "chord": "Control+Insert"},
+        {"action": "paste", "chord": "Control+v"},
+        {"action": "paste", "chord": "Shift+Insert"},
+        {"action": "cut", "chord": "Control+x"},
+        {"action": "history_paste", "chord": "Control+Shift+v", "note": "paste previous ring slot"},
+        {"action": "history_paste", "chord": "Control+Alt+v", "note": "Clipboard Master quick paste"},
+        {"action": "history", "chord": "Control+Shift+c", "note": "copy + push historic ring"},
+        {"action": "clear", "chord": "Control+Shift+Delete"}
+      ]
+    },
     "all": {
       "label": "Union — accept every known chord (field sovereign mode)",
       "union_of": [
         "standard", "windows", "mac", "emacs", "nano", "vi",
-        "apple2e", "apple2e_prodos", "c64", "nes_keyboard", "terminal", "readline"
+        "apple2e", "apple2e_prodos", "c64", "nes_keyboard", "terminal", "readline",
+        "clipboard_master"
       ]
     }
   },

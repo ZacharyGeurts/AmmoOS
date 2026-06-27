@@ -1,0 +1,12 @@
+{
+  "id": "atari_2600",
+  "title": "Atari 2600",
+  "author": "",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/atari_2600/atari_2600.h7c",
+  "h7": null,
+  "cover": null,
+  "migrated_from": "h7",
+  "updated": "2026-06-27T12:04:38Z"
+}

@@ -1,189 +1,752 @@
 {
+  "schema": "dewey-shelf/v1",
+  "shelf": "000-computer-science",
   "code": "000",
   "title": "Computer science, information & general works",
-  "slug": "000-computer-science",
-  "count": 18,
-  "updated": "2026-06-24T03:12:05Z",
+  "updated": "2026-06-27T12:37:26Z",
+  "format_primary": "h7c",
+  "book_count": 74,
+  "h7c_count": 56,
   "books": [
+    {
+      "id": "explaining_apl",
+      "title": "Explaining APL",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_apl/explaining_apl.h7c",
+      "cover": "/world/assets/combinatronic/books/apl.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_ada",
+      "title": "Explaining Ada",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_ada/explaining_ada.h7c",
+      "cover": "/world/assets/combinatronic/books/ada.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_algol",
+      "title": "Explaining Algol",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_algol/explaining_algol.h7c",
+      "cover": "/world/assets/combinatronic/books/algol.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_ammolang",
+      "title": "Explaining AmmoLang",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_ammolang/explaining_ammolang.h7c",
+      "cover": "/world/assets/combinatronic/books/ammolang.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_asm",
+      "title": "Explaining Assembly",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_asm/explaining_asm.h7c",
+      "cover": "/world/assets/combinatronic/books/asm.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_basic",
+      "title": "Explaining BASIC",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_basic/explaining_basic.h7c",
+      "cover": "/world/assets/combinatronic/books/basic.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_c",
+      "title": "Explaining C",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_c/explaining_c.h7c",
+      "cover": "/world/assets/combinatronic/books/c.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_csharp",
+      "title": "Explaining C#",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_csharp/explaining_csharp.h7c",
+      "cover": "/world/assets/combinatronic/books/csharp.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_cxx",
+      "title": "Explaining C++",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_cxx/explaining_cxx.h7c",
+      "cover": "/world/assets/combinatronic/books/cxx.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_cobol",
+      "title": "Explaining COBOL",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_cobol/explaining_cobol.h7c",
+      "cover": "/world/assets/combinatronic/books/cobol.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_cobol_copy",
+      "title": "Explaining COBOL COPY",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_cobol_copy/explaining_cobol_copy.h7c",
+      "cover": "/world/assets/combinatronic/books/cobol_copy.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_clojure",
+      "title": "Explaining Clojure",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_clojure/explaining_clojure.h7c",
+      "cover": "/world/assets/combinatronic/books/clojure.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_d",
+      "title": "Explaining D",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_d/explaining_d.h7c",
+      "cover": "/world/assets/combinatronic/books/d.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_dart",
+      "title": "Explaining Dart",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_dart/explaining_dart.h7c",
+      "cover": "/world/assets/combinatronic/books/dart.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_delphi",
+      "title": "Explaining Delphi",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_delphi/explaining_delphi.h7c",
+      "cover": "/world/assets/combinatronic/books/delphi.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_elixir",
+      "title": "Explaining Elixir",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_elixir/explaining_elixir.h7c",
+      "cover": "/world/assets/combinatronic/books/elixir.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_erlang",
+      "title": "Explaining Erlang",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_erlang/explaining_erlang.h7c",
+      "cover": "/world/assets/combinatronic/books/erlang.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_field",
+      "title": "Explaining Field",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_field/explaining_field.h7c",
+      "cover": "/world/assets/combinatronic/books/field.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_forth",
+      "title": "Explaining Forth",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_forth/explaining_forth.h7c",
+      "cover": "/world/assets/combinatronic/books/forth.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_fortran",
+      "title": "Explaining Fortran",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_fortran/explaining_fortran.h7c",
+      "cover": "/world/assets/combinatronic/books/fortran.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_freebasic",
+      "title": "Explaining FreeBASIC",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_freebasic/explaining_freebasic.h7c",
+      "cover": "/world/assets/combinatronic/books/freebasic.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_go",
+      "title": "Explaining Go",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_go/explaining_go.h7c",
+      "cover": "/world/assets/combinatronic/books/go.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_haskell",
+      "title": "Explaining Haskell",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_haskell/explaining_haskell.h7c",
+      "cover": "/world/assets/combinatronic/books/haskell.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_java",
+      "title": "Explaining Java",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_java/explaining_java.h7c",
+      "cover": "/world/assets/combinatronic/books/java.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_javascript",
+      "title": "Explaining JavaScript",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_javascript/explaining_javascript.h7c",
+      "cover": "/world/assets/combinatronic/books/javascript.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_julia",
+      "title": "Explaining Julia",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_julia/explaining_julia.h7c",
+      "cover": "/world/assets/combinatronic/books/julia.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_kotlin",
+      "title": "Explaining Kotlin",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_kotlin/explaining_kotlin.h7c",
+      "cover": "/world/assets/combinatronic/books/kotlin.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_lisp",
+      "title": "Explaining Lisp",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_lisp/explaining_lisp.h7c",
+      "cover": "/world/assets/combinatronic/books/lisp.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_lua",
+      "title": "Explaining Lua",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_lua/explaining_lua.h7c",
+      "cover": "/world/assets/combinatronic/books/lua.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_matlab",
+      "title": "Explaining MATLAB",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_matlab/explaining_matlab.h7c",
+      "cover": "/world/assets/combinatronic/books/matlab.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_modula2",
+      "title": "Explaining Modula-2",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_modula2/explaining_modula2.h7c",
+      "cover": "/world/assets/combinatronic/books/modula2.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_nim",
+      "title": "Explaining Nim",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_nim/explaining_nim.h7c",
+      "cover": "/world/assets/combinatronic/books/nim.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_ocaml",
+      "title": "Explaining OCaml",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_ocaml/explaining_ocaml.h7c",
+      "cover": "/world/assets/combinatronic/books/ocaml.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_objc",
+      "title": "Explaining Objective-C",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_objc/explaining_objc.h7c",
+      "cover": "/world/assets/combinatronic/books/objc.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_php",
+      "title": "Explaining PHP",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_php/explaining_php.h7c",
+      "cover": "/world/assets/combinatronic/books/php.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_pascal",
+      "title": "Explaining Pascal",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_pascal/explaining_pascal.h7c",
+      "cover": "/world/assets/combinatronic/books/pascal.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_perl",
+      "title": "Explaining Perl",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_perl/explaining_perl.h7c",
+      "cover": "/world/assets/combinatronic/books/perl.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_prolog",
+      "title": "Explaining Prolog",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_prolog/explaining_prolog.h7c",
+      "cover": "/world/assets/combinatronic/books/prolog.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_python",
+      "title": "Explaining Python",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_python/explaining_python.h7c",
+      "cover": "/world/assets/combinatronic/books/python.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_qbasic",
+      "title": "Explaining QBasic",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_qbasic/explaining_qbasic.h7c",
+      "cover": "/world/assets/combinatronic/books/qbasic.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_quickbasic",
+      "title": "Explaining QuickBASIC",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_quickbasic/explaining_quickbasic.h7c",
+      "cover": "/world/assets/combinatronic/books/quickbasic.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_r",
+      "title": "Explaining R",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_r/explaining_r.h7c",
+      "cover": "/world/assets/combinatronic/books/r.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_ruby",
+      "title": "Explaining Ruby",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_ruby/explaining_ruby.h7c",
+      "cover": "/world/assets/combinatronic/books/ruby.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_rust",
+      "title": "Explaining Rust",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_rust/explaining_rust.h7c",
+      "cover": "/world/assets/combinatronic/books/rust.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_snobol",
+      "title": "Explaining SNOBOL",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_snobol/explaining_snobol.h7c",
+      "cover": "/world/assets/combinatronic/books/snobol.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_sql",
+      "title": "Explaining SQL",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_sql/explaining_sql.h7c",
+      "cover": "/world/assets/combinatronic/books/sql.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_scala",
+      "title": "Explaining Scala",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_scala/explaining_scala.h7c",
+      "cover": "/world/assets/combinatronic/books/scala.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_shell",
+      "title": "Explaining Shell",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_shell/explaining_shell.h7c",
+      "cover": "/world/assets/combinatronic/books/shell.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_smalltalk",
+      "title": "Explaining Smalltalk",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_smalltalk/explaining_smalltalk.h7c",
+      "cover": "/world/assets/combinatronic/books/smalltalk.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_swift",
+      "title": "Explaining Swift",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_swift/explaining_swift.h7c",
+      "cover": "/world/assets/combinatronic/books/swift.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_turbo_pascal",
+      "title": "Explaining Turbo Pascal",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_turbo_pascal/explaining_turbo_pascal.h7c",
+      "cover": "/world/assets/combinatronic/books/turbo_pascal.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_typescript",
+      "title": "Explaining TypeScript",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_typescript/explaining_typescript.h7c",
+      "cover": "/world/assets/combinatronic/books/typescript.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_vba",
+      "title": "Explaining VBA",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_vba/explaining_vba.h7c",
+      "cover": "/world/assets/combinatronic/books/vba.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_verilog",
+      "title": "Explaining Verilog",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_verilog/explaining_verilog.h7c",
+      "cover": "/world/assets/combinatronic/books/verilog.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_visual_basic",
+      "title": "Explaining Visual Basic",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_visual_basic/explaining_visual_basic.h7c",
+      "cover": "/world/assets/combinatronic/books/visual_basic.png",
+      "ready": true
+    },
+    {
+      "id": "explaining_zig",
+      "title": "Explaining Zig",
+      "author": "Hostess 7",
+      "dewey": "000",
+      "format": "h7c",
+      "h7c": "library/dewey/000-computer-science/explaining_zig/explaining_zig.h7c",
+      "cover": "/world/assets/combinatronic/books/zig.png",
+      "ready": true
+    },
     {
       "id": "gutenberg_first_algebra",
       "title": "First Lessons in Algebra (Gutenberg)",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-896c5e4954eb",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "gutenberg_mcgruffey_1",
       "title": "McGuffey's First Eclectic Reader",
       "author": "",
       "dewey": "000",
-      "ein": "H7-FIELD-310dcc66a3bc",
       "format": "H7",
-      "ready": true,
-      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/gutenberg_mcgruffey_1.h7"
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "gutenberg_mcgruffey_2",
       "title": "McGuffey's Second Eclectic Reader",
       "author": "",
       "dewey": "000",
-      "ein": "H7-FIELD-e3262fb1e4e2",
       "format": "H7",
-      "ready": true,
-      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/gutenberg_mcgruffey_2.h7"
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_am_gov",
       "title": "OpenStax American Government 3e",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-9f258a5dc751",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_anatomy",
       "title": "OpenStax Anatomy and Physiology 2e",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-4bb97ede79d7",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_astronomy",
       "title": "OpenStax Astronomy 2e",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-2d91eeca8088",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_college_algebra",
       "title": "OpenStax College Algebra 2e",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-b2973ba91189",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_health",
       "title": "OpenStax Health",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-e6201e4d5d9a",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_sociology",
       "title": "OpenStax Introduction to Sociology 3e",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-2b23532c4ed7",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_statistics",
       "title": "OpenStax Introductory Statistics 2e",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-387854235bed",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_economics",
       "title": "OpenStax Principles of Economics 3e",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-4e3025450297",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_psychology",
       "title": "OpenStax Psychology 2e",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-5d78b5c2f339",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "openstax_writing_guide",
       "title": "OpenStax Writing Guide with Handbook",
       "author": "",
       "dewey": "000",
-      "ein": "H7-FIELD-827618f24a0f",
       "format": "H7",
-      "ready": true,
-      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/openstax_writing_guide.h7"
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "wikibooks_french",
       "title": "Wikibooks French",
       "author": "",
       "dewey": "000",
-      "ein": "H7-FIELD-0be56bc66b0b",
       "format": "H7",
-      "ready": true,
-      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/wikibooks_french.h7"
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "wikibooks_elem_science",
       "title": "Wikibooks General Science",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-c2c01732eeb4",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "wikibooks_rhetoric",
       "title": "Wikibooks Rhetoric and Composition",
       "author": "",
       "dewey": "000",
-      "ein": "H7-FIELD-6b68ddd9906a",
       "format": "H7",
-      "ready": true,
-      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/wikibooks_rhetoric.h7"
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "wikibooks_spanish",
       "title": "Wikibooks Spanish",
       "author": "",
       "dewey": "000",
-      "ein": "H7-FIELD-ec1a7e3e02ca",
       "format": "H7",
-      "ready": true,
-      "path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/wikibooks_spanish.h7"
+      "h7c": null,
+      "cover": null,
+      "ready": false
     },
     {
       "id": "wikibooks_world_geography",
       "title": "Wikibooks World Regional Geography",
       "author": "",
       "dewey": null,
-      "ein": "H7-FIELD-9b7fa88f5d1d",
       "format": "catalog-entry",
-      "ready": false,
-      "path": ""
+      "h7c": null,
+      "cover": null,
+      "ready": false
     }
   ]
 }

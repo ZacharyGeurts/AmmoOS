@@ -46,6 +46,14 @@
       who: "human",
       text: "Ask Hostess what sites you visit most — procedural habits stay vault-local, never cloud.",
     },
+    {
+      who: "human",
+      text: "Stress and terror are discerned locally — corroborate before act; never illegal recreational shoot.",
+    },
+    {
+      who: "ai",
+      text: "External panic is held until IFF clears — signals directed from another being do not auto-escalate.",
+    },
   ];
 
   let tipIdx = 0;

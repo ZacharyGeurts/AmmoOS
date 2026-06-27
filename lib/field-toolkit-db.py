@@ -484,8 +484,32 @@ FIELD_DIE_SIGNAL_THRESHOLD = 6
 FIELD_DIE_NOISE_RATIO = 0.94
 
 
+def _instant_depth_snap_on_field_die() -> dict[str, Any]:
+    """Instant single-field-depth check — snap dimensional pits on field die."""
+    script = INSTALL / "lib" / "field-depth-singularizer.py"
+    if not script.is_file():
+        return {"ok": False, "error": "singularizer_missing", "instant": True}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("field_depth_die", script)
+        if not spec or not spec.loader:
+            return {"ok": False, "error": "singularizer_load_failed", "instant": True}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "instant_field_die_check"):
+            return mod.instant_field_die_check({})
+        if hasattr(mod, "snap_dimensional_pits"):
+            out = mod.snap_dimensional_pits(body={})
+            out["field_die"] = True
+            return out
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)[:120], "instant": True}
+    return {"ok": False, "error": "singularizer_no_hook", "instant": True}
+
+
 def field_die_roll(ip: str | None = None) -> dict[str, Any]:
     """AMOURANTHRTX Field Die — 94% noise, 6% signal. Signal may sever top hostile."""
+    depth_snap = _instant_depth_snap_on_field_die()
     roll = random.randint(1, 20)
     signal = roll <= FIELD_DIE_SIGNAL_THRESHOLD
     targets = _collect_target_rows()
@@ -498,6 +522,8 @@ def field_die_roll(ip: str | None = None) -> dict[str, Any]:
     out: dict[str, Any] = {
         "ok": True,
         "mode": "field_die",
+        "depth_snap": depth_snap,
+        "pits_snapped": int(depth_snap.get("pits_snapped") or 0),
         "roll": roll,
         "dice": f"d20={roll}",
         "signal": signal,

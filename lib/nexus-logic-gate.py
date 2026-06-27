@@ -92,23 +92,36 @@ def load_doctrine() -> dict[str, Any]:
     }
 
 
+def _ellie_authority() -> Any | None:
+    return _mod("ellie_authority", INSTALL / "lib" / "field-ellie-fier.py")
+
+
 def threat_warn_level() -> str:
-    """Equipment mandate — threat warnings always HIGH; no operator downgrade."""
-    if os.environ.get("NEXUS_THREAT_WARN_DOWNGRADE", "").strip().lower() in ("1", "true", "yes"):
-        return "high"
-    doc = load_doctrine()
-    floor = str((doc.get("threat_warnings") or {}).get("floor") or "high").lower()
-    env = os.environ.get("NEXUS_THREAT_WARN_LEVEL", floor).strip().lower()
-    if env in ("low", "medium", "calm", "off", "none"):
-        return "high"
-    return env if env else "high"
+    """Delegated to ELLIE — logic gate enforces ingress/egress only."""
+    ellie = _ellie_authority()
+    if ellie and hasattr(ellie, "threat_warn_level"):
+        try:
+            return str(ellie.threat_warn_level())
+        except Exception:
+            pass
+    cached = _load(STATE / "field-ellie-security-authority.json", {})
+    if cached.get("threat_warn_level"):
+        return str(cached["threat_warn_level"])
+    return "high"
 
 
 def threat_posture_floor() -> str:
-    """Minimum UI posture when threat warn level is high."""
-    if threat_warn_level() == "high":
-        return "alert"
-    return "watch"
+    """Delegated to ELLIE."""
+    ellie = _ellie_authority()
+    if ellie and hasattr(ellie, "threat_posture_floor"):
+        try:
+            return str(ellie.threat_posture_floor())
+        except Exception:
+            pass
+    cached = _load(STATE / "field-ellie-security-authority.json", {})
+    if cached.get("posture_floor"):
+        return str(cached["posture_floor"])
+    return "alert" if threat_warn_level() == "high" else "watch"
 
 
 def _mod(name: str, rel: Path) -> Any | None:

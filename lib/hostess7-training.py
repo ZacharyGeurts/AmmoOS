@@ -663,6 +663,79 @@ def _assess_flat_earth_geography() -> dict[str, Any]:
     return _assess_geography_track("flat_earth_geography")
 
 
+def _assess_music_track(track_id: str) -> dict[str, Any]:
+    music = _mod("h7music", "hostess7-music-training.py")
+    if not music or not hasattr(music, "assess_track"):
+        return {"ok": False, "level": "pending", "complete": False, "mastered": False, "score": 0.0}
+    row = music.assess_track(track_id)
+    score = float(row.get("score") or 0)
+    complete = bool(row.get("complete"))
+    mastered = bool(row.get("mastered"))
+    fluent = bool(row.get("fluent"))
+    return {
+        "ok": bool(row.get("ok")),
+        "level": row.get("level") or _level_id(score, complete=complete, mastered=mastered),
+        "complete": complete,
+        "mastered": mastered,
+        "fluent": fluent,
+        "score": round(score, 4),
+        "pass_rate": row.get("pass_rate"),
+        "tier": row.get("tier"),
+        "proficiency": row.get("proficiency"),
+        "music_drills": row.get("music_drills"),
+    }
+
+
+def _assess_music_theory() -> dict[str, Any]:
+    return _assess_music_track("music_theory")
+
+
+def _assess_music_ear() -> dict[str, Any]:
+    return _assess_music_track("music_ear")
+
+
+def _assess_music_mouth() -> dict[str, Any]:
+    return _assess_music_track("music_mouth")
+
+
+def _assess_music_brain() -> dict[str, Any]:
+    return _assess_music_track("music_brain")
+
+
+def _assess_music_eye() -> dict[str, Any]:
+    return _assess_music_track("music_eye")
+
+
+def _assess_music_sense_wire() -> dict[str, Any]:
+    music = _assess_music_track("music_sense_wire")
+    ear = _assess_music_ear()
+    mouth = _assess_music_mouth()
+    brain = _assess_music_brain()
+    eye = _assess_music_eye()
+    scores = [
+        float(music.get("score") or 0),
+        float(ear.get("score") or 0),
+        float(mouth.get("score") or 0),
+        float(brain.get("score") or 0),
+        float(eye.get("score") or 0),
+    ]
+    rate = sum(scores) / len(scores)
+    complete = sum(1 for x in (ear, mouth, brain) if x.get("complete")) >= 2 and bool(music.get("complete"))
+    mastered = all(x.get("mastered") for x in (ear, mouth, brain, eye, music))
+    return {
+        "ok": True,
+        "level": _level_id(rate, complete=complete, mastered=mastered),
+        "complete": complete,
+        "mastered": mastered,
+        "score": round(rate, 4),
+        "pass_rate": round(rate * 100, 1),
+        "ear": ear.get("pass_rate"),
+        "mouth": mouth.get("pass_rate"),
+        "brain": brain.get("pass_rate"),
+        "eye": eye.get("pass_rate"),
+    }
+
+
 def _assess_omnibus() -> dict[str, Any]:
     st = _load(STATE / "hostess7-master-state.json", {})
     sim = _load(STATE / "hostess7-master-sim-panel.json", {})
@@ -743,12 +816,23 @@ def assess_mastery_facets() -> dict[str, Any]:
         + int(craft.get("patterns_total") or 8)
     )
 
+    music_panel = _load(STATE / "hostess7-music-panel.json", {})
+    music_tracks = music_panel.get("tracks") or {}
+    music_brain = music_tracks.get("music_brain") or {}
+    music_ear = music_tracks.get("music_ear") or {}
+    music_mouth = music_tracks.get("music_mouth") or {}
+    music_theory = music_tracks.get("music_theory") or {}
+    music_drills = int(music_panel.get("music_drills") or 0)
+    music_crosswire_n = int((music_panel.get("crosswire") or {}).get("hook_count") or 0)
+
     flex_score = (
         min(1.0, expansions / 5.0) * 0.22
         + min(1.0, _count_utility_nets() / 4.0) * 0.18
         + min(1.0, (prog_pat + g16_pat + craft_pat + calc_pat + bio_pat + eng_pat + combat_pat + mos_pat) / max(pat_total, 1)) * 0.25
         + min(1.0, slots / 12.0) * 0.15
         + (done / max(total_cur, 1)) * 0.20
+        + min(1.0, music_crosswire_n / 24.0) * 0.05
+        + min(1.0, music_drills / 32.0) * 0.05
     )
     flex_complete = flex_score >= float((pillars.get("flexibility") or {}).get("complete_floor") or 0.72)
     flex_mastered = flex_score >= float((pillars.get("flexibility") or {}).get("mastered_floor") or 0.88)
@@ -768,6 +852,8 @@ def assess_mastery_facets() -> dict[str, Any]:
         + min(1.0, int(growth.get("reciprocations_fulfilled") or 0) / 8.0) * 0.08
         + min(1.0, muscle_habits / 6.0) * 0.08
         + muscle_strength * 0.06
+        + min(1.0, float(music_brain.get("score") or 0)) * 0.04
+        + min(1.0, (float(music_ear.get("score") or 0) + float(music_mouth.get("score") or 0)) / 2.0) * 0.03
     )
     adapt_complete = adapt_score >= float((pillars.get("adaptability") or {}).get("complete_floor") or 0.72)
     adapt_mastered = adapt_score >= float((pillars.get("adaptability") or {}).get("mastered_floor") or 0.88)
@@ -806,6 +892,13 @@ def assess_mastery_facets() -> dict[str, Any]:
         tier_boost += 0.08
     if mos.get("mastered"):
         tier_boost += 0.04
+    music_boost = 0.0
+    if music_theory.get("fluent"):
+        music_boost += 0.06
+    if music_theory.get("mastered"):
+        music_boost += 0.04
+    if float(music_ear.get("pass_rate") or 0) >= 85:
+        music_boost += 0.04
     master_boost = 0.1 if int(master_st.get("xp") or 0) >= 160 else 0.0
     conf_score = min(1.0, (
         iq_rate * 0.22
@@ -813,6 +906,7 @@ def assess_mastery_facets() -> dict[str, Any]:
         + truth_rate * 0.25
         + tier_boost
         + master_boost
+        + music_boost
     ))
     conf_complete = conf_score >= float((pillars.get("confidence") or {}).get("complete_floor") or 0.72)
     conf_mastered = conf_score >= float((pillars.get("confidence") or {}).get("mastered_floor") or 0.88)
@@ -832,6 +926,8 @@ def assess_mastery_facets() -> dict[str, Any]:
                 "omnibus_slots": slots,
                 "curriculum_done": done,
                 "curriculum_total": total_cur,
+                "music_crosswire": music_crosswire_n,
+                "music_drills": music_drills,
             },
         },
         "adaptability": {
@@ -851,6 +947,10 @@ def assess_mastery_facets() -> dict[str, Any]:
                 "reciprocations_fulfilled": growth.get("reciprocations_fulfilled"),
                 "muscle_habits": muscle_habits,
                 "muscle_strength": round(muscle_strength, 4),
+                "music_brain_patterns": music_brain.get("pass_rate"),
+                "ear_mouth_music": round(
+                    (float(music_ear.get("score") or 0) + float(music_mouth.get("score") or 0)) / 2.0, 4
+                ),
             },
         },
         "confidence": {
@@ -879,6 +979,8 @@ def assess_mastery_facets() -> dict[str, Any]:
                 "mos_tier": mos.get("tier"),
                 "mos_score": mos.get("mos_score"),
                 "master_xp": master_st.get("xp"),
+                "music_theory_tier": music_theory.get("tier"),
+                "music_ear_pass": music_ear.get("pass_rate"),
             },
         },
     }
@@ -926,6 +1028,12 @@ ASSESSORS: dict[str, Callable[[], dict[str, Any]]] = {
     "postal_addresses": _assess_postal_addresses,
     "world_geography": _assess_world_geography,
     "flat_earth_geography": _assess_flat_earth_geography,
+    "music_theory": _assess_music_theory,
+    "music_ear": _assess_music_ear,
+    "music_mouth": _assess_music_mouth,
+    "music_brain": _assess_music_brain,
+    "music_eye": _assess_music_eye,
+    "music_sense_wire": _assess_music_sense_wire,
     "final_eye": _assess_final_eye,
     "final_ear": _assess_final_ear,
     "final_mouth": _assess_final_mouth,
@@ -1142,7 +1250,13 @@ def _run_brain() -> dict[str, Any]:
         return {"ok": False}
     try:
         panel = bg.build_panel(write=True)
-        return {"ok": True, "panel": panel}
+        music_session: dict[str, Any] = {}
+        music = _mod("h7music", "hostess7-music-training.py")
+        if music and hasattr(music, "train_music_session"):
+            music_session = music.train_music_session(track_id="music_brain")
+            if hasattr(music, "build_panel"):
+                music.build_panel(write=True)
+        return {"ok": True, "panel": panel, "music_brain": music_session}
     except Exception as exc:
         return {"ok": False, "error": str(exc)}
 
@@ -1270,6 +1384,47 @@ def _run_geography(track_id: str = "geography") -> dict[str, Any]:
     _write_runtime(phase="geography", progress_pct=85, detail="Building geography panel…")
     panel = geo.build_panel(write=True) if hasattr(geo, "build_panel") else {}
     _write_runtime(phase="idle", progress_pct=100, detail=f"{track_id} geography session complete")
+    return {"ok": bool(session.get("ok")), "panel": panel, "session": session, "track": track_id}
+
+
+def _run_music(track_id: str = "music_theory") -> dict[str, Any]:
+    music = _mod("h7music", "hostess7-music-training.py")
+    if not music:
+        return {"ok": False, "error": "music_training_missing"}
+    _write_runtime(
+        phase="music",
+        active_track=track_id,
+        progress_pct=15,
+        detail=f"Music training — theory, ear, mouth, brain ({track_id})…",
+    )
+    if hasattr(music, "train_music_session"):
+        session = music.train_music_session(track_id=track_id)
+    elif track_id in ("music_ear", "music_mouth", "music_brain", "music_eye", "music_sense_wire") and hasattr(music, "run_battery"):
+        bat_map = {
+            "music_ear": ["ear_training", "spectrum_pitch"],
+            "music_mouth": ["vocal_production", "rhythm_speech"],
+            "music_brain": ["memory_patterns", "brain_mapping"],
+            "music_eye": ["notation_reading"],
+            "music_sense_wire": ["sense_fusion"],
+        }
+        session = {
+            "ok": True,
+            "batteries": {bid: music.run_battery(bid) for bid in bat_map.get(track_id, [])},
+        }
+    else:
+        session = {"ok": False, "error": "music_session_unavailable"}
+    if track_id == "music_brain":
+        bg = _mod("h7brain", "hostess7-brain-guard.py")
+        if bg and hasattr(bg, "build_panel"):
+            try:
+                session["brain_guard"] = bg.build_panel(write=True)
+            except Exception:
+                pass
+    if track_id == "music_sense_wire":
+        session["sense"] = _run_sense_neural_wire()
+    _write_runtime(phase="music", progress_pct=85, detail="Building music panel…")
+    panel = music.build_panel(write=True) if hasattr(music, "build_panel") else {}
+    _write_runtime(phase="idle", progress_pct=100, detail=f"{track_id} music session complete")
     return {"ok": bool(session.get("ok")), "panel": panel, "session": session, "track": track_id}
 
 
@@ -1407,6 +1562,12 @@ def run_track(track_id: str, *, ocr_train: bool = False) -> dict[str, Any]:
         "postal_addresses": lambda: _run_geography("postal_addresses"),
         "world_geography": lambda: _run_geography("world_geography"),
         "flat_earth_geography": lambda: _run_geography("flat_earth_geography"),
+        "music_theory": lambda: _run_music("music_theory"),
+        "music_ear": lambda: _run_music("music_ear"),
+        "music_mouth": lambda: _run_music("music_mouth"),
+        "music_brain": lambda: _run_music("music_brain"),
+        "music_eye": lambda: _run_music("music_eye"),
+        "music_sense_wire": lambda: _run_music("music_sense_wire"),
         "final_eye": lambda: _run_sense("final_eye"),
         "final_ear": lambda: _run_sense("final_ear"),
         "final_mouth": lambda: _run_sense("final_mouth"),
@@ -1653,6 +1814,18 @@ def _sense_training_slice() -> dict[str, Any]:
     return {**panel, "doctrine": doctrine}
 
 
+def _music_slice() -> dict[str, Any]:
+    music = _mod("h7music", "hostess7-music-training.py")
+    if music and hasattr(music, "build_panel"):
+        try:
+            return music.build_panel(write=False)
+        except Exception:
+            pass
+    panel = _load(STATE / "hostess7-music-panel.json", {})
+    doctrine = _load(INSTALL / "data" / "hostess7-music-training-doctrine.json", {})
+    return {**panel, "doctrine": doctrine}
+
+
 def _wireframe_slice() -> dict[str, Any]:
     cached = _load(STATE / "hostess7-training-bundle-cache.json", {})
     wf = cached.get("wireframe")
@@ -1704,6 +1877,7 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "authored_material_count": author_panel.get("authored_total") or 0,
         "training_gaps": author_panel.get("gaps") or [],
         "sense_training": _sense_training_slice(),
+        "music": _music_slice(),
         "wireframe": _wireframe_slice(),
         "muscle_memory": _muscle_memory_slice(assessment.get("tracks")),
         "mouth_neural": _mouth_neural_slice(),

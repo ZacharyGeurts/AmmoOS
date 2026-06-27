@@ -153,6 +153,44 @@
       ]
     },
     {
+      "id": "combinatronic_spider_wire",
+      "label": "Combinatronic spider wire — Ironclad outward lane priority",
+      "nets": [
+        {
+          "id": "spider_wire_neural",
+          "engine": "NewLatest/lib/field-combinatronic-spider-wire.py",
+          "lane": "Ironclad-Outward",
+          "kind": "simple_weighted",
+          "features": ["repetition", "coolness", "separation", "fan_in_penalty"],
+          "sovereign_time": true,
+          "outside_input": false
+        }
+      ]
+    },
+    {
+      "id": "universal_neural",
+      "label": "Universal Neural — one net, whole combinamatrix + g16 universal",
+      "authority": "field-universal-neural-doctrine.json",
+      "nets": [
+        {
+          "id": "combinamatrix_neural",
+          "engine": "NewLatest/lib/field-combinamatrix.py",
+          "lane": "Matrix-Pack",
+          "kind": "width_length_grid",
+          "features": ["facet_spread", "path_pct", "coolness", "wire_adjacency"],
+          "teach": "NewLatest/lib/field-universal-neural.py"
+        },
+        {
+          "id": "universal_combinamatrix",
+          "engine": "NewLatest/lib/field-universal-neural.py",
+          "lane": "One-Neural-Universal",
+          "curriculum": ["observe", "pack", "wire", "score", "universal", "emit"],
+          "truth_floor": 58,
+          "outputs": ["field-g16-universal-combinatronic.json", "field-combinamatrix.json"]
+        }
+      ]
+    },
+    {
       "id": "muscle_memory",
       "label": "Muscle memory — procedural operator habits",
       "authority": "hostess7-supreme-authority.json",
