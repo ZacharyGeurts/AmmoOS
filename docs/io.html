@@ -11,7 +11,7 @@
 <body>
   <nav>
     <div class="nav-top">
-      <div class="nav-brand"><strong>NEXUS-Shield Manual</strong> <span class="nav-version">v10.4.3</span></div>
+      <div class="nav-brand"><strong>NEXUS-Shield Manual</strong> <span class="nav-version">g16 1.0</span></div>
     </div>
     <div class="nav-links">
       <a href="index.html">Index</a>
@@ -79,6 +79,10 @@ nexus verify</code></pre>
     <tr><td><code>/api/gatekeeper</code></td><td>GET</td><td>Connection scoring, USER_OK / HARM</td></tr>
     <tr><td><code>/api/settings</code></td><td>GET/POST</td><td>Toggles → <code>settings.override</code></td></tr>
     <tr><td><code>/api/field-stack</code></td><td>GET</td><td>Queen + Final_Eye + meld posture</td></tr>
+    <tr><td><code>/api/field-host-desktop</code></td><td>GET</td><td>Host desktop apps, theme, startbar</td></tr>
+    <tr><td><code>/api/field-host-desktop/icon/&lt;token&gt;</code></td><td>GET</td><td>Resolved app icon bytes</td></tr>
+    <tr><td><code>/api/field-host-freeze</code></td><td>GET/POST</td><td>Host OS freeze (soft/mem/disk)</td></tr>
+    <tr><td><code>/api/field-underlay-surface</code></td><td>GET/POST</td><td>Drop / rise underlay beneath host</td></tr>
     <tr><td><code>/api/field-underlay</code></td><td>GET</td><td>Underlay F9 doctrine JSON</td></tr>
     <tr><td><code>/api/tristate-installer</code></td><td>GET/POST</td><td>2026 Tristate wizard API</td></tr>
     <tr><td><code>/api/hostess7/training/bundle</code></td><td>GET</td><td>Training tab data</td></tr>
@@ -88,7 +92,8 @@ nexus verify</code></pre>
   <h3>HTML pages</h3>
   <table>
     <tr><th>Path</th><th>File</th></tr>
-    <tr><td><code>/field</code></td><td><code>panel/threat-panel.html</code></td></tr>
+    <tr><td><code>/field</code></td><td><code>panel/field-desktop.html</code> — host desktop (first page)</td></tr>
+    <tr><td><code>/command</code></td><td><code>panel/threat-panel.html</code> — full C2</td></tr>
     <tr><td><code>/underlay-f9</code></td><td><code>panel/underlay-f9.html</code></td></tr>
     <tr><td><code>/tristate-installer</code></td><td>Redirect → underlay-f9 underlay sector</td></tr>
   </table>

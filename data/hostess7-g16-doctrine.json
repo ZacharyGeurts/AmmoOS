@@ -12,7 +12,11 @@
     {"id": "g16_cxx_std", "label": "gnu++26 / gnu17 defaults with field_opt profile", "files": ["Grok16/cmake/grok16-profile-field-opt.cmake"]},
     {"id": "g16_chips_accurate", "label": "CHIPS_G16_ACCURATE hot paths", "files": ["Queen/data/chips-g16-manifest.json", "Queen/cmake/g16-chips-field-opt.cmake"]},
     {"id": "g16_env_roots", "label": "GROK16_ROOT + G16_PREFIX — never hardcode paths", "files": ["Queen/scripts/g16-build.sh", "Queen/engine/queen-main.cpp"]},
-    {"id": "field_g16_contracts", "label": "field_g16.hh hot/cold attrs + magic section", "files": ["World_Redata/cpp/include/wrdt/field_g16.hh"]}
+    {"id": "field_g16_contracts", "label": "field_g16.hh hot/cold attrs + magic section", "files": ["World_Redata/cpp/include/wrdt/field_g16.hh"]},
+    {"id": "g16_linker_pass", "label": "g16-ld field linker — linux/android/darwin/windows", "files": ["Grok16/forge/g16-linker.py", "Grok16/data/g16-linker-doctrine.json"]},
+    {"id": "g16_ironclad_sanity", "label": "Ironclad + field sanity meld on every g16 build", "files": ["Grok16/forge/g16-ironclad.py", "Grok16/cmake/g16-field-mandate.cmake"]},
+    {"id": "g16_rtx_gate", "label": "queen_rtx / vulkan_rtx gated on RTX GPU", "files": ["Grok16/forge/rtx_gate.py", "Grok16/cmake/grok16-rtx-gate.cmake"]},
+    {"id": "nexus_g16_bridge", "label": "NEXUS stack optimized through Grok16", "files": ["NewLatest/lib/nexus-g16-bridge.py", "NewLatest/data/nexus-g16-compile-doctrine.json"]}
   ],
   "assistant_ceiling": {
     "label": "Generic coding assistant",

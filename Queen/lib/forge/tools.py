@@ -81,6 +81,8 @@ def run_inside(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
         "threat-panel-http.py", "threat-panel.sh", "nexus-common.sh",
         "connection-gatekeeper.py", "hostess7-command.py", "hostess7-autonomous.py",
         "field-queen-browser.py", "panel-browser.sh",
+        "field-host-desktop.py", "field-underlay-surface.py", "field-host-freeze.py",
+        "queen-panel-open.py", "field-queen-browser-open.py",
         "grok-build-bridge.py", "queen-build.py", "queen-field-boot.py", "queen-forge.py",
         "queen-hostess-brain.py", "queen-zocr.py",
     ]

@@ -1,6 +1,6 @@
 {
   "schema": "queen-field-tools/v1",
-  "updated": "2026-06-25T23:00:11Z",
+  "updated": "2026-06-27T00:18:42Z",
   "product": "Queen Field Tools",
   "doctrine": "All build tools are field-native \u2014 Grok16 g16 + field cmake + Queen forge. Hostess 7 invokes via ./Hostess7.sh queen-field-tools or /api/field-tools.",
   "queen_root": "/home/default/Desktop/SG/NewLatest/Queen",
@@ -65,7 +65,7 @@
       "label": "Grok16 Field CMake (configure + Ninja build)",
       "role": "g16 owns RTX cmake \u2014 replaces Queen cmake glue",
       "hostess_cmd": "./Hostess7.sh queen-field-build rtx",
-      "ready": false,
+      "ready": true,
       "optional": false,
       "forge": "lib/queen-forge.py",
       "replaces": "Grok16/scripts/field-cmake.sh"
@@ -87,7 +87,7 @@
       "label": "Field CMake build amouranth_engine",
       "role": "Incremental Ninja compile via g16",
       "hostess_cmd": "./Hostess7.sh queen-field-build compile",
-      "ready": false,
+      "ready": true,
       "optional": false,
       "forge": "lib/queen-forge.py",
       "replaces": "Grok16/scripts/field-cmake.sh"
@@ -153,7 +153,7 @@
       "label": "Stage inside deps (SDL, glm)",
       "role": "No network fetch \u2014 Queen/vendor/deps",
       "hostess_cmd": "pythong Queen/lib/queen-forge.py run deps",
-      "ready": true,
+      "ready": false,
       "optional": false,
       "forge": "lib/queen-forge.py",
       "replaces": "scripts/stage-deps-inside.sh"
@@ -164,7 +164,7 @@
       "label": "Queen-browser RTX exe",
       "role": "Sovereign browser \u2014 field_opt + mandate",
       "hostess_cmd": "bash Queen/build-all.sh",
-      "ready": false,
+      "ready": true,
       "optional": false,
       "forge": "lib/queen-forge.py",
       "replaces": "build.sh"
@@ -186,7 +186,7 @@
       "label": "RTX compile queen-browser",
       "role": "Ninja incremental via field cmake",
       "hostess_cmd": "pythong Queen/lib/queen-forge.py run rtx_build",
-      "ready": false,
+      "ready": true,
       "optional": false,
       "forge": "lib/queen-forge.py",
       "replaces": ""
@@ -219,7 +219,7 @@
       "label": "Field Technology full core pipeline",
       "role": "Optimized forge drop order",
       "hostess_cmd": "pythong Queen/lib/queen-forge.py run field_tech",
-      "ready": false,
+      "ready": true,
       "optional": false,
       "forge": "lib/queen-forge.py",
       "replaces": "build-all.sh"
@@ -277,7 +277,7 @@
         "label": "Grok16 Field CMake (configure + Ninja build)",
         "role": "g16 owns RTX cmake \u2014 replaces Queen cmake glue",
         "hostess_cmd": "./Hostess7.sh queen-field-build rtx",
-        "ready": false,
+        "ready": true,
         "optional": false,
         "forge": "lib/queen-forge.py",
         "replaces": "Grok16/scripts/field-cmake.sh"
@@ -299,7 +299,7 @@
         "label": "Field CMake build amouranth_engine",
         "role": "Incremental Ninja compile via g16",
         "hostess_cmd": "./Hostess7.sh queen-field-build compile",
-        "ready": false,
+        "ready": true,
         "optional": false,
         "forge": "lib/queen-forge.py",
         "replaces": "Grok16/scripts/field-cmake.sh"
@@ -369,7 +369,7 @@
         "label": "Stage inside deps (SDL, glm)",
         "role": "No network fetch \u2014 Queen/vendor/deps",
         "hostess_cmd": "pythong Queen/lib/queen-forge.py run deps",
-        "ready": true,
+        "ready": false,
         "optional": false,
         "forge": "lib/queen-forge.py",
         "replaces": "scripts/stage-deps-inside.sh"
@@ -380,7 +380,7 @@
         "label": "Queen-browser RTX exe",
         "role": "Sovereign browser \u2014 field_opt + mandate",
         "hostess_cmd": "bash Queen/build-all.sh",
-        "ready": false,
+        "ready": true,
         "optional": false,
         "forge": "lib/queen-forge.py",
         "replaces": "build.sh"
@@ -402,7 +402,7 @@
         "label": "RTX compile queen-browser",
         "role": "Ninja incremental via field cmake",
         "hostess_cmd": "pythong Queen/lib/queen-forge.py run rtx_build",
-        "ready": false,
+        "ready": true,
         "optional": false,
         "forge": "lib/queen-forge.py",
         "replaces": ""
@@ -441,7 +441,7 @@
         "label": "Field Technology full core pipeline",
         "role": "Optimized forge drop order",
         "hostess_cmd": "pythong Queen/lib/queen-forge.py run field_tech",
-        "ready": false,
+        "ready": true,
         "optional": false,
         "forge": "lib/queen-forge.py",
         "replaces": "build-all.sh"
@@ -496,6 +496,6 @@
       }
     ]
   },
-  "ready_count": 14,
+  "ready_count": 18,
   "tool_count": 19
 }

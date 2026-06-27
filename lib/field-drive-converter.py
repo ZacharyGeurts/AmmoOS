@@ -22,7 +22,20 @@ KILROY_FIELD = Path(os.environ.get("KILROY_FIELD_ROOT", "/media/default/KILROY_F
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -59,20 +72,48 @@ def _world_redata_root() -> Path | None:
     return None
 
 
+def _non_fielded():
+    py = INSTALL / "lib" / "field-non-fielded-safety.py"
+    if not py.is_file():
+        return None
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("field_non_fielded_safety", py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def defield_audit() -> dict[str, Any]:
+    nf = _non_fielded()
+    if nf:
+        out = nf.defield_audit()
+    else:
+        out = {"ok": False, "error": "non_fielded_module_missing"}
+    panel = _load(PANEL, {"schema": "field-drive-converter/v1"})
+    panel["defield_audit"] = out
+    panel["defield_ok"] = bool(out.get("defield_ok"))
+    panel["defield_at"] = _now()
+    _write_atomic(PANEL, panel)
+    return out
+
+
 def resolve_roots(*, for_convert: bool = False) -> list[Path]:
     if _virtual():
         roots = [KILROY_FIELD / "tmp" / "field-storage"]
-        if not for_convert:
-            # Scan-only: include harness state for visibility, never convert it.
-            roots.extend([STATE, KILROY_FIELD])
         return [p.resolve() for p in roots if p.is_dir()]
     doc = _load(DOCTRINE, {})
     raw = doc.get("storage", {}).get("default_scan_roots", [])
+    h7 = Path(os.environ.get("HOSTESS7_ROOT", str(SG / "Hostess7")))
+    team = Path(os.environ.get("HOSTESS7_TEAM_FIELD", str(h7 / "cache" / "fieldstorage")))
     mapping = {
         "NEXUS_STATE_DIR": STATE,
         "SG_ROOT": SG,
         "HOME": HOME,
         "KILROY_FIELD_ROOT": KILROY_FIELD,
+        "HOSTESS7_ROOT": h7,
+        "HOSTESS7_TEAM_FIELD": team,
     }
     out: list[Path] = []
     for item in raw:
@@ -252,7 +293,16 @@ def audit() -> dict[str, Any]:
     return rep
 
 
-def scan() -> dict[str, Any]:
+def scan(*, skip_defield_gate: bool = False) -> dict[str, Any]:
+    if not skip_defield_gate:
+        da = defield_audit()
+        if not da.get("defield_ok") and os.environ.get("NEXUS_DRIVE_CONVERTER_FORCE") != "1":
+            return {
+                "ok": False,
+                "error": "defield_required",
+                "doctrine": "Restore all field tails before WRDT scan — no field-in-field",
+                "defield_audit": da,
+            }
     roots = resolve_roots(for_convert=False)
     scans: list[dict[str, Any]] = []
     total_packable = 0
@@ -289,6 +339,15 @@ def scan() -> dict[str, Any]:
 
 
 def convert(*, apply: bool = False, confirm: bool = False) -> dict[str, Any]:
+    if apply:
+        da = defield_audit()
+        if not da.get("defield_ok") and os.environ.get("NEXUS_DRIVE_CONVERTER_FORCE") != "1":
+            return {
+                "ok": False,
+                "error": "defield_required",
+                "doctrine": "Restore all field tails before convert — no field-in-field",
+                "defield_audit": da,
+            }
     plan = _load(PLAN, {})
     if not plan.get("scans"):
         scan_out = scan()
@@ -341,7 +400,7 @@ def convert(*, apply: bool = False, confirm: bool = False) -> dict[str, Any]:
 
 
 def install_phase(*, apply: bool = False, confirm: bool = False) -> dict[str, Any]:
-    """Tristate install Transform — re-field, restore-out, audit, scan, optional convert."""
+    """Tristate install Transform — re-field, restore-out, defield, audit, scan, optional convert."""
     steps: list[dict[str, Any]] = []
     rf = refield()
     steps.append({"step": "refield", "ok": bool(rf.get("refield_ok")), "result": rf})
@@ -349,14 +408,19 @@ def install_phase(*, apply: bool = False, confirm: bool = False) -> dict[str, An
     steps.append({"step": "scan_restore", "ok": bool(rs.get("ok")), "result": rs})
     ro = restore_out(apply=apply, confirm=confirm) if apply else restore_out(apply=False)
     steps.append({"step": "restore_out", "ok": bool(ro.get("ok")), "result": ro})
-    a = audit()
-    steps.append({"step": "audit", "ok": bool(a.get("ok")), "result": a})
-    s = scan()
-    steps.append({"step": "scan", "ok": bool(s.get("ok")), "result": s})
+    da = defield_audit()
+    steps.append({"step": "defield_audit", "ok": bool(da.get("defield_ok")), "result": da})
+    a = {"ok": False, "skipped": True, "error": "defield_required"}
+    s = {"ok": False, "skipped": True, "error": "defield_required"}
     c = {"ok": True, "skipped": True}
-    if apply:
-        c = convert(apply=True, confirm=confirm)
-        steps.append({"step": "convert", "ok": bool(c.get("ok")), "result": c})
+    if da.get("defield_ok") or os.environ.get("NEXUS_DRIVE_CONVERTER_FORCE") == "1":
+        a = audit()
+        steps.append({"step": "audit", "ok": bool(a.get("ok")), "result": a})
+        s = scan(skip_defield_gate=True)
+        steps.append({"step": "scan", "ok": bool(s.get("ok")), "result": s})
+        if apply:
+            c = convert(apply=True, confirm=confirm)
+            steps.append({"step": "convert", "ok": bool(c.get("ok")), "result": c})
     doc = {
         "schema": "field-drive-converter-install/v1",
         "ts": _now(),
@@ -386,6 +450,8 @@ def posture() -> dict[str, Any]:
         "install_ready": bool(_load(PANEL, {}).get("scanned")),
         "refield_ready": bool(_load(PANEL, {}).get("refield_ok")),
         "restore_ready": bool(_load(PANEL, {}).get("restore_scanned")),
+        "defield_ok": bool(_load(PANEL, {}).get("defield_ok")),
+        "defield_audit": _load(PANEL, {}).get("defield_audit"),
         "convert_ready": bool(_load(PLAN, {}).get("totals", {}).get("packable_files")),
     }
 
@@ -400,6 +466,7 @@ def main() -> int:
         "audit": audit,
         "scan": scan,
         "scan-restore": scan_restore,
+        "defield-audit": defield_audit,
         "restore-out": lambda: restore_out(apply=apply, confirm=confirm),
         "convert": lambda: convert(apply=apply, confirm=confirm),
         "dry-run": lambda: convert(apply=False),

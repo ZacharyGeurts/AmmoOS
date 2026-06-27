@@ -33,7 +33,20 @@ _PROBE_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -552,6 +565,48 @@ def _package_digest(members: dict[str, Any], prev_chain: str) -> str:
     return hashlib.sha256(f"{prev_chain}|{material}".encode()).hexdigest()
 
 
+def _ironclad_sense_goldmine() -> dict[str, Any]:
+    """Plate → eye/ear/mouth receipts for sense package meld."""
+    ic_py = INSTALL / "lib" / "ironclad-immediate.py"
+    if ic_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("ironclad_immediate", ic_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_immediate"):
+                    doc = mod.read_immediate()
+                    gm = doc.get("plate_to_sense") or {}
+                    if gm:
+                        return gm
+                if hasattr(mod, "plate_to_sense_goldmine"):
+                    return mod.plate_to_sense_goldmine()
+        except Exception:
+            pass
+    cached = _load(STATE / "ironclad-immediate.json", {})
+    return cached.get("plate_to_sense") or {}
+
+
+def _sense_member_ironclad(member_key: str, goldmine: dict[str, Any]) -> dict[str, Any]:
+    mapping = {
+        "final_eye": "eye_neural",
+        "final_ear": "ear_neural",
+        "hostess7": "sense_neural_wire",
+    }
+    target = mapping.get(member_key)
+    members = goldmine.get("members") or {}
+    receipt = members.get(target) or {}
+    return {
+        "ironclad_grounded": bool(goldmine.get("ironclad_grounded")),
+        "goldmine": bool(goldmine.get("goldmine")),
+        "truth_percent": receipt.get("truth_percent") or goldmine.get("truth_percent"),
+        "citation": receipt.get("citation") or goldmine.get("citation"),
+        "read_first": bool(receipt.get("read_first") or goldmine.get("read_first")),
+        "wire": receipt.get("wire"),
+    }
+
+
 def _plate_meld_link() -> dict[str, Any]:
     rt = _load(STATE / "field-plate-meld-runtime.json", {})
     if rt.get("generation"):
@@ -607,6 +662,70 @@ def _verdict(members: dict[str, Any]) -> str:
     return "WATCH"
 
 
+def _witness_obs_field_stack() -> dict[str, Any]:
+    """OBS-native sense lane — Scene Guard, tree prune, posterity inspect, threat ledger witness."""
+    sg = _sg_root()
+    root = sg / "OBS-FieldVoiceFilter"
+    home = Path.home()
+    plugin_data = home / ".config/obs-studio/plugins/obs-field-voice-filter/data"
+    runtime_paths = [
+        plugin_data / "field-obs-stack.json",
+        root / "data/field-obs-stack.json",
+    ]
+    stack_doc: dict[str, Any] = {}
+    stack_path: Path | None = None
+    for p in runtime_paths:
+        if p.is_file():
+            stack_doc = _load(p, {})
+            stack_path = p
+            break
+
+    posterity_bridge: dict[str, Any] = {}
+    try:
+        import importlib.util
+        bridge_py = Path(__file__).resolve().parent / "obs-threat-posterity-bridge.py"
+        spec = importlib.util.spec_from_file_location("obs_threat_posterity_bridge", bridge_py)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            posterity_bridge = mod.panel_json()
+    except Exception:
+        posterity_bridge = {}
+
+    posterity_doc = root / "data/field-security-posterity-doctrine.json"
+    threat_ledger = plugin_data / "threat-ledger.jsonl"
+    if not threat_ledger.is_file():
+        threat_ledger = root / "data/threat-ledger.jsonl"
+
+    present = root.is_dir() and (root / "install.sh").is_file()
+    threat_summary = (posterity_bridge.get("threat_ledger") or {}).get("summary") or {}
+    live = bool(stack_doc) or bool(threat_summary.get("rows")) or posterity_bridge.get("live")
+    return {
+        "present": present,
+        "root": str(root) if present else None,
+        "install": "OBS-FieldVoiceFilter/install.sh",
+        "runtime_status": str(stack_path) if stack_path else None,
+        "stack": stack_doc,
+        "live": live,
+        "filters": [f.get("id") for f in (stack_doc.get("filters") or []) if isinstance(f, dict)],
+        "ai": stack_doc.get("ai") or {},
+        "bridges": stack_doc.get("bridges") or posterity_bridge.get("bridges") or {},
+        "defaults": stack_doc.get("defaults") or "clean_passthrough",
+        "posterity": posterity_bridge.get("posterity") or {},
+        "repeat_inspect": posterity_bridge.get("repeat_inspect") or {},
+        "threat_ledger_present": threat_ledger.is_file(),
+        "threat_summary": threat_summary,
+        "posterity_doctrine_sha256": (posterity_bridge.get("posterity") or {}).get("doctrine_sha256"),
+        "ironclad": {
+            "read_first": True,
+            "citation": "ironclad:sense:obs_posterity",
+            "wire": "scene_guard → field-tree-prune → field-security-posterity → threat-ledger.jsonl",
+            "ear_ref": (posterity_bridge.get("bridges") or {}).get("final_ear"),
+            "eye_ref": (posterity_bridge.get("bridges") or {}).get("final_eye"),
+        },
+    }
+
+
 def meld(*, link_plates: bool = True) -> dict[str, Any]:
     """Witness all sense products and write protected meld panel."""
     global _GEN
@@ -629,7 +748,27 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
             "zocr": _witness_zocr(zocr_root, eye_root),
             "world_redata": _witness_redata_live(wr_root),
             "hostess7": _witness_hostess7(h7_root),
+            "obs_field_stack": _witness_obs_field_stack(),
         }
+        goldmine = _ironclad_sense_goldmine()
+        mouth_receipt = (goldmine.get("members") or {}).get("mouth_neural") or {}
+        for key in ("final_eye", "final_ear", "hostess7"):
+            if members.get(key):
+                members[key]["ironclad"] = _sense_member_ironclad(key, goldmine)
+        if goldmine:
+            members.setdefault("mouth_neural", {
+                "present": True,
+                "role": "voice hemisphere — thought≠utterance",
+                "bridge": mouth_receipt.get("bridge") or "Final_Mouth/zocr_neural_assist.py",
+                "ironclad": {
+                    "ironclad_grounded": bool(goldmine.get("ironclad_grounded")),
+                    "goldmine": True,
+                    "truth_percent": mouth_receipt.get("truth_percent") or goldmine.get("truth_percent"),
+                    "citation": mouth_receipt.get("citation") or goldmine.get("citation"),
+                    "read_first": True,
+                    "wire": mouth_receipt.get("wire"),
+                },
+            })
         chain = _package_digest(members, prev_chain)
         verdict = _verdict(members)
         plate_link = _plate_meld_link() if link_plates else {}
@@ -679,6 +818,11 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
             "hostess_brain_source": (members["hostess7"].get("brain_roots") or {}).get("source"),
             "hostess_smart_one": (members["hostess7"].get("smart_one") or {}).get("label"),
             "hostess_brain_candidates": len(members["hostess7"].get("brain_candidates") or []),
+            "obs_field_live": members["obs_field_stack"].get("live"),
+            "obs_field_filters": len(members["obs_field_stack"].get("filters") or []),
+            "ironclad_goldmine_ok": bool(goldmine.get("goldmine_ok")),
+            "ironclad_grounded": bool(goldmine.get("ironclad_grounded")),
+            "plate_to_sense": bool(goldmine.get("goldmine")),
             "protected": True,
         }
 
@@ -709,11 +853,16 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
                 "queen_final_eye": "Queen/lib/queen_final_eye.py",
                 "queen_earball": "Queen/lib/queen-earball.py",
                 "queen_zocr": "Queen/lib/queen-zocr.py",
+                "queen_sense_neural": "Queen/lib/queen-sense-neural.py",
                 "world_redata_converter": "lib/field-drive-converter.py",
                 "hostess7_field": "lib/hostess7-field.sh",
                 "field_brain_sync": "lib/field-brain-sync.sh",
                 "heaven_hell": "lib/heaven-hell.py",
+                "ironclad_immediate": "lib/ironclad-immediate.py",
+                "obs_field_stack": "OBS-FieldVoiceFilter/install.sh",
             },
+            "ironclad_goldmine": goldmine,
+            "plate_to_sense": goldmine,
         }
 
         payload = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"

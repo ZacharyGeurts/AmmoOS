@@ -35,6 +35,11 @@ nexus_network_stack_pre_meld() {
 
 nexus_plate_meld_cycle() {
   nexus_plate_meld_enabled || return 0
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/ironclad-reality-field.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/ironclad-reality-field.sh"
+    nexus_ironclad_reality_field_cycle
+  fi
   nexus_network_stack_pre_meld
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-sense-package.sh" ]]; then
     # shellcheck source=/dev/null

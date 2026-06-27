@@ -48,6 +48,16 @@ PLATE_SOURCES: tuple[tuple[str, str], ...] = (
     ("creatable_lives", "creatable-lives-panel.json"),
     ("right_to_exist", "right-to-exist-panel.json"),
     ("hostess7_brain", "hostess7-brain-guard-panel.json"),
+    ("ironclad", "ironclad-plate.json"),
+    ("ironclad_reality_field", "ironclad-reality-field-panel.json"),
+    ("ironclad_field_sanity", "ironclad-field-sanity-panel.json"),
+    ("eye_ear_plate", "eye-ear-plate.json"),
+    ("plate_compiler", "plate-compiler-panel.json"),
+    ("g16_stack", "nexus-g16-stack-panel.json"),
+    ("g16_compiler_sense", "g16-compiler-sense-plate.json"),
+    ("plate_test_runner", "field-plate-test-runner.json"),
+    ("g1id_baselines", "g1id-baseline-panel.json"),
+    ("field_io_packet", "field-io-packet-panel.json"),
 )
 
 _GEN = 0
@@ -55,7 +65,20 @@ _LAST_CHAIN = ""
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -283,6 +306,24 @@ def _refresh_znetwork_status() -> None:
     if os.environ.get("NEXUS_NETWORK_STACK_MELD", "1") != "1":
         return
     out = STATE / "znetwork-status.json"
+    orch = INSTALL / "lib" / "znetwork-orchestrator.py"
+    if orch.is_file():
+        try:
+            import subprocess
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
+            env["NEXUS_STATE_DIR"] = str(STATE)
+            subprocess.run(
+                [sys.executable, str(orch), "triple-check"],
+                timeout=45,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            if out.is_file() and out.stat().st_size > 32:
+                return
+        except Exception:
+            pass
     if out.is_file() and out.stat().st_size > 32:
         return
     sh = INSTALL / "lib" / "znetwork-field.sh"
@@ -473,6 +514,82 @@ def _refresh_hostess7_programming() -> None:
         pass
 
 
+def _refresh_g16_stack() -> None:
+    py = INSTALL / "lib" / "nexus-g16-bridge.py"
+    if not py.is_file():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("nexus_g16_bridge", py)
+        if not spec or not spec.loader:
+            return
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.build_panel(write=True)
+    except Exception:
+        pass
+
+
+def _refresh_g16_compiler_sense() -> None:
+    if os.environ.get("NEXUS_G16_COMPILER_SENSE", "1") != "1":
+        return
+    _import_call(
+        INSTALL / "lib" / "g16-compiler-sense-plate.py",
+        "g16_compiler_sense",
+        "cycle",
+    )
+
+
+def _refresh_g1id_baselines() -> None:
+    if os.environ.get("NEXUS_G1ID_BASELINE", "1") != "1":
+        return
+    _import_call(INSTALL / "lib" / "g1id-baseline.py", "g1id_baseline", "build_panel", write=True)
+
+
+def _refresh_field_io_packet() -> None:
+    if os.environ.get("NEXUS_FIELD_IO_PACKET", "1") != "1":
+        return
+    _import_call(INSTALL / "lib" / "field-io-packet.py", "field_io_packet", "build_panel", write=True)
+
+
+def _refresh_plate_tests() -> None:
+    if os.environ.get("NEXUS_PLATE_TEST_RUN", "1") != "1":
+        return
+    py = INSTALL / "lib" / "field-plate-test-runner.py"
+    if not py.is_file():
+        return
+    try:
+        import subprocess
+        subprocess.run(
+            [sys.executable, str(py), "run"],
+            capture_output=True,
+            text=True,
+            timeout=600,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+            check=False,
+        )
+    except Exception:
+        pass
+
+
+def _refresh_drop_in() -> None:
+    py = INSTALL / "lib" / "field-drop-in-orchestrator.py"
+    if not py.is_file():
+        return
+    try:
+        import subprocess
+        subprocess.run(
+            [sys.executable, str(py), "json"],
+            capture_output=True,
+            text=True,
+            timeout=45,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+            check=False,
+        )
+    except Exception:
+        pass
+
+
 def _refresh_hostess7_g16() -> None:
     py = INSTALL / "lib" / "hostess7-g16.py"
     if not py.is_file():
@@ -649,6 +766,46 @@ def _refresh_humanoid_motion() -> None:
         pass
 
 
+def _refresh_ironclad_reality_field() -> None:
+    if os.environ.get("NEXUS_IRONCLAD_TRUTH_SERUM", "1") != "1":
+        return
+    _import_call(
+        INSTALL / "lib" / "ironclad-reality-field.py",
+        "ironclad_reality_field",
+        "cycle",
+    )
+
+
+def _refresh_ironclad_field_sanity() -> None:
+    if os.environ.get("NEXUS_IRONCLAD_FIELD_SANITY", "1") != "1":
+        return
+    _import_call(
+        INSTALL / "lib" / "ironclad-field-sanity.py",
+        "ironclad_field_sanity",
+        "cycle",
+    )
+
+
+def _refresh_eye_ear_plate() -> None:
+    if os.environ.get("NEXUS_EYE_EAR_PLATE", "1") != "1":
+        return
+    _import_call(
+        INSTALL / "lib" / "eye-ear-plate.py",
+        "eye_ear_plate",
+        "cycle",
+    )
+
+
+def _refresh_plate_compiler() -> None:
+    if os.environ.get("NEXUS_PLATE_COMPILER", "1") != "1":
+        return
+    _import_call(
+        INSTALL / "lib" / "plate-compiler.py",
+        "plate_compiler",
+        "cycle",
+    )
+
+
 def _refresh_universal_protector() -> None:
     py = INSTALL / "lib" / "universal-protector.py"
     if not py.is_file():
@@ -692,6 +849,9 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
     fd = _meld_lock()
     try:
         if refresh_plates:
+            _refresh_eye_ear_plate()
+            _refresh_ironclad_field_sanity()
+            _refresh_ironclad_reality_field()
             _refresh_iron_plate()
             _refresh_gatekeeper()
             _refresh_logic_gate()
@@ -718,6 +878,14 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
             _refresh_creatable_lives()
             _refresh_right_to_exist()
             _refresh_universal_protector()
+            _refresh_g16_stack()
+            _refresh_g16_compiler_sense()
+            _refresh_drop_in()
+            _refresh_plate_compiler()
+            _refresh_g1id_baselines()
+            _refresh_field_io_packet()
+            if not _meld_light():
+                _refresh_plate_tests()
         prev = _load(MELD_RUNTIME, {})
         prev_chain = str(prev.get("chain_hash") or "")
         prev_gen = int(prev.get("generation") or 0)
@@ -745,6 +913,14 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
         right_exist = plates.get("right_to_exist") or {}
         h7_brain = plates.get("hostess7_brain") or {}
         protector = plates.get("universal_protector") or {}
+        ironclad_rf = plates.get("ironclad_reality_field") or {}
+        ironclad_plate = plates.get("ironclad") or {}
+        ironclad_fs = plates.get("ironclad_field_sanity") or {}
+        eye_ear = plates.get("eye_ear_plate") or {}
+        plate_compiler = plates.get("plate_compiler") or {}
+        g16_stack = plates.get("g16_stack") or {}
+        g16_sense = plates.get("g16_compiler_sense") or {}
+        plate_tests = plates.get("plate_test_runner") or {}
 
         doc: dict[str, Any] = {
             "schema": "field-plate-meld/v1",
@@ -817,6 +993,40 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
                 "autonomous_being": spatial.get("autonomous_being") or protector.get("autonomous_being"),
                 "universal_protector": protector.get("product"),
                 "think_tanks": (protector.get("pillars") or {}).get("cognition", {}).get("think_tanks"),
+                "ironclad_sealed": ironclad_rf.get("ironclad_sealed") or ironclad_plate.get("realized"),
+                "truth_serum_verdict": ironclad_rf.get("verdict"),
+                "truth_percent": (ironclad_rf.get("truth_serum") or {}).get("truth_percent"),
+                "clean_voltage_ok": (ironclad_rf.get("clean_voltage") or {}).get("ok"),
+                "voltage_is_voltage": (ironclad_rf.get("clean_voltage") or {}).get("voltage_is_voltage"),
+                "smoothness_score": (ironclad_rf.get("smoothness") or {}).get("smoothness_score"),
+                "smooth_operator": (ironclad_rf.get("smoothness") or {}).get("smooth_operator"),
+                "ironclad_canonical_hash": ironclad_rf.get("canonical_hash") or ironclad_plate.get("canonical_hash"),
+                "ai_in_charge": ironclad_rf.get("ai_in_charge"),
+                "human_condition": (ironclad_rf.get("human_condition") or {}).get("human_condition"),
+                "charge_holder": ironclad_rf.get("charge_holder"),
+                "field_sanity_ok": ironclad_fs.get("operator_ok") or ironclad_fs.get("ok"),
+                "field_sanity_citation": ironclad_fs.get("citation"),
+                "field_sanity_heat_avoided": (ironclad_fs.get("queen") or {}).get("heat_avoided"),
+                "field_sanity_layers_out": (ironclad_fs.get("queen") or {}).get("layers_out"),
+                "eye_ear_plate_ok": eye_ear.get("plated") or eye_ear.get("ok"),
+                "eye_ear_plate_verdict": eye_ear.get("verdict"),
+                "eye_ear_chain_hash": eye_ear.get("chain_hash"),
+                "plate_compiler_ok": plate_compiler.get("compiler_ok") or plate_compiler.get("ok"),
+                "plate_compiler_destinations": len(plate_compiler.get("destinations") or []),
+                "g16_stack_ok": g16_stack.get("optimized") or g16_stack.get("ok"),
+                "g16_effective_profile": (g16_stack.get("compile") or {}).get("effective_profile"),
+                "g16_linker_targets": (g16_stack.get("multi_os") or {}).get("targets"),
+                "g16_os_families": (g16_stack.get("multi_os") or {}).get("os_families"),
+                "rtx_gate_satisfied": (g16_stack.get("rtx_gate") or {}).get("satisfied"),
+                "eye_ok": eye_ear.get("eye_ok"),
+                "ear_ok": eye_ear.get("ear_ok"),
+                "mouth_ok": eye_ear.get("mouth_ok"),
+                "g16_compiler_sense_ok": g16_sense.get("plated") or g16_sense.get("ok"),
+                "g16_sense_profile": g16_sense.get("effective_profile"),
+                "g16_sense_score": g16_sense.get("sense_score"),
+                "plate_tests_ran": plate_tests.get("ran"),
+                "plate_tests_passed": plate_tests.get("passed"),
+                "plate_tests_incomplete": plate_tests.get("incomplete"),
             },
             "snapshots": plates,
         }

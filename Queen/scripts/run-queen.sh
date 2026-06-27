@@ -23,7 +23,9 @@ export FINAL_EAR_ROOT="${FINAL_EAR}"
 export QUEEN_SOVEREIGN=1
 export NEXUS_QUEEN_SOVEREIGN=1
 export QUEEN_WORLD_ONLY=1
-export NEXUS_EMBED_PANEL_IN_ENGINE="${NEXUS_EMBED_PANEL_IN_ENGINE:-1}"
+export NEXUS_EMBED_PANEL_IN_ENGINE="${NEXUS_EMBED_PANEL_IN_ENGINE:-0}"
+export QUEEN_WORLD_PORT="${QUEEN_WORLD_PORT:-9481}"
+export QUEEN_BROWSER_URL="${QUEEN_BROWSER_URL:-http://127.0.0.1:${QUEEN_WORLD_PORT}/world/browser.html}"
 export NEXUS_PANEL_AUTO_OPEN=0
 export NEXUS_NO_TRAY=1
 export QUEEN_GROK_BUILD=1
@@ -31,7 +33,6 @@ export QUEEN_GROK_BUILD_SECURE=1
 export NEXUS_AI_SECURE_CHANNEL=1
 export QUEEN_AI_TELEMETRY_OK=1
 export QUEEN_FIELD_GPU=1
-export QUEEN_WORLD_PORT="${QUEEN_WORLD_PORT:-9481}"
 export HOSTESS7_ROOT="${HOSTESS7_ROOT:-${SG}/Hostess7}"
 export HOSTESS7_AI_PRIMARY="${HOSTESS7_AI_PRIMARY:-1}"
 export HOSTESS7_AI_COMMUNIQUE="${HOSTESS7_AI_COMMUNIQUE:-1}"
@@ -94,14 +95,79 @@ if [[ "${SG_FIELD_VIRUS_GUARD:-1}" == "1" && -f "${ROOT}/lib/queen-field-virus.p
   fi
 fi
 
-# Queen World auto-boots Grok16 + RTX secure space — browser load seals the rest.
-pythong "${ROOT}/lib/queen-world.py" --daemon
+# NEXUS field panel (:9477) — Start tab + field C2; queen-world alone is not enough.
+NEXUS_ROOT="${ROOT}/.."
+export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${NEXUS_ROOT}}"
+export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${NEXUS_ROOT}/.nexus-state}"
+export NEXUS_FIELD_STANDALONE=1
+export NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
 
-if [[ ! -x "${BIN}" ]]; then
-  echo "Queen OS → http://127.0.0.1:${QUEEN_WORLD_PORT}/world/ (load page = full boot)"
-  echo "No operator setup — Grok16 + RTX secure space seal on load."
-  echo "Build RTX exe: ${ROOT}/scripts/g16-build.sh"
-  exec pythong "${ROOT}/lib/queen-world.py" --host 127.0.0.1 --port "${QUEEN_WORLD_PORT}"
+ensure_nexus_panel() {
+  local port="${NEXUS_THREAT_PANEL_PORT}"
+  local url="http://127.0.0.1:${port}/field"
+  if curl -sf --connect-timeout 1 "$url" >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Starting NEXUS field panel on :${port}…"
+  if [[ -x "${NEXUS_ROOT}/nexus.sh" ]]; then
+    NEXUS_ZNETWORK_PROMPT=0 bash "${NEXUS_ROOT}/nexus.sh" --no-browser --no-tray \
+      >>"${NEXUS_STATE_DIR}/panel-boot.log" 2>&1 || true
+  fi
+  for _ in $(seq 1 40); do
+    curl -sf --connect-timeout 1 "$url" >/dev/null 2>&1 && return 0
+    sleep 0.25
+  done
+  echo "WARN: NEXUS panel unavailable — sovereign start page on :${QUEEN_WORLD_PORT}"
+  export QUEEN_BROWSER_START="http://127.0.0.1:${QUEEN_WORLD_PORT}/world/queen-start.html"
+  return 1
+}
+
+ensure_nexus_panel || true
+
+export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/field}"
+export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/field}"
+export NEXUS_FIELD_BROWSER_QUEEN="${NEXUS_FIELD_BROWSER_QUEEN:-1}"
+
+mkdir -p "${NEXUS_STATE_DIR}/imports"
+chmod 700 "${NEXUS_STATE_DIR}" "${NEXUS_STATE_DIR}/imports" 2>/dev/null || true
+
+if [[ -f "${ROOT}/scripts/queen-icon-kit.py" ]]; then
+  pythong "${ROOT}/scripts/queen-icon-kit.py" >/dev/null 2>&1 || true
 fi
 
-exec "${BIN}" --sovereign --queen "$@"
+# Queen Web Browser shell — HTTP surface at browser.html (no RTX boot / DVD splash).
+export QUEEN_WEB_SHELL="${QUEEN_WEB_SHELL:-1}"
+export QUEEN_SKIP_RTX_BOOT="${QUEEN_SKIP_RTX_BOOT:-1}"
+export NEXUS_EMBED_PANEL_IN_ENGINE=0
+
+pythong "${ROOT}/lib/queen-world.py" --daemon
+
+open_web_shell() {
+  local url="${QUEEN_BROWSER_URL}"
+  echo "Queen Web Browser → ${url}"
+  echo "(RTX boot canvas disabled — use QUEEN_RTX_CHROME=1 to opt into legacy RTX chrome)"
+  if command -v firefox >/dev/null 2>&1; then
+    exec firefox --new-window "${url}" --class QueenBrowser "$@"
+  fi
+  if command -v google-chrome >/dev/null 2>&1; then
+    exec google-chrome --app="${url}" --class=QueenBrowser "$@"
+  fi
+  if command -v chromium >/dev/null 2>&1; then
+    exec chromium --app="${url}" --class=QueenBrowser "$@"
+  fi
+  if command -v xdg-open >/dev/null 2>&1; then
+    exec xdg-open "${url}"
+  fi
+  echo "No system browser — serving shell only. Open: ${url}"
+  exec pythong "${ROOT}/lib/queen-world.py" --host 127.0.0.1 --port "${QUEEN_WORLD_PORT}"
+}
+
+if [[ "${QUEEN_WEB_SHELL}" == "1" && "${QUEEN_RTX_CHROME:-0}" != "1" ]]; then
+  open_web_shell
+fi
+
+if [[ ! -x "${BIN}" ]]; then
+  open_web_shell
+fi
+
+exec "${BIN}" --sovereign --queen --extended-field "--url=${QUEEN_BROWSER_URL}" "$@"

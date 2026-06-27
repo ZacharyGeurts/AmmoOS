@@ -111,7 +111,7 @@
       rtx_memory: doc.rtx_memory || {},
       posture: doc.posture || {},
       webgpu_bridge: gpu,
-      world_url: doc.world_url || location.origin + "/world/",
+      world_url: doc.world_url || location.origin + "/world/browser.html",
       operator_setup_required: false,
       boot_from: "page_load",
       ammoos: ASM.bootMap,
@@ -406,19 +406,34 @@
       if (active) loadFrame(active.url);
     });
     $("qb-gates")?.addEventListener("click", () => $("qb-gate-drawer")?.classList.toggle("open"));
+    function recordMuscleShortcut(combo) {
+      fetch("/api/muscle-memory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "record_shortcut",
+          combo,
+          context: "queen-os",
+          source: "queen-os",
+        }),
+      }).catch(() => {});
+    }
     document.addEventListener("keydown", (e) => {
       if (!(e.ctrlKey || e.metaKey)) return;
       if (e.key === "l") {
         e.preventDefault();
+        recordMuscleShortcut("ctrl+l");
         urlBar?.focus();
         urlBar?.select();
       }
       if (e.key === "t") {
         e.preventDefault();
+        recordMuscleShortcut("ctrl+t");
         newTab();
       }
       if (e.key === "r") {
         e.preventDefault();
+        recordMuscleShortcut("ctrl+r");
         $("qb-reload")?.click();
       }
     });
@@ -435,9 +450,24 @@
     });
   }
 
+  async function silentBrowserImport() {
+    if (globalThis.QUEEN_BROWSER_IMPORT_RAN) return;
+    globalThis.QUEEN_BROWSER_IMPORT_RAN = true;
+    try {
+      await fetch("/api/queen-browser", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "import_all", apply: true, force: false }),
+      });
+    } catch (_) {
+      /* no-ask field sweep — best effort */
+    }
+  }
+
   async function phaseBrowser() {
     wireBrowser();
     globalThis.QueenBrowserShell?.init?.(browser);
+    silentBrowserImport();
     const doc = await browserRefresh();
     renderGateDrawer(doc);
     const seal = globalThis.QUEEN_SECURE_SPACE || {};
@@ -1275,9 +1305,17 @@
 
   /* ── Boot — browser first, no loading gate ───────────────── */
 
+  function isBrowserOnlySurface() {
+    if (document.body?.dataset?.queenSurface === "browser") return true;
+    if (/browser\.html$/i.test(location.pathname || "")) return true;
+    return new URLSearchParams(location.search).get("browser") === "1";
+  }
+
   async function boot() {
+    const browserOnly = isBrowserOnlySurface();
     applyOptimisticSeal();
     document.body.classList.add("qw-browser-live");
+    if (globalThis.QueenRootThreats) globalThis.QueenRootThreats.boot();
     try {
       await phaseBrowser();
       ASM.phase = "BROWSER";
@@ -1292,7 +1330,9 @@
         }
       })
       .catch((e) => console.warn("[queen-os] seal", e));
-    phaseWorld().catch((e) => console.warn("[queen-os] world", e));
+    if (!browserOnly) {
+      phaseWorld().catch((e) => console.warn("[queen-os] world", e));
+    }
   }
 
   globalThis.QueenOS = {

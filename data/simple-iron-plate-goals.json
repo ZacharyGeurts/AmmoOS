@@ -13,6 +13,22 @@
       "tech": "field-plate-meld.py · flock+fsync+chain-hash"
     },
     {
+      "id": "g1id_immoveable_baselines",
+      "priority": 1,
+      "effectiveness": 0.97,
+      "label": "G1ID immoveable baselines — sovereign time meld, chmod 0444",
+      "check": "g1id_baselines_ok",
+      "tech": "g1id-baseline.py · g1id-format.py · data/baselines/"
+    },
+    {
+      "id": "field_io_truth_gate",
+      "priority": 1,
+      "effectiveness": 0.97,
+      "label": "Field I/O packet — sovereign in, conversation stream out only",
+      "check": "field_io_truth_gate_pass",
+      "tech": "field-io-packet.py · ironclad + sanity + baselines gate"
+    },
+    {
       "id": "route_word_hot_path",
       "priority": 2,
       "effectiveness": 0.96,

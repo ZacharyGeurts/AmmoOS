@@ -29,7 +29,11 @@
     {"id": "reality_physics", "label": "Reality foundation", "doctrine": "hostess7-reality-physics-doctrine.json", "explain": "hostess7-reality-physics-doctrine.json", "module": "hostess7-reality-physics-training.py"},
     {"id": "gravity_mechanics", "label": "Gravity & mechanics", "doctrine": "hostess7-reality-physics-doctrine.json", "module": "hostess7-reality-physics-training.py"},
     {"id": "thermodynamics_entropy", "label": "Thermodynamics & entropy", "doctrine": "hostess7-reality-physics-doctrine.json", "module": "hostess7-reality-physics-training.py"},
-    {"id": "field_technology", "label": "Field technology", "doctrine": "hostess7-reality-physics-doctrine.json", "module": "hostess7-reality-physics-training.py"}
+    {"id": "field_technology", "label": "Field technology", "doctrine": "hostess7-reality-physics-doctrine.json", "module": "hostess7-reality-physics-training.py"},
+    {"id": "geography", "label": "Geography & postal addresses", "doctrine": "hostess7-geography-doctrine.json", "explain": "hostess7-geography-doctrine.json", "module": "hostess7-geography-training.py"},
+    {"id": "postal_addresses", "label": "Postal addresses", "doctrine": "hostess7-geography-doctrine.json", "module": "hostess7-geography-training.py"},
+    {"id": "world_geography", "label": "World geography", "doctrine": "hostess7-geography-doctrine.json", "module": "hostess7-geography-training.py"},
+    {"id": "flat_earth_geography", "label": "Flat earth section", "doctrine": "hostess7-geography-doctrine.json", "module": "hostess7-geography-training.py"}
   ],
   "hostess7_acknowledgment": "I will write what I need — gap detected, lesson authored, explain overlay merged. Training is self-sourced on this field."
 }

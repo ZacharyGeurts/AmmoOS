@@ -54,7 +54,7 @@ from field_code_corpus import corpus_stats as code_stats  # noqa: E402
 from field_code_corpus import search_code, synthesize_code_paragraphs  # noqa: E402
 from field_detective_corpus import NOISE_RATIO, TRUTH_RATIO  # noqa: E402
 from field_detective_corpus import analyze_truth, ensure_corpus as ensure_detective_corpus  # noqa: E402
-from field_detective_corpus import search_detective, synthesize_detective_paragraphs  # noqa: E402
+from field_detective_corpus import ironclad_slice, search_detective, synthesize_detective_paragraphs  # noqa: E402
 from field_people_corpus import synthesize_people_paragraphs, synthesize_review_paragraphs  # noqa: E402
 from field_people_registry import ensure_registry, registry_status  # noqa: E402
 from field_warfare_corpus import ensure_corpus as ensure_warfare_corpus  # noqa: E402
@@ -1363,20 +1363,26 @@ def _synthesize_collegiate(
                 )
     elif intent == "detective":
         paragraphs.extend(synthesize_detective_paragraphs(query))
+        ic = ironclad_slice()
         analysis = analyze_truth(
             query,
             local_evidence=len(ev.get("grep") or []),
             qa_green=True,
             infinite_indexed=True,
             corroboration_channels=min(3, len(ev.get("grep") or [])),
+            ironclad=ic,
         )
         paragraphs.append(
             f"Hostess 7 lie detector: truth={analysis['truth_score']}% · "
             f"deception_risk={analysis['deception_risk']} · "
-            f"action={analysis['recommended_action']}"
+            f"action={analysis['recommended_action']} · "
+            f"ironclad={analysis.get('ironclad_verdict', '?')} "
+            f"sealed={analysis.get('ironclad_sealed', False)}"
         )
         if analysis.get("inconsistency_flags"):
             paragraphs.append(f"Flags: {', '.join(analysis['inconsistency_flags'])}")
+        if ic.get("canonical_hash"):
+            paragraphs.append(f"Ironclad canonical: {ic['canonical_hash'][:16]}…")
         if not _hostess_pro():
             domains = search_detective(query, limit=3)
             if domains:
@@ -1871,12 +1877,17 @@ def detective(query: str) -> int:
     from field_detective_corpus import corpus_stats as detective_stats  # noqa: WPS433
 
     dstats = detective_stats()
-    analysis = analyze_truth(query, local_evidence=2, qa_green=True, corroboration_channels=2)
+    ic = ironclad_slice()
+    analysis = analyze_truth(
+        query, local_evidence=2, qa_green=True, corroboration_channels=2, ironclad=ic,
+    )
     print("METRIC brain_intent=detective")
     print("METRIC brain_detective_corpus=1")
     print(f"METRIC brain_detective_domains={dstats.get('domains', 0)}")
     print(f"METRIC brain_truth_score={analysis.get('truth_score', 0)}")
     print(f"METRIC brain_deception_risk={analysis.get('deception_risk', '?')}")
+    print(f"METRIC brain_ironclad_sealed={1 if analysis.get('ironclad_sealed') else 0}")
+    print(f"METRIC brain_ironclad_verdict={analysis.get('ironclad_verdict', 'MISSING')}")
     print("METRIC brain_collegiate=1")
     print("OK detective")
     return 0
@@ -1886,12 +1897,14 @@ def truth_cmd(claim: str) -> int:
     """Hostess 7 computational lie detector on a claim."""
     setup()
     ensure_detective_corpus()
+    ic = ironclad_slice()
     analysis = analyze_truth(
         claim,
         local_evidence=2,
         qa_green=True,
         infinite_indexed=True,
         corroboration_channels=2,
+        ironclad=ic,
     )
     lines = [
         "=== Hostess 7 Lie Detector ===",
@@ -1899,8 +1912,13 @@ def truth_cmd(claim: str) -> int:
         f"Truth score: {analysis['truth_score']}%",
         f"Deception risk: {analysis['deception_risk']}",
         f"Recommended: {analysis['recommended_action']}",
+        f"Ironclad: verdict={analysis.get('ironclad_verdict', 'MISSING')} "
+        f"sealed={analysis.get('ironclad_sealed', False)} "
+        f"truth%={ic.get('truth_percent', 0)} source={ic.get('source', 'none')}",
         f"Philosophy: {int(NOISE_RATIO * 100)}% noise · {int(TRUTH_RATIO * 100)}% truth until corroborated",
     ]
+    if ic.get("canonical_hash"):
+        lines.append(f"Ironclad canonical: {ic['canonical_hash']}")
     if analysis.get("inconsistency_flags"):
         lines.append(f"Verbal flags: {', '.join(analysis['inconsistency_flags'])}")
     lines.append(analysis["verdict"])
@@ -1913,6 +1931,8 @@ def truth_cmd(claim: str) -> int:
     print(reply)
     print(f"METRIC brain_truth_score={analysis['truth_score']}")
     print(f"METRIC brain_deception_risk={analysis['deception_risk']}")
+    print(f"METRIC brain_ironclad_sealed={1 if analysis.get('ironclad_sealed') else 0}")
+    print(f"METRIC brain_ironclad_verdict={analysis.get('ironclad_verdict', 'MISSING')}")
     print("OK truth")
     return 0
 

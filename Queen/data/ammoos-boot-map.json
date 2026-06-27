@@ -49,7 +49,7 @@
     {"id": "queen_world", "role": "Horizon 7 isolation · go to Queen there — not a loopback port"}
   ],
   "entry": {
-    "url": "http://127.0.0.1:9481/world/",
+    "url": "http://127.0.0.1:9481/world/browser.html",
     "script": "world/queen-os.js",
     "env": ["QUEEN_INTERNAL_ONLY=1", "QUEEN_SOVEREIGN=1", "GROK16_ROOT", "QUEEN_ROOT", "KILROY_ROOT", "AMOURANTHRTX_ROOT", "SG_ROOT"]
   },

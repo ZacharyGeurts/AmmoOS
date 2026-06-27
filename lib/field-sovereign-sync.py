@@ -42,6 +42,7 @@ MIRROR_FILES = (
     "sovereign-time-anchor.json",
     "sovereign-cycle-state.json",
     "sovereign-time-pulse.json",
+    "sovereign-linear-time.json",
     "field-operator-clock-anchor.json",
     "sovereign-section-stamps.json",
 )
@@ -304,6 +305,9 @@ def manifest(*, refresh: bool = True) -> dict[str, Any]:
         "never_lose_cycle": True,
         "never_lose_data": True,
         "never_misconstrued": True,
+        "never_desync": True,
+        "clock_source": "sovereign_linear",
+        "authoritative_module": "lib/sovereign-clock.py",
         "fabric_encrypt": {
             "slots": 4,
             "zero_cost_idle": True,

@@ -198,7 +198,7 @@ def boot(*, force: bool = False) -> dict[str, Any]:
         "grok16": g16,
         "rtx_memory": rtx,
         "browser_reset": browser_ok,
-        "world_url": f"http://{os.environ.get('QUEEN_WORLD_HOST', '127.0.0.1')}:{os.environ.get('QUEEN_WORLD_PORT', '9481')}/world/",
+        "world_url": f"http://{os.environ.get('QUEEN_WORLD_HOST', '127.0.0.1')}:{os.environ.get('QUEEN_WORLD_PORT', '9481')}/world/browser.html",
         "boot_from": "page_load",
         "operator_setup_required": False,
         "internal_only": True,

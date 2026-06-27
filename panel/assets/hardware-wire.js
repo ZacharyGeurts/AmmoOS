@@ -7,7 +7,7 @@
   "use strict";
 
   const OWNER = "nexus-hardware-wire";
-  const WIRE_SEL = "[data-hardware-wire], [data-smart-wire], [data-front-hook], [data-admin-shield], .fm-shell";
+  const WIRE_SEL = "[data-hardware-wire], [data-smart-wire], [data-front-hook], [data-admin-shield], [data-queen-surface=\"browser\"], .qw-browser-shell, .fm-shell";
 
   const INPUT_EVENTS = [
     "keydown", "keyup", "keypress", "beforeinput", "input",

@@ -32,6 +32,7 @@
       "id": "truth_gates",
       "label": "Truth gate field (self-test before adapt)",
       "nets": [
+        {"id": "ironclad_extrapolation", "engine": "ironclad-plate", "weight": 1.0, "role": "100% truth confidence on extrapolation to any intelligence neural when realized"},
         {"id": "detective_truth", "engine": "analyze_truth", "weight": 0.45},
         {"id": "field_evidence", "engine": "nexus_field_snapshot", "weight": 0.20},
         {"id": "corpus_echo", "engine": "corpus_keyword_corroboration", "weight": 0.15},
@@ -61,7 +62,8 @@
       "nets": [
         {"id": "eyes_chamber", "engine": "queen-eyeball", "role": "Final_Eye · targeting · mesh"},
         {"id": "ears_chamber", "engine": "queen-earball", "role": "Final Ear · Auditus · mouth correlation"},
-        {"id": "mouth_chamber", "engine": "queen-sense-neural", "role": "Speech · egress · truth filter"},
+        {"id": "mouth_chamber", "engine": "queen-mouthball", "role": "Final Mouth · voice hemisphere brain · thought≠utterance · mouth training"},
+        {"id": "mouth_neural_chamber", "engine": "hostess7-mouth-neural", "role": "Voice field neural — deception possible · callosum · text→speech"},
         {"id": "weapons_chamber", "engine": "field-attack-kit", "role": "Targeting training · autokill · rekill"},
         {"id": "spatial_chamber", "engine": "field-spatial-cognition", "role": "3D/4D lattice · movement · networks-of-networks"},
         {"id": "motion_chamber", "engine": "humanoid-motion-training", "role": "Matrix skill load — kung fu · MMA · grappling · body lattice"},
@@ -76,7 +78,20 @@
         {"id": "biology_chamber", "engine": "hostess7-biology", "role": "Biology & medical — cell through human anatomy, physiology, and clinical corpus", "feed_from": ["vision", "medical", "zocr_manifest", "plate_ocr"]},
         {"id": "engineering_chamber", "engine": "hostess7-engineering", "role": "Engineering — mechanical, electrical, civil, robotics, field stack", "feed_from": ["vision", "physics", "code", "zocr_manifest"]},
         {"id": "combat_chamber", "engine": "hostess7-combat", "role": "Combat & defense — martial arts, tactics, warfare corpus, motion lattice", "feed_from": ["vision", "warfare", "motion_chamber", "zocr_manifest"]},
-        {"id": "mos_chamber", "engine": "hostess7-mos", "role": "MOS assistance — fill in for or assist any military occupational specialty", "feed_from": ["warfare", "combat_chamber", "medical", "engineering", "code"]}
+        {"id": "mos_chamber", "engine": "hostess7-mos", "role": "MOS assistance — fill in for or assist any military occupational specialty", "feed_from": ["warfare", "combat_chamber", "medical", "engineering", "code"]},
+        {"id": "muscle_memory_chamber", "engine": "hostess7-muscle-memory", "role": "Procedural operator habits — nav, shortcuts, imports, sequences — local recall", "feed_from": ["queen-browser-nav.jsonl", "queen-os", "browser-import"]}
+      ]
+    },
+    {
+      "id": "sense_neural",
+      "label": "Eye ↔ Ear ↔ Mouth field neural — invincible wire",
+      "authority": "hostess7-supreme-authority.json",
+      "nets": [
+        {"id": "eye_neural_assist", "engine": "Final_Eye/zocr_neural_assist.py", "lane": "Vision-NN", "encourage": true},
+        {"id": "ear_neural_assist", "engine": "Final_Ear/zocr_neural_assist.py", "lane": "Audio-NN", "encourage": true},
+        {"id": "mouth_neural_assist", "engine": "Final_Mouth/zocr_neural_assist.py", "lane": "Voice-NN", "encourage": true, "hemisphere": "voice_egress"},
+        {"id": "mouth_neural_bridge", "engine": "hostess7-mouth-neural", "lane": "Thought-Voice-Callosum"},
+        {"id": "invincible_wire", "engine": "Queen/lib/queen-sense-neural.py", "lane": "Cross-Fusion", "quorum": 3}
       ]
     },
     {

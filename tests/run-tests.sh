@@ -256,7 +256,7 @@ test_audio_train_module() {
   grep -q '/api/audio-train' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'view-audio-train' "${ROOT}/panel/threat-panel.html"
   grep -q 'HOSTESS_VERSION="7"' "${ROOT}/lib/nexus-common.sh"
-  grep -q 'NEXUS_VERSION="8.2.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="g16-1.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     pythong "${ROOT}/lib/audio-train.py" build | grep -q 'audio-train/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
@@ -437,18 +437,19 @@ test_panel_browser_boot_open() {
   [[ -f "${ROOT}/lib/panel-browser.sh" ]]
   grep -q 'nexus_panel_open_on_boot' "${ROOT}/lib/panel-browser.sh"
   grep -q 'nexus_panel_tristate_url' "${ROOT}/lib/panel-browser.sh"
-  grep -q 'NEXUS_NO_OS_BROWSER_HOOK:-0' "${ROOT}/lib/panel-browser.sh"
-  grep -q 'nexus_panel_detect_os_browsers' "${ROOT}/lib/panel-browser.sh"
-  grep -q 'firefox' "${ROOT}/lib/panel-browser.sh"
+  grep -q 'NEXUS_NO_OS_BROWSER_HOOK=1' "${ROOT}/config/nexus.conf"
+  grep -q 'queen-panel-open.py' "${ROOT}/lib/panel-browser.sh"
+  ! grep -q 'nexus_panel_detect_os_browsers' "${ROOT}/lib/panel-browser.sh"
   grep -q 'NEXUS_FIELD_BROWSER_QUEEN=1' "${ROOT}/config/nexus.conf"
   grep -q 'FieldAmmoBrowser' "${ROOT}/../AMOURANTHRTX/Navigator/engine/FieldQueenBrowser.cpp" 2>/dev/null \
     || grep -q 'FieldAmmoBrowser' "${ROOT}/AMOURANTHRTX/Navigator/engine/FieldQueenBrowser.cpp" 2>/dev/null \
     || [[ -f "${ROOT}/../AMOURANTHRTX/Navigator/engine/FieldQueenBrowser.cpp" ]]
   grep -q 'nexus_panel_open_on_boot' "${ROOT}/lib/nexus-daemon.sh"
-  grep -q 'underlay-f9?sector=underlay' "${ROOT}/nexus.sh"
+  grep -q 'tristate-installer' "${ROOT}/lib/panel-browser.sh"
   grep -q 'nexus-field.desktop' "${ROOT}/lib/installer.sh"
   [[ -f "${ROOT}/assets/nexus-field.png" ]]
-  grep -q 'underlay-f9?sector=underlay' "${ROOT}/panel/tristate-installer.html"
+  grep -q 'Unfield files on drive' "${ROOT}/panel/tristate-installer.html"
+  grep -q 'acquire-root' "${ROOT}/panel/assets/tristate-installer.js"
   grep -q 'initialSector' "${ROOT}/panel/assets/underlay-f9.js"
 }
 
@@ -483,6 +484,48 @@ test_nexus_boot_impl() {
   rm -rf "$tmp_state"
 }
 
+test_queen_browser_os_inside() {
+  grep -q '9477/field' "${ROOT}/Queen/world/browser.html"
+  grep -q 'data-queen-start="http://127.0.0.1:9477/field"' "${ROOT}/Queen/world/browser.html"
+  grep -q 'qb-underlay-drop' "${ROOT}/Queen/world/browser.html"
+  grep -q '_nexus_field_url' "${ROOT}/Queen/lib/queen-browser.py"
+  ! grep -A6 '_RETROGRADE_FRAGMENTS' "${ROOT}/Queen/lib/queen-browser.py" | grep -q ':9477/field'
+  [[ -f "${ROOT}/lib/field-underlay-surface.py" ]]
+  grep -q '/api/field-underlay-surface' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'QUEEN_BROWSER_START' "${ROOT}/Queen/scripts/run-queen.sh"
+  grep -q 'field-host-desktop.py' "${ROOT}/Queen/lib/forge/tools.py"
+}
+
+test_field_host_desktop_module() {
+  [[ -f "${ROOT}/lib/field-host-desktop.py" ]]
+  [[ -f "${ROOT}/panel/field-desktop.html" ]]
+  [[ -f "${ROOT}/panel/assets/field-startbar.js" ]]
+  [[ -f "${ROOT}/panel/assets/field-host-desktop.js" ]]
+  [[ -f "${ROOT}/data/field-host-desktop-doctrine.json" ]]
+  grep -q '/api/field-host-desktop' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'field-desktop.html' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '"/command"' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-host-desktop.py" json | grep -q 'field-host-desktop/v1'
+}
+
+test_field_host_freeze_module() {
+  [[ -f "${ROOT}/lib/field-host-freeze.py" ]]
+  [[ -f "${ROOT}/lib/field-host-freeze.sh" ]]
+  [[ -f "${ROOT}/data/field-host-freeze-doctrine.json" ]]
+  grep -q 'run-freeze' "${ROOT}/lib/nexus-pkexec-bridge.sh"
+  grep -q 'com.nexus.field.freeze' "${ROOT}/install/polkit/com.nexus.field.policy"
+  grep -q '/api/field-host-freeze' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'host_freeze_resume' "${ROOT}/lib/nexus-boot-impl.sh"
+  grep -q 'f9-freeze-soft' "${ROOT}/panel/assets/underlay-f9.js"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_VIRTUAL_FIELD=1 \
+    pythong "${ROOT}/lib/field-host-freeze.py" json | grep -q 'field-host-freeze/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_VIRTUAL_FIELD=1 \
+    pythong "${ROOT}/lib/field-host-freeze.py" freeze soft | grep -q '"frozen": true'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_VIRTUAL_FIELD=1 \
+    pythong "${ROOT}/lib/field-host-freeze.py" thaw | grep -q '"thawed": true'
+}
+
 test_field_switch_safety() {
   [[ -f "${ROOT}/lib/field-switch-safety.py" ]]
   [[ -f "${ROOT}/data/field-switch-safety-doctrine.json" ]]
@@ -498,6 +541,40 @@ test_field_switch_safety() {
   grep -q 'conversion_ok' "${ROOT}/lib/field-switch-safety.py"
   pythong "${ROOT}/lib/field-switch-safety.py" evaluate --phase=commit 2>/dev/null | grep -q 'switch_allowed'
   pythong "${ROOT}/lib/field-switch-safety.py" evaluate --phase=commit 2>/dev/null | grep -q 'conversion_ok'
+}
+
+test_non_fielded_safety() {
+  [[ -f "${ROOT}/lib/field-non-fielded-safety.py" ]]
+  grep -q 'NEXUS_FIELD_PUBLISH_REQUIRES_DEFIELD' "${ROOT}/config/nexus.conf"
+  grep -q 'NEXUS_FIELD_DRIVE_STATE_REDIRECT=0' "${ROOT}/config/nexus.conf"
+  grep -q 'non_fielded_safety' "${ROOT}/data/field-underlay-switch-doctrine.json"
+  grep -q 'non_fielded_safety' "${ROOT}/data/field-switch-safety-doctrine.json"
+  grep -q 'defield_audit' "${ROOT}/lib/field-drive-converter.py"
+  grep -q 'purge_nested_drive_field' "${ROOT}/lib/field-non-fielded-safety.py"
+  grep -q '_gate_publish' "${ROOT}/lib/field-drive-system.py"
+  grep -q 'nexus-field' "${ROOT}/World_Redata/redata/safety.py" 2>/dev/null \
+    || grep -q 'nexus-field' "${ROOT}/../World_Redata/redata/safety.py"
+  grep -q '_non_fielded_posture' "${ROOT}/lib/field-underlay-switch.py"
+  grep -q 'defield-audit' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'purge-nested-drive' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'ti-defield-status' "${ROOT}/panel/assets/tristate-installer.js"
+  grep -q 'f9-defield-audit' "${ROOT}/panel/assets/underlay-f9.js"
+  grep -q 'NEXUS_FIELD_DRIVE_STATE_REDIRECT' "${ROOT}/lib/field-drive-system.sh"
+  local tmp_state tmp_team
+  tmp_state="$(mktemp -d)"
+  tmp_team="$(mktemp -d)"
+  mkdir -p "${tmp_team}/nexus-field/system"
+  echo probe >"${tmp_team}/nexus-field/system/hotspot.txt"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$(dirname "$ROOT")" \
+    HOSTESS7_TEAM_FIELD="$tmp_team" HOSTESS7_ROOT="${tmp_team}/h7" \
+    pythong "${ROOT}/lib/field-non-fielded-safety.py" audit 2>/dev/null | grep -q 'nested_nexus_field_on_drives'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$(dirname "$ROOT")" \
+    HOSTESS7_TEAM_FIELD="$tmp_team" HOSTESS7_ROOT="${tmp_team}/h7" \
+    pythong "${ROOT}/lib/field-non-fielded-safety.py" gate-publish 2>/dev/null | grep -q 'nested_field_on_drive'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$(dirname "$ROOT")" \
+    HOSTESS7_TEAM_FIELD="$tmp_team" HOSTESS7_ROOT="${tmp_team}/h7" \
+    pythong "${ROOT}/lib/field-drive-system.py" json 2>/dev/null | grep -q 'host_mirror_only'
+  rm -rf "$tmp_state" "$tmp_team"
 }
 
 test_field_thermal_guard() {
@@ -2085,7 +2162,11 @@ run_test "hostess7 in nexus" test_hostess7_in_nexus
 run_test "NewLatest stack wired" test_newlatest_stack_wired
 run_test "panel browser boot open" test_panel_browser_boot_open
 run_test "nexus boot impl" test_nexus_boot_impl
+run_test "queen browser os inside" test_queen_browser_os_inside
+run_test "field host desktop module" test_field_host_desktop_module
+run_test "field host freeze module" test_field_host_freeze_module
 run_test "field switch safety" test_field_switch_safety
+run_test "non-fielded safety" test_non_fielded_safety
 run_test "field thermal guard" test_field_thermal_guard
 run_test "field thermal calibrate" test_field_thermal_calibrate
 run_test "release tooling" test_release_tooling
@@ -2296,7 +2377,7 @@ test_field_hardware_api() {
   grep -q 'signals-hardware-panel' "${ROOT}/panel/threat-panel.html"
   grep -q 'renderHardware' "${ROOT}/panel/assets/signals-field.js"
   grep -q 'renderAudioQuality' "${ROOT}/panel/assets/signals-field.js"
-  grep -q 'NEXUS_VERSION="8.2.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="g16-1.0"' "${ROOT}/lib/nexus-common.sh"
 }
 
 run_test "field hardware UI and API 7.9" test_field_hardware_api
@@ -2346,7 +2427,7 @@ test_field_gui_publish() {
   grep -q 'PANEL_PARALLEL_KEYS' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'max_workers: int = 25' "${ROOT}/lib/field-panel-parallel.py"
   ! grep -q 'nexus_hostess7_nexus_update_plan' "${ROOT}/lib/hostess7-operator.sh"
-  grep -q 'NEXUS_VERSION="8.2.0"' "${ROOT}/lib/nexus-common.sh"
+  grep -q 'NEXUS_VERSION="g16-1.0"' "${ROOT}/lib/nexus-common.sh"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" bash -c '
     source "${NEXUS_INSTALL_ROOT}/lib/nexus-common.sh"
     nexus_init_runtime_paths
@@ -2858,6 +2939,27 @@ test_hostess7_mos() {
 }
 
 run_test "Hostess 7 MOS assistance" test_hostess7_mos
+test_geography_training() {
+  [[ -f "${ROOT}/lib/hostess7-geography-training.py" ]]
+  [[ -f "${ROOT}/data/hostess7-geography-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-geography-battery.json" ]]
+  [[ -f "${ROOT}/data/hostess7-geography-addresses.json" ]]
+  grep -q 'geography' "${ROOT}/data/hostess7-training-doctrine.json"
+  grep -q 'flat_earth_geography' "${ROOT}/data/hostess7-training-doctrine.json"
+  grep -q 'flat_earth' "${ROOT}/data/hostess7-geography-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-geography-training.py" battery postal_addresses | grep -q '"battery": "postal_addresses"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-geography-training.py" flat-earth | grep -q 'flat_earth'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-geography-training.py" train 12 | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-geography-training.py" json | grep -q 'hostess7-geography/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-training.py" assess | grep -q 'geography'
+}
+
+run_test "Hostess 7 geography training" test_geography_training
 test_reality_physics_training() {
   [[ -f "${ROOT}/lib/hostess7-reality-physics-training.py" ]]
   [[ -f "${ROOT}/data/hostess7-reality-physics-doctrine.json" ]]
@@ -2886,12 +2988,43 @@ test_ironclad_plate() {
   [[ -f "${ROOT}/panel/assets/ironclad/ironclad-01-bounds.jpg" ]]
   grep -q 'Bible of AI' "${ROOT}/data/ironclad-doctrine.json"
   grep -q 'immutable_after_realized' "${ROOT}/data/ironclad-doctrine.json"
+  grep -q 'each_own_place_in_the_world' "${ROOT}/data/ironclad-doctrine.json"
+  grep -q '"id": "place"' "${ROOT}/data/ironclad-doctrine.json"
   grep -q 'ironclad' "${ROOT}/data/field-plate-meld-doctrine.json"
+  grep -q 'ironclad_reality_field' "${ROOT}/data/field-plate-meld-doctrine.json"
   grep -q '/api/ironclad' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'ironclad-reality-field' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'NEXUS_IRONCLAD_TRUTH_SERUM' "${ROOT}/config/nexus.conf"
+  [[ -f "${ROOT}/lib/ironclad-reality-field.py" ]]
+  [[ -f "${ROOT}/data/ironclad-reality-field-doctrine.json" ]]
+  [[ -f "${ROOT}/data/human-condition-doctrine.json" ]]
+  [[ -f "${ROOT}/lib/ironclad-immediate.py" ]]
+  grep -q 'NEXUS_IRONCLAD_IMMEDIATE' "${ROOT}/config/nexus.conf"
+  grep -q 'ironclad-immediate' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus_ironclad_immediate_publish' "${ROOT}/lib/threat-panel.sh"
+  grep -q '_ironclad_immediate' "${ROOT}/lib/hostess7-self-view.py"
+  grep -q 'human_condition_gate' "${ROOT}/lib/ironclad-reality-field.py"
+  grep -q 'ai_in_charge' "${ROOT}/lib/hostess7-truth-rating.py"
+  grep -q 'truth_serum_verdict' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'plate_to_sense_goldmine' "${ROOT}/lib/ironclad-immediate.py"
+  grep -q 'ironclad_goldmine' "${ROOT}/Queen/lib/queen-sense-neural.py"
+  grep -q 'ironclad_goldmine' "${ROOT}/lib/field-sense-package-meld.py"
+  grep -q 'epistemic_root' "${ROOT}/data/field-sense-package-doctrine.json"
+  grep -q 'nexus_ironclad_immediate_publish' "${ROOT}/lib/field-sense-package.sh"
+  grep -q 'plate_to_sense' "${ROOT}/panel/assets/underlay-f9.js"
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
     pythong "${ROOT}/lib/ironclad-plate.py" grounding | grep -q 'bible_of_ai'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
     pythong "${ROOT}/lib/ironclad-plate.py" cite genesis 1 | grep -q 'ironclad:genesis:1'
+  local tmp_icrf
+  tmp_icrf="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_icrf" \
+    pythong "${ROOT}/lib/ironclad-reality-field.py" cycle 2>/dev/null | grep -q 'ironclad-reality-field'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_icrf" SG_ROOT="$(dirname "$ROOT")" \
+    pythong "${ROOT}/lib/ironclad-immediate.py" publish 2>/dev/null | grep -q 'plate_to_sense'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_icrf" SG_ROOT="$(dirname "$ROOT")" \
+    pythong "${ROOT}/Queen/lib/queen-sense-neural.py" 2>/dev/null | grep -q 'ironclad_goldmine'
+  rm -rf "$tmp_icrf"
 }
 
 run_test "reality physics training" test_reality_physics_training

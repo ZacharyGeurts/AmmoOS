@@ -1,6 +1,19 @@
 # NEXUS-Shield
 
-**v10.4.3** — Autonomous field C2. Gatekeeper scoring, loopback panel, field thermal guard, boot-impl reload, Underlay F9 Tristate installer.
+**g16 1.0** — Host desktop landing, Queen Browser OS inside, field C2 command deck, host freeze, Underlay F9 Tristate installer.
+
+## What's new in g16 1.0
+
+| Surface | URL | Role |
+|---------|-----|------|
+| **Host desktop** (first page) | http://127.0.0.1:9477/field | Mirror incumbent OS apps + field startbar |
+| **Field command** (full C2) | http://127.0.0.1:9477/command | Threat panel — Monitor, Training, Intel, System |
+| **Queen Browser** | http://127.0.0.1:9481/world/browser.html | Browser chrome with field OS inside Start tab |
+| **Underlay F9** | http://127.0.0.1:9477/underlay-f9?sector=underlay | 2026 Tristate installer |
+
+**Drop / Rise** — Queen shell calls `/api/field-underlay-surface` to drop the field underlay beneath the host desktop or rise the field OS slice.
+
+**Host freeze** — `/api/field-host-freeze` soft (cgroup), mem (S3), or disk (hibernate) modes; sovereign gap witness on resume.
 
 ## Thermodynamic Foundations • Honoring Rolf Landauer
 
@@ -18,18 +31,18 @@ In NEXUS-Shield and Field layer: **All global redata is incremental, budget-capp
 
 ---
 
-## Install (release tarballs)
+## Install
 
 ```bash
-# From https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.3
-tar -xzf nexus-shield-10.4.3-source.tar.gz
-cd nexus-shield-10.4.3
+git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
+cd NEXUS-Shield
+chmod +x install-all.sh genius_shield.sh nexus.sh nexus-install-gui.sh
 sudo ./install-all.sh
 ```
 
-Browser opens **http://127.0.0.1:9477/field** on start.
+Browser opens **http://127.0.0.1:9477/field** (host desktop) on start. Full C2 at **/command**.
 
-**Installer guide (scripts, boot, troubleshoot):** [INSTALL-README.md](INSTALL-README.md)
+**Installer guide:** [INSTALL-README.md](INSTALL-README.md)
 
 | Script | Purpose |
 |--------|---------|
@@ -37,6 +50,7 @@ Browser opens **http://127.0.0.1:9477/field** on start.
 | `genius_shield.sh` | Deploy to `/usr/local/lib/nexus-shield` + systemd |
 | `nexus-install-gui.sh` | Open Tristate / Underlay F9 installer |
 | `nexus.sh` | Dev tree — panel + browser |
+| `Queen/scripts/run-queen.sh` | Queen Browser on `:9481` |
 
 ---
 
@@ -50,22 +64,14 @@ Browser opens **http://127.0.0.1:9477/field** on start.
 
 Local preview: open `docs/index.html` in a browser (images in `docs/images/`).
 
----
-
-## URLs after install
-
-| Surface | URL |
-|---------|-----|
-| Field panel | http://127.0.0.1:9477/field |
-| Tristate / Underlay F9 | http://127.0.0.1:9477/underlay-f9?sector=underlay |
-| Training | http://127.0.0.1:9477/field#training |
+**Wiki:** https://github.com/ZacharyGeurts/NEXUS-Shield/wiki (sync via `./scripts/publish-wiki.sh`)
 
 ---
 
 ## Everyday commands
 
 ```bash
-./nexus.sh                 # open panel (dev tree)
+./nexus.sh                 # open host desktop (dev tree)
 nexus status               # health + URL
 nexus trust <ip>           # trust forever
 nexus verify               # manifest integrity
@@ -80,11 +86,16 @@ nexus-install-gui.sh       # Tristate installer in browser
   <img src="docs/images/io-architecture.svg" alt="NEXUS architecture I/O" width="640" />
 </p>
 
-Operator browser ↔ panel HTTP `:9477` ↔ `nexus-genius.service` ↔ `/var/lib/nexus-shield` state ↔ nftables perimeter.
+```
+Host browser
+  ├─ :9477/field        → field-desktop.html (apps + startbar)
+  ├─ :9477/command      → threat-panel.html (full C2)
+  └─ :9481/world/browser.html → Queen chrome → Start tab embeds /field
+        ↕ /api/field-underlay-surface (drop / rise)
+Panel HTTP :9477 ↔ nexus-genius.service ↔ /var/lib/nexus-shield ↔ nftables perimeter
+```
 
 See [Field I/O manual](docs/io.html) for boot flow, API tables, and state file map (all illustrated).
-
-**Wiki:** https://github.com/ZacharyGeurts/NEXUS-Shield/wiki (sync via `./scripts/publish-wiki.sh`)
 
 ---
 
@@ -94,9 +105,11 @@ See [Field I/O manual](docs/io.html) for boot flow, API tables, and state file m
 install-all.sh          ← main installer
 INSTALL-README.md       ← installer guide (read this for deploy)
 nexus.sh                ← field dev launcher
-lib/                    ← daemon modules
-panel/                  ← web UI
+lib/                    ← daemon modules (field-host-desktop, field-host-freeze, …)
+panel/                  ← web UI (field-desktop.html, threat-panel.html)
+Queen/                  ← Queen Browser OS inside
 docs/                   ← GitHub Pages manual + images
+wiki/                   ← GitHub wiki source
 config/nexus.conf       ← defaults
 ```
 

@@ -143,11 +143,13 @@ def main() -> int:
         print(f"API FAIL: /api/status — {exc}")
         fail += 1
 
-    tray_icon = INSTALL / "panel" / "assets" / "nexus-tray-us-24.png"
-    if tray_icon.is_file() and tray_icon.stat().st_size > 100:
-        print(f"TRAY ICON OK: {tray_icon.name} ({tray_icon.stat().st_size} bytes)")
+    for tray_name in ("queen-tray-24.png", "nexus-tray-us-24.png", "nexus-field-24.png"):
+        tray_icon = INSTALL / "panel" / "assets" / tray_name
+        if tray_icon.is_file() and tray_icon.stat().st_size > 80:
+            print(f"TRAY ICON OK: {tray_name} ({tray_icon.stat().st_size} bytes)")
+            break
     else:
-        print("TRAY ICON WARN: nexus-tray-us-24.png missing — non-fatal")
+        print("TRAY ICON WARN: Queen tray icons missing — run Queen/scripts/queen-icon-kit.py")
 
     shot = Path("/tmp/nexus-panel-ocr-rtx.png")
     if _screenshot_panel(shot, RTX_URL):

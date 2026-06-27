@@ -26,7 +26,7 @@ nexus_underlay_hotkey_install() {
 [Desktop Entry]
 Type=Application
 Name=NEXUS Underlay Hotkey (F9)
-Comment=Opens 2026 Tristate Installer — permanent underlay switch
+Comment=F9 — Tristate installer until defield clean; Queen sovereign browser after secure network
 Exec=env NEXUS_INSTALL_ROOT=${root} NEXUS_STATE_DIR=${NEXUS_STATE_DIR:-/var/lib/nexus-shield} pythong ${py}
 Hidden=false
 NoDisplay=true

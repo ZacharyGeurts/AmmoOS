@@ -95,11 +95,34 @@ def _spd_speak(chunk: str, *, voice: str, rate: int, pitch: int) -> bool:
     return True
 
 
+def _mouth_neural_prepare(thought: str) -> dict[str, Any]:
+    mm = INSTALL / "lib" / "hostess7-mouth-neural.py"
+    if not mm.is_file() or os.environ.get("NEXUS_HOSTESS7_MOUTH_NEURAL", "1") != "1":
+        return {"ok": True, "utterance": thought, "thought_voice_alignment": 1.0, "skipped": True}
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(mm), "dispatch"],
+            input=json.dumps({"action": "prepare", "text": thought}),
+            capture_output=True,
+            text=True,
+            timeout=45,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        doc = json.loads(proc.stdout or "{}")
+        if doc.get("utterance"):
+            return doc
+    except (json.JSONDecodeError, subprocess.TimeoutExpired, OSError):
+        pass
+    return {"ok": True, "utterance": thought, "thought_voice_alignment": 1.0, "skipped": True}
+
+
 def speak(text: str, *, save_sample: bool = True) -> dict[str, Any]:
-    """Speak text — Piper HQ neural first, spd-say American female fallback."""
+    """Speak through mouth field neural — thought→voice hemisphere, then Piper/spd-say."""
     if not ENABLED:
         return {"ok": False, "error": "voice_disabled"}
-    clean = _clean_speech_text(text)
+    thought = _clean_speech_text(text)
+    neural = _mouth_neural_prepare(thought)
+    clean = _clean_speech_text(str(neural.get("utterance") or thought))
     if len(clean) < 3:
         return {"ok": False, "error": "text_too_short"}
 
@@ -150,6 +173,14 @@ def speak(text: str, *, save_sample: bool = True) -> dict[str, Any]:
         "locale": doctrine.get("locale") or "en-US",
         "gender": doctrine.get("gender") or "female",
         "quality": doctrine.get("quality") or "high",
+        "thought": thought,
+        "utterance": clean,
+        "field_neural": {
+            "thought_voice_alignment": neural.get("thought_voice_alignment"),
+            "deception_risk": neural.get("deception_risk"),
+            "top_label": neural.get("top_label"),
+            "deception_possible": neural.get("deception_possible", True),
+        },
     }
     _save(PANEL, {
         "schema": "hostess7-voice/v1",
@@ -165,6 +196,7 @@ def speak(text: str, *, save_sample: bool = True) -> dict[str, Any]:
 def build_panel(*, write: bool = True) -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     panel = _load(PANEL, {})
+    field_neural = doctrine.get("field_neural") or {}
     doc = {
         "schema": "hostess7-voice/v1",
         "enabled": ENABLED,
@@ -178,6 +210,12 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "piper_available": bool(shutil.which("piper")),
         "spd_available": bool(shutil.which("spd-say")),
         "last_engine": panel.get("last_engine"),
+        "field_neural": {
+            "voice_hemisphere": True,
+            "deception_possible": field_neural.get("deception_possible", True),
+            "thought_voice_alignment": "not_guaranteed",
+            "mouth_neural_engine": field_neural.get("mouth_neural_engine"),
+        },
     }
     if write:
         _save(PANEL, doc)

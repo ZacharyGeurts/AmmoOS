@@ -19,9 +19,11 @@
       </div>
       <div class="f9-status-bar">
         <span class="f9-chip" id="f9-chip-gen"><b>GEN</b> —</span>
+        <span class="f9-chip" id="f9-chip-ironclad"><b>IRON</b> —</span>
         <span class="f9-chip" id="f9-chip-verdict"><b>FW</b> —</span>
         <span class="f9-chip" id="f9-chip-die"><b>DIE</b> —</span>
         <span class="f9-chip" id="f9-chip-bus"><b>BUS</b> —</span>
+        <span class="f9-chip" id="f9-chip-sovereign"><b>TIME</b> —</span>
       </div>
       <div class="f9-actions">
         <button type="button" class="f9-btn f9-btn--green" id="f9-meld">MELD</button>
@@ -99,7 +101,7 @@
 
         <section class="f9-sector" data-sector="cycle">
           <h2>Operator Cycle</h2>
-          <p class="f9-lead">Manual meld trigger — same chain the daemon runs each vigil tick.</p>
+          <p class="f9-lead">Manual meld trigger — same chain the daemon runs each vigil tick. Host freeze locks memory, suspends the guest OS (soft cgroup or ACPI mem/disk), and witnesses sovereign clock on resume without disturbing field draw on soft freeze.</p>
           <div id="f9-cycle-body"></div>
         </section>
       </main>

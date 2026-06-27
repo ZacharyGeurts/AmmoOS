@@ -393,3 +393,101 @@
   font-size: 0.78rem;
   line-height: 1.35;
 }
+
+#view-training .h7-rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+#view-training .h7-room-card {
+  border: 1px solid rgba(74, 222, 128, 0.22);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(6, 10, 18, 0.88);
+}
+
+#view-training .h7-room-card.locked {
+  border-color: rgba(192, 132, 252, 0.45);
+  box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.12);
+}
+
+#view-training .h7-room-card.fully:not(.locked) {
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+#view-training .h7-room-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+#view-training .h7-room-head h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+#view-training .h7-room-lock {
+  font-size: 0.95rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+#view-training .h7-mouth-hemisphere-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: stretch;
+  margin-top: 10px;
+}
+
+#view-training .h7-hemisphere-card {
+  border: 1px solid rgba(240, 160, 96, 0.28);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(8, 4, 10, 0.9);
+}
+
+#view-training .h7-hemisphere-card.thought {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+#view-training .h7-hemisphere-card.voice {
+  border-color: rgba(240, 160, 96, 0.45);
+}
+
+#view-training .h7-hemisphere-card h3 {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
+#view-training .h7-callosum-bridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 6px;
+  color: rgba(240, 208, 96, 0.85);
+  font-size: 0.78rem;
+  text-align: center;
+  min-width: 72px;
+}
+
+#view-training .h7-callosum-bridge span:first-child {
+  font-size: 1.2rem;
+}
+
+#view-training .h7-mouth-lessons .h7-room-card {
+  border-color: rgba(240, 160, 96, 0.22);
+}
+
+#view-training .h7-room-open {
+  color: var(--h7-muted);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}

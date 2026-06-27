@@ -2,6 +2,7 @@
   "use strict";
 
   const PROGRAMS = [
+    { id: "nexus", label: "NEXUS", hint: "Field C2 · Queen tab", url: "queen://nexus" },
     { id: "browser", label: "Web", hint: "New tab", url: "queen://world" },
     { id: "os", label: "Queen OS", hint: "Capsule & cores", url: "/world/?embed=1&dock=overview" },
     { id: "terminal", label: "Terminal", hint: "GNU shell", url: "queen://terminal" },

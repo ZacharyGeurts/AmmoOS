@@ -29,7 +29,20 @@ GITHUB_REPO = os.environ.get("NEXUS_GITHUB_REPO", "ZacharyGeurts/NEXUS-Shield")
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any = None) -> Any:
@@ -91,6 +104,27 @@ def _truth_status() -> dict[str, Any]:
     return {}
 
 
+def _ironclad_immediate() -> dict[str, Any]:
+    cached = _load(STATE / "ironclad-immediate.json", {})
+    if cached.get("schema") == "ironclad-immediate/v1":
+        selves = cached.get("selves") or {}
+        if selves.get("hostess7"):
+            return selves["hostess7"]
+        return cached
+    mod = _mod("ironclad_immediate", "ironclad-immediate.py")
+    if mod and hasattr(mod, "for_self"):
+        try:
+            return mod.for_self("hostess7")
+        except Exception:
+            pass
+    if mod and hasattr(mod, "read_immediate"):
+        try:
+            return mod.read_immediate()
+        except Exception:
+            pass
+    return _load(INSTALL / "data" / "ironclad-doctrine.json", {})
+
+
 def _motion_slice() -> dict[str, Any]:
     iron = _load(STATE / "iron-plate-motion-resolve-panel.json", {})
     meld = _load(STATE / "field-plate-meld-runtime.json", {})
@@ -124,7 +158,22 @@ def _evaluate_want(want_id: str, *, brain: dict[str, Any], master: dict[str, Any
     corrupted = bool(brain.get("corrupted_count", 0) or v.get("corrupted") or v.get("removal_count"))
     row: dict[str, Any] = {"id": want_id, "value": None, "display": "—", "ok": None}
 
-    if want_id == "brain_verdict":
+    if want_id == "ironclad":
+        ic = _ironclad_immediate()
+        sealed = bool(ic.get("ironclad_sealed"))
+        row["value"] = {
+            "sealed": sealed,
+            "verdict": ic.get("verdict"),
+            "truth_percent": ic.get("truth_percent"),
+            "ai_in_charge": ic.get("ai_in_charge"),
+        }
+        row["display"] = (
+            f"SEALED · {ic.get('truth_percent', 100)}%"
+            if sealed
+            else f"{ic.get('verdict') or 'immediate'} · {ic.get('truth_percent', '—')}%"
+        )
+        row["ok"] = sealed and ic.get("available", True)
+    elif want_id == "brain_verdict":
         row["value"] = verdict
         row["display"] = verdict.replace("_", " ")
         row["ok"] = verdict == "brain_verified"
@@ -753,6 +802,7 @@ def build_self_view(*, write: bool = False) -> dict[str, Any]:
 
     appearance = _operator_appearance()
     truth = _core_of_truth()
+    ironclad = _ironclad_immediate()
     lookup = _load(OPERATOR_LOOKUP, {})
     if not lookup.get("fetched_at"):
         lookup = _static_operator_lookup()
@@ -775,9 +825,13 @@ def build_self_view(*, write: bool = False) -> dict[str, Any]:
         "alerts": alerts,
         "learning_opportunities": learning,
         "diagnostics_below": True,
+        "ironclad": ironclad,
         "live_snapshot": {
             "brain_verdict": verdict,
             "guard_score": brain.get("guard_score"),
+            "ironclad_sealed": ironclad.get("ironclad_sealed"),
+            "ironclad_verdict": ironclad.get("verdict"),
+            "ai_in_charge": ironclad.get("ai_in_charge"),
             "master_level": (master.get("level") or {}).get("label"),
             "curriculum_done": master.get("curriculum_done"),
             "curriculum_total": master.get("curriculum_total"),

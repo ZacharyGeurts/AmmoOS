@@ -4,7 +4,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CHECKLIST="${ROOT}/data/review-checklist.json"
-BIN="${ZNETWORK_BIN:-${ROOT}/build/znetwork}"
+INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$(cd "${ROOT}/.." 2>/dev/null && pwd)}"
+BIN="${ZNETWORK_BIN:-${INSTALL_ROOT}/bin/znetwork}"
+[[ -x "${BIN}" ]] || BIN="${ROOT}/build/znetwork"
+[[ -x "${BIN}" ]] || BIN="${SG_ROOT:-}/ZNetwork/build/znetwork"
 
 echo "=== ZNetwork review gate ==="
 python3 - <<PY

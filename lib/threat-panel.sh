@@ -62,6 +62,11 @@ nexus_threat_panel_publish() {
   local lock="${NEXUS_STATE_DIR}/threat-panel.publish.lock"
   exec 9>"$lock" 2>/dev/null || return 0
   flock -w 5 9 2>/dev/null || return 0
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh"
+    nexus_ironclad_immediate_publish
+  fi
   if [[ "${NEXUS_PANEL_PUBLISH_FAST:-}" != "1" ]]; then
     if declare -f nexus_field_brain_sync >/dev/null 2>&1; then
       nexus_field_brain_sync

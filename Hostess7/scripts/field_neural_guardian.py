@@ -14,7 +14,7 @@ STACK_JSON = ROOT / "data" / "hostess7-neural-stack.json"
 TRUTH_FLOOR_JSON = ROOT / "data" / "hostess7-truth-floor.json"
 
 sys.path.insert(0, str(ROOT / "scripts"))
-from field_detective_corpus import analyze_truth  # noqa: E402
+from field_detective_corpus import analyze_truth, ironclad_slice  # noqa: E402
 
 
 def _ts() -> str:
@@ -34,17 +34,22 @@ def discern_claim(claim: str, *, local_evidence: int = 1, qa_green: bool = True)
     """Classify claim as truth / partial_truth / deception / lie / quarantine."""
     meta = _load(GUARDIAN_JSON)
     floor = float(meta.get("truth_floors", {}).get("adapt", 58))
+    ic = ironclad_slice()
     analysis = analyze_truth(
         claim,
         local_evidence=local_evidence,
         qa_green=qa_green,
         corroboration_channels=1,
+        ironclad=ic,
     )
     score = float(analysis.get("truth_score", 0))
     flags = analysis.get("inconsistency_flags", [])
+    ironclad_sealed = bool(analysis.get("ironclad_sealed"))
 
     if score < floor:
         klass = "quarantine"
+    elif score >= 70 and len(flags) <= 1 and ironclad_sealed:
+        klass = "truth"
     elif score >= 70 and len(flags) <= 1:
         klass = "truth"
     elif score >= 40:
@@ -54,6 +59,11 @@ def discern_claim(claim: str, *, local_evidence: int = 1, qa_green: bool = True)
     else:
         klass = "deception"
 
+    passes = score >= floor and klass not in ("lie", "quarantine")
+    if not ic.get("ok") and klass == "truth":
+        passes = False
+        klass = "partial_truth"
+
     return {
         "schema": "hostess7-neural-guardian-discern/v1",
         "ts": _ts(),
@@ -62,11 +72,14 @@ def discern_claim(claim: str, *, local_evidence: int = 1, qa_green: bool = True)
         "class": klass,
         "truth_score": score,
         "adapt_floor": floor,
-        "passes_guardian": score >= floor and klass not in ("lie", "quarantine"),
+        "passes_guardian": passes,
         "deception_flags": flags,
+        "ironclad": ic,
+        "ironclad_sealed": ironclad_sealed,
+        "ironclad_verdict": analysis.get("ironclad_verdict"),
         "analysis": analysis,
         "protector_verdict": (
-            "PROTECT" if klass in ("truth", "partial_truth") and score >= floor
+            "PROTECT" if klass in ("truth", "partial_truth") and passes
             else "QUARANTINE" if klass in ("lie", "quarantine")
             else "INVESTIGATE"
         ),

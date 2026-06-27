@@ -77,7 +77,7 @@ def _env() -> dict[str, str]:
         "FINAL_EYE_ASSIST": os.environ.get("FINAL_EYE_ASSIST", "1"),
         "FINAL_EYE_LOW_END": os.environ.get("FINAL_EYE_LOW_END", "1"),
         "FINAL_EYE_COOL": os.environ.get("FINAL_EYE_COOL", "1"),
-        "NEXUS_EMBED_PANEL_IN_ENGINE": "1",
+        "NEXUS_EMBED_PANEL_IN_ENGINE": os.environ.get("NEXUS_EMBED_PANEL_IN_ENGINE", "0"),
         "QUEEN_SOVEREIGN": "1",
         "NEXUS_QUEEN_SOVEREIGN": "1",
     }
@@ -324,7 +324,9 @@ def world_status_fast() -> dict[str, Any]:
         "fast": True,
         "updated": _now(),
         "world_ready": True,
-        "world_url": f"http://{HOST}:{PORT}/world/",
+        "world_url": f"http://{HOST}:{PORT}/world/browser.html",
+        "browser_url": f"http://{HOST}:{PORT}/world/browser.html",
+        "os_world_url": f"http://{HOST}:{PORT}/world/index.html",
         "port": PORT,
         "motto": brain.get("motto") or rtx_doc.get("motto"),
         "queen_verdict": gates.get("queen_verdict"),
@@ -367,7 +369,9 @@ def world_status(*, full: bool = True) -> dict[str, Any]:
         "schema": "queen-world/v1",
         "updated": _now(),
         "world_ready": True,
-        "world_url": f"http://{HOST}:{PORT}/world/",
+        "world_url": f"http://{HOST}:{PORT}/world/browser.html",
+        "browser_url": f"http://{HOST}:{PORT}/world/browser.html",
+        "os_world_url": f"http://{HOST}:{PORT}/world/index.html",
         "port": PORT,
         "external_nexus": False,
         "motto": brain.get("motto") or rtx_doc.get("motto") or "One RTX card. One world.",
@@ -435,6 +439,30 @@ def _field_net_status() -> dict[str, Any]:
 
 def dispatch_field_net(body: dict[str, Any]) -> dict[str, Any]:
     return _run_json(_LIB / "queen-field-net.py", "dispatch", body=body, timeout=30)
+
+
+def _ironclad_field_sanity_script() -> Path | None:
+    for candidate in (
+        QUEEN.parent / "lib" / "ironclad-field-sanity.py",
+        SG / "NewLatest" / "lib" / "ironclad-field-sanity.py",
+    ):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _field_sanity_status() -> dict[str, Any]:
+    ic = _ironclad_field_sanity_script()
+    if ic:
+        return _run_json(ic, "json", timeout=25)
+    return _run_json(_LIB / "queen-field-sanity.py", "json", timeout=25)
+
+
+def dispatch_field_sanity(body: dict[str, Any]) -> dict[str, Any]:
+    ic = _ironclad_field_sanity_script()
+    if ic:
+        return _run_json(ic, "pass", body=body, timeout=30)
+    return _run_json(_LIB / "queen-field-sanity.py", "pass", body=body, timeout=30)
 
 
 def _external_wire_status() -> dict[str, Any]:
@@ -537,8 +565,24 @@ def dispatch_build(body: dict[str, Any]) -> dict[str, Any]:
     return _run_json(_LIB / "queen-build.py", "dispatch", body=body, timeout=7200)
 
 
+_BROWSER_STATUS_CACHE: dict[str, Any] | None = None
+_BROWSER_STATUS_CACHE_TS: float = 0.0
+
+
 def _browser_status() -> dict[str, Any]:
-    return _run_json(_LIB / "queen-browser.py", "json", timeout=45)
+    import time
+
+    global _BROWSER_STATUS_CACHE, _BROWSER_STATUS_CACHE_TS
+    if os.environ.get("QUEEN_FAST_STATUS", "1") not in ("0", "false", "no"):
+        cache_sec = float(os.environ.get("QUEEN_STATUS_CACHE_SEC", "5"))
+        now = time.time()
+        if _BROWSER_STATUS_CACHE and now - _BROWSER_STATUS_CACHE_TS < cache_sec:
+            return _BROWSER_STATUS_CACHE
+    doc = _run_json(_LIB / "queen-browser.py", "json", timeout=45)
+    if os.environ.get("QUEEN_FAST_STATUS", "1") not in ("0", "false", "no"):
+        _BROWSER_STATUS_CACHE = doc
+        _BROWSER_STATUS_CACHE_TS = time.time()
+    return doc
 
 
 def dispatch_browser(body: dict[str, Any]) -> dict[str, Any]:
@@ -546,6 +590,69 @@ def dispatch_browser(body: dict[str, Any]) -> dict[str, Any]:
     if not script.is_file():
         return {"ok": False, "error": "queen_browser_missing"}
     return _run_json(script, "dispatch", body=body, timeout=60)
+
+
+def _browser_import_status() -> dict[str, Any]:
+    return _run_json(_LIB / "queen-browser-import.py", "json", timeout=30)
+
+
+def dispatch_browser_import(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    action = (body or {}).get("action") or "sweep"
+    if action in ("json", "status"):
+        return _browser_import_status()
+    script = _LIB / "queen-browser-import.py"
+    if not script.is_file():
+        return {"ok": False, "error": "queen_browser_import_missing"}
+    cmd = "auto" if action == "auto" else "sweep"
+    return _run_json(script, cmd, timeout=120)
+
+
+def _muscle_memory_script() -> Path:
+    return SG / "NewLatest" / "lib" / "hostess7-muscle-memory.py"
+
+
+def _muscle_memory_status() -> dict[str, Any]:
+    script = _muscle_memory_script()
+    if not script.is_file():
+        return {"ok": False, "error": "muscle_memory_missing"}
+    env = _env()
+    env["NEXUS_INSTALL_ROOT"] = str(SG / "NewLatest")
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "json"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(SG / "NewLatest"),
+            env=env,
+        )
+        return json.loads(proc.stdout or "{}")
+    except (json.JSONDecodeError, subprocess.TimeoutExpired):
+        return {"ok": False, "error": "muscle_memory_unavailable"}
+
+
+def dispatch_muscle_memory(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    script = _muscle_memory_script()
+    if not script.is_file():
+        return {"ok": False, "error": "muscle_memory_missing"}
+    payload = dict(body or {})
+    if not payload.get("action"):
+        payload["action"] = "status"
+    env = _env()
+    env["NEXUS_INSTALL_ROOT"] = str(SG / "NewLatest")
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "dispatch"],
+            input=json.dumps(payload, ensure_ascii=False),
+            capture_output=True,
+            text=True,
+            timeout=45,
+            cwd=str(SG / "NewLatest"),
+            env=env,
+        )
+        return json.loads(proc.stdout or "{}")
+    except (json.JSONDecodeError, subprocess.TimeoutExpired):
+        return {"ok": False, "error": "muscle_memory_dispatch_failed"}
 
 
 def _file_browser_status() -> dict[str, Any]:
@@ -570,6 +677,20 @@ def _web_compat_status() -> dict[str, Any]:
 
 def dispatch_web_compat(body: dict[str, Any]) -> dict[str, Any]:
     return _run_json(_LIB / "queen-web-compat.py", "dispatch", body=body, timeout=30)
+
+
+def _update_status(*, force: bool = False) -> dict[str, Any]:
+    args = ["status"]
+    if force:
+        args.append("--force")
+    return _run_json(_LIB / "queen-update.py", *args, timeout=30)
+
+
+def dispatch_update(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    action = (body or {}).get("action") or "apply"
+    if action == "sudo-prompt":
+        return _run_json(_LIB / "queen-update.py", "sudo-prompt", timeout=20)
+    return _run_json(_LIB / "queen-update.py", "apply", timeout=30)
 
 
 def _nexus_jump_status() -> dict[str, Any]:
@@ -814,6 +935,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/queen-browser":
             self._send_json(200, _browser_status())
             return
+        if path in ("/api/queen-browser-import", "/api/browser-import"):
+            self._send_json(200, _browser_import_status())
+            return
+        if path in ("/api/muscle-memory", "/api/hostess7-muscle-memory", "/api/muscle_memory"):
+            self._send_json(200, _muscle_memory_status())
+            return
         if path in ("/api/queen-file-browser", "/api/file-browser", "/api/files"):
             self._send_json(200, _file_browser_status())
             return
@@ -827,6 +954,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/api/field-net", "/api/queen-field-net"):
             self._send_json(200, _field_net_status())
+            return
+        if path in ("/api/field-sanity", "/api/queen-field-sanity"):
+            self._send_json(200, _field_sanity_status())
             return
         if path in ("/api/external-wire", "/api/field-external-wire", "/api/queen-external-wire"):
             self._send_json(200, _external_wire_status())
@@ -898,6 +1028,11 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/api/nexus-jump", "/api/queen-nexus-jump"):
             self._send_json(200, _nexus_jump_status())
             return
+        if path in ("/api/update/check", "/api/update/status"):
+            qs = parse_qs(urlparse(self.path).query)
+            force = (qs.get("force") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _update_status(force=force))
+            return
         if path.startswith("/browse/view"):
             qs = parse_qs(urlparse(self.path).query)
             target = (qs.get("url") or [""])[0]
@@ -915,9 +1050,17 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(data)
             return
         if path == "/world" or path == "/world/":
-            p = WORLD / "index.html"
+            p = WORLD / "browser.html"
             if p.is_file():
                 self._send_bytes(p.read_bytes(), mime="text/html; charset=utf-8")
+                return
+        if path == "/world/index.html":
+            qs = parse_qs(urlparse(self.path).query)
+            if (qs.get("os") or [""])[0] not in ("1", "true", "yes"):
+                self.send_response(HTTPStatus.MOVED_PERMANENTLY)
+                self.send_header("Location", "/world/browser.html")
+                self._apply_security_headers()
+                self.end_headers()
                 return
         if path.startswith("/world/"):
             rel = path[len("/world/") :]
@@ -935,7 +1078,7 @@ class Handler(BaseHTTPRequestHandler):
                 return
         if path == "/" or path == "":
             self.send_response(HTTPStatus.MOVED_PERMANENTLY)
-            self.send_header("Location", "/world/")
+            self.send_header("Location", "/world/browser.html")
             self.end_headers()
             return
         self.send_error(HTTPStatus.NOT_FOUND)
@@ -945,6 +1088,21 @@ class Handler(BaseHTTPRequestHandler):
         body = self._read_json_body()
         if path == "/api/queen-build":
             self._send_json(200, dispatch_build(body))
+            return
+        if path == "/api/update/apply":
+            result = dispatch_update(body)
+            if result.get("update_in_progress") and not result.get("started"):
+                code = 409
+            elif result.get("started"):
+                code = 202
+            else:
+                code = 200
+            self._send_json(code, result)
+            return
+        if path == "/api/update/sudo-prompt":
+            result = dispatch_update({"action": "sudo-prompt"})
+            code = 202 if result.get("prompt_started") else 400
+            self._send_json(code, result)
             return
         if path in ("/api/field-tools", "/api/queen-field-tools"):
             self._send_json(200, dispatch_field_tools(body))
@@ -981,6 +1139,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/queen-browser":
             self._send_json(200, dispatch_browser(body))
             return
+        if path in ("/api/queen-browser-import", "/api/browser-import"):
+            self._send_json(200, dispatch_browser_import(body))
+            return
         if path in ("/api/queen-file-browser", "/api/file-browser", "/api/files"):
             self._send_json(200, dispatch_file_browser(body))
             return
@@ -995,6 +1156,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/api/field-net", "/api/queen-field-net"):
             self._send_json(200, dispatch_field_net(body))
+            return
+        if path in ("/api/field-sanity", "/api/queen-field-sanity"):
+            self._send_json(200, dispatch_field_sanity(body))
             return
         if path in ("/api/game-room", "/api/gameroom", "/api/chips"):
             self._send_json(200, dispatch_game_room(body))
@@ -1049,6 +1213,9 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/api/contact-vector", "/api/contact-classification"):
             self._send_json(200, dispatch_contact_vector(body))
             return
+        if path in ("/api/muscle-memory", "/api/hostess7-muscle-memory", "/api/muscle_memory"):
+            self._send_json(200, dispatch_muscle_memory(body))
+            return
         self.send_error(HTTPStatus.NOT_FOUND)
 
 
@@ -1075,13 +1242,13 @@ def main() -> int:
 
     if args.daemon:
         if port_open(args.host, args.port):
-            print(json.dumps({"ok": True, "already": True, "url": f"http://{args.host}:{args.port}/world/"}))
+            print(json.dumps({"ok": True, "already": True, "url": f"http://{args.host}:{args.port}/world/browser.html"}))
             return 0
         pid = os.fork()
         if pid > 0:
             for _ in range(20):
                 if port_open(args.host, args.port):
-                    print(json.dumps({"ok": True, "spawned": True, "url": f"http://{args.host}:{args.port}/world/"}))
+                    print(json.dumps({"ok": True, "spawned": True, "url": f"http://{args.host}:{args.port}/world/browser.html"}))
                     return 0
                 import time
                 time.sleep(0.2)
@@ -1118,7 +1285,7 @@ def main() -> int:
         print(f"[queen-world] secure boot warn: {exc}", flush=True)
 
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
-    url = f"http://{args.host}:{args.port}/world/"
+    url = f"http://{args.host}:{args.port}/world/browser.html"
     print(f"Queen World → {url}", flush=True)
     print(f"Build deck → http://{args.host}:{args.port}/gui/queen-build-deck.html", flush=True)
     try:

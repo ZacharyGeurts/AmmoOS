@@ -282,6 +282,10 @@ def probe_compilers(ctx: ForgeContext) -> dict[str, Any]:
 def write_manifest(ctx: ForgeContext) -> Path:
     doc = probe_compilers(ctx)
     doc["updated"] = _ts()
+    if _ver_meta.get("distro_version"):
+        doc["distro_version"] = _ver_meta["distro_version"]
+    if _ver_meta.get("tag"):
+        doc["release_tag"] = _ver_meta["tag"]
     doc["field_mandate"] = {
         "id": "G16_FIELD_SAFETY_MANDATE_v1",
         "cmake": str(g16_field_mandate_path(ctx)),

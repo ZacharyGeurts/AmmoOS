@@ -47,6 +47,10 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "packet_field": ("packet-field.py", ["json"]),
     "host_attacks": ("host-attack-map.py", ["json-panel"]),
     "us_field": ("field-us-intel.py", ["json"]),
+    "sweet_anita_broadcast": ("field-sweet-anita-broadcast.py", ["json"]),
+    "us_obs_field": ("field-sweet-anita-broadcast.py", ["us"]),
+    "field_voltage_regulation": ("field-voltage-regulation.py", ["json"]),
+    "us_voltage_regulation": ("field-voltage-regulation.py", ["us"]),
     "field_command": ("field-command.py", ["json"]),
     "browser_awareness": ("browser-awareness.py", ["json"]),
     "field_queen_browser": ("field-queen-browser.py", ["json"]),
@@ -67,6 +71,11 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "kernel_meld": ("field-kernel-meld.py", ["json"]),
     "firmware_threat": ("field-firmware-threat-removal.py", ["json"]),
     "sense_package": ("field-sense-package-meld.py", ["json"]),
+    "obs_threat_posterity": ("obs-threat-posterity-bridge.py", ["json"]),
+    "eye_ear_plate": ("eye-ear-plate.py", ["json"]),
+    "g16_compiler_sense": ("g16-compiler-sense-plate.py", ["json"]),
+    "plate_test_runner": ("field-plate-test-runner.py", ["json"]),
+    "plate_compiler": ("plate-compiler.py", ["json"]),
     "field_bus": ("field-unified-bus.py", ["json"]),
     "logic_gate": ("nexus-logic-gate.py", ["json"]),
     "spatial_field": ("field-spatial-cognition.py", ["json"]),
@@ -76,8 +85,14 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "creatable_lives": ("creatable-lives-assist.py", ["json"]),
     "right_to_exist": ("right-to-exist-mandate.py", ["json"]),
     "hostess7_brain": ("hostess7-brain-guard.py", ["json"]),
+    "ironclad": ("ironclad-plate.py", ["json"]),
+    "ironclad_immediate": ("ironclad-immediate.py", ["json"]),
+    "ironclad_reality_field": ("ironclad-reality-field.py", ["json"]),
+    "ironclad_field_sanity": ("ironclad-field-sanity.py", ["json"]),
     "hostess7_programming": ("hostess7-programming.py", ["json"]),
     "hostess7_g16": ("hostess7-g16.py", ["json"]),
+    "nexus_g16_stack": ("nexus-g16-bridge.py", ["json"]),
+    "plate_compiler": ("plate-compiler.py", ["json"]),
     "hostess7_codecraft": ("hostess7-codecraft.py", ["json"]),
     "hostess7_training": ("hostess7-training.py", ["json"]),
     "hostess7_calculator": ("hostess7-calculator.py", ["json"]),
@@ -89,6 +104,8 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
 
 QUEEN_SLICES: dict[str, tuple[str, list[str]]] = {
     "field_eyeball": ("lib/queen-eyeball.py", ["json"]),
+    "field_earball": ("lib/queen-earball.py", ["json"]),
+    "field_mouthball": ("lib/queen-mouthball.py", ["json"]),
 }
 
 STATE_SLICES: dict[str, tuple[str, dict[str, Any]]] = {
@@ -108,7 +125,19 @@ def _env(*, cwd: Path | None = None) -> dict[str, str]:
     sg = INSTALL.parent if INSTALL.name == "NewLatest" else INSTALL.parent.parent
     env.setdefault("SG_ROOT", str(sg))
     env.setdefault("QUEEN_ROOT", str(_queen_root()))
+    queen = _queen_root()
     env.setdefault("FINAL_EYE_ROOT", str(sg / "Final_Eye"))
+    env.setdefault("FINAL_EAR_ROOT", str(sg / "Final_Ear"))
+    env.setdefault("FINAL_MOUTH_ROOT", str(sg / "Final_Mouth"))
+    py_parts = [
+        str(queen / "lib"),
+        str(sg / "Final_Eye"),
+        str(sg / "Final_Ear"),
+        str(sg / "Final_Mouth"),
+    ]
+    if env.get("PYTHONPATH"):
+        py_parts.append(env["PYTHONPATH"])
+    env["PYTHONPATH"] = os.pathsep.join(p for p in py_parts if p)
     try:
         import importlib.util
 

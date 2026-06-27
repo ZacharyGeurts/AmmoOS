@@ -118,9 +118,11 @@
     const st = d.status || {};
     const ul = d.underlay || {};
     const pm = d.plateMeld || {};
+    const ic = d.ironcladImmediate || {};
     const grid = $("f9-command-grid");
     if (!grid) return;
     grid.innerHTML =
+      card("Ironclad", ic.ironclad_sealed ? "SEALED" : ic.verdict || "immediate", (ic.truth_percent ?? "—") + "% · " + (ic.charge_holder || "—")) +
       card("Panel build", st.panel_build || "underlay-f9", "NEXUS-Shield v" + (st.version || "—")) +
       card("Vigil mode", st.vigil_mode || st.mode || "calm", "Poll " + POLL_MS + "ms") +
       card("Plate generation", pm.generation ?? "—", "chain " + (pm.chain_hash || "").slice(0, 16)) +
@@ -132,19 +134,121 @@
   function renderUnderlay() {
     const ul = state.data.underlay || {};
     const nat = state.data.native || {};
+    const ti = state.data.tristate || {};
+    const di = state.data.dropIn || {};
+    const proto = state.data.sovereignProtocol || {};
+    const nf = ti.non_fielded || ti.drive_converter?.panel?.defield_audit || di.defield_audit || {};
+    const defieldOk = di.defield_ok === true || ti.drive_converter?.panel?.defield_ok === true || nf.defield_ok === true;
+    const nested = nf.nested_nexus_field_on_drives || [];
+    const f9Target = di.f9_target || (defieldOk && proto.secured ? "queen_sovereign_browser" : "tristate_installer");
     const el = $("f9-underlay-body");
     if (!el) return;
-    const policy = ul.policy || ul.doctrine?.policy || {};
+    const policy = ul.policy || ul.doctrine?.policy || di.policy || {};
+    const defCls = defieldOk ? "ok" : "alert";
+    const netCls = proto.secured ? "ok" : "warn";
     el.innerHTML =
       '<div class="f9-grid">' +
-      card("Drop-in", policy.drop_in_replacement ? "YES" : "no", "destructive_migration: false") +
+      card("Drop-in", policy.drop_in_replacement || di.phase ? "YES" : "no", "phase: " + (di.phase || "—")) +
       card("Guest passthrough", policy.guest_os_passthrough ? "YES" : "no", "incumbent OS inside envelope") +
-      card("Hotkey", policy.hotkey || "F9", "2026 underlay installer") +
+      card("Hotkey F9", policy.hotkey || "F9", f9Target === "queen_sovereign_browser" ? "Queen sovereign browser" : "Tristate installer") +
+      card("Secure network", proto.secured ? "SECURED" : "pending", (proto.managed_live ?? "—") + " managed · legacy compat") +
       card("Native authority", nat.native_authority || "SG/NewLatest", nat.we_are_the_native ? "witness BIOS" : "—") +
       card("Flash chip", nat.flash_chip === false ? "FALSE" : String(nat.flash_chip), nat.flash_policy || "witness only") +
-      '</div><pre class="f9-pre f9-wide">' +
-      esc(JSON.stringify(ul.model || ul.posture || ul, null, 2)) +
+      card("Non-fielded", defieldOk ? "CLEAN" : "BLOCKED", "no field-in-field before whole-system field") +
+      card("Restorable tails", nf.restorable_files != null ? String(nf.restorable_files) : "—", "WRDT/WRZC/ZAC/H7 must be 0") +
+      card("Drive hotspots", nested.length ? String(nested.length) : "0", nf.host_mirror_only ? "publish → host mirror" : "committed") +
+      '</div>' +
+      '<div class="f9-actions" style="margin:0.75rem 0">' +
+      '<button type="button" class="f9-btn f9-btn--green" id="f9-drop-in-force">FORCE DROP-IN</button>' +
+      '<button type="button" class="f9-btn" id="f9-defield-audit">DEFIELD AUDIT</button>' +
+      '<button type="button" class="f9-btn" id="f9-secure-network" ' + (defieldOk ? "" : "disabled") + '>SECURE NETWORK</button>' +
+      '<button type="button" class="f9-btn f9-btn--green" id="f9-open-browser" ' + (f9Target === "queen_sovereign_browser" ? "" : "disabled") + '>OPEN QUEEN BROWSER</button>' +
+      '<button type="button" class="f9-btn" id="f9-open-display">OPEN DISPLAY</button>' +
+      '<button type="button" class="f9-btn f9-btn--green" id="f9-purge-nested" ' + (nested.length ? "" : "disabled") + '>PURGE NESTED FIELD</button>' +
+      '</div>' +
+      (nested.length
+        ? '<ul class="f9-list f9-wide"><li class="f9-chip f9-chip--' + defCls + '">Nested nexus-field on drive — quarantine before convert/commit</li>'
+          + nested.map((p) => "<li>" + esc(p) + "</li>").join("") + "</ul>"
+        : "") +
+      '<pre class="f9-pre f9-wide">' +
+      esc(JSON.stringify({ underlay: ul.model || ul.posture || ul, non_fielded: nf }, null, 2)) +
       "</pre>";
+    $("f9-drop-in-force")?.addEventListener("click", () => runDropInAction("/force", "force drop-in"));
+    $("f9-defield-audit")?.addEventListener("click", () => runDropInAction("/defield", "defield audit"));
+    $("f9-secure-network")?.addEventListener("click", () => runDropInAction("/secure-network", "secure network"));
+    $("f9-open-browser")?.addEventListener("click", () => runQueenBrowser());
+    $("f9-open-display")?.addEventListener("click", () => runDisplayOpen());
+    $("f9-purge-nested")?.addEventListener("click", () => {
+      if (!confirm("Quarantine nested nexus-field on TEAM/KILROY drives?\n\nHost mirror (.nexus-field-drive) is the only pre-commit publish target.")) return;
+      runTristateAction("/purge-nested-drive", "purge nested", { apply: true, confirm: true });
+    });
+  }
+
+  async function runTristateAction(path, label, body) {
+    toast(label + "…");
+    try {
+      const res = await fetch("/api/tristate-installer" + path, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body || {}),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (j.posture) state.data.tristate = j.posture;
+      renderUnderlay();
+      toast(j.ok || j.posture?.drive_converter?.panel?.defield_ok ? label + " complete" : j.error || label + " blocked");
+    } catch (e) {
+      toast(label + " failed: " + e.message);
+    }
+  }
+
+  async function runDropInAction(path, label, body) {
+    toast(label + "…");
+    try {
+      const res = await fetch("/api/drop-in-orchestrator" + path, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body || {}),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (j.posture) state.data.dropIn = j.posture;
+      else state.data.dropIn = j;
+      await refresh();
+      toast(j.ok ? label + " complete" : j.error || label + " blocked");
+    } catch (e) {
+      toast(label + " failed: " + e.message);
+    }
+  }
+
+  async function runQueenBrowser() {
+    toast("Opening Queen sovereign browser…");
+    try {
+      const res = await fetch("/api/queen-browser/f9", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const j = await res.json().catch(() => ({}));
+      toast(j.ok ? "Queen browser open" : j.error || "browser blocked");
+    } catch (e) {
+      toast("browser failed: " + e.message);
+    }
+  }
+
+  async function runDisplayOpen() {
+    toast("Opening display…");
+    try {
+      const j = await api("/api/display-open/local", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ route: "underlay-f9" }),
+      });
+      toast(j.ok ? "Display open" : j.error || "display blocked");
+    } catch (e) {
+      toast("display failed: " + e.message);
+    }
   }
 
   function renderSense() {
@@ -156,6 +260,10 @@
     const zocr = mem.zocr || {};
     const wr = mem.world_redata || {};
     const h7 = mem.hostess7 || {};
+    const icrf = state.data.ironcladReality || {};
+    const icim = state.data.ironcladImmediate || {};
+    const pts = icim.plate_to_sense || sp.plate_to_sense || sp.ironclad_goldmine || {};
+    const sn = state.data.senseNeural || {};
     const el = $("f9-sense-body");
     if (!el) return;
     const smart = h7.smart_one || {};
@@ -175,9 +283,40 @@
       card("ZOCR legacy", zocr.present ? "present" : "—", zocr.superseded_by_final_eye ? "fallback" : "canonical") +
       card("World Redata", wr.present ? "present" : "—", (wr.live ? "live" : "witness") + " WRDT1/WRZC1") +
       card("Present", sum.present_count ?? "—", "live " + (sum.live_count ?? "—")) +
+      card("Ironclad serum", icrf.verdict || "—", (icrf.ironclad_sealed ? "SEALED" : "pending") + " · " + (icrf.truth_serum?.truth_percent ?? "—") + "%") +
+      card("Human condition", icrf.ai_in_charge ? "AI IN CHARGE" : "HUMAN HOLDS", icrf.human_condition?.motto || "never wrong gate") +
+      card("Charge", icrf.charge_holder || "—", icrf.human_condition?.ai_role || (icrf.ai_in_charge ? "command" : "counsel")) +
+      card("Clean voltage", icrf.clean_voltage?.voltage_is_voltage ? "YES" : "no", icrf.clean_voltage?.motto || "voltage_is_voltage") +
+      card("Smooth operator", icrf.smoothness?.smoothness_score != null ? String(icrf.smoothness.smoothness_score) : "—", icrf.smoothness?.smooth_operator ? "smooth" : "advisory") +
+      card("Plate→Eye", pts.members?.eye_neural?.truth_percent != null ? pts.members.eye_neural.truth_percent + "%" : "—", pts.ironclad_grounded ? "GOLDMINE" : "read_first") +
+      card("Plate→Ear", pts.members?.ear_neural?.truth_percent != null ? pts.members.ear_neural.truth_percent + "%" : "—", pts.members?.ear_neural?.citation || "ironclad:neural:2") +
+      card("Plate→Mouth", pts.members?.mouth_neural?.truth_percent != null ? pts.members.mouth_neural.truth_percent + "%" : "—", pts.members?.mouth_neural?.hemisphere || "voice") +
+      card("Sense wire", sn.goldmine_ok || pts.goldmine_ok ? "GOLDMINE" : sn.invincible_ok ? "invincible" : "wire", (sn.woven_paths ?? pts.woven_paths ?? "—") + " paths · " + (sn.citation || pts.citation || "ironclad:neural:2")) +
+      '</div><div class="f9-actions" style="margin:0.5rem 0">' +
+      '<button type="button" class="f9-btn f9-btn--green" id="f9-ironclad-serum">TRUTH SERUM CYCLE</button>' +
       '</div><pre class="f9-pre f9-wide">' +
-      esc(JSON.stringify(sp, null, 2)) +
+      esc(JSON.stringify({ sense: sp, plate_to_sense: pts, sense_neural: sn, ironclad_reality_field: icrf }, null, 2)) +
       "</pre>";
+    $("f9-ironclad-serum")?.addEventListener("click", () => runIroncladSerum());
+  }
+
+  async function runIroncladSerum() {
+    toast("Ironclad truth serum cycle…");
+    try {
+      const res = await fetch("/api/ironclad/reality-field/cycle", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const j = await res.json().catch(() => ({}));
+      state.data.ironcladReality = j;
+      renderSense();
+      toast(j.verdict === "GREEN" ? "Truth serum GREEN — SI field sealed" : j.verdict || "serum cycle done");
+      await refresh();
+    } catch (e) {
+      toast("serum failed: " + e.message);
+    }
   }
 
   function renderDie() {
@@ -256,41 +395,62 @@
 
   function renderSovereign() {
     const st = state.data.sovereignTime || {};
+    const clk = state.data.sovereignClock || {};
     const sync = state.data.sovereignSync || {};
+    const desync = clk.desync || {};
+    const synced = clk.synced !== false && desync.synced !== false;
     const el = $("f9-sovereign-body");
     if (!el) return;
     el.innerHTML =
       '<div class="f9-grid">' +
-      card("Sovereign time", st.sealed || st.ok ? "SEALED" : "watch", st.pulse ?? st.cycle ?? "—") +
-      card("Cycle", sync.cycle ?? st.cycle ?? "—", "never lose cycle") +
-      card("Mirrors", sync.redundant_files ?? "—", sync.never_lose_cycle ? "redundant ON" : "—") +
+      card("Sovereign clock", synced ? "SYNC" : "DESYNC", clk.utc || st.derived_utc || "—") +
+      card("Linear sealed", st.immutable_linear || clk.immutable_linear ? "SEALED" : "watch", clk.linear_ns ?? "—") +
+      card("Cycle", (clk.cycle ?? sync.cycle ?? st.cycle) || "—", "never lose cycle") +
+      card("Skew", desync.skew_ms != null ? desync.skew_ms + " ms" : "—", synced ? "never desync" : "red flag") +
       '</div><pre class="f9-pre f9-wide">' +
-      esc(JSON.stringify({ sovereignTime: st, sovereignSync: sync }, null, 2)) +
+      esc(JSON.stringify({ sovereignClock: clk, sovereignTime: st, sovereignSync: sync }, null, 2)) +
       "</pre>";
   }
 
   function renderCycle() {
+    const hz = state.data.hostFreeze || {};
+    const phase = hz.phase || "idle";
+    const frozen = hz.frozen ? "FROZEN" : phase.toUpperCase();
+    const isolated = hz.field_draw_isolated ? "field draw isolated" : "full host";
     const el = $("f9-cycle-body");
     if (!el) return;
     el.innerHTML =
       '<div class="f9-grid f9-wide">' +
       card("Last tick", state.lastTick || "—", "auto every " + POLL_MS / 1000 + "s") +
+      card("Host freeze", frozen, isolated) +
       card("Sense meld", "POST /api/sense-package/meld", "eye · ear · zocr · redata · hostess7") +
       card("Meld cycle", "POST /api/plate-meld/cycle", "sense → firmware → kernel → plates → bus") +
       card("Bus pack", "POST /api/field-bus/cycle", "data_bus[64] copilot") +
       "</div>" +
-      '<p class="f9-lead">Operator cycle fuses all plates under flock — kernel meld, firmware strip, unified bus refresh.</p>' +
+      '<p class="f9-lead">Operator cycle fuses all plates under flock — kernel meld, firmware strip, unified bus refresh. Host freeze locks memory and suspends the guest OS; field slice keeps drawing on soft freeze.</p>' +
       '<div class="f9-actions" style="margin-top:0.75rem">' +
       '<button type="button" class="f9-btn f9-btn--green" id="f9-run-sense">SENSE MELD</button>' +
       '<button type="button" class="f9-btn" id="f9-run-meld">RUN MELD CYCLE</button>' +
       '<button type="button" class="f9-btn" id="f9-run-bus">PACK BUS</button>' +
       '<button type="button" class="f9-btn" id="f9-run-firmware">STRIP FIRMWARE</button>' +
       "</div>" +
+      '<div class="f9-actions" style="margin-top:0.5rem">' +
+      '<button type="button" class="f9-btn f9-btn--green" id="f9-freeze-soft">SOFT FREEZE</button>' +
+      '<button type="button" class="f9-btn" id="f9-freeze-mem">MEM SLEEP</button>' +
+      '<button type="button" class="f9-btn" id="f9-freeze-disk">DISK CLOSE</button>' +
+      '<button type="button" class="f9-btn" id="f9-freeze-thaw">THAW</button>' +
+      '<button type="button" class="f9-btn" id="f9-freeze-resume">RESUME WITNESS</button>' +
+      "</div>" +
       '<pre class="f9-pre f9-wide" id="f9-cycle-log">awaiting cycle…</pre>';
     $("f9-run-sense")?.addEventListener("click", () => runCycle("sense"));
     $("f9-run-meld")?.addEventListener("click", () => runCycle("meld"));
     $("f9-run-bus")?.addEventListener("click", () => runCycle("bus"));
     $("f9-run-firmware")?.addEventListener("click", () => runCycle("firmware"));
+    $("f9-freeze-soft")?.addEventListener("click", () => runHostFreeze("freeze", "soft"));
+    $("f9-freeze-mem")?.addEventListener("click", () => runHostFreeze("freeze", "mem"));
+    $("f9-freeze-disk")?.addEventListener("click", () => runHostFreeze("close", "disk"));
+    $("f9-freeze-thaw")?.addEventListener("click", () => runHostFreeze("thaw"));
+    $("f9-freeze-resume")?.addEventListener("click", () => runHostFreeze("resume-witness"));
   }
 
   function renderAll() {
@@ -312,12 +472,28 @@
     const fw = d.firmware || {};
     const k = d.kernel || {};
     const sp = d.sensePackage || {};
+    const ic = d.ironcladImmediate || {};
     chip("f9-chip-gen", "GEN", pm.generation ?? "—");
+    if ($("f9-chip-ironclad")) {
+      chip(
+        "f9-chip-ironclad",
+        "IRON",
+        ic.ironclad_sealed ? "SEALED" : ic.verdict || "—",
+        ic.ironclad_sealed ? "ok" : ic.verdict === "WATCH" ? "warn" : ""
+      );
+    }
     const senseVerdict = sp.verdict || fw.verdict || "—";
     chip("f9-chip-verdict", "SENSE", senseVerdict, senseVerdict === "GREEN" ? "ok" : senseVerdict === "WATCH" || senseVerdict === "BIOS_REQUIRED" ? "warn" : "alert");
     chip("f9-chip-die", "DIE", k.kilroy_live ? "LIVE" : "witness", k.bzimage_ready ? "ok" : "");
     chip("f9-chip-bus", "BUS", (d.bus?.checksum ?? "—").toString().slice(-8));
-    $("f9-foot-tick").textContent = state.lastTick || "—";
+    const clk = d.sovereignClock || {};
+    const desync = clk.desync || {};
+    const synced = clk.synced !== false && desync.synced !== false;
+    if ($("f9-chip-sovereign")) {
+      chip("f9-chip-sovereign", "TIME", synced ? "SYNC" : "DESYNC", synced ? "ok" : "alert");
+    }
+    const tick = clk.utc || clk.utc_full || "";
+    $("f9-foot-tick").textContent = tick ? tick.slice(11, 19) + "Z" : state.lastTick || "—";
   }
 
   async function refresh() {
@@ -337,7 +513,16 @@
         packet,
         laws,
         sovereignTime,
+        sovereignClock,
         sovereignSync,
+        tristate,
+        dropIn,
+        sovereignProtocol,
+        displays,
+        ironcladReality,
+        ironcladImmediate,
+        senseNeural,
+        hostFreeze,
       ] = await Promise.all([
         api("/api/status").catch(() => ({})),
         api("/api/field-underlay").catch(() => ({})),
@@ -353,7 +538,16 @@
         api("/api/packet-field").catch(() => ({})),
         api("/api/connectivity-laws").catch(() => ({})),
         api("/api/sovereign-time").catch(() => ({})),
+        api("/api/sovereign-clock").catch(() => ({})),
         api("/api/sovereign-sync").catch(() => ({})),
+        api("/api/tristate-installer").catch(() => ({})),
+        api("/api/drop-in-orchestrator").catch(() => ({})),
+        api("/api/sovereign-protocol").catch(() => ({})),
+        api("/api/display-open").catch(() => ({})),
+        api("/api/ironclad/reality-field").catch(() => ({})),
+        api("/api/ironclad/immediate").catch(() => ({})),
+        api("/api/sense-neural").catch(() => ({})),
+        api("/api/field-host-freeze").catch(() => ({})),
       ]);
       state.data = {
         status,
@@ -370,13 +564,45 @@
         packet,
         laws,
         sovereignTime,
+        sovereignClock,
         sovereignSync,
+        tristate,
+        dropIn,
+        sovereignProtocol,
+        displays,
+        ironcladReality,
+        ironcladImmediate,
+        senseNeural,
+        hostFreeze,
       };
-      state.lastTick = new Date().toISOString().slice(11, 19) + "Z";
+      const tickUtc = sovereignClock?.utc || sovereignClock?.utc_full || "";
+      state.lastTick = tickUtc ? tickUtc.slice(11, 19) + "Z" : new Date().toISOString().slice(11, 19) + "Z";
       updateHeader();
       renderAll();
     } catch (e) {
       toast("refresh failed: " + e.message);
+    }
+  }
+
+  async function runHostFreeze(action, mode) {
+    const log = $("f9-cycle-log");
+    const path = "/api/field-host-freeze/" + action;
+    const needsElevated = action === "freeze" || action === "close" || action === "thaw";
+    const body = { mode: mode || "soft" };
+    if (needsElevated) body.elevated = true;
+    if (log) log.textContent = "host freeze " + action + (mode ? " (" + mode + ")" : "") + "…";
+    try {
+      const res = await api(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (log) log.textContent = JSON.stringify(res, null, 2);
+      toast(res.ok ? action + " ok" : action + " failed");
+      await refresh();
+    } catch (e) {
+      if (log) log.textContent = String(e);
+      toast("host freeze failed");
     }
   }
 
@@ -414,12 +640,20 @@
   }
 
   function bindF9() {
-    document.addEventListener("keydown", (ev) => {
-      if (ev.key === "F9") {
-        ev.preventDefault();
-        setSector("underlay");
-        toast("UNDERLAY F9 — bottom-up authority");
+    document.addEventListener("keydown", async (ev) => {
+      if (ev.key !== "F9") return;
+      ev.preventDefault();
+      const di = state.data.dropIn || {};
+      const target = di.f9_target || "tristate_installer";
+      if (target === "queen_sovereign_browser") {
+        await runQueenBrowser();
+        return;
       }
+      setSector("underlay");
+      toast("UNDERLAY F9 — Tristate installer");
+      try {
+        await api("/api/queen-browser/f9", { method: "POST", body: "{}" });
+      } catch (_) { /* panel may open installer tab */ }
     });
   }
 

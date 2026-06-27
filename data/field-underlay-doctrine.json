@@ -12,7 +12,9 @@
     "permanent_after_commit": true,
     "off_switch": false,
     "installer": "2026-tristate-installer",
-    "hotkey": "F9"
+    "hotkey": "F9",
+    "hotkey_pre_defield": "tristate_installer",
+    "hotkey_post_secure": "queen_sovereign_browser"
   },
   "model": {
     "underlay": "KILROY Field Die + NEXUS shield + Queen capsule — native authority",
@@ -29,6 +31,7 @@
   "protections_envelope": [
     "connection_gatekeeper",
     "hardware_wire",
+    "clipboard_wire",
     "cpu_vulnerability_shield",
     "field_polkit",
     "field_perimeter",

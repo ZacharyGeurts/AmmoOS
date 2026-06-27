@@ -77,7 +77,20 @@ STATE_GLOBS = (
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -210,6 +223,17 @@ def discover_all_drives() -> list[dict[str, Any]]:
     return drives
 
 
+def _non_fielded():
+    spec = importlib.util.spec_from_file_location(
+        "field_non_fielded_safety", INSTALL / "lib" / "field-non-fielded-safety.py",
+    )
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def primary_field_root() -> Path:
     sel = _selected_drive_path()
     if sel:
@@ -220,6 +244,14 @@ def primary_field_root() -> Path:
         if _safe_is_dir(root / "brain"):
             return root
     return HOSTESS7_TEAM
+
+
+def publish_field_root() -> Path:
+    """Host mirror until underlay commit — never drop field files on TEAM drive early."""
+    nf = _non_fielded()
+    if nf:
+        return nf.publish_field_root(_selected_drive_path())
+    return INSTALL / ".nexus-field-drive"
 
 
 def select_drive(path: str) -> dict[str, Any]:
@@ -241,8 +273,9 @@ def select_drive(path: str) -> dict[str, Any]:
     return {"ok": True, **doc, "drives": discover_all_drives()}
 
 
-def nexus_field_base() -> Path:
-    return primary_field_root() / NEXUS_FIELD_NAME
+def nexus_field_base(*, for_publish: bool = False) -> Path:
+    root = publish_field_root() if for_publish else primary_field_root()
+    return root / NEXUS_FIELD_NAME
 
 
 def system_dir() -> Path:
@@ -261,8 +294,8 @@ def talk_outbox() -> Path:
     return nexus_field_base() / "talk" / "outbox"
 
 
-def ensure_layout() -> Path:
-    base = nexus_field_base()
+def ensure_layout(*, for_publish: bool = False) -> Path:
+    base = nexus_field_base(for_publish=for_publish)
     for sub in ("system", "state", "talk/inbox", "talk/outbox", "run"):
         (base / sub).mkdir(parents=True, exist_ok=True)
     return base
@@ -274,6 +307,9 @@ def drive_mounted() -> bool:
 
 
 def field_drive_active() -> bool:
+    nf = _non_fielded()
+    if nf and not nf.state_redirect_allowed() and os.environ.get("NEXUS_FIELD_DRIVE_ACTIVE") != "1":
+        return False
     return os.environ.get("NEXUS_FIELD_DRIVE_ACTIVE") == "1" or (
         state_dir().is_dir() and os.environ.get("NEXUS_FIELD_DRIVE", "1") == "1"
         and (nexus_field_base() / "active.json").is_file()
@@ -307,9 +343,20 @@ def _ignore_copy(_dir: str, names: list[str]) -> set[str]:
     return {n for n in names if n in skip or n.endswith(".pyc")}
 
 
+def _gate_publish(op: str) -> dict[str, Any] | None:
+    nf = _non_fielded()
+    if not nf:
+        return None
+    gate = nf.gate_publish(op=op)
+    return gate if not gate.get("ok") else None
+
+
 def publish_tools(*, full: bool = False) -> dict[str, Any]:
     """Copy ported field tools (lib/bin) onto field drive — no system deps."""
-    base = ensure_layout()
+    blocked = _gate_publish("publish_tools")
+    if blocked:
+        return blocked
+    base = ensure_layout(for_publish=True)
     tools_dst = base / "tools"
     if full and tools_dst.exists():
         shutil.rmtree(tools_dst, ignore_errors=True)
@@ -343,7 +390,10 @@ def publish_tools(*, full: bool = False) -> dict[str, Any]:
 
 def publish_gui(*, full: bool = False) -> dict[str, Any]:
     """Publish whole GUI (panel + assets) to field drive — the portable system face."""
-    base = ensure_layout()
+    blocked = _gate_publish("publish_gui")
+    if blocked:
+        return blocked
+    base = ensure_layout(for_publish=True)
     sys_dst = system_dir()
     gui_dst = sys_dst / "panel"
     assets_dst = sys_dst / "assets"
@@ -370,7 +420,10 @@ def publish_gui(*, full: bool = False) -> dict[str, Any]:
 
 def publish_system(*, full: bool = False) -> dict[str, Any]:
     """Mirror GUI + supporting install + state onto field drive."""
-    base = ensure_layout()
+    blocked = _gate_publish("publish_system")
+    if blocked:
+        return blocked
+    base = ensure_layout(for_publish=True)
     sys_dst = system_dir()
     st_dst = state_dir()
 
@@ -412,13 +465,16 @@ def publish_system(*, full: bool = False) -> dict[str, Any]:
     sys_files, sys_bytes = _count_tree(sys_dst)
     st_files, st_bytes = _count_tree(st_dst)
 
+    nf = _non_fielded()
     manifest = {
         "schema": "field-drive-system/v1",
         "updated": _now(),
         "version": VERSION,
         "hostess_version": os.environ.get("HOSTESS_VERSION", "7"),
         "install_root": str(INSTALL),
-        "field_root": str(primary_field_root()),
+        "field_root": str(publish_field_root()),
+        "host_mirror_only": bool(nf and not nf.underlay_committed()),
+        "non_fielded_gate": bool(nf and nf.publish_requires_defield()),
         "nexus_field": str(base),
         "system_dir": str(sys_dst),
         "state_dir": str(st_dst),
@@ -449,9 +505,10 @@ def publish_system(*, full: bool = False) -> dict[str, Any]:
 
 
 def sync_state_only() -> dict[str, Any]:
-    """Lightweight cycle — state files only."""
-    ensure_layout()
-    st_dst = state_dir()
+    """Lightweight cycle — state files only (host mirror until underlay commit)."""
+    base = ensure_layout(for_publish=True)
+    st_dst = base / "state"
+    st_dst.mkdir(parents=True, exist_ok=True)
     state_files: list[str] = []
     host_state = _host_state_dir()
     if host_state.is_dir():
@@ -580,12 +637,17 @@ def build_status() -> dict[str, Any]:
     if not threat and _safe_is_file(host_state / "threat-panel.json"):
         threat = _load_json(host_state / "threat-panel.json", {})
 
+    nf = _non_fielded()
+    audit = nf.defield_audit() if nf else {}
     return {
         "schema": "field-drive-system/v1",
         "updated": _now(),
         "version": VERSION,
         "drive_mounted": drive_mounted(),
         "field_root": str(primary_field_root()),
+        "publish_root": str(publish_field_root()),
+        "host_mirror_only": bool(nf and not nf.underlay_committed()),
+        "non_fielded_audit": audit,
         "nexus_field": str(base),
         "active": bool(active.get("active")),
         "whole_system": manifest.get("whole_system") or "gui",

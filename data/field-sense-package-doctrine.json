@@ -12,6 +12,53 @@
     "probe_cache_seconds": 12,
     "shallow_http_probe": true
   },
+  "epistemic_root": {
+    "ironclad": {
+      "doctrine": "data/ironclad-doctrine.json",
+      "immediate": "ironclad-immediate.json",
+      "engine": "lib/ironclad-immediate.py",
+      "read_first": true,
+      "goldmine": true,
+      "motto": "Plate → eye · ear · mouth · sense wire — all intelligence traces Ironclad first.",
+      "citation": "ironclad:neural:2",
+      "targets": ["eye_neural", "ear_neural", "mouth_neural", "sense_neural_wire"],
+      "wires": [
+        "ironclad_bible → final_eye_node → eye_neural",
+        "ironclad_bible → final_ear_node → ear_neural",
+        "ironclad_bible → final_mouth_node → mouth_neural",
+        "ironclad_bible → sense_neural_wire"
+      ]
+    },
+    "scene_guard": {
+      "doctrine": "OBS-FieldVoiceFilter/data/field-scene-guard-doctrine.json",
+      "obs_filter": "sg_field_scene_guard",
+      "rule": "One filter on the scene — field repeat inspect + security posterity; prunes legacy filters from tree",
+      "spiderweb_ledger": "spiderweb-tree.jsonl",
+      "posterity_doctrine": "OBS-FieldVoiceFilter/data/field-security-posterity-doctrine.json",
+      "repeat_inspect": "field-repeat-field.c",
+      "security_posterity": "field-security-posterity.c",
+      "final_eye_ref": "Final_Eye/data/zocr-pattern-registry.json",
+      "final_ear_ref": "Final_Ear/data/ear-truth-filter.json",
+      "reject_always": ["banded_signal", "coded_signal", "grid_jam", "moire_weave", "hostile_waveform"]
+    },
+    "obs_field_stack": {
+      "root": "OBS-FieldVoiceFilter",
+      "install": "OBS-FieldVoiceFilter/install.sh",
+      "runtime_status": "data/field-obs-stack.json",
+      "threat_ledger": "data/threat-ledger.jsonl",
+      "spiderweb_ledger": "data/spiderweb-tree.jsonl",
+      "defaults": "clean_passthrough",
+      "single_filter": "sg_field_scene_guard",
+      "role": "OBS-native sense lane — Scene Guard on scene; spiderweb + tree prune; bridges eye/ear/Hostess7"
+    },
+    "sweet_anita_broadcast": {
+      "doctrine": "NewLatest/data/field-sweet-anita-broadcast-doctrine.json",
+      "panel_tab": "sweet-anita",
+      "api": "/api/sweet-anita",
+      "us_slice": "/api/us-obs-field",
+      "rule": "Embedded panel preview — never tunnel desktop; best dB for everyone; decks + all major platforms"
+    }
+  },
   "products": {
     "final_eye": {
       "env": "FINAL_EYE_ROOT",

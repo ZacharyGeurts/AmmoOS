@@ -44,8 +44,8 @@
     },
     "field_thermal_guard": {
       "nexus_keys": ["NEXUS_FIELD_THERMAL_GUARD", "NEXUS_FIELD_MAX_JOULES_PER_SEC", "NEXUS_FIELD_REDATA_CHUNK"],
-      "amouranthrtx": "FieldThermalGuard + FieldGlobalRedata",
-      "role": "Landauer work budget, incremental redata, Pipeline dispatch guard"
+      "amouranthrtx": "FieldThermalGuard + FieldWave + FieldGlobalRedata",
+      "role": "Landauer work budget, per-wave entropy guard, incremental redata, Pipeline dispatch guard"
     },
     "efficient_store": {
       "nexus_keys": ["NEXUS_STATE_DIR"],

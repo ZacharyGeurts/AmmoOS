@@ -20,10 +20,7 @@ ANGEL_MANDATE = INSTALL / "data" / "queen-angel-mandate.json"
 PANEL = STATE / "field-queen-browser-panel.json"
 
 QUEEN_BROWSER_PROCS = frozenset({
-    "fieldfox", "field-queen", "queen-browser",
-    "firefox", "chrome", "chromium", "brave", "brave-browser", "vivaldi", "opera",
-    "msedge", "waterfox", "librewolf", "floorp", "thorium",
-    "google-chrome", "google-chrome-stable",
+    "queen-browser", "queen-world", "field-queen",
 })
 BLOCKED_CAPTURE_PROCS = frozenset({
     "obs", "obs-studio", "obs-ffmpeg-mux", "wf-recorder", "gpu-screen-recorder",
@@ -169,7 +166,20 @@ def field_queen_env() -> dict[str, str]:
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -256,7 +266,7 @@ def embedded_panel_path() -> str:
     custom = os.environ.get("QUEEN_EMBED_PANEL_FILE", "").strip()
     if custom:
         return custom
-    for rel in ("world/index.html", "panel/field.html"):
+    for rel in ("world/browser.html", "panel/field.html"):
         p = INSTALL / rel
         if p.is_file():
             return str(p)
@@ -270,8 +280,13 @@ def sovereign_posture() -> dict[str, Any]:
         "own_os": sov,
         "no_os_browser_hook": sov and os.environ.get("NEXUS_NO_OS_BROWSER_HOOK", "1") == "1",
         "no_screen_capture": sov and os.environ.get("NEXUS_NO_SCREEN_CAPTURE", "1") == "1",
+        "no_keyboard_hook": sov and os.environ.get("NEXUS_NO_KEYBOARD_HOOK", "1") == "1",
+        "keyboard_no_middleman": sov and os.environ.get("NEXUS_KEYBOARD_NO_MIDDLEMAN", "1") == "1",
+        "media_egress_lock": os.environ.get("NEXUS_MEDIA_EGRESS_LOCK", "1") == "1",
+        "local_capture_operator": os.environ.get("NEXUS_LOCAL_CAPTURE_OPERATOR", "1") == "1",
+        "local_capture_grant": _local_capture_grant_active(),
         "no_wm_hook": sov and os.environ.get("NEXUS_NO_WM_HOOK", "1") == "1",
-        "embed_panel_in_engine": os.environ.get("NEXUS_EMBED_PANEL_IN_ENGINE", "1") == "1",
+        "embed_panel_in_engine": os.environ.get("NEXUS_EMBED_PANEL_IN_ENGINE", "0") == "1",
         "embedded_panel_file": embedded_panel_path(),
         "zero_telemetry": zero_telemetry(),
         "ai_telemetry_secure_only": True,
@@ -289,10 +304,40 @@ def sovereign_posture() -> dict[str, Any]:
     }
 
 
+def _local_capture_grant_active() -> dict[str, Any]:
+    grant_path = STATE / "local-capture-grant.json"
+    doc = _load_json(grant_path, {})
+    if not doc.get("active"):
+        return {}
+    exp = doc.get("expires_at") or ""
+    try:
+        from datetime import datetime, timezone
+
+        if exp and datetime.strptime(exp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+            return {}
+    except ValueError:
+        return {}
+    return doc
+
+
 def gate_capture_process(proc: str) -> dict[str, Any]:
     pl = (proc or "").lower()
     if not is_sovereign():
         return {"proc": proc, "verdict": "ALLOW_LEGACY", "iff": "LEGACY", "iff_label": "LEGACY · PRE-SOVEREIGN"}
+    grant = _local_capture_grant_active()
+    if grant and os.environ.get("NEXUS_LOCAL_CAPTURE_OPERATOR", "1") not in ("0", "false", "no"):
+        allowed = {a.lower() for a in (grant.get("allowed_procs") or ["obs", "obs-studio"])}
+        for a in allowed:
+            if a in pl and grant.get("loopback_only") and not grant.get("egress_allowed"):
+                return {
+                    "proc": proc,
+                    "verdict": "ALLOW_LOCAL_OPERATOR",
+                    "iff": "CIVILIAN",
+                    "iff_label": "CIVILIAN · LOCAL_OPERATOR",
+                    "enforcement": "PASS — operator local capture grant (loopback only)",
+                    "grant_id": grant.get("id"),
+                    "purpose": grant.get("purpose"),
+                }
     for b in BLOCKED_CAPTURE_PROCS:
         if b in pl and "queen-browser" not in pl:
             return {
@@ -348,11 +393,11 @@ def posture() -> dict[str, Any]:
         "connection_gatekeeper": os.environ.get("NEXUS_CONNECTION_GATEKEEPER", "1") == "1",
         "packet_field": os.environ.get("NEXUS_PACKET_FIELD", "1") == "1",
         "sovereign_time": os.environ.get("NEXUS_SOVEREIGN_TIME", "1") == "1",
-        "engine_ship": os.environ.get("NEXUS_FIELDFox_ENGINE", "fieldfox"),
+        "engine_ship": os.environ.get("NEXUS_FIELDFox_ENGINE", "queen-browser"),
         "sovereign": os.environ.get("NEXUS_QUEEN_SOVEREIGN", os.environ.get("QUEEN_SOVEREIGN", "1")) == "1",
         "no_os_browser_hook": os.environ.get("NEXUS_NO_OS_BROWSER_HOOK", "1") == "1",
         "no_screen_capture": os.environ.get("NEXUS_NO_SCREEN_CAPTURE", "1") == "1",
-        "embed_panel_in_engine": os.environ.get("NEXUS_EMBED_PANEL_IN_ENGINE", "1") == "1",
+        "embed_panel_in_engine": os.environ.get("NEXUS_EMBED_PANEL_IN_ENGINE", "0") == "1",
     }
 
 

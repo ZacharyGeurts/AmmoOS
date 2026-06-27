@@ -1,6 +1,6 @@
 # Installers
 
-Guide for **v10.4.3** release tarballs and in-tree scripts.
+Guide for **g16 1.0** — clone from GitHub or release tarball.
 
 **Also:** [INSTALL-README.md](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/INSTALL-README.md) in the repo.
 
@@ -8,20 +8,28 @@ Guide for **v10.4.3** release tarballs and in-tree scripts.
 
 ## Release assets
 
-Download: https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/v10.4.3
+**Recommended (g16 1.0 on main):**
+
+```bash
+git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
+cd NEXUS-Shield
+```
+
+Release tarballs (when published): https://github.com/ZacharyGeurts/NEXUS-Shield/releases/tag/g16-1.0
 
 | File | Use |
 |------|-----|
-| `nexus-shield-10.4.3-source.tar.gz` | Full tree — **recommended** |
-| `nexus-shield-10.4.3-installers.tar.gz` | Scripts only |
+| `nexus-shield-g16-1.0-source.tar.gz` | Full tree — **recommended** |
+| `nexus-shield-g16-1.0-installers.tar.gz` | Scripts only |
 
 ---
 
 ## Full install
 
 ```bash
-tar -xzf nexus-shield-10.4.3-source.tar.gz
-cd nexus-shield-10.4.3
+# or from tarball:
+tar -xzf nexus-shield-g16-1.0-source.tar.gz
+cd nexus-shield-g16-1.0
 chmod +x install-all.sh genius_shield.sh nexus.sh nexus-install-gui.sh
 sudo ./install-all.sh
 ```

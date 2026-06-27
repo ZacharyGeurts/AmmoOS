@@ -1,6 +1,186 @@
 /* Queen Browser Shell — tabs are the OS; dock retired in shell mode */
+html,
 body.qw-browser-shell {
+  height: 100%;
+  overflow: hidden;
+}
+
+body.qw-browser-shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "threats"
+    "viewport"
+    "chrome";
+  min-height: 100vh;
+  height: 100vh;
+}
+
+body.qw-browser-shell #qm-threat-bar {
+  grid-area: threats;
+}
+
+body.qw-browser-shell .qb-viewport {
+  grid-area: viewport;
+  min-height: 0;
+}
+
+body.qw-browser-shell .qb-chrome {
+  grid-area: chrome;
+  border-top: 1px solid rgba(26, 77, 50, 0.55);
+  border-bottom: none;
+  max-height: 320px;
+  overflow: hidden;
+  transition:
+    max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.28s ease,
+    padding 0.32s ease,
+    border-color 0.28s ease;
+}
+
+body.qw-browser-shell.qw-chrome-minimized {
   grid-template-rows: auto 1fr;
+}
+
+body.qw-browser-shell.qw-chrome-minimized .qb-chrome {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top-color: transparent;
+  pointer-events: none;
+}
+
+/* Minimize control — underscore beside new-tab */
+.qb-chrome-min-btn {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  letter-spacing: 0;
+  padding-bottom: 6px !important;
+  color: var(--qb-emerald-glow, #3ecf8e) !important;
+  border-color: rgba(34, 197, 94, 0.35) !important;
+}
+
+.qb-chrome-min-btn:hover,
+.qb-chrome-min-btn:focus-visible {
+  color: var(--qb-rose-soft, #f472b6) !important;
+  border-color: rgba(244, 114, 182, 0.45) !important;
+  background: rgba(235, 72, 140, 0.1) !important;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+}
+
+/* Restore chip — checkbox-sized, bottom-right when chrome minimized */
+.qb-chrome-restore {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2400;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(26, 77, 50, 0.85);
+  border-radius: 3px;
+  background: linear-gradient(145deg, #0c1812 0%, #050806 100%);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.35, 0.64, 1),
+    box-shadow 0.22s ease,
+    border-color 0.18s ease;
+}
+
+.qb-chrome-restore img {
+  width: 14px;
+  height: 14px;
+  display: block;
+  transition: transform 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* Hover peek — tray rises like it's about to open */
+.qb-chrome-restore::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  width: min(300px, 48vw);
+  height: 58px;
+  border-radius: 10px 10px 4px 4px;
+  border: 1px solid rgba(26, 77, 50, 0.75);
+  background: linear-gradient(180deg, #0a120e 0%, #050806 100%);
+  box-shadow:
+    0 -10px 32px rgba(0, 0, 0, 0.55),
+    inset 0 -1px 0 rgba(244, 114, 182, 0.22),
+    inset 0 1px 0 rgba(62, 207, 142, 0.12);
+  transform: scaleY(0.12) translateY(10px);
+  transform-origin: bottom right;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.36s cubic-bezier(0.34, 1.45, 0.64, 1),
+    opacity 0.24s ease;
+}
+
+.qb-chrome-restore::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  pointer-events: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.qw-chrome-minimized .qb-chrome-restore {
+  display: flex;
+}
+
+body.qw-chrome-minimized .qb-chrome-restore[hidden] {
+  display: none !important;
+}
+
+.qb-chrome-restore:hover,
+.qb-chrome-restore:focus-visible {
+  transform: scale(1.12);
+  border-color: rgba(62, 207, 142, 0.75);
+  box-shadow:
+    0 0 16px rgba(34, 197, 94, 0.35),
+    0 0 8px rgba(244, 114, 182, 0.18);
+  outline: none;
+}
+
+.qb-chrome-restore:hover::before,
+.qb-chrome-restore:focus-visible::before {
+  transform: scaleY(1) translateY(0);
+  opacity: 1;
+}
+
+.qb-chrome-restore:hover img,
+.qb-chrome-restore:focus-visible img {
+  transform: translateY(-2px) scale(1.08);
+}
+
+.qb-chrome-restore:hover::after,
+.qb-chrome-restore:focus-visible::after {
+  border-color: rgba(62, 207, 142, 0.35);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.25);
+}
+
+.qb-chrome-restore:active {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.qw-browser-shell .qb-chrome,
+  .qb-chrome-restore,
+  .qb-chrome-restore::before,
+  .qb-chrome-restore img {
+    transition: none !important;
+  }
 }
 
 body.qw-browser-shell .qw-dock {
@@ -45,7 +225,7 @@ body.qw-browser-shell.qw-viewport-fs .qb-chrome {
 
 .qb-tab--start .qb-tab-title::before {
   content: "⊞ ";
-  color: #5ecfff;
+  color: #3ecf8e;
 }
 
 .qb-tab--files .qb-tab-title::before {
@@ -73,7 +253,7 @@ body.qw-browser-shell.qw-viewport-fs .qb-chrome {
 
 .qb-start-btn {
   border-color: rgba(46, 184, 224, 0.45);
-  color: #5ecfff;
+  color: #3ecf8e;
   font-size: 1rem;
   font-weight: 700;
 }
@@ -87,6 +267,17 @@ body.qw-browser-shell.qw-viewport-fs .qb-chrome {
 .qb-viewport {
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+body.qw-browser-shell .qb-viewport .qb-frame,
+body.qw-browser-shell .qb-viewport .qb-tab-panes {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
 }
 
 .qb-tab-panes {

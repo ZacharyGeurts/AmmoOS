@@ -3,7 +3,9 @@
   "title": "Sovereign sync — one clock, every section",
   "motto": "Never misconstrue time. Never lose a cycle. Never lose data.",
   "canonical_module": "lib/field-sovereign-sync.py",
-  "clock_source": "sovereign-time derived_utc — monotonic anchor, not pool NTP",
+  "clock_source": "sovereign-clock.utc_z() — everyone everything everywhere; never desync",
+  "authoritative_module": "lib/sovereign-clock.py",
+  "never_desync": true,
   "sections": {
     "dns": {"gate": true, "stamp": true, "ledger": true},
     "dhcp": {"gate": true, "stamp": true, "ledger": true},
@@ -22,7 +24,8 @@
     "ledgers_append_only": [
       "sovereign-sync-ledger.jsonl",
       "sovereign-cycle-ledger.jsonl",
-      "sovereign-time-receipts.jsonl"
+      "sovereign-time-receipts.jsonl",
+      "sovereign-time-red-flags.jsonl"
     ],
     "recover": "field-sovereign-sync.py recover"
   },

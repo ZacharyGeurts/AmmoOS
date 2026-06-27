@@ -26,6 +26,7 @@
   <link rel="preload" href="/api/nexus-field" as="fetch" crossorigin />
   <script src="/assets/front-hook.js?v=cc7"></script>
   <script src="/assets/hardware-wire.js?v=cc1"></script>
+  <script src="/assets/clipboard-wire.js?v=cc1"></script>
   <script src="/assets/admin-window-shield.js?v=cc6"></script>
   <script src="/assets/field-foundation.js"></script>
   <script src="/assets/nexus-ui-smooth.js"></script>
@@ -49,7 +50,9 @@
   <link rel="stylesheet" href="/assets/nexus-person-system.css" />
   <link rel="stylesheet" href="/assets/hostess7-command.css" />
   <link rel="stylesheet" href="/assets/nexus-training.css" />
+  <link rel="stylesheet" href="/assets/final-sense-tabs.css" />
   <link rel="stylesheet" href="/assets/field-inspector.css" />
+  <link rel="stylesheet" href="/assets/sweet-anita-broadcast.css" />
   <script defer src="/assets/nexus-person-system.js"></script>
   <script defer src="/assets/nexus-map-interact.js"></script>
   <script defer src="/assets/hostess7-command.js"></script>
@@ -136,10 +139,11 @@
       text-decoration: none; transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     }
     .header-twitch-link:hover {
-      border-color: #9146ff; box-shadow: 0 0 18px rgba(145, 70, 255, 0.38); transform: translateY(-1px);
+      border-color: #22c55e; box-shadow: 0 0 18px rgba(34, 197, 94, 0.35), 0 0 8px rgba(244, 114, 182, 0.2); transform: translateY(-1px);
     }
     .header-twitch-avatar {
       width: 38px; height: 38px; border-radius: 50%; object-fit: cover;
+      border: 2px solid #22c55e; box-shadow: 0 0 0 1px rgba(244, 114, 182, 0.35);
       border: 2px solid #9146ff; box-shadow: 0 0 14px rgba(145, 70, 255, 0.45);
     }
     .header-twitch-label {
@@ -2012,11 +2016,12 @@
       </div>
     </div>
     <div class="header-partner-links" aria-label="Field partners">
-      <a class="header-twitch-link" href="https://www.twitch.tv/amouranth" target="_blank" rel="noopener noreferrer" title="Amouranth on Twitch">
-        <img class="header-twitch-avatar" src="/assets/amouranth-twitch-avatar.png" alt="Amouranth" width="38" height="38" loading="lazy" />
+      <a class="header-twitch-link" href="http://127.0.0.1:9481/world/browser.html" title="Queen Browser — local Amouranth branding · black · emerald · rose. All icons generated from on-disk assets; no remote images.">
+        <img class="header-twitch-avatar" src="/assets/amouranth-panel-avatar.png" alt="Queen Browser" width="38" height="38" loading="lazy"
+          title="Queen mascot — taskbar &amp; tray icons use this same local portrait. Click opens Queen Browser shell." />
         <span>
-          <span class="header-twitch-label">Amouranth</span>
-          <span class="header-twitch-sub">Twitch →</span>
+          <span class="header-twitch-label">Queen Browser</span>
+          <span class="header-twitch-sub">Local shell →</span>
         </span>
       </a>
       <a class="header-amouranthrtx-link" href="https://github.com/ZacharyGeurts/AMOURANTHRTX" target="_blank" rel="noopener noreferrer" title="AMOURANTHRTX Field Die on GitHub">
@@ -2111,18 +2116,34 @@
     </div>
   </div>
 
-  <nav class="menu" aria-label="Panel sections">
-    <button type="button" class="active" data-view="command" data-i18n="nav.command" data-tip="Hostess 7 Super Intelligence — ask if she needs or wants anything, Grok-style talk, IQ & Turing batteries.">Hostess 7 · Super Intelligence</button>
-    <button type="button" data-view="us" data-i18n="nav.us" data-tip="Page 1 — forensic identity of THIS machine. Every fact from ss, ip, proc, and NEXUS state — zero external guesswork.">US</button>
-    <button type="button" data-view="packets" data-i18n="nav.packets" data-tip="Packets — live connections scored Good/Bad plus deep DPI inspect. Packet permission v4.0.">Packets</button>
-    <button type="button" data-view="threats" data-i18n="nav.threats" data-tip="Threats — globe map, attack-path dossiers, Grok Heavy kill-orders. Identify. Record. KILL.">Threats</button>
-    <button type="button" data-view="intel" data-i18n="nav.intel" data-tip="Intel — honorability, field RF antenna, police interop, research tables.">Intel</button>
-    <button type="button" data-view="signals" data-i18n="nav.signals" data-tip="Signals — gorgeous field antenna pulses. Every signal FCC-identified with threat tags.">Signals</button>
-    <button type="button" data-view="dns" data-i18n="nav.dns" data-tip="DNS & DHCP — planetary command. Threat levels, traffic patterns, secure threat model, Truth Resolver + Field DHCP on one tab.">DNS &amp; DHCP</button>
-    <button type="button" data-view="outside" data-i18n="nav.outside" data-tip="Outside — NEXUS egress gate. SSH, telnet, mail, HTTP/S, custom ports. Operator-initiated outbound through our firewall.">Outside</button>
-    <button type="button" data-view="library" data-i18n="nav.library" aria-label="Library · Books · Alt Shift B" aria-keyshortcuts="Alt+Shift+B" data-tip="Hostess7 H7 field books — alphabetical list, braille reader, screen-reader search. Alt+Shift+B jumps here.">Library · Books</button>
-    <button type="button" data-view="training" data-tip="Hostess 7 Training — wireframe graph, track evaluation, curriculum steps, mastery pillars.">Training</button>
-    <button type="button" data-view="system" data-i18n="nav.system" data-tip="System — settings, logs, protection toggles.">System</button>
+  <nav class="menu menu--grouped" aria-label="Panel sections">
+    <div class="nav-group">
+      <span class="nav-group-label">Operator</span>
+      <button type="button" class="active" data-view="command" data-i18n="nav.command" data-tip="Hostess 7 Super Intelligence — ask if she needs or wants anything, Grok-style talk, IQ & Turing batteries.">Hostess 7 · Super Intelligence</button>
+      <button type="button" data-view="us" data-i18n="nav.us" data-tip="Page 1 — forensic identity of THIS machine plus Field OBS stack summary.">US</button>
+      <button type="button" data-view="sweet-anita" data-tip="Sweet_Anita — Twitch-style video tab: OBS Field stack, decks, every major platform, embedded preview (no desktop tunnel), best dB for everyone.">Sweet_Anita</button>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Network</span>
+      <button type="button" data-view="packets" data-i18n="nav.packets" data-tip="Packets — live connections scored Good/Bad plus deep DPI inspect. Packet permission v4.0.">Packets</button>
+      <button type="button" data-view="threats" data-i18n="nav.threats" data-tip="Threats — globe map, attack-path dossiers, Grok Heavy kill-orders. Identify. Record. KILL.">Threats</button>
+      <button type="button" data-view="dns" data-i18n="nav.dns" data-tip="DNS & DHCP — planetary command. Threat levels, traffic patterns, secure threat model, Truth Resolver + Field DHCP on one tab.">DNS &amp; DHCP</button>
+      <button type="button" data-view="outside" data-i18n="nav.outside" data-tip="Outside — NEXUS egress gate. SSH, telnet, mail, HTTP/S, custom ports. Operator-initiated outbound through our firewall.">Outside</button>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Sense</span>
+      <button type="button" data-view="final-eye" data-tip="Final_Eye — ocular spectrum, twins Vita/Veritas, stream, teach authority, eye-ear fusion.">Final Eye</button>
+      <button type="button" data-view="final-ear" data-tip="Final Ear — auditory spectrum waterfall, equipment profiles, truth filters, sound tracker, desktop follow.">Final Ear</button>
+      <button type="button" data-view="final-mouth" data-tip="Final Mouth — vocal spectrum, voice fix, TTS, viseme bind, mouth-ear-eye fusion.">Final Mouth</button>
+      <button type="button" data-view="signals" data-i18n="nav.signals" data-tip="Signals — gorgeous field antenna pulses. Every signal FCC-identified with threat tags.">Signals</button>
+      <button type="button" data-view="intel" data-i18n="nav.intel" data-tip="Intel — honorability, field RF antenna, police interop, research tables.">Intel</button>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Knowledge</span>
+      <button type="button" data-view="library" data-i18n="nav.library" aria-label="Library · Books · Alt Shift B" aria-keyshortcuts="Alt+Shift+B" data-tip="Hostess7 H7 field books — alphabetical list, braille reader, screen-reader search. Alt+Shift+B jumps here.">Library · Books</button>
+      <button type="button" data-view="training" data-tip="Hostess 7 Training — wireframe graph, track evaluation, curriculum steps, mastery pillars.">Training</button>
+      <button type="button" data-view="system" data-i18n="nav.system" data-tip="System — settings, logs, protection toggles.">System</button>
+    </div>
   </nav>
   <nav id="panel-subnav" class="panel-subnav" aria-label="Section views" hidden></nav>
 
@@ -2371,6 +2392,12 @@
         <div id="us-meta" class="us-stats-bar">Sampling local field…</div>
         <div id="us-pills" class="us-hero-status"></div>
       </header>
+      <section id="us-voltage-regulation" class="us-obs-card" aria-label="Voltage regulation — present rail" style="border-color:rgba(90,248,170,0.35);">
+        <p class="meta">Loading voltage regulation…</p>
+      </section>
+      <section id="us-obs-field" class="us-obs-card" aria-label="Field OBS broadcasting on this host">
+        <p class="meta">Loading Field OBS stack…</p>
+      </section>
       <div id="us-host-machine"></div>
       <div id="us-hostess-profile"></div>
       <section class="us-traffic-panel">
@@ -2406,7 +2433,79 @@
         <button type="button" data-view-jump="threats/map">Threat map →</button>
         <button type="button" data-view-jump="intel/trust">Honorability →</button>
         <button type="button" data-view-jump="intel/rf">Field RF →</button>
+        <button type="button" data-view-jump="sweet-anita">Sweet_Anita broadcast →</button>
       </div>
+    </div>
+  </section>
+
+  <section id="view-sweet-anita" class="view sa-twitch-room" aria-label="Sweet_Anita Broadcasting" role="region">
+    <div class="sa-wrap">
+      <header class="sa-channel-header" id="sa-hero">
+        <div class="sa-channel-identity">
+          <img class="sa-channel-avatar" src="/assets/sweet-anita-avatar.svg" alt="Sweet_Anita channel avatar" width="56" height="56" loading="lazy" />
+          <div>
+            <h2 class="sa-channel-name" id="sa-title">Sweet_Anita</h2>
+            <p class="sa-channel-game" id="sa-subtitle">Field Broadcasting · OBS stack · embedded panel preview — never tunnel desktop.</p>
+          </div>
+        </div>
+        <div class="sa-channel-meta">
+          <span class="sa-live-badge" id="sa-live-badge" aria-live="polite">LIVE</span>
+          <span class="sa-viewer-pill" id="sa-viewer-pill">Panel preview</span>
+        </div>
+        <div id="sa-hero-status" class="sa-pills"></div>
+      </header>
+
+      <div class="sa-stream-stage">
+        <div class="sa-video-column">
+          <div class="sa-preview-panel">
+            <div class="sa-preview-canvas-wrap">
+              <span class="sa-live-dot" id="sa-live-dot" aria-hidden="true">LIVE</span>
+              <span class="sa-preview-badge" id="sa-preview-badge">Panel preview · no tunnel</span>
+              <canvas id="sa-preview-canvas" aria-label="Sweet_Anita broadcast preview — embedded in NEXUS panel"></canvas>
+            </div>
+            <div class="sa-vu-row">
+              <div class="sa-vu-block">
+                <div class="sa-vu-label">Mic · L</div>
+                <div class="sa-vu"><div class="sa-vu-fill" id="sa-vu-l" style="height:35%"></div></div>
+                <div class="sa-vu-target" id="sa-vu-target">Target −12 dBFS</div>
+              </div>
+              <div class="sa-vu-block">
+                <div class="sa-vu-label">Mic · R</div>
+                <div class="sa-vu"><div class="sa-vu-fill" id="sa-vu-r" style="height:32%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="sa-chat-rail" aria-label="Field operator chat">
+          <div class="sa-chat-header">Stream chat · Field operator</div>
+          <div class="sa-chat-body" id="sa-chat-feed" aria-live="polite"></div>
+          <div class="sa-chat-input-mock">Send a message…</div>
+        </aside>
+      </div>
+
+      <div class="sa-layout">
+        <article class="sa-card">
+          <h4>Best dB · everyone always</h4>
+          <div id="sa-audio-best"></div>
+        </article>
+        <article class="sa-card">
+          <h4>Field OBS filter stack</h4>
+          <div id="sa-obs-stack"></div>
+          <div class="sa-actions">
+            <button type="button" class="primary" data-view-jump="us">US host identity →</button>
+            <button type="button" id="sa-refresh">Refresh stack</button>
+          </div>
+        </article>
+      </div>
+      <article class="sa-card" style="margin-bottom:14px">
+        <h4>Streaming platforms · RTMP / RTMPS</h4>
+        <div class="sa-grid-2" id="sa-platforms"></div>
+      </article>
+      <article class="sa-card">
+        <h4>Decks &amp; control surfaces</h4>
+        <div id="sa-decks"></div>
+      </article>
+      <pre class="sense-log" id="sa-log" style="margin-top:10px;max-height:120px;overflow:auto"></pre>
     </div>
   </section>
 
@@ -2726,7 +2825,7 @@
       <div class="h7-graph-row">
         <div class="h7-wire-wrap">
           <div class="h7-wire-toolbar">
-            <span id="nexus-training-wireframe-hud">Reality model graph · physics tracks</span>
+            <span id="nexus-training-wireframe-hud">Hostess 7 matrix · sense wires · physics · tracks</span>
             <button type="button" id="h7-btn-focus">Focus</button>
           </div>
           <canvas id="nexus-training-wireframe-canvas"></canvas>
@@ -2744,6 +2843,14 @@
 
       <div id="h7-ironclad-gallery" class="h7-chart-card" style="margin-bottom:14px;padding:12px 14px"></div>
       <div id="h7-physics-summary" class="h7-chart-card" style="margin-bottom:14px;padding:12px 14px"></div>
+
+      <div id="h7-sense-training" class="h7-chart-card" style="margin-bottom:14px;padding:12px 14px;border-color:rgba(56,189,248,0.35)"></div>
+
+      <h2 class="h7-section-title">Muscle memory rooms · understandings</h2>
+      <div id="h7-muscle-memory-rooms" class="h7-chart-card h7-rooms-wrap" style="margin-bottom:14px;padding:12px 14px;border-color:rgba(74,222,128,0.35)"></div>
+
+      <h2 class="h7-section-title">Mouth field neural · voice hemisphere</h2>
+      <div id="h7-mouth-neural-hemisphere" class="h7-chart-card h7-mouth-neural-wrap" style="margin-bottom:14px;padding:12px 14px;border-color:rgba(240,160,96,0.45)"></div>
 
       <h2 class="h7-section-title">Training tracks</h2>
       <div class="h7-tracks" id="h7-tracks-grid"></div>
@@ -3127,6 +3234,126 @@
       <div class="view-jump-row" style="margin-top:14px;">
         <button type="button" data-view-jump="packets/live">Live connections →</button>
         <button type="button" data-view-jump="threats/kill">Kill orders →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-final-eye" class="view" aria-label="Final Eye" role="region">
+    <div class="sense-tab-wrap">
+      <p class="sense-tab-motto" id="fe-motto"><strong>Final_Eye</strong> — ocular spectrum · twins Vita &amp; Veritas · teach authority · offense mesh under Hostess 7.</p>
+      <div id="fe-status"></div>
+      <div class="sense-tab-hero">
+        <div class="sense-canvas-panel sense-canvas-panel--eye">
+          <h4>Ocular spectrum · cone sensitivity</h4>
+          <canvas id="fe-spectrum" class="sense-spectrum-canvas" aria-label="Ocular spectrum visualization"></canvas>
+        </div>
+        <div class="sense-card">
+          <h4>Live stream · :9479</h4>
+          <img id="fe-stream" class="sense-stream-frame" alt="Final_Eye MJPEG stream" />
+          <div class="sense-actions">
+            <button type="button" class="primary" id="fe-arm-dishes">Arm dishes</button>
+            <button type="button" id="fe-arm-person">Stereo · person</button>
+            <button type="button" id="fe-verify">Verify</button>
+            <button type="button" id="fe-teach">Teach authority</button>
+            <button type="button" id="fe-targets">Targets</button>
+            <button type="button" id="fe-fusion">Eye↔Ear wire</button>
+            <button type="button" id="fe-virtual">+ WiFi eye</button>
+            <button type="button" id="fe-refresh">Refresh</button>
+          </div>
+          <pre class="sense-log" id="fe-log"></pre>
+        </div>
+      </div>
+      <div class="sense-card" style="margin-top:14px">
+        <h4>Training wire · matrix session</h4>
+        <canvas id="fe-training-wire" class="sense-spectrum-canvas" style="height:160px" aria-label="Sense training wireframe"></canvas>
+        <div id="fe-training-sessions"></div>
+        <pre class="sense-log sense-train-log" id="fe-train-log"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-final-ear" class="view" aria-label="Final Ear" role="region">
+    <div class="sense-tab-wrap">
+      <p class="sense-tab-motto" id="fer-motto"><strong>Final Ear</strong> — auditory spectrum of everything we hear · equipment profiles · truth filters · sound tracker.</p>
+      <div id="fer-status"></div>
+      <div class="sense-tab-hero">
+        <div class="sense-canvas-panel sense-canvas-panel--ear">
+          <h4>Live spectrum · FFT bins</h4>
+          <canvas id="fer-spectrum" class="sense-spectrum-canvas" aria-label="Auditory spectrum bars"></canvas>
+          <p class="meta" id="fer-spectrum-meta">Capturing desktop monitor…</p>
+        </div>
+        <div class="sense-canvas-panel sense-canvas-panel--ear">
+          <h4>Waterfall · time × frequency</h4>
+          <canvas id="fer-waterfall" class="sense-spectrum-canvas sense-waterfall-canvas" aria-label="Auditory spectrum waterfall"></canvas>
+        </div>
+      </div>
+      <div class="sense-grid">
+        <div class="sense-card">
+          <h4>Equipment profiles</h4>
+          <div id="fer-profiles"></div>
+          <div class="sense-actions">
+            <button type="button" class="primary" id="fer-arm">Arm Auditus</button>
+            <button type="button" id="fer-sense-all">Sense all lanes</button>
+            <button type="button" id="fer-desktop">Follow desktop</button>
+            <button type="button" id="fer-truth">Truth filter</button>
+            <button type="button" id="fer-fusion">Eye↔Ear fusion</button>
+            <button type="button" id="fer-verify">Verify</button>
+            <button type="button" id="fer-refresh">Refresh</button>
+          </div>
+        </div>
+        <div class="sense-card">
+          <h4>Sound tracker · sources</h4>
+          <ul class="sense-track-list" id="fer-tracks"><li class="meta">Awaiting tracker…</li></ul>
+          <pre class="sense-log" id="fer-log"></pre>
+        </div>
+      </div>
+      <div class="sense-card" style="margin-top:14px">
+        <h4>Training wire · matrix session</h4>
+        <canvas id="fer-training-wire" class="sense-spectrum-canvas" style="height:160px" aria-label="Ear training wireframe"></canvas>
+        <div id="fer-training-sessions"></div>
+        <pre class="sense-log sense-train-log" id="fer-train-log"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-final-mouth" class="view" aria-label="Final Mouth" role="region">
+    <div class="sense-tab-wrap">
+      <p class="sense-tab-motto" id="fm-motto"><strong>Final Mouth</strong> — voice hemisphere brain · thought≠utterance · vocal spectrum · mouth-ear-eye fusion.</p>
+      <div id="fm-status"></div>
+      <div id="fm-neural-hemisphere" class="sense-card" style="margin-top:10px;padding:10px 12px;border-color:rgba(240,160,96,0.35)"></div>
+      <div class="sense-tab-hero">
+        <div class="sense-canvas-panel sense-canvas-panel--mouth">
+          <h4>Vocal spectrum · formants F1 F2 F3</h4>
+          <canvas id="fm-spectrum" class="sense-spectrum-canvas" aria-label="Vocal spectrum visualization"></canvas>
+        </div>
+        <div class="sense-card">
+          <h4>Voice fix · calibration</h4>
+          <div class="sense-fix-row"><label>Pitch</label><input type="range" id="fm-pitch" min="-12" max="12" step="0.5" value="0" /><span id="fm-pitch-val">0</span></div>
+          <div class="sense-fix-row"><label>Rate</label><input type="range" id="fm-rate" min="80" max="220" step="5" value="140" /><span id="fm-rate-val">140</span></div>
+          <div class="sense-fix-row"><label>EQ low</label><input type="range" id="fm-eq-low" min="-12" max="12" step="1" value="0" /><span id="fm-eq-low-val">0</span></div>
+          <div class="sense-fix-row"><label>EQ mid</label><input type="range" id="fm-eq-mid" min="-12" max="12" step="1" value="0" /><span id="fm-eq-mid-val">0</span></div>
+          <div class="sense-fix-row"><label>EQ high</label><input type="range" id="fm-eq-high" min="-12" max="12" step="1" value="0" /><span id="fm-eq-high-val">0</span></div>
+          <p class="meta" id="fm-fusion-label">Fusion — mouth·ear·eye correlation</p>
+          <div class="sense-fusion-meter"><span id="fm-fusion-bar" style="width:72%"></span></div>
+          <textarea id="fm-speak-text" rows="3" style="width:100%;margin-top:8px;background:#040810;color:var(--text);border:1px solid #333;border-radius:8px;padding:8px;" placeholder="Thought ingress — voice hemisphere may diverge…"></textarea>
+          <div id="fm-thought-utterance" class="meta" style="margin-top:8px;padding:8px;border:1px solid rgba(240,160,96,0.2);border-radius:8px;background:rgba(8,4,10,0.6)"></div>
+          <div class="sense-actions">
+            <button type="button" id="fm-prepare">Prepare utterance</button>
+            <button type="button" class="primary" id="fm-speak">Speak</button>
+            <button type="button" id="fm-arm-dishes">Dishes mode</button>
+            <button type="button" id="fm-arm-war">War mode</button>
+            <button type="button" id="fm-fusion">Test fusion</button>
+            <button type="button" id="fm-verify">Verify</button>
+            <button type="button" id="fm-refresh">Refresh</button>
+          </div>
+          <pre class="sense-log" id="fm-log"></pre>
+        </div>
+      </div>
+      <div class="sense-card" style="margin-top:14px">
+        <h4>Training wire · matrix session</h4>
+        <canvas id="fm-training-wire" class="sense-spectrum-canvas" style="height:160px" aria-label="Mouth training wireframe"></canvas>
+        <div id="fm-training-sessions"></div>
+        <pre class="sense-log sense-train-log" id="fm-train-log"></pre>
       </div>
     </div>
   </section>
@@ -3655,6 +3882,11 @@
   </section>
 
   <script defer src="/assets/sdf-render.js"></script>
+  <script defer src="/assets/final-sense-training-wire.js"></script>
+  <script defer src="/assets/final-eye-tab.js"></script>
+  <script defer src="/assets/sweet-anita-broadcast.js"></script>
+  <script defer src="/assets/final-ear-tab.js"></script>
+  <script defer src="/assets/final-mouth-tab.js"></script>
   <script defer src="/assets/signals-field.js"></script>
   <script defer src="/assets/dns-dashboard.js"></script>
   <script defer src="/assets/outside-tools.js"></script>
@@ -3968,9 +4200,13 @@
     const TAB_GROUPS = {
       command: { panel: "command", default: "command", subs: { command: "Hostess 7" } },
       us: { panel: "us", default: "us", subs: { us: "US" } },
+      "sweet-anita": { panel: "sweet-anita", default: "broadcast", subs: { broadcast: "Broadcast", preview: "Preview", platforms: "Platforms" } },
       packets: { panel: "packets", default: "monitor", subs: { monitor: "Live · Good/Bad", inspect: "DPI · Deep inspect" } },
       threats: { panel: "threats", default: "home-protector", subs: { "home-protector": "Home · Airspace", "local-holes": "Local · Holes", "host-attack": "Map · Globe", spiderweb: "Terror · Spiderweb", "precision-map": "Precision · Map", "precision-web": "Precision · Web", dossier: "Attack paths", "human-dossier": "Kill orders" } },
       intel: { panel: "intel", default: "honor", subs: { honor: "Trust · Honor", people: "People · Registry", "audio-train": "Audio · Train", "field-rf": "Field RF", research: "Research" } },
+      "final-eye": { panel: "final-eye", default: "final-eye", subs: { "final-eye": "Final Eye" } },
+      "final-ear": { panel: "final-ear", default: "final-ear", subs: { "final-ear": "Final Ear" } },
+      "final-mouth": { panel: "final-mouth", default: "final-mouth", subs: { "final-mouth": "Final Mouth" } },
       signals: { panel: "signals", default: "signals", subs: { signals: "Field · Live" } },
       dns: { panel: "dns", default: "dns", subs: { dns: "DNS & DHCP · Planetary" } },
       outside: { panel: "outside", default: "outside", subs: { outside: "Egress · Gate" } },
@@ -4010,6 +4246,9 @@
       { key: "hostess7_command", url: "/api/hostess7-command" },
       { key: "hostess7_training", url: "/api/hostess7/training" },
       { key: "us_field", url: "/api/us-field" },
+      { key: "sweet_anita_broadcast", url: "/api/sweet-anita" },
+      { key: "us_obs_field", url: "/api/us-obs-field" },
+      { key: "us_voltage_regulation", url: "/api/us-voltage-regulation" },
       { key: "packet_field", url: "/api/data/packet-field" },
       { key: "home_protector", url: "/api/home-protector" },
       { key: "local_services", url: "/api/local-services" },
@@ -4041,16 +4280,23 @@
       { key: "census_field", url: "/api/census-field" },
       { key: "existence_identity", url: "/api/existence-identity" },
       { key: "operator_location", url: "/api/operator/location" },
+      { key: "field_eyeball", url: "/api/queen-eyeball" },
+      { key: "field_earball", url: "/api/queen-earball" },
+      { key: "field_mouthball", url: "/api/queen-mouthball" },
     ];
 
     const TAB_LOAD_MODULES = {
       command: { keys: ["field_command", "planetary_observer", "gatekeeper", "lethal_enforcement", "hostess7_command"], subs: { command: ["field_command", "planetary_observer", "lethal_enforcement", "hostess7_command"] } },
-      us: { keys: ["us_field"], subs: { us: ["us_field"] } },
+      us: { keys: ["us_field", "us_voltage_regulation", "us_obs_field"], subs: { us: ["us_field", "us_voltage_regulation", "us_obs_field"] } },
+      "sweet-anita": { keys: ["sweet_anita_broadcast", "audio_train"], subs: { broadcast: ["sweet_anita_broadcast", "audio_train"], preview: ["sweet_anita_broadcast"], platforms: ["sweet_anita_broadcast"] } },
       packets: { keys: ["gatekeeper", "packet_field"], subs: { monitor: ["gatekeeper"], inspect: ["packet_field"] } },
       threats: { keys: ["home_protector", "local_services", "host_attacks", "terror_spiderweb", "planetary_observer", "precision_field", "angel_dossiers", "human_dossier"], subs: { "home-protector": ["home_protector"], "local-holes": ["local_services"], "host-attack": ["host_attacks", "planetary_observer"], spiderweb: ["terror_spiderweb"], "precision-map": ["precision_field"], "precision-web": ["precision_field", "terror_spiderweb"], dossier: ["angel_dossiers"], "human-dossier": ["human_dossier"] } },
       intel: { keys: ["audio_train", "field_rf", "browser_awareness", "human_registry", "police_agency", "census_field", "existence_identity", "angel_research"], subs: { honor: ["browser_awareness"], people: ["human_registry", "census_field", "existence_identity"], "audio-train": ["audio_train"], "field-rf": ["field_rf", "police_agency", "gov_intel", "program_tags"], research: ["angel_research"] } },
       library: { keys: ["h7_library", "field_brain"], subs: { library: ["h7_library", "field_brain"] } },
       training: { keys: ["hostess7_training"], subs: { training: ["hostess7_training"] } },
+      "final-eye": { keys: ["field_eyeball"], subs: { "final-eye": ["field_eyeball"] } },
+      "final-ear": { keys: ["field_earball"], subs: { "final-ear": ["field_earball"] } },
+      "final-mouth": { keys: ["field_mouthball"], subs: { "final-mouth": ["field_mouthball"] } },
       system: { keys: ["settings"], subs: { settings: ["settings"], logs: ["settings"] } },
       signals: { keys: ["signals_field", "field_antenna", "field_radio", "field_hardware", "field_hazard_onset"], subs: { signals: ["signals_field", "field_antenna", "field_radio", "field_hardware"] } },
       dns: { keys: ["field_dns"], subs: { dns: ["field_dns"] } },
@@ -4087,6 +4333,9 @@
       if (key === "human_dossier") return typeof val === "object" && (val.generated_at != null || val.ip_count != null || Array.isArray(val.ips));
       if (key === "angel_research") return typeof val === "object" && (val.tables != null || val.updated != null);
       if (key === "us_field") return typeof val === "object" && (val.title != null || val.page != null || val.updated != null);
+      if (key === "sweet_anita_broadcast") return typeof val === "object" && val.schema === "sweet-anita-broadcast/v1";
+      if (key === "us_obs_field") return typeof val === "object" && val.schema === "us-obs-field/v1";
+      if (key === "us_voltage_regulation") return typeof val === "object" && val.schema === "us-voltage-regulation/v1";
       if (key === "h7_library") return typeof val === "object" && (val.books != null || val.updated != null);
       if (key === "field_brain") return typeof val === "object" && (val.ok === true || val.schema === "field-brain/v1" || val.github_library_books > 0 || val.manifest_count > 0 || val.superintelligence != null);
       if (key === "packet_field") return typeof val === "object" && (val.updated != null || val.ports != null || val.ring != null || (val.recent || []).length > 0 || val.field_graphics != null);
@@ -4104,6 +4353,9 @@
       if (key === "lethal_enforcement") return typeof val === "object" && (val.merciless != null || val.status != null || val.heaven_hell != null);
       if (key === "hostess7_command") return typeof val === "object" && val.schema === "hostess7-command/v1" && (Array.isArray(val.intel_digest) || val.self_view || val.needs_wants || Array.isArray(val.transcript) || val.github_repo != null);
       if (key === "hostess7_training") return typeof val === "object" && val.schema === "hostess7-training/v1" && val.tracks != null;
+      if (key === "field_eyeball") return typeof val === "object" && (val.schema === "queen-eyeball-hostess7/v1" || val.final_eyeball != null || val.product != null);
+      if (key === "field_earball") return typeof val === "object" && (val.schema === "queen-earball-hostess7/v1" || val.final_ear != null || val.product != null);
+      if (key === "field_mouthball") return typeof val === "object" && (val.schema === "queen-mouthball-hostess7/v1" || val.final_mouth != null || val.product != null);
       if (key === "settings") return typeof val === "object" && Object.keys(val).length > 0;
       if (Array.isArray(val)) return true;
       if (typeof val === "object") return Object.keys(val).length > 0 || val.updated != null;
@@ -4410,8 +4662,13 @@
         if (global.renderPrecisionSpiderweb) renderPrecisionSpiderweb(pf);
       }
       renderUSField(data.us_field, data.h7_library);
+      if (global.SweetAnitaBroadcast?.renderUSVoltage) global.SweetAnitaBroadcast.renderUSVoltage(data.us_voltage_regulation);
+      if (global.SweetAnitaBroadcast?.renderUSObs) global.SweetAnitaBroadcast.renderUSObs(data.us_obs_field);
       if (currentSubView === "us" && data.us_field && global.paintUSTraffic) {
         paintUSTraffic(data.us_field);
+      }
+      if (currentPanel === "sweet-anita" && global.SweetAnitaBroadcast?.render) {
+        global.SweetAnitaBroadcast.render(data.sweet_anita_broadcast);
       }
       renderDossiers(data.angel_dossiers);
       renderHumanDossiers(data.human_dossier);
@@ -4422,6 +4679,15 @@
       renderLibrary(data.h7_library || { books: [], shelves: [] });
       renderFieldBrain(data.field_brain);
       if (window.NexusPlugins) NexusPlugins.render(data);
+      if (currentPanel === "final-eye" && global.FinalEyeTab?.renderStatus) {
+        global.FinalEyeTab.renderStatus(data.field_eyeball);
+      }
+      if (currentPanel === "final-ear" && global.FinalEarTab?.renderStatus) {
+        global.FinalEarTab.renderStatus(data.field_earball);
+      }
+      if (currentPanel === "final-mouth" && global.FinalMouthTab?.renderStatus) {
+        global.FinalMouthTab.renderStatus(data.field_mouthball);
+      }
       updateTabLoadProgress(data);
     }
 
@@ -4458,6 +4724,17 @@
         case "us_field":
           renderUSField(data.us_field, data.h7_library);
           if (currentSubView === "us" && data.us_field && global.paintUSTraffic) paintUSTraffic(data.us_field);
+          break;
+        case "us_voltage_regulation":
+          if (global.SweetAnitaBroadcast?.renderUSVoltage) global.SweetAnitaBroadcast.renderUSVoltage(data.us_voltage_regulation);
+          break;
+        case "us_obs_field":
+          if (global.SweetAnitaBroadcast?.renderUSObs) global.SweetAnitaBroadcast.renderUSObs(data.us_obs_field);
+          break;
+        case "sweet_anita_broadcast":
+          if (currentPanel === "sweet-anita" && global.SweetAnitaBroadcast?.render) {
+            global.SweetAnitaBroadcast.render(data.sweet_anita_broadcast);
+          }
           break;
         case "packet_field":
           renderPacketField(data.packet_field || {});
@@ -4538,6 +4815,25 @@
           if (currentPanel === "training" && global.NexusTraining?.refreshFromSlice) {
             global.NexusTraining.refreshFromSlice(data.hostess7_training);
           }
+          if (currentPanel === "final-eye" || currentPanel === "final-ear" || currentPanel === "final-mouth") {
+            global.SenseTrainingWire?.setBundleFromSlice?.(data.hostess7_training);
+            global.SenseTrainingWire?.initForPanel?.(currentPanel);
+          }
+          break;
+        case "field_eyeball":
+          if (currentPanel === "final-eye" && global.FinalEyeTab?.renderStatus) {
+            global.FinalEyeTab.renderStatus(data.field_eyeball);
+          }
+          break;
+        case "field_earball":
+          if (currentPanel === "final-ear" && global.FinalEarTab?.renderStatus) {
+            global.FinalEarTab.renderStatus(data.field_earball);
+          }
+          break;
+        case "field_mouthball":
+          if (currentPanel === "final-mouth" && global.FinalMouthTab?.renderStatus) {
+            global.FinalMouthTab.renderStatus(data.field_mouthball);
+          }
           break;
         case "settings":
           if (data.settings) renderSettings(data.settings);
@@ -4572,6 +4868,29 @@
       prefetchTabSlices(currentPanel, sub);
       if (currentPanel === "training" || sub === "training") {
         requestAnimationFrame(() => global.NexusTraining?.init?.());
+      }
+      if (currentPanel === "final-eye") {
+        requestAnimationFrame(() => {
+          global.FinalEyeTab?.refresh?.();
+          global.SenseTrainingWire?.initForPanel?.("final-eye");
+        });
+      }
+      if (currentPanel === "final-ear") {
+        requestAnimationFrame(() => {
+          global.FinalEarTab?.refresh?.();
+          global.SenseTrainingWire?.initForPanel?.("final-ear");
+        });
+      }
+      if (currentPanel === "final-mouth") {
+        requestAnimationFrame(() => {
+          global.FinalMouthTab?.refresh?.();
+          global.SenseTrainingWire?.initForPanel?.("final-mouth");
+        });
+      }
+      if (currentPanel === "sweet-anita") {
+        requestAnimationFrame(() => {
+          global.SweetAnitaBroadcast?.onPanelShow?.();
+        });
       }
       if (sub === "logs") loadLog(currentLog);
       if (sub === "home-protector" && lastPanelData) renderHomeProtector(lastPanelData.home_protector);
@@ -4758,7 +5077,8 @@
 
     const TAB_DOM_REQUIRED = {
       command: ["command-motto", "command-know"],
-      us: ["us-motto", "us-hostess-profile"],
+      us: ["us-motto", "us-hostess-profile", "us-voltage-regulation", "us-obs-field"],
+      "sweet-anita": ["sa-hero", "sa-preview-canvas"],
       packets: ["connections"],
       threats: ["home-protector-stats"],
       intel: ["people-meta", "audio-train-motto"],
@@ -4766,6 +5086,9 @@
       dns: ["dns-hero-title", "dns-posture-strip"],
       outside: ["outside-hero-title"],
       library: ["library-search"],
+      "final-eye": ["fe-status"],
+      "final-ear": ["fer-status"],
+      "final-mouth": ["fm-status"],
       system: ["settings-profile"],
     };
 
@@ -7282,7 +7605,7 @@
       const activeEl = $("honor-active-sites");
       const sites = ba.active_sites || hon.active_browser_sites || [];
       if (activeEl) {
-        if (!sites.length) activeEl.innerHTML = '<div class="empty">No browser tab traffic — open X.com or YouTube in Firefox/Chrome.</div>';
+        if (!sites.length) activeEl.innerHTML = '<div class="empty">No browser tab traffic — open sites in Queen browser tabs.</div>';
         else {
           activeEl.innerHTML = sites.map((s) =>
             `<div style="margin-bottom:6px;">${honorStarsHtml(s.honor_stars ?? s.stars)}

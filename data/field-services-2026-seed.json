@@ -20,7 +20,9 @@
   },
   "security_model": {
     "gate": "field-sovereign-gate.py",
+    "clock": "sovereign-clock.py — everyone everything everywhere",
     "sync": "field-sovereign-sync.py",
+    "never_desync": true,
     "doctrine": "data/field-sovereign-sync-doctrine.json",
     "cycle": "sovereign-cycle-state.json — monotonic, never backward, never skipped",
     "anchor": "sovereign-time-anchor.json — derived UTC under sonic/RF/SQUIDGIE",

@@ -47,6 +47,18 @@ def _now() -> str:
             return mod.utc("underlay")
     except (ImportError, OSError, AttributeError):
         pass
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "sovereign_clock_underlay", INSTALL / "lib" / "sovereign-clock.py",
+        )
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.utc_z("underlay")
+    except (ImportError, OSError, AttributeError):
+        pass
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -271,10 +283,48 @@ def posture() -> dict[str, Any]:
         "install_gui": "/tristate-installer",
         "api": "/api/tristate-installer",
         "drive_converter": _drive_converter_py("json", timeout=30),
+        "non_fielded": _non_fielded_posture(),
         "znetwork": znetwork_posture(refresh_offer=False),
         "operator": _operator_posture(),
         "switch_safety": _switch_safety(phase),
+        "root": _root_posture(),
     }
+
+
+def _root_posture() -> dict[str, Any]:
+    py = INSTALL / "lib" / "field-polkit.py"
+    if not py.is_file():
+        return {"schema": "field-pol-root/v1", "ok": False, "ready": False, "error": "field_polkit_missing"}
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(py), "root", "tristate_installer"],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        doc = json.loads(proc.stdout or "{}")
+        doc["ok"] = bool(doc.get("ready"))
+        return doc
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as exc:
+        return {"schema": "field-pol-root/v1", "ok": False, "ready": False, "error": str(exc)}
+
+
+def _non_fielded_posture() -> dict[str, Any]:
+    py = INSTALL / "lib" / "field-non-fielded-safety.py"
+    if not py.is_file():
+        return {"ok": False, "error": "non_fielded_missing"}
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(py), "audit"],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        return json.loads(proc.stdout or "{}")
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as exc:
+        return {"ok": False, "error": str(exc)}
 
 
 def _switch_safety(phase: str) -> dict[str, Any]:
@@ -324,6 +374,15 @@ def _drive_converter_py(*args: str, timeout: int = 600) -> dict[str, Any]:
 def scan_wrdt() -> dict[str, Any]:
     if lock_state().get("committed"):
         return {"ok": False, "error": "already_committed", "committed": True}
+    defield = _defield_gate()
+    if not defield.get("ok") and os.environ.get("NEXUS_DRIVE_CONVERTER_FORCE") != "1":
+        return {
+            "ok": False,
+            "error": "defield_required",
+            "doctrine": "Defield all tails and purge nested nexus-field on drives before WRDT scan",
+            "defield_audit": defield,
+            "posture": posture(),
+        }
     audit = _drive_converter_py("audit", timeout=120)
     scan = _drive_converter_py("scan", timeout=300)
     plan = scan.get("plan") or {}
@@ -341,9 +400,34 @@ def scan_wrdt() -> dict[str, Any]:
     return out
 
 
+def _defield_gate() -> dict[str, Any]:
+    py = INSTALL / "lib" / "field-non-fielded-safety.py"
+    if not py.is_file():
+        return {"ok": True, "skipped": "module_missing"}
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(py), "gate-convert"],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        return json.loads(proc.stdout or "{}")
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 def apply_wrdt(*, confirm: bool = False, elevated: bool = False) -> dict[str, Any]:
     if not confirm:
         return {"ok": False, "error": "confirm_required", "doctrine": "type YES in GUI or pass --confirm"}
+    defield = _defield_gate()
+    if not defield.get("ok") and os.environ.get("NEXUS_DRIVE_CONVERTER_FORCE") != "1":
+        return {
+            "ok": False,
+            "error": "defield_required",
+            "doctrine": "Restore all field tails before WRDT apply — no field-in-field",
+            "defield_audit": defield,
+        }
     safety = _switch_safety("wrdt_apply")
     if not safety.get("switch_allowed"):
         return {
@@ -413,6 +497,14 @@ def grok_prep(*, elevated: bool = False) -> dict[str, Any]:
 def commit(*, elevated: bool = False) -> dict[str, Any]:
     if lock_state().get("committed"):
         return {"ok": True, "already": True, "posture": posture()}
+    defield = _defield_gate()
+    if not defield.get("ok") and os.environ.get("NEXUS_UNDERLAY_FORCE") != "1":
+        return {
+            "ok": False,
+            "error": "defield_required_before_commit",
+            "doctrine": "Zero field tails in scan roots before permanent underlay commit",
+            "defield_audit": defield,
+        }
     safety = _switch_safety("commit")
     if not safety.get("switch_allowed"):
         return {
@@ -601,10 +693,25 @@ def mark_nexus_installed() -> dict[str, Any]:
 
 
 def hotkey_action() -> dict[str, Any]:
+    f9_py = INSTALL / "lib" / "field-queen-browser-open.py"
+    if f9_py.is_file():
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(f9_py), "f9"],
+                capture_output=True,
+                text=True,
+                timeout=45,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+            )
+            doc = json.loads(proc.stdout or "{}")
+            doc["posture"] = posture()
+            return doc
+        except (subprocess.SubprocessError, json.JSONDecodeError, OSError):
+            pass
     p = posture()
     if p.get("committed"):
-        return {"ok": True, "action": "status", "url": "/tristate-installer#committed", "posture": p}
-    return {"ok": True, "action": "install", "url": "/tristate-installer", "posture": p}
+        return {"ok": True, "action": "queen_sovereign_browser", "url": "/world/browser.html", "posture": p}
+    return {"ok": True, "action": "tristate_installer", "url": "/tristate-installer", "posture": p}
 
 
 def zenity_wizard() -> int:
@@ -631,9 +738,14 @@ def zenity_wizard() -> int:
         check=False,
     ).returncode != 0:
         return 3
-    url = f"http://127.0.0.1:{os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477')}/tristate-installer"
-    if shutil.which("xdg-open"):
-        subprocess.Popen(["xdg-open", url])
+    opener = INSTALL / "lib" / "queen-panel-open.py"
+    if opener.is_file():
+        subprocess.run(
+            [sys.executable, str(opener), "nexus", "tristate-installer"],
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL)},
+            timeout=25,
+            check=False,
+        )
     return 0
 
 

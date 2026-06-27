@@ -103,17 +103,20 @@ body {
 /* Step rail */
 .ti-steps {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 0.5rem;
   margin-bottom: 1.5rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
+  .ti-steps {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
   .ti-steps {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .ti-steps .ti-step:nth-child(5) {
-    grid-column: 1 / -1;
   }
 }
 
@@ -337,6 +340,19 @@ body {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--ti-cyan), var(--ti-violet));
   transition: width 0.6s var(--ti-ease);
+}
+
+.ti-list {
+  margin: 0.75rem 0;
+  padding-left: 1.25rem;
+  font-size: 0.82rem;
+  color: var(--ti-soft);
+}
+
+.ti-list .ti-muted {
+  color: var(--ti-muted);
+  list-style: none;
+  margin-left: -1.25rem;
 }
 
 .ti-log {

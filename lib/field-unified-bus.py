@@ -34,6 +34,7 @@ LANE_SLOTS: dict[str, tuple[int, ...]] = {
     "rf": (32, 33, 34, 35),
     "dns": (36, 37, 38, 39),
     "sovereign": (40, 41, 42, 43),
+    "io_packet": (44, 45, 46, 47),
     "thermal": (48, 49, 50, 51),
     "copilot": (52, 53, 54, 55),
 }
@@ -50,6 +51,7 @@ LANE_KEYS: dict[str, dict[str, int]] = {
     "rf": {"aps": 32, "hostile": 33, "pollution": 34, "signal": 35},
     "dns": {"truth": 36, "blocked": 37, "qps": 38, "services": 39},
     "sovereign": {"cycle": 40, "pulse": 41, "mirrors": 42, "seal": 43},
+    "io_packet": {"gate_pass": 44, "sanity_ok": 45, "baselines_ok": 46, "stream_count": 47},
     "thermal": {"peak_c": 48, "level": 49, "entropy": 50, "quota": 51},
 }
 
@@ -59,7 +61,20 @@ _GEN = 0
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -257,6 +272,14 @@ def pack_bus() -> list[int]:
     bus[41] = pack_word(magnitude=min(int(anchor.get("pulse") or 0) % 256, 255), lane_id=40)
     bus[42] = pack_word(magnitude=min(int(sync.get("redundant_files") or 0), 255), lane_id=40)
     bus[43] = pack_word(magnitude=1 if sync.get("never_lose_cycle") else 0, flags=0x02, lane_id=40)
+
+    io_panel = _load(STATE / "field-io-packet-panel.json", {})
+    io_gate = io_panel.get("truth_gate") or {}
+    io_stream = int((io_panel.get("conversation_stream") or {}).get("count") or 0)
+    bus[44] = pack_word(magnitude=1 if io_gate.get("pass_ok") else 0, flags=0x01, lane_id=44)
+    bus[45] = pack_word(magnitude=1 if (io_gate.get("field_sanity") or {}).get("ok") else 0, lane_id=44)
+    bus[46] = pack_word(magnitude=1 if (io_gate.get("g1id_baselines") or {}).get("ok") else 0, lane_id=44)
+    bus[47] = pack_word(magnitude=min(io_stream, 255), flags=0x02, lane_id=44)
 
     peak = thermal.get("peak_c")
     peak_byte = int(float(peak)) if isinstance(peak, (int, float)) else 0

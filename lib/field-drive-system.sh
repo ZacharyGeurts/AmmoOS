@@ -9,6 +9,13 @@ HOSTESS7_ROOT="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root 2>/dev/null)}"
 
 nexus_field_drive_root() {
   local local_mirror="${NEXUS_INSTALL_ROOT:-.}/.nexus-field-drive"
+  local lock="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}/field-underlay-lock.json"
+  # Pre-commit: host mirror only — no field files on TEAM/KILROY drives.
+  if [[ ! -f "$lock" ]] || ! grep -q '"committed"[[:space:]]*:[[:space:]]*true' "$lock" 2>/dev/null; then
+    mkdir -p "${local_mirror}/nexus-field/state" 2>/dev/null || true
+    printf '%s\n' "${local_mirror}"
+    return 0
+  fi
   if [[ -d "${local_mirror}/nexus-field/state" ]]; then
     printf '%s\n' "${local_mirror}"
     return 0
@@ -34,6 +41,13 @@ nexus_field_drive_root() {
 
 nexus_field_drive_apply_paths() {
   [[ "${NEXUS_FIELD_DRIVE:-1}" == "1" ]] || return 0
+  # Never redirect runtime state to drive until underlay commit (no field-in-field).
+  if [[ "${NEXUS_FIELD_DRIVE_STATE_REDIRECT:-0}" != "1" ]]; then
+    local lock="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}/field-underlay-lock.json"
+    if [[ ! -f "$lock" ]] || ! grep -q '"committed"[[:space:]]*:[[:space:]]*true' "$lock" 2>/dev/null; then
+      return 0
+    fi
+  fi
   local root field_base state_on_drive
   root="$(nexus_field_drive_root 2>/dev/null)" || return 0
   field_base="${root}/nexus-field"

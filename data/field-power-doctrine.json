@@ -5,6 +5,8 @@
   "policy": {
     "grid_export_requires_hardware": true,
     "software_witness_only": true,
+    "grid_never_enters_voltage_trust_layer": true,
+    "voltage_regulation": "data/field-voltage-regulation-doctrine.json",
     "shed_credits_reduce_net_draw": true,
     "thermal_governor_coupled": true,
     "wave_potential_energy_in_ledger": true

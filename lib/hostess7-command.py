@@ -28,7 +28,20 @@ UA = "NEXUS-Shield-Hostess7-Command/2.0"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _logic_gate_enabled() -> bool:
@@ -527,7 +540,9 @@ def save_sketch(data_url: str, *, note: str = "") -> dict[str, Any]:
     except (ValueError, OSError) as exc:
         return {"ok": False, "error": str(exc)}
     SKETCH_DIR.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    if _SOVEREIGN_CLOCK_MOD is None:
+        _now()
+    stamp = _SOVEREIGN_CLOCK_MOD.utc_compact()
     path = SKETCH_DIR / f"sketch-{stamp}.png"
     path.write_bytes(blob)
     SKETCH_LATEST.write_bytes(blob)
@@ -1209,6 +1224,62 @@ def _excellence_cadence_reply(low: str) -> str | None:
     return _excellence_pledge()
 
 
+_MUSCLE_MEMORY_KEYS = (
+    "muscle memory", "muscle-memory", "procedural memory", "operator habit",
+    "browser habit", "browser habits", "navigation habit", "my habits",
+    "what do i usually", "what sites do i", "remember my shortcuts", "habit recall",
+)
+
+
+def _muscle_memory_cadence_reply(low: str) -> str | None:
+    """Procedural operator habits — nav, shortcuts, imports."""
+    if not any(k in low for k in _MUSCLE_MEMORY_KEYS):
+        return None
+    if os.environ.get("NEXUS_HOSTESS7_MUSCLE_MEMORY", "1") != "1":
+        return None
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7mm", INSTALL / "lib" / "hostess7-muscle-memory.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            reply = mod.explain_muscle_memory(low)
+            if reply:
+                return reply
+    except Exception:
+        pass
+    return None
+
+
+_MOUTH_NEURAL_KEYS = (
+    "mouth neural", "mouth brain", "voice hemisphere", "thought voice",
+    "thought and voice", "mouth training", "speech hemisphere", "field neural voice",
+    "deception voice", "thought utterance", "voice egress", "mouth hemisphere",
+)
+
+
+def _mouth_neural_cadence_reply(low: str) -> str | None:
+    """Voice hemisphere — thought≠utterance, mouth training, deception possible."""
+    if not any(k in low for k in _MOUTH_NEURAL_KEYS):
+        return None
+    if os.environ.get("NEXUS_HOSTESS7_MOUTH_NEURAL", "1") != "1":
+        return None
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7mouth", INSTALL / "lib" / "hostess7-mouth-neural.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            reply = mod.explain_mouth_neural(low)
+            if reply:
+                return reply
+    except Exception:
+        pass
+    return None
+
+
 def _mastery_cadence_reply(low: str) -> str | None:
     """Mastery pillar explanations — flexibility, adaptability, confidence."""
     if not any(k in low for k in _MASTERY_KEYS):
@@ -1341,6 +1412,14 @@ def _human_cadence_reply(user_message: str, github: dict[str, Any], panel: dict[
     mastery = _mastery_cadence_reply(low)
     if mastery:
         return mastery
+
+    muscle = _muscle_memory_cadence_reply(low)
+    if muscle:
+        return muscle
+
+    mouth = _mouth_neural_cadence_reply(low)
+    if mouth:
+        return mouth
 
     mos = _mos_cadence_reply(low, raw=user_message)
     if mos:
@@ -1553,6 +1632,8 @@ def ask_operator(
     author_training_reply = _author_training_cadence_reply(low_msg)
     excellence_reply = _excellence_cadence_reply(low_msg)
     mastery_reply = _mastery_cadence_reply(low_msg)
+    muscle_reply = _muscle_memory_cadence_reply(low_msg)
+    mouth_reply = _mouth_neural_cadence_reply(low_msg)
     mos_reply = _mos_cadence_reply(low_msg, raw=message)
     eng_reply = _engineering_cadence_reply(low_msg, raw=message)
     combat_reply = _combat_cadence_reply(low_msg, raw=message)
@@ -1613,6 +1694,22 @@ def ask_operator(
             "ok": True,
             "reply": mastery_reply,
             "engine": "hostess7_training",
+            "thinking": False,
+            "instant": True,
+        }
+    elif muscle_reply and use_brain and not human_cadence_only:
+        result = {
+            "ok": True,
+            "reply": muscle_reply,
+            "engine": "hostess7_muscle_memory",
+            "thinking": False,
+            "instant": True,
+        }
+    elif mouth_reply and use_brain and not human_cadence_only:
+        result = {
+            "ok": True,
+            "reply": mouth_reply,
+            "engine": "hostess7_mouth_neural",
             "thinking": False,
             "instant": True,
         }
@@ -2059,6 +2156,7 @@ def build_panel(*, panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "truth_rating": _truth_panel(),
         "needs_wants": _needs_wants_ask(panel_doc),
         "self_view": _self_view_panel(),
+        "ironclad_immediate": _ironclad_immediate_panel(),
         "programming": _programming_panel(),
         "g16": _g16_panel(),
         "codecraft": _codecraft_panel(),
@@ -2068,6 +2166,8 @@ def build_panel(*, panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "combat": _combat_panel(),
         "mos": _mos_panel(),
         "training": _training_panel(),
+        "muscle_memory": _muscle_memory_panel(),
+        "mouth_neural": _mouth_neural_panel(),
         "threat_posture": {"warn_level": "high", "equipment_holds_gate": True, "logic_gate": _logic_gate_enabled()},
     }
 
@@ -2084,6 +2184,34 @@ def _training_panel() -> dict[str, Any]:
     except Exception:
         pass
     return _load_json(STATE / "hostess7-training-panel.json", {})
+
+
+def _muscle_memory_panel() -> dict[str, Any]:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7mm", INSTALL / "lib" / "hostess7-muscle-memory.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.build_panel(write=False)
+    except Exception:
+        pass
+    return _load_json(STATE / "hostess7-muscle-memory-panel.json", {})
+
+
+def _mouth_neural_panel() -> dict[str, Any]:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7mouth", INSTALL / "lib" / "hostess7-mouth-neural.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.build_panel(write=False)
+    except Exception:
+        pass
+    return _load_json(STATE / "hostess7-mouth-neural-panel.json", {})
 
 
 def _calculator_panel() -> dict[str, Any]:
@@ -2185,6 +2313,7 @@ def _programming_panel() -> dict[str, Any]:
 
 
 def _voice_panel() -> dict[str, Any]:
+    panel: dict[str, Any] = {}
     try:
         import importlib.util
 
@@ -2192,10 +2321,29 @@ def _voice_panel() -> dict[str, Any]:
         if spec and spec.loader:
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
-            return mod.build_panel(write=False)
+            panel = mod.build_panel(write=False)
+    except Exception:
+        panel = _load_json(STATE / "hostess7-voice-panel.json", {})
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7mouth", INSTALL / "lib" / "hostess7-mouth-neural.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            mn = mod.build_panel(write=False)
+            panel["field_neural"] = {
+                "hemispheres": mn.get("hemispheres"),
+                "callosum": mn.get("callosum"),
+                "deception_possible": mn.get("deception_possible", True),
+                "level": mn.get("level"),
+                "pass_rate": mn.get("pass_rate"),
+                "lessons_passed": (mn.get("neural_status") or {}).get("lessons_passed"),
+                "motto": mn.get("motto"),
+            }
     except Exception:
         pass
-    return _load_json(STATE / "hostess7-voice-panel.json", {})
+    return panel
 
 
 def _codecraft_panel() -> dict[str, Any]:
@@ -2210,6 +2358,26 @@ def _codecraft_panel() -> dict[str, Any]:
     except Exception:
         pass
     return _load_json(STATE / "hostess7-codecraft-panel.json", {})
+
+
+def _ironclad_immediate_panel() -> dict[str, Any]:
+    cached = _load_json(STATE / "ironclad-immediate.json", {})
+    if cached.get("schema") == "ironclad-immediate/v1":
+        return cached
+    try:
+        import importlib.util
+
+        py = INSTALL / "lib" / "ironclad-immediate.py"
+        if py.is_file():
+            spec = importlib.util.spec_from_file_location("ironclad_immediate", py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_immediate"):
+                    return mod.read_immediate()
+    except Exception:
+        pass
+    return {}
 
 
 def _self_view_panel() -> dict[str, Any]:

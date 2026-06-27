@@ -362,7 +362,7 @@ class Handler(BaseHTTPRequestHandler):
             })
             return
 
-        if path in ("/assets/front-hook.js", "/assets/hardware-wire.js", "/assets/smart-wire.js", "/assets/admin-window-shield.js"):
+        if path in ("/assets/front-hook.js", "/assets/hardware-wire.js", "/assets/smart-wire.js", "/assets/clipboard-wire.js", "/assets/admin-window-shield.js"):
             asset = INSTALL / "panel" / "assets" / path.rsplit("/", 1)[-1]
             if not asset.is_file():
                 self._send_json(404, {"error": "asset_missing"})

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hostess 7 Training Viewer — personal side project. Opens in its own browser window.
+# Hostess 7 Training Viewer — opens in Queen browser tab.
 set -euo pipefail
 
 VIEWER_ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -11,6 +11,7 @@ export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${NEXUS_INSTALL_ROOT}/.nexus-state}"
 export HOSTESS7_ROOT="${HOSTESS7_ROOT:-${NEXUS_INSTALL_ROOT}/Hostess7}"
 export GROK16_ROOT="${GROK16_ROOT:-${NEXUS_INSTALL_ROOT}/Grok16}"
 export H7_TRAINING_VIEWER_PORT="${H7_TRAINING_VIEWER_PORT:-9488}"
+export QUEEN_ROOT="${QUEEN_ROOT:-${NEXUS_INSTALL_ROOT}/Queen}"
 
 PY="${PY:-pythong}"
 if ! command -v "$PY" >/dev/null 2>&1; then
@@ -20,6 +21,7 @@ fi
 URL="http://127.0.0.1:${H7_TRAINING_VIEWER_PORT}/"
 PID_FILE="${VIEWER_ROOT}/.viewer.pid"
 LOG="${VIEWER_ROOT}/viewer.log"
+OPENER="${NEXUS_INSTALL_ROOT}/lib/queen-panel-open.py"
 
 mkdir -p "${NEXUS_STATE_DIR}"
 
@@ -44,31 +46,11 @@ fi
 
 _open() {
   local url="$1"
-  if command -v google-chrome-stable >/dev/null 2>&1; then
-    DISPLAY="${DISPLAY:-:0}" google-chrome-stable --app="$url" --window-size=1480,960 --new-window >/dev/null 2>&1 &
-    return
+  if [[ -f "$OPENER" ]]; then
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      QUEEN_ROOT="${QUEEN_ROOT}" "$PY" "$OPENER" url "$url" && return
   fi
-  if command -v google-chrome >/dev/null 2>&1; then
-    DISPLAY="${DISPLAY:-:0}" google-chrome --app="$url" --window-size=1480,960 --new-window >/dev/null 2>&1 &
-    return
-  fi
-  if command -v chromium-browser >/dev/null 2>&1; then
-    DISPLAY="${DISPLAY:-:0}" chromium-browser --app="$url" --window-size=1480,960 --new-window >/dev/null 2>&1 &
-    return
-  fi
-  if command -v chromium >/dev/null 2>&1; then
-    DISPLAY="${DISPLAY:-:0}" chromium --app="$url" --window-size=1480,960 --new-window >/dev/null 2>&1 &
-    return
-  fi
-  if command -v firefox >/dev/null 2>&1; then
-    DISPLAY="${DISPLAY:-:0}" firefox --new-window "$url" >/dev/null 2>&1 &
-    return
-  fi
-  if command -v xdg-open >/dev/null 2>&1; then
-    DISPLAY="${DISPLAY:-:0}" xdg-open "$url" >/dev/null 2>&1 &
-    return
-  fi
-  echo "Open manually: $url"
+  echo "Open in Queen browser: $url"
 }
 
 case "${1:-open}" in
@@ -81,21 +63,15 @@ case "${1:-open}" in
       echo "Training viewer not running."
     fi
     ;;
-  status)
-    if _running; then
-      echo "Running pid=$(cat "$PID_FILE") url=$URL"
-      curl -sf "${URL}api/health" 2>/dev/null || true
-    else
-      echo "Stopped"
-    fi
+  url)
+    echo "$URL"
     ;;
   open|start|"")
     _open "$URL"
-    echo "Hostess 7 Training Viewer → $URL"
-    echo "STATE: $NEXUS_STATE_DIR"
+    echo "Training viewer: $URL"
     ;;
   *)
-    echo "Usage: $0 [open|stop|status]" >&2
+    echo "Usage: $0 [open|stop|url]" >&2
     exit 1
     ;;
 esac

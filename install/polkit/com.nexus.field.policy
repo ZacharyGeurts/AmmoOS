@@ -79,6 +79,36 @@
     <annotate key="org.freedesktop.policykit.exec.argv1">run-service</annotate>
   </action>
 
+  <!-- ZNetwork field secure network — root gate before operator accepts -->
+  <action id="com.nexus.field.znetwork">
+    <description>Enable ZNetwork field secure network manager</description>
+    <message>Authentication is required to activate ZNetwork on this computer</message>
+    <icon_name>network-wired</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/lib/nexus-shield/lib/nexus-pkexec-bridge.sh</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">run-znetwork</annotate>
+  </action>
+
+  <!-- Host OS freeze — cgroup soft freeze, ACPI mem/disk, sovereign resume witness -->
+  <action id="com.nexus.field.freeze">
+    <description>Freeze host OS in place (field draw isolated)</description>
+    <message>Authentication is required to freeze or thaw the host operating system</message>
+    <icon_name>system-suspend</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/lib/nexus-shield/lib/nexus-pkexec-bridge.sh</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">run-freeze</annotate>
+  </action>
+
   <!-- 2026 Tristate Installer — permanent underlay commit, WRDT apply, reboot -->
   <action id="com.nexus.field.underlay">
     <description>Commit permanent field underlay (Tristate Installer)</description>

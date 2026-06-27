@@ -8,6 +8,11 @@
 - [Field Switch Safety](Field-Switch-Safety)
 - [Underlay F9 Tristate](Underlay-F9-Tristate)
 
+### g16 surfaces
+- [Host Desktop](Host-Desktop)
+- [Queen Browser](Queen-Browser)
+- [Host Freeze](Host-Freeze)
+
 ### Operator
 - [Panel Guide](Panel-Guide)
 - [Configuration](Configuration)

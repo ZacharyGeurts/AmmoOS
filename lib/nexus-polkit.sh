@@ -83,11 +83,98 @@ nexus_polkit_action_for() {
       harden)  printf '%s' com.nexus.field.harden ;;
       service) printf '%s' com.nexus.field.service ;;
       underlay) printf '%s' com.nexus.field.underlay ;;
+      freeze)   printf '%s' com.nexus.field.freeze ;;
+      znetwork) printf '%s' com.nexus.field.znetwork ;;
       *)       printf '%s' com.nexus.field.install ;;
     esac
   else
     printf '%s' com.nexus.field.bootstrap
   fi
+}
+
+nexus_pol_py() {
+  local py="${NEXUS_INSTALL_ROOT:-${_NEXUS_POLKIT_ROOT}}/lib/field-polkit.py"
+  [[ -f "$py" ]] || py="${_NEXUS_POLKIT_LIB}/field-polkit.py"
+  [[ -f "$py" ]] || return 1
+  local runner="${NEXUS_PYTHONG:-pythong}"
+  command -v "$runner" >/dev/null 2>&1 || runner="python3"
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${_NEXUS_POLKIT_ROOT}}" \
+  NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}" \
+    "$runner" "$py" "$@"
+}
+
+nexus_pol_root_json() {
+  local purpose="${1:-}"
+  nexus_pol_py root "$purpose" 2>/dev/null
+}
+
+nexus_pol_is_root() {
+  if [[ "$(id -u 2>/dev/null || echo 1)" -eq 0 ]]; then
+    return 0
+  fi
+  local doc
+  doc="$(nexus_pol_root_json "${1:-}")" || return 1
+  grep -q '"is_root"[[:space:]]*:[[:space:]]*true' <<<"$doc" 2>/dev/null
+}
+
+nexus_pol_has_cached_sudo() {
+  sudo -n true 2>/dev/null
+}
+
+nexus_pol_secure_sudo() {
+  local prompt="${1:-NEXUS Field — administrator password required.}"
+  if [[ "$(id -u)" -eq 0 ]]; then
+    return 0
+  fi
+  if nexus_pol_has_cached_sudo; then
+    return 0
+  fi
+  if [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]] && command -v zenity >/dev/null 2>&1; then
+    local pw
+    pw="$(zenity --password --title="NEXUS Field" --text="$prompt" 2>/dev/null || true)"
+    if [[ -z "$pw" ]]; then
+      return 3
+    fi
+    printf '%s\n' "$pw" | sudo -S -v 2>/dev/null
+    local rc=$?
+    unset pw
+    return $rc
+  fi
+  sudo -v || return 1
+}
+
+# Ensure root via pol — pkexec bridge first on Linux GUI, else secure sudo -v.
+nexus_pol_ensure_root() {
+  local purpose="${1:-general}"
+  if nexus_pol_is_root "$purpose"; then
+    export NEXUS_ELEVATED_ROOT=1
+    return 0
+  fi
+  if nexus_pol_has_cached_sudo; then
+    export NEXUS_ELEVATED_ROOT=1
+    return 0
+  fi
+  # shellcheck source=/dev/null
+  [[ -f "${_NEXUS_POLKIT_LIB}/nexus-elevate.sh" ]] && source "${_NEXUS_POLKIT_LIB}/nexus-elevate.sh"
+  if declare -f nexus_elevate_has_gui >/dev/null 2>&1 && nexus_elevate_has_gui \
+    && command -v pkexec >/dev/null 2>&1; then
+    local bridge action marker="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}/pol-elevate.marker"
+    bridge="$(nexus_polkit_bridge_path)" || true
+    if [[ -n "${bridge:-}" ]]; then
+      nexus_polkit_bootstrap_if_cached_sudo
+      action="$(nexus_polkit_action_for znetwork)"
+      mkdir -p "$(dirname "$marker")" 2>/dev/null || true
+      : >"$marker"
+      chmod 600 "$marker" 2>/dev/null || true
+      if pkexec --action "$action" "$bridge" run-znetwork "$marker"; then
+        export NEXUS_ELEVATED_ROOT=1
+        return 0
+      fi
+    fi
+  fi
+  nexus_pol_secure_sudo "Authenticate once for ${purpose}." || return 1
+  export NEXUS_ELEVATED_ROOT=1
+  return 0
 }
 
 nexus_polkit_resolve_installer() {

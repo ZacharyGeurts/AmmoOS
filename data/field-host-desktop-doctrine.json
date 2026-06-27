@@ -1,0 +1,61 @@
+{
+  "schema": "field-host-desktop-doctrine/v1",
+  "title": "Host desktop — mirror incumbent OS, field startbar overlay",
+  "motto": "First page shows all their programs with the menu they already know.",
+  "policy": {
+    "mirror_guest_os": true,
+    "prefer_original_icons": true,
+    "field_apps_always_present": true,
+    "startbar_overlay": "bottom",
+    "touch_long_press_ms": 480,
+    "right_click_context": true
+  },
+  "field_apps": [
+    {
+      "id": "nexus-command",
+      "name": "NEXUS Field Command",
+      "exec": "/command",
+      "icon": "nexus-field",
+      "category": "Field",
+      "pinned": true
+    },
+    {
+      "id": "underlay-f9",
+      "name": "Underlay F9",
+      "exec": "/underlay-f9",
+      "icon": "nexus-field",
+      "category": "Field",
+      "pinned": true
+    },
+    {
+      "id": "tristate",
+      "name": "2026 Tristate Installer",
+      "exec": "/tristate-installer",
+      "icon": "nexus-field",
+      "category": "Field"
+    },
+    {
+      "id": "queen-browser",
+      "name": "Queen Browser",
+      "exec": "http://127.0.0.1:9481/world/browser.html",
+      "icon": "queen-browser",
+      "category": "Field",
+      "pinned": true
+    }
+  ],
+  "linux_scan_dirs": [
+    "/usr/share/applications",
+    "HOME/.local/share/applications",
+    "/var/lib/snapd/desktop/applications"
+  ],
+  "icon_theme_dirs": [
+    "/usr/share/icons/hicolor",
+    "HOME/.local/share/icons/hicolor",
+    "/usr/share/pixmaps"
+  ],
+  "themes": {
+    "windows": "windows11",
+    "linux": "gnome",
+    "darwin": "macos"
+  }
+}

@@ -24,5 +24,15 @@
     "advisory_sources": ["thermal_warn", "thermal_crit", "peak_delta_c", "wave_shed_warn"],
     "mitigation": ["wave_shed", "capture_halt", "usb_autosuspend"],
     "no_quota_cut_unless_crit": true
+  },
+  "non_fielded_safety": {
+    "rule": "No fielded files on drives before whole-system field — no nested nexus-field or zac hotspots",
+    "deny_rel_parts": ["nexus-field", ".nexus-field-drive", "zac"],
+    "publish_host_mirror": ".nexus-field-drive",
+    "publish_requires_defield": true,
+    "state_redirect_requires_commit": true,
+    "convert_requires_defield": true,
+    "commit_requires_defield": true,
+    "module": "lib/field-non-fielded-safety.py"
   }
 }

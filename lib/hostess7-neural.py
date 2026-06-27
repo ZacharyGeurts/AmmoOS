@@ -102,7 +102,20 @@ RECOMMENDATIONS: tuple[dict[str, str], ...] = (
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -853,11 +866,80 @@ def _agents7_bonus() -> float:
         return 0.0
 
 
+def _ironclad_neural_extrapolation(claim: str, meta: dict[str, Any] | None) -> dict[str, Any] | None:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("ironclad", INSTALL / "lib" / "ironclad-plate.py")
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if not hasattr(mod, "neural_extrapolation_confidence"):
+            return None
+        target = str((meta or {}).get("target_neural") or "any_intelligence_neural")
+        out = mod.neural_extrapolation_confidence(claim, target_neural=target, meta=meta)
+        if out.get("ok") and out.get("extrapolation"):
+            return out
+    except Exception:
+        pass
+    return None
+
+
+def _ironclad_selftest_result(
+    ironclad: dict[str, Any],
+    *,
+    floor: float,
+    genius: float,
+    claim: str,
+    meta: dict[str, Any] | None,
+) -> dict[str, Any]:
+    score = float(ironclad.get("truth_score") or 100.0)
+    sealed = bool(ironclad.get("ironclad_sealed"))
+    result = {
+        "schema": "hostess7-neural-selftest/v1",
+        "ts": _now(),
+        "claim_excerpt": claim[:400],
+        "truth_score": score,
+        "base_truth": score,
+        "deception_risk": ironclad.get("deception_risk") or ("low" if sealed else "medium"),
+        "adapt_allowed": True,
+        "genius_tier": sealed or score >= genius,
+        "adapt_floor": floor,
+        "genius_floor": genius,
+        "ironclad_sealed": sealed,
+        "ironclad_extrapolation": True,
+        "target_neural": ironclad.get("target_neural"),
+        "citation": ironclad.get("citation"),
+        "assurance": ironclad.get("assurance"),
+        "layers": [
+            {"layer": "ironclad_extrapolation", "activation": score, "pass": True},
+        ],
+        "recommended_action": "accept_ironclad_sealed" if sealed else "accept_ironclad_pending",
+        "meta": meta or {},
+    }
+    _append_jsonl(SELFTEST_LOG, result)
+    st = _load_json(NEURAL_STATE, {})
+    st.update({
+        "last_selftest": _now(),
+        "last_truth_score": score,
+        "last_adapt_allowed": True,
+        "last_ironclad_sealed": sealed,
+        "total_selftests": int(st.get("total_selftests", 0)) + 1,
+    })
+    _save_json(NEURAL_STATE, st)
+    return result
+
+
 def self_test_knowledge(claim: str, *, meta: dict[str, Any] | None = None) -> dict[str, Any]:
     """Truth self-test across neural gate series before any adapt."""
     manifest = stack_manifest()
     floor = float(manifest.get("truth_adapt_floor") or TRUTH_ADAPT_FLOOR)
     genius = float(manifest.get("truth_genius_floor") or TRUTH_GENIUS_FLOOR)
+
+    ironclad = _ironclad_neural_extrapolation(claim, meta)
+    if ironclad:
+        return _ironclad_selftest_result(ironclad, floor=floor, genius=genius, claim=claim, meta=meta)
 
     detective = _run_detective_truth(claim)
     base = float(detective.get("truth_score") or 0)

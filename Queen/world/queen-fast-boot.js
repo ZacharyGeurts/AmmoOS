@@ -1,5 +1,5 @@
 /**
- * Queen Fast Boot — cache-first paint, lazy pane scripts, zero blocking storm.
+ * Queen Fast Boot — cache-first paint, lazy pane scripts, no blocking splash.
  */
 (function (global) {
   "use strict";
@@ -28,18 +28,6 @@
   function loadPaneScripts(pane) {
     const list = LAZY_SCRIPTS[pane] || [];
     return Promise.all(list.map(loadScript)).catch(() => {});
-  }
-
-  function setProgress(pct) {
-    const bar = document.querySelector(".qm-progress > i");
-    if (bar) bar.style.width = `${Math.min(100, pct)}%`;
-  }
-
-  function dismissBoot() {
-    const el = document.getElementById("qm-boot");
-    if (!el) return;
-    el.classList.add("qm-boot--gone");
-    setTimeout(() => el.remove(), 200);
   }
 
   function cacheWorld(doc) {
@@ -83,32 +71,23 @@
   }
 
   function boot() {
-    setProgress(15);
     const cached = readCache();
-    if (cached) {
-      applyWorld(cached);
-      setProgress(40);
-    }
+    if (cached) applyWorld(cached);
 
     if (global.QueenRootThreats) global.QueenRootThreats.boot();
 
-    const shellReady = loadScript("queen-browser-shell.js");
-    shellReady.then(() => setProgress(65));
-
     Promise.all([
-      shellReady,
+      loadScript("queen-browser-shell.js"),
       fetchWorld(),
     ]).then(([, doc]) => {
       if (doc) {
         cacheWorld(doc);
         applyWorld(doc);
       }
-      setProgress(100);
-      dismissBoot();
       wireDockLazy();
       loadPaneScripts("os");
     }).catch(() => {
-      dismissBoot();
+      wireDockLazy();
     });
   }
 

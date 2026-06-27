@@ -25,8 +25,37 @@
       .replace(/"/g, "&quot;");
   }
 
-  function startUrl(origin) {
-    return `${origin}/world/queen-start.html`;
+  function startUrl() {
+    return document.body?.dataset?.queenStart || "http://127.0.0.1:9477/field";
+  }
+
+  const SHELL_ACTIONS = new Set(["navigate", "new_tab", "attach_tab", "home", "command"]);
+
+  function isLoopbackOrigin(origin) {
+    try {
+      const u = new URL(origin);
+      return u.hostname === "127.0.0.1" || u.hostname === "localhost";
+    } catch {
+      return false;
+    }
+  }
+
+  function isSafeShellUrl(url) {
+    if (!url || typeof url !== "string") return false;
+    const u = url.trim();
+    if (!u || u.length > 8192) return false;
+    const lower = u.toLowerCase();
+    if (lower.startsWith("javascript:") || lower.startsWith("data:") || lower.startsWith("vbscript:")) {
+      return false;
+    }
+    if (u.startsWith("/") || u.startsWith("queen://")) return true;
+    try {
+      const parsed = new URL(u, location.origin);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   function ensureViewport() {
@@ -99,7 +128,7 @@
     frame.dataset.compatEra = profile.compat_era || (profile.era && profile.era.id) || "es2026";
   }
 
-  function loadTab(tabId, url, opts) {
+  async function loadTab(tabId, url, opts) {
     const entry = getOrCreatePane(tabId);
     if (!entry) return;
     const doc = globalThis.QueenOS?.browser?.doc?.doc || globalThis.QueenOS?.browser?.doc;
@@ -107,9 +136,21 @@
     const compatMode = opts?.compatMode || tab?.compat_mode || "auto";
     const profile = opts?.compat || tab?.compat_profile || tab;
     applyCompatToFrame(entry.frame, profile);
+    globalThis.QueenFieldSanity?.hardenFrames?.();
+    if (url && globalThis.QueenFieldSanity?.validateUrl) {
+      const gate = await globalThis.QueenFieldSanity.validateUrl(url);
+      if (!gate.ok) {
+        const statusEl = $("qb-status");
+        if (statusEl) {
+          statusEl.textContent = `Field sanity blocked · ${gate.reason || gate.classification?.verdict || "hold"}`;
+        }
+        url = startUrl();
+      }
+    }
     const proxy = opts?.proxy ?? doc?.proxyMode;
     entry.frame.src = frameUrl(url, proxy, compatMode);
     setActivePane(tabId);
+    document.dispatchEvent(new CustomEvent("queen-navigate", { detail: { tabId, url } }));
     const pill = document.getElementById("qb-compat-pill");
     if (pill && tab) {
       pill.textContent = `${tab.compat_era || "es2026"} · ${tab.compat_mode || "auto"}`;
@@ -224,14 +265,26 @@
   }
 
   function onShellMessage(ev) {
-    if (ev.origin !== location.origin) return;
+    if (ev.origin !== location.origin && !isLoopbackOrigin(ev.origin)) return;
     const data = ev.data;
-    if (!data || data.type !== "queen:shell") return;
+    if (!data || typeof data !== "object" || data.type !== "queen:shell") return;
     const action = data.action;
-    const url = data.url;
-    if (action === "navigate" && url) globalThis.QueenOS?.browser?.navigate?.(url);
-    if (action === "new_tab" && url) globalThis.QueenOS?.browser?.newTab?.(url);
-    if (action === "attach_tab") attachTab(data.tab_id);
+    if (!SHELL_ACTIONS.has(action)) return;
+    if (action === "attach_tab") {
+      attachTab(data.tab_id);
+      return;
+    }
+    let url = data.url;
+    if (action === "home") url = startUrl();
+    if (action === "command") url = document.body?.dataset?.queenCommand || "http://127.0.0.1:9477/command";
+    if (!isSafeShellUrl(url)) {
+      const status = $("qb-status");
+      if (status) status.textContent = "Blocked hostile shell message";
+      return;
+    }
+    if (action === "navigate") globalThis.QueenOS?.browser?.navigate?.(url);
+    if (action === "new_tab" || action === "command") globalThis.QueenOS?.browser?.newTab?.(url);
+    if (action === "home") globalThis.QueenOS?.browser?.navigate?.(url);
   }
 
   function wireSecurity() {
@@ -270,8 +323,31 @@
     });
   }
 
+  function panelApi(path) {
+    const port = document.body?.dataset?.nexusPanelPort || "9477";
+    return `http://127.0.0.1:${port}${path}`;
+  }
+
+  async function underlaySurface(verb) {
+    const status = $("qb-status");
+    try {
+      const res = await fetch(panelApi(`/api/field-underlay-surface/${verb}`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const doc = await res.json();
+      if (status) status.textContent = doc.message || (doc.ok ? verb : doc.error || "failed");
+      if (verb === "rise" && doc.ok) activateStart();
+    } catch (e) {
+      if (status) status.textContent = `Underlay ${verb}: ${e}`;
+    }
+  }
+
   function wireStartButton() {
     $("qb-start")?.addEventListener("click", activateStart);
+    $("qb-underlay-drop")?.addEventListener("click", () => underlaySurface("drop"));
+    $("qb-underlay-rise")?.addEventListener("click", () => underlaySurface("rise"));
     $("qb-compat-pill")?.addEventListener("click", async () => {
       const modes = ["auto", "modern", "legacy_secure", "archaeology", "future"];
       const doc = globalThis.QueenOS?.browser?.doc?.doc || globalThis.QueenOS?.browser?.doc;

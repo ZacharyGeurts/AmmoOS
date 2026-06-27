@@ -43,6 +43,11 @@ INPUT_MIDDLEMAN = frozenset({
     "remmina", "vnc", "x11vnc", "tigervnc", "teamviewer", "anydesk",
 })
 
+CLIPBOARD_MIDDLEMAN = frozenset({
+    "copyq", "parcellite", "clipit", "clipman", "diodon", "greenclip", "klipper",
+    "cliphist", "clipster", "gpaste", "clipmgr", "xclipboard", "autocutsel",
+})
+
 AUDIO_MIDDLEMAN = frozenset({
     "arecord", "parecord", "ecasound", "sox", "audacity", "ffmpeg", "ffplay",
     "gst-launch", "gst-launch-1.0", "pw-record", "pw-cat",
@@ -121,6 +126,13 @@ HARDWARE_CLASSES: tuple[HardwareWireClass, ...] = (
         (),
         RF_MIDDLEMAN,
         (),
+    ),
+    HardwareWireClass(
+        "clipboard",
+        "Clipboard / selection / secure vault wire",
+        (),
+        CLIPBOARD_MIDDLEMAN,
+        ("copy", "cut", "paste", "beforeinput"),
     ),
 )
 

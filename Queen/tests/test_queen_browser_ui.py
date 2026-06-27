@@ -8,7 +8,7 @@ import time
 
 HOST = os.environ.get("QUEEN_WORLD_HOST", "127.0.0.1")
 PORT = int(os.environ.get("QUEEN_WORLD_PORT", "9481"))
-URL = f"http://{HOST}:{PORT}/world/"
+URL = f"http://{HOST}:{PORT}/world/browser.html"
 
 
 def main() -> int:
@@ -66,11 +66,14 @@ def main() -> int:
         # Back
         page.click("#qb-back")
         page.wait_for_function(
-            "() => document.getElementById('qb-frame')?.src?.includes('Field_Primer') || document.getElementById('qb-frame')?.src?.includes('zacharygeurts')",
+            "() => { const s = document.getElementById('qb-frame')?.src || ''; return s.includes('9477/field') || s.includes('queen-field-home') || s.includes('Field_Primer') || s.includes('zacharygeurts'); }",
             timeout=15000,
         )
         back_src = page.locator("#qb-frame").get_attribute("src") or ""
-        check("Field_Primer" in back_src or "zacharygeurts" in back_src, "back returns home")
+        check(
+            "9477/field" in back_src or "queen-field-home" in back_src or "Field_Primer" in back_src or "zacharygeurts" in back_src,
+            "back returns home",
+        )
 
         # Forward
         page.click("#qb-forward")
@@ -92,15 +95,20 @@ def main() -> int:
         # Home
         page.click("#qb-home")
         page.wait_for_function(
-            "() => document.getElementById('qb-frame')?.src?.includes('Field_Primer') || document.getElementById('qb-frame')?.src?.includes('zacharygeurts')",
+            "() => { const s = document.getElementById('qb-frame')?.src || ''; return s.includes('9477/field') || s.includes('queen-field-home') || s.includes('Field_Primer') || s.includes('zacharygeurts'); }",
             timeout=15000,
         )
-        check("Field_Primer" in (page.locator("#qb-url").input_value() or "") or "zacharygeurts" in (page.locator("#qb-frame").get_attribute("src") or ""), "home button")
+        check(
+            "queen-field-home" in (page.locator("#qb-frame").get_attribute("src") or "")
+            or "Field_Primer" in (page.locator("#qb-url").input_value() or "")
+            or "zacharygeurts" in (page.locator("#qb-frame").get_attribute("src") or ""),
+            "home button",
+        )
 
         # Bookmark click
         page.locator(".qb-bookmark", has_text="Field Primer").click()
         page.wait_for_function(
-            "() => document.getElementById('qb-frame')?.src?.includes('Field_Primer') || document.getElementById('qb-frame')?.src?.includes('zacharygeurts')",
+            "() => { const s = document.getElementById('qb-frame')?.src || ''; return s.includes('9477/field') || s.includes('queen-field-home') || s.includes('Field_Primer') || s.includes('zacharygeurts'); }",
             timeout=15000,
         )
         check(True, "bookmark navigation")

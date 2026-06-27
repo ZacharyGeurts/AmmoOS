@@ -53,6 +53,7 @@
     {"id": "javascript", "label": "JavaScript (ES2026)", "held": true, "layer": "script"},
     {"id": "web_compat_auto", "label": "Web compat auto — pre-1.0 HTML through future drafts", "held": true, "layer": "compat"},
     {"id": "legacy_secure_cage", "label": "Legacy secure cage — old JS isolated from OS/memory", "held": true, "layer": "compat"},
+    {"id": "browser_import_resecure", "label": "Browser import resecure — sweep Firefox/Chrome family, field-gate every URL", "held": true, "layer": "security"},
     {"id": "nexus_jump", "label": "NEXUS Jump — quick security at every navigation boundary", "held": true, "layer": "security"},
     {"id": "countermeasures_armed", "label": "Countermeasures armed at jump — never afraid", "held": true, "layer": "security"},
     {"id": "wasm", "label": "WebAssembly", "held": true, "layer": "script"},
@@ -138,7 +139,7 @@
     "spec_store_bypass_disable=off without Grok waived entry",
     "Unmitigated CPU sysfs Vulnerable class — fail closed under NEXUS_CPU_VULN_SHIELD"
   ],
-  "process_names": ["fieldfox", "field-queen", "queen-browser", "firefox", "librewolf", "floorp", "waterfox"],
+  "process_names": ["queen-browser", "queen-world", "field-queen"],
   "security_gates": [
     {"id": "code_seal", "label": "Queen + Ear code seal", "held": true, "layer": "integrity"},
     {"id": "g16_field_mandate", "label": "G16 field safety mandate on RTX", "held": true, "layer": "compiler"},

@@ -56,63 +56,14 @@ void shutdown(SDL_Window* window, SDL_Renderer* renderer) noexcept {
 
 void renderBootFrame(SDL_Renderer* renderer, const BootState& boot, const Theme& theme,
                      int w, int h) noexcept {
-    const float t = boot.sealed_time.load();
-    const float load = boot.load_progress.load();
-    const float pulse = 0.5f + 0.5f * std::sin(t * 6.28318f);
-
-    const Uint8 br = static_cast<Uint8>(theme.void_r * 255);
-    const Uint8 bg = static_cast<Uint8>(theme.void_g * 255);
-    const Uint8 bb = static_cast<Uint8>(theme.void_b * 255);
-    SDL_SetRenderDrawColor(renderer, br, bg, bb, 255);
+    (void)boot;
+    (void)w;
+    (void)h;
+    SDL_SetRenderDrawColor(renderer,
+        static_cast<Uint8>(theme.void_r * 255),
+        static_cast<Uint8>(theme.void_g * 255),
+        static_cast<Uint8>(theme.void_b * 255), 255);
     SDL_RenderClear(renderer);
-
-    const int cx = w / 2;
-    const int cy = h / 2 - h / 12;
-    const int r0 = static_cast<int>(std::min(w, h) * (0.14f + pulse * 0.02f));
-    const int r1 = static_cast<int>(std::min(w, h) * (0.22f + load * 0.06f));
-
-    SDL_SetRenderDrawColor(renderer,
-        static_cast<Uint8>(theme.aqua_r * 255),
-        static_cast<Uint8>(theme.aqua_g * 255),
-        static_cast<Uint8>(theme.aqua_b * 255), 200);
-    for (int a = 0; a < 360; a += 4) {
-        const float rad = static_cast<float>(a) * 3.14159f / 180.f;
-        SDL_RenderLine(renderer,
-            cx + static_cast<int>(std::cos(rad) * r0),
-            cy + static_cast<int>(std::sin(rad) * r0),
-            cx + static_cast<int>(std::cos(rad) * (r0 + 3)),
-            cy + static_cast<int>(std::sin(rad) * (r0 + 3)));
-    }
-
-    SDL_SetRenderDrawColor(renderer,
-        static_cast<Uint8>(theme.rose_r * 255),
-        static_cast<Uint8>(theme.rose_g * 255),
-        static_cast<Uint8>(theme.rose_b * 255), 180);
-    for (int a = 0; a < 360; a += 6) {
-        const float rad = static_cast<float>(a) * 3.14159f / 180.f;
-        SDL_RenderLine(renderer,
-            cx + static_cast<int>(std::cos(rad) * r1),
-            cy + static_cast<int>(std::sin(rad) * r1),
-            cx + static_cast<int>(std::cos(rad) * (r1 + 2)),
-            cy + static_cast<int>(std::sin(rad) * (r1 + 2)));
-    }
-
-    const int barW = w * 2 / 5;
-    const int barH = 12;
-    const int barX = (w - barW) / 2;
-    const int barY = cy + h / 8;
-    SDL_SetRenderDrawColor(renderer, 26, 34, 48, 255);
-    SDL_FRect track{static_cast<float>(barX), static_cast<float>(barY),
-                    static_cast<float>(barW), static_cast<float>(barH)};
-    SDL_RenderFillRect(renderer, &track);
-    SDL_FRect fill{static_cast<float>(barX), static_cast<float>(barY),
-                   static_cast<float>(barW) * load, static_cast<float>(barH)};
-    SDL_SetRenderDrawColor(renderer,
-        static_cast<Uint8>(theme.aqua_r * 255),
-        static_cast<Uint8>(theme.aqua_g * 255),
-        static_cast<Uint8>(theme.aqua_b * 255), 255);
-    SDL_RenderFillRect(renderer, &fill);
-
     SDL_RenderPresent(renderer);
 }
 
@@ -169,12 +120,10 @@ bool launchEngine(const std::string& binary, const char* url) noexcept {
 
 void pumpBoot(SDL_Renderer* renderer, BootState& boot, const Theme& theme,
               int w, int h, float dt) noexcept {
-    boot.sealed_time.store(boot.sealed_time.load() + dt);
-    float p = boot.load_progress.load();
-    p = std::min(1.f, p + dt * 0.55f);
-    boot.load_progress.store(p);
+    (void)dt;
+    boot.load_progress.store(1.f);
+    boot.boot_done.store(true);
     renderBootFrame(renderer, boot, theme, w, h);
-    if (p >= 1.f) boot.boot_done.store(true);
 }
 
 } // namespace FieldQueenShell

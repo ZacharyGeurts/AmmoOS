@@ -31,7 +31,20 @@ IMAGE_EXTS = frozenset({".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -320,7 +333,9 @@ def import_and_merge(
     sample_rows: list[dict[str, Any]] = []
 
     img_queue = list(images or [])
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    if _SOVEREIGN_CLOCK_MOD is None:
+        _now()
+    stamp = _SOVEREIGN_CLOCK_MOD.utc_compact()
 
     for row in parsed[:2000]:
         if not isinstance(row, dict):

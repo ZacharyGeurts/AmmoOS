@@ -1,0 +1,18 @@
+{
+  "schema": "ironclad-field-sanity-doctrine/v1",
+  "title": "Ironclad Field Sanity — subsidiary meld",
+  "motto": "Integral field sanity absorbed into the Melded Plate of Truth.",
+  "ironclad_ref": "data/ironclad-doctrine.json",
+  "meld_citation": "ironclad:meld:2",
+  "extensions_ref": "data/ironclad-meld-extensions.json",
+  "queen_engine": "Queen/lib/queen-field-sanity.py",
+  "queen_doctrine": "Queen/data/queen-field-sanity-doctrine.json",
+  "integral": {
+    "rule": "one_pass_simplify",
+    "never_obtuse": true,
+    "never_build_under_heat": true,
+    "infinite_resolution_aspiration": true
+  },
+  "pass": ["classify", "strip", "dedupe", "flatten", "cool_sort"],
+  "citation_prefix": "ironclad:field_sanity"
+}

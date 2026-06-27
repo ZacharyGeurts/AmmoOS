@@ -21,7 +21,20 @@ ENABLED = os.environ.get("NEXUS_HOSTESS7_TRAINING", "1") == "1"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any = None) -> Any:
@@ -492,6 +505,85 @@ def _assess_neural() -> dict[str, Any]:
     }
 
 
+def _mod_sense():
+    return _mod("h7sense", "hostess7-sense-training.py")
+
+
+def _assess_sense_track(track_id: str) -> dict[str, Any]:
+    sense = _mod_sense()
+    if not sense or not hasattr(sense, "assess_track"):
+        return {"ok": False, "level": "pending", "complete": False, "mastered": False, "score": 0.0}
+    row = sense.assess_track(track_id)
+    score = float(row.get("score") or 0)
+    complete = bool(row.get("complete"))
+    mastered = bool(row.get("mastered"))
+    return {
+        "ok": row.get("ok", True),
+        "level": row.get("level") or _level_id(score, complete=complete, mastered=mastered),
+        "complete": complete,
+        "mastered": mastered,
+        "score": round(score, 4),
+        "pass_rate": row.get("pass_rate"),
+        "passed": row.get("passed"),
+        "total": row.get("total"),
+        "tab": row.get("tab"),
+        "api": row.get("api"),
+    }
+
+
+def _assess_final_eye() -> dict[str, Any]:
+    return _assess_sense_track("final_eye")
+
+
+def _assess_final_ear() -> dict[str, Any]:
+    return _assess_sense_track("final_ear")
+
+
+def _assess_final_mouth() -> dict[str, Any]:
+    return _assess_sense_track("final_mouth")
+
+
+def _assess_muscle_memory() -> dict[str, Any]:
+    mod = _mod("h7mm", "hostess7-muscle-memory.py")
+    if mod and hasattr(mod, "assess_track"):
+        row = mod.assess_track()
+        row.setdefault("label", "Muscle memory")
+        return row
+    panel = _load(STATE / "hostess7-muscle-memory-panel.json", {})
+    score = float(panel.get("strength_score") or 0)
+    return {
+        "track": "muscle_memory",
+        "label": "Muscle memory",
+        "score": score,
+        "complete": bool(panel.get("complete")),
+        "mastered": bool(panel.get("mastered")),
+        "fluent": bool(panel.get("fluent")),
+        "tier": panel.get("tier"),
+        "pass_rate": round(score * 100, 1),
+    }
+
+
+def _assess_sense_neural_wire() -> dict[str, Any]:
+    eye = _assess_final_eye()
+    ear = _assess_final_ear()
+    mouth = _assess_final_mouth()
+    scores = [float(eye.get("score") or 0), float(ear.get("score") or 0), float(mouth.get("score") or 0)]
+    rate = sum(scores) / 3.0
+    complete = sum(1 for x in (eye, ear, mouth) if x.get("complete")) >= 2
+    mastered = all(x.get("mastered") for x in (eye, ear, mouth))
+    return {
+        "ok": True,
+        "level": _level_id(rate, complete=complete, mastered=mastered),
+        "complete": complete,
+        "mastered": mastered,
+        "score": round(rate, 4),
+        "pass_rate": round(rate * 100, 1),
+        "eye": eye.get("pass_rate"),
+        "ear": ear.get("pass_rate"),
+        "mouth": mouth.get("pass_rate"),
+    }
+
+
 def _assess_reality_physics_track(track_id: str) -> dict[str, Any]:
     rp = _mod("h7reality", "hostess7-reality-physics-training.py")
     if not rp or not hasattr(rp, "assess_track"):
@@ -529,6 +621,46 @@ def _assess_thermodynamics_entropy() -> dict[str, Any]:
 
 def _assess_field_technology() -> dict[str, Any]:
     return _assess_reality_physics_track("field_technology")
+
+
+def _assess_geography_track(track_id: str) -> dict[str, Any]:
+    geo = _mod("h7geo", "hostess7-geography-training.py")
+    if not geo or not hasattr(geo, "assess_track"):
+        return {"ok": False, "level": "pending", "complete": False, "mastered": False, "score": 0.0}
+    row = geo.assess_track(track_id)
+    score = float(row.get("score") or 0)
+    complete = bool(row.get("complete"))
+    mastered = bool(row.get("mastered"))
+    fluent = bool(row.get("fluent"))
+    return {
+        "ok": bool(row.get("ok")),
+        "level": row.get("level") or _level_id(score, complete=complete, mastered=mastered),
+        "complete": complete,
+        "mastered": mastered,
+        "fluent": fluent,
+        "score": round(score, 4),
+        "pass_rate": row.get("pass_rate"),
+        "tier": row.get("tier"),
+        "proficiency": row.get("proficiency"),
+        "address_corpus": row.get("address_corpus"),
+        "address_drills": row.get("address_drills"),
+    }
+
+
+def _assess_geography() -> dict[str, Any]:
+    return _assess_geography_track("geography")
+
+
+def _assess_postal_addresses() -> dict[str, Any]:
+    return _assess_geography_track("postal_addresses")
+
+
+def _assess_world_geography() -> dict[str, Any]:
+    return _assess_geography_track("world_geography")
+
+
+def _assess_flat_earth_geography() -> dict[str, Any]:
+    return _assess_geography_track("flat_earth_geography")
 
 
 def _assess_omnibus() -> dict[str, Any]:
@@ -625,12 +757,17 @@ def assess_mastery_facets() -> dict[str, Any]:
     adapt_ratio = adapted / adapt_denom
     has_comp = bool((comprehension.get("summary") or "").strip())
     recovered = bool(master_st.get("training_solidified") or master_st.get("last_train"))
+    mm = _load(STATE / "hostess7-muscle-memory-panel.json", {})
+    muscle_habits = int(mm.get("habit_count") or 0)
+    muscle_strength = float(mm.get("strength_score") or 0)
     adapt_score = (
-        min(1.0, learn_events / 24.0) * 0.28
-        + adapt_ratio * 0.32
-        + (0.18 if has_comp else 0.05)
-        + (0.12 if recovered else 0.0)
-        + min(1.0, int(growth.get("reciprocations_fulfilled") or 0) / 8.0) * 0.10
+        min(1.0, learn_events / 24.0) * 0.24
+        + adapt_ratio * 0.28
+        + (0.16 if has_comp else 0.05)
+        + (0.10 if recovered else 0.0)
+        + min(1.0, int(growth.get("reciprocations_fulfilled") or 0) / 8.0) * 0.08
+        + min(1.0, muscle_habits / 6.0) * 0.08
+        + muscle_strength * 0.06
     )
     adapt_complete = adapt_score >= float((pillars.get("adaptability") or {}).get("complete_floor") or 0.72)
     adapt_mastered = adapt_score >= float((pillars.get("adaptability") or {}).get("mastered_floor") or 0.88)
@@ -712,6 +849,8 @@ def assess_mastery_facets() -> dict[str, Any]:
                 "comprehension": has_comp,
                 "training_recovery": recovered,
                 "reciprocations_fulfilled": growth.get("reciprocations_fulfilled"),
+                "muscle_habits": muscle_habits,
+                "muscle_strength": round(muscle_strength, 4),
             },
         },
         "confidence": {
@@ -783,6 +922,15 @@ ASSESSORS: dict[str, Callable[[], dict[str, Any]]] = {
     "gravity_mechanics": _assess_gravity_mechanics,
     "thermodynamics_entropy": _assess_thermodynamics_entropy,
     "field_technology": _assess_field_technology,
+    "geography": _assess_geography,
+    "postal_addresses": _assess_postal_addresses,
+    "world_geography": _assess_world_geography,
+    "flat_earth_geography": _assess_flat_earth_geography,
+    "final_eye": _assess_final_eye,
+    "final_ear": _assess_final_ear,
+    "final_mouth": _assess_final_mouth,
+    "sense_neural_wire": _assess_sense_neural_wire,
+    "muscle_memory": _assess_muscle_memory,
 }
 
 
@@ -1053,6 +1201,78 @@ SELF_INTERACTION_QUERIES = (
 )
 
 
+def _run_sense(track_id: str) -> dict[str, Any]:
+    sense = _mod_sense()
+    if not sense or not hasattr(sense, "run_sense_track"):
+        return {"ok": False, "error": "sense_training_missing"}
+    _write_runtime(
+        phase="sense_training",
+        active_track=track_id,
+        progress_pct=10,
+        detail=f"Sense training {track_id}…",
+    )
+    result = sense.run_sense_track(track_id)
+    _write_runtime(
+        phase="idle",
+        active_track=None,
+        progress_pct=100,
+        last_track=track_id,
+        detail=f"{track_id} sense training done",
+    )
+    return result
+
+
+def _run_sense_neural_wire() -> dict[str, Any]:
+    sense = _mod_sense()
+    if sense and hasattr(sense, "run_sense_neural_wire"):
+        _write_runtime(
+            phase="sense_training",
+            active_track="sense_neural_wire",
+            progress_pct=20,
+            detail="Sense neural wire — matrix session…",
+        )
+        result = sense.run_sense_neural_wire()
+        _write_runtime(
+            phase="idle",
+            active_track=None,
+            progress_pct=100,
+            last_track="sense_neural_wire",
+            detail="Sense neural wire complete",
+        )
+        return result
+    results = [_run_sense(tid) for tid in ("final_eye", "final_ear", "final_mouth")]
+    ok = sum(1 for r in results if r.get("ok")) >= 2
+    return {"ok": ok, "tracks": results, "schema": "hostess7-sense-neural-wire/v1"}
+
+
+def _run_geography(track_id: str = "geography") -> dict[str, Any]:
+    geo = _mod("h7geo", "hostess7-geography-training.py")
+    if not geo:
+        return {"ok": False, "error": "geography_missing"}
+    _write_runtime(
+        phase="geography",
+        active_track=track_id,
+        progress_pct=15,
+        detail=f"Geography training — postal, world, flat earth ({track_id})…",
+    )
+    if track_id == "flat_earth_geography" and hasattr(geo, "flat_earth_section"):
+        session = {"ok": True, "flat_earth": geo.flat_earth_section()}
+        if hasattr(geo, "run_battery"):
+            session["battery"] = geo.run_battery("flat_earth")
+    elif track_id in ("postal_addresses", "world_geography") and hasattr(geo, "run_battery"):
+        bat_map = {
+            "postal_addresses": "postal_addresses",
+            "world_geography": "world_geography",
+        }
+        session = {"ok": True, "battery": geo.run_battery(bat_map[track_id])}
+    else:
+        session = geo.train_geography_session() if hasattr(geo, "train_geography_session") else {"ok": False}
+    _write_runtime(phase="geography", progress_pct=85, detail="Building geography panel…")
+    panel = geo.build_panel(write=True) if hasattr(geo, "build_panel") else {}
+    _write_runtime(phase="idle", progress_pct=100, detail=f"{track_id} geography session complete")
+    return {"ok": bool(session.get("ok")), "panel": panel, "session": session, "track": track_id}
+
+
 def _run_reality_physics(track_id: str = "reality_physics") -> dict[str, Any]:
     rp = _mod("h7reality", "hostess7-reality-physics-training.py")
     if not rp:
@@ -1183,6 +1403,14 @@ def run_track(track_id: str, *, ocr_train: bool = False) -> dict[str, Any]:
         "gravity_mechanics": lambda: _run_reality_physics("gravity_mechanics"),
         "thermodynamics_entropy": lambda: _run_reality_physics("thermodynamics_entropy"),
         "field_technology": lambda: _run_reality_physics("field_technology"),
+        "geography": lambda: _run_geography("geography"),
+        "postal_addresses": lambda: _run_geography("postal_addresses"),
+        "world_geography": lambda: _run_geography("world_geography"),
+        "flat_earth_geography": lambda: _run_geography("flat_earth_geography"),
+        "final_eye": lambda: _run_sense("final_eye"),
+        "final_ear": lambda: _run_sense("final_ear"),
+        "final_mouth": lambda: _run_sense("final_mouth"),
+        "sense_neural_wire": _run_sense_neural_wire,
     }
     fn = runners.get(canonical) or runners.get(track_id)
     if not fn:
@@ -1413,6 +1641,40 @@ def explain_excellence_pledge(query: str) -> str | None:
     return "\n\n".join(p for p in parts if p)
 
 
+def _sense_training_slice() -> dict[str, Any]:
+    sense = _mod_sense()
+    if sense and hasattr(sense, "panel_json"):
+        try:
+            return sense.panel_json()
+        except Exception:
+            pass
+    panel = _load(STATE / "hostess7-sense-training-panel.json", {})
+    doctrine = _load(INSTALL / "data" / "hostess7-sense-training-doctrine.json", {})
+    return {**panel, "doctrine": doctrine}
+
+
+def _wireframe_slice() -> dict[str, Any]:
+    cached = _load(STATE / "hostess7-training-bundle-cache.json", {})
+    wf = cached.get("wireframe")
+    if isinstance(wf, dict) and wf.get("nodes"):
+        return wf
+    viewer = INSTALL / "hostess7-training-viewer"
+    if not viewer.is_dir():
+        return {}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7bundle", INSTALL / "lib" / "hostess7-training-bundle.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            bundle = mod.bundle_training_data(refresh=False)
+            return bundle.get("wireframe") or {}
+    except Exception:
+        pass
+    return {}
+
+
 def build_panel(*, write: bool = True) -> dict[str, Any]:
     assessment = assess_all()
     author = _mod("h7author", "hostess7-training-author.py")
@@ -1441,6 +1703,10 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "training_author": author_panel,
         "authored_material_count": author_panel.get("authored_total") or 0,
         "training_gaps": author_panel.get("gaps") or [],
+        "sense_training": _sense_training_slice(),
+        "wireframe": _wireframe_slice(),
+        "muscle_memory": _muscle_memory_slice(assessment.get("tracks")),
+        "mouth_neural": _mouth_neural_slice(),
     }
     cached = _load(PANEL, {})
     if cached.get("phases"):
@@ -1449,6 +1715,32 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
     if write:
         _save(PANEL, {**cached, **doc})
     return doc
+
+
+def _muscle_memory_slice(tracks: dict[str, Any] | None = None) -> dict[str, Any]:
+    mod = _mod("h7mm", "hostess7-muscle-memory.py")
+    if not mod:
+        return _load(STATE / "hostess7-muscle-memory-panel.json", {})
+    try:
+        if hasattr(mod, "sync_understandings_from_training"):
+            mod.sync_understandings_from_training(tracks)
+        if hasattr(mod, "build_panel"):
+            return mod.build_panel(write=True, sync_training=False)
+    except Exception:
+        pass
+    return _load(STATE / "hostess7-muscle-memory-panel.json", {})
+
+
+def _mouth_neural_slice() -> dict[str, Any]:
+    mod = _mod("h7mouth", "hostess7-mouth-neural.py")
+    if not mod:
+        return _load(STATE / "hostess7-mouth-neural-panel.json", {})
+    try:
+        if hasattr(mod, "build_panel"):
+            return mod.build_panel(write=True)
+    except Exception:
+        pass
+    return _load(STATE / "hostess7-mouth-neural-panel.json", {})
 
 
 def main() -> int:

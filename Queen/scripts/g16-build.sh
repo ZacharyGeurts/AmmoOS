@@ -16,8 +16,24 @@ export GROK16_BUILD_JOBS="${GROK16_BUILD_JOBS:-${QUEEN_BUILD_JOBS:-2}}"
 export PATH="${GROK16_ROOT}/bin:${GROK16_ROOT}/libexec/grok16:${PATH}"
 
 FIELD_CMAKE="${GROK16_ROOT}/scripts/field-cmake.sh"
+THERMAL_BRIDGE="${GROK16_ROOT}/scripts/nexus-thermal-bridge.sh"
 [[ -f "$FIELD_CMAKE" ]] || { echo "g16-build: missing $FIELD_CMAKE" >&2; exit 1; }
-[[ -x "${GROK16_ROOT}/bin/g16" ]] || { echo "g16-build: g16 not ready — run ${ROOT}/scripts/g16-toolchain.sh install" >&2; exit 1; }
+if [[ -f "$THERMAL_BRIDGE" ]]; then
+  bash "$THERMAL_BRIDGE" || echo "g16-build: thermal bridge warn (continuing)" >&2
+fi
+[[ -x "${GROK16_ROOT}/bin/g16" ]] || { echo "g16-build: g16 not ready — run ${GROK16_ROOT}/scripts/grok16-toolchain.sh install" >&2; exit 1; }
+
+_g16_rtx_gate() {
+  local gpy="${GPY16_DRIVER:-$SG/GrokPy/bin/gpy-16}"
+  [[ -x "$gpy" ]] || gpy="$SG/PythonG/bin/pythong"
+  [[ -x "$gpy" ]] || return 0
+  if ! "$gpy" "$GROK16_ROOT/forge/rtx_gate.py" check "${1:-queen_rtx}" >/dev/null 2>&1; then
+    echo "g16-build: ${1:-queen_rtx} blocked — no RTX GPU (use: GROK16_FIELD_PROFILE=field_opt $0 build)" >&2
+    echo "g16-build: override dev only: G16_RTX_GATE_FORCE=1" >&2
+    return 1
+  fi
+  return 0
+}
 
 case "${1:-build}" in
   configure) shift; exec bash "$FIELD_CMAKE" configure "$@" ;;
@@ -32,6 +48,7 @@ case "${1:-build}" in
   status) exec bash "$FIELD_CMAKE" status ;;
   queen-rtx|full)
     shift || true
+    _g16_rtx_gate queen_rtx || exit 1
     exec bash "$FIELD_CMAKE" queen-rtx "$@"
     ;;
   -h|--help|help)

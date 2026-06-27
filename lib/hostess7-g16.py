@@ -37,7 +37,20 @@ _FLUENCY_KEYS = ("fluent", "mastered", "mastery", "fluency", "fully fluent", "co
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any = None) -> Any:
@@ -66,6 +79,13 @@ def _grok16_root() -> Path:
     env = os.environ.get("GROK16_ROOT", "").strip()
     if env:
         return Path(env)
+    try:
+        sys.path.insert(0, str(INSTALL / "lib"))
+        from sg_paths import grok16_root as _gr  # type: ignore
+
+        return _gr()
+    except Exception:
+        pass
     sibling = INSTALL.parent.parent / "Grok16"
     if sibling.is_dir():
         return sibling
@@ -74,6 +94,32 @@ def _grok16_root() -> Path:
     if prefix:
         return Path(prefix)
     return Path("/usr/local/lib/grok16")
+
+
+def _g16_bridge() -> Any | None:
+    py = INSTALL / "lib" / "nexus-g16-bridge.py"
+    if not py.is_file():
+        return None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("nexus_g16_bridge", py)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _g16_stack() -> dict[str, Any]:
+    mod = _g16_bridge()
+    if mod and hasattr(mod, "stack_status"):
+        try:
+            return mod.stack_status()
+        except Exception:
+            pass
+    return {"ok": False}
 
 
 def _g16_bin(name: str = "g16") -> Path:
@@ -206,6 +252,10 @@ def g16_score(*, battery: dict[str, Any] | None = None, probe: dict[str, Any] | 
     score += 0.06 * min(1.0, mastered_pat / max(len(patterns), 1))
     score += 0.04 if int(live.get("discern_pass") or 0) >= 3 else 0.01
     score += 0.03 if brain_ok else 0.0
+    stack = _g16_stack()
+    score += 0.04 if stack.get("optimized") else (0.02 if stack.get("ok") else 0.0)
+    score += 0.02 if (stack.get("link") or {}).get("ok") else 0.0
+    score += 0.02 if (stack.get("rtx_gate") or {}).get("satisfied") else 0.0
     score = round(min(0.99, score), 4)
 
     fluent_floor = float(doctrine.get("fluent_floor_score") or 0.85)
@@ -228,6 +278,10 @@ def g16_score(*, battery: dict[str, Any] | None = None, probe: dict[str, Any] | 
         "patterns_total": len(patterns),
         "g16_version": live.get("version") or (tc.get("toolchain") or {}).get("g16_version"),
         "brain_verified": brain_ok,
+        "g16_stack": stack,
+        "effective_profile": (stack.get("compile") or {}).get("effective_profile"),
+        "linker_targets": (stack.get("multi_os") or {}).get("targets"),
+        "rtx_gate_satisfied": (stack.get("rtx_gate") or {}).get("satisfied"),
     }
 
 
@@ -371,6 +425,7 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
     metrics = g16_score()
     tc = _toolchain_doc()
     live = metrics.get("live_probe") or {}
+    stack = metrics.get("g16_stack") or _g16_stack()
     doc = {
         "schema": "hostess7-g16/v1",
         "updated": _now(),
@@ -393,6 +448,12 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "grok16_root": str(_grok16_root()),
         "build_script": str(QUEEN / "scripts" / "g16-build.sh"),
         "field_mandate": (tc.get("field_mandate") or _load(MANDATE, {}).get("mandate_id")),
+        "g16_stack": stack,
+        "effective_profile": metrics.get("effective_profile") or (stack.get("compile") or {}).get("effective_profile"),
+        "linker_targets": metrics.get("linker_targets") or (stack.get("multi_os") or {}).get("targets"),
+        "os_families": (stack.get("multi_os") or {}).get("os_families"),
+        "rtx_gate_satisfied": metrics.get("rtx_gate_satisfied") or (stack.get("rtx_gate") or {}).get("satisfied"),
+        "rtx_gated_profiles": (stack.get("rtx_gate") or {}).get("profiles_gated"),
         "reason": (
             "Hostess 7 is fluent and mastered on Grok16 g16 — live probe, discern, ninja, mandate."
             if metrics.get("mastered")

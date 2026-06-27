@@ -1,5 +1,5 @@
 #!/usr/bin/env pythong
-"""F9 underlay hotkey — opens 2026 Tristate Installer (NEXUS-owned, not xbindkeys)."""
+"""F9 underlay hotkey — Tristate installer pre-defield; Queen sovereign browser post-secure."""
 from __future__ import annotations
 
 import glob
@@ -15,27 +15,35 @@ from pathlib import Path
 EV_KEY = 0x01
 KEY_F9 = 67  # F1=59 … F12=70 — F9 normally unused (F11=Queen FS, F8=RTX FS)
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
-SWITCH_PY = INSTALL / "lib" / "field-underlay-switch.py"
+STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
+F9_PY = INSTALL / "lib" / "field-queen-browser-open.py"
 DEBOUNCE_SEC = 1.2
 
 
-def _open_installer() -> None:
-    port = os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477")
-    url = f"http://127.0.0.1:{port}/field"
-    if SWITCH_PY.is_file():
+def _env() -> dict[str, str]:
+    return {**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)}
+
+
+def _open_f9() -> None:
+    if F9_PY.is_file():
         subprocess.run(
-            [sys.executable, str(SWITCH_PY), "hotkey"],
-            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL)},
-            timeout=30,
+            [sys.executable, str(F9_PY), "f9"],
+            env=_env(),
+            timeout=45,
             check=False,
         )
-    for opener in ("xdg-open", "gio", "sensible-browser"):
-        if subprocess.run(["which", opener], capture_output=True).returncode == 0:
-            subprocess.Popen(
-                [opener, url],
-                env={**os.environ, "DISPLAY": os.environ.get("DISPLAY", ":0")},
-            )
-            return
+        return
+    switch = INSTALL / "lib" / "field-underlay-switch.py"
+    if switch.is_file():
+        subprocess.run([sys.executable, str(switch), "hotkey"], env=_env(), timeout=30, check=False)
+    opener = INSTALL / "lib" / "queen-panel-open.py"
+    if opener.is_file():
+        subprocess.run(
+            [sys.executable, str(opener), "nexus", "tristate-installer"],
+            env=_env(),
+            timeout=25,
+            check=False,
+        )
 
 
 def _keyboard_fds() -> dict[int, str]:
@@ -74,12 +82,12 @@ def listen_loop() -> None:
                 if now - last < DEBOUNCE_SEC:
                     continue
                 last = now
-                _open_installer()
+                _open_f9()
 
 
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "once":
-        _open_installer()
+        _open_f9()
         return 0
     if os.environ.get("NEXUS_UNDERLAY_HOTKEY") == "0":
         return 0

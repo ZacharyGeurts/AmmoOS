@@ -26,7 +26,20 @@ TRISTATE_URL = os.environ.get(
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _parse_version(text: str) -> tuple[int, ...]:
@@ -214,6 +227,29 @@ def _lock_status() -> dict[str, Any]:
         return {"locked": False}
 
 
+def _nxf_check(force: bool = False) -> dict[str, Any] | None:
+    nxf_py = INSTALL / "lib" / "nxf.py"
+    if not nxf_py.is_file():
+        return None
+    import subprocess
+
+    args = [sys.executable, str(nxf_py), "check"]
+    if force:
+        args.append("--force")
+    try:
+        proc = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            timeout=20,
+            env={**os.environ, "NEXUS_STATE_DIR": str(STATE), "NEXUS_INSTALL_ROOT": str(INSTALL)},
+        )
+        doc = json.loads(proc.stdout or "{}")
+        return doc if doc.get("ok") else None
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+        return None
+
+
 def check_update(force: bool = False) -> dict[str, Any]:
     current = _read_local_version()
     cached: dict[str, Any] | None = None
@@ -225,6 +261,23 @@ def check_update(force: bool = False) -> dict[str, Any]:
                 return cached
         except (OSError, json.JSONDecodeError, ValueError):
             cached = None
+
+    nxf = _nxf_check(force=force)
+    if nxf and nxf.get("latest"):
+        lock = _lock_status()
+        nxf["update_lock"] = lock
+        nxf["update_in_progress"] = bool(lock.get("locked"))
+        if lock.get("locked"):
+            nxf["update_available"] = False
+            nxf["label"] = lock.get("message") or "Update in progress"
+        try:
+            CACHE.parent.mkdir(parents=True, exist_ok=True)
+            tmp = CACHE.with_suffix(".tmp")
+            tmp.write_text(json.dumps(nxf, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            tmp.replace(CACHE)
+        except OSError:
+            pass
+        return nxf
 
     gh = _github_latest()
     latest = gh.get("latest") or current

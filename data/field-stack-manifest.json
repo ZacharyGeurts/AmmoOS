@@ -38,12 +38,16 @@
     },
     "zocr": {
       "root": "SG/ZOCR",
-      "role": "Legacy ZOCR root \u2014 forge witness, fallback when Final_Eye absent"
+      "role": "Legacy ZOCR root \u2014 forge witness, fallback when ZNEWOCR absent"
     },
     "world_redata": {
       "root": "SG/World_Redata",
       "port": 9478,
-      "formats": ["WRDT1", "WRZC1", "ZAC7"],
+      "formats": [
+        "WRDT1",
+        "WRZC1",
+        "ZAC7"
+      ],
       "role": "Lossless redata envelopes \u2014 drive converter, in-place snap"
     },
     "sense_package": {
@@ -52,9 +56,23 @@
       "api": "/api/sense-package",
       "role": "Unified meld + protect \u2014 eye, ear, zocr, redata, Hostess7 brain (witness read-only)"
     },
+    "obs_field_stack": {
+      "root": "SG/OBS-FieldVoiceFilter",
+      "install": "OBS-FieldVoiceFilter/install.sh",
+      "runtime_status": "data/field-obs-stack.json",
+      "threat_ledger": "data/threat-ledger.jsonl",
+      "posterity_doctrine": "data/field-security-posterity-doctrine.json",
+      "api": "/api/obs-threat-posterity",
+      "role": "OBS Scene Guard \u2014 one filter on scene; prune legacy filters; spiderweb down tree"
+    },
     "grok16": {
       "root": "SG/Grok16",
+      "distro_version": "1.0.0",
+      "tag": "v1.0.0",
+      "g16_version": "16.1.1",
       "build": "g16 + Ninja (Queen/scripts/g16-build.sh)",
+      "release_packages": "dist/grok16-1.0.0",
+      "build_manifest": "data/grok16-build.json",
       "role": "Field compiler @ gnu++26 \u2014 queen-browser RTX"
     },
     "hostess7": {
@@ -62,6 +80,15 @@
       "brain_witness": "lib/field-sense-package-meld.py",
       "brain_sync": "lib/field-brain-sync.sh",
       "role": "Forever Watchguard Angel \u2014 brain melded onto sense stack; read-only witness, never relocated"
+    },
+    "znetwork": {
+      "root": "NewLatest/znetwork",
+      "orchestrator": "lib/znetwork-orchestrator.py",
+      "shell_bridge": "lib/znetwork-field.sh",
+      "doctrine": "data/znetwork-doctrine.json",
+      "binary": "bin/znetwork",
+      "default_mode": "REVIEW_ONLY",
+      "role": "Field secure network manager \u2014 truth-gated slide-in; taskbar swap on activate"
     }
   },
   "nexus_defenses": [
@@ -103,7 +130,27 @@
     {
       "id": "sovereign-time",
       "path": "lib/sovereign-time.py",
-      "role": "Monotonic eyeball receipts"
+      "role": "Immutable linear clock \u2014 monotonic epoch only"
+    },
+    {
+      "id": "sovereign-clock",
+      "path": "lib/sovereign-clock.py",
+      "role": "Universal UTC for every module \u2014 never desync"
+    },
+    {
+      "id": "g1id-format",
+      "path": "lib/g1id-format.py",
+      "role": "Cold geometric identity \u2014 this_one 3D, sovereign time meld"
+    },
+    {
+      "id": "g1id-baseline",
+      "path": "lib/g1id-baseline.py",
+      "role": "Immoveable sealed .g1id baselines \u2014 chmod 0444 anchors"
+    },
+    {
+      "id": "field-io-packet",
+      "path": "lib/field-io-packet.py",
+      "role": "Truth-gated I/O \u2014 sovereign time in, conversation stream out only"
     },
     {
       "id": "packet-field",
@@ -114,6 +161,11 @@
       "id": "field-dns",
       "path": "lib/field-dns.py",
       "role": "Truth DNS"
+    },
+    {
+      "id": "znetwork-orchestrator",
+      "path": "lib/znetwork-orchestrator.py",
+      "role": "ZNetwork v2 \u2014 truth-gated activate, sovereign time, taskbar swap"
     }
   ],
   "final_eye_weapons": [
@@ -168,5 +220,5 @@
     "forge_test"
   ],
   "start": "scripts/start-field-stack.sh",
-  "updated": "2026-06-25T23:00:11Z"
+  "updated": "2026-06-27T00:18:43Z"
 }

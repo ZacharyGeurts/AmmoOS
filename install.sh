@@ -1,74 +1,44 @@
 #!/usr/bin/env bash
-# NEXUS Field Installer — Linux / macOS / Windows
+# NEXUS Field Installer — NXF-driven portable or system install.
 #
 #   ./install.sh              Portable — no password, start menu icon
 #   ./install.sh --system     Full install — UAC-style Allow, then OS admin auth once
+#   curl -fsSL …/install-remote.sh | bash   GitHub one-liner
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
-# shellcheck source=/dev/null
-source "${ROOT}/lib/installer.sh"
-
 MODE="portable"
 for arg in "$@"; do
   case "$arg" in
     --system|--full|-s) MODE="system" ;;
+    --from-github|--github|-g) exec bash "${ROOT}/lib/nxf-install.sh" --from-github --mode "$MODE" ;;
     --help|-h)
       cat <<'EOF'
-NEXUS Field Installer
+NEXUS Field Installer (NXF)
 
   ./install.sh              Portable install (recommended)
                             · No admin password
-                            · Start menu / Applications shortcut
-                            · Panel at http://127.0.0.1:9477/field
-                            · Builds ZNetwork if cmake is available
+                            · Start menu shortcut · Queen browser shell
 
-  ./install.sh --system     Full system install (Linux / Windows)
-                            · UAC-style Allow/Cancel, then OS admin auth once
-                            · All major systems + 2026 Tristate Installer + F9 hotkey
+  ./install.sh --system     Full system install (Linux)
+                            · One admin approval · systemd + Tristate F9
 
-  ./install-all.sh          Same as --system (recommended on Linux)
+  ./install.sh --from-github
+                            Fetch latest.nxf + source tarball from GitHub
 
-  After install: ./nexus.sh  (or Start menu → NEXUS Field Command Center)
-  Tristate underlay: ./nexus.sh --underlay
+  install-remote.sh         curl | bash one-liner from GitHub main
 
-Needs: python3, curl, web browser
-Optional: zenity or yad (ZNetwork Yes / No / Skip dialog)
+  After install:
+    ./Queen/scripts/run-queen.sh   Queen web browser (9481)
+    ./nexus.sh                     NEXUS field panel (9477)
+
+Needs: python3, curl
 EOF
       exit 0
       ;;
   esac
 done
 
-echo "NEXUS Field installer (${MODE})…"
-
-if ! nexus_install_check_deps; then
-  echo "Install python3 and curl, then re-run ./install.sh" >&2
-  exit 1
-fi
-
-OS="$(nexus_install_detect_os)"
-case "$MODE" in
-  portable)
-    nexus_install_portable "$ROOT"
-    ;;
-  system)
-    case "$OS" in
-      linux|windows)
-        exec bash "${ROOT}/install-all.sh"
-        ;;
-      macos)
-        nexus_install_portable "$ROOT"
-        ;;
-      *)
-        echo "Unsupported OS for --system. Use ./install.sh (portable)." >&2
-        exit 1
-        ;;
-    esac
-    ;;
-esac
-
-echo ""
-echo "Done. Start menu → NEXUS Field Command Center  or  ./nexus.sh"
+exec bash "${ROOT}/lib/nxf-install.sh" --mode "$MODE" "$@"

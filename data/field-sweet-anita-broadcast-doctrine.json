@@ -1,0 +1,60 @@
+{
+  "schema": "field-sweet-anita-broadcast/v1",
+  "title": "Sweet_Anita · Field Broadcasting",
+  "channel_name": "Sweet_Anita",
+  "motto": "Twitch-style video tab — embedded panel preview, never tunnel desktop. Best dB for everyone. Decks and every major platform wired.",
+  "branding": {
+    "theme": "twitch",
+    "primary_color": "#9146ff",
+    "accent_color": "#f472b6",
+    "avatar": "/assets/sweet-anita-avatar.svg"
+  },
+  "preview": {
+    "mode": "embedded",
+    "tunnel_desktop": false,
+    "tunnel_obs_nested": false,
+    "always_on_top_in_panel": true
+  },
+  "audio_best": {
+    "sample_rate_hz": 48000,
+    "buffer_ms": 10,
+    "mic_peak_dbfs": { "floor": -18, "ceiling": -6, "target": -12 },
+    "stream_lufs": { "integrated": -14, "true_peak_max_db": -1 },
+    "noise_gate_db": -42,
+    "motto": "48 kHz · clean passthrough default · Field Best filters opt-in"
+  },
+  "platforms": [
+    { "id": "twitch", "name": "Twitch", "protocol": "RTMP", "ingest": "rtmp://live.twitch.tv/app", "docs": "https://help.twitch.tv/s/article/broadcast-requirements" },
+    { "id": "youtube", "name": "YouTube Live", "protocol": "RTMP", "ingest": "rtmp://a.rtmp.youtube.com/live2", "docs": "https://support.google.com/youtube/answer/2907883" },
+    { "id": "kick", "name": "Kick", "protocol": "RTMP", "ingest": "rtmps://fa723fc1b171.global-contribute.live-video.net/app", "docs": "https://kick.com/dashboard/settings/stream" },
+    { "id": "tiktok", "name": "TikTok Live", "protocol": "RTMP", "ingest": "rtmp://push-rtmp.tiktokcdn.com/live/", "docs": "https://www.tiktok.com/live/studio" },
+    { "id": "facebook", "name": "Facebook Gaming", "protocol": "RTMPS", "ingest": "rtmps://live-api-s.facebook.com:443/rtmp", "docs": "https://www.facebook.com/gaming/streamer" },
+    { "id": "rumble", "name": "Rumble", "protocol": "RTMP", "ingest": "rtmp://rumble.com/live", "docs": "https://rumble.com/account/livestream" },
+    { "id": "instagram", "name": "Instagram Live", "protocol": "RTMPS", "ingest": "rtmps://live-upload.instagram.com:443/rtmp", "docs": "https://help.instagram.com/" },
+    { "id": "linkedin", "name": "LinkedIn Live", "protocol": "RTMP", "ingest": "rtmp://rtmp.linkedin.com:1935/live", "docs": "https://www.linkedin.com/help/linkedin/answer/a568503" },
+    { "id": "x", "name": "X (Twitter)", "protocol": "RTMP", "ingest": "rtmp://va.pscp.tv:80/x", "docs": "https://help.x.com/en/using-x/media-studio" }
+  ],
+  "decks": [
+    { "id": "elgato_stream_deck", "name": "Elgato Stream Deck", "protocol": "websocket", "default_port": 2843 },
+    { "id": "loupedeck", "name": "Loupedeck", "protocol": "native" },
+    { "id": "touch_portal", "name": "Touch Portal", "protocol": "websocket", "default_port": 9080 },
+    { "id": "companion", "name": "Bitfocus Companion", "protocol": "websocket", "default_port": 16622 },
+    { "id": "deckboard", "name": "Deckboard", "protocol": "websocket" },
+    { "id": "nexus_panel", "name": "NEXUS Panel tabs", "protocol": "field", "note": "Jump keys map to Sweet_Anita + US OBS" }
+  ],
+  "obs_field_stack": {
+    "root": "OBS-FieldVoiceFilter",
+    "filters": ["sg_field_scene_guard"],
+    "attach": "scene",
+    "prune_tree": true,
+    "spiderweb_down_tree": true
+  },
+  "security_posterity": {
+    "doctrine": "OBS-FieldVoiceFilter/data/field-security-posterity-doctrine.json",
+    "repeat_inspect": "field-repeat-field.c",
+    "posterity_engine": "field-security-posterity.c",
+    "ledger": "threat-ledger.jsonl",
+    "api": "/api/obs-threat-posterity",
+    "motto": "Posterity decides; resolution deigns — repeating hostile signatures confirm."
+  }
+}

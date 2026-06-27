@@ -246,6 +246,23 @@ nexus_boot_impl_sign_manifest() {
   }
 }
 
+nexus_boot_impl_host_freeze_resume() {
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-host-freeze.py" ]] || return 0
+  local py freeze_state
+  py="$(nexus_boot_impl_resolve_python)" || return 0
+  freeze_state="${NEXUS_STATE_DIR}/field-host-freeze.json"
+  [[ -f "$freeze_state" ]] || return 0
+  if ! grep -qE '"phase"[[:space:]]*:[[:space:]]*"(frozen|suspending|prepared)"' "$freeze_state" 2>/dev/null; then
+    return 0
+  fi
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+    "$py" "${NEXUS_INSTALL_ROOT}/lib/field-host-freeze.py" resume-witness >>"$(nexus_boot_impl_log_path)" 2>&1 || {
+    nexus_log "WARN" "boot-impl" "host_freeze_resume_witness_deferred"
+    return 1
+  }
+  nexus_log "INFO" "boot-impl" "host_freeze_resume_witness_ok"
+}
+
 nexus_boot_impl_thermal_guard_init() {
   [[ "${NEXUS_FIELD_THERMAL_GUARD:-1}" == "1" ]] || return 0
   [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-thermal-guard.py" ]] || return 0
@@ -276,9 +293,15 @@ nexus_boot_impl_ensure_dirs() {
 nexus_boot_impl_first() {
   local wired=0 meld=0
   nexus_boot_impl_ensure_dirs
+  nexus_boot_impl_host_freeze_resume || true
   nexus_boot_impl_log_path >/dev/null
   nexus_log "INFO" "boot-impl" "FIRST_INSTALL begin root=${NEXUS_INSTALL_ROOT}"
 
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh"
+    nexus_ironclad_immediate_publish
+  fi
   wired="$(nexus_boot_impl_wire_stack)"
   nexus_boot_impl_migrate_state
   nexus_boot_impl_export_paths
@@ -304,8 +327,14 @@ nexus_boot_impl_first() {
 nexus_boot_impl_refresh() {
   local wired=0 meld=0
   nexus_boot_impl_ensure_dirs
+  nexus_boot_impl_host_freeze_resume || true
   nexus_log "INFO" "boot-impl" "BOOT_REFRESH begin root=${NEXUS_INSTALL_ROOT}"
 
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh"
+    nexus_ironclad_immediate_publish
+  fi
   wired="$(nexus_boot_impl_wire_stack)"
   nexus_boot_impl_export_paths
   nexus_boot_impl_front_hook

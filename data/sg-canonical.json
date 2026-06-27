@@ -1,19 +1,19 @@
 {
   "schema": "sg-canonical/v1",
-  "updated": "2026-06-26",
+  "updated": "2026-06-27",
   "canonical_root": "NewLatest",
-  "motto": "SG/NewLatest is the operational tree — Queen + NEXUS + Field Technology + wired stack",
+  "motto": "SG/NewLatest is the operational tree \u2014 Queen + NEXUS + Field Technology + wired stack",
   "sg_root_semantics": "SG_ROOT defaults to NEXUS_INSTALL_ROOT (NewLatest). Stack siblings are symlinked inside NewLatest via scripts/wire-stack.sh.",
   "stack": {
     "operator_surface": "NewLatest/Queen",
     "network_shield": "NewLatest",
     "compiler": "NewLatest/Grok16",
-    "final_eye": "NewLatest/Final_Eye",
-    "final_ear": "NewLatest/Final_Ear",
-    "zocr": "NewLatest/ZNEWOCR",
+    "final_eye": "Final_Eye",
+    "final_ear": "Final_Ear",
+    "zocr": "ZOCR",
     "zocr_legacy": "NewLatest/ZOCR",
     "znewocr": "NewLatest/ZNEWOCR",
-    "world_redata": "NewLatest/World_Redata",
+    "world_redata": "World_Redata",
     "hostess_brain": "NewLatest/Hostess7",
     "field_kernel": "NewLatest/KILROY",
     "field_book": "NewLatest/Field_Primer",
@@ -26,7 +26,7 @@
   },
   "wire_script": "NewLatest/scripts/wire-stack.sh",
   "retired": {
-    "Latest/NEXUS-Shield": "superseded by NewLatest — remove after migration"
+    "Latest/NEXUS-Shield": "superseded by NewLatest \u2014 remove after migration"
   },
   "cpu_vulnerability_shield": {
     "doctrine": "NewLatest/data/cpu-vulnerability-doctrine.json",
@@ -38,13 +38,13 @@
     "doctrine": "NewLatest/data/native-layer-doctrine.json",
     "posture": "NewLatest/lib/native-layer.py",
     "flash_chip": false,
-    "motto": "We are THE native — BIOS witness, no ROM flash, everything lives with us"
+    "motto": "We are THE native \u2014 BIOS witness, no ROM flash, everything lives with us"
   },
   "sense_package": {
     "doctrine": "NewLatest/data/field-sense-package-doctrine.json",
     "meld": "NewLatest/lib/field-sense-package-meld.py",
     "api": "/api/sense-package",
-    "motto": "Eye · Ear · ZOCR · Redata · Hostess7 — melded and protected; brain witnessed read-only"
+    "motto": "Eye \u00b7 Ear \u00b7 ZOCR \u00b7 Redata \u00b7 Hostess7 \u2014 melded and protected; brain witnessed read-only"
   },
   "security": {
     "root_sovereign": "NewLatest/Queen/lib/queen-root-sovereign.py",

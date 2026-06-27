@@ -46,6 +46,19 @@
       "verb": "run-underlay",
       "role": "tristate_installer_commit_wrdt_reboot",
       "keep": false
+    },
+    {
+      "id": "com.nexus.field.freeze",
+      "verb": "run-freeze",
+      "role": "host_os_freeze_thaw_acpi",
+      "keep": false
+    },
+    {
+      "id": "com.nexus.field.znetwork",
+      "verb": "run-znetwork",
+      "role": "znetwork_root_gate_linux_windows",
+      "keep": true,
+      "note": "Pol checks Linux root / Windows admin before ZNetwork activate"
     }
   ],
   "ship_paths": [

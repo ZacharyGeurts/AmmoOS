@@ -103,6 +103,17 @@ def _has_place_receipt(entity: dict[str, Any]) -> bool:
     return any(entity.get(k) not in (None, "", []) for k in keys)
 
 
+def load_baseline(baseline_id: str, *, verify_plate: bool = True) -> dict[str, Any]:
+    """Load immoveable G1ID baseline by manifest id."""
+    manifest = _load(INSTALL / "data" / "g1id-baseline-manifest.json", {})
+    for entry in manifest.get("baselines") or []:
+        if str(entry.get("id")) != str(baseline_id):
+            continue
+        rel = str(entry.get("path") or f"data/baselines/{baseline_id}.g1id")
+        return load_g1id(INSTALL / rel, verify_plate=verify_plate)
+    return {"ok": False, "error": "baseline_not_in_manifest", "id": baseline_id}
+
+
 def load_g1id(path: Path | str, *, verify_plate: bool = True) -> dict[str, Any]:
     """Load cold .g1id geometric identity — this_one hardened, plate preserved."""
     g1 = _mod(INSTALL / "lib" / "g1id-format.py", "g1id_format")
@@ -119,6 +130,8 @@ def load_g1id(path: Path | str, *, verify_plate: bool = True) -> dict[str, Any]:
             "entity": entity,
             "classify": classify_entity(entity),
             "format": "g1id",
+            "meld_inputs": doc.get("meld_inputs"),
+            "sovereign_time": (doc.get("meld_inputs") or {}).get("sovereign_time"),
         }
     except Exception as exc:
         return {"ok": False, "error": str(exc), "path": str(path)}

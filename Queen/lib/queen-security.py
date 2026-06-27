@@ -13,9 +13,9 @@ QUEEN = Path(__file__).resolve().parents[1]
 SEAL_PATH = QUEEN / "data" / "queen-code-seal.json"
 _CODE_GLOBS = ("lib/*.py", "lib/forge/*.py", "lib/forge/**/*.py")
 _PROTECTED = frozenset({
-    "gate_release", "field_route", "sovereign_dispatch", "compiler_probe",
+    "gate_release", "field_route", "field_sanity", "sovereign_dispatch", "compiler_probe",
     "browser_navigate", "sense_neural", "encourage", "external_wire", "secure_channel",
-    "field_virus", "file_ingress", "file_egress",
+    "field_virus", "file_ingress", "file_egress", "credential_vault", "browser_import",
 })
 
 

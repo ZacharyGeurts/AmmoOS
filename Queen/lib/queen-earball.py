@@ -407,6 +407,25 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             return learn_from_observation(body["track"], source=str(body.get("source") or "queen"))
         return learn_status()
 
+    if action in ("spectrum", "spectrum_analyze", "auditory_spectrum"):
+        _import_ear()
+        from zocr_ear_spectrum import capture_and_analyze, spectrum_doctrine, analyze_pcm_spectrum
+        if body.get("doctrine"):
+            return {"ok": True, **spectrum_doctrine()}
+        pcm_hex = body.get("pcm_hex")
+        if pcm_hex:
+            pcm = bytes.fromhex(str(pcm_hex))
+            return analyze_pcm_spectrum(
+                pcm,
+                sample_rate=int(body.get("sample_rate_hz") or 48000),
+                channels=int(body.get("channels") or 2),
+                profile_id=body.get("profile"),
+            )
+        return capture_and_analyze(
+            seconds=float(body.get("seconds") or 0.5),
+            profile_id=body.get("profile"),
+        )
+
     return {
         "ok": False,
         "error": "unknown_action",
@@ -419,6 +438,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             "wire", "fused_analyze", "secure_path", "secure_identify", "eye_ear_fusion",
             "identify", "signal_intel", "sovereign_time",
             "desktop_audio", "sense_all", "sound_track", "sound_registry", "sound_learn",
+            "spectrum", "spectrum_analyze", "auditory_spectrum",
         ],
     }
 

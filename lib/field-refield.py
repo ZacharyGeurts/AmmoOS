@@ -39,6 +39,18 @@ def _now() -> str:
             return mod.utc("refield")
     except (ImportError, OSError, AttributeError):
         pass
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "sovereign_clock_refield", INSTALL / "lib" / "sovereign-clock.py",
+        )
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.utc_z("refield")
+    except (ImportError, OSError, AttributeError):
+        pass
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 

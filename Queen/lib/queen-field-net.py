@@ -14,7 +14,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
@@ -66,9 +66,9 @@ def world_base() -> str:
 
 def default_home() -> str:
     custom = os.environ.get("QUEEN_BROWSER_HOME", "").strip()
-    if custom and not internal_only():
+    if custom:
         return custom
-    return f"{world_base()}/world/queen-start.html"
+    return f"{world_base()}/world/queen-field-home.html"
 
 
 def internal_routes() -> list[dict[str, Any]]:
@@ -88,7 +88,7 @@ def _resolve_queen_scheme(url: str) -> str:
     rest = url.split("://", 1)[1]
     host = rest.split("/", 1)[0].lower()
     mapping = {
-        "world": "/world/",
+        "world": "/world/browser.html",
         "forge": "/gui/queen-build-deck.html",
         "hostess": "/api/field-brain",
         "brain": "/api/field-brain",
@@ -109,8 +109,12 @@ def _resolve_queen_scheme(url: str) -> str:
         "terminal": "/world/?dock=terminal",
         "gnu-terminal": "/world/?dock=terminal",
         "shell": "/world/?dock=terminal",
-        "start": "/world/queen-start.html",
-        "programs": "/world/queen-start.html",
+        "start": f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
+        "programs": f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
+        "nexus": f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
+        "nexus-field": f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
+        "field": f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
+        "c2": f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
         "sovereign": "/api/sovereign",
         "capsule": "/api/sovereign",
         "horizon7": "/api/horizon7",
@@ -147,9 +151,29 @@ def _resolve_queen_scheme(url: str) -> str:
     return world_base() + path
 
 
+def _field_depth_from_url(url: str) -> int:
+    try:
+        q = parse_qs(urlparse(url).query)
+        d = int((q.get("field_depth") or ["0"])[0])
+        return max(0, min(d, 64))
+    except (ValueError, TypeError, IndexError):
+        return 0
+
+
+def _nested_field_meta(url: str) -> dict[str, Any]:
+    depth = _field_depth_from_url(url)
+    return {
+        "field_depth": depth,
+        "nested_field_safe": depth < 64,
+        "field_on_field": depth > 0,
+        "infinite_stack": "each layer gate-held — practical cap 64",
+    }
+
+
 def classify_url(url: str) -> dict[str, Any]:
     """Classify contact — presume hostile; never presume correct contact without positive ID."""
     u = (url or "").strip()
+    nested = _nested_field_meta(u)
     if not u or u == "about:blank":
         return {
             "url": u,
@@ -158,6 +182,7 @@ def classify_url(url: str) -> dict[str, Any]:
             "layer": "blank",
             "internal": True,
             "presume_hostile": True,
+            **nested,
         }
     if u.startswith("/"):
         u = world_base() + u
@@ -171,6 +196,7 @@ def classify_url(url: str) -> dict[str, Any]:
             "layer": "queen_scheme",
             "internal": True,
             "presume_hostile": True,
+            **nested,
         }
     parsed = urlparse(u)
     host = (parsed.hostname or "").lower()
@@ -182,6 +208,7 @@ def classify_url(url: str) -> dict[str, Any]:
             "layer": "local",
             "internal": True,
             "presume_hostile": True,
+            **nested,
         }
     if host in INTERNAL_HOSTS or host.endswith(".local"):
         if parsed.port in (None, WORLD_PORT, 9479, 9477, 2419) or host in INTERNAL_HOSTS:
@@ -192,6 +219,7 @@ def classify_url(url: str) -> dict[str, Any]:
                 "layer": "loopback",
                 "internal": True,
                 "presume_hostile": True,
+                **nested,
             }
     if not internal_only():
         return {
@@ -201,6 +229,7 @@ def classify_url(url: str) -> dict[str, Any]:
             "layer": "external",
             "internal": False,
             "presume_hostile": True,
+            **nested,
         }
     return {
         "url": u,
@@ -211,6 +240,7 @@ def classify_url(url: str) -> dict[str, Any]:
         "presume_hostile": True,
         "reason": "queen_internal_only — no URLs outside Queen",
         "hint": default_home(),
+        **nested,
     }
 
 

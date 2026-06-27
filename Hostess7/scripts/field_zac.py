@@ -364,6 +364,50 @@ def _storage_unchanged(storage: Path, old: dict[str, Any] | None) -> bool:
     return seen == len(prev) and seen > 0
 
 
+def _preflight_non_fielded(storage: Path) -> None:
+    """Refuse ZAC pack while WRDT/WRZC tails remain — no field-on-field."""
+    if os.environ.get("NEXUS_ZAC_SKIP_DEFIELD", "").strip().lower() in ("1", "true", "yes"):
+        return
+    safety = ROOT.parent / "NewLatest" / "lib" / "field-non-fielded-safety.py"
+    if not safety.is_file():
+        safety = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield")) / "lib" / "field-non-fielded-safety.py"
+    if safety.is_file():
+        import subprocess
+        proc = subprocess.run(
+            [sys.executable, str(safety), "gate-convert"],
+            capture_output=True,
+            text=True,
+            timeout=180,
+            env={**os.environ, "HOSTESS7_ROOT": str(ROOT), "HOSTESS7_TEAM_FIELD": str(storage)},
+        )
+        try:
+            rep = json.loads(proc.stdout or "{}")
+        except json.JSONDecodeError:
+            rep = {}
+        if not rep.get("ok"):
+            raise ValueError(
+                "ZAC7 pack blocked — defield all WRDT/WRZC/ZAC tails first (non-fielded safety). "
+                f"restorable={rep.get('restorable_files')} tails={rep.get('field_tail_hits')}"
+            )
+    if (WORLD_REDATA / "redata" / "cli.py").is_file():
+        import subprocess
+        proc = subprocess.run(
+            [sys.executable, str(WORLD_REDATA / "redata" / "cli.py"), "scan-restorable", str(storage)],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env={**os.environ, "PYTHONPATH": str(WORLD_REDATA)},
+        )
+        try:
+            rep = json.loads(proc.stdout or "{}")
+            if int(rep.get("restorable_files") or 0) > 0:
+                raise ValueError(
+                    f"ZAC7 pack blocked — {rep['restorable_files']} restorable field tails under {storage}"
+                )
+        except json.JSONDecodeError:
+            pass
+
+
 def pack_storage(
     storage: Path = STORAGE,
     out_dir: Path = DEFAULT_OUT,
@@ -378,6 +422,7 @@ def pack_storage(
     """Pack fieldstorage into index + data .zac shards."""
     if not storage.is_dir():
         raise FileNotFoundError(f"storage missing: {storage}")
+    _preflight_non_fielded(storage)
 
     old = None if force else _try_load_manifest(out_dir, index_name)
     if _storage_unchanged(storage, old):

@@ -21,7 +21,20 @@ KT_LN2 = 2.87e-21
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -204,6 +217,57 @@ def _calibration_receipt() -> dict[str, Any]:
     return _load(path, {})
 
 
+def _canvas_pixels() -> int:
+    w = int(os.environ.get("NEXUS_FIELD_CANVAS_W", "3840"))
+    h = int(os.environ.get("NEXUS_FIELD_CANVAS_H", "2160"))
+    return w * h
+
+
+def compute_thermal_metrics(guard: FieldThermalGuard) -> dict[str, Any]:
+    """Observable certainty numbers — replaces old 857× unguarded peak-risk estimate."""
+    canvas_px = _canvas_pixels()
+    chunk = guard.max_global_redata_chunk
+    burst_derating = round(canvas_px / max(chunk, 1), 1)
+    max_ops_budget = guard.max_joules_per_second / guard.joules_per_field_op if guard.joules_per_field_op > 0 else 0.0
+    sustained_ops = float(os.environ.get("NEXUS_FIELD_SUSTAINED_OPS_S", "44000000"))
+    headroom_mult = round(max_ops_budget / max(sustained_ops, 1.0), 1)
+    peak = _read_hwmon_peak_c()
+    thermal_adv = _load(STATE / "thermal-advisory.json", {})
+    layers = {
+        "engine_guard": 1.0,
+        "incremental_redata": 1.0,
+        "hwmon_feedback": 1.0 if peak is not None else 0.6,
+        "gatekeeper_wired": 1.0 if (INSTALL / "lib" / "connection-gatekeeper.py").is_file() else 0.5,
+        "boot_enforced": 1.0 if (INSTALL / "lib" / "nexus-boot-impl.sh").is_file() else 0.5,
+        "grok16_bridge": 1.0 if Path(os.environ.get("GROK16_ROOT", str(INSTALL.parent.parent / "Grok16"))).joinpath("scripts/nexus-thermal-bridge.sh").is_file() else 0.7,
+    }
+    certainty = round(sum(layers.values()) / len(layers), 3)
+    dispatch_gain_min = 35 if guard.headroom_pct() >= 80.0 else int(35 * guard.headroom_pct() / 100.0)
+    dispatch_gain_max = 60 if guard.headroom_pct() >= 80.0 else int(60 * guard.headroom_pct() / 100.0)
+    return {
+        "schema": "field-thermal-metrics/v1",
+        "ts": _now(),
+        "certainty_score": certainty,
+        "certainty_label": "high" if certainty >= 0.9 else "medium" if certainty >= 0.7 else "low",
+        "safe_global_redata_certainty_pct": round(certainty * 100.0, 1),
+        "replaces_old_estimate": "857x_peak_risk_unguarded",
+        "burst_derating_ratio": burst_derating,
+        "budget_headroom_ops_per_s": round(max_ops_budget),
+        "sustained_field_ops_per_s": round(sustained_ops),
+        "headroom_multiplier": headroom_mult,
+        "canvas_pixels_4k_uhd": canvas_px,
+        "redata_chunk": chunk,
+        "incremental_passes_4k": int((canvas_px + chunk - 1) // chunk),
+        "dispatch_gain_band_pct": [dispatch_gain_min, dispatch_gain_max],
+        "quality_scale": round(min(1.0, guard.headroom_pct() / 100.0), 3),
+        "cold_path_overhead_pct": 0.0,
+        "monolithic_blast_forbidden": True,
+        "peak_c": peak,
+        "hotspot_advisory": bool(thermal_adv.get("hotspot_advisory")),
+        "layers": layers,
+    }
+
+
 def evaluate() -> dict[str, Any]:
     guard = FieldThermalGuard()
     anom = detect_anomaly()
@@ -212,6 +276,7 @@ def evaluate() -> dict[str, Any]:
     headroom = round(guard.headroom_pct(), 1)
     cal = _calibration_receipt()
     max_ops = 45.0 / guard.joules_per_field_op if guard.joules_per_field_op > 0 else 0
+    metrics = compute_thermal_metrics(guard)
     doc = {
         "schema": "field-thermal-guard/v1",
         "ts": _now(),
@@ -228,9 +293,13 @@ def evaluate() -> dict[str, Any]:
         "speed_impact": "none_under_normal_load",
         "max_ops_per_second_at_budget": cal.get("max_ops_per_second_at_budget") or max_ops,
         "calibration": cal if cal else {"status": "pending", "tool": "lib/field-thermal-calibrate.py"},
+        "metrics": metrics,
+        "certainty_score": metrics.get("certainty_score"),
+        "certainty_label": metrics.get("certainty_label"),
     }
     publish_policy(guard)
     _save(PANEL, doc)
+    _save(STATE / "field-thermal-metrics.json", metrics)
     return doc
 
 

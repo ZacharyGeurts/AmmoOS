@@ -187,7 +187,7 @@
   },
   "world_space": {
     "schema": "queen-world/v1",
-    "url": "http://127.0.0.1:9481/world/",
+    "url": "http://127.0.0.1:9481/world/browser.html",
     "port": 9481,
     "serve": "lib/queen-world.py",
     "start": "scripts/start-world.sh",
@@ -235,11 +235,11 @@
   },
   "browser_stack": {
     "rtx_shell": "queen-browser — AMOURANTHRTX Vulkan + SDL3 inside",
-    "in_engine_ui": "queen-world SPA — queen-os.js ASM orchestrator (tabs, nav, gates, OS dock)",
+    "in_engine_ui": "queen-browser shell — world/browser.html hardened web surface (Queen OS at world/index.html optional)",
     "boot_compshader": "QueenBoot.comp — 2026 aqua/rose chrome",
     "apis": ["/api/queen-browser", "/api/ammoos-boot", "/browse/view"],
     "engines": {
-      "ship_now": "queen-world on :9481 — world/index.html is OS GUI + web browser",
+      "ship_now": "queen-browser on :9481 — world/browser.html is hardened web shell (not Queen OS world)",
       "millennium_ladybird": "vendor/ladybird — independent C++ engine",
       "millennium_servo": "vendor/servo — Rust layout engine",
       "media": "vendor/ffmpeg — MP4 H.264 AAC static"

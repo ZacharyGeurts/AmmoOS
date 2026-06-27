@@ -194,7 +194,20 @@ def _apply_honorability(
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -230,13 +243,23 @@ def _field_thermal_meta() -> dict[str, Any]:
     """NEXUS-Shield thermal guard — headroom + stealth rate limit for gatekeeper."""
     guard = _load_json(STATE / "field-thermal-guard.json", {})
     rate = _load_json(STATE / "field-thermal-rate-limit.json", {})
+    metrics = _load_json(STATE / "field-thermal-metrics.json", {})
     active = bool(rate.get("active"))
+    headroom = guard.get("headroom_pct")
+    field_intensity = 1.0
+    if headroom is not None and headroom < 80.0:
+        field_intensity = max(0.2, float(headroom) / 100.0)
+    if active:
+        field_intensity = min(field_intensity, 0.75)
     return {
-        "headroom_pct": guard.get("headroom_pct"),
+        "headroom_pct": headroom,
         "rate_limit_active": active,
         "max_joules_per_second": rate.get("max_joules_per_second") or guard.get("max_joules_per_second"),
         "incremental_only": guard.get("incremental_only", True),
         "monolithic_blast_forbidden": guard.get("monolithic_blast_forbidden", True),
+        "certainty_score": metrics.get("certainty_score") or guard.get("certainty_score"),
+        "field_intensity_scale": round(field_intensity, 3),
+        "burst_derating_ratio": metrics.get("burst_derating_ratio"),
     }
 
 
@@ -775,14 +798,36 @@ def _apply_zero_telemetry(
     return verdict, trust_rank, reason
 
 
+def _local_capture_grant_active() -> bool:
+    state = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
+    grant_path = state / "local-capture-grant.json"
+    try:
+        doc = json.loads(grant_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not doc.get("active") or doc.get("egress_allowed"):
+        return False
+    exp = doc.get("expires_at") or ""
+    try:
+        from datetime import datetime, timezone
+
+        if exp and datetime.strptime(exp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+            return False
+    except ValueError:
+        return False
+    return bool(doc.get("loopback_only"))
+
+
 def _apply_queen_sovereign(
     proc: str, verdict: str, trust_rank: int, reason: str,
 ) -> tuple[str, int, str]:
     if not _queen_sovereign_active():
         return verdict, trust_rank, reason
     pl = (proc or "").lower()
+    grant = _local_capture_grant_active()
+    obs_markers = ("obs", "obs-studio", "obs-ffmpeg-mux")
     capture_markers = (
-        "obs", "obs-studio", "obs-ffmpeg-mux", "wf-recorder", "gpu-screen-recorder",
+        "wf-recorder", "gpu-screen-recorder",
         "simplescreenrecorder", "kooha", "grim", "slurp", "wayshot", "spectacle", "peek",
         "recordmydesktop",
     )
@@ -792,7 +837,9 @@ def _apply_queen_sovereign(
         "evtest", "intercept", "skey", "keysniffer", "pynput", "pykeylogger",
         "evemu-event", "libinput-debug-events", "xev", "vnc", "x11vnc", "teamviewer",
     )
-    if any(m in pl for m in capture_markers):
+    if grant and any(m in pl for m in obs_markers):
+        return "USER_OK", TRUST_RANK.get("USER_OK", 8), "CIVILIAN — operator local OBS grant (loopback only)"
+    if any(m in pl for m in obs_markers + capture_markers):
         return "HARM_CANDIDATE", TRUST_RANK["HARM_CANDIDATE"], "IFF HOSTILE — screen capture interdicted (in-engine surface only)"
     if any(m in pl for m in hook_markers):
         return "HARM_CANDIDATE", TRUST_RANK["HARM_CANDIDATE"], "IFF HOSTILE — keyboard middleman interdicted (smart wire)"
@@ -818,6 +865,9 @@ def _verdict(scores: dict[str, int], proc: str, ip_class: str) -> tuple[str, str
     )
     ephemeral = scores["search_ephemeral"] >= 6 and scores["stream_theft_risk"] <= 3
     media_ok = scores["media_stream"] >= 6 and scores["user_browser"] >= 6
+    if _queen_sovereign_active() and os.environ.get("NEXUS_MEDIA_EGRESS_LOCK", "1") not in ("0", "false", "no"):
+        if not _local_capture_grant_active():
+            media_ok = False
 
     if scores["operator_auth"] >= 10:
         return "USER_OK", "CIVILIAN — operator-authorized peer", False

@@ -137,6 +137,17 @@ doc["layers"]["sense_package"] = {
     "api": "/api/sense-package",
     "role": "Unified meld + protect — eye, ear, zocr, redata, Hostess7 brain (witness read-only)",
 }
+obs_filter = sg / "OBS-FieldVoiceFilter"
+if obs_filter.is_dir():
+    doc["layers"]["obs_field_stack"] = {
+        "root": str(obs_filter.relative_to(sg.parent) if obs_filter.is_relative_to(sg.parent) else obs_filter),
+        "install": "OBS-FieldVoiceFilter/install.sh",
+        "runtime_status": "data/field-obs-stack.json",
+        "threat_ledger": "data/threat-ledger.jsonl",
+        "posterity_doctrine": "data/field-security-posterity-doctrine.json",
+        "api": "/api/obs-threat-posterity",
+        "role": "OBS Scene Guard — one filter on scene; prune legacy filters; spiderweb down tree",
+    }
 h7 = sg / "Hostess7"
 if h7.is_dir():
     doc["layers"]["hostess7"] = {
@@ -145,9 +156,21 @@ if h7.is_dir():
         "brain_sync": "lib/field-brain-sync.sh",
         "role": "Forever Watchguard Angel — brain melded onto sense stack; read-only witness, never relocated",
     }
+g16_ver_path = g16 / "data" / "grok16-version.json"
+g16_ver = {}
+if g16_ver_path.is_file():
+    try:
+        g16_ver = json.loads(g16_ver_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        pass
 doc["layers"]["grok16"] = {
     "root": str(g16.relative_to(sg.parent) if g16.is_relative_to(sg.parent) else g16),
+    "distro_version": g16_ver.get("distro_version", "1.0.0"),
+    "tag": g16_ver.get("tag", "v1.0.0"),
+    "g16_version": g16_ver.get("g16_version", "16.1.1"),
     "build": "g16 + Ninja (Queen/scripts/g16-build.sh)",
+    "release_packages": "dist/grok16-1.0.0",
+    "build_manifest": "data/grok16-build.json",
     "role": "Field compiler @ gnu++26 — queen-browser RTX",
 }
 doc["bridges"] = {
@@ -181,6 +204,20 @@ p.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
 print(f"  wrote {p}")
 PY
 fi
+
+echo ""
+echo "=== OBS Field Voice Filter (sense lane) ==="
+OBS_FILTER="${SG}/OBS-FieldVoiceFilter"
+if [[ -d "${OBS_FILTER}" && -x "${OBS_FILTER}/install.sh" ]]; then
+  bash "${OBS_FILTER}/install.sh"
+  echo "  installed obs-field-voice-filter"
+else
+  echo "WARN: OBS-FieldVoiceFilter missing — skip" >&2
+fi
+
+echo ""
+echo "=== OBS threat posterity bridge ==="
+"${PY}" "${ROOT}/lib/obs-threat-posterity-bridge.py" sync || echo "WARN: obs threat posterity bridge incomplete" >&2
 
 echo ""
 echo "=== sense package meld ==="

@@ -7,6 +7,14 @@ nexus_sense_package_enabled() {
 
 nexus_sense_package_cycle() {
   nexus_sense_package_enabled || return 0
+  # Plate → eye/ear/mouth goldmine hot-read before sense witness meld
+  if declare -F nexus_ironclad_immediate_publish >/dev/null 2>&1; then
+    nexus_ironclad_immediate_publish
+  elif [[ -f "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh"
+    nexus_ironclad_immediate_publish
+  fi
   local py="${NEXUS_INSTALL_ROOT}/lib/field-sense-package-meld.py"
   [[ -f "$py" ]] || return 0
   NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \

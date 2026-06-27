@@ -6,6 +6,7 @@ import atexit
 import fcntl
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -27,11 +28,25 @@ except (ImportError, ValueError):
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parent.parent))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 PORT = os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477")
-APP_ID = "nexus-shield-panel"
+APP_ID_NEXUS = "nexus-shield-panel"
+APP_ID_ZNETWORK = "znetwork-field-panel"
 LAST_TAB_FILE = STATE / "panel-tray-last-tab.json"
+TRAY_MODE_FILE = STATE / "znetwork-tray-mode.json"
+OPERATOR_FILE = STATE / "znetwork-operator.json"
 TRAY_LOCK = STATE / "panel-tray.lock"
 PID_FILE = STATE / "panel-tray.pid"
 _SERVE_LOCK_HANDLE = None
+
+ZNETWORK_TAB_CHOICES: list[tuple[str, str]] = [
+    ("ZNetwork · Status", "system/settings"),
+    ("ZNetwork · Connection", "packets/monitor"),
+    ("ZNetwork · DNS truth", "dns"),
+    ("ZNetwork · Gatekeeper", "threats/home-protector"),
+    ("Command Center", "command"),
+    ("Packets · Live", "packets/monitor"),
+    ("Threats · Map", "threats/host-attack"),
+    ("Revert tray to NEXUS", "__revert_tray__"),
+]
 
 TAB_CHOICES: list[tuple[str, str]] = [
     ("Command Center", "command"),
@@ -59,11 +74,48 @@ def _panel_base() -> str:
     return f"http://127.0.0.1:{PORT}/field"
 
 
+def _tray_mode() -> str:
+    env_mode = os.environ.get("NEXUS_TRAY_MODE", "").strip().lower()
+    if env_mode in ("znetwork", "nexus"):
+        return env_mode
+    try:
+        doc = json.loads(TRAY_MODE_FILE.read_text(encoding="utf-8"))
+        if doc.get("active") and str(doc.get("mode", "")).lower() == "znetwork":
+            return "znetwork"
+    except (OSError, json.JSONDecodeError, TypeError):
+        pass
+    try:
+        op = json.loads(OPERATOR_FILE.read_text(encoding="utf-8"))
+        if str(op.get("choice", "")).lower() == "yes" and (
+            op.get("running") is True or str(op.get("running")).lower() == "true"
+        ):
+            return "znetwork"
+    except (OSError, json.JSONDecodeError, TypeError):
+        pass
+    return "nexus"
+
+
+def _tab_choices() -> list[tuple[str, str]]:
+    return ZNETWORK_TAB_CHOICES if _tray_mode() == "znetwork" else TAB_CHOICES
+
+
+def _app_id() -> str:
+    return APP_ID_ZNETWORK if _tray_mode() == "znetwork" else APP_ID_NEXUS
+
+
+def _tray_title() -> str:
+    if _tray_mode() == "znetwork":
+        return "ZNetwork — field secure network — click for status & controls"
+    return "NEXUS Field Command Center — click or right-click for tabs"
+
+
 def _tray_icon_source() -> Path:
     for rel in (
+        "panel/assets/queen-tray-24.png",
         "panel/assets/nexus-tray-us-24.png",
+        "panel/assets/queen-tray.png",
         "panel/assets/nexus-tray-us.png",
-        "panel/assets/nexus-tray-us-source.jpg",
+        "Queen/world/assets/branding/amouranth-gentle.png",
         "panel/assets/nexus-shield.png",
         "assets/nexus-shield.png",
     ):
@@ -91,8 +143,11 @@ def _install_xdg_tray_icon(icon: Path) -> str:
         if spec and spec.loader:
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
+            if _tray_mode() == "znetwork" and hasattr(mod, "install_znetwork_xdg_icons"):
+                mod.install_znetwork_xdg_icons(INSTALL)
+                return APP_ID_ZNETWORK
             mod.install_xdg_tray_icons(INSTALL)
-            return "nexus-shield-panel"
+            return APP_ID_NEXUS
     except Exception:
         pass
     home = Path(os.environ.get("HOME", "/home/default"))
@@ -106,14 +161,28 @@ def _install_xdg_tray_icon(icon: Path) -> str:
                 capture_output=True,
                 timeout=8,
             )
-            return "nexus-shield-panel"
+            return APP_ID_NEXUS
     except (OSError, subprocess.TimeoutExpired):
         pass
     return str(icon)
 
 
+def _revert_tray_to_nexus() -> None:
+    revert_py = INSTALL / "lib" / "znetwork-orchestrator.py"
+    if revert_py.is_file():
+        env = os.environ.copy()
+        env.setdefault("NEXUS_INSTALL_ROOT", str(INSTALL))
+        env.setdefault("NEXUS_STATE_DIR", str(STATE))
+        py = shutil.which("pythong") or sys.executable
+        try:
+            subprocess.run([py, str(revert_py), "tray-revert"], env=env, timeout=20, check=False)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+
+
 def _ensure_tray_icon(*, force: bool = False) -> Path:
-    icon = STATE / "nexus-tray.png"
+    znet = _tray_mode() == "znetwork"
+    icon = STATE / ("znetwork-tray.png" if znet else "nexus-tray.png")
     icon.parent.mkdir(parents=True, exist_ok=True)
     try:
         import importlib.util
@@ -123,6 +192,8 @@ def _ensure_tray_icon(*, force: bool = False) -> Path:
         if spec and spec.loader:
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
+            if znet and hasattr(mod, "build_znetwork_tray_icons"):
+                return mod.build_znetwork_tray_icons(INSTALL, STATE, force=force)
             return mod.build_tray_icons(INSTALL, STATE, force=force)
     except Exception:
         pass
@@ -181,54 +252,43 @@ def _load_last_tab() -> str:
         return "command"
 
 
-def _detect_browser() -> list[str]:
-    for name in (
-        "xdg-open",
-        "google-chrome-stable",
-        "google-chrome",
-        "chromium-browser",
-        "chromium",
-        "firefox",
-        "brave-browser",
-        "microsoft-edge",
-    ):
-        try:
-            proc = subprocess.run(["which", name], capture_output=True, text=True, timeout=3)
-            if proc.returncode == 0 and (proc.stdout or "").strip():
-                yield name
-        except (OSError, subprocess.TimeoutExpired):
-            continue
-
-
 def open_tab(route: str = "command") -> None:
     route = (route or "command").strip().lstrip("#")
-    url = f"{_panel_base()}#{route}"
+    if route == "__revert_tray__":
+        _revert_tray_to_nexus()
+        return
     _save_last_tab(route)
+    opener = INSTALL / "lib" / "queen-panel-open.py"
+    if not opener.is_file():
+        return
     env = os.environ.copy()
-    env.setdefault("DISPLAY", ":0")
-    for browser in _detect_browser():
-        try:
-            if browser == "xdg-open":
-                subprocess.Popen(["xdg-open", url], env=env, start_new_session=True)
-            elif browser in ("google-chrome-stable", "google-chrome", "chromium-browser", "chromium"):
-                subprocess.Popen(
-                    [browser, f"--app={url}", "--new-window"],
-                    env=env,
-                    start_new_session=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-            else:
-                subprocess.Popen(
-                    [browser, "--new-window", url],
-                    env=env,
-                    start_new_session=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-            return
-        except OSError:
-            continue
+    env.setdefault("NEXUS_INSTALL_ROOT", str(INSTALL))
+    env.setdefault("NEXUS_STATE_DIR", str(STATE))
+    queen = INSTALL / "Queen"
+    if not queen.is_dir():
+        for candidate in (
+            INSTALL.parent / "Queen",
+            Path(os.environ.get("SG_ROOT", str(INSTALL.parent))) / "Queen",
+            Path(os.environ.get("SG_ROOT", str(INSTALL.parent))) / "NewLatest" / "Queen",
+        ):
+            if candidate.is_dir():
+                queen = candidate
+                break
+    env.setdefault("QUEEN_ROOT", str(queen))
+    env.setdefault("NEXUS_THREAT_PANEL_PORT", PORT)
+    env.setdefault("QUEEN_WORLD_PORT", "9481")
+    py = shutil.which("pythong") or sys.executable
+    try:
+        subprocess.run(
+            [py, str(opener), "nexus", route],
+            env=env,
+            timeout=25,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        pass
 
 
 class TabPickerPopup(Gtk.Window):
@@ -254,7 +314,7 @@ class TabPickerPopup(Gtk.Window):
         outer.set_margin_start(12)
         outer.set_margin_end(12)
 
-        hint = Gtk.Label(label="Click a tab — opens immediately in your browser")
+        hint = Gtk.Label(label="Click a tab — opens immediately in Queen browser")
         hint.set_xalign(0)
         hint.set_line_wrap(True)
         outer.pack_start(hint, False, False, 0)
@@ -306,7 +366,7 @@ def _populate_tray_flyout(menu: Gtk.Menu) -> None:
         menu.remove(child)
         child.destroy()
     last = _load_last_tab()
-    for label, route in TAB_CHOICES:
+    for label, route in _tab_choices():
         title = f"★ {label}" if route == last else label
         item = Gtk.MenuItem.new_with_label(title)
         item.connect("activate", lambda _w, r=route: open_tab(r))
@@ -355,7 +415,7 @@ class NexusTray:
                 icon.set_from_file(icon_path)
             else:
                 icon.set_from_icon_name("security-high")
-            icon.set_tooltip_text("NEXUS Field Command Center — click or right-click for tabs")
+            icon.set_tooltip_text(_tray_title())
             icon.set_visible(True)
             icon.connect("activate", lambda ic, *_: show_tab_picker(ic, 1, Gtk.get_current_event_time()))
             icon.connect("popup-menu", lambda ic, btn, t: show_tab_picker(ic, btn, t))
@@ -371,12 +431,12 @@ class NexusTray:
                 if not Path(icon_ref).stat().st_size:
                     icon_name = "security-high"
             self._indicator = AyatanaAppIndicator3.Indicator.new(
-                APP_ID,
+                _app_id(),
                 icon_name,
                 AyatanaAppIndicator3.IndicatorCategory.APPLICATION_STATUS,
             )
             self._indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
-            self._indicator.set_title("NEXUS Field Command Center — click or right-click for tabs")
+            self._indicator.set_title(_tray_title())
             _populate_tray_flyout(self._flyout_menu)
             self._indicator.set_menu(self._flyout_menu)
             return True

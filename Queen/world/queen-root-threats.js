@@ -84,7 +84,12 @@
   function act(kind) {
     if (kind === "nexus") {
       const port = 9477;
-      global.open(`https://127.0.0.1:${port}/field`, "_blank", "noopener");
+      const url = `http://127.0.0.1:${port}/field`;
+      if (global.parent && global.parent !== global) {
+        global.parent.postMessage({ type: "queen:shell", action: "new_tab", url }, global.location.origin);
+      } else {
+        global.location.href = url;
+      }
       return;
     }
     const map = { audit: "audit_root", rekill: "rekill", crush: "crush_hot" };

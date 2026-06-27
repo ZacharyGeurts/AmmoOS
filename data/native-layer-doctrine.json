@@ -28,6 +28,7 @@
     "hardware_wire",
     "truth_dns",
     "sovereign_time",
+    "sovereign_clock",
     "packet_field",
     "connection_gatekeeper",
     "hostess_brain",

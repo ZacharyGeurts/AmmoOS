@@ -16,6 +16,8 @@ _LIB = Path(__file__).resolve().parent
 WIRE = QUEEN / "data" / "sense-neural-invincible-wire.json"
 AUTHORITY = SG / "Hostess7" / "data" / "hostess7-supreme-authority.json"
 GATE = _LIB / "queen-neural-encourage-gate.py"
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", SG / "NewLatest"))
+STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / "state"))
 
 
 def _ts() -> str:
@@ -31,6 +33,54 @@ def _read(path: Path, default: Any = None) -> Any:
 
 def _encourage_gate():
     return _load_mod("queen_neural_encourage_gate", GATE)
+
+
+def _ironclad_goldmine() -> dict[str, Any]:
+    """Hot-read plate → eye/ear/mouth goldmine — no cycle wait."""
+    cached = _read(STATE / "ironclad-immediate.json", {})
+    if cached.get("plate_to_sense"):
+        return cached["plate_to_sense"]
+    ic_py = INSTALL / "lib" / "ironclad-immediate.py"
+    if not ic_py.is_file():
+        ic_py = SG / "NewLatest" / "lib" / "ironclad-immediate.py"
+    if ic_py.is_file():
+        try:
+            mod = _load_mod("ironclad_immediate", ic_py)
+            if hasattr(mod, "plate_to_sense_goldmine"):
+                base = cached if cached.get("schema") == "ironclad-immediate/v1" else {}
+                if not base and hasattr(mod, "immediate_slice"):
+                    base = mod.immediate_slice()
+                return mod.plate_to_sense_goldmine(base=base)
+        except Exception:
+            pass
+    wire = _read(WIRE, {})
+    extrap = wire.get("ironclad_extrapolation") or {}
+    return {
+        "schema": "ironclad-plate-to-sense/v1",
+        "goldmine": True,
+        "read_first": True,
+        "plate_sealed": False,
+        "ironclad_grounded": False,
+        "truth_percent": extrap.get("truth_percent_when_sealed", 100.0),
+        "citation": extrap.get("citation") or "ironclad:neural:2",
+        "targets": extrap.get("targets") or ["eye_neural", "ear_neural", "mouth_neural", "sense_neural_wire"],
+        "goldmine_ok": False,
+    }
+
+
+def _ironclad_wire_ctx(goldmine: dict[str, Any] | None = None) -> dict[str, Any]:
+    gm = goldmine or _ironclad_goldmine()
+    truth = float(gm.get("truth_percent") or 72.0)
+    if gm.get("ironclad_grounded"):
+        truth = max(truth, 100.0)
+    return {
+        "ironclad_grounded": bool(gm.get("ironclad_grounded")),
+        "ironclad_sealed": bool(gm.get("plate_sealed")),
+        "truth_score": truth,
+        "citation": gm.get("citation") or "ironclad:neural:2",
+        "goldmine": bool(gm.get("goldmine")),
+        "read_first": bool(gm.get("read_first")),
+    }
 
 
 def _load_mod(name: str, path: Path):
@@ -74,10 +124,16 @@ def _ear_offense():
     return _load_mod("ear_audio_offense", ear / "zocr_audio_offense.py")
 
 
+def _mouth_neural():
+    mouth = Path(os.environ.get("FINAL_MOUTH_ROOT", SG / "Final_Mouth"))
+    return _load_mod("mouth_neural_assist", mouth / "zocr_neural_assist.py")
+
+
 def invincible_wire_status() -> dict[str, Any]:
     wire = _read(WIRE, {})
+    goldmine = _ironclad_goldmine()
     auth = hostess_authority()
-    eye_st, ear_st = {}, {}
+    eye_st, ear_st, mouth_st = {}, {}, {}
     try:
         eye_st = _eye_neural().neural_assist_status()
     except Exception as exc:
@@ -86,14 +142,20 @@ def invincible_wire_status() -> dict[str, Any]:
         ear_st = _ear_neural().neural_assist_status()
     except Exception as exc:
         ear_st = {"error": str(exc)}
+    try:
+        mouth_st = _mouth_neural().neural_assist_status()
+    except Exception as exc:
+        mouth_st = {"error": str(exc)}
     seals_ok = (
         eye_st.get("seal_ok") is not False
         and (ear_st.get("sealed") or ear_st.get("seal_ok") is not False or ear_st.get("incorruptible"))
+        and mouth_st.get("seal_ok") is not False
     )
     paths_ok = sum(1 for p in [
         seals_ok,
         eye_st.get("network_id"),
         ear_st.get("network_id"),
+        mouth_st.get("network_id"),
         auth.get("hostess7_highest_authority"),
         wire.get("invincible"),
     ] if p)
@@ -107,17 +169,32 @@ def invincible_wire_status() -> dict[str, Any]:
         subbit = _load_mod("queen_subbit_heuristics", _LIB / "queen-subbit-heuristics.py").status()
     except Exception as exc:
         subbit = {"error": str(exc)[:120]}
+    ironclad_ok = bool(goldmine.get("goldmine_ok") or (goldmine.get("ironclad_grounded") and paths_ok >= 4))
     return {
         "schema": "queen-sense-neural-wire/v1",
         "updated": _ts(),
         "title": wire.get("title"),
         "rule": wire.get("rule"),
         "invincible": wire.get("invincible"),
+        "ironclad_goldmine": goldmine,
+        "plate_to_sense": goldmine,
+        "ironclad_grounded": bool(goldmine.get("ironclad_grounded")),
+        "ironclad_sealed": bool(goldmine.get("plate_sealed")),
+        "truth_percent": goldmine.get("truth_percent"),
+        "neural_extrapolation_active": bool(goldmine.get("neural_extrapolation_active")),
+        "goldmine_ok": ironclad_ok,
+        "citation": goldmine.get("citation") or "ironclad:neural:2",
         "authority": auth,
         "eye_neural": eye_st,
         "ear_neural": ear_st,
+        "mouth_neural": mouth_st,
+        "thought_voice_callosum": {
+            "deception_possible": True,
+            "alignment": mouth_st.get("thought_voice_alignment"),
+            "hemisphere": mouth_st.get("hemisphere") or "voice_egress",
+        },
         "woven_paths": paths_ok,
-        "invincible_ok": paths_ok >= 3,
+        "invincible_ok": paths_ok >= 4,
         "encourage": wire.get("encourage"),
         "incorruptible": gate_st.get("incorruptible", True),
         "quarantine_count": gate_st.get("quarantine_count", 0),
@@ -148,6 +225,11 @@ def fused_analyze(body: dict[str, Any] | None = None) -> dict[str, Any]:
             )
             out["schema"] = "queen-sense-neural-fused/v1"
             out["authority"] = hostess_authority()
+            gm = _ironclad_goldmine()
+            out["ironclad_goldmine"] = gm
+            out["ironclad_grounded"] = bool(gm.get("ironclad_grounded"))
+            out["truth_percent"] = gm.get("truth_percent")
+            out["citation"] = gm.get("citation") or "ironclad:neural:2"
             if out.get("ok"):
                 out["to_countermeasure"] = _suggest_countermeasure(
                     out.get("ear_neural") or {},
@@ -211,11 +293,16 @@ def fused_analyze(body: dict[str, Any] | None = None) -> dict[str, Any]:
     if ear_refined.get("top_label") == "ventriloquism_hint":
         cross_agree = eye_out.get("top_label") != "clear_field" or eye_out.get("confidence", 0) < 0.6
 
+    gm = _ironclad_goldmine()
     out = {
         "ok": quorum,
         "schema": "queen-sense-neural-fused/v1",
         "updated": _ts(),
         "authority": hostess_authority(),
+        "ironclad_goldmine": gm,
+        "ironclad_grounded": bool(gm.get("ironclad_grounded")),
+        "truth_percent": gm.get("truth_percent"),
+        "citation": gm.get("citation") or "ironclad:neural:2",
         "eye": eye_out,
         "ear": ear_refined,
         "ear_first_pass": ear_out,
@@ -258,8 +345,13 @@ def _suggest_countermeasure(ear: dict, eye: dict, agree: bool) -> dict[str, Any]
 
 def _wire_ctx_for_encourage(body: dict[str, Any]) -> dict[str, Any]:
     ctx = dict(body.get("wire_ctx") or body.get("context") or {})
+    ic_ctx = _ironclad_wire_ctx()
+    for key, val in ic_ctx.items():
+        ctx.setdefault(key, val)
     if body.get("truth_score") is not None:
         ctx["truth_score"] = body["truth_score"]
+    elif ic_ctx.get("ironclad_grounded"):
+        ctx["truth_score"] = ic_ctx["truth_score"]
     if body.get("eye_ear_quorum") is not None:
         ctx["eye_ear_quorum"] = body["eye_ear_quorum"]
     if body.get("evidence"):
@@ -282,25 +374,46 @@ def encourage_both(body: dict[str, Any]) -> dict[str, Any]:
     auth = hostess_authority()
     if not auth.get("hostess7_highest_authority"):
         return {"ok": False, "error": "authority_denied", "quarantined": True, "reason": "authority_denied"}
-    label_eye = body.get("eye_label") or body.get("label")
-    label_ear = body.get("ear_label") or body.get("label")
+    label_eye = body.get("eye_label") or (body.get("label") if not body.get("mouth_label") else None)
+    label_ear = body.get("ear_label") or (body.get("label") if not body.get("mouth_label") else None)
+    label_mouth = body.get("mouth_label") or body.get("label")
     source = str(body.get("source") or "hostess7")
     delta = float(body.get("delta") or 0.02)
     wire_ctx = _wire_ctx_for_encourage(body)
+    gm = _ironclad_goldmine()
     out: dict[str, Any] = {
         "ok": True,
         "schema": "queen-sense-neural-encourage/v1",
         "authority": auth,
         "incorruptible": True,
-        "wire_ctx": {"eye_ear_quorum": wire_ctx.get("eye_ear_quorum"), "weapons_simulated": bool(body.get("simulate_weapon"))},
+        "ironclad_goldmine": gm,
+        "ironclad_grounded": bool(gm.get("ironclad_grounded")),
+        "citation": gm.get("citation") or "ironclad:neural:2",
+        "wire_ctx": {
+            "eye_ear_quorum": wire_ctx.get("eye_ear_quorum"),
+            "weapons_simulated": bool(body.get("simulate_weapon")),
+            "mouth_hemisphere": True,
+            "ironclad_grounded": wire_ctx.get("ironclad_grounded"),
+            "truth_score": wire_ctx.get("truth_score"),
+            "goldmine": wire_ctx.get("goldmine"),
+        },
     }
     if label_eye:
         out["eye"] = _eye_neural().encourage(label=str(label_eye), delta=delta, source=source, wire_ctx=wire_ctx)
     if label_ear:
         out["ear"] = _ear_neural().encourage(label=str(label_ear), delta=delta, source=source, wire_ctx=wire_ctx)
+    if label_mouth or body.get("include_mouth") or body.get("reinforce_triad"):
+        out["mouth"] = _mouth_neural().encourage(
+            label=str(label_mouth or "text_to_voice"),
+            delta=delta,
+            source=source,
+            wire_ctx=wire_ctx,
+        )
     if body.get("reinforce_pair"):
         out["pair"] = {"eye": label_eye, "ear": label_ear, "wired": True}
-    results = [out.get(k) for k in ("eye", "ear") if out.get(k)]
+    if body.get("reinforce_triad"):
+        out["triad"] = {"eye": label_eye, "ear": label_ear, "mouth": label_mouth, "wired": True}
+    results = [out.get(k) for k in ("eye", "ear", "mouth") if out.get(k)]
     out["ok"] = all(r.get("ok") for r in results) if results else False
     if not out["ok"]:
         out["quarantined"] = any(r.get("quarantined") for r in results if isinstance(r, dict))
@@ -324,7 +437,9 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         return {"ok": True, **hostess_authority()}
     if action in ("analyze", "fused", "fused_analyze"):
         return fused_analyze(body)
-    if action in ("encourage", "teach", "reinforce"):
+    if action in ("encourage", "teach", "reinforce", "encourage_triad", "reinforce_triad"):
+        if action in ("encourage_triad", "reinforce_triad"):
+            body = {**body, "reinforce_triad": True, "include_mouth": True}
         return encourage_both(body)
     if action in ("countermeasure", "strike"):
         threat = str(body.get("threat") or "assault_burst")
@@ -345,7 +460,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
     return {
         "ok": False,
         "error": "unknown_action",
-        "actions": ["status", "authority", "analyze", "encourage", "countermeasure", "equipment", "subbit_verify"],
+        "actions": ["status", "authority", "analyze", "encourage", "encourage_triad", "countermeasure", "equipment", "subbit_verify"],
     }
 
 

@@ -84,9 +84,20 @@ curl -s http://127.0.0.1:9477/api/hostess7/training/bundle | jq .
 | Route | Purpose |
 |-------|---------|
 | `/api/threat-panel.json` | Full panel state |
+| `/api/field-host-desktop` | Host desktop app list + theme |
+| `/api/field-host-freeze` | Host OS freeze (soft/mem/disk) |
+| `/api/field-underlay-surface` | Drop / rise underlay |
 | `/api/field-underlay` | Underlay F9 JSON |
 | `/api/tristate-installer` | Tristate wizard API |
 | `/api/hostess7/training/bundle` | Training tab |
+
+### HTML pages (g16)
+
+| Path | File |
+|------|------|
+| `/field` | `panel/field-desktop.html` |
+| `/command` | `panel/threat-panel.html` |
+| `/underlay-f9` | `panel/underlay-f9.html` |
 
 ---
 

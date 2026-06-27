@@ -2,7 +2,7 @@
 # NEXUS-Shield shared runtime — invisible to consumers, root-only state.
 # shellcheck disable=SC2034
 
-NEXUS_VERSION="10.4.3"
+NEXUS_VERSION="g16-1.0"
 NEXUS_EDITION="Universal Protector"
 HOSTESS_VERSION="7"
 
@@ -20,7 +20,11 @@ if [[ -f "${_NEXUS_COMMON_DIR}/sg-paths.sh" ]]; then
 fi
 ZOCR_ROOT="${ZOCR_ROOT:-${SG_ROOT}/ZNEWOCR}"
 ZNEWOCR_ROOT="${ZNEWOCR_ROOT:-${ZOCR_ROOT}}"
-QUEEN_ROOT="${QUEEN_ROOT:-${_NEXUS_TREE_ROOT}/Queen}"
+if declare -f sg_paths_queen_root >/dev/null 2>&1; then
+  QUEEN_ROOT="${QUEEN_ROOT:-$(sg_paths_queen_root)}"
+else
+  QUEEN_ROOT="${QUEEN_ROOT:-${_NEXUS_TREE_ROOT}/Queen}"
+fi
 # KILROY Field OS — top-level sibling of SG, never inside Queen
 if [[ -z "${KILROY_ROOT:-}" && -f "${_NEXUS_COMMON_DIR}/kilroy-resolve.sh" ]]; then
   # shellcheck source=/dev/null

@@ -266,15 +266,16 @@ def main() -> int:
         print("TAB AUDIT FAIL: no panel JSON (start panel or run from installed tree)")
         return 1
 
-    avatar = INSTALL / "panel" / "assets" / "amouranth-twitch-avatar.png"
+    avatar = INSTALL / "panel" / "assets" / "amouranth-panel-avatar.png"
+    legacy_avatar = INSTALL / "panel" / "assets" / "amouranth-twitch-avatar.png"
     wordmark = INSTALL / "panel" / "assets" / "amouranthrtx-wordmark.svg"
     header_checks = []
-    if "amouranth-twitch-avatar.png" not in html:
-        header_checks.append("missing twitch avatar in HTML")
+    if "amouranth-panel-avatar.png" not in html and "amouranth-twitch-avatar.png" not in html:
+        header_checks.append("missing Queen panel avatar in HTML")
     if "amouranthrtx-wordmark.svg" not in html:
         header_checks.append("missing AMOURANTHRTX wordmark in HTML")
-    if not avatar.is_file():
-        header_checks.append("missing amouranth-twitch-avatar.png asset")
+    if not avatar.is_file() and not legacy_avatar.is_file():
+        header_checks.append("missing amouranth-panel-avatar.png asset")
     if not wordmark.is_file():
         header_checks.append("missing amouranthrtx-wordmark.svg asset")
     ocr_note = _ocr_smoke(avatar)

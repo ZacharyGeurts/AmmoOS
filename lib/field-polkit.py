@@ -1,9 +1,10 @@
 #!/usr/bin/env pythong
-"""NEXUS Field Polkit posture — hardened elevation bridge + policy integrity."""
+"""NEXUS Field Polkit (pol) — root posture, secure elevation, policy integrity."""
 from __future__ import annotations
 
 import json
 import os
+import platform
 import stat
 import subprocess
 import sys
@@ -34,7 +35,20 @@ def _bridge_path() -> Path:
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -93,8 +107,87 @@ def _polkitd_active() -> str:
         return "unknown"
 
 
+def detect_platform() -> str:
+    sys_name = (platform.system() or "").lower()
+    if sys_name == "windows":
+        return "windows"
+    if sys_name == "darwin":
+        return "darwin"
+    if sys_name == "linux":
+        return "linux"
+    return sys_name or "unknown"
+
+
+def is_windows_admin() -> bool:
+    if detect_platform() != "windows":
+        return False
+    try:
+        import ctypes
+
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except (AttributeError, OSError):
+        return False
+
+
+def is_root() -> bool:
+    plat = detect_platform()
+    if plat == "windows":
+        return is_windows_admin()
+    try:
+        return os.geteuid() == 0
+    except AttributeError:
+        return is_windows_admin()
+
+
+def has_cached_sudo() -> bool:
+    if detect_platform() != "linux":
+        return False
+    try:
+        proc = subprocess.run(
+            ["sudo", "-n", "true"],
+            capture_output=True,
+            timeout=5,
+        )
+        return proc.returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
+def root_posture(*, purpose: str = "") -> dict[str, Any]:
+    plat = detect_platform()
+    root = is_root()
+    cached = has_cached_sudo()
+    needs_elevation = not root and plat in ("linux", "windows")
+    method = "none"
+    if root:
+        method = "administrator" if plat == "windows" else "root"
+    elif cached:
+        method = "sudo_cached"
+    elif plat == "linux":
+        method = "pkexec_or_secure_sudo"
+    elif plat == "windows":
+        method = "uac_elevate"
+    return {
+        "schema": "field-pol-root/v1",
+        "ts": _now(),
+        "platform": plat,
+        "arch": platform.machine() or "unknown",
+        "is_root": root,
+        "is_admin": root if plat == "windows" else None,
+        "euid": os.geteuid() if hasattr(os, "geteuid") else None,
+        "has_cached_sudo": cached,
+        "needs_elevation": needs_elevation,
+        "elevation_method": method,
+        "purpose": purpose or "general",
+        "polkit_installed": _path_is_file(POLICY),
+        "bridge_present": _path_is_file(_bridge_path()),
+        "ready": root or cached or not needs_elevation,
+    }
+
+
 def posture() -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
+    root = root_posture()
     checks = {
         "policy_present": _path_is_file(POLICY),
         "rules_present": _path_is_file(RULES),
@@ -130,6 +223,7 @@ def posture() -> dict[str, Any]:
         "actions": [a.get("id") for a in doctrine.get("actions", []) if isinstance(a, dict)],
         "audit_tail": _audit_tail(),
         "deny_recent": deny_recent,
+        "root": root,
     }
 
 
@@ -155,7 +249,11 @@ def main() -> int:
     if mode == "json":
         print(json.dumps(posture(), ensure_ascii=False, indent=2))
         return 0
-    print("usage: field-polkit.py [json|board]", file=sys.stderr)
+    if mode == "root":
+        purpose = sys.argv[2] if len(sys.argv) > 2 else ""
+        print(json.dumps(root_posture(purpose=purpose), ensure_ascii=False, indent=2))
+        return 0
+    print("usage: field-polkit.py [json|board|root [purpose]]", file=sys.stderr)
     return 2
 
 

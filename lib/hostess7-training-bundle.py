@@ -60,7 +60,33 @@ def load_models_doc() -> dict[str, Any]:
 def bundle_training_data(*, refresh: bool = False) -> dict[str, Any]:
     train = _load_training()
     if refresh:
-        train.assess_all()
+        assessment = train.assess_all()
+    else:
+        assessment = train.assess_all()
+
+    muscle_memory: dict[str, Any] = {}
+    try:
+        spec = importlib.util.spec_from_file_location("h7mm", INSTALL / "lib" / "hostess7-muscle-memory.py")
+        if spec and spec.loader:
+            mm = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mm)
+            if hasattr(mm, "sync_understandings_from_training"):
+                mm.sync_understandings_from_training(assessment.get("tracks"))
+            if hasattr(mm, "build_panel"):
+                muscle_memory = mm.build_panel(write=True, sync_training=False)
+    except Exception:
+        muscle_memory = _load(STATE / "hostess7-muscle-memory-panel.json", {})
+
+    mouth_neural: dict[str, Any] = {}
+    try:
+        spec = importlib.util.spec_from_file_location("h7mouth", INSTALL / "lib" / "hostess7-mouth-neural.py")
+        if spec and spec.loader:
+            mn = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mn)
+            if hasattr(mn, "build_panel"):
+                mouth_neural = mn.build_panel(write=True)
+    except Exception:
+        mouth_neural = _load(STATE / "hostess7-mouth-neural-panel.json", {})
 
     master_st = _load(STATE / "hostess7-master-state.json", {})
     curriculum = _load(INSTALL / "data" / "hostess7-master-curriculum.json", {})
@@ -70,7 +96,6 @@ def bundle_training_data(*, refresh: bool = False) -> dict[str, Any]:
         sid = step.get("id")
         steps.append({**step, "completed": sid in done})
 
-    assessment = train.assess_all()
     graphs = train.build_evaluation_graphs()
     models_doc = load_models_doc()
 
@@ -122,6 +147,8 @@ def bundle_training_data(*, refresh: bool = False) -> dict[str, Any]:
         "combat": _load(STATE / "hostess7-combat-panel.json", {}),
         "mos": _load(STATE / "hostess7-mos-panel.json", {}),
         "reality_physics": _load(STATE / "hostess7-reality-physics-panel.json", {}),
+        "geography": _load(STATE / "hostess7-geography-panel.json", {}),
+        "sense_training": _load(STATE / "hostess7-sense-training-panel.json", {}),
         "ironclad": _load(STATE / "ironclad-panel.json", {}),
         "ironclad_doctrine": _load(INSTALL / "data" / "ironclad-doctrine.json", {}),
         "ironclad_images": _load(INSTALL / "data" / "ironclad" / "images" / "manifest.json", {}),
@@ -136,6 +163,8 @@ def bundle_training_data(*, refresh: bool = False) -> dict[str, Any]:
         "ledger_master_train": _tail_jsonl(STATE / "hostess7-master-train.jsonl"),
         "connected_models_registry": models_doc,
         "wireframe": wireframe,
+        "muscle_memory": muscle_memory,
+        "mouth_neural": mouth_neural,
     }
 
 

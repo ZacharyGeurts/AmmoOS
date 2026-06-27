@@ -83,11 +83,15 @@ def run_tests() -> list[tuple[str, str]]:
         "qb-bookmarks",
         "qb-gate-pill",
         "qb-security-strip",
-        "queen-os.js",
-        "qw-dock",
-        "qw-ammoos-body",
+        "data-queen-surface=\"browser\"",
+        "data-queen-theme=\"black_emerald_rose_2026\"",
+        "queen-theme-2026.js",
+        "queen-media-egress.js",
+        "data-media-egress",
+        "Queen",
     ):
         assert_true(needle in text, f"shell contains {needle}", results)
+    assert_true("qw-dock" not in text, "default /world/ is browser-only (no Queen OS dock)", results)
 
     for asset in (
         "/world/queen-os.js",
@@ -95,6 +99,8 @@ def run_tests() -> list[tuple[str, str]]:
         "/world/queen-gnu-terminal.js",
         "/world/queen-gnu-terminal.css",
         "/world/queen-browser-shell.js",
+        "/world/queen-theme-2026.js",
+        "/gui/queen-theme-2026.json",
         "/world/queen-start.html",
         "/world/queen-files.html",
         "/world/queen-files.js",
@@ -108,6 +114,15 @@ def run_tests() -> list[tuple[str, str]]:
     assert_true(code == 200 and doc.get("queen_verdict") == "QUEEN_READY", "QUEEN_READY verdict", results)
     sec = doc.get("security") or {}
     assert_true(sec.get("doctrine") == "presume_hostile_defend_offense", "browser hostile-presumption doctrine", results)
+    egress = sec.get("media_egress") or {}
+    assert_true(egress.get("egress_lock") is True, "media egress locked by default", results)
+    assert_true(egress.get("blocked_by_default", {}).get("screen_out") is True, "screen out blocked", results)
+    assert_true(egress.get("blocked_by_default", {}).get("keystrokes_out") is True, "keystrokes out blocked", results)
+    assert_true(egress.get("blocked_by_default", {}).get("keyhooks_out") is True, "keyhooks out blocked", results)
+    _, grant = _post("/api/queen-browser", {"action": "capture_request", "purpose": "obs_local"}, timeout=30)
+    assert_true(grant.get("ok") and grant.get("permit") is True, "operator local capture grant", results)
+    _, revoked = _post("/api/queen-browser", {"action": "capture_revoke"}, timeout=30)
+    assert_true(revoked.get("ok") is True, "capture revoke", results)
     assert_true((sec.get("iff") or {}).get("presume_hostile") is True, "browser presume hostile IFF", results)
     assert_true((sec.get("iff") or {}).get("never_presume_correct_contact") is True, "never presume correct contact", results)
     assert_true(doc.get("capabilities", {}).get("start_tab") is True, "start tab capability", results)
@@ -160,7 +175,11 @@ def run_tests() -> list[tuple[str, str]]:
     # --- History back / forward ---
     code, back = _post("/api/queen-browser", {"action": "back", "tab_id": tab1})
     assert_true(code == 200 and back.get("ok"), "history back", results)
-    assert_true("/world/" in (back.get("tab", {}).get("url") or ""), "back returns home tab URL", results)
+    assert_true(
+        "/field" in (back.get("tab", {}).get("url") or "") or "/world/" in (back.get("tab", {}).get("url") or ""),
+        "back returns home tab URL",
+        results,
+    )
 
     code, fwd = _post("/api/queen-browser", {"action": "forward", "tab_id": tab1})
     assert_true(code == 200 and fwd.get("ok"), "history forward", results)
@@ -351,25 +370,38 @@ def run_tests() -> list[tuple[str, str]]:
     assert_true(fs.get("schema") == "kilroy-field-stack/v1", "field stack mandate", results)
     assert_true(kdoc.get("rank") == 1, "KILROY rank 1", results)
 
-    # --- OS dock panels still reachable ---
+    # --- Browser-only default; Queen OS world optional at /world/index.html?os=1 ---
     wc2, whtml = _get("/world/")
     assert_true(b"qw-browser-shell" in whtml and b"qb-start" in whtml, "browser-shell mode + Start button", results)
-    assert_true(b"data-tab=\"hostess\"" in whtml, "legacy dock markup retained", results)
-    assert_true(b"data-tab=\"kilroy\"" in whtml and b"qw-kilroy-body" in whtml, "KILROY dock panel in shell", results)
-    assert_true(b"data-tab=\"gameroom\"" in whtml and b"gr-screen-wrap" in whtml, "Game Room dock + theater", results)
+    assert_true(b"data-queen-surface=\"browser\"" in whtml, "default surface is Queen browser", results)
+    assert_true(b"qw-dock" not in whtml, "default /world/ has no Queen OS dock", results)
+
+    idx_code, idx_html = _get("/world/index.html")
+    assert_true(
+        b"data-queen-surface=\"browser\"" in idx_html or b"qb-chrome" in idx_html,
+        "index.html forwards to themed browser (no retrograde OS default)",
+        results,
+    )
+    assert_true(b"qw-dock" not in idx_html, "index.html default has no Queen OS dock", results)
+
+    os_code, os_html = _get("/world/index.html?os=1")
+    assert_true(os_code == 200, "Queen OS world reachable with ?os=1", results)
+    assert_true(b"data-tab=\"hostess\"" in os_html, "Queen OS dock markup at index.html?os=1", results)
+    assert_true(b"data-tab=\"kilroy\"" in os_html and b"qw-kilroy-body" in os_html, "KILROY dock panel in OS world", results)
+    assert_true(b"data-tab=\"gameroom\"" in os_html and b"gr-screen-wrap" in os_html, "Game Room dock + theater", results)
 
     gc, grdoc_raw = _get("/api/game-room")
     grdoc = json.loads(grdoc_raw.decode("utf-8"))
     assert_true(gc == 200 and grdoc.get("schema") == "queen-chips/v1", "game room API", results)
     assert_true(len(grdoc.get("systems") or []) >= 10, "game room systems catalog", results)
     assert_true(any(c.get("id") == "cyrix_6x86" for c in (grdoc.get("host_cpus") or [])), "Cyrix CPU option", results)
-    assert_true(b"gr-deck" in whtml and b"gr-stage" in whtml, "theater stage + deck layout", results)
-    assert_true(b"qw-systems-grid" in whtml, "OS computer systems grid", results)
-    assert_true(b'data-os-pane="inside"' in whtml and b"qw-layer-rings" in whtml, "Inside sovereign capsule pane", results)
-    assert_true(b"qw-sov-rebuild" in whtml and b"qw-sov-reboot" in whtml, "capsule rebuild + reboot controls", results)
-    assert_true(b'data-tab="earball"' in whtml and b"qw-ear-body" in whtml, "Final Ear dock panel", results)
+    assert_true(b"gr-deck" in os_html and b"gr-stage" in os_html, "theater stage + deck layout", results)
+    assert_true(b"qw-systems-grid" in os_html, "OS computer systems grid", results)
+    assert_true(b'data-os-pane="inside"' in os_html and b"qw-layer-rings" in os_html, "Inside sovereign capsule pane", results)
+    assert_true(b"qw-sov-rebuild" in os_html and b"qw-sov-reboot" in os_html, "capsule rebuild + reboot controls", results)
+    assert_true(b'data-tab="earball"' in os_html and b"qw-ear-body" in os_html, "Final Ear dock panel", results)
     assert_true(
-        b'data-tab="terminal"' in whtml and b"qgt-deck" in whtml and b"qgt-scrolltrack" in whtml,
+        b'data-tab="terminal"' in os_html and b"qgt-deck" in os_html and b"qgt-scrolltrack" in os_html,
         "GNU terminal dock + minibrowser + scrollbar",
         results,
     )

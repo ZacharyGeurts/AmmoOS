@@ -47,11 +47,52 @@ def _world_base() -> str:
     return f"http://127.0.0.1:{port}"
 
 
+def _panel_alive(port: int | None = None) -> bool:
+    import socket
+
+    p = port or int(os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477"))
+    try:
+        with socket.create_connection(("127.0.0.1", p), timeout=0.45):
+            return True
+    except OSError:
+        return False
+
+
+def _queen_field_home() -> str:
+    return f"{_world_base()}/world/queen-field-home.html"
+
+
+def _sovereign_start_url() -> str:
+    if _panel_alive():
+        return _nexus_field_url()
+    return _queen_field_home()
+
+
 def _start_page() -> str:
-    return os.environ.get(
-        "QUEEN_BROWSER_START",
-        f"{_world_base()}/world/queen-start.html",
-    )
+    override = os.environ.get("QUEEN_BROWSER_START", "").strip()
+    if override:
+        return override
+    if _panel_alive():
+        return _nexus_field_url()
+    return _queen_field_home()
+
+
+_RETROGRADE_FRAGMENTS = (
+    "queen-start.html",
+    "/world/index.html",
+    "queen-field-home.html",
+)
+
+
+def _is_retrograde_url(url: str) -> bool:
+    u = (url or "").lower()
+    return any(frag in u for frag in _RETROGRADE_FRAGMENTS)
+
+
+def _upgrade_retrograde_url(url: str, *, role: str = "") -> str:
+    if not _is_retrograde_url(url):
+        return url
+    return _start_page() if role == "start" else DEFAULT_HOME
 
 
 def _files_page() -> str:
@@ -61,16 +102,118 @@ def _files_page() -> str:
     )
 
 
+def _nexus_field_url() -> str:
+    port = os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477")
+    return f"http://127.0.0.1:{port}/field"
+
+
 def _default_home() -> str:
-    return os.environ.get("QUEEN_BROWSER_HOME", _start_page())
+    override = os.environ.get("QUEEN_BROWSER_HOME", "").strip()
+    if override:
+        return override
+    if _panel_alive():
+        return _nexus_field_url()
+    return _queen_field_home()
 
 
 DEFAULT_HOME = _default_home()
 MAX_TABS = int(os.environ.get("QUEEN_BROWSER_MAX_TABS", "24"))
 MAX_HISTORY = int(os.environ.get("QUEEN_BROWSER_MAX_HISTORY", "64"))
 
+
+def _media_egress_mod() -> Any:
+    script = QUEEN / "lib" / "queen-media-egress.py"
+    if not script.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("queen_media_egress", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _media_egress_status() -> dict[str, Any]:
+    mod = _media_egress_mod()
+    if mod is None:
+        return {}
+    try:
+        return mod.egress_posture()
+    except Exception:
+        return {}
+
+
+def _vault_mod() -> Any:
+    script = QUEEN / "lib" / "queen-vault.py"
+    if not script.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("queen_vault", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _import_mod() -> Any:
+    script = QUEEN / "lib" / "queen-browser-import.py"
+    if not script.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("queen_browser_import", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _muscle_memory_record(url: str, *, action: str = "navigate") -> None:
+    if os.environ.get("NEXUS_HOSTESS7_MUSCLE_MEMORY", "1") != "1":
+        return
+    script = SG / "NewLatest" / "lib" / "hostess7-muscle-memory.py"
+    if not script.is_file():
+        return
+    try:
+        import subprocess
+
+        subprocess.run(
+            [sys.executable, str(script), "dispatch"],
+            input=json.dumps({"action": "record_nav", "url": url, "browser_action": action, "source": "queen-browser"}),
+            capture_output=True,
+            text=True,
+            timeout=8,
+            cwd=str(SG / "NewLatest"),
+            env={
+                **os.environ,
+                "NEXUS_STATE_DIR": str(STATE),
+                "NEXUS_INSTALL_ROOT": str(SG / "NewLatest"),
+                "SG_ROOT": str(SG),
+            },
+        )
+    except Exception:
+        pass
+
+
+def _merged_bookmarks(doc: dict[str, Any]) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    out: list[dict[str, Any]] = []
+    for bm in BOOKMARKS:
+        key = (bm.get("url") or "").strip()
+        if key and key not in seen:
+            out.append(bm)
+            seen.add(key)
+    for bm in doc.get("imported_bookmarks") or []:
+        key = (bm.get("url") or "").strip()
+        if key and key not in seen:
+            out.append(bm)
+            seen.add(key)
+    return out
+
+
 BOOKMARKS = [
-    {"id": "queen-world", "title": "Queen OS", "url": _default_home()},
+    {"id": "nexus", "title": "NEXUS Field", "url": _nexus_field_url()},
+    {"id": "queen", "title": "Queen", "url": f"{_world_base()}/world/browser.html"},
+    {"id": "queen-home", "title": "Queen", "url": _queen_field_home()},
     {"id": "forge", "title": "Forge", "url": f"http://127.0.0.1:{os.environ.get('QUEEN_WORLD_PORT', '9481')}/gui/queen-build-deck.html"},
     {"id": "hostess", "title": "Hostess 7", "url": "queen://hostess"},
     {"id": "kilroy", "title": "KILROY", "url": "queen://kilroy"},
@@ -179,6 +322,33 @@ def default_state() -> dict[str, Any]:
     }
 
 
+def _migrate_themed_ship(doc: dict[str, Any]) -> bool:
+    """Forward-only: migrate stale start/home off retrograde surfaces."""
+    changed = False
+    ship = doc.get("theme_ship") or {}
+    if doc.get("home") and _is_retrograde_url(str(doc["home"])):
+        doc["home"] = DEFAULT_HOME
+        changed = True
+    for tab in doc.get("tabs") or []:
+        role = str(tab.get("role") or "")
+        url = str(tab.get("url") or "")
+        if _is_retrograde_url(url) or (role == "start" and url != _start_page()):
+            tab["url"] = _start_page() if role == "start" else _upgrade_retrograde_url(url, role=role)
+            hist = tab.get("history") or []
+            tab["history"] = [_upgrade_retrograde_url(str(h), role=role) for h in hist]
+            tab["history_index"] = min(tab.get("history_index", 0), max(0, len(tab["history"]) - 1))
+            changed = True
+    target_ship = {
+        "surface": os.environ.get("QUEEN_BROWSER_SURFACE", "browser"),
+        "theme": "black_emerald_rose_2026",
+        "forward_only": True,
+    }
+    if ship != target_ship:
+        doc["theme_ship"] = target_ship
+        changed = True
+    return changed
+
+
 def _ensure_files_tab(doc: dict[str, Any]) -> bool:
     """Migrate older state — pinned Files tab is always second."""
     tabs = list(doc.get("tabs") or [])
@@ -203,10 +373,26 @@ def load_state() -> dict[str, Any]:
     if doc.get("schema") != "queen-browser/v1" or not doc.get("tabs"):
         doc = default_state()
         save_state(doc)
+        _maybe_auto_import()
         return doc
-    if _ensure_files_tab(doc):
+    migrated = _migrate_themed_ship(doc)
+    files_added = _ensure_files_tab(doc)
+    if migrated or files_added:
         save_state(doc)
+    _maybe_auto_import()
     return doc
+
+
+def _maybe_auto_import() -> None:
+    if os.environ.get("QUEEN_BROWSER_AUTO_IMPORT", "1") != "1":
+        return
+    mod = _import_mod()
+    if mod is None:
+        return
+    try:
+        mod.auto_sweep_if_needed()
+    except Exception:
+        pass
 
 
 def save_state(doc: dict[str, Any]) -> None:
@@ -373,7 +559,9 @@ def browser_status() -> dict[str, Any]:
         "files_tab": doc.get("files_tab")
         or next((t.get("id") for t in doc.get("tabs") or [] if t.get("role") == "files"), None),
         "active_url": active.get("url") if active else DEFAULT_HOME,
-        "bookmarks": BOOKMARKS,
+        "bookmarks": _merged_bookmarks(doc),
+        "import": (doc.get("import_manifest") or {}) if doc.get("import_manifest") else {},
+        "vault": (_vault_mod().vault_status() if _vault_mod() else {}),
         "capabilities": {
             "tabs": True,
             "history": True,
@@ -405,6 +593,11 @@ def browser_status() -> dict[str, Any]:
             "hotbar_drag_drop": True,
             "zero_cost_4_slot": True,
             "folder_menu": True,
+            "browser_import": True,
+            "field_resecure": True,
+            "credential_vault": True,
+            "bookmark_import": True,
+            "primary_browser": True,
         },
         "nexus_jump": _nexus_jump_status(),
         "zero_cost_security": _zero_cost_security(),
@@ -427,6 +620,13 @@ def browser_status() -> dict[str, Any]:
             "zero_cost_4_slot": True,
             "amouranthrtx_slots": ["TIME", "MEMORY", "THERMO", "CONTEXT"],
             "runtime_tax": 0,
+            "media_egress": _media_egress_status(),
+            "egress_lock": True,
+            "local_capture_only": True,
+            "screen_out": False,
+            "mic_out": False,
+            "keystrokes_out": False,
+            "keyhooks_out": False,
         },
         "web_compat": _compat_module().compat_status() if _compat_module() else {},
         "field_net": _field_net(),
@@ -484,6 +684,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         doc["active_tab"] = tab["id"]
         save_state(doc)
         _append_nav({"ts": _now(), "action": "navigate", "url": url, "gate": gate, "compat": compat.get("effective_mode")})
+        _muscle_memory_record(url, action="navigate")
         return {"ok": True, "tab": tab, "gate": gate, "jump": jump, "compat": compat, "status": browser_status()}
 
     if action == "new_tab":
@@ -602,6 +803,99 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         url = _normalize_url(str(body.get("url") or DEFAULT_HOME))
         compat = _compat_profile(url, mode=str(body.get("mode") or "auto"))
         return {"ok": True, "compat": compat}
+
+    if action in ("import_all", "import_profiles", "sweep_browsers"):
+        mod = _import_mod()
+        if mod is None:
+            return {"ok": False, "error": "import_module_missing"}
+        apply = body.get("apply", True) is not False
+        if body.get("force"):
+            out = mod.sweep_all(apply=apply)
+        else:
+            out = mod.auto_sweep_if_needed()
+            if out is None:
+                out = {"ok": True, "skipped": True, "reason": "profiles_unchanged"}
+        return {**out, "status": browser_status()}
+
+    if action in ("resecure", "resecure_state"):
+        mod = _import_mod()
+        if mod is None:
+            return {"ok": False, "error": "import_module_missing"}
+        doc = load_state()
+        secured = 0
+        for bm in doc.get("imported_bookmarks") or []:
+            row = mod.resecure_entry(bm)
+            if row:
+                bm.update({
+                    "url": row.get("url"),
+                    "permit": row.get("permit"),
+                    "quarantined": row.get("quarantined"),
+                    "field_verdict": row.get("field_verdict"),
+                    "resecured": True,
+                })
+                secured += 1
+        save_state(doc)
+        return {"ok": True, "resecured": secured, "status": browser_status()}
+
+    if action == "import_status":
+        mod = _import_mod()
+        if mod is None:
+            return {"ok": False, "error": "import_module_missing"}
+        return {"ok": True, **mod.status_json()}
+
+    if action in ("vault_status", "credential_status"):
+        vault = _vault_mod()
+        if vault is None:
+            return {"ok": False, "error": "vault_missing"}
+        return {"ok": True, **vault.vault_status()}
+
+    if action in ("credential_lookup", "vault_lookup"):
+        vault = _vault_mod()
+        if vault is None:
+            return {"ok": False, "error": "vault_missing"}
+        host = str(body.get("host") or _host(str(body.get("url") or "")))
+        if not host:
+            return {"ok": False, "error": "host_required"}
+        rows = vault.lookup_credentials(host, gate_check=body.get("gate_check", True) is not False)
+        return {"ok": True, "host": host, "credentials": rows, "count": len(rows)}
+
+    if action in ("set_primary_browser", "primary_browser"):
+        script = QUEEN / "scripts" / "queen-browser-primary.sh"
+        if not script.is_file():
+            return {"ok": False, "error": "primary_script_missing"}
+        import subprocess
+
+        proc = subprocess.run(["bash", str(script)], capture_output=True, text=True, timeout=30, cwd=str(QUEEN))
+        try:
+            doc = json.loads(proc.stdout or "{}")
+        except json.JSONDecodeError:
+            doc = {"ok": proc.returncode == 0, "tail": (proc.stdout or "")[-500:]}
+        return doc
+
+    if action in ("media_egress_status", "egress_posture"):
+        return {"ok": True, **_media_egress_status()}
+
+    if action in ("capture_request", "request_local_capture"):
+        mod = _media_egress_mod()
+        if mod is None:
+            return {"ok": False, "error": "media_egress_missing"}
+        return mod.request_local_capture(
+            purpose=str(body.get("purpose") or "obs_local"),
+            ttl_sec=body.get("ttl_sec"),
+        )
+
+    if action in ("capture_revoke", "revoke_capture"):
+        mod = _media_egress_mod()
+        if mod is None:
+            return {"ok": False, "error": "media_egress_missing"}
+        return mod.revoke_grant()
+
+    if action in ("media_gate_check", "gate_media"):
+        mod = _media_egress_mod()
+        if mod is None:
+            return {"ok": False, "error": "media_egress_missing"}
+        c = body.get("constraints") if isinstance(body.get("constraints"), dict) else body
+        return mod.media_gate_check(c)
 
     return {"ok": False, "error": "unknown_action", "action": action}
 

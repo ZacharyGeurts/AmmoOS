@@ -1,0 +1,31 @@
+{
+  "schema": "nexus-g16-compile-doctrine/v1",
+  "title": "NEXUS ↔ Grok16 — optimize NewLatest all the way through the field compiler",
+  "motto": "Compile and link under g16 — macOS, Android, ARM, x86; RTX only when RTX silicon is present.",
+  "grok16_ref": "SG/Grok16",
+  "compile": {
+    "driver": "g16",
+    "cxx_std": "gnu++26",
+    "c_std": "gnu17",
+    "profile_default": "field_opt",
+    "profiles_rtx_gated": ["queen_rtx", "vulkan_rtx"],
+    "profile_open": ["field_opt", "field_compute", "ai", "hostess_secure"]
+  },
+  "link": {
+    "driver": "g16-ld",
+    "orchestrator": "Grok16/forge/g16-linker.py",
+    "doctrine": "Grok16/data/g16-linker-doctrine.json",
+    "os_families": ["linux", "android", "darwin", "ios", "windows", "none"]
+  },
+  "rtx_gate": {
+    "script": "Grok16/forge/rtx_gate.py",
+    "doctrine": "Grok16/data/g16-rtx-gate.json",
+    "override_env": "G16_RTX_GATE_FORCE"
+  },
+  "plates": [
+    "hostess7-g16-panel.json",
+    "nexus-g16-stack-panel.json",
+    "plate-compiler-panel.json"
+  ],
+  "pass": ["probe_g16", "ironclad_witness", "field_sanity", "linker_targets", "rtx_gate", "plate_compile", "meld"]
+}

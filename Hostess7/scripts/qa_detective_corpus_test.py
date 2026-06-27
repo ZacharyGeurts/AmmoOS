@@ -14,6 +14,7 @@ from field_detective_corpus import (  # noqa: E402
     analyze_truth,
     corpus_stats,
     ensure_corpus,
+    ironclad_slice,
     search_detective,
     synthesize_detective_paragraphs,
 )
@@ -29,8 +30,8 @@ def main() -> int:
     ensure_brain_layout()
     stats = corpus_stats()
 
-    if stats["domains"] < 8:
-        return fail(f"expected 8+ detective domains, got {stats['domains']}")
+    if stats["domains"] < 9:
+        return fail(f"expected 9+ detective domains (incl. ironclad), got {stats['domains']}")
     if stats["version"] < DETECTIVE_CORPUS_VERSION:
         return fail("detective corpus version stale")
 
@@ -54,14 +55,27 @@ def main() -> int:
     if not analysis.get("inconsistency_flags"):
         return fail("expected inconsistency flags on absolute claim")
 
+    ic = ironclad_slice()
+    if "ironclad_sealed" not in ic:
+        return fail("ironclad_slice missing ironclad_sealed")
+    if "verdict" not in ic:
+        return fail("ironclad_slice missing verdict")
+
+    iron_hits = search_detective("ironclad sealed canonical witness", limit=2)
+    if not iron_hits or iron_hits[0].get("id") != "ironclad_truth":
+        return fail(f"ironclad search miss: {[r.get('id') for r in iron_hits]}")
+
     good = analyze_truth(
         "grep evidence in Pipeline.hpp FieldHostess7 tick documented in QA",
         local_evidence=3,
         qa_green=True,
         corroboration_channels=3,
+        ironclad=ic,
     )
     if float(good["truth_score"]) < 50:
         return fail(f"corroborated claim should score higher, got {good['truth_score']}")
+    if "ironclad" not in good:
+        return fail("analyze_truth missing ironclad block")
 
     paras = synthesize_detective_paragraphs("detective corroboration 94 percent noise")
     if len(paras) < 2:

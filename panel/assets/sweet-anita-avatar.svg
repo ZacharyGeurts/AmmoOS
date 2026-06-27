@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Sweet_Anita channel avatar">
+  <defs>
+    <linearGradient id="sa-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9146ff"/>
+      <stop offset="55%" stop-color="#c026d3"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+    <radialGradient id="sa-glow" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#fce7f3" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#f472b6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="48" cy="48" r="46" fill="url(#sa-bg)"/>
+  <circle cx="48" cy="48" r="46" fill="none" stroke="#f9a8d4" stroke-width="3" opacity="0.55"/>
+  <ellipse cx="48" cy="78" rx="28" ry="18" fill="#1a0a18" opacity="0.35"/>
+  <circle cx="48" cy="40" r="22" fill="url(#sa-glow)"/>
+  <ellipse cx="48" cy="42" rx="18" ry="20" fill="#2d0f28"/>
+  <path d="M28 52 Q48 68 68 52" fill="none" stroke="#f9a8d4" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="38" cy="38" r="4" fill="#fce7f3"/>
+  <circle cx="58" cy="38" r="4" fill="#fce7f3"/>
+  <circle cx="39" cy="37" r="1.5" fill="#581c87"/>
+  <circle cx="59" cy="37" r="1.5" fill="#581c87"/>
+  <path d="M34 30 Q48 18 62 30" fill="none" stroke="#fce7f3" stroke-width="4" stroke-linecap="round"/>
+</svg>

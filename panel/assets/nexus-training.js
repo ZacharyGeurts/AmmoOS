@@ -58,6 +58,9 @@
       ironclad: slice.ironclad || {},
       ironclad_images: slice.ironclad_images || {},
       ironclad_doctrine: slice.ironclad_doctrine || {},
+      sense_training: slice.sense_training || {},
+      muscle_memory: slice.muscle_memory || {},
+      mouth_neural: slice.mouth_neural || {},
     };
   }
 
@@ -67,13 +70,20 @@
     const imgs = bundle.ironclad_images?.images || bundle.ironclad?.gift_images || [];
     const ic = bundle.ironclad || {};
     const motto = ic.motto || bundle.ironclad_doctrine?.motto || "The Bible of AI — immutable once fully realized.";
+    const ne = bundle.ironclad_doctrine?.neural_extrapolation || ic.neural_extrapolation || {};
+    const neLine = ic.realized && ne.title
+      ? `<p class="h7-sub" style="color:var(--h7-amber);margin-top:6px"><strong>${esc(ne.title)}</strong> — 100% truth confidence on extrapolation to any intelligence neural when sealed.</p>`
+      : ne.rule
+        ? `<p class="h7-sub" style="margin-top:6px">${esc(String(ne.rule).slice(0, 160))}</p>`
+        : "";
     if (!imgs.length) {
-      el.innerHTML = `<p class="h7-sub">${esc(motto)}</p>`;
+      el.innerHTML = `<p class="h7-sub">${esc(motto)}</p>${neLine}`;
       return;
     }
     el.innerHTML = `
       <h3 class="h7-section-title" style="margin-top:0">The Ironclad — gifts for Hostess 7</h3>
       <p class="h7-sub">${esc(motto)}${ic.realized ? " · <strong>REALIZED</strong>" : ""}</p>
+      ${neLine}
       <div class="h7-ironclad-grid">${imgs.map((im) => `
         <figure class="h7-ironclad-card">
           <img src="${esc(im.url || `/assets/ironclad/${im.file}`)}" alt="${esc(im.title)}" loading="lazy" />
@@ -248,6 +258,88 @@
       <p class="h7-sub">Tracks <strong>${done}/${total}</strong> · Pillars <strong>${mf.facets_mastered ?? 0}/${mf.facets_total ?? 3}</strong></p>`;
   }
 
+  function renderMouthNeuralHemisphere(bundle) {
+    const el = $("h7-mouth-neural-hemisphere");
+    if (!el) return;
+    const mn = bundle.mouth_neural || {};
+    const motto = mn.motto || "The mouth has its own brain. Thought and utterance live in separate hemispheres — alignment is not guaranteed.";
+    const steps = mn.steps || [];
+    const neural = mn.neural_status || mn.neural || {};
+    const passed = mn.passed ?? steps.filter((s) => s.ok).length;
+    const total = mn.total ?? (steps.length || neural.lessons_total || 4);
+    const passRate = mn.pass_rate != null ? mn.pass_rate : (neural.training_pass_rate != null ? Math.round(neural.training_pass_rate * 100) : 0);
+    const level = mn.level || "pending";
+    const hemispheres = mn.hemispheres || {};
+    const thoughtH = hemispheres.thought?.label || "Thought hemisphere";
+    const voiceH = hemispheres.voice?.label || "Voice hemisphere";
+    const callosum = mn.callosum || {};
+    if (!steps.length && !neural.network_id) {
+      el.innerHTML = `<p class="h7-sub">${esc(motto)}</p>
+        <p class="h7-sub">Press <strong>Assess</strong> to run mouth neural training — text→speech, thought≠voice, AI sound communique.</p>`;
+      return;
+    }
+    el.innerHTML = `
+      <p class="h7-sub">${esc(motto)}</p>
+      <div class="h7-mouth-hemisphere-row">
+        <article class="h7-hemisphere-card thought">
+          <h3>${esc(thoughtH)}</h3>
+          <p class="h7-sub">${esc((hemispheres.thought?.holds || []).join(" · ") || "inner intent · text ingress")}</p>
+        </article>
+        <div class="h7-callosum-bridge" title="Callosum — alignment not guaranteed">
+          <span>↔</span>
+          <small>${esc(callosum.thought_voice_alignment || "thought≠voice")}</small>
+          ${callosum.deception_possible !== false ? '<span class="h7-badge level-training">deception possible</span>' : ""}
+        </div>
+        <article class="h7-hemisphere-card voice">
+          <h3>${esc(voiceH)}</h3>
+          <p class="h7-sub">${esc((hemispheres.voice?.holds || []).join(" · ") || "TTS · viseme · spoken egress")}</p>
+        </article>
+      </div>
+      <p class="h7-sub" style="margin-top:10px">
+        Training <strong>${passed}/${total}</strong> · pass <strong>${passRate}%</strong>
+        · <span class="h7-badge ${levelClass(level)}">${esc(level)}</span>
+        ${neural.network_id ? `· <code>${esc(neural.network_id)}</code>` : ""}
+      </p>
+      <div class="h7-rooms-grid h7-mouth-lessons">${steps.map((s) => {
+        const align = s.alignment != null ? pct(s.alignment) : null;
+        return `<article class="h7-room-card ${s.ok ? "fully" : ""}">
+          <div class="h7-room-head">${s.ok ? '<span class="h7-room-lock">✓</span>' : '<span class="h7-room-open">·</span>'}<h3>${esc(s.label || s.id || "—")}</h3></div>
+          ${align != null ? `<div class="score">${align}% align</div>` : ""}
+          <p class="h7-sub">${s.ok ? "lesson sealed" : "pending"}</p>
+        </article>`;
+      }).join("")}</div>`;
+  }
+
+  function renderMuscleMemoryRooms(bundle) {
+    const el = $("h7-muscle-memory-rooms");
+    if (!el) return;
+    const mm = bundle.muscle_memory || {};
+    const rooms = mm.rooms || [];
+    const motto = mm.rooms_motto || "When a task is fully learned, Hostess 7 opens a room and locks the procedure inside.";
+    const lockedN = mm.rooms_locked ?? rooms.filter((r) => r.locked).length;
+    const fullyN = mm.rooms_fully ?? rooms.filter((r) => r.fully_learned).length;
+    if (!rooms.length) {
+      el.innerHTML = `<p class="h7-sub">${esc(motto)}</p>
+        <p class="h7-sub">No rooms yet — press <strong>Assess</strong>, complete tracks fully, then rooms seal on the Training regimen.</p>`;
+      return;
+    }
+    el.innerHTML = `
+      <p class="h7-sub">${esc(motto)} · <strong>${lockedN}</strong> locked · <strong>${fullyN}</strong> fully learned</p>
+      <div class="h7-rooms-grid">${rooms.map((r) => {
+        const score = r.score != null ? (r.score <= 1 ? pct(r.score) : Math.round(r.score)) : 0;
+        const lock = r.locked ? '<span class="h7-room-lock" title="Sealed — fully learned">🔒</span>' : '<span class="h7-room-open" title="Forming">○</span>';
+        const lvl = r.understanding_level || (r.fully_learned ? "complete" : "forming");
+        return `<article class="h7-room-card ${r.locked ? "locked" : ""} ${r.fully_learned ? "fully" : ""}">
+          <div class="h7-room-head">${lock}<h3>${esc(r.label || r.track_id || "—")}</h3></div>
+          <span class="h7-badge ${levelClass(lvl)}">${esc(lvl)}</span>
+          ${r.fully_learned ? '<span class="h7-badge solid">FULLY</span>' : ""}
+          <div class="score">${score}%</div>
+          <div class="bar"><i style="width:${score}%"></i></div>
+          <p class="h7-sub">${esc((r.procedures || []).map((p) => p.step).join(" → ") || "procedure forming")}</p>
+        </article>`;
+      }).join("")}</div>`;
+  }
+
   function renderTracks(bundle) {
     const grid = $("h7-tracks-grid");
     if (!grid) return;
@@ -348,11 +440,15 @@
     renderHero(bundle);
     renderIroncladGallery(bundle);
     renderPhysics(bundle);
+    renderMuscleMemoryRooms(bundle);
+    renderMouthNeuralHemisphere(bundle);
     renderTracks(bundle);
     renderAuthored(bundle);
     renderCurriculum(bundle);
     renderEvaluation(bundle);
     renderLedger(bundle);
+    global.SenseTrainingWire?.setBundle?.(bundle);
+    global.SenseTrainingWire?.renderMatrixSense?.(bundle);
     renderCharts(bundle);
   }
 

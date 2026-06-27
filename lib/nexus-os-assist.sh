@@ -11,10 +11,14 @@ nexus_os_assist_export_paths() {
   local root="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
   local state="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 
-  if [[ -d "${root}/Queen" ]]; then
+  if [[ -f "${root}/lib/sg-paths.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${root}/lib/sg-paths.sh"
+    export QUEEN_ROOT="${QUEEN_ROOT:-$(sg_paths_queen_root)}"
+  elif [[ -d "${root}/Queen" ]]; then
     export QUEEN_ROOT="${QUEEN_ROOT:-${root}/Queen}"
   elif [[ -z "${QUEEN_ROOT:-}" ]]; then
-    for q in "${SG_ROOT:-}/NewLatest/Queen" "${HOME}/Desktop/SG/NewLatest/Queen"; do
+    for q in "${SG_ROOT:-}/Queen" "${SG_ROOT:-}/NewLatest/Queen" "${HOME}/Desktop/SG/Queen" "${HOME}/Desktop/SG/NewLatest/Queen"; do
       [[ -d "$q" ]] && export QUEEN_ROOT="$(cd "$q" && pwd)" && break
     done
   fi

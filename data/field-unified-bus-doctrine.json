@@ -16,6 +16,7 @@
     "rf": {"slots": [32, 33, 34, 35], "role": "WiFi APs hostile pollution signal"},
     "dns": {"slots": [36, 37, 38, 39], "role": "Truth DNS sovereign services"},
     "sovereign": {"slots": [40, 41, 42, 43], "role": "Cycle pulse fabric seal"},
+    "io_packet": {"slots": [44, 45, 46, 47], "role": "Truth-gated I/O — sovereign in, conversation stream out"},
     "thermal": {"slots": [48, 49, 50, 51], "role": "Hwmon thermo quota entropy fold"},
     "firmware": {"slots": [56, 57, 58, 59], "role": "BIOS/firmware threat scan removal verdict"},
     "copilot": {"slots": [52, 53, 54, 55], "role": "Per-lane bench checksums"}

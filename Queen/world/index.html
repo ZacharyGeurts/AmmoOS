@@ -3,26 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Queen Browser · Sovereign OS</title>
+  <title>Queen Sovereign OS</title>
+  <script>
+    (function () {
+      if (!/[?&]os=1(?:&|$)/.test(location.search)) location.replace("/world/browser.html");
+    })();
+  </script>
   <style>
-    html,body{margin:0;background:#050810;color:#e8f0ff;font:14px system-ui,sans-serif}
-    .qm-boot{position:fixed;inset:0;display:grid;place-items:center;background:#050810;z-index:2000}
+    html,body{margin:0;background:#020403;color:#e8f2ea;font:14px system-ui,sans-serif}
   </style>
-  <link rel="stylesheet" href="queen-modern.css" />
   <link rel="stylesheet" href="queen-world.css" />
   <link rel="stylesheet" href="queen-gnu-terminal.css" />
   <link rel="stylesheet" href="queen-browser-shell.css" />
+  <link rel="icon" href="assets/branding/amouranth-gentle.png" type="image/png" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:*; frame-src 'self' http://127.0.0.1:* https:; object-src 'none'; base-uri 'self'; form-action 'self'" />
 </head>
-<body class="qw qw-os qw-browser-shell">
-  <div id="qm-boot" class="qm-boot" aria-hidden="true">
-    <div class="qm-boot-inner"><strong>Queen</strong><span>Field browser · gates held</span><div class="qm-progress"><i></i></div></div>
-  </div>
+<body class="qw qw-os qw-browser-shell" data-queen-surface="os">
   <div id="qm-threat-bar" class="qm-threat-bar" role="toolbar" aria-label="Root threats"></div>
-  <header class="qb-chrome" aria-label="Queen browser">
+
+  <main class="qb-viewport">
+    <iframe class="qb-frame" id="qb-frame" title="Queen web surface" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads allow-presentation allow-popups-to-escape-sandbox"></iframe>
+  </main>
+
+  <header class="qb-chrome" id="qb-chrome" aria-label="Queen browser">
     <div class="qb-row qb-row--tabs">
       <div class="qb-tabs" id="qb-tabs" role="tablist"></div>
       <button type="button" class="qb-icon-btn" id="qb-new-tab" title="New tab (Ctrl+T)">+</button>
+      <button type="button" class="qb-icon-btn qb-chrome-min-btn" id="qb-chrome-min" title="Minimize browser bar (_)" aria-label="Minimize browser bar" aria-pressed="false">_</button>
     </div>
     <div class="qb-row qb-row--nav">
       <button type="button" class="qb-icon-btn" id="qb-back" title="Back">←</button>
@@ -39,6 +46,10 @@
     </div>
     <div class="qb-row qb-row--bookmarks">
       <nav class="qb-bookmarks" id="qb-bookmarks" aria-label="Bookmarks"></nav>
+      <span class="qb-brand-strip" title="Gentle Amouranth touch · Queen emerald rose">
+        <img class="qb-brand-avatar" src="assets/branding/amouranth-gentle.png" alt="" width="28" height="28" />
+        <span>Queen · emerald rose</span>
+      </span>
       <span class="qb-security-strip" id="qb-security-strip" title="AMOURANTHRTX zero-cost 4-slot · Queen jail">4-slot · 0% tax</span>
       <div class="qb-gate-strip" id="qb-gate-strip"></div>
     </div>
@@ -50,9 +61,11 @@
     <div id="qb-gate-drawer-body"></div>
   </aside>
 
-  <main class="qb-viewport">
-    <iframe class="qb-frame" id="qb-frame" title="Queen web surface" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads allow-presentation allow-popups-to-escape-sandbox"></iframe>
-  </main>
+  <button type="button" class="qb-chrome-restore" id="qb-chrome-restore" hidden
+    title="Restore Queen browser bar — hover to peek · click to expand"
+    aria-label="Restore browser bar">
+    <img src="assets/branding/queen-chrome-restore.svg" width="16" height="16" alt="" />
+  </button>
 
   <nav class="qw-dock" aria-label="Queen OS">
     <button type="button" class="qw-dock-btn active" data-tab="browser" title="Web browser">Web</button>
@@ -367,7 +380,10 @@
   </section>
 
   <script src="queen-root-threats.js" defer></script>
-  <script src="queen-fast-boot.js" defer></script>
+  <script src="queen-branding.js" defer></script>
+  <script src="queen-browser-shell.js" defer></script>
+  <script src="queen-chrome-dock.js" defer></script>
+  <script src="queen-os.js" defer></script>
   <script defer>
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("qw-arm-dishes-2")?.addEventListener("click", () =>

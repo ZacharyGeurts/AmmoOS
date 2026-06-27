@@ -7,7 +7,7 @@ INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}"
 AUDIT_LOG="${STATE_DIR}/pkexec-audit.jsonl"
 
-_VERBS=(run-install run-update run-harden run-service run-underlay)
+_VERBS=(run-install run-update run-harden run-service run-underlay run-znetwork run-freeze)
 
 nexus_pkexec_audit() {
   local event="$1" detail="${2:-}"
@@ -143,6 +143,51 @@ nexus_pkexec_run_service() {
   exec systemctl "$cmd" nexus-genius.service
 }
 
+nexus_pkexec_run_znetwork() {
+  local marker="${1:-}"
+  [[ -n "$marker" && -f "$marker" ]] || {
+    nexus_pkexec_audit "deny_znetwork_marker" "$marker"
+    exit 2
+  }
+  local real_state
+  real_state="$(readlink -f "$STATE_DIR" 2>/dev/null || true)"
+  [[ -n "$real_state" && "$marker" == "$real_state/"* ]] || {
+    nexus_pkexec_audit "deny_znetwork_marker_path" "$marker"
+    exit 2
+  }
+  export NEXUS_ELEVATED_ROOT=1
+  nexus_pkexec_audit "allow" "znetwork:elevation_sealed"
+  touch "$marker"
+  exit 0
+}
+
+nexus_pkexec_run_freeze() {
+  local cmd="${1:-}"
+  shift || true
+  case "$cmd" in
+    prepare|freeze|thaw|close|resume-witness|json) ;;
+    *)
+      nexus_pkexec_audit "deny_freeze_cmd" "$cmd"
+      echo "nexus-pkexec-bridge: freeze verb not whitelisted." >&2
+      exit 2
+      ;;
+  esac
+  local py="${INSTALL_ROOT}/lib/field-host-freeze.py"
+  [[ -f "$py" ]] || py="${_BRIDGE}/field-host-freeze.py"
+  [[ -f "$py" ]] || {
+    nexus_pkexec_audit "deny_freeze_missing" "$py"
+    exit 2
+  }
+  export NEXUS_ELEVATED_ROOT=1
+  nexus_pkexec_audit "allow" "freeze:$cmd"
+  local -a args=(python3 "$py" "$cmd" --elevated)
+  local arg
+  for arg in "$@"; do
+    args+=("$arg")
+  done
+  exec "${args[@]}"
+}
+
 nexus_pkexec_run_underlay() {
   local cmd="${1:-}"
   shift || true
@@ -180,6 +225,8 @@ case "$VERB" in
   run-harden)  nexus_pkexec_run_harden "$@" ;;
   run-service) nexus_pkexec_run_service "$@" ;;
   run-underlay) nexus_pkexec_run_underlay "$@" ;;
+  run-freeze)   nexus_pkexec_run_freeze "$@" ;;
+  run-znetwork) nexus_pkexec_run_znetwork "$@" ;;
   *)
     nexus_pkexec_audit "deny_verb" "$VERB"
     echo "nexus-pkexec-bridge: unknown verb '${VERB}'." >&2

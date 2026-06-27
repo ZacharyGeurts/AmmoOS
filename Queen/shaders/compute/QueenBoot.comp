@@ -1,5 +1,5 @@
 #version 460 core
-// Queen Browser 2026 — boot compshader (NEXUS RTX FieldSocket layout)
+// Queen Browser — void fill only (no boot splash rings)
 #extension GL_EXT_scalar_block_layout : enable
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D resultImage;
@@ -16,63 +16,11 @@ layout(push_constant) uniform FieldSocket {
     float viewport_h;
 } field;
 
-float hash21(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-
-float ring(vec2 uv, vec2 c, float r, float w) {
-    float d = abs(length(uv - c) - r);
-    return smoothstep(w, 0.0, d);
-}
-
-vec3 queenPalette(float t) {
-    vec3 aqua = vec3(0.18, 0.72, 0.88);
-    vec3 rose = vec3(0.92, 0.28, 0.55);
-    vec3 void_ = vec3(0.02, 0.025, 0.04);
-    return mix(mix(void_, aqua, 0.55), rose, 0.35 + 0.25 * sin(t * 1.7));
-}
-
 void main() {
     ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
     ivec2 size = imageSize(resultImage);
     if (coord.x >= size.x || coord.y >= size.y) return;
 
-    vec2 res = vec2(size);
-    vec2 uv = (vec2(coord) + 0.5) / res;
-    vec2 p = uv * 2.0 - 1.0;
-    p.x *= res.x / max(res.y, 1.0);
-
-    float t = field.sealed_time;
-    float load = clamp(field.data_bus[0] / 255.0, 0.0, 1.0);
-    float pulse = 0.5 + 0.5 * sin(t * 3.14159 * 2.0);
-
-    vec3 bg = queenPalette(t);
-    float vig = 1.0 - 0.35 * dot(p, p);
-    bg *= vig;
-
-    float grid = abs(sin(p.x * 24.0 + t)) * abs(sin(p.y * 18.0 - t * 0.7));
-    bg += vec3(0.02, 0.04, 0.06) * grid * 0.15;
-
-    vec2 crown = vec2(0.0, -0.12);
-    float r1 = ring(p, crown, 0.42 + pulse * 0.04, 0.018);
-    float r2 = ring(p, crown, 0.28 + load * 0.12, 0.022);
-    float r3 = ring(p, crown, 0.14, 0.028);
-    vec3 accent = vec3(0.35, 0.85, 1.0);
-    bg = mix(bg, accent, r1 * 0.55);
-    bg = mix(bg, vec3(0.95, 0.35, 0.65), r2 * 0.45);
-    bg = mix(bg, vec3(1.0), r3 * 0.25);
-
-    float barW = 0.5;
-    float barH = 0.018;
-    vec2 barC = vec2(0.0, 0.55);
-    vec2 d = abs(p - barC) - vec2(barW * 0.5, barH);
-    float bar = smoothstep(0.01, 0.0, length(max(d, 0.0)) + min(max(d.x, d.y), 0.0));
-    vec3 fill = mix(vec3(0.08), accent, load);
-    bg = mix(bg, fill, bar * 0.9);
-
-    float grain = hash21(uv + t) * 0.03;
-    bg += grain;
-
-    bg = clamp(bg, 0.0, 1.0);
-    imageStore(resultImage, coord, vec4(bg / (bg + vec3(1.0)), 1.0));
+    vec3 void_ = vec3(0.008, 0.016, 0.012);
+    imageStore(resultImage, coord, vec4(void_, 1.0));
 }

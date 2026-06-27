@@ -1,10 +1,36 @@
 #!/bin/bash
 # NEXUS panel system tray — taskbar icon; click opens fast-track tab picker.
 
+nexus_panel_tray_mode() {
+  if [[ "${NEXUS_TRAY_MODE:-}" == "znetwork" ]]; then
+    printf 'znetwork'
+    return 0
+  fi
+  if [[ -f "${NEXUS_STATE_DIR}/znetwork-tray-mode.json" ]] \
+    && grep -q '"mode"[[:space:]]*:[[:space:]]*"znetwork"' "${NEXUS_STATE_DIR}/znetwork-tray-mode.json" 2>/dev/null \
+    && grep -q '"active"[[:space:]]*:[[:space:]]*true' "${NEXUS_STATE_DIR}/znetwork-tray-mode.json" 2>/dev/null; then
+    printf 'znetwork'
+    return 0
+  fi
+  if [[ -f "${NEXUS_STATE_DIR}/znetwork-operator.json" ]]; then
+    grep -q '"choice"[[:space:]]*:[[:space:]]*"yes"' "${NEXUS_STATE_DIR}/znetwork-operator.json" 2>/dev/null \
+      && grep -q '"running"[[:space:]]*:[[:space:]]*true' "${NEXUS_STATE_DIR}/znetwork-operator.json" 2>/dev/null \
+      && { printf 'znetwork'; return 0; }
+  fi
+  printf 'nexus'
+}
+
 nexus_panel_tray_icon_path() {
-  local state_icon="${NEXUS_STATE_DIR}/nexus-tray.png"
+  local mode state_icon
+  mode="$(nexus_panel_tray_mode)"
+  if [[ "$mode" == "znetwork" ]]; then
+    state_icon="${NEXUS_STATE_DIR}/znetwork-tray.png"
+  else
+    state_icon="${NEXUS_STATE_DIR}/nexus-tray.png"
+  fi
   local src=""
   for candidate in \
+    "${NEXUS_INSTALL_ROOT}/panel/assets/queen-tray-24.png" \
     "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-field-24.png" \
     "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-tray-us-24.png" \
     "${NEXUS_INSTALL_ROOT}/panel/assets/nexus-field.png" \
@@ -19,6 +45,7 @@ nexus_panel_tray_icon_path() {
   done
   if command -v pythong >/dev/null 2>&1 && [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-tray-icon.py" ]]; then
     NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      NEXUS_TRAY_MODE="${mode}" NEXUS_TRAY_ICON_REFRESH="${NEXUS_TRAY_ICON_REFRESH:-0}" \
       pythong "${NEXUS_INSTALL_ROOT}/lib/panel-tray-icon.py" >/dev/null 2>&1 || true
   fi
   if [[ -s "$state_icon" ]]; then
@@ -28,8 +55,36 @@ nexus_panel_tray_icon_path() {
 }
 
 nexus_panel_tray_icon_refresh() {
-  rm -f "${NEXUS_STATE_DIR}/nexus-tray.png" "${NEXUS_STATE_DIR}/nexus-tray-icon.stamp" 2>/dev/null || true
+  rm -f \
+    "${NEXUS_STATE_DIR}/nexus-tray.png" \
+    "${NEXUS_STATE_DIR}/nexus-tray-icon.stamp" \
+    "${NEXUS_STATE_DIR}/znetwork-tray.png" \
+    "${NEXUS_STATE_DIR}/znetwork-tray-icon.stamp" \
+    2>/dev/null || true
   nexus_panel_tray_icon_path >/dev/null 2>&1 || true
+}
+
+# After ZNetwork password/activate — swap taskbar icon + restart tray in znetwork mode.
+nexus_panel_tray_znetwork_swap() {
+  [[ "${NEXUS_PANEL_TRAY:-1}" == "1" ]] || return 0
+  local mode="${NEXUS_TRAY_MODE:-znetwork}"
+  local mode_file="${NEXUS_STATE_DIR}/znetwork-tray-mode.json"
+  export NEXUS_TRAY_MODE="$mode"
+  export NEXUS_TRAY_ICON_REFRESH=1
+  mkdir -p "${NEXUS_STATE_DIR}" 2>/dev/null || true
+  if [[ "$mode" == "znetwork" ]]; then
+    printf '{"schema":"znetwork-tray-mode/v2","mode":"znetwork","app_id":"znetwork-field-panel","icon":"znetwork-tray","active":true,"title":"ZNetwork — field secure network","swapped_at":"%s"}\n' \
+      "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" >"$mode_file" 2>/dev/null || true
+  else
+    printf '{"schema":"znetwork-tray-mode/v2","mode":"nexus","active":false,"reverted_at":"%s"}\n' \
+      "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" >"$mode_file" 2>/dev/null || true
+  fi
+  nexus_panel_tray_icon_refresh
+  nexus_panel_tray_stop 2>/dev/null || true
+  sleep 0.3
+  nexus_panel_tray_start 2>/dev/null || true
+  nexus_panel_tray_watchdog_start 2>/dev/null || true
+  nexus_log "INFO" "panel-tray" "ZNETWORK_TRAY_SWAP mode=${mode}"
 }
 
 # PIDs of long-running tray daemons (exclude short-lived `open` helper).
@@ -147,7 +202,7 @@ nexus_panel_tray_start() {
       NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
       NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
       NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}" \
-
+      NEXUS_TRAY_MODE="$(nexus_panel_tray_mode)" \
       NEXUS_TRAY_ICON_REFRESH=1 \
       DISPLAY="${DISPLAY:-:0}" \
       XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-}" \
@@ -252,7 +307,7 @@ nexus_panel_tray_install_autostart() {
 Type=Application
 Name=NEXUS Field Tray
 Comment=NEXUS Field taskbar icon — fast tab picker
-Icon=nexus-field
+Icon=queen-browser
 Exec=env NEXUS_INSTALL_ROOT=${root} NEXUS_STATE_DIR=${NEXUS_STATE_DIR:-/var/lib/nexus-shield} DISPLAY=:0 bash -c 'source ${root}/lib/nexus-common.sh; source ${root}/lib/panel-tray.sh; nexus_panel_tray_icon_refresh; nexus_panel_tray_ensure_once'
 Hidden=false
 NoDisplay=true
@@ -275,7 +330,10 @@ nexus_panel_open_tab() {
     DISPLAY="${DISPLAY:-:0}" \
       pythong "$script" open "$route" 2>/dev/null && return 0
   fi
-  local url
-  url="$(nexus_panel_url)#${route}"
-  DISPLAY="${DISPLAY:-:0}" xdg-open "$url" >/dev/null 2>&1 &
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+  NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+  QUEEN_ROOT="${QUEEN_ROOT:-${NEXUS_INSTALL_ROOT}/Queen}" \
+  NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}" \
+  QUEEN_WORLD_PORT="${QUEEN_WORLD_PORT:-9481}" \
+    pythong "${NEXUS_INSTALL_ROOT}/lib/queen-panel-open.py" nexus "$route" >/dev/null 2>&1 &
 }

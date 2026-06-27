@@ -284,6 +284,60 @@ def _spatial_existence_slice() -> dict[str, Any]:
     return {"id": "spatial_existence", "absorbed": False, "detail": "slice_unavailable"}
 
 
+def _g1id_slice() -> dict[str, Any]:
+    py = INSTALL / "lib" / "g1id-format.py"
+    if not py.is_file():
+        return {"id": "g1id", "absorbed": False, "missing": True}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("g1id_format_plate", py)
+        if not spec or not spec.loader:
+            return {"id": "g1id", "absorbed": False, "missing": True}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "melded_extension_slice"):
+            return mod.melded_extension_slice()
+    except Exception:
+        pass
+    return {"id": "g1id", "absorbed": False, "detail": "slice_unavailable"}
+
+
+def _g1id_baseline_slice() -> dict[str, Any]:
+    py = INSTALL / "lib" / "g1id-baseline.py"
+    if not py.is_file():
+        return {"id": "g1id_baselines", "absorbed": False, "missing": True}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("g1id_baseline_plate", py)
+        if not spec or not spec.loader:
+            return {"id": "g1id_baselines", "absorbed": False, "missing": True}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "melded_extension_slice"):
+            return mod.melded_extension_slice()
+    except Exception:
+        pass
+    return {"id": "g1id_baselines", "absorbed": False, "detail": "slice_unavailable"}
+
+
+def _field_io_packet_slice() -> dict[str, Any]:
+    py = INSTALL / "lib" / "field-io-packet.py"
+    if not py.is_file():
+        return {"id": "field_io_packet", "absorbed": False, "missing": True}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("field_io_packet_plate", py)
+        if not spec or not spec.loader:
+            return {"id": "field_io_packet", "absorbed": False, "missing": True}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "melded_extension_slice"):
+            return mod.melded_extension_slice()
+    except Exception:
+        pass
+    return {"id": "field_io_packet", "absorbed": False, "detail": "slice_unavailable"}
+
+
 def cite(book: str, verse: int = 1) -> str | None:
     doctrine = _load(DOCTRINE, {})
     for b in doctrine.get("books") or []:
@@ -343,6 +397,9 @@ def knowledge_grounding() -> dict[str, Any]:
             "extensions_ref": str(MELD_EXTENSIONS.relative_to(INSTALL)) if MELD_EXTENSIONS.is_file() else None,
             "field_sanity": _field_sanity_slice(),
             "spatial_existence": _spatial_existence_slice(),
+            "g1id": _g1id_slice(),
+            "g1id_baselines": _g1id_baseline_slice(),
+            "field_io_packet": _field_io_packet_slice(),
         },
     }
 
@@ -365,6 +422,9 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "melded_extensions": grounding.get("melded_extensions"),
         "field_sanity": (grounding.get("melded_extensions") or {}).get("field_sanity"),
         "spatial_existence": (grounding.get("melded_extensions") or {}).get("spatial_existence"),
+        "g1id": (grounding.get("melded_extensions") or {}).get("g1id"),
+        "g1id_baselines": (grounding.get("melded_extensions") or {}).get("g1id_baselines"),
+        "field_io_packet": (grounding.get("melded_extensions") or {}).get("field_io_packet"),
         "grounding": grounding,
     }
     if write:

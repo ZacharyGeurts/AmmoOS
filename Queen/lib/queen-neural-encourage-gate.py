@@ -99,10 +99,43 @@ def hostess_authority_ok() -> bool:
     return supreme.get("id") == "hostess7"
 
 
+def _ironclad_goldmine() -> dict[str, Any]:
+    state = Path(os.environ.get("NEXUS_STATE_DIR", QUEEN / ".nexus-state"))
+    cached = _read(state / "ironclad-immediate.json", {})
+    if cached.get("plate_to_sense"):
+        return cached["plate_to_sense"]
+    install = Path(os.environ.get("NEXUS_INSTALL_ROOT", SG / "NewLatest"))
+    ic_py = install / "lib" / "ironclad-immediate.py"
+    if not ic_py.is_file():
+        ic_py = SG / "NewLatest" / "lib" / "ironclad-immediate.py"
+    if ic_py.is_file():
+        try:
+            import importlib.util
+            import sys
+            spec = importlib.util.spec_from_file_location("ironclad_immediate", ic_py)
+            mod = importlib.util.module_from_spec(spec)
+            assert spec and spec.loader
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "plate_to_sense_goldmine"):
+                base = cached if cached.get("schema") == "ironclad-immediate/v1" else {}
+                if not base and hasattr(mod, "immediate_slice"):
+                    base = mod.immediate_slice()
+                return mod.plate_to_sense_goldmine(base=base)
+        except Exception:
+            pass
+    return {}
+
+
 def truth_floor() -> int:
     stack = _read(NEURAL_STACK, {})
     doc = load_doctrine()
-    return int(stack.get("truth_adapt_floor") or doc.get("truth_adapt_floor") or 58)
+    base = int(stack.get("truth_adapt_floor") or doc.get("truth_adapt_floor") or 58)
+    gm = _ironclad_goldmine()
+    if gm.get("ironclad_grounded"):
+        return max(base, 100)
+    if gm.get("plate_sealed"):
+        return max(base, int(float(gm.get("truth_percent") or 100)))
+    return base
 
 
 def _weapon_signals(wire_ctx: dict[str, Any]) -> list[str]:
@@ -144,6 +177,9 @@ def _weapon_signals(wire_ctx: dict[str, Any]) -> list[str]:
 def _truth_score(wire_ctx: dict[str, Any], source: str) -> float:
     if wire_ctx.get("truth_score") is not None:
         return float(wire_ctx["truth_score"])
+    gm = _ironclad_goldmine()
+    if wire_ctx.get("ironclad_grounded") or gm.get("ironclad_grounded"):
+        return max(100.0, float(gm.get("truth_percent") or 100.0))
     score = 72.0
     weapons = _weapon_signals(wire_ctx)
     if weapons:
@@ -180,14 +216,19 @@ def verify_base_seal(*, sense: str, net: dict[str, Any], seal_path: Path | None 
         except Exception as exc:
             return {"ok": False, "reason": "eye_seal_check_failed", "error": str(exc), "payload_sha256": payload_hash}
 
-    seal_path = seal_path or Path(os.environ.get("FINAL_EAR_ROOT", SG / "Final_Ear")) / "data" / "ear-neural-seal.json"
+    if sense == "mouth":
+        seal_path = seal_path or Path(os.environ.get("FINAL_MOUTH_ROOT", SG / "Final_Mouth")) / "data" / "mouth-neural-seal.json"
+        reason_ok, reason_bad, bootstrap_reason = "mouth_seal_ok", "mouth_seal_mismatch", "mouth_seal_bootstrap"
+    else:
+        seal_path = seal_path or Path(os.environ.get("FINAL_EAR_ROOT", SG / "Final_Ear")) / "data" / "ear-neural-seal.json"
+        reason_ok, reason_bad, bootstrap_reason = "ear_seal_ok", "ear_seal_mismatch", "ear_seal_bootstrap"
     seal = _read(seal_path, {})
     if not seal.get("sha256"):
-        return {"ok": True, "reason": "ear_seal_bootstrap", "payload_sha256": payload_hash, "bootstrap": True}
+        return {"ok": True, "reason": bootstrap_reason, "payload_sha256": payload_hash, "bootstrap": True}
     ok = seal.get("sha256") == payload_hash
     return {
         "ok": ok,
-        "reason": "ear_seal_ok" if ok else "ear_seal_mismatch",
+        "reason": reason_ok if ok else reason_bad,
         "payload_sha256": payload_hash,
         "seal_sha256": seal.get("sha256"),
         "network_id": seal.get("network_id") or net.get("network_id"),
@@ -206,9 +247,14 @@ def bootstrap_seal(*, sense: str, net: dict[str, Any]) -> dict[str, Any]:
         sys.path.insert(0, str(fe))
         spec.loader.exec_module(mod)
         return mod.seal_network()
-    seal_path = Path(os.environ.get("FINAL_EAR_ROOT", SG / "Final_Ear")) / "data" / "ear-neural-seal.json"
+    if sense == "mouth":
+        seal_path = Path(os.environ.get("FINAL_MOUTH_ROOT", SG / "Final_Mouth")) / "data" / "mouth-neural-seal.json"
+        schema = "zocr-mouth-neural-seal/v1"
+    else:
+        seal_path = Path(os.environ.get("FINAL_EAR_ROOT", SG / "Final_Ear")) / "data" / "ear-neural-seal.json"
+        schema = "zocr-ear-neural-seal/v1"
     doc = {
-        "schema": "zocr-ear-neural-seal/v1",
+        "schema": schema,
         "ts": _ts(),
         "sha256": payload_hash,
         "network_id": net.get("network_id"),
@@ -454,9 +500,14 @@ def gate_status() -> dict[str, Any]:
                     prev = row.get("hash") or _row_hash(row)
         except OSError:
             pass
+    gm = _ironclad_goldmine()
     return {
         "incorruptible": True,
         "truth_floor": truth_floor(),
+        "ironclad_goldmine": gm,
+        "ironclad_grounded": bool(gm.get("ironclad_grounded")),
+        "plate_to_sense": bool(gm.get("goldmine")),
+        "citation": gm.get("citation") or "ironclad:neural:2",
         "quarantine_count": quarantine_count,
         "encourage_ledger_count": encourage_count,
         "hash_chain_ok": chain_ok,

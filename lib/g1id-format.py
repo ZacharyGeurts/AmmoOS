@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import math
 import os
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -22,10 +22,80 @@ EXTENT_MAX = 1000.0
 PROP_MIN = 0.001
 PROP_MAX = 1000.0
 AXES = ("x", "y", "z")
+MELD_CITATION = "ironclad:meld:2"
+
+_SOVEREIGN_CLOCK_MOD = None
+
+
+def _sovereign_clock() -> Any | None:
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is not None:
+        return _SOVEREIGN_CLOCK_MOD
+    py = Path(__file__).resolve().parent / "sovereign-clock.py"
+    if not py.is_file():
+        py = INSTALL / "lib" / "sovereign-clock.py"
+    if not py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("sovereign_clock_g1id", py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _SOVEREIGN_CLOCK_MOD = mod
+    return mod
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    clk = _sovereign_clock()
+    if clk and hasattr(clk, "utc_z"):
+        return clk.utc_z("g1id")
+    return ""
+
+
+def sovereign_time_meld_input() -> dict[str, Any]:
+    """Cold sovereign-time snapshot — sole meld input for G1ID seal."""
+    clk = _sovereign_clock()
+    if not clk:
+        return {"ok": False, "error": "sovereign_clock_missing"}
+    try:
+        know = clk.know() if hasattr(clk, "know") else {}
+        desync = know.get("desync") if isinstance(know.get("desync"), dict) else {}
+        linear = (know.get("status") or {}) if isinstance(know.get("status"), dict) else {}
+        linear_ns = int(know.get("linear_ns") or know.get("derived_ns") or 0)
+        if linear_ns <= 0 and hasattr(clk, "ns_linear"):
+            linear_ns = int(clk.ns_linear())
+        derived_utc = str(know.get("utc") or (clk.utc_z("g1id") if hasattr(clk, "utc_z") else ""))
+        return {
+            "ok": True,
+            "source": "lib/sovereign-time.py",
+            "clock": "lib/sovereign-clock.py",
+            "schema": "sovereign-time-meld-input/v1",
+            "linear_ns": linear_ns,
+            "derived_utc": derived_utc,
+            "sealed": bool(linear.get("sealed", True)),
+            "synced": bool(desync.get("synced", know.get("synced", True))),
+            "never_desync": bool(know.get("never_desync", True)),
+            "immutable_linear": bool(know.get("immutable_linear", True)),
+            "witness_only": True,
+            "not_geometry_t": True,
+            "citation": "ironclad:g1id:2",
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def meld_inputs_snapshot() -> dict[str, Any]:
+    """Assemble meld inputs — sovereign time only."""
+    st = sovereign_time_meld_input()
+    if not st.get("ok"):
+        return {"ok": False, "error": st.get("error") or "sovereign_time_unavailable", "sovereign_time": st}
+    payload = {k: v for k, v in st.items() if k != "ok"}
+    return {
+        "ok": True,
+        "citation": MELD_CITATION,
+        "policy": "sovereign_time_only",
+        "sovereign_time": payload,
+    }
 
 
 def _load(path: Path, default: Any = None) -> Any:
@@ -111,15 +181,19 @@ def build_geometry(
 
 
 def _payload_for_hash(doc: dict[str, Any]) -> dict[str, Any]:
-    return {
+    out: dict[str, Any] = {
         "schema": doc.get("schema"),
         "format": doc.get("format"),
         "kind": doc.get("kind"),
         "thermal": doc.get("thermal"),
         "plate": doc.get("plate"),
         "hardening": doc.get("hardening"),
+        "meld_inputs": doc.get("meld_inputs"),
         "self": doc.get("self"),
     }
+    if doc.get("baseline"):
+        out["baseline"] = doc.get("baseline")
+    return out
 
 
 def payload_hash(doc: dict[str, Any]) -> str:
@@ -135,14 +209,20 @@ def build_document(
     centroid: dict[str, float] | None = None,
     units: str = "m",
     plate: dict[str, Any] | None = None,
+    baseline: bool = False,
 ) -> dict[str, Any]:
     """Assemble a hardened G1ID document (this_one only)."""
     plate = plate or plate_snapshot()
+    meld = meld_inputs_snapshot()
+    if not meld.get("ok"):
+        raise ValueError(meld.get("error") or "meld_inputs_failed")
+    st = meld.get("sovereign_time") or {}
+    sealed_at = str(st.get("derived_utc") or _now())
     doc: dict[str, Any] = {
         "schema": SCHEMA,
         "format": FORMAT,
         "kind": KIND,
-        "updated": _now(),
+        "updated": sealed_at,
         "thermal": {
             "policy": "cold_only",
             "hot_forbidden": True,
@@ -156,6 +236,11 @@ def build_document(
             "t_forbidden": True,
             "citation": "ironclad:spatial_existence:1",
         },
+        "meld_inputs": {
+            "citation": meld.get("citation") or MELD_CITATION,
+            "policy": meld.get("policy") or "sovereign_time_only",
+            "sovereign_time": st,
+        },
         "self": {
             "id": str(self_id).strip()[:128],
             "label": str(label).strip()[:256],
@@ -163,6 +248,15 @@ def build_document(
             "geometry": build_geometry(centroid=centroid, extents=extents, units=units),
         },
     }
+    if baseline:
+        doc["baseline"] = {
+            "immoveable": True,
+            "role": "secure_anchor",
+            "amendment_forbidden": True,
+            "rewrite_forbidden": True,
+            "mode_bits": "0444",
+            "citation": "ironclad:g1id:2",
+        }
     doc["integrity"] = {
         "payload_hash": payload_hash(doc),
         "sealed_at": doc["updated"],
@@ -233,6 +327,27 @@ def validate(
     thermal = doc.get("thermal") or {}
     if thermal.get("hot_forbidden") is not True:
         errors.append("hot_not_forbidden")
+    meld = doc.get("meld_inputs") or {}
+    if not meld:
+        errors.append("meld_inputs_missing")
+    st = meld.get("sovereign_time") or {}
+    if not st:
+        errors.append("sovereign_time_meld_missing")
+    else:
+        if not st.get("linear_ns"):
+            errors.append("sovereign_time_linear_ns_missing")
+        if not st.get("derived_utc"):
+            errors.append("sovereign_time_derived_utc_missing")
+        if st.get("not_geometry_t") is not True:
+            errors.append("sovereign_time_not_geometry_t")
+        if st.get("witness_only") is not True:
+            errors.append("sovereign_time_witness_only_required")
+    bl = doc.get("baseline") or {}
+    if bl:
+        if bl.get("immoveable") is not True:
+            errors.append("baseline_not_immoveable")
+        if bl.get("rewrite_forbidden") is not True:
+            errors.append("baseline_rewrite_not_forbidden")
     return {
         "ok": len(errors) == 0,
         "schema": "g1id-validate/v1",
@@ -241,6 +356,31 @@ def validate(
         "dimensions": geom.get("dimensions"),
         "plate_preserved": bool(plate.get("preserved")),
         "this_one_hardened": bool(hard.get("this_one_sealed")),
+        "sovereign_time_meld": bool(st.get("linear_ns") and st.get("derived_utc")),
+        "baseline_immoveable": bool(bl.get("immoveable")),
+    }
+
+
+def melded_extension_slice() -> dict[str, Any]:
+    """Live G1ID meld slice for ironclad-plate knowledge_grounding."""
+    meld = meld_inputs_snapshot()
+    example = INSTALL / "data" / "examples" / "operator-this-one.g1id"
+    example_ok = False
+    if example.is_file():
+        try:
+            example_ok = bool(validate(json.loads(example.read_text(encoding="utf-8")), verify_plate=False).get("ok"))
+        except (OSError, json.JSONDecodeError):
+            pass
+    return {
+        "id": "g1id",
+        "absorbed": DOCTRINE.is_file(),
+        "meld_citation": MELD_CITATION,
+        "citation": "ironclad:g1id:2",
+        "policy": "sovereign_time_only",
+        "sovereign_time_ok": bool(meld.get("ok")),
+        "sovereign_time": meld.get("sovereign_time") if meld.get("ok") else meld,
+        "example_valid": example_ok,
+        "updated": _now(),
     }
 
 
@@ -324,6 +464,12 @@ def main() -> int:
     if cmd == "read" and len(sys.argv) > 2:
         print(json.dumps(read_file(sys.argv[2]), ensure_ascii=False, default=str))
         return 0
+    if cmd == "meld":
+        print(json.dumps(meld_inputs_snapshot(), ensure_ascii=False))
+        return 0 if meld_inputs_snapshot().get("ok") else 1
+    if cmd == "slice":
+        print(json.dumps(melded_extension_slice(), ensure_ascii=False))
+        return 0
     if cmd == "build-example":
         out = write_file(
             INSTALL / "data" / "examples" / "operator-this-one.g1id",
@@ -337,7 +483,7 @@ def main() -> int:
     print(json.dumps({
         "format": FORMAT,
         "extension": ".g1id",
-        "usage": "g1id-format.py [validate PATH|read PATH|write PATH ID LABEL X Y Z|build-example]",
+        "usage": "g1id-format.py [validate PATH|read PATH|write PATH ID LABEL X Y Z|meld|slice|build-example]",
     }, ensure_ascii=False))
     return 0
 

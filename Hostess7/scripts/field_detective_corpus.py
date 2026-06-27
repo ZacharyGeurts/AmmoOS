@@ -6,6 +6,7 @@ Not a substitute for licensed investigators, polygraph examiners, or court proce
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import re
@@ -13,8 +14,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+SG = Path(os.environ.get("SG_ROOT", str(ROOT.parent.parent)))
 CORPUS_CACHE = ROOT / "cache" / "fieldstorage" / "brain" / "detective" / "corpus.json"
-DETECTIVE_CORPUS_VERSION = 1
+DETECTIVE_CORPUS_VERSION = 2
 
 NOISE_RATIO = 0.94
 TRUTH_RATIO = 0.06
@@ -150,7 +152,109 @@ DETECTIVE_DOMAINS: tuple[dict[str, str | tuple[str, ...]], ...] = (
             "Attorney-Client Privilege may attach to investigation strategy with licensed counsel."
         ),
     },
+    {
+        "id": "ironclad_truth",
+        "title": "Ironclad — epistemic floor for detective & truth",
+        "tags": ("ironclad", "sealed", "canonical", "bible of ai", "truth set", "witness", "g16"),
+        "body": (
+            "Ironclad is the melded plate of truth — canonical hash, field sanity, spatial existence, g1id. "
+            "Detective corroboration stacks: verbal flags + local grep + QA + infinite index + Ironclad witness. "
+            "When ironclad_sealed: truth_percent rises to 100%, neural extrapolation traces truth_set axioms. "
+            "When pending: WATCH verdict — corroborate harder before accept; truth capped at adapt floor. "
+            "Grok16 bridge: forge/g16-ironclad.py · data/g16-ironclad-meld.json · test-battery-expert gate. "
+            "Hostess supreme authority: ai_in_charge requires ironclad_sealed + truth_percent_100 + serum_GREEN. "
+            "Every inference must trace to a truth_set axiom or live field receipt melded on the plate."
+        ),
+    },
 )
+
+
+def _nexus_install() -> Path:
+    for candidate in (
+        Path(os.environ.get("NEXUS_INSTALL_ROOT", "")),
+        ROOT.parent,
+        SG / "NewLatest",
+    ):
+        if not candidate or not candidate.is_dir():
+            continue
+        if (candidate / "lib" / "ironclad-plate.py").is_file():
+            return candidate
+        if (candidate / "data" / "ironclad-doctrine.json").is_file():
+            return candidate
+    return ROOT.parent
+
+
+def _load_module(path: Path, name: str) -> Any | None:
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location(name, path)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def ironclad_slice() -> dict[str, Any]:
+    """Hot-read Ironclad receipt for detective/truth corroboration."""
+    install = _nexus_install()
+    os.environ.setdefault("NEXUS_INSTALL_ROOT", str(install))
+    state = Path(os.environ.get("NEXUS_STATE_DIR", install / "state"))
+    os.environ.setdefault("NEXUS_STATE_DIR", str(state))
+
+    ic_imm = _load_module(install / "lib" / "ironclad-immediate.py", "ironclad_immediate_detective")
+    if ic_imm and hasattr(ic_imm, "read_immediate"):
+        try:
+            doc = ic_imm.read_immediate()
+            if doc.get("available") or doc.get("schema"):
+                return {
+                    "ok": True,
+                    "source": "ironclad-immediate",
+                    "ironclad_sealed": bool(doc.get("ironclad_sealed") or doc.get("realized")),
+                    "integrity_ok": bool(doc.get("integrity_ok", True)),
+                    "truth_percent": float(doc.get("truth_percent") or 0.0),
+                    "verdict": doc.get("verdict") or ("GREEN" if doc.get("ironclad_sealed") else "WATCH"),
+                    "canonical_hash": doc.get("canonical_hash"),
+                    "citation": doc.get("citation_format") or "ironclad:immediate:1",
+                    "ai_in_charge": doc.get("ai_in_charge"),
+                    "neural_extrapolation_active": bool(doc.get("neural_extrapolation_active")),
+                    "install": str(install),
+                }
+        except Exception as exc:
+            return {"ok": False, "source": "ironclad-immediate", "error": str(exc), "install": str(install)}
+
+    g16 = SG / "Grok16" / "forge" / "g16-ironclad.py"
+    g16_mod = _load_module(g16, "g16_ironclad_detective")
+    if g16_mod and hasattr(g16_mod, "meld_slice"):
+        try:
+            doc = g16_mod.meld_slice()
+            return {
+                "ok": bool(doc.get("absorbed")),
+                "source": "g16-ironclad",
+                "ironclad_sealed": bool(doc.get("ironclad_sealed")),
+                "integrity_ok": bool(doc.get("absorbed")),
+                "truth_percent": 100.0 if doc.get("ironclad_sealed") else 95.0,
+                "verdict": "GREEN" if doc.get("ironclad_sealed") else "WATCH",
+                "canonical_hash": doc.get("canonical_hash"),
+                "citation": doc.get("citation") or "ironclad:field_sanity:1",
+                "field_sanity": doc.get("field_sanity"),
+                "spatial_existence": doc.get("spatial_existence"),
+                "g1id": doc.get("g1id"),
+                "install": str(g16.parent.parent),
+            }
+        except Exception as exc:
+            return {"ok": False, "source": "g16-ironclad", "error": str(exc)}
+
+    return {
+        "ok": False,
+        "source": "none",
+        "ironclad_sealed": False,
+        "integrity_ok": False,
+        "truth_percent": 0.0,
+        "verdict": "MISSING",
+        "error": "ironclad_not_found",
+        "install": str(install),
+    }
 
 
 def build_corpus() -> dict:
@@ -211,8 +315,11 @@ def search_detective(query: str, *, limit: int = 6) -> list[dict]:
             if d.get("id") in ("forensic_science", "digital_investigation"):
                 score += 15
         if any(k in q for k in ("truth", "corroborate", "94", "verify")):
-            if d.get("id") in ("corroboration_truth", "hostess_lie_detector"):
+            if d.get("id") in ("corroboration_truth", "hostess_lie_detector", "ironclad_truth"):
                 score += 15
+        if any(k in q for k in ("ironclad", "sealed", "canonical", "bible of ai", "witness")):
+            if d.get("id") == "ironclad_truth":
+                score += 20
         if score > 0:
             scored.append((score, d))
     scored.sort(key=lambda x: -x[0])
@@ -243,9 +350,11 @@ def analyze_truth(
     qa_green: bool = False,
     infinite_indexed: bool = False,
     corroboration_channels: int = 0,
+    ironclad: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Hostess 7 computational lie detector — corroboration-weighted truth score."""
     flags = _deception_flags(claim)
+    ic = ironclad if ironclad is not None else ironclad_slice()
     score = TRUTH_RATIO * 100
     if local_evidence:
         score += min(25, local_evidence * 8)
@@ -254,10 +363,20 @@ def analyze_truth(
     if infinite_indexed:
         score += 15
     score += min(20, corroboration_channels * 6)
+    if ic.get("ok"):
+        if ic.get("ironclad_sealed"):
+            score += 15
+        elif ic.get("verdict") == "WATCH":
+            score += 6
+    else:
+        score -= 5
     score -= len(flags) * 8
     score = max(0.0, min(100.0, round(score, 1)))
 
-    if score >= 70:
+    if score >= 70 and ic.get("ironclad_sealed"):
+        risk = "low"
+        action = "accept_with_documentation"
+    elif score >= 70:
         risk = "low"
         action = "accept_with_documentation"
     elif score >= 40:
@@ -267,6 +386,11 @@ def analyze_truth(
         risk = "high"
         action = "reject_or_investigate"
 
+    ic_note = (
+        f"Ironclad {ic.get('verdict', 'MISSING')} "
+        f"sealed={ic.get('ironclad_sealed')} "
+        f"truth%={ic.get('truth_percent', 0)}"
+    )
     return {
         "claim_preview": claim[:200],
         "truth_score": score,
@@ -275,9 +399,13 @@ def analyze_truth(
         "noise_ratio": NOISE_RATIO,
         "truth_ratio": TRUTH_RATIO,
         "recommended_action": action,
+        "ironclad": ic,
+        "ironclad_sealed": bool(ic.get("ironclad_sealed")),
+        "ironclad_verdict": ic.get("verdict"),
         "verdict": (
             f"Truth {score}% — deception risk {risk}. "
-            f"{len(flags)} verbal flags. Corroborate: grep + QA + infinite index."
+            f"{len(flags)} verbal flags. {ic_note}. "
+            f"Corroborate: grep + QA + infinite index + Ironclad witness."
         ),
     }
 
@@ -294,10 +422,15 @@ def synthesize_detective_paragraphs(query: str) -> list[str]:
             "not licensed PI or admissible polygraph."
         )
     else:
+        ic = ironclad_slice()
+        ic_line = (
+            f"Ironclad {ic.get('verdict', 'MISSING')} "
+            f"(sealed={ic.get('ironclad_sealed')}, source={ic.get('source', 'none')})."
+        )
         paras.append(
             "Detective note: Hostess 7 holds investigation method, forensics, interview science, "
-            "verbal/nonverbal deception cues, and computational truth scoring — "
-            "94% noise / 6% truth until corroborated."
+            "verbal/nonverbal deception cues, computational truth scoring, and Ironclad witness — "
+            f"94% noise / 6% truth until corroborated. {ic_line}"
         )
     for h in hits:
         title = h.get("title", "Detective")

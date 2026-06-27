@@ -1,7 +1,16 @@
 {
-  "schema": "hostess7-voice-doctrine/v1",
-  "title": "Hostess 7 spoken English — American female, high quality",
-  "motto": "Perfectly fluent American English — warm, clear, operator-grade. Default female voice with high-quality samples.",
+  "schema": "hostess7-voice-doctrine/v2",
+  "title": "Hostess 7 field neural voice — American female, voice hemisphere",
+  "motto": "Full field neural voice — thought hemisphere feeds mouth brain; utterance may diverge; deception possible, truth-gated.",
+  "field_neural": {
+    "enabled": true,
+    "module": "lib/hostess7-mouth-neural.py",
+    "mouth_neural": "Final_Mouth/zocr_neural_assist.py",
+    "hemisphere": "voice_egress",
+    "thought_hemisphere": "internal_intent",
+    "deception_possible": true,
+    "thought_voice_alignment_not_guaranteed": true
+  },
   "locale": "en-US",
   "dialect": "american_english",
   "gender": "female",

@@ -2,13 +2,16 @@
   "use strict";
 
   const API = "/api/tristate-installer";
-  const STEPS = ["welcome", "znetwork", "arrive", "transform", "commit"];
+  const STEPS = ["welcome", "root", "unfield", "znetwork", "arrive", "transform", "commit"];
   const STORAGE_KEY = "tristate-wizard-step";
 
   let state = null;
   let step = "welcome";
   let znChoice = null;
   let znLoaded = false;
+  let rootReady = false;
+  let defieldOk = false;
+  let unfieldAutoRan = false;
 
   const $ = (id) => document.getElementById(id);
 
@@ -19,14 +22,6 @@
     el.hidden = false;
     el.classList.add("show");
     setTimeout(() => el.classList.remove("show"), 3200);
-  }
-
-  function fmtBytes(n) {
-    const v = Number(n) || 0;
-    if (v < 1024) return v + " B";
-    if (v < 1048576) return (v / 1024).toFixed(1) + " KB";
-    if (v < 1073741824) return (v / 1048576).toFixed(1) + " MB";
-    return (v / 1073741824).toFixed(2) + " GB";
   }
 
   function stepIndex(id) {
@@ -45,6 +40,14 @@
       if (saved && STEPS.includes(saved)) return saved;
     } catch (_) { /* ignore */ }
     return "welcome";
+  }
+
+  function canAdvance(id) {
+    if (id === "root") return rootReady;
+    if (id === "unfield") return defieldOk;
+    if (id === "znetwork") return !!znChoice;
+    if (id === "arrive") return rootReady && defieldOk;
+    return true;
   }
 
   function setStep(next) {
@@ -98,28 +101,32 @@
 
     updateChrome(next);
 
+    if (next === "root" && !rootReady) maybeAutoAcquireRoot();
+    if (next === "unfield" && !unfieldAutoRan) {
+      unfieldAutoRan = true;
+      runUnfieldAudit(true);
+    }
     if (next === "znetwork" && !znLoaded) loadZnetworkOffer();
-  }
-
-  function canAdvance(id) {
-    if (id === "znetwork") return !!znChoice;
-    return true;
   }
 
   function updateChrome(id) {
     const badge = $("ti-status-badge");
     const heroes = {
-      welcome: ["Welcome to the Field", "Five guided steps — guest OS stays, we move under without damage."],
+      welcome: ["Welcome to the Field", "Seven guided steps — root first, unfield drives, then install."],
+      root: ["Administrator access", "One approval for install, network, WRDT, and commit — not just ZNetwork."],
+      unfield: ["Unfield files on drive", "Quarantine nested field copies and clear tail formats before install."],
       znetwork: ["ZNetwork replacer", "Slide-in field network — review disable vs replace, then choose."],
-      arrive: ["Install protections", "NEXUS Shield, Queen, perimeter — one admin approval."],
+      arrive: ["Install protections", "NEXUS Shield, Queen, perimeter — uses root granted at step 2."],
       transform: ["Transform", "Re-field shadow first — then sovereign restore, audit, World redump."],
       commit: ["Commit — permanent", "We are always the underlay from this point. No off switch."],
       committed: ["Underlay live", "Guest substrate inside field protections. Reboot when ready."],
     };
     const labels = {
       welcome: "WELCOME",
+      root: "ROOT",
+      unfield: "UNFIELD",
       znetwork: "NETWORK",
-      arrive: "PROTECT",
+      arrive: "INSTALL",
       transform: "TRANSFORM",
       commit: "COMMIT",
       committed: "UNDERLAY LIVE",
@@ -135,9 +142,81 @@
     }
     const prog = $("ti-progress-bar");
     if (prog) {
-      const pct = { welcome: 8, znetwork: 22, arrive: 40, transform: 65, commit: 88, committed: 100 };
+      const pct = {
+        welcome: 5,
+        root: 18,
+        unfield: 32,
+        znetwork: 46,
+        arrive: 58,
+        transform: 74,
+        commit: 90,
+        committed: 100,
+      };
       prog.style.width = (pct[id] || 0) + "%";
     }
+  }
+
+  function renderRoot(root) {
+    root = root || state?.root || {};
+    rootReady = !!(root.ready || root.is_root || root.has_cached_sudo);
+    const status = $("ti-root-status");
+    const method = $("ti-root-method");
+    if (status) {
+      status.textContent = rootReady ? "READY" : "PENDING";
+      status.classList.toggle("ti-ok", rootReady);
+      status.classList.toggle("ti-danger", !rootReady);
+    }
+    if (method) method.textContent = root.elevation_method || root.method || "—";
+    const nxt = $("ti-wizard-next");
+    if (nxt && step === "root") nxt.disabled = !canAdvance("root");
+    const installBtn = $("ti-install-nexus");
+    if (installBtn) installBtn.disabled = !(rootReady && defieldOk);
+  }
+
+  function renderDefield(data) {
+    const panel = data?.drive_converter?.panel || {};
+    const defieldAudit = panel.defield_audit || data?.non_fielded || {};
+    defieldOk = panel.defield_ok === true || defieldAudit.defield_ok === true;
+    const nestedDrives = defieldAudit.nested_nexus_field_on_drives || [];
+    const restoreTotals = data?.drive_converter?.restore_plan?.totals || panel.restore_totals || {};
+
+    const defStatus = $("ti-defield-status");
+    const defTails = $("ti-defield-tails");
+    const defNested = $("ti-defield-nested");
+    const defMirror = $("ti-defield-mirror");
+    if (defStatus) {
+      defStatus.textContent = defieldOk ? "CLEAN" : "BLOCKED";
+      defStatus.classList.toggle("ti-ok", defieldOk);
+      defStatus.classList.toggle("ti-danger", !defieldOk);
+    }
+    if (defTails) {
+      const tails = defieldAudit.restorable_files ?? restoreTotals.restorable_files;
+      defTails.textContent = tails != null ? String(tails) : "—";
+    }
+    if (defNested) {
+      defNested.textContent = nestedDrives.length ? String(nestedDrives.length) : "0";
+      defNested.title = nestedDrives.join("\n");
+    }
+    if (defMirror) {
+      defMirror.textContent = defieldAudit.host_mirror_only ? "HOST MIRROR" : "DRIVE OK";
+    }
+    const nestedList = $("ti-defield-nested-list");
+    if (nestedList) {
+      nestedList.innerHTML = nestedDrives.length
+        ? nestedDrives.map((p) => "<li>" + p + "</li>").join("")
+        : "<li class=\"ti-muted\">No nested nexus-field on drives</li>";
+    }
+
+    const purgeNestedBtn = $("ti-purge-nested");
+    if (purgeNestedBtn) purgeNestedBtn.disabled = !nestedDrives.length;
+
+    const nxt = $("ti-wizard-next");
+    if (nxt && (step === "unfield" || step === "arrive")) nxt.disabled = !canAdvance(step);
+    const installBtn = $("ti-install-nexus");
+    if (installBtn) installBtn.disabled = !(rootReady && defieldOk);
+    const commitBtn = $("ti-commit");
+    const accept = $("ti-accept-permanent");
+    if (commitBtn && accept) commitBtn.disabled = !accept.checked || !defieldOk;
   }
 
   function renderZnetwork(zn) {
@@ -178,6 +257,9 @@
 
   function renderStatus(data) {
     state = data;
+    renderRoot(data.root);
+    renderDefield(data);
+
     const ul = data.underlay || {};
     const verdict = $("ti-underlay-verdict");
     const prot = $("ti-protections");
@@ -249,10 +331,15 @@
 
     const applyBtn = $("ti-apply-wrdt");
     const dryBtn = $("ti-drive-dryrun");
+    const scanWrdtBtn = $("ti-scan-wrdt");
+    const driveAuditBtn = $("ti-drive-audit");
     const auditOk = panel.audit_ok === true;
     const hasFiles = totals.packable_files > 0;
-    if (applyBtn) applyBtn.disabled = !(auditOk && hasFiles);
-    if (dryBtn) dryBtn.disabled = !(auditOk && hasFiles);
+    const transformReady = defieldOk && auditOk;
+    if (applyBtn) applyBtn.disabled = !(transformReady && hasFiles);
+    if (dryBtn) dryBtn.disabled = !(transformReady && hasFiles);
+    if (scanWrdtBtn) scanWrdtBtn.disabled = !defieldOk;
+    if (driveAuditBtn) driveAuditBtn.disabled = !defieldOk;
 
     renderZnetwork(data.znetwork);
 
@@ -260,10 +347,6 @@
       setStep("committed");
       return;
     }
-
-    const commitBtn = $("ti-commit");
-    const accept = $("ti-accept-permanent");
-    if (commitBtn && accept) commitBtn.disabled = !accept.checked;
 
     const serverPhase = data.phase || "arrive";
     if (serverPhase === "commit" && stepIndex(step) < stepIndex("transform")) {
@@ -295,6 +378,48 @@
       renderStatus(data);
     } catch (e) {
       toast("Panel offline — start NEXUS Field first");
+    }
+  }
+
+  async function acquireRoot() {
+    toast("Approve administrator access in the system dialog…");
+    try {
+      const j = await apiPost("/acquire-root", {});
+      if (j.root) renderRoot(j.root);
+      if (j.posture) renderStatus(j.posture);
+      else await refresh();
+      if (j.ok || j.already || rootReady) {
+        toast("Administrator access granted");
+        const nxt = $("ti-wizard-next");
+        if (nxt && step === "root") nxt.disabled = false;
+      } else {
+        toast(j.error || "Elevation declined");
+      }
+    } catch (e) {
+      toast(String(e.message || e));
+    }
+  }
+
+  function maybeAutoAcquireRoot() {
+    if (rootReady) return;
+    const btn = $("ti-acquire-root");
+    if (btn && !btn.dataset.autoTried) {
+      btn.dataset.autoTried = "1";
+      acquireRoot();
+    }
+  }
+
+  async function runUnfieldAudit(silent) {
+    if (!silent) toast("Unfield audit — scanning drives…");
+    try {
+      const j = await apiPost("/defield-audit", {});
+      renderStatus(j.posture || j);
+      const ok = j.defield_ok || j.posture?.drive_converter?.panel?.defield_ok;
+      if (!silent) toast(ok ? "Unfield clean — ready to install" : j.error || "Unfield blocked");
+      const nxt = $("ti-wizard-next");
+      if (nxt && step === "unfield") nxt.disabled = !canAdvance("unfield");
+    } catch (e) {
+      if (!silent) toast(String(e.message || e));
     }
   }
 
@@ -344,7 +469,13 @@
       return;
     }
     if (!canAdvance(step)) {
-      toast(step === "znetwork" ? "Choose Yes, No, or Skip first" : "Complete this step first");
+      const hints = {
+        root: "Grant administrator access first",
+        unfield: "Run unfield audit — drives must be clean before install",
+        znetwork: "Choose Yes, No, or Skip first",
+        arrive: "Root and unfield must pass before install",
+      };
+      toast(hints[step] || "Complete this step first");
       return;
     }
     setStep(STEPS[idx + 1]);
@@ -358,6 +489,7 @@
   });
 
   $("ti-refresh")?.addEventListener("click", refresh);
+  $("ti-acquire-root")?.addEventListener("click", acquireRoot);
 
   $("ti-operator-board")?.addEventListener("click", async () => {
     toast("Scanning Operator — parallel IRQ, DMA, PCI…");
@@ -386,11 +518,15 @@
 
   $("ti-accept-permanent")?.addEventListener("change", (e) => {
     const btn = $("ti-commit");
-    if (btn) btn.disabled = !e.target.checked;
+    if (btn) btn.disabled = !e.target.checked || !defieldOk;
   });
 
   $("ti-install-nexus")?.addEventListener("click", async () => {
-    toast("Launching install — approve admin dialog…");
+    if (!rootReady || !defieldOk) {
+      toast("Root and unfield must pass before install");
+      return;
+    }
+    toast("Launching install — uses administrator access from step 2…");
     try {
       await apiPost("/install-nexus", {});
       toast("Install started — tap Refresh when complete");
@@ -441,6 +577,20 @@
       const j = await apiPost("/drive-audit", {});
       renderStatus(j.posture || j);
       toast(j.ok ? "Audit passed" : j.error || "audit check");
+    } catch (e) {
+      toast(String(e.message || e));
+    }
+  });
+
+  $("ti-defield-audit")?.addEventListener("click", () => runUnfieldAudit(false));
+
+  $("ti-purge-nested")?.addEventListener("click", async () => {
+    if (!confirm("Quarantine nested nexus-field copies on TEAM/KILROY drives?\n\nPre-commit publish stays on host mirror only.")) return;
+    toast("Purging nested drive field copies…");
+    try {
+      const j = await apiPost("/purge-nested-drive", { apply: true, confirm: true });
+      renderStatus(j.posture || j);
+      toast(j.ok ? "Nested field quarantined" : j.error || "purge incomplete");
     } catch (e) {
       toast(String(e.message || e));
     }

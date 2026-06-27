@@ -5,6 +5,7 @@
   "use strict";
 
   const QUEEN_WORLD = "http://127.0.0.1:9481";
+  const QUEEN_BROWSER = `${QUEEN_WORLD}/world/browser.html`;
   const DEFAULT_POLL_MS = 1200;
   const EMBED = "/field-legacy?embed=1";
 
@@ -159,7 +160,7 @@
     if (id === "queen") {
       setStage("queen");
       const f = $("#fm-queen-frame");
-      if (f && !f.src) f.src = `${QUEEN_WORLD}/world/?browser=1&queen=1`;
+      if (f && !f.src) f.src = QUEEN_BROWSER;
       try { global.history.replaceState(null, "", "#queen"); } catch (_) {}
       document.dispatchEvent(new CustomEvent("nexus-field-tab", { detail: { tab: "queen" } }));
       global.requestAnimationFrame(resizeC2Viewport);
@@ -314,7 +315,25 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       }).then((r) => r.ok ? toast("RE-KILL cycle", true) : toast("RE-KILL failed", false)));
-    $("#fm-queen")?.addEventListener("click", () => { global.location.href = `${QUEEN_WORLD}/world/`; });
+    $("#fm-queen")?.addEventListener("click", () => {
+      const port = global.location.port || "9477";
+      const nexus = `http://127.0.0.1:${port}/field`;
+      global.fetch(`${QUEEN_WORLD}/api/nexus-jump`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "jump", url: nexus, proc: "queen-browser" }),
+      }).catch(() => {});
+      global.fetch(`${QUEEN_WORLD}/api/queen-browser`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "new_tab", url: nexus }),
+      }).catch(() => {});
+      try {
+        global.open(QUEEN_BROWSER, "queen-browser", "noopener,noreferrer");
+      } catch (_) {
+        global.location.href = QUEEN_BROWSER;
+      }
+    });
   }
 
   function boot() {

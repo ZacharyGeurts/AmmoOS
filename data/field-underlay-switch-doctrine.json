@@ -16,7 +16,7 @@
     "guest_passthrough": true,
     "reboot_target": "KILROY Field",
     "hotkey": "F9",
-    "hotkey_note": "F9 normally unused on Linux desktop — F11 Queen fullscreen, F8 RTX fullscreen, F1 help, F5 refresh"
+    "hotkey_note": "F9 — Tristate installer until defield clean + secure network; then Queen sovereign browser (self-contained shell)"
   },
   "flow": [
     "Install NEXUS field stack (protections aboard)",
@@ -48,12 +48,26 @@
     "vendor": "ZacharyGeurts",
     "repo": "World_Redata",
     "default_scan_roots": [
-      "KILROY_FIELD_ROOT",
-      "NEXUS_STATE_DIR",
-      "SG_ROOT/NewLatest/data",
-      "HOME/Desktop/SG"
+      "KILROY_FIELD_ROOT/tmp/field-storage",
+      "HOSTESS7_ROOT/cache/fieldstorage",
+      "HOSTESS7_TEAM_FIELD"
     ],
-    "apply_requires": ["audit_ok", "confirm", "admin_auth"]
+    "exclude_paths": [
+      "nexus-field",
+      ".nexus-field-drive",
+      "zac",
+      "NewLatest/lib",
+      "NewLatest/panel",
+      "NEXUS_STATE_DIR"
+    ],
+    "non_fielded_safety": {
+      "rule": "Defield all WRDT/WRZC/ZAC/H7 tails before publish or convert — never field-in-field",
+      "publish_host_mirror_until_commit": true,
+      "no_drive_field_files_before_whole_system": true,
+      "restore_out_before_convert": true,
+      "restore_out_before_commit": true
+    },
+    "apply_requires": ["audit_ok", "defield_ok", "confirm", "admin_auth"]
   },
   "grok": {
     "entry": "/KILROY Field",

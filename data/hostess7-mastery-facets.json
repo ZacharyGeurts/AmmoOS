@@ -18,7 +18,7 @@
       "definition": "Growth ledger, truth-gated adapt, comprehension refresh — learns live and reciprocates without silent weight drift.",
       "complete_floor": 0.72,
       "mastered_floor": 0.88,
-      "signals": ["learn_events", "adapt_ratio", "comprehension", "training_recovery", "reciprocation"]
+      "signals": ["learn_events", "adapt_ratio", "comprehension", "training_recovery", "reciprocation", "muscle_habits", "muscle_strength"]
     },
     {
       "id": "confidence",

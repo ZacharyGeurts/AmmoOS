@@ -132,12 +132,14 @@
     },
     {
       "id": "sense_neural",
-      "label": "Eye ↔ Ear encouragable assist — invincible wire",
+      "label": "Eye ↔ Ear ↔ Mouth encouragable assist — invincible wire",
       "authority": "hostess7-supreme-authority.json",
       "nets": [
         {"id": "eye_neural_assist", "engine": "Final_Eye/zocr_neural_assist.py", "lane": "Vision-NN", "encourage": true},
         {"id": "ear_neural_assist", "engine": "Final_Ear/zocr_neural_assist.py", "lane": "Audio-NN", "encourage": true},
-        {"id": "invincible_wire", "engine": "Queen/lib/queen-sense-neural.py", "lane": "Cross-Fusion", "quorum": 2},
+        {"id": "mouth_neural_assist", "engine": "Final_Mouth/zocr_neural_assist.py", "lane": "Voice-NN", "encourage": true, "hemisphere": "voice_egress", "deception_possible": true},
+        {"id": "mouth_neural_bridge", "engine": "NewLatest/lib/hostess7-mouth-neural.py", "lane": "Thought-Voice-Callosum", "role": "Thought hemisphere → voice hemisphere → TTS"},
+        {"id": "invincible_wire", "engine": "Queen/lib/queen-sense-neural.py", "lane": "Cross-Fusion", "quorum": 3},
         {"id": "audio_offense", "engine": "Final_Ear/zocr_audio_offense.py", "lane": "Ear-Offense", "tiers": ["preserve", "offense", "severe", "lethal"]},
         {"id": "vision_offense", "engine": "Final_Eye/zocr_offense.py", "lane": "Eye-Offense", "tiers": ["preserve", "offense", "severe", "lethal"]},
         {"id": "gac1_zocram", "engine": "Final_Ear/zocr_zocram1_api.py", "lane": "ZOCRAM1", "format": "GAC1", "container": "ZOCRAM1"},
@@ -148,6 +150,17 @@
         {"id": "sound_registry", "engine": "Final_Ear/zocr_sound_registry.py", "lane": "Permanent-IDs", "neural_bind": "ear_neural_assist"},
         {"id": "desktop_audio", "engine": "Final_Ear/zocr_desktop_audio.py", "lane": "Desktop-Ingress", "zero_cost": true},
         {"id": "sound_learn", "engine": "Final_Ear/zocr_sound_learn.py", "lane": "Priority-Safe-Learn", "overlay_only": true, "truth_floor": 58}
+      ]
+    },
+    {
+      "id": "muscle_memory",
+      "label": "Muscle memory — procedural operator habits",
+      "authority": "hostess7-supreme-authority.json",
+      "nets": [
+        {"id": "habit_recall", "engine": "NewLatest/lib/hostess7-muscle-memory.py", "lane": "Procedural-Recall", "local_only": true},
+        {"id": "nav_ingest", "engine": "queen-browser-nav.jsonl", "lane": "Browser-Ingress"},
+        {"id": "shortcut_bind", "engine": "Queen/world/queen-os.js", "lane": "Keyboard-Muscle"},
+        {"id": "import_habit", "engine": "Queen/lib/queen-browser-import.py", "lane": "Import-Muscle"}
       ]
     }
   ],

@@ -69,6 +69,24 @@
       "capstone": true,
       "read_first": true
     },
+    "ironclad_reality_field": {
+      "panel": "ironclad-reality-field-panel.json",
+      "doctrine": "data/ironclad-reality-field-doctrine.json",
+      "engine": "lib/ironclad-reality-field.py",
+      "role": "Truth serum for Super Intelligence reality field — clean voltage · smooth operator · 100% seal",
+      "capstone_operator": true,
+      "refresh_before_fuse": true
+    },
+    "ironclad_field_sanity": {
+      "panel": "ironclad-field-sanity-panel.json",
+      "doctrine": "data/ironclad-field-sanity-doctrine.json",
+      "extensions": "data/ironclad-meld-extensions.json",
+      "engine": "lib/ironclad-field-sanity.py",
+      "role": "Field sanity absorbed into Ironclad — integral simplify, never obtuse, never build under heat",
+      "subsidiary_meld": true,
+      "meld_citation": "ironclad:meld:2",
+      "refresh_before_fuse": true
+    },
     "kernel": {
       "panel": "field-kernel-meld-panel.json",
       "role": "KILROY linux-7.1.1 witness + bzImage in-place manifest",
@@ -79,6 +97,13 @@
       "role": "Smart Connective Iron Plate scores every connection; gatekeeper IFF + logic gate on meld chain",
       "refresh_before_fuse": true,
       "meld_summary_key": "network_stack"
+    },
+    "clipboard_wire": {
+      "panel": "field-clipboard-wire.json",
+      "doctrine": "data/field-clipboard-doctrine.json",
+      "engine": "lib/field-clipboard-wire.py",
+      "role": "Hardware clipboard wire — secured vault, all chords, Apple IIe · emacs · nano · vi · ALL",
+      "refresh_before_fuse": true
     }
   },
   "architecture": {

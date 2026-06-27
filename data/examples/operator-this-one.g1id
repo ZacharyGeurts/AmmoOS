@@ -2,7 +2,7 @@
   "schema": "g1-geometric-identity/v1",
   "format": "g1id",
   "kind": "this_one",
-  "updated": "2026-06-26T23:14:56Z",
+  "updated": "2026-06-26T23:18:04Z",
   "thermal": {
     "policy": "cold_only",
     "hot_forbidden": true,
@@ -21,6 +21,24 @@
     "dimensions_locked": 3,
     "t_forbidden": true,
     "citation": "ironclad:spatial_existence:1"
+  },
+  "meld_inputs": {
+    "citation": "ironclad:meld:2",
+    "policy": "sovereign_time_only",
+    "sovereign_time": {
+      "source": "lib/sovereign-time.py",
+      "clock": "lib/sovereign-clock.py",
+      "schema": "sovereign-time-meld-input/v1",
+      "linear_ns": 1782515884852557966,
+      "derived_utc": "2026-06-26T23:18:04Z",
+      "sealed": true,
+      "synced": false,
+      "never_desync": true,
+      "immutable_linear": true,
+      "witness_only": true,
+      "not_geometry_t": true,
+      "citation": "ironclad:g1id:2"
+    }
   },
   "self": {
     "id": "operator",
@@ -59,8 +77,8 @@
     }
   },
   "integrity": {
-    "payload_hash": "20f120bc3143735346d3001266796abfd4dd02aec68c1495e87c4abb32da69e1",
-    "sealed_at": "2026-06-26T23:14:56Z",
+    "payload_hash": "a56d328c645e326a67b3d13235b10a202c80c6b6b1a6ae631fe436e753438553",
+    "sealed_at": "2026-06-26T23:18:04Z",
     "algorithm": "sha256"
   }
 }

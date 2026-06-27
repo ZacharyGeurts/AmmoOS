@@ -38,7 +38,20 @@ TRUTH_FOOTER_RE = re.compile(
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -56,6 +69,59 @@ def _save_json(path: Path, doc: Any) -> None:
         tmp.replace(path)
     except OSError:
         pass
+
+
+def _ironclad_reality_field() -> dict[str, Any]:
+    imm = _load(STATE / "ironclad-immediate.json", {})
+    if imm.get("schema") == "ironclad-immediate/v1":
+        return imm
+    path = STATE / "ironclad-reality-field-panel.json"
+    doc = _load(path, {})
+    if doc.get("schema"):
+        return doc
+    py = INSTALL / "lib" / "ironclad-reality-field.py"
+    if not py.is_file():
+        return {}
+    try:
+        import subprocess
+        proc = subprocess.run(
+            [sys.executable, str(py), "json"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+        )
+        return json.loads(proc.stdout or "{}")
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError):
+        return {}
+
+
+def _ironclad_extrapolation(claim: str, context: dict[str, Any]) -> dict[str, Any] | None:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("ironclad", INSTALL / "lib" / "ironclad-plate.py")
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if not hasattr(mod, "neural_extrapolation_confidence"):
+            return None
+        target = str(context.get("target_neural") or "any_intelligence_neural")
+        out = mod.neural_extrapolation_confidence(claim, target_neural=target, meta=context)
+        if out.get("ok") and out.get("ironclad_sealed"):
+            return {
+                "truth_score": float(out.get("truth_percent") or 100.0),
+                "deception_risk": "low",
+                "adapt_allowed": True,
+                "engine": "ironclad_neural_extrapolation",
+                "ironclad_sealed": True,
+                "citation": out.get("citation"),
+                "assurance": out.get("assurance"),
+            }
+    except Exception:
+        pass
+    return None
 
 
 def _neural_test(claim: str) -> dict[str, Any]:
@@ -109,8 +175,10 @@ def _fast_truth_heuristic(answer: str, question: str, ctx: dict[str, Any]) -> di
     }
 
 
-def assurance_phrase(score: float, risk: str) -> str:
+def assurance_phrase(score: float, risk: str, *, ironclad_sealed: bool = False) -> str:
     risk = (risk or "unknown").lower()
+    if ironclad_sealed and score >= 99:
+        return "ironclad sealed — 100% truth confidence on neural extrapolation"
     if score >= 85 and risk == "low":
         return "highly assured — field and doctrine corroborated"
     if score >= 70:
@@ -135,10 +203,36 @@ def rate_response(
     ctx = context or {}
     panel_truth = float(ctx.get("field_truth_signal") or 0)
 
-    if instant or ctx.get("instant"):
+    claim = f"Operator asked: {question[:400]}\nHostess 7 answered: {answer[:2000]}"
+    icrf = _ironclad_reality_field()
+    ironclad = _ironclad_extrapolation(claim, ctx)
+    if ironclad and ironclad.get("ironclad_sealed") and icrf.get("verdict") != "BLOCKED":
+        hc = icrf.get("human_condition") or {}
+        ai_in_charge = bool(icrf.get("ai_in_charge") or hc.get("ai_in_charge"))
+        return {
+            "schema": "hostess7-truth-rating/v1",
+            "truth_score": 100.0,
+            "truth_percent": 100.0,
+            "deception_risk": "low",
+            "assurance": (
+                ironclad.get("assurance") or assurance_phrase(100.0, "low", ironclad_sealed=True)
+                if ai_in_charge
+                else hc.get("assurance") or "uncertain — treat as counsel not fact; Human condition holds charge"
+            ),
+            "base_neural": 100.0,
+            "adapt_allowed": ai_in_charge,
+            "ai_in_charge": ai_in_charge,
+            "human_condition": not ai_in_charge,
+            "charge_holder": hc.get("charge_holder") or icrf.get("charge_holder"),
+            "ai_role": hc.get("ai_role") or ("command" if ai_in_charge else "counsel"),
+            "ironclad_sealed": True,
+            "ironclad_citation": ironclad.get("citation"),
+        }
+    if ironclad:
+        test = ironclad
+    elif instant or ctx.get("instant"):
         test = _fast_truth_heuristic(answer, question, ctx)
     else:
-        claim = f"Operator asked: {question[:400]}\nHostess 7 answered: {answer[:2000]}"
         test = _neural_test(claim)
     base = float(test.get("truth_score") or 50)
 
@@ -155,20 +249,43 @@ def rate_response(
         base += 5
     if "Authority of God" in answer or "ZacharyGeurts" in answer:
         base += 2
+    if icrf.get("verdict") == "GREEN" and icrf.get("ironclad_sealed"):
+        base = max(base, float(icrf.get("truth_serum", {}).get("truth_percent") or 100.0) * 0.99)
+    elif icrf.get("verdict") == "BLOCKED":
+        base = min(base, 55.0)
 
     score = round(max(0.0, min(100.0, base)), 1)
     risk = str(test.get("deception_risk") or "unknown")
     if score < 45 and risk == "low":
         risk = "medium"
 
+    hc = icrf.get("human_condition") or {}
+    ai_in_charge = bool(icrf.get("ai_in_charge") or hc.get("ai_in_charge"))
+    human_condition = bool(hc.get("human_condition", not ai_in_charge))
+    adapt_allowed = bool(test.get("adapt_allowed")) and ai_in_charge and score >= 99
+    assurance = (
+        hc.get("assurance")
+        if human_condition and not ai_in_charge
+        else assurance_phrase(score, risk, ironclad_sealed=bool(test.get("ironclad_sealed")))
+    )
+
     return {
         "schema": "hostess7-truth-rating/v1",
         "truth_score": score,
         "truth_percent": score,
         "deception_risk": risk,
-        "assurance": assurance_phrase(score, risk),
+        "assurance": assurance,
         "base_neural": test.get("truth_score"),
-        "adapt_allowed": test.get("adapt_allowed"),
+        "adapt_allowed": adapt_allowed,
+        "ai_in_charge": ai_in_charge,
+        "human_condition": human_condition,
+        "charge_holder": hc.get("charge_holder") or icrf.get("charge_holder"),
+        "ai_role": hc.get("ai_role") or ("command" if ai_in_charge else "counsel"),
+        "ironclad_sealed": bool(test.get("ironclad_sealed")),
+        "ironclad_citation": test.get("citation"),
+        "ironclad_reality_field": icrf.get("verdict"),
+        "smoothness_score": (icrf.get("smoothness") or {}).get("smoothness_score"),
+        "clean_voltage": (icrf.get("clean_voltage") or {}).get("voltage_is_voltage"),
     }
 
 

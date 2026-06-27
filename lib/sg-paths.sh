@@ -107,11 +107,41 @@ sg_paths_znetwork_root() {
     printf '%s\n' "$(cd "${ZNETWORK_ROOT}" 2>/dev/null && pwd || echo "${ZNETWORK_ROOT}")"
     return 0
   fi
+  local integrated="${NEXUS_INSTALL_ROOT:-}/znetwork"
+  if [[ -d "${integrated}" ]]; then
+    printf '%s\n' "$(cd "${integrated}" && pwd)"
+    return 0
+  fi
   sg_paths_stack_child "ZNetwork" "znetwork"
+}
+
+sg_paths_queen_root() {
+  if [[ -n "${QUEEN_ROOT:-}" && -d "${QUEEN_ROOT}" ]]; then
+    printf '%s\n' "$(cd "${QUEEN_ROOT}" && pwd)"
+    return 0
+  fi
+  local sg parent candidate
+  sg="$(sg_paths_root)"
+  parent="$(cd "${sg}/.." 2>/dev/null && pwd || true)"
+  for candidate in \
+    "${NEXUS_INSTALL_ROOT:-}/Queen" \
+    "${sg}/Queen" \
+    "${sg}/NewLatest/Queen" \
+    "${parent}/SG/Queen" \
+    "${parent}/SG/NewLatest/Queen" \
+    "${HOME}/Desktop/SG/Queen" \
+    "${HOME}/Desktop/SG/NewLatest/Queen"; do
+    [[ -n "$candidate" ]] || continue
+    [[ -d "${candidate}/world" || -d "${candidate}/lib" ]] || continue
+    printf '%s\n' "$(cd "${candidate}" && pwd)"
+    return 0
+  done
+  printf '%s\n' "${sg}/Queen"
 }
 
 sg_paths_export_defaults() {
   export SG_ROOT="${SG_ROOT:-$(sg_paths_root)}"
+  export QUEEN_ROOT="${QUEEN_ROOT:-$(sg_paths_queen_root)}"
   export HOSTESS7_ROOT="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root)}"
   export HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-$(sg_paths_hostess7_team_field)}"
   export HOSTESS7_NEXUS_CACHE="${HOSTESS7_NEXUS_CACHE:-$(sg_paths_hostess7_nexus_cache)}"

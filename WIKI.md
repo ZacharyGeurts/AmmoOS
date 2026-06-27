@@ -6,15 +6,18 @@
 
 ---
 
-## Pages (v10.4.3)
+## Pages (g16 1.0)
 
 | Page | Topic |
 |------|-------|
 | [Home](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Home) | Overview |
-| [Installers](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Installers) | Release tarballs + scripts |
+| [Host Desktop](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Host-Desktop) | First page, startbar, app mirror |
+| [Queen Browser](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Queen-Browser) | Browser chrome, OS inside, drop/rise |
+| [Host Freeze](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Host-Freeze) | Soft/mem/disk freeze |
+| [Installers](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Installers) | Clone + scripts |
 | [Field I/O](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Field-IO) | API, state, diagrams |
 | [Field Thermal Guard](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Field-Thermal-Guard) | Landauer budget, incremental redata |
-| [Panel Guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Panel-Guide) | Tabs + screenshots |
+| [Panel Guide](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Panel-Guide) | Command deck tabs + screenshots |
 | [Linux Installation](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Linux-Installation) | Install & verify |
 | [Boot Implementation](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Boot-Implementation) | Reboot reload |
 | [Underlay F9 Tristate](https://github.com/ZacharyGeurts/NEXUS-Shield/wiki/Underlay-F9-Tristate) | 2026 installer |
@@ -36,5 +39,5 @@ Or manually:
 ```bash
 git clone https://github.com/ZacharyGeurts/NEXUS-Shield.wiki.git
 rsync -a --delete wiki/ NEXUS-Shield.wiki/
-cd NEXUS-Shield.wiki && git add -A && git commit -m "wiki: v10.4.3 field thermal guard" && git push
+cd NEXUS-Shield.wiki && git add -A && git commit -m "wiki: g16 1.0 host desktop, Queen Browser, host freeze" && git push
 ```

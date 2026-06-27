@@ -20,7 +20,20 @@ PANEL = STATE / "field-services-2026-panel.json"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -61,6 +74,7 @@ def build_panel() -> dict[str, Any]:
     dhcp = _slice("field_dhcp", "field-dhcp.py")
     ntp = _slice("field_ntp", "field-ntp-2026.py")
     sovereign = _slice("sovereign_time", "sovereign-time.py")
+    clock = _mod("sovereign_clock", "sovereign-clock.py").know()
     gate = _slice("sovereign_gate", "field-sovereign-gate.py")
     sync = _slice("sovereign_sync", "field-sovereign-sync.py")
     ellie = _slice("ellie_last_host", "ellie-last-host.py")
@@ -76,8 +90,11 @@ def build_panel() -> dict[str, Any]:
         "dhcp": dhcp,
         "ntp": ntp,
         "sovereign_time": sovereign,
+        "sovereign_clock": clock,
         "sovereign_gate": gate,
         "sovereign_sync": sync,
+        "never_desync": True,
+        "synced": bool(clock.get("synced")) if isinstance(clock, dict) else False,
         "security_model": seed.get("security_model") or {},
         "sync_doctrine": _load_json(INSTALL / "data" / "field-sovereign-sync-doctrine.json", {}),
         "ellie_last_host": ellie,

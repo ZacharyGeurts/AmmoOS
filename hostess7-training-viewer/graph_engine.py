@@ -465,6 +465,46 @@ def build_wireframe_graph(
         },
     )
     add_edge("reality_physics_hub", "hostess7_core", "physics")
+
+    geo_panel = _load(state / "hostess7-geography-panel.json", {})
+    geo_tracks = (geo_panel.get("tracks") or {}) if isinstance(geo_panel, dict) else {}
+    add_node(
+        id="geography_hub",
+        label="Geography",
+        group="geography_core",
+        level=str((geo_tracks.get("geography") or {}).get("level") or "training"),
+        score=float((geo_tracks.get("geography") or {}).get("score") or 0.3),
+        x=4.2, y=5.2, z=-1.8,
+        color="#2a9d8f",
+        detail=str(geo_panel.get("motto") or "Postal addresses · world geography · flat earth")[:120],
+        kind="geography_hub",
+        payload={
+            "address_corpus": geo_panel.get("address_corpus_count"),
+            "countries": len(geo_panel.get("countries_represented") or []),
+            "flat_earth_claims": len((geo_panel.get("flat_earth") or {}).get("claims") or []),
+        },
+    )
+    add_edge("geography_hub", "hostess7_core", "geography")
+    for gi, (gid, glabel, gcolor) in enumerate((
+        ("postal_addresses", "Postal", "#e9c46a"),
+        ("world_geography", "World", "#264653"),
+        ("flat_earth_geography", "Flat Earth", "#e76f51"),
+    )):
+        gt = geo_tracks.get(gid) or tracks.get(gid) or {}
+        gx, gy, gz = _ring_pos(gi, 3, 2.8, 5.2, -0.4)
+        add_node(
+            id=f"geography_{gid}",
+            label=glabel,
+            group="geography_track",
+            level=level_from_track(gt) if gt else "pending",
+            score=float(gt.get("score") or 0.2),
+            x=gx, y=gy, z=gz,
+            color=gcolor,
+            detail=json.dumps({k: gt.get(k) for k in ("pass_rate", "address_corpus", "address_drills") if gt.get(k) is not None}, ensure_ascii=False)[:120],
+            kind="geography_track",
+        )
+        add_edge("geography_hub", f"geography_{gid}", "geography")
+        add_edge(f"geography_{gid}", "hostess7_core", "training")
     for pi, (pid, plabel, pcolor) in enumerate((
         ("gravity_mechanics", "Gravity", "#38bdf8"),
         ("thermodynamics_entropy", "Thermo·entropy", "#c084fc"),
@@ -486,6 +526,80 @@ def build_wireframe_graph(
         add_edge("reality_physics_hub", f"physics_{pid}", "physics")
         add_edge(f"physics_{pid}", "hostess7_core", "training")
 
+    sense_panel = _load(state / "hostess7-sense-training-panel.json", {})
+    sense_tracks = sense_panel.get("tracks") or {}
+    sense_doc = _load(install / "data" / "hostess7-sense-training-doctrine.json", {})
+    sense_overall = float(sense_panel.get("overall_score") or 0.25)
+    add_node(
+        id="sense_package_hub",
+        label="Sense package",
+        group="sense",
+        level="complete" if int(sense_panel.get("tracks_complete") or 0) >= 2 else "training",
+        score=sense_overall,
+        x=0, y=-2.8, z=4.2,
+        color="#38bdf8",
+        detail="Final Eye · Ear · Mouth — Hostess 7 training wires",
+        kind="sense_hub",
+        payload={"tracks_complete": sense_panel.get("tracks_complete"), "tracks_mastered": sense_panel.get("tracks_mastered")},
+    )
+    add_edge("sense_package_hub", "hostess7_core", "sense")
+
+    sense_defs = (
+        ("final_eye", "Final Eye", "final_eye_node", "#7ec8ff", 0.0),
+        ("final_ear", "Final Ear", "final_ear_node", "#4de88a", 2.094),
+        ("final_mouth", "Final Mouth", "final_mouth_node", "#f0a060", 4.189),
+    )
+    for tid, label, nid, color, phase in sense_defs:
+        st = sense_tracks.get(tid) or tracks.get(tid) or {}
+        sess = (sense_doc.get("sessions") or {}).get(tid) or {}
+        sx, sy, sz = _ring_pos(0, 1, 2.4, -2.8, phase)
+        add_node(
+            id=nid,
+            label=label,
+            group="sense_product",
+            level=level_from_track(st) if st else "pending",
+            score=float(st.get("score") or 0.2),
+            x=sx, y=sy, z=sz,
+            color=color,
+            detail=str(sess.get("api") or "")[:80],
+            kind="sense_product",
+            payload={"tab": sess.get("tab"), "track_id": tid, "steps": st.get("steps") or []},
+        )
+        add_edge("sense_package_hub", nid, "sense")
+        add_edge(nid, "hostess7_core", "training")
+        track_nid = f"track_{tid}"
+        if track_nid not in node_ids:
+            add_node(
+                id=track_nid,
+                label=str(st.get("label") or sess.get("label") or tid)[:24],
+                group="training_track",
+                level=level_from_track(st) if st else "pending",
+                score=float(st.get("score") or 0.15),
+                x=sx * 0.7, y=sy - 1.2, z=sz * 0.7,
+                color=color,
+                kind="track",
+            )
+        add_edge(track_nid, nid, "session")
+        add_edge("hostess7_core", track_nid, "training")
+
+    wire_t = tracks.get("sense_neural_wire") or {}
+    wx, wy, wz = _ring_pos(0, 1, 1.6, -1.4, 1.0)
+    add_node(
+        id="sense_neural_wire",
+        label="Invincible wire",
+        group="sense_neural",
+        level=level_from_track(wire_t) if wire_t else "pending",
+        score=float(wire_t.get("score") or sense_overall),
+        x=wx, y=wy, z=wz,
+        color="#c084fc",
+        detail="Eye↔Ear↔Mouth neural quorum under Hostess 7",
+        kind="sense_wire",
+    )
+    add_edge("final_eye_node", "sense_neural_wire", "neural")
+    add_edge("final_ear_node", "sense_neural_wire", "neural")
+    add_edge("final_mouth_node", "sense_neural_wire", "neural")
+    add_edge("sense_neural_wire", "hostess7_core", "quorum")
+
     ic_panel = _load(state / "ironclad-plate.json", {}) or _load(install / "data" / "ironclad-doctrine.json", {})
     ic_realized = bool(ic_panel.get("realized") or (ic_panel.get("immutability") or {}).get("realized"))
     add_node(
@@ -502,6 +616,10 @@ def build_wireframe_graph(
     )
     add_edge("ironclad_bible", "hostess7_core", "truth")
     add_edge("ironclad_bible", "reality_physics_hub", "physics")
+    add_edge("ironclad_bible", "sense_neural_wire", "neural_extrapolation")
+    add_edge("ironclad_bible", "sense_package_hub", "neural_extrapolation")
+    for sense_nid in ("final_eye_node", "final_ear_node", "final_mouth_node"):
+        add_edge("ironclad_bible", sense_nid, "neural_extrapolation")
 
     meld = _load(state / "field-plate-meld.json", {})
     if meld.get("chain_hash"):

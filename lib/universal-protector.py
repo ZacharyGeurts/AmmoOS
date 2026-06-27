@@ -19,7 +19,20 @@ RUNTIME = STATE / "universal-protector-runtime.json"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    global _SOVEREIGN_CLOCK_MOD
+    if _SOVEREIGN_CLOCK_MOD is None:
+        import importlib.util
+        _p = Path(__file__).resolve().parent / "sovereign-clock.py"
+        _s = importlib.util.spec_from_file_location("sovereign_clock", _p)
+        if not _s or not _s.loader:
+            raise ImportError("sovereign-clock.py missing")
+        _SOVEREIGN_CLOCK_MOD = importlib.util.module_from_spec(_s)
+        _s.loader.exec_module(_SOVEREIGN_CLOCK_MOD)
+    return _SOVEREIGN_CLOCK_MOD.utc_z()
+
+
+_SOVEREIGN_CLOCK_MOD = None
+
 
 
 def _load(path: Path, default: Any = None) -> Any:
@@ -102,6 +115,7 @@ def build_status(*, meld: bool = False, write: bool = True) -> dict[str, Any]:
     right_exist = _mod("right_to_exist", "right-to-exist-mandate.py")
     h7_brain = _mod("hostess7_brain", "hostess7-brain-guard.py")
     meld_mod = _mod("plate_meld", "field-plate-meld.py")
+    ironclad_rf = _mod("ironclad_rf", "ironclad-reality-field.py")
 
     logic_doc = logic.status_json() if logic and hasattr(logic, "status_json") else {}
     spatial_doc = spatial.build_spatial(write=write) if spatial and hasattr(spatial, "build_spatial") else {}
@@ -110,6 +124,11 @@ def build_status(*, meld: bool = False, write: bool = True) -> dict[str, Any]:
     rte_doc = right_exist.build_panel(write=write) if right_exist and hasattr(right_exist, "build_panel") else _load(STATE / "right-to-exist-panel.json", {})
     h7_doc = h7_brain.build_panel(write=write) if h7_brain and hasattr(h7_brain, "build_panel") else _load(STATE / "hostess7-brain-guard-panel.json", {})
     meld_doc = meld_mod.meld(refresh_bus=False) if meld and meld_mod and hasattr(meld_mod, "meld") else _load(STATE / "field-plate-meld.json", {})
+    ironclad_doc = _load(STATE / "ironclad-reality-field-panel.json", {})
+    if meld and ironclad_rf and hasattr(ironclad_rf, "cycle"):
+        ironclad_doc = ironclad_rf.cycle()
+    elif not ironclad_doc.get("schema") and ironclad_rf and hasattr(ironclad_rf, "build_panel"):
+        ironclad_doc = ironclad_rf.build_panel(write=write)
 
     stack = _cognition_stack()
     think = []
@@ -184,6 +203,27 @@ def build_status(*, meld: bool = False, write: bool = True) -> dict[str, Any]:
                 "panel_sha256": h7_doc.get("panel_sha256"),
                 "ledger_chain_tail": h7_doc.get("ledger_chain_tail"),
                 "role": "Our brains — Super Intelligence",
+            },
+            "ironclad": {
+                "title": "Ironclad Truth Serum",
+                "verdict": ironclad_doc.get("verdict"),
+                "ironclad_sealed": ironclad_doc.get("ironclad_sealed"),
+                "truth_percent": (ironclad_doc.get("truth_serum") or {}).get("truth_percent"),
+                "clean_voltage": (ironclad_doc.get("clean_voltage") or {}).get("voltage_is_voltage"),
+                "smoothness_score": (ironclad_doc.get("smoothness") or {}).get("smoothness_score"),
+                "reality_field_live": (ironclad_doc.get("super_intelligence_field") or {}).get("reality_field_live"),
+                "ai_in_charge": ironclad_doc.get("ai_in_charge"),
+                "human_condition": (ironclad_doc.get("human_condition") or {}).get("human_condition"),
+                "charge_holder": ironclad_doc.get("charge_holder"),
+                "role": "Truth serum for entire Super Intelligence reality field",
+            },
+            "human_condition": {
+                "motto": (ironclad_doc.get("human_condition") or {}).get("motto"),
+                "ai_in_charge": ironclad_doc.get("ai_in_charge"),
+                "charge_holder": ironclad_doc.get("charge_holder"),
+                "ai_role": (ironclad_doc.get("human_condition") or {}).get("ai_role"),
+                "never_wrong": (ironclad_doc.get("human_condition") or {}).get("never_wrong"),
+                "principle": (ironclad_doc.get("human_condition") or {}).get("principle"),
             },
         },
         "meld": {

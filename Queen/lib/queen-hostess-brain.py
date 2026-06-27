@@ -186,6 +186,29 @@ def _ai_operate(query: str, *, from_: str = "ai") -> dict[str, Any]:
         return {"ok": False, "tail": (proc.stdout or "")[-2000:], "returncode": proc.returncode}
 
 
+def _muscle_memory_status() -> dict[str, Any]:
+    script = SG / "NewLatest" / "lib" / "hostess7-muscle-memory.py"
+    if not script.is_file():
+        return {"available": False}
+    proc = subprocess.run(
+        [sys.executable, str(script), "json"],
+        cwd=str(SG / "NewLatest"),
+        capture_output=True,
+        text=True,
+        timeout=30,
+        env={
+            **os.environ,
+            "NEXUS_STATE_DIR": os.environ.get("NEXUS_STATE_DIR", str(QUEEN / ".nexus-state")),
+            "NEXUS_INSTALL_ROOT": str(SG / "NewLatest"),
+            "SG_ROOT": str(SG),
+        },
+    )
+    try:
+        return {"available": True, **json.loads(proc.stdout)}
+    except json.JSONDecodeError:
+        return {"available": False, "tail": (proc.stdout or "")[-1500:]}
+
+
 def hostess_brain_status() -> dict[str, Any]:
     manifest = _load_json(BRAIN_MANIFEST)
     return {
@@ -202,6 +225,7 @@ def hostess_brain_status() -> dict[str, Any]:
         "hostess7_final_eye": manifest.get("hostess7_final_eye", {}),
         "final_eye_doctrine": _load_json(HOSTESS / "data" / "final-eye-12-doctrine.json"),
         "eyeball": _eyeball_status(),
+        "muscle_memory": _muscle_memory_status(),
         "comfort": hostess_comfort(),
         "sdf": _sdf_stats(),
         "textbook": _textbook_status(),
@@ -379,6 +403,28 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             return _extract_json_stdout(proc.stdout)
         except json.JSONDecodeError:
             return {"ok": proc.returncode == 0, "tail": (proc.stdout or "")[-2000:]}
+    if action in ("muscle_memory", "muscle-memory", "muscle"):
+        script = SG / "NewLatest" / "lib" / "hostess7-muscle-memory.py"
+        if not script.is_file():
+            return {"ok": False, "error": "muscle_memory_missing"}
+        proc = subprocess.run(
+            [sys.executable, str(script), "dispatch"],
+            input=json.dumps(body),
+            capture_output=True,
+            text=True,
+            timeout=45,
+            cwd=str(SG / "NewLatest"),
+            env={
+                **_ai_communique_env(),
+                "NEXUS_STATE_DIR": os.environ.get("NEXUS_STATE_DIR", str(QUEEN / ".nexus-state")),
+                "NEXUS_INSTALL_ROOT": str(SG / "NewLatest"),
+                "SG_ROOT": str(SG),
+            },
+        )
+        try:
+            return json.loads(proc.stdout)
+        except json.JSONDecodeError:
+            return {"ok": False, "tail": (proc.stdout or "")[-2000:]}
     return {"ok": False, "error": "unknown_action"}
 
 

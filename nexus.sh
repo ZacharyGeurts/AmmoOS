@@ -170,12 +170,14 @@ Usage:
   ./nexus.sh --no-tray       Skip system-tray icon (combine with other flags)
   ./nexus.sh --tray          Start tray icon only (right-click → jump to tab)
   ./nexus.sh --underlay      Open 2026 Tristate / Underlay F9 installer
+  ./nexus.sh --drop-in       Forceful drop-in pipeline (defield → redata → secure net)
+  ./nexus.sh --browser-f9    F9 action once (Queen browser or Tristate installer)
   ./nexus.sh --tab <view>    Open a panel tab in the browser (e.g. command, library)
   ./nexus.sh --shutdown      Stop panel, tray, and watchdog immediately (--stop)
   ./nexus.sh --restart       Stop and start panel immediately (--restart-immediate)
 
 Tab views (for --tab):
-  command, us, packets, threats, intel, signals, dns, outside, library, system
+  command, us, sweet-anita, packets, threats, intel, final-eye, final-ear, final-mouth, signals, dns, outside, library, training, system
   Sub-views: packets/monitor, threats/map, intel/honor, system/settings, …
 
 Environment:
@@ -205,9 +207,13 @@ case "${1:-}" in
     nexus_launch_underlay zenity
     exit $?
     ;;
-  --hotkey)
+  --hotkey|--browser-f9)
     nexus_launch_underlay hotkey
     exit $?
+    ;;
+  --drop-in)
+    nexus_field_standalone_ensure_panel 2>/dev/null || true
+    exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-drop-in-orchestrator.py" pipeline
     ;;
   --shutdown|--stop)
     nexus_panel_shutdown_immediate

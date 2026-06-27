@@ -17,7 +17,9 @@
   "capsule_internal": true,
   "operator_surface": "AMOURANTHRTX queen-browser FieldWebPanel — not host port monitor",
   "routes": [
-    {"id": "world", "path": "/world/", "title": "Queen OS + Browser", "layer": "shell"},
+    {"id": "nexus", "path": "http://127.0.0.1:9477/field", "title": "NEXUS Field C2", "layer": "shell"},
+    {"id": "queen", "path": "/world/browser.html", "title": "Queen", "layer": "shell"},
+    {"id": "queen_home", "path": "/world/queen-field-home.html", "title": "Queen", "layer": "engine"},
     {"id": "forge", "path": "/gui/queen-build-deck.html", "title": "Queen Forge", "layer": "build"},
     {"id": "hostess", "path": "/api/field-brain", "title": "Hostess 7 Brain", "layer": "brain"},
     {"id": "eyeball", "path": "/api/queen-eyeball", "title": "Final_Eye", "layer": "offense"},
@@ -35,7 +37,8 @@
     {"id": "world_redata", "path": "/api/world-redata", "title": "World Redata — secure forever", "layer": "storage"},
     {"id": "secure_channel", "path": "/api/secure-channel", "title": "Secure Channel — forever invincible comms", "layer": "security"},
     {"id": "world_repack", "path": "http://127.0.0.1:9480/", "title": "World Repack — individual-file GUI", "layer": "storage"},
-    {"id": "contact_vector", "path": "/api/contact-vector", "title": "Contact classification vector", "layer": "security"}
+    {"id": "contact_vector", "path": "/api/contact-vector", "title": "Contact classification vector", "layer": "security"},
+    {"id": "field_sanity", "path": "/api/field-sanity", "title": "Field sanity", "layer": "thermo"}
   ],
   "external_wire": {
     "lane": "External",

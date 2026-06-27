@@ -2,6 +2,13 @@
   "schema": "field-wave-doctrine/v1",
   "title": "Voltage is voltage — stripped to the wave",
   "motto": "If it is voltage, it is voltage. No encoding. Strip to the wave; the rest is potential energy.",
+  "regulation": {
+    "operate_at_present_rail": true,
+    "power_company_grid_trust_layer": "blocked",
+    "conversion_on_voltage_path": false,
+    "entropy_on_trust_layer": false,
+    "doctrine": "data/field-voltage-regulation-doctrine.json"
+  },
   "policy": {
     "voltage_is_voltage": true,
     "encode_wave": false,

@@ -103,6 +103,8 @@ nexus_install_icon_src() {
   local root="$1"
   local candidate
   for candidate in \
+    "${root}/Queen/world/assets/branding/amouranth-gentle.png" \
+    "${root}/panel/assets/queen-browser.png" \
     "${root}/assets/nexus-field.png" \
     "${root}/panel/assets/nexus-field.png" \
     "${root}/panel/assets/nexus-field-256.png" \
@@ -155,9 +157,9 @@ Version=${ver}
 Type=Application
 Name=NEXUS Field Command Center
 GenericName=Field C2
-Comment=Queen field browser — secured Firefox/Chrome + NEXUS panel — tray + ZNetwork
+Comment=Queen field browser — NEXUS opens in Queen tabs — tray + ZNetwork
 Exec=${exec}
-Icon=nexus-field
+Icon=queen-browser
 Path=${root}
 Terminal=false
 Categories=Security;Network;System;
@@ -257,6 +259,10 @@ nexus_install_portable() {
   sg="$(cd "${root}/.." && pwd)"
   export SG_ROOT="${sg}"
   mkdir -p "${root}/.nexus-state"
+  if [[ -f "${root}/Queen/scripts/queen-icon-kit.py" ]]; then
+    python3 "${root}/Queen/scripts/queen-icon-kit.py" >/dev/null 2>&1 \
+      || pythong "${root}/Queen/scripts/queen-icon-kit.py" >/dev/null 2>&1 || true
+  fi
   zn="$(nexus_install_znetwork_src "$root" 2>/dev/null || true)"
   nexus_install_build_znetwork "$sg" || true
   [[ -n "$zn" ]] && nexus_install_ship_znetwork "$root" "$zn" || true
