@@ -229,6 +229,11 @@ case "${1:-}" in
       URL="$(nexus_panel_url)"
       echo "Panel restarted: ${URL}"
       echo "Version: $(nexus_panel_served_version 2>/dev/null || nexus_panel_desired_version 2>/dev/null || echo unknown)"
+      if [[ "${NEXUS_FIELD_LAUNCH_BROWSER:-1}" == "1" ]] && [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py" ]]; then
+        pythong "${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py" open 2>/dev/null \
+          | grep -q '"ok": true' && echo "Integrated Queen browser launched" \
+          || echo "WARN: integrated browser launch incomplete — ./scripts/start-field-stack.sh" >&2
+      fi
       exit 0
     fi
     echo "Panel restart failed — see ${NEXUS_STATE_DIR}/panel-http.log" >&2

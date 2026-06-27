@@ -63,7 +63,7 @@ echo ""
 echo "=== sense package meld ==="
 "${PY}" "${ROOT}/lib/field-sense-package-meld.py" meld 2>/dev/null || true
 
-"${ROOT}/nexus.sh" --no-browser || {
+NEXUS_ZNETWORK_PROMPT=0 bash "${ROOT}/nexus.sh" --no-browser --no-tray || {
   echo "WARN: NEXUS panel start failed — see ${STATE}/panel-http.log" >&2
 }
 
@@ -98,3 +98,20 @@ echo "URLs:"
 echo "  NEXUS panel  http://127.0.0.1:${PANEL_PORT}/field"
 echo "  Final_Eye    http://127.0.0.1:${EYE_PORT}/ops"
 echo "  Queen Browser  http://127.0.0.1:${WORLD_PORT}/world/browser.html"
+
+if [[ "${NEXUS_FIELD_LAUNCH_BROWSER:-1}" == "1" ]]; then
+  echo ""
+  echo "=== Launch integrated Queen browser ==="
+  pkill -f "${QUEEN}/build/rtx/bin/Linux/queen-browser" 2>/dev/null || true
+  sleep 0.35
+  PY_LAUNCH="${PY:-pythong}"
+  if command -v "${PY_LAUNCH}" >/dev/null 2>&1; then
+    launch_out="$("${PY_LAUNCH}" "${ROOT}/lib/field-queen-browser-open.py" open 2>/dev/null || true)"
+    if echo "${launch_out}" | grep -q '"ok": true'; then
+      echo "  Integrated browser launched (RTX shell or Queen tab queue)"
+    else
+      echo "  WARN: integrated browser launch incomplete — open manually:" >&2
+      echo "    http://127.0.0.1:${WORLD_PORT}/world/browser.html" >&2
+    fi
+  fi
+fi
