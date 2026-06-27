@@ -1,0 +1,15 @@
+{
+  "id": "gutenberg_grammar_land",
+  "title": "Grammar-Land (Gutenberg children's grammar)",
+  "author": "Project Gutenberg",
+  "dewey": "800",
+  "publisher": "Project Gutenberg",
+  "license": "Public Domain",
+  "grade_band": "3-6",
+  "subject": "english_ela",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/gutenberg_grammar_land/front.png",
+  "cover_asset": "library/assets/covers/gutenberg_grammar_land/front.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

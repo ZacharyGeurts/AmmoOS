@@ -1,0 +1,12 @@
+{
+  "schema": "sg-stack-retired/v1",
+  "title": "Retired paths — do not wire; superseded by NewLatest",
+  "retired": [
+    {"path": "SG/Latest/NEXUS-Shield", "reason": "872M duplicate of NewLatest — removed 2026-06-26", "replacement": "SG/NewLatest"},
+    {"path": "SG/NewLatest/amouranth_engine.log", "reason": "221MB stale build log — truncated", "replacement": "Queen build logs only"},
+    {"path": "SG/memes", "reason": "Not in operational stack — optional media"},
+    {"path": "SG/BarbieGirl", "reason": "Not in operational stack"},
+    {"path": "SG/AMOURANTHRTX-wiki", "reason": "Docs only — not runtime stack"}
+  ],
+  "note": "Run scripts/wire-stack.sh after clone to symlink stack into NewLatest."
+}

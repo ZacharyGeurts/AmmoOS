@@ -1,0 +1,13 @@
+{
+  "id": "format-media_gif",
+  "title": "GIF",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".gif"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_gif.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

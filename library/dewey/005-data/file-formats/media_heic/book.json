@@ -1,0 +1,14 @@
+{
+  "id": "format-media_heic",
+  "title": "HEIC",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".heic",
+    ".heif"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_heic.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

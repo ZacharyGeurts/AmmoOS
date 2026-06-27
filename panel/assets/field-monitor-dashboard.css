@@ -1,0 +1,145 @@
+/* AmmoOS monitor wall — right 50%, black canvas, draggable thumbnails */
+
+.fmd-root {
+  --fmd-bg: #040508;
+  --fmd-panel: #0a0c12;
+  --fmd-edge: rgba(148, 163, 184, 0.12);
+  --fmd-text: #e8edf7;
+  --fmd-dim: #7c8aa3;
+  --fmd-accent: #38bdf8;
+  position: relative;
+  height: 100%;
+  background:
+    radial-gradient(ellipse 90% 60% at 80% 0%, rgba(56, 189, 248, 0.06), transparent 55%),
+    linear-gradient(180deg, #06080f 0%, var(--fmd-bg) 100%);
+  color: var(--fmd-text);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  overflow: hidden;
+  border-left: 1px solid var(--fmd-edge);
+}
+
+.fmd-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--fmd-edge);
+  background: rgba(8, 10, 16, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.fmd-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fmd-dim);
+}
+
+.fmd-zoom {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--fmd-dim);
+}
+
+.fmd-zoom input[type="range"] {
+  width: 88px;
+}
+
+.fmd-canvas {
+  position: absolute;
+  inset: 42px 0 0;
+  overflow: auto;
+  padding: 14px;
+  transform-origin: top left;
+}
+
+.fmd-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 100%;
+}
+
+.fmd-panel {
+  position: relative;
+  min-height: 160px;
+  border-radius: 12px;
+  border: 1px solid var(--fmd-edge);
+  background: var(--fmd-panel);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  cursor: grab;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.fmd-panel:active {
+  cursor: grabbing;
+}
+
+.fmd-panel.dragging {
+  opacity: 0.88;
+  box-shadow: 0 16px 40px rgba(56, 189, 248, 0.18);
+  z-index: 20;
+}
+
+.fmd-grip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fmd-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--fmd-edge);
+  user-select: none;
+}
+
+.fmd-grip span:last-child {
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.fmd-panel--chromeless {
+  border-color: rgba(94, 207, 122, 0.2);
+  min-height: 140px;
+}
+
+.fmd-panel--chromeless .fmd-view {
+  height: 100%;
+  min-height: 140px;
+  pointer-events: auto;
+}
+
+.fmd-view {
+  width: 100%;
+  height: 200px;
+  border: 0;
+  display: block;
+  background: #000;
+  pointer-events: none;
+}
+
+.fmd-panel.focused .fmd-view {
+  pointer-events: auto;
+}
+
+.fmd-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 240px;
+  color: var(--fmd-dim);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 24px;
+}

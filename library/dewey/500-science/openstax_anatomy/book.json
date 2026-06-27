@@ -1,0 +1,15 @@
+{
+  "id": "openstax_anatomy",
+  "title": "OpenStax Anatomy and Physiology 2e",
+  "author": "OpenStax",
+  "dewey": "500",
+  "publisher": "OpenStax",
+  "license": "CC BY 4.0",
+  "grade_band": "11-12",
+  "subject": "science",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/openstax_anatomy/front.png",
+  "cover_asset": "library/assets/covers/openstax_anatomy/front.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

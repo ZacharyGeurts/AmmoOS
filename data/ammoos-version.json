@@ -1,0 +1,25 @@
+{
+  "schema": "ammoos-version/v1",
+  "product": "AmmoOS",
+  "edition": "beta",
+  "version": "1.0.1-beta",
+  "tag": "v1.0.1-beta",
+  "nexus_lineage": "10.4.1",
+  "g16_pairing": "4.7.1",
+  "pythong_pairing": "16.1.0-gpy16",
+  "release_model": "source_bootstrap_per_platform",
+  "statement": "AmmoOS beta 1.0.1-beta \u2014 Grok16 4.7.1 pairing, combinatronic field OS, browser + native launch.",
+  "surfaces": {
+    "host_desktop": "http://127.0.0.1:9477/field",
+    "field_command": "http://127.0.0.1:9477/command",
+    "queen_browser": "http://127.0.0.1:9481/world/browser.html",
+    "underlay_f9": "http://127.0.0.1:9477/underlay-f9?sector=underlay",
+    "training_viewer": "http://127.0.0.1:9477/command#training"
+  },
+  "native_programs": [
+    "Queen/build/rtx/bin/Linux/queen-browser",
+    "hostess7-training-viewer/launch.sh",
+    "nexus.sh",
+    "install-all.sh"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "format-vcodec_theora",
+  "title": "Theora",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [],
+  "magic": null,
+  "cover": "/library/assets/formats/vcodec_theora.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

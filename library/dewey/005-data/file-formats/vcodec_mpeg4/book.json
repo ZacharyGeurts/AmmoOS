@@ -1,0 +1,11 @@
+{
+  "id": "format-vcodec_mpeg4",
+  "title": "MPEG-4 Part 2",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [],
+  "magic": null,
+  "cover": "/library/assets/formats/vcodec_mpeg4.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

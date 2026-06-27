@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AmmoOS — Getting Started</title>
+  <meta name="description" content="AmmoOS 1.0.1-beta beta manual — field OS, browser surfaces, combinatronic engine." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/AmmoOS/getting-started.html" />
+  <link rel="stylesheet" href="manual.css?vv2" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>AmmoOS</strong>
+        <span class="nav-version">1.0.1-beta beta</span>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="launch-surfaces.html">Launch Surfaces</a>
+      <a href="combinatronic.html">Combinatronic</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="io.html">Field I/O</a>
+      <a href="queen-browser.html">Queen Browser</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="https://github.com/ZacharyGeurts/AmmoOS">GitHub</a>
+    </div>
+  </nav>
+
+  <h1>Getting Started</h1>
+  <p>AmmoOS <strong>1.0.1-beta</strong> installs from source. Production deploy uses <code>install-all.sh</code>; development uses <code>nexus.sh</code>.</p>
+  <h2>Linux x86_64</h2>
+  <pre><code>git clone https://github.com/ZacharyGeurts/AmmoOS.git
+cd AmmoOS
+sudo ./install-all.sh</code></pre>
+  <p>Browser opens <code>http://127.0.0.1:9477/field</code> on start.</p>
+  <h2>Development tree</h2>
+  <pre><code>export SG_ROOT=/path/to/SG
+./scripts/ammoos-beta-pipeline.sh
+./nexus.sh</code></pre>
+  <h2>Windows</h2>
+  <pre><code># PowerShell (see stealth.ps1 in release assets)
+# Or WSL2:
+tar -xzf ammooos-1.0.1-beta-source.tar.gz && cd ammooos-1.0.1-beta
+sudo ./install-all.sh</code></pre>
+  <h2>Verify</h2>
+  <pre><code>./scripts/ammoos-launch-verify.sh</code></pre>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="https://github.com/ZacharyGeurts/AmmoOS/releases/tag/v1.0.1-beta">Release v1.0.1-beta</a> ·
+    <a href="https://github.com/ZacharyGeurts/AmmoOS">GitHub</a>
+    <p class="footer-meta">AmmoOS 1.0.1-beta · field OS beta · GPLv3</p>
+  </footer>
+</body>
+</html>

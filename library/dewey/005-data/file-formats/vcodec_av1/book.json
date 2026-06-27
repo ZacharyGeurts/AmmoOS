@@ -1,0 +1,11 @@
+{
+  "id": "format-vcodec_av1",
+  "title": "AV1",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [],
+  "magic": null,
+  "cover": "/library/assets/formats/vcodec_av1.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

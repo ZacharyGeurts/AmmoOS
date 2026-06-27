@@ -1,0 +1,13 @@
+{
+  "id": "format-fld",
+  "title": "FLD",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "image_field",
+  "extensions": [
+    ".fld"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/fld.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

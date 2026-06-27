@@ -1,0 +1,13 @@
+{
+  "id": "format-aml",
+  "title": "AmmoLang",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "sovereign",
+  "extensions": [
+    ".aml"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/aml.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

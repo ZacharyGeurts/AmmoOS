@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AmmoOS — Launch Surfaces</title>
+  <meta name="description" content="AmmoOS 1.0.1-beta beta manual — field OS, browser surfaces, combinatronic engine." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/AmmoOS/launch-surfaces.html" />
+  <link rel="stylesheet" href="manual.css?vv2" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>AmmoOS</strong>
+        <span class="nav-version">1.0.1-beta beta</span>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="launch-surfaces.html">Launch Surfaces</a>
+      <a href="combinatronic.html">Combinatronic</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="io.html">Field I/O</a>
+      <a href="queen-browser.html">Queen Browser</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="https://github.com/ZacharyGeurts/AmmoOS">GitHub</a>
+    </div>
+  </nav>
+
+  <h1>Launch surfaces</h1>
+  <p>Policy: <strong>browser or native program</strong> — no orphan components.</p>
+  <table>
+    <tr><th>Surface</th><th>Path</th><th>Kind</th></tr>
+    <tr><td>Host desktop</td><td><code>http://127.0.0.1:9477/field</code></td><td>Browser</td></tr>
+    <tr><td>Field command</td><td><code>http://127.0.0.1:9477/command</code></td><td>Browser</td></tr>
+    <tr><td>Queen Browser</td><td><code>http://127.0.0.1:9481/world/browser.html</code></td><td>Browser</td></tr>
+    <tr><td>Underlay F9</td><td><code>http://127.0.0.1:9477/underlay-f9?sector=underlay</code></td><td>Browser</td></tr>
+    <tr><td>Training viewer</td><td><code>http://127.0.0.1:9477/command#training</code></td><td>Browser</td></tr>
+    <tr><td>Queen shell</td><td><code>Queen/build/rtx/bin/Linux/queen-browser</code></td><td>Native</td></tr>
+    <tr><td>Dev launcher</td><td><code>./nexus.sh</code></td><td>Native</td></tr>
+  </table>
+  <h2>Verify registry</h2>
+  <pre><code>./scripts/ammoos-launch-verify.sh
+cat .nexus-state/ammoos-launch-registry.json</code></pre>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="https://github.com/ZacharyGeurts/AmmoOS/releases/tag/v1.0.1-beta">Release v1.0.1-beta</a> ·
+    <a href="https://github.com/ZacharyGeurts/AmmoOS">GitHub</a>
+    <p class="footer-meta">AmmoOS 1.0.1-beta · field OS beta · GPLv3</p>
+  </footer>
+</body>
+</html>

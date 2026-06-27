@@ -1,0 +1,13 @@
+{
+  "id": "format-media_avi",
+  "title": "AVI",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".avi"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_avi.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "format-png",
+  "title": "PNG Image",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".png"
+  ],
+  "magic": "89504e47",
+  "cover": "/library/assets/formats/png.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

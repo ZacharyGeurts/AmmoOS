@@ -1,0 +1,14 @@
+{
+  "id": "format-plate",
+  "title": "PLATE",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "image_field",
+  "extensions": [
+    ".plate.json",
+    "-plate.json"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/plate.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

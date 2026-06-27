@@ -1,0 +1,3030 @@
+{
+  "schema": "field-combinatronic-visuals-registry/v1",
+  "generated": "2026-06-27T13:10:18Z",
+  "install_root": "/home/default/Desktop/SG/NewLatest",
+  "chip_count": 28,
+  "lang_count": 56,
+  "file_count": 288,
+  "ok_count": 232,
+  "broken_count": 56,
+  "patterns": {
+    "chip_png": {
+      "kind": "generated_png",
+      "path": "data/combinatronic-visuals/chips/{chip_id}.png",
+      "url": "/world/assets/combinatronic/chips/{chip_id}.png",
+      "id_key": "chip_id",
+      "ids_from": "chip_catalog.chips[].id",
+      "min_bytes": 8000,
+      "magic": "89504e47",
+      "repair_cmd": "field-combinatronic-visuals.py chip {chip_id}",
+      "render": "PIL macro — pink felt #d4899a, black #080808, exact imprint + pin count from catalog"
+    },
+    "chip_mirror": {
+      "kind": "mirror",
+      "path": "Queen/world/assets/combinatronic/chips/{chip_id}.png",
+      "source_pattern": "chip_png",
+      "repair_cmd": "field-combinatronic-visuals.py repair mirror",
+      "note": "byte-identical copy of chip_png for Queen /world/ static serve"
+    },
+    "book_cover": {
+      "kind": "generated_png",
+      "path": "data/combinatronic-visuals/books/{lang_id}.png",
+      "url": "/world/assets/combinatronic/books/{lang_id}.png",
+      "id_key": "lang_id",
+      "ids_from": "program_seed.language_packs keys",
+      "min_bytes": 3000,
+      "magic": "89504e47",
+      "repair_cmd": "field-combinatronic-visuals.py book {lang_id}",
+      "render": "Explaining {Language} cover — title from LANG_LABELS, command count from seed"
+    },
+    "book_mirror": {
+      "kind": "mirror",
+      "path": "Queen/world/assets/combinatronic/books/{lang_id}.png",
+      "source_pattern": "book_cover",
+      "repair_cmd": "field-combinatronic-visuals.py repair mirror"
+    },
+    "h7_manual": {
+      "kind": "h7_book",
+      "path": "library/dewey/000-computer-science/explaining_{lang_id}/explaining_{lang_id}.h7c",
+      "id_key": "lang_id",
+      "magic": "48374201",
+      "repair_cmd": "field-combinatronic-visuals.py book {lang_id}",
+      "verify": "unpack_h7 text_sha256 + char_count; lossless zlib+fly",
+      "text_from": "write_explaining_manual(lang_id) — command→canonical op sections"
+    },
+    "book_json": {
+      "kind": "shelf_entry",
+      "path": "library/dewey/000-computer-science/explaining_{lang_id}/book.json",
+      "id_key": "lang_id",
+      "repair_cmd": "field-combinatronic-visuals.py book {lang_id}",
+      "fields": [
+        "id",
+        "title",
+        "ein",
+        "format",
+        "cover",
+        "combinatronic_lang",
+        "field_path"
+      ]
+    },
+    "manifest": {
+      "kind": "aggregate",
+      "path": "data/field-combinatronic-visuals-manifest.json",
+      "repair_cmd": "field-combinatronic-visuals.py generate",
+      "schema": "field-combinatronic-visuals-manifest/v1"
+    },
+    "registry": {
+      "kind": "fingerprint",
+      "path": "data/field-combinatronic-visuals-registry.json",
+      "repair_cmd": "field-combinatronic-visuals.py registry",
+      "schema": "field-combinatronic-visuals-registry/v1",
+      "note": "sha256 of every expected file — compare across machines; content hashes stable when seeds unchanged"
+    },
+    "panel": {
+      "kind": "state_cache",
+      "path": "field-combinatronic-visuals-panel.json",
+      "root": "NEXUS_STATE_DIR",
+      "repair_cmd": "field-combinatronic-visuals.py manifest"
+    }
+  },
+  "sources": {
+    "chip_catalog": {
+      "path": "data/field-combinatronic-chip-catalog.json",
+      "role": "source_of_truth",
+      "drives": [
+        "chip_png",
+        "chip_mirror"
+      ],
+      "ids": "chips[].id",
+      "repair": "restore from git or sibling clone; never hand-edit PNGs"
+    },
+    "program_seed": {
+      "path": "data/field-program-combinatronic-seed.json",
+      "role": "source_of_truth",
+      "drives": [
+        "book_cover",
+        "book_mirror",
+        "h7_manual",
+        "book_json"
+      ],
+      "ids": "language_packs keys",
+      "repair": "restore from git; language_packs commands drive manual text"
+    },
+    "h7_packer": {
+      "path": "Hostess7/scripts/field_h7_book.py",
+      "role": "codec",
+      "drives": [
+        "h7_manual"
+      ],
+      "repair": "required on any machine that packs or verifies .h7"
+    },
+    "generator": {
+      "path": "lib/field-combinatronic-visuals.py",
+      "role": "builder",
+      "repair": "restore from git — all generated assets rebuild from this module"
+    }
+  },
+  "repair": {
+    "cross_machine": "Any NEXUS_INSTALL_ROOT with sources + generator rebuilds all generated files. No PNG/H7 binary transfer required.",
+    "order": [
+      "1. Restore source JSON + lib/field-combinatronic-visuals.py + Hostess7/scripts/field_h7_book.py from git or donor clone",
+      "2. field-combinatronic-visuals.py inventory — list missing/corrupt",
+      "3. field-combinatronic-visuals.py repair — regenerate only broken rows",
+      "4. field-combinatronic-visuals.py registry — refresh fingerprints",
+      "5. h7-library-bridge.py build — re-index Explaining shelf"
+    ],
+    "commands": {
+      "inventory": "field-combinatronic-visuals.py inventory",
+      "verify": "field-combinatronic-visuals.py verify",
+      "repair_all": "field-combinatronic-visuals.py repair",
+      "repair_one_chip": "field-combinatronic-visuals.py chip <chip_id>",
+      "repair_one_book": "field-combinatronic-visuals.py book <lang_id>",
+      "repair_mirrors": "field-combinatronic-visuals.py repair mirror",
+      "full_rebuild": "field-combinatronic-visuals.py generate",
+      "pattern_help": "field-combinatronic-visuals.py pattern <pattern_id>",
+      "registry": "field-combinatronic-visuals.py registry"
+    }
+  },
+  "files": [
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/cyrix_6x86.png",
+      "chip_id": "cyrix_6x86",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 482455,
+      "sha256": "4a99449af8ec27f78e09891f22cc5d9fca8f7f1e93593b3985c041117779ebff",
+      "repair_cmd": "chip cyrix_6x86"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/cyrix_6x86.png",
+      "chip_id": "cyrix_6x86",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 482455,
+      "sha256": "4a99449af8ec27f78e09891f22cc5d9fca8f7f1e93593b3985c041117779ebff",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/cyrix_6x86mx.png",
+      "chip_id": "cyrix_6x86mx",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 483997,
+      "sha256": "50153d148cd2bb54a8e243c5953fa4b04a630a3ff51ae24497bf45514eeb0f63",
+      "repair_cmd": "chip cyrix_6x86mx"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/cyrix_6x86mx.png",
+      "chip_id": "cyrix_6x86mx",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 483997,
+      "sha256": "50153d148cd2bb54a8e243c5953fa4b04a630a3ff51ae24497bf45514eeb0f63",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/cyrix_cx486dlc.png",
+      "chip_id": "cyrix_cx486dlc",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 515465,
+      "sha256": "8fb58ec6c7de52065f9082c4943e06d0a00dbc46d4592617d5bf3b29a10c6bee",
+      "repair_cmd": "chip cyrix_cx486dlc"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/cyrix_cx486dlc.png",
+      "chip_id": "cyrix_cx486dlc",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 515465,
+      "sha256": "8fb58ec6c7de52065f9082c4943e06d0a00dbc46d4592617d5bf3b29a10c6bee",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/cyrix_5x86.png",
+      "chip_id": "cyrix_5x86",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 514997,
+      "sha256": "688fcec9ddede197a82ffe92c3c0095d73025d8218134119aa3d46f696bdf9cb",
+      "repair_cmd": "chip cyrix_5x86"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/cyrix_5x86.png",
+      "chip_id": "cyrix_5x86",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 514997,
+      "sha256": "688fcec9ddede197a82ffe92c3c0095d73025d8218134119aa3d46f696bdf9cb",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/cyrix_mii.png",
+      "chip_id": "cyrix_mii",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 479483,
+      "sha256": "afc5d9b059dfb22622d6d0dae5bf562043676b1010302e4f4f3c57e1fd608a80",
+      "repair_cmd": "chip cyrix_mii"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/cyrix_mii.png",
+      "chip_id": "cyrix_mii",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 479483,
+      "sha256": "afc5d9b059dfb22622d6d0dae5bf562043676b1010302e4f4f3c57e1fd608a80",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/cyrix_geode_gx1.png",
+      "chip_id": "cyrix_geode_gx1",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 472372,
+      "sha256": "62d27b8fab72aed1e9db20b8cbecf3ee0911c96d5fe3f94467a3095ae4815b8f",
+      "repair_cmd": "chip cyrix_geode_gx1"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/cyrix_geode_gx1.png",
+      "chip_id": "cyrix_geode_gx1",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 472372,
+      "sha256": "62d27b8fab72aed1e9db20b8cbecf3ee0911c96d5fe3f94467a3095ae4815b8f",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_i80486.png",
+      "chip_id": "mame_i80486",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 515477,
+      "sha256": "209f41eb70af86cf77ad907fa76d3e0eb3fd38a618de0a461102e4d40768d372",
+      "repair_cmd": "chip mame_i80486"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_i80486.png",
+      "chip_id": "mame_i80486",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 515477,
+      "sha256": "209f41eb70af86cf77ad907fa76d3e0eb3fd38a618de0a461102e4d40768d372",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_i80386.png",
+      "chip_id": "mame_i80386",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 515881,
+      "sha256": "e76c7591355af33965048da3520a7845f48e71ef6b044f469550f5dc63ccc815",
+      "repair_cmd": "chip mame_i80386"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_i80386.png",
+      "chip_id": "mame_i80386",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 515881,
+      "sha256": "e76c7591355af33965048da3520a7845f48e71ef6b044f469550f5dc63ccc815",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_pentium.png",
+      "chip_id": "mame_pentium",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 481981,
+      "sha256": "e0df6a1739727f544f0444fee7145191550c38dc0ea448af38c6ee620acb3f1c",
+      "repair_cmd": "chip mame_pentium"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_pentium.png",
+      "chip_id": "mame_pentium",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 481981,
+      "sha256": "e0df6a1739727f544f0444fee7145191550c38dc0ea448af38c6ee620acb3f1c",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_pentium_mmx.png",
+      "chip_id": "mame_pentium_mmx",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 481770,
+      "sha256": "7672ae907307c3727d901acc39505dbebfb02f3c5f570c753cd22f918a91cb87",
+      "repair_cmd": "chip mame_pentium_mmx"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_pentium_mmx.png",
+      "chip_id": "mame_pentium_mmx",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 481770,
+      "sha256": "7672ae907307c3727d901acc39505dbebfb02f3c5f570c753cd22f918a91cb87",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_m6502.png",
+      "chip_id": "mame_m6502",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 536590,
+      "sha256": "df3b91b2652852f27e94092e70abe52b04ef3b19d5f0ca52ca17989955bf455b",
+      "repair_cmd": "chip mame_m6502"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_m6502.png",
+      "chip_id": "mame_m6502",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 536590,
+      "sha256": "df3b91b2652852f27e94092e70abe52b04ef3b19d5f0ca52ca17989955bf455b",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_z80.png",
+      "chip_id": "mame_z80",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534232,
+      "sha256": "6bb9c878e99d47c9ca9532294ec55719fa2e3f4bab9d84b44b51d17b07dfb561",
+      "repair_cmd": "chip mame_z80"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_z80.png",
+      "chip_id": "mame_z80",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534232,
+      "sha256": "6bb9c878e99d47c9ca9532294ec55719fa2e3f4bab9d84b44b51d17b07dfb561",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/coco_mc6809e.png",
+      "chip_id": "coco_mc6809e",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 537065,
+      "sha256": "675084efcd542ffd9ed67da22b8cec28d691a0717989d9e7b4084ef9c8e6d8b5",
+      "repair_cmd": "chip coco_mc6809e"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/coco_mc6809e.png",
+      "chip_id": "coco_mc6809e",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 537065,
+      "sha256": "675084efcd542ffd9ed67da22b8cec28d691a0717989d9e7b4084ef9c8e6d8b5",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_m68000.png",
+      "chip_id": "mame_m68000",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 537628,
+      "sha256": "76344bc0e593de3e5d7b6b3dc10f6df712beb5a355e189336fd02977231e4ace",
+      "repair_cmd": "chip mame_m68000"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_m68000.png",
+      "chip_id": "mame_m68000",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 537628,
+      "sha256": "76344bc0e593de3e5d7b6b3dc10f6df712beb5a355e189336fd02977231e4ace",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_m6809.png",
+      "chip_id": "mame_m6809",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 535381,
+      "sha256": "954fb088a092e880c85afa49f0aedd78787675dd946f357aeb73ac498f518935",
+      "repair_cmd": "chip mame_m6809"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_m6809.png",
+      "chip_id": "mame_m6809",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 535381,
+      "sha256": "954fb088a092e880c85afa49f0aedd78787675dd946f357aeb73ac498f518935",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_wdc65816.png",
+      "chip_id": "mame_wdc65816",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 535038,
+      "sha256": "8976b65e38b4ac1f55ec413e81b026ae70b9164139846c9facc3e80637e859da",
+      "repair_cmd": "chip mame_wdc65816"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_wdc65816.png",
+      "chip_id": "mame_wdc65816",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 535038,
+      "sha256": "8976b65e38b4ac1f55ec413e81b026ae70b9164139846c9facc3e80637e859da",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_sn76489.png",
+      "chip_id": "mame_sn76489",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 559274,
+      "sha256": "e46d1b13f1199d7ff93d9dd49e0043f9070155d476964e8af3f870581f560742",
+      "repair_cmd": "chip mame_sn76489"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_sn76489.png",
+      "chip_id": "mame_sn76489",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 559274,
+      "sha256": "e46d1b13f1199d7ff93d9dd49e0043f9070155d476964e8af3f870581f560742",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_ym2612.png",
+      "chip_id": "mame_ym2612",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534574,
+      "sha256": "812d24a0d28673bc2171693d09e37999124cf6f9499781f71efe432aa806b68a",
+      "repair_cmd": "chip mame_ym2612"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_ym2612.png",
+      "chip_id": "mame_ym2612",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534574,
+      "sha256": "812d24a0d28673bc2171693d09e37999124cf6f9499781f71efe432aa806b68a",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_ay8910.png",
+      "chip_id": "mame_ay8910",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 535529,
+      "sha256": "1efc7cf6027621ded096b5676846c6b2778880a5d73e42902746e3c7f091810a",
+      "repair_cmd": "chip mame_ay8910"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_ay8910.png",
+      "chip_id": "mame_ay8910",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 535529,
+      "sha256": "1efc7cf6027621ded096b5676846c6b2778880a5d73e42902746e3c7f091810a",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_r3000.png",
+      "chip_id": "mame_r3000",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 513532,
+      "sha256": "7bec31323d45b164d8cd9148657a2d1f9a7c7af31dbebeea68f9b18490932658",
+      "repair_cmd": "chip mame_r3000"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_r3000.png",
+      "chip_id": "mame_r3000",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 513532,
+      "sha256": "7bec31323d45b164d8cd9148657a2d1f9a7c7af31dbebeea68f9b18490932658",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_arm7.png",
+      "chip_id": "mame_arm7",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 528924,
+      "sha256": "e57f345e7db4acababfed2cf2b08513db8e96921e70819830c0a59a9dff1aa9b",
+      "repair_cmd": "chip mame_arm7"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_arm7.png",
+      "chip_id": "mame_arm7",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 528924,
+      "sha256": "e57f345e7db4acababfed2cf2b08513db8e96921e70819830c0a59a9dff1aa9b",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_sh4.png",
+      "chip_id": "mame_sh4",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 509605,
+      "sha256": "62f069b72e21100353d4205bbbb20c7afab588a9766a0f0b6a898bf0fae43176",
+      "repair_cmd": "chip mame_sh4"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_sh4.png",
+      "chip_id": "mame_sh4",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 509605,
+      "sha256": "62f069b72e21100353d4205bbbb20c7afab588a9766a0f0b6a898bf0fae43176",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_huc6280.png",
+      "chip_id": "mame_huc6280",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 531386,
+      "sha256": "7b0a7c3bf6ed7a9d09aaf546f7b339fbb29dddcc168cbf3620ac5df61e1aeaf5",
+      "repair_cmd": "chip mame_huc6280"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_huc6280.png",
+      "chip_id": "mame_huc6280",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 531386,
+      "sha256": "7b0a7c3bf6ed7a9d09aaf546f7b339fbb29dddcc168cbf3620ac5df61e1aeaf5",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_i8086.png",
+      "chip_id": "mame_i8086",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534562,
+      "sha256": "7549ec9a34d2b42c0e2dabd80f7b520f089b0a91ab167d6d5d95314d1a10f8a4",
+      "repair_cmd": "chip mame_i8086"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_i8086.png",
+      "chip_id": "mame_i8086",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534562,
+      "sha256": "7549ec9a34d2b42c0e2dabd80f7b520f089b0a91ab167d6d5d95314d1a10f8a4",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_i8088.png",
+      "chip_id": "mame_i8088",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534550,
+      "sha256": "86a592bece6b6231aed991773cf9b9bfd277c27baf1a4ee566701728f6f355dd",
+      "repair_cmd": "chip mame_i8088"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_i8088.png",
+      "chip_id": "mame_i8088",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534550,
+      "sha256": "86a592bece6b6231aed991773cf9b9bfd277c27baf1a4ee566701728f6f355dd",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/coco3_gime.png",
+      "chip_id": "coco3_gime",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 525794,
+      "sha256": "0f257046568cf7c7de163ad215d15192ce8699dd388b3720bf7a744273002916",
+      "repair_cmd": "chip coco3_gime"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/coco3_gime.png",
+      "chip_id": "coco3_gime",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 525794,
+      "sha256": "0f257046568cf7c7de163ad215d15192ce8699dd388b3720bf7a744273002916",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/coco_sn76489.png",
+      "chip_id": "coco_sn76489",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 559600,
+      "sha256": "c64bb3ad54f5272ef88bd7c0eb12fe78a87563c710cbe1592045fe3b589bcee8",
+      "repair_cmd": "chip coco_sn76489"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/coco_sn76489.png",
+      "chip_id": "coco_sn76489",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 559600,
+      "sha256": "c64bb3ad54f5272ef88bd7c0eb12fe78a87563c710cbe1592045fe3b589bcee8",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/mame_sid6526.png",
+      "chip_id": "mame_sid6526",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534683,
+      "sha256": "a354b201d532694c22ac2cb230f5243320a7e88f8eae664147598af7f8ee0c91",
+      "repair_cmd": "chip mame_sid6526"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/mame_sid6526.png",
+      "chip_id": "mame_sid6526",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534683,
+      "sha256": "a354b201d532694c22ac2cb230f5243320a7e88f8eae664147598af7f8ee0c91",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/ada.png",
+      "chip_id": null,
+      "lang_id": "ada",
+      "status": "ok",
+      "bytes": 17230,
+      "sha256": "4bea92c1ecd7f34e8164c08f065812fc3d5017933852945da6c8869cd8172012",
+      "repair_cmd": "book ada"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/ada.png",
+      "chip_id": null,
+      "lang_id": "ada",
+      "status": "ok",
+      "bytes": 17230,
+      "sha256": "4bea92c1ecd7f34e8164c08f065812fc3d5017933852945da6c8869cd8172012",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_ada/explaining_ada.h7c",
+      "chip_id": null,
+      "lang_id": "ada",
+      "status": "bad_magic",
+      "bytes": 69661,
+      "sha256": null,
+      "repair_cmd": "book ada"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_ada/book.json",
+      "chip_id": null,
+      "lang_id": "ada",
+      "status": "ok",
+      "bytes": 704,
+      "sha256": "1fbcf7ba593d9746ab1d5cdf56cd5d1e962d7c054a23b3595bd40bdd118d51d4",
+      "repair_cmd": "book ada"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/algol.png",
+      "chip_id": null,
+      "lang_id": "algol",
+      "status": "ok",
+      "bytes": 17274,
+      "sha256": "e12c4a87686178b71e08fca5310bc8e97b706529c617f4d55bf2f94da67eff21",
+      "repair_cmd": "book algol"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/algol.png",
+      "chip_id": null,
+      "lang_id": "algol",
+      "status": "ok",
+      "bytes": 17274,
+      "sha256": "e12c4a87686178b71e08fca5310bc8e97b706529c617f4d55bf2f94da67eff21",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_algol/explaining_algol.h7c",
+      "chip_id": null,
+      "lang_id": "algol",
+      "status": "bad_magic",
+      "bytes": 65629,
+      "sha256": null,
+      "repair_cmd": "book algol"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_algol/book.json",
+      "chip_id": null,
+      "lang_id": "algol",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "18f431e520172ded9463c45ce1932f496cc124bcadb69b322f94c7ef7f1677c3",
+      "repair_cmd": "book algol"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/ammolang.png",
+      "chip_id": null,
+      "lang_id": "ammolang",
+      "status": "ok",
+      "bytes": 18217,
+      "sha256": "e0d74ca3256b1b16744a1ece2d3a9b08dfe7c10df50ab1313d7f22794655a38f",
+      "repair_cmd": "book ammolang"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/ammolang.png",
+      "chip_id": null,
+      "lang_id": "ammolang",
+      "status": "ok",
+      "bytes": 18217,
+      "sha256": "e0d74ca3256b1b16744a1ece2d3a9b08dfe7c10df50ab1313d7f22794655a38f",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_ammolang/explaining_ammolang.h7c",
+      "chip_id": null,
+      "lang_id": "ammolang",
+      "status": "bad_magic",
+      "bytes": 76930,
+      "sha256": null,
+      "repair_cmd": "book ammolang"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_ammolang/book.json",
+      "chip_id": null,
+      "lang_id": "ammolang",
+      "status": "ok",
+      "bytes": 744,
+      "sha256": "ea4c8733825200420f797e5d52c6262ad3a0463a8a2e72bd50cd574999db0c60",
+      "repair_cmd": "book ammolang"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/apl.png",
+      "chip_id": null,
+      "lang_id": "apl",
+      "status": "ok",
+      "bytes": 16708,
+      "sha256": "600f02cc3ec74f96784334449a260ec049df7599a512f6fda2921b4f61f09df1",
+      "repair_cmd": "book apl"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/apl.png",
+      "chip_id": null,
+      "lang_id": "apl",
+      "status": "ok",
+      "bytes": 16708,
+      "sha256": "600f02cc3ec74f96784334449a260ec049df7599a512f6fda2921b4f61f09df1",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_apl/explaining_apl.h7c",
+      "chip_id": null,
+      "lang_id": "apl",
+      "status": "bad_magic",
+      "bytes": 62147,
+      "sha256": null,
+      "repair_cmd": "book apl"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_apl/book.json",
+      "chip_id": null,
+      "lang_id": "apl",
+      "status": "ok",
+      "bytes": 704,
+      "sha256": "d59971018adc47d74f4245b79998a55ab560e3920c53ab3404c1cdebb050d394",
+      "repair_cmd": "book apl"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/asm.png",
+      "chip_id": null,
+      "lang_id": "asm",
+      "status": "ok",
+      "bytes": 18395,
+      "sha256": "287db5c8685c3bf910bb22fb88f96e3f2d1e6166058d2e75315b163c895f74dc",
+      "repair_cmd": "book asm"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/asm.png",
+      "chip_id": null,
+      "lang_id": "asm",
+      "status": "ok",
+      "bytes": 18395,
+      "sha256": "287db5c8685c3bf910bb22fb88f96e3f2d1e6166058d2e75315b163c895f74dc",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_asm/explaining_asm.h7c",
+      "chip_id": null,
+      "lang_id": "asm",
+      "status": "bad_magic",
+      "bytes": 69635,
+      "sha256": null,
+      "repair_cmd": "book asm"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_asm/book.json",
+      "chip_id": null,
+      "lang_id": "asm",
+      "status": "ok",
+      "bytes": 709,
+      "sha256": "6b71ca6360cd26e6446af9efeab964804d82bd2ee5a54ecd371b25cbca70a45e",
+      "repair_cmd": "book asm"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/basic.png",
+      "chip_id": null,
+      "lang_id": "basic",
+      "status": "ok",
+      "bytes": 17640,
+      "sha256": "b8c673fc7435fc051b45218dd42f8ff67aea11363fa2f427e29edfffda585629",
+      "repair_cmd": "book basic"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/basic.png",
+      "chip_id": null,
+      "lang_id": "basic",
+      "status": "ok",
+      "bytes": 17640,
+      "sha256": "b8c673fc7435fc051b45218dd42f8ff67aea11363fa2f427e29edfffda585629",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_basic/explaining_basic.h7c",
+      "chip_id": null,
+      "lang_id": "basic",
+      "status": "bad_magic",
+      "bytes": 70934,
+      "sha256": null,
+      "repair_cmd": "book basic"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_basic/book.json",
+      "chip_id": null,
+      "lang_id": "basic",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "01b361a7df391b2cefc748567af4eeea0cc344e9eb93335876930c7264e2a6d0",
+      "repair_cmd": "book basic"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/c.png",
+      "chip_id": null,
+      "lang_id": "c",
+      "status": "ok",
+      "bytes": 16302,
+      "sha256": "c6f1b80c6b0c0cdac3b95d3ae3b918bf60f49456544ad4b38acf40f669831e02",
+      "repair_cmd": "book c"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/c.png",
+      "chip_id": null,
+      "lang_id": "c",
+      "status": "ok",
+      "bytes": 16302,
+      "sha256": "c6f1b80c6b0c0cdac3b95d3ae3b918bf60f49456544ad4b38acf40f669831e02",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_c/explaining_c.h7c",
+      "chip_id": null,
+      "lang_id": "c",
+      "status": "bad_magic",
+      "bytes": 67331,
+      "sha256": null,
+      "repair_cmd": "book c"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_c/book.json",
+      "chip_id": null,
+      "lang_id": "c",
+      "status": "ok",
+      "bytes": 688,
+      "sha256": "f2129a711f1d75b74ed05bf22ca60a119d668050066f45142c7fbb3ca5f9365a",
+      "repair_cmd": "book c"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/clojure.png",
+      "chip_id": null,
+      "lang_id": "clojure",
+      "status": "ok",
+      "bytes": 17692,
+      "sha256": "c0554de9a20bb932e3067327bdb962baa4a72454f4c9a0cb11851089d83dc57a",
+      "repair_cmd": "book clojure"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/clojure.png",
+      "chip_id": null,
+      "lang_id": "clojure",
+      "status": "ok",
+      "bytes": 17692,
+      "sha256": "c0554de9a20bb932e3067327bdb962baa4a72454f4c9a0cb11851089d83dc57a",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_clojure/explaining_clojure.h7c",
+      "chip_id": null,
+      "lang_id": "clojure",
+      "status": "bad_magic",
+      "bytes": 69331,
+      "sha256": null,
+      "repair_cmd": "book clojure"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_clojure/book.json",
+      "chip_id": null,
+      "lang_id": "clojure",
+      "status": "ok",
+      "bytes": 736,
+      "sha256": "b4d6bf218c2eb6e30c9a68315c0a3c408021c7fdc330f67618e8ca489e6b1891",
+      "repair_cmd": "book clojure"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/cobol.png",
+      "chip_id": null,
+      "lang_id": "cobol",
+      "status": "ok",
+      "bytes": 17246,
+      "sha256": "97978a8c4ad9e975d2898aabbb62aa137dbacb1ff78c0d4c8431c6b487ce2617",
+      "repair_cmd": "book cobol"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/cobol.png",
+      "chip_id": null,
+      "lang_id": "cobol",
+      "status": "ok",
+      "bytes": 17246,
+      "sha256": "97978a8c4ad9e975d2898aabbb62aa137dbacb1ff78c0d4c8431c6b487ce2617",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_cobol/explaining_cobol.h7c",
+      "chip_id": null,
+      "lang_id": "cobol",
+      "status": "bad_magic",
+      "bytes": 69193,
+      "sha256": null,
+      "repair_cmd": "book cobol"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_cobol/book.json",
+      "chip_id": null,
+      "lang_id": "cobol",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "f26741c5f7535fabd5f41a1f56e33517a57caf51aa9305b65c8f6d244fce0a0c",
+      "repair_cmd": "book cobol"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/cobol_copy.png",
+      "chip_id": null,
+      "lang_id": "cobol_copy",
+      "status": "ok",
+      "bytes": 17878,
+      "sha256": "09857ebc7c362a1c86603c214c31cc16cab1f24e1a599584bf35ee61a86ffad8",
+      "repair_cmd": "book cobol_copy"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/cobol_copy.png",
+      "chip_id": null,
+      "lang_id": "cobol_copy",
+      "status": "ok",
+      "bytes": 17878,
+      "sha256": "09857ebc7c362a1c86603c214c31cc16cab1f24e1a599584bf35ee61a86ffad8",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_cobol_copy/explaining_cobol_copy.h7c",
+      "chip_id": null,
+      "lang_id": "cobol_copy",
+      "status": "bad_magic",
+      "bytes": 71428,
+      "sha256": null,
+      "repair_cmd": "book cobol_copy"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_cobol_copy/book.json",
+      "chip_id": null,
+      "lang_id": "cobol_copy",
+      "status": "ok",
+      "bytes": 760,
+      "sha256": "2637fdeaaea859de0ab1a188f90fe0cae3c5e9d72762ccb570fb87286abcbf81",
+      "repair_cmd": "book cobol_copy"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/csharp.png",
+      "chip_id": null,
+      "lang_id": "csharp",
+      "status": "ok",
+      "bytes": 16793,
+      "sha256": "87d3df8896f338cf29f5a9bcbc41820afe2c6f9306b52f90b4315c19d2b51677",
+      "repair_cmd": "book csharp"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/csharp.png",
+      "chip_id": null,
+      "lang_id": "csharp",
+      "status": "ok",
+      "bytes": 16793,
+      "sha256": "87d3df8896f338cf29f5a9bcbc41820afe2c6f9306b52f90b4315c19d2b51677",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_csharp/explaining_csharp.h7c",
+      "chip_id": null,
+      "lang_id": "csharp",
+      "status": "bad_magic",
+      "bytes": 70387,
+      "sha256": null,
+      "repair_cmd": "book csharp"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_csharp/book.json",
+      "chip_id": null,
+      "lang_id": "csharp",
+      "status": "ok",
+      "bytes": 724,
+      "sha256": "65f21d38d85713114f4bf3e19c7c0157fd715b9de39c2a254cee3ec551aeed4c",
+      "repair_cmd": "book csharp"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/cxx.png",
+      "chip_id": null,
+      "lang_id": "cxx",
+      "status": "ok",
+      "bytes": 16377,
+      "sha256": "23a30d488570cbeccc77771733f4eeeaf6111568f05c880aa3b772ffa3a68efa",
+      "repair_cmd": "book cxx"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/cxx.png",
+      "chip_id": null,
+      "lang_id": "cxx",
+      "status": "ok",
+      "bytes": 16377,
+      "sha256": "23a30d488570cbeccc77771733f4eeeaf6111568f05c880aa3b772ffa3a68efa",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_cxx/explaining_cxx.h7c",
+      "chip_id": null,
+      "lang_id": "cxx",
+      "status": "bad_magic",
+      "bytes": 70867,
+      "sha256": null,
+      "repair_cmd": "book cxx"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_cxx/book.json",
+      "chip_id": null,
+      "lang_id": "cxx",
+      "status": "ok",
+      "bytes": 704,
+      "sha256": "2b4c85e16f3d1adfcf7ba570f47a3be4adaf4dfcd59563a69db599c956731b44",
+      "repair_cmd": "book cxx"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/d.png",
+      "chip_id": null,
+      "lang_id": "d",
+      "status": "ok",
+      "bytes": 16198,
+      "sha256": "4c329a06429007d825c918079ebba1a45472f67e6bb37a00398c362a155f806b",
+      "repair_cmd": "book d"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/d.png",
+      "chip_id": null,
+      "lang_id": "d",
+      "status": "ok",
+      "bytes": 16198,
+      "sha256": "4c329a06429007d825c918079ebba1a45472f67e6bb37a00398c362a155f806b",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_d/explaining_d.h7c",
+      "chip_id": null,
+      "lang_id": "d",
+      "status": "bad_magic",
+      "bytes": 67985,
+      "sha256": null,
+      "repair_cmd": "book d"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_d/book.json",
+      "chip_id": null,
+      "lang_id": "d",
+      "status": "ok",
+      "bytes": 688,
+      "sha256": "54ae08f2c10a06f351797b772d756128892eb613ba248e385828fd24c133cc02",
+      "repair_cmd": "book d"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/dart.png",
+      "chip_id": null,
+      "lang_id": "dart",
+      "status": "ok",
+      "bytes": 17025,
+      "sha256": "ea504de4609d0f6b0d575d613ad414154543908e25ae1ef91d55241c629351a5",
+      "repair_cmd": "book dart"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/dart.png",
+      "chip_id": null,
+      "lang_id": "dart",
+      "status": "ok",
+      "bytes": 17025,
+      "sha256": "ea504de4609d0f6b0d575d613ad414154543908e25ae1ef91d55241c629351a5",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_dart/explaining_dart.h7c",
+      "chip_id": null,
+      "lang_id": "dart",
+      "status": "bad_magic",
+      "bytes": 69637,
+      "sha256": null,
+      "repair_cmd": "book dart"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_dart/book.json",
+      "chip_id": null,
+      "lang_id": "dart",
+      "status": "ok",
+      "bytes": 712,
+      "sha256": "ec4d0687cf59aa84fe954468afbbc2dbd52db03438894c2803582b4652bb95e9",
+      "repair_cmd": "book dart"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/delphi.png",
+      "chip_id": null,
+      "lang_id": "delphi",
+      "status": "ok",
+      "bytes": 17136,
+      "sha256": "7329306f079aa985405f3fc5b0871cdc066a47abe2b84ed99728372547b04bae",
+      "repair_cmd": "book delphi"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/delphi.png",
+      "chip_id": null,
+      "lang_id": "delphi",
+      "status": "ok",
+      "bytes": 17136,
+      "sha256": "7329306f079aa985405f3fc5b0871cdc066a47abe2b84ed99728372547b04bae",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_delphi/explaining_delphi.h7c",
+      "chip_id": null,
+      "lang_id": "delphi",
+      "status": "bad_magic",
+      "bytes": 75427,
+      "sha256": null,
+      "repair_cmd": "book delphi"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_delphi/book.json",
+      "chip_id": null,
+      "lang_id": "delphi",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "3a73670c141eb91fdb58163c7749d9d60645c1308b295ac52b1e524222b01fd6",
+      "repair_cmd": "book delphi"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/elixir.png",
+      "chip_id": null,
+      "lang_id": "elixir",
+      "status": "ok",
+      "bytes": 16605,
+      "sha256": "2ba9b104f2607f3d58f23e7314b38866af524a0db9701c88e5a15729e1f1ff27",
+      "repair_cmd": "book elixir"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/elixir.png",
+      "chip_id": null,
+      "lang_id": "elixir",
+      "status": "ok",
+      "bytes": 16605,
+      "sha256": "2ba9b104f2607f3d58f23e7314b38866af524a0db9701c88e5a15729e1f1ff27",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_elixir/explaining_elixir.h7c",
+      "chip_id": null,
+      "lang_id": "elixir",
+      "status": "bad_magic",
+      "bytes": 68671,
+      "sha256": null,
+      "repair_cmd": "book elixir"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_elixir/book.json",
+      "chip_id": null,
+      "lang_id": "elixir",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "2a06c867449ea6344117a316a7cc9fba54c3d3daef411ff8e8c3ba89c6a65c13",
+      "repair_cmd": "book elixir"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/erlang.png",
+      "chip_id": null,
+      "lang_id": "erlang",
+      "status": "ok",
+      "bytes": 17136,
+      "sha256": "a4a4c4eae8f53f970b8d34afd6ee99ee236f602462abc460951c4faf9f322a83",
+      "repair_cmd": "book erlang"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/erlang.png",
+      "chip_id": null,
+      "lang_id": "erlang",
+      "status": "ok",
+      "bytes": 17136,
+      "sha256": "a4a4c4eae8f53f970b8d34afd6ee99ee236f602462abc460951c4faf9f322a83",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_erlang/explaining_erlang.h7c",
+      "chip_id": null,
+      "lang_id": "erlang",
+      "status": "bad_magic",
+      "bytes": 67326,
+      "sha256": null,
+      "repair_cmd": "book erlang"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_erlang/book.json",
+      "chip_id": null,
+      "lang_id": "erlang",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "969defcaaaa546752da942c12ee63f0129cb52e95cff300209e46c525ca639de",
+      "repair_cmd": "book erlang"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/field.png",
+      "chip_id": null,
+      "lang_id": "field",
+      "status": "ok",
+      "bytes": 16830,
+      "sha256": "4a60bd25be84524222f9133effdeb0382ddb669e053806ef665c316254f2361d",
+      "repair_cmd": "book field"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/field.png",
+      "chip_id": null,
+      "lang_id": "field",
+      "status": "ok",
+      "bytes": 16830,
+      "sha256": "4a60bd25be84524222f9133effdeb0382ddb669e053806ef665c316254f2361d",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_field/explaining_field.h7c",
+      "chip_id": null,
+      "lang_id": "field",
+      "status": "bad_magic",
+      "bytes": 69242,
+      "sha256": null,
+      "repair_cmd": "book field"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_field/book.json",
+      "chip_id": null,
+      "lang_id": "field",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "eadb9e0e53337071b76c16a209a1e992ecfc778ba2a90bbb3d2ccf7b300a6139",
+      "repair_cmd": "book field"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/forth.png",
+      "chip_id": null,
+      "lang_id": "forth",
+      "status": "ok",
+      "bytes": 16920,
+      "sha256": "24ad539ddab726bec195c313bc54e3b03e4c79c5aa8b332f85f9279972066dcd",
+      "repair_cmd": "book forth"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/forth.png",
+      "chip_id": null,
+      "lang_id": "forth",
+      "status": "ok",
+      "bytes": 16920,
+      "sha256": "24ad539ddab726bec195c313bc54e3b03e4c79c5aa8b332f85f9279972066dcd",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_forth/explaining_forth.h7c",
+      "chip_id": null,
+      "lang_id": "forth",
+      "status": "bad_magic",
+      "bytes": 64638,
+      "sha256": null,
+      "repair_cmd": "book forth"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_forth/book.json",
+      "chip_id": null,
+      "lang_id": "forth",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "27c98ba6b98d13ff0f24f527d2b0837a5df59ddea6c0a09ceb7bcaaa0f1b0474",
+      "repair_cmd": "book forth"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/fortran.png",
+      "chip_id": null,
+      "lang_id": "fortran",
+      "status": "ok",
+      "bytes": 17353,
+      "sha256": "a30082d93afd44d1a75c3a5dca106adf03be476b74e972d87f65eaf52bc3e11a",
+      "repair_cmd": "book fortran"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/fortran.png",
+      "chip_id": null,
+      "lang_id": "fortran",
+      "status": "ok",
+      "bytes": 17353,
+      "sha256": "a30082d93afd44d1a75c3a5dca106adf03be476b74e972d87f65eaf52bc3e11a",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_fortran/explaining_fortran.h7c",
+      "chip_id": null,
+      "lang_id": "fortran",
+      "status": "bad_magic",
+      "bytes": 67261,
+      "sha256": null,
+      "repair_cmd": "book fortran"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_fortran/book.json",
+      "chip_id": null,
+      "lang_id": "fortran",
+      "status": "ok",
+      "bytes": 736,
+      "sha256": "00334795e6734aba33084ad745886c99cb05a2e860e60f750ec91c268a0e2f6a",
+      "repair_cmd": "book fortran"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/freebasic.png",
+      "chip_id": null,
+      "lang_id": "freebasic",
+      "status": "ok",
+      "bytes": 18411,
+      "sha256": "8f7932dab4c44c7012f9794575383a61017c9f62354b359f409dca7d34a0f170",
+      "repair_cmd": "book freebasic"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/freebasic.png",
+      "chip_id": null,
+      "lang_id": "freebasic",
+      "status": "ok",
+      "bytes": 18411,
+      "sha256": "8f7932dab4c44c7012f9794575383a61017c9f62354b359f409dca7d34a0f170",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_freebasic/explaining_freebasic.h7c",
+      "chip_id": null,
+      "lang_id": "freebasic",
+      "status": "bad_magic",
+      "bytes": 75726,
+      "sha256": null,
+      "repair_cmd": "book freebasic"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_freebasic/book.json",
+      "chip_id": null,
+      "lang_id": "freebasic",
+      "status": "ok",
+      "bytes": 752,
+      "sha256": "8d6aa22e79bf0a2ca4849416cfdb630fda708a039e36218c4dd40b49f7cc6209",
+      "repair_cmd": "book freebasic"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/go.png",
+      "chip_id": null,
+      "lang_id": "go",
+      "status": "ok",
+      "bytes": 16684,
+      "sha256": "d7f0c080c829ac541c70c3e1a13a5a5e308d29151f288ca816b06019df8648de",
+      "repair_cmd": "book go"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/go.png",
+      "chip_id": null,
+      "lang_id": "go",
+      "status": "ok",
+      "bytes": 16684,
+      "sha256": "d7f0c080c829ac541c70c3e1a13a5a5e308d29151f288ca816b06019df8648de",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_go/explaining_go.h7c",
+      "chip_id": null,
+      "lang_id": "go",
+      "status": "bad_magic",
+      "bytes": 69291,
+      "sha256": null,
+      "repair_cmd": "book go"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_go/book.json",
+      "chip_id": null,
+      "lang_id": "go",
+      "status": "ok",
+      "bytes": 696,
+      "sha256": "9da7174cb5f7faf8c49e46e77de58623912491396204da66b4aade7e03568ecc",
+      "repair_cmd": "book go"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/haskell.png",
+      "chip_id": null,
+      "lang_id": "haskell",
+      "status": "ok",
+      "bytes": 17418,
+      "sha256": "4db140b8d7e2eff43e5b02cc44b66f0d9aeac3534db096163a4c5911b69584c9",
+      "repair_cmd": "book haskell"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/haskell.png",
+      "chip_id": null,
+      "lang_id": "haskell",
+      "status": "ok",
+      "bytes": 17418,
+      "sha256": "4db140b8d7e2eff43e5b02cc44b66f0d9aeac3534db096163a4c5911b69584c9",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_haskell/explaining_haskell.h7c",
+      "chip_id": null,
+      "lang_id": "haskell",
+      "status": "bad_magic",
+      "bytes": 67715,
+      "sha256": null,
+      "repair_cmd": "book haskell"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_haskell/book.json",
+      "chip_id": null,
+      "lang_id": "haskell",
+      "status": "ok",
+      "bytes": 736,
+      "sha256": "396e74153de007d3a5eba3a3ae55f34d6ace3f03397330f36ca747274fcacac0",
+      "repair_cmd": "book haskell"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/java.png",
+      "chip_id": null,
+      "lang_id": "java",
+      "status": "ok",
+      "bytes": 16907,
+      "sha256": "a6c6fd72943de66c9422060a9c7c1dd485af604d6492792001c6f06c713cc1ab",
+      "repair_cmd": "book java"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/java.png",
+      "chip_id": null,
+      "lang_id": "java",
+      "status": "ok",
+      "bytes": 16907,
+      "sha256": "a6c6fd72943de66c9422060a9c7c1dd485af604d6492792001c6f06c713cc1ab",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_java/explaining_java.h7c",
+      "chip_id": null,
+      "lang_id": "java",
+      "status": "bad_magic",
+      "bytes": 68776,
+      "sha256": null,
+      "repair_cmd": "book java"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_java/book.json",
+      "chip_id": null,
+      "lang_id": "java",
+      "status": "ok",
+      "bytes": 712,
+      "sha256": "dddcb629a887b25dfed3e48c92b0d0f0991f5676d54966e85f2fa48c93cc6d19",
+      "repair_cmd": "book java"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/javascript.png",
+      "chip_id": null,
+      "lang_id": "javascript",
+      "status": "ok",
+      "bytes": 18145,
+      "sha256": "81bb3d45105a29ed877caf802eb7df6c7ac978b97a848c43786d3cc332380333",
+      "repair_cmd": "book javascript"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/javascript.png",
+      "chip_id": null,
+      "lang_id": "javascript",
+      "status": "ok",
+      "bytes": 18145,
+      "sha256": "81bb3d45105a29ed877caf802eb7df6c7ac978b97a848c43786d3cc332380333",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_javascript/explaining_javascript.h7c",
+      "chip_id": null,
+      "lang_id": "javascript",
+      "status": "bad_magic",
+      "bytes": 73979,
+      "sha256": null,
+      "repair_cmd": "book javascript"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_javascript/book.json",
+      "chip_id": null,
+      "lang_id": "javascript",
+      "status": "ok",
+      "bytes": 760,
+      "sha256": "c6e8bcc58b4db79a76ff4d79e9b87b2b364fe34656149d31d4bf143821bd7fb2",
+      "repair_cmd": "book javascript"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/julia.png",
+      "chip_id": null,
+      "lang_id": "julia",
+      "status": "ok",
+      "bytes": 16793,
+      "sha256": "4de066f8cdfd47d80a3382ebd4e3f6bcb4ad6fe0532a20b80285718e988f2a0f",
+      "repair_cmd": "book julia"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/julia.png",
+      "chip_id": null,
+      "lang_id": "julia",
+      "status": "ok",
+      "bytes": 16793,
+      "sha256": "4de066f8cdfd47d80a3382ebd4e3f6bcb4ad6fe0532a20b80285718e988f2a0f",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_julia/explaining_julia.h7c",
+      "chip_id": null,
+      "lang_id": "julia",
+      "status": "bad_magic",
+      "bytes": 71091,
+      "sha256": null,
+      "repair_cmd": "book julia"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_julia/book.json",
+      "chip_id": null,
+      "lang_id": "julia",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "6218ee9381c0defa6c9c2d0ce1f2f2359f6fc594bd5234e63964a5afcf5791f5",
+      "repair_cmd": "book julia"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/kotlin.png",
+      "chip_id": null,
+      "lang_id": "kotlin",
+      "status": "ok",
+      "bytes": 17051,
+      "sha256": "f895bddc2d66154663393abe9ffae00a49f28518476d021788de4868f1b7f7ce",
+      "repair_cmd": "book kotlin"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/kotlin.png",
+      "chip_id": null,
+      "lang_id": "kotlin",
+      "status": "ok",
+      "bytes": 17051,
+      "sha256": "f895bddc2d66154663393abe9ffae00a49f28518476d021788de4868f1b7f7ce",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_kotlin/explaining_kotlin.h7c",
+      "chip_id": null,
+      "lang_id": "kotlin",
+      "status": "bad_magic",
+      "bytes": 71189,
+      "sha256": null,
+      "repair_cmd": "book kotlin"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_kotlin/book.json",
+      "chip_id": null,
+      "lang_id": "kotlin",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "eb40a1e473569bf6430a31c7fdeb63211b125e9dd9f573c4eb025081c343e58b",
+      "repair_cmd": "book kotlin"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/lisp.png",
+      "chip_id": null,
+      "lang_id": "lisp",
+      "status": "ok",
+      "bytes": 16856,
+      "sha256": "dc2047aba696d97d582b51f7fb103d288581fcb06bd1d030dd9750a434422f48",
+      "repair_cmd": "book lisp"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/lisp.png",
+      "chip_id": null,
+      "lang_id": "lisp",
+      "status": "ok",
+      "bytes": 16856,
+      "sha256": "dc2047aba696d97d582b51f7fb103d288581fcb06bd1d030dd9750a434422f48",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_lisp/explaining_lisp.h7c",
+      "chip_id": null,
+      "lang_id": "lisp",
+      "status": "bad_magic",
+      "bytes": 68617,
+      "sha256": null,
+      "repair_cmd": "book lisp"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_lisp/book.json",
+      "chip_id": null,
+      "lang_id": "lisp",
+      "status": "ok",
+      "bytes": 712,
+      "sha256": "60d69a6d806583f54de8bcd8400ab0c0378958ee574f2ada3beeed18febb39b0",
+      "repair_cmd": "book lisp"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/lua.png",
+      "chip_id": null,
+      "lang_id": "lua",
+      "status": "ok",
+      "bytes": 16539,
+      "sha256": "f7673661978ce41ed996d7a837941c55ea94bb1d12c47a303f5ba898d67f2394",
+      "repair_cmd": "book lua"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/lua.png",
+      "chip_id": null,
+      "lang_id": "lua",
+      "status": "ok",
+      "bytes": 16539,
+      "sha256": "f7673661978ce41ed996d7a837941c55ea94bb1d12c47a303f5ba898d67f2394",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_lua/explaining_lua.h7c",
+      "chip_id": null,
+      "lang_id": "lua",
+      "status": "bad_magic",
+      "bytes": 67408,
+      "sha256": null,
+      "repair_cmd": "book lua"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_lua/book.json",
+      "chip_id": null,
+      "lang_id": "lua",
+      "status": "ok",
+      "bytes": 704,
+      "sha256": "ef9565cf91928728bd792eaee2c22cdbd77ef7e41cefacd3304ed8bcf469ecab",
+      "repair_cmd": "book lua"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/matlab.png",
+      "chip_id": null,
+      "lang_id": "matlab",
+      "status": "ok",
+      "bytes": 17222,
+      "sha256": "43d37ea14a67875f6de7da146d6d0db6530c2c8a5e9e89eecb98bb6758f920eb",
+      "repair_cmd": "book matlab"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/matlab.png",
+      "chip_id": null,
+      "lang_id": "matlab",
+      "status": "ok",
+      "bytes": 17222,
+      "sha256": "43d37ea14a67875f6de7da146d6d0db6530c2c8a5e9e89eecb98bb6758f920eb",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_matlab/explaining_matlab.h7c",
+      "chip_id": null,
+      "lang_id": "matlab",
+      "status": "bad_magic",
+      "bytes": 66522,
+      "sha256": null,
+      "repair_cmd": "book matlab"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_matlab/book.json",
+      "chip_id": null,
+      "lang_id": "matlab",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "28d2aacc10b14a10b2cc90ff0da59919fa68f8521bc7e0161e525ba198759821",
+      "repair_cmd": "book matlab"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/modula2.png",
+      "chip_id": null,
+      "lang_id": "modula2",
+      "status": "ok",
+      "bytes": 17996,
+      "sha256": "3f25581a6667d1cab6aec59d1ce77b2944d905fe0045456d75ec2e5c3b446723",
+      "repair_cmd": "book modula2"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/modula2.png",
+      "chip_id": null,
+      "lang_id": "modula2",
+      "status": "ok",
+      "bytes": 17996,
+      "sha256": "3f25581a6667d1cab6aec59d1ce77b2944d905fe0045456d75ec2e5c3b446723",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_modula2/explaining_modula2.h7c",
+      "chip_id": null,
+      "lang_id": "modula2",
+      "status": "bad_magic",
+      "bytes": 74704,
+      "sha256": null,
+      "repair_cmd": "book modula2"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_modula2/book.json",
+      "chip_id": null,
+      "lang_id": "modula2",
+      "status": "ok",
+      "bytes": 737,
+      "sha256": "aa4730b29484b0f6f4297e8e98d9b5bff8ad36386c295561e415f54fb6b42b65",
+      "repair_cmd": "book modula2"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/nim.png",
+      "chip_id": null,
+      "lang_id": "nim",
+      "status": "ok",
+      "bytes": 16621,
+      "sha256": "8367ba6fa1b8cdfcaae0735d7fa4f2875984f532dba627683c05338cc97accd8",
+      "repair_cmd": "book nim"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/nim.png",
+      "chip_id": null,
+      "lang_id": "nim",
+      "status": "ok",
+      "bytes": 16621,
+      "sha256": "8367ba6fa1b8cdfcaae0735d7fa4f2875984f532dba627683c05338cc97accd8",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_nim/explaining_nim.h7c",
+      "chip_id": null,
+      "lang_id": "nim",
+      "status": "bad_magic",
+      "bytes": 70415,
+      "sha256": null,
+      "repair_cmd": "book nim"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_nim/book.json",
+      "chip_id": null,
+      "lang_id": "nim",
+      "status": "ok",
+      "bytes": 704,
+      "sha256": "878049051153e7a72b730bd5958d25295f6f39793bde1b634716f90f36fccd1e",
+      "repair_cmd": "book nim"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/objc.png",
+      "chip_id": null,
+      "lang_id": "objc",
+      "status": "ok",
+      "bytes": 18829,
+      "sha256": "1946e6a0ba10cb0980d2dcdeae3fc0aaf401b941f4d57f0c573e93d0583c4f0d",
+      "repair_cmd": "book objc"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/objc.png",
+      "chip_id": null,
+      "lang_id": "objc",
+      "status": "ok",
+      "bytes": 18829,
+      "sha256": "1946e6a0ba10cb0980d2dcdeae3fc0aaf401b941f4d57f0c573e93d0583c4f0d",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_objc/explaining_objc.h7c",
+      "chip_id": null,
+      "lang_id": "objc",
+      "status": "bad_magic",
+      "bytes": 76233,
+      "sha256": null,
+      "repair_cmd": "book objc"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_objc/book.json",
+      "chip_id": null,
+      "lang_id": "objc",
+      "status": "ok",
+      "bytes": 719,
+      "sha256": "3a1d8452134e40dbac0264277872b356dd47c8e658b2d5f0cb6d0aa20e4498e5",
+      "repair_cmd": "book objc"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/ocaml.png",
+      "chip_id": null,
+      "lang_id": "ocaml",
+      "status": "ok",
+      "bytes": 17617,
+      "sha256": "9fa452c5a38bce41adfcd19b16193233bc8672ef4874d86c3f9b88a2982eac3e",
+      "repair_cmd": "book ocaml"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/ocaml.png",
+      "chip_id": null,
+      "lang_id": "ocaml",
+      "status": "ok",
+      "bytes": 17617,
+      "sha256": "9fa452c5a38bce41adfcd19b16193233bc8672ef4874d86c3f9b88a2982eac3e",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_ocaml/explaining_ocaml.h7c",
+      "chip_id": null,
+      "lang_id": "ocaml",
+      "status": "bad_magic",
+      "bytes": 67212,
+      "sha256": null,
+      "repair_cmd": "book ocaml"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_ocaml/book.json",
+      "chip_id": null,
+      "lang_id": "ocaml",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "85f5ded08f8ce15fc356953d2fffd31c2b4670619cd398a9f0f003b6c79207d8",
+      "repair_cmd": "book ocaml"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/pascal.png",
+      "chip_id": null,
+      "lang_id": "pascal",
+      "status": "ok",
+      "bytes": 17233,
+      "sha256": "a540d0b865819f5b24e1aae15cfc70cc40f5a6285fcb355217bbd380531ae548",
+      "repair_cmd": "book pascal"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/pascal.png",
+      "chip_id": null,
+      "lang_id": "pascal",
+      "status": "ok",
+      "bytes": 17233,
+      "sha256": "a540d0b865819f5b24e1aae15cfc70cc40f5a6285fcb355217bbd380531ae548",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_pascal/explaining_pascal.h7c",
+      "chip_id": null,
+      "lang_id": "pascal",
+      "status": "bad_magic",
+      "bytes": 69895,
+      "sha256": null,
+      "repair_cmd": "book pascal"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_pascal/book.json",
+      "chip_id": null,
+      "lang_id": "pascal",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "e92980a0e1f7fbe8e184b3674e4229f0bf7b7b46dc6b2b80f53169e9c75b5650",
+      "repair_cmd": "book pascal"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/perl.png",
+      "chip_id": null,
+      "lang_id": "perl",
+      "status": "ok",
+      "bytes": 16626,
+      "sha256": "c30dd81aa4fee9f1834b9babcac3b7a896192a74d6619519553cdb86a2202b74",
+      "repair_cmd": "book perl"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/perl.png",
+      "chip_id": null,
+      "lang_id": "perl",
+      "status": "ok",
+      "bytes": 16626,
+      "sha256": "c30dd81aa4fee9f1834b9babcac3b7a896192a74d6619519553cdb86a2202b74",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_perl/explaining_perl.h7c",
+      "chip_id": null,
+      "lang_id": "perl",
+      "status": "bad_magic",
+      "bytes": 65761,
+      "sha256": null,
+      "repair_cmd": "book perl"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_perl/book.json",
+      "chip_id": null,
+      "lang_id": "perl",
+      "status": "ok",
+      "bytes": 712,
+      "sha256": "291a943dc32f2d1def172b198cebf46d8569252471c75f0018c9a705a8c140ab",
+      "repair_cmd": "book perl"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/php.png",
+      "chip_id": null,
+      "lang_id": "php",
+      "status": "ok",
+      "bytes": 16228,
+      "sha256": "c200c5c0dc3c1c9a843f9de39f54063dd64d2d82bc663ebf4c3339dcb011c6e9",
+      "repair_cmd": "book php"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/php.png",
+      "chip_id": null,
+      "lang_id": "php",
+      "status": "ok",
+      "bytes": 16228,
+      "sha256": "c200c5c0dc3c1c9a843f9de39f54063dd64d2d82bc663ebf4c3339dcb011c6e9",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_php/explaining_php.h7c",
+      "chip_id": null,
+      "lang_id": "php",
+      "status": "bad_magic",
+      "bytes": 67179,
+      "sha256": null,
+      "repair_cmd": "book php"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_php/book.json",
+      "chip_id": null,
+      "lang_id": "php",
+      "status": "ok",
+      "bytes": 704,
+      "sha256": "fce903cf5394c4edbbbae99583a7adeaa8e2d4200e5222ef37f5f837b70d485d",
+      "repair_cmd": "book php"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/prolog.png",
+      "chip_id": null,
+      "lang_id": "prolog",
+      "status": "ok",
+      "bytes": 17167,
+      "sha256": "7cb71e40ce50a87ea4b0dedc45f495b3192d41c96ec6b18914fecf6eb1f5bd73",
+      "repair_cmd": "book prolog"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/prolog.png",
+      "chip_id": null,
+      "lang_id": "prolog",
+      "status": "ok",
+      "bytes": 17167,
+      "sha256": "7cb71e40ce50a87ea4b0dedc45f495b3192d41c96ec6b18914fecf6eb1f5bd73",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_prolog/explaining_prolog.h7c",
+      "chip_id": null,
+      "lang_id": "prolog",
+      "status": "bad_magic",
+      "bytes": 63964,
+      "sha256": null,
+      "repair_cmd": "book prolog"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_prolog/book.json",
+      "chip_id": null,
+      "lang_id": "prolog",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "5007a39c59e59e7afc46e0dc5cc78eae0ca60bf06694326a4a3a3c3fcc0936e8",
+      "repair_cmd": "book prolog"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/python.png",
+      "chip_id": null,
+      "lang_id": "python",
+      "status": "ok",
+      "bytes": 17400,
+      "sha256": "4c3a99760d27af2797c662833816bd8ab7334687595795b0da8da8bc276e4e1a",
+      "repair_cmd": "book python"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/python.png",
+      "chip_id": null,
+      "lang_id": "python",
+      "status": "ok",
+      "bytes": 17400,
+      "sha256": "4c3a99760d27af2797c662833816bd8ab7334687595795b0da8da8bc276e4e1a",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_python/explaining_python.h7c",
+      "chip_id": null,
+      "lang_id": "python",
+      "status": "bad_magic",
+      "bytes": 72243,
+      "sha256": null,
+      "repair_cmd": "book python"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_python/book.json",
+      "chip_id": null,
+      "lang_id": "python",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "8706b1b0c6c855d6a74861bca4b870185b3291b5ee24136d225a3426374629f2",
+      "repair_cmd": "book python"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/qbasic.png",
+      "chip_id": null,
+      "lang_id": "qbasic",
+      "status": "ok",
+      "bytes": 17860,
+      "sha256": "171486792905ad6590fedc9ef209b66481e211c00ace6fa76cfa0a0a53a2f6e0",
+      "repair_cmd": "book qbasic"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/qbasic.png",
+      "chip_id": null,
+      "lang_id": "qbasic",
+      "status": "ok",
+      "bytes": 17860,
+      "sha256": "171486792905ad6590fedc9ef209b66481e211c00ace6fa76cfa0a0a53a2f6e0",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_qbasic/explaining_qbasic.h7c",
+      "chip_id": null,
+      "lang_id": "qbasic",
+      "status": "bad_magic",
+      "bytes": 71808,
+      "sha256": null,
+      "repair_cmd": "book qbasic"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_qbasic/book.json",
+      "chip_id": null,
+      "lang_id": "qbasic",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "549df87ee1f069bc6c1bf35f846a9eae01aa78b57f59d4dc6b1e1ac72fc353c4",
+      "repair_cmd": "book qbasic"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/quickbasic.png",
+      "chip_id": null,
+      "lang_id": "quickbasic",
+      "status": "ok",
+      "bytes": 19262,
+      "sha256": "ef06c43d17ccc23556df00f26d2e4f4d92731bca64cb12db8c442d0aaa0bbb65",
+      "repair_cmd": "book quickbasic"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/quickbasic.png",
+      "chip_id": null,
+      "lang_id": "quickbasic",
+      "status": "ok",
+      "bytes": 19262,
+      "sha256": "ef06c43d17ccc23556df00f26d2e4f4d92731bca64cb12db8c442d0aaa0bbb65",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_quickbasic/explaining_quickbasic.h7c",
+      "chip_id": null,
+      "lang_id": "quickbasic",
+      "status": "bad_magic",
+      "bytes": 76597,
+      "sha256": null,
+      "repair_cmd": "book quickbasic"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_quickbasic/book.json",
+      "chip_id": null,
+      "lang_id": "quickbasic",
+      "status": "ok",
+      "bytes": 760,
+      "sha256": "e9c42fbe1e578053b2d327ad56a84d870a6ab47e9bf4a9bffb45c26b5f5fe4aa",
+      "repair_cmd": "book quickbasic"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/r.png",
+      "chip_id": null,
+      "lang_id": "r",
+      "status": "ok",
+      "bytes": 16316,
+      "sha256": "a81e0310d5112de2d7d81aa6e763915c0959ea45ceee4bb1253d2109d8d89f42",
+      "repair_cmd": "book r"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/r.png",
+      "chip_id": null,
+      "lang_id": "r",
+      "status": "ok",
+      "bytes": 16316,
+      "sha256": "a81e0310d5112de2d7d81aa6e763915c0959ea45ceee4bb1253d2109d8d89f42",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_r/explaining_r.h7c",
+      "chip_id": null,
+      "lang_id": "r",
+      "status": "bad_magic",
+      "bytes": 65497,
+      "sha256": null,
+      "repair_cmd": "book r"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_r/book.json",
+      "chip_id": null,
+      "lang_id": "r",
+      "status": "ok",
+      "bytes": 688,
+      "sha256": "3fa8c2498b5f968cd17a2022df3d919f1cbbb1af0469df5cd9f1985b0c65f438",
+      "repair_cmd": "book r"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/ruby.png",
+      "chip_id": null,
+      "lang_id": "ruby",
+      "status": "ok",
+      "bytes": 17293,
+      "sha256": "ab1382f8d3866ec495b40d1874b2f7c5c5c24bd58bf6363b7a5069271a58b250",
+      "repair_cmd": "book ruby"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/ruby.png",
+      "chip_id": null,
+      "lang_id": "ruby",
+      "status": "ok",
+      "bytes": 17293,
+      "sha256": "ab1382f8d3866ec495b40d1874b2f7c5c5c24bd58bf6363b7a5069271a58b250",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_ruby/explaining_ruby.h7c",
+      "chip_id": null,
+      "lang_id": "ruby",
+      "status": "bad_magic",
+      "bytes": 68191,
+      "sha256": null,
+      "repair_cmd": "book ruby"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_ruby/book.json",
+      "chip_id": null,
+      "lang_id": "ruby",
+      "status": "ok",
+      "bytes": 712,
+      "sha256": "d4c6bf658a92baa4507aabad14c80e919f1e6f86194ce9267ace179c45d96d2f",
+      "repair_cmd": "book ruby"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/rust.png",
+      "chip_id": null,
+      "lang_id": "rust",
+      "status": "ok",
+      "bytes": 17080,
+      "sha256": "f3bb2e6738889bae9c7040f0c686fb6d23928ccf22dc0275d2b5e624f9b1eaf7",
+      "repair_cmd": "book rust"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/rust.png",
+      "chip_id": null,
+      "lang_id": "rust",
+      "status": "ok",
+      "bytes": 17080,
+      "sha256": "f3bb2e6738889bae9c7040f0c686fb6d23928ccf22dc0275d2b5e624f9b1eaf7",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_rust/explaining_rust.h7c",
+      "chip_id": null,
+      "lang_id": "rust",
+      "status": "bad_magic",
+      "bytes": 72964,
+      "sha256": null,
+      "repair_cmd": "book rust"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_rust/book.json",
+      "chip_id": null,
+      "lang_id": "rust",
+      "status": "ok",
+      "bytes": 712,
+      "sha256": "68bd6ac3e0abf2477927a912cf46ac72c17f6d7a49e3b10fc78ae0ff94f6b8b4",
+      "repair_cmd": "book rust"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/scala.png",
+      "chip_id": null,
+      "lang_id": "scala",
+      "status": "ok",
+      "bytes": 17339,
+      "sha256": "cda483e1181bcc6ee3c1ba05828ba502f640cb412f1f6d1042481c26af54c55b",
+      "repair_cmd": "book scala"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/scala.png",
+      "chip_id": null,
+      "lang_id": "scala",
+      "status": "ok",
+      "bytes": 17339,
+      "sha256": "cda483e1181bcc6ee3c1ba05828ba502f640cb412f1f6d1042481c26af54c55b",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_scala/explaining_scala.h7c",
+      "chip_id": null,
+      "lang_id": "scala",
+      "status": "bad_magic",
+      "bytes": 69817,
+      "sha256": null,
+      "repair_cmd": "book scala"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_scala/book.json",
+      "chip_id": null,
+      "lang_id": "scala",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "889fadc9a2b85aaceb1824df3e87163c9af8fcf4b1632e98ce38ab6bfe7eb9f8",
+      "repair_cmd": "book scala"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/shell.png",
+      "chip_id": null,
+      "lang_id": "shell",
+      "status": "ok",
+      "bytes": 17102,
+      "sha256": "1ac276c62deccd3e8ceb6c448d918c51cc6221468a6d914655e39ddd08826dc4",
+      "repair_cmd": "book shell"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/shell.png",
+      "chip_id": null,
+      "lang_id": "shell",
+      "status": "ok",
+      "bytes": 17102,
+      "sha256": "1ac276c62deccd3e8ceb6c448d918c51cc6221468a6d914655e39ddd08826dc4",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_shell/explaining_shell.h7c",
+      "chip_id": null,
+      "lang_id": "shell",
+      "status": "bad_magic",
+      "bytes": 67509,
+      "sha256": null,
+      "repair_cmd": "book shell"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_shell/book.json",
+      "chip_id": null,
+      "lang_id": "shell",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "8164c29c78d99297f00f42c3b2b95d09274f7a25c4c617e571e144aff7e313e8",
+      "repair_cmd": "book shell"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/smalltalk.png",
+      "chip_id": null,
+      "lang_id": "smalltalk",
+      "status": "ok",
+      "bytes": 17756,
+      "sha256": "f45e2923d45e18011c9360f6b3aead051fe81d499e1a1813d2054ba5f43d48b9",
+      "repair_cmd": "book smalltalk"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/smalltalk.png",
+      "chip_id": null,
+      "lang_id": "smalltalk",
+      "status": "ok",
+      "bytes": 17756,
+      "sha256": "f45e2923d45e18011c9360f6b3aead051fe81d499e1a1813d2054ba5f43d48b9",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_smalltalk/explaining_smalltalk.h7c",
+      "chip_id": null,
+      "lang_id": "smalltalk",
+      "status": "bad_magic",
+      "bytes": 68186,
+      "sha256": null,
+      "repair_cmd": "book smalltalk"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_smalltalk/book.json",
+      "chip_id": null,
+      "lang_id": "smalltalk",
+      "status": "ok",
+      "bytes": 752,
+      "sha256": "2b4c368816804b8271d1c144066b268378b6fa7a8d195f8a163079dd06d2241a",
+      "repair_cmd": "book smalltalk"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/snobol.png",
+      "chip_id": null,
+      "lang_id": "snobol",
+      "status": "ok",
+      "bytes": 17572,
+      "sha256": "d58e6b2909309b77e072d41e6d255d0cb0a461d9143f45b1d8f4a92e4d4c8957",
+      "repair_cmd": "book snobol"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/snobol.png",
+      "chip_id": null,
+      "lang_id": "snobol",
+      "status": "ok",
+      "bytes": 17572,
+      "sha256": "d58e6b2909309b77e072d41e6d255d0cb0a461d9143f45b1d8f4a92e4d4c8957",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_snobol/explaining_snobol.h7c",
+      "chip_id": null,
+      "lang_id": "snobol",
+      "status": "bad_magic",
+      "bytes": 68036,
+      "sha256": null,
+      "repair_cmd": "book snobol"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_snobol/book.json",
+      "chip_id": null,
+      "lang_id": "snobol",
+      "status": "ok",
+      "bytes": 728,
+      "sha256": "cae61e930ea7b09c72350d280615185821656a0feae304021f3f477e6a014c6c",
+      "repair_cmd": "book snobol"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/sql.png",
+      "chip_id": null,
+      "lang_id": "sql",
+      "status": "ok",
+      "bytes": 17199,
+      "sha256": "99104e4cffebf40b4fbf3b9b4d6e83d2f17dcbf0586984303de32b1c5ce9b2dd",
+      "repair_cmd": "book sql"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/sql.png",
+      "chip_id": null,
+      "lang_id": "sql",
+      "status": "ok",
+      "bytes": 17199,
+      "sha256": "99104e4cffebf40b4fbf3b9b4d6e83d2f17dcbf0586984303de32b1c5ce9b2dd",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_sql/explaining_sql.h7c",
+      "chip_id": null,
+      "lang_id": "sql",
+      "status": "bad_magic",
+      "bytes": 70114,
+      "sha256": null,
+      "repair_cmd": "book sql"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_sql/book.json",
+      "chip_id": null,
+      "lang_id": "sql",
+      "status": "ok",
+      "bytes": 704,
+      "sha256": "844a30a81c03eca24bfa3dfb7d70f901b345358627785dd3dd2c84ce4a280696",
+      "repair_cmd": "book sql"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/swift.png",
+      "chip_id": null,
+      "lang_id": "swift",
+      "status": "ok",
+      "bytes": 17284,
+      "sha256": "c4a7ed37f1097f1b5da58fe25c4db6ddf453f0d891ef549f8ff2fc88fd07197b",
+      "repair_cmd": "book swift"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/swift.png",
+      "chip_id": null,
+      "lang_id": "swift",
+      "status": "ok",
+      "bytes": 17284,
+      "sha256": "c4a7ed37f1097f1b5da58fe25c4db6ddf453f0d891ef549f8ff2fc88fd07197b",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_swift/explaining_swift.h7c",
+      "chip_id": null,
+      "lang_id": "swift",
+      "status": "bad_magic",
+      "bytes": 70883,
+      "sha256": null,
+      "repair_cmd": "book swift"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_swift/book.json",
+      "chip_id": null,
+      "lang_id": "swift",
+      "status": "ok",
+      "bytes": 720,
+      "sha256": "4d888694aead7eaf23bb4470bc28eb0232fc9096263b58aa24a8247ed408a125",
+      "repair_cmd": "book swift"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/turbo_pascal.png",
+      "chip_id": null,
+      "lang_id": "turbo_pascal",
+      "status": "ok",
+      "bytes": 17981,
+      "sha256": "c454b28ab03faad24eaea0a551ee533c5985a4cb0ddb5f61a263565aa42d3705",
+      "repair_cmd": "book turbo_pascal"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/turbo_pascal.png",
+      "chip_id": null,
+      "lang_id": "turbo_pascal",
+      "status": "ok",
+      "bytes": 17981,
+      "sha256": "c454b28ab03faad24eaea0a551ee533c5985a4cb0ddb5f61a263565aa42d3705",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_turbo_pascal/explaining_turbo_pascal.h7c",
+      "chip_id": null,
+      "lang_id": "turbo_pascal",
+      "status": "bad_magic",
+      "bytes": 74286,
+      "sha256": null,
+      "repair_cmd": "book turbo_pascal"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_turbo_pascal/book.json",
+      "chip_id": null,
+      "lang_id": "turbo_pascal",
+      "status": "ok",
+      "bytes": 776,
+      "sha256": "58fd8aad72a40687218e2a275495e348a6a52bcfed12f5d3c156b61db6ee0ef7",
+      "repair_cmd": "book turbo_pascal"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/typescript.png",
+      "chip_id": null,
+      "lang_id": "typescript",
+      "status": "ok",
+      "bytes": 18366,
+      "sha256": "c352692889628e538c1bb9b5aa47d9d921225f6c3809861f886919c8ec393368",
+      "repair_cmd": "book typescript"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/typescript.png",
+      "chip_id": null,
+      "lang_id": "typescript",
+      "status": "ok",
+      "bytes": 18366,
+      "sha256": "c352692889628e538c1bb9b5aa47d9d921225f6c3809861f886919c8ec393368",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_typescript/explaining_typescript.h7c",
+      "chip_id": null,
+      "lang_id": "typescript",
+      "status": "bad_magic",
+      "bytes": 75296,
+      "sha256": null,
+      "repair_cmd": "book typescript"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_typescript/book.json",
+      "chip_id": null,
+      "lang_id": "typescript",
+      "status": "ok",
+      "bytes": 760,
+      "sha256": "78611f177f88508ae34e6fadaa433ca84350f60d6fadb205b579ea6e4c60bd06",
+      "repair_cmd": "book typescript"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/vba.png",
+      "chip_id": null,
+      "lang_id": "vba",
+      "status": "ok",
+      "bytes": 17154,
+      "sha256": "4ea3ba21b12b7fae1cef6f0182be9dc3511c3a36c3668c7d98cbae34261ae78a",
+      "repair_cmd": "book vba"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/vba.png",
+      "chip_id": null,
+      "lang_id": "vba",
+      "status": "ok",
+      "bytes": 17154,
+      "sha256": "4ea3ba21b12b7fae1cef6f0182be9dc3511c3a36c3668c7d98cbae34261ae78a",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_vba/explaining_vba.h7c",
+      "chip_id": null,
+      "lang_id": "vba",
+      "status": "bad_magic",
+      "bytes": 72228,
+      "sha256": null,
+      "repair_cmd": "book vba"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_vba/book.json",
+      "chip_id": null,
+      "lang_id": "vba",
+      "status": "ok",
+      "bytes": 704,
+      "sha256": "605b218ed479b0a1422f481dd08be6ec83b9ee32dfea9674c9f91ce170590391",
+      "repair_cmd": "book vba"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/verilog.png",
+      "chip_id": null,
+      "lang_id": "verilog",
+      "status": "ok",
+      "bytes": 17775,
+      "sha256": "da2bc2c5d4ed2b2dee2656950e73e09c937e4755eb7e7afead2b0cf8d3ecff3e",
+      "repair_cmd": "book verilog"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/verilog.png",
+      "chip_id": null,
+      "lang_id": "verilog",
+      "status": "ok",
+      "bytes": 17775,
+      "sha256": "da2bc2c5d4ed2b2dee2656950e73e09c937e4755eb7e7afead2b0cf8d3ecff3e",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_verilog/explaining_verilog.h7c",
+      "chip_id": null,
+      "lang_id": "verilog",
+      "status": "bad_magic",
+      "bytes": 69049,
+      "sha256": null,
+      "repair_cmd": "book verilog"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_verilog/book.json",
+      "chip_id": null,
+      "lang_id": "verilog",
+      "status": "ok",
+      "bytes": 736,
+      "sha256": "b3bc9093c1c2bf1244293ededa80852c64fd0f4a903d04f917632a54e0216722",
+      "repair_cmd": "book verilog"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/visual_basic.png",
+      "chip_id": null,
+      "lang_id": "visual_basic",
+      "status": "ok",
+      "bytes": 18257,
+      "sha256": "7d83098eb0f3b4ccd40f968bb1a5801757856c70a7ba8c371f63319b903ae9b4",
+      "repair_cmd": "book visual_basic"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/visual_basic.png",
+      "chip_id": null,
+      "lang_id": "visual_basic",
+      "status": "ok",
+      "bytes": 18257,
+      "sha256": "7d83098eb0f3b4ccd40f968bb1a5801757856c70a7ba8c371f63319b903ae9b4",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_visual_basic/explaining_visual_basic.h7c",
+      "chip_id": null,
+      "lang_id": "visual_basic",
+      "status": "bad_magic",
+      "bytes": 75090,
+      "sha256": null,
+      "repair_cmd": "book visual_basic"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_visual_basic/book.json",
+      "chip_id": null,
+      "lang_id": "visual_basic",
+      "status": "ok",
+      "bytes": 776,
+      "sha256": "7eb7f2b77260b9c51fcd40866030e3c882a7e283a55d4e354797d119acf95fb8",
+      "repair_cmd": "book visual_basic"
+    },
+    {
+      "pattern": "book_cover",
+      "path": "data/combinatronic-visuals/books/zig.png",
+      "chip_id": null,
+      "lang_id": "zig",
+      "status": "ok",
+      "bytes": 16882,
+      "sha256": "bb3aba00a2ccb8b084f87993a00f3c5da58d88fabac68fc018c72bd128b32f28",
+      "repair_cmd": "book zig"
+    },
+    {
+      "pattern": "book_mirror",
+      "path": "Queen/world/assets/combinatronic/books/zig.png",
+      "chip_id": null,
+      "lang_id": "zig",
+      "status": "ok",
+      "bytes": 16882,
+      "sha256": "bb3aba00a2ccb8b084f87993a00f3c5da58d88fabac68fc018c72bd128b32f28",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "h7_manual",
+      "path": "library/dewey/000-computer-science/explaining_zig/explaining_zig.h7c",
+      "chip_id": null,
+      "lang_id": "zig",
+      "status": "bad_magic",
+      "bytes": 73378,
+      "sha256": null,
+      "repair_cmd": "book zig"
+    },
+    {
+      "pattern": "book_json",
+      "path": "library/dewey/000-computer-science/explaining_zig/book.json",
+      "chip_id": null,
+      "lang_id": "zig",
+      "status": "ok",
+      "bytes": 704,
+      "sha256": "87ceed96a52ac08d4d8d8098cbaddf7f9c77fe9f9d26e82f2fd41a33ca0dad50",
+      "repair_cmd": "book zig"
+    },
+    {
+      "pattern": "manifest",
+      "path": "data/field-combinatronic-visuals-manifest.json",
+      "chip_id": null,
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 38789,
+      "sha256": "fa7cefdeaa6402f41673d041cb187ab97cf7092e02ded8e3d8d28eac469d6492",
+      "repair_cmd": "generate"
+    },
+    {
+      "pattern": "registry",
+      "path": "data/field-combinatronic-visuals-registry.json",
+      "chip_id": null,
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 97481,
+      "sha256": "016daa8c8fc55d681a6179c74c1c4b27af1d8413e2ca2c5aea5c0817a9780b28",
+      "repair_cmd": "registry"
+    },
+    {
+      "pattern": "panel",
+      "path": "field-combinatronic-visuals-panel.json",
+      "chip_id": null,
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 273,
+      "sha256": "e7c84e8f5782ba98998ad2cd1ff690e374c4058e51496aaea92a8bc2bf648b43",
+      "repair_cmd": "manifest"
+    },
+    {
+      "pattern": "chip_catalog",
+      "path": "data/field-combinatronic-chip-catalog.json",
+      "chip_id": null,
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 7730,
+      "sha256": "2d075a37314a540595c4e4b682d9abcdc96a92ae2bed35fb8675236a2158f60c",
+      "repair_cmd": null
+    },
+    {
+      "pattern": "program_seed",
+      "path": "data/field-program-combinatronic-seed.json",
+      "chip_id": null,
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 42444,
+      "sha256": "70f3f613c1a811c9948a64cf432f14cc8c9ce58f4929b52c17b0784cdbba0995",
+      "repair_cmd": null
+    },
+    {
+      "pattern": "doctrine",
+      "path": "data/field-combinatronic-visuals-doctrine.json",
+      "chip_id": null,
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 6803,
+      "sha256": "0ff67c332e28788cafb9bd51e776719f2bca335d1c6235c7c7ffdd8459ff7a34",
+      "repair_cmd": null
+    },
+    {
+      "pattern": "generator",
+      "path": "lib/field-combinatronic-visuals.py",
+      "chip_id": null,
+      "lang_id": null,
+      "status": "ok",
+      "bytes": null,
+      "sha256": "d6e8185750009cec8c615da3644d2e3d62ff03aa6c20d02e7a4370c570ae8613",
+      "repair_cmd": null
+    },
+    {
+      "pattern": "h7_packer",
+      "path": "Hostess7/scripts/field_h7_book.py",
+      "chip_id": null,
+      "lang_id": null,
+      "status": "ok",
+      "bytes": null,
+      "sha256": "5198a13746b957562c5c0c5b9c4795082d596e057e5e4af270afe53c3505f38b",
+      "repair_cmd": null
+    }
+  ]
+}

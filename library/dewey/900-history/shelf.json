@@ -1,0 +1,62 @@
+{
+  "schema": "dewey-shelf/v1",
+  "shelf": "900-history",
+  "code": "900",
+  "title": "History & geography",
+  "updated": "2026-06-27T12:37:26Z",
+  "format_primary": "h7c",
+  "book_count": 5,
+  "h7c_count": 0,
+  "books": [
+    {
+      "id": "openstax_us_history",
+      "title": "OpenStax U.S. History",
+      "author": "OpenStax",
+      "dewey": "900",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_us_history/front.png",
+      "ready": false
+    },
+    {
+      "id": "openstax_world_history_1",
+      "title": "OpenStax World History Volume 1",
+      "author": "OpenStax",
+      "dewey": "900",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_world_history_1/front.png",
+      "ready": false
+    },
+    {
+      "id": "openstax_world_history_2",
+      "title": "OpenStax World History Volume 2",
+      "author": "OpenStax",
+      "dewey": "900",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/openstax_world_history_2/front.png",
+      "ready": false
+    },
+    {
+      "id": "wikibooks_us_history",
+      "title": "Wikibooks US History",
+      "author": "Wikibooks",
+      "dewey": "900",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/wikibooks_us_history/front.png",
+      "ready": false
+    },
+    {
+      "id": "wikibooks_world_history",
+      "title": "Wikibooks World History",
+      "author": "Wikibooks",
+      "dewey": "900",
+      "format": "textbook",
+      "h7c": null,
+      "cover": "/library/assets/covers/wikibooks_world_history/front.png",
+      "ready": false
+    }
+  ]
+}

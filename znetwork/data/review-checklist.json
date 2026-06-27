@@ -1,0 +1,20 @@
+{
+  "schema": "znetwork-review-checklist/v1",
+  "title": "ZNetwork ACTIVE mode gate",
+  "approved": false,
+  "required_reviews": [
+    "Slide-in plan reviewed — no carrier drop on primary iface",
+    "NetworkManager handoff tested in VM with rollback",
+    "Field DNS cutover does not break captive portals",
+    "DDoS policy limits validated under load test",
+    "Windows and macOS backend stubs replaced or waived",
+    "NEXUS gatekeeper IPC path signed off",
+    "Root sovereign guard whitelist includes znetwork daemon",
+    "Rollback: unmask NetworkManager within 60s documented"
+  ],
+  "sign_off": {
+    "operator": null,
+    "date": null,
+    "notes": "Set approved=true only after all items checked. Requires ZNETWORK_REVIEW_APPROVED=1."
+  }
+}

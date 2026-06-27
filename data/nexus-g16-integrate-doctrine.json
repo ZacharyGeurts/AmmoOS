@@ -1,0 +1,48 @@
+{
+  "schema": "nexus-g16-integrate-doctrine/v1",
+  "title": "Grok16 integrated into NewLatest \u2014 optimize, balance, recompile",
+  "motto": "Grok16 lives inside NewLatest \u2014 combinatronics balanced before every compile; Queen browser rides the ideal profile.",
+  "grok16_ref": "SG/Grok16",
+  "module": "lib/nexus-g16-recompile.py",
+  "bridge": "lib/nexus-g16-bridge.py",
+  "combinatronics": {
+    "gate": "Grok16/lib/g16-compile-combinatronics.py",
+    "doctrine": "Grok16/data/g16-compile-combinatronics-doctrine.json",
+    "balance": "lib/field-combinatronic-balance.py",
+    "always_at_creation": true
+  },
+  "pipeline": [
+    "integrate_grok16",
+    "balance_combinatronics",
+    "recompile_asm_probes",
+    "recompile_queen_browser",
+    "stamp_receipts",
+    "nexus_g16_stack_panel"
+  ],
+  "targets": {
+    "queen_browser": {
+      "binary": "Queen/build/rtx/bin/Linux/queen-browser",
+      "forge": "Queen/lib/queen-forge.py",
+      "build": "Queen/scripts/g16-build.sh"
+    },
+    "asm_probes": [
+      "lib/bin/field-outside-asm",
+      "lib/bin/field-wave-asm"
+    ]
+  },
+  "env": {
+    "G16_OPTIMAL_COMBINATRONICS_AT_COMPILE": "1",
+    "G16_ALWAYS_OPTIMAL": "1",
+    "NEXUS_G16_INTEGRATED": "1"
+  },
+  "wired": [
+    "lib/nexus-g16-recompile.py",
+    "lib/nexus-g16-bridge.py",
+    "scripts/sync-field-stack.sh",
+    "Queen/scripts/g16-build.sh",
+    "Queen/lib/forge/tools.py",
+    "Grok16/scripts/grok16-integrate.sh"
+  ],
+  "grok16_integrated": true,
+  "grok16_root": "/home/default/Desktop/SG/Grok16"
+}

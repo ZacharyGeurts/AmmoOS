@@ -1,0 +1,125 @@
+{
+  "schema": "ammoos-platform-release/v1",
+  "product": "AmmoOS",
+  "version": "1.0.1-beta",
+  "tag": "v1.0.1-beta",
+  "release_model": "source_bootstrap_per_platform",
+  "statement": "AmmoOS beta \u2014 browser-first field OS with native Queen shell. Bootstrap source on each target; web surfaces run on loopback.",
+  "doctrine": "data/ammoos-version.json",
+  "launch": {
+    "browser_primary": true,
+    "panel_port": 9477,
+    "queen_port": 9481,
+    "verify": "scripts/ammoos-launch-verify.sh"
+  },
+  "platforms": [
+    {
+      "id": "linux-gnu-x86_64",
+      "os": "linux",
+      "arch": "x86_64",
+      "format": "tar.gz",
+      "bootstrap": {
+        "installer": "install-all.sh",
+        "dev": "nexus.sh"
+      },
+      "notes": "Primary \u2014 full panel, Queen browser, systemd deploy"
+    },
+    {
+      "id": "linux-gnu-aarch64",
+      "os": "linux",
+      "arch": "aarch64",
+      "format": "tar.gz",
+      "bootstrap": {
+        "installer": "install-all.sh",
+        "cross_host": "linux-gnu-x86_64"
+      },
+      "notes": "ARM64 Linux \u2014 source bootstrap; Queen RTX build on target"
+    },
+    {
+      "id": "linux-gnu-arm",
+      "os": "linux",
+      "arch": "arm",
+      "format": "tar.gz",
+      "bootstrap": {
+        "installer": "install-all.sh"
+      },
+      "notes": "ARM32 GNU/Linux"
+    },
+    {
+      "id": "linux-gnu-riscv64",
+      "os": "linux",
+      "arch": "riscv64",
+      "format": "tar.gz",
+      "bootstrap": {
+        "installer": "install-all.sh",
+        "g16_cross": "riscv64-linux-gnu-"
+      },
+      "notes": "RISC-V 64 \u2014 pairs with Grok16 RISC-V linker doctrine"
+    },
+    {
+      "id": "linux-gnu-i386",
+      "os": "linux",
+      "arch": "i386",
+      "format": "tar.gz",
+      "bootstrap": {
+        "installer": "install-all.sh"
+      },
+      "notes": "32-bit GNU/Linux"
+    },
+    {
+      "id": "windows-x86_64",
+      "os": "windows",
+      "arch": "x86_64",
+      "format": "zip",
+      "bootstrap": {
+        "installer": "stealth.ps1",
+        "wsl_fallback": "install-all.sh"
+      },
+      "notes": "PowerShell stealth installer; WSL2 runs full Linux stack"
+    },
+    {
+      "id": "darwin-aarch64",
+      "os": "darwin",
+      "arch": "aarch64",
+      "format": "tar.gz",
+      "bootstrap": {
+        "dev": "nexus.sh",
+        "browser_only": true
+      },
+      "notes": "Apple Silicon \u2014 browser surfaces + dev tree; no systemd deploy"
+    },
+    {
+      "id": "darwin-x86_64",
+      "os": "darwin",
+      "arch": "x86_64",
+      "format": "tar.gz",
+      "bootstrap": {
+        "dev": "nexus.sh",
+        "browser_only": true
+      },
+      "notes": "Intel macOS \u2014 browser surfaces + dev tree"
+    },
+    {
+      "id": "freebsd-amd64",
+      "os": "freebsd",
+      "arch": "amd64",
+      "format": "tar.gz",
+      "bootstrap": {
+        "installer": "install.sh"
+      },
+      "notes": "FreeBSD \u2014 panel HTTP stack; verify Queen forge on target"
+    },
+    {
+      "id": "android-aarch64",
+      "os": "android",
+      "arch": "aarch64",
+      "format": "apk",
+      "bootstrap": {
+        "webview": "Queen/world/browser.html",
+        "ndk": true
+      },
+      "notes": "WebView shell \u2014 Queen world browser surface"
+    }
+  ],
+  "g16_pairing": "4.7.1"
+}

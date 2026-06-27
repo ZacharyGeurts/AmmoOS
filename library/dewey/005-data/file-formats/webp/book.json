@@ -1,0 +1,11 @@
+{
+  "id": "format-webp",
+  "title": "WebP image",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [],
+  "magic": "RIFF",
+  "cover": "/library/assets/formats/webp.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

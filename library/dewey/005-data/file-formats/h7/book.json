@@ -1,0 +1,14 @@
+{
+  "id": "format-h7",
+  "title": "H7",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "image_field",
+  "extensions": [
+    ".h7snap",
+    ".field-snap"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/h7.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

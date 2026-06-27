@@ -1,0 +1,12 @@
+{
+  "id": "packard_bell_pc",
+  "title": "Packard Bell PC",
+  "author": "",
+  "dewey": "004.16",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/packard_bell_pc/packard_bell_pc.h7c",
+  "h7": null,
+  "cover": null,
+  "migrated_from": "h7",
+  "updated": "2026-06-27T12:05:00Z"
+}

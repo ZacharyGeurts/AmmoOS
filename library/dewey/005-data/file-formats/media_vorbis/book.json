@@ -1,0 +1,13 @@
+{
+  "id": "format-media_vorbis",
+  "title": "Vorbis",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".ogg"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_vorbis.png",
+  "updated": "2026-06-27T12:17:36Z"
+}

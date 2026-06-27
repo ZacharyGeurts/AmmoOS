@@ -1,0 +1,12 @@
+{
+  "id": "trs80_model1",
+  "title": "TRS-80 Model I",
+  "author": "",
+  "dewey": "004.167",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/trs80_model1/trs80_model1.h7c",
+  "h7": null,
+  "cover": null,
+  "migrated_from": "h7",
+  "updated": "2026-06-27T12:05:12Z"
+}

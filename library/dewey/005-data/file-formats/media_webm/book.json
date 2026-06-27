@@ -1,0 +1,13 @@
+{
+  "id": "format-media_webm",
+  "title": "WebM",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".webm"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_webm.png",
+  "updated": "2026-06-27T12:17:36Z"
+}
