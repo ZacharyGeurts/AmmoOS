@@ -4,7 +4,36 @@
   "sealed_doctrine_ref": "data/ironclad-doctrine.json",
   "meld_citation": "ironclad:meld:2",
   "policy": "Extensions meld into the capstone without amending the sealed canonical hash.",
+  "time_is_linear": {
+    "declaration": "Time is linear.",
+    "rule": "One axis, one direction, monotonic — sovereign linear_ns from sealed epoch; never a fourth geometry dimension.",
+    "citation": "ironclad:time:1",
+    "not_geometry_t": true,
+    "witness_only": ["wall_clock", "ntp", "rtc", "thermal", "cpufreq"]
+  },
   "books": [
+    {
+      "id": "time",
+      "title": "Time — Linear sovereign clock",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Time is linear — one axis, one direction, monotonic forever; no rewind, no branch, no pause on the sovereign clock."
+        },
+        {
+          "v": 2,
+          "text": "linear_ns and derived_utc seal melds and ledgers; wall clock, NTP, RTC, thermal, and cpufreq are witness only — they never adjust linear time."
+        },
+        {
+          "v": 3,
+          "text": "G1ID geometry is x, y, z only — t is forbidden in cold files; linear time rides sovereign-time, not the spatial lattice."
+        },
+        {
+          "v": 4,
+          "text": "Take time out means gap or red flag when continuity breaks — the clock keeps advancing; threats log never rewinds linear."
+        }
+      ]
+    },
     {
       "id": "field_sanity",
       "title": "Field Sanity — Integral simplify",
@@ -23,7 +52,11 @@
         },
         {
           "v": 4,
-          "text": "Fielded areas quarantine external loopback; G16 single-pass holds entropy hotspots to zero."
+          "text": "Depth fields are to be sealed and destroyed — field_depth and field-on-field layers are sealed at every gate and eradicated from state; single field depth zero cannot persist."
+        },
+        {
+          "v": 5,
+          "text": "Ironclad field sanity witnesses depth_field_impossible — parallel I/O may fan in, but truth stays one amplitude at layer 0."
         }
       ]
     },
@@ -41,7 +74,7 @@
         },
         {
           "v": 3,
-          "text": "Spatial existence is amplitude on the lattice — x, y, z, t bound this one to a cell; that one without cell receipt is rumor until proven."
+          "text": "Place is x, y, z on the lattice — this one occupies a cell; linear time is a separate sovereign receipt (ironclad:time:1), never a geometry axis in G1ID."
         },
         {
           "v": 4,
@@ -63,11 +96,11 @@
       "verses": [
         {
           "v": 1,
-          "text": "G1ID is cold geometric self — 3D proportions only; this one hardened, plate preserved, t never in geometry."
+          "text": "G1ID is cold geometric self — 3D proportions only; this one hardened, plate preserved; time is linear and lives in sovereign-time, never as t in geometry."
         },
         {
           "v": 2,
-          "text": "Sovereign time is the sole meld input — linear_ns and derived_utc seal when the file is written; wall clock is witness only."
+          "text": "Sovereign linear time is the sole meld input — linear_ns and derived_utc seal when the file is written; wall clock is witness only."
         },
         {
           "v": 3,
