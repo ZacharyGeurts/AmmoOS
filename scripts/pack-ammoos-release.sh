@@ -14,19 +14,27 @@ PKG_NAME="ammoos-${VER}-source.tar.gz"
 INST_NAME="ammoos-${VER}-installers.tar.gz"
 WIN_NAME="ammoos-${VER}-windows-x86_64.zip"
 
+TAR_ONLY=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -v|--version) VER="$2"; shift 2 ;;
+    --tar-only) TAR_ONLY=1 ;;
     *) echo "unknown: $1" >&2; exit 1 ;;
   esac
 done
 
 mkdir -p "$DIST"
-rm -rf "$STAGE"
-mkdir -p "$STAGE"
+log_progress() { echo "[pack $(date +%H:%M:%S)] $*"; }
 
-echo "=== staging AmmoOS ${VER} ==="
-rsync -a \
+if [[ "$TAR_ONLY" -eq 1 ]]; then
+  [[ -d "$STAGE" ]] || { echo "missing stage ${STAGE} — run full pack first" >&2; exit 1; }
+  echo "=== tar-only (stage present) ==="
+else
+  rm -rf "$STAGE"
+  mkdir -p "$STAGE"
+  echo "=== staging AmmoOS ${VER} ==="
+  log_progress "staging tree"
+  rsync -a \
   --exclude='.git' \
   --exclude='.nexus-state' \
   --exclude='.nexus-state-test' \
@@ -86,9 +94,19 @@ done
 if [[ -f "${STAGE}/README-AMMOOS.md" ]]; then
   cp "${STAGE}/README-AMMOOS.md" "${STAGE}/README.md"
 fi
+fi
 
 echo "=== source tarball ==="
+log_progress "compressing source (may take several minutes — heartbeat every 60s)"
+(
+  while sleep 60; do log_progress "still compressing ${PKG_NAME}…"; done
+) &
+_tar_hb=$!
+trap 'kill "$_tar_hb" 2>/dev/null || true' EXIT
 tar -czf "${DIST}/${PKG_NAME}" -C "${DIST}" "ammoos-${VER}"
+kill "$_tar_hb" 2>/dev/null || true
+wait "$_tar_hb" 2>/dev/null || true
+log_progress "source tarball done"
 
 echo "=== installers tarball ==="
 INSTALL_STAGE="${DIST}/ammoos-${VER}-installers"

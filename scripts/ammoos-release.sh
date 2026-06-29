@@ -34,8 +34,31 @@ if [[ -f "${ROOT}/docs/build-ammoos-manual.py" ]]; then
   python3 "${ROOT}/docs/build-ammoos-manual.py"
 fi
 
-log "pack archives"
-bash "${ROOT}/scripts/pack-ammoos-release.sh" --version "$AMMOOS_VERSION"
+need_pack=1
+min_src_bytes=$((500 * 1024 * 1024))
+if [[ "${SKIP_PACK:-0}" == "1" ]]; then
+  src_arc="${ROOT}/dist/ammoos-${AMMOOS_VERSION}-source.tar.gz"
+  inst_arc="${ROOT}/dist/ammoos-${AMMOOS_VERSION}-installers.tar.gz"
+  src_ok=0
+  if [[ -f "$src_arc" ]]; then
+    sz=$(stat -c%s "$src_arc" 2>/dev/null || echo 0)
+    [[ "$sz" -ge "$min_src_bytes" ]] && src_ok=1
+  fi
+  if [[ "$src_ok" -eq 1 && -f "$inst_arc" ]]; then
+    need_pack=0
+    log "SKIP pack — dist artifacts present ($(du -h "$src_arc" | awk '{print $1}') source)"
+  elif [[ -d "${ROOT}/dist/ammoos-${AMMOOS_VERSION}" ]]; then
+    log "SKIP full pack — retar source from stage (corrupt or missing archive)"
+    bash "${ROOT}/scripts/pack-ammoos-release.sh" --version "$AMMOOS_VERSION" --tar-only
+    need_pack=0
+  else
+    log "SKIP_PACK set but archives missing — full pack"
+  fi
+fi
+if [[ "$need_pack" -eq 1 ]]; then
+  log "pack archives"
+  bash "${ROOT}/scripts/pack-ammoos-release.sh" --version "$AMMOOS_VERSION"
+fi
 
 DIST="${ROOT}/dist"
 EXPORT="${DIST}/ammoos-export-${AMMOOS_VERSION}"

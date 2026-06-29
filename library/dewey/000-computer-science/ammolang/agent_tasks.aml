@@ -4,7 +4,8 @@
 @motto "Agent tasks · catalog · gates · ship · never hang"
 
 seq ·
-  say "Agent task bundle — hang guard on every step"
+  say "Agent task bundle — AmmoLang-only entry · progress every 60s"
+  post "AGENT START — all tasks route through lib/ammolang-run.sh"
   self upgrade
   fast path:gpy path:g16 compile:0 fastest
   assist hang

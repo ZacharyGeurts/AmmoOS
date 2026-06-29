@@ -42,8 +42,16 @@ rsync -a --delete \
 
 cd "$PAGES_REPO"
 git add -A
-git diff --cached --quiet && { echo "Pages up to date"; exit 0; }
-git -c user.email="gzac5314@users.noreply.github.com" -c user.name="ZacharyGeurts" \
-  commit -m "pages: AmmoOS manual v${VER}"
+if git diff --cached --quiet; then
+  if git rev-parse HEAD >/dev/null 2>&1; then
+    echo "Pages up to date"
+    exit 0
+  fi
+  git -c user.email="gzac5314@users.noreply.github.com" -c user.name="ZacharyGeurts" \
+    commit --allow-empty -m "pages: init gh-pages v${VER}"
+else
+  git -c user.email="gzac5314@users.noreply.github.com" -c user.name="ZacharyGeurts" \
+    commit -m "pages: AmmoOS manual v${VER}"
+fi
 git push origin "$PAGES_BRANCH" 2>/dev/null || git push -u origin "$PAGES_BRANCH"
 echo "Pages: https://zacharygeurts.github.io/AmmoOS/"

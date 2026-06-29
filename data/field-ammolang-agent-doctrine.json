@@ -1,0 +1,31 @@
+{
+  "schema": "field-ammolang-agent-doctrine/v1",
+  "title": "Agent entry — AmmoLang only",
+  "motto": "All field tasks start through AmmoLang — minute progress posts, hang guard, freeze assist.",
+  "policy": {
+    "entry_only": "lib/ammolang-run.sh",
+    "wrapper": "scripts/aml.sh",
+    "progress_sec": 60,
+    "progress_panel": ".nexus-state/ammolang-release-progress.json",
+    "build_log": ".nexus-state/field-ammolang-build.log",
+    "never_bypass": "Do not invoke scripts/*.sh or pack/release directly — route via task_registry."
+  },
+  "default_env": {
+    "AML_BUILD": "1",
+    "AML_PROGRESS": "1",
+    "AML_PROGRESS_MIN": "60",
+    "AML_GITHUB_TRANSPORT": "mcp_secure"
+  },
+  "watch": [
+    "tail -f .nexus-state/field-ammolang-build.log",
+    "watch -n30 cat .nexus-state/ammolang-release-progress.json"
+  ],
+  "tasks": {
+    "ship": "ammoos_ship",
+    "beta3": "ammoos_ship",
+    "release": "ammoos_push",
+    "agent": "agent_tasks",
+    "github": "github_mcp",
+    "gates": "grok16_gates"
+  }
+}

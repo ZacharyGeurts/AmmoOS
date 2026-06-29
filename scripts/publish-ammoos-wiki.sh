@@ -10,6 +10,8 @@ VER="${AMMOOS_VERSION:-2.0.0-beta3}"
 
 [[ -d "$WIKI_SRC" ]] || { echo "Missing ${WIKI_SRC}" >&2; exit 1; }
 
+gh repo edit ZacharyGeurts/AmmoOS --enable-wiki 2>/dev/null || true
+
 if [[ ! -d "${WIKI_REPO}/.git" ]]; then
   rm -rf "$WIKI_REPO"
   if git ls-remote --heads "$WIKI_REMOTE" master 2>/dev/null | grep -q master; then

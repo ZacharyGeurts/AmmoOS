@@ -636,11 +636,12 @@ def _run_subprocess(
 
     monitor = _import_grok16("monitor", "g16_self_monitor.py") if use_monitor else None
     if monitor and hasattr(monitor, "run_monitored"):
-        stall = ctx.op_stall or (
-            _gate_run_stall(timeout)
-            if any(tok in key_spec for tok in ("grok16-test-gate", "grok16-launch-verify", "grok16-release", "grok16-integrate"))
-            else min(90, max(30, timeout // 2))
-        )
+        if any(tok in key_spec for tok in ("ammoos-push-only", "ammoos-release", "pack-ammoos", "publish-stack", "publish-ammoos")):
+            stall = ctx.op_stall or 3600
+        elif any(tok in key_spec for tok in ("grok16-test-gate", "grok16-launch-verify", "grok16-release", "grok16-integrate")):
+            stall = ctx.op_stall or _gate_run_stall(timeout)
+        else:
+            stall = ctx.op_stall or min(90, max(30, timeout // 2))
         res = monitor.run_monitored(
             cmd,
             label=short,

@@ -16,7 +16,8 @@
     "queen_catalog": "library/dewey/000-computer-science/ammolang/queen_catalog.aml",
     "agent_tasks": "library/dewey/000-computer-science/ammolang/agent_tasks.aml",
     "github_mcp": "library/dewey/000-computer-science/ammolang/github_mcp.aml",
-    "ammoos_ship": "library/dewey/000-computer-science/ammolang/ammoos_ship.aml"
+    "ammoos_ship": "library/dewey/000-computer-science/ammolang/ammoos_ship.aml",
+    "ammoos_push": "library/dewey/000-computer-science/ammolang/ammoos_push.aml"
   },
   "script_routes": {
     "sovereign": "library/dewey/000-computer-science/ammolang/sovereign_build.aml",
@@ -33,7 +34,8 @@
     "queen_catalog": "library/dewey/000-computer-science/ammolang/queen_catalog.aml",
     "agent_tasks": "library/dewey/000-computer-science/ammolang/agent_tasks.aml",
     "github_mcp": "library/dewey/000-computer-science/ammolang/github_mcp.aml",
-    "ammoos_ship": "library/dewey/000-computer-science/ammolang/ammoos_ship.aml"
+    "ammoos_ship": "library/dewey/000-computer-science/ammolang/ammoos_ship.aml",
+    "ammoos_push": "library/dewey/000-computer-science/ammolang/ammoos_push.aml"
   },
   "task_registry": {
     "catalog": "queen_catalog",
@@ -55,7 +57,10 @@
     "mcp": "github_mcp",
     "ship": "ammoos_ship",
     "ammoos_ship": "ammoos_ship",
-    "beta3": "ammoos_ship"
+    "beta3": "ammoos_ship",
+    "release": "ammoos_push",
+    "push": "ammoos_push",
+    "ammoos_push": "ammoos_push"
   },
   "mcp_github": {
     "default_transport": "mcp_secure",

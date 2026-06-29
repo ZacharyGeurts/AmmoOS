@@ -41,5 +41,13 @@
     "library/dewey/000-computer-science/ammolang/github_mcp.aml"
   ],
   "script_router": "lib/ammolang-run.sh",
+  "agent_entry": "scripts/aml.sh",
+  "agent_doctrine": "data/field-ammolang-agent-doctrine.json",
+  "progress": {
+    "interval_sec": 60,
+    "panel": ".nexus-state/ammolang-release-progress.json",
+    "log": ".nexus-state/field-ammolang-build.log",
+    "motto": "All agent tasks start through AmmoLang — posted every minute."
+  },
   "api": "/api/ammolang"
 }
