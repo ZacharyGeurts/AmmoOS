@@ -1,17 +1,22 @@
 {
   "schema": "ammoos-version/v1",
   "product": "AmmoOS",
-  "edition": "pre-grok-heavy",
+  "edition": "grok-expert-review",
   "channel": "release",
-  "version": "1.9.9-pre-grok-heavy",
-  "tag": "v1.9.9-pre-grok-heavy",
+  "version": "1.9.9e",
+  "tag": "v1.9.9e",
   "codename": "View",
   "nexus_lineage": "NewLatest",
   "g16_pairing": "5.0.0",
   "pythong_pairing": "16.1.0-gpy16",
   "kilroy_pairing": "field_die",
   "release_model": "source_bootstrap_per_platform",
-  "statement": "AmmoOS 1.9.9 Pre Grok Heavy — when ZNetwork runs we ARE 127.0.0.1 (field OS, not a browser). View folder manager, program-glyph icons, MCP layer, Grok16 compile path.",
+  "statement": "AmmoOS inside Queen — NEXUS C2 · ZNetwork · Queen defends · AmmoOS embedded. Loopback 127.0.0.1 when ZNetwork runs. Hardware no-break.",
+  "stack_model": {
+    "doctrine": "data/field-stack-layer-doctrine.json",
+    "order": ["hardware", "nexus_c2", "znetwork", "queen", "ammoos"],
+    "ammoos_inside_queen": true
+  },
   "surfaces": {
     "host_desktop": "http://127.0.0.1:9477/field",
     "field_command": "http://127.0.0.1:9477/command",

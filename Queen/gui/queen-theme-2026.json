@@ -13,7 +13,8 @@
   },
   "branding": {
     "amouranth_gentle": "world/assets/branding/amouranth-gentle.png",
-    "freddie_easter_egg": "world/assets/branding/freddie-easter-egg.png",
+    "queen_crown_surprise": "world/assets/branding/queen-crown-surprise.svg",
+    "user_guide": "world/queen-browser-guide.html",
     "palette": "black · emerald · rose",
     "undertone": "amouranth_gentle_watermark",
     "local_only_assets": true,

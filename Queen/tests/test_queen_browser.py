@@ -97,14 +97,16 @@ def run_tests() -> list[tuple[str, str]]:
     ):
         assert_true(needle in text, f"shell contains {needle}", results)
     bjs, bjst = _get("/world/queen-branding.js")
-    assert_true(bjs == 200 and b"qb-freddie-egg" in bjst and b"rhap" in bjst, "Freddie easter egg wired", results)
+    assert_true(bjs == 200 and b"qb-queen-crown-egg" in bjst and b"queen-browser-guide" in bjst, "Queen crown + guide wired", results)
     assert_true("qw-dock" not in text, "default /world/ is browser-only (no Queen OS dock)", results)
 
     for asset in (
         "/world/queen-branding.css",
         "/world/queen-branding.js",
         "/world/assets/branding/queen-favicon-48.png",
-        "/world/assets/branding/freddie-easter-egg.png",
+        "/world/assets/branding/queen-crown-surprise.svg",
+        "/world/queen-browser-guide.html",
+        "/world/queen-browser-guide.css",
         "/world/assets/branding/amouranth-plate.png",
         "/world/queen-os.js",
         "/world/queen-world.css",

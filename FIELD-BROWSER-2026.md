@@ -12,7 +12,7 @@ The Queen browser is not a minimal privacy fork. It is the **complete web surfac
 | WebRTC disabled | WebRTC **on** — camera/mic/data channels gated per tab |
 | WebGPU optional pack | WebGPU **in-tree** — thermo-billed per context |
 | MP4 codec optional | MP4 + H.264 + AAC **mandatory in-tree** |
-| "Use Chrome for video" | FieldFox ships full MSE + FFmpeg media path |
+| "Use Chrome for video" | Queen ships full MSE + FFmpeg media path via Field Gecko engine |
 
 Capabilities are not toggles that remove surface area. They are **gates** the operator holds via:
 
@@ -28,7 +28,7 @@ Capabilities are not toggles that remove surface area. They are **gates** the op
 
 | Track | Engine | When |
 |-------|--------|------|
-| **Ship now** | **FieldFox** — hardened Gecko fork | 2026 operator desktop |
+| **Ship now** | **Queen Browser** — hardened Field Gecko engine | 2026 operator desktop |
 | **Millennium** | Ladybird / Servo | Independent engine, same gate doctrine |
 
 No Chromium telemetry chew. Full compat: old web, WASM surrogates for dead plugins, inline PDF, SVG, MathML.

@@ -2159,6 +2159,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload), "application/json")
             return
 
+        if path == "/api/field-stack-layer":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-stack-layer.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path == "/api/admin-shield":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "admin-window-shield.py", ["json"], timeout=20)
             self._send(200, json.dumps(payload), "application/json")

@@ -428,6 +428,8 @@ def _running_programs() -> list[dict[str, Any]]:
         "threat-panel-http": "Field Panel",
         "queen-world": "Queen World",
         "firefox": "Queen Browser",
+        "fieldfox": "Queen Browser",
+        "queen-browser": "Queen Browser",
         "chromium": "Chromium",
         "google-chrome": "Chrome",
         "code": "VS Code",

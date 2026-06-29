@@ -1,106 +1,122 @@
-# AmmoOS
+# NEXUS-Shield
 
-![Release](https://img.shields.io/badge/release-1.9.9--pre--grok--heavy-brightgreen)
-![Edition](https://img.shields.io/badge/edition-Pre_Grok_Heavy-blue)
-![G16](https://img.shields.io/badge/Grok16-5.0.0-gold)
-![Queen](https://img.shields.io/badge/Queen-browser-purple)
-![License](https://img.shields.io/badge/license-GPLv3-green)
+**g16 1.0** — Host desktop landing, Queen Browser OS inside, field C2 command deck, host freeze, Underlay F9 Tristate installer.
 
-**AmmoOS** is the **1.9.9 Pre Grok Heavy** field operating system on **`127.0.0.1`**. Once **ZNetwork** is running, you are the loopback field — **not** a generic web browser tab. Queen is the system shell; native programs and **View** (folder manager) launch from the Start menu. Program-glyph icons; Grok16 5.0.0; MCP GitHub publish.
+## What's new in g16 1.0
 
-## Live surfaces (after install)
-
-| Surface | URL | Kind |
+| Surface | URL | Role |
 |---------|-----|------|
-| **Host desktop** | http://127.0.0.1:9477/field | Browser — first page |
-| **Field command** | http://127.0.0.1:9477/command | Browser — full C2 |
-| **Queen Browser** | http://127.0.0.1:9481/world/browser.html | Browser — OS in Start tab |
-| **Underlay F9** | http://127.0.0.1:9477/underlay-f9?sector=underlay | Browser — Tristate installer |
-| **Training** | http://127.0.0.1:9477/command#training | Browser — Hostess7 tab |
-| **Queen shell** | `Queen/build/rtx/bin/Linux/queen-browser` | Native — RTX program |
-| **Dev launcher** | `./nexus.sh` | Native — panel + browser |
+| **Host desktop** (first page) | http://127.0.0.1:9477/field | Mirror incumbent OS apps + field startbar |
+| **Field command** (full C2) | http://127.0.0.1:9477/command | Threat panel — Monitor, Training, Intel, System |
+| **Queen Browser** | http://127.0.0.1:9481/world/browser.html | Browser chrome with field OS inside Start tab |
+| **Underlay F9** | http://127.0.0.1:9477/underlay-f9?sector=underlay | 2026 Tristate installer |
 
-## Quick install (Linux x86_64)
+**Drop / Rise** — Queen shell calls `/api/field-underlay-surface` to drop the field underlay beneath the host desktop or rise the field OS slice.
+
+**Host freeze** — `/api/field-host-freeze` soft (cgroup), mem (S3), or disk (hibernate) modes; sovereign gap witness on resume.
+
+## Thermodynamic Foundations • Honoring Rolf Landauer
+
+[Landauer Tribute — Field Primer](https://zacharygeurts.github.io/Field_Primer/creditors/landauer.html)
+
+> E_min = k_B T ln 2 — the theoretical floor behind ThermoAccountant's proxy ledger.
+
+> Landauer taught tenderness toward bits.
+
+> To erase in haste without accounting is to spend another's clarity.
+
+> Irreversibility reminds us: some truths, once spoken, cannot be unspoken without heat.
+
+In NEXUS-Shield and Field layer: **All global redata is incremental, budget-capped, and guarded** — we practice the tenderness he taught. Thermal headroom enforced. Quality job 1. No damage. No haste.
+
+---
+
+## Install
 
 ```bash
-git clone https://github.com/ZacharyGeurts/AmmoOS.git
-cd AmmoOS
+git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
+cd NEXUS-Shield
+chmod +x install-all.sh genius_shield.sh nexus.sh nexus-install-gui.sh
 sudo ./install-all.sh
 ```
 
-Browser opens **http://127.0.0.1:9477/field** on start.
+Browser opens **http://127.0.0.1:9477/field** (host desktop) on start. Full C2 at **/command**.
 
-## Release pipeline (1.0)
+**Installer guide:** [INSTALL-README.md](INSTALL-README.md)
+
+| Script | Purpose |
+|--------|---------|
+| `install-all.sh` | One approval — full Linux install |
+| `genius_shield.sh` | Deploy to `/usr/local/lib/nexus-shield` + systemd |
+| `nexus-install-gui.sh` | Open Tristate / Underlay F9 installer |
+| `nexus.sh` | Dev tree — panel + browser |
+| `Queen/scripts/run-queen.sh` | Queen Browser on `:9481` |
+
+---
+
+## Manual (GitHub Pages)
+
+| Page | Contents |
+|------|----------|
+| [Manual index](https://zacharygeurts.github.io/NEXUS-Shield/) | Overview + architecture diagram |
+| [Field I/O](https://zacharygeurts.github.io/NEXUS-Shield/io.html) | API, state files, boot markers **with diagrams** |
+| [Getting Started](https://zacharygeurts.github.io/NEXUS-Shield/getting-started.html) | Install flow + panel screenshot |
+
+Local preview: open `docs/index.html` in a browser (images in `docs/images/`).
+
+**Wiki:** https://github.com/ZacharyGeurts/NEXUS-Shield/wiki (sync via `./scripts/publish-wiki.sh`)
+
+---
+
+## Everyday commands
 
 ```bash
-export SG_ROOT=/path/to/SG
-./scripts/ammoos-beta-pipeline.sh    # combinatronic · plate · engine · integrate
-./scripts/ammoos-launch-verify.sh     # surfaces · sovereignty · local DNS/DHCP
-./scripts/pack-ammoos-release.sh --version 1.0.0
+./nexus.sh                 # open host desktop (dev tree)
+nexus status               # health + URL
+nexus trust <ip>           # trust forever
+nexus verify               # manifest integrity
+nexus-install-gui.sh       # Tristate installer in browser
 ```
 
-## Combinatronic integration
-
-AmmoOS runs the full **g16 combinatronic optimal** cycle before release:
-
-- **Rebalance** — chip + program batteries, universal leaf ordering
-- **Condense** — plate width × length consolidation
-- **Combine** — universal panel + combinatorics publish
-- **Connect** — chip ISA ↔ language driver edges
-- **Spider wire** — ironclad outward lane optimization
-
-Doctrine: `lib/g16-combinatronic-rebalance.py` · State: `.nexus-state/ammoos-*.json`
-
-## Platform matrix
-
-AmmoOS 1.0 ships **source bootstrap** for:
-
-| Platform | Installer |
-|----------|-----------|
-| Linux x86_64 | `install-all.sh` |
-| Linux aarch64 / arm / riscv64 / i386 | `install-all.sh` on target |
-| Windows x86_64 | `stealth.ps1` or WSL2 + `install-all.sh` |
-| macOS (Intel / Apple Silicon) | `./nexus.sh` dev tree |
-| FreeBSD amd64 | `install.sh` |
-| Android aarch64 | Queen `browser.html` WebView shell |
-
-Full matrix: [ammoos-2.0.0-beta-PLATFORMS.md](dist/ammoos-2.0.0-beta-PLATFORMS.md) · JSON: `data/ammoos-platform-release.json`
+---
 
 ## Architecture
 
+<p align="center">
+  <img src="docs/images/io-architecture.svg" alt="NEXUS architecture I/O" width="640" />
+</p>
+
 ```
-Host browser (:9477)
-  ├─ /field        → host desktop (apps + startbar)
-  ├─ /command      → threat panel + training
-  └─ /underlay-f9  → Tristate installer
-
-Queen Browser (:9481)
-  └─ /world/browser.html → field OS inside Start tab
-
-Native programs
-  ├─ queen-browser     → RTX shell (FIELDC / AmmoOS guest)
-  ├─ nexus.sh          → dev launcher
-  └─ install-all.sh    → production deploy
-
-Combinatronic engine
-  ├─ g16-combinatronic-rebalance.py
-  ├─ field-program-combinatronic.py
-  └─ Queen/AmmoOS/net/*.fld plates
+Host browser
+  ├─ :9477/field        → field-desktop.html (apps + startbar)
+  ├─ :9477/command      → threat-panel.html (full C2)
+  └─ :9481/world/browser.html → Queen chrome → Start tab embeds /field
+        ↕ /api/field-underlay-surface (drop / rise)
+Panel HTTP :9477 ↔ nexus-genius.service ↔ /var/lib/nexus-shield ↔ nftables perimeter
 ```
 
-## Manual
+See [Field I/O manual](docs/io.html) for boot flow, API tables, and state file map (all illustrated).
 
-| Doc | URL |
-|-----|-----|
-| **Web manual** | https://zacharygeurts.github.io/AmmoOS/ |
-| Getting Started | https://zacharygeurts.github.io/AmmoOS/getting-started.html |
-| Launch surfaces | https://zacharygeurts.github.io/AmmoOS/launch-surfaces.html |
-| Combinatronic | https://zacharygeurts.github.io/AmmoOS/combinatronic.html |
-| Platforms | https://zacharygeurts.github.io/AmmoOS/platforms.html |
-| Field I/O | https://zacharygeurts.github.io/AmmoOS/io.html |
+---
 
-## Lineage
+## Project layout
 
-AmmoOS beta **2.0.0-beta** packages **NEXUS-Shield / NewLatest 10.4.1** with Grok16 **4.7.1** pairing and **KILROY Field Die** syscall truth. Full SG stack siblings are wired and materialized in release archives.
+```
+install-all.sh          ← main installer
+INSTALL-README.md       ← installer guide (read this for deploy)
+nexus.sh                ← field dev launcher
+lib/                    ← daemon modules (field-host-desktop, field-host-freeze, …)
+panel/                  ← web UI (field-desktop.html, threat-panel.html)
+Queen/                  ← Queen Browser OS inside
+docs/                   ← GitHub Pages manual + images
+wiki/                   ← GitHub wiki source
+config/nexus.conf       ← defaults
+```
 
-**Release notes:** [RELEASE-2.0.0-beta.md](RELEASE-2.0.0-beta.md)
+---
+
+## License
+
+**NEXUS-Shield — MIT** · [LICENSE](LICENSE)
+
+**AMOURANTHRTX — GPL v3 or commercial** (separate repo, not MIT-free)

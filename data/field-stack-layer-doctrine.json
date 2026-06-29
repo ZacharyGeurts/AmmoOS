@@ -1,0 +1,111 @@
+{
+  "schema": "field-stack-layer/v1",
+  "title": "Field stack layers — NEXUS C2 · ZNetwork · Queen · AmmoOS",
+  "version": "1.0.0",
+  "motto": "Hardware untouched. NEXUS C2 commands. ZNetwork pipes. Queen defends. AmmoOS lives inside Queen.",
+  "statement": "AmmoOS is not a sibling product — it is the field OS embedded in Queen Browser. Queen is secured and rewritten to do it all, with NEXUS C2 and ZNetwork helping defend.",
+  "hardware_guard": {
+    "no_breaks": true,
+    "flash_spi_rom": false,
+    "never_harm_os": true,
+    "coexist_host_desktop": true,
+    "own_drivers": true,
+    "never_mask_native_until_l3_ready": true,
+    "doctrine": "data/native-layer-doctrine.json",
+    "motto": "Witness BIOS, own field drivers in software — never brick hardware or kill host NIC manager prematurely"
+  },
+  "layers_bottom_up": [
+    {
+      "order": 0,
+      "id": "hardware",
+      "label": "Hardware",
+      "role": "witness_and_wire",
+      "break_policy": "none",
+      "modules": ["lib/hardware_wire_registry.py", "lib/hardware-wire.py"]
+    },
+    {
+      "order": 1,
+      "id": "nexus_c2",
+      "label": "NEXUS C2",
+      "role": "command_security_defense",
+      "port": 9477,
+      "surfaces": {
+        "field": "/field",
+        "command": "/command"
+      },
+      "modules": [
+        "lib/threat-panel-http.py",
+        "lib/connection-gatekeeper.py",
+        "lib/field-queen-browser.py",
+        "lib/trust-strike-engine.py",
+        "Queen/lib/queen-nexus-c2.py"
+      ],
+      "motto": "Command deck, gates, trust strike, panel API — security fixes originate here"
+    },
+    {
+      "order": 2,
+      "id": "znetwork",
+      "label": "ZNetwork",
+      "role": "sole_internet_pipe",
+      "internet_pipe_percent_target": 100,
+      "modules": [
+        "lib/znetwork-relayer.py",
+        "lib/znetwork-orchestrator.py",
+        "lib/znetwork-smart-inside.py",
+        "lib/znetwork-exploit-shield.py"
+      ],
+      "doctrine": "data/znetwork-doctrine.json",
+      "motto": "100% ingress/egress — relayer + exploit shield help Queen defend"
+    },
+    {
+      "order": 3,
+      "id": "queen",
+      "label": "Queen Browser",
+      "role": "secure_shell_defender",
+      "port": 9481,
+      "shell": "/world/browser.html",
+      "contains": ["ammoos"],
+      "security_wired": [
+        "data/field-queen-gates-seed.json",
+        "lib/field-queen-browser.py",
+        "Queen/world/queen-browser-shell.js",
+        "Queen/lib/queen-browser-import.py",
+        "lib/connection-gatekeeper.py"
+      ],
+      "motto": "Rewritten browser OS — tabs, gates, import, loopback shell; defends with NEXUS + ZNetwork help"
+    },
+    {
+      "order": 4,
+      "id": "ammoos",
+      "label": "AmmoOS",
+      "role": "field_os_inside_queen",
+      "parent": "queen",
+      "not_sibling": true,
+      "loopback": "127.0.0.1",
+      "surfaces": {
+        "host_desktop": "http://127.0.0.1:9477/field",
+        "view": "http://127.0.0.1:9481/world/view.html",
+        "start_tab": "http://127.0.0.1:9477/field"
+      },
+      "motto": "Start menu, View, programs — embedded in Queen Start tab, not a separate browser"
+    }
+  ],
+  "defense_chain": [
+    "hardware_wire",
+    "nexus_c2_gates",
+    "znetwork_relayer",
+    "znetwork_exploit_shield",
+    "connection_gatekeeper",
+    "queen_gates",
+    "queen_import_resecure",
+    "truth_dns",
+    "field_dhcp"
+  ],
+  "env": {
+    "FIELD_STACK_LAYER": "nexus_c2,znetwork,queen,ammoos",
+    "AMMOOS_INSIDE_QUEEN": "1",
+    "QUEEN_DEFENDS_WITH_NEXUS": "1",
+    "QUEEN_DEFENDS_WITH_ZNETWORK": "1",
+    "HARDWARE_NO_BREAK": "1"
+  }
+}

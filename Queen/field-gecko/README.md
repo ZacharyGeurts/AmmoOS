@@ -1,25 +1,31 @@
 # Queen Field Gecko
 
-Queen Browser gecko backend for AmmoOS — **not** the operator's personal Firefox profile.
+Queen Browser engine backend for AmmoOS — **not** the operator's personal browser profile.
 
-## Doctrine
+## What this is
 
-- **Queen Webbrowser** (`/world/browser.html`) is the stable tabbed shell.
-- **No comp shader boot** — `QUEEN_WEB_SHELL=1`, `QUEEN_SKIP_RTX_BOOT=1`.
-- **No OS browser fallback** — `QUEEN_NO_OS_BROWSER=1` uses this launcher only.
-- Stripped for AI operators: telemetry off, loopback-first, g16 toolchain path in manifest.
+- **Queen** is the product name users see everywhere (tabs, Start menu, taskbar).
+- **Field Gecko** is the isolated engine profile under `field-gecko/profile/`.
+- Legacy binaries may still be named `fieldfox` or `firefox` on disk — the shell is always Queen.
 
-## Ship now (legal, no fork required)
-
-Uses system `firefox` with an **isolated Queen profile** under `field-gecko/profile/`:
+## Launch
 
 ```bash
 ./bin/launch-field-gecko.sh
 ```
 
-## Build later (MPL 2.0 source path)
+Opens Queen with an isolated profile. Default home/search: DuckDuckGo.
+
+## User guide
+
+Operators migrating from Firefox should open:
+
+`http://127.0.0.1:9481/world/queen-browser-guide.html`
+
+## Bootstrap (optional)
 
 ```bash
 ./scripts/bootstrap-field-gecko.sh --tag FIREFOX_ESR_128_BASE
-# Configure with g16 when engine tree is wired — see manifest.json
 ```
+
+Builds a stripped gecko engine from Mozilla source (MPL 2.0). Queen branding applies in the AmmoOS shell — not in upstream Mozilla artwork.

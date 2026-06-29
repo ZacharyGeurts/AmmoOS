@@ -1,6 +1,6 @@
 {
   "schema": "ammoos-mcp-layer/v1",
-  "version": "1.9.9-pre-grok-heavy",
+  "version": "1.9.9e",
   "title": "AmmoOS GitHub MCP integration layer",
   "description": "Private stdio MCP for ZacharyGeurts repos — drives AmmoOS publish, wiki, and release from NewLatest.",
   "setup": "scripts/github-mcp-private-setup.sh",
@@ -16,6 +16,8 @@
   "repos": {
     "AmmoOS": "https://github.com/ZacharyGeurts/AmmoOS",
     "Grok16": "https://github.com/ZacharyGeurts/Grok16",
-    "Kill-Grok-Orphans": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans"
+    "Kill-Grok-Orphans": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans",
+    "Kill-Grok-Orphans_release": "v1.1.0",
+    "Kill-Grok-Orphans_mcp": "Kill-Grok-Orphans/data/kgo-mcp-layer.json"
   }
 }

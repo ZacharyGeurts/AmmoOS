@@ -2,7 +2,12 @@
   "schema": "sg-canonical/v1",
   "updated": "2026-06-27",
   "canonical_root": "NewLatest",
-  "motto": "SG/NewLatest is AmmoOS \u2014 Queen underlying browser on 127.0.0.1, ZNetwork 100% internet pipe, own drivers on any hardware",
+  "motto": "SG/NewLatest — NEXUS C2 · ZNetwork · Queen (secure) · AmmoOS inside Queen on 127.0.0.1 — hardware no-break",
+  "stack_layers": {
+    "doctrine": "NewLatest/data/field-stack-layer-doctrine.json",
+    "posture": "NewLatest/lib/field-stack-layer.py",
+    "order": ["hardware", "nexus_c2", "znetwork", "queen", "ammoos"]
+  },
   "sovereignty": {
     "doctrine": "NewLatest/data/queen-ammoos-sovereignty-doctrine.json",
     "posture": "NewLatest/lib/queen-ammoos-sovereignty.py",

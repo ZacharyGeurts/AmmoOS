@@ -8,7 +8,8 @@
     "shell": "standalone",
     "favicon": "panel/assets/ammoos-field-48.png",
     "wordmark": "world/assets/branding/ammoos-wordmark.svg",
-    "easter_egg": "world/assets/branding/freddie-easter-egg.png"
+    "crown_surprise": "world/assets/branding/queen-crown-surprise.svg",
+    "user_guide": "world/queen-browser-guide.html"
   },
   "license": "MPL-2.0",
   "engine": "queen-field-gecko",
@@ -32,11 +33,13 @@
   ],
   "profile_dir": "profile",
   "binary_candidates": [
+    "bin/queen-browser",
     "bin/fieldfox",
     "bin/firefox"
   ],
   "legacy": {
     "schema": "queen-field-gecko/v1",
-    "binary_candidates": ["bin/fieldfox", "bin/firefox"]
+    "note": "fieldfox/firefox are legacy engine binary names — UI is always Queen",
+    "binary_candidates": ["bin/queen-browser", "bin/fieldfox", "bin/firefox"]
   }
 }

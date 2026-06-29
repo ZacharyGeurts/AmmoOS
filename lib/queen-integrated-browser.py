@@ -243,6 +243,7 @@ def close_integrated(*, stop_world: bool = False) -> dict[str, Any]:
         "AmmoOS",
         "QueenFieldBrowser",
         "Mozilla Firefox.*AmmoOS",
+        "QueenBrowser",
     )
     for pat in patterns:
         try:

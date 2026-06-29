@@ -50,8 +50,10 @@ mkdir -p "${PROFILE}"
 resolve_binary() {
   local c
   for c in \
+    "${ROOT}/bin/queen-browser" \
     "${ROOT}/bin/fieldfox" \
     "${ROOT}/bin/firefox" \
+    "${QUEEN}/build/field-gecko/bin/queen-browser" \
     "${QUEEN}/build/field-gecko/bin/fieldfox" \
     /usr/bin/firefox-esr \
     /usr/bin/firefox; do
@@ -64,7 +66,7 @@ resolve_binary() {
 }
 
 BIN="$(resolve_binary)" || {
-  echo "queen-browser: no gecko binary — AmmoOS C2 still at ${C2_URL}" >&2
+  echo "Queen Browser: no engine binary — use Queen web shell at http://127.0.0.1:${PORT}/world/browser.html or C2 at ${C2_URL}" >&2
   exit 1
 }
 
@@ -76,12 +78,12 @@ if [[ -f "${INSTALL}/lib/queen-integrated-browser.py" ]]; then
     "${PY:-pythong}" "${INSTALL}/lib/queen-integrated-browser.py" seed 2>/dev/null || true
 fi
 
-FF_ARGS=(--no-remote --profile "${PROFILE}" --class AmmoOS --name AmmoOS)
+QUEEN_ARGS=(--no-remote --profile "${PROFILE}" --class QueenBrowser --name QueenBrowser)
 if [[ "${KIOSK}" == "1" ]]; then
-  FF_ARGS+=(--kiosk)
+  QUEEN_ARGS+=(--kiosk)
 fi
 if [[ "${QUEEN_BENCHMARK_MODE:-0}" == "1" ]]; then
-  FF_ARGS+=(
+  QUEEN_ARGS+=(
     --width=1920
     --height=1080
     --setpref=dom.ipc.processCount=16
@@ -99,4 +101,4 @@ if [[ "${QUEEN_BENCHMARK_MODE:-0}" == "1" ]]; then
   )
 fi
 
-exec "${BIN}" "${FF_ARGS[@]}" "${LAUNCH_URL}" "$@"
+exec "${BIN}" "${QUEEN_ARGS[@]}" "${LAUNCH_URL}" "$@"

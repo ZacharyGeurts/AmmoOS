@@ -1,12 +1,12 @@
 # AmmoOS
 
-![Release](https://img.shields.io/badge/release-1.9.9--pre--grok--heavy-brightgreen)
-![Edition](https://img.shields.io/badge/edition-Pre_Grok_Heavy-blue)
+![Release](https://img.shields.io/badge/release-1.9.9e-brightgreen)
+![Edition](https://img.shields.io/badge/edition-Grok_Expert_Review-blue)
 ![G16](https://img.shields.io/badge/Grok16-5.0.0-gold)
 ![Queen](https://img.shields.io/badge/Queen-browser-purple)
 ![License](https://img.shields.io/badge/license-GPLv3-green)
 
-**AmmoOS** is the **1.9.9 Pre Grok Heavy** field operating system on **`127.0.0.1`**. Once **ZNetwork** is running, you are the loopback field — **not** a generic web browser tab. Queen is the system shell; native programs and **View** (folder manager) launch from the Start menu. Program-glyph icons; Grok16 5.0.0; MCP GitHub publish.
+**AmmoOS** is the **1.9.9e Grok Expert Review** field operating system on **`127.0.0.1`**. Once **ZNetwork** is running, you are the loopback field — **not** a generic web browser tab. Queen is the secured system shell; AmmoOS lives **inside** Queen. Stack layers: Hardware → NEXUS C2 → ZNetwork → Queen → AmmoOS. Program-glyph icons; Grok16 5.0.0 `ammoos` profile; MCP GitHub publish.
 
 ## Live surfaces (after install)
 

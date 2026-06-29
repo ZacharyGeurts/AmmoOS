@@ -1,9 +1,12 @@
 {
   "schema": "queen-field-browser/v1",
   "name": "Queen",
-  "motto": "AmmoOS underlying browser — full local system control on 127.0.0.1; ZNetwork owns 100% internet pipe.",
+  "motto": "Queen contains AmmoOS — NEXUS C2 · ZNetwork · Queen defends on 127.0.0.1; hardware no-break.",
+  "stack_layers": "data/field-stack-layer-doctrine.json",
   "sovereignty": {
     "product": "AmmoOS",
+    "container": "Queen Browser",
+    "ammoos_inside_queen": true,
     "loopback_authority": "127.0.0.1",
     "underlying_system": true,
     "sole_browser": true,

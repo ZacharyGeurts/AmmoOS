@@ -2,7 +2,10 @@
   "schema": "nexus-field-stack-manifest/v1",
   "title": "NewLatest Field Stack",
   "version": "10.0.0-field",
-  "rule": "Whole SG/NewLatest NEXUS rewritten for field \u2014 Queen RTX browser holds the remade OS; NEXUS supplies security, tools, defenses; Final_Eye 1.1 supplies offense and Teach weapon authority",
+  "rule": "Layered stack: hardware (no break) \u2192 NEXUS C2 \u2192 ZNetwork \u2192 Queen (secure shell) \u2192 AmmoOS inside Queen",
+  "stack_layer_doctrine": "data/field-stack-layer-doctrine.json",
+  "stack_order": ["hardware", "nexus_c2", "znetwork", "queen", "ammoos"],
+  "ammoos_inside_queen": true,
   "install_root": "SG/NewLatest",
   "layers": {
     "queen": {

@@ -103,6 +103,27 @@ def _znetwork_slice() -> dict[str, Any]:
     }
 
 
+def _stack_layers_slice() -> dict[str, Any]:
+    script = INSTALL / "lib" / "field-stack-layer.py"
+    if not script.is_file():
+        script = ROOT / "lib" / "field-stack-layer.py"
+    if not script.is_file():
+        return {"ok": False, "skipped": True}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("field_stack_layer_sov", script)
+        if not spec or not spec.loader:
+            return {"ok": False, "skipped": True}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "posture"):
+            return mod.posture()
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+    return {"ok": False, "skipped": True}
+
+
 def posture() -> dict[str, Any]:
     doc = _load_doctrine()
     policy = doc.get("policy") or {}
@@ -112,26 +133,37 @@ def posture() -> dict[str, Any]:
     if policy.get("znetwork_always_full_pipe", True) and zn.get("relayer_enabled"):
         pipe = target
         zn["internet_pipe_percent"] = pipe
+    stack = _stack_layers_slice()
+    loopback = doc.get("loopback_authority") or "127.0.0.1"
     return {
-        "schema": "queen-ammoos-sovereignty/v1",
+        "schema": doc.get("schema") or "queen-ammoos-sovereignty/v2",
         "ok": True,
         "ts": _now(),
         "product": doc.get("product") or "AmmoOS",
+        "container": doc.get("container") or "Queen Browser",
+        "ammoos_inside_queen": bool(doc.get("ammoos_inside_queen", policy.get("ammoos_embedded_not_sibling", True))),
         "motto": doc.get("motto") or "",
-        "loopback_authority": doc.get("loopback_authority") or "127.0.0.1",
+        "loopback_authority": loopback,
+        "layer_order": doc.get("layer_order") or ["hardware", "nexus_c2", "znetwork", "queen", "ammoos"],
         "local_only_control": bool(policy.get("queen_full_system_control_local", True)),
         "queen_underlying_browser": bool(policy.get("queen_underlying_browser", True)),
+        "queen_defends_with_nexus": bool(policy.get("queen_defends_with_nexus", True)),
+        "queen_defends_with_znetwork": bool(policy.get("queen_defends_with_znetwork", True)),
+        "hardware_no_break": bool(policy.get("hardware_no_break", (doc.get("hardware") or {}).get("no_breaks", True))),
         "presume_sole_internet": bool(policy.get("presume_sole_internet", True)),
         "hardware_pipe_full": bool(policy.get("hardware_pipe_full", True)),
         "own_drivers": bool((doc.get("hardware") or {}).get("own_drivers", True)),
         "hardened_as_only_internet": bool(policy.get("hardened_as_only_internet", True)),
         "znetwork": zn,
         "local_services": _local_services_slice(),
+        "stack_layers": stack,
         "internet_pipe_percent": pipe,
         "internet_pipe_target": target,
-        "c2_url": f"http://{doc.get('loopback_authority', '127.0.0.1')}:9477/field",
-        "panel_url": f"http://{doc.get('loopback_authority', '127.0.0.1')}:9477/command",
+        "nexus_c2_url": (doc.get("nexus_c2") or {}).get("field") or f"http://{loopback}:9477/field",
+        "c2_url": f"http://{loopback}:9477/field",
+        "panel_url": f"http://{loopback}:9477/command",
         "queen_shell": (doc.get("queen") or {}).get("shell") or "/world/browser.html",
+        "queen_url": f"http://{loopback}:9481/world/browser.html",
         "blessing": "God Bless",
     }
 

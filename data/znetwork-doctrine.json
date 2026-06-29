@@ -13,7 +13,9 @@
     "internet_pipe_percent_minimum": 100,
     "doctrine": "data/queen-ammoos-sovereignty-doctrine.json",
     "posture": "lib/queen-ammoos-sovereignty.py",
-    "motto": "Queen is the browser and local system — ZNetwork holds 100% of internet in/out on 127.0.0.1",
+    "stack_layers": "data/field-stack-layer-doctrine.json",
+    "ammoos_inside_queen": true,
+    "motto": "Layer 2 — ZNetwork pipes 100% internet; Queen (layer 3) defends; AmmoOS lives inside Queen",
     "local_truth_dns": "lib/field-dns.py",
     "local_field_dhcp": "lib/field-dhcp.py",
     "local_auto_connect": "lib/field-local-dns-connect.py"

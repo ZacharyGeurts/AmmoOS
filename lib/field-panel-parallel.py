@@ -78,6 +78,7 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "browser_awareness": ("browser-awareness.py", ["json"]),
     "field_queen_browser": ("field-queen-browser.py", ["json"]),
     "field_stack": ("queen_field_nexus.py", ["json"]),
+    "field_stack_layer": ("field-stack-layer.py", ["json"]),
     "trust_strike": ("trust-strike-engine.py", ["summary"]),
     "police_agency": ("police-agency-db.py", ["json"]),
     "human_registry": ("human-registry.py", ["json"]),
