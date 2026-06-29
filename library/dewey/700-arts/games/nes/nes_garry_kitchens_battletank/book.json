@@ -1,0 +1,12 @@
+{
+  "id": "nes_garry_kitchens_battletank",
+  "title": "Garry Kitchen's Battletank",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_garry_kitchens_battletank-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_garry_kitchens_battletank/nes_garry_kitchens_battletank.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

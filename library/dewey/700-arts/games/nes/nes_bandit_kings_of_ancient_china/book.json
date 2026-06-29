@@ -1,0 +1,12 @@
+{
+  "id": "nes_bandit_kings_of_ancient_china",
+  "title": "Bandit Kings of Ancient China",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_bandit_kings_of_ancient_china-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_bandit_kings_of_ancient_china/nes_bandit_kings_of_ancient_china.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

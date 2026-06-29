@@ -33,8 +33,10 @@ read_version() {
   [[ -f "$f" ]] && tr -d '[:space:]' <"$f" || echo ""
 }
 
-echo "=== grok16 integrate + combinatronics balance ==="
-if [[ -x "${GROK16_ROOT}/scripts/grok16-integrate.sh" ]]; then
+echo "=== compiler stack (Grok16 + AmmoCode + Vulkan doctrine) ==="
+if [[ -x "${ROOT}/scripts/integrate-compiler-stack.sh" ]]; then
+  bash "${ROOT}/scripts/integrate-compiler-stack.sh" || echo "WARN: compiler stack integrate partial" >&2
+elif [[ -x "${GROK16_ROOT}/scripts/grok16-integrate.sh" ]]; then
   bash "${GROK16_ROOT}/scripts/grok16-integrate.sh" integrate || echo "WARN: grok16 integrate partial" >&2
 fi
 if [[ -f "${ROOT}/lib/nexus-g16-recompile.py" ]]; then

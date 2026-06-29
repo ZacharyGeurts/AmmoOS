@@ -18,27 +18,40 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", SG / "NewLatest"))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", QUEEN / ".nexus-state"))
 DESKTOP_STATE = STATE / "queen-desktop.json"
 
-CLASSIC_PROGRAMS = [
-    {"id": "kilroy", "name": "KILROY", "kind": "program", "url": "/world/?dock=kilroy", "category": "System"},
-    {"id": "files", "name": "Files", "kind": "folder", "url": "/world/queen-files.html", "category": "System"},
-    {"id": "browser", "name": "Queen Browser", "kind": "program", "url": "/world/browser.html", "category": "System"},
-    {"id": "nexus-c2", "name": "AmmoOS C2", "kind": "program", "url": "/world/queen-nexus-c2.html", "category": "System", "panel_thumbnail": True, "icon": "ammoos-field"},
-    {"id": "dashboard", "name": "AmmoOS C2", "kind": "program", "url": "/world/queen-nexus-c2.html", "category": "System", "panel_thumbnail": True, "legacy_id": "dashboard", "icon": "ammoos-field"},
-    {"id": "ammoos-image", "name": "AmmoOS Image", "kind": "program", "url": "queen://field-gimp", "category": "AmmoOS"},
-    {"id": "terminal", "name": "Terminal", "kind": "program", "url": "queen://terminal", "category": "System"},
-    {"id": "code", "name": "Code", "kind": "program", "url": "/world/queen-code.html", "category": "Programs"},
-    {"id": "chips", "name": "CHIPS", "kind": "program", "url": "queen://chips", "category": "Programs"},
-    {"id": "cores", "name": "Cores", "kind": "program", "url": "queen://cores", "category": "Programs"},
-    {"id": "gameroom", "name": "Game Room", "kind": "program", "url": "queen://gameroom", "category": "Programs"},
-    {"id": "forge", "name": "Forge", "kind": "program", "url": "/gui/queen-build-deck.html", "category": "Programs"},
-    {"id": "hostess", "name": "Hostess 7", "kind": "program", "url": "queen://hostess", "category": "Programs"},
-    {"id": "eyeball", "name": "Final_Eye", "kind": "program", "url": "queen://eyeball", "category": "Programs"},
-    {"id": "earball", "name": "Final Ear", "kind": "program", "url": "queen://earball", "category": "Programs"},
+START_MENU_FOLDERS = [
+    {"id": "os", "title": "OS", "hint": "Start menu · desktop · shell"},
+    {"id": "command", "title": "Command", "hint": "NEXUS integrations · C2 · field stack"},
+    {"id": "hostess-7", "title": "Hostess 7", "hint": "AI training · neural lanes · sense wire"},
+]
 
-    {"id": "g16", "name": "Grok16", "kind": "program", "url": "queen://g16", "category": "Programs"},
-    {"id": "gpy", "name": "GPY-16", "kind": "program", "url": "queen://grokpy", "category": "Programs"},
-    {"id": "field", "name": "Field Tech", "kind": "folder", "url": "/world/?embed=1&dock=field", "category": "Programs"},
-    {"id": "ammoos", "name": "AmmoOS", "kind": "program", "url": "queen://nexus", "category": "Field", "icon": "ammoos-field", "legacy_id": "nexus"},
+CLASSIC_PROGRAMS = [
+    {"id": "os-start", "name": "Start Menu", "kind": "program", "url": "/world/queen-start.html", "category": "OS", "menu_folder": "os"},
+    {"id": "os-desktop", "name": "Queen Desktop", "kind": "program", "url": "/world/queen-desktop.html", "category": "OS", "menu_folder": "os"},
+    {"id": "files", "name": "Files", "kind": "folder", "url": "/world/queen-files.html", "category": "OS", "menu_folder": "os"},
+    {"id": "browser", "name": "Queen Browser", "kind": "program", "url": "/world/browser.html", "category": "OS", "menu_folder": "os"},
+    {"id": "terminal", "name": "Terminal", "kind": "program", "url": "queen://terminal", "category": "OS", "menu_folder": "os"},
+    {"id": "thermal-manager", "name": "Thermal Manager", "kind": "program", "url": "/world/queen-thermal-manager.html", "category": "OS", "menu_folder": "os", "panel_thumbnail": True, "icon": "ammoos-field"},
+    {"id": "code", "name": "Queen Code", "kind": "program", "url": "/world/queen-code.html", "category": "OS", "menu_folder": "os"},
+    {"id": "gameroom", "name": "Game Room", "kind": "program", "url": "queen://gameroom", "category": "OS", "menu_folder": "os"},
+    {"id": "kilroy", "name": "KILROY", "kind": "program", "url": "/world/?dock=kilroy", "category": "Command", "menu_folder": "command"},
+    {"id": "nexus-c2", "name": "AmmoOS C2", "kind": "program", "url": "/world/queen-nexus-c2.html", "category": "Command", "menu_folder": "command", "panel_thumbnail": True, "icon": "ammoos-field"},
+    {"id": "dashboard", "name": "AmmoOS C2", "kind": "program", "url": "/world/queen-nexus-c2.html", "category": "Command", "menu_folder": "command", "panel_thumbnail": True, "legacy_id": "dashboard", "icon": "ammoos-field"},
+    {"id": "ammoos", "name": "NEXUS Field", "kind": "program", "url": "http://127.0.0.1:9477/field", "category": "Command", "menu_folder": "command", "icon": "ammoos-field", "legacy_id": "nexus"},
+    {"id": "field-command", "name": "Field Command", "kind": "program", "url": "http://127.0.0.1:9477/command", "category": "Command", "menu_folder": "command"},
+    {"id": "chips", "name": "CHIPS", "kind": "program", "url": "queen://chips", "category": "Command", "menu_folder": "command"},
+    {"id": "cores", "name": "Cores", "kind": "program", "url": "queen://cores", "category": "Command", "menu_folder": "command"},
+    {"id": "ammoos-image", "name": "AmmoOS Image", "kind": "program", "url": "queen://field-gimp", "category": "Command", "menu_folder": "command"},
+    {"id": "field", "name": "Field Tech", "kind": "folder", "url": "/world/?embed=1&dock=field", "category": "Command", "menu_folder": "command"},
+    {"id": "hostess-hub", "name": "AI Training Hub", "kind": "program", "url": "/world/queen-hostess7-hub.html", "category": "Hostess 7", "menu_folder": "hostess-7"},
+    {"id": "hostess", "name": "Hostess Brain", "kind": "program", "url": "queen://hostess", "category": "Hostess 7", "menu_folder": "hostess-7"},
+    {"id": "hostess-training", "name": "Training Viewer", "kind": "program", "url": "http://127.0.0.1:9488/", "category": "Hostess 7", "menu_folder": "hostess-7"},
+    {"id": "forge", "name": "Forge", "kind": "program", "url": "/gui/queen-build-deck.html", "category": "Hostess 7", "menu_folder": "hostess-7"},
+    {"id": "eyeball", "name": "Final_Eye", "kind": "program", "url": "queen://eyeball", "category": "Hostess 7", "menu_folder": "hostess-7"},
+    {"id": "final-ear-manager", "name": "Final Ear", "kind": "program", "url": "/world/queen-final-ear-manager.html", "category": "Hostess 7", "menu_folder": "hostess-7", "panel_thumbnail": True, "icon": "ammoos-field"},
+    {"id": "final-mouth-manager", "name": "Final Mouth", "kind": "program", "url": "/world/queen-final-mouth-manager.html", "category": "Hostess 7", "menu_folder": "hostess-7", "panel_thumbnail": True, "icon": "ammoos-field"},
+    {"id": "earball", "name": "Earball", "kind": "program", "url": "queen://earball", "category": "Hostess 7", "menu_folder": "hostess-7"},
+    {"id": "g16", "name": "Grok16", "kind": "program", "url": "queen://g16", "category": "Hostess 7", "menu_folder": "hostess-7"},
+    {"id": "gpy", "name": "GPY-16", "kind": "program", "url": "queen://grokpy", "category": "Hostess 7", "menu_folder": "hostess-7"},
 ]
 
 
@@ -125,18 +138,66 @@ def _normalize_url(url: str) -> str:
     return u
 
 
+def _default_pinned() -> set[str]:
+    return {"kilroy", "files", "browser", "terminal", "code"}
+
+
+def _pinned_ids() -> set[str]:
+    doc = _load(DESKTOP_STATE, {})
+    stored = doc.get("pinned_programs")
+    if isinstance(stored, list) and stored:
+        return {str(x) for x in stored}
+    return _default_pinned()
+
+
 def _classic_icons() -> list[dict[str, Any]]:
-    pinned = {"kilroy", "files", "browser", "terminal", "code"}
+    pinned = _pinned_ids()
     out = []
     for p in CLASSIC_PROGRAMS:
+        icon_id = p["id"]
+        if icon_id.startswith("os-"):
+            icon_id = icon_id.replace("os-", "")
+        if icon_id == "hostess-hub":
+            icon_id = "hostess"
+        if icon_id == "hostess-training":
+            icon_id = "hostess"
+        if icon_id == "field-command":
+            icon_id = "nexus"
         out.append({
             **p,
-            "icon": f"prog-{p['id']}-48",
+            "icon": f"prog-{icon_id}-48",
             "sdf_kind": p.get("kind") or "program",
-            "pinned": p["id"] in pinned or p.get("category") == "System",
+            "pinned": p["id"] in pinned,
             "url": _normalize_url(p.get("url") or ""),
+            "menu_folder": p.get("menu_folder") or "os",
         })
     return out
+
+
+def _start_menu_folders(programs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    by_folder: dict[str, list[dict[str, Any]]] = {f["id"]: [] for f in START_MENU_FOLDERS}
+    for prog in programs:
+        fid = str(prog.get("menu_folder") or "os")
+        by_folder.setdefault(fid, []).append(prog)
+    out: list[dict[str, Any]] = []
+    for folder in START_MENU_FOLDERS:
+        fid = folder["id"]
+        children = by_folder.get(fid) or []
+        if not children:
+            continue
+        out.append({
+            **folder,
+            "kind": "folder",
+            "children": children,
+        })
+    return out
+
+
+def _desktop_icons_in_start(host_doc: dict[str, Any]) -> bool:
+    policy = host_doc.get("policy") or {}
+    if "desktop_icons_in_start" in policy:
+        return bool(policy.get("desktop_icons_in_start"))
+    return policy.get("show_desktop_icons") is False
 
 
 def _host_programs(host_doc: dict[str, Any]) -> list[dict[str, Any]]:
@@ -187,6 +248,8 @@ def desktop_posture() -> dict[str, Any]:
     if hook and hasattr(hook, "is_boot_os"):
         boot_os = hook.is_boot_os()
 
+    classic = _classic_icons()
+    icons_in_start = _desktop_icons_in_start(host_doc)
     return {
         "schema": "queen-desktop/v1",
         "ts": _now(),
@@ -198,7 +261,10 @@ def desktop_posture() -> dict[str, Any]:
         "wallpaper_fit": prefs["wallpaper_fit"],
         "icon_columns": prefs["icon_columns"],
         "theme": prefs["theme"],
-        "classic_programs": _classic_icons(),
+        "desktop_icons_in_start": icons_in_start,
+        "classic_programs": [] if icons_in_start else classic,
+        "start_programs": classic if icons_in_start else [],
+        "start_menu_folders": _start_menu_folders(classic if icons_in_start else classic),
         "host_programs": _host_programs(host_doc),
         "host_theme": host_doc.get("theme") or "gnome",
         "host_menu": host_doc.get("menu") or {},
@@ -214,7 +280,7 @@ def desktop_posture() -> dict[str, Any]:
             "show_clock": True,
             "show_tasks": True,
         },
-        "posture": "Queen classic desktop — AmmoOS C2 is the program surface; Queen Browser is the web engine",
+        "posture": "Queen classic desktop — program icons live in Start folders; Queen Browser is the web engine",
     }
 
 
@@ -233,6 +299,28 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         doc["updated"] = _now()
         _save(DESKTOP_STATE, doc)
         return {"ok": True, **desktop_posture()}
+
+    if action in ("toggle_pin", "set_pin", "pin_program"):
+        doc = _load(DESKTOP_STATE, {"schema": "queen-desktop-prefs/v1"})
+        prog_id = str(body.get("program_id") or body.get("id") or "").strip()
+        if not prog_id:
+            return {"ok": False, "error": "program_id_required"}
+        valid = {p["id"] for p in CLASSIC_PROGRAMS}
+        if prog_id not in valid:
+            return {"ok": False, "error": "unknown_program", "program_id": prog_id}
+        pins = list(_pinned_ids())
+        want = body.get("pinned")
+        if want is None:
+            want = prog_id not in pins
+        if want:
+            if prog_id not in pins:
+                pins.append(prog_id)
+        else:
+            pins = [x for x in pins if x != prog_id]
+        doc["pinned_programs"] = pins
+        doc["updated"] = _now()
+        _save(DESKTOP_STATE, doc)
+        return {"ok": True, "program_id": prog_id, "pinned": bool(want), **desktop_posture()}
 
     return {"ok": False, "error": "unknown_action", "action": action}
 

@@ -1,0 +1,12 @@
+{
+  "id": "nes_mouryou_senki_madara",
+  "title": "Mouryou Senki Madara",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_mouryou_senki_madara-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_mouryou_senki_madara/nes_mouryou_senki_madara.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

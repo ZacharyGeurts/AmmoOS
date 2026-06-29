@@ -9,7 +9,7 @@ Patch release (+0.0.1) — panel layout, launcher consolidation, `/field` routin
 - **Single launcher** — `nexus.sh` only; thin wrappers for legacy entry points
 - **Single installer** — `install-all.sh`; `stealth_install.sh` wraps it
 - **`/field` routing** — main C2 panel (`threat-panel.html`), not Underlay F9
-- **Queen browser** — Firefox + FieldFox profile (real browser, field security gates)
+- **Queen Browser** — Field Gecko engine profile (real browser shell, field security gates)
 - **Desktop icon** — `nexus-field.png` taskbar / start menu entry
 
 ## Install

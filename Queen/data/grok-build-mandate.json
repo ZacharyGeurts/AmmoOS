@@ -28,7 +28,7 @@
   "allowed_processes": [
     "queen-browser",
     "field-queen",
-    "fieldfox",
+    "queen-field-engine",
     "grok",
     "grok-build"
   ],

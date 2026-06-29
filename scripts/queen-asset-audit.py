@@ -15,7 +15,8 @@ INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(ROOT)))
 
 OUR_SOURCES = {
     QUEEN / "world" / "assets" / "branding" / "amouranth-gentle.png",
-    QUEEN / "world" / "assets" / "branding" / "freddie-easter-egg.png",
+    QUEEN / "world" / "assets" / "branding" / "queen-crown-surprise.svg",
+    QUEEN / "world" / "queen-browser-guide.html",
 }
 
 LEGACY_REPLACE = ("nexus-tray-us-source.jpg",)

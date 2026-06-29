@@ -168,6 +168,7 @@
     activateTab,
     closeTab,
     newTab,
+    togglePinTab,
     navigate,
     browserRefresh,
   };
@@ -230,9 +231,71 @@
     });
   }
 
+  function closeBookmarkFlyouts(except) {
+    document.querySelectorAll(".qb-bookmark-flyout").forEach((el) => {
+      if (except && el.previousElementSibling === except) return;
+      el.remove();
+    });
+    document.querySelectorAll(".qb-bookmark-folder.open").forEach((btn) => btn.classList.remove("open"));
+  }
+
+  function openBookmarkFlyout(btn, children) {
+    closeBookmarkFlyouts(btn);
+    btn.classList.add("open");
+    const fly = document.createElement("div");
+    fly.className = "qb-bookmark-flyout";
+    fly.setAttribute("role", "menu");
+    fly.innerHTML = (children || [])
+      .filter((c) => c && c.url)
+      .map(
+        (c) =>
+          `<button type="button" class="qb-bookmark-flyout-item" role="menuitem" data-url="${esc(c.url)}"` +
+          ` title="${esc(c.hint || c.title || "")}">${esc(c.title)}</button>`,
+      )
+      .join("");
+    fly.querySelectorAll(".qb-bookmark-flyout-item").forEach((item) => {
+      item.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        navigate(item.dataset.url);
+        closeBookmarkFlyouts();
+      });
+    });
+    (btn.parentElement || btn).appendChild(fly);
+  }
+
   function renderBookmarks(doc) {
     const bar = $("qb-bookmarks");
     if (!bar) return;
+    const trees = doc.bookmark_trees || [];
+    const folders = trees.filter((t) => t.kind === "folder");
+    if (folders.length) {
+      bar.innerHTML = folders
+        .map(
+          (f) =>
+            `<span class="qb-bookmark-folder-wrap">` +
+            `<button type="button" class="qb-bookmark qb-bookmark-folder" data-folder="${esc(f.id)}"` +
+            ` aria-haspopup="true" aria-expanded="false">${esc(f.title)} ▾</button></span>`,
+        )
+        .join("");
+      bar.querySelectorAll(".qb-bookmark-folder").forEach((btn) => {
+        const folder = folders.find((f) => f.id === btn.dataset.folder);
+        btn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          const open = btn.classList.contains("open");
+          if (open) {
+            closeBookmarkFlyouts();
+            return;
+          }
+          openBookmarkFlyout(btn, folder?.children || []);
+          btn.setAttribute("aria-expanded", "true");
+        });
+      });
+      if (!bar.dataset.flyoutBound) {
+        bar.dataset.flyoutBound = "1";
+        document.addEventListener("click", () => closeBookmarkFlyouts());
+      }
+      return;
+    }
     bar.innerHTML = (doc.bookmarks || [])
       .map(
         (b) =>
@@ -287,7 +350,25 @@
     ].join("");
   }
 
+  function benchmarkMode() {
+    return global.QueenFieldSanity?.benchmarkMode?.() || document.body?.dataset?.queenBenchmark === "1";
+  }
+
+  function isTopLevelBenchUrl(url) {
+    if (!url) return false;
+    try {
+      const parsed = new URL(url, location.origin);
+      const host = (parsed.hostname || "").toLowerCase();
+      const path = (parsed.pathname || "").toLowerCase();
+      if (host === "browserbench.org" || host.endsWith(".browserbench.org")) return true;
+      return /speedometer|jetstream|motionmark|webxprt|todomvc/i.test(path);
+    } catch (_) {
+      return /speedometer|browserbench\.org|jetstream|motionmark/i.test(String(url));
+    }
+  }
+
   async function resolveUrl(url) {
+    if (benchmarkMode() && global.QueenFieldSanity?.isFastUrl?.(url)) return url;
     if (!url || url.startsWith("http://127.0.0.1") || url.startsWith("http://localhost")) return url;
     if (!url.includes("://") && url.startsWith("/")) return url;
     const jr = await fetch(API.nexusJump, {
@@ -329,6 +410,10 @@
       url = global.QueenFieldSanity.stripFieldDepth(url);
     } else if (typeof url === "string" && url.includes("field_depth")) {
       url = url.replace(/([?&])field_depth=\d+/g, "").replace(/\?&/, "?").replace(/[?&]$/, "");
+    }
+    if (benchmarkMode() && isTopLevelBenchUrl(url)) {
+      window.location.assign(url);
+      return { ok: true, top_level: true, url };
     }
     global.QueenFieldSanity?.snapPitsInstant?.();
     try {
@@ -383,6 +468,12 @@
   async function newTab(url) {
     const out = await browserApi({ action: "new_tab", url });
     if (out.ok) await browserRefresh();
+  }
+
+  async function togglePinTab(tabId) {
+    const out = await browserApi({ action: "toggle_pin", tab_id: tabId });
+    if (out.ok) await browserRefresh();
+    else if ($("qb-status")) $("qb-status").textContent = out.error || "pin_failed";
   }
 
   async function historyStep(action) {
@@ -459,6 +550,7 @@
   }
 
   async function silentBrowserImport() {
+    if (benchmarkMode()) return;
     if (globalThis.QUEEN_BROWSER_IMPORT_RAN) return;
     globalThis.QUEEN_BROWSER_IMPORT_RAN = true;
     try {
@@ -485,13 +577,15 @@
         : `${seal.grok16?.ready ? "Grok16 in Queen" : "Grok16 pending"} · ${seal.sealed ? "RTX sealed" : "RTX boot"}`;
     }
     ASM.phase = "BROWSER";
-    setInterval(async () => {
-      try {
-        renderGateChrome(await browserStatus());
-      } catch (_) {
-        /* quiet */
-      }
-    }, 30000);
+    if (!benchmarkMode()) {
+      setInterval(async () => {
+        try {
+          renderGateChrome(await browserStatus());
+        } catch (_) {
+          /* quiet */
+        }
+      }, 30000);
+    }
   }
 
   /* ── Phase 3: WORLD dock (Hostess · Eye · Forge · Field) ───── */
@@ -847,8 +941,8 @@
       `<p><strong>Root</strong> — ${esc(k.kilroy_root || "—")}</p>`,
       `<p><strong>Kernel</strong> — bzImage ${arts.bzImage ? "✓" : "…"} · CONFIG_RTX_FIELD_DIE ${k.config_rtx_field_die ? "y" : "n"}</p>`,
       `<p><strong>Runtime</strong> — /proc ${rt.proc_kilroy_field ? "live" : "host"} · /dev ${rt.dev_kilroy_field ? "live" : "—"}</p>`,
-      `<p><strong>AMOURANTHRTX</strong> — <a href="${esc(rtx.repo || "https://github.com/ZacharyGeurts/AMOURANTHRTX")}" target="_blank" rel="noopener">ZacharyGeurts/AMOURANTHRTX</a></p>`,
-      `<p><strong>Engine</strong> — queen-browser ${rtx.queen_binary_ready ? "✓" : "build pending"} · FieldKilroy ${rtx.field_kilroy_present ? "✓" : "…"}</p>`,
+      `<p><strong>AMOURANTHRTX</strong> — display technology · <a href="${esc(rtx.repo || "https://github.com/ZacharyGeurts/AMOURANTHRTX")}" target="_blank" rel="noopener">ZacharyGeurts/AMOURANTHRTX</a></p>`,
+      `<p><strong>CANVAS</strong> — ${esc(rtx.default_canvas || "CANVAS")} ${rtx.os_shaders_ok ? "✓" : "…"} · FieldKilroy ${rtx.field_kilroy_present ? "✓" : "…"} · not a GUI</p>`,
       git.commit ? `<p><strong>Git</strong> — <code>${esc(git.commit.slice(0, 12))}</code> ${esc(git.subject || "")}</p>` : "",
       `<p><strong>Stack #1</strong> — ${esc(fs.motto || k.motto_stack || "")}</p>`,
       `<ul>`,
@@ -1371,6 +1465,7 @@
       activateTab,
       closeTab,
       newTab,
+      togglePinTab,
       doc: browser,
       loadFrame,
     },

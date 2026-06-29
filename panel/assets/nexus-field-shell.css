@@ -39,6 +39,14 @@
   padding-bottom: calc(var(--fsb-h, 44px) + 8px + env(safe-area-inset-bottom, 0));
 }
 
+.hd-monitor.hd-monitor--solo {
+  flex: none !important;
+  max-width: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+}
+
 html.nfs-taskbar-hidden .hd-desktop {
   padding-bottom: 0;
 }

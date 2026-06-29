@@ -1,0 +1,12 @@
+{
+  "id": "nes_best_of_the_best_championship_karate",
+  "title": "Best of the Best Championship Karate",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_best_of_the_best_championship_karate-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_best_of_the_best_championship_karate/nes_best_of_the_best_championship_karate.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

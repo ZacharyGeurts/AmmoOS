@@ -152,6 +152,8 @@ def field_queen_env() -> dict[str, str]:
         "NEXUS_QUEEN_SOVEREIGN": "1",
         "QUEEN_FOREVER_WATCHGUARD": "1",
         "HOSTESS7_ANGEL_MANDATE": "1",
+        "NEXUS_HOSTESS7_INTERNET": "1",
+        "HOSTESS7_INTERNET": "1",
         "QUEEN_ZERO_TELEMETRY": "1",
         "NEXUS_ZERO_TELEMETRY": "1",
         "NEXUS_HOSTESS7_AUTONOMOUS": "1",

@@ -52,6 +52,21 @@
       "doctrine": "data/iron-plate-organize-doctrine.json",
       "role": "Iron plate → composite_bsp power sort · C2 BSP · combinatorics · H7 organize"
     },
+    "chips_plate_stack": {
+      "panel": "field-chips-plate-stack-panel.json",
+      "doctrine": "data/field-chips-iron-steel-plate-doctrine.json",
+      "engine": "lib/field-chips-plate-stack.py",
+      "role": "CHIPS Iron + Steel plate — every die removable above Ironclad · sovereign time only",
+      "refresh_before_fuse": true
+    },
+    "chips_core": {
+      "panel": "field-chips-core-panel.json",
+      "doctrine": "data/field-chips-core-doctrine.json",
+      "engine": "lib/field-chips-core.py",
+      "role": "CHIPS core — condense ironclad_chips + plate_stack after Ironclad seals",
+      "refresh_before_fuse": true,
+      "condense_after": "ironclad_sealed"
+    },
     "creatable_lives": {
       "panel": "creatable-lives-panel.json",
       "doctrine": "data/creatable-lives-doctrine.json",

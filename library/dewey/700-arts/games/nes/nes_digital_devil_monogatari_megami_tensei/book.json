@@ -1,0 +1,12 @@
+{
+  "id": "nes_digital_devil_monogatari_megami_tensei",
+  "title": "Digital Devil Monogatari: Megami Tensei",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_digital_devil_monogatari_megami_tensei-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_digital_devil_monogatari_megami_tensei/nes_digital_devil_monogatari_megami_tensei.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

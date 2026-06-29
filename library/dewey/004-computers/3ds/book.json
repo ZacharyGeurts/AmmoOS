@@ -1,12 +1,12 @@
 {
   "id": "3ds",
   "title": "Nintendo 3DS",
-  "author": "",
+  "author": "Field Extensive Library",
   "dewey": "004.678",
-  "format": "h7c",
-  "h7c": "library/dewey/004-computers/3ds/3ds.h7c",
-  "h7": null,
-  "cover": null,
-  "migrated_from": "h7",
-  "updated": "2026-06-27T12:04:33Z"
+  "format": "h7/7",
+  "cover": "/library/assets/devices/3ds.png",
+  "ready": true,
+  "h7": "library/dewey/004-computers/3ds/3ds.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
 }

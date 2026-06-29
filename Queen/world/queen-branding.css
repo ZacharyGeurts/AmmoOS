@@ -29,7 +29,7 @@ body[data-queen-surface="browser"] .qb-chrome {
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(244, 114, 182, 0.12) !important;
 }
 
-body[data-queen-surface="browser"].qw-chrome-minimized .qb-freddie-egg {
+body[data-queen-surface="browser"].qw-chrome-minimized .qb-queen-crown-egg {
   right: 34px;
 }
 
@@ -171,8 +171,8 @@ body[data-queen-surface="browser"] .qb-ha-help:hover {
   background: rgba(34, 197, 94, 0.12);
 }
 
-/* Hidden Freddie easter egg — nearly invisible until found */
-body[data-queen-surface="browser"] .qb-freddie-egg {
+/* Hidden Queen crown — nearly invisible until found */
+body[data-queen-surface="browser"] .qb-queen-crown-egg {
   position: fixed;
   right: 8px;
   bottom: 8px;
@@ -188,7 +188,7 @@ body[data-queen-surface="browser"] .qb-freddie-egg {
   transition: opacity 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-body[data-queen-surface="browser"] .qb-freddie-egg::after {
+body[data-queen-surface="browser"] .qb-queen-crown-egg::after {
   content: "♛";
   font-size: 9px;
   line-height: 18px;
@@ -198,15 +198,15 @@ body[data-queen-surface="browser"] .qb-freddie-egg::after {
   pointer-events: none;
 }
 
-body[data-queen-surface="browser"] .qb-freddie-egg:hover,
-body[data-queen-surface="browser"] .qb-freddie-egg:focus-visible {
+body[data-queen-surface="browser"] .qb-queen-crown-egg:hover,
+body[data-queen-surface="browser"] .qb-queen-crown-egg:focus-visible {
   opacity: 0.95;
   transform: scale(1.35);
   box-shadow: 0 0 16px rgba(235, 72, 140, 0.45);
   outline: none;
 }
 
-body[data-queen-surface="browser"] .qb-freddie-toast {
+body[data-queen-surface="browser"] .qb-queen-crown-toast {
   position: fixed;
   right: 16px;
   bottom: 28px;
@@ -226,24 +226,29 @@ body[data-queen-surface="browser"] .qb-freddie-toast {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-body[data-queen-surface="browser"] .qb-freddie-toast strong {
+body[data-queen-surface="browser"] .qb-queen-crown-toast strong {
   color: var(--qb-rose-soft);
 }
 
-body[data-queen-surface="browser"] .qb-freddie-toast.qb-freddie-toast--show {
+body[data-queen-surface="browser"] .qb-queen-crown-toast.qb-queen-crown-toast--show {
   opacity: 1;
   transform: none;
   pointer-events: auto;
 }
 
-body[data-queen-surface="browser"] .qb-freddie-toast img {
+body[data-queen-surface="browser"] .qb-queen-crown-toast img,
+body[data-queen-surface="browser"] .qb-queen-crown-toast a {
   width: 100%;
   border-radius: 10px;
   margin-top: 10px;
   border: 1px solid rgba(34, 197, 94, 0.35);
 }
 
-body[data-queen-surface="browser"] .qb-freddie-reveal .qb-viewport::after {
+body[data-queen-surface="browser"] .qb-queen-crown-toast a {
+  color: var(--qb-emerald-glow);
+}
+
+body[data-queen-surface="browser"] .qb-queen-crown-reveal .qb-viewport::after {
   content: "";
   position: absolute;
   inset: 0;

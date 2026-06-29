@@ -1,0 +1,12 @@
+{
+  "id": "nes_jetsons_cogswells_caper",
+  "title": "Jetsons: Cogswell's Caper",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_jetsons_cogswells_caper-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_jetsons_cogswells_caper/nes_jetsons_cogswells_caper.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

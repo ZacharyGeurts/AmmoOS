@@ -1,0 +1,12 @@
+{
+  "id": "nes_alpha_mission",
+  "title": "Alpha Mission",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_alpha_mission-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_alpha_mission/nes_alpha_mission.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

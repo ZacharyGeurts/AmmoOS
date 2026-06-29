@@ -9,13 +9,14 @@
   "ironclad_root": {
     "citation": "ironclad:meld:2",
     "plates": ["ironclad-plate", "ironclad-reality-field", "iron-plate-organize", "field-plate-meld"],
+    "canonical_field_layer": 1,
     "outward_layers": [
-      {"layer": 0, "id": "ironclad", "label": "Capstone — Bible of AI + meld extensions"},
-      {"layer": 1, "id": "meld_plates", "label": "Plate meld + combinatorics bridge + power sort"},
-      {"layer": 2, "id": "g16_facets", "label": "chips_battery · program_combinatronic · sense_universal"},
-      {"layer": 3, "id": "condense_bands", "label": "Chip families + language bands"},
-      {"layer": 4, "id": "leaves", "label": "Unified combinatorics leaves"},
-      {"layer": 5, "id": "connections", "label": "ISA ↔ language driver edges"}
+      {"layer": 1, "id": "ironclad", "label": "Capstone — Bible of AI + meld extensions"},
+      {"layer": 2, "id": "meld_plates", "label": "Plate meld + combinatorics bridge + power sort"},
+      {"layer": 3, "id": "g16_facets", "label": "ironclad_chips · program_combinatronic · sense_universal"},
+      {"layer": 4, "id": "condense_bands", "label": "Chip families + language bands"},
+      {"layer": 5, "id": "leaves", "label": "Unified combinatorics leaves"},
+      {"layer": 6, "id": "connections", "label": "ISA ↔ language driver edges"}
     ]
   },
   "spider_wire": {

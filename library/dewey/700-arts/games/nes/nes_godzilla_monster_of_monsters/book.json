@@ -1,0 +1,12 @@
+{
+  "id": "nes_godzilla_monster_of_monsters",
+  "title": "Godzilla: Monster of Monsters",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_godzilla_monster_of_monsters-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_godzilla_monster_of_monsters/nes_godzilla_monster_of_monsters.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

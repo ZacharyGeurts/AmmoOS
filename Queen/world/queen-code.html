@@ -8,11 +8,12 @@
   <link rel="stylesheet" href="queen-modern.css" data-queen-theme="1" />
   <link rel="stylesheet" href="queen-syntax.css" data-queen-theme="1" />
   <link rel="stylesheet" href="queen-code.css" data-queen-theme="1" />
+  <link rel="stylesheet" href="queen-code-themes.css" data-queen-theme="1" />
   <link rel="stylesheet" href="field-performance-flyout.css" />
   <link rel="icon" href="assets/branding/queen-favicon-48.png" type="image/png" sizes="48x48" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:*; frame-ancestors 'self' http://127.0.0.1:*; object-src 'none'; base-uri 'self'" />
 </head>
-<body class="qc" data-queen-surface="code" data-telemetry="off">
+<body class="qc" data-queen-surface="code" data-telemetry="off" data-qc-theme="queen_emerald">
   <div class="qc-app">
     <header class="qc-titlebar">
       <strong>Queen Code</strong>
@@ -30,11 +31,39 @@
           </div>
         </details>
         <details class="qc-menu">
+          <summary>Run</summary>
+          <div class="qc-menu-panel">
+            <button type="button" id="qc-menu-build">g16 Build</button>
+            <button type="button" id="qc-menu-launch">Run .launch chamber</button>
+            <button type="button" id="qc-menu-run-py">Run Python (gpy-16)</button>
+            <div class="qc-menu-sep" role="separator"></div>
+            <div class="qc-menu-label">Compiler profile</div>
+            <select id="qc-menu-compiler" class="qc-menu-select">
+              <option value="belt_2_0">belt_2_0 — Grok16 default</option>
+              <option value="belt_1_0">belt_1_0 — baseline</option>
+              <option value="field_opt">field_opt — field optimized</option>
+              <option value="hostess_secure">hostess_secure</option>
+              <option value="forever">forever</option>
+              <option value="ai">ai — AI compile lane</option>
+            </select>
+          </div>
+        </details>
+        <details class="qc-menu">
           <summary>View</summary>
           <div class="qc-menu-panel">
             <button type="button" id="qc-menu-wrap">Toggle word wrap</button>
             <button type="button" id="qc-menu-font-dec">Font −</button>
             <button type="button" id="qc-menu-font-inc">Font +</button>
+            <label>Theme
+              <select id="qc-set-theme">
+                <option value="queen_emerald">Queen Emerald</option>
+                <option value="one_dark">One Dark</option>
+                <option value="dracula">Dracula</option>
+                <option value="nord">Nord</option>
+                <option value="solarized_dark">Solarized Dark</option>
+                <option value="monokai">Monokai</option>
+              </select>
+            </label>
           </div>
         </details>
         <details class="qc-menu">
@@ -87,6 +116,8 @@
       <div class="qc-toolbar">
         <button type="button" class="primary" id="qc-save">Save (Ctrl+S)</button>
         <button type="button" id="qc-g16">g16 syntax check</button>
+        <button type="button" id="qc-build">Build</button>
+        <button type="button" id="qc-launch">▶ .launch</button>
       </div>
       <div class="qc-editor-wrap">
         <div class="qc-gutter" id="qc-gutter" aria-hidden="true">1</div>

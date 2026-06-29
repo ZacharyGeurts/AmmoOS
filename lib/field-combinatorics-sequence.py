@@ -28,7 +28,7 @@ FACET_ORDER = (
 SOURCE_KEYS = (
     ("growth", "field-combinatronics-growth.json", "combinatorics_leaves"),
     ("program", "field-program-combinatronic.json", "combinatorics_leaves"),
-    ("chips", "field-chip-battery.json", "combinatorics_leaves"),
+    ("chips", "field-ironclad-chips-combinatorics.json", "combinatorics_leaves"),
     ("g16", "field-g16-universal-combinatronic.json", "combinatorics_leaves"),
     ("spider", "field-combinatronic-spider-wire.json", "lanes"),
 )
@@ -103,11 +103,21 @@ def _normalize_leaf(row: dict[str, Any], *, source: str, idx: int) -> dict[str, 
     }
 
 
+def _chips_source_key() -> tuple[str, str, str]:
+    """Prefer condensed CHIPS core after Ironclad; else scattered combinatorics."""
+    core = _load(STATE / "field-chips-core.json", {})
+    if core.get("condensed") and core.get("core_leaves"):
+        return ("chips", "field-chips-core.json", "core_leaves")
+    return ("chips", "field-ironclad-chips-combinatorics.json", "combinatorics_leaves")
+
+
 def _collect_leaves() -> tuple[list[dict[str, Any]], dict[str, int]]:
     leaves: list[dict[str, Any]] = []
     counts: dict[str, int] = {}
     seen: set[str] = set()
-    for source, fname, key in SOURCE_KEYS:
+    source_keys = list(SOURCE_KEYS)
+    source_keys[2] = _chips_source_key()
+    for source, fname, key in source_keys:
         doc = _load(STATE / fname, {})
         rows = doc.get(key) or []
         if source == "spider" and not rows:

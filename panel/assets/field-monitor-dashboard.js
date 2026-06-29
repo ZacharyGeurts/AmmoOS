@@ -1,10 +1,11 @@
 /**
- * AmmoOS monitor wall — right-side thumbnails, drag reorder, zoom.
+ * Six-tool display wall — 3×2 fit, drag reorder, drop icons to assign program.
  */
 (function (global) {
   "use strict";
 
-  const STORAGE = "ammo-monitor-dashboard-v1";
+  const STORAGE = "ammo-six-tools-v2";
+  const MAX_SLOTS = 6;
 
   function esc(s) {
     return String(s ?? "")
@@ -22,137 +23,190 @@
     return null;
   }
 
+  function programUrl(app) {
+    const exec = String(app?.exec || app?.url || "").trim();
+    if (!exec) return null;
+    if (exec.startsWith("/")) return exec;
+    if (app?.view) return "/command?embed=1#" + app.view;
+    if (/^https?:\/\/127\.0\.0\.1:9477/i.test(exec)) {
+      try {
+        return new URL(exec).pathname + new URL(exec).search + new URL(exec).hash;
+      } catch (_) {
+        return exec;
+      }
+    }
+    return null;
+  }
+
+  function iconHtml(app) {
+    const QIE = global.QueenIconEngine;
+    if (QIE?.programIconHtml) {
+      return QIE.programIconHtml(app, 28, { small: true, base: QIE.PANEL_ICONS });
+    }
+    const src = app.icon_url || "/assets/queen-favicon-48.png";
+    return '<img src="' + esc(src) + '" alt="" width="28" height="28" class="fmd-dock-icon" />';
+  }
+
   function mount(root, config) {
     if (!root) return;
     const cfg = config || {};
-    const panels = Array.isArray(cfg.panels) ? cfg.panels : [];
-    root.__fmdPanels = panels.slice();
-    let zoom = Number(cfg.default_zoom || 1) || 1;
-    let order = panels.map(function (p) { return p.id; });
-
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE) || "{}");
-      if (Array.isArray(saved.order) && saved.order.length) order = saved.order;
-      if (saved.zoom) zoom = Number(saved.zoom) || zoom;
-    } catch (_) {}
-
-    root.innerHTML =
-      '<div class="fmd-root">' +
-      '<header class="fmd-bar"><span class="fmd-title">Monitor</span>' +
-      '<label class="fmd-zoom">Zoom <input type="range" id="fmd-zoom" min="70" max="140" step="5" value="' +
-      Math.round(zoom * 100) +
-      '" /></label></header>' +
-      '<div class="fmd-canvas" id="fmd-canvas"><div class="fmd-grid" id="fmd-grid"></div></div></div>';
+    const panels = (Array.isArray(cfg.panels) ? cfg.panels : []).slice(0, MAX_SLOTS);
+    const programs = Array.isArray(cfg.programs) ? cfg.programs : [];
+    const dockApps = Array.isArray(cfg.icon_dock)
+      ? cfg.icon_dock
+      : programs.filter(function (p) {
+          return p.shell && programUrl(p) && !p.ghost && !p.clipboard_ghost && p.id !== "queen-browser";
+        }).slice(0, 24);
 
     const byId = {};
     panels.forEach(function (p) { byId[p.id] = p; });
+    programs.forEach(function (p) {
+      if (p.id) byId["prog:" + p.id] = { id: p.id, title: p.name, url: programUrl(p) };
+    });
+
+    let slots = panels.map(function (p) {
+      return { id: p.id, title: p.title || p.id, url: p.url };
+    });
+    while (slots.length < MAX_SLOTS) {
+      slots.push({ id: "empty_" + slots.length, title: "Drop icon", url: "" });
+    }
+    slots = slots.slice(0, MAX_SLOTS);
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE) || "{}");
+      if (Array.isArray(saved.slots) && saved.slots.length === MAX_SLOTS) slots = saved.slots;
+    } catch (_) {}
 
     function save() {
       try {
-        localStorage.setItem(STORAGE, JSON.stringify({ order: order, zoom: zoom }));
+        localStorage.setItem(STORAGE, JSON.stringify({ slots: slots }));
       } catch (_) {}
     }
 
-    function applyZoom() {
-      const canvas = root.querySelector("#fmd-canvas");
-      if (canvas) canvas.style.transform = "scale(" + zoom + ")";
-    }
-
     function render() {
+      const showDock = dockApps.length > 0;
+      root.innerHTML =
+        '<div class="fmd-root fmd-root--six">' +
+        '<div class="fmd-grid fmd-grid--six" id="fmd-grid"></div>' +
+        (showDock
+          ? '<div class="fmd-dock" id="fmd-dock" aria-label="Program icons — drag onto a window"></div>'
+          : "") +
+        "</div>";
+
       const grid = root.querySelector("#fmd-grid");
-      if (!grid) return;
-      if (!order.length) {
-        grid.innerHTML = '<div class="fmd-empty"><strong>Monitor wall</strong><span>Panels load from doctrine</span></div>';
-        return;
-      }
-      grid.innerHTML = order
-        .map(function (id) {
-          const p = byId[id];
-          if (!p) return "";
-          const url = resolveUrl(p.url);
-          if (!url) return "";
-          const chromeless = p.chromeless !== false && p.panel_thumbnail !== false;
-          const cls = chromeless ? " fmd-panel--chromeless" : "";
-          const grip = chromeless
-            ? ""
-            : '<div class="fmd-grip"><span>' + esc(p.title || id) + '</span><span>drag</span></div>';
+      const dock = showDock ? root.querySelector("#fmd-dock") : null;
+
+      grid.innerHTML = slots
+        .map(function (slot, idx) {
+          const url = resolveUrl(slot.url);
+          const empty = !url;
+          const title = slot.title || slot.id || "Tool " + (idx + 1);
           return (
-            '<article class="fmd-panel' + cls + '" draggable="true" data-id="' + esc(id) + '">' +
-            grip +
-            '<iframe class="fmd-view" src="' + esc(url) + '" title="' + esc(p.title || id) + '" loading="lazy"></iframe></article>'
+            '<article class="fmd-panel fmd-panel--slot fmd-panel--page' + (empty ? " fmd-panel--empty" : "") + '" ' +
+            'draggable="true" data-slot="' + idx + '" data-id="' + esc(slot.id) + '">' +
+            '<div class="fmd-slot-label" title="Drag to reorder">' + esc(title) + "</div>" +
+            (url
+              ? '<div class="fmd-page-frame"><iframe class="fmd-view" src="' + esc(url) + '" title="' + esc(title) + '" loading="lazy"></iframe></div>'
+              : '<div class="fmd-drop-hint">Drop program icon here</div>') +
+            "</article>"
           );
         })
         .join("");
 
-      let dragId = null;
+      if (dock) {
+        dock.innerHTML = dockApps
+          .map(function (app) {
+            const url = programUrl(app);
+            if (!url) return "";
+            return (
+              '<button type="button" class="fmd-dock-btn" draggable="true" ' +
+              'data-app-id="' + esc(app.id) + '" data-url="' + esc(url) + '" ' +
+              'title="' + esc(app.name || app.id) + '">' +
+              iconHtml(app) +
+              '<span>' + esc(app.name || app.id) + "</span></button>"
+            );
+          })
+          .join("");
+      }
+
+      let dragSlot = null;
+      let dragApp = null;
+
       grid.querySelectorAll(".fmd-panel").forEach(function (el) {
         el.addEventListener("dragstart", function (ev) {
-          dragId = el.dataset.id;
+          if (dragApp) return;
+          dragSlot = Number(el.dataset.slot);
           el.classList.add("dragging");
-          ev.dataTransfer?.setData("text/plain", dragId);
+          ev.dataTransfer?.setData("text/plain", "slot:" + dragSlot);
         });
         el.addEventListener("dragend", function () {
           el.classList.remove("dragging");
-          dragId = null;
+          dragSlot = null;
         });
         el.addEventListener("dragover", function (ev) {
           ev.preventDefault();
+          el.classList.add("drop-target");
+        });
+        el.addEventListener("dragleave", function () {
+          el.classList.remove("drop-target");
         });
         el.addEventListener("drop", function (ev) {
           ev.preventDefault();
-          const from = dragId || ev.dataTransfer?.getData("text/plain");
-          const to = el.dataset.id;
-          if (!from || !to || from === to) return;
-          const fi = order.indexOf(from);
-          const ti = order.indexOf(to);
-          if (fi < 0 || ti < 0) return;
-          order.splice(fi, 1);
-          order.splice(ti, 0, from);
+          el.classList.remove("drop-target");
+          const to = Number(el.dataset.slot);
+          const raw = ev.dataTransfer?.getData("text/plain") || "";
+          if (raw.startsWith("app:")) {
+            const parts = raw.split(":");
+            const appId = parts[1];
+            const url = decodeURIComponent(parts.slice(2).join(":"));
+            const app = dockApps.find(function (a) { return a.id === appId; });
+            slots[to] = {
+              id: appId || "custom",
+              title: app?.name || appId || "Program",
+              url: url,
+            };
+            save();
+            render();
+            return;
+          }
+          if (raw.startsWith("slot:")) {
+            const from = Number(raw.replace("slot:", ""));
+            if (from === to || from < 0 || to < 0) return;
+            const tmp = slots[from];
+            slots[from] = slots[to];
+            slots[to] = tmp;
+            save();
+            render();
+          }
+        });
+      });
+
+      dock?.querySelectorAll(".fmd-dock-btn").forEach(function (btn) {
+        btn.addEventListener("dragstart", function (ev) {
+          dragApp = btn.dataset.appId;
+          const url = btn.dataset.url || "";
+          ev.dataTransfer?.setData("text/plain", "app:" + btn.dataset.appId + ":" + encodeURIComponent(url));
+          btn.classList.add("dragging");
+        });
+        btn.addEventListener("dragend", function () {
+          btn.classList.remove("dragging");
+          dragApp = null;
+        });
+        btn.addEventListener("click", function () {
+          const url = btn.dataset.url;
+          const appId = btn.dataset.appId;
+          const app = dockApps.find(function (a) { return a.id === appId; });
+          const emptyIdx = slots.findIndex(function (s) { return !resolveUrl(s.url); });
+          const idx = emptyIdx >= 0 ? emptyIdx : 0;
+          slots[idx] = { id: appId, title: app?.name || appId, url: url };
           save();
           render();
         });
-        el.addEventListener("dblclick", function () {
-          grid.querySelectorAll(".fmd-panel").forEach(function (n) { n.classList.remove("focused"); });
-          el.classList.toggle("focused");
-          const iframe = el.querySelector("iframe");
-          if (iframe) iframe.style.height = el.classList.contains("focused") ? "360px" : "200px";
-        });
       });
-      applyZoom();
     }
-
-    root.querySelector("#fmd-zoom")?.addEventListener("input", function (ev) {
-      zoom = Number(ev.target.value) / 100;
-      save();
-      applyZoom();
-    });
 
     render();
   }
 
-  function addPanel(root, panel) {
-    if (!root || !panel || !panel.url) return;
-    const cfg = { panels: [], default_zoom: 1 };
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE) || "{}");
-      if (Array.isArray(saved.order)) cfg.panels = saved.order.map(function (id) {
-        return { id: id, title: id, url: "/" };
-      });
-    } catch (_) {}
-    const id = panel.id || "dyn_" + Date.now();
-    const entry = {
-      id: id,
-      title: panel.title || id,
-      url: panel.url,
-      chromeless: panel.chromeless !== false,
-      panel_thumbnail: panel.panel_thumbnail !== false,
-    };
-    const byId = {};
-    (root.__fmdPanels || []).forEach(function (p) { byId[p.id] = p; });
-    byId[id] = entry;
-    root.__fmdPanels = Object.keys(byId).map(function (k) { return byId[k]; });
-    mount(root, { panels: root.__fmdPanels, default_zoom: 1 });
-  }
-
-  global.FieldMonitorDashboard = { mount: mount, addPanel: addPanel };
+  global.FieldMonitorDashboard = { mount: mount, addPanel: function () {} };
 })(window);

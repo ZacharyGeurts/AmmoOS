@@ -79,7 +79,9 @@
         {"id": "engineering_chamber", "engine": "hostess7-engineering", "role": "Engineering — mechanical, electrical, civil, robotics, field stack", "feed_from": ["vision", "physics", "code", "zocr_manifest"]},
         {"id": "combat_chamber", "engine": "hostess7-combat", "role": "Combat & defense — martial arts, tactics, warfare corpus, motion lattice", "feed_from": ["vision", "warfare", "motion_chamber", "zocr_manifest"]},
         {"id": "mos_chamber", "engine": "hostess7-mos", "role": "MOS assistance — fill in for or assist any military occupational specialty", "feed_from": ["warfare", "combat_chamber", "medical", "engineering", "code"]},
-        {"id": "muscle_memory_chamber", "engine": "hostess7-muscle-memory", "role": "Procedural operator habits — nav, shortcuts, imports, sequences — local recall", "feed_from": ["queen-browser-nav.jsonl", "queen-os", "browser-import"]}
+        {"id": "muscle_memory_chamber", "engine": "hostess7-muscle-memory", "role": "Procedural operator habits — nav, shortcuts, imports, sequences — local recall", "feed_from": ["queen-browser-nav.jsonl", "queen-os", "browser-import"]},
+        {"id": "userwatch_chamber", "engine": "hostess7-userwatch", "role": "Operator bond — keyboard/mouse rhythm, assurance, work-zone replate hold, task queues", "feed_from": ["queen-gnu-terminal", "queen-code", "hostess7-muscle-memory", "iron-plate-organize"]},
+        {"id": "imaging_chamber", "engine": "hostess7-imaging", "role": "Imagine + NEXUS combinatronic — PIL exact-text, format icons, Big Drive grids, repair queue", "feed_from": ["imagine", "vision", "field-combinatronic-visuals", "field-file-formats", "field-big-drive"]}
       ]
     },
     {

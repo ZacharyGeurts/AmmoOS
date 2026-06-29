@@ -1,0 +1,12 @@
+{
+  "id": "nes_lunar_pool",
+  "title": "Lunar Pool",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_lunar_pool-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_lunar_pool/nes_lunar_pool.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

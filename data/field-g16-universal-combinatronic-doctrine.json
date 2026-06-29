@@ -9,7 +9,7 @@
   "panel": "field-g16-universal-combinatronic-panel.json",
   "cache": "field-g16-universal-combinatronic.json",
   "sub_facets": {
-    "chips_battery": "lib/field-chip-battery.py",
+    "ironclad_chips": "lib/field-ironclad-chips-combinatorics.py",
     "program_combinatronic": "lib/field-program-combinatronic.py",
     "sense_universal": "lib/field-sense-package-meld.py"
   },

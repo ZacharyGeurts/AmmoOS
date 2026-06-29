@@ -148,7 +148,8 @@ def impossibility_posture() -> dict[str, Any]:
         "single_field_depth": enabled,
         "max_field_depth": 0 if enabled else None,
         "rule": "forbid_and_strip_at_every_gate",
-        "motto": "One field. Depth zero. Depth fields sealed and destroyed.",
+        "canonical_field_layer": 1,
+        "motto": "One field. Field layer 1. Depth fields sealed and destroyed.",
         "citation": "ironclad:field_sanity:4",
         "singularizer": cached if cached.get("schema") == "field-depth-singularizer/v1" else {"mode": "idle"},
     }

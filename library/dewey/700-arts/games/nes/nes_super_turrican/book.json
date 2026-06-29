@@ -1,0 +1,10 @@
+{
+  "id": "nes_super_turrican",
+  "title": "Super Turrican",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_super_turrican/nes_super_turrican.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_super_turrican-box.png",
+  "ready": true
+}

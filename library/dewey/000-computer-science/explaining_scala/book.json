@@ -4,20 +4,23 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-304fd635fc9d",
-  "format": "h7c",
+  "ein": "H7C-FIELD-3643a9b46734",
+  "format": "h7/7",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
-  "h7c": "library/dewey/000-computer-science/explaining_scala/explaining_scala.h7c",
-  "h7": null,
+  "h7": "library/dewey/000-computer-science/explaining_scala/explaining_scala.h7",
   "field_path": "library/dewey/000-computer-science/explaining_scala/explaining_scala.h7c",
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "scala",
   "cover": "/world/assets/combinatronic/books/scala.png",
-  "updated": "2026-06-27T13:09:25Z"
+  "updated": "2026-06-29T09:02:43Z",
+  "face_format": "h7c",
+  "properties_only_h7": true
 }

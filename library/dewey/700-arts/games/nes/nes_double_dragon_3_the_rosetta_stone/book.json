@@ -1,0 +1,12 @@
+{
+  "id": "nes_double_dragon_3_the_rosetta_stone",
+  "title": "Double Dragon 3 - The Rosetta Stone",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_double_dragon_3_the_rosetta_stone-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_double_dragon_3_the_rosetta_stone/nes_double_dragon_3_the_rosetta_stone.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

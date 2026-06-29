@@ -1,0 +1,11 @@
+{
+  "id": "format-vcodec_wmv",
+  "title": "WMV",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [],
+  "magic": null,
+  "cover": "/library/assets/formats/vcodec_wmv.png",
+  "updated": "2026-06-29T08:56:32Z"
+}

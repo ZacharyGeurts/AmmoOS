@@ -1,0 +1,12 @@
+{
+  "id": "nes_ganbare_goemon_gaiden_kieta_ougon_kiseru",
+  "title": "Ganbare Goemon Gaiden: Kieta Ougon Kiseru",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_ganbare_goemon_gaiden_kieta_ougon_kiseru-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_ganbare_goemon_gaiden_kieta_ougon_kiseru/nes_ganbare_goemon_gaiden_kieta_ougon_kiseru.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

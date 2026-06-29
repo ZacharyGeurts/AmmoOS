@@ -106,6 +106,18 @@
       "combinatorics_role": "vault_sovereign",
       "dock_glyph": "lock",
       "legacy_route": "/field-keepass"
+    },
+    {
+      "id": "field_big_drive",
+      "label": "Big Drive",
+      "plate_key": "field_big_drive",
+      "panel": "field-big-drive-panel.json",
+      "script": "field-big-drive.py",
+      "route": "/field-big-drive",
+      "exec": "/field-big-drive",
+      "combinatorics_role": "storage_fabric",
+      "dock_glyph": "drive",
+      "file_assoc": [".iso", ".img", ".fielddrive", ".vhd", ".vhdx", ".vdi", ".qcow2", ".dmg", ".ima", ".flp"]
     }
   ],
   "poll_ms": {
@@ -117,6 +129,7 @@
     "field_gpu": 1200,
     "field_audio": 3000,
     "field_broadcaster": 4000,
-    "field_lock": 5000
+    "field_lock": 5000,
+    "field_big_drive": 10000
   }
 }

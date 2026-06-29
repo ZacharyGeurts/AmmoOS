@@ -1,6 +1,6 @@
-# AmmoOS 1.0.0-beta
+# AmmoOS 1.0.1-beta
 
-**Tag:** `v1.0.0-beta` · **Lineage:** NEXUS-Shield 10.4.1 · **Grok16:** 4.7.0 · **Platforms:** 10
+**Tag:** `v1.0.1-beta` · **Lineage:** NEXUS-Shield 10.4.1 · **Grok16:** 4.7.1 · **Platforms:** 10
 
 ## What shipped
 
@@ -14,8 +14,8 @@
 ## Install (Linux x86_64)
 
 ```bash
-tar -xzf ammooos-1.0.0-beta-source.tar.gz
-cd ammooos-1.0.0-beta
+tar -xzf ammooos-1.0.1-beta-source.tar.gz
+cd ammooos-1.0.1-beta
 sudo ./install-all.sh
 ```
 
@@ -32,11 +32,11 @@ sudo ./install-all.sh
 
 | Asset | Contents |
 |-------|----------|
-| `ammoos-1.0.0-beta-source.tar.gz` | Full AmmoOS tree |
-| `ammoos-1.0.0-beta-installers.tar.gz` | install-all, nexus, stealth scripts |
-| `ammoos-1.0.0-beta-windows-x86_64.zip` | Windows PowerShell bootstrap |
-| `ammoos-1.0.0-beta-platforms.json` | Platform bootstrap matrix |
-| `ammoos-1.0.0-beta-PLATFORMS.md` | Human-readable platform guide |
+| `ammoos-1.0.1-beta-source.tar.gz` | Full AmmoOS tree |
+| `ammoos-1.0.1-beta-installers.tar.gz` | install-all, nexus, stealth scripts |
+| `ammoos-1.0.1-beta-windows-x86_64.zip` | Windows PowerShell bootstrap |
+| `ammoos-1.0.1-beta-platforms.json` | Platform bootstrap matrix |
+| `ammoos-1.0.1-beta-PLATFORMS.md` | Human-readable platform guide |
 
 ## Beta pipeline
 

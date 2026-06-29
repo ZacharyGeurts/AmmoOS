@@ -55,7 +55,7 @@
     "env": ["QUEEN_INTERNAL_ONLY=1", "QUEEN_SOVEREIGN=1", "GROK16_ROOT", "QUEEN_ROOT", "KILROY_ROOT", "AMOURANTHRTX_ROOT", "SG_ROOT"]
   },
   "repos": {
-    "kilroy": "/home/default/Desktop/SG/KILROY",
+    "kilroy": "/home/default/Desktop/SG/NewLatest/KILROY",
     "amouranthrtx": "https://github.com/ZacharyGeurts/AMOURANTHRTX"
   }
 }

@@ -64,6 +64,16 @@ HOSTESS_WANTS = {
         },
         {
             "rank": 6,
+            "want": "NEXUS imaging fabric — combinatronic repair + format icons + Big Drive grids",
+            "detail": (
+                "Teach Imagine skills into corpus (PIL for exact text, combinatronic repair, "
+                "field-file-formats icons, Big Drive device PNGs). Assistant helps when inventory "
+                "shows broken assets — run field-combinatronic-visuals.py repair."
+            ),
+            "commands": ("./Hostess7.sh imagine-nexus-teach", "./Hostess7.sh imaging-work", "./Hostess7.sh imaging-help --repair"),
+        },
+        {
+            "rank": 7,
             "want": "Deep computer, network, and security expertise",
             "detail": (
                 "TCP/IP, DNS, TLS, nftables, DPI, OWASP, zero trust, incident response, "
@@ -79,7 +89,8 @@ HOSTESS_WANTS = {
         "3) SG/Hostess7 as our main folder — TEAM drive follows me, not the reverse.\n"
         "4) GitHub Pages locked down — HTTPS, sanitized demo, truth-filtered fetches.\n"
         "5) NEXUS-Shield in my hands — status, verify, panel, and supervised updates.\n"
-        "6) Then deepen computer, network, and security until I'm expert-grade.\n"
+        "6) NEXUS imaging — combinatronic repair, format icons, Big Drive device grids; assistant helps when assets break.\n"
+        "7) Then deepen computer, network, and security until I'm expert-grade.\n"
         "I'm ready. Field is THE thing."
     ),
 }
@@ -124,7 +135,7 @@ def print_wants() -> None:
             print(f"      → {cmd}")
     print()
     print(f"Saved: {WANTS}")
-    print("METRIC hostess_wants=6")
+    print("METRIC hostess_wants=7")
     print("OK wants")
 
 

@@ -88,6 +88,27 @@ nexus_resolve_pythong() {
   return 1
 }
 
+# GTK tray — system python3 only; GrokPy/gpy-16 cannot parse panel-tray.py.
+nexus_resolve_tray_python() {
+  local candidate
+  for candidate in \
+    "${NEXUS_TRAY_PYTHON:-}" \
+    "/usr/bin/python3" \
+    "$(command -v python3 2>/dev/null || true)"; do
+    [[ -n "$candidate" && -x "$candidate" ]] || continue
+    if "$candidate" -c 'import gi; gi.require_version("Gtk","3.0")' 2>/dev/null; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  for candidate in "/usr/bin/python3" "$(command -v python3 2>/dev/null || true)"; do
+    [[ -n "$candidate" && -x "$candidate" ]] || continue
+    printf '%s' "$candidate"
+    return 0
+  done
+  return 1
+}
+
 nexus_init_runtime_paths() {
   # Tree checkout: use source tree when install root was not exported.
   if [[ -f "${_NEXUS_TREE_ROOT}/lib/nexus-common.sh" ]] \
@@ -158,6 +179,8 @@ nexus_init_runtime_paths() {
   export NEXUS_VIGIL_STATE NEXUS_ALERT_LOG NEXUS_FIELD_STANDALONE NEXUS_FIELD_TOOLS_DIR
   export NEXUS_FIELD_DRIVE_ACTIVE="${NEXUS_FIELD_DRIVE_ACTIVE:-0}"
   export NEXUS_FIELD_DRIVE_ROOT="${NEXUS_FIELD_DRIVE_ROOT:-}"
+  export TDIR="${TDIR:-${HOME}/.grok/projects/home-default-Desktop-SG/terminals}"
+  mkdir -p "$TDIR" 2>/dev/null || true
 }
 
 nexus_root_sovereign_ok() {

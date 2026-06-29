@@ -1,0 +1,12 @@
+{
+  "id": "nes_heavy_barrel",
+  "title": "Heavy Barrel",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_heavy_barrel-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_heavy_barrel/nes_heavy_barrel.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

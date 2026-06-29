@@ -72,16 +72,17 @@ source "${NEXUS_INSTALL_ROOT}/lib/vector-scour.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/angel-dossier.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh"
-[[ -f "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-antenna-guard.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-antenna-guard.sh"
+[[ "${NEXUS_AUDIO_TRAIN:-0}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh"
-[[ -f "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh"
-[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-antenna.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-antenna.sh"
+[[ "${NEXUS_SIGNALS_FIELD:-0}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh"
+
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-drive-system.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-drive-system.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/dns-admin-portal.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-dossier.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-us-intel.sh"
-[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh"
+[[ "${NEXUS_FIELD_RF_SENTINEL:-0}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-rf-sentinel.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/police-agency.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/police-agency.sh"
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/pest-arsenal.sh"
@@ -177,10 +178,10 @@ start_module() {
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh"
 (
   nexus_await_curl_ready "$(nexus_panel_app_url 2>/dev/null || nexus_panel_url 2>/dev/null || echo 'http://127.0.0.1:9477/app')" 5 5
-  if declare -f nexus_panel_open_on_boot >/dev/null 2>&1; then
+  if declare -f nexus_boot_c2_desktop >/dev/null 2>&1; then
+    nexus_boot_c2_desktop
+  elif declare -f nexus_panel_open_on_boot >/dev/null 2>&1; then
     nexus_panel_open_on_boot "$(nexus_panel_url 2>/dev/null || echo 'http://127.0.0.1:9477/field')"
-  else
-    nexus_panel_open_browser
   fi
 ) &
 

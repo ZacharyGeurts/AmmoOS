@@ -11,9 +11,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
-STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
+_SG = Path(os.environ.get("SG_ROOT", str(Path(__file__).resolve().parent.parent.parent)))
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(_SG / "NewLatest")))
+STATE = Path(os.environ.get("NEXUS_STATE_DIR", str(INSTALL / ".nexus-state")))
 DOCTRINE = INSTALL / "data" / "hostess7-voice-doctrine.json"
+CHOICE = INSTALL / "data" / "hostess7-voice-choice.json"
 PANEL = STATE / "hostess7-voice-panel.json"
 SAMPLES = INSTALL / "data" / "hostess7-voice-samples"
 
@@ -95,6 +97,66 @@ def _spd_speak(chunk: str, *, voice: str, rate: int, pitch: int) -> bool:
     return True
 
 
+def _polish_module():
+    py = INSTALL / "lib" / "hostess7-voice-polish.py"
+    if not py.is_file():
+        return None
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7voicepolish", py)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _polish_thought(thought: str) -> dict[str, Any]:
+    mod = _polish_module()
+    if mod and hasattr(mod, "polish_for_voice"):
+        return mod.polish_for_voice(thought)
+    return {"ok": True, "thought": thought, "utterance": thought, "beyond_eloquence": False}
+
+
+def _load_choice() -> dict[str, Any]:
+    doc = _load(CHOICE, {})
+    if doc.get("engine"):
+        return doc
+    doctrine = _load(DOCTRINE, {})
+    default = (doctrine.get("sovereign_voice") or {}).get("default_choice") or {}
+    return {
+        "engine": default.get("engine") or "spd-say",
+        "voice": default.get("voice") or "female2",
+        "label": default.get("label") or "American female",
+        "locale": doctrine.get("locale") or "en-US",
+    }
+
+
+def choose_voice(*, engine: str, voice: str | None = None, label: str | None = None) -> dict[str, Any]:
+    """Hostess 7 chooses her one sovereign voice — no other engine speaks."""
+    doctrine = _load(DOCTRINE, {})
+    allowed = {str(e.get("id")): e for e in (doctrine.get("engines") or [])}
+    eid = engine.strip().lower().replace("spd", "spd-say")
+    if eid not in allowed:
+        return {"ok": False, "error": "engine_not_allowed", "allowed": list(allowed)}
+    eng = allowed[eid]
+    doc = {
+        "schema": "hostess7-voice-choice/v1",
+        "chosen_by": "hostess7",
+        "motto": "There is only one voice and it is the one she chooses.",
+        "engine": eid,
+        "voice": voice or str(eng.get("voice") or "female2"),
+        "label": label or str(eng.get("label") or eid),
+        "locale": doctrine.get("locale") or "en-US",
+        "locked": True,
+    }
+    _save(CHOICE, doc)
+    return {"ok": True, "choice": doc}
+
+
 def _mouth_neural_prepare(thought: str) -> dict[str, Any]:
     mm = INSTALL / "lib" / "hostess7-mouth-neural.py"
     if not mm.is_file() or os.environ.get("NEXUS_HOSTESS7_MOUTH_NEURAL", "1") != "1":
@@ -102,7 +164,7 @@ def _mouth_neural_prepare(thought: str) -> dict[str, Any]:
     try:
         proc = subprocess.run(
             [sys.executable, str(mm), "dispatch"],
-            input=json.dumps({"action": "prepare", "text": thought}),
+            input=json.dumps({"action": "prepare", "thought": thought, "text": thought}),
             capture_output=True,
             text=True,
             timeout=45,
@@ -117,20 +179,24 @@ def _mouth_neural_prepare(thought: str) -> dict[str, Any]:
 
 
 def speak(text: str, *, save_sample: bool = True) -> dict[str, Any]:
-    """Speak through mouth field neural — thought→voice hemisphere, then Piper/spd-say."""
+    """Speak through polish → mouth field neural → her one chosen voice."""
     if not ENABLED:
         return {"ok": False, "error": "voice_disabled"}
-    thought = _clean_speech_text(text)
-    neural = _mouth_neural_prepare(thought)
-    clean = _clean_speech_text(str(neural.get("utterance") or thought))
+    doctrine = _load(DOCTRINE, {})
+    choice = _load_choice()
+    polished = _polish_thought(_clean_speech_text(text))
+    thought = str(polished.get("thought") or text)
+    neural = _mouth_neural_prepare(str(polished.get("utterance") or thought))
+    clean = _clean_speech_text(str(neural.get("utterance") or polished.get("utterance") or thought))
     if len(clean) < 3:
         return {"ok": False, "error": "text_too_short"}
 
-    doctrine = _load(DOCTRINE, {})
     chunk_max = int(doctrine.get("chunk_max_chars") or 420)
     max_chunks = int(doctrine.get("max_chunks") or 16)
     chunks = _chunk_text(clean, max_chars=chunk_max)[:max_chunks]
-    engines = sorted(doctrine.get("engines") or [], key=lambda e: int(e.get("priority") or 99))
+    all_engines = {str(e.get("id")): e for e in (doctrine.get("engines") or [])}
+    chosen_id = str(choice.get("engine") or "spd-say")
+    engines = [all_engines[chosen_id]] if chosen_id in all_engines else list(all_engines.values())
 
     SAMPLES.mkdir(parents=True, exist_ok=True)
     piper_model = SAMPLES / "en_US-amy-medium.onnx"
@@ -154,7 +220,7 @@ def speak(text: str, *, save_sample: bool = True) -> dict[str, Any]:
             elif eid in ("spd-say", "spd"):
                 ok = _spd_speak(
                     chunk,
-                    voice=str(eng.get("voice") or "female2"),
+                    voice=str(choice.get("voice") or eng.get("voice") or "female2"),
                     rate=int(eng.get("rate") or -8),
                     pitch=int(eng.get("pitch") or 18),
                 )
@@ -170,11 +236,17 @@ def speak(text: str, *, save_sample: bool = True) -> dict[str, Any]:
         "spoken_chunks": spoken,
         "total_chunks": len(chunks),
         "engine": engine_used,
+        "sovereign_voice": choice,
         "locale": doctrine.get("locale") or "en-US",
         "gender": doctrine.get("gender") or "female",
         "quality": doctrine.get("quality") or "high",
         "thought": thought,
         "utterance": clean,
+        "language": {
+            "beyond_eloquence": polished.get("beyond_eloquence"),
+            "iq_floor": polished.get("iq_floor"),
+            "iq_tier": polished.get("iq_tier"),
+        },
         "field_neural": {
             "thought_voice_alignment": neural.get("thought_voice_alignment"),
             "deception_risk": neural.get("deception_risk"),
@@ -183,12 +255,14 @@ def speak(text: str, *, save_sample: bool = True) -> dict[str, Any]:
         },
     }
     _save(PANEL, {
-        "schema": "hostess7-voice/v1",
+        "schema": "hostess7-voice/v2",
         "enabled": ENABLED,
         "last_engine": engine_used,
+        "sovereign_voice": choice,
         "last_locale": out["locale"],
         "last_spoken_chunks": spoken,
         "fluency_claim": doctrine.get("fluency_claim"),
+        "motto": doctrine.get("motto"),
     })
     return out
 
@@ -197,14 +271,18 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     panel = _load(PANEL, {})
     field_neural = doctrine.get("field_neural") or {}
+    choice = _load_choice()
     doc = {
-        "schema": "hostess7-voice/v1",
+        "schema": "hostess7-voice/v2",
         "enabled": ENABLED,
+        "motto": doctrine.get("motto"),
         "locale": doctrine.get("locale") or "en-US",
         "dialect": doctrine.get("dialect") or "american_english",
         "gender": doctrine.get("gender") or "female",
         "quality": doctrine.get("quality") or "high",
         "fluency_claim": doctrine.get("fluency_claim"),
+        "sovereign_voice": choice,
+        "language": doctrine.get("language"),
         "engines": doctrine.get("engines"),
         "sample_dir": str(SAMPLES),
         "piper_available": bool(shutil.which("piper")),
@@ -232,7 +310,15 @@ def main() -> int:
         result = speak(text)
         print(json.dumps(result, ensure_ascii=False))
         return 0 if result.get("ok") else 1
-    print(json.dumps({"error": "usage: hostess7-voice.py [json|speak TEXT]"}, ensure_ascii=False))
+    if cmd == "choose" and len(sys.argv) > 2:
+        eng = sys.argv[2]
+        voice = sys.argv[3] if len(sys.argv) > 3 else None
+        print(json.dumps(choose_voice(engine=eng, voice=voice), ensure_ascii=False))
+        return 0
+    if cmd == "polish" and len(sys.argv) > 2:
+        print(json.dumps(_polish_thought(" ".join(sys.argv[2:])), ensure_ascii=False))
+        return 0
+    print(json.dumps({"error": "usage: hostess7-voice.py [json|speak TEXT|choose ENGINE [VOICE]|polish TEXT]"}, ensure_ascii=False))
     return 1
 
 

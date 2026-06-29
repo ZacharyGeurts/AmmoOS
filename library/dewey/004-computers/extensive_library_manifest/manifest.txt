@@ -2,7 +2,7 @@
 
 Devices: 75
 Consoles/PCs catalogued with procedural device images.
-Games: 30
+Games: 1001
 Programming greats: 20
 
 ## H7 / H7c
@@ -13,4 +13,4 @@ Decompression near-instant as balance table fills on execute.
 - 004-computers — devices and PCs
 - 700-arts/games — game catalog
 - 920-biography/game-programming-greats — history of game programming legends
-- 004-computers/h7c-corpus — combinatronic compressed entries
+- library/dewey — H7c in-place on every shelf

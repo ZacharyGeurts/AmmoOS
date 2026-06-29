@@ -10,7 +10,7 @@ nexus_network_stack_pre_meld() {
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh" ]]; then
     # shellcheck source=/dev/null
     source "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh"
-    nexus_znetwork_publish 2>/dev/null || true
+    ZNETWORK_PUBLISH_QUIET=1 nexus_znetwork_publish 2>/dev/null || true
   fi
   if [[ "${NEXUS_IRON_PLATE_MELD_REFRESH:-1}" == "1" ]] && command -v pythong >/dev/null 2>&1 \
     && [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-operator.py" ]]; then

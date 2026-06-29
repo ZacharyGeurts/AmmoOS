@@ -180,6 +180,18 @@ def detect_era(url: str, hints: dict[str, Any] | None = None) -> dict[str, Any]:
     return {"era": _era_by_id("es2026"), "confidence": 0.5, "reason": "default_modern"}
 
 
+def _queen_user_agent(*, era: dict[str, Any], mode_key: str) -> str:
+    ua_era = era["id"]
+    engine_rev = "128.0"
+    if era["year"] < 1998:
+        return f"Mozilla/4.0 (compatible; QueenBrowser/2026; AmmoOS; Legacy/{ua_era})"
+    return (
+        f"Mozilla/5.0 (X11; Linux x86_64; rv:{engine_rev}) "
+        f"QueenBrowser/2026 AmmoOS/1.0 compat/{ua_era} mode/{mode_key} "
+        f"Gecko/20100101 QueenFieldEngine/{engine_rev}"
+    )
+
+
 def resolve_profile(
     url: str,
     *,
@@ -194,7 +206,6 @@ def resolve_profile(
     if mode_key == "auto":
         detected = detect_era(url, hints)
         era = detected["era"]
-        # Auto upgrades security for old eras
         if era["year"] < 2005:
             effective_mode = "legacy_secure"
         elif era["year"] < 2012:
@@ -207,13 +218,7 @@ def resolve_profile(
         era = _era_by_id(str(mode_doc.get("era") or "es2026"))
         detect_meta = {"era": era, "confidence": 1.0, "reason": f"mode:{mode_key}"}
 
-    ua_era = era["id"]
-    user_agent = (
-        f"Mozilla/5.0 (compatible; QueenBrowser/2026; AmmoOS; compat/{ua_era}; "
-        f"mode/{mode_key}) Gecko/20100101 Firefox/128.0"
-    )
-    if era["year"] < 1998:
-        user_agent = f"Mozilla/4.0 (compatible; QueenBrowser/2026; Legacy/{ua_era})"
+    user_agent = _queen_user_agent(era=era, mode_key=mode_key)
 
     return {
         "schema": "queen-web-compat/v1",
@@ -261,7 +266,7 @@ def compat_status() -> dict[str, Any]:
         "motto": "Full gamut: pre-1.0 HTML through future drafts. Auto modes secure old code.",
         "modes": {k: {"label": v["label"]} for k, v in MODES.items()},
         "eras": ERAS,
-        "engine_targets": ["queen-browser", "queen-shell+proxy", "ladybird", "servo"],
+        "engine_targets": ["queen-browser", "queen-field-engine", "queen-shell+proxy", "ladybird", "servo"],
         "doctrine": {
             "omit_capabilities": False,
             "hold_all_gates": True,

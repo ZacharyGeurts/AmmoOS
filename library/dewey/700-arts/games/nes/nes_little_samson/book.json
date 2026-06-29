@@ -1,0 +1,12 @@
+{
+  "id": "nes_little_samson",
+  "title": "Little Samson",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_little_samson-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_little_samson/nes_little_samson.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

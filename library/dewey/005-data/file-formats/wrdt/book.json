@@ -1,13 +1,13 @@
 {
   "id": "format-wrdt",
-  "title": "WRDT",
+  "title": "World Redata WRDT1",
   "dewey": null,
   "format": "registry-entry",
-  "family": "image_field",
+  "family": "sovereign",
   "extensions": [
     ".wrdt"
   ],
-  "magic": "57524454",
+  "magic": "WRDT",
   "cover": "/library/assets/formats/wrdt.png",
-  "updated": "2026-06-27T12:17:36Z"
+  "updated": "2026-06-29T08:56:32Z"
 }

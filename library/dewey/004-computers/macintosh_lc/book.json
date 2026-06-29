@@ -1,12 +1,12 @@
 {
   "id": "macintosh_lc",
   "title": "Macintosh LC",
-  "author": "",
+  "author": "Field Extensive Library",
   "dewey": "004.165",
-  "format": "h7c",
-  "h7c": "library/dewey/004-computers/macintosh_lc/macintosh_lc.h7c",
-  "h7": null,
-  "cover": null,
-  "migrated_from": "h7",
-  "updated": "2026-06-27T12:04:53Z"
+  "format": "h7/7",
+  "cover": "/library/assets/devices/macintosh_lc.png",
+  "ready": true,
+  "h7": "library/dewey/004-computers/macintosh_lc/macintosh_lc.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
 }

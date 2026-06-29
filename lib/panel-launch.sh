@@ -5,6 +5,10 @@
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/panel-browser.sh"
 
 nexus_panel_open_browser() {
+  if declare -f nexus_boot_c2_desktop >/dev/null 2>&1 && nexus_boot_c2_only_enabled; then
+    nexus_boot_c2_desktop
+    return $?
+  fi
   declare -f nexus_panel_open_on_boot >/dev/null 2>&1 \
     && nexus_panel_open_on_boot "${1:-$(nexus_panel_url 2>/dev/null || echo "http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT:-9477}/field")}"
 }

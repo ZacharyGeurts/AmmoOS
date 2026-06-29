@@ -1,0 +1,12 @@
+{
+  "id": "nes_flight_of_the_intruder",
+  "title": "Flight of the Intruder",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_flight_of_the_intruder-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_flight_of_the_intruder/nes_flight_of_the_intruder.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

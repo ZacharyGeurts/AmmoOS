@@ -1,0 +1,12 @@
+{
+  "id": "nes_krustys_fun_house",
+  "title": "Krusty's Fun House",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_krustys_fun_house-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_krustys_fun_house/nes_krustys_fun_house.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

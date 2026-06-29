@@ -6,7 +6,8 @@
   "use strict";
 
   const POLL_MS = 30000;
-  const MAX_DEPTH = 0;
+  const CANONICAL_FIELD_LAYER = 1;
+  const MAX_DEPTH = CANONICAL_FIELD_LAYER;
   const HOME_FRAG = "queen-field-home.html";
   const BLANK = new Set(["", "about:blank", "about:srcdoc"]);
 
@@ -18,8 +19,8 @@
   }
 
   function fieldDepth() {
-    /* Single field depth always — Ironclad safety; no field-on-field stack. */
-    return 0;
+    /* Single field at layer 1 — Ironclad safety; no field-on-field stack. */
+    return CANONICAL_FIELD_LAYER;
   }
 
   function isQueenHomeUrl(src) {
@@ -75,12 +76,13 @@
   }
 
   function renderDepthLabels(depth) {
-    const label = "layer 0 · single field · depth sealed and destroyed";
+    const layer = depth >= CANONICAL_FIELD_LAYER ? CANONICAL_FIELD_LAYER : CANONICAL_FIELD_LAYER;
+    const label = `layer ${layer} · single field · depth sealed and destroyed`;
     $("qb-field-depth") && ($("qb-field-depth").textContent = `Field depth · ${label}`);
     $("qfh-depth") && ($("qfh-depth").textContent = `Field depth · ${label}`);
     $("qfh-nested") &&
-      ($("qfh-nested").textContent = "Depth fields sealed and destroyed — one amplitude at layer 0");
-    document.body.dataset.fieldDepth = "0";
+      ($("qfh-nested").textContent = "Depth fields sealed and destroyed — one amplitude at field layer 1");
+    document.body.dataset.fieldDepth = String(CANONICAL_FIELD_LAYER);
     document.body.dataset.depthFieldImpossible = "1";
     document.body.dataset.depthFieldsSealedAndDestroyed = "1";
   }
@@ -164,12 +166,12 @@
     if (data.type === "queen_field_die") {
       snapDimensionalPits();
       global.QueenFieldSanity?.instantFieldDieCheck?.();
-      renderDepthLabels(0);
+      renderDepthLabels(CANONICAL_FIELD_LAYER);
       return;
     }
-    if (data.type === "queen_field_ping" && typeof data.depth === "number" && data.depth > 0) {
+    if (data.type === "queen_field_ping" && typeof data.depth === "number" && data.depth > CANONICAL_FIELD_LAYER) {
       snapDimensionalPits();
-      renderDepthLabels(0);
+      renderDepthLabels(CANONICAL_FIELD_LAYER);
     }
     if (data.type === "queen_field_sanity" && data.gate_ok === false) {
       document.body.dataset.fieldSanity = "hold";

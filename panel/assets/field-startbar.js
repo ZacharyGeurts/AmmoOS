@@ -5,7 +5,7 @@
   "use strict";
 
   const LONG_PRESS_MS = 480;
-  const QUEEN_ICON = "/assets/queen-favicon-48.png";
+  const QUEEN_ICON = "/assets/ammoos-field-48.png";
 
   function quickSvg(glyph) {
     const paths = {
@@ -30,10 +30,6 @@
   }
 
   function quickIcon(app) {
-    if (app.glyph === "broadcast" && app.icon_url) {
-      return iconEl(app, true);
-    }
-    if (app.glyph) return quickSvg(app.glyph);
     return iconEl(app, true);
   }
 
@@ -54,10 +50,11 @@
       .replace(/"/g, "&quot;");
   }
 
-  function iconEl(app, small) {
+  function iconEl(app, small, size) {
     const QIE = global.QueenIconEngine;
+    const px = size || (small ? 20 : 28);
     if (QIE?.programIconHtml) {
-      return QIE.programIconHtml(app, small ? 20 : 28, { small, base: QIE.PANEL_ICONS })
+      return QIE.programIconHtml(app, px, { small: small || px <= 24, base: QIE.PANEL_ICONS })
         .replace(/qie-prog-icon/g, "qie-prog-icon fsb-app-icon")
         .replace(/qie-live-wrap/g, "qie-live-wrap fsb-icon-live-wrap")
         .replace(/qie-live-ring/g, "qie-live-ring fsb-live-ring");
@@ -204,6 +201,7 @@
     if (!menu || !start) return;
     state.menuOpen = force !== undefined ? force : !state.menuOpen;
     menu.classList.toggle("open", state.menuOpen);
+    menu.setAttribute("aria-hidden", state.menuOpen ? "false" : "true");
     start.setAttribute("aria-expanded", state.menuOpen ? "true" : "false");
     if (state.menuOpen) {
       const search = document.getElementById("fsb-search");
@@ -211,27 +209,67 @@
     }
   }
 
-  function renderMenuItems(apps, filter) {
+  function usesFlyoutMenu(m) {
+    return !!(m && (m.flyout || m.layout === "flyout" || (m.style === "nexus_c2" && !m.tree)));
+  }
+
+  function renderMenuItems(apps, filter, iconSize) {
     const q = (filter || "").trim().toLowerCase();
     const list = (apps || []).filter(function (a) {
       if (!q) return true;
       return (a.name || "").toLowerCase().includes(q) || (a.category || "").toLowerCase().includes(q);
     });
+    const flyout = iconSize && iconSize >= 36;
     return list
       .map(function (app) {
         return (
-          '<button type="button" class="fsb-menu-item" data-app-id="' +
+          '<button type="button" class="fsb-menu-item' +
+          (flyout ? " fsb-menu-item--flyout" : "") +
+          '" data-app-id="' +
           esc(app.id) +
           '" title="' +
-          esc(app.category || "") +
+          esc((app.name || "") + (app.category ? " · " + app.category : "")) +
           '">' +
-          iconEl(app) +
+          iconEl(app, false, iconSize || 32) +
           "<span>" +
           esc(app.name) +
           "</span></button>"
         );
       })
       .join("");
+  }
+
+  function renderFlyoutSections(m) {
+    const cats = m.category_order || Object.keys(m.categories || {});
+    const groups = m.categories || {};
+    const host = m.host_categories || {};
+    let html = '<div class="fsb-flyout-sections">';
+    cats.forEach(function (cat) {
+      const items = groups[cat];
+      if (!items || !items.length) return;
+      const label = cat.replace(/^NEXUS · /, "").replace(/^AmmoOS · /, "");
+      html +=
+        '<section class="fsb-flyout-section">' +
+        '<div class="fsb-flyout-section-label">' + esc(label) + "</div>" +
+        '<div class="fsb-menu-grid fsb-menu-grid--flyout">' +
+        renderMenuItems(items, "", 40) +
+        "</div></section>";
+    });
+    const hostKeys = Object.keys(host).sort();
+    if (hostKeys.length) {
+      html += '<section class="fsb-flyout-section fsb-flyout-section--host">';
+      html += '<div class="fsb-flyout-section-label">Host programs</div>';
+      hostKeys.forEach(function (cat) {
+        html +=
+          '<div class="fsb-flyout-sub">' + esc(cat.replace(/^Host · /, "")) +
+          '<div class="fsb-menu-grid fsb-menu-grid--flyout">' +
+          renderMenuItems(host[cat], "", 40) +
+          "</div></div>";
+      });
+      html += "</section>";
+    }
+    html += "</div>";
+    return html;
   }
 
   function renderTreeSections(m, apps) {
@@ -298,6 +336,59 @@
     const theme = data.theme || "gnome";
 
     let body = "";
+    if (usesFlyoutMenu(m)) {
+      if (pinned.length) {
+        body +=
+          '<div class="fsb-menu-pinned-label">Pinned</div>' +
+          '<div class="fsb-menu-grid fsb-menu-grid--flyout fsb-menu-grid--pinned" id="fsb-pinned">' +
+          renderMenuItems(pinned, "", 40) +
+          "</div>";
+      }
+      body += renderFlyoutSections(m);
+      menu.classList.add("fsb-menu--flyout");
+      menu.innerHTML =
+        '<div class="fsb-menu-head fsb-menu-head--c2">' +
+        '<span class="fsb-menu-brand">' + esc(state.data?.product || "AmmoOS") + " C2</span>" +
+        (m.search !== false
+          ? '<input type="search" class="fsb-search" id="fsb-search" placeholder="Search programs…" autocomplete="off" />'
+          : "") +
+        "</div>" +
+        '<div class="fsb-menu-body fsb-menu-body--flyout">' + body + "</div>" +
+        '<div class="fsb-menu-foot" id="fsb-power">' +
+        (m.power || []).map(function (p) {
+          return '<button type="button" class="fsb-power-btn' + (p.danger ? " danger" : "") +
+            '" data-power="' + esc(p.action || p.id) + '"' +
+            (p.exec ? ' data-exec="' + esc(p.exec) + '"' : "") + ">" + esc(p.label) + "</button>";
+        }).join("") +
+        "</div>";
+      const search = document.getElementById("fsb-search");
+      if (search) {
+        search.addEventListener("input", function () {
+          const q = search.value.trim().toLowerCase();
+          document.querySelectorAll(".fsb-menu-body--flyout .fsb-menu-item").forEach(function (btn) {
+            const name = (btn.textContent || "").toLowerCase();
+            btn.style.display = !q || name.includes(q) ? "" : "none";
+          });
+          document.querySelectorAll(".fsb-flyout-section").forEach(function (sec) {
+            const visible = sec.querySelectorAll('.fsb-menu-item:not([style*="display: none"])').length;
+            sec.style.display = visible || !q ? "" : "none";
+          });
+        });
+      }
+      bindMenuClicks(data);
+      document.querySelectorAll("[data-power]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          toggleMenu(false);
+          if (btn.dataset.exec) {
+            launchApp({ id: "power-" + btn.dataset.power, name: btn.textContent, exec: btn.dataset.exec });
+            return;
+          }
+          const handler = global.NexusFieldShell?.handlePower || global.FieldHostDesktop?.handlePower;
+          if (handler) handler(btn.dataset.power);
+        });
+      });
+      return;
+    }
     if (m.tree || m.layout === "tree_sidebar") {
       if (pinned.length) {
         body +=
@@ -446,11 +537,26 @@
     });
   }
 
-  function bindMenuClicks(data) {
+  function appIndex(data) {
     const byId = {};
-    (data.programs || []).forEach(function (a) {
-      byId[a.id] = a;
+    function add(a) {
+      if (a && a.id) byId[a.id] = a;
+    }
+    (data.programs || []).forEach(add);
+    const m = data.menu || {};
+    (m.pinned || m.favorites || m.dock_pinned || []).forEach(add);
+    (m.programs || []).forEach(add);
+    Object.keys(m.categories || {}).forEach(function (cat) {
+      (m.categories[cat] || []).forEach(add);
     });
+    Object.keys(m.host_categories || {}).forEach(function (cat) {
+      (m.host_categories[cat] || []).forEach(add);
+    });
+    return byId;
+  }
+
+  function bindMenuClicks(data) {
+    const byId = appIndex(data);
     document.querySelectorAll(".fsb-menu-item[data-app-id]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         launchApp(byId[btn.dataset.appId]);
@@ -460,7 +566,6 @@
   }
 
   function trayIconEl(app) {
-    if (app.glyph && !app.icon_url) return quickSvg(app.glyph);
     return iconEl(app, true);
   }
 
@@ -496,18 +601,21 @@
     const tray = document.getElementById("fsb-tray-icons");
     if (!tray) return;
     const icons = state.data?.startbar?.tray_icons || [];
+    const byId = appIndex(state.data || {});
+    icons.forEach(function (a) {
+      if (a && a.id) byId[a.id] = Object.assign({}, byId[a.id] || {}, a);
+    });
     tray.innerHTML = icons
       .map(function (app) {
-        const tiny = app.tiny ? " fsb-tray-icon--tiny" : "";
-        const live = app.live ? " fsb-tray-icon--live" : "";
+        const row = byId[app.id] || app;
+        const tiny = row.tiny ? " fsb-tray-icon--tiny" : "";
+        const live = row.live ? " fsb-tray-icon--live" : "";
         return (
           '<button type="button" class="fsb-tray-icon' + tiny + live + '" data-tray-id="' +
-          esc(app.id) + '" title="' + esc(app.name) + '">' + trayIconEl(app) + "</button>"
+          esc(row.id) + '" title="' + esc(row.name) + '">' + trayIconEl(row) + "</button>"
         );
       })
       .join("");
-    const byId = {};
-    icons.forEach(function (a) { byId[a.id] = a; });
     tray.querySelectorAll(".fsb-tray-icon").forEach(function (btn) {
       btn.addEventListener("click", function () {
         handleTrayAction(byId[btn.dataset.trayId]);
@@ -647,15 +755,31 @@
     const m = String(now.getMinutes()).padStart(2, "0");
     const ap = h >= 12 ? "PM" : "AM";
     const h12 = h % 12 || 12;
-    el.textContent = h12 + ":" + m + " " + ap;
-    el.title = now.toLocaleString();
+    const ident = state.data?.field_identity;
+    if (ident?.znetwork_running && ident?.authority) {
+      el.textContent = ident.authority + " · " + h12 + ":" + m + " " + ap;
+      el.title = (ident.motto || ident.label) + " — " + now.toLocaleString();
+      el.classList.add("fsb-clock--loopback");
+    } else {
+      el.textContent = h12 + ":" + m + " " + ap;
+      el.title = now.toLocaleString();
+      el.classList.remove("fsb-clock--loopback");
+    }
   }
 
   function startIcon() {
+    const QIE = global.QueenIconEngine;
+    if (QIE?.programIconHtml) {
+      return (
+        QIE.programIconHtml({ id: "ammoos", icon: "queen-prog-ammoos", name: "AmmoOS" }, 28, { small: false, base: QIE.PANEL_ICONS })
+          .replace(/qie-prog-icon/g, "qie-prog-icon fsb-start-queen")
+      );
+    }
     return (
       '<img class="fsb-start-queen" src="' +
       QUEEN_ICON +
-      '" alt="" width="28" height="28" decoding="async" title="Queen Start" />'
+      '" alt="" width="28" height="28" decoding="async" title="AmmoOS Start" />' +
+      '<span class="fsb-start-label">Start</span>'
     );
   }
 
@@ -666,21 +790,21 @@
 
     root.innerHTML =
       '<nav class="fsb-root" aria-label="Field startbar">' +
+      '<div class="fsb-start-wrap">' +
       '<button type="button" class="fsb-start" id="fsb-start" aria-label="Start menu" aria-expanded="false" aria-haspopup="true">' +
       startIcon() +
       "</button>" +
+      '<div class="fsb-menu fsb-menu--flyout" id="fsb-menu" role="dialog" aria-label="Programs" aria-hidden="true"></div>' +
+      "</div>" +
       '<div class="fsb-quick" id="fsb-quick" role="toolbar" aria-label="Quick launch"></div>' +
       '<div class="fsb-tasks" id="fsb-tasks" role="list"></div>' +
       '<div class="fsb-tray">' +
       '<div class="fsb-tray-icons" id="fsb-tray-icons" role="toolbar" aria-label="System tray"></div>' +
       '<button type="button" class="fsb-desktop-tray" id="fsb-desktop-min" title="Show desktop — minimize all windows" aria-label="Minimize desktop">' +
-      '<svg class="fsb-desktop-svg" viewBox="0 0 24 24" aria-hidden="true">' +
-      '<rect x="3" y="4" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
-      '<path d="M5 18h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' +
-      "</svg></button>" +
+      iconEl({ id: "nexus-c2-desktop", icon: "queen-prog-os", name: "Desktop" }, true, 18) +
+      "</button>" +
       '<div class="fsb-clock" id="fsb-clock" role="timer"></div>' +
       "</div></nav>" +
-      '<div class="fsb-menu" id="fsb-menu" role="dialog" aria-label="Programs" aria-hidden="true"></div>' +
       '<div class="fsb-ctx" id="fsb-ctx" role="menu"></div>';
 
     renderMenu(data);
@@ -780,7 +904,7 @@
     });
 
     document.addEventListener("click", function (ev) {
-      if (!ev.target.closest(".fsb-menu") && !ev.target.closest(".fsb-start")) {
+      if (!ev.target.closest(".fsb-start-wrap")) {
         toggleMenu(false);
       }
       if (!ev.target.closest(".fsb-ctx")) closeCtx();

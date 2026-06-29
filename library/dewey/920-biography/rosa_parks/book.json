@@ -1,0 +1,12 @@
+{
+  "id": "rosa_parks",
+  "title": "Rosa Parks: A True Biography",
+  "author": "Hostess 7 Library",
+  "dewey": "920.92",
+  "category": "biography",
+  "format": "h7/7",
+  "ready": true,
+  "h7": "library/dewey/920-biography/rosa_parks/rosa_parks.md",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

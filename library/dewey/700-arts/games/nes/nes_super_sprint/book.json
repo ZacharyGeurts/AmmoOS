@@ -1,0 +1,10 @@
+{
+  "id": "nes_super_sprint",
+  "title": "Super Sprint",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_super_sprint/nes_super_sprint.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_super_sprint-box.png",
+  "ready": true
+}

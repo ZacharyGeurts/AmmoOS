@@ -1,0 +1,12 @@
+{
+  "id": "nes_addams_family_pugsleys_scavenger_hunt",
+  "title": "Addams Family: Pugsley's Scavenger Hunt",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_addams_family_pugsleys_scavenger_hunt-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_addams_family_pugsleys_scavenger_hunt/nes_addams_family_pugsleys_scavenger_hunt.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

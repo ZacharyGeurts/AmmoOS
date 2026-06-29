@@ -24,6 +24,7 @@ run_test() {
 
   if [[ $# -eq 1 ]] && declare -f "$1" >/dev/null 2>&1; then
     if [[ -x "$G16_MONITOR_SH" ]]; then
+      export -f "$1" 2>/dev/null || true
       if bash "$G16_MONITOR_SH" fn "$name" "$timeout_sec" "$1"; then
         rc=0
       else
@@ -540,6 +541,51 @@ test_queen_benchmark() {
   QUEEN_BENCHMARK_MODE=1 pythong "${ROOT}/Queen/lib/queen-benchmark.py" json | grep -q 'queen-benchmark/v1'
 }
 
+test_queen_bookmarks_flyout() {
+  [[ -f "${ROOT}/Queen/world/queen-bookmarks-flyout.js" ]]
+  [[ -f "${ROOT}/Queen/world/queen-bookmarks-flyout.css" ]]
+  grep -q 'qb-bookmarks-flyout-btn' "${ROOT}/Queen/world/browser.html"
+  grep -q 'bookmark_flyout' "${ROOT}/data/field-best-sort-doctrine.json"
+  grep -q '_sort_bookmarks' "${ROOT}/Queen/lib/queen-browser.py"
+  grep -q 'visit_index' "${ROOT}/Queen/lib/queen-browser.py"
+  grep -q '_record_visit' "${ROOT}/Queen/lib/queen-browser.py"
+  grep -q 'ironclad_bsp_mru' "${ROOT}/Queen/lib/queen-browser.py"
+}
+
+test_queen_browser_bookmarks_full() {
+  [[ -f "${ROOT}/Queen/data/queen-localhost-bookmarks.json" ]]
+  [[ -f "${ROOT}/Queen/lib/queen-browser-settings.py" ]]
+  [[ -f "${ROOT}/Queen/lib/queen-bookmark-tree.py" ]]
+  [[ -f "${ROOT}/Queen/lib/queen-bookmark-tooltips.py" ]]
+  [[ -f "${ROOT}/Queen/world/queen-bookmarks-bar.js" ]]
+  [[ -f "${ROOT}/Queen/world/queen-browser-settings.html" ]]
+  grep -q 'localhost_flyout' "${ROOT}/Queen/lib/queen-browser.py"
+  grep -q 'bookmark_trees' "${ROOT}/Queen/lib/queen-browser.py"
+  grep -q 'qb-bookmarks-search' "${ROOT}/Queen/world/browser.html"
+  grep -q '/api/queen-browser-settings' "${ROOT}/Queen/lib/queen-world.py"
+  grep -q 'tooltips_enabled' "${ROOT}/Queen/data/queen-browser-settings-doctrine.json"
+  grep -q 'security_locked_keys' "${ROOT}/Queen/data/queen-browser-settings-doctrine.json"
+  grep -q '_secure_compat_profile' "${ROOT}/Queen/lib/queen-browser.py"
+  pythong -c "import json; d=json.load(open('${ROOT}/Queen/data/queen-browser-settings-doctrine.json')); assert 'tooltips_fetch_meta' not in (d.get('defaults') or {}), d"
+  ! [[ -f "${ROOT}/Queen/world/queen-browser.js" ]]
+  grep -q '_extract_gecko_tree' "${ROOT}/Queen/lib/queen-browser-import.py"
+  pythong "${ROOT}/Queen/lib/queen-browser-settings.py" posture | grep -q '"security_locked": true'
+}
+
+test_queen_visit_list() {
+  [[ -f "${ROOT}/Queen/lib/queen-visit-list.py" ]]
+  [[ -f "${ROOT}/Queen/data/queen-visit-list-doctrine.json" ]]
+  grep -q '/api/queen-visit-list' "${ROOT}/Queen/lib/queen-world.py"
+  grep -q 'queen-visit-list' "${ROOT}/Queen/lib/queen-browser.py"
+  grep -q 'classify_scum' "${ROOT}/Queen/lib/queen-visit-list.py"
+  grep -q 'unshared' "${ROOT}/Queen/data/queen-visit-list-doctrine.json"
+  grep -q 'qbf-recent-list' "${ROOT}/Queen/world/browser.html"
+  NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/queen-visit-list-test}" \
+    pythong "${ROOT}/Queen/lib/queen-visit-list.py" posture | grep -q 'queen-visit-list/v1'
+  NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/queen-visit-list-test}" \
+    pythong "${ROOT}/Queen/lib/queen-visit-list.py" dispatch <<< '{"action":"classify","url":"https://www.google-analytics.com/collect"}' | grep -q '"scummy": true'
+}
+
 test_queen_browser_os_inside() {
   grep -q '9477/field' "${ROOT}/Queen/world/browser.html"
   grep -q 'data-queen-start="http://127.0.0.1:9477/field"' "${ROOT}/Queen/world/browser.html"
@@ -610,8 +656,12 @@ test_field_os_shell() {
   [[ -f "${ROOT}/panel/assets/field-queen-nav.js" ]]
   [[ -f "${ROOT}/panel/control-panel.html" ]]
   [[ -f "${ROOT}/panel/assets/control-panel.js" ]]
-  grep -q 'nexus-field-shell' "${ROOT}/panel/field-desktop.html"
-  grep -q 'field-queen-nav' "${ROOT}/panel/field-desktop.html"
+  grep -q 'FieldMonitorDashboard' "${ROOT}/panel/field-desktop.html"
+  grep -q 'FieldC2TaskManager' "${ROOT}/panel/field-desktop.html"
+  grep -q 'six_tool_wall' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'keyboard_sovereign' "${ROOT}/data/field-host-desktop-doctrine.json"
+  [[ -f "${ROOT}/lib/field-keyboard-sovereign.py" ]]
+  grep -q 'field-keyboard-sovereign' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/field-shell-settings' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/control-panel' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'no_client_browser' "${ROOT}/data/field-host-desktop-doctrine.json"
@@ -619,9 +669,22 @@ test_field_os_shell() {
   grep -q 'monitor_dashboard' "${ROOT}/data/field-host-desktop-doctrine.json"
   grep -q 'AmmoOS' "${ROOT}/data/field-host-desktop-doctrine.json"
   grep -q 'fsb-tray-icons' "${ROOT}/panel/assets/field-startbar.js"
+  grep -q 'renderFlyoutSections' "${ROOT}/panel/assets/field-startbar.js"
+  grep -q '_doctrine_quick_ids' "${ROOT}/lib/field-taskbar-pins.py"
+  grep -q 'queen-prog-earball' "${ROOT}/data/field-host-desktop-doctrine.json"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-host-desktop.py" build | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['menu'].get('flyout') is True; assert len(d['startbar']['quick']) == 4; assert all(x.get('icon') or x.get('icon_url') for x in d['startbar']['quick'])"
+  grep -q 'world/browser.html' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q '/api/host/poweroff' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'FieldMonitorDashboard' "${ROOT}/panel/assets/field-host-desktop.js"
+  grep -q 'fmd-grid--six' "${ROOT}/panel/assets/field-monitor-dashboard.css"
   [[ -f "${ROOT}/panel/assets/field-monitor-dashboard.js" ]]
   [[ -f "${ROOT}/panel/field-znetwork.html" ]]
+  [[ -f "${ROOT}/panel/assets/field-znetwork-hub.js" ]]
+  [[ -f "${ROOT}/panel/assets/field-znetwork-founder.png" ]]
+  grep -q 'znetwork-founder' "${ROOT}/panel/field-znetwork.html"
+  grep -q 'field-znetwork-hub' "${ROOT}/panel/field-znetwork.html"
+  grep -q 'queen-browser' "${ROOT}/Queen/data/queen-nexus-c2-panels.json"
   [[ -f "${ROOT}/lib/field-c2-bookmark-boot.py" ]]
   grep -q 'organize_scrub' "${ROOT}/Queen/lib/queen-browser-import.py"
   grep -q 'X-AmmoOS-Legacy' "${ROOT}/lib/threat-panel-http.py"
@@ -630,7 +693,12 @@ test_field_os_shell() {
   grep -q 'launch_at_c2_desktop' "${ROOT}/data/field-host-desktop-doctrine.json"
   grep -q '\--kiosk' "${ROOT}/Queen/field-gecko/bin/launch-field-gecko.sh"
   grep -q 'NEXUS_C2_DESKTOP_LAUNCH' "${ROOT}/Queen/field-gecko/bin/launch-field-gecko.sh"
-  grep -q '_nexus_launch_c2_desktop' "${ROOT}/nexus.sh"
+  grep -q 'nexus_boot_c2_desktop' "${ROOT}/nexus.sh"
+  grep -q 'nexus_boot_c2_desktop' "${ROOT}/lib/panel-browser.sh"
+  grep -q 'NEXUS_BOOT_C2_ONLY' "${ROOT}/config/nexus.conf"
+  grep -q 'nexus-c2-desktop' "${ROOT}/data/field-host-desktop-doctrine.json"
+  ! grep -q '_nexus_launch_c2_desktop' "${ROOT}/nexus.sh"
+  ! grep -q '_nexus_queen_layer_autostart' "${ROOT}/nexus.sh"
   grep -q 'nfs-kiosk' "${ROOT}/panel/assets/nexus-field-shell.css"
   grep -q 'boot_program' "${ROOT}/data/field-host-desktop-doctrine.json"
   grep -q 'nexus-command' "${ROOT}/data/field-host-desktop-doctrine.json"
@@ -644,6 +712,12 @@ test_field_os_shell() {
   grep -q 'browser_display' "${ROOT}/lib/field-host-desktop.py"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     pythong "${ROOT}/lib/field-shell-settings.py" json | grep -q 'field-shell-settings/v1'
+  pythong "${ROOT}/lib/field-shell-settings.py" json | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['defaults']['ui_scale']==125; assert d['desktop_scale']['default_pct']==125"
+  [[ -f "${ROOT}/panel/assets/field-desktop-scale.js" ]]
+  grep -q 'FieldDesktopScale' "${ROOT}/panel/assets/field-desktop-scale.js"
+  grep -q 'MAX_PCT = 400' "${ROOT}/panel/assets/field-desktop-scale.js"
+  grep -q 'desktop_ui_scale_default' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'desktop_ui_scale_max": 400' "${ROOT}/data/field-host-desktop-doctrine.json"
 }
 
 test_field_gimp_bridge() {
@@ -674,6 +748,10 @@ test_field_keepass() {
   grep -q '/field-lock' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'queen-browser' "${ROOT}/data/field-host-desktop-doctrine.json"
   grep -q 'taskbar_quick' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'nexus_c2_flyout' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'fsb-menu--flyout' "${ROOT}/panel/assets/field-startbar.js"
+  grep -q 'renderFlyoutSections' "${ROOT}/panel/assets/field-startbar.js"
+  grep -q '"start_menu_folders": false' "${ROOT}/data/field-host-desktop-doctrine.json"
   SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     pythong "${ROOT}/lib/field-keepass.py" json | grep -q 'field-lock/v1'
   pythong "${SG_ROOT}/KeePass-Field/forge/field-keepass-harden.py" json | grep -q '"ok": true'
@@ -718,6 +796,169 @@ test_field_audio_settings() {
   grep -q 'fa-advanced' "${ROOT}/panel/field-audio-settings.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     pythong "${ROOT}/lib/field-audio-settings.py" json | grep -q '"ok": true'
+}
+
+test_field_display_settings() {
+  [[ -f "${ROOT}/lib/field-display-settings.py" ]]
+  [[ -f "${ROOT}/data/field-display-settings-doctrine.json" ]]
+  [[ -f "${ROOT}/panel/field-display-settings.html" ]]
+  [[ -f "${ROOT}/panel/assets/field-display-settings.js" ]]
+  [[ -f "${ROOT}/panel/assets/field-display-settings.css" ]]
+  grep -q '/api/field-display-settings' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/field-display-settings' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '"id": "16k"' "${ROOT}/data/field-display-settings-doctrine.json"
+  grep -q 'submicron' "${ROOT}/data/field-display-settings-doctrine.json"
+  grep -q 'field-display-settings' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'syncFromApi' "${ROOT}/panel/assets/field-desktop-scale.js"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-display-settings.py" json | grep -q 'field-display-settings/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-display-settings.py" json 1920 1080 | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['screenspace']['max_pct']==400; assert len(d['ladder'])>=10"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-display-settings.py" apply '{"resolution_profile":"16k","ui_scale":100}' | grep -q '16k'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-shell-settings.py" json | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['desktop_scale']['max_pct']==400"
+}
+
+test_field_ammoos_blocks() {
+  [[ -f "${ROOT}/lib/field-ammoos-blocks.py" ]]
+  [[ -f "${ROOT}/data/field-ammoos-blocks-doctrine.json" ]]
+  grep -q '/api/field-ammoos-blocks' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'ammoos_blocks' "${ROOT}/lib/field-plate-meld.py"
+  grep -q '"id": "chips"' "${ROOT}/data/field-ammoos-blocks-doctrine.json"
+  grep -q '"id": "codecs"' "${ROOT}/data/field-ammoos-blocks-doctrine.json"
+  grep -q 'thermal_safe' "${ROOT}/lib/field-ammoos-blocks.py"
+  grep -q 'field-ammoos-blocks-panel.json' "${ROOT}/lib/field-plate-meld.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-ammoos-blocks.py" json | grep -q 'field-ammoos-blocks/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-ammoos-blocks.py" scan | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['child_count']>=8; assert any(c['block_id']=='chips' for c in d['children']); assert any(c['block_id']=='codecs' for c in d['children'])"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-ammoos-blocks.py" thermal | grep -q 'field-ammoos-thermal-gate/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-ammoos-blocks.py" publish | grep -q '"ok": true'
+}
+
+test_queen_thermal_manager() {
+  [[ -f "${ROOT}/Queen/world/queen-thermal-manager.html" ]]
+  [[ -f "${ROOT}/Queen/world/queen-thermal-manager.js" ]]
+  [[ -f "${ROOT}/lib/field-thermal-manager-block.py" ]]
+  grep -q 'thermal-manager' "${ROOT}/Queen/lib/queen-browser.py"
+  grep -q '/api/field-thermal-guard' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/field-thermal-manager-block' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '"id": "thermal-manager"' "${ROOT}/Queen/data/queen-nexus-c2-panels.json"
+  grep -q '"version": "2.0.0"' "${ROOT}/data/ammoos-version.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$SG" \
+    pythong "${ROOT}/lib/field-thermal-guard.py" json | grep -q 'field-thermal-guard/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$SG" \
+    pythong "${ROOT}/lib/field-thermal-manager-block.py" json | grep -q 'field-thermal-manager-block/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$SG" \
+    pythong "${ROOT}/lib/field-thermal-manager-block.py" ocr | grep -q '"ok": true'
+}
+
+test_queen_final_ear_mouth() {
+  [[ -f "${ROOT}/Queen/world/queen-final-ear-manager.html" ]]
+  [[ -f "${ROOT}/Queen/world/queen-final-ear-manager.js" ]]
+  [[ -f "${ROOT}/Queen/world/queen-final-mouth-manager.html" ]]
+  [[ -f "${ROOT}/Queen/world/queen-final-mouth-manager.js" ]]
+  [[ -f "${ROOT}/lib/field-final-ear-block.py" ]]
+  [[ -f "${ROOT}/lib/field-final-mouth-block.py" ]]
+  grep -q 'final-ear-manager' "${ROOT}/Queen/lib/queen-browser.py"
+  grep -q 'final-mouth-manager' "${ROOT}/Queen/lib/queen-browser.py"
+  grep -q '/api/field-final-ear-block' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/field-final-mouth-block' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '"id": "final_ear"' "${ROOT}/data/field-ammoos-blocks-doctrine.json"
+  grep -q '"id": "final_mouth"' "${ROOT}/data/field-ammoos-blocks-doctrine.json"
+  grep -q '"id": "final-ear-manager"' "${ROOT}/Queen/data/queen-nexus-c2-panels.json"
+  grep -q '"id": "final-mouth-manager"' "${ROOT}/Queen/data/queen-nexus-c2-panels.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$SG" \
+    pythong "${ROOT}/lib/field-final-ear-block.py" json | grep -q 'field-final-ear-block/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$SG" \
+    pythong "${ROOT}/lib/field-final-mouth-block.py" json | grep -q 'field-final-mouth-block/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$SG" \
+    pythong "${ROOT}/lib/field-final-ear-block.py" ocr | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$SG" \
+    pythong "${ROOT}/lib/field-final-mouth-block.py" ocr | grep -q '"ok": true'
+}
+
+test_queen_canvas_renderer() {
+  [[ -f "${ROOT}/data/field-rtx-display-doctrine.json" ]]
+  [[ -f "${ROOT}/lib/field-rtx-canvas-block.py" ]]
+  [[ -f "${ROOT}/Queen/lib/queen-canvas-renderer.py" ]]
+  grep -q '/api/field-rtx-canvas-block' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '"id": "queen_canvas"' "${ROOT}/data/field-stack-layer-doctrine.json"
+  grep -q 'queen_canvas' "${ROOT}/data/field-stack-layer-doctrine.json"
+  grep -q '/api/queen-canvas-renderer' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '"id": "rtx_canvas"' "${ROOT}/data/field-ammoos-blocks-doctrine.json"
+  [[ -f "${SG}/AMOURANTHRTX/Navigator/shaders/compute/CANVAS.comp" ]]
+  [[ ! -f "${SG}/AMOURANTHRTX/Navigator/shaders/compute/Amouranth.comp" ]]
+  NEXUS_INSTALL_ROOT="$ROOT" SG_ROOT="$SG" \
+    pythong "${ROOT}/Queen/lib/queen-canvas-renderer.py" json | grep -q 'queen-canvas-renderer/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" SG_ROOT="$SG" \
+    pythong "${ROOT}/lib/field-rtx-canvas-block.py" json | grep -q 'field-rtx-canvas-block/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" SG_ROOT="$SG" \
+    pythong "${ROOT}/lib/field-stack-layer.py" json | grep -q 'queen_canvas'
+}
+
+test_field_video_codec_pipe() {
+  [[ -f "${ROOT}/lib/field-video-codec-battery.py" ]]
+  [[ -f "${ROOT}/lib/field-video-codec-pipe.py" ]]
+  [[ -f "${ROOT}/Queen/lib/queen-video-codec.py" ]]
+  [[ -f "${ROOT}/data/field-video-codec-battery-doctrine.json" ]]
+  [[ -f "${ROOT}/data/field-video-codec-battery-seed.json" ]]
+  grep -q '/api/video-codec' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'straight_pipe' "${ROOT}/data/field-media-codec-doctrine.json"
+  grep -q 'Queen video codec battery' "${ROOT}/scripts/start-field-stack.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" \
+    pythong "${ROOT}/lib/field-video-codec-battery.py" json | grep -q 'field-video-codec-battery-panel/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" \
+    pythong "${ROOT}/lib/field-video-codec-pipe.py" status | grep -q 'field-video-codec-pipe/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" \
+    pythong "${ROOT}/lib/field-video-codec-battery.py" json | grep -q '"video_codec_count":'
+}
+
+test_field_audio_secure_bind() {
+  [[ -f "${SG}/Final_Ear/zocr_hardware_audio.py" ]]
+  [[ -f "${ROOT}/lib/field-audio-secure-bind.py" ]]
+  [[ -f "${ROOT}/Queen/lib/queen-audio-route.py" ]]
+  [[ -f "${ROOT}/data/queen-audio-route-doctrine.json" ]]
+  grep -q 'field-audio-secure-bind' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'hardware_audio' "${ROOT}/Queen/lib/queen-earball.py"
+  grep -q 'Queen secure audio bind' "${ROOT}/scripts/start-field-stack.sh"
+  FINAL_EAR_ROOT="${SG}/Final_Ear" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/field-audio-secure-bind.py" probe | grep -q 'zocr-hardware-audio-probe/v1'
+  FINAL_EAR_ROOT="${SG}/Final_Ear" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/Queen/lib/queen-earball.py" dispatch <<< '{"action":"hardware_audio"}' | grep -q 'zocr-hardware-audio-status/v1'
+}
+
+test_field_big_drive() {
+  [[ -f "${ROOT}/lib/field-big-drive.py" ]]
+  [[ -f "${ROOT}/data/field-big-drive-doctrine.json" ]]
+  [[ -f "${ROOT}/panel/field-big-drive.html" ]]
+  [[ -f "${ROOT}/panel/assets/field-big-drive.js" ]]
+  grep -q '/api/field-big-drive' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/field-big-drive' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'field-big-drive' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'Open in Big Drive' "${ROOT}/Queen/world/queen-files.js"
+  grep -q '_storage_formats' "${ROOT}/lib/field-file-formats.py"
+  grep -q 'field_on_field_forbidden' "${ROOT}/data/field-big-drive-doctrine.json"
+  grep -q 'bd-stabilizer-bar' "${ROOT}/panel/field-big-drive.html"
+  grep -q 'stabilizer_progress' "${ROOT}/lib/field-big-drive.py"
+  grep -q 'stabilize_drive' "${ROOT}/lib/field-big-drive.py"
+  local py="python3"
+  command -v pythong >/dev/null 2>&1 && py="pythong"
+  SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    "$py" "${ROOT}/lib/field-big-drive.py" json | grep -q 'field-big-drive/v1'
+  local tmp_iso="${NEXUS_STATE_DIR}/big-drive-test.iso"
+  printf 'plain iso payload' >"$tmp_iso"
+  local stab_out
+  stab_out=$(SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    "$py" "${ROOT}/lib/field-big-drive.py" dispatch <<EOF
+{"action":"stabilize","path":"${tmp_iso}","device_id":"usb_stick"}
+EOF
+)
+  echo "$stab_out" | grep -q '"ok": true'
+  echo "$stab_out" | grep -q 'universal_2d'
 }
 
 test_field_g16_launch() {
@@ -856,6 +1097,120 @@ test_field_goodies_plate() {
     pythong "${ROOT}/lib/field-plate-combinatorics-bridge.py" build | grep -q 'field-surfaces-slice'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
     pythong "${ROOT}/lib/field-plate-meld.py" fuse | grep -q 'shell_dock'
+}
+
+test_nexus_c2_overhaul() {
+  [[ -f "${ROOT}/data/nexus-c2-doctrine.json" ]]
+  [[ -f "${ROOT}/lib/nexus-c2-overhaul.py" ]]
+  [[ -f "${ROOT}/panel/assets/nexus-c2-bus.js" ]]
+  [[ -f "${ROOT}/panel/assets/nexus-c2-status.css" ]]
+  grep -q '/api/nexus-c2/snapshot' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus-c2-overhaul' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'threat-panel.html' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus-c2-bus.js' "${ROOT}/panel/field-desktop.html"
+  grep -q 'never_live_on_get' "${ROOT}/data/nexus-c2-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/nexus-c2-test}" \
+    pythong "${ROOT}/lib/nexus-c2-overhaul.py" snapshot | grep -q 'nexus-c2-overhaul/v1'
+}
+
+test_ammoos_incorporate() {
+  [[ -f "${ROOT}/data/ammoos-incorporate-doctrine.json" ]]
+  [[ -f "${ROOT}/lib/ammoos-incorporate.py" ]]
+  [[ -f "${ROOT}/scripts/ammoos-incorporate.sh" ]]
+  [[ -f "${ROOT}/panel/ammoos-incorporate.html" ]]
+  [[ -f "${ROOT}/panel/assets/ammoos-incorporate.js" ]]
+  grep -q '\-\-incorporate' "${ROOT}/nexus.sh"
+  grep -q '\-\-reconcile' "${ROOT}/nexus.sh"
+  grep -q 'coexist_reconcile' "${ROOT}/lib/ammoos-incorporate.py"
+  grep -q '/api/ammoos-incorporate' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/ammoos-incorporate' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'ammoos-incorporate' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'never_reboot' "${ROOT}/data/ammoos-incorporate-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/ammoos-inc}" pythong "${ROOT}/lib/ammoos-incorporate.py" posture | grep -q 'ammoos-incorporate/v1'
+}
+
+test_ammoos_coexist_reconcile() {
+  [[ -f "${ROOT}/data/ammoos-coexist-doctrine.json" ]]
+  [[ -f "${ROOT}/lib/ammoos-coexist-reconcile.py" ]]
+  grep -q 'never_harm_self_on_update' "${ROOT}/data/ammoos-coexist-doctrine.json"
+  grep -q 'ammoos-coexist-reconcile' "${ROOT}/nexus.sh"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/ammoos-coexist}" \
+    pythong "${ROOT}/lib/ammoos-coexist-reconcile.py" posture | grep -q 'ammoos-coexist-reconcile/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/ammoos-coexist}" \
+    pythong "${ROOT}/lib/ammoos-coexist-reconcile.py" safe | grep -q '"safe": true'
+}
+
+test_ammoos_startup_sovereignty() {
+  [[ -f "${ROOT}/data/ammoos-startup-sovereignty-doctrine.json" ]]
+  [[ -f "${ROOT}/lib/ammoos-startup-sovereign.py" ]]
+  [[ -f "${ROOT}/lib/ammoos-startup-sovereign.sh" ]]
+  grep -q 'ammoos-startup-sovereign' "${ROOT}/nexus.sh"
+  grep -q 'nexus_ammoos_startup_should_desktop' "${ROOT}/lib/panel-browser.sh"
+  grep -q 'startup_sovereignty' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q '/api/ammoos-startup' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'resume_host_os' "${ROOT}/data/ammoos-startup-sovereignty-doctrine.json"
+  grep -q 'start_ammoos_desktop' "${ROOT}/data/ammoos-startup-sovereignty-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/ammoos-startup}" \
+    pythong "${ROOT}/lib/ammoos-startup-sovereign.py" posture | grep -q 'ammoos-startup-sovereign/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/ammoos-startup}" \
+    AMMOOS_RESUME_HOST=1 pythong "${ROOT}/lib/ammoos-startup-sovereign.py" orchestrate | grep -q '"launch_desktop": false'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/tmp/ammoos-startup}" \
+    AMMOOS_START_DESKTOP=1 pythong "${ROOT}/lib/ammoos-startup-sovereign.py" orchestrate | grep -q '"launch_desktop": true'
+}
+
+test_ammoos_program_shell() {
+  [[ -f "${ROOT}/data/field-program-shell-doctrine.json" ]]
+  [[ -f "${ROOT}/panel/assets/field-program-shell.css" ]]
+  [[ -f "${ROOT}/panel/assets/field-program-shell.js" ]]
+  [[ -f "${ROOT}/Queen/world/queen-ammoos-bridge.js" ]]
+  [[ -f "${ROOT}/scripts/ammoos-wrap-program-shell.py" ]]
+  grep -q 'FieldProgramShell' "${ROOT}/panel/assets/field-program-shell.js"
+  grep -q 'ammoos:launch' "${ROOT}/panel/assets/nexus-field-shell.js"
+  grep -q 'FieldProgramShell?.navigate' "${ROOT}/panel/assets/field-shell-dock.js"
+  grep -q 'field-program-shell.css' "${ROOT}/panel/field-lock.html"
+  grep -q 'field-program-shell.js' "${ROOT}/panel/nexus-calc.html"
+  grep -q 'queen-ammoos-bridge.js' "${ROOT}/Queen/world/browser.html"
+  grep -q 'program_shell' "${ROOT}/data/field-field-surfaces-doctrine.json"
+}
+
+test_ammoos_themes_and_security() {
+  [[ -f "${ROOT}/data/ammoos-themes-doctrine.json" ]]
+  [[ -f "${ROOT}/data/ammoos-security-defaults-doctrine.json" ]]
+  [[ -f "${ROOT}/lib/ammoos-theme-engine.py" ]]
+  [[ -f "${ROOT}/lib/ammoos-security-defaults.py" ]]
+  [[ -f "${ROOT}/panel/assets/ammoos-c2-themes.css" ]]
+  [[ -f "${ROOT}/panel/assets/ammoos-theme-engine.js" ]]
+  grep -q 'default_ammoos_theme' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'nexus_c2' "${ROOT}/data/ammoos-themes-doctrine.json"
+  grep -q 'ammoos_theme' "${ROOT}/data/queen-settings-surface-doctrine.json"
+  grep -q 'ammoos_theme' "${ROOT}/lib/field-shell-settings.py"
+  grep -q '/api/ammoos-themes' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'nexus-military-v8' "${ROOT}/panel/field-desktop.html"
+  grep -q 'ammoos-c2-themes' "${ROOT}/panel/field-desktop.html"
+  grep -q 'nexus_settings_apply_ammoos_defaults' "${ROOT}/lib/nexus-settings.sh"
+  NEXUS_INSTALL_ROOT="$ROOT" pythong "${ROOT}/lib/ammoos-theme-engine.py" catalog | grep -q 'nexus_c2'
+  NEXUS_INSTALL_ROOT="$ROOT" pythong "${ROOT}/lib/ammoos-theme-engine.py" default | grep -q 'nexus_c2'
+}
+
+test_ammoos_update_os() {
+  [[ -f "${ROOT}/lib/ammoos-update-inplace.py" ]]
+  [[ -f "${ROOT}/data/ammoos-update-doctrine.json" ]]
+  [[ -f "${ROOT}/panel/ammoos-update-os.html" ]]
+  [[ -f "${ROOT}/panel/assets/ammoos-update-os.js" ]]
+  [[ -f "${ROOT}/panel/assets/ammoos-update-os.css" ]]
+  [[ -f "${ROOT}/scripts/ammoos-update-inplace.sh" ]]
+  grep -q '/api/ammoos-update' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/ammoos-update-os' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'ammoos-update-os' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'Update your own OS' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'ammoos-update' "${ROOT}/data/field-shell-dock-doctrine.json"
+  grep -q 'update-your-os.html' "${ROOT}/docs/build-ammoos-manual.py"
+  grep -q 'ZacharyGeurts/AmmoOS' "${ROOT}/data/ammoos-update-doctrine.json"
+  grep -q 'AmmoCode' "${ROOT}/data/ammoos-update-doctrine.json"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/ammoos-update-inplace.py" check | grep -q 'ammoos-update/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/ammoos-update-inplace.py" doctrine | grep -q 'getting_started'
 }
 
 test_field_popcorn() {
@@ -2179,6 +2534,47 @@ test_znetwork_field() {
   [[ -f "${NEXUS_STATE_DIR}/znetwork-status.json" ]]
 }
 
+test_znetwork_relayer() {
+  [[ -f "${ROOT}/lib/znetwork-relayer.py" ]]
+  grep -q '"relayer"' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'nexus_znetwork_relayer_board' "${ROOT}/lib/znetwork-field.sh"
+  grep -q 'ZNETWORK_RELAYER=1' "${ROOT}/config/nexus.conf"
+  grep -q 'ZNETWORK_UNDERHOOK=0' "${ROOT}/config/nexus.conf"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/znetwork-relayer.py" json | grep -q '"schema": "znetwork-relayer/v1"'
+}
+
+test_znetwork_replace_in_place() {
+  [[ -f "${ROOT}/lib/znetwork-replace-in-place.py" ]]
+  grep -q 'replace_in_place' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'nexus_znetwork_replace_py' "${ROOT}/lib/znetwork-field.sh"
+  grep -q 'ZNETWORK_TAKEOVER=0' "${ROOT}/config/nexus.conf"
+  grep -q 'ZNETWORK_SMART_INSIDE=1' "${ROOT}/config/nexus.conf"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/znetwork-replace-in-place.py" json | grep -q '"schema": "znetwork-replace-in-place/v1"'
+}
+
+test_znetwork_exploit_shield() {
+  [[ -f "${ROOT}/lib/znetwork-exploit-shield.py" ]]
+  grep -q 'exploit_shield' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'zero_day_behavioral' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'nexus_znetwork_exploit_scan' "${ROOT}/lib/znetwork-field.sh"
+  grep -q 'exploit_shield_scan' "${ROOT}/lib/znetwork-orchestrator.py"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/znetwork-exploit-shield.py" scan | grep -q '"schema": "znetwork-exploit-shield/v1"'
+}
+
+test_znetwork_smart_inside() {
+  [[ -f "${ROOT}/lib/znetwork-smart-inside.py" ]]
+  grep -q 'smart_inside' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'passthrough_all_traffic' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'nexus_znetwork_smart_inside' "${ROOT}/lib/znetwork-field.sh"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/znetwork-smart-inside.py" json | grep -q '"schema": "znetwork-smart-inside/v1"'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" ZNETWORK_SMART_INSIDE=1 \
+    pythong "${ROOT}/lib/znetwork-handler-retire.py" replace | grep -q 'ZNETWORK_SMART_INSIDE'
+}
+
 test_znetwork_handler_retire() {
   grep -q 'never_harm_os' "${ROOT}/lib/znetwork-handler-retire.py"
   grep -q 'coexist_os' "${ROOT}/data/znetwork-doctrine.json"
@@ -2192,6 +2588,60 @@ test_znetwork_handler_retire() {
     pythong "${ROOT}/lib/znetwork-handler-retire.py" detect | grep -q '"schema": "znetwork-handler-retire/v1"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
     pythong "${ROOT}/lib/znetwork-handler-retire.py" replace | grep -q '"policy_owner": "znetwork"'
+}
+
+test_znetwork_wireless_fcc() {
+  [[ -f "${ROOT}/lib/znetwork-wireless-fcc.py" ]]
+  grep -q 'wireless_fcc' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'trace_action_behind' "${ROOT}/lib/znetwork-wireless-fcc.py"
+  grep -q 'strike_action_behind' "${ROOT}/lib/znetwork-wireless-fcc.py"
+  grep -q 'fix_not_kill' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'nexus_znetwork_wireless_fcc_bind_and_scan' "${ROOT}/lib/znetwork-field.sh"
+  grep -q '_is_own_router' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'fix_router_strike_actor' "${ROOT}/lib/znetwork-relayer.py"
+  local tmp_state
+  tmp_state="$(mktemp -d)"
+  printf '{"schema":"znetwork-own-router/v1","bound":true,"gateway_ip":"192.168.1.1","bssid":"aa:bb:cc:dd:ee:ff","ssid":"HomeNet"}\n' \
+    >"${tmp_state}/znetwork-own-router.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/znetwork-wireless-fcc.py" json | grep -q '"schema": "znetwork-wireless-fcc/v1"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/znetwork-wireless-fcc.py" is-own 192.168.1.1 | grep -q '"own": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong -c "
+import json, os, sys
+sys.path.insert(0, '${ROOT}/lib')
+os.environ['NEXUS_INSTALL_ROOT'] = '${ROOT}'
+os.environ['NEXUS_STATE_DIR'] = '${tmp_state}'
+import importlib.util
+spec = importlib.util.spec_from_file_location('zwf', '${ROOT}/lib/znetwork-wireless-fcc.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+tr = mod.trace_action_behind({'kind':'hostile_gateway_symptom','ip':'192.168.1.1'})
+assert tr.get('symptom_is_own_router') is True
+assert tr.get('policy') in ('fix_router_only','fix_router_strike_actor')
+print('trace_ok')
+"
+  rm -rf "$tmp_state"
+}
+
+test_znetwork_startup_retire() {
+  [[ -f "${ROOT}/lib/znetwork-startup-retire.py" ]]
+  grep -q 'startup_retire' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'nexus_znetwork_startup_retire_host' "${ROOT}/lib/znetwork-field.sh"
+  grep -q 'startup_retire_host' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'disable_startup_only_no_live_stop' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'nexus_install_reboot_prompt' "${ROOT}/lib/installer.sh"
+  grep -q 'nexus_install_reboot_prompt' "${ROOT}/lib/nxf-install.sh"
+  local tmp_state
+  tmp_state="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/znetwork-startup-retire.py" detect | grep -q '"schema": "znetwork-startup-retire/v1"'
+  printf 'running=1\n' >"${tmp_state}/znetwork-running.marker"
+  printf '{"schema":"znetwork-relayer/v1","active":true}\n' >"${tmp_state}/znetwork-relayer.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/znetwork-startup-retire.py" takeover | grep -q '"ok": true'
+  rm -rf "$tmp_state"
 }
 
 test_vestigial_cleanup() {
@@ -2225,6 +2675,32 @@ test_znetwork_tray_flow() {
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_TRAY_MODE=znetwork NEXUS_TRAY_ICON_REFRESH=1 \
     pythong "${ROOT}/lib/panel-tray-icon.py" --force --znetwork >/dev/null
   [[ -s "${ROOT}/panel/assets/znetwork-tray-24.png" ]]
+}
+
+test_znetwork_secure_vault() {
+  [[ -f "${ROOT}/lib/znetwork-secure-vault.py" ]]
+  [[ -f "${ROOT}/panel/field-znetwork-vault.html" ]]
+  [[ -f "${ROOT}/panel/assets/field-znetwork-vault.js" ]]
+  grep -q 'ZNetwork · Secure Vault' "${ROOT}/lib/panel-tray.py"
+  grep -q '__vault__' "${ROOT}/lib/panel-tray.py"
+  grep -q '/api/znetwork/vault' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'field-znetwork-vault' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'secure_vault' "${ROOT}/data/znetwork-doctrine.json"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/znetwork-secure-vault.py" queue | grep -q 'znetwork-vault-queue/v1'
+}
+
+test_znetwork_operator_registry() {
+  [[ -f "${ROOT}/lib/znetwork-operator-registry.py" ]]
+  grep -q 'operator_registry' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q '/api/znetwork/registry' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'composite_bsp' "${ROOT}/lib/znetwork-operator-registry.py"
+  grep -q 'zv-register-form' "${ROOT}/panel/field-znetwork-vault.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/znetwork-operator-registry.py" register '{"full_name":"Test Operator","region":"Earth"}' \
+    | grep -q 'znetwork-operator-registry/v1'
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/znetwork-operator-registry.py" mesh | grep -q 'composite_bsp'
 }
 
 test_znetwork_hostile_threat() {
@@ -2696,41 +3172,67 @@ print('tampered')
 run_test "combinatorics reject retaliate" test_combinatorics_reject_retaliate
 
 test_chip_battery_combinatorics() {
+  local tmp_state sg
+  sg="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
   [[ -f "${ROOT}/lib/field-chip-battery.py" ]]
   [[ -f "${ROOT}/data/field-chip-battery-seed.json" ]]
   [[ -f "${ROOT}/data/field-chip-battery-doctrine.json" ]]
-  grep -q 'chip_battery' "${ROOT}/lib/field-panel-parallel.py"
-  grep -q 'chip_battery' "${ROOT}/lib/field-plate-meld.py"
-  grep -q 'chips_battery' "${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}/Grok16/data/g16-field-combinatorics-doctrine.json"
-  grep -q 'chip_battery' "${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}/Grok16/lib/field_combinatorics.py"
-  grep -q 'chip_battery_total' "${ROOT}/lib/field-combinatorics-comb.py"
+  grep -q 'ironclad_chips' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q 'ironclad_chips' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'ironclad_chips' "${sg}/Grok16/data/g16-field-combinatorics-doctrine.json"
+  grep -q 'ironclad_chips' "${sg}/Grok16/lib/field_combinatorics.py"
+  grep -q 'ironclad_chips_total' "${ROOT}/lib/field-combinatorics-comb.py"
+  [[ -f "${ROOT}/lib/field-ironclad-chips-combinatorics.py" ]]
+  [[ -f "${ROOT}/data/field-ironclad-chips-combinatorics-doctrine.json" ]]
   grep -q '/api/chip-battery' "${ROOT}/lib/threat-panel-http.py"
   grep -q '/api/chips/combinatronic' "${ROOT}/lib/threat-panel-http.py"
   grep -q 'combinatronic' "${ROOT}/data/field-chip-battery-doctrine.json"
   grep -q 'combinatronic_panel' "${ROOT}/lib/field-chip-battery.py"
-  grep -q '/api/chips/combinatronic' "${sg}/Queen/lib/queen-world.py"
-  grep -q 'combinatronic_status' "${sg}/Queen/lib/queen-chips.py"
-  [[ -f "${sg}/Queen/world/queen-chips-cores.css" ]]
-  grep -q 'combinatronic' "${sg}/Queen/world/queen-chips-cores.js"
-  [[ -f "${sg}/Queen/world/queen-styles.js" ]]
-  [[ -f "${sg}/Queen/world/queen-styles.css" ]]
-  [[ -f "${sg}/Queen/gui/queen-styles-themes.json" ]]
-  grep -q 'qb-styles' "${sg}/Queen/world/browser.html"
-  grep -q 'QueenStyles' "${sg}/Queen/world/queen-styles.js"
-  [[ -f "${sg}/Queen/world/queen-nexus-c2.html" ]]
-  [[ -f "${sg}/Queen/lib/queen-nexus-c2.py" ]]
-  grep -q 'programmatic' "${sg}/Queen/data/queen-nexus-c2-panels.json"
-  grep -q 'panel_thumbnail' "${sg}/Queen/lib/queen-desktop.py"
+  grep -q '/api/chips/combinatronic' "${ROOT}/Queen/lib/queen-world.py"
+  grep -q 'combinatronic_status' "${ROOT}/Queen/lib/queen-chips.py"
+  [[ -f "${ROOT}/Queen/world/queen-chips-cores.css" ]]
+  grep -q 'combinatronic' "${ROOT}/Queen/world/queen-chips-cores.js"
+  [[ -f "${ROOT}/Queen/world/queen-styles.js" ]]
+  [[ -f "${ROOT}/Queen/world/queen-styles.css" ]]
+  [[ -f "${ROOT}/Queen/gui/queen-styles-themes.json" ]]
+  grep -q 'qb-styles' "${ROOT}/Queen/world/browser.html"
+  grep -q 'QueenStyles' "${ROOT}/Queen/world/queen-styles.js"
+  [[ -f "${ROOT}/Queen/world/queen-nexus-c2.html" ]]
+  [[ -f "${ROOT}/Queen/lib/queen-nexus-c2.py" ]]
+  grep -q 'programmatic' "${ROOT}/Queen/data/queen-nexus-c2-panels.json"
+  grep -q 'panel_thumbnail' "${ROOT}/Queen/lib/queen-desktop.py"
   grep -q 'programmatic' "${ROOT}/data/field-host-desktop-doctrine.json"
   grep -q 'coco2' "${ROOT}/Queen/data/queen-game-room.json"
+  grep -q 'launch_emulator' "${ROOT}/Queen/lib/queen-chips.py"
+  grep -q 'emulator_pump_loop' "${ROOT}/Queen/lib/queen-chips.py"
+  grep -q 'spawn_rtx' "${ROOT}/Queen/world/queen-game-room.js"
+  grep -q 'gr-fb' "${ROOT}/Queen/world/queen-game-room.html"
+  grep -q 'pollFramebuffer' "${ROOT}/Queen/world/queen-game-room.js"
+  grep -q '_launch_emulator_rom' "${ROOT}/Queen/lib/queen-launch-chamber.py"
+  grep -q '_retro_chips_posture' "${ROOT}/lib/field-plate-combinatorics-bridge.py"
+  grep -q 'FieldChips' "${ROOT}/lib/field-plate-combinatorics-bridge.py"
+  grep -q 'data-rom-path' "${ROOT}/Queen/world/queen-nes-cartridge-theater.js"
+  grep -q 'comb-launch-gameroom' "${ROOT}/panel/assets/combinatorics-studio.js"
+  grep -q 'queen-sweet-anita-protocol' "${ROOT}/Queen/lib/queen-sweet-anita-protocol.py"
+  grep -q 'queen-nes-library' "${ROOT}/Queen/lib/queen-nes-library.py"
+  grep -q '/api/nes-library' "${ROOT}/Queen/lib/queen-world.py"
+  grep -q '/api/sap' "${ROOT}/Queen/lib/queen-world.py"
+  grep -q 'gr-nes-grid' "${ROOT}/Queen/world/queen-game-room.html"
+  grep -q 'QueenSAP' "${ROOT}/Queen/world/queen-game-room-sap.js"
+  grep -q 'have_first' "${ROOT}/Queen/world/queen-game-room-nes.js"
+  grep -q 'gr-layout' "${ROOT}/Queen/world/queen-game-room.html"
+  grep -q 'theater_pct' "${ROOT}/Queen/data/queen-game-room.json"
+  [[ -f "${ROOT}/Queen/data/queen-test-roms.json" ]]
+  grep -q 'resolve_test_rom' "${ROOT}/Queen/lib/queen-chips.py"
   [[ -f "${ROOT}/data/field-chip-path-predict-seed.json" ]]
   grep -q 'code_path_prediction' "${ROOT}/data/field-chip-battery-doctrine.json"
   grep -q 'hard_percentages' "${ROOT}/lib/field-chip-battery.py"
-  local tmp_state sg
-  sg="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
   grep -q 'narrow_band' "${sg}/Grok16/data/g16-power-sort-doctrine.json"
   grep -q 'chip_paths' "${sg}/Grok16/lib/field-power-sort.py"
   tmp_state="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/Queen/lib/queen-chips.py" dispatch <<< '{"action":"launch","system":"nes","spawn_rtx":false}' \
+    | grep -q '"mode": "chips"'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
     pythong "${ROOT}/lib/field-chip-battery.py" verify | grep -q '"ok": true'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
@@ -2740,9 +3242,9 @@ test_chip_battery_combinatorics() {
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
     pythong "${ROOT}/lib/field-chip-battery.py" combinatronic | grep -q 'field-chips-combinatronic/v1'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
-    pythong "${sg}/Queen/lib/queen-chips.py" combinatronic | grep -q 'field-chips-combinatronic/v1'
+    pythong "${ROOT}/Queen/lib/queen-chips.py" combinatronic | grep -q 'field-chips-combinatronic/v1'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
-    python3 "$sg/Grok16/lib/field_combinatorics.py" publish | grep -q 'chip_battery'
+    python3 "$sg/Grok16/lib/field_combinatorics.py" publish | grep -q 'ironclad_chips'
 }
 
 run_test "chip battery combinatorics" test_chip_battery_combinatorics
@@ -3221,6 +3723,123 @@ test_h7c_neural_rebalance() {
 
 run_test "h7c neural rebalance" test_h7c_neural_rebalance
 
+test_future_war_h7c_block() {
+  [[ -f "${ROOT}/library/dewey/355-military-science/future_war/future_war.h7c" ]]
+  [[ -f "${ROOT}/library/dewey/355-military-science/future_war/future_war.md" ]]
+  grep -q 'format_v4' "${ROOT}/data/field-h7c-doctrine.json"
+  grep -q 'wrap_h7c_block' "${ROOT}/lib/field-h7c-compression.py"
+  grep -q 'field-layer-sweep' "${ROOT}/lib/field-h7-corpus-sync.py"
+  [[ -f "${ROOT}/lib/field-layer-sweep.py" ]]
+  tmp_state="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/field-h7c-compression.py" unpack \
+    "${ROOT}/library/dewey/355-military-science/future_war/future_war.h7c" | grep -q '"block_wrapper": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong -c "
+from pathlib import Path
+import importlib.util, sys
+root = Path('${ROOT}')
+spec = importlib.util.spec_from_file_location('h7c', root / 'lib/field-h7c-compression.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+raw = (root / 'library/dewey/355-military-science/future_war/future_war.md').read_text(encoding='utf-8')
+blob = (root / 'library/dewey/355-military-science/future_war/future_war.h7c').read_bytes()
+_, text, stats = mod.decompress_h7c(blob, verify=True)
+assert text == raw
+assert stats.get('field_layer') == 1
+print('ok')
+"
+  ! grep -rq '"layer": 0' "${ROOT}/data/field-combinatronic-spider-wire-doctrine.json" \
+    "${ROOT}/data/field-chips-iron-steel-plate-doctrine.json" 2>/dev/null
+}
+
+run_test "future war h7c block" test_future_war_h7c_block
+
+test_h7c_library_corrects() {
+  [[ -f "${ROOT}/lib/field-h7c-correct.py" ]]
+  grep -q '"corrects"' "${ROOT}/data/field-h7c-doctrine.json"
+  mkdir -p "${ROOT}/.nexus-state"
+  tmp_state="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong "${ROOT}/lib/field-h7c-correct.py" one \
+    "${ROOT}/library/dewey/700-arts/games/nes/nes_contra/nes_contra.h7c" --apply | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    pythong -c "
+import importlib.util
+from pathlib import Path
+root = Path('${ROOT}')
+spec = importlib.util.spec_from_file_location('h7c', root / 'lib/field-h7c-compression.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+blob = (root / 'library/dewey/700-arts/games/nes/nes_contra/nes_contra.h7c').read_bytes()
+_, text, stats = mod.decompress_h7c(blob, verify=True)
+assert stats.get('block_wrapper') is True
+if '## Corrects' in text:
+    assert 'H7c/4' in text or 'ironclad block' in text.lower()
+print('ok')
+"
+}
+
+run_test "h7c library corrects" test_h7c_library_corrects
+
+test_h7_format_disguise() {
+  [[ -f "${ROOT}/lib/field-h7-format.py" ]]
+  [[ -f "${ROOT}/data/field-h7-doctrine.json" ]]
+  grep -q '"format": "h7/7"' "${ROOT}/data/field-h7-doctrine.json"
+  grep -q 'fid="h7"' "${ROOT}/lib/field-file-formats.py"
+  mkdir -p "${ROOT}/.nexus-state"
+  tmp_state="$(mktemp -d)"
+  tmp_book="$(mktemp -d)"
+  echo '# Gate test' > "${tmp_book}/gate.md"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    python3 "${ROOT}/lib/field-h7-format.py" one "${tmp_book}/gate.md" --apply | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    python3 "${ROOT}/lib/field-h7-format.py" properties "${tmp_book}/gate.h7" | grep -q '"is_h7": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    python3 "${ROOT}/lib/field-h7-format.py" properties "${tmp_book}/gate.h7" | grep -q 'properties_only_reveal'
+}
+
+run_test "h7 format disguise" test_h7_format_disguise
+
+test_h7_universal_portable() {
+  [[ -f "${ROOT}/lib/field-h7-format.py" ]]
+  mkdir -p "${ROOT}/.nexus-state"
+  tmp_state="$(mktemp -d)"
+  tmp_dir="$(mktemp -d)"
+  printf '# Portable gate\n\nExact bytes.\n' > "${tmp_dir}/gate.md"
+  printf '\x89PNG\r\n\x1a\n\x00\x00\x00' > "${tmp_dir}/tiny.png"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    python3 "${ROOT}/lib/field-h7-format.py" adopt "${tmp_dir}/gate.md" --apply | grep -q '"changed": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    python3 "${ROOT}/lib/field-h7-format.py" adopt "${tmp_dir}/gate.md" --apply | grep -q 'already_h7'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    python3 "${ROOT}/lib/field-h7-format.py" instant "${tmp_dir}/gate.md" | grep -q '"instant": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    python3 "${ROOT}/lib/field-h7-format.py" properties "${tmp_dir}/gate.md" | grep -q 'h7/7-portable'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    python3 -c "
+import importlib.util
+from pathlib import Path
+root = Path('${ROOT}')
+spec = importlib.util.spec_from_file_location('h7', root / 'lib/field-h7-format.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+p = Path('${tmp_dir}/gate.md')
+blob = p.read_bytes()
+assert mod.is_h7_blob(blob)
+_, raw, _ = mod.decompress_bytes(blob, verify=True)
+assert raw.decode('utf-8').startswith('# Portable gate')
+png = Path('${tmp_dir}/tiny.png')
+mod.adopt_path(png, inplace=True, apply_corrects=False)
+pb = png.read_bytes()
+_, pr, _ = mod.decompress_bytes(pb, verify=True)
+assert pr[:8] == b'\x89PNG\r\n\x1a\n'
+print('ok')
+"
+}
+
+run_test "h7 universal portable" test_h7_universal_portable
+
 test_g16_compile_combinatronics() {
   local sg="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
   [[ -f "${sg}/Grok16/lib/g16-compile-combinatronics.py" ]]
@@ -3291,6 +3910,79 @@ test_file_formats_best_sort() {
 }
 
 run_test "file formats best sort" test_file_formats_best_sort
+
+test_no_field_files_gate() {
+  [[ -f "${ROOT}/lib/field-no-file-gate.py" ]]
+  [[ -f "${ROOT}/data/field-no-file-doctrine.json" ]]
+  grep -q 'no_field_files' "${ROOT}/lib/ironclad-field-sanity.py"
+  grep -q 'never_poison_the_well' "${ROOT}/lib/field-file-formats.py"
+  grep -q 'presumes_field_underneath' "${ROOT}/lib/field-file-formats.py"
+  grep -q 'queen-sovereign-bundle.json' "${ROOT}/Queen/lib/forge/field_tools.py"
+  sg="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
+  [[ -f "${sg}/Grok16/forge/g16-no-field-files.py" ]]
+  grep -q 'no_field_files' "${sg}/Grok16/forge/g16-field-sanity.py"
+  grep -q 'no_field_files' "${sg}/Grok16/forge/g16-linker.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$(mktemp -d)" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-no-file-gate.py" verify | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${sg}/Grok16/forge/g16-no-field-files.py" verify | grep -q '"ok": true'
+}
+
+run_test "no field files gate" test_no_field_files_gate
+
+test_hostess7_noti() {
+  [[ -f "${ROOT}/lib/noti.py" ]]
+  [[ -f "${ROOT}/lib/hostess7-noti.py" ]]
+  [[ -f "${ROOT}/data/noti-doctrine.json" ]]
+  grep -q 'hostess7_noti' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q 'noti_bridge' "${ROOT}/data/field-stack-manifest.json"
+  grep -q 'lib/noti.py' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
+  grep -q 'hostess7-noti.py' "${ROOT}/lib/field-io-packet.py"
+  nd="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$nd" SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" \
+    pythong "${ROOT}/lib/noti.py" json | grep -q 'noti-panel/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$nd" SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" \
+    pythong "${ROOT}/lib/hostess7-noti.py" seed | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$nd" SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" \
+    pythong "${ROOT}/lib/noti.py" taskbar | grep -q '"state"'
+  rm -rf "$nd"
+}
+
+run_test "hostess7 noti tie-in" test_hostess7_noti
+
+test_hostess7_system_control() {
+  [[ -f "${ROOT}/lib/hostess7-system-control.py" ]]
+  [[ -f "${ROOT}/data/hostess7-system-control-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-supreme-authority.json" ]]
+  grep -q 'hostess7_system_control' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q 'hostess7_in_charge' "${ROOT}/lib/field-command.py"
+  grep -q 'NEXUS_HOSTESS7_FULL_CONTROL=1' "${ROOT}/config/nexus.conf"
+  grep -q 'angel_hostess7' "${ROOT}/data/hostess7-supreme-authority.json"
+  grep -q 'hostess7_system_control' "${ROOT}/data/queen-angel-mandate.json"
+  nd="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$nd" NEXUS_HOSTESS7_FULL_CONTROL=1 \
+    pythong "${ROOT}/lib/hostess7-system-control.py" assume | grep -q '"assumed": true'
+  rm -rf "$nd"
+}
+
+run_test "hostess7 system control" test_hostess7_system_control
+
+test_hostess7_tasklist() {
+  [[ -f "${ROOT}/lib/hostess7-tasklist.py" ]]
+  [[ -f "${ROOT}/data/hostess7-tasklist-doctrine.json" ]]
+  grep -q 'hostess7_tasklist' "${ROOT}/lib/field-panel-parallel.py"
+  nd="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$nd" HOSTESS7_ROOT="${ROOT}/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-tasklist.py" seed | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$nd" HOSTESS7_ROOT="${ROOT}/Hostess7" \
+    pythong "${ROOT}/lib/hostess7-tasklist.py" report | grep -q 'OPEN'
+  tid="$(NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$nd" pythong "${ROOT}/lib/hostess7-tasklist.py" json | pythong -c 'import sys,json; print(json.load(sys.stdin)["open"][0]["id"])')"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$nd" \
+    pythong "${ROOT}/lib/hostess7-tasklist.py" complete "$tid" "test complete" | grep -q '"status": "completed"'
+  rm -rf "$nd"
+}
+
+run_test "hostess7 tasklist" test_hostess7_tasklist
 
 test_combinatronic_balance() {
   [[ -f "${ROOT}/lib/field-combinatronic-balance.py" ]]
@@ -3394,6 +4086,85 @@ test_steel_neural_plates() {
 }
 
 run_test "steel neural plates" test_steel_neural_plates
+
+test_chips_plate_stack() {
+  [[ -f "${ROOT}/lib/field-chips-plate-stack.py" ]]
+  [[ -f "${ROOT}/data/field-chips-iron-steel-plate-doctrine.json" ]]
+  grep -q 'chips_plate_stack' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q 'chips_plate_stack' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'chips_plate_stack' "${ROOT}/data/field-plate-meld-doctrine.json"
+  grep -q 'sovereign_time_only' "${ROOT}/data/field-chips-iron-steel-plate-doctrine.json"
+  grep -q 'steel_rewrite' "${ROOT}/data/field-chips-iron-steel-plate-doctrine.json"
+  grep -q 'steel_family' "${ROOT}/lib/field-chips-plate-stack.py"
+  grep -q 'field-steel-plate-optimal' "${ROOT}/data/field-chips-iron-steel-plate-doctrine.json"
+  [[ -f "${ROOT}/lib/field-steel-plate-optimal.py" ]]
+  grep -q 'direct_neural_calculator' "${ROOT}/lib/field-chips-plate-stack.py"
+  grep -q 'organize_chip_paths' "${ROOT}/lib/iron-plate-organize.py"
+  grep -q '/api/chips/plate-stack' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/chips/plate-stack' "${ROOT}/Queen/lib/queen-world.py"
+  grep -q 'chips_plate_stack' "${ROOT}/lib/g16-combinatronic-rebalance.py"
+  grep -q 'plate_stack' "${ROOT}/data/field-ironclad-chips-combinatorics-doctrine.json"
+  [[ -f "${ROOT}/lib/field-chips-core.py" ]]
+  [[ -f "${ROOT}/data/field-chips-core-doctrine.json" ]]
+  grep -q 'chips_core' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q 'chips_core' "${ROOT}/lib/field-plate-meld.py"
+  grep -q 'condense_after_ironclad' "${ROOT}/lib/field-chips-core.py"
+  grep -q '/api/chips/core' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/chips/core' "${ROOT}/Queen/lib/queen-world.py"
+  grep -q 'chips_core' "${ROOT}/lib/g16-combinatronic-rebalance.py"
+  grep -q 'qcc-chips-core' "${ROOT}/Queen/world/queen-chips-cores.html"
+  local tmp_state sg
+  sg="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
+  tmp_state="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-ironclad-chips-combinatorics.py" publish >/dev/null
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-steel-neural-plates.py" build >/dev/null
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-chips-plate-stack.py" build | grep -q 'field-chips-plate-stack/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-chips-plate-stack.py" verify | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-chips-plate-stack.py" wire | grep -q 'sovereign_linear_ns'
+  grep -q 'field-plate-rebalance-derivatives' "${ROOT}/lib/field-chips-plate-stack.py"
+  grep -q 'plate_rebalance_derivatives' "${ROOT}/lib/g16-combinatronic-rebalance.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-plate-rebalance-derivatives.py" verify | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/g16-combinatronic-rebalance.py" plate_derivatives | grep -q 'central_difference'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-chips-core.py" build | grep -q 'field-chips-core/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-chips-core.py" verify | grep -q '"ok": true'
+}
+
+run_test "chips plate stack" test_chips_plate_stack
+
+test_chips_program_usage() {
+  [[ -f "${ROOT}/lib/field-chips-program-usage.py" ]]
+  [[ -f "${ROOT}/data/field-chips-program-usage-doctrine.json" ]]
+  [[ -f "${ROOT}/data/field-chips-program-usage-seed.json" ]]
+  grep -q 'chips_program_usage' "${ROOT}/lib/field-panel-parallel.py"
+  grep -q '/api/chips/usage' "${ROOT}/lib/threat-panel-http.py"
+  grep -q '/api/chips/usage' "${ROOT}/Queen/lib/queen-world.py"
+  grep -q 'chips_usage' "${ROOT}/Queen/lib/queen-kilroy.py"
+  grep -q 'chips_usage' "${ROOT}/Queen/lib/queen-desktop.py"
+  grep -q 'kilroy_integration' "${ROOT}/data/field-chips-program-usage-doctrine.json"
+  local tmp_state sg
+  sg="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
+  tmp_state="$(mktemp -d)"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
+    pythong "${ROOT}/lib/field-ironclad-chips-combinatorics.py" publish >/dev/null
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" \
+    pythong "${ROOT}/lib/field-chips-program-usage.py" resolve browser | grep -q 'field-chips-program-usage/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" \
+    pythong "${ROOT}/lib/field-chips-program-usage.py" kilroy | grep -q '"program_id": "kilroy"'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" \
+    pythong "${ROOT}/lib/field-chips-program-usage.py" publish | grep -q 'field-chips-program-usage-registry/v1'
+  rm -rf "$tmp_state"
+}
+
+run_test "chips program usage universal" test_chips_program_usage
 
 test_cpu_library_font_clipboard() {
   [[ -f "${ROOT}/lib/field-cpu-library.py" ]]
@@ -3942,6 +4713,9 @@ run_test "NewLatest stack wired" test_newlatest_stack_wired
 run_test "panel browser boot open" test_panel_browser_boot_open
 run_test "nexus boot impl" test_nexus_boot_impl
 run_test "queen benchmark lane" test_queen_benchmark
+run_test "queen bookmarks flyout ironclad" test_queen_bookmarks_flyout
+run_test "queen browser bookmarks full" test_queen_browser_bookmarks_full
+run_test "queen visit list scum purge" test_queen_visit_list
 run_test "queen browser os inside" test_queen_browser_os_inside
 run_test "field host desktop module" test_field_host_desktop_module
 run_test "field OS shell" test_field_os_shell
@@ -3950,7 +4724,22 @@ run_test "field KeePass" test_field_keepass
 run_test "field GPU control" test_field_gpu_control
 run_test "field shell dock" test_field_shell_dock
 run_test "field audio settings" test_field_audio_settings
+run_test "field display settings" test_field_display_settings
+run_test "field ammoos blocks" test_field_ammoos_blocks
+run_test "queen thermal manager" test_queen_thermal_manager
+run_test "queen final ear mouth" test_queen_final_ear_mouth
+run_test "queen canvas renderer" test_queen_canvas_renderer
+run_test "field video codec pipe" test_field_video_codec_pipe
+run_test "field audio secure bind" test_field_audio_secure_bind
+run_test "field big drive" test_field_big_drive
 run_test "field g16 launch" test_field_g16_launch
+run_test "nexus c2 overhaul" test_nexus_c2_overhaul
+run_test "ammoos hot incorporate" test_ammoos_incorporate
+run_test "ammoos coexist reconcile" test_ammoos_coexist_reconcile
+run_test "ammoos startup sovereignty" test_ammoos_startup_sovereignty
+run_test "ammoos program shell" test_ammoos_program_shell
+run_test "ammoos themes and secured defaults" test_ammoos_themes_and_security
+run_test "ammoos update your os" test_ammoos_update_os
 run_test "field popcorn player" test_field_popcorn
 run_test "field ellie fier threat plate" test_field_ellie_fier
 run_test "plate meld orchestrator" test_plate_meld_orchestrator
@@ -4140,10 +4929,36 @@ run_test "seal vault refresh/verify" test_seal_vault_refresh_verify
 run_test "tamper guard restore from seal" test_tamper_guard_restore
 run_test "panel HTTP loopback hardening" test_panel_http_loopback
 run_test "ZNetwork triple-check publish" test_znetwork_field
+run_test "ZNetwork smart inside passthrough" test_znetwork_smart_inside
+run_test "ZNetwork exploit shield zero-day behavioral" test_znetwork_exploit_shield
+run_test "ZNetwork relayer sole internet stack" test_znetwork_relayer
+run_test "ZNetwork replace in place retires old stack" test_znetwork_replace_in_place
 run_test "ZNetwork handler retire no sudo" test_znetwork_handler_retire
+run_test "ZNetwork startup retire host networking" test_znetwork_startup_retire
+run_test "ZNetwork wireless FCC trace strike" test_znetwork_wireless_fcc
 run_test "vestigial cleanup on boot" test_vestigial_cleanup
 run_test "ZNetwork tray flow and panel slice" test_znetwork_tray_flow
+run_test "ZNetwork secure vault ZISV" test_znetwork_secure_vault
+run_test "ZNetwork operator registry BSP" test_znetwork_operator_registry
 run_test "ZNetwork hostile threat detection" test_znetwork_hostile_threat
+
+test_hostess7_znetwork_wire() {
+  [[ -f "${ROOT}/lib/hostess7-znetwork-wire.py" ]]
+  [[ -f "${ROOT}/data/hostess7-communication-profile.json" ]]
+  [[ -f "${ROOT}/scripts/build-hostess7-comm-profile.py" ]]
+  grep -q 'hostess7_superintel' "${ROOT}/data/znetwork-doctrine.json"
+  grep -q 'znetwork_wire' "${ROOT}/Hostess7/data/hostess7-ai-communique.json"
+  grep -q 'znetwork_wire' "${ROOT}/Hostess7/data/hostess7-neural-stack.json"
+  grep -q '/api/hostess7/znetwork' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'zn-hostess' "${ROOT}/panel/field-znetwork.html"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
+    pythong "${ROOT}/lib/hostess7-znetwork-wire.py" status | grep -q '"schema": "hostess7-znetwork-wire/v1"'
+  profile="$(NEXUS_INSTALL_ROOT="$ROOT" pythong "${ROOT}/lib/hostess7-znetwork-wire.py" profile)"
+  echo "$profile" | grep -q 'ZacharyGeurts'
+  echo "$profile" | grep -q 'x.com/ZacharyGeurts'
+}
+
+run_test "Hostess7 ZNetwork wire local comm profile" test_hostess7_znetwork_wire
 
 test_field_standalone_runtime() {
   [[ -f "${ROOT}/lib/nexus-common.sh" ]]
@@ -4810,6 +5625,93 @@ test_geography_training() {
 }
 
 run_test "Hostess 7 geography training" test_geography_training
+test_archaeology_training() {
+  [[ -f "${ROOT}/lib/hostess7-archaeology-training.py" ]]
+  [[ -f "${ROOT}/data/hostess7-archaeology-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-archaeology-battery.json" ]]
+  [[ -f "${ROOT}/Hostess7/scripts/field_archaeology_catalog.py" ]]
+  [[ -f "${ROOT}/Hostess7/scripts/field_archaeology_truth.py" ]]
+  [[ -f "${ROOT}/library/dewey/930-archaeology/shelf.json" ]]
+  grep -q 'wikibooks_archaeology' "${ROOT}/data/hostess7-archaeology-doctrine.json"
+  grep -q 'archaeology' "${ROOT}/data/hostess7-training-doctrine.json"
+  grep -q 'ironclad_corroboration' "${ROOT}/data/hostess7-archaeology-battery.json"
+  grep -q '/api/hostess7/archaeology' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'archaeology_training' "${ROOT}/data/ironclad-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-archaeology-training.py" textbook | grep -q 'wikibooks_archaeology'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-archaeology-training.py" help "stratigraphy superposition" --ai | grep -q 'archaeology'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-archaeology-training.py" train 8 | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-archaeology-training.py" json | grep -q 'hostess7-archaeology/v1'
+  pythong "${ROOT}/Hostess7/scripts/field_archaeology_catalog.py" count | grep -q '"count": 5'
+}
+
+run_test "Hostess 7 archaeology textbook" test_archaeology_training
+test_geology_training() {
+  [[ -f "${ROOT}/lib/hostess7-geology-training.py" ]]
+  [[ -f "${ROOT}/data/hostess7-geology-doctrine.json" ]]
+  [[ -f "${ROOT}/data/hostess7-geology-battery.json" ]]
+  [[ -f "${ROOT}/Hostess7/scripts/field_geology_catalog.py" ]]
+  [[ -f "${ROOT}/library/dewey/550-geology/shelf.json" ]]
+  grep -q 'gutenberg_textbook_geology' "${ROOT}/data/hostess7-geology-doctrine.json"
+  grep -q 'geology' "${ROOT}/data/hostess7-training-doctrine.json"
+  grep -q '/api/hostess7/geology' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'geology_training' "${ROOT}/data/ironclad-doctrine.json"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-geology-training.py" textbook | grep -q 'gutenberg_textbook_geology'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-geology-training.py" help "plate tectonics convergent" --ai | grep -q 'geology'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-geology-training.py" train 8 | grep -q '"ok": true'
+  pythong "${ROOT}/Hostess7/scripts/field_geology_catalog.py" count | grep -q '"count": 4'
+}
+
+run_test "Hostess 7 geology textbook" test_geology_training
+test_chemistry_training() {
+  [[ -f "${ROOT}/lib/hostess7-chemistry-training.py" ]]
+  [[ -f "${ROOT}/data/hostess7-chemistry-doctrine.json" ]]
+  [[ -f "${ROOT}/data/periodic-table-elements.json" ]]
+  [[ -f "${ROOT}/data/periodic-table-isotopes.json" ]]
+  [[ -f "${ROOT}/library/dewey/546-periodic-table/shelf.json" ]]
+  grep -q 'ironclad_periodic_table' "${ROOT}/data/hostess7-chemistry-doctrine.json"
+  grep -q '"count": 118' "${ROOT}/data/periodic-table-elements.json"
+  grep -q 'chemistry' "${ROOT}/data/hostess7-training-doctrine.json"
+  grep -q '/api/hostess7/chemistry' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-chemistry-training.py" textbook | grep -q 'ironclad_periodic_table'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-chemistry-training.py" help "carbon-14 half-life" --ai | grep -q 'chemistry'
+  pythong "${ROOT}/Hostess7/scripts/field_chemistry_catalog.py" count | grep -q '"count": 3'
+}
+
+run_test "Hostess 7 periodic table textbook" test_chemistry_training
+test_history_training() {
+  [[ -f "${ROOT}/lib/hostess7-history-training.py" ]]
+  [[ -f "${ROOT}/data/hostess7-history-doctrine.json" ]]
+  [[ -f "${ROOT}/library/dewey/909-contemporary-history/shelf.json" ]]
+  [[ -f "${ROOT}/library/dewey/909-contemporary-history/history_year_2020/book.json" ]]
+  grep -q 'history_year_2000' "${ROOT}/data/hostess7-history-doctrine.json"
+  grep -q '"year_range"' "${ROOT}/library/dewey/909-contemporary-history/shelf.json"
+  grep -q 'history' "${ROOT}/data/hostess7-training-doctrine.json"
+  grep -q '/api/hostess7/history' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-history-training.py" textbook | grep -q 'history_year_2000'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-history-training.py" help "what happened in 2020" --ai | grep -q 'history'
+  pythong "${ROOT}/Hostess7/scripts/field_history_catalog.py" count | grep -q '"count": 27'
+  [[ -f "${ROOT}/data/history-lies-of-the-year.json" ]]
+  [[ -f "${ROOT}/data/history-lies-policy.json" ]]
+  grep -q 'LIES OF THE YEAR' "${ROOT}/library/dewey/909-contemporary-history/history_year_2020/book.json"
+  grep -q 'lies_of_the_year' "${ROOT}/library/dewey/909-contemporary-history/history_year_2020/pages/page-003-lies-of-the-year.json"
+  grep -q 'forbidden' "${ROOT}/data/history-lies-policy.json"
+  grep -q '/api/hostess7/history/lies' "${ROOT}/lib/threat-panel-http.py"
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    pythong "${ROOT}/lib/hostess7-history-training.py" lies 2020 | grep -q 'LIES OF THE YEAR'
+}
+
+run_test "Hostess 7 history year blocks" test_history_training
 test_reality_physics_training() {
   [[ -f "${ROOT}/lib/hostess7-reality-physics-training.py" ]]
   [[ -f "${ROOT}/data/hostess7-reality-physics-doctrine.json" ]]

@@ -359,11 +359,33 @@
     renderLeaves(doc);
   }
 
+  function renderChipsCore(doc) {
+    const el = $("qcc-chips-core");
+    if (!el) return;
+    const panel = doc?.panel || doc || {};
+    const counts = panel.counts || {};
+    if (panel.condensed == null && panel.pending == null) {
+      el.innerHTML = '<p class="qcc-muted">CHIPS core loading…</p>';
+      return;
+    }
+    el.innerHTML = [
+      `<div class="qcc-core-meta">`,
+      `<span>state <strong>${panel.condensed ? "condensed" : "scattered"}</strong></span>`,
+      `<span>ironclad <strong>${panel.ironclad_sealed ? "sealed" : "open"}</strong></span>`,
+      `<span>modules <strong>${counts.core_modules ?? "—"}</strong></span>`,
+      `<span>chips <strong>${counts.chips ?? "—"}</strong></span>`,
+      `<span>ratio <strong>${counts.compression_ratio ?? "—"}×</strong></span>`,
+      `</div>`,
+      `<p class="qcc-muted">${esc(panel.posture || "")}</p>`,
+    ].join("");
+  }
+
   async function refresh() {
-    const [chips, boot, comb, visuals, spider, growth, plateDims, combinamatrix, universalNeural, steelPlates, sequence] = await Promise.all([
+    const [chips, boot, comb, chipsCore, visuals, spider, growth, plateDims, combinamatrix, universalNeural, steelPlates, sequence] = await Promise.all([
       fetch("/api/chips", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch("/api/queen-boot", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch("/api/chips/combinatronic", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch("/api/chips/core", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch("/api/combinatronic/visuals", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch("/api/combinatronic/spider-wire", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch("/api/combinatronics/growth", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
@@ -381,10 +403,13 @@
     const die = bootDoc.chips || bootDoc.cores || [];
     const battery = chipsDoc.chip_battery || {};
 
+    const coreDoc = chipsCore || {};
+    const corePanel = coreDoc.panel || coreDoc || {};
     $("qcc-status").innerHTML = [
       `<span class="gr-pill${tree.present ? " ok" : ""}">CHIPS ${tree.headers || 0}</span>`,
       `<span class="gr-pill${g16.ready ? " ok" : ""}">G16 ${esc(g16.profile || "field_opt")}</span>`,
       `<span class="gr-pill${combDoc.ok !== false ? " ok" : ""}">Combinatronic ${battery.leaf_count ?? combDoc.leaf_count ?? "—"}</span>`,
+      `<span class="gr-pill${corePanel.condensed ? " ok" : ""}">Core ${corePanel.condensed ? "sealed" : "pending"}</span>`,
       `<span class="gr-pill ok">Webbrowser</span>`,
     ].join("");
 
@@ -402,6 +427,7 @@
       : "<p>Boot map loading…</p>";
 
     renderCombinatronic(combDoc, visuals || {});
+    renderChipsCore(coreDoc);
     renderGrowth(growth || {});
     renderPlateDimensions(plateDims || {});
     renderCombinamatrix(combinamatrix || {});

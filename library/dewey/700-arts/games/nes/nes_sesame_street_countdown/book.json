@@ -1,0 +1,10 @@
+{
+  "id": "nes_sesame_street_countdown",
+  "title": "Sesame Street Countdown",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_sesame_street_countdown/nes_sesame_street_countdown.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_sesame_street_countdown-box.png",
+  "ready": true
+}

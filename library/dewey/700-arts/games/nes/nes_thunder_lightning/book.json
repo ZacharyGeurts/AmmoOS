@@ -1,0 +1,10 @@
+{
+  "id": "nes_thunder_lightning",
+  "title": "Thunder & Lightning",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_thunder_lightning/nes_thunder_lightning.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_thunder_lightning-box.png",
+  "ready": true
+}

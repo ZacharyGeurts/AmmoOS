@@ -1,0 +1,12 @@
+{
+  "id": "nes_indiana_jones_and_the_temple_of_doom",
+  "title": "Indiana Jones and the Temple of Doom",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_indiana_jones_and_the_temple_of_doom-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_indiana_jones_and_the_temple_of_doom/nes_indiana_jones_and_the_temple_of_doom.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

@@ -29,6 +29,16 @@
     iconOverrides: null,
     previewOn: true,
     previewPath: "",
+    searchQ: "",
+    searchTimer: null,
+    searchMode: "local",
+    fileTypes: null,
+    library: null,
+    typeFilter: null,
+    typesSearch: "",
+    librarySearch: "",
+    libraryTab: "programs",
+    libraryFacet: { kind: "", dewey: "", platform: "" },
   };
 
   function $(id) {
@@ -549,6 +559,7 @@
     bindAlwaysPreviewActions(body);
     const mountEl = body?.querySelector(".qf-preview-viewer") || body;
     const out = await QV.mount(mountEl, path, entry);
+    global.QueenZoomLightbox?.bind?.(mountEl);
     if (langEl) langEl.textContent = out?.language || "";
     if (codeBtn) {
       codeBtn.hidden = false;
@@ -559,6 +570,30 @@
   function codeViewerUrl(path) {
     const base = `${location.origin}/world/queen-code.html`;
     return `${base}?path=${encodeURIComponent(path)}`;
+  }
+
+  const BIG_DRIVE_EXTS = new Set([
+    ".iso", ".cue", ".chd", ".img", ".ima", ".flp", ".dsk", ".raw", ".dd",
+    ".vhd", ".vhdx", ".vdi", ".qcow2", ".qcow", ".dmg", ".fielddrive", ".bin", ".nrg",
+  ]);
+
+  function panelPort() {
+    try {
+      return parent?.document?.body?.dataset?.nexusPanelPort || document.body?.dataset?.nexusPanelPort || "9477";
+    } catch (_) {
+      return "9477";
+    }
+  }
+
+  function bigDriveEligible(entry) {
+    if (!entry || entry.kind === "dir") return false;
+    if (entry.file_type?.big_drive) return true;
+    const ext = (entry.path || "").toLowerCase().replace(/.*(\.[^./]+)$/, "$1");
+    return BIG_DRIVE_EXTS.has(ext);
+  }
+
+  function bigDriveUrl(path) {
+    return `http://127.0.0.1:${panelPort()}/field-big-drive?path=${encodeURIComponent(path)}`;
   }
 
   function openInTab(path) {
@@ -980,6 +1015,13 @@
     if (!isDir && action === "open_code") {
       items.push({ id: "code", label: "Open in Queen Code", action: () => navigateUrl(codeViewerUrl(entry.path)) });
     }
+    if (!isDir && bigDriveEligible(entry)) {
+      items.push({
+        id: "bigdrive",
+        label: "Open in Big Drive",
+        action: () => navigateUrl(bigDriveUrl(entry.path)),
+      });
+    }
     if (!isDir && action === "launch_spv") {
       items.push({ id: "launch", label: "Launch SPIR-V", action: () => launchSpv(entry.path) });
     }
@@ -1123,6 +1165,30 @@
     }
   }
 
+  function jumpToSearchMatch(q) {
+    const box = $("qf-rows");
+    if (!box || !q) return;
+    const needle = q.trim().toLowerCase();
+    if (!needle) return;
+    let first = null;
+    box.querySelectorAll(".qf-row").forEach((row) => {
+      const name = (row.querySelector(".name span")?.textContent || "").toLowerCase();
+      const match = name.includes(needle);
+      row.classList.toggle("match", match);
+      row.classList.toggle("hidden-by-search", !match);
+      if (match && !first) first = row;
+    });
+    if (first) {
+      first.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      const path = first.dataset.path;
+      if (path) {
+        state.selected = path;
+        box.querySelectorAll(".qf-row").forEach((r) => r.classList.toggle("selected", r.dataset.path === path));
+        showPreview(path);
+      }
+    }
+  }
+
   function renderRows(entries) {
     const box = $("qf-rows");
     if (!box) return;
@@ -1130,20 +1196,28 @@
     if (state.launchablesOnly) {
       rows = rows.filter((e) => e.launchable || e.file_type?.launchable || e.action === "run_launchable" || e.file_type?.action === "run_launchable");
     }
+    if (state.typeFilter) {
+      rows = rows.filter((e) => (e.file_type?.type_id || e.ext?.replace(".", "")) === state.typeFilter);
+    }
     state.entries = rows;
     if (!rows?.length) {
       box.innerHTML = '<div class="qf-empty">Empty folder</div>';
       return;
     }
     const sorted = sortEntries(rows);
+    const q = (state.searchQ || "").trim().toLowerCase();
     box.innerHTML = sorted
       .map(
-        (e) => `
-      <div class="qf-row${state.selected === e.path ? " selected" : ""}" data-path="${esc(e.path)}" data-kind="${esc(e.kind)}" data-action="${esc(entryAction(e))}">
+        (e) => {
+          const match = q && (e.name || "").toLowerCase().includes(q);
+          const hide = q && !match;
+          return `
+      <div class="qf-row${state.selected === e.path ? " selected" : ""}${match ? " match" : ""}${hide ? " hidden-by-search" : ""}" data-path="${esc(e.path)}" data-kind="${esc(e.kind)}" data-action="${esc(entryAction(e))}">
         <div class="name">${iconHtml(resolveIcon(e), e)}<span>${esc(e.name)}</span>${alwaysKnowsBadge(e)}</div>
         <div class="meta">${alwaysMeta(e) || launchMeta(e)}</div>
         <div class="meta">${fmtTime(e.mtime)}</div>
-      </div>`,
+      </div>`;
+        },
       )
       .join("");
     box.querySelectorAll(".qf-row").forEach((row) => {
@@ -1175,6 +1249,7 @@
         );
       });
     });
+    if (q) jumpToSearchMatch(q);
     const hotbar = $("qf-hotbar");
     hotbar?.addEventListener("dragover", (e) => {
       if (e.dataTransfer?.types?.includes("application/x-queen-file")) {
@@ -1272,10 +1347,17 @@
     });
   }
 
-  async function runSearch() {
+  async function runSearch(deep) {
     const q = ($("qf-search")?.value || "").trim();
+    state.searchQ = q;
     if (!q) {
+      state.searchMode = "local";
       await openPath(state.path);
+      return;
+    }
+    if (!deep && state.entries.length) {
+      renderRows(state.entries);
+      $("qf-status-left").textContent = `Filtering ${state.entries.length} items · “${q}”`;
       return;
     }
     const out = await api({ action: "search", path: state.path, query: q });
@@ -1283,11 +1365,318 @@
       $("qf-status-left").textContent = `Search blocked: ${out.error || "failed"}`;
       return;
     }
+    state.searchMode = "deep";
     state.launchables = [];
     renderLaunchablesPanel([]);
     renderRows(out.hits || []);
     $("qf-status-left").textContent = `${out.count || 0} hits for “${q}” under ${out.path}`;
-    $("qf-status-right").textContent = out.truncated ? "Search capped" : "Wishlist search · jail active";
+    $("qf-status-right").textContent = out.truncated ? "Search capped" : "Deep search · jail active";
+  }
+
+  function onSearchInput() {
+    const el = $("qf-search");
+    const q = (el?.value || "").trim();
+    state.searchQ = q;
+    clearTimeout(state.searchTimer);
+    if (!q) {
+      state.searchMode = "local";
+      openPath(state.path);
+      return;
+    }
+    if (state.entries.length) {
+      renderRows(state.entries);
+      $("qf-status-left").textContent = `Instant · “${q}”`;
+    }
+    state.searchTimer = setTimeout(() => {
+      if (q.length >= 2) runSearch(true);
+    }, 320);
+  }
+
+  function typeIcon(t) {
+    return t?.global_icon || t?.program_icon || "📄";
+  }
+
+  function renderTypeBar() {
+    const bar = $("qf-type-bar");
+    const types = state.fileTypes?.types || {};
+    const pins = state.fileTypes?.type_prefs?.bar_pins || [];
+    if (!bar) return;
+    if (!pins.length) {
+      bar.hidden = true;
+      return;
+    }
+    bar.hidden = false;
+    bar.innerHTML = pins
+      .map((tid) => {
+        const t = types[tid];
+        if (!t) return "";
+        const active = state.typeFilter === tid;
+        return `<button type="button" class="qf-type-chip${active ? " active" : ""}" data-type="${esc(tid)}" title="${esc(t.label)}"><span class="ico">${typeIcon(t)}</span>${esc(t.label)}</button>`;
+      })
+      .join("");
+    bar.querySelectorAll(".qf-type-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.typeFilter = state.typeFilter === btn.dataset.type ? null : btn.dataset.type;
+        renderTypeBar();
+        renderRows(state.entries);
+      });
+    });
+  }
+
+  function renderTypesDrawer() {
+    const body = $("qf-types-body");
+    if (!body) return;
+    const types = state.fileTypes?.types || {};
+    const q = (state.typesSearch || "").trim().toLowerCase();
+    const rows = Object.entries(types).filter(([tid, t]) => {
+      if (!q) return true;
+      const hay = `${tid} ${t.label || ""} ${(t.extensions || []).join(" ")}`.toLowerCase();
+      return hay.includes(q);
+    });
+    body.innerHTML = rows
+      .map(([tid, t]) => {
+        const flags = t.flags || {};
+        const exts = (t.extensions || []).slice(0, 6).join(", ");
+        return (
+          `<details class="qf-type-row" data-type="${esc(tid)}">` +
+          `<summary><span class="ico">${typeIcon(t)}</span><strong>${esc(t.label || tid)}</strong>` +
+          `<span class="qf-lib-meta">${esc(exts || "—")}</span></summary>` +
+          `<div class="qf-type-detail">` +
+          `<div><code>${esc(tid)}</code> · action <code>${esc(t.settings?.action || t.action || "?")}</code> · open <code>${esc(t.settings?.open_with || t.open_with || "—")}</code></div>` +
+          `<div class="qf-type-flags">` +
+          `<button type="button" class="qf-flag${flags.compileable ? " on" : ""}" data-flag="compileable" data-type="${esc(tid)}">Compile</button>` +
+          `<button type="button" class="qf-flag${flags.launchable ? " on" : ""}" data-flag="launchable" data-type="${esc(tid)}" disabled>Launch</button>` +
+          `<button type="button" class="qf-flag${flags.on_bar ? " on" : ""}" data-flag="on_bar" data-type="${esc(tid)}">On bar</button>` +
+          `<button type="button" class="qf-flag${flags.preview !== false ? " on" : ""}" data-flag="preview" data-type="${esc(tid)}">Preview</button>` +
+          `</div></div></details>`
+        );
+      })
+      .join("");
+    body.querySelectorAll(".qf-flag[data-flag='on_bar']").forEach((btn) => {
+      btn.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        const out = await api({ action: "toggle_type_flag", type_id: btn.dataset.type, key: "on_bar", toggle: true });
+        if (out.ok) {
+          state.fileTypes = out;
+          renderTypeBar();
+          renderTypesDrawer();
+        }
+      });
+    });
+    body.querySelectorAll(".qf-flag[data-flag='compileable']").forEach((btn) => {
+      btn.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        const out = await api({ action: "toggle_type_flag", type_id: btn.dataset.type, key: "compileable", toggle: true });
+        if (out.ok) {
+          state.fileTypes = out;
+          renderTypesDrawer();
+        }
+      });
+    });
+    body.querySelectorAll(".qf-flag[data-flag='preview']").forEach((btn) => {
+      btn.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        const tid = btn.dataset.type;
+        const cur = (state.fileTypes?.types || {})[tid]?.flags?.preview !== false;
+        const out = await api({ action: "set_type_pref", type_id: tid, key: "preview", value: !cur });
+        if (out.ok) {
+          state.fileTypes = out;
+          renderTypesDrawer();
+        }
+      });
+    });
+  }
+
+  function renderLibraryFacets(facets) {
+    const wrap = $("qf-library-facets");
+    if (!wrap) return;
+    const f = facets || state.library?.facets || {};
+    const chips = [];
+    const active = state.libraryFacet || {};
+    chips.push(
+      `<button type="button" class="qf-lib-chip${!active.kind && !active.dewey && !active.platform ? " on" : ""}" data-facet="clear">All</button>`
+    );
+    for (const row of (f.kinds || []).slice(0, 8)) {
+      const on = active.kind === row.id ? " on" : "";
+      chips.push(
+        `<button type="button" class="qf-lib-chip${on}" data-facet-kind="${esc(row.id)}">${esc(row.id)} (${row.count})</button>`
+      );
+    }
+    for (const row of (f.dewey || []).slice(0, 6)) {
+      const on = active.dewey === row.code ? " on" : "";
+      chips.push(
+        `<button type="button" class="qf-lib-chip qf-lib-chip--dewey${on}" data-facet-dewey="${esc(row.code)}" title="${esc(row.label)}">${esc(row.code)} · ${esc(row.label)} (${row.count})</button>`
+      );
+    }
+    wrap.innerHTML = chips.join("");
+    wrap.querySelectorAll("[data-facet]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.libraryFacet = { kind: "", dewey: "", platform: "" };
+        renderLibraryFacets(f);
+        searchLibrary(state.librarySearch);
+      });
+    });
+    wrap.querySelectorAll("[data-facet-kind]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.facetKind || "";
+        state.libraryFacet.kind = state.libraryFacet.kind === id ? "" : id;
+        renderLibraryFacets(f);
+        searchLibrary(state.librarySearch);
+      });
+    });
+    wrap.querySelectorAll("[data-facet-dewey]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const code = btn.dataset.facetDewey || "";
+        state.libraryFacet.dewey = state.libraryFacet.dewey === code ? "" : code;
+        renderLibraryFacets(f);
+        searchLibrary(state.librarySearch);
+      });
+    });
+  }
+
+  function libraryCoverUrl(p) {
+    return p.cover_url || p.box_art_url || p.cover || p.icon_url || global.QueenIconEngine?.libraryIconUrl?.(p.id) || "";
+  }
+
+  function renderLibraryDrawer(items, meta) {
+    const body = $("qf-library-body");
+    if (!body) return;
+    if (state.libraryTab === "nes") {
+      body.innerHTML = '<p class="qf-empty">Loading NES cartridge theater…</p>';
+      global.QueenNesTheater?.loadCatalog?.(48).then((out) => {
+        if (out?.ok) global.QueenNesTheater?.render?.(body, out.entries);
+        else body.innerHTML = '<p class="qf-empty">NES catalog not built — run field-nes-cartridge-forge build.</p>';
+      });
+      return;
+    }
+    const list = items || state.library?.programs || [];
+    const policy = state.library?.policy || {};
+    if (!list.length) {
+      body.innerHTML =
+        '<p class="qf-empty">Library empty — Scan builds the Dewey-classified icon index (zero disk copy).</p>';
+      return;
+    }
+    const policyNote = policy.icon_cache === false ? " · zero-copy · Dewey" : "";
+    const scoreNote = meta?.search_engine ? ` · ${meta.search_engine}` : "";
+    $("qf-status-right").textContent = `Library · ${meta?.count ?? list.length} shown · ${state.library?.count || 0} total${policyNote}${scoreNote}`;
+    body.innerHTML = list
+      .map((p) => {
+        const ai = p.ai || {};
+        const cmd = ai.command || p.exec || p.command || "";
+        const cover = libraryCoverUrl(p);
+        const thumb = cover || "";
+        const dewey = p.dewey ? `${p.dewey}${p.dewey_label ? ` · ${p.dewey_label}` : ""}` : "";
+        const score = p.score != null && p.score > 0 ? `<span class="qf-lib-score">${p.score}</span>` : "";
+        const lic = p.license_label ? `<br><span class="qf-lib-lic">${esc(p.license_label)}</span>` : "";
+        return (
+          `<div class="qf-lib-row${cover ? " qf-lib-row--cover" : ""}" data-queen-ai-operate="${esc(ai.operate || "open")}"` +
+          ` data-queen-ai-command="${esc(cmd)}" data-queen-ai-name="${esc(p.name || "")}"` +
+          ` data-queen-icon-ref="${esc(p.id || "")}">` +
+          (thumb
+            ? `<div class="qf-lib-cover"><img class="qz-zoomable" src="${esc(thumb)}" alt="${esc(p.name || "")}" loading="lazy" decoding="async" /></div>`
+            : `<span class="ico">📦</span>`) +
+          `<div><strong>${esc(p.name)}</strong>${score}` +
+          `<code>${esc(cmd)}</code>` +
+          `<div class="qf-lib-meta">` +
+          `${esc(p.kind || ai.kind || "")} · ${esc(p.source || "")} · ${esc(p.serve_mode || "")}` +
+          (dewey ? `<br><span class="qf-lib-dewey">${esc(dewey)}</span>` : "") +
+          (p.genre ? `<br>Genre: ${esc(p.genre)}` : "") +
+          (p.console_id ? `<br>Platform: ${esc(p.console_id)}` : "") +
+          (p.year ? `<br>Year: ${esc(p.year)}` : "") +
+          lic +
+          (p.has_rom ? `<br><span class="qf-lib-rom">.nes ROM in library</span>` : "") +
+          (ai.description ? `<br>${esc(ai.description)}` : "") +
+          `</div></div></div>`
+        );
+      })
+      .join("");
+    global.QueenAiSurface?.enrichFromLibrary?.();
+    global.QueenZoomLightbox?.bind?.(body);
+  }
+
+  async function switchLibraryTab(tab) {
+    state.libraryTab = tab || "programs";
+    document.querySelectorAll(".qf-lib-tab").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.libTab === state.libraryTab);
+    });
+    const facets = $("qf-library-facets");
+    if (facets) facets.hidden = state.libraryTab === "nes";
+    if (state.libraryTab === "nes") {
+      renderLibraryDrawer([], state.library);
+      return;
+    }
+    if (state.libraryTab === "games") {
+      const out = await api({
+        action: "library_search",
+        query: state.librarySearch || "",
+        kind: "video_game",
+        limit: 120,
+      });
+      if (out.ok) renderLibraryDrawer(out.hits, out);
+      return;
+    }
+    const seed = state.library?.programs?.length
+      ? state.library.programs
+      : Object.values(state.library?.entries || {});
+    renderLibraryDrawer(seed.slice(0, 120), state.library);
+  }
+
+  async function refreshFileTypes() {
+    const out = await api({ action: "file_types" });
+    if (out.ok) {
+      state.fileTypes = out;
+      renderTypeBar();
+      if (!$("qf-types-drawer")?.hidden) renderTypesDrawer();
+    }
+  }
+
+  async function loadLibrary(scan) {
+    const out = await api({ action: scan ? "library_scan" : "program_library" });
+    if (out.ok) {
+      state.library = out;
+      await global.QueenIconEngine?.loadLibraryIndex?.(true);
+      renderLibraryFacets(out.facets);
+      const seed = out.programs?.length ? out.programs : Object.values(out.entries || {});
+      renderLibraryDrawer(seed.slice(0, 120), out);
+      $("qf-status-left").textContent =
+        `Library v3 · ${out.count || 0} entries · ${out.games_count || 0} games · ${out.dewey_books || 0} Dewey · ${out.icons_resolved || 0} icons`;
+    }
+  }
+
+  async function searchLibrary(q) {
+    const facet = state.libraryFacet || {};
+    const hasFilter = !!(q || facet.kind || facet.dewey || facet.platform);
+    if (!hasFilter) {
+      const seed = state.library?.programs?.length
+        ? state.library.programs
+        : Object.values(state.library?.entries || {});
+      renderLibraryDrawer(seed.slice(0, 120), state.library);
+      return;
+    }
+    const out = await api({
+      action: "library_search",
+      query: q,
+      kind: facet.kind || "",
+      dewey: facet.dewey || "",
+      platform: facet.platform || "",
+      limit: 120,
+    });
+    if (out.ok) {
+      if (out.facets) renderLibraryFacets(out.facets);
+      renderLibraryDrawer(out.hits, out);
+    }
+  }
+
+  function toggleDrawer(id, on) {
+    const el = $(id);
+    if (!el) return;
+    const open = on !== undefined ? on : el.hidden;
+    el.hidden = !open;
+    document.querySelectorAll(".qf-drawer").forEach((d) => {
+      if (d.id !== id) d.hidden = true;
+    });
+    if (open && id === "qf-types-drawer") renderTypesDrawer();
+    if (open && id === "qf-library-drawer" && !state.library) loadLibrary(false);
   }
 
   async function mkdirHere() {
@@ -1344,14 +1733,32 @@
       if (out.parent) openPath(out.parent);
     });
     $("qf-refresh")?.addEventListener("click", () => openPath(state.path));
+    $("qf-search")?.addEventListener("input", onSearchInput);
     $("qf-search")?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        runSearch();
+        runSearch(true);
       }
       if (e.key === "Escape") {
         e.target.value = "";
+        state.searchQ = "";
+        state.searchMode = "local";
         openPath(state.path);
+      }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const rows = [...document.querySelectorAll(".qf-row:not(.hidden-by-search)")];
+        if (!rows.length) return;
+        const cur = rows.findIndex((r) => r.classList.contains("selected"));
+        const next = e.key === "ArrowDown"
+          ? rows[Math.min(cur + 1, rows.length - 1)]
+          : rows[Math.max(cur - 1, 0)];
+        if (next) {
+          state.selected = next.dataset.path;
+          rows.forEach((r) => r.classList.toggle("selected", r === next));
+          next.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          showPreview(state.selected);
+        }
       }
     });
     $("qf-mkdir")?.addEventListener("click", () => mkdirHere());
@@ -1372,6 +1779,24 @@
       }
     });
     $("qf-shell")?.addEventListener("click", () => toggleTerminalDrawer());
+    $("qf-types-btn")?.addEventListener("click", () => toggleDrawer("qf-types-drawer"));
+    $("qf-types-close")?.addEventListener("click", () => toggleDrawer("qf-types-drawer", false));
+    $("qf-library-btn")?.addEventListener("click", () => toggleDrawer("qf-library-drawer"));
+    $("qf-library-close")?.addEventListener("click", () => toggleDrawer("qf-library-drawer", false));
+    $("qf-library-scan")?.addEventListener("click", () => loadLibrary(true));
+    document.querySelectorAll(".qf-lib-tab").forEach((btn) => {
+      btn.addEventListener("click", () => switchLibraryTab(btn.dataset.libTab || "programs"));
+    });
+    $("qf-types-search")?.addEventListener("input", (e) => {
+      state.typesSearch = e.target.value;
+      renderTypesDrawer();
+    });
+    let libTimer = null;
+    $("qf-library-search")?.addEventListener("input", (e) => {
+      state.librarySearch = e.target.value;
+      clearTimeout(libTimer);
+      libTimer = setTimeout(() => searchLibrary(state.librarySearch), 280);
+    });
     document.addEventListener("click", (e) => {
       if (!e.target.closest(".qf-folder-menu")) {
         $("qf-folder-menu").hidden = true;
@@ -1383,6 +1808,8 @@
       if (e.key === "Escape") {
         hideProperties();
         hideCtx();
+        toggleDrawer("qf-types-drawer", false);
+        toggleDrawer("qf-library-drawer", false);
       }
     });
     window.addEventListener("scroll", hideCtx, true);
@@ -1421,6 +1848,8 @@
     state.nav = st.nav || { stack: [], index: -1 };
     state.fileTypes = st.file_types;
     state.iconOverrides = st.file_types?.icon_overrides;
+    renderTypeBar();
+    loadLibrary(false).catch(() => {});
     const ps = st.power_sort || {};
     if (ps.always_best_sort && ps.mode) {
       state.sortMode = ps.mode;

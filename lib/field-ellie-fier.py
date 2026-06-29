@@ -421,6 +421,92 @@ def posture(*, scan: bool = False) -> dict[str, Any]:
     return doc
 
 
+def _panel_snapshot(panel_name: str | None) -> dict[str, Any]:
+    if not panel_name:
+        return {}
+    raw = _load(STATE / str(panel_name), {})
+    if not isinstance(raw, dict):
+        return {}
+    slim: dict[str, Any] = {}
+    for key, val in raw.items():
+        if isinstance(val, (dict, list)):
+            continue
+        slim[key] = val
+    if raw.get("summary") and isinstance(raw["summary"], dict):
+        for k, v in raw["summary"].items():
+            if not isinstance(v, (dict, list)):
+                slim[f"summary.{k}"] = v
+    if raw.get("gate") and isinstance(raw["gate"], dict):
+        slim["gate.verdict"] = raw["gate"].get("verdict")
+    return slim
+
+
+_ROUTE_TO_PILLAR = {
+    "network": "network",
+    "truth": "truth",
+    "thermal": "thermal_power",
+    "thermal_power": "thermal_power",
+    "firmware": "firmware_vault",
+    "firmware_vault": "firmware_vault",
+    "media": "media",
+    "sovereign": "sovereign",
+}
+
+
+def _resolve_pillar_id(pillar_id: str) -> str:
+    key = str(pillar_id or "").strip().lower()
+    return _ROUTE_TO_PILLAR.get(key, key)
+
+
+def pillar_diagnostic(pillar_id: str, *, scan: bool = False) -> dict[str, Any]:
+    """Single-page diagnostic payload for one ELLIE security pillar."""
+    doctrine = _load(DOCTRINE, {})
+    pillar = _resolve_pillar_id(pillar_id)
+    pillars_cfg = doctrine.get("security_pillars") or {}
+    pages = doctrine.get("diagnostic_pages") or []
+    page_meta = next((p for p in pages if str(p.get("pillar") or p.get("id")) == pillar), None)
+    if pillar not in pillars_cfg and not page_meta:
+        return {"ok": False, "error": "unknown_pillar", "pillar": pillar, "known": list(pillars_cfg.keys())}
+
+    posture_doc = posture(scan=scan)
+    slices = collect_security_slices()
+    bucket = (slices.get("pillars") or {}).get(pillar) or {}
+    feed_rows = list(bucket.get("feeds") or [])
+    enriched: list[dict[str, Any]] = []
+    for row in feed_rows:
+        entry = dict(row)
+        panel_name = row.get("panel")
+        if panel_name:
+            entry["panel_data"] = _panel_snapshot(str(panel_name))
+        enriched.append(entry)
+
+    sw = posture_doc.get("systemwide") or {}
+    title = (page_meta or {}).get("title") or pillar.replace("_", " ").title()
+    return {
+        "schema": "field-ellie-diag-page/v1",
+        "ok": True,
+        "pillar": pillar,
+        "title": title,
+        "route": (page_meta or {}).get("route") or f"/field-ellie/{pillar}",
+        "updated": _now(),
+        "threat_warn_level": posture_doc.get("threat_warn_level") or threat_warn_level(),
+        "systemwide": {
+            "verdict": sw.get("verdict"),
+            "score": sw.get("score"),
+            "threat_warn_level": sw.get("threat_warn_level"),
+        },
+        "pillar_posture": {
+            "verdict": bucket.get("verdict") or "clear",
+            "live": bucket.get("live") or 0,
+            "feed_count": len(enriched),
+            "max_score": bucket.get("max_score"),
+        },
+        "feeds": enriched,
+        "workers": (pillars_cfg.get(pillar) or {}).get("workers") or [],
+        "motto": doctrine.get("motto"),
+    }
+
+
 def read_authority() -> dict[str, Any]:
     cached = _load(AUTHORITY, {})
     if cached.get("schema"):
@@ -455,7 +541,12 @@ def main() -> int:
     if cmd == "threat_warn_level":
         print(json.dumps({"threat_warn_level": threat_warn_level(), "posture_floor": threat_posture_floor()}, ensure_ascii=False))
         return 0
-    print("usage: field-ellie-fier.py [json|scan|threat|slices|authority|threat_warn_level] [--scan]", file=sys.stderr)
+    if cmd == "pillar":
+        pid = sys.argv[2] if len(sys.argv) > 2 else ""
+        do_scan = "--scan" in sys.argv[3:] or str(os.environ.get("ELLIE_PILLAR_SCAN", "")).strip() in ("1", "true", "yes")
+        print(json.dumps(pillar_diagnostic(pid, scan=do_scan), ensure_ascii=False, indent=2))
+        return 0
+    print("usage: field-ellie-fier.py [json|scan|threat|slices|authority|threat_warn_level|pillar ID] [--scan]", file=sys.stderr)
     return 2
 
 

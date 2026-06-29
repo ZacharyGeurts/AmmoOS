@@ -37,6 +37,7 @@ WORLD_PORT = int(os.environ.get("QUEEN_WORLD_PORT", "9481"))
 PANEL_PORT = int(os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477"))
 FIELD_GECKO = QUEEN / "field-gecko"
 LAUNCH_SH = FIELD_GECKO / "bin" / "launch-field-gecko.sh"
+DUCKDUCKGO_HOME = os.environ.get("QUEEN_BROWSER_HOME", "https://duckduckgo.com/").strip() or "https://duckduckgo.com/"
 
 
 def _world_base() -> str:
@@ -51,9 +52,9 @@ def _shell_url() -> str:
     custom = os.environ.get("QUEEN_BROWSER_URL", "").strip()
     if custom:
         return custom
-    if os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "1").strip().lower() not in ("0", "false", "no", "off"):
+    if os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "0").strip().lower() not in ("0", "false", "no", "off"):
         return _c2_field_url()
-    return f"{_world_base()}/world/browser.html"
+    return DUCKDUCKGO_HOME
 
 
 def _http_json(method: str, url: str, body: dict[str, Any] | None = None, *, timeout: float = 12.0) -> dict[str, Any]:
@@ -127,13 +128,8 @@ def startup_tab_specs() -> list[dict[str, Any]]:
                 return list(tabs)
         except (OSError, json.JSONDecodeError):
             pass
-    panel = f"http://127.0.0.1:{PANEL_PORT}/field"
     return [
-        {"role": "start", "title": "NEXUS Field", "url": panel},
-        {"role": "chips", "title": "CHIPS", "url": "queen://chips"},
-        {"role": "cores", "title": "Cores", "url": "queen://cores"},
-        {"role": "code", "title": "Queen Code", "url": "/world/queen-code.html"},
-        {"role": "files", "title": "Files", "url": "/world/queen-files.html"},
+        {"role": "browser", "title": "Queen Browser", "url": DUCKDUCKGO_HOME, "pinned": True},
     ]
 
 
@@ -200,12 +196,12 @@ def launch_integrated_display() -> dict[str, Any]:
         "QUEEN_SKIP_RTX_BOOT": "1",
         "QUEEN_NO_OS_BROWSER": "1",
         "NEXUS_EMBED_PANEL_IN_ENGINE": "0",
-        "NEXUS_C2_DESKTOP_LAUNCH": os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "1"),
-        "NEXUS_C2_KIOSK": os.environ.get("NEXUS_C2_KIOSK", "1"),
+        "NEXUS_C2_DESKTOP_LAUNCH": os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "0"),
+        "NEXUS_C2_KIOSK": os.environ.get("NEXUS_C2_KIOSK", "0"),
         "NEXUS_C2_LAUNCH_URL": os.environ.get("NEXUS_C2_LAUNCH_URL", c2_url),
         "QUEEN_BROWSER_URL": shell,
-        "QUEEN_BROWSER_START": os.environ.get("QUEEN_BROWSER_START", c2_url),
-        "QUEEN_BROWSER_HOME": os.environ.get("QUEEN_BROWSER_HOME", c2_url),
+        "QUEEN_BROWSER_START": os.environ.get("QUEEN_BROWSER_START", DUCKDUCKGO_HOME),
+        "QUEEN_BROWSER_HOME": os.environ.get("QUEEN_BROWSER_HOME", DUCKDUCKGO_HOME),
     }
     try:
         subprocess.Popen(
@@ -236,17 +232,64 @@ def open_integrated(*, seed_only: bool = False) -> dict[str, Any]:
     return launch_integrated_display()
 
 
+def close_integrated(*, stop_world: bool = False) -> dict[str, Any]:
+    """Close AmmoOS / Queen field browser window — never host poweroff."""
+    profile = str((FIELD_GECKO / "profile").resolve())
+    killed: list[str] = []
+    patterns = (
+        f"firefox.*{profile}",
+        f"firefox-esr.*{profile}",
+        f"fieldfox.*{profile}",
+        "AmmoOS",
+        "QueenFieldBrowser",
+        "Mozilla Firefox.*AmmoOS",
+        "QueenBrowser",
+    )
+    for pat in patterns:
+        try:
+            proc = subprocess.run(
+                ["pkill", "-f", pat],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if proc.returncode == 0:
+                killed.append(pat)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    world_stopped = False
+    if stop_world:
+        for pat in ("queen-world.py", "queen-browser"):
+            try:
+                proc = subprocess.run(["pkill", "-f", pat], capture_output=True, timeout=5)
+                if proc.returncode == 0:
+                    killed.append(pat)
+                    world_stopped = True
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+    return {
+        "ok": True,
+        "action": "close_os",
+        "message": "AmmoOS closed — host stays running",
+        "killed": killed,
+        "world_stopped": world_stopped,
+        "host_poweroff": False,
+    }
+
+
 def main() -> int:
     cmd = (sys.argv[1] if len(sys.argv) > 1 else "open").strip().lower()
     if cmd in ("open", "launch", "start"):
         out = open_integrated()
     elif cmd == "seed":
         out = open_integrated(seed_only=True)
+    elif cmd in ("close", "close-os", "quit", "exit"):
+        out = close_integrated(stop_world=os.environ.get("AMMOOS_CLOSE_STOP_WORLD", "0") in ("1", "true", "yes"))
     elif cmd == "ensure":
         out = ensure_queen_world()
     else:
         print(json.dumps({
-            "error": "usage: queen-integrated-browser.py [open|seed|ensure]",
+            "error": "usage: queen-integrated-browser.py [open|seed|close|ensure]",
         }, ensure_ascii=False))
         return 1
     print(json.dumps(out, ensure_ascii=False))

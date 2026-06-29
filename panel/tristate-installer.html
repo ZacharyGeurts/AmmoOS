@@ -26,7 +26,7 @@
       <div class="ti-step active" data-step="welcome"><span class="ti-step-num">1</span><h3>Welcome</h3><span>Field underlay</span></div>
       <div class="ti-step" data-step="root"><span class="ti-step-num">2</span><h3>Root</h3><span>One admin approval</span></div>
       <div class="ti-step" data-step="unfield"><span class="ti-step-num">3</span><h3>Unfield</h3><span>Files on drive</span></div>
-      <div class="ti-step" data-step="znetwork"><span class="ti-step-num">4</span><h3>Network</h3><span>ZNetwork choice</span></div>
+      <div class="ti-step" data-step="znetwork"><span class="ti-step-num">4</span><h3>Network</h3><span>ZNetwork ingrained</span></div>
       <div class="ti-step" data-step="arrive"><span class="ti-step-num">5</span><h3>Install</h3><span>NEXUS protections</span></div>
       <div class="ti-step" data-step="transform"><span class="ti-step-num">6</span><h3>Transform</h3><span>WRDT pipeline</span></div>
       <div class="ti-step" data-step="commit"><span class="ti-step-num">7</span><h3>Commit</h3><span>Permanent</span></div>
@@ -45,7 +45,7 @@
 
       <div class="ti-body">
         <section class="ti-pane active" data-pane="welcome">
-          <p class="ti-lead">Permanent underlay installs NEXUS Shield, Queen, and field protections beneath your incumbent OS. One administrator approval at the start powers every later step.</p>
+          <p class="ti-lead">Permanent underlay installs NEXUS Shield, Queen, and field protections beneath your incumbent OS. <strong>On launch</strong> you get one UAC/sudo/polkit prompt — install, network, WRDT, and commit reuse that session; never again.</p>
           <div class="ti-welcome-grid">
             <div class="ti-welcome-card"><strong>Root first</strong><span>Administrator access once — install, network, WRDT, commit.</span></div>
             <div class="ti-welcome-card"><strong>Unfield on drive</strong><span>Clear nested field copies before anything is installed.</span></div>
@@ -66,7 +66,7 @@
           <div class="ti-actions">
             <button type="button" class="ti-btn ti-btn--primary" id="ti-acquire-root">Grant administrator access</button>
           </div>
-          <p class="ti-lead ti-muted">Approve the system dialog (pkexec or sudo). Cached credentials last for the whole wizard.</p>
+          <p class="ti-lead ti-muted">If launch auth already succeeded, this step shows READY — no second prompt. Otherwise approve once (pkexec, UAC, or sudo).</p>
         </section>
 
         <section class="ti-pane" data-pane="unfield" hidden>
@@ -95,13 +95,9 @@
           </div>
           <div class="ti-stats">
             <div class="ti-stat"><b id="ti-zn-status">PENDING</b><small>Status</small></div>
-            <div class="ti-stat"><b id="ti-zn-choice-label">—</b><small>Your choice</small></div>
+            <div class="ti-stat"><b id="ti-zn-choice-label">INGRAINED</b><small>Field network</small></div>
           </div>
-          <div class="ti-inline-actions">
-            <button type="button" class="ti-btn ti-choice" data-zn-choice="yes">Yes — ZNetwork</button>
-            <button type="button" class="ti-btn ti-choice" data-zn-choice="no">No — keep native</button>
-            <button type="button" class="ti-btn ti-choice" data-zn-choice="skip">Skip</button>
-          </div>
+          <p class="ti-muted" id="ti-zn-ingrained">ZNetwork is built into the field stack — auto-enabled on install (no Yes/No/Skip).</p>
         </section>
 
         <section class="ti-pane" data-pane="arrive" hidden>
@@ -166,6 +162,6 @@
   </div>
 
   <div class="ti-toast" id="ti-toast" role="status" hidden></div>
-  <script src="/assets/tristate-installer.js?v=ti7" defer></script>
+  <script src="/assets/tristate-installer.js?v=ti8" defer></script>
 </body>
 </html>

@@ -270,19 +270,9 @@ def _safe_icon_path(token: str) -> Path | None:
     return None
 
 
-def _cache_icon(icon_key: str, src: Path) -> str | None:
-    if not src.is_file():
-        return None
-    ICON_CACHE.mkdir(parents=True, exist_ok=True)
-    ext = src.suffix.lower() if src.suffix.lower() in ICON_EXTS else ".png"
-    safe = re.sub(r"[^a-zA-Z0-9._-]+", "_", icon_key)[:120]
-    dest = ICON_CACHE / f"{safe}{ext}"
-    try:
-        if not dest.is_file() or dest.stat().st_mtime < src.stat().st_mtime:
-            dest.write_bytes(src.read_bytes())
-        return dest.name
-    except OSError:
-        return None
+def _library_icon_url(desktop_stem: str) -> str:
+    """Zero-copy — Queen Program Library streams from host icon path."""
+    return f"/api/queen-program-library/icon/{quote('host-' + desktop_stem, safe='')}"
 
 
 def _scan_linux_apps() -> list[dict[str, Any]]:
@@ -308,16 +298,39 @@ def _scan_linux_apps() -> list[dict[str, Any]]:
             app = _rebrand_host_browser(app)
             resolved = _resolve_icon_file(app["icon"], app.get("desktop_path"))
             if resolved:
-                token = _cache_icon(app["icon_key"], resolved)
-                if token:
-                    app["icon_url"] = f"/api/field-host-desktop/icon/{quote(token, safe='')}"
+                app["icon_resolved_from"] = str(resolved)
+            stem = Path(str(app.get("desktop_path") or "")).stem or str(app.get("id", "")).replace("desktop-", "")
+            if stem:
+                app["icon_url"] = _library_icon_url(stem)
             apps.append(app)
     return sorted(apps, key=lambda x: x["name"].lower())
+
+
+def _policy() -> dict[str, Any]:
+    return _load(DOCTRINE, {}).get("policy") or {}
+
+
+def _desktop_icons_in_start(policy: dict[str, Any] | None = None) -> bool:
+    p = policy if policy is not None else _policy()
+    if "desktop_icons_in_start" in p:
+        return bool(p.get("desktop_icons_in_start"))
+    return p.get("show_desktop_icons") is False
+
+
+def _normalize_start_surface(app: dict[str, Any], policy: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Route desktop-flagged launchers into Start folders only."""
+    row = dict(app)
+    if _desktop_icons_in_start(policy) and row.get("desktop"):
+        row["start_menu"] = True
+        row.pop("desktop", None)
+    return row
 
 
 def _launcher_visible(app: dict[str, Any]) -> bool:
     """Hide display-tech engines (Queen browser CSS shell) from Start/desktop — C2 owns launch."""
     if app.get("ghost") or app.get("clipboard_ghost"):
+        return False
+    if app.get("desktop") and _desktop_icons_in_start() and app.get("start_menu") is not True:
         return False
     if app.get("start_menu") is False:
         return False
@@ -353,33 +366,58 @@ def _browser_display_slice(apps: list[dict[str, Any]], policy: dict[str, Any]) -
     }
 
 
+def _queen_icon_ref(icon_name: str) -> str:
+    name = str(icon_name or "").strip()
+    aliases = {
+        "ammoos-field": "ammoos",
+        "nexus-field": "field",
+        "nexus-shield": "shield",
+        "queen-prog-browser": "browser",
+    }
+    if name in aliases:
+        return f"queen-prog-{aliases[name]}"
+    if name.startswith("queen-prog-"):
+        return name
+    if name.startswith("prog-"):
+        return f"queen-prog-{name[5:]}"
+    if name.startswith("file-"):
+        return name
+    return f"queen-prog-{name}"
+
+
 def _field_apps() -> list[dict[str, Any]]:
     doctrine = _load(DOCTRINE, {})
+    policy = doctrine.get("policy") or {}
     out: list[dict[str, Any]] = []
     for row in doctrine.get("field_apps") or []:
-        app = dict(row)
+        app = _normalize_start_surface(row, policy)
         app.setdefault("source", "field")
         app.setdefault("category", "Field")
         preset_icon_url = app.get("icon_url")
-        icon_name = app.get("icon") or "nexus-field"
+        icon_name = app.get("icon") or "ammoos-field"
         resolved = _resolve_icon_file(icon_name)
         if not resolved:
             for candidate in (
                 INSTALL / "panel/assets" / f"{icon_name}.png",
+                INSTALL / "panel/assets/ammoos-field-48.png",
                 INSTALL / "panel/assets/nexus-field-48.png",
-                INSTALL / "panel/assets/queen-favicon-48.png",
+                INSTALL / "panel/assets/ammoos-field.png",
                 INSTALL / "panel/assets/nexus-field.png",
                 INSTALL / "Queen/world/assets/icons" / f"{icon_name}.png",
+                INSTALL / "Queen/world/assets/icons" / f"prog-{icon_name.removeprefix('queen-prog-')}-48.png",
             ):
                 if candidate.is_file():
                     resolved = candidate
                     break
         if resolved:
-            token = _cache_icon(app.get("id", icon_name), resolved)
-            if token:
-                app["icon_url"] = f"/api/field-host-desktop/icon/{quote(token, safe='')}"
-        elif preset_icon_url:
+            app["icon_resolved_from"] = str(resolved)
+        icon_ref = _queen_icon_ref(icon_name)
+        if preset_icon_url:
             app["icon_url"] = str(preset_icon_url)
+        elif icon_ref == "queen-prog-znetwork":
+            app["icon_url"] = "/world/assets/icons/prog-znetwork-48.png"
+        else:
+            app["icon_url"] = f"/api/queen-program-library/icon/{quote(icon_ref, safe='')}"
         out.append(app)
     return out
 
@@ -390,6 +428,8 @@ def _running_programs() -> list[dict[str, Any]]:
         "threat-panel-http": "Field Panel",
         "queen-world": "Queen World",
         "firefox": "Queen Browser",
+        "fieldfox": "Queen Browser",
+        "queen-browser": "Queen Browser",
         "chromium": "Chromium",
         "google-chrome": "Chrome",
         "code": "VS Code",
@@ -407,16 +447,71 @@ def _running_programs() -> list[dict[str, Any]]:
     return running
 
 
-def _power_actions() -> list[dict[str, Any]]:
-    return [
+def _boot_os() -> bool:
+    for script in (
+        INSTALL / "Queen" / "lib" / "queen-boot-hook.py",
+        SG / "Queen" / "lib" / "queen-boot-hook.py",
+    ):
+        if not script.is_file():
+            continue
+        try:
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location("queen_boot_hook_desktop", script)
+            if not spec or not spec.loader:
+                continue
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "is_boot_os"):
+                return bool(mod.is_boot_os())
+        except Exception:
+            pass
+    flag = os.environ.get("QUEEN_BOOT_OS", os.environ.get("NEXUS_QUEEN_BOOT_OS", "")).strip().lower()
+    return flag in ("1", "true", "yes", "on")
+
+
+def _window_mode(*, boot_os: bool | None = None) -> bool:
+    """AmmoOS guest session — close window on shut down unless sovereign boot_os."""
+    boot = _boot_os() if boot_os is None else boot_os
+    if boot:
+        return False
+    override = os.environ.get("AMMOOS_WINDOW_MODE", os.environ.get("QUEEN_WINDOW_MODE", "")).strip().lower()
+    if override in ("0", "false", "no", "off"):
+        return False
+    if override in ("1", "true", "yes", "on"):
+        return True
+    return True
+
+
+def _power_actions(*, boot_os: bool | None = None, window_mode: bool | None = None) -> list[dict[str, Any]]:
+    boot = _boot_os() if boot_os is None else boot_os
+    win = _window_mode(boot_os=boot) if window_mode is None else window_mode
+    actions: list[dict[str, Any]] = [
         {"id": "sign-out", "label": "Sign out", "action": "sign-out"},
         {"id": "restart-nexus", "label": "Restart NEXUS", "action": "restart-nexus"},
-        {"id": "power-off", "label": "Shut down", "action": "power-off", "danger": True},
+    ]
+    if win:
+        actions.append({
+            "id": "close-os",
+            "label": "Shut down AmmoOS",
+            "action": "close-os",
+            "danger": True,
+            "hint": "Close the AmmoOS window — host computer stays on",
+        })
+    else:
+        actions.append({
+            "id": "power-off",
+            "label": "Shut down host",
+            "action": "power-off",
+            "danger": True,
+        })
+    actions.extend([
         {"id": "freeze-soft", "label": "Soft freeze host", "action": "freeze-soft"},
         {"id": "sleep", "label": "Sleep", "action": "freeze-mem"},
         {"id": "underlay", "label": "Underlay F9", "exec": "/underlay-f9"},
         {"id": "control-panel", "label": "Control Panel", "exec": "/control-panel"},
-    ]
+    ])
+    return actions
 
 
 def _category_order() -> list[str]:
@@ -502,6 +597,29 @@ def _taskbar_quick(apps: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
+def _tray_icons(apps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    doctrine = _load(DOCTRINE, {})
+    by_id = {str(a.get("id")): a for a in apps if a.get("id")}
+    rows = doctrine.get("tray_icons") or []
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        app_id = str(row.get("id") or "")
+        base = dict(by_id.get(app_id) or {})
+        tray = {**base, **row}
+        if row.get("action"):
+            tray["action"] = row["action"]
+        if row.get("name"):
+            tray["name"] = row["name"]
+        if row.get("tiny"):
+            tray["tiny"] = True
+        if row.get("live"):
+            tray["live"] = True
+        out.append(tray)
+    return out
+
+
 def _menu_nexus_c2_tree(apps: list[dict[str, Any]]) -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     order = _category_order()
@@ -519,9 +637,11 @@ def _menu_nexus_c2_tree(apps: list[dict[str, Any]]) -> dict[str, Any]:
     field_cats = {k: v for k, v in categories.items() if k.startswith("NEXUS")}
     host_cats = {k: v for k, v in categories.items() if k.startswith("Host")}
     pinned = [a for a in visible if a.get("pinned")]
+    layout = str(doctrine.get("policy", {}).get("menu_layout") or "nexus_c2_flyout")
+    use_flyout = layout in ("nexus_c2_flyout", "flyout") or not doctrine.get("policy", {}).get("start_menu_folders", False)
     return {
         "style": "nexus_c2",
-        "layout": "tree_sidebar",
+        "layout": "flyout" if use_flyout else "tree_sidebar",
         "categories": field_cats,
         "host_categories": host_cats,
         "category_order": ordered_cats,
@@ -529,15 +649,18 @@ def _menu_nexus_c2_tree(apps: list[dict[str, Any]]) -> dict[str, Any]:
         "programs": visible,
         "power": _power_actions(),
         "search": True,
-        "tree": True,
+        "tree": not use_flyout,
+        "flyout": use_flyout,
         "nexus_c2_priority": bool(doctrine.get("policy", {}).get("nexus_c2_priority", True)),
+        "boot_os": _boot_os(),
+        "window_mode": _window_mode(),
     }
 
 
 def _menu_for_theme(theme: str, apps: list[dict[str, Any]]) -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     layout = str(doctrine.get("policy", {}).get("menu_layout") or "")
-    if layout == "nexus_c2_tree" or doctrine.get("policy", {}).get("nexus_c2_priority"):
+    if layout in ("nexus_c2_tree", "nexus_c2_flyout", "flyout") or doctrine.get("policy", {}).get("nexus_c2_priority"):
         return _menu_nexus_c2_tree(apps)
     categories: dict[str, list[dict[str, Any]]] = {}
     for app in apps:
@@ -583,6 +706,41 @@ def _menu_for_theme(theme: str, apps: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _znetwork_loopback_identity() -> dict[str, Any]:
+    """When ZNetwork is running, AmmoOS is 127.0.0.1 — field OS, not a web browser."""
+    marker = STATE / "znetwork-running.marker"
+    status_path = STATE / "znetwork-status.json"
+    running = marker.is_file()
+    status: dict[str, Any] = {}
+    if status_path.is_file():
+        status = _load(status_path, {})
+        running = running or bool(status.get("running") or status.get("ok"))
+    authority = (
+        status.get("loopback_authority")
+        or _load(INSTALL / "data" / "queen-ammoos-sovereignty-doctrine.json", {}).get("loopback_authority")
+        or "127.0.0.1"
+    )
+    pipe_pct = status.get("internet_pipe_percent") or status.get("pipe_percent")
+    if running:
+        return {
+            "mode": "loopback_os",
+            "authority": authority,
+            "znetwork_running": True,
+            "not_a_browser": True,
+            "internet_pipe_percent": pipe_pct if pipe_pct is not None else 100,
+            "label": f"You are {authority}",
+            "motto": "ZNetwork holds the pipe — Queen is the system on loopback, not an OS browser tab.",
+        }
+    return {
+        "mode": "staging",
+        "authority": authority,
+        "znetwork_running": False,
+        "not_a_browser": False,
+        "label": "Awaiting ZNetwork",
+        "motto": "Start ZNetwork to become loopback field OS at 127.0.0.1.",
+    }
+
+
 def _shell_settings() -> dict[str, Any]:
     script = INSTALL / "lib" / "field-shell-settings.py"
     if not script.is_file():
@@ -606,7 +764,8 @@ def _shell_settings() -> dict[str, Any]:
 def build_panel() -> dict[str, Any]:
     guest = _guest_system()
     theme = _theme_id()
-    policy = _load(DOCTRINE, {}).get("policy") or {}
+    policy = _policy()
+    icons_in_start = _desktop_icons_in_start(policy)
     mirror_host = bool(policy.get("mirror_guest_os", False))
     host_sidebar = bool(policy.get("host_programs_sidebar", False))
     scan_host = bool(policy.get("scan_host_desktop", False))
@@ -633,17 +792,21 @@ def build_panel() -> dict[str, Any]:
         prog = _programmatic_monitor_panels()
         if prog:
             monitor_dashboard = {**monitor_dashboard, "panels": prog, "source": "queen-nexus-c2-panels"}
-    tray_icons = _load(DOCTRINE, {}).get("tray_icons") or []
+    tray_icons = _tray_icons(apps)
     organized = _iron_plate_organize(menu=menu, monitor=monitor_dashboard, tray_icons=tray_icons)
     if organized:
         menu = organized.get("menu") or menu
         monitor_dashboard = organized.get("monitor_dashboard") or monitor_dashboard
         if organized.get("tray_icons"):
             tray_icons = organized.get("tray_icons") or tray_icons
+    boot_os = _boot_os()
+    window_mode = _window_mode(boot_os=boot_os)
     doc = {
         "schema": "field-host-desktop/v1",
         "ts": _now(),
         "ok": True,
+        "boot_os": boot_os,
+        "window_mode": window_mode,
         "guest_os": {
             "system": platform.system(),
             "release": platform.release(),
@@ -676,9 +839,13 @@ def build_panel() -> dict[str, Any]:
             "start_menu_collapsed": bool(policy.get("start_menu_collapsed", True)),
         },
         "monitor_dashboard": monitor_dashboard,
+        "icon_dock": [] if icons_in_start else launcher_apps,
+        "desktop_icons": [] if icons_in_start else [a for a in launcher_apps if a.get("desktop")],
         "iron_plate_organize": bool(organized),
         "product": _load(DOCTRINE, {}).get("product") or "AmmoOS",
         "shell": {
+            "boot_os": boot_os,
+            "window_mode": window_mode,
             "programs_as_windows": bool(_load(DOCTRINE, {}).get("policy", {}).get("programs_as_windows", True)),
             "integrated_launch": bool(_load(DOCTRINE, {}).get("policy", {}).get("nexus_integrated_launch", True)),
             "no_client_browser": bool(_load(DOCTRINE, {}).get("policy", {}).get("no_client_browser", True)),
@@ -699,7 +866,8 @@ def build_panel() -> dict[str, Any]:
             "underlay": "/underlay-f9",
             "tristate": "/tristate-installer",
         },
-        "posture": "AmmoOS C2 — category folders in Start, monitor wall right, legacy panel dissolved",
+        "posture": "AmmoOS C2 — all program icons in Start folders; desktop surface clear",
+        "field_identity": _znetwork_loopback_identity(),
     }
     _save_atomic(PANEL_FILE, doc)
     STAMP.write_text(_now() + "\n", encoding="utf-8")
@@ -729,6 +897,12 @@ def posture() -> dict[str, Any]:
             if cached.get("programs"):
                 cached["ts"] = _now()
                 cached["running"] = _running_programs()
+                cached["field_identity"] = _znetwork_loopback_identity()
+                if cached["field_identity"].get("znetwork_running"):
+                    cached["posture"] = (
+                        f"AmmoOS loopback OS at {cached['field_identity'].get('authority', '127.0.0.1')} "
+                        "— ZNetwork pipe live; not a client browser"
+                    )
                 return cached
         except (OSError, json.JSONDecodeError):
             pass

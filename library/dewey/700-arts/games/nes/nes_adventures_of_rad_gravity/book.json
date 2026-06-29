@@ -1,0 +1,12 @@
+{
+  "id": "nes_adventures_of_rad_gravity",
+  "title": "Adventures of Rad Gravity",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_adventures_of_rad_gravity-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_adventures_of_rad_gravity/nes_adventures_of_rad_gravity.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

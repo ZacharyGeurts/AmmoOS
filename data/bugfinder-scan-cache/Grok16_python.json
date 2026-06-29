@@ -45,7 +45,7 @@
       "severity": "high",
       "pattern_id": "eval_exec",
       "line": 95,
-      "path": "/home/default/Desktop/SG/Grok16/python/driver/gpy16_driver.py",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/python/driver/gpy16_driver.py",
       "text": "exec(compile(sys.stdin.read(), \"<gpy-16>\", \"exec\"), {\"__name__\": \"__main__\"})",
       "kb_query": "code injection eval exec security"
     },
@@ -54,7 +54,7 @@
       "severity": "high",
       "pattern_id": "eval_exec",
       "line": 101,
-      "path": "/home/default/Desktop/SG/Grok16/python/driver/gpy16_driver.py",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/python/driver/gpy16_driver.py",
       "text": "exec(compile(code, \"<gpy-16>\", \"exec\"), {\"__name__\": \"__main__\"})",
       "kb_query": "code injection eval exec security"
     },
@@ -63,7 +63,7 @@
       "severity": "high",
       "pattern_id": "eval_exec",
       "line": 208,
-      "path": "/home/default/Desktop/SG/Grok16/python/driver/gpy16_driver.py",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/python/driver/gpy16_driver.py",
       "text": "exec(compile(source, \"<gpy-16>\", \"exec\"), {\"__name__\": \"__main__\"})",
       "kb_query": "code injection eval exec security"
     }
@@ -478,7 +478,7 @@
       "severity": "high",
       "pattern_id": "eval_exec",
       "line": 95,
-      "path": "/home/default/Desktop/SG/Grok16/python/driver/gpy16_driver.py",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/python/driver/gpy16_driver.py",
       "text": "exec(compile(sys.stdin.read(), \"<gpy-16>\", \"exec\"), {\"__name__\": \"__main__\"})",
       "kb_query": "code injection eval exec security"
     },
@@ -487,7 +487,7 @@
       "severity": "high",
       "pattern_id": "eval_exec",
       "line": 101,
-      "path": "/home/default/Desktop/SG/Grok16/python/driver/gpy16_driver.py",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/python/driver/gpy16_driver.py",
       "text": "exec(compile(code, \"<gpy-16>\", \"exec\"), {\"__name__\": \"__main__\"})",
       "kb_query": "code injection eval exec security"
     },
@@ -496,7 +496,7 @@
       "severity": "high",
       "pattern_id": "eval_exec",
       "line": 208,
-      "path": "/home/default/Desktop/SG/Grok16/python/driver/gpy16_driver.py",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/python/driver/gpy16_driver.py",
       "text": "exec(compile(source, \"<gpy-16>\", \"exec\"), {\"__name__\": \"__main__\"})",
       "kb_query": "code injection eval exec security"
     },

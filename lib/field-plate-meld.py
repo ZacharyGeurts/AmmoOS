@@ -63,7 +63,9 @@ PLATE_SOURCES: tuple[tuple[str, str], ...] = (
     ("truth_blocks", "g16-truth-blocks-panel.json"),
     ("field_combinatorics", "g16-field-combinatorics-panel.json"),
     ("combinatorics_bridge", "field-plate-combinatorics-bridge.json"),
-    ("chip_battery", "field-chip-battery-panel.json"),
+    ("ironclad_chips", "field-ironclad-chips-combinatorics-panel.json"),
+    ("chips_plate_stack", "field-chips-plate-stack-panel.json"),
+    ("chips_core", "field-chips-core-panel.json"),
     ("program_combinatronic", "field-program-combinatronic-panel.json"),
     ("g16_universal", "field-g16-universal-combinatronic-panel.json"),
     ("cpu_library", "field-cpu-library-panel.json"),
@@ -80,6 +82,12 @@ PLATE_SOURCES: tuple[tuple[str, str], ...] = (
     ("field_g16_launch", "field-g16-launch-panel.json"),
     ("field_gpu", "field-gpu-control-panel.json"),
     ("field_audio", "field-audio-settings-panel.json"),
+    ("field_display", "field-display-settings-panel.json"),
+    ("ammoos_blocks", "field-ammoos-blocks-panel.json"),
+    ("thermal_manager_block", "field-thermal-manager-block-panel.json"),
+    ("rtx_canvas_block", "field-rtx-canvas-block-panel.json"),
+    ("final_ear_block", "field-final-ear-block-panel.json"),
+    ("final_mouth_block", "field-final-mouth-block-panel.json"),
     ("field_broadcaster", "field-broadcaster-panel.json"),
     ("field_lock", "field-keepass-panel.json"),
     ("field_host_desktop", "field-host-desktop.json"),
@@ -399,16 +407,67 @@ def _refresh_packet_deinterlace() -> None:
     _import_call(INSTALL / "lib" / "field-packet-deinterlace.py", "field_packet_deinterlace", "build_panel")
 
 
+def _znetwork_relayer_active() -> bool:
+    marker = STATE / "znetwork-relayer.json"
+    if not marker.is_file():
+        return False
+    try:
+        doc = json.loads(marker.read_text(encoding="utf-8"))
+        return bool(doc.get("active"))
+    except (OSError, json.JSONDecodeError):
+        return False
+
+
 def _refresh_znetwork_status() -> None:
     if os.environ.get("NEXUS_ZNETWORK", "1") != "1":
         return
     if os.environ.get("NEXUS_NETWORK_STACK_MELD", "1") != "1":
         return
     out = STATE / "znetwork-status.json"
+    relayer_mode = (
+        os.environ.get("ZNETWORK_RELAYER", "1") != "0"
+        and os.environ.get("ZNETWORK_UNDERHOOK", "0") != "1"
+    )
+    if relayer_mode and _znetwork_relayer_active():
+        if out.is_file() and out.stat().st_size > 32:
+            return
+        relayer = INSTALL / "lib" / "znetwork-relayer.py"
+        sh = INSTALL / "lib" / "znetwork-field.sh"
+        try:
+            import subprocess
+
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
+            env["NEXUS_STATE_DIR"] = str(STATE)
+            env["ZNETWORK_PUBLISH_QUIET"] = "1"
+            if sh.is_file():
+                subprocess.run(
+                    ["bash", "-c", f'source "{INSTALL}/lib/nexus-common.sh" && source "{sh}" && nexus_znetwork_publish_quiet'],
+                    timeout=20,
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                )
+            elif relayer.is_file():
+                subprocess.run(
+                    [sys.executable, str(relayer), "posture"],
+                    timeout=15,
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                )
+            if out.is_file() and out.stat().st_size > 32:
+                return
+        except Exception:
+            pass
+        return
+    if out.is_file() and out.stat().st_size > 32:
+        return
     orch = INSTALL / "lib" / "znetwork-orchestrator.py"
     if orch.is_file():
         try:
             import subprocess
+
             env = os.environ.copy()
             env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
             env["NEXUS_STATE_DIR"] = str(STATE)
@@ -423,18 +482,18 @@ def _refresh_znetwork_status() -> None:
                 return
         except Exception:
             pass
-    if out.is_file() and out.stat().st_size > 32:
-        return
     sh = INSTALL / "lib" / "znetwork-field.sh"
     if not sh.is_file():
         return
     try:
         import subprocess
+
         env = os.environ.copy()
         env["NEXUS_INSTALL_ROOT"] = str(INSTALL)
         env["NEXUS_STATE_DIR"] = str(STATE)
+        env["ZNETWORK_PUBLISH_QUIET"] = "1"
         subprocess.run(
-            ["bash", "-c", f'source "{sh}" && nexus_znetwork_publish'],
+            ["bash", "-c", f'source "{INSTALL}/lib/nexus-common.sh" && source "{sh}" && nexus_znetwork_publish'],
             timeout=45,
             env=env,
             capture_output=True,
@@ -763,6 +822,42 @@ def _refresh_field_audio() -> None:
     if os.environ.get("NEXUS_FIELD_AUDIO", "1").strip().lower() in ("0", "false", "no", "off"):
         return
     _import_call(INSTALL / "lib" / "field-audio-settings.py", "field_audio_settings", "posture")
+
+
+def _refresh_field_display() -> None:
+    if os.environ.get("NEXUS_FIELD_DISPLAY", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-display-settings.py", "field_display_settings", "posture")
+
+
+def _refresh_ammoos_blocks() -> None:
+    if os.environ.get("NEXUS_AMMOOS_BLOCKS", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-ammoos-blocks.py", "field_ammoos_blocks", "publish_panel")
+
+
+def _refresh_thermal_manager_block() -> None:
+    if os.environ.get("NEXUS_THERMAL_MANAGER_BLOCK", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-thermal-manager-block.py", "field_thermal_manager_block", "publish_panel")
+
+
+def _refresh_rtx_canvas_block() -> None:
+    if os.environ.get("NEXUS_RTX_CANVAS_BLOCK", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-rtx-canvas-block.py", "field_rtx_canvas_block", "publish_panel")
+
+
+def _refresh_final_ear_block() -> None:
+    if os.environ.get("NEXUS_FINAL_EAR_BLOCK", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-final-ear-block.py", "field_final_ear_block", "publish_panel")
+
+
+def _refresh_final_mouth_block() -> None:
+    if os.environ.get("NEXUS_FINAL_MOUTH_BLOCK", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    _import_call(INSTALL / "lib" / "field-final-mouth-block.py", "field_final_mouth_block", "publish_panel")
 
 
 def _refresh_field_broadcaster() -> None:
@@ -1160,6 +1255,12 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
             _refresh_if_allowed("field_g16_launch", _refresh_field_g16_launch)
             _refresh_if_allowed("field_gpu", _refresh_field_gpu)
             _refresh_if_allowed("field_audio", _refresh_field_audio)
+            _refresh_if_allowed("field_display", _refresh_field_display)
+            _refresh_if_allowed("ammoos_blocks", _refresh_ammoos_blocks)
+            _refresh_if_allowed("thermal_manager_block", _refresh_thermal_manager_block)
+            _refresh_if_allowed("rtx_canvas_block", _refresh_rtx_canvas_block)
+            _refresh_if_allowed("final_ear_block", _refresh_final_ear_block)
+            _refresh_if_allowed("final_mouth_block", _refresh_final_mouth_block)
             _refresh_if_allowed("field_broadcaster", _refresh_field_broadcaster)
             _refresh_if_allowed("field_lock", _refresh_field_lock)
             _refresh_if_allowed("code_bugfinder", _refresh_code_bugfinder)
@@ -1229,6 +1330,8 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
         field_g16_launch = plates.get("field_g16_launch") or {}
         field_gpu = plates.get("field_gpu") or {}
         field_audio = plates.get("field_audio") or {}
+        field_display = plates.get("field_display") or {}
+        ammoos_blocks = plates.get("ammoos_blocks") or {}
         field_broadcaster_plate = plates.get("field_broadcaster") or {}
         c2_taskbar = plates.get("c2_taskbar") or {}
         field_lock_plate = plates.get("field_lock") or {}
@@ -1289,6 +1392,12 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
                 "truth_blocks_bytes": truth_blocks.get("total_bytes"),
                 "free_meld": truth_blocks.get("free_meld"),
                 "free_meld_compile_gate": truth_blocks.get("compile_gate"),
+                "ammoos_block_count": ammoos_blocks.get("block_count"),
+                "ammoos_stack_held": ammoos_blocks.get("stack_held"),
+                "ammoos_thermal_safe": ammoos_blocks.get("thermal_safe"),
+                "ammoos_chips_held": (ammoos_blocks.get("chips_block") or {}).get("held"),
+                "ammoos_codecs_held": (ammoos_blocks.get("codecs_block") or {}).get("held"),
+                "ammoos_display_profile": (ammoos_blocks.get("display_block") or {}).get("snapshot", {}).get("resolution_profile"),
                 "combinatorics_native_ceiling": (combinatorics.get("speed_cap") or {}).get("native_ceiling_ops_per_sec"),
                 "combinatorics_lattice_dots": ((combinatorics.get("hard_limits") or {}).get("boxes_of_boxes") or {}).get("total_lattice_dots"),
                 "combinatorics_cardinality": (combinatorics.get("combinatoric_space") or {}).get("cardinality_estimate"),
@@ -1388,6 +1497,9 @@ def meld(*, refresh_bus: bool = True, refresh_plates: bool = True) -> dict[str, 
                 "field_gpu_ok": field_gpu.get("ok"),
                 "field_audio_ok": field_audio.get("ok"),
                 "field_audio_backend": field_audio.get("backend"),
+                "field_display_ok": field_display.get("ok"),
+                "ammoos_blocks_ok": ammoos_blocks.get("ok"),
+                "ammoos_thermal_safe": ammoos_blocks.get("thermal_safe"),
                 "broadcaster_ok": field_broadcaster_plate.get("ok"),
                 "broadcaster_streaming": field_broadcaster_plate.get("streaming"),
                 "field_surfaces_live": comb_bridge.get("field_surfaces_live"),

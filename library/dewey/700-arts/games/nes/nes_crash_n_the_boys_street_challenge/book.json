@@ -1,0 +1,12 @@
+{
+  "id": "nes_crash_n_the_boys_street_challenge",
+  "title": "Crash 'N the Boys: Street Challenge",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_crash_n_the_boys_street_challenge-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_crash_n_the_boys_street_challenge/nes_crash_n_the_boys_street_challenge.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

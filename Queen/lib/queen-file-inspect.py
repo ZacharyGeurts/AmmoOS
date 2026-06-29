@@ -32,6 +32,7 @@ def _chamber_mod():
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", QUEEN / ".nexus-state"))
 REGISTRY_PATH = QUEEN / "data" / "queen-file-types.json"
 ICON_OVERRIDES_PATH = STATE / "queen-file-icon-overrides.json"
+TYPE_PREFS_PATH = STATE / "queen-file-type-prefs.json"
 
 
 def _ts() -> str:
@@ -44,6 +45,46 @@ def _load_registry(path: Path | None = None) -> dict[str, Any]:
         return json.loads(reg_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {"schema": "queen-file-types/v1", "types": {}, "default_icons": {}}
+
+
+def load_type_prefs() -> dict[str, Any]:
+    try:
+        doc = json.loads(TYPE_PREFS_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        doc = {}
+    if doc.get("schema") != "queen-file-type-prefs/v1":
+        doc = {"schema": "queen-file-type-prefs/v1", "updated": _ts(), "types": {}, "bar_pins": []}
+    doc.setdefault("types", {})
+    doc.setdefault("bar_pins", [])
+    return doc
+
+
+def _save_type_prefs(doc: dict[str, Any]) -> dict[str, Any]:
+    doc["schema"] = "queen-file-type-prefs/v1"
+    doc["updated"] = _ts()
+    TYPE_PREFS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = TYPE_PREFS_PATH.with_suffix(".tmp")
+    tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(TYPE_PREFS_PATH)
+    return doc
+
+
+def set_type_pref(type_id: str, key: str, value: Any) -> dict[str, Any]:
+    doc = load_type_prefs()
+    row = doc["types"].setdefault(type_id, {})
+    if value is None or value == "":
+        row.pop(key, None)
+        if not row:
+            doc["types"].pop(type_id, None)
+    else:
+        row[key] = value
+    return _save_type_prefs(doc)
+
+
+def set_bar_pins(pins: list[str]) -> dict[str, Any]:
+    doc = load_type_prefs()
+    doc["bar_pins"] = [str(x) for x in pins if x][:24]
+    return _save_type_prefs(doc)
 
 
 def load_icon_overrides() -> dict[str, Any]:
@@ -86,26 +127,55 @@ def save_icon_override(
 def file_types_registry() -> dict[str, Any]:
     reg = _load_registry()
     overrides = load_icon_overrides()
+    prefs = load_type_prefs()
     types_out: dict[str, Any] = {}
     for tid, spec in (reg.get("types") or {}).items():
         ov = overrides.get("by_type", {}).get(tid) or {}
+        user = prefs.get("types", {}).get(tid) or {}
+        action = user.get("action") or spec.get("action")
+        open_with = user.get("open_with") or spec.get("open_with")
+        compileable = user.get("compileable") if "compileable" in user else bool(spec.get("compileable"))
         types_out[tid] = {
             "label": spec.get("label") or tid,
             "extensions": spec.get("extensions") or [],
-            "compileable": bool(spec.get("compileable")),
+            "name_patterns": spec.get("name_patterns") or [],
+            "compileable": compileable,
             "global_icon": spec.get("global_icon"),
             "program_icon": ov.get("program_icon") or spec.get("program_icon"),
-            "action": spec.get("action"),
-            "open_with": spec.get("open_with"),
+            "action": action,
+            "open_with": open_with,
             "icon_asset": spec.get("icon_asset"),
+            "mime": spec.get("mime"),
+            "inspect": spec.get("inspect"),
+            "flags": {
+                "compileable": compileable,
+                "launchable": action in ("run_launchable", "launch_spv", "run_launch"),
+                "open_code": action == "open_code",
+                "open_tab": action == "open_tab",
+                "preview": user.get("preview", True) is not False,
+                "inspect": user.get("inspect", True) is not False,
+                "on_bar": tid in (prefs.get("bar_pins") or []),
+                "hidden": user.get("hidden") is True,
+            },
+            "settings": {
+                "action": action,
+                "open_with": open_with,
+                "program_icon": ov.get("program_icon") or spec.get("program_icon"),
+                "user_overrides": user,
+            },
         }
     return {
         "schema": reg.get("schema", "queen-file-types/v1"),
         "types": types_out,
+        "type_count": len(types_out),
         "default_icons": reg.get("default_icons") or {},
         "icon_overrides": {
             "by_type": overrides.get("by_type") or {},
             "by_path": overrides.get("by_path") or {},
+        },
+        "type_prefs": {
+            "bar_pins": prefs.get("bar_pins") or [],
+            "types": prefs.get("types") or {},
         },
     }
 

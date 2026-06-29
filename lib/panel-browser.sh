@@ -123,16 +123,49 @@ nexus_panel_boot_id() {
   printf '%s' "$bid"
 }
 
+nexus_boot_c2_only_enabled() {
+  [[ "${NEXUS_BOOT_C2_ONLY:-1}" == "1" ]]
+}
+
+nexus_boot_c2_prune_autostart() {
+  local home="${HOME:-}"
+  [[ -n "$home" ]] || return 0
+  rm -f "${home}/.config/autostart/nexus-queen-world.desktop" 2>/dev/null || true
+}
+
+nexus_boot_c2_desktop() {
+  local py="${NEXUS_PYTHONG:-pythong}"
+  local open_py="${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py"
+  [[ -f "$open_py" ]] || return 1
+  nexus_boot_c2_prune_autostart
+  NEXUS_C2_DESKTOP_LAUNCH=1 \
+  NEXUS_C2_KIOSK="${NEXUS_C2_KIOSK:-1}" \
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
+  NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+  QUEEN_ROOT="${QUEEN_ROOT:-${NEXUS_INSTALL_ROOT}/Queen}" \
+  NEXUS_THREAT_PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}" \
+    "$py" "$open_py" open 2>/dev/null | grep -q '"ok": true'
+}
+
 nexus_panel_open_on_boot() {
   [[ "${NEXUS_PANEL_AUTO_OPEN:-1}" == "1" ]] || return 0
   local marker="${NEXUS_PANEL_LAUNCH_MARKER:-${NEXUS_STATE_DIR}/panel-launched.boot}"
-  local boot_id url
+  local boot_id
   boot_id="$(nexus_panel_boot_id)"
   if [[ -f "$marker" ]] && grep -qFx "$boot_id" "$marker" 2>/dev/null; then
     return 0
   fi
-  url="${1:-$(nexus_panel_url)}"
-  if nexus_panel_open_browser "$url"; then
+  if nexus_boot_c2_only_enabled; then
+    if nexus_boot_c2_desktop; then
+      printf '%s\n' "$boot_id" >"$marker"
+      chmod 640 "$marker" 2>/dev/null || true
+      nexus_log "INFO" "panel-browser" "BOOT_C2_DESKTOP ok"
+      return 0
+    fi
+    nexus_log "WARN" "panel-browser" "BOOT_C2_DESKTOP_FAILED"
+    return 1
+  fi
+  if nexus_panel_open_browser "${1:-$(nexus_panel_url)}"; then
     printf '%s\n' "$boot_id" >"$marker"
     chmod 640 "$marker" 2>/dev/null || true
     return 0
@@ -192,20 +225,13 @@ nexus_panel_open_browser() {
 
 nexus_panel_open_help() {
   local url="${1:-$(nexus_panel_url)}"
-  local world_port="${QUEEN_WORLD_PORT:-9481}"
   cat <<EOF
-NEXUS panel URL: ${url}
+NEXUS C2 desktop URL: ${url}
 
-Queen browser only — no Firefox/Chrome fallback.
+Boot is C2-only — fullscreen AmmoOS command surface at /field.
 
-  1. Start Queen world (if needed):
-     ${QUEEN_ROOT:-${NEXUS_INSTALL_ROOT}/Queen}/scripts/start-world.sh --daemon
-
-  2. Open Queen browser (not Queen OS world):
-     http://127.0.0.1:${world_port}/world/browser.html
-
-  3. Queue NEXUS tab:
-     pythong ${NEXUS_INSTALL_ROOT}/lib/queen-panel-open.py nexus
+  ./nexus.sh
+  pythong ${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py open
 
 Tray icon (right-click near clock):
 

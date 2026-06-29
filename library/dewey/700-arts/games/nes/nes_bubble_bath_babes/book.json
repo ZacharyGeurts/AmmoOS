@@ -1,0 +1,12 @@
+{
+  "id": "nes_bubble_bath_babes",
+  "title": "Bubble Bath Babes",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_bubble_bath_babes-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_bubble_bath_babes/nes_bubble_bath_babes.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

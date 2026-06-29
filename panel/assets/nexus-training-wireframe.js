@@ -71,7 +71,9 @@ if (!canvas) {
 
   function makeWireNode(node) {
     const group = new THREE.Group();
-    const scale = node.group === "core" ? 1.35 : node.group === "connected" ? 0.95 : 0.65;
+    const scale = node.group === "core" ? 1.35
+      : node.group === "agents7" ? (node.kind === "agents7_hub" ? 1.05 : 0.72)
+      : node.group === "connected" ? 0.95 : 0.65;
     const geo = node.group === "core"
       ? new THREE.IcosahedronGeometry(scale, 1)
       : new THREE.OctahedronGeometry(scale, 0);
@@ -146,7 +148,7 @@ if (!canvas) {
       const g = makeWireNode(node);
       scene.add(g);
       nodeMeshes.set(node.id, g);
-      if (node.group === "core" || node.group === "connected" || node.group === "training_track" || node.kind === "chamber") {
+      if (node.group === "core" || node.group === "agents7" || node.group === "connected" || node.group === "training_track" || node.kind === "chamber") {
         const sp = makeLabel(node.label, g.position);
         scene.add(sp);
         labelSprites.push(sp);
@@ -163,7 +165,12 @@ if (!canvas) {
       ];
       const geo = new THREE.BufferGeometry().setFromPoints(pts);
       const kind = edge.kind || "meld";
-      const col = kind === "connected" ? 0xf4a261 : kind === "meld" ? 0x4ade80 : kind === "training" ? 0x60a5fa : 0x243552;
+      const col = kind === "fusion" || kind === "agent" ? 0xe76f8a
+        : kind === "truth" || kind === "truth_relay" ? 0xf4a261
+        : kind === "connected" ? 0xf4a261
+        : kind === "meld" ? 0x4ade80
+        : kind === "training" ? 0x60a5fa
+        : 0x243552;
       const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.55 }));
       scene.add(line);
       edgeLines.push(line);

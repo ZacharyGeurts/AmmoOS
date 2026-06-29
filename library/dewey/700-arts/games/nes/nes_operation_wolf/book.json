@@ -1,0 +1,12 @@
+{
+  "id": "nes_operation_wolf",
+  "title": "Operation Wolf",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_operation_wolf-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_operation_wolf/nes_operation_wolf.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

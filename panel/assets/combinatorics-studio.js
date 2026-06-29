@@ -355,7 +355,7 @@
     const cat = comb?.cpu_catalog || {};
     const archs = cat.architectures || [];
     if (totalEl) {
-      const battery = cat.chip_battery_total ?? 0;
+      const battery = cat.ironclad_chips_total ?? cat.chip_battery_total ?? 0;
       const pred = cat.code_path_prediction || {};
       const pct = pred.total_pct != null ? ` · ${pred.total_pct}% paths` : "";
       const bands = pred.bands != null ? ` · ${pred.bands} bands` : "";
@@ -416,6 +416,42 @@
     renderMeldDesign(comb);
     renderBrainSpeed(comb);
     renderCpuCatalog(comb);
+    renderEmulatorLaunch(doc, comb);
+  }
+
+  function renderEmulatorLaunch(doc, comb) {
+    const host = $("comb-emulator-launch");
+    if (!host) return;
+    const posture = comb?.exec_posture || doc?.exec_posture || {};
+    const hook = (comb?.field_surfaces || {}).exec_hook?.emulator_launch;
+    const emulator = posture.emulator || hook?.surface && "FieldChips";
+    if (emulator !== "FieldChips" && !hook) {
+      host.innerHTML = '<p class="comb-muted">Exec posture is not CHIPS retro — walk tree or refresh chip battery.</p>';
+      return;
+    }
+    const system = posture.launch_system || hook?.system || "nes";
+    host.innerHTML = `
+      <div class="comb-emulator-row">
+        <span class="comb-chip on">FieldChips</span>
+        <span class="comb-chip">${esc(system)}</span>
+        <button type="button" class="comb-btn comb-btn--accent" id="comb-launch-gameroom">Launch Game Room</button>
+      </div>
+      <p class="comb-muted">Combinatorics picked CHIPS emulator — spawns queen-game-room pump.</p>`;
+    host.querySelector("#comb-launch-gameroom")?.addEventListener("click", async () => {
+      log(`Launching Game Room CHIPS pump (${system})…`);
+      try {
+        const res = await fetch("/api/game-room", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "launch", system, spawn_rtx: true }),
+        });
+        const out = await res.json();
+        log(out.spawned ? `Pump started: ${out.rom_path || system}` : `Launch: ${out.error || out.message || "see log"}`);
+        if (out.spawned) window.open("/world/queen-game-room.html", "_blank", "noopener");
+      } catch (e) {
+        log(`Game Room launch error: ${e.message || e}`);
+      }
+    });
   }
 
   async function fetchStatus() {

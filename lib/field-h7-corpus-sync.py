@@ -638,17 +638,29 @@ def sync(*, force_manifest: bool = False, build_library: bool = True) -> dict[st
     }
 
 
+def run_field_layer_sweep(*, apply: bool = False) -> dict[str, Any]:
+    mod = _import_nexus("field_layer_sweep", "field-layer-sweep.py")
+    if not mod or not hasattr(mod, "sweep"):
+        return {"ok": True, "skipped": "field_layer_sweep_missing"}
+    try:
+        return mod.sweep(apply=apply, refield_doctrines=False)
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 def sweep(*, purge_apply: bool = False) -> dict[str, Any]:
     """Full sweep — sync knowledge, unlayer corpus JSON, depth cycles, defield audit."""
     sync_report = sync(build_library=False)
     unlayered = unlayer_corpus_files()
     depth = run_depth_cycles(passes=4)
+    layer_sweep = run_field_layer_sweep(apply=purge_apply)
     defield = run_defield_sweep(purge_apply=purge_apply)
     total_unlayer_fixes = sum(int(r.get("fixes") or 0) for r in unlayered)
     total_depth_fixes = sum(int(r.get("fixes") or 0) for r in depth if isinstance(r, dict))
     ok = (
         sync_report.get("ok")
         and defield.get("ok")
+        and layer_sweep.get("ok", True)
         and (sync_report.get("h7_audit") or {}).get("ok", True)
     )
     return {
@@ -660,8 +672,9 @@ def sweep(*, purge_apply: bool = False) -> dict[str, Any]:
         "depth_fixes": total_depth_fixes,
         "unlayered": unlayered,
         "depth_cycles": depth,
+        "field_layer_sweep": layer_sweep,
         "defield": defield,
-        "doctrine": "No fielded H7 tails, no nested nexus-field on drives, depth zero on all corpus.",
+        "doctrine": "No fielded H7 tails, no nested nexus-field on drives, canonical field layer 1 on all corpus.",
     }
 
 

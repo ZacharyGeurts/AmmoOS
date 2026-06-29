@@ -66,10 +66,10 @@ def _import_mod(name: str, rel: str) -> Any | None:
 
 
 def _chip_panel(*, refresh: bool = False) -> dict[str, Any]:
-    mod = _import_mod("fcb", "field-chip-battery.py")
+    mod = _import_mod("ic_chips", "field-ironclad-chips-combinatorics.py")
     if mod and hasattr(mod, "combinatronic_panel"):
         return mod.combinatronic_panel(refresh=refresh, state_dir=STATE)
-    return _load(STATE / "field-chip-battery.json", {})
+    return _load(STATE / "field-ironclad-chips-combinatorics.json", {})
 
 
 def _program_panel(*, refresh: bool = False) -> dict[str, Any]:
@@ -166,7 +166,7 @@ def _connect_graph(chips: list[dict[str, Any]], langs: dict[str, Any]) -> list[d
 def _leaf_score(leaf: dict[str, Any], *, idx: int) -> float:
     base = 1000.0 - idx
     facet = str(leaf.get("facet") or "")
-    if facet == "chips_battery":
+    if facet in ("ironclad_chips", "chips_battery"):
         base += float(leaf.get("path_pct") or 0) * 2
         if str(leaf.get("thermal_tier") or "") == "cool":
             base += 12
@@ -241,13 +241,13 @@ def build_g16_universal(*, refresh: bool = False, force: bool = False) -> dict[s
         refresh = bool(gate.get("effective_refresh", refresh))
 
     if refresh:
-        chip_mod = _import_mod("fcb", "field-chip-battery.py")
+        chip_mod = _import_mod("ic_chips", "field-ironclad-chips-combinatorics.py")
         prog_mod = _import_mod("fpc", "field-program-combinatronic.py")
         if chip_mod and hasattr(chip_mod, "publish_panel"):
-            chip_mod.publish_panel(write_battery=True)
+            chip_mod.publish_panel(write_combinatorics=True)
         if prog_mod and hasattr(prog_mod, "publish_panel"):
             prog_mod.publish_panel(write_battery=True)
-    chips_doc = _load(STATE / "field-chip-battery.json", {}) or _chip_panel(refresh=False)
+    chips_doc = _load(STATE / "field-ironclad-chips-combinatorics.json", {}) or _chip_panel(refresh=False)
     prog_doc = _load(STATE / "field-program-combinatronic.json", {}) or _program_panel(refresh=False)
     sense = _sense_slice()
 
@@ -261,7 +261,7 @@ def build_g16_universal(*, refresh: bool = False, force: bool = False) -> dict[s
             **leaf,
             "id": f"{LEAF_PREFIX}:chip:{lid}",
             "source_leaf": lid,
-            "sub_facet": "chips_battery",
+            "sub_facet": "ironclad_chips",
             "facet": "g16_universal",
         })
     for leaf in prog_leaves_in:
@@ -287,7 +287,7 @@ def build_g16_universal(*, refresh: bool = False, force: bool = False) -> dict[s
     bands = condense_bands(chip_leaves_in, prog_leaves_in)
     chip_rows = chips_doc.get("counts") or {}
     prog_counts = prog_doc.get("counts") or {}
-    chips_list = _load(STATE / "field-chip-battery.json", {}).get("chips") or []
+    chips_list = _load(STATE / "field-ironclad-chips-combinatorics.json", {}).get("chips") or []
     connections = _connect_graph(chips_list, _load(STATE / "field-program-combinatronic.json", {}))
 
     elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
@@ -299,7 +299,7 @@ def build_g16_universal(*, refresh: bool = False, force: bool = False) -> dict[s
         "ok": True,
         "facet": "g16_universal",
         "sub_facets": {
-            "chips_battery": {
+            "ironclad_chips": {
                 "leaf_count": chips_doc.get("leaf_count") or len(chip_leaves_in),
                 "counts": chip_rows,
             },

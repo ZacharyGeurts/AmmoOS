@@ -67,5 +67,10 @@ EOF
     source "${NEXUS_INSTALL_ROOT}/lib/field-perimeter-shield.sh"
     nexus_perimeter_shield_board
   fi
-  nexus_log "INFO" "front-hook" "BOARD_HIT owner=nexus pass_through=${pass} smart_wire=1 underlay=1 tristate=1 perimeter=1"
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-keyboard-sovereign.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/field-keyboard-sovereign.sh"
+    nexus_keyboard_sovereign_engage
+  fi
+  nexus_log "INFO" "front-hook" "BOARD_HIT owner=nexus pass_through=${pass} smart_wire=1 underlay=1 tristate=1 perimeter=1 keyboard_sovereign=1"
 }

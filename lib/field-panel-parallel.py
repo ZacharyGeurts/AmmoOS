@@ -31,9 +31,12 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "lethal_enforcement": ("lethal-enforcement.py", ["panel"]),
     "hostess7_lethal_insight": ("hostess7-lethal-insight.py", ["panel"]),
     "hostess7_command": ("hostess7-command.py", ["panel"]),
+    "hostess7_system_control": ("hostess7-system-control.py", ["json"]),
+    "hostess7_tasklist": ("hostess7-tasklist.py", ["json"]),
+    "hostess7_noti": ("hostess7-noti.py", ["json"]),
+    "noti_field": ("noti.py", ["json"]),
     "hostess7_master": ("hostess7-master.py", ["panel"]),
     "signals_field": ("signals-field.py", ["json"]),
-    "field_antenna": ("field-antenna-orchestrator.py", ["json"]),
     "field_radio": ("field-radio-catcher.py", ["json"]),
     "field_dns": ("field-dns.py", ["json"]),
     "field_outside_talk": ("field-outside-talk.py", ["json"]),
@@ -47,6 +50,7 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "h7_corpus_sync": ("field-h7-corpus-sync.py", ["sync"]),
     "combinatorics_bridge": ("field-plate-combinatorics-bridge.py", ["build"]),
     "plate_meld_orchestrator": ("field-plate-meld-orchestrator.py", ["json"]),
+    "hostess7_userwatch": ("hostess7-userwatch.py", ["json"]),
     "compatibility_layers": ("field-compatibility-layers.py", ["json"]),
     "field_filesystem": ("field-filesystem-update.py", ["json"]),
     "always_files": ("field-always-files.py", ["json"]),
@@ -74,6 +78,7 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "browser_awareness": ("browser-awareness.py", ["json"]),
     "field_queen_browser": ("field-queen-browser.py", ["json"]),
     "field_stack": ("queen_field_nexus.py", ["json"]),
+    "field_stack_layer": ("field-stack-layer.py", ["json"]),
     "trust_strike": ("trust-strike-engine.py", ["summary"]),
     "police_agency": ("police-agency-db.py", ["json"]),
     "human_registry": ("human-registry.py", ["json"]),
@@ -104,7 +109,9 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "iron_plate_motion": ("iron-plate-motion-resolve.py", ["resolve"]),
     "iron_plate_organize": ("iron-plate-organize.py", ["json"]),
     "iron_plate_spot": ("iron-plate-spot-detector.py", ["json"]),
-    "chip_battery": ("field-chip-battery.py", ["json"]),
+    "ironclad_chips": ("field-ironclad-chips-combinatorics.py", ["json"]),
+    "chips_plate_stack": ("field-chips-plate-stack.py", ["json"]),
+    "chips_core": ("field-chips-core.py", ["json"]),
     "program_combinatronic": ("field-program-combinatronic.py", ["json"]),
     "g16_universal": ("field-g16-universal-combinatronic.py", ["json"]),
     "cpu_library": ("field-cpu-library.py", ["json"]),
@@ -266,23 +273,48 @@ def _maybe_auto_engage_diagnostic() -> dict[str, Any] | None:
     return None
 
 
+def _radio_audio_disabled_keys() -> set[str]:
+    """Field antenna / OTA radio / audio train removed from this install profile."""
+    keys: set[str] = {"field_antenna"}
+    if os.environ.get("NEXUS_SIGNALS_FIELD", "1") == "0":
+        keys.add("signals_field")
+    if os.environ.get("NEXUS_FIELD_RADIO", "1") == "0":
+        keys.add("field_radio")
+    if os.environ.get("NEXUS_AUDIO_TRAIN", "1") == "0":
+        keys.add("audio_train")
+    if os.environ.get("NEXUS_FIELD_RF_SENTINEL", "1") == "0":
+        keys.add("field_rf")
+    if os.environ.get("NEXUS_FIELD_RADIO", "1") == "0":
+        keys.add("field_audio")
+        keys.add("field_broadcaster")
+    return keys
+
+
+def _apply_slice_toggles(slices: dict[str, tuple[str, list[str]]]) -> dict[str, tuple[str, list[str]]]:
+    drop = _radio_audio_disabled_keys()
+    if not drop:
+        return slices
+    return {k: v for k, v in slices.items() if k not in drop}
+
+
 def _diagnostic_filter_slices() -> dict[str, tuple[str, list[str]]]:
+    base = _apply_slice_toggles(FIELD_SLICES)
     try:
         import importlib.util
 
         diag_py = INSTALL / "lib" / "field-diagnostic-mode.py"
         if not diag_py.is_file():
-            return FIELD_SLICES
+            return base
         spec = importlib.util.spec_from_file_location("field_diagnostic_mode", diag_py)
         if not spec or not spec.loader:
-            return FIELD_SLICES
+            return base
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         if hasattr(mod, "filter_field_slices"):
-            return mod.filter_field_slices(FIELD_SLICES)
+            return _apply_slice_toggles(mod.filter_field_slices(base))
     except Exception:
         pass
-    return FIELD_SLICES
+    return base
 
 
 def publish_parallel(*, max_workers: int | None = None) -> dict[str, Any]:

@@ -1,0 +1,12 @@
+{
+  "id": "nes_fantastic_adventures_of_dizzy",
+  "title": "Fantastic Adventures of Dizzy",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_fantastic_adventures_of_dizzy-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_fantastic_adventures_of_dizzy/nes_fantastic_adventures_of_dizzy.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

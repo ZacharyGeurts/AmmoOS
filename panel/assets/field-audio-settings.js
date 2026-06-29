@@ -275,13 +275,7 @@
         " sources";
     }
     const adv = $("fa-advanced");
-    if (adv && !adv._bound) {
-      adv._bound = true;
-      adv.checked = !!(data.settings || {}).advanced;
-      adv.onchange = function () {
-        applySettings({ advanced: adv.checked });
-      };
-    }
+    if (adv) adv.checked = false;
   }
 
   async function applySettings(patch) {

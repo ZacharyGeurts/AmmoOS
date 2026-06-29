@@ -73,12 +73,12 @@ bool pickEngine(std::string& binary, std::string& engine_id) noexcept {
         {root.string() + "/vendor/ladybird/Build/release/bin/Ladybird", "ladybird"},
         {root.string() + "/vendor/ladybird/build/bin/Ladybird", "ladybird"},
         {root.string() + "/build/servo/servo", "servo"},
-        {"fieldfox", "fieldfox"},
+        {root.string() + "/build/rtx/bin/Linux/queen-browser", "queen-browser"},
+        {root.string() + "/field-gecko/bin/queen-browser", "queen-field-engine"},
+        {root.string() + "/build/field-gecko/bin/queen-browser", "queen-field-engine"},
+        {"queen-browser", "queen-browser"},
+        {"queen-field-engine", "queen-field-engine"},
         {"field-queen", "field-queen"},
-        {"queen-browser", "queen-shell"},
-        {"firefox", "gecko"},
-        {"librewolf", "gecko"},
-        {"floorp", "gecko"},
     };
     for (const auto& [path, id] : candidates) {
         if (path.find('/') != std::string::npos) {
@@ -102,12 +102,12 @@ bool launchEngine(const std::string& binary, const char* url) noexcept {
     if (binary.find('/') != std::string::npos) {
         cmd = "\"" + binary + "\" \"" + url + "\" &";
     } else {
-        const char* launch = std::getenv("NEXUS_INSTALL_ROOT");
-        std::string ff;
-        if (launch) {
-            ff = std::string(launch) + "/lib/fieldfox-launch.sh";
-            if (std::filesystem::exists(ff)) {
-                cmd = "NEXUS_INSTALL_ROOT=\"" + std::string(launch) + "\" \"" + ff + "\" \"" +
+        const char* queen = std::getenv("QUEEN_ROOT");
+        std::string launcher;
+        if (queen) {
+            launcher = std::string(queen) + "/field-gecko/bin/launch-field-gecko.sh";
+            if (std::filesystem::exists(launcher)) {
+                cmd = "QUEEN_ROOT=\"" + std::string(queen) + "\" \"" + launcher + "\" \"" +
                       url + "\" &";
                 return std::system(cmd.c_str()) == 0;
             }

@@ -1,0 +1,12 @@
+{
+  "id": "nes_joe_mac_caveman_ninja",
+  "title": "Joe & Mac: Caveman Ninja",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_joe_mac_caveman_ninja-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_joe_mac_caveman_ninja/nes_joe_mac_caveman_ninja.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

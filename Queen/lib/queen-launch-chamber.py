@@ -1293,6 +1293,37 @@ def write_launch_file(
     }
 
 
+def _launch_emulator_rom(entry: Path, *, system: str = "nes") -> dict[str, Any]:
+    """Route ROM files to Queen Game Room CHIPS pump instead of direct exec."""
+    import importlib.util
+
+    chips_py = QUEEN / "lib" / "queen-chips.py"
+    if not chips_py.is_file():
+        return {"ok": False, "error": "queen_chips_missing"}
+    spec = importlib.util.spec_from_file_location("queen_chips_launch", chips_py)
+    if not spec or not spec.loader:
+        return {"ok": False, "error": "queen_chips_import_failed"}
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    ext = entry.suffix.lower()
+    sys_id = system
+    if ext == ".nes":
+        sys_id = "nes"
+    elif ext in (".smc", ".sfc"):
+        sys_id = "snes"
+    elif ext in (".gb", ".gbc"):
+        sys_id = "gameboy"
+    elif ext in (".z64", ".v64", ".n64"):
+        sys_id = "n64"
+    if hasattr(mod, "launch_emulator"):
+        out = mod.launch_emulator(system=sys_id, body={"rom_path": str(entry.resolve())})
+        out["launch_mode"] = "emulator"
+        out["entry"] = str(entry)
+        out["runtime"] = "emulator"
+        return out
+    return {"ok": False, "error": "launch_emulator_unavailable"}
+
+
 def _run_cmd(runtime: str, entry: Path, root: Path) -> list[str]:
     py = _resolve_pythong()
     if runtime == "python":
@@ -1384,6 +1415,17 @@ def run_chamber(
         return {"ok": False, "error": "entry_missing", "entry": str(entry), "manifest": manifest}
 
     runtime = str(manifest.get("runtime") or _runtime_for_entry(entry_name))
+    if runtime == "emulator" and entry.suffix.lower() in (
+        ".nes", ".smc", ".sfc", ".gb", ".gbc", ".gba", ".z64", ".v64", ".n64",
+        ".pce", ".sms", ".rom",
+    ):
+        emu = _launch_emulator_rom(entry)
+        emu["manifest"] = {k: v for k, v in manifest.items() if not k.startswith("_")}
+        emu["launch_path"] = launch_path
+        emu["cwd"] = str(root)
+        emu["message"] = emu.get("message") or f"Emulator routed to Game Room — {entry.name}"
+        return emu
+
     cmd = _run_cmd(runtime, entry, root)
     if args:
         cmd.extend(args)

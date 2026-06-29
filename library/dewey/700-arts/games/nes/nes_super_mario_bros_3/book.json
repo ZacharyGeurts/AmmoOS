@@ -1,0 +1,10 @@
+{
+  "id": "nes_super_mario_bros_3",
+  "title": "Super Mario Bros. 3",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_super_mario_bros_3/nes_super_mario_bros_3.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_super_mario_bros_3-box.png",
+  "ready": true
+}

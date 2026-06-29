@@ -255,6 +255,22 @@ def _write_notify(*, packet_id: str, verb: str, linear_ns: int, derived_utc: str
         "updated": _now(),
     }
     _save(NOTIFY, doc)
+    try:
+        h7n = INSTALL / "lib" / "hostess7-noti.py"
+        if h7n.is_file():
+            import subprocess
+            import sys
+
+            subprocess.run(
+                [sys.executable, str(h7n), "dispatch"],
+                input=json.dumps({"action": "field_io", "notify": doc}),
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+            )
+    except (OSError, subprocess.TimeoutExpired):
+        pass
     return doc
 
 

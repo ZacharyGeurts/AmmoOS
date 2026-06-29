@@ -34,6 +34,17 @@
     "thoughts": "cache/fieldstorage/brain/thoughts.jsonl",
     "queen_api": "/api/field-brain",
     "queen_dispatch": {"action": "ai_operate", "query": "…"},
+    "znetwork_wire": {
+      "module": "lib/hostess7-znetwork-wire.py",
+      "api": "/api/hostess7/znetwork",
+      "speak_api": "/api/hostess7/znetwork/speak",
+      "profile": "data/hostess7-communication-profile.json",
+      "profile_source": "https://x.com/ZacharyGeurts",
+      "build_script": "scripts/build-hostess7-comm-profile.py",
+      "sole_egress": "znetwork_relayer",
+      "local_only": true,
+      "queen_outbound": true
+    },
     "external_wire": {
       "lane": "External",
       "tier": "beyond_darpa_lockheed",

@@ -1,0 +1,12 @@
+{
+  "id": "nes_jackie_chans_action_kung_fu",
+  "title": "Jackie Chan's Action Kung Fu",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_jackie_chans_action_kung_fu-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_jackie_chans_action_kung_fu/nes_jackie_chans_action_kung_fu.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

@@ -289,16 +289,53 @@ def kilroy_status() -> dict[str, Any]:
 def amouranthrtx_status() -> dict[str, Any]:
     rtx = amouranthrtx_root()
     git = _git_head(rtx)
-    bin_path = _queen_binary()
     qa = rtx / "build-release" / "bin" / "Linux" / "qa_field_kilroy_test"
     if not qa.is_file():
         qa = rtx / "build" / "bin" / "Linux" / "qa_field_kilroy_test"
     zc = _load_json(QUEEN / "data" / "queen-zero-cost-4slot.json")
+    install = _sg_root() / "AmmoOS"
+    rtx_doc = _load_json(install / "data" / "field-rtx-display-doctrine.json")
+    if not rtx_doc:
+        rtx_doc = _load_json(_sg_root() / "AmmoOS" / "data" / "field-rtx-display-doctrine.json")
+    os_shaders = [
+        str(mod.get("id"))
+        for mod in (rtx_doc.get("os_shaders") or {}).get("modules") or []
+        if mod.get("id")
+    ]
+    shader_dir = rtx / "Navigator" / "shaders" / "compute"
+    os_ok = all((shader_dir / f"{s}.comp").is_file() for s in os_shaders) if os_shaders else False
+    canvas_mod = None
+    canvas_path = QUEEN / "lib" / "queen-canvas-renderer.py"
+    if canvas_path.is_file():
+        try:
+            spec = importlib.util.spec_from_file_location("queen_canvas_kilroy", canvas_path)
+            if spec and spec.loader:
+                cm = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(cm)
+                if hasattr(cm, "posture"):
+                    canvas_mod = cm.posture()
+        except Exception:
+            canvas_mod = None
     return {
-        "schema": "queen-amouranthrtx/v1",
+        "schema": "queen-field-rtx/v1",
         "repo": AMOURANTHRTX_REPO,
         "root": str(rtx),
         "present": rtx.is_dir() and (rtx / "CMakeLists.txt").is_file(),
+        "role": rtx_doc.get("role", "display_technology"),
+        "is_gui": rtx_doc.get("is_gui", False),
+        "stack_layer": (rtx_doc.get("stack_layer") or {}).get("id", "queen_canvas"),
+        "default_canvas": (rtx_doc.get("os_shaders") or {}).get("default", "CANVAS"),
+        "desktop_comp_shader": (rtx_doc.get("queen_backend") or {}).get("desktop_comp_shader", False),
+        "os_shaders": os_shaders,
+        "os_shaders_ok": os_ok,
+        "demo_shaders_policy": "demos_only — set AMOURANTHRTX_DEMO=1",
+        "engines": {
+            "pipeline": (rtx / "Navigator" / "engine" / "Pipeline.hpp").is_file(),
+            "field_fabric": (rtx / "Navigator" / "engine" / "FieldFabric.hpp").is_file(),
+            "field_thermal_guard": (rtx / "Navigator" / "engine" / "FieldThermalGuard.hpp").is_file(),
+            "field_gpu_launch": (rtx / "Navigator" / "engine" / "FieldGpuLaunch.hpp").is_file(),
+            "field_rtx_drivers": (rtx / "Navigator" / "engine" / "FieldRtxDrivers.hpp").is_file(),
+        },
         "zero_cost_4_slot": {
             "enabled": True,
             "runtime_tax": zc.get("runtime_tax", 0),
@@ -307,18 +344,15 @@ def amouranthrtx_status() -> dict[str, Any]:
                 {"id": "TIME"}, {"id": "MEMORY"}, {"id": "THERMO"}, {"id": "CONTEXT"},
             ],
             "queen_exceeds": zc.get("queen_exceeds_rtx", True),
-            "file_browser_jail": True,
         },
         "field_kilroy": str(rtx / "FieldKilroy"),
         "field_kilroy_present": (rtx / "FieldKilroy" / "FieldKilroyCompat.hpp").is_file(),
-        "field_queen_browser": str(rtx / "Navigator" / "engine" / "FieldQueenBrowser.cpp"),
+        "canvas_renderer": canvas_mod,
         "kilroy_os_script": str(rtx / "scripts" / "build_kilroy_os.sh"),
         "git": git,
-        "queen_binary": str(bin_path) if bin_path else None,
-        "queen_binary_ready": bool(bin_path and bin_path.is_file()),
         "qa_field_kilroy": str(qa) if qa.is_file() else None,
         "build": {
-            "queen": "pythong lib/queen-forge.py run rtx",
+            "canvas": "pythong Queen/lib/queen-canvas-renderer.py json",
             "kilroy_os": f"{rtx}/scripts/build_kilroy_os.sh all",
             "field_kilroy_qa": f"{rtx}/scripts/field_kilroy.sh qa",
         },

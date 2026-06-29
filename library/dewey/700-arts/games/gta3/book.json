@@ -1,12 +1,12 @@
 {
   "id": "gta3",
   "title": "Grand Theft Auto III",
-  "author": "",
+  "author": "Field Extensive Library",
   "dewey": "794.8",
-  "format": "h7c",
-  "h7c": "library/dewey/700-arts/games/gta3/gta3.h7c",
-  "h7": null,
+  "format": "h7/7",
   "cover": null,
-  "migrated_from": "h7",
-  "updated": "2026-06-27T12:05:21Z"
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/gta3/gta3.h7",
+  "face_format": "h7b",
+  "properties_only_h7": true
 }

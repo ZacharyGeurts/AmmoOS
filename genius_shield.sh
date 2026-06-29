@@ -155,8 +155,8 @@ nexus_sign_manifest /usr/local/lib/nexus-shield/MANIFEST.sha256
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/seal-vault.sh"
 # ZNetwork — build + ship binary for startup Yes/No/Skip dialog
-ZN_SRC="$(cd "${ROOT}/../ZNetwork" 2>/dev/null && pwd)"
-[[ -d "$ZN_SRC" ]] || ZN_SRC="$(cd "${SG_ROOT:-${ROOT}/..}/ZNetwork" 2>/dev/null && pwd)"
+ZN_SRC="$(cd "${ROOT}/ZNetwork" 2>/dev/null && pwd)"
+[[ -d "$ZN_SRC" ]] || ZN_SRC="$(cd "${SG_ROOT:-${ROOT}/..}/NewLatest/ZNetwork" 2>/dev/null && pwd)"
 if [[ -d "$ZN_SRC" ]]; then
   install -d -m 755 /usr/local/lib/nexus-shield/bin /usr/local/lib/nexus-shield/znetwork/data
   cp -a "${ZN_SRC}/scripts" /usr/local/lib/nexus-shield/znetwork/ 2>/dev/null || true

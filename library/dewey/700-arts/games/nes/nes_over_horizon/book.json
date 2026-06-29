@@ -1,0 +1,12 @@
+{
+  "id": "nes_over_horizon",
+  "title": "Over Horizon",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_over_horizon-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_over_horizon/nes_over_horizon.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

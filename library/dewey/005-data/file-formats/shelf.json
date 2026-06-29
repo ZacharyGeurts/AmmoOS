@@ -3,9 +3,9 @@
   "shelf": "005-data/file-formats",
   "code": "005",
   "title": "005-data/file-formats",
-  "updated": "2026-06-27T12:37:26Z",
+  "updated": "2026-06-29T09:43:43Z",
   "format_primary": "h7c",
-  "book_count": 64,
+  "book_count": 68,
   "h7c_count": 0,
   "books": [
     {
@@ -136,6 +136,26 @@
       "format": "registry-entry",
       "h7c": null,
       "cover": "/library/assets/formats/fld.png",
+      "ready": false
+    },
+    {
+      "id": "format-fielddrive",
+      "title": "Field Drive",
+      "author": "",
+      "dewey": null,
+      "format": "registry-entry",
+      "h7c": null,
+      "cover": "/library/assets/formats/fielddrive.png",
+      "ready": false
+    },
+    {
+      "id": "format-field_io_packet",
+      "title": "Field I/O Packet",
+      "author": "",
+      "dewey": null,
+      "format": "registry-entry",
+      "h7c": null,
+      "cover": "/library/assets/formats/field_io_packet.png",
       "ready": false
     },
     {
@@ -559,23 +579,23 @@
       "ready": false
     },
     {
-      "id": "format-wrdt",
-      "title": "WRDT",
+      "id": "format-media_wma",
+      "title": "WMA",
       "author": "",
       "dewey": null,
       "format": "registry-entry",
       "h7c": null,
-      "cover": "/library/assets/formats/wrdt.png",
+      "cover": "/library/assets/formats/media_wma.png",
       "ready": false
     },
     {
-      "id": "format-wrzc",
-      "title": "WRZC",
+      "id": "format-vcodec_wmv",
+      "title": "WMV",
       "author": "",
       "dewey": null,
       "format": "registry-entry",
       "h7c": null,
-      "cover": "/library/assets/formats/wrzc.png",
+      "cover": "/library/assets/formats/vcodec_wmv.png",
       "ready": false
     },
     {
@@ -616,6 +636,26 @@
       "format": "registry-entry",
       "h7c": null,
       "cover": "/library/assets/formats/media_wmv.png",
+      "ready": false
+    },
+    {
+      "id": "format-wrdt",
+      "title": "World Redata WRDT1",
+      "author": "",
+      "dewey": null,
+      "format": "registry-entry",
+      "h7c": null,
+      "cover": "/library/assets/formats/wrdt.png",
+      "ready": false
+    },
+    {
+      "id": "format-wrzc",
+      "title": "World Redata WRZC1",
+      "author": "",
+      "dewey": null,
+      "format": "registry-entry",
+      "h7c": null,
+      "cover": "/library/assets/formats/wrzc.png",
       "ready": false
     },
     {

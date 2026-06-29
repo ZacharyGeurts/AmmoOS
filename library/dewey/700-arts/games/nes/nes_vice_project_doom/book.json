@@ -1,0 +1,10 @@
+{
+  "id": "nes_vice_project_doom",
+  "title": "Vice: Project Doom",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_vice_project_doom/nes_vice_project_doom.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_vice_project_doom-box.png",
+  "ready": true
+}

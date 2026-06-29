@@ -43,6 +43,16 @@ def _load(path: Path, default: Any = None) -> Any:
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
+    pio_path = INSTALL / "lib" / "plate-sealed-io.py"
+    if pio_path.is_file():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("plate_sealed_io_ipo", pio_path)
+        if spec and spec.loader:
+            pio = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(pio)
+            if hasattr(pio, "sealed_write_json"):
+                pio.sealed_write_json(path, doc)
+                return
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -265,7 +275,15 @@ def _ironclad_chain_tree(
         if nid == "c2_taskbar":
             live = bsp_hit
         connections.append({**node, "live": live})
-    replate = organize_gain >= 0.42 and grounded and bridge_ok and bsp_hit
+    replate_raw = organize_gain >= 0.42 and grounded and bridge_ok and bsp_hit
+    replate_gate: dict[str, Any] = {"replate_recommended": replate_raw, "replate_held": False}
+    uw = _import_py(INSTALL / "lib" / "hostess7-userwatch.py", "iron_uw")
+    if uw and hasattr(uw, "gate_replate"):
+        try:
+            replate_gate = uw.gate_replate(replate_raw)
+        except Exception:
+            replate_gate = {"replate_recommended": replate_raw, "replate_held": False}
+    replate = bool(replate_gate.get("replate_recommended"))
     return {
         "schema": "ironclad-organize-chain/v1",
         "citation": chain_doc.get("citation") or "ironclad:neural:2",
@@ -280,12 +298,17 @@ def _ironclad_chain_tree(
         "meta_plate_count": plate_condense.get("meta_plate_count"),
         "organize_gain": organize_gain,
         "replate_recommended": replate,
+        "replate_raw": replate_raw,
+        "replate_held": bool(replate_gate.get("replate_held")),
+        "replate_hold_reason": replate_gate.get("hold_reason"),
+        "userwatch_zones": replate_gate.get("work_zones") or [],
         "connections": connections,
         "connections_live": sum(1 for c in connections if c.get("live")),
         "browser_in_c2": any(c.get("id") == "browser_display" for c in connections),
         "posture": (
             f"Ironclad chain · gain {organize_gain:.2f} · "
-            f"{'replate' if replate else 'hold'} · {sum(1 for c in connections if c.get('live'))} nodes live"
+            f"{'replate held' if replate_gate.get('replate_held') else ('replate' if replate else 'hold')} · "
+            f"{sum(1 for c in connections if c.get('live'))} nodes live"
         ),
     }
 
@@ -434,6 +457,72 @@ def apply_to_desktop(
     }
 
 
+def organize_chip_paths(*, limit: int = 48) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Iron Plate chip_paths — THE sort (composite_bsp) from CHIPS core, plate stack, or Ironclad chips."""
+    core = _load(STATE / "field-chips-core.json", {})
+    if core.get("condensed") and core.get("core_modules"):
+        rows = [
+            {
+                "id": m.get("core_id") or m.get("id"),
+                "name": m.get("label"),
+                "family": m.get("family"),
+                "path_pct": m.get("path_pct"),
+                "slot": m.get("slot"),
+                "chip_count": m.get("chip_count"),
+            }
+            for m in (core.get("core_modules") or [])[:limit]
+        ]
+        return rows, {
+            "source": "chips_core",
+            "count": len(rows),
+            "the_sort": True,
+            "condensed": True,
+            "ironclad_grounded": bool(core.get("ironclad_sealed")),
+            "ironclad_citation": core.get("ironclad_citation") or "ironclad:chips:core",
+        }
+
+    stack = _load(STATE / "field-chips-plate-stack.json", {})
+    if stack.get("modules"):
+        rows = [
+            {
+                "id": m.get("chip_id"),
+                "name": m.get("label"),
+                "family": m.get("family"),
+                "band": m.get("band"),
+                "path_pct": m.get("path_pct"),
+                "iron_slot": m.get("iron_slot"),
+                "bsp_model": m.get("bsp_model"),
+            }
+            for m in (stack.get("modules") or [])[:limit]
+        ]
+        meta = (stack.get("layers") or {}).get("iron_plate") or {}
+        return rows, {**meta, "source": "chips_plate_stack", "count": len(rows)}
+
+    combinatorics = _load(STATE / "field-ironclad-chips-combinatorics.json", {})
+    chips = list(combinatorics.get("chips") or [])
+    rows = [
+        {
+            "id": c.get("id"),
+            "name": c.get("label"),
+            "family": c.get("family"),
+            "band": c.get("band"),
+            "path_pct": c.get("path_pct"),
+            "slot": c.get("slot"),
+        }
+        for c in chips[:limit]
+    ]
+    sorted_rows, meta = _sort_rows(rows, context="chip_paths", algorithm="composite_bsp", n=len(rows))
+    imm = _ironclad_immediate()
+    return sorted_rows, {
+        **meta,
+        "source": "ironclad_chips",
+        "count": len(sorted_rows),
+        "the_sort": True,
+        "ironclad_grounded": bool(imm.get("ironclad_sealed") or (imm.get("plate_to_sense") or {}).get("ironclad_grounded")),
+        "ironclad_citation": "ironclad:neural:2",
+    }
+
+
 def _plate_spots() -> dict[str, Any]:
     spot_py = INSTALL / "lib" / "iron-plate-spot-detector.py"
     mod = _import_py(spot_py, "iron_spot_organize")
@@ -490,6 +579,7 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
     tray = desktop.get("startbar", {}).get("tray_icons") or _load(INSTALL / "data" / "field-host-desktop-doctrine.json", {}).get("tray_icons") or []
 
     organized = apply_to_desktop(menu=menu, monitor=monitor, tray_icons=list(tray))
+    chip_path_rows, chip_path_meta = organize_chip_paths()
     format_rows, format_sort = organize_format_table()
     condense_rows, condense_meta = organize_condense_groups(bridge)
     posture = bridge.get("exec_posture") or {}
@@ -511,9 +601,22 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
     iron_ok = bool(iron.get("connection_count") or iron.get("ok") or iron.get("plated"))
     organize_ok = ENABLED and tools_live >= 3 and (power_ok or bsp_ok or bridge_ok or iron_ok)
 
+    stack_witness: dict[str, Any] = {}
+    pio_path = INSTALL / "lib" / "plate-sealed-io.py"
+    if pio_path.is_file():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("plate_sealed_io_ipo2", pio_path)
+        if spec and spec.loader:
+            pio = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(pio)
+            if hasattr(pio, "stack_fabric_witness"):
+                stack_witness = pio.stack_fabric_witness()
+
     doc = {
         "schema": "iron-plate-organize/v1",
         "updated": _now(),
+        "stack_fabric": stack_witness,
+        "meld_citation": "ironclad:meld:2",
         "enabled": ENABLED,
         "product": doctrine.get("iron_plate_product") or "Simple Iron Plate",
         "motto": doctrine.get("motto"),
@@ -531,6 +634,13 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
             "source": power.get("source"),
             "always_best_sort": True,
             "field_unique_best": True,
+        },
+        "chip_paths": {
+            "count": len(chip_path_rows),
+            "sort": chip_path_meta,
+            "algorithm": chip_path_meta.get("algorithm") or "composite_bsp",
+            "source": chip_path_meta.get("source"),
+            "sample": chip_path_rows[:12],
         },
         "format_table": {
             "count": len(format_rows),

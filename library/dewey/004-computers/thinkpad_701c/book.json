@@ -1,12 +1,12 @@
 {
   "id": "thinkpad_701c",
   "title": "ThinkPad 701C",
-  "author": "",
+  "author": "Field Extensive Library",
   "dewey": "004.16",
-  "format": "h7c",
-  "h7c": "library/dewey/004-computers/thinkpad_701c/thinkpad_701c.h7c",
-  "h7": null,
-  "cover": null,
-  "migrated_from": "h7",
-  "updated": "2026-06-27T12:05:11Z"
+  "format": "h7/7",
+  "cover": "/library/assets/devices/thinkpad_701c.png",
+  "ready": true,
+  "h7": "library/dewey/004-computers/thinkpad_701c/thinkpad_701c.h7",
+  "face_format": "h7b",
+  "properties_only_h7": true
 }

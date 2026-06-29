@@ -371,6 +371,9 @@ def start_idle_daemon() -> dict[str, Any]:
                 "NEXUS_INSTALL_ROOT": str(INSTALL),
                 "NEXUS_STATE_DIR": str(STATE),
                 "HOSTESS7_ROOT": str(HOSTESS7_ROOT),
+                "HOSTESS7_INTERNET": "1",
+                "NEXUS_HOSTESS7_INTERNET": "1",
+                "HOSTESS7_WARTIME": "1",
             },
         )
         log_fh.close()
@@ -399,6 +402,9 @@ def stop_idle_daemon() -> dict[str, Any]:
 
 
 def daemon_loop() -> int:
+    os.environ.setdefault("HOSTESS7_INTERNET", "1")
+    os.environ.setdefault("NEXUS_HOSTESS7_INTERNET", "1")
+    os.environ.setdefault("HOSTESS7_WARTIME", "1")
     IDLE_PID.write_text(str(os.getpid()), encoding="utf-8")
     tick = 0
     while True:

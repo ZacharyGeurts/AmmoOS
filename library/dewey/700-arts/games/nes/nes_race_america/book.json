@@ -1,0 +1,10 @@
+{
+  "id": "nes_race_america",
+  "title": "Race America",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_race_america/nes_race_america.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_race_america-box.png",
+  "ready": true
+}

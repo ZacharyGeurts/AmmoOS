@@ -1,0 +1,10 @@
+{
+  "id": "nes_silver_surfer",
+  "title": "Silver Surfer",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_silver_surfer/nes_silver_surfer.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_silver_surfer-box.png",
+  "ready": true
+}

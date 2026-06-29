@@ -1,0 +1,12 @@
+{
+  "id": "nes_knightmare_2_the_maze_of_galious",
+  "title": "Knightmare 2: The Maze of Galious",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_knightmare_2_the_maze_of_galious-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_knightmare_2_the_maze_of_galious/nes_knightmare_2_the_maze_of_galious.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

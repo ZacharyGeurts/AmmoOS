@@ -1,0 +1,12 @@
+{
+  "id": "nes_predator_soon_the_hunt_will_begin",
+  "title": "Predator: Soon the Hunt Will Begin",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_predator_soon_the_hunt_will_begin-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_predator_soon_the_hunt_will_begin/nes_predator_soon_the_hunt_will_begin.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

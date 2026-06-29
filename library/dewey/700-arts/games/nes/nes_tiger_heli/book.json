@@ -1,0 +1,10 @@
+{
+  "id": "nes_tiger_heli",
+  "title": "Tiger Heli",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_tiger_heli/nes_tiger_heli.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_tiger_heli-box.png",
+  "ready": true
+}

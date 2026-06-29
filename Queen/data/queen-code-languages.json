@@ -17,6 +17,7 @@
     "d",
     "dart",
     "delphi",
+    "economics",
     "elixir",
     "erlang",
     "field",
@@ -29,6 +30,7 @@
     "javascript",
     "julia",
     "kotlin",
+    "linux",
     "lisp",
     "lua",
     "matlab",
@@ -94,6 +96,7 @@
     ".diff": "diff",
     ".dockerfile": "dockerfile",
     ".dpr": "delphi",
+    ".economics": "economics",
     ".erl": "erlang",
     ".ex": "elixir",
     ".exs": "elixir",
@@ -133,6 +136,7 @@
     ".kts": "kotlin",
     ".less": "css",
     ".lhs": "haskell",
+    ".linux": "linux",
     ".lisp": "lisp",
     ".log": "log",
     ".lsp": "lisp",
@@ -252,7 +256,9 @@
     "forth": "belt_1_0",
     "apl": "belt_1_0",
     "algol": "belt_1_0",
-    "snobol": "belt_1_0"
+    "snobol": "belt_1_0",
+    "economics": "belt_1_0",
+    "linux": "belt_1_0"
   },
   "viewer": {
     "module": "world/queen-viewer.js",

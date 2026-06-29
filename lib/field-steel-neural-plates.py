@@ -42,6 +42,10 @@ def _load(path: Path, default: Any = None) -> Any:
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
+    pio = _import_mod("plate_sealed_io", "plate-sealed-io.py")
+    if pio and hasattr(pio, "sealed_write_json"):
+        pio.sealed_write_json(path, doc)
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -85,12 +89,22 @@ def _norm_tokens(row: dict[str, Any], keys: list[str]) -> set[str]:
     return out
 
 
-def _plate_members(doc: dict[str, Any], leaf_key: str, bridge_keys: list[str], *, limit: int = 128) -> list[dict[str, Any]]:
+def _source_state_path(src: dict[str, Any]) -> str:
+    """Resolve state file — combinatorics, battery, or panel."""
+    for key in ("combinatorics", "battery", "panel"):
+        val = str(src.get(key) or "").strip()
+        if val:
+            return val
+    return ""
+
+
+def _plate_members(doc: dict[str, Any], leaf_key: str, bridge_keys: list[str], *, limit: int = 0) -> list[dict[str, Any]]:
     rows = doc.get(leaf_key) or []
     if not isinstance(rows, list):
         return []
     members: list[dict[str, Any]] = []
-    for i, row in enumerate(rows[:limit]):
+    cap = len(rows) if limit <= 0 else min(len(rows), limit)
+    for i, row in enumerate(rows[:cap]):
         if not isinstance(row, dict):
             continue
         mid = str(row.get("id") or row.get("chip_id") or row.get("instruction") or f"m:{i}")
@@ -109,8 +123,8 @@ def _build_plates(doctrine: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[
     by_id: dict[str, dict[str, Any]] = {}
     for src in doctrine.get("plate_sources") or []:
         pid = str(src.get("id") or "")
-        bat = str(src.get("battery") or "")
-        doc = _load(STATE / bat, {})
+        bat = _source_state_path(src)
+        doc = _load(STATE / bat, {}) if bat else {}
         members = _plate_members(
             doc,
             str(src.get("leaf_key") or "combinatorics_leaves"),
@@ -347,9 +361,16 @@ def build_steel_plates(*, refresh: bool = False, force: bool = False) -> dict[st
         plates = bal.stamp_optimized(plates, balanced=at_balance)
 
     elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
+    stack_witness: dict[str, Any] = {}
+    pio = _import_mod("plate_sealed_io_sn", "plate-sealed-io.py")
+    if pio and hasattr(pio, "stack_fabric_witness"):
+        stack_witness = pio.stack_fabric_witness()
+
     result = {
         "schema": "field-steel-neural-plates/v1",
         "updated": _now(),
+        "stack_fabric": stack_witness,
+        "meld_citation": "ironclad:meld:2",
         "motto": doctrine.get("motto"),
         "ok": len(plates) > 0,
         "plate_count": len(plates),
@@ -387,7 +408,9 @@ def publish_panel(*, refresh: bool = False, write_battery: bool = True, force: b
     battery = build_steel_plates(refresh=refresh, force=force)
     panel = {
         "schema": "field-steel-neural-plates-panel/v1",
-        "updated": battery.get("updated"),
+        "updated": _now(),
+        "stack_fabric": battery.get("stack_fabric"),
+        "meld_citation": battery.get("meld_citation") or "ironclad:meld:2",
         "ok": battery.get("ok"),
         "motto": battery.get("motto"),
         "plate_count": battery.get("plate_count"),

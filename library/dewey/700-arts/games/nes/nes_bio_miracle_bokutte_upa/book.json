@@ -1,0 +1,12 @@
+{
+  "id": "nes_bio_miracle_bokutte_upa",
+  "title": "Bio Miracle Bokutte Upa",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_bio_miracle_bokutte_upa-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_bio_miracle_bokutte_upa/nes_bio_miracle_bokutte_upa.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

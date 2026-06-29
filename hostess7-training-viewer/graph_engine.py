@@ -176,6 +176,36 @@ def probe_model(model: dict[str, Any], *, install: Path, state: Path, hostess7: 
     return out
 
 
+AGENTS7_DEFS: tuple[tuple[int, str, str, str], ...] = (
+    (0, "Hostess-Prime", "hostess", "👑"),
+    (1, "Economist", "economist", "📈"),
+    (2, "War-Chief", "war-chief", "⚔️"),
+    (3, "Technologist", "technologist", "🔬"),
+    (4, "Counsel", "counsel", "⚖️"),
+    (5, "Clinic", "clinic", "🩺"),
+    (6, "Physicist", "physicist", "🌌"),
+    (7, "Chemist", "chemist", "⚗️"),
+    (8, "Coder", "coder", "💻"),
+    (9, "Detective", "detective", "🔍"),
+    (10, "Vision", "vision", "👁"),
+    (11, "Scholar", "scholar", "📚"),
+    (12, "Horizon", "horizon", "🌐"),
+)
+
+
+def _agents7_running(hostess7: Path) -> bool:
+    pid_file = hostess7 / "cache" / "fieldstorage" / "brain" / "superintel" / "agents7" / "daemon.pid"
+    try:
+        pid = int(pid_file.read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
 def _ring_pos(i: int, n: int, radius: float, y: float, phase: float = 0.0) -> tuple[float, float, float]:
     if n <= 0:
         return 0.0, y, 0.0
@@ -228,7 +258,7 @@ def build_wireframe_graph(
 
     add_node(
         id="hostess7_core",
-        label="Hostess 7",
+        label="Her · Hostess 7",
         group="core",
         level=a_level,
         score=a_overall,
@@ -649,6 +679,42 @@ def build_wireframe_graph(
     add_edge("final_mouth_node", "sense_neural_wire", "neural")
     add_edge("sense_neural_wire", "hostess7_core", "quorum")
 
+    agents_running = _agents7_running(hostess7)
+    agents_level = "complete" if agents_running else "pending"
+    ax, ay, az = _ring_pos(0, 1, 3.2, 1.2, 0.0)
+    add_node(
+        id="agents7_hub",
+        label="Agents 7 · fusion",
+        group="agents7",
+        level=agents_level,
+        score=0.92 if agents_running else 0.35,
+        x=ax, y=ay, z=az,
+        color="#e76f8a",
+        detail="Prime + twelve World Experts — truth reaches Her through fusion, never direct from Ironclad",
+        kind="agents7_hub",
+        payload={"agent_count": len(AGENTS7_DEFS), "daemon_running": agents_running},
+    )
+    add_edge("sense_neural_wire", "agents7_hub", "quorum")
+    add_edge("agents7_hub", "hostess7_core", "fusion")
+
+    for ai, (aid, name, lane, emoji) in enumerate(AGENTS7_DEFS):
+        px, py, pz = _ring_pos(ai, len(AGENTS7_DEFS), 5.8, 0.6, 0.35)
+        nid = f"agent7_{aid}"
+        add_node(
+            id=nid,
+            label=f"{emoji} {name}",
+            group="agents7",
+            level=agents_level if aid == 0 else ("training" if agents_running else "pending"),
+            score=0.9 if agents_running and aid == 0 else (0.75 if agents_running else 0.25),
+            x=px, y=py, z=pz,
+            color="#f4a261" if aid == 0 else "#60a5fa",
+            detail=f"{lane} lane — one vote in Her's fusion ring",
+            kind="agent7",
+            payload={"agent_id": aid, "lane": lane, "name": name},
+        )
+        add_edge("agents7_hub", nid, "agent")
+        add_edge(nid, "hostess7_core", "fusion")
+
     ic_panel = _load(state / "ironclad-plate.json", {}) or _load(install / "data" / "ironclad-doctrine.json", {})
     ic_realized = bool(ic_panel.get("realized") or (ic_panel.get("immutability") or {}).get("realized"))
     add_node(
@@ -663,7 +729,6 @@ def build_wireframe_graph(
         kind="ironclad",
         payload={"immutable": ic_panel.get("immutable"), "canonical_hash": (ic_panel.get("canonical_hash") or "")[:16]},
     )
-    add_edge("ironclad_bible", "hostess7_core", "truth")
     add_edge("ironclad_bible", "reality_physics_hub", "physics")
     add_edge("ironclad_bible", "sense_neural_wire", "neural_extrapolation")
     add_edge("ironclad_bible", "sense_package_hub", "neural_extrapolation")
@@ -672,18 +737,25 @@ def build_wireframe_graph(
         add_edge("ironclad_bible", sense_nid, "neural_extrapolation")
 
     meld = _load(state / "field-plate-meld.json", {})
-    if meld.get("chain_hash"):
-        add_node(
-            id="plate_meld",
-            label="Plate meld",
-            group="meld",
-            level="complete",
-            score=0.9,
-            x=0, y=-4.2, z=0,
-            detail=f"gen {meld.get('generation')} · {str(meld.get('chain_hash', ''))[:16]}…",
-            kind="meld",
-        )
-        add_edge("plate_meld", "hostess7_core", "chain_hash")
+    meld_hash = str(meld.get("chain_hash") or "")
+    add_node(
+        id="plate_meld",
+        label="Plate meld",
+        group="meld",
+        level="complete" if meld_hash else "pending",
+        score=0.9 if meld_hash else 0.4,
+        x=0, y=-4.2, z=0,
+        detail=(
+            f"gen {meld.get('generation')} · {meld_hash[:16]}…"
+            if meld_hash
+            else "Melded plate relay — Ironclad → Field → Her"
+        ),
+        kind="meld",
+        payload={"chain_hash": meld_hash[:16] if meld_hash else None, "generation": meld.get("generation")},
+    )
+    add_edge("ironclad_bible", "plate_meld", "meld")
+    add_edge("plate_meld", "agents7_hub", "truth")
+    add_edge("plate_meld", "sense_neural_wire", "chain_hash")
 
     return {
         "schema": "hostess7-wireframe-graph/v1",
@@ -693,4 +765,13 @@ def build_wireframe_graph(
         "nodes": nodes,
         "edges": edges,
         "connected_models": probed_models,
+        "agents7": {
+            "count": len(AGENTS7_DEFS),
+            "daemon_running": agents_running,
+            "flow": "Ironclad → plate_meld → agents7_hub → Her · Hostess 7",
+            "agents": [
+                {"id": aid, "name": name, "lane": lane, "emoji": emoji}
+                for aid, name, lane, emoji in AGENTS7_DEFS
+            ],
+        },
     }

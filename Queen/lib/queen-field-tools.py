@@ -31,6 +31,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _build_essential_status() -> dict[str, Any]:
+    path = GROK16 / "data" / "grok16-build-essential-toolchain.json"
+    if not path.is_file():
+        return {"ready": False, "manifest": str(path)}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"ready": False, "manifest": str(path)}
+
+
+def _field_build_status() -> dict[str, Any]:
+    path = GROK16 / "data" / "grok16-field-build-toolchain.json"
+    if not path.is_file():
+        return {"ready": False, "manifest": str(path)}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"ready": False, "manifest": str(path)}
+
+
 # Canonical field build tools Hostess 7 may invoke (forge id → metadata)
 FIELD_TOOL_CATALOG: tuple[dict[str, str], ...] = (
     {"id": "field_cmake", "track": "field-cmake", "label": "Grok16 Field CMake (configure + Ninja build)",
@@ -47,6 +67,14 @@ FIELD_TOOL_CATALOG: tuple[dict[str, str], ...] = (
      "role": "g16-as / g16-ld vendor", "hostess_cmd": "pythong Queen/lib/queen-forge.py run binutils_fetch"},
     {"id": "binutils_build", "track": "toolchain", "label": "Grok16 field binutils build",
      "role": "Field assembler + linker", "hostess_cmd": "pythong Queen/lib/queen-forge.py run binutils_build"},
+    {"id": "build_essential_install", "track": "build-essential", "label": "Grok16 build-essential (Ubuntu parity+)",
+     "role": "g16 + binutils + cmake/ninja + autotools + utilities — all in SG/Grok16", "hostess_cmd": "./Grok16/scripts/grok16-build-essential.sh install"},
+    {"id": "build_essential_verify", "track": "build-essential", "label": "Grok16 build-essential verify",
+     "role": "Compile+link smoke with g16-build-env", "hostess_cmd": "./Grok16/scripts/grok16-build-essential.sh verify"},
+    {"id": "field_build_install", "track": "field-build", "label": "Grok16 field build fabric install",
+     "role": "g16-cmake/ninja/make/bison/flex wrappers + compat symlinks", "hostess_cmd": "./Grok16/scripts/grok16-field-build.sh install"},
+    {"id": "field_build_verify", "track": "field-build", "label": "Grok16 field build verify",
+     "role": "cmake/ninja/make/bison/flex + minimal example", "hostess_cmd": "./Grok16/scripts/grok16-field-build.sh verify"},
     {"id": "shaders", "track": "compile", "label": "QueenBoot SPIR-V (glslc)",
      "role": "Boot comp shader for RTX", "hostess_cmd": "pythong Queen/lib/queen-forge.py run shaders"},
     {"id": "deps", "track": "compile", "label": "Stage inside deps (SDL, glm)",
@@ -77,7 +105,16 @@ FIELD_TOOL_CATALOG: tuple[dict[str, str], ...] = (
 def _tool_row(ctx: ForgeContext, meta: dict[str, str]) -> dict[str, Any]:
     tid = meta["id"]
     reg = TOOL_REGISTRY.get(tid)
-    ready = reg.check(ctx) if reg else False
+    if tid == "build_essential_install":
+        ready = bool(_build_essential_status().get("ready"))
+    elif tid == "build_essential_verify":
+        ready = (GROK16 / "scripts/g16-build-env.sh").is_file()
+    elif tid == "field_build_install":
+        ready = bool(_field_build_status().get("ready"))
+    elif tid == "field_build_verify":
+        ready = (GROK16 / "bin/g16-cmake").is_file() and (GROK16 / "bin/g16-ninja").is_file()
+    else:
+        ready = reg.check(ctx) if reg else False
     return {
         **meta,
         "ready": ready,
@@ -110,6 +147,8 @@ def field_tools_status(*, write_manifest: bool = True) -> dict[str, Any]:
             "paths": g16.get("paths"),
         },
         "field_cmake": fcmake,
+        "build_essential": _build_essential_status(),
+        "field_build": _field_build_status(),
         "display_default": {"width": 3840, "height": 2160, "refresh_hz": 120},
         "api": {
             "field_tools": "/api/field-tools",
@@ -122,6 +161,9 @@ def field_tools_status(*, write_manifest: bool = True) -> dict[str, Any]:
             "probe": "./Hostess7.sh queen-field-tools probe",
             "run": "./Hostess7.sh queen-field-tools run <tool_id>",
             "build_rtx": "./Hostess7.sh queen-field-build rtx",
+            "build_essential": "./Grok16/scripts/grok16-build-essential.sh status",
+            "build_env": "eval \"$(./Grok16/scripts/grok16-build-essential.sh env)\"",
+            "field_build": "./Grok16/scripts/grok16-field-build.sh status",
             "g16_probe": "./Hostess7.sh queen-grok16-probe",
         },
         "tools": tools,

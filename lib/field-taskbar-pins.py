@@ -11,7 +11,12 @@ from typing import Any
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
 PINS = STATE / "field-taskbar-pins.json"
-DEFAULT_QUICK = ("queen-files", "queen-terminal", "queen-browser", "field-broadcaster")
+DEFAULT_QUICK = (
+    "view",
+    "queen-terminal",
+    "queen-browser",
+    "field-broadcaster",
+)
 
 
 def _now() -> str:
@@ -46,21 +51,37 @@ def get_pins() -> dict[str, Any]:
     return doc
 
 
+def _doctrine_quick_ids(doctrine_quick: list[dict[str, Any]]) -> list[str]:
+    ids: list[str] = []
+    for row in doctrine_quick:
+        if isinstance(row, dict) and row.get("id"):
+            ids.append(str(row["id"]))
+    return ids
+
+
 def apply_quick(doctrine_quick: list[dict[str, Any]], apps_by_id: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
     pins = get_pins()
-    quick_ids = [q for q in (pins.get("quick") or list(DEFAULT_QUICK)) if q not in (pins.get("unpinned") or [])]
-    if pins.get("folder_pinned") is False and "queen-files" in quick_ids:
-        quick_ids = [q for q in quick_ids if q != "queen-files"]
+    unpinned = set(pins.get("unpinned") or [])
+    doctrine_ids = _doctrine_quick_ids(doctrine_quick)
+    if doctrine_ids:
+        quick_ids = [q for q in doctrine_ids if q not in unpinned]
+    else:
+        quick_ids = [q for q in (pins.get("quick") or list(DEFAULT_QUICK)) if q not in unpinned]
+    if pins.get("folder_pinned") is False and "view" in quick_ids:
+        quick_ids = [q for q in quick_ids if q != "view"]
     out: list[dict[str, Any]] = []
-    glyph_map = {str(r.get("id")): r.get("glyph") for r in doctrine_quick if isinstance(r, dict)}
+    doctrine_map = {str(r.get("id")): r for r in doctrine_quick if isinstance(r, dict) and r.get("id")}
     for app_id in quick_ids:
         app = apps_by_id.get(app_id)
         if not app:
             continue
         row = dict(app)
-        if glyph_map.get(app_id):
-            row["glyph"] = glyph_map[app_id]
-        if app_id == "queen-files":
+        extra = doctrine_map.get(app_id) or {}
+        if extra.get("live"):
+            row["live"] = True
+        if extra.get("unpinnable"):
+            row["unpinnable"] = True
+        elif app_id in ("view", "queen-files"):
             row["unpinnable"] = True
         out.append(row)
     return out
@@ -70,10 +91,10 @@ def set_pin(app_id: str, *, pinned: bool = True) -> dict[str, Any]:
     doc = get_pins()
     unpinned: set[str] = set(doc.get("unpinned") or [])
     quick: list[str] = list(doc.get("quick") or list(DEFAULT_QUICK))
-    if app_id == "queen-files":
+    if app_id in ("view", "queen-files"):
         doc["folder_pinned"] = pinned
-        if pinned and "queen-files" not in quick:
-            quick.insert(0, "queen-files")
+        if pinned and "view" not in quick:
+            quick.insert(0, "view")
     if pinned:
         unpinned.discard(app_id)
         if app_id not in quick:

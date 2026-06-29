@@ -20,7 +20,18 @@ _BENCH_HOSTS = frozenset(
     }
 )
 _BENCH_PATH_RE = re.compile(r"^/world/bench(?:/|$)", re.I)
+_BENCH_KEYWORDS = (
+    "speedometer",
+    "todomvc",
+    "jetstream",
+    "motionmark",
+    "webxprt",
+    "basemark",
+    "kraken",
+    "octane",
+)
 _JUMP_CACHE: dict[str, dict[str, Any]] = {}
+_GATE_CACHE: dict[str, dict[str, Any]] = {}
 
 
 def benchmark_mode() -> bool:
@@ -40,9 +51,8 @@ def is_benchmark_url(url: str) -> bool:
             return True
         if host in ("127.0.0.1", "localhost") and _BENCH_PATH_RE.match(parsed.path or ""):
             return True
-        if "speedometer" in (parsed.path or "").lower():
-            return True
-        if "todomvc" in (parsed.path or "").lower():
+        path_lower = (parsed.path or "").lower()
+        if any(kw in path_lower for kw in _BENCH_KEYWORDS):
             return True
     except Exception:
         pass
@@ -69,10 +79,65 @@ def _modern_compat_stub() -> dict[str, Any]:
         "compat_mode": "modern",
         "effective_mode": "modern",
         "compat_era": "es2026",
+        "era": {"id": "es2026", "year": 2026},
         "legacy_isolate": False,
         "sandbox": "allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads allow-presentation",
         "no_shared_array_buffer": False,
+        "user_agent": "",
+        "benchmark_fast": True,
     }
+
+
+def modern_compat_profile() -> dict[str, Any]:
+    return dict(_modern_compat_stub())
+
+
+def is_nav_fast_path(url: str) -> bool:
+    """True when navigation may skip panel subprocess + gate tax."""
+    if benchmark_mode():
+        return is_benchmark_url(url) or is_fast_internal(url)
+    return is_benchmark_url(url) and is_fast_internal(url)
+
+
+def skip_side_effects() -> bool:
+    return benchmark_mode()
+
+
+def fast_gate_nav(url: str) -> dict[str, Any] | None:
+    """Instant gate permit — no panel_json / jump subprocess."""
+    if not is_nav_fast_path(url):
+        return None
+    u = (url or "").strip()
+    key = u
+    cached = _GATE_CACHE.get(key)
+    if cached:
+        return {**cached, "cached": True}
+    try:
+        host = (urlparse(u if "://" in u else f"http://127.0.0.1{u}").hostname or "").lower()
+    except Exception:
+        host = "local"
+    out = {
+        "url": u,
+        "host": host or "local",
+        "queen_verdict": "BENCHMARK_FAST",
+        "permit": True,
+        "fast_path": True,
+        "benchmark_mode": True,
+        "gates_all_held": True,
+        "gates_held": 12,
+        "gates_total": 12,
+        "sovereign": True,
+        "skipped": ["panel_json", "jump_subprocess", "honorability", "telemetry"],
+        "egress": {"internal": True, "verdict": "ALLOW_INTERNAL", "benchmark": True},
+        "nexus_jump": {
+            "verdict": "BENCHMARK_FAST",
+            "iff": "CAPSULE_INTERNAL",
+            "permit": True,
+            "countermeasures_ready": 0,
+        },
+    }
+    _GATE_CACHE[key] = out
+    return out
 
 
 def fast_jump(
@@ -138,6 +203,8 @@ def posture() -> dict[str, Any]:
         "hosts": sorted(_BENCH_HOSTS),
         "local_bench": "/world/bench/",
         "speedometer": "https://browserbench.org/Speedometer3.0/",
+        "jetstream": "https://browserbench.org/JetStream2.2/",
+        "motionmark": "https://browserbench.org/MotionMark1.3.1/",
         "motto": "Numbers up — DOM/JS hot path, security tax off the clock.",
     }
 

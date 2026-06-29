@@ -1,0 +1,12 @@
+{
+  "id": "nes_myth_history_in_the_making",
+  "title": "Myth: History in the Making",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_myth_history_in_the_making-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_myth_history_in_the_making/nes_myth_history_in_the_making.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

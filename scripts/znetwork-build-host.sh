@@ -1,0 +1,1 @@
+/home/default/Desktop/SG/ZNetwork/scripts/znetwork-build-host.sh

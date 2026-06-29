@@ -1,0 +1,10 @@
+{
+  "id": "nes_tombs_treasure",
+  "title": "Tombs & Treasure",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_tombs_treasure/nes_tombs_treasure.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_tombs_treasure-box.png",
+  "ready": true
+}

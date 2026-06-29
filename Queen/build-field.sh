@@ -9,5 +9,5 @@ echo "=== Queen Sovereign Field ==="
 echo "SG_ROOT=${SG_ROOT}"
 pythong "${ROOT}/lib/queen-forge.py" field
 echo ""
-echo "Package: ${ROOT}/field/sovereign/queen-field.json"
+echo "Package: ${ROOT}/field/sovereign/queen-sovereign-bundle.json"
 echo "Publish: pythong ${ROOT}/lib/queen-forge.py run field_publish"

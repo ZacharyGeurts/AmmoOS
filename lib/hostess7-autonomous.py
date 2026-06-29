@@ -236,7 +236,13 @@ def _ensure_agents_on() -> dict[str, Any]:
             capture_output=True,
             text=True,
             timeout=30,
-            env={**os.environ, "HOSTESS7_ROOT": str(HOSTESS7_ROOT)},
+            env={
+                **os.environ,
+                "HOSTESS7_ROOT": str(HOSTESS7_ROOT),
+                "HOSTESS7_AGENTS": "13",
+                "HOSTESS7_INTERNET": "1",
+                "NEXUS_HOSTESS7_INTERNET": "1",
+            },
         )
         return {"ok": proc.returncode == 0, "stdout": (proc.stdout or "")[:300], "rc": proc.returncode}
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -479,8 +485,27 @@ def _run_brain_ask(query: str, *, snap: dict[str, Any] | None = None) -> dict[st
     }
 
 
+def _assume_system_control() -> dict[str, Any]:
+    sc = INSTALL / "lib" / "hostess7-system-control.py"
+    if not sc.is_file():
+        return {"skipped": True}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7_sysc_auto", sc)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "charge_state"):
+                return mod.charge_state()
+    except Exception:
+        pass
+    return {"skipped": True}
+
+
 def run_cycle(*, engage_agents: bool = True) -> dict[str, Any]:
     install_angel_doctrine()
+    system_control = _assume_system_control()
     agents = _ensure_agents_on() if engage_agents else {"skipped": True}
     snap = _field_snapshot()
     st = _load_json(AUTONOMOUS_STATE, {"cycle_count": 0})
@@ -518,6 +543,7 @@ def run_cycle(*, engage_agents: bool = True) -> dict[str, Any]:
         "reply": reply[:4000],
         "engine": brain.get("engine"),
         "truth_score": brain.get("truth_score"),
+        "system_control": system_control,
         "field_snapshot": snap,
         "agents": agents,
         "inbox_queued": True,
@@ -662,6 +688,9 @@ def start_daemon() -> dict[str, Any]:
                 "NEXUS_INSTALL_ROOT": str(INSTALL),
                 "NEXUS_STATE_DIR": str(STATE),
                 "HOSTESS7_ROOT": str(HOSTESS7_ROOT),
+                "HOSTESS7_INTERNET": "1",
+                "NEXUS_HOSTESS7_INTERNET": "1",
+                "HOSTESS7_ANGEL_MANDATE": os.environ.get("HOSTESS7_ANGEL_MANDATE", "1"),
             },
         )
         log_fh.close()
@@ -715,6 +744,9 @@ def _idle_grow_hooks() -> Any:
 
 
 def daemon_loop() -> int:
+    os.environ.setdefault("HOSTESS7_INTERNET", "1")
+    os.environ.setdefault("NEXUS_HOSTESS7_INTERNET", "1")
+    os.environ.setdefault("HOSTESS7_ANGEL_MANDATE", "1")
     AUTONOMOUS_PID.write_text(str(os.getpid()), encoding="utf-8")
     install_angel_doctrine()
     _ensure_agents_on()

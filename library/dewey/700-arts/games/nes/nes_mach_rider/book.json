@@ -1,0 +1,12 @@
+{
+  "id": "nes_mach_rider",
+  "title": "Mach Rider",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_mach_rider-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_mach_rider/nes_mach_rider.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

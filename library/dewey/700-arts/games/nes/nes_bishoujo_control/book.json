@@ -1,0 +1,12 @@
+{
+  "id": "nes_bishoujo_control",
+  "title": "Bishoujo Control",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_bishoujo_control-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_bishoujo_control/nes_bishoujo_control.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

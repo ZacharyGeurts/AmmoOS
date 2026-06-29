@@ -52,7 +52,7 @@ _HARM_RE = re.compile(
 )
 
 BROWSER_SOURCES: list[dict[str, Any]] = [
-    {"id": "firefox", "label": "Firefox", "roots": ["~/.mozilla/firefox"], "engine": "gecko"},
+    {"id": "legacy_gecko", "label": "Legacy gecko profile (pre-Queen)", "roots": ["~/.mozilla/firefox"], "engine": "gecko"},
     {"id": "librewolf", "label": "LibreWolf", "roots": ["~/.librewolf"], "engine": "gecko"},
     {"id": "floorp", "label": "Floorp", "roots": ["~/.floorp"], "engine": "gecko"},
     {"id": "waterfox", "label": "Waterfox", "roots": ["~/.waterfox"], "engine": "gecko"},

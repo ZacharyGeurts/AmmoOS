@@ -1,14 +1,825 @@
 {
   "schema": "field-combinatronic-visuals-manifest/v1",
-  "generated": "2026-06-27T13:10:18Z",
+  "generated": "2026-06-29T09:10:30Z",
   "chips": {
-    "count": 0,
-    "catalog_count": 28,
-    "items": []
+    "count": 90,
+    "catalog_count": 90,
+    "items": [
+      {
+        "ok": true,
+        "chip_id": "cyrix_6x86",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/cyrix_6x86.png",
+        "world_url": "/world/assets/combinatronic/chips/cyrix_6x86.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/cyrix_6x86.png",
+        "pins": 321,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "cyrix_6x86mx",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/cyrix_6x86mx.png",
+        "world_url": "/world/assets/combinatronic/chips/cyrix_6x86mx.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/cyrix_6x86mx.png",
+        "pins": 321,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "cyrix_cx486dlc",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/cyrix_cx486dlc.png",
+        "world_url": "/world/assets/combinatronic/chips/cyrix_cx486dlc.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/cyrix_cx486dlc.png",
+        "pins": 168,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "cyrix_5x86",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/cyrix_5x86.png",
+        "world_url": "/world/assets/combinatronic/chips/cyrix_5x86.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/cyrix_5x86.png",
+        "pins": 168,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "cyrix_mii",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/cyrix_mii.png",
+        "world_url": "/world/assets/combinatronic/chips/cyrix_mii.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/cyrix_mii.png",
+        "pins": 321,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "cyrix_geode_gx1",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/cyrix_geode_gx1.png",
+        "world_url": "/world/assets/combinatronic/chips/cyrix_geode_gx1.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/cyrix_geode_gx1.png",
+        "pins": 208,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_i80486",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_i80486.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_i80486.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_i80486.png",
+        "pins": 168,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_i80386",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_i80386.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_i80386.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_i80386.png",
+        "pins": 132,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_pentium",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_pentium.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_pentium.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_pentium.png",
+        "pins": 273,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_pentium_mmx",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_pentium_mmx.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_pentium_mmx.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_pentium_mmx.png",
+        "pins": 321,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_m6502",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_m6502.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_m6502.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_m6502.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_z80",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_z80.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_z80.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_z80.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "coco_mc6809e",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/coco_mc6809e.png",
+        "world_url": "/world/assets/combinatronic/chips/coco_mc6809e.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/coco_mc6809e.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_m68000",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_m68000.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_m68000.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_m68000.png",
+        "pins": 64,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_m6809",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_m6809.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_m6809.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_m6809.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_wdc65816",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_wdc65816.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_wdc65816.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_wdc65816.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_sn76489",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_sn76489.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_sn76489.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_sn76489.png",
+        "pins": 16,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_ym2612",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_ym2612.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_ym2612.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_ym2612.png",
+        "pins": 24,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_ay8910",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_ay8910.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_ay8910.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_ay8910.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_r3000",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_r3000.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_r3000.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_r3000.png",
+        "pins": 179,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_arm7",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_arm7.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_arm7.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_arm7.png",
+        "pins": 64,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_sh4",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_sh4.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_sh4.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_sh4.png",
+        "pins": 120,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_huc6280",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_huc6280.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_huc6280.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_huc6280.png",
+        "pins": 80,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_i8086",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_i8086.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_i8086.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_i8086.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_i8088",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_i8088.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_i8088.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_i8088.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "coco3_gime",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/coco3_gime.png",
+        "world_url": "/world/assets/combinatronic/chips/coco3_gime.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/coco3_gime.png",
+        "pins": 68,
+        "package": "plcc"
+      },
+      {
+        "ok": true,
+        "chip_id": "coco_sn76489",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/coco_sn76489.png",
+        "world_url": "/world/assets/combinatronic/chips/coco_sn76489.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/coco_sn76489.png",
+        "pins": 16,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mame_sid6526",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mame_sid6526.png",
+        "world_url": "/world/assets/combinatronic/chips/mame_sid6526.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mame_sid6526.png",
+        "pins": 28,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "amd_k6_2",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/amd_k6_2.png",
+        "world_url": "/world/assets/combinatronic/chips/amd_k6_2.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/amd_k6_2.png",
+        "pins": 321,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "amd_k6_3",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/amd_k6_3.png",
+        "world_url": "/world/assets/combinatronic/chips/amd_k6_3.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/amd_k6_3.png",
+        "pins": 321,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "amd_athlon_xp",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/amd_athlon_xp.png",
+        "world_url": "/world/assets/combinatronic/chips/amd_athlon_xp.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/amd_athlon_xp.png",
+        "pins": 462,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "amd_am486dx4",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/amd_am486dx4.png",
+        "world_url": "/world/assets/combinatronic/chips/amd_am486dx4.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/amd_am486dx4.png",
+        "pins": 168,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "idt_winchip_c6",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/idt_winchip_c6.png",
+        "world_url": "/world/assets/combinatronic/chips/idt_winchip_c6.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/idt_winchip_c6.png",
+        "pins": 296,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "via_c3_533",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/via_c3_533.png",
+        "world_url": "/world/assets/combinatronic/chips/via_c3_533.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/via_c3_533.png",
+        "pins": 370,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "transmeta_crusoe_tm5600",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/transmeta_crusoe_tm5600.png",
+        "world_url": "/world/assets/combinatronic/chips/transmeta_crusoe_tm5600.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/transmeta_crusoe_tm5600.png",
+        "pins": 474,
+        "package": "bga"
+      },
+      {
+        "ok": true,
+        "chip_id": "nexgen_nx586",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/nexgen_nx586.png",
+        "world_url": "/world/assets/combinatronic/chips/nexgen_nx586.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/nexgen_nx586.png",
+        "pins": 296,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "intel_pentium_pro",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/intel_pentium_pro.png",
+        "world_url": "/world/assets/combinatronic/chips/intel_pentium_pro.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/intel_pentium_pro.png",
+        "pins": 387,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "intel_pentium_ii",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/intel_pentium_ii.png",
+        "world_url": "/world/assets/combinatronic/chips/intel_pentium_ii.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/intel_pentium_ii.png",
+        "pins": 242,
+        "package": "slot"
+      },
+      {
+        "ok": true,
+        "chip_id": "intel_80286",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/intel_80286.png",
+        "world_url": "/world/assets/combinatronic/chips/intel_80286.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/intel_80286.png",
+        "pins": 68,
+        "package": "plcc"
+      },
+      {
+        "ok": true,
+        "chip_id": "intel_80387dx",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/intel_80387dx.png",
+        "world_url": "/world/assets/combinatronic/chips/intel_80387dx.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/intel_80387dx.png",
+        "pins": 68,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "nec_v20",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/nec_v20.png",
+        "world_url": "/world/assets/combinatronic/chips/nec_v20.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/nec_v20.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "nec_v30",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/nec_v30.png",
+        "world_url": "/world/assets/combinatronic/chips/nec_v30.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/nec_v30.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "mos_6510",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mos_6510.png",
+        "world_url": "/world/assets/combinatronic/chips/mos_6510.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mos_6510.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "ricoh_2a03",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/ricoh_2a03.png",
+        "world_url": "/world/assets/combinatronic/chips/ricoh_2a03.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/ricoh_2a03.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "motorola_68030",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/motorola_68030.png",
+        "world_url": "/world/assets/combinatronic/chips/motorola_68030.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/motorola_68030.png",
+        "pins": 132,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "motorola_68040",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/motorola_68040.png",
+        "world_url": "/world/assets/combinatronic/chips/motorola_68040.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/motorola_68040.png",
+        "pins": 179,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "wdc_65c02",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/wdc_65c02.png",
+        "world_url": "/world/assets/combinatronic/chips/wdc_65c02.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/wdc_65c02.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "intel_i960",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/intel_i960.png",
+        "world_url": "/world/assets/combinatronic/chips/intel_i960.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/intel_i960.png",
+        "pins": 304,
+        "package": "bga"
+      },
+      {
+        "ok": true,
+        "chip_id": "intel_i860",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/intel_i860.png",
+        "world_url": "/world/assets/combinatronic/chips/intel_i860.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/intel_i860.png",
+        "pins": 168,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "cyrix_fasmath_83d87",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/cyrix_fasmath_83d87.png",
+        "world_url": "/world/assets/combinatronic/chips/cyrix_fasmath_83d87.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/cyrix_fasmath_83d87.png",
+        "pins": 68,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "weitek_1167",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/weitek_1167.png",
+        "world_url": "/world/assets/combinatronic/chips/weitek_1167.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/weitek_1167.png",
+        "pins": 121,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "sega_315_5313",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/sega_315_5313.png",
+        "world_url": "/world/assets/combinatronic/chips/sega_315_5313.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/sega_315_5313.png",
+        "pins": 100,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "nintendo_2c02",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/nintendo_2c02.png",
+        "world_url": "/world/assets/combinatronic/chips/nintendo_2c02.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/nintendo_2c02.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "nintendo_sa1",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/nintendo_sa1.png",
+        "world_url": "/world/assets/combinatronic/chips/nintendo_sa1.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/nintendo_sa1.png",
+        "pins": 128,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "super_fx_gsu1",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/super_fx_gsu1.png",
+        "world_url": "/world/assets/combinatronic/chips/super_fx_gsu1.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/super_fx_gsu1.png",
+        "pins": 80,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "ti_tms9918a",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/ti_tms9918a.png",
+        "world_url": "/world/assets/combinatronic/chips/ti_tms9918a.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/ti_tms9918a.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "yamaha_v9938",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/yamaha_v9938.png",
+        "world_url": "/world/assets/combinatronic/chips/yamaha_v9938.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/yamaha_v9938.png",
+        "pins": 64,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "yamaha_ymf262",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/yamaha_ymf262.png",
+        "world_url": "/world/assets/combinatronic/chips/yamaha_ymf262.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/yamaha_ymf262.png",
+        "pins": 48,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "yamaha_ym2149",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/yamaha_ym2149.png",
+        "world_url": "/world/assets/combinatronic/chips/yamaha_ym2149.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/yamaha_ym2149.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "oki_m6295",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/oki_m6295.png",
+        "world_url": "/world/assets/combinatronic/chips/oki_m6295.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/oki_m6295.png",
+        "pins": 44,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "mos_8364_paula",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mos_8364_paula.png",
+        "world_url": "/world/assets/combinatronic/chips/mos_8364_paula.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mos_8364_paula.png",
+        "pins": 48,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "commodore_8370_agnus",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/commodore_8370_agnus.png",
+        "world_url": "/world/assets/combinatronic/chips/commodore_8370_agnus.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/commodore_8370_agnus.png",
+        "pins": 84,
+        "package": "plcc"
+      },
+      {
+        "ok": true,
+        "chip_id": "commodore_8362_denis",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/commodore_8362_denis.png",
+        "world_url": "/world/assets/combinatronic/chips/commodore_8362_denis.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/commodore_8362_denis.png",
+        "pins": 48,
+        "package": "plcc"
+      },
+      {
+        "ok": true,
+        "chip_id": "xilinx_xc2064",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/xilinx_xc2064.png",
+        "world_url": "/world/assets/combinatronic/chips/xilinx_xc2064.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/xilinx_xc2064.png",
+        "pins": 68,
+        "package": "plcc"
+      },
+      {
+        "ok": true,
+        "chip_id": "altera_ep300",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/altera_ep300.png",
+        "world_url": "/world/assets/combinatronic/chips/altera_ep300.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/altera_ep300.png",
+        "pins": 24,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "lattice_isp1016",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/lattice_isp1016.png",
+        "world_url": "/world/assets/combinatronic/chips/lattice_isp1016.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/lattice_isp1016.png",
+        "pins": 44,
+        "package": "plcc"
+      },
+      {
+        "ok": true,
+        "chip_id": "actel_a1020b",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/actel_a1020b.png",
+        "world_url": "/world/assets/combinatronic/chips/actel_a1020b.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/actel_a1020b.png",
+        "pins": 84,
+        "package": "plcc"
+      },
+      {
+        "ok": true,
+        "chip_id": "xilinx_virtex_ii_pro",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/xilinx_virtex_ii_pro.png",
+        "world_url": "/world/assets/combinatronic/chips/xilinx_virtex_ii_pro.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/xilinx_virtex_ii_pro.png",
+        "pins": 1156,
+        "package": "bga"
+      },
+      {
+        "ok": true,
+        "chip_id": "sony_cxd8530aq",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/sony_cxd8530aq.png",
+        "world_url": "/world/assets/combinatronic/chips/sony_cxd8530aq.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/sony_cxd8530aq.png",
+        "pins": 208,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "sony_cxd8561q",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/sony_cxd8561q.png",
+        "world_url": "/world/assets/combinatronic/chips/sony_cxd8561q.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/sony_cxd8561q.png",
+        "pins": 256,
+        "package": "bga"
+      },
+      {
+        "ok": true,
+        "chip_id": "nintendo_cpu_nus",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/nintendo_cpu_nus.png",
+        "world_url": "/world/assets/combinatronic/chips/nintendo_cpu_nus.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/nintendo_cpu_nus.png",
+        "pins": 179,
+        "package": "bga"
+      },
+      {
+        "ok": true,
+        "chip_id": "hitachi_sh2_7604",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/hitachi_sh2_7604.png",
+        "world_url": "/world/assets/combinatronic/chips/hitachi_sh2_7604.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/hitachi_sh2_7604.png",
+        "pins": 128,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "konami_052001",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/konami_052001.png",
+        "world_url": "/world/assets/combinatronic/chips/konami_052001.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/konami_052001.png",
+        "pins": 64,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "capcom_cps_b_a",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/capcom_cps_b_a.png",
+        "world_url": "/world/assets/combinatronic/chips/capcom_cps_b_a.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/capcom_cps_b_a.png",
+        "pins": 40,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "taito_tc0100scn",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/taito_tc0100scn.png",
+        "world_url": "/world/assets/combinatronic/chips/taito_tc0100scn.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/taito_tc0100scn.png",
+        "pins": 160,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "sharp_lr35902",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/sharp_lr35902.png",
+        "world_url": "/world/assets/combinatronic/chips/sharp_lr35902.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/sharp_lr35902.png",
+        "pins": 80,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "hudson_huc6270",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/hudson_huc6270.png",
+        "world_url": "/world/assets/combinatronic/chips/hudson_huc6270.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/hudson_huc6270.png",
+        "pins": 80,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "snk_lspc2_a0",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/snk_lspc2_a0.png",
+        "world_url": "/world/assets/combinatronic/chips/snk_lspc2_a0.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/snk_lspc2_a0.png",
+        "pins": 100,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "intel_pentium_iii",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/intel_pentium_iii.png",
+        "world_url": "/world/assets/combinatronic/chips/intel_pentium_iii.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/intel_pentium_iii.png",
+        "pins": 370,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "ibm_powerpc_601",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/ibm_powerpc_601.png",
+        "world_url": "/world/assets/combinatronic/chips/ibm_powerpc_601.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/ibm_powerpc_601.png",
+        "pins": 304,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "dec_alpha_21064",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/dec_alpha_21064.png",
+        "world_url": "/world/assets/combinatronic/chips/dec_alpha_21064.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/dec_alpha_21064.png",
+        "pins": 431,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "ti_tms34010",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/ti_tms34010.png",
+        "world_url": "/world/assets/combinatronic/chips/ti_tms34010.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/ti_tms34010.png",
+        "pins": 179,
+        "package": "pga"
+      },
+      {
+        "ok": true,
+        "chip_id": "intel_strongarm_sa110",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/intel_strongarm_sa110.png",
+        "world_url": "/world/assets/combinatronic/chips/intel_strongarm_sa110.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/intel_strongarm_sa110.png",
+        "pins": 256,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "qualcomm_hexagon_qsd8x50",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/qualcomm_hexagon_qsd8x50.png",
+        "world_url": "/world/assets/combinatronic/chips/qualcomm_hexagon_qsd8x50.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/qualcomm_hexagon_qsd8x50.png",
+        "pins": 624,
+        "package": "bga"
+      },
+      {
+        "ok": true,
+        "chip_id": "mitsubishi_m37702",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/mitsubishi_m37702.png",
+        "world_url": "/world/assets/combinatronic/chips/mitsubishi_m37702.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/mitsubishi_m37702.png",
+        "pins": 128,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "ensoniq_esp_r2",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/ensoniq_esp_r2.png",
+        "world_url": "/world/assets/combinatronic/chips/ensoniq_esp_r2.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/ensoniq_esp_r2.png",
+        "pins": 100,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "sega_315_5570",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/sega_315_5570.png",
+        "world_url": "/world/assets/combinatronic/chips/sega_315_5570.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/sega_315_5570.png",
+        "pins": 128,
+        "package": "qfp"
+      },
+      {
+        "ok": true,
+        "chip_id": "yamaha_ym2610",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/yamaha_ym2610.png",
+        "world_url": "/world/assets/combinatronic/chips/yamaha_ym2610.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/yamaha_ym2610.png",
+        "pins": 64,
+        "package": "dip"
+      },
+      {
+        "ok": true,
+        "chip_id": "loongson_3a5000",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/loongson_3a5000.png",
+        "world_url": "/world/assets/combinatronic/chips/loongson_3a5000.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/loongson_3a5000.png",
+        "pins": 1216,
+        "package": "bga"
+      },
+      {
+        "ok": true,
+        "chip_id": "elbrus_8cb",
+        "path": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/chips/elbrus_8cb.png",
+        "world_url": "/world/assets/combinatronic/chips/elbrus_8cb.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/chips/elbrus_8cb.png",
+        "pins": 2577,
+        "package": "bga"
+      }
+    ]
   },
   "books": {
-    "count": 56,
-    "language_count": 56,
+    "count": 58,
+    "language_count": 58,
     "items": [
       {
         "ok": true,
@@ -20,7 +831,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_ada/explaining_ada.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_ada/explaining_ada.h7c",
         "command_count": 29,
-        "char_count": 11210
+        "char_count": 14067
       },
       {
         "ok": true,
@@ -32,7 +843,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_algol/explaining_algol.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_algol/explaining_algol.h7c",
         "command_count": 19,
-        "char_count": 8880
+        "char_count": 11680
       },
       {
         "ok": true,
@@ -44,7 +855,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_ammolang/explaining_ammolang.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_ammolang/explaining_ammolang.h7c",
         "command_count": 58,
-        "char_count": 17011
+        "char_count": 20046
       },
       {
         "ok": true,
@@ -56,7 +867,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_apl/explaining_apl.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_apl/explaining_apl.h7c",
         "command_count": 29,
-        "char_count": 10448
+        "char_count": 13074
       },
       {
         "ok": true,
@@ -68,7 +879,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_asm/explaining_asm.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_asm/explaining_asm.h7c",
         "command_count": 34,
-        "char_count": 11885
+        "char_count": 14794
       },
       {
         "ok": true,
@@ -80,7 +891,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_basic/explaining_basic.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_basic/explaining_basic.h7c",
         "command_count": 59,
-        "char_count": 16367
+        "char_count": 19441
       },
       {
         "ok": true,
@@ -92,7 +903,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_c/explaining_c.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_c/explaining_c.h7c",
         "command_count": 46,
-        "char_count": 14256
+        "char_count": 17257
       },
       {
         "ok": true,
@@ -104,7 +915,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_clojure/explaining_clojure.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_clojure/explaining_clojure.h7c",
         "command_count": 27,
-        "char_count": 10771
+        "char_count": 13633
       },
       {
         "ok": true,
@@ -116,7 +927,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_cobol/explaining_cobol.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_cobol/explaining_cobol.h7c",
         "command_count": 26,
-        "char_count": 10510
+        "char_count": 13418
       },
       {
         "ok": true,
@@ -128,7 +939,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_cobol_copy/explaining_cobol_copy.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_cobol_copy/explaining_cobol_copy.h7c",
         "command_count": 31,
-        "char_count": 11722
+        "char_count": 14692
       },
       {
         "ok": true,
@@ -140,7 +951,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_csharp/explaining_csharp.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_csharp/explaining_csharp.h7c",
         "command_count": 37,
-        "char_count": 12772
+        "char_count": 15711
       },
       {
         "ok": true,
@@ -152,7 +963,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_cxx/explaining_cxx.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_cxx/explaining_cxx.h7c",
         "command_count": 47,
-        "char_count": 14891
+        "char_count": 17862
       },
       {
         "ok": true,
@@ -164,7 +975,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_d/explaining_d.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_d/explaining_d.h7c",
         "command_count": 31,
-        "char_count": 11515
+        "char_count": 14349
       },
       {
         "ok": true,
@@ -176,7 +987,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_dart/explaining_dart.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_dart/explaining_dart.h7c",
         "command_count": 29,
-        "char_count": 11102
+        "char_count": 13931
       },
       {
         "ok": true,
@@ -188,7 +999,19 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_delphi/explaining_delphi.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_delphi/explaining_delphi.h7c",
         "command_count": 71,
-        "char_count": 19342
+        "char_count": 22384
+      },
+      {
+        "ok": true,
+        "lang_id": "economics",
+        "label": "Economics",
+        "cover": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/books/economics.png",
+        "world_url": "/world/assets/combinatronic/books/economics.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/books/economics.png",
+        "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_economics/explaining_economics.h7c",
+        "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_economics/explaining_economics.h7c",
+        "command_count": 89,
+        "char_count": 27014
       },
       {
         "ok": true,
@@ -200,7 +1023,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_elixir/explaining_elixir.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_elixir/explaining_elixir.h7c",
         "command_count": 27,
-        "char_count": 10790
+        "char_count": 13669
       },
       {
         "ok": true,
@@ -212,7 +1035,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_erlang/explaining_erlang.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_erlang/explaining_erlang.h7c",
         "command_count": 21,
-        "char_count": 9706
+        "char_count": 12470
       },
       {
         "ok": true,
@@ -224,7 +1047,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_field/explaining_field.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_field/explaining_field.h7c",
         "command_count": 20,
-        "char_count": 9606
+        "char_count": 12423
       },
       {
         "ok": true,
@@ -236,7 +1059,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_forth/explaining_forth.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_forth/explaining_forth.h7c",
         "command_count": 32,
-        "char_count": 11429
+        "char_count": 14259
       },
       {
         "ok": true,
@@ -248,7 +1071,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_fortran/explaining_fortran.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_fortran/explaining_fortran.h7c",
         "command_count": 30,
-        "char_count": 11436
+        "char_count": 14355
       },
       {
         "ok": true,
@@ -260,7 +1083,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_freebasic/explaining_freebasic.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_freebasic/explaining_freebasic.h7c",
         "command_count": 28,
-        "char_count": 11166
+        "char_count": 14091
       },
       {
         "ok": true,
@@ -272,7 +1095,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_go/explaining_go.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_go/explaining_go.h7c",
         "command_count": 44,
-        "char_count": 13961
+        "char_count": 16878
       },
       {
         "ok": true,
@@ -284,7 +1107,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_haskell/explaining_haskell.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_haskell/explaining_haskell.h7c",
         "command_count": 31,
-        "char_count": 11625
+        "char_count": 14543
       },
       {
         "ok": true,
@@ -296,7 +1119,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_java/explaining_java.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_java/explaining_java.h7c",
         "command_count": 38,
-        "char_count": 13088
+        "char_count": 16000
       },
       {
         "ok": true,
@@ -308,7 +1131,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_javascript/explaining_javascript.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_javascript/explaining_javascript.h7c",
         "command_count": 46,
-        "char_count": 14899
+        "char_count": 17932
       },
       {
         "ok": true,
@@ -320,7 +1143,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_julia/explaining_julia.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_julia/explaining_julia.h7c",
         "command_count": 28,
-        "char_count": 11116
+        "char_count": 14002
       },
       {
         "ok": true,
@@ -332,7 +1155,19 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_kotlin/explaining_kotlin.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_kotlin/explaining_kotlin.h7c",
         "command_count": 36,
-        "char_count": 12613
+        "char_count": 15461
+      },
+      {
+        "ok": true,
+        "lang_id": "linux",
+        "label": "Linux",
+        "cover": "/home/default/Desktop/SG/NewLatest/data/combinatronic-visuals/books/linux.png",
+        "world_url": "/world/assets/combinatronic/books/linux.png",
+        "mirrored": "/home/default/Desktop/SG/NewLatest/Queen/world/assets/combinatronic/books/linux.png",
+        "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_linux/explaining_linux.h7c",
+        "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_linux/explaining_linux.h7c",
+        "command_count": 112,
+        "char_count": 29537
       },
       {
         "ok": true,
@@ -344,7 +1179,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_lisp/explaining_lisp.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_lisp/explaining_lisp.h7c",
         "command_count": 32,
-        "char_count": 11667
+        "char_count": 14582
       },
       {
         "ok": true,
@@ -356,7 +1191,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_lua/explaining_lua.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_lua/explaining_lua.h7c",
         "command_count": 22,
-        "char_count": 9872
+        "char_count": 12703
       },
       {
         "ok": true,
@@ -368,7 +1203,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_matlab/explaining_matlab.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_matlab/explaining_matlab.h7c",
         "command_count": 20,
-        "char_count": 9403
+        "char_count": 12176
       },
       {
         "ok": true,
@@ -380,7 +1215,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_modula2/explaining_modula2.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_modula2/explaining_modula2.h7c",
         "command_count": 62,
-        "char_count": 17567
+        "char_count": 20596
       },
       {
         "ok": true,
@@ -392,7 +1227,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_nim/explaining_nim.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_nim/explaining_nim.h7c",
         "command_count": 30,
-        "char_count": 11370
+        "char_count": 14216
       },
       {
         "ok": true,
@@ -404,7 +1239,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_objc/explaining_objc.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_objc/explaining_objc.h7c",
         "command_count": 30,
-        "char_count": 11420
+        "char_count": 14339
       },
       {
         "ok": true,
@@ -416,7 +1251,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_ocaml/explaining_ocaml.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_ocaml/explaining_ocaml.h7c",
         "command_count": 21,
-        "char_count": 9572
+        "char_count": 12339
       },
       {
         "ok": true,
@@ -428,7 +1263,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_pascal/explaining_pascal.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_pascal/explaining_pascal.h7c",
         "command_count": 48,
-        "char_count": 14829
+        "char_count": 17833
       },
       {
         "ok": true,
@@ -440,7 +1275,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_perl/explaining_perl.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_perl/explaining_perl.h7c",
         "command_count": 26,
-        "char_count": 10344
+        "char_count": 13203
       },
       {
         "ok": true,
@@ -452,7 +1287,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_php/explaining_php.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_php/explaining_php.h7c",
         "command_count": 34,
-        "char_count": 12030
+        "char_count": 14952
       },
       {
         "ok": true,
@@ -464,7 +1299,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_prolog/explaining_prolog.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_prolog/explaining_prolog.h7c",
         "command_count": 17,
-        "char_count": 8660
+        "char_count": 11276
       },
       {
         "ok": true,
@@ -476,7 +1311,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_python/explaining_python.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_python/explaining_python.h7c",
         "command_count": 54,
-        "char_count": 16153
+        "char_count": 19145
       },
       {
         "ok": true,
@@ -488,7 +1323,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_qbasic/explaining_qbasic.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_qbasic/explaining_qbasic.h7c",
         "command_count": 84,
-        "char_count": 21148
+        "char_count": 24307
       },
       {
         "ok": true,
@@ -500,7 +1335,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_quickbasic/explaining_quickbasic.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_quickbasic/explaining_quickbasic.h7c",
         "command_count": 35,
-        "char_count": 12476
+        "char_count": 15517
       },
       {
         "ok": true,
@@ -512,7 +1347,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_r/explaining_r.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_r/explaining_r.h7c",
         "command_count": 24,
-        "char_count": 9964
+        "char_count": 12811
       },
       {
         "ok": true,
@@ -524,7 +1359,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_ruby/explaining_ruby.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_ruby/explaining_ruby.h7c",
         "command_count": 38,
-        "char_count": 12828
+        "char_count": 15710
       },
       {
         "ok": true,
@@ -536,7 +1371,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_rust/explaining_rust.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_rust/explaining_rust.h7c",
         "command_count": 52,
-        "char_count": 15680
+        "char_count": 18641
       },
       {
         "ok": true,
@@ -548,7 +1383,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_scala/explaining_scala.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_scala/explaining_scala.h7c",
         "command_count": 30,
-        "char_count": 11428
+        "char_count": 14266
       },
       {
         "ok": true,
@@ -560,7 +1395,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_shell/explaining_shell.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_shell/explaining_shell.h7c",
         "command_count": 35,
-        "char_count": 12152
+        "char_count": 15052
       },
       {
         "ok": true,
@@ -572,7 +1407,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_smalltalk/explaining_smalltalk.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_smalltalk/explaining_smalltalk.h7c",
         "command_count": 23,
-        "char_count": 10292
+        "char_count": 13278
       },
       {
         "ok": true,
@@ -584,7 +1419,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_snobol/explaining_snobol.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_snobol/explaining_snobol.h7c",
         "command_count": 17,
-        "char_count": 8663
+        "char_count": 11422
       },
       {
         "ok": true,
@@ -596,7 +1431,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_sql/explaining_sql.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_sql/explaining_sql.h7c",
         "command_count": 27,
-        "char_count": 10483
+        "char_count": 13283
       },
       {
         "ok": true,
@@ -608,7 +1443,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_swift/explaining_swift.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_swift/explaining_swift.h7c",
         "command_count": 37,
-        "char_count": 12802
+        "char_count": 15688
       },
       {
         "ok": true,
@@ -620,7 +1455,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_turbo_pascal/explaining_turbo_pascal.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_turbo_pascal/explaining_turbo_pascal.h7c",
         "command_count": 81,
-        "char_count": 21567
+        "char_count": 24679
       },
       {
         "ok": true,
@@ -632,7 +1467,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_typescript/explaining_typescript.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_typescript/explaining_typescript.h7c",
         "command_count": 59,
-        "char_count": 17532
+        "char_count": 20545
       },
       {
         "ok": true,
@@ -644,7 +1479,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_vba/explaining_vba.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_vba/explaining_vba.h7c",
         "command_count": 27,
-        "char_count": 10855
+        "char_count": 13719
       },
       {
         "ok": true,
@@ -656,7 +1491,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_verilog/explaining_verilog.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_verilog/explaining_verilog.h7c",
         "command_count": 15,
-        "char_count": 8407
+        "char_count": 10987
       },
       {
         "ok": true,
@@ -668,7 +1503,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_visual_basic/explaining_visual_basic.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_visual_basic/explaining_visual_basic.h7c",
         "command_count": 79,
-        "char_count": 20975
+        "char_count": 24214
       },
       {
         "ok": true,
@@ -680,7 +1515,7 @@
         "h7c_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_zig/explaining_zig.h7c",
         "h7_path": "/home/default/Desktop/SG/NewLatest/library/dewey/000-computer-science/explaining_zig/explaining_zig.h7c",
         "command_count": 39,
-        "char_count": 13135
+        "char_count": 16004
       }
     ]
   },

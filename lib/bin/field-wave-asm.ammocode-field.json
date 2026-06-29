@@ -1,0 +1,53 @@
+{
+  "schema": "g16-ammocode-field-instill/v1",
+  "updated": "2026-06-29T10:04:19Z",
+  "binary": "/home/default/Desktop/SG/NewLatest/lib/bin/field-wave-asm",
+  "instilled": true,
+  "ammocode_is_field": true,
+  "no_subfields": true,
+  "subfields_forbidden": true,
+  "posture": "field",
+  "field": true,
+  "resting_on_field": false,
+  "defield_if_resting_on_field": true,
+  "max_field_depth": 0,
+  "doctrine": "data/g16-ammocode-field-doctrine.json",
+  "citation": "ammocode:field:no_subfields",
+  "binary_bytes": 16480,
+  "binary_sha256": "fbf173254ac65a11b67cb3874fb5326b725401cd04dac150db78e094fe072a81",
+  "meta": {
+    "lane": "link"
+  },
+  "_g16_seal": {
+    "schema": "g16-sealed-output/v1",
+    "algorithm": "sha256",
+    "digest": "42a62d0a90c953f1683284a4394e38a7d149039740062f2cea5dbfb5bc825207",
+    "sealed_at": "2026-06-29T10:04:19Z",
+    "path": "/home/default/Desktop/SG/NewLatest/lib/bin/field-wave-asm.ammocode-field.json",
+    "g1id_meld": {
+      "id": "g1id",
+      "absorbed": true,
+      "meld_citation": "ironclad:meld:2",
+      "citation": "ironclad:time:1",
+      "policy": "sovereign_time_only",
+      "time_is_linear": true,
+      "sovereign_time_ok": true,
+      "sovereign_time": {
+        "source": "lib/sovereign-time.py",
+        "clock": "lib/sovereign-clock.py",
+        "schema": "sovereign-time-meld-input/v1",
+        "linear_ns": 1782727459320014829,
+        "derived_utc": "2026-06-29T10:04:19Z",
+        "sealed": true,
+        "synced": false,
+        "never_desync": true,
+        "immutable_linear": true,
+        "witness_only": true,
+        "not_geometry_t": true,
+        "citation": "ironclad:g1id:2"
+      },
+      "example_valid": true,
+      "updated": "2026-06-29T10:04:19Z"
+    }
+  }
+}

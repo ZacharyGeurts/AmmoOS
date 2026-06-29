@@ -1,0 +1,12 @@
+{
+  "id": "nes_bugs_bunny_crazy_castle",
+  "title": "Bugs Bunny Crazy Castle",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_bugs_bunny_crazy_castle-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_bugs_bunny_crazy_castle/nes_bugs_bunny_crazy_castle.h7",
+  "face_format": "h7b",
+  "properties_only_h7": true
+}

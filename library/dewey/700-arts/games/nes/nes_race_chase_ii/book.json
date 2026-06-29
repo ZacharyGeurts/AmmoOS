@@ -1,0 +1,10 @@
+{
+  "id": "nes_race_chase_ii",
+  "title": "Race Chase II",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_race_chase_ii/nes_race_chase_ii.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_race_chase_ii-box.png",
+  "ready": true
+}

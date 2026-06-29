@@ -1,0 +1,10 @@
+{
+  "id": "nes_three_stooges",
+  "title": "Three Stooges",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_three_stooges/nes_three_stooges.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_three_stooges-box.png",
+  "ready": true
+}

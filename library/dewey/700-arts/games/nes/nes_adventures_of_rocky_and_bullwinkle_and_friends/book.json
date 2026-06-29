@@ -1,0 +1,12 @@
+{
+  "id": "nes_adventures_of_rocky_and_bullwinkle_and_friends",
+  "title": "Adventures of Rocky and Bullwinkle and Friends",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_adventures_of_rocky_and_bullwinkle_and_friends-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_adventures_of_rocky_and_bullwinkle_and_friends/nes_adventures_of_rocky_and_bullwinkle_and_friends.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

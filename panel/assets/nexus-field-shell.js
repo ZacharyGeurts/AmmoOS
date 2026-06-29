@@ -4,11 +4,12 @@
 (function (global) {
   "use strict";
 
-  const QUEEN_ICON = "/assets/queen-favicon-48.png";
+  const QUEEN_ICON = "/assets/ammoos-field-48.png";
   const PANEL = "";
 
   const state = {
     settings: null,
+    hostPolicy: null,
     windows: [],
     activeId: null,
     altOpen: false,
@@ -16,6 +17,11 @@
     programsById: {},
     zTop: 8100,
   };
+
+  function desktopIconsEnabled() {
+    if (state.hostPolicy?.desktop_icons_in_start) return false;
+    return state.settings?.show_desktop_icons !== false;
+  }
 
   function esc(s) {
     return String(s ?? "")
@@ -55,6 +61,17 @@
     }
   }
 
+  function queenShellUrl(exec) {
+    if (!exec || !isQueenLoopback(exec)) return exec;
+    try {
+      const p = new URL(exec, QUEEN_BROWSER);
+      if (p.pathname.startsWith("/browse/view") || p.pathname === "/browse/view") return QUEEN_BROWSER;
+      if (p.pathname.startsWith("/world/") && !p.pathname.endsWith("/browser.html")) return exec;
+      if (p.pathname.endsWith("/browser.html")) return QUEEN_BROWSER;
+    } catch (_) {}
+    return exec;
+  }
+
   function resolveUrl(app) {
     const exec = String(app?.exec || app?.url || "").trim();
     if (!exec) return "/field";
@@ -62,7 +79,8 @@
     if (exec.startsWith("/")) return exec;
     if (app?.view) return "/command?embed=1#" + app.view;
     if (/^https?:\/\//i.test(exec)) {
-      if (isPanelLoopback(exec) || isQueenLoopback(exec)) return exec;
+      if (isPanelLoopback(exec)) return exec;
+      if (isQueenLoopback(exec)) return queenShellUrl(exec);
       return QUEEN_BROWSER;
     }
     return exec;
@@ -112,12 +130,16 @@
     state.settings = (doc && doc.settings) || doc || {};
     const autoHide = state.settings.taskbar_auto_hide !== false;
     document.documentElement.classList.toggle("nfs-taskbar-hidden", autoHide);
-    document.documentElement.style.setProperty(
-      "--hd-icon-size",
-      (state.settings.desktop_icon_size || 40) + "px"
-    );
-    const scale = (state.settings.ui_scale || 100) / 100;
-    document.documentElement.style.fontSize = scale === 1 ? "" : Math.round(16 * scale) + "px";
+    if (global.FieldDesktopScale?.apply) {
+      global.FieldDesktopScale.apply(state.settings);
+    } else {
+      document.documentElement.style.setProperty(
+        "--hd-icon-size",
+        (state.settings.desktop_icon_size || 50) + "px"
+      );
+      const scale = (state.settings.ui_scale || 125) / 100;
+      document.documentElement.style.fontSize = Math.round(16 * scale) + "px";
+    }
     if (state.settings.theme_override) {
       document.documentElement.dataset.osTheme = state.settings.theme_override;
     }
@@ -129,7 +151,7 @@
       if (!res.ok) throw new Error("settings " + res.status);
       applySettings(await res.json());
     } catch (_) {
-      applySettings({ taskbar_auto_hide: false, taskbar_peek: true, ui_scale: 100 });
+      applySettings({ taskbar_auto_hide: false, taskbar_peek: true, ui_scale: 125, desktop_icon_size: 50 });
     }
   }
 
@@ -195,6 +217,7 @@
           shellWin: w.id,
         };
       });
+    global.FieldC2TaskManager?.sync?.(tasks, state.activeId);
     global.FieldStartbar?.syncShellTasks?.(tasks, state.activeId);
   }
 
@@ -422,8 +445,12 @@
       '<div class="nfs-modal-row"><label>Peek on hover</label><input type="checkbox" id="nfs-prop-peek" ' +
       (s.taskbar_peek !== false ? "checked" : "") +
       " /></div>" +
-      '<div class="nfs-modal-row"><label>UI scale</label><input type="range" id="nfs-prop-scale" min="75" max="150" value="' +
-      (s.ui_scale || 100) +
+      '<div class="nfs-modal-row"><label>UI scale</label><input type="range" id="nfs-prop-scale" min="' +
+      (global.FieldDesktopScale?.MIN_PCT || 50) +
+      '" max="' +
+      (global.FieldDesktopScale?.MAX_PCT || 200) +
+      '" value="' +
+      (s.ui_scale || global.FieldDesktopScale?.DEFAULT_PCT || 125) +
       '" /></div>' +
       '<div class="nfs-modal-row"><label>Icon size</label><input type="range" id="nfs-prop-icons" min="32" max="72" value="' +
       (s.desktop_icon_size || 40) +
@@ -477,8 +504,12 @@
         const displays = doc.displays || [];
         const s = doc.settings || {};
         let html =
-          '<div class="nfs-modal-row"><label>UI scale</label><input type="range" id="nfs-disp-scale" min="75" max="150" value="' +
-          (s.ui_scale || 100) +
+          '<div class="nfs-modal-row"><label>UI scale</label><input type="range" id="nfs-disp-scale" min="' +
+          (global.FieldDesktopScale?.MIN_PCT || 50) +
+          '" max="' +
+          (global.FieldDesktopScale?.MAX_PCT || 200) +
+          '" value="' +
+          (s.ui_scale || global.FieldDesktopScale?.DEFAULT_PCT || 125) +
           '" /></div>';
         displays.forEach(function (d, i) {
           html +=
@@ -522,7 +553,9 @@
       ctx.innerHTML =
         '<button type="button" data-dact="refresh">Refresh</button>' +
         '<button type="button" data-dact="sort">Sort icons by name</button>' +
-        '<button type="button" data-dact="icons">Toggle desktop icons</button>' +
+        (state.hostPolicy?.desktop_icons_in_start
+          ? ""
+          : '<button type="button" data-dact="icons">Toggle desktop icons</button>') +
         "<hr />" +
         '<button type="button" data-dact="display">Display settings</button>' +
         '<button type="button" data-dact="personalize">Personalize</button>' +
@@ -580,18 +613,63 @@
         });
       return;
     }
-    if (action === "power-off" || action === "shutdown") {
-      if (!confirm("Shut down host? This uses elevated host freeze.")) return;
-      fetch("/api/field-host-freeze/shutdown", {
+    if (action === "close-os" || action === "close_os" || action === "quit-ammoos") {
+      if (!confirm("Shut down AmmoOS? The host computer will stay on.")) return;
+      fetch("/api/ammoos/close", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "disk", elevated: true, confirm: true }),
+        body: JSON.stringify({ confirm: true }),
       })
         .then(function (r) {
           return r.json();
         })
         .then(function (j) {
-          toast(j.message || (j.ok ? "Shutdown requested" : j.error || "failed"));
+          toast(j.message || (j.ok ? "AmmoOS closed" : j.error || "Close failed"));
+          if (j.ok) {
+            try {
+              window.close();
+            } catch (_) {}
+          }
+        })
+        .catch(function () {
+          toast("AmmoOS close request failed");
+        });
+      return;
+    }
+    if (action === "power-off" || action === "shutdown") {
+      const bootOs = !!(state.hostPolicy?.boot_os || state.hostPolicy?.shell?.boot_os);
+      if (!bootOs && state.hostPolicy?.window_mode !== false) {
+        return handlePower("close-os");
+      }
+      if (!confirm("Shut down host?")) return;
+      function requestShutdown(elevated) {
+        return fetch("/api/field-host-freeze/shutdown", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "disk", elevated: elevated, confirm: true }),
+        }).then(function (r) {
+          return r.json().then(function (j) {
+            return { status: r.status, body: j };
+          });
+        });
+      }
+      requestShutdown(false)
+        .then(function (res) {
+          if (res.body && res.body.ok) {
+            toast(res.body.message || "Shutdown requested");
+            return;
+          }
+          if (res.body && res.body.error === "root_required") {
+            return requestShutdown(true);
+          }
+          return fetch("/api/host/poweroff", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (j) {
+              if (j.ok) toast(j.message || "Shutdown requested");
+              else toast(j.error || res.body?.error || "Shutdown failed");
+            });
         })
         .catch(function () {
           toast("Shutdown request failed");
@@ -614,6 +692,7 @@
     }
     if (msg.type === "nexus:settings" && msg.settings) {
       applySettings({ settings: msg.settings });
+      global.FieldDesktopScale?.apply?.(msg.settings);
       return;
     }
     if (msg.type === "nexus:focus") {
@@ -631,6 +710,7 @@
   }
 
   function mountShell(data) {
+    state.hostPolicy = data?.policy || null;
     state.browserDisplay = data?.shell?.browser_display || {};
     const allPrograms = data?.programs_all || data?.programs || [];
     allPrograms.forEach(function (p) {
@@ -738,18 +818,31 @@
     setTimeout(retry, 1200);
   }
 
+  function onBootSurface(data, app) {
+    const launchUrl = String(data?.shell?.launch_url || data?.policy?.launch_url || "/field").trim() || "/field";
+    const path = String(global.location?.pathname || "");
+    if (path === launchUrl || path === "/field") return true;
+    const exec = String(app?.exec || "").trim();
+    if (exec === launchUrl || exec === "/field") return true;
+    if (app?.id === "nexus-c2-desktop" && (path === "/field" || path.endsWith("/field"))) return true;
+    return false;
+  }
+
   function bootDesktop(data) {
     const boot = String(data?.shell?.boot_program ?? data?.policy?.boot_program ?? "").trim();
-    if (boot) {
+    const launchAtDesktop =
+      data?.shell?.launch_at_c2_desktop !== false && data?.policy?.launch_at_c2_desktop !== false;
+    if (boot && !launchAtDesktop) {
       const prog = (data?.programs || []).find(function (p) {
         return p.id === boot;
       });
-      if (prog) {
+      if (prog && !onBootSurface(data, prog)) {
         setTimeout(function () {
           launch(prog);
         }, 120);
       }
     }
+    /* launch_at_c2_desktop: page is already /field — do not spawn a nested C2 window */
     const kiosk =
       data?.shell?.kiosk_launch !== false && data?.policy?.kiosk_launch !== false;
     const fs =

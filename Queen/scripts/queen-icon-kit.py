@@ -1,5 +1,5 @@
 #!/usr/bin/env pythong
-"""Queen icon kit — taskbar, tray, desktop, panel, sealed sync from local Amouranth branding."""
+"""Queen icon kit — program-glyph icons (OCR-shaped), tray, desktop, panel. No portrait branding."""
 from __future__ import annotations
 
 import json
@@ -161,8 +161,51 @@ PROGRAM_IDS = (
     "code",
     "tristate",
     "network",
+    "znetwork",
     "lock",
     "shield",
+    "c2-desktop",
+    "nexus-c2-desktop",
+    "calc",
+    "calendar",
+    "popcorn",
+    "gpu",
+    "big-drive",
+    "gimp",
+    "image",
+    "combinatorics",
+    "compatibility",
+    "ellie",
+    "broadcaster",
+    "audio-settings",
+    "launch-explorer",
+    "control-panel",
+    "nexus-calc",
+    "nexus-calendar",
+    "ammoos-image",
+    "field-gimp",
+    "field-popcorn",
+    "field-gpu",
+    "field-big-drive",
+    "nexus-combinatorics",
+    "nexus-compatibility",
+    "nexus-control-panel",
+    "nexus-field-command",
+    "nexus-packets",
+    "nexus-threats",
+    "nexus-dns",
+    "nexus-library",
+    "nexus-training",
+    "nexus-intel",
+    "nexus-final-eye",
+    "nexus-final-ear",
+    "nexus-final-mouth",
+    "queen-chips",
+    "queen-code",
+    "queen-files",
+    "view",
+    "queen-gameroom",
+    "queen-terminal",
 )
 
 FILE_BATTERY_IDS = (
@@ -360,19 +403,122 @@ def _draw_program_glyph(draw: ImageDraw.ImageDraw, prog_id: str, box: tuple[int,
     elif prog_id == "underlay":
         draw.line([(x0, y1 - h // 5), (x1, y1 - h // 5)], fill=emerald, width=stroke)
         draw.polygon([(cx - w // 6, cy), (cx, y0 + h // 5), (cx + w // 6, cy)], fill=rose)
-    elif prog_id == "files":
+    elif prog_id in ("files", "queen-files", "view"):
         draw.polygon([(x0 + w // 5, y0 + h // 4), (x0 + w // 2, y0), (x1 - w // 5, y0), (x1 - w // 5, y1), (x0 + w // 5, y1)], outline=emerald, width=stroke)
+        if prog_id == "view":
+            draw.text((x0 + w // 4, cy - h // 10), "V", fill=rose)
+    elif prog_id in ("ammoos", "nexus", "field"):
+        draw.polygon([(cx, y0 + h // 8), (x1 - w // 6, cy), (cx, y1 - h // 8), (x0 + w // 6, cy)], outline=emerald, width=stroke)
+        draw.ellipse((cx - w // 10, cy - h // 10, cx + w // 10, cy + h // 10), fill=rose)
+    elif prog_id == "os":
+        draw.rectangle((x0 + w // 6, y0 + h // 6, x1 - w // 6, y1 - h // 6), outline=emerald, width=stroke)
+        draw.ellipse((cx - w // 12, cy - h // 12, cx + w // 12, cy + h // 12), fill=rose)
     elif prog_id == "code":
         draw.line([(x0 + w // 3, y0 + h // 4), (x0 + w // 5, cy), (x0 + w // 3, y1 - h // 4)], fill=emerald, width=stroke)
         draw.line([(x1 - w // 3, y0 + h // 4), (x1 - w // 5, cy), (x1 - w // 3, y1 - h // 4)], fill=rose, width=stroke)
     elif prog_id == "network":
         draw.ellipse((cx - w // 10, cy - h // 10, cx + w // 10, cy + h // 10), fill=rose)
         draw.ellipse((x0 + w // 6, y0 + h // 4, x1 - w // 6, y1 - h // 4), outline=emerald, width=stroke)
+    elif prog_id == "znetwork":
+        sky = (56, 189, 248, 255)
+        core = (125, 211, 252, 255)
+        for ang in (0, 60, 120, 180, 240, 300):
+            rad = math.radians(ang)
+            dx = int(math.cos(rad) * w // 4)
+            dy = int(math.sin(rad) * h // 4)
+            draw.line([(cx, cy), (cx + dx, cy + dy)], fill=sky, width=stroke)
+        draw.ellipse((cx - w // 10, cy - h // 10, cx + w // 10, cy + h // 10), fill=core, outline=sky)
+        zw = max(6, w // 2)
+        zh = max(5, int(zw * 0.72))
+        thick = max(2, zw // 5)
+        x0z, x1z = cx - zw // 2, cx + zw // 2
+        y0z, y1z = cy - zh // 2, cy + zh // 2
+        draw.polygon(
+            [
+                (x0z, y0z),
+                (x1z, y0z),
+                (x1z, y0z + thick),
+                (x0z + thick * 2, y1z - thick),
+                (x1z, y1z - thick),
+                (x1z, y1z),
+                (x0z, y1z),
+                (x0z, y1z - thick),
+                (x1z - thick * 2, y0z + thick),
+                (x0z, y0z + thick),
+            ],
+            fill=(240, 249, 255, 245),
+            outline=sky,
+        )
     elif prog_id == "lock":
         draw.rectangle((x0 + w // 4, cy, x1 - w // 4, y1 - h // 6), outline=emerald, width=stroke)
         draw.arc((x0 + w // 3, y0 + h // 5, x1 - w // 3, cy), 180, 0, fill=emerald, width=stroke)
     elif prog_id == "shield":
         draw.polygon([(cx, y0 + h // 8), (x1 - w // 6, y0 + h // 3), (x1 - w // 5, y1 - h // 4), (cx, y1 - h // 8), (x0 + w // 5, y1 - h // 4), (x0 + w // 6, y0 + h // 3)], outline=emerald, width=stroke)
+    elif prog_id in ("calc", "nexus-calc"):
+        draw.rectangle((x0 + w // 6, y0 + h // 8, x1 - w // 6, y1 - h // 8), outline=emerald, width=stroke)
+        for i, ch in enumerate(("7", "+", "=")):
+            draw.text((x0 + w // 5, y0 + h // 5 + i * h // 5), ch, fill=rose if i == 1 else white)
+    elif prog_id in ("calendar", "nexus-calendar"):
+        draw.rectangle((x0 + w // 6, y0 + h // 6, x1 - w // 6, y1 - h // 8), outline=emerald, width=stroke)
+        draw.line([(x0 + w // 6, y0 + h // 3), (x1 - w // 6, y0 + h // 3)], fill=rose, width=stroke)
+        draw.text((cx - w // 10, cy), "31", fill=white)
+    elif prog_id in ("popcorn", "field-popcorn"):
+        draw.polygon([(cx, y0 + h // 8), (x1 - w // 5, y1 - h // 4), (x0 + w // 5, y1 - h // 4)], outline=rose, width=stroke)
+        draw.ellipse((cx - w // 8, cy - h // 10, cx + w // 8, cy + h // 10), fill=emerald)
+    elif prog_id in ("gpu", "field-gpu"):
+        draw.rectangle((x0 + w // 5, y0 + h // 4, x1 - w // 5, y1 - h // 5), outline=emerald, width=stroke)
+        draw.text((x0 + w // 5, cy - h // 10), "GPU", fill=rose)
+    elif prog_id in ("big-drive", "field-big-drive"):
+        draw.ellipse((cx - w // 3, cy - h // 4, cx + w // 3, cy + h // 4), outline=emerald, width=stroke)
+        draw.rectangle((cx - w // 12, cy - h // 12, cx + w // 12, cy + h // 12), fill=rose)
+    elif prog_id in ("gimp", "image", "ammoos-image", "field-gimp"):
+        draw.rectangle((x0 + w // 6, y0 + h // 6, x1 - w // 6, y1 - h // 6), outline=emerald, width=stroke)
+        draw.ellipse((cx - w // 8, cy - h // 8, cx + w // 8, cy + h // 8), fill=rose)
+        draw.line([(x0 + w // 4, y1 - h // 4), (x1 - w // 4, y0 + h // 4)], fill=white, width=stroke)
+    elif prog_id in ("combinatorics", "nexus-combinatorics"):
+        for i in range(3):
+            draw.rectangle((x0 + w // 6 + i * w // 8, y0 + h // 5 + i * h // 10, x0 + w // 3 + i * w // 8, y1 - h // 5), outline=emerald, width=stroke)
+    elif prog_id in ("compatibility", "nexus-compatibility"):
+        draw.ellipse((x0 + w // 4, cy - h // 5, cx, cy + h // 5), outline=emerald, width=stroke)
+        draw.ellipse((cx, cy - h // 5, x1 - w // 4, cy + h // 5), outline=rose, width=stroke)
+    elif prog_id in ("ellie", "nexus-threats", "nexus-packets", "nexus-dns", "nexus-intel"):
+        draw.polygon([(cx, y0 + h // 8), (x1 - w // 6, y0 + h // 3), (x1 - w // 5, y1 - h // 4), (cx, y1 - h // 8), (x0 + w // 5, y1 - h // 4), (x0 + w // 6, y0 + h // 3)], outline=emerald, width=stroke)
+        draw.ellipse((cx - w // 12, cy - h // 12, cx + w // 12, cy + h // 12), fill=rose)
+    elif prog_id in ("broadcaster", "field-broadcaster"):
+        draw.polygon([(cx, y0 + h // 5), (x1 - w // 5, y1 - h // 3), (x0 + w // 5, y1 - h // 3)], fill=rose)
+        draw.ellipse((cx - w // 10, cy, cx + w // 10, cy + h // 5), fill=emerald)
+    elif prog_id in ("audio-settings", "field-audio-settings"):
+        draw.polygon([(x0 + w // 4, y0 + h // 3), (x0 + w // 2, y0 + h // 3), (x0 + w // 2, y1 - h // 3), (x0 + w // 4, y1 - h // 3)], fill=emerald)
+        draw.arc((x0 + w // 2, cy - h // 6, x1 - w // 6, cy + h // 6), 270, 90, fill=rose, width=stroke)
+    elif prog_id in ("launch-explorer", "field-launch-explorer"):
+        draw.polygon([(x0 + w // 4, y0 + h // 5), (x0 + w // 4, y1 - h // 5), (x1 - w // 5, cy)], fill=rose)
+        draw.rectangle((x0 + w // 2, y0 + h // 3, x1 - w // 4, y1 - h // 3), outline=emerald, width=stroke)
+    elif prog_id in ("control-panel", "nexus-control-panel"):
+        draw.rectangle((x0 + w // 5, y0 + h // 5, x1 - w // 5, y1 - h // 5), outline=emerald, width=stroke)
+        for i in range(3):
+            yy = y0 + h // 4 + i * h // 5
+            draw.ellipse((x0 + w // 4, yy - h // 16, x0 + w // 3, yy + h // 16), fill=rose if i == 0 else emerald)
+            draw.line([(x0 + w // 2, yy), (x1 - w // 4, yy)], fill=white, width=stroke)
+    elif prog_id in ("c2-desktop", "nexus-c2-desktop"):
+        draw.rounded_rectangle((x0 + w // 8, y0 + h // 6, x1 - w // 8, y1 - h // 8), radius=w // 10, outline=emerald, width=stroke)
+        draw.text((x0 + w // 5, cy - h // 10), "C2", fill=rose)
+    elif prog_id in ("nexus-field-command", "nexus-command", "command"):
+        draw.rectangle((x0 + w // 5, y0 + h // 5, x1 - w // 5, y1 - h // 5), outline=emerald, width=stroke)
+        draw.line([(x0 + w // 4, cy), (x1 - w // 4, cy)], fill=rose, width=stroke)
+        draw.line([(cx, y0 + h // 3), (cx, y1 - h // 3)], fill=white, width=stroke)
+    elif prog_id in ("nexus-library", "nexus-training"):
+        draw.rectangle((x0 + w // 5, y0 + h // 6, x1 - w // 5, y1 - h // 6), outline=emerald, width=stroke)
+        draw.line([(x0 + w // 4, y0 + h // 3), (x1 - w // 4, y0 + h // 3)], fill=rose, width=stroke)
+        for i in range(3):
+            draw.line([(x0 + w // 4, y0 + h // 2 + i * h // 8), (x1 - w // 3, y0 + h // 2 + i * h // 8)], fill=white, width=stroke)
+    elif prog_id in ("nexus-final-eye", "eyeball"):
+        draw.ellipse((cx - w // 3, cy - h // 3, cx + w // 3, cy + h // 3), outline=emerald, width=stroke)
+        draw.ellipse((cx - w // 8, cy - h // 8, cx + w // 8, cy + h // 8), fill=rose)
+    elif prog_id in ("nexus-final-ear", "earball"):
+        draw.arc((x0 + w // 5, y0 + h // 5, x1 - w // 5, y1 - h // 5), 200, 340, fill=emerald, width=stroke)
+        draw.ellipse((cx - w // 10, cy, cx + w // 10, cy + h // 6), fill=rose)
+    elif prog_id in ("nexus-final-mouth", "hostess"):
+        draw.arc((x0 + w // 4, y0 + h // 4, x1 - w // 4, y1 - h // 4), 20, 160, fill=rose, width=stroke)
     else:
         draw.polygon(
             [(cx, y0 + h // 8), (x1 - w // 6, cy + h // 6), (cx + w // 8, y1 - h // 8), (x0 + w // 6, cy + h // 6)],
@@ -387,7 +533,8 @@ def render_program_icon(prog_id: str, size: int, face: Image.Image | None = None
     canvas = _program_plate(size, accent=accent)
     margin = max(3, size // 5)
     inner_box = (margin, margin, size - margin, size - margin)
-    if prog_id in ("ammoos", "nexus", "browser", "os", "field") and face is not None:
+    portrait_ids: tuple[str, ...] = ()
+    if prog_id in portrait_ids and face is not None:
         inset = size - 2 * margin
         portrait = _crop_face(face).resize((inset, inset), Image.Resampling.LANCZOS)
         mask = Image.new("L", (inset, inset), 0)
@@ -418,10 +565,13 @@ def _build_plate(face: Image.Image) -> Image.Image:
     return Image.alpha_composite(plate.convert("RGBA"), overlay).convert("RGB")
 
 
+def render_brand_icon(size: int, *, tray: bool = False) -> Image.Image:
+    """AmmoOS start/tray glyph — program-shaped, no portrait."""
+    return render_program_icon("ammoos", size, face=None)
+
+
 def build_all(*, force: bool = True) -> dict:
-    if not SOURCE.is_file():
-        raise FileNotFoundError(f"Queen branding source missing: {SOURCE}")
-    face = Image.open(SOURCE)
+    face = Image.open(SOURCE) if SOURCE.is_file() else None
     PANEL_ASSETS.mkdir(parents=True, exist_ok=True)
     ASSETS.mkdir(parents=True, exist_ok=True)
     BRANDING.mkdir(parents=True, exist_ok=True)
@@ -429,7 +579,7 @@ def build_all(*, force: bool = True) -> dict:
     out: dict[str, list[str]] = {"desktop": [], "tray": [], "aliases": [], "sealed": []}
     touched: list[Path] = []
 
-    master = render_queen_icon(face, 256)
+    master = render_brand_icon(256) if face is None else render_queen_icon(face, 256)
     primary_dest = (
         ASSETS / "ammoos-field.png",
         PANEL_ASSETS / "ammoos-field.png",
@@ -451,7 +601,7 @@ def build_all(*, force: bool = True) -> dict:
         out["desktop"].append(str(dest))
 
     for sz in DESKTOP_SIZES:
-        img = render_queen_icon(face, sz)
+        img = render_brand_icon(sz) if face is None else render_queen_icon(face, sz)
         p = PANEL_ASSETS / f"ammoos-field-{sz}.png"
         _write(img, p)
         touched.append(p)
@@ -467,7 +617,7 @@ def build_all(*, force: bool = True) -> dict:
                 out["aliases"].append(str(ap))
 
     for sz in TRAY_SIZES:
-        img = render_queen_icon(face, sz, tray=True)
+        img = render_brand_icon(sz) if face is None else render_queen_icon(face, sz, tray=True)
         for base in ("ammoos-tray", "queen-tray", "nexus-tray-us"):
             p = PANEL_ASSETS / f"{base}-{sz}.png"
             _write(img, p)
@@ -477,21 +627,15 @@ def build_all(*, force: bool = True) -> dict:
         (64, ("ammoos-tray-64.png", "queen-tray-64.png", "nexus-tray-us-64.png")),
         (128, ("ammoos-tray.png", "queen-tray.png", "nexus-tray-us.png")),
     ):
-        img = render_queen_icon(face, sz, tray=True)
+        img = render_brand_icon(sz) if face is None else render_queen_icon(face, sz, tray=True)
         for n in names:
             p = PANEL_ASSETS / n
             _write(img, p)
             touched.append(p)
             out["tray"].append(str(p))
 
-    avatar = _crop_face(face).resize((38, 38), Image.Resampling.LANCZOS)
-    for name in ("amouranth-panel-avatar.png", "amouranth-twitch-avatar.png"):
-        p = PANEL_ASSETS / name
-        _write(avatar, p)
-        touched.append(p)
-
-    fav48 = render_queen_icon(face, 48)
-    tray_src = render_queen_icon(face, 32, tray=True)
+    fav48 = render_brand_icon(48)
+    tray_src = render_brand_icon(32)
     _write(fav48, BRANDING / "queen-favicon-48.png")
     _write(tray_src, BRANDING / "queen-tray-source.png")
     touched.extend([BRANDING / "queen-favicon-48.png", BRANDING / "queen-tray-source.png"])
@@ -573,8 +717,9 @@ def build_all(*, force: bool = True) -> dict:
                 touched.append(dest)
                 out["wordmarks"] = out.get("wordmarks", []) + [str(dest)]
 
-    _write(_build_plate(face), BRANDING / "amouranth-plate.png")
-    touched.append(BRANDING / "amouranth-plate.png")
+    if face is not None:
+        _write(_build_plate(face), BRANDING / "amouranth-plate.png")
+        touched.append(BRANDING / "amouranth-plate.png")
 
     if LEGACY_TRAY_JPG.is_file():
         LEGACY_TRAY_JPG.unlink()
@@ -593,9 +738,16 @@ def build_all(*, force: bool = True) -> dict:
             p = fg_icons / f"queen-field-{sz}.png"
             _write(icon, p)
             out["field_gecko"].append(str(p))
-        shutil.copy2(BRANDING / "queen-favicon-48.png", fg_icons / "queen-favicon-48.png")
-        shutil.copy2(BRANDING / "queen-favicon-48.png", fg_icons / "default48.png")
-        out["field_gecko"].extend([str(fg_icons / "queen-favicon-48.png"), str(fg_icons / "default48.png")])
+        ammoos48 = PANEL_ASSETS / "ammoos-field-48.png"
+        fav_src = ammoos48 if ammoos48.is_file() else BRANDING / "queen-favicon-48.png"
+        shutil.copy2(fav_src, fg_icons / "ammoos-field-48.png")
+        shutil.copy2(fav_src, fg_icons / "queen-favicon-48.png")
+        shutil.copy2(fav_src, fg_icons / "default48.png")
+        out["field_gecko"].extend([
+            str(fg_icons / "ammoos-field-48.png"),
+            str(fg_icons / "queen-favicon-48.png"),
+            str(fg_icons / "default48.png"),
+        ])
 
     out["sealed"] = _sync_sealed(touched)
     install_hicolor()

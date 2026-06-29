@@ -1,0 +1,12 @@
+{
+  "id": "nes_metroid",
+  "title": "Metroid",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_metroid-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_metroid/nes_metroid.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

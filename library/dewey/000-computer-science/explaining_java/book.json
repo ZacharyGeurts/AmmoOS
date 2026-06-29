@@ -4,20 +4,23 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-3b59912b21fe",
-  "format": "h7c",
+  "ein": "H7C-FIELD-5092a9f5b04d",
+  "format": "h7/7",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
-  "h7c": "library/dewey/000-computer-science/explaining_java/explaining_java.h7c",
-  "h7": null,
+  "h7": "library/dewey/000-computer-science/explaining_java/explaining_java.h7",
   "field_path": "library/dewey/000-computer-science/explaining_java/explaining_java.h7c",
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "java",
   "cover": "/world/assets/combinatronic/books/java.png",
-  "updated": "2026-06-27T13:08:49Z"
+  "updated": "2026-06-29T08:53:54Z",
+  "face_format": "h7c",
+  "properties_only_h7": true
 }

@@ -1,0 +1,10 @@
+{
+  "id": "nes_swamp_thing",
+  "title": "Swamp Thing",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_swamp_thing/nes_swamp_thing.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_swamp_thing-box.png",
+  "ready": true
+}

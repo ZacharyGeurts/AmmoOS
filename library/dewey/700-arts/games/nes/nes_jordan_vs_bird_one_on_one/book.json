@@ -1,0 +1,12 @@
+{
+  "id": "nes_jordan_vs_bird_one_on_one",
+  "title": "Jordan vs. Bird: One-on-One",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_jordan_vs_bird_one_on_one-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_jordan_vs_bird_one_on_one/nes_jordan_vs_bird_one_on_one.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

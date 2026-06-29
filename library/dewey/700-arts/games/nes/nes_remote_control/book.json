@@ -1,0 +1,10 @@
+{
+  "id": "nes_remote_control",
+  "title": "Remote Control",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_remote_control/nes_remote_control.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_remote_control-box.png",
+  "ready": true
+}

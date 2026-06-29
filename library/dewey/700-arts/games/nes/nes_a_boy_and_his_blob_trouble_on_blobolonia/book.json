@@ -1,0 +1,12 @@
+{
+  "id": "nes_a_boy_and_his_blob_trouble_on_blobolonia",
+  "title": "A Boy and his Blob: Trouble on Blobolonia",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_a_boy_and_his_blob_trouble_on_blobolonia-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_a_boy_and_his_blob_trouble_on_blobolonia/nes_a_boy_and_his_blob_trouble_on_blobolonia.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

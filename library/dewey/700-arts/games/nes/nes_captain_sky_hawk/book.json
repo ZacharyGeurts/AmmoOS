@@ -1,0 +1,12 @@
+{
+  "id": "nes_captain_sky_hawk",
+  "title": "Captain Sky Hawk",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_captain_sky_hawk-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_captain_sky_hawk/nes_captain_sky_hawk.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

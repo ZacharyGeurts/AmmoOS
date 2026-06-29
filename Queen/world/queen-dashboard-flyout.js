@@ -177,10 +177,10 @@
   function mount() {
     loadPrefs();
     const hosts = [
+      document.getElementById("qd-tray-tools"),
       document.querySelector(".qb-brand-strip"),
-      document.querySelector(".qd-tray"),
-      document.querySelector(".qd-taskbar"),
       document.querySelector(".qb-row--bookmarks"),
+      document.querySelector(".qd-taskbar"),
     ].filter(Boolean);
     const host = hosts[0];
     if (!host || document.getElementById("qdf-anchor")) return;

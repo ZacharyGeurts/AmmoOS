@@ -1,0 +1,12 @@
+{
+  "id": "nes_championship_lode_runner",
+  "title": "Championship Lode Runner",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_championship_lode_runner-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_championship_lode_runner/nes_championship_lode_runner.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

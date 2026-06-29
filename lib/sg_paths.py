@@ -121,9 +121,26 @@ def final_ear_root() -> Path:
     return stack_path("Final_Ear")
 
 
+def final_mouth_root() -> Path:
+    return stack_path("Final_Mouth")
+
+
 def world_redata_root() -> Path:
     return stack_path("World_Redata")
 
 
 def znetwork_root() -> Path:
-    return stack_path("ZNetwork", "znetwork")
+    """Canonical ZNetwork lives in NewLatest/ZNetwork (full repo + build)."""
+    env = os.environ.get("ZNETWORK_ROOT", "").strip()
+    if env:
+        return Path(env).expanduser().resolve()
+    inst = sg_root()
+    for name in ("ZNetwork", "znetwork"):
+        nested = inst / name
+        if nested.exists():
+            return nested.resolve()
+    parent = inst.parent
+    for candidate in (parent / "ZNetwork", parent / "znetwork"):
+        if candidate.exists():
+            return candidate.resolve()
+    return (inst / "ZNetwork").resolve()

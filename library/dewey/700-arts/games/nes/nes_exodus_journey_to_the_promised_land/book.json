@@ -1,0 +1,12 @@
+{
+  "id": "nes_exodus_journey_to_the_promised_land",
+  "title": "Exodus: Journey to the Promised Land",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_exodus_journey_to_the_promised_land-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_exodus_journey_to_the_promised_land/nes_exodus_journey_to_the_promised_land.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

@@ -1,0 +1,12 @@
+{
+  "id": "nes_hollywood_squares",
+  "title": "Hollywood Squares",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_hollywood_squares-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_hollywood_squares/nes_hollywood_squares.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

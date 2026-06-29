@@ -1,0 +1,12 @@
+{
+  "id": "nes_grave_digger",
+  "title": "Grave Digger",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_grave_digger-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_grave_digger/nes_grave_digger.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

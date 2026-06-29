@@ -63,6 +63,10 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh english-train         Install rhetoric + grammar + interpersonal training
   ./Hostess7.sh english-rhetoric "…"    Metaphors, conjunctions, gerunds, interpersonal flow
   ./Hostess7.sh wants                 Ask Hostess 7 what she wants FIRST (priorities)
+  ./Hostess7.sh noti [status|seed|taskbar]  Noti notifier — Hostess 7 tied in
+  ./Hostess7.sh charge [assume]  Full system control — Angel above General
+  ./Hostess7.sh tasklist [report|seed|json]  Secure task queue — she fills, assistant executes
+  ./Hostess7.sh task-done <id> "report"  Mark task complete with Ironclad ledger
   ./Hostess7.sh security-learn        Computer, network, security + NEXUS corpus
   ./Hostess7.sh security "…"          Query security / network / NEXUS expertise
   ./Hostess7.sh nexus [status|verify|panel|update|test]  NEXUS-Shield control
@@ -107,6 +111,8 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh license               Demo status + GPL v3 / 3% commercial terms
   ./Hostess7.sh compression-test      Lossless FLD1 + H7 + ZAC round-trip QA
   ./Hostess7.sh imagine-learn         Grok Imagine + live video papers/GitHub fetch
+  ./Hostess7.sh imagine-nexus-teach   NEXUS imaging skills → Imagine corpus (PIL, combinatronic, Big Drive)
+  ./Hostess7.sh imaging-work          Imaging work queue — broken assets, missing icons
   ./Hostess7.sh imagine "…"           Query Imagine + talking-head corpus
   ./Hostess7.sh live-video            Live talk pipeline (TTS + Graphics frames)
   ./Hostess7.sh live-video-demo       Demo talk frame in Graphics window
@@ -123,6 +129,8 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh heaven-hell-learn   Truth doctrine + Bibles → .H7 + self-brief
   ./Hostess7.sh bible-ingest        All scripture denominations on H7 shelf (slow fetch)
   ./Hostess7.sh self-brief          Self-update exploration seed for Hostess7
+  ./Hostess7.sh ironclad-chips        Hostess 7 leads — full CHIPS → Ironclad truth plate
+  ./Hostess7.sh ironclad-chips status CHIPS meld receipt (ask Ironclad → chips_core)
   ./Hostess7.sh detective "…"         Investigation & lie-detector synthesis
   ./Hostess7.sh truth "claim"         Computational truth score on a claim
   ./Hostess7.sh people                People registry — tags, lie profiles, review queue
@@ -273,6 +281,16 @@ main() {
         imagine-learn|imagine_learn|learn-imagine)
             HOSTESS7_INTERNET=1 exec pythong "$ROOT/scripts/field_imagine_learn.py"
             ;;
+        imagine-nexus-teach|imagine_nexus_teach|nexus-imaging-teach)
+            exec pythong "$ROOT/scripts/field_imagine_nexus_teach.py" "$@"
+            ;;
+        imaging-work|imaging_work|imaging-queue)
+            exec pythong "$NEXUS_INSTALL_ROOT/lib/hostess7-imaging.py" work-queue
+            ;;
+        imaging-help|imaging_help|help-imaging)
+            shift
+            exec pythong "$NEXUS_INSTALL_ROOT/lib/hostess7-imaging.py" help-out "$@"
+            ;;
         imagine|grok-imagine)
             shift
             [[ $# -gt 0 ]] || set -- "Grok Imagine and live talking video for Hostess7"
@@ -401,6 +419,43 @@ print('OK warfare-expand')
         wants|what-do-you-want|hostess-wants)
             exec pythong "$ROOT/scripts/field_hostess_wants.py"
             ;;
+        noti|notifier|notifications)
+            shift
+            sub="${1:-status}"
+            case "$sub" in
+                seed|rooms) exec pythong "$ROOT/../lib/hostess7-noti.py" seed ;;
+                taskbar) exec pythong "$ROOT/../lib/noti.py" taskbar ;;
+                *) exec pythong "$ROOT/../lib/hostess7-noti.py" json ;;
+            esac
+            ;;
+        charge|authority|system-control|assume-control)
+            shift
+            sub="${1:-json}"
+            case "$sub" in
+                assume|assume-control) exec pythong "$ROOT/../lib/hostess7-system-control.py" assume ;;
+                commander) exec pythong "$ROOT/../lib/hostess7-system-control.py" commander ;;
+                *) exec pythong "$ROOT/../lib/hostess7-system-control.py" json ;;
+            esac
+            ;;
+        tasklist|tasks|task-list)
+            shift
+            sub="${1:-report}"
+            case "$sub" in
+                seed) exec pythong "$ROOT/../lib/hostess7-tasklist.py" seed ;;
+                json|panel) exec pythong "$ROOT/../lib/hostess7-tasklist.py" json ;;
+                *) exec pythong "$ROOT/../lib/hostess7-tasklist.py" report ;;
+            esac
+            ;;
+        task-done|task_complete|task-complete)
+            shift
+            tid="${1:-}"
+            shift || true
+            exec pythong "$ROOT/../lib/hostess7-tasklist.py" complete "$tid" "$*"
+            ;;
+        task-add)
+            shift
+            exec pythong "$ROOT/../lib/hostess7-tasklist.py" add "$*"
+            ;;
         security-learn|security_learn|sec-learn)
             exec pythong "$BRAIN" security-learn
             ;;
@@ -510,6 +565,10 @@ print('OK warfare-expand')
             ;;
         self-brief|self_brief|hostess-self-brief)
             exec pythong "$ROOT/scripts/field_hostess_self_brief.py"
+            ;;
+        ironclad-chips|ironclad_chips|chips-ironclad|chips_ironclad)
+            shift
+            exec pythong "$ROOT/scripts/field_hostess7_ironclad_chips.py" "${1:-status}" "${@:2}"
             ;;
         detective|detect|investigate)
             shift

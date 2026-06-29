@@ -1,0 +1,12 @@
+{
+  "id": "nes_american_dream",
+  "title": "American Dream",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_american_dream-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_american_dream/nes_american_dream.h7",
+  "face_format": "h7b",
+  "properties_only_h7": true
+}

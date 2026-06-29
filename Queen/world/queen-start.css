@@ -44,10 +44,35 @@
 }
 
 .qs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 24px 32px;
+}
+
+.qs-folder-head {
+  margin-bottom: 10px;
+}
+
+.qs-folder-head strong {
+  display: block;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(62, 207, 142, 0.9);
+}
+
+.qs-folder-head span {
+  display: block;
+  font-size: 0.72rem;
+  color: #8899aa;
+  margin-top: 2px;
+}
+
+.qs-folder-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
   gap: 12px;
-  padding: 20px 24px 32px;
 }
 
 .qs-tile-icon {

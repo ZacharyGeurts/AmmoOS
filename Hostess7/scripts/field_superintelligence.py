@@ -2802,12 +2802,25 @@ def _git_head() -> str:
 
 
 def _read_version() -> str:
-    try:
-        text = (ROOT / "scripts" / "ammo_platform.py").read_text(encoding="utf-8")
-        m = re.search(r'AMOURANTHRTX_VERSION\s*=\s*"([^"]+)"', text)
-        return m.group(1) if m else "?"
-    except OSError:
-        return "?"
+    install = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(ROOT.parent)))
+    for candidate in (
+        ROOT / "scripts" / "ammo_platform.py",
+        install / "data" / "ammoos-version.json",
+    ):
+        try:
+            if candidate.suffix == ".json":
+                doc = json.loads(candidate.read_text(encoding="utf-8"))
+                ver = doc.get("version") or doc.get("tag")
+                if ver:
+                    return str(ver).lstrip("v")
+            else:
+                text = candidate.read_text(encoding="utf-8")
+                m = re.search(r'AMOURANTHRTX_VERSION\s*=\s*"([^"]+)"', text)
+                if m:
+                    return m.group(1)
+        except (OSError, json.JSONDecodeError):
+            continue
+    return os.environ.get("HOSTESS_VERSION", "?")
 
 
 def ingest(*, limit: int = 24) -> int:

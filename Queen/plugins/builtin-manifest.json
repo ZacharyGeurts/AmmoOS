@@ -26,7 +26,7 @@
     {"id": "pdf-inline", "builtin": true, "layer": "document", "gate_id": "pdf_inline"},
     {"id": "servo-engine", "builtin": true, "layer": "engine", "vendor": "servo", "track": "millennium"},
     {"id": "ladybird-engine", "builtin": true, "layer": "engine", "vendor": "ladybird", "track": "millennium"},
-    {"id": "queen-browser-engine", "builtin": true, "layer": "engine", "vendor": "queen", "track": "ship_now", "label": "Queen Browser", "legacy_id": "fieldfox-engine"},
+    {"id": "queen-browser-engine", "builtin": true, "layer": "engine", "vendor": "queen", "track": "ship_now", "label": "Queen Browser", "legacy_id": "queen-field-engine"},
 
     {"id": "queen-forge", "builtin": true, "layer": "gui", "module": "queen-forge.py", "manifest": "data/queen-forge-manifest.json"},
     {"id": "queen-self-build", "builtin": true, "layer": "gui", "module": "queen-build.py", "deck": "gui/queen-build-deck.html", "forge": "queen-forge.py"},

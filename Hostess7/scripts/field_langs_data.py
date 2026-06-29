@@ -195,6 +195,16 @@ LANG_ENTRIES: tuple[dict, ...] = (
     {"id": "protobuf", "name": "Protocol Buffers", "year": 2008, "paradigm": "serialization idl", "typing": "schema",
      "memory": "n/a", "tags": ("protobuf", "grpc", "serialization"),
      "body": "Protobuf: binary IDL serialization — gRPC services, backward-compatible field evolution."},
+    {"id": "linux", "name": "Linux (Field substrate)", "year": 1991, "paradigm": "POSIX kernel + userspace", "typing": "dynamic",
+     "memory": "virtual memory + cgroups", "tags": ("linux", "posix", "systemd", "kernel", "glibc", "hostess7.sh"),
+     "body": "Linux on Field: incumbent substrate runs as guest under KILROY Field Die — HostPassthrough glibc, unmodified binaries. "
+              "systemd/nftables/polkit/tristate installer path. Hostess7.sh and install-all.sh orchestrate the stack; "
+              "/proc/kilroy_field witnesses syscall truth. Shell, apt, cgroups, namespaces map to combinatronic ops."},
+    {"id": "economics", "name": "Economics (Master Economist)", "year": 1776, "paradigm": "social science quantitative", "typing": "model-based",
+     "memory": "n/a", "tags": ("economics", "macro", "micro", "finance", "trade", "openstax", "master economist"),
+     "body": "Hostess 7 Master Economist — macro (GDP, inflation, policy), micro (supply/demand, elasticity), "
+              "finance (risk, portfolio), trade (tariffs, supply chains), business (CAC/LTV, unit economics), "
+              "and field_economics (sovereign compute, bandwidth, defense cost). Truth-gated: 94% noise discarded."},
 )
 
 

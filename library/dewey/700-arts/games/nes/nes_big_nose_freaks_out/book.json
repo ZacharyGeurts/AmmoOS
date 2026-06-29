@@ -1,0 +1,12 @@
+{
+  "id": "nes_big_nose_freaks_out",
+  "title": "Big Nose Freaks Out",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_big_nose_freaks_out-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_big_nose_freaks_out/nes_big_nose_freaks_out.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

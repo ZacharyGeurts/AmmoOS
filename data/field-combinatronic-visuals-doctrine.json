@@ -14,12 +14,24 @@
     "pattern": "/api/combinatronic/visuals/pattern"
   },
   "sources": {
+    "ironclad_chips": {
+      "path": "field-ironclad-chips-combinatorics.json",
+      "root": "NEXUS_STATE_DIR",
+      "role": "source_of_truth",
+      "drives": ["chip_thumb_png", "chip_detail_png", "chip_thumb_mirror", "chip_detail_mirror"],
+      "ids": "chips[].id",
+      "repair": "field-ironclad-chips-combinatorics.py publish — then ironclad-all",
+      "note": "Every die exists here — ask Ironclad, then chips_core after seal"
+    },
     "chip_catalog": {
       "path": "data/field-combinatronic-chip-catalog.json",
-      "role": "source_of_truth",
+      "role": "featured_render_overlay",
       "drives": ["chip_png", "chip_mirror"],
-      "ids": "chips[].id",
-      "repair": "restore from git or sibling clone; never hand-edit PNGs"
+      "ids": "chips[].id where featured",
+      "truth_from": "ironclad_chips",
+      "fields": ["imprint", "package", "pins", "socket", "body", "featured"],
+      "forbidden": ["schematic_blueprint", "design_over_standard", "duplicate ingest"],
+      "repair": "field-ironclad-chips-combinatorics.py clean-catalog — then field-combinatronic-visuals.py chip <id>"
     },
     "program_seed": {
       "path": "data/field-program-combinatronic-seed.json",
@@ -58,6 +70,40 @@
       "source_pattern": "chip_png",
       "repair_cmd": "field-combinatronic-visuals.py repair mirror",
       "note": "byte-identical copy of chip_png for Queen /world/ static serve"
+    },
+    "chip_thumb_png": {
+      "kind": "generated_png",
+      "path": "data/combinatronic-visuals/chips/thumbs/{chip_id}.png",
+      "url": "/world/assets/combinatronic/chips/thumbs/{chip_id}.png",
+      "id_key": "chip_id",
+      "ids_from": "ironclad_chips.chips[].id",
+      "min_bytes": 1500,
+      "magic": "89504e47",
+      "repair_cmd": "field-combinatronic-visuals.py ironclad-chip {chip_id}",
+      "render": "PIL thumb 320×240 — labeled band, vendor·kind, pink felt macro"
+    },
+    "chip_detail_png": {
+      "kind": "generated_png",
+      "path": "data/combinatronic-visuals/chips/detail/{chip_id}.png",
+      "url": "/world/assets/combinatronic/chips/detail/{chip_id}.png",
+      "id_key": "chip_id",
+      "ids_from": "ironclad_chips.chips[].id",
+      "min_bytes": 12000,
+      "magic": "89504e47",
+      "repair_cmd": "field-combinatronic-visuals.py ironclad-chip {chip_id}",
+      "render": "PIL catalog page 1200×900 — imprint, vendor, kind, era, note, package"
+    },
+    "chip_thumb_mirror": {
+      "kind": "mirror",
+      "path": "Queen/world/assets/combinatronic/chips/thumbs/{chip_id}.png",
+      "source_pattern": "chip_thumb_png",
+      "repair_cmd": "field-combinatronic-visuals.py repair mirror ironclad"
+    },
+    "chip_detail_mirror": {
+      "kind": "mirror",
+      "path": "Queen/world/assets/combinatronic/chips/detail/{chip_id}.png",
+      "source_pattern": "chip_detail_png",
+      "repair_cmd": "field-combinatronic-visuals.py repair mirror ironclad"
     },
     "book_cover": {
       "kind": "generated_png",
@@ -134,6 +180,9 @@
       "verify": "field-combinatronic-visuals.py verify",
       "repair_all": "field-combinatronic-visuals.py repair",
       "repair_one_chip": "field-combinatronic-visuals.py chip <chip_id>",
+      "ironclad_chip": "field-combinatronic-visuals.py ironclad-chip <chip_id>",
+      "ironclad_all": "field-combinatronic-visuals.py ironclad-all",
+      "ironclad_thumbs": "field-combinatronic-visuals.py ironclad-thumbs",
       "repair_one_book": "field-combinatronic-visuals.py book <lang_id>",
       "repair_mirrors": "field-combinatronic-visuals.py repair mirror",
       "full_rebuild": "field-combinatronic-visuals.py generate",

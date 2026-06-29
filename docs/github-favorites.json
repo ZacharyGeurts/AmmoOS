@@ -1,0 +1,749 @@
+{
+  "schema": "github-favorites/v2",
+  "owner": "ZacharyGeurts",
+  "title": "Favorites",
+  "subtitle": "16 public repos \u2014 page-first pins, release SHA manifest.",
+  "generated": "2026-06-29T07:08:23Z",
+  "unlimited": false,
+  "pin_count": 16,
+  "native_pin_max": 6,
+  "pages_base": "https://zacharygeurts.github.io",
+  "favorites": [
+    {
+      "star": true,
+      "name": "AmmoOS",
+      "repo": "AmmoOS",
+      "tag": "field OS",
+      "url": "https://github.com/ZacharyGeurts/AmmoOS",
+      "pin_url": "https://zacharygeurts.github.io/AmmoOS/",
+      "pages": "https://zacharygeurts.github.io/AmmoOS/",
+      "releases_page": "https://zacharygeurts.github.io/AmmoOS/releases.html",
+      "wiki": "https://github.com/ZacharyGeurts/AmmoOS/wiki",
+      "releases": "https://github.com/ZacharyGeurts/AmmoOS/releases",
+      "issues": "https://github.com/ZacharyGeurts/AmmoOS/issues",
+      "latest_tag": "v1.9.9h",
+      "latest_release": {
+        "tag": "v1.9.9h",
+        "name": "Grok Expert Review",
+        "published": "2026-06-29T06:40:20Z",
+        "url": "https://github.com/ZacharyGeurts/AmmoOS/releases/tag/v1.9.9h",
+        "assets": []
+      }
+    },
+    {
+      "star": true,
+      "name": "Grok16",
+      "repo": "Grok16",
+      "tag": "G16 compiler",
+      "url": "https://github.com/ZacharyGeurts/Grok16",
+      "pin_url": "https://zacharygeurts.github.io/Grok16/",
+      "pages": "https://zacharygeurts.github.io/Grok16/",
+      "releases_page": "https://zacharygeurts.github.io/Grok16/releases.html",
+      "wiki": "https://github.com/ZacharyGeurts/Grok16/wiki",
+      "releases": "https://github.com/ZacharyGeurts/Grok16/releases",
+      "issues": "https://github.com/ZacharyGeurts/Grok16/issues",
+      "latest_tag": "v5.0.1",
+      "latest_release": {
+        "tag": "v5.0.1",
+        "name": "Grok16 5.0.1 \u2014 AmmoOS Incorporation",
+        "published": "2026-06-29T06:39:08Z",
+        "url": "https://github.com/ZacharyGeurts/Grok16/releases/tag/v5.0.1",
+        "assets": [
+          {
+            "name": "grok16-5.0.1-platforms.json",
+            "size": 5180,
+            "size_human": "5.1 KiB",
+            "digest": "246585e08040e771cf586da81d08ca245e37d9795b967c3482974bf4e092d61a",
+            "sha256": "246585e08040e771cf586da81d08ca245e37d9795b967c3482974bf4e092d61a",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Grok16/releases/download/v5.0.1/grok16-5.0.1-platforms.json",
+            "content_type": "application/json"
+          },
+          {
+            "name": "grok16-5.0.1-PLATFORMS.md",
+            "size": 1216,
+            "size_human": "1.2 KiB",
+            "digest": "203339bf2e0451e6e841afd622948f871374aaa8850ef8add04a802f0c8ae856",
+            "sha256": "203339bf2e0451e6e841afd622948f871374aaa8850ef8add04a802f0c8ae856",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Grok16/releases/download/v5.0.1/grok16-5.0.1-PLATFORMS.md",
+            "content_type": "text/markdown; charset=utf-8"
+          },
+          {
+            "name": "grok16-5.0.1-src.tar.gz",
+            "size": 91765379,
+            "size_human": "87.51 MiB",
+            "digest": "6705606eb75caf84a9c8bbe66b2814cd639d41b200e385962b51327dedccebf3",
+            "sha256": "6705606eb75caf84a9c8bbe66b2814cd639d41b200e385962b51327dedccebf3",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Grok16/releases/download/v5.0.1/grok16-5.0.1-src.tar.gz",
+            "content_type": "application/x-gtar"
+          }
+        ]
+      }
+    },
+    {
+      "star": true,
+      "name": "KILROY",
+      "repo": "KILROY",
+      "tag": "Field boot",
+      "url": "https://github.com/ZacharyGeurts/KILROY",
+      "pin_url": "https://zacharygeurts.github.io/KILROY/",
+      "pages": "https://zacharygeurts.github.io/KILROY/",
+      "releases_page": "https://zacharygeurts.github.io/KILROY/releases.html",
+      "wiki": "https://github.com/ZacharyGeurts/KILROY/wiki",
+      "releases": "https://github.com/ZacharyGeurts/KILROY/releases",
+      "issues": "https://github.com/ZacharyGeurts/KILROY/issues",
+      "latest_tag": "v1.0.0",
+      "latest_release": {
+        "tag": "v1.0.0",
+        "name": "KILROY 1.0.0 \u2014 Taco",
+        "published": "2026-06-29T06:46:43Z",
+        "url": "https://github.com/ZacharyGeurts/KILROY/releases/tag/v1.0.0",
+        "assets": [
+          {
+            "name": "kilroy-1.0.0-bare-elf-aarch64.tar.gz",
+            "size": 904041,
+            "size_human": "882.9 KiB",
+            "digest": "bec70827023b73f1a6a0216b85f7fdc1bef4d8a1754be29f2d18fe9a5a8d20dc",
+            "sha256": "bec70827023b73f1a6a0216b85f7fdc1bef4d8a1754be29f2d18fe9a5a8d20dc",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-bare-elf-aarch64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kilroy-1.0.0-bare-elf-riscv64.tar.gz",
+            "size": 909182,
+            "size_human": "887.9 KiB",
+            "digest": "561f34c2a1d32ff3b0c461c6f32ca1550b23f63fa60f70d26d6e09f9f92b6018",
+            "sha256": "561f34c2a1d32ff3b0c461c6f32ca1550b23f63fa60f70d26d6e09f9f92b6018",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-bare-elf-riscv64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kilroy-1.0.0-bare-elf-x86_64.tar.gz",
+            "size": 865791,
+            "size_human": "845.5 KiB",
+            "digest": "665a2fd36a5d7e9162d956a08e04600e197966f8020a95b99f1250d95debefae",
+            "sha256": "665a2fd36a5d7e9162d956a08e04600e197966f8020a95b99f1250d95debefae",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-bare-elf-x86_64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kilroy-1.0.0-linux-gnu-aarch64.tar.gz",
+            "size": 904045,
+            "size_human": "882.9 KiB",
+            "digest": "b390ac8cdbef127b522db8c298d49e07a9d562c57f9fb1daa09cc0ea55c2631d",
+            "sha256": "b390ac8cdbef127b522db8c298d49e07a9d562c57f9fb1daa09cc0ea55c2631d",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-linux-gnu-aarch64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kilroy-1.0.0-linux-gnu-arm.tar.gz",
+            "size": 793059,
+            "size_human": "774.5 KiB",
+            "digest": "f66b0bf81280d61445f79358c75cbba6499667c09a6ca32f42e4c552b80f1886",
+            "sha256": "f66b0bf81280d61445f79358c75cbba6499667c09a6ca32f42e4c552b80f1886",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-linux-gnu-arm.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kilroy-1.0.0-linux-gnu-i386.tar.gz",
+            "size": 655486,
+            "size_human": "640.1 KiB",
+            "digest": "1f546954d34ad04c4e0bd2af1fdd21fde3b5ed3449d52271f3118a074b9dca93",
+            "sha256": "1f546954d34ad04c4e0bd2af1fdd21fde3b5ed3449d52271f3118a074b9dca93",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-linux-gnu-i386.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kilroy-1.0.0-linux-gnu-riscv64.tar.gz",
+            "size": 909193,
+            "size_human": "887.9 KiB",
+            "digest": "62f2320ce7c2528d2a8f0d26e4c7ac4042ffd63715b6004b5c86331cb415d731",
+            "sha256": "62f2320ce7c2528d2a8f0d26e4c7ac4042ffd63715b6004b5c86331cb415d731",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-linux-gnu-riscv64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kilroy-1.0.0-linux-gnu-x86_64.tar.gz",
+            "size": 48097852,
+            "size_human": "45.87 MiB",
+            "digest": "dfbdd508d69a53b2f8f4bcd0eba292aafd3040d38c0fd9744d805ee8e3c634f9",
+            "sha256": "dfbdd508d69a53b2f8f4bcd0eba292aafd3040d38c0fd9744d805ee8e3c634f9",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-linux-gnu-x86_64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kilroy-1.0.0-PLATFORMS.md",
+            "size": 1795,
+            "size_human": "1.8 KiB",
+            "digest": "97b5dae452bc895117fdbc5bafc184756338a8d9b9e63a223aad16276a7c0fec",
+            "sha256": "97b5dae452bc895117fdbc5bafc184756338a8d9b9e63a223aad16276a7c0fec",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-PLATFORMS.md",
+            "content_type": "text/markdown; charset=utf-8"
+          },
+          {
+            "name": "kilroy-1.0.0-src.tar.gz",
+            "size": 68880933,
+            "size_human": "65.69 MiB",
+            "digest": "f32c056d1312c80f0199219b421fecf8b9f9988ea58f59a397303598224e0a5c",
+            "sha256": "f32c056d1312c80f0199219b421fecf8b9f9988ea58f59a397303598224e0a5c",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-1.0.0-src.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kilroy-platform-release.json",
+            "size": 3302,
+            "size_human": "3.2 KiB",
+            "digest": "87cd37175213b300befbb1ba1ccb48e74651ead1c3bd7f177d497793417fac8a",
+            "sha256": "87cd37175213b300befbb1ba1ccb48e74651ead1c3bd7f177d497793417fac8a",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.0.0/kilroy-platform-release.json",
+            "content_type": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "star": true,
+      "name": "ZNetwork",
+      "repo": "ZNetwork",
+      "tag": "smart relayer",
+      "url": "https://github.com/ZacharyGeurts/ZNetwork",
+      "pin_url": "https://zacharygeurts.github.io/ZNetwork/",
+      "pages": "https://zacharygeurts.github.io/ZNetwork/",
+      "releases_page": "https://zacharygeurts.github.io/ZNetwork/releases.html",
+      "wiki": "https://github.com/ZacharyGeurts/ZNetwork/wiki",
+      "releases": "https://github.com/ZacharyGeurts/ZNetwork/releases",
+      "issues": "https://github.com/ZacharyGeurts/ZNetwork/issues",
+      "latest_tag": "v2.1.0",
+      "latest_release": {
+        "tag": "v2.1.0",
+        "name": "ZNetwork 2.1.0 \u2014 Stack",
+        "published": "2026-06-29T06:49:54Z",
+        "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/tag/v2.1.0",
+        "assets": [
+          {
+            "name": "znetwork-2.1.0-android-aarch64.tar.gz",
+            "size": 25433,
+            "size_human": "24.8 KiB",
+            "digest": "f7c5b70f6ca9ffd6b1e6618b1b49fbe92b022aab407632f8fe7625b8733287a1",
+            "sha256": "f7c5b70f6ca9ffd6b1e6618b1b49fbe92b022aab407632f8fe7625b8733287a1",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-android-aarch64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-android-arm.tar.gz",
+            "size": 25437,
+            "size_human": "24.8 KiB",
+            "digest": "a12b0794fecb45483f9dc9e36ee388150b33f39b639e7639b5c19441a5f99e7f",
+            "sha256": "a12b0794fecb45483f9dc9e36ee388150b33f39b639e7639b5c19441a5f99e7f",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-android-arm.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-android-x86_64.tar.gz",
+            "size": 25431,
+            "size_human": "24.8 KiB",
+            "digest": "e0bf56983b1415019adf996af781786e4e26444a850160493f6785178a403f70",
+            "sha256": "e0bf56983b1415019adf996af781786e4e26444a850160493f6785178a403f70",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-android-x86_64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-bare-elf-aarch64.tar.gz",
+            "size": 92295,
+            "size_human": "90.1 KiB",
+            "digest": "5bbe416e697a9d8a4926f1a7f529ad9853025db2987fd1e5c29faea8b7f2cf11",
+            "sha256": "5bbe416e697a9d8a4926f1a7f529ad9853025db2987fd1e5c29faea8b7f2cf11",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-bare-elf-aarch64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-bare-elf-riscv64.tar.gz",
+            "size": 92298,
+            "size_human": "90.1 KiB",
+            "digest": "c546daf901d943a2dde67f5befc510733f7f311feac6c38199933551d4c0137b",
+            "sha256": "c546daf901d943a2dde67f5befc510733f7f311feac6c38199933551d4c0137b",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-bare-elf-riscv64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-bare-elf-x86_64.tar.gz",
+            "size": 92292,
+            "size_human": "90.1 KiB",
+            "digest": "cb3afea3d3075f3c9390e5485cea3ff9ddb405c91b486355dfc509078dc5e904",
+            "sha256": "cb3afea3d3075f3c9390e5485cea3ff9ddb405c91b486355dfc509078dc5e904",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-bare-elf-x86_64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-darwin-aarch64.tar.gz",
+            "size": 25432,
+            "size_human": "24.8 KiB",
+            "digest": "aa92419d6c5c6275694e62582a112403e0dd85cab609c48768b63c953138a108",
+            "sha256": "aa92419d6c5c6275694e62582a112403e0dd85cab609c48768b63c953138a108",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-darwin-aarch64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-darwin-x86_64.tar.gz",
+            "size": 25426,
+            "size_human": "24.8 KiB",
+            "digest": "49aa26761da0ef29342dbaae3a879aadd58265a80ae84eface08802bacf670f5",
+            "sha256": "49aa26761da0ef29342dbaae3a879aadd58265a80ae84eface08802bacf670f5",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-darwin-x86_64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-ios-aarch64.tar.gz",
+            "size": 25432,
+            "size_human": "24.8 KiB",
+            "digest": "c53100f08e8ea7997fdcd6b945861097824340e2c3f4c43a483757f220617690",
+            "sha256": "c53100f08e8ea7997fdcd6b945861097824340e2c3f4c43a483757f220617690",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-ios-aarch64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-linux-gnu-aarch64.tar.gz",
+            "size": 80322,
+            "size_human": "78.4 KiB",
+            "digest": "3bb2b5480c04c92dd5d31d0e444b07c1dd78a1d3d08ae44862bf589dd027a238",
+            "sha256": "3bb2b5480c04c92dd5d31d0e444b07c1dd78a1d3d08ae44862bf589dd027a238",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-linux-gnu-aarch64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-linux-gnu-arm.tar.gz",
+            "size": 79676,
+            "size_human": "77.8 KiB",
+            "digest": "a917df92b9ded1a3bb2ff1c7459395d0f4f1e7488f1d4a12f0699fa6f7254cdb",
+            "sha256": "a917df92b9ded1a3bb2ff1c7459395d0f4f1e7488f1d4a12f0699fa6f7254cdb",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-linux-gnu-arm.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-linux-gnu-i386.tar.gz",
+            "size": 99913,
+            "size_human": "97.6 KiB",
+            "digest": "88285c62ea5bc31975b8f728cdca7f2b5f5f9e134d6ce9ac0e565806dba0d7ce",
+            "sha256": "88285c62ea5bc31975b8f728cdca7f2b5f5f9e134d6ce9ac0e565806dba0d7ce",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-linux-gnu-i386.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-linux-gnu-riscv64.tar.gz",
+            "size": 82003,
+            "size_human": "80.1 KiB",
+            "digest": "d10a058393e271a28efa1750a50112889908a35ae3cefe02b672eb28053c1110",
+            "sha256": "d10a058393e271a28efa1750a50112889908a35ae3cefe02b672eb28053c1110",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-linux-gnu-riscv64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-linux-gnu-x86_64.tar.gz",
+            "size": 92296,
+            "size_human": "90.1 KiB",
+            "digest": "397e4579551784951bfeece881803641cfe23295f72cd5a89e75f6cc7c5481f1",
+            "sha256": "397e4579551784951bfeece881803641cfe23295f72cd5a89e75f6cc7c5481f1",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-linux-gnu-x86_64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-PLATFORMS.md",
+            "size": 992,
+            "size_human": "992 B",
+            "digest": "e20a5373289297a0c227bd5e0205f450de177c566b78bd7aa875d54ed8479a2f",
+            "sha256": "e20a5373289297a0c227bd5e0205f450de177c566b78bd7aa875d54ed8479a2f",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-PLATFORMS.md",
+            "content_type": "text/markdown; charset=utf-8"
+          },
+          {
+            "name": "znetwork-2.1.0-src.tar.gz",
+            "size": 27045,
+            "size_human": "26.4 KiB",
+            "digest": "ab4de2f35ea56c9571b414b54feccf8b60adef4fddb2ff1a880b43950f94f363",
+            "sha256": "ab4de2f35ea56c9571b414b54feccf8b60adef4fddb2ff1a880b43950f94f363",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-src.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-win32-aarch64.tar.gz",
+            "size": 25433,
+            "size_human": "24.8 KiB",
+            "digest": "c61b440bb6d8e456173a69124f17af3484e3debb0a0289fcc65ba271be9c3ef0",
+            "sha256": "c61b440bb6d8e456173a69124f17af3484e3debb0a0289fcc65ba271be9c3ef0",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-win32-aarch64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-2.1.0-win32-x86_64.tar.gz",
+            "size": 107049,
+            "size_human": "104.5 KiB",
+            "digest": "7381fab44ed07d00dcbb37d0f7290a7f3eb3da2cf8462023a651214cd1f8909e",
+            "sha256": "7381fab44ed07d00dcbb37d0f7290a7f3eb3da2cf8462023a651214cd1f8909e",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-2.1.0-win32-x86_64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "znetwork-platform-release.json",
+            "size": 2185,
+            "size_human": "2.1 KiB",
+            "digest": "40eb636660a59ecf78385dbf78e208b020419e7fee0a5f5dfef728c2ad76beb8",
+            "sha256": "40eb636660a59ecf78385dbf78e208b020419e7fee0a5f5dfef728c2ad76beb8",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-platform-release.json",
+            "content_type": "application/json"
+          },
+          {
+            "name": "znetwork-version.json",
+            "size": 818,
+            "size_human": "818 B",
+            "digest": "1f10297d405daa943d5b510eb74c97df6f94f03ce00a97728950b099731cc26e",
+            "sha256": "1f10297d405daa943d5b510eb74c97df6f94f03ce00a97728950b099731cc26e",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/download/v2.1.0/znetwork-version.json",
+            "content_type": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "star": true,
+      "name": "AmmoCode",
+      "repo": "AmmoCode",
+      "tag": "compiler GUI",
+      "url": "https://github.com/ZacharyGeurts/AmmoCode",
+      "pin_url": "https://github.com/ZacharyGeurts/AmmoCode",
+      "wiki": "https://github.com/ZacharyGeurts/AmmoCode/wiki",
+      "releases": "https://github.com/ZacharyGeurts/AmmoCode/releases",
+      "issues": "https://github.com/ZacharyGeurts/AmmoCode/issues"
+    },
+    {
+      "star": true,
+      "name": "Field_Primer",
+      "repo": "Field_Primer",
+      "tag": "field primer",
+      "url": "https://github.com/ZacharyGeurts/Field_Primer",
+      "pin_url": "https://zacharygeurts.github.io/Field_Primer/",
+      "pages": "https://zacharygeurts.github.io/Field_Primer/",
+      "wiki": "https://github.com/ZacharyGeurts/Field_Primer/wiki",
+      "releases": "https://github.com/ZacharyGeurts/Field_Primer/releases",
+      "issues": "https://github.com/ZacharyGeurts/Field_Primer/issues"
+    },
+    {
+      "star": true,
+      "name": "Field_Research",
+      "repo": "Field_Research",
+      "tag": "combinatorics manual",
+      "url": "https://github.com/ZacharyGeurts/Field_Research",
+      "pin_url": "https://zacharygeurts.github.io/Field_Research/",
+      "pages": "https://zacharygeurts.github.io/Field_Research/",
+      "wiki": "https://github.com/ZacharyGeurts/Field_Research/wiki",
+      "releases": "https://github.com/ZacharyGeurts/Field_Research/releases",
+      "issues": "https://github.com/ZacharyGeurts/Field_Research/issues"
+    },
+    {
+      "star": true,
+      "name": "Final_Eye",
+      "repo": "Final_Eye",
+      "tag": "vision stack",
+      "url": "https://github.com/ZacharyGeurts/Final_Eye",
+      "pin_url": "https://zacharygeurts.github.io/Final_Eye/",
+      "pages": "https://zacharygeurts.github.io/Final_Eye/",
+      "releases_page": "https://zacharygeurts.github.io/Final_Eye/releases.html",
+      "wiki": "https://github.com/ZacharyGeurts/Final_Eye/wiki",
+      "releases": "https://github.com/ZacharyGeurts/Final_Eye/releases",
+      "issues": "https://github.com/ZacharyGeurts/Final_Eye/issues",
+      "latest_tag": "v1.3.0",
+      "latest_release": {
+        "tag": "v1.3.0",
+        "name": "Final_Eye v1.3.0 \u2014 motion-track",
+        "published": "2026-06-26T02:57:37Z",
+        "url": "https://github.com/ZacharyGeurts/Final_Eye/releases/tag/v1.3.0",
+        "assets": [
+          {
+            "name": "final-eye_1.3.0_amd64.deb",
+            "size": 24109328,
+            "size_human": "22.99 MiB",
+            "digest": "e595690093c3bbbdbfbf995e903ab6562bd0d6ffcbfd78510893b669bc170649",
+            "sha256": "e595690093c3bbbdbfbf995e903ab6562bd0d6ffcbfd78510893b669bc170649",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Final_Eye/releases/download/v1.3.0/final-eye_1.3.0_amd64.deb",
+            "content_type": "application/x-debian-package"
+          },
+          {
+            "name": "Final_Eye-1.3.0-linux-x86_64.tar.gz",
+            "size": 46381443,
+            "size_human": "44.23 MiB",
+            "digest": "d8707bf637761f9eb6a111bfec594c35bf12d4cc844db273c7b69c484b19d2d4",
+            "sha256": "d8707bf637761f9eb6a111bfec594c35bf12d4cc844db273c7b69c484b19d2d4",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Final_Eye/releases/download/v1.3.0/Final_Eye-1.3.0-linux-x86_64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "Final_Eye-1.3.0-macos-universal.tar.gz",
+            "size": 46381445,
+            "size_human": "44.23 MiB",
+            "digest": "a180b2293899f8ae95a8faaeb248bfef9bc676dce5803a937a1425d63f303af5",
+            "sha256": "a180b2293899f8ae95a8faaeb248bfef9bc676dce5803a937a1425d63f303af5",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Final_Eye/releases/download/v1.3.0/Final_Eye-1.3.0-macos-universal.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "Final_Eye-1.3.0-manifest.json",
+            "size": 1598,
+            "size_human": "1.6 KiB",
+            "digest": "0abbc0abc3d58ce000185c4ba9ffa56a22afabaa3d7b95631e863ada84f163a4",
+            "sha256": "0abbc0abc3d58ce000185c4ba9ffa56a22afabaa3d7b95631e863ada84f163a4",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Final_Eye/releases/download/v1.3.0/Final_Eye-1.3.0-manifest.json",
+            "content_type": "application/json"
+          },
+          {
+            "name": "Final_Eye-1.3.0-source.tar.gz",
+            "size": 46381273,
+            "size_human": "44.23 MiB",
+            "digest": "43008621c08a365708f220ed0765b3fc464d222098e307459ef9609dfd91ddc8",
+            "sha256": "43008621c08a365708f220ed0765b3fc464d222098e307459ef9609dfd91ddc8",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Final_Eye/releases/download/v1.3.0/Final_Eye-1.3.0-source.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "Final_Eye-1.3.0-windows-x64.zip",
+            "size": 50085265,
+            "size_human": "47.77 MiB",
+            "digest": "23b0391e58ff6ddb8aa6eef23d9cb086c70f339d3cd732a895fd7fdae4641de0",
+            "sha256": "23b0391e58ff6ddb8aa6eef23d9cb086c70f339d3cd732a895fd7fdae4641de0",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Final_Eye/releases/download/v1.3.0/Final_Eye-1.3.0-windows-x64.zip",
+            "content_type": "application/zip"
+          },
+          {
+            "name": "SHA256SUMS",
+            "size": 688,
+            "size_human": "688 B",
+            "digest": "6c152ee702d99a65faa8ef58b07717e7ba745728c6611d3a6102562e62c1406c",
+            "sha256": "6c152ee702d99a65faa8ef58b07717e7ba745728c6611d3a6102562e62c1406c",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Final_Eye/releases/download/v1.3.0/SHA256SUMS",
+            "content_type": "application/octet-stream"
+          }
+        ]
+      }
+    },
+    {
+      "star": true,
+      "name": "World_Redata",
+      "repo": "World_Redata",
+      "tag": "WRDT1 redata",
+      "url": "https://github.com/ZacharyGeurts/World_Redata",
+      "pin_url": "https://zacharygeurts.github.io/World_Redata/",
+      "pages": "https://zacharygeurts.github.io/World_Redata/",
+      "wiki": "https://github.com/ZacharyGeurts/World_Redata/wiki",
+      "releases": "https://github.com/ZacharyGeurts/World_Redata/releases",
+      "issues": "https://github.com/ZacharyGeurts/World_Redata/issues"
+    },
+    {
+      "star": true,
+      "name": "AMOURANTHRTX",
+      "repo": "AMOURANTHRTX",
+      "tag": "Field Die",
+      "url": "https://github.com/ZacharyGeurts/AMOURANTHRTX",
+      "pin_url": "https://zacharygeurts.github.io/AMOURANTHRTX/",
+      "pages": "https://zacharygeurts.github.io/AMOURANTHRTX/",
+      "releases_page": "https://zacharygeurts.github.io/AMOURANTHRTX/releases.html",
+      "wiki": "https://github.com/ZacharyGeurts/AMOURANTHRTX/wiki",
+      "releases": "https://github.com/ZacharyGeurts/AMOURANTHRTX/releases",
+      "issues": "https://github.com/ZacharyGeurts/AMOURANTHRTX/issues",
+      "latest_tag": "v2.2.0",
+      "latest_release": {
+        "tag": "v2.2.0",
+        "name": "AMOURANTHRTX v2.2.0 \u2014 Hostess 7 v33 Protocol",
+        "published": "2026-06-23T02:19:55Z",
+        "url": "https://github.com/ZacharyGeurts/AMOURANTHRTX/releases/tag/v2.2.0",
+        "assets": []
+      }
+    },
+    {
+      "star": true,
+      "name": "OBS-FieldVoiceFilter",
+      "repo": "OBS-FieldVoiceFilter",
+      "tag": "OBS plugin",
+      "url": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter",
+      "pin_url": "https://zacharygeurts.github.io/OBS-FieldVoiceFilter/",
+      "pages": "https://zacharygeurts.github.io/OBS-FieldVoiceFilter/",
+      "wiki": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/wiki",
+      "releases": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/releases",
+      "issues": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/issues"
+    },
+    {
+      "star": true,
+      "name": "Kill-Grok-Orphans",
+      "repo": "Kill-Grok-Orphans",
+      "tag": "Grok watchdog",
+      "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans",
+      "pin_url": "https://zacharygeurts.github.io/Kill-Grok-Orphans/",
+      "pages": "https://zacharygeurts.github.io/Kill-Grok-Orphans/",
+      "releases_page": "https://zacharygeurts.github.io/Kill-Grok-Orphans/releases.html",
+      "wiki": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/wiki",
+      "releases": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases",
+      "issues": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/issues",
+      "latest_tag": "v1.1.0",
+      "latest_release": {
+        "tag": "v1.1.0",
+        "name": "Kill Grok Orphans 1.1.0",
+        "published": "2026-06-29T06:20:26Z",
+        "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases/tag/v1.1.0",
+        "assets": [
+          {
+            "name": "kgo-1.1.0-darwin-universal.tar.gz",
+            "size": 5803,
+            "size_human": "5.7 KiB",
+            "digest": "1dcd54489b7849e11670250ec99dae4f580fda82a475cfd9a67f0aebed1afff5",
+            "sha256": "1dcd54489b7849e11670250ec99dae4f580fda82a475cfd9a67f0aebed1afff5",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases/download/v1.1.0/kgo-1.1.0-darwin-universal.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kgo-1.1.0-linux-gnu-aarch64.tar.gz",
+            "size": 366676,
+            "size_human": "358.1 KiB",
+            "digest": "a79e0cafc6ed0a850ae8911183d54844c15b23aae87cf95039e017d0c1f1692c",
+            "sha256": "a79e0cafc6ed0a850ae8911183d54844c15b23aae87cf95039e017d0c1f1692c",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases/download/v1.1.0/kgo-1.1.0-linux-gnu-aarch64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kgo-1.1.0-linux-gnu-arm.tar.gz",
+            "size": 300902,
+            "size_human": "293.8 KiB",
+            "digest": "d18ce6447898e2ea785e3dd3e143f0aebff3f24ed0ee4ac46bf5f8d071a0c6b5",
+            "sha256": "d18ce6447898e2ea785e3dd3e143f0aebff3f24ed0ee4ac46bf5f8d071a0c6b5",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases/download/v1.1.0/kgo-1.1.0-linux-gnu-arm.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kgo-1.1.0-linux-gnu-i386.tar.gz",
+            "size": 403019,
+            "size_human": "393.6 KiB",
+            "digest": "9034a808f155aa60ec690de341a00c354280d42acd898a8b884c1185c1b62e4d",
+            "sha256": "9034a808f155aa60ec690de341a00c354280d42acd898a8b884c1185c1b62e4d",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases/download/v1.1.0/kgo-1.1.0-linux-gnu-i386.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kgo-1.1.0-linux-gnu-riscv64.tar.gz",
+            "size": 373715,
+            "size_human": "365.0 KiB",
+            "digest": "f68b76b2813e1b3c05f6a59f61f97a7089804042628044b7511f9aa9f1a2285b",
+            "sha256": "f68b76b2813e1b3c05f6a59f61f97a7089804042628044b7511f9aa9f1a2285b",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases/download/v1.1.0/kgo-1.1.0-linux-gnu-riscv64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kgo-1.1.0-linux-gnu-x86_64.tar.gz",
+            "size": 422594,
+            "size_human": "412.7 KiB",
+            "digest": "434e197554f8c799b9ded166493574ca4543b089ac8c1df9920a13104599a0da",
+            "sha256": "434e197554f8c799b9ded166493574ca4543b089ac8c1df9920a13104599a0da",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases/download/v1.1.0/kgo-1.1.0-linux-gnu-x86_64.tar.gz",
+            "content_type": "application/x-gtar"
+          },
+          {
+            "name": "kgo-1.1.0-windows-x86_64.zip",
+            "size": 7453,
+            "size_human": "7.3 KiB",
+            "digest": "71a9341be0ac4f7821faf409b6a9f920b75ac61fd2956c46f9d65237c5d9fb32",
+            "sha256": "71a9341be0ac4f7821faf409b6a9f920b75ac61fd2956c46f9d65237c5d9fb32",
+            "download_count": 0,
+            "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases/download/v1.1.0/kgo-1.1.0-windows-x86_64.zip",
+            "content_type": "application/zip"
+          }
+        ]
+      }
+    },
+    {
+      "star": true,
+      "name": "memes",
+      "repo": "memes",
+      "tag": "vision feed",
+      "url": "https://github.com/ZacharyGeurts/memes",
+      "pin_url": "https://github.com/ZacharyGeurts/memes",
+      "wiki": "https://github.com/ZacharyGeurts/memes/wiki",
+      "releases": "https://github.com/ZacharyGeurts/memes/releases",
+      "issues": "https://github.com/ZacharyGeurts/memes/issues"
+    },
+    {
+      "star": true,
+      "name": "retrotool",
+      "repo": "retrotool",
+      "tag": "retro tooling",
+      "url": "https://github.com/ZacharyGeurts/retrotool",
+      "pin_url": "https://github.com/ZacharyGeurts/retrotool",
+      "wiki": "https://github.com/ZacharyGeurts/retrotool/wiki",
+      "releases": "https://github.com/ZacharyGeurts/retrotool/releases",
+      "issues": "https://github.com/ZacharyGeurts/retrotool/issues"
+    },
+    {
+      "star": true,
+      "name": "Poop",
+      "repo": "Poop",
+      "tag": "misc",
+      "url": "https://github.com/ZacharyGeurts/Poop",
+      "pin_url": "https://github.com/ZacharyGeurts/Poop",
+      "wiki": "https://github.com/ZacharyGeurts/Poop/wiki",
+      "releases": "https://github.com/ZacharyGeurts/Poop/releases",
+      "issues": "https://github.com/ZacharyGeurts/Poop/issues"
+    },
+    {
+      "star": true,
+      "name": "ZacharyGeurts",
+      "repo": "ZacharyGeurts",
+      "tag": "profile hub",
+      "url": "https://github.com/ZacharyGeurts/ZacharyGeurts",
+      "pin_url": "https://zacharygeurts.github.io/ZacharyGeurts/",
+      "pages": "https://zacharygeurts.github.io/ZacharyGeurts/",
+      "wiki": "https://github.com/ZacharyGeurts/ZacharyGeurts/wiki",
+      "releases": "https://github.com/ZacharyGeurts/ZacharyGeurts/releases",
+      "issues": "https://github.com/ZacharyGeurts/ZacharyGeurts/issues"
+    }
+  ]
+}

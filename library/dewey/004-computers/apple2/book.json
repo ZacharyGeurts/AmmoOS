@@ -1,12 +1,12 @@
 {
   "id": "apple2",
   "title": "Apple II",
-  "author": "",
+  "author": "Field Extensive Library",
   "dewey": "004.678",
-  "format": "h7c",
-  "h7c": "library/dewey/004-computers/apple2/apple2.h7c",
-  "h7": null,
-  "cover": null,
-  "migrated_from": "h7",
-  "updated": "2026-06-27T12:04:36Z"
+  "format": "h7/7",
+  "cover": "/library/assets/devices/apple2.png",
+  "ready": true,
+  "h7": "library/dewey/004-computers/apple2/apple2.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
 }

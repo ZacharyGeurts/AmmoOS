@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import urllib.error
@@ -13,7 +14,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(ROOT)))
+SG = Path(os.environ.get("SG_ROOT", str(INSTALL.parent)))
+FINAL_EYE = SG / "Final_Eye"
 PORT = int(os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477"))
+QUEEN_PORT = int(os.environ.get("QUEEN_WORLD_PORT", "9481"))
 PANEL_URL = os.environ.get("NEXUS_PANEL_URL", f"https://127.0.0.1:{PORT}")
 RTX_URL = f"{PANEL_URL}/?rtx=1"
 
@@ -48,9 +52,23 @@ def _fetch(url: str, timeout: int = 15) -> str:
         return resp.read().decode("utf-8", errors="replace")
 
 
-def _ocr_image(path: Path) -> str:
+def _final_eye_ocr(path: Path) -> str:
+    """Prefer SG/Final_Eye/zocr.py; fall back to tesseract."""
     if not path.is_file():
         return ""
+    zocr = FINAL_EYE / "zocr.py"
+    if zocr.is_file():
+        try:
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location("zocr_validate", zocr)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "ocr_image"):
+                    return str(mod.ocr_image(path) or "")
+        except Exception:
+            pass
     try:
         out = subprocess.check_output(
             ["tesseract", str(path), "stdout", "-l", "eng", "--psm", "6"],
@@ -60,6 +78,10 @@ def _ocr_image(path: Path) -> str:
         return out.decode("utf-8", errors="replace")
     except (subprocess.SubprocessError, OSError):
         return ""
+
+
+def _ocr_image(path: Path) -> str:
+    return _final_eye_ocr(path)
 
 
 def _screenshot_panel(out: Path, url: str) -> bool:
@@ -167,10 +189,74 @@ def main() -> int:
     else:
         print("OCR SKIP: headless screenshot unavailable (HTML/API checks used)")
 
+    thermal_html = INSTALL / "Queen" / "world" / "queen-thermal-manager.html"
+    if thermal_html.is_file():
+        th_text = thermal_html.read_text(encoding="utf-8", errors="replace")
+        for needle in ("Thermal Manager", "NEXUS C2", "qtm-gauge", "Landauer"):
+            if needle in th_text:
+                print(f"THERMAL HTML OK: {needle}")
+            else:
+                print(f"THERMAL HTML FAIL: missing {needle}")
+                fail += 1
+        try:
+            py = shutil.which("pythong") or sys.executable
+            ocr_doc = json.loads(
+                subprocess.check_output(
+                    [py, str(INSTALL / "lib" / "field-thermal-manager-block.py"), "ocr"],
+                    stderr=subprocess.DEVNULL,
+                    timeout=25,
+                    env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "SG_ROOT": str(SG)},
+                ).decode("utf-8", errors="replace")
+            )
+            if ocr_doc.get("ok"):
+                print(f"FINAL_EYE OCR OK: thermal manager ({ocr_doc.get('hit_count')} needles)")
+            else:
+                print(f"FINAL_EYE OCR FAIL: {ocr_doc}")
+                fail += 1
+        except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as exc:
+            print(f"FINAL_EYE OCR WARN: {exc}")
+    else:
+        print("THERMAL SKIP: queen-thermal-manager.html not in NewLatest/Queen/world")
+
+    for label, html_rel, block_py, needles in (
+        ("EAR", "Queen/world/queen-final-ear-manager.html", "field-final-ear-block.py",
+         ("Final Ear", "NEXUS C2", "Auditus", "Veritas")),
+        ("MOUTH", "Queen/world/queen-final-mouth-manager.html", "field-final-mouth-block.py",
+         ("Final Mouth", "NEXUS C2", "Loquor", "Veritas Vox")),
+    ):
+        sense_html = INSTALL / html_rel
+        if sense_html.is_file():
+            sense_text = sense_html.read_text(encoding="utf-8", errors="replace")
+            for needle in needles:
+                if needle in sense_text:
+                    print(f"{label} HTML OK: {needle}")
+                else:
+                    print(f"{label} HTML FAIL: missing {needle}")
+                    fail += 1
+            try:
+                py = shutil.which("pythong") or sys.executable
+                ocr_doc = json.loads(
+                    subprocess.check_output(
+                        [py, str(INSTALL / "lib" / block_py), "ocr"],
+                        stderr=subprocess.DEVNULL,
+                        timeout=45,
+                        env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "SG_ROOT": str(SG)},
+                    ).decode("utf-8", errors="replace")
+                )
+                if ocr_doc.get("ok"):
+                    print(f"FINAL_EYE OCR OK: {label.lower()} manager ({ocr_doc.get('hit_count')} needles)")
+                else:
+                    print(f"FINAL_EYE OCR FAIL: {label} {ocr_doc}")
+                    fail += 1
+            except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as exc:
+                print(f"FINAL_EYE OCR WARN: {label} {exc}")
+        else:
+            print(f"{label} SKIP: {html_rel} not in NewLatest/Queen/world")
+
     if fail:
         print(f"\nOCR VALIDATION FAILED ({fail} hard failures)")
         return 1
-    print("\nOCR VALIDATION PASSED — RTX Zero panel confirmed")
+    print("\nOCR VALIDATION PASSED — RTX Zero + Thermal + Final Ear/Mouth (Final_Eye) confirmed")
     return 0
 
 

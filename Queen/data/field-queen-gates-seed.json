@@ -35,13 +35,20 @@
     "positive_identification_before_permit": true,
     "forever_watchguard_angel": true,
     "queen_layer_hostess7": true,
-    "angel_mandate": "queen-angel-mandate.json"
+    "angel_mandate": "queen-angel-mandate.json",
+    "ammoos_sovereignty": true,
+    "loopback_authority": "127.0.0.1",
+    "znetwork_internet_pipe_percent": 100,
+    "own_drivers_on_any_hardware": true,
+    "presume_sole_internet": true
   },
   "engines": {
     "ship_now": {
-      "id": "fieldfox",
+      "id": "queen-browser",
+      "legacy_id": "queen-field-engine",
       "base": "gecko-hardened",
-      "note": "Telemetry stripped, NEXUS native messaging, Truth Resolver lock, full codec tree"
+      "label": "Queen Browser",
+      "note": "Queen Field Gecko — telemetry stripped, native messaging, Truth Resolver lock"
     },
     "millennium": {
       "id": "ladybird-servo",
@@ -53,6 +60,7 @@
     {"id": "javascript", "label": "JavaScript (ES2026)", "held": true, "layer": "script"},
     {"id": "web_compat_auto", "label": "Web compat auto — pre-1.0 HTML through future drafts", "held": true, "layer": "compat"},
     {"id": "legacy_secure_cage", "label": "Legacy secure cage — old JS isolated from OS/memory", "held": true, "layer": "compat"},
+    {"id": "browser_import_resecure", "label": "Browser import resecure — sweep legacy gecko/Chromium profiles into Queen, field-gate every URL", "held": true, "layer": "security"},
     {"id": "nexus_jump", "label": "NEXUS Jump — quick security at every navigation boundary", "held": true, "layer": "security"},
     {"id": "countermeasures_armed", "label": "Countermeasures armed at jump — never afraid", "held": true, "layer": "security"},
     {"id": "wasm", "label": "WebAssembly", "held": true, "layer": "script"},
@@ -87,7 +95,7 @@
     {"id": "legacy_plugins_surrogate", "label": "Flash/Java/Silverlight WASM surrogates", "held": true, "layer": "legacy"},
     {"id": "in_process_ui", "label": "UI inside RTX engine (no OS viewport capture)", "held": true, "layer": "sovereign"},
     {"id": "no_obs_capture", "label": "OBS / screen recorders blocked at gate", "held": true, "layer": "sovereign"},
-    {"id": "no_os_browser_hook", "label": "No wmctrl/xdotool/Firefox overlay", "held": true, "layer": "sovereign"},
+    {"id": "no_os_browser_hook", "label": "No wmctrl/xdotool/host-browser overlay — Queen shell only", "held": true, "layer": "sovereign"},
     {"id": "embedded_nexus_panel", "label": "NEXUS panel file:// or loopback in-engine", "held": true, "layer": "sovereign"},
     {"id": "field_surface", "label": "FieldSurface replaces SDL3 (backend phase-out)", "held": true, "layer": "chip"},
     {"id": "field_gpu_dispatch", "label": "FieldGpuDispatch replaces libvulkan (SPIR-V kept)", "held": true, "layer": "chip"},
@@ -99,7 +107,11 @@
     {"id": "nexus_jump_iff", "label": "NEXUS Jump — hostile presumption at every navigation boundary", "held": true, "layer": "security"},
     {"id": "forever_watchguard_angel", "label": "Hostess 7 Forever Watchguard Angel — Queen layer", "held": true, "layer": "angel"},
     {"id": "grok_build_secure", "label": "Grok Build — AI secure channel + Queen branded page", "held": true, "layer": "ai"},
-    {"id": "field_virus_scanner", "label": "Field Virus scanner — own heuristics gate every file in/out; HOSTILE until CIVILIAN or THREAT", "held": true, "layer": "security"}
+    {"id": "field_virus_scanner", "label": "Field Virus scanner — own heuristics gate every file in/out; HOSTILE until CIVILIAN or THREAT", "held": true, "layer": "security"},
+    {"id": "ammoos_sovereignty", "label": "AmmoOS sovereignty — Queen underlying browser, 127.0.0.1 local authority", "held": true, "layer": "sovereign"},
+    {"id": "znetwork_sole_pipe", "label": "ZNetwork sole internet — 100% ingress/egress pipe in and out", "held": true, "layer": "network"},
+    {"id": "own_drivers_hardware", "label": "Own drivers on any hardware — FieldGpuDispatch, iron plate, full wire", "held": true, "layer": "chip"},
+    {"id": "presume_sole_internet", "label": "Presume Queen+ZNetwork is the only internet on the system — hardened", "held": true, "layer": "network"}
   ],
   "codecs": {
     "container": ["video/mp4", "video/webm", "video/ogg", "audio/mp4", "audio/mpeg", "audio/ogg", "audio/webm"],
@@ -126,7 +138,7 @@
   },
   "vulnerabilities_retired": [
     "Optional DRM/WebRTC/WebGPU toggles — Queen holds gates; never omits surface",
-    "Chromium telemetry chew — FieldFox Gecko fork, telemetry stripped",
+    "Chromium telemetry chew — Queen Field Gecko engine, telemetry stripped",
     "Foreign DNS resolver shortcut — Truth Resolver only",
     "Pool NTP as sole clock — sovereign-first witness",
     "MP4 as optional codec pack — bundled in-tree mandatory",
@@ -138,7 +150,7 @@
     "spec_store_bypass_disable=off without Grok waived entry",
     "Unmitigated CPU sysfs Vulnerable class — fail closed under NEXUS_CPU_VULN_SHIELD"
   ],
-  "process_names": ["fieldfox", "field-queen", "queen-browser", "firefox", "librewolf", "floorp", "waterfox"],
+  "process_names": ["queen-browser", "queen-world", "field-queen"],
   "security_gates": [
     {"id": "code_seal", "label": "Queen + Ear code seal", "held": true, "layer": "integrity"},
     {"id": "g16_field_mandate", "label": "G16 field safety mandate on RTX", "held": true, "layer": "compiler"},

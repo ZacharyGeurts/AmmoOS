@@ -1,0 +1,12 @@
+{
+  "id": "nes_dragon_buster_ii_yami_no_fuuin",
+  "title": "Dragon Buster II: Yami no Fuuin",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_dragon_buster_ii_yami_no_fuuin-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_dragon_buster_ii_yami_no_fuuin/nes_dragon_buster_ii_yami_no_fuuin.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

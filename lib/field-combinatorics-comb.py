@@ -192,21 +192,21 @@ def _brain_route(task: str, *, pattern_id: str = "", runner: str = "") -> dict[s
     return route
 
 
-def _chip_battery_architectures() -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Load universal chip battery for combinatorics CPU catalog."""
+def _ironclad_chips_architectures() -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Load Ironclad chip combinatorics for combinatorics CPU catalog."""
     for path in (
-        INSTALL / "lib" / "field-chip-battery.py",
-        Path(__file__).resolve().parent / "field-chip-battery.py",
+        INSTALL / "lib" / "field-ironclad-chips-combinatorics.py",
+        Path(__file__).resolve().parent / "field-ironclad-chips-combinatorics.py",
     ):
         if not path.is_file():
             continue
         try:
-            spec = importlib.util.spec_from_file_location("field_chip_battery_comb", path)
+            spec = importlib.util.spec_from_file_location("field_ironclad_chips_comb", path)
             if spec and spec.loader:
                 mod = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(mod)
-                if hasattr(mod, "build_chip_battery"):
-                    battery = mod.build_chip_battery()
+                if hasattr(mod, "build_ironclad_chips_combinatorics"):
+                    battery = mod.build_ironclad_chips_combinatorics()
                     archs: list[dict[str, Any]] = []
                     for chip in battery.get("chips") or []:
                         archs.append({
@@ -360,7 +360,7 @@ def cpu_architecture_catalog() -> dict[str, Any]:
             elif isinstance(chip, dict):
                 architectures.append({"kind": "chips_hot", **chip})
 
-    battery_archs, battery_counts = _chip_battery_architectures()
+    battery_archs, battery_counts = _ironclad_chips_architectures()
     prog_counts = _program_combinatronic_counts()
     seen_ids = {str(a.get("id")) for a in architectures}
     for arch in battery_archs:
@@ -376,8 +376,8 @@ def cpu_architecture_catalog() -> dict[str, Any]:
         "guest_systems": len(guest),
         "host_cpus": len(host_cpus),
         "g16_patterns": sum(1 for a in architectures if a.get("kind") == "g16_pattern"),
-        "chip_battery_total": battery_counts.get("total") or len(battery_archs),
-        "chip_battery_counts": battery_counts,
+        "ironclad_chips_total": battery_counts.get("total") or len(battery_archs),
+        "ironclad_chips_counts": battery_counts,
         "program_combinatronic_total": prog_counts.get("commands"),
         "program_combinatronic_languages": prog_counts.get("languages"),
         "program_boil_pct": prog_counts.get("boil_pct"),
@@ -415,7 +415,7 @@ def plate_meld_design() -> dict[str, Any]:
                 combinatorics_ids = {
                     "field_combinatorics",
                     "combinatorics_bridge",
-                    "chip_battery",
+                    "ironclad_chips",
                     "truth_blocks",
                     "code_bugfinder",
                     "c2_taskbar",

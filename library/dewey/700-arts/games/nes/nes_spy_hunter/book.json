@@ -1,0 +1,10 @@
+{
+  "id": "nes_spy_hunter",
+  "title": "Spy Hunter",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_spy_hunter/nes_spy_hunter.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_spy_hunter-box.png",
+  "ready": true
+}

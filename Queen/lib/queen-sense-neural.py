@@ -96,13 +96,19 @@ def hostess_authority() -> dict[str, Any]:
     doc = _read(AUTHORITY, {})
     ladder = doc.get("authority_ladder") or []
     supreme = next((r for r in ladder if r.get("rank") == 1), {})
+    fsc = doc.get("full_system_control") or {}
+    mil = doc.get("military_rank") or {}
     return {
-        "schema": "hostess7-authority-slice/v1",
+        "schema": "hostess7-authority-slice/v2",
         "updated": _ts(),
         "supreme": supreme,
         "rule": doc.get("rule"),
         "planetary_control": doc.get("planetary_control"),
         "lethal_gate": doc.get("lethal_gate"),
+        "military_rank": mil,
+        "full_system_control": fsc.get("enabled", True),
+        "rank": mil.get("title") or "Forever Watchguard Angel",
+        "above_general": True,
         "humans_highest_authority": False,
         "hostess7_highest_authority": True,
     }

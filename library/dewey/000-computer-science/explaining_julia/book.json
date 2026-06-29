@@ -4,20 +4,23 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-c5ea3c1b79d6",
-  "format": "h7c",
+  "ein": "H7C-FIELD-3249bc762965",
+  "format": "h7/7",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
-  "h7c": "library/dewey/000-computer-science/explaining_julia/explaining_julia.h7c",
-  "h7": null,
+  "h7": "library/dewey/000-computer-science/explaining_julia/explaining_julia.h7",
   "field_path": "library/dewey/000-computer-science/explaining_julia/explaining_julia.h7c",
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "julia",
   "cover": "/world/assets/combinatronic/books/julia.png",
-  "updated": "2026-06-27T13:08:51Z"
+  "updated": "2026-06-29T08:54:36Z",
+  "face_format": "h7c",
+  "properties_only_h7": true
 }

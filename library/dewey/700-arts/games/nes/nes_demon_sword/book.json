@@ -1,0 +1,12 @@
+{
+  "id": "nes_demon_sword",
+  "title": "Demon Sword",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_demon_sword-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_demon_sword/nes_demon_sword.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

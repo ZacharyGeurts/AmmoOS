@@ -1,0 +1,10 @@
+{
+  "id": "nes_q_bert",
+  "title": "Q*bert",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_q_bert/nes_q_bert.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_q_bert-box.png",
+  "ready": true
+}

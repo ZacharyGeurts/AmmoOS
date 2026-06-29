@@ -1,0 +1,12 @@
+{
+  "id": "nes_attack_of_the_killer_tomatoes",
+  "title": "Attack of the Killer Tomatoes",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_attack_of_the_killer_tomatoes-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_attack_of_the_killer_tomatoes/nes_attack_of_the_killer_tomatoes.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

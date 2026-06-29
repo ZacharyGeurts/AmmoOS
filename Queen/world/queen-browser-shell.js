@@ -15,6 +15,7 @@
     startOpen: false,
     startSide: "classic",
     desktopDoc: null,
+    autoProxyExternal: true,
   };
 
   function $(id) {
@@ -35,6 +36,16 @@
   }
 
   const SHELL_ACTIONS = new Set(["navigate", "new_tab", "attach_tab", "home", "command"]);
+
+  function tabTip(t) {
+    const title = t.title || t.url || "Tab";
+    const pinned = t.pinned || t.role === "start" || t.role === "desktop" || t.role === "files";
+    return pinned ? `${title} · pinned` : title;
+  }
+
+  function isCoreTab(t) {
+    return t.role === "start" || t.role === "desktop" || t.role === "files";
+  }
 
   function isLoopbackOrigin(origin) {
     try {
@@ -135,14 +146,62 @@
     if (idx >= 0) shell.cycleIdx = idx;
   }
 
+  function isTopLevelBenchUrl(url) {
+    if (!url) return false;
+    try {
+      const parsed = new URL(url, location.origin);
+      const host = (parsed.hostname || "").toLowerCase();
+      const path = (parsed.pathname || "").toLowerCase();
+      if (host === "browserbench.org" || host.endsWith(".browserbench.org")) return true;
+      return /speedometer|jetstream|motionmark|webxprt|todomvc/i.test(path);
+    } catch (_) {
+      return /speedometer|browserbench\.org|jetstream|motionmark/i.test(String(url));
+    }
+  }
+
+  function maybeTopLevelBench(url) {
+    if (!benchmarkMode() || !isTopLevelBenchUrl(url)) return false;
+    window.location.assign(url);
+    return true;
+  }
+
+  function isExternalUrl(url) {
+    if (!url || url.startsWith("about:") || url.startsWith("/") || url.startsWith("queen://")) return false;
+    try {
+      const u = new URL(url, location.origin);
+      return u.hostname !== "127.0.0.1" && u.hostname !== "localhost";
+    } catch {
+      return false;
+    }
+  }
+
+  function shouldProxy(url, explicitProxy) {
+    if (benchmarkMode()) return false;
+    if (explicitProxy === true) return true;
+    if (explicitProxy === false) return false;
+    if (!isExternalUrl(url)) return false;
+    return shell.autoProxyExternal !== false;
+  }
+
   function frameUrl(url, proxy, compatMode) {
     if (!url) return "about:blank";
     const mode = compatMode || "auto";
-    if (benchmarkMode()) proxy = false;
-    if (proxy) {
+    if (shouldProxy(url, proxy)) {
       return `/browse/view?url=${encodeURIComponent(url)}&compat=${encodeURIComponent(mode)}`;
     }
     return url;
+  }
+
+  function injectPageAgent(frame) {
+    if (!frame) return;
+    global.QueenPageInspector?.injectAgent?.(frame);
+    frame.addEventListener(
+      "load",
+      () => {
+        global.QueenPageInspector?.injectAgent?.(frame);
+      },
+      { once: false },
+    );
   }
 
   function applyCompatToFrame(frame, profile) {
@@ -154,6 +213,7 @@
   }
 
   async function loadTab(tabId, url, opts) {
+    if (maybeTopLevelBench(url)) return;
     const entry = getOrCreatePane(tabId);
     if (!entry) return;
     const doc = globalThis.QueenOS?.browser?.doc?.doc || globalThis.QueenOS?.browser?.doc;
@@ -176,6 +236,7 @@
     }
     const proxy = benchmarkMode() ? false : (opts?.proxy ?? doc?.proxyMode);
     entry.frame.src = frameUrl(url, proxy, compatMode);
+    injectPageAgent(entry.frame);
     delete entry.frame.dataset.discardedSrc;
     setActivePane(tabId);
     document.dispatchEvent(new CustomEvent("queen-navigate", { detail: { tabId, url } }));
@@ -203,11 +264,17 @@
           pinned ? ` qb-tab-pinned${roleCls}` : "",
           popped ? " qb-tab-popped" : "",
         ].join("");
+        const pinTitle = pinned ? "Unpin tab" : "Pin tab";
+        const pinGlyph = pinned ? "📌" : "📍";
+        const pinBtn = isCoreTab(t)
+          ? ""
+          : `<span class="qb-tab-pin" data-pin="${esc(t.id)}" title="${pinTitle}" aria-label="${pinTitle}">${pinGlyph}</span>`;
         return `
-      <button type="button" class="${cls}" data-tab="${esc(t.id)}" title="${esc(t.url)}">
+      <button type="button" class="${cls}" data-tab="${esc(t.id)}" title="${esc(tabTip(t))}">
         <span class="qb-tab-title">${esc(t.title || t.url)}</span>
+        ${pinBtn}
         <span class="qb-tab-popout" data-popout="${esc(t.id)}" title="Snap to window" aria-label="Pop out tab"><svg class="qb-ico qb-ico--tab" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#popout"/></svg></span>
-        <span class="qb-tab-fs" data-fs="${esc(t.id)}" title="Tab fullscreen" aria-label="Fullscreen tab"><svg class="qb-ico qb-ico--tab" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#tab-fs"/></svg></span>
+        <span class="qb-tab-fs" data-fs="${esc(t.id)}" title="Fullscreen viewport" aria-label="Fullscreen viewport"><svg class="qb-ico qb-ico--tab" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#tab-fs"/></svg></span>
         ${pinned ? "" : `<span class="qb-tab-close" data-close="${esc(t.id)}" aria-label="Close tab"><svg class="qb-ico qb-ico--tab" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#close"/></svg></span>`}
       </button>`;
       })
@@ -219,6 +286,12 @@
     if (!bar || bar.dataset.shellBound === "1") return;
     bar.dataset.shellBound = "1";
     bar.addEventListener("click", (e) => {
+      const pin = e.target.closest("[data-pin]");
+      if (pin) {
+        e.stopPropagation();
+        globalThis.QueenOS?.browser?.togglePinTab?.(pin.dataset.pin);
+        return;
+      }
       const pop = e.target.closest("[data-popout]");
       if (pop) {
         e.stopPropagation();
@@ -315,42 +388,71 @@
     return shell.desktopDoc;
   }
 
-  function renderStartMenuItems(programs) {
+  function startProgramsFromDoc(doc) {
+    if (!doc) return [];
+    if (doc.desktop_icons_in_start && Array.isArray(doc.start_programs) && doc.start_programs.length) {
+      return doc.start_programs;
+    }
+    return doc.classic_programs || [];
+  }
+
+  function bindStartItem(btn) {
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.url;
+      if (url) {
+        globalThis.QueenOS?.browser?.newTab?.(url);
+        toggleStartMenu(false);
+      }
+    });
+    btn.addEventListener("dragstart", (ev) => {
+      const url = btn.dataset.queenProgramUrl || btn.dataset.url;
+      const name = btn.dataset.queenProgramName || btn.dataset.name || "Program";
+      if (!url) return;
+      ev.dataTransfer.setData("text/uri-list", url);
+      ev.dataTransfer.setData(
+        "application/x-queen-program",
+        JSON.stringify({ url, name }),
+      );
+      ev.dataTransfer.effectAllowed = "copy";
+    });
+  }
+
+  function renderStartProgramButton(p) {
+    return (
+      `<button type="button" class="qb-start-item" draggable="true"` +
+      ` data-url="${escMenu(p.url || p.exec || "")}"` +
+      ` data-queen-program-url="${escMenu(p.url || p.exec || "")}"` +
+      ` data-queen-program-name="${escMenu(p.name)}"` +
+      ` data-name="${escMenu(p.name)}">` +
+      `<span>${escMenu(p.name)}</span></button>`
+    );
+  }
+
+  function renderStartMenuItems(programs, folders) {
     const body = $("qb-start-menu-body");
     if (!body) return;
     const q = ($("qb-start-search")?.value || "").trim().toLowerCase();
-    const list = (programs || []).filter((p) => !q || (p.name || "").toLowerCase().includes(q));
-    body.innerHTML = list
-      .map(
-        (p) =>
-          `<button type="button" class="qb-start-item" draggable="true"` +
-          ` data-url="${escMenu(p.url || p.exec || "")}"` +
-          ` data-queen-program-url="${escMenu(p.url || p.exec || "")}"` +
-          ` data-queen-program-name="${escMenu(p.name)}"` +
-          ` data-name="${escMenu(p.name)}">` +
-          `<span>${escMenu(p.name)}</span></button>`,
-      )
-      .join("");
-    body.querySelectorAll(".qb-start-item").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const url = btn.dataset.url;
-        if (url) {
-          globalThis.QueenOS?.browser?.newTab?.(url);
-          toggleStartMenu(false);
-        }
-      });
-      btn.addEventListener("dragstart", (ev) => {
-        const url = btn.dataset.queenProgramUrl || btn.dataset.url;
-        const name = btn.dataset.queenProgramName || btn.dataset.name || "Program";
-        if (!url) return;
-        ev.dataTransfer.setData("text/uri-list", url);
-        ev.dataTransfer.setData(
-          "application/x-queen-program",
-          JSON.stringify({ url, name }),
-        );
-        ev.dataTransfer.effectAllowed = "copy";
-      });
-    });
+    const folderList = Array.isArray(folders) && folders.length ? folders : null;
+    if (folderList) {
+      body.innerHTML = folderList
+        .map((folder) => {
+          const kids = (folder.children || []).filter(
+            (p) => !q || (p.name || "").toLowerCase().includes(q) || (folder.title || "").toLowerCase().includes(q),
+          );
+          if (!kids.length && q && !(folder.title || "").toLowerCase().includes(q)) return "";
+          return (
+            `<section class="qb-start-folder" data-folder="${escMenu(folder.id)}">` +
+            `<h3 class="qb-start-folder-title">${escMenu(folder.title)}</h3>` +
+            `<div class="qb-start-folder-items">${kids.map(renderStartProgramButton).join("")}</div>` +
+            `</section>`
+          );
+        })
+        .join("");
+    } else {
+      const list = (programs || []).filter((p) => !q || (p.name || "").toLowerCase().includes(q));
+      body.innerHTML = list.map(renderStartProgramButton).join("");
+    }
+    body.querySelectorAll(".qb-start-item").forEach(bindStartItem);
   }
 
   async function toggleStartMenu(force, side) {
@@ -363,7 +465,7 @@
     $("qb-start-classic")?.setAttribute("aria-expanded", shell.startOpen ? "true" : "false");
     if (shell.startOpen) {
       const doc = await fetchDesktopDoc();
-      renderStartMenuItems(doc.classic_programs || []);
+      renderStartMenuItems(startProgramsFromDoc(doc), doc.start_menu_folders);
       setTimeout(() => $("qb-start-search")?.focus(), 60);
     }
   }
@@ -414,6 +516,7 @@
 
   function wireSecurity() {
     window.addEventListener("message", onShellMessage);
+    window.addEventListener("message", onDesktopMessage);
     document.addEventListener("securitypolicyviolation", (e) => {
       const status = $("qb-status");
       if (status) status.textContent = `CSP blocked: ${e.blockedURI || e.violatedDirective}`;
@@ -456,7 +559,7 @@
     $("qb-start-classic")?.addEventListener("click", () => toggleStartMenu(undefined, "classic"));
     $("qb-start-search")?.addEventListener("input", async () => {
       const doc = await fetchDesktopDoc();
-      renderStartMenuItems(doc.classic_programs || []);
+      renderStartMenuItems(startProgramsFromDoc(doc), doc.start_menu_folders);
     });
     document.addEventListener("click", (ev) => {
       if (!shell.startOpen) return;
@@ -490,13 +593,34 @@
     });
   }
 
+  function applyDesktopEmbedMode() {
+    const params = new URLSearchParams(location.search);
+    if (params.get("desktop_embed") !== "1") return;
+    document.body.classList.add("qw-desktop-embed");
+    $("qb-chrome")?.setAttribute("hidden", "");
+    $("qb-chrome-restore")?.setAttribute("hidden", "");
+    $("qm-threat-bar")?.setAttribute("hidden", "");
+    const plate = $("qb-field-plate");
+    if (plate) plate.setAttribute("aria-hidden", "true");
+  }
+
   function applyShellMode() {
     document.body.classList.add("qw-browser-shell");
+    applyDesktopEmbedMode();
     const strip = document.createElement("span");
     strip.className = "qb-security-strip";
     strip.id = "qb-security-strip";
     strip.textContent = "AmmoOS · Queen Browser · PRESUME HOSTILE · DEFEND";
     $("qb-gate-strip")?.prepend(strip);
+  }
+
+  function onDesktopMessage(ev) {
+    if (ev.origin !== location.origin && !isLoopbackOrigin(ev.origin)) return;
+    const data = ev.data;
+    if (!data || data.type !== "queen:desktop") return;
+    if (data.action === "toggle_start") {
+      toggleStartMenu(undefined, data.side || "classic");
+    }
   }
 
   function patchBrowser(browserApi) {
@@ -549,6 +673,7 @@
         const doc = await origRefresh();
         browserApi.renderTabs(doc);
         applyStartButtonMode(doc);
+        await fixDesktopEmbedTab(browserApi, doc);
         const active = (doc.tabs || []).find((t) => t.active) || doc.tabs?.[0];
         if (active && !shell.popouts.has(active.id)) loadTab(active.id, active.url);
         return doc;
@@ -556,8 +681,32 @@
     }
   }
 
+  async function fixDesktopEmbedTab(browserApi, doc) {
+    if (!document.body.classList.contains("qw-desktop-embed")) return;
+    const tabs = doc?.tabs || [];
+    const active = tabs.find((t) => t.active) || tabs[0];
+    if (!active || (active.role !== "desktop" && active.role !== "start")) return;
+    const alt = tabs.find((t) => t.role === "files") || tabs.find((t) => !t.pinned && t.role !== "desktop" && t.role !== "start");
+    if (alt && browserApi.activateTab) {
+      await browserApi.activateTab(alt.id);
+      return;
+    }
+    if (browserApi.newTab) await browserApi.newTab("https://duckduckgo.com/");
+  }
+
+  async function loadShieldPolicy() {
+    try {
+      const r = await fetch("/api/queen-page-shields", { cache: "no-store" });
+      const doc = await r.json();
+      shell.autoProxyExternal = doc?.policy?.auto_proxy_external !== false;
+    } catch (_) {
+      shell.autoProxyExternal = true;
+    }
+  }
+
   function init(browserFacade) {
     if (shell.ready) return;
+    loadShieldPolicy();
     applyShellMode();
     ensureViewport();
     bindTabChrome();

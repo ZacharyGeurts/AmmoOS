@@ -49,6 +49,12 @@
       if (path === "files") return "/world/queen-files.html";
       if (path === "gameroom") return "/world/queen-game-room.html";
       if (path === "nexus-c2" || path === "c2") return "/world/queen-nexus-c2.html";
+      if (path === "thermal" || path === "thermal-manager") return "/world/queen-thermal-manager.html";
+      if (path === "final-ear" || path === "final-ear-manager" || path === "earball") return "/world/queen-final-ear-manager.html";
+      if (path === "final-mouth" || path === "final-mouth-manager" || path === "mouthball") return "/world/queen-final-mouth-manager.html";
+      if (path === "hostess7-hub" || path === "hostess7" || path === "hostess" || path === "ai-training") return "/world/queen-hostess7-hub.html";
+      if (path === "command" || path === "field-command") return "http://127.0.0.1:9477/command";
+      if (path === "os" || path === "start" || path === "desktop") return "/world/queen-start.html";
       const port = document.body?.dataset?.nexusPanelPort || "9477";
       if (path === "field-gimp" || path === "ammoos-image") return `http://127.0.0.1:${port}/field-gimp`;
       return `/world/?dock=${encodeURIComponent(path)}`;

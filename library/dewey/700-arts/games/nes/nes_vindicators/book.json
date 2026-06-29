@@ -1,0 +1,10 @@
+{
+  "id": "nes_vindicators",
+  "title": "Vindicators",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_vindicators/nes_vindicators.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_vindicators-box.png",
+  "ready": true
+}

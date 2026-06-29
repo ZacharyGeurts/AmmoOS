@@ -290,12 +290,44 @@
       "open_with": "emulator"
     },
     "disc_image": {
-      "extensions": [".iso", ".cue", ".chd", ".img", ".dmg"],
+      "extensions": [".iso", ".cue", ".chd", ".bin", ".nrg"],
       "label": "Disc image",
       "global_icon": "💿",
       "program_icon": "▶",
       "action": "run_launchable",
-      "open_with": "emulator"
+      "open_with": "emulator",
+      "big_drive": true
+    },
+    "storage_image": {
+      "extensions": [".img", ".ima", ".flp", ".dsk", ".raw", ".dd", ".fielddrive"],
+      "label": "Storage image",
+      "global_icon": "💾",
+      "program_icon": "▶",
+      "action": "open_tab",
+      "open_with": "big-drive",
+      "big_drive": true,
+      "icon_asset": "drive"
+    },
+    "vm_disk": {
+      "extensions": [".vhd", ".vhdx", ".vdi", ".qcow2", ".qcow", ".dmg"],
+      "label": "VM disk",
+      "global_icon": "🖥",
+      "program_icon": "▶",
+      "action": "open_tab",
+      "open_with": "big-drive",
+      "big_drive": true,
+      "vm": true,
+      "icon_asset": "drive"
+    },
+    "floppy_image": {
+      "extensions": [".ima", ".flp"],
+      "label": "Floppy image",
+      "global_icon": "🖫",
+      "program_icon": "▶",
+      "action": "open_tab",
+      "open_with": "big-drive",
+      "big_drive": true,
+      "icon_asset": "drive"
     },
     "lua": {
       "extensions": [".lua"],

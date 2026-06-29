@@ -18,7 +18,7 @@
     "coolness": 0.10
   },
   "plate_sources": [
-    {"id": "chips", "battery": "field-chip-battery.json", "leaf_key": "combinatorics_leaves", "facet": "chips_battery", "bridge_keys": ["chip_id", "family", "mame_device"]},
+    {"id": "chips", "combinatorics": "field-ironclad-chips-combinatorics.json", "leaf_key": "combinatorics_leaves", "facet": "ironclad_chips", "bridge_keys": ["chip_id", "family", "mame_device"]},
     {"id": "programs", "battery": "field-program-combinatronic.json", "leaf_key": "combinatorics_leaves", "facet": "program_combinatronic", "bridge_keys": ["lang", "canonical", "runner"]},
     {"id": "files", "battery": "field-file-formats-table.json", "leaf_key": "formats", "facet": "file_formats", "bridge_keys": ["family", "id", "extensions"]},
     {"id": "library", "battery": "field-extensive-library.json", "leaf_key": "devices", "facet": "extensive_library", "bridge_keys": ["id", "family", "platform"]},

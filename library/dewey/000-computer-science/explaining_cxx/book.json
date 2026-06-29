@@ -4,20 +4,23 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-ba5d5b2bb77b",
-  "format": "h7c",
+  "ein": "H7C-FIELD-7aae2632c0a0",
+  "format": "h7/7",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
-  "h7c": "library/dewey/000-computer-science/explaining_cxx/explaining_cxx.h7c",
-  "h7": null,
+  "h7": "library/dewey/000-computer-science/explaining_cxx/explaining_cxx.h7",
   "field_path": "library/dewey/000-computer-science/explaining_cxx/explaining_cxx.h7c",
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "cxx",
   "cover": "/world/assets/combinatronic/books/cxx.png",
-  "updated": "2026-06-27T13:08:37Z"
+  "updated": "2026-06-29T08:49:21Z",
+  "face_format": "h7c",
+  "properties_only_h7": true
 }

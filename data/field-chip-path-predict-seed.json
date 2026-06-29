@@ -4,7 +4,7 @@
   "hard_percent": true,
   "narrow_band_width": 16,
   "pipe_policy": "adjacent_narrow_only",
-  "context": "chips_battery",
+  "context": "ironclad_chips",
   "base_paths": [
     {"chip_id": "chips_6502", "path_id": "opcode_dispatch", "weight": 22.0, "label": "6502 opcode table walk"},
     {"chip_id": "chips_2c02", "path_id": "scanline_tile_fetch", "weight": 18.0, "label": "PPU scanline SIMD fetch"},

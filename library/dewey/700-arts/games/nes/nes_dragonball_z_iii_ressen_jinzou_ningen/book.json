@@ -1,0 +1,12 @@
+{
+  "id": "nes_dragonball_z_iii_ressen_jinzou_ningen",
+  "title": "Dragonball Z III: Ressen Jinzou Ningen",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_dragonball_z_iii_ressen_jinzou_ningen-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_dragonball_z_iii_ressen_jinzou_ningen/nes_dragonball_z_iii_ressen_jinzou_ningen.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

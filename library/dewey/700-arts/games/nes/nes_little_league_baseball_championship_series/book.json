@@ -1,0 +1,12 @@
+{
+  "id": "nes_little_league_baseball_championship_series",
+  "title": "Little League Baseball Championship Series",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_little_league_baseball_championship_series-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_little_league_baseball_championship_series/nes_little_league_baseball_championship_series.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

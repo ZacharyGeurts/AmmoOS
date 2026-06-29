@@ -1,0 +1,12 @@
+{
+  "id": "nes_big_birds_hide_and_speak",
+  "title": "Big Bird's Hide and Speak",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_big_birds_hide_and_speak-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_big_birds_hide_and_speak/nes_big_birds_hide_and_speak.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

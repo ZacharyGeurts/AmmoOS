@@ -1,0 +1,12 @@
+{
+  "id": "nes_caesars_palace",
+  "title": "Caesar's Palace",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_caesars_palace-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_caesars_palace/nes_caesars_palace.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

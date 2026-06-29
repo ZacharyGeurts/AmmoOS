@@ -125,10 +125,24 @@ class FieldGenerator:
                 "weight": float(f.get("weight") or 0.33),
             })
 
-    def create_field(self, field_id: str, lat: float, lon: float, freq_mhz: float, power: float = 100.0) -> dict[str, Any]:
-        row = {"id": field_id, "lat": lat, "lon": lon, "freq": freq_mhz, "power": power}
+    def create_anchor(self, field_id: str, lat: float, lon: float, freq_mhz: float, power: float = 100.0) -> dict[str, Any]:
+        """Register a mesh anchor on the 2D plane — never creates a field file."""
+        gate_py = INSTALL / "lib" / "field-no-file-gate.py"
+        if gate_py.is_file():
+            spec = importlib.util.spec_from_file_location("field_no_file_gate_tri", gate_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                roots = mod.sg_grok16_ready() if hasattr(mod, "sg_grok16_ready") else {"ok": True}
+                if not roots.get("ok"):
+                    return {"ok": False, "error": "sg_grok16_not_ready", "never_poison_the_well": True}
+        row = {"id": field_id, "lat": lat, "lon": lon, "freq": freq_mhz, "power": power, "depth": 0}
         self.fields.append(row)
         return row
+
+    def create_field(self, field_id: str, lat: float, lon: float, freq_mhz: float, power: float = 100.0) -> dict[str, Any]:
+        """Deprecated alias — use create_anchor; field files are forbidden."""
+        return self.create_anchor(field_id, lat, lon, freq_mhz, power=power)
 
     def broadcast(self, message: str = "NEXUS-FIELD-PULSE") -> dict[str, Any]:
         for f in self.fields:

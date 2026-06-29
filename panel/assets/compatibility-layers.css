@@ -1,24 +1,25 @@
+@import url("field-queen-theme.css");
+
 :root {
-  --cl-bg: #04060c;
-  --cl-panel: #0a1020;
-  --cl-border: #1e3a5f;
-  --cl-muted: #94a3b8;
-  --cl-ok: #4ade80;
-  --cl-warn: #fb923c;
+  --cl-bg: var(--qf-bg-deep);
+  --cl-panel: var(--qf-panel);
+  --cl-border: var(--qf-edge-emerald);
+  --cl-muted: var(--qf-dim);
+  --cl-ok: var(--qf-emerald-glow);
+  --cl-warn: #f59e0b;
   --cl-off: #475569;
-  --cl-glow: rgba(94, 234, 212, 0.15);
+  --cl-glow: var(--qf-glow-emerald);
 }
 
 html, body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(ellipse 90% 60% at 20% 0%, rgba(56, 189, 248, 0.14) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(167, 139, 250, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(94, 234, 212, 0.08) 0%, transparent 50%),
-    linear-gradient(180deg, #060a14 0%, var(--cl-bg) 100%);
-  color: #eef4fc;
-  font-family: "Segoe UI", system-ui, sans-serif;
+    radial-gradient(ellipse 90% 70% at 20% 0%, var(--qf-glow-blue), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 8%, var(--qf-glow-rose), transparent 45%),
+    linear-gradient(180deg, var(--qf-bg-mid) 0%, var(--qf-bg) 100%);
+  color: var(--qf-text);
+  font-family: var(--qf-font);
   line-height: 1.5;
 }
 
@@ -33,7 +34,7 @@ html, body {
   text-decoration: none;
   font-size: 0.9rem;
 }
-.cl-back:hover { color: #38bdf8; }
+.cl-back:hover { color: var(--qf-emerald-glow); }
 
 .cl-hero {
   display: flex;

@@ -1,12 +1,12 @@
 {
   "id": "sun_sparcstation",
   "title": "Sun SPARCstation",
-  "author": "",
+  "author": "Field Extensive Library",
   "dewey": "004.16",
-  "format": "h7c",
-  "h7c": "library/dewey/004-computers/sun_sparcstation/sun_sparcstation.h7c",
-  "h7": null,
-  "cover": null,
-  "migrated_from": "h7",
-  "updated": "2026-06-27T12:05:10Z"
+  "format": "h7/7",
+  "cover": "/library/assets/devices/sun_sparcstation.png",
+  "ready": true,
+  "h7": "library/dewey/004-computers/sun_sparcstation/sun_sparcstation.h7",
+  "face_format": "h7b",
+  "properties_only_h7": true
 }

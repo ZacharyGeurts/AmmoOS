@@ -1,0 +1,12 @@
+{
+  "id": "nes_die_hard",
+  "title": "Die Hard",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_die_hard-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_die_hard/nes_die_hard.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

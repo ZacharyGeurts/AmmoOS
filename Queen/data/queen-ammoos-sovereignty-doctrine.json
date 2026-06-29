@@ -1,0 +1,120 @@
+{
+  "schema": "queen-ammoos-sovereignty/v2",
+  "title": "Queen stack — AmmoOS inside Queen, defended by NEXUS C2 + ZNetwork",
+  "motto": "AmmoOS · 127.0.0.1 · God Bless — Queen is the secure browser that contains AmmoOS; NEXUS C2 commands; ZNetwork pipes 100%; hardware never broken.",
+  "product": "AmmoOS",
+  "container": "Queen Browser",
+  "ammoos_inside_queen": true,
+  "loopback_authority": "127.0.0.1",
+  "local_only_control": true,
+  "presume_sole_internet": true,
+  "stack_layers": "data/field-stack-layer-doctrine.json",
+  "stack_posture": "lib/field-stack-layer.py",
+  "layer_order": ["hardware", "nexus_c2", "znetwork", "queen", "ammoos"],
+  "policy": {
+    "queen_underlying_browser": true,
+    "queen_full_system_control_local": true,
+    "queen_defends_with_nexus": true,
+    "queen_defends_with_znetwork": true,
+    "ammoos_embedded_not_sibling": true,
+    "no_os_browser_primary": true,
+    "no_foreign_network_stack": true,
+    "znetwork_internet_pipe_percent_target": 100,
+    "znetwork_always_full_pipe": true,
+    "hardware_pipe_full": true,
+    "hardware_no_break": true,
+    "own_drivers_on_any_hardware": true,
+    "field_operator_iron_plate": true,
+    "native_layer_authority": true,
+    "ingress_egress_local_only_policy": true,
+    "hardened_as_only_internet": true
+  },
+  "nexus_c2": {
+    "label": "NEXUS C2",
+    "port": 9477,
+    "field": "http://127.0.0.1:9477/field",
+    "command": "http://127.0.0.1:9477/command",
+    "role": "Command, security fixes, gates, trust strike — foundation layer above hardware"
+  },
+  "queen": {
+    "browser": "Queen Browser",
+    "engine": "queen-field-gecko",
+    "shell": "/world/browser.html",
+    "port": 9481,
+    "contains": "AmmoOS",
+    "c2_loopback": "http://127.0.0.1:9477/field",
+    "panel_loopback": "http://127.0.0.1:9477/command",
+    "doctrine": "Queen/data/queen-field-browser-doctrine.json",
+    "gates": "data/field-queen-gates-seed.json",
+    "user_guide": "/world/queen-browser-guide.html",
+    "role": "Secure rewritten shell — hosts AmmoOS in Start tab; all security wired; defends with NEXUS + ZNetwork"
+  },
+  "ammoos": {
+    "inside_queen": true,
+    "start_surface": "http://127.0.0.1:9477/field",
+    "view": "http://127.0.0.1:9481/world/view.html",
+    "role": "Field OS programs and folders — part of Queen, not a separate browser product"
+  },
+  "local_services": {
+    "truth_dns": "lib/field-dns.py",
+    "field_dhcp": "lib/field-dhcp.py",
+    "auto_connect": "lib/field-local-dns-connect.py",
+    "takeover": "lib/dns-service-takeover.py",
+    "loopback_resolver": "127.0.0.1",
+    "dhcp_dns_option": "127.0.0.1",
+    "policy": "Use our own local DHCP and DNS — connect when either starts",
+    "motto": "Truth Resolver + Field DHCP on loopback — auto-steer resolv and DHCP client"
+  },
+  "znetwork": {
+    "sole_internet_stack": true,
+    "internet_pipe_percent": 100,
+    "ingress_egress_owner": "znetwork",
+    "relayer_default": true,
+    "civilian_passthrough": true,
+    "never_harm_os": true,
+    "doctrine": "data/znetwork-doctrine.json",
+    "modules": [
+      "lib/znetwork-relayer.py",
+      "lib/znetwork-orchestrator.py",
+      "lib/znetwork-smart-inside.py",
+      "lib/znetwork-exploit-shield.py"
+    ],
+    "motto": "100% of internet pipe — helps Queen defend; hostile interdict, civilian pass"
+  },
+  "hardware": {
+    "no_breaks": true,
+    "own_drivers": true,
+    "never_harm_os": true,
+    "coexist_host_desktop": true,
+    "driver_doctrine": "We are our own drivers on any hardware — FieldGpuDispatch, FieldSurface, iron plate, IRQ/DMA/PCI/USB/net paths owned by field stack",
+    "operator_doctrine": "data/field-operator-doctrine.json",
+    "native_layer": "data/native-layer-doctrine.json",
+    "layers": ["irq", "dma", "pci", "usb", "net", "input", "storage", "gpu", "audio"],
+    "pipe": "full_hardware_wire_in_out"
+  },
+  "hardening": {
+    "loopback_first": true,
+    "truth_dns_sovereign": true,
+    "connection_gatekeeper_iff": true,
+    "packet_permission_v4": true,
+    "zero_telemetry": true,
+    "settings_surface_minimal": true,
+    "best_settings_locked": true
+  },
+  "env": {
+    "AMMOOS_INSIDE_QUEEN": "1",
+    "QUEEN_DEFENDS_WITH_NEXUS": "1",
+    "QUEEN_DEFENDS_WITH_ZNETWORK": "1",
+    "HARDWARE_NO_BREAK": "1",
+    "QUEEN_BROWSER_ONLY": "1",
+    "QUEEN_NO_OS_BROWSER": "1",
+    "NEXUS_FIELD_BROWSER_QUEEN": "1",
+    "ZNETWORK_RELAYER": "1",
+    "ZNETWORK_SMART_INSIDE": "1",
+    "ZNETWORK_PROTECTION_ONLY": "0",
+    "ZNETWORK_INTERNET_PIPE_TARGET": "100",
+    "NEXUS_FIELD_DNS": "1",
+    "NEXUS_FIELD_DHCP": "1",
+    "NEXUS_FIELD_LOCAL_DNS_CONNECT": "1"
+  }
+}

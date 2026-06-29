@@ -1,0 +1,10 @@
+{
+  "id": "nes_tecmo_baseball",
+  "title": "Tecmo Baseball",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_tecmo_baseball/nes_tecmo_baseball.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_tecmo_baseball-box.png",
+  "ready": true
+}

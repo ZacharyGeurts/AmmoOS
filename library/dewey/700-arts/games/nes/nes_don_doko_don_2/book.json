@@ -1,0 +1,12 @@
+{
+  "id": "nes_don_doko_don_2",
+  "title": "Don Doko Don 2",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_don_doko_don_2-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_don_doko_don_2/nes_don_doko_don_2.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

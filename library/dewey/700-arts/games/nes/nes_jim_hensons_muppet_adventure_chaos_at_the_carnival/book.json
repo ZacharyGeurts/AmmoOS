@@ -1,0 +1,12 @@
+{
+  "id": "nes_jim_hensons_muppet_adventure_chaos_at_the_carnival",
+  "title": "Jim Henson's Muppet Adventure: Chaos at the Carnival",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_jim_hensons_muppet_adventure_chaos_at_the_carnival-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_jim_hensons_muppet_adventure_chaos_at_the_carnival/nes_jim_hensons_muppet_adventure_chaos_at_the_carnival.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

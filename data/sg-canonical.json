@@ -1,16 +1,48 @@
 {
   "schema": "sg-canonical/v1",
-  "updated": "2026-06-27",
+  "updated": "2026-06-29",
   "canonical_root": "NewLatest",
-  "motto": "SG/NewLatest is AmmoOS \u2014 Queen Browser + Field Technology + wired stack",
+  "motto": "SG/NewLatest — NEXUS C2 · ZNetwork · Queen (secure) · AmmoOS inside Queen on 127.0.0.1 — hardware no-break",
+  "stack_layers": {
+    "doctrine": "NewLatest/data/field-stack-layer-doctrine.json",
+    "posture": "NewLatest/lib/field-stack-layer.py",
+    "order": ["hardware", "nexus_c2", "znetwork", "queen", "ammoos"]
+  },
+  "sovereignty": {
+    "doctrine": "NewLatest/data/queen-ammoos-sovereignty-doctrine.json",
+    "posture": "NewLatest/lib/queen-ammoos-sovereignty.py",
+    "loopback": "127.0.0.1",
+    "znetwork_pipe_percent": 100,
+    "blessing": "God Bless"
+  },
   "product": "AmmoOS",
   "sg_root_semantics": "SG_ROOT defaults to NEXUS_INSTALL_ROOT (NewLatest). Stack siblings are symlinked inside NewLatest via scripts/wire-stack.sh.",
+  "compiler_stack": {
+    "primary": "NewLatest/Grok16",
+    "gui": "NewLatest/AmmoCode",
+    "filetypes_db": "NewLatest/data/field-programming-filetypes.json",
+    "code_open": "NewLatest/scripts/sg-code-open.sh",
+    "fieldc": "NewLatest/AMOURANTHRTX/Navigator/engine/FieldFieldCc.hpp",
+    "vulkan_doctrine": "NewLatest/data/vulkan-os-doctrine.json",
+    "integrate": "NewLatest/scripts/integrate-compiler-stack.sh",
+    "rtx_engine": "NewLatest/AMOURANTHRTX",
+    "rtx_integrate": "NewLatest/scripts/integrate-amouranthrtx.sh",
+    "rtx_open": "NewLatest/scripts/amouranthrtx-open.sh"
+  },
   "stack": {
     "operator_surface": "NewLatest/Queen",
     "network_shield": "NewLatest",
     "compiler": "NewLatest/Grok16",
+    "ammocode": "NewLatest/AmmoCode",
     "final_eye": "Final_Eye",
     "final_ear": "Final_Ear",
+    "final_mouth": "NewLatest/Final_Mouth",
+    "field_research": "NewLatest/Field_Research",
+    "gimp_field": "NewLatest/GIMP-Field",
+    "obs_field": "NewLatest/OBS-Field",
+    "keepass_field": "NewLatest/KeePass-Field",
+    "gdb_field": "NewLatest/GDB-Field",
+    "ammosecurity": "NewLatest/ammosecurity",
     "zocr": "ZOCR",
     "zocr_legacy": "NewLatest/ZOCR",
     "znewocr": "NewLatest/ZNEWOCR",
@@ -68,6 +100,10 @@
     "live_build": "NewLatest/Queen/scripts/queen-live-build.sh",
     "training_viewer": "NewLatest/hostess7-training-viewer/launch.sh",
     "wire_stack": "NewLatest/scripts/wire-stack.sh",
+    "integrate_compiler": "NewLatest/scripts/integrate-compiler-stack.sh",
+    "integrate_ammocode": "NewLatest/scripts/integrate-ammocode.sh",
+    "integrate_amouranthrtx": "NewLatest/scripts/integrate-amouranthrtx.sh",
+    "amouranthrtx_open": "NewLatest/scripts/amouranthrtx-open.sh",
     "boot_impl": "NewLatest/scripts/nexus-boot-impl.sh"
   },
   "boot_impl": {

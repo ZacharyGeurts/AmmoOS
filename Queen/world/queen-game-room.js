@@ -18,6 +18,9 @@
     gamepad: null,
     fullscreen: false,
     webLive: false,
+    spawned: false,
+    romPath: null,
+    fbPoll: null,
     curtainsOpen: false,
     lastPadBtn: {},
   };
@@ -101,17 +104,24 @@
     const systems = state.doc.systems || [];
     el.innerHTML = systems
       .map(
-        (s) => `
+        (s) => {
+          const infoUrl = s.info_url || `/world/queen-system-info.html?system=${encodeURIComponent(s.id)}`;
+          return `
       <button type="button" class="gr-tile${state.system === s.id ? " active" : ""}${s.status === "scaffold" ? " scaffold" : ""}"
         data-system="${esc(s.id)}" title="${esc(s.chips || "")}">
+        <a class="gr-tile-info" href="${esc(infoUrl)}" title="System info · CHIPS catalog" aria-label="Info for ${esc(s.label)}">ⓘ</a>
         <span class="gr-tile-label">${esc(s.label)}</span>
         <span class="gr-tile-meta">${esc(s.era)} · ${esc(s.cpu)}</span>
         ${s.movie ? '<span class="gr-tile-badge">Cinema</span>' : ""}
-      </button>`,
+      </button>`;
+        },
       )
       .join("");
     el.querySelectorAll("[data-system]").forEach((btn) => {
-      btn.addEventListener("click", () => selectSystem(btn.dataset.system));
+      btn.addEventListener("click", (ev) => {
+        if (ev.target.closest(".gr-tile-info")) return;
+        selectSystem(btn.dataset.system);
+      });
     });
   }
 
@@ -137,6 +147,22 @@
       .join("");
   }
 
+  function renderTestRom(test) {
+    const el = $("gr-test-rom");
+    if (!el) return;
+    if (!test || test.ok === false) {
+      if (state.system && state.system !== "cinema") {
+        el.hidden = false;
+        el.textContent = test?.hint || "Test ROM: run fetch-queen-test-roms.py";
+      } else {
+        el.hidden = true;
+      }
+      return;
+    }
+    el.hidden = false;
+    el.textContent = `Test ROM: ${test.title || test.filename || "ready"} · ${test.filename || ""}`;
+  }
+
   function renderStatus() {
     const el = $("gr-status");
     if (!el || !state.doc) return;
@@ -147,9 +173,11 @@
       `<span class="gr-pill${chips.present ? " ok" : ""}">CHIPS ${chips.headers || 0} headers</span>`,
       `<span class="gr-pill${g16.ready ? " ok" : ""}">G16 ${g16.profile || "field_opt"}</span>`,
       `<span class="gr-pill ok">Webbrowser</span>`,
-      state.webLive
-        ? `<span class="gr-pill ok">● CHIPS live</span>`
-        : `<span class="gr-pill">CHIPS idle</span>`,
+      state.spawned
+        ? `<span class="gr-pill ok">● pump ${state.system}</span>`
+        : state.webLive
+          ? `<span class="gr-pill ok">● CHIPS live</span>`
+          : `<span class="gr-pill">CHIPS idle</span>`,
       state.gamepad
         ? `<span class="gr-pill ok">🎮 ${esc(state.gamepad.id)}</span>`
         : `<span class="gr-pill">🎮 controller</span>`,
@@ -196,14 +224,16 @@
       state.mode = "emulator";
       if (sys?.ratio) applyAspect(sys.ratio);
     }
+    globalThis.QueenNesLibrary?.showNesRoom?.(id === "nes");
     render();
-    await api({
+    const cfg = await api({
       action: "configure",
       system: state.system,
       host_cpu: state.cpu,
       memory: state.memory,
       aspect: state.aspect,
     });
+    renderTestRom(cfg.test_rom);
   }
 
   function cycleSystem(dir) {
@@ -223,22 +253,91 @@
     applyAspect(state.aspect);
   }
 
+  function stopFbPoll() {
+    if (state.fbPoll) {
+      clearInterval(state.fbPoll);
+      state.fbPoll = null;
+    }
+  }
+
+  function showFramebuffer(live) {
+    const canvas = $("gr-canvas");
+    const fb = $("gr-fb");
+    const video = $("gr-video");
+    if (!fb) return;
+    if (live) {
+      fb.hidden = false;
+      if (canvas) canvas.hidden = true;
+      if (video) video.hidden = true;
+      fb.src = `${FB_API}/image?t=${Date.now()}`;
+    } else {
+      fb.hidden = true;
+      fb.removeAttribute("src");
+    }
+  }
+
+  async function pollFramebuffer() {
+    try {
+      const r = await fetch(FB_API, { cache: "no-store" });
+      if (!r.ok) return;
+      const fb = await r.json();
+      state.spawned = !!(fb.spawned || fb.queen_process);
+      if (fb.programs_canvas_ready && fb.image_url) {
+        state.webLive = true;
+        showFramebuffer(true);
+        const hud = $("gr-hud");
+        if (hud) {
+          hud.hidden = false;
+          hud.textContent = `CHIPS live · ${fb.system || state.system}${fb.rom_path ? " · " + fb.rom_path.split("/").pop() : ""}`;
+        }
+        renderStatus();
+      } else if (!fb.queen_process) {
+        state.webLive = false;
+        state.spawned = false;
+        stopFbPoll();
+        showFramebuffer(false);
+        renderStatus();
+      }
+    } catch (_) {
+      /* quiet poll */
+    }
+  }
+
+  function startFbPoll() {
+    stopFbPoll();
+    pollFramebuffer();
+    state.fbPoll = setInterval(pollFramebuffer, 120);
+  }
+
   async function launch(opts) {
+    opts = opts || {};
     openCurtains();
-    const out = await api({
+    const body = {
       action: "launch",
-      system: state.system,
+      system: opts.system || state.system,
       host_cpu: state.cpu,
       memory: state.memory,
-      spawn_rtx: false,
+      spawn_rtx: opts.spawn_rtx !== false,
       surface: "webbrowser",
-    });
+    };
+    if (opts.rom_path) body.rom_path = opts.rom_path;
+    if (opts.nes_id) body.nes_id = opts.nes_id;
+    if (opts.title) body.title = opts.title;
+    if (opts.system) state.system = opts.system;
+
+    const out = await api(body);
     const log = $("gr-log");
     if (log) log.textContent = JSON.stringify(out, null, 2);
     if (out.mode === "cinema") {
       $("gr-movie-input")?.click();
-    } else if (out.ok) {
+    } else if (out.ok && out.spawned) {
       state.webLive = true;
+      state.spawned = true;
+      state.romPath = out.rom_path || null;
+      startFbPoll();
+      renderStatus();
+    } else if (out.ok) {
+      state.webLive = false;
       drawCanvasActive(out);
       renderStatus();
     }
@@ -408,26 +507,58 @@
     ctx.fillStyle = "rgba(212, 168, 83, 0.18)";
     ctx.font = `bold ${Math.max(18, w / 28)}px Georgia, serif`;
     ctx.textAlign = "center";
-    ctx.fillText("Queen Game Room", w / 2, h / 2 - 14);
+    ctx.fillText("Queen Cinema", w / 2, h / 2 - 14);
     ctx.font = `${Math.max(12, w / 42)}px Inter, sans-serif`;
     ctx.fillStyle = "#9a8b72";
-    ctx.fillText("CHIPS · Grok16 field_opt · Launch or load a movie", w / 2, h / 2 + 18);
+    ctx.fillText("75% Theater · 25% Arcade · Launch loads best test ROM", w / 2, h / 2 + 18);
     ctx.strokeStyle = "rgba(212, 168, 83, 0.25)";
     ctx.lineWidth = 2;
     ctx.strokeRect(w * 0.08, h * 0.12, w * 0.84, h * 0.76);
   }
 
+  function setSystem(id) {
+    state.system = id;
+    globalThis.QueenNesLibrary?.showNesRoom?.(id === "nes");
+    render();
+  }
+
   function init() {
+    const urlSystem = new URLSearchParams(location.search).get("system");
+    if (urlSystem) state.system = urlSystem;
+
     wireControls();
     wireGamepad();
     wireMovie();
     drawCanvasIdle();
-    refresh();
+    refresh().then(async () => {
+      if (urlSystem) await selectSystem(urlSystem);
+      globalThis.QueenNesLibrary?.showNesRoom?.(state.system === "nes");
+      globalThis.QueenNesLibrary?.init?.();
+      globalThis.QueenSAP?.init?.();
+      const cfg = await api({
+        action: "configure",
+        system: state.system,
+        host_cpu: state.cpu,
+        memory: state.memory,
+        aspect: state.aspect,
+      });
+      renderTestRom(cfg.test_rom);
+    });
     setInterval(refresh, 30000);
-
   }
 
-  globalThis.QueenGameRoom = { state, refresh, launch, selectSystem, toggleFullscreen, init };
+  globalThis.QueenGameRoom = {
+    state,
+    refresh,
+    launch,
+    selectSystem,
+    setSystem,
+    toggleFullscreen,
+    openCurtains,
+    startFbPoll,
+    stopFbPoll,
+    init,
+  };
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {

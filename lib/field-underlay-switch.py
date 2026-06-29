@@ -645,7 +645,7 @@ def znetwork_posture(*, refresh_offer: bool = False) -> dict[str, Any]:
 
 
 def znetwork_choice(choice: str) -> dict[str, Any]:
-    normalized = str(choice or "").strip().lower()
+    normalized = str(choice or "").strip().lower() or "yes"
     if normalized not in ("yes", "no", "skip"):
         return {"ok": False, "error": "invalid_choice", "choices": ["yes", "no", "skip"]}
     helper = INSTALL / "lib" / "znetwork-field.sh"

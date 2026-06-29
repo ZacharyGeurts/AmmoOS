@@ -1,12 +1,12 @@
 {
   "id": "a2600",
   "title": "Atari 2600",
-  "author": "",
+  "author": "Field Extensive Library",
   "dewey": "004.678",
-  "format": "h7c",
-  "h7c": "library/dewey/004-computers/a2600/a2600.h7c",
-  "h7": null,
-  "cover": null,
-  "migrated_from": "h7",
-  "updated": "2026-06-27T12:04:33Z"
+  "format": "h7/7",
+  "cover": "/library/assets/devices/a2600.png",
+  "ready": true,
+  "h7": "library/dewey/004-computers/a2600/a2600.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
 }

@@ -1,13 +1,13 @@
 {
   "id": "format-wrzc",
-  "title": "WRZC",
+  "title": "World Redata WRZC1",
   "dewey": null,
   "format": "registry-entry",
-  "family": "image_field",
+  "family": "sovereign",
   "extensions": [
     ".wrzc"
   ],
-  "magic": "57525a43",
+  "magic": "WRZC",
   "cover": "/library/assets/formats/wrzc.png",
-  "updated": "2026-06-27T12:17:36Z"
+  "updated": "2026-06-29T08:56:32Z"
 }

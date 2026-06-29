@@ -7,7 +7,7 @@ DOCS_SRC="${ROOT}/docs"
 PAGES_REPO="${PAGES_REPO:-${ROOT}/.pages-ammoos-publish}"
 PAGES_REMOTE="${PAGES_REMOTE:-https://github.com/ZacharyGeurts/AmmoOS.git}"
 PAGES_BRANCH="${PAGES_BRANCH:-gh-pages}"
-VER="${AMMOOS_VERSION:-1.0.0-beta}"
+VER="${AMMOOS_VERSION:-2.0.0-beta}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

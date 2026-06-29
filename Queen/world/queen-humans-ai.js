@@ -16,7 +16,11 @@
     },
     {
       who: "human",
-      text: "Shift+click IMPORT to make Queen your default browser — drop-in replacement.",
+      text: "Shift+click IMPORT to make Queen your default browser — replaces host browser handlers on this machine.",
+    },
+    {
+      who: "human",
+      text: "New to Queen? Click ? in the bar or open /world/queen-browser-guide.html for migration help.",
     },
     {
       who: "ai",
@@ -123,7 +127,12 @@
 
   function bind() {
     $("qb-ha-help")?.addEventListener("click", () => {
-      $("qb-gates")?.click();
+      const guide = `${location.origin}/world/queen-browser-guide.html`;
+      if (globalThis.QueenOS?.browser?.openTab) {
+        globalThis.QueenOS.browser.openTab(guide, { title: "Queen Guide" });
+      } else {
+        window.open(guide, "_blank", "noopener");
+      }
     });
     renderTip();
     refreshVector();

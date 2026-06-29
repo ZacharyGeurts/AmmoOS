@@ -1,0 +1,12 @@
+{
+  "id": "nes_getsufuu_maden",
+  "title": "Getsufuu Maden",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_getsufuu_maden-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_getsufuu_maden/nes_getsufuu_maden.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

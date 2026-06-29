@@ -91,6 +91,16 @@ def _host(url: str) -> str:
         return ""
 
 
+def _benchmark_mod() -> Any | None:
+    path = QUEEN / "lib" / "queen-benchmark.py"
+    if not path.is_file():
+        return None
+    try:
+        return _load_module("queen_benchmark_gate", path)
+    except Exception:
+        return None
+
+
 def _jump_slice(url: str) -> dict[str, Any]:
     script = QUEEN / "lib" / "queen-nexus-jump.py"
     if not script.is_file():
@@ -110,6 +120,12 @@ def _jump_slice(url: str) -> dict[str, Any]:
 
 
 def gate_nav(url: str) -> dict[str, Any]:
+    bench = _benchmark_mod()
+    if bench is not None and hasattr(bench, "fast_gate_nav"):
+        fast = bench.fast_gate_nav(url)
+        if fast:
+            return fast
+
     jump = _jump_slice(url)
     if jump and jump.get("permit") is False:
         return {

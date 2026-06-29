@@ -1,0 +1,12 @@
+{
+  "id": "nes_city_connection",
+  "title": "City Connection",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_city_connection-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_city_connection/nes_city_connection.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

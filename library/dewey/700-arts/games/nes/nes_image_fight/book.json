@@ -1,0 +1,12 @@
+{
+  "id": "nes_image_fight",
+  "title": "Image Fight",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_image_fight-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_image_fight/nes_image_fight.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

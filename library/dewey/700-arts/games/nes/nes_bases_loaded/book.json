@@ -1,0 +1,12 @@
+{
+  "id": "nes_bases_loaded",
+  "title": "Bases Loaded",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_bases_loaded-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_bases_loaded/nes_bases_loaded.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

@@ -1,0 +1,12 @@
+{
+  "id": "nes_dai_2_ji_super_robot_taisen",
+  "title": "Dai-2-ji Super Robot Taisen",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_dai_2_ji_super_robot_taisen-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_dai_2_ji_super_robot_taisen/nes_dai_2_ji_super_robot_taisen.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

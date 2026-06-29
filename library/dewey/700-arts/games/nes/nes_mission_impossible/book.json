@@ -1,0 +1,12 @@
+{
+  "id": "nes_mission_impossible",
+  "title": "Mission Impossible",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_mission_impossible-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_mission_impossible/nes_mission_impossible.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

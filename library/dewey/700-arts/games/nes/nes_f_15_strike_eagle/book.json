@@ -1,0 +1,12 @@
+{
+  "id": "nes_f_15_strike_eagle",
+  "title": "F-15 Strike Eagle",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_f_15_strike_eagle-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_f_15_strike_eagle/nes_f_15_strike_eagle.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

@@ -43,8 +43,13 @@ PLATE_CONDENSE_GROUPS: dict[str, list[tuple[str, str]]] = {
     ],
     "g16_universal": [
         ("g16_universal", "field-g16-universal-combinatronic-panel.json"),
-        ("chip_battery", "field-chip-battery-panel.json"),
+        ("ironclad_chips", "field-ironclad-chips-combinatorics-panel.json"),
         ("program_combinatronic", "field-program-combinatronic-panel.json"),
+    ],
+    "chips_core": [
+        ("ironclad_chips", "field-ironclad-chips-combinatorics-panel.json"),
+        ("chips_plate_stack", "field-chips-plate-stack-panel.json"),
+        ("chips_core", "field-chips-core-panel.json"),
     ],
     "iron_truth": [
         ("truth_blocks", "g16-truth-blocks-panel.json"),

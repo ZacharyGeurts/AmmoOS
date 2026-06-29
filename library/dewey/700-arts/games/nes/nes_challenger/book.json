@@ -1,0 +1,12 @@
+{
+  "id": "nes_challenger",
+  "title": "Challenger",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_challenger-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_challenger/nes_challenger.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

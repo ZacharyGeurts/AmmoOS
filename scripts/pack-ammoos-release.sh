@@ -6,7 +6,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-common.sh"
 
-AMMOOS_VERSION="${AMMOOS_VERSION:-1.0.0-beta}"
+AMMOOS_VERSION="${AMMOOS_VERSION:-2.0.0-beta}"
 VER="${AMMOOS_VERSION}"
 DIST="${ROOT}/dist"
 STAGE="${DIST}/ammoos-${VER}"
@@ -48,6 +48,39 @@ rsync -a \
   --exclude='.github/workflows/release-v10.yml' \
   --exclude='Hostess7/.github' \
   "${ROOT}/" "${STAGE}/"
+
+# Materialize stack sibling symlinks (KILROY, Grok16, …) for portable export
+echo "=== materialize stack siblings ==="
+STACK_SYMLINKS=(
+  AMOURANTHRTX Grok16 GrokPy PythonG KILROY Final_Eye Final_Ear
+  ZNEWOCR ZOCR ZNetwork World_Redata World_Repack Field_Primer Spiderweb
+)
+for name in "${STACK_SYMLINKS[@]}"; do
+  link="${STAGE}/${name}"
+  [[ -L "$link" ]] || continue
+  target="$(readlink -f "$link" 2>/dev/null || true)"
+  [[ -n "$target" && -d "$target" ]] || continue
+  echo "  ${name} <- ${target}"
+  rm -f "$link"
+  mkdir -p "$link"
+  RSYNC_EX=(
+    --exclude='.git' --exclude='build' --exclude='build-cmake' --exclude='cache'
+    --exclude='vendor' --exclude='.venv*' --exclude='__pycache__' --exclude='*.pyc'
+  )
+  copied=0
+  if rsync -a "${RSYNC_EX[@]}" "${target}/" "${link}/" 2>/dev/null; then
+    copied=1
+  elif [[ "$name" == "KILROY" && -n "${SUDO_PASS:-}" ]]; then
+    printf '%s\n' "$SUDO_PASS" | sudo -S rsync -a "${RSYNC_EX[@]}" "${target}/" "${link}/" && copied=1
+    printf '%s\n' "$SUDO_PASS" | sudo -S chown -R "$(id -un):$(id -gn)" "${link}" 2>/dev/null || true
+  elif [[ "$name" == "KILROY" ]]; then
+    sudo rsync -a "${RSYNC_EX[@]}" "${target}/" "${link}/" 2>/dev/null && copied=1
+    sudo chown -R "$(id -un):$(id -gn)" "${link}" 2>/dev/null || true
+  fi
+  if [[ "$copied" -eq 0 ]]; then
+    rsync -a --ignore-errors "${RSYNC_EX[@]}" "${target}/" "${link}/" || true
+  fi
+done
 
 # AmmoOS branding at export root
 if [[ -f "${STAGE}/README-AMMOOS.md" ]]; then

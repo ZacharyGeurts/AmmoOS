@@ -1,0 +1,12 @@
+{
+  "id": "nes_bards_tale_ii_the_destiny_knight",
+  "title": "Bard's Tale II: The Destiny Knight",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_bards_tale_ii_the_destiny_knight-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_bards_tale_ii_the_destiny_knight/nes_bards_tale_ii_the_destiny_knight.h7",
+  "face_format": "h7c",
+  "properties_only_h7": true
+}

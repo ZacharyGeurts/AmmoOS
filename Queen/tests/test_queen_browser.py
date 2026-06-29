@@ -97,14 +97,16 @@ def run_tests() -> list[tuple[str, str]]:
     ):
         assert_true(needle in text, f"shell contains {needle}", results)
     bjs, bjst = _get("/world/queen-branding.js")
-    assert_true(bjs == 200 and b"qb-freddie-egg" in bjst and b"rhap" in bjst, "Freddie easter egg wired", results)
+    assert_true(bjs == 200 and b"qb-queen-crown-egg" in bjst and b"queen-browser-guide" in bjst, "Queen crown + guide wired", results)
     assert_true("qw-dock" not in text, "default /world/ is browser-only (no Queen OS dock)", results)
 
     for asset in (
         "/world/queen-branding.css",
         "/world/queen-branding.js",
         "/world/assets/branding/queen-favicon-48.png",
-        "/world/assets/branding/freddie-easter-egg.png",
+        "/world/assets/branding/queen-crown-surprise.svg",
+        "/world/queen-browser-guide.html",
+        "/world/queen-browser-guide.css",
         "/world/assets/branding/amouranth-plate.png",
         "/world/queen-os.js",
         "/world/queen-world.css",
@@ -129,6 +131,18 @@ def run_tests() -> list[tuple[str, str]]:
         "/world/queen-nexus-c2.html",
         "/world/queen-nexus-c2.js",
         "/world/queen-nexus-c2.css",
+        "/world/queen-thermal-manager.html",
+        "/world/queen-thermal-manager.js",
+        "/world/queen-thermal-manager.css",
+        "/world/queen-final-ear-manager.html",
+        "/world/queen-final-ear-manager.js",
+        "/world/queen-final-ear-manager.css",
+        "/world/queen-final-mouth-manager.html",
+        "/world/queen-final-mouth-manager.js",
+        "/world/queen-final-mouth-manager.css",
+        "/world/queen-hostess7-hub.html",
+        "/world/queen-hostess7-hub.js",
+        "/world/queen-hostess7-hub.css",
         "/world/queen-dashboard.html",
         "/world/queen-dashboard.js",
         "/world/queen-dashboard.css",
@@ -167,8 +181,11 @@ def run_tests() -> list[tuple[str, str]]:
     code, desk_raw = _get("/api/queen-desktop")
     desk = json.loads(desk_raw.decode("utf-8"))
     assert_true(code == 200 and desk.get("schema") == "queen-desktop/v1", "queen-desktop API", results)
-    desk_ids = {p.get("id") for p in desk.get("classic_programs") or []}
-    assert_true("nexus-c2" in desk_ids or "dashboard" in desk_ids, "nexus c2 in classic programs", results)
+    start_src = desk.get("start_programs") if desk.get("desktop_icons_in_start") else desk.get("classic_programs")
+    desk_ids = {p.get("id") for p in start_src or []}
+    assert_true("nexus-c2" in desk_ids or "dashboard" in desk_ids, "nexus c2 in start programs", results)
+    if desk.get("desktop_icons_in_start"):
+        assert_true(not desk.get("classic_programs"), "desktop surface clear when icons in start", results)
 
     code, c2_api_raw = _get("/api/nexus-c2")
     c2_api = json.loads(c2_api_raw.decode("utf-8"))
@@ -227,6 +244,14 @@ def run_tests() -> list[tuple[str, str]]:
         files_idx = next((i for i, t in enumerate(tabs) if t.get("role") == "files"), -1)
         assert_true(files_idx == start_idx + 1, "Files tab immediately after Start", results)
     assert_true(len(doc.get("bookmarks") or []) >= 3, "bookmarks present", results)
+    bm_ids = {b.get("id") for b in (doc.get("bookmarks") or [])}
+    assert_true("thermal-manager" in bm_ids, "Thermal Manager bookmark", results)
+    assert_true("final-ear-manager" in bm_ids, "Final Ear manager bookmark", results)
+    assert_true("final-mouth-manager" in bm_ids, "Final Mouth manager bookmark", results)
+    trees = doc.get("bookmark_trees") or []
+    tree_ids = {t.get("id") for t in trees if isinstance(t, dict)}
+    for fid in ("hostess-7", "command", "os"):
+        assert_true(fid in tree_ids, f"bookmark folder {fid}", results)
     home = doc.get("home") or ""
     assert_true(home.startswith("http"), "home URL set", results)
     tab1 = (doc.get("tabs") or [{}])[0].get("id")
@@ -498,6 +523,25 @@ def run_tests() -> list[tuple[str, str]]:
 
     grc, grhtml = _get("/world/queen-game-room.html")
     assert_true(grc == 200 and b"queen-game-room.js" in grhtml, "game room web page", results)
+    assert_true(
+        any((s.get("info_url") or "").startswith("/world/queen-system-info.html") for s in (grdoc.get("systems") or [])),
+        "game room systems expose info_url",
+        results,
+    )
+
+    sic, sidoc_raw = _get("/api/game-room/system?system=nes")
+    sidoc = json.loads(sidoc_raw.decode("utf-8"))
+    assert_true(sic == 200 and sidoc.get("schema") == "queen-emulator-system-info/v1", "emulator system info API", results)
+    assert_true(sidoc.get("ok") is True and sidoc.get("device_image"), "system info device image", results)
+    assert_true(len(sidoc.get("stack_chips") or []) >= 1, "system info stack chips", results)
+
+    infoc, infohtml = _get("/world/queen-system-info.html?system=nes")
+    assert_true(
+        infoc == 200 and b"queen-system-info.js" in infohtml and b"qsi-device-frame" in infohtml,
+        "emulator system info page",
+        results,
+    )
+
     ccc, cchtml = _get("/world/queen-chips-cores.html")
     assert_true(ccc == 200 and b"queen-chips-cores.js" in cchtml, "chips/cores web page", results)
     assert_true(any(c.get("id") == "cyrix_6x86" for c in (grdoc.get("host_cpus") or [])), "Cyrix CPU option", results)

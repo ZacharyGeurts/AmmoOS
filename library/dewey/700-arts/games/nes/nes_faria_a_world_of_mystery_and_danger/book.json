@@ -1,0 +1,12 @@
+{
+  "id": "nes_faria_a_world_of_mystery_and_danger",
+  "title": "Faria: A World of Mystery and Danger",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_faria_a_world_of_mystery_and_danger-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_faria_a_world_of_mystery_and_danger/nes_faria_a_world_of_mystery_and_danger.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

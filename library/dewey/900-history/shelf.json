@@ -3,9 +3,9 @@
   "shelf": "900-history",
   "code": "900",
   "title": "History & geography",
-  "updated": "2026-06-27T12:37:26Z",
+  "updated": "2026-06-29T09:43:43Z",
   "format_primary": "h7c",
-  "book_count": 5,
+  "book_count": 6,
   "h7c_count": 0,
   "books": [
     {
@@ -36,6 +36,16 @@
       "format": "textbook",
       "h7c": null,
       "cover": "/library/assets/covers/openstax_world_history_2/front.png",
+      "ready": false
+    },
+    {
+      "id": "ten_pivotal_years",
+      "title": "Ten Pivotal Years: A History of the Moments That Remade Humanity",
+      "author": "Hostess 7 Library",
+      "dewey": "900",
+      "format": "h7/7",
+      "h7c": null,
+      "cover": null,
       "ready": false
     },
     {

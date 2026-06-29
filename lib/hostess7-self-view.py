@@ -177,6 +177,43 @@ def _evaluate_want(want_id: str, *, brain: dict[str, Any], master: dict[str, Any
         row["value"] = verdict
         row["display"] = verdict.replace("_", " ")
         row["ok"] = verdict == "brain_verified"
+    elif want_id == "userwatch_bond":
+        uw = _load(STATE / "hostess7-userwatch-panel.json", {})
+        if not uw:
+            mod_path = INSTALL / "lib" / "hostess7-userwatch.py"
+            if mod_path.is_file():
+                try:
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location("h7_uw_sv", mod_path)
+                    if spec and spec.loader:
+                        mod = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(mod)
+                        uw = mod.build_panel(write=False) if hasattr(mod, "build_panel") else {}
+                except Exception:
+                    uw = {}
+        tier = str(uw.get("bond_tier") or "trace")
+        rate = float(uw.get("assurance_rate") or 0)
+        row["value"] = {"bond_tier": tier, "assurance_rate": rate, "bond_id": uw.get("bond_id")}
+        row["display"] = f"{tier} · assurance {round(rate * 100)}%"
+        row["ok"] = rate >= 0.48
+    elif want_id == "plating_apex":
+        apex = (_load(STATE / "hostess7-userwatch-panel.json", {}).get("plating_apex") or {})
+        if not apex:
+            mod_path = INSTALL / "lib" / "hostess7-userwatch.py"
+            if mod_path.is_file():
+                try:
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location("h7_uw_apex", mod_path)
+                    if spec and spec.loader:
+                        mod = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(mod)
+                        apex = mod.review_plating_apex() if hasattr(mod, "review_plating_apex") else {}
+                except Exception:
+                    apex = {}
+        score = float(apex.get("apex_score") or 0)
+        row["value"] = apex
+        row["display"] = f"apex {round(score * 100)}% — {'APEX' if apex.get('at_apex') else 'climbing'}"
+        row["ok"] = bool(apex.get("at_apex"))
     elif want_id == "guard_score":
         score = brain.get("guard_score") or v.get("guard_score")
         row["value"] = score

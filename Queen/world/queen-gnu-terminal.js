@@ -438,6 +438,16 @@
 
     try {
       const j = await api({ action: "run", command: trimmed, cwd: sess.cwd || root.cwd });
+      fetch("/api/hostess7/userwatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "work_zone",
+          cwd: sess.cwd || root.cwd,
+          command: trimmed,
+          source: "queen-gnu-terminal",
+        }),
+      }).catch(() => {});
       if (j.clear) {
         clearTerminal(sess);
         return;

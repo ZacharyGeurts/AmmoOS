@@ -1,0 +1,12 @@
+{
+  "id": "nes_dragonball_daimaou_fukkatsu",
+  "title": "Dragonball: Daimaou Fukkatsu",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_dragonball_daimaou_fukkatsu-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_dragonball_daimaou_fukkatsu/nes_dragonball_daimaou_fukkatsu.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

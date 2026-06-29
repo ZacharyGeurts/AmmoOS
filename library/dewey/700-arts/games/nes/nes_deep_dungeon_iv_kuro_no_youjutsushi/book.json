@@ -1,0 +1,12 @@
+{
+  "id": "nes_deep_dungeon_iv_kuro_no_youjutsushi",
+  "title": "Deep Dungeon IV: Kuro no Youjutsushi",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_deep_dungeon_iv_kuro_no_youjutsushi-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_deep_dungeon_iv_kuro_no_youjutsushi/nes_deep_dungeon_iv_kuro_no_youjutsushi.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

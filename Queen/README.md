@@ -49,6 +49,8 @@ export NEXUS_INSTALL_ROOT="$(cd .. && pwd)"
 ./build/rtx/bin/Linux/queen-browser --queen --extended-field
 ```
 
-No external Firefox/Chrome. UI + AmmoOS panel load **inside** the RTX engine (`FieldWebPanel` + `QueenBoot.comp` compshader boot). Threat panel API auto-starts on `:9477` if needed.
+No external host-browser UI — operators see **Queen Browser** only. AmmoOS panel loads **inside** the RTX engine (`FieldWebPanel` + `QueenBoot.comp` compshader boot). Threat panel API auto-starts on `:9477` if needed.
 
-Binary names: `queen-browser`, `field-queen` — Queen Browser is the web engine (`fieldfox` retained as legacy alias).
+Binary names: `queen-browser`, `queen-field-engine`, `field-queen`.
+
+**User guide:** `http://127.0.0.1:9481/world/queen-browser-guide.html`

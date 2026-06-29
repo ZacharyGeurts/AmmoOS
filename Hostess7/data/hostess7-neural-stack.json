@@ -89,7 +89,8 @@
         {"id": "superintel_operate", "engine": "scripts/field_superintelligence.py", "lane": "Super-Intel", "mode": "operate"},
         {"id": "inbox_jsonl", "engine": "brain/superintel/inbox.jsonl", "lane": "AI-Ingress"},
         {"id": "outbox_jsonl", "engine": "brain/superintel/outbox.jsonl", "lane": "AI-Egress"},
-        {"id": "queen_field_brain", "engine": "Queen/lib/queen-hostess-brain.py", "lane": "Queen-API", "action": "ai_operate"}
+        {"id": "queen_field_brain", "engine": "Queen/lib/queen-hostess-brain.py", "lane": "Queen-API", "action": "ai_operate"},
+        {"id": "znetwork_wire", "engine": "lib/hostess7-znetwork-wire.py", "lane": "ZNetwork-Egress", "profile": "data/hostess7-communication-profile.json", "sole_outbound": true}
       ]
     },
     {

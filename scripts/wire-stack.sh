@@ -7,19 +7,29 @@ PARENT="$(cd "${ROOT}/.." && pwd)"
 
 STACK=(
   AMOURANTHRTX
+  AmmoCode
   Grok16
   GrokPy
   PythonG
   KILROY
   Final_Eye
   Final_Ear
+  Final_Mouth
   ZNEWOCR
   ZOCR
-  ZNetwork
   World_Redata
   World_Repack
   Field_Primer
+  Field_Research
   Spiderweb
+  GIMP
+  GIMP-Field
+  OBS-Field
+  OBS-FieldVoiceFilter
+  KeePass-Field
+  GDB-Field
+  ammosecurity
+  Kill-Grok-Orphans
 )
 
 wired=0

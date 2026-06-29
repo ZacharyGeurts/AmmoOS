@@ -1,0 +1,12 @@
+{
+  "id": "nes_godzilla_2_war_of_the_monsters",
+  "title": "Godzilla 2: War of the Monsters",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_godzilla_2_war_of_the_monsters-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_godzilla_2_war_of_the_monsters/nes_godzilla_2_war_of_the_monsters.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

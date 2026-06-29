@@ -1,0 +1,10 @@
+{
+  "id": "nes_tetris_2",
+  "title": "Tetris 2",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_tetris_2/nes_tetris_2.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_tetris_2-box.png",
+  "ready": true
+}

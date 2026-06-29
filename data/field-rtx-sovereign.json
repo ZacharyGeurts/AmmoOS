@@ -7,7 +7,7 @@
     "now": {
       "gpu": "Vulkan bridge (FieldGpuDispatch::VulkanBridge) — minimal loader to submit SPIR-V",
       "surface": "SDL3 → FieldSurface migration",
-      "shaders": "retired — CHIPS/cores route through Queen Webbrowser (no desktop comp shader boot)"
+      "shaders": "CANVAS.comp OS dispatch — Queen CANVAS renderer above ZNetwork (no desktop comp shader boot)"
     },
     "forever": {
       "gpu": "FieldGpuDispatch pure — direct field socket to RTX without libvulkan",

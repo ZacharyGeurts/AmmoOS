@@ -38,6 +38,7 @@ VESTIGIAL_AUTOSTART = (
     "nexus-shield.desktop",
     "nexus-tristate-installer.desktop",
     "nexus-threat-panel.desktop",
+    "nexus-queen-world.desktop",
 )
 
 def _never_harm_os() -> bool:
@@ -49,6 +50,12 @@ LEGACY_PROCESS_PATTERNS = (
     r"/Latest/NEXUS-Shield/lib/threat-panel-http\.py",
     r"/Latest/NEXUS-Shield/lib/nexus-daemon",
     r"Latest/NEXUS-Shield.*threat-panel",
+    r"field-antenna",
+    r"field_antenna",
+    r"field-antenna-catch",
+    r"field-antenna-orchestrator",
+    r"field-antenna-launcher",
+    r"field-spectrum-demod.*catch",
 )
 
 # Duplicate state roots (migrate away, do not delete panels)

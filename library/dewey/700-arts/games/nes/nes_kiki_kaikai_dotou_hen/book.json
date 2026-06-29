@@ -1,0 +1,12 @@
+{
+  "id": "nes_kiki_kaikai_dotou_hen",
+  "title": "Kiki Kaikai: Dotou-hen",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_kiki_kaikai_dotou_hen-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_kiki_kaikai_dotou_hen/nes_kiki_kaikai_dotou_hen.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

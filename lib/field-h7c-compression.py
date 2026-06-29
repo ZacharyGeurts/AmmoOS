@@ -21,24 +21,123 @@ BALANCE_TABLE = STATE / "field-h7c-balance-table.json"
 MAGIC_V1 = b"H7C\x01"
 MAGIC_V2 = b"H7C\x02"
 MAGIC_V3 = b"H7C\x03"
-MAGICS = (MAGIC_V1, MAGIC_V2, MAGIC_V3)
+MAGIC_V4 = b"H7C\x04"
+MAGICS = (MAGIC_V1, MAGIC_V2, MAGIC_V3, MAGIC_V4)
 FORMAT_V1 = "h7c/1"
 FORMAT_V2 = "h7c/2"
 FORMAT_V3 = "h7c/3"
+FORMAT_V4 = "h7c/4"
+CANONICAL_FIELD_LAYER = 1
 H7FIG_RE = __import__("re").compile(r"!\[([^\]]*)\]\(h7fig:([a-zA-Z0-9_.-]+)\)")
 BALANCE_TARGET = 0.97
 UNIVERSAL_BATTERY = STATE / "field-g16-universal-combinatronic.json"
 _UNIVERSAL_CACHE: dict[str, Any] | None = None
+_H7_MODULE_CACHE: Any | None = None
+_COMBINA_LEAVES_CACHE: list[dict[str, Any]] | None = None
+_BALANCE_MOD_CACHE: Any | None = None
+_BALANCE_TABLE_MEM: dict[str, Any] | None = None
+_BALANCE_BATCH_DEPTH = 0
+_BALANCE_DIRTY = False
 
 FACET_UNI_SUB: dict[str, str] = {
     "code": "program_combinatronic",
-    "prose": "chips_battery",
-    "heading": "chips_battery",
+    "prose": "ironclad_chips",
+    "heading": "ironclad_chips",
 }
 
 
 class H7cError(ValueError):
     pass
+
+
+def _ironclad_block_slice() -> dict[str, Any]:
+    path = INSTALL / "lib" / "ironclad-immediate.py"
+    if not path.is_file():
+        return {}
+    try:
+        spec = importlib.util.spec_from_file_location("h7c_ironclad", path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "immediate_slice"):
+                return mod.immediate_slice() or {}
+    except Exception:
+        pass
+    cached = _load(STATE / "ironclad-immediate.json", {})
+    return cached if isinstance(cached, dict) else {}
+
+
+def unwrap_h7c_block(data: bytes) -> tuple[bytes, dict[str, Any] | None]:
+    """Peel h7c/4 ironclad block wrapper — inner v1–v3 bytes pass through unchanged."""
+    if len(data) < 12 or data[:4] != MAGIC_V4:
+        return data, None
+    block_hdr_len = struct.unpack("<I", data[4:8])[0]
+    start = 8
+    end = start + block_hdr_len
+    if end + 4 > len(data):
+        raise H7cError("truncated H7c block header")
+    block_hdr = json.loads(data[start:end].decode("utf-8"))
+    inner_len = struct.unpack("<I", data[end : end + 4])[0]
+    inner_start = end + 4
+    inner_end = inner_start + inner_len
+    if inner_end > len(data):
+        raise H7cError("truncated H7c block inner")
+    inner = data[inner_start:inner_end]
+    expect = block_hdr.get("inner_sha256")
+    if expect and hashlib.sha256(inner).hexdigest() != expect:
+        raise H7cError("H7c block inner sha256 mismatch")
+    if inner[:4] not in (MAGIC_V1, MAGIC_V2, MAGIC_V3):
+        raise H7cError("H7c block inner is not v1–v3 payload")
+    return inner, block_hdr
+
+
+def wrap_h7c_block(inner: bytes, meta: dict[str, Any] | None = None) -> bytes:
+    """Wrap an existing H7c blob in ironclad-sealed h7c/4 block — lossless, field layer 1."""
+    if inner[:4] not in (MAGIC_V1, MAGIC_V2, MAGIC_V3):
+        raise H7cError("wrap_h7c_block requires inner h7c/1–3 bytes")
+    m = meta or {}
+    inner_hdr_len = struct.unpack("<I", inner[4:8])[0]
+    inner_hdr: dict[str, Any] = {}
+    try:
+        inner_hdr = json.loads(inner[8 : 8 + inner_hdr_len].decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        inner_hdr = {}
+    iron = _ironclad_block_slice()
+    block_hdr: dict[str, Any] = {
+        "format": FORMAT_V4,
+        "schema": "h7c-ironclad-block/v1",
+        "field_layer": CANONICAL_FIELD_LAYER,
+        "ironclad_sealed": bool(iron.get("ok", True)),
+        "ironclad_citation": m.get("ironclad_citation") or "ironclad:h7c:1",
+        "inner_format": inner_hdr.get("format") or FORMAT_V2,
+        "inner_sha256": hashlib.sha256(inner).hexdigest(),
+        "inner_bytes": len(inner),
+        "lossless": True,
+        "block_wrapper": True,
+        "statement": "Ironclad block envelope — inner H7c unchanged; decompress peels block.",
+        "packed_at": _now(),
+        **{k: v for k, v in m.items() if k not in ("format", "inner_sha256")},
+    }
+    if iron.get("citation_prefix"):
+        block_hdr["ironclad_immediate"] = {
+            "citation_prefix": iron.get("citation_prefix"),
+            "realized": iron.get("realized"),
+        }
+    block_json = json.dumps(block_hdr, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    if len(block_json) > 65535:
+        raise H7cError("H7c block header too large")
+    return b"".join([
+        MAGIC_V4,
+        struct.pack("<I", len(block_json)),
+        block_json,
+        struct.pack("<I", len(inner)),
+        inner,
+    ])
+
+
+def peel_h7c_bytes(data: bytes) -> tuple[bytes, dict[str, Any] | None]:
+    """Return decompressable H7c bytes — unwraps block when present."""
+    return unwrap_h7c_block(data)
 
 
 def _now() -> str:
@@ -54,9 +153,18 @@ def _load(path: Path, default: Any = None) -> Any:
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    try:
+        tmp.write_text(payload, encoding="utf-8")
+        tmp.replace(path)
+    except OSError:
+        path.write_text(payload, encoding="utf-8")
+        if tmp.is_file():
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
 
 
 def _doctrine() -> dict[str, Any]:
@@ -72,6 +180,9 @@ def _optimizer_cfg() -> dict[str, Any]:
 
 
 def _h7_module() -> Any | None:
+    global _H7_MODULE_CACHE
+    if _H7_MODULE_CACHE is not None:
+        return _H7_MODULE_CACHE
     path = INSTALL / "Hostess7" / "scripts" / "field_h7_book.py"
     if not path.is_file():
         return None
@@ -80,23 +191,40 @@ def _h7_module() -> Any | None:
         return None
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
+    _H7_MODULE_CACHE = mod
     return mod
 
 
-def _combinamatrix_leaves() -> list[dict[str, Any]]:
+def _combinamatrix_leaves(*, fast: bool = False) -> list[dict[str, Any]]:
+    global _COMBINA_LEAVES_CACHE
+    if fast:
+        return _COMBINA_LEAVES_CACHE or []
+    if _COMBINA_LEAVES_CACHE is not None:
+        return _COMBINA_LEAVES_CACHE
+    battery = STATE / "field-combinamatrix.json"
+    if battery.is_file():
+        doc = _load(battery, {})
+        cells = list(doc.get("cells") or doc.get("leaves") or [])
+        if cells:
+            _COMBINA_LEAVES_CACHE = cells
+            return cells
     cm = INSTALL / "lib" / "field-combinamatrix.py"
     if not cm.is_file():
+        _COMBINA_LEAVES_CACHE = []
         return []
     spec = importlib.util.spec_from_file_location("field_combinamatrix", cm)
     if not spec or not spec.loader:
+        _COMBINA_LEAVES_CACHE = []
         return []
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     try:
         panel = mod.build_matrix(refresh=False)
-        return list(panel.get("cells") or panel.get("leaves") or [])
+        cells = list(panel.get("cells") or panel.get("leaves") or [])
     except Exception:
-        return []
+        cells = []
+    _COMBINA_LEAVES_CACHE = cells
+    return cells
 
 
 def _universal_mod() -> Any | None:
@@ -163,7 +291,7 @@ def _map_bands_universal(
     hints: list[dict[str, Any]] = []
     for band in bands:
         facet = str(band.get("facet") or "prose")
-        sub = FACET_UNI_SUB.get(facet, "chips_battery")
+        sub = FACET_UNI_SUB.get(facet, "ironclad_chips")
         candidates = sub_index.get(sub) or sub_index.get("g16_universal") or []
         if not candidates:
             refs.append(-1)
@@ -202,7 +330,7 @@ def _universal_connection_hints(
         leaf = leaves[ref]
         lid = str(leaf.get("source_leaf") or leaf.get("id") or "")
         sub = str(leaf.get("sub_facet") or "")
-        if sub == "chips_battery":
+        if sub in ("ironclad_chips", "chips_battery"):
             chip_ids.add(lid)
         elif sub == "program_combinatronic":
             lang_ids.add(str(leaf.get("lang") or lid))
@@ -637,10 +765,7 @@ def small_optimizer(
     return working, package
 
 
-def load_balance_table() -> dict[str, Any]:
-    doc = _load(BALANCE_TABLE, {})
-    if doc.get("entries") is not None:
-        return doc
+def _empty_balance_table() -> dict[str, Any]:
     return {
         "schema": "field-h7c-balance-table/v1",
         "updated": _now(),
@@ -651,26 +776,65 @@ def load_balance_table() -> dict[str, Any]:
     }
 
 
-def save_balance_table(doc: dict[str, Any]) -> None:
+def begin_balance_batch() -> None:
+    """Defer balance-table disk writes — use during library sweeps."""
+    global _BALANCE_BATCH_DEPTH, _BALANCE_TABLE_MEM
+    if _BALANCE_BATCH_DEPTH == 0:
+        _BALANCE_TABLE_MEM = load_balance_table()
+    _BALANCE_BATCH_DEPTH += 1
+
+
+def end_balance_batch(*, persist: bool = True) -> None:
+    global _BALANCE_BATCH_DEPTH, _BALANCE_TABLE_MEM, _BALANCE_DIRTY
+    if _BALANCE_BATCH_DEPTH <= 0:
+        return
+    _BALANCE_BATCH_DEPTH -= 1
+    if _BALANCE_BATCH_DEPTH > 0:
+        return
+    if persist and _BALANCE_DIRTY and _BALANCE_TABLE_MEM is not None:
+        save_balance_table(_BALANCE_TABLE_MEM, persist=True)
+    _BALANCE_TABLE_MEM = None
+    _BALANCE_DIRTY = False
+
+
+def load_balance_table() -> dict[str, Any]:
+    if _BALANCE_TABLE_MEM is not None:
+        return _BALANCE_TABLE_MEM
+    doc = _load(BALANCE_TABLE, {})
+    if doc.get("entries") is not None:
+        return doc
+    return _empty_balance_table()
+
+
+def save_balance_table(doc: dict[str, Any], *, persist: bool = True) -> None:
     hits = int(doc.get("hits", 0))
     misses = int(doc.get("misses", 0))
     total = hits + misses
     doc["balance"] = round(hits / total, 4) if total else 0.0
     doc["updated"] = _now()
     doc["balanced"] = doc["balance"] >= BALANCE_TARGET
-    _save(BALANCE_TABLE, doc)
+    global _BALANCE_TABLE_MEM, _BALANCE_DIRTY
+    if _BALANCE_BATCH_DEPTH > 0:
+        _BALANCE_TABLE_MEM = doc
+        if persist:
+            _BALANCE_DIRTY = True
+        return
+    if persist:
+        _save(BALANCE_TABLE, doc)
 
 
-def balance_lookup(digest: str, *, facet: str = "") -> str | None:
+def balance_lookup(digest: str, *, facet: str = "", record_stats: bool = True) -> str | None:
     table = load_balance_table()
     key = f"{facet}:{digest}" if facet else digest
     entry = (table.get("entries") or {}).get(key)
     if entry and entry.get("text"):
-        table["hits"] = int(table.get("hits", 0)) + 1
-        save_balance_table(table)
+        if record_stats:
+            table["hits"] = int(table.get("hits", 0)) + 1
+            save_balance_table(table, persist=_BALANCE_BATCH_DEPTH == 0)
         return str(entry["text"])
-    table["misses"] = int(table.get("misses", 0)) + 1
-    save_balance_table(table)
+    if record_stats:
+        table["misses"] = int(table.get("misses", 0)) + 1
+        save_balance_table(table, persist=_BALANCE_BATCH_DEPTH == 0)
     return None
 
 
@@ -688,12 +852,29 @@ def balance_store(digest: str, text: str, *, facet: str = "", meta: dict[str, An
     save_balance_table(table)
 
 
+def _figure_condenser() -> Any | None:
+    path = INSTALL / "lib" / "field-h7c-figure-compress.py"
+    if not path.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("field_h7c_figure_compress", path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod
+    except Exception:
+        pass
+    return None
+
+
 def _pack_figures(figures: dict[str, dict[str, Any]] | None) -> tuple[bytes, list[dict[str, Any]]]:
-    """Embed PNG/SVG figures — keyed by id referenced as ![alt](h7fig:id) in text."""
+    """Embed PNG figures — field plate condense, meld dedupe, keyed as ![alt](h7fig:id)."""
     if not figures:
         return b"", []
+    condenser = _figure_condenser()
     manifest: list[dict[str, Any]] = []
     blobs: list[bytes] = []
+    seen_sha: dict[str, int] = {}
     for fig_id, spec in figures.items():
         raw = spec.get("data")
         if raw is None and spec.get("path"):
@@ -704,13 +885,46 @@ def _pack_figures(figures: dict[str, dict[str, Any]] | None) -> tuple[bytes, lis
         if not isinstance(raw, (bytes, bytearray)) or not raw:
             continue
         raw = bytes(raw)
+        plate_key = str(spec.get("plate_key") or fig_id)
+        meta_extra: dict[str, Any] = {}
+        if condenser and hasattr(condenser, "condense_figure_png"):
+            try:
+                accent = spec.get("accent")
+                accent_t = tuple(accent) if isinstance(accent, (list, tuple)) and len(accent) == 3 else None
+                raw, meta_extra = condenser.condense_figure_png(
+                    raw,
+                    plate_key=plate_key,
+                    accent=accent_t,
+                    use_meld=True,
+                    use_plate_snap=spec.get("plate_snap", True),
+                )
+            except Exception:
+                meta_extra = {}
+        sha = meta_extra.get("sha256") or hashlib.sha256(raw).hexdigest()
+        if sha in seen_sha:
+            manifest.append({
+                "id": str(fig_id),
+                "mime": str(spec.get("mime") or "image/png"),
+                "alt": str(spec.get("alt") or fig_id),
+                "sha256": sha,
+                "bytes": len(raw),
+                "offset": seen_sha[sha],
+                "plate_key": plate_key,
+                "meld_ref": True,
+                **meta_extra,
+            })
+            continue
+        offset = sum(len(b) for b in blobs)
+        seen_sha[sha] = offset
         manifest.append({
             "id": str(fig_id),
             "mime": str(spec.get("mime") or "image/png"),
             "alt": str(spec.get("alt") or fig_id),
-            "sha256": hashlib.sha256(raw).hexdigest(),
+            "sha256": sha,
             "bytes": len(raw),
-            "offset": sum(len(b) for b in blobs),
+            "offset": offset,
+            "plate_key": plate_key,
+            **meta_extra,
         })
         blobs.append(raw)
     if not manifest:
@@ -759,6 +973,7 @@ def pack_h7c(
     neural_weights: dict[str, Any] | None = None,
     stamp_neural_gens: bool = True,
     figures: dict[str, dict[str, Any]] | None = None,
+    update_balance_table: bool = True,
 ) -> bytes:
     """Pack text into Hostess 7 Condenser (H7c) — lossless; v2 optimizer; v3 adds embedded figures."""
     if figures:
@@ -819,7 +1034,7 @@ def pack_h7c(
         key = f"{sig['facet']}:{sig['digest']}"
         if key in (table.get("entries") or {}):
             balance_hits += 1
-        else:
+        elif update_balance_table:
             balance_store(sig["digest"], band["text"], facet=sig["facet"], meta={"optimizer": bool(optimizer_pkg)})
 
     fig_compressed, fig_manifest = _pack_figures(figures)
@@ -891,7 +1106,8 @@ def pack_h7c(
 
 
 def parse_h7c(data: bytes) -> tuple[dict[str, Any], bytes, bytes, bytes, bytes, bytes, bytes, bytes]:
-    if len(data) < 8 or data[:4] not in MAGICS:
+    data, _block = unwrap_h7c_block(data)
+    if len(data) < 8 or data[:4] not in (MAGIC_V1, MAGIC_V2, MAGIC_V3):
         raise H7cError("not an H7c book (bad magic)")
     is_v2 = data[:4] in (MAGIC_V2, MAGIC_V3)
     is_v3 = data[:4] == MAGIC_V3
@@ -945,9 +1161,12 @@ def decompress_h7c(
     *,
     verify: bool = True,
     with_figures: bool = True,
+    update_balance_table: bool = True,
+    combinatronic_balance: bool = True,
 ) -> tuple[dict[str, Any], str, dict[str, Any]]:
     """Lossless decompress — universal rapid + balance table + optimizer fast path; H7B integrity."""
     t0 = time.perf_counter()
+    _, block_hdr = unwrap_h7c_block(data)
     header, band_c, sig_c, leaf_c, opt_c, uni_c, inner_c, fig_c = parse_h7c(data)
 
     bands = json.loads(zlib.decompress(band_c).decode("utf-8"))
@@ -987,7 +1206,7 @@ def decompress_h7c(
             table_hits += 1
         else:
             reconstructed.append(band["text"])
-            if not rapid:
+            if not rapid and update_balance_table:
                 balance_store(sig["digest"], band["text"], facet=sig["facet"])
 
     text_from_bands = "\n".join(reconstructed)
@@ -1027,6 +1246,10 @@ def decompress_h7c(
         "table_entries": len((table.get("entries") or {})),
         "lossless": True,
         "format": header.get("format"),
+        "block_wrapper": bool(block_hdr),
+        "block_format": (block_hdr or {}).get("format"),
+        "field_layer": (block_hdr or {}).get("field_layer", CANONICAL_FIELD_LAYER),
+        "ironclad_sealed": (block_hdr or {}).get("ironclad_sealed"),
         "optimizer": {
             "present": bool(optimizer_pkg),
             "balanced": optimizer_pkg.get("balanced"),
@@ -1048,7 +1271,7 @@ def decompress_h7c(
             "skipped_balance_lookups": universal_hits if rapid else 0,
         },
     }
-    if bal := _balance_mod():
+    if combinatronic_balance and (bal := _balance_mod()):
         if hasattr(bal, "read_content_balance"):
             try:
                 stats["text_sha256"] = header.get("text_sha256")
@@ -1078,10 +1301,18 @@ def extract_figures(data: bytes) -> dict[str, dict[str, Any]]:
     return _unpack_figures(fig_c, header.get("figures") or [])
 
 
-def compress_file(src: Path, dest: Path, meta: dict[str, Any] | None = None) -> dict[str, Any]:
+def compress_file(
+    src: Path,
+    dest: Path,
+    meta: dict[str, Any] | None = None,
+    *,
+    use_block: bool = False,
+) -> dict[str, Any]:
     text = src.read_text(encoding="utf-8")
     m = {"source": str(src), "title": src.stem, **(meta or {})}
     packed = pack_h7c(text, m, use_optimizer=True, format_version=2)
+    if use_block or m.get("block_wrapper"):
+        packed = wrap_h7c_block(packed, m)
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(packed)
     header, _, stats = decompress_h7c(packed, verify=True)
@@ -1093,7 +1324,10 @@ def compress_file(src: Path, dest: Path, meta: dict[str, Any] | None = None) -> 
         "bytes_in": len(text.encode("utf-8")),
         "bytes_out": len(packed),
         "ratio": round(ratio, 4),
-        "format": header.get("format"),
+        "format": stats.get("block_format") or header.get("format"),
+        "inner_format": header.get("format"),
+        "block_wrapper": bool(stats.get("block_wrapper")),
+        "field_layer": stats.get("field_layer", CANONICAL_FIELD_LAYER),
         "lossless": True,
         "optimizer": stats.get("optimizer"),
     }
@@ -1445,7 +1679,15 @@ def main() -> int:
     if cmd == "pack" and len(sys.argv) >= 4:
         src, dest = Path(sys.argv[2]), Path(sys.argv[3])
         meta = json.loads(sys.argv[4]) if len(sys.argv) > 4 else {}
-        print(json.dumps(compress_file(src, dest, meta), ensure_ascii=False, indent=2))
+        use_block = "--block" in sys.argv or meta.get("block_wrapper")
+        print(json.dumps(compress_file(src, dest, meta, use_block=bool(use_block)), ensure_ascii=False, indent=2))
+        return 0
+    if cmd == "pack-block" and len(sys.argv) >= 4:
+        src, dest = Path(sys.argv[2]), Path(sys.argv[3])
+        meta = json.loads(sys.argv[4]) if len(sys.argv) > 4 else {}
+        meta.setdefault("block_wrapper", True)
+        meta.setdefault("ironclad_citation", "ironclad:h7c:1")
+        print(json.dumps(compress_file(src, dest, meta, use_block=True), ensure_ascii=False, indent=2))
         return 0
     if cmd == "unpack" and len(sys.argv) >= 3:
         data = Path(sys.argv[2]).read_bytes()
@@ -1487,7 +1729,7 @@ def main() -> int:
         return 0 if ok else 1
     print(json.dumps({
         "error": "usage",
-        "cmds": ["panel", "balance", "optimize [file]", "pack <src> <dest>", "unpack <file>", "rebalance <h7c>", "bench [h7c]", "verify"],
+        "cmds": ["panel", "balance", "optimize [file]", "pack <src> <dest>", "pack-block <src> <dest>", "unpack <file>", "rebalance <h7c>", "bench [h7c]", "verify"],
     }))
     return 1
 

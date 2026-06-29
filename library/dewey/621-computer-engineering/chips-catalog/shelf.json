@@ -1,0 +1,22 @@
+{
+  "schema": "dewey-shelf/v1",
+  "shelf": "621-computer-engineering/chips-catalog",
+  "code": "621",
+  "title": "621-computer-engineering/chips-catalog",
+  "updated": "2026-06-29T09:43:43Z",
+  "format_primary": "h7c",
+  "book_count": 1,
+  "h7c_count": 0,
+  "books": [
+    {
+      "id": "ironclad-chips-catalog",
+      "title": "Ironclad CHIPS Catalog",
+      "author": "Hostess 7",
+      "dewey": "621",
+      "format": "chips-catalog",
+      "h7c": null,
+      "cover": "/world/assets/combinatronic/chips/cyrix_6x86.png",
+      "ready": false
+    }
+  ]
+}

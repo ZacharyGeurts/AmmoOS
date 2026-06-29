@@ -1,0 +1,12 @@
+{
+  "id": "nes_operation_europe_path_to_victory_1939_45",
+  "title": "Operation Europe: Path to Victory 1939-45",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_operation_europe_path_to_victory_1939_45-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_operation_europe_path_to_victory_1939_45/nes_operation_europe_path_to_victory_1939_45.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

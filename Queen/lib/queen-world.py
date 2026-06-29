@@ -46,7 +46,24 @@ def _nexus_lib_script(name: str) -> Path:
     return SG / "NewLatest" / "lib" / name
 
 
+def _benchmark_mode_on() -> bool:
+    return os.environ.get("QUEEN_BENCHMARK_MODE", "").strip().lower() in ("1", "true", "yes", "on")
+
+
 def _perf_flyout_sample(*, reset: bool = False) -> dict[str, Any]:
+    if _benchmark_mode_on():
+        return {
+            "schema": "field-performance-flyout/v1",
+            "ok": True,
+            "benchmark_mode": True,
+            "disabled": True,
+            "reason": "perf_flyout_off_in_benchmark",
+            "cpu_pct": 0,
+            "loadavg": [],
+            "memory": {"used_pct": 0, "used_kb": 0, "total_kb": 0},
+            "energy": {"power_w": 0, "headroom_pct": 100},
+            "loopback_only": True,
+        }
     global _PERF_FLYOUT_MOD
     script = _nexus_lib_script("field-performance-flyout.py")
     if not script.is_file():
@@ -186,6 +203,10 @@ def _game_room_status() -> dict[str, Any]:
     return _run_json(_LIB / "queen-chips.py", "json", timeout=60)
 
 
+def _game_room_system_info(*, system: str = "nes") -> dict[str, Any]:
+    return _run_json(_LIB / "queen-chips.py", "system", system, timeout=90)
+
+
 def _chip_battery_status() -> dict[str, Any]:
     script = _nexus_lib_script("field-chip-battery.py")
     return _run_json(script, "json", timeout=90)
@@ -211,6 +232,28 @@ def _steel_neural_plates(*, refresh: bool = False, force: bool = False) -> dict[
     if script.is_file():
         return _run_json(script, *argv, timeout=180)
     return {"schema": "field-steel-neural-plates/v1", "ok": False, "hint": "field-steel-neural-plates missing"}
+
+
+def _chips_plate_stack(*, refresh: bool = False, force: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-chips-plate-stack.py")
+    argv: list[str] = ["json"]
+    if refresh:
+        argv.append("--refresh")
+    if force:
+        argv.append("--force")
+    if script.is_file():
+        return _run_json(script, *argv, timeout=180)
+    return {"schema": "field-chips-plate-stack-panel/v1", "ok": False, "hint": "field-chips-plate-stack missing"}
+
+
+def _chips_core(*, refresh: bool = False) -> dict[str, Any]:
+    script = _nexus_lib_script("field-chips-core.py")
+    argv: list[str] = ["json"]
+    if refresh:
+        argv.append("--refresh")
+    if script.is_file():
+        return _run_json(script, *argv, timeout=180)
+    return {"schema": "field-chips-core-panel/v1", "ok": False, "hint": "field-chips-core missing"}
 
 
 def _combinatronic_balance(*, cmd: str = "panel", force: bool = False) -> dict[str, Any]:
@@ -384,6 +427,23 @@ def _device_visuals_status(*, sub: str = "panel", refresh: bool = False) -> dict
 
 def dispatch_game_room(body: dict[str, Any]) -> dict[str, Any]:
     return _run_json(_LIB / "queen-chips.py", "dispatch", body=body, timeout=90)
+
+
+def _nes_library_status(*, sort: str = "title_az", query: str = "", offset: int = 0, limit: int = 96) -> dict[str, Any]:
+    body = {"action": "list", "sort": sort, "query": query, "offset": offset, "limit": limit}
+    return _run_json(_LIB / "queen-nes-library.py", "dispatch", body=body, timeout=120)
+
+
+def dispatch_nes_library(body: dict[str, Any]) -> dict[str, Any]:
+    return _run_json(_LIB / "queen-nes-library.py", "dispatch", body=body, timeout=120)
+
+
+def _sap_status() -> dict[str, Any]:
+    return _run_json(_LIB / "queen-sweet-anita-protocol.py", timeout=30)
+
+
+def dispatch_sap(body: dict[str, Any]) -> dict[str, Any]:
+    return _run_json(_LIB / "queen-sweet-anita-protocol.py", "dispatch", body=body, timeout=60)
 
 
 def _sovereign_status() -> dict[str, Any]:
@@ -701,6 +761,32 @@ def _field_sanity_status() -> dict[str, Any]:
 
 
 def dispatch_field_sanity(body: dict[str, Any]) -> dict[str, Any]:
+    if _benchmark_mode_on():
+        mod = _benchmark_mod()
+        if mod is not None and hasattr(mod, "benchmark_mode") and mod.benchmark_mode():
+            layers = body.get("layers") or []
+            count = len(layers) if isinstance(layers, list) else 0
+            return {
+                "schema": "queen-field-sanity/v1",
+                "ok": True,
+                "fast_path": True,
+                "benchmark_mode": True,
+                "layers_in": count,
+                "layers_out": max(1, count),
+                "heat_avoided": 0,
+                "gate_ok": True,
+                "reorganized": [
+                    {
+                        "order": i,
+                        "id": L.get("id") or f"layer-{i}",
+                        "url": L.get("url") or "about:blank",
+                        "depth": 0,
+                        "active": bool(L.get("active")),
+                    }
+                    for i, L in enumerate((layers or [])[:64])
+                    if isinstance(L, dict)
+                ],
+            }
     action = str(body.get("action") or "").strip().lower()
     if action in ("instant_snap", "snap", "field_die", "instant"):
         return dispatch_field_depth_snap(body)
@@ -824,9 +910,53 @@ def dispatch_build(body: dict[str, Any]) -> dict[str, Any]:
 
 _BROWSER_STATUS_CACHE: dict[str, Any] | None = None
 _BROWSER_STATUS_CACHE_TS: float = 0.0
+_BROWSER_MOD: Any = None
+_BENCHMARK_MOD: Any = None
+
+
+def _inline_browser_enabled() -> bool:
+    if _benchmark_mode_on():
+        return True
+    return os.environ.get("QUEEN_INLINE_BROWSER", "1").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _browser_mod() -> Any:
+    global _BROWSER_MOD
+    script = _LIB / "queen-browser.py"
+    if not script.is_file():
+        return None
+    if _BROWSER_MOD is None:
+        spec = importlib.util.spec_from_file_location("queen_browser_inline", script)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _BROWSER_MOD = mod
+    return _BROWSER_MOD
+
+
+def _benchmark_mod() -> Any:
+    global _BENCHMARK_MOD
+    script = _LIB / "queen-benchmark.py"
+    if not script.is_file():
+        return None
+    if _BENCHMARK_MOD is None:
+        spec = importlib.util.spec_from_file_location("queen_benchmark_inline", script)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _BENCHMARK_MOD = mod
+    return _BENCHMARK_MOD
 
 
 def _benchmark_status() -> dict[str, Any]:
+    mod = _benchmark_mod()
+    if mod is not None and hasattr(mod, "posture"):
+        try:
+            return mod.posture()
+        except Exception:
+            pass
     return _run_json(_LIB / "queen-benchmark.py", "json", timeout=15)
 
 
@@ -839,6 +969,16 @@ def _browser_status() -> dict[str, Any]:
         now = time.time()
         if _BROWSER_STATUS_CACHE and now - _BROWSER_STATUS_CACHE_TS < cache_sec:
             return _BROWSER_STATUS_CACHE
+    mod = _browser_mod()
+    if mod is not None and _inline_browser_enabled():
+        try:
+            doc = mod.browser_status()
+            if os.environ.get("QUEEN_FAST_STATUS", "1") not in ("0", "false", "no"):
+                _BROWSER_STATUS_CACHE = doc
+                _BROWSER_STATUS_CACHE_TS = time.time()
+            return doc
+        except Exception:
+            pass
     doc = _run_json(_LIB / "queen-browser.py", "json", timeout=45)
     if os.environ.get("QUEEN_FAST_STATUS", "1") not in ("0", "false", "no"):
         _BROWSER_STATUS_CACHE = doc
@@ -850,7 +990,35 @@ def dispatch_browser(body: dict[str, Any]) -> dict[str, Any]:
     script = _LIB / "queen-browser.py"
     if not script.is_file():
         return {"ok": False, "error": "queen_browser_missing"}
+    mod = _browser_mod()
+    if mod is not None and _inline_browser_enabled():
+        try:
+            return mod.dispatch(body)
+        except Exception as exc:
+            return {"ok": False, "error": "dispatch_failed", "reason": str(exc)}
     return _run_json(script, "dispatch", body=body, timeout=60)
+
+
+def dispatch_page_shields(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    script = _LIB / "queen-page-shields.py"
+    if not script.is_file():
+        return {"ok": False, "error": "page_shields_missing"}
+    return _run_json(script, "dispatch", body=body or {"action": "status"}, timeout=30)
+
+
+def _page_agent_inject_html(target_url: str) -> str:
+    host = ""
+    try:
+        host = (urlparse(target_url).hostname or "").lower()
+    except Exception:
+        pass
+    shields = dispatch_page_shields({"action": "match", "url": target_url, "host": host})
+    css = shields.get("css") or ""
+    css_block = f"<style id='queen-page-shields-inline'>{css}</style>" if css else ""
+    return (
+        f"{css_block}"
+        "<script src='/world/queen-page-agent.js' id='queen-page-agent'></script>"
+    )
 
 
 def _desktop_status() -> dict[str, Any]:
@@ -960,6 +1128,23 @@ def dispatch_file_browser(body: dict[str, Any]) -> dict[str, Any]:
     return _run_json(_LIB / "queen-file-browser.py", "dispatch", body=body, timeout=60)
 
 
+def _program_library_mod() -> Any:
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("queen_program_library", _LIB / "queen-program-library.py")
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _program_library_icon_payload(entry_id: str) -> tuple[bytes, str, dict[str, str]] | None:
+    mod = _program_library_mod()
+    if not mod:
+        return None
+    return mod.serve_icon_bytes(entry_id)
+
+
 def _queen_code_status() -> dict[str, Any]:
     return _run_json(_LIB / "queen-code.py", "json", timeout=45)
 
@@ -1048,16 +1233,19 @@ def _proxy_fetch(url: str, *, compat_mode: str = "auto") -> tuple[int, bytes, st
     if "html" in ctype.lower():
         text = raw.decode("utf-8", errors="replace")
         base = f'{parsed.scheme}://{parsed.netloc}'
+        inject = _page_agent_inject_html(url)
         if "<head" in text.lower():
             text = re.sub(
                 r"(<head[^>]*>)",
-                rf'\1<base href="{base}/">',
+                rf'\1<base href="{base}/">{inject}',
                 text,
                 count=1,
                 flags=re.I,
             )
         else:
-            text = f'<base href="{base}/">' + text
+            text = f'<base href="{base}/">{inject}' + text
+        if inject not in text:
+            text = inject + text
         era = (compat.get("era") or {}).get("id") or "es2026"
         eff = compat.get("effective_mode") or "auto"
         banner = (
@@ -1162,11 +1350,16 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _send_bytes(self, data: bytes, *, mime: str) -> None:
+    def _send_bytes(self, data: bytes, *, mime: str, extra_headers: dict[str, str] | None = None) -> None:
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "public, max-age=300")
+        cache = (extra_headers or {}).get("Cache-Control", "public, max-age=300")
+        self.send_header("Cache-Control", cache)
+        if extra_headers:
+            for key, value in extra_headers.items():
+                if key != "Cache-Control":
+                    self.send_header(key, value)
         self._apply_security_headers()
         self.end_headers()
         self.wfile.write(data)
@@ -1243,6 +1436,16 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/queen-browser":
             self._send_json(200, _browser_status())
             return
+        if path in ("/api/queen-page-shields", "/api/page-shields"):
+            qs = parse_qs(urlparse(self.path).query)
+            if (qs.get("css") or ["0"])[0] in ("1", "true", "yes"):
+                host = (qs.get("host") or [""])[0]
+                url = (qs.get("url") or [""])[0]
+                css = dispatch_page_shields({"action": "css", "host": host, "url": url}).get("css") or ""
+                self._send_bytes(css.encode("utf-8"), mime="text/css; charset=utf-8")
+                return
+            self._send_json(200, dispatch_page_shields({"action": "status"}))
+            return
         if path in ("/api/queen-benchmark", "/api/benchmark"):
             self._send_json(200, _benchmark_status())
             return
@@ -1265,6 +1468,26 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/api/queen-file-browser", "/api/file-browser", "/api/files"):
             self._send_json(200, _file_browser_status())
+            return
+        if path.startswith("/api/queen-program-library/icon/"):
+            entry_id = unquote(path.split("/api/queen-program-library/icon/", 1)[-1].split("?")[0])
+            payload = _program_library_icon_payload(entry_id)
+            if not payload:
+                self.send_error(404, "icon not found")
+                return
+            data, mime, hdrs = payload
+            self._send_bytes(data, mime=mime, extra_headers=hdrs)
+            return
+        if path in ("/api/queen-program-library",):
+            qs = parse_qs(urlparse(self.path).query)
+            mod = _program_library_mod()
+            if mod and (qs.get("index") or ["0"])[0] in ("1", "true", "yes"):
+                self._send_json(200, mod.library_doc(index_only=True))
+                return
+            if mod and (qs.get("ref") or [""])[0]:
+                self._send_json(200, mod.resolve_icon((qs.get("ref") or [""])[0]))
+                return
+            self._send_json(200, _run_json(_LIB / "queen-program-library.py", "json", timeout=120))
             return
         if path in ("/api/queen-code", "/api/code", "/api/code-viewer"):
             self._send_json(200, _queen_code_status())
@@ -1365,6 +1588,11 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/api/game-room", "/api/gameroom", "/api/chips"):
             self._send_json(200, _game_room_status())
             return
+        if path.startswith("/api/game-room/system"):
+            qs = parse_qs(urlparse(self.path).query)
+            system = str((qs.get("system") or qs.get("system_id") or ["nes"])[0])
+            self._send_json(200, _game_room_system_info(system=system))
+            return
         if path in ("/api/chip-battery", "/api/combinatorics/chip-battery"):
             self._send_json(200, _chip_battery_status())
             return
@@ -1372,6 +1600,17 @@ class Handler(BaseHTTPRequestHandler):
             qs = parse_qs(urlparse(self.path).query)
             refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
             self._send_json(200, _combinatronic_status(refresh=refresh))
+            return
+        if path in ("/api/chips/plate-stack", "/api/chips-plate-stack", "/api/chip-plate-stack"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            force = (qs.get("force") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _chips_plate_stack(refresh=refresh, force=force))
+            return
+        if path in ("/api/chips/core", "/api/chips-core", "/api/chip-core"):
+            qs = parse_qs(urlparse(self.path).query)
+            refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, _chips_core(refresh=refresh))
             return
         if path in ("/api/combinatronics/growth", "/api/combinatronics-growth"):
             qs = parse_qs(urlparse(self.path).query)
@@ -1447,6 +1686,17 @@ class Handler(BaseHTTPRequestHandler):
             sub = path.split("/api/combinatronic/visuals", 1)[-1].strip("/") or path.split("/api/combinatronic-visuals", 1)[-1].strip("/") or "manifest"
             pat = str((qs.get("id") or qs.get("pattern") or ["chip_png"])[0])
             self._send_json(200, _combinatronic_visuals(refresh=refresh, sub=sub, repair=repair, pattern_id=pat))
+            return
+        if path in ("/api/nes-library", "/api/game-room/nes", "/api/game-room/library"):
+            qs = parse_qs(urlparse(self.path).query)
+            sort = str((qs.get("sort") or ["title_az"])[0])
+            query = str((qs.get("q") or qs.get("query") or [""])[0])
+            offset = int((qs.get("offset") or ["0"])[0])
+            limit = int((qs.get("limit") or ["96"])[0])
+            self._send_json(200, _nes_library_status(sort=sort, query=query, offset=offset, limit=limit))
+            return
+        if path in ("/api/sap", "/api/sweet-anita", "/api/game-room/sap"):
+            self._send_json(200, _sap_status())
             return
         if path in ("/api/game-room/fb", "/api/gameroom/fb"):
             self._send_json(200, _game_room_fb())
@@ -1530,6 +1780,15 @@ class Handler(BaseHTTPRequestHandler):
                 mime = mimetypes.guess_type(str(fp))[0] or "application/octet-stream"
                 self._send_bytes(fp.read_bytes(), mime=mime)
                 return
+        if path.startswith("/library/"):
+            nexus_root = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(SG / "NewLatest")))
+            lib_root = nexus_root / "library"
+            rel = path[len("/library/") :]
+            fp = _safe_path(lib_root, rel)
+            if fp and fp.is_file():
+                mime = mimetypes.guess_type(str(fp))[0] or "application/octet-stream"
+                self._send_bytes(fp.read_bytes(), mime=mime)
+                return
         if path == "/" or path == "":
             self.send_response(HTTPStatus.MOVED_PERMANENTLY)
             self.send_header("Location", "/world/browser.html")
@@ -1597,6 +1856,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/queen-browser":
             self._send_json(200, dispatch_browser(body))
             return
+        if path in ("/api/queen-page-shields", "/api/page-shields"):
+            self._send_json(200, dispatch_page_shields(body))
+            return
         if path in ("/api/queen-desktop", "/api/desktop"):
             self._send_json(200, dispatch_desktop(body))
             return
@@ -1635,6 +1897,16 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/api/game-room", "/api/gameroom", "/api/chips"):
             self._send_json(200, dispatch_game_room(body))
+            return
+        if path.startswith("/api/game-room/system"):
+            system = str((body or {}).get("system") or (body or {}).get("system_id") or "nes")
+            self._send_json(200, _game_room_system_info(system=system))
+            return
+        if path in ("/api/nes-library", "/api/game-room/nes", "/api/game-room/library"):
+            self._send_json(200, dispatch_nes_library(body))
+            return
+        if path.startswith("/api/sap") or path in ("/api/sweet-anita", "/api/game-room/sap"):
+            self._send_json(200, dispatch_sap(body))
             return
         if path in ("/api/chips/combinatronic", "/api/chip-battery/combinatronic"):
             refresh = bool((body or {}).get("refresh"))

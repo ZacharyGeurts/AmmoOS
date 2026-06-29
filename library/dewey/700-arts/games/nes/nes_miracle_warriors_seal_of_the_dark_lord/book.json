@@ -1,0 +1,12 @@
+{
+  "id": "nes_miracle_warriors_seal_of_the_dark_lord",
+  "title": "Miracle Warriors: Seal of the Dark Lord",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7/7",
+  "cover": "/library/assets/cartridges/nes/nes_miracle_warriors_seal_of_the_dark_lord-box.png",
+  "ready": true,
+  "h7": "library/dewey/700-arts/games/nes/nes_miracle_warriors_seal_of_the_dark_lord/nes_miracle_warriors_seal_of_the_dark_lord.h7",
+  "face_format": "markdown",
+  "properties_only_h7": true
+}

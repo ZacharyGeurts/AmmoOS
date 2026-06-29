@@ -1,0 +1,10 @@
+{
+  "id": "nes_snakes_revenge",
+  "title": "Snake's Revenge",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_snakes_revenge/nes_snakes_revenge.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_snakes_revenge-box.png",
+  "ready": true
+}

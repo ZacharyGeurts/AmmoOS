@@ -4,6 +4,8 @@
 (function (global) {
   "use strict";
 
+  const FIELD_ANTENNA_REMOVED = true;
+
   let animId = 0;
   let phase = 0;
   let lastDoc = null;
@@ -34,7 +36,7 @@
   function mergeSignalsPayload(panelData) {
     const raw = panelData || {};
     const sf = raw.signals_field || raw;
-    const fa = raw.field_antenna || {};
+    const fa = FIELD_ANTENNA_REMOVED ? {} : (raw.field_antenna || {});
     const frRoot = raw.field_radio || {};
     const frSf = sf.field_radio || {};
     const frNested = (fa.field_radio && fa.field_radio.station_menu) ? fa.field_radio : {};
@@ -1248,7 +1250,9 @@
   function renderSignalsMeta(doc) {
     const motto = document.getElementById("signals-motto");
     if (motto) {
-      motto.innerHTML = `<strong>Signals · Field Antennas</strong> — ${esc(doc.tagline || doc.motto || "")}`;
+      motto.innerHTML = FIELD_ANTENNA_REMOVED
+        ? `<strong>Signals</strong> — ${esc(doc.tagline || doc.motto || "WiFi and wire pulse scan — field antenna removed")}`
+        : `<strong>Signals · Field Antennas</strong> — ${esc(doc.tagline || doc.motto || "")}`;
     }
     const stats = document.getElementById("signals-stats");
     const st = doc.stats || {};
@@ -1269,8 +1273,10 @@
       ].map(([k, v]) => `<span class="signals-stat"><span class="signals-stat-label">${esc(k)}</span><strong>${esc(String(v))}</strong></span>`).join("");
     }
     renderOperatorStrip(doc);
-    renderAntennaBanner(fa);
-    renderAntennaReadiness(fa);
+    if (!FIELD_ANTENNA_REMOVED) {
+      renderAntennaBanner(fa);
+      renderAntennaReadiness(fa);
+    }
     renderFccBanner(doc.fcc);
     renderFccTable(doc.fcc);
     renderFrequencyRegistry(doc);

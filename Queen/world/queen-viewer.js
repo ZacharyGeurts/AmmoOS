@@ -120,7 +120,7 @@
       type_label: prev.type_label || prev.mode,
     });
     if (prev.mode === "image" && prev.data_url) {
-      html += `<div class="qv-image-wrap"><img src="${esc(prev.data_url)}" alt="${esc(entry?.name || "preview")}" loading="lazy" /></div>`;
+      html += `<div class="qv-image-wrap"><img class="qz-zoomable" src="${esc(prev.data_url)}" alt="${esc(entry?.name || "preview")}" loading="lazy" /></div>`;
       return { ok: true, mode: "image", html, language: lang };
     }
     if (prev.mode === "hex") {

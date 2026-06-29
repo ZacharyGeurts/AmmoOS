@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Queen Browser (Field Gecko backend) — kiosk AmmoOS C2 desktop (/field), no titlebar, over host taskbar.
+# Queen Browser — Field Engine launcher. Isolated profile, kiosk C2 desktop, Queen UI only.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -8,15 +8,15 @@ SG="$(cd "${QUEEN}/../.." && pwd)"
 PROFILE="${ROOT}/profile"
 PORT="${QUEEN_WORLD_PORT:-9481}"
 PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
+HOME_URL="${QUEEN_BROWSER_HOME:-https://duckduckgo.com/}"
 C2_URL="${NEXUS_C2_LAUNCH_URL:-http://127.0.0.1:${PANEL_PORT}/field}"
-SHELL_URL="${QUEEN_BROWSER_URL:-http://127.0.0.1:${PORT}/world/browser.html}"
-KIOSK="${NEXUS_C2_KIOSK:-1}"
-C2_DESKTOP="${NEXUS_C2_DESKTOP_LAUNCH:-1}"
+KIOSK="${NEXUS_C2_KIOSK:-0}"
+C2_DESKTOP="${NEXUS_C2_DESKTOP_LAUNCH:-0}"
 
 if [[ "${C2_DESKTOP}" == "1" ]]; then
   LAUNCH_URL="${C2_URL}"
 else
-  LAUNCH_URL="${SHELL_URL}"
+  LAUNCH_URL="${HOME_URL}"
 fi
 
 export QUEEN_ROOT="${QUEEN}"
@@ -27,24 +27,41 @@ export QUEEN_NO_OS_BROWSER=1
 export NEXUS_EMBED_PANEL_IN_ENGINE=0
 export NEXUS_C2_KIOSK="${KIOSK}"
 export NEXUS_C2_DESKTOP_LAUNCH="${C2_DESKTOP}"
+
 if [[ "${QUEEN_BENCHMARK_MODE:-0}" == "1" ]]; then
   export QUEEN_ALLOW_EXTERNAL_URLS=1
   export NEXUS_FIELD_THERMAL_GUARD=0
+  export QUEEN_FAST_STATUS=1
+  export QUEEN_STATUS_CACHE_SEC=60
   KIOSK=0
+  if [[ -n "${1:-}" ]]; then
+    LAUNCH_URL="$1"
+    shift
+  else
+    LAUNCH_URL="${QUEEN_BENCH_URL:-https://browserbench.org/Speedometer3.0/}"
+  fi
 fi
+
 export QUEEN_BROWSER_URL="${LAUNCH_URL}"
-export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-${C2_URL}}"
+export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-${HOME_URL}}"
+export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-${HOME_URL}}"
 
 mkdir -p "${PROFILE}"
 
 resolve_binary() {
+  if [[ -n "${QUEEN_ENGINE_BINARY:-}" && -x "${QUEEN_ENGINE_BINARY}" ]]; then
+    echo "${QUEEN_ENGINE_BINARY}"
+    return 0
+  fi
   local c
   for c in \
-    "${ROOT}/bin/fieldfox" \
-    "${ROOT}/bin/firefox" \
-    "${QUEEN}/build/field-gecko/bin/fieldfox" \
-    /usr/bin/firefox-esr \
-    /usr/bin/firefox; do
+    "${ROOT}/bin/queen-browser" \
+    "${ROOT}/bin/queen-field-engine" \
+    "${QUEEN}/build/field-gecko/bin/queen-browser" \
+    "${QUEEN}/build/field-gecko/bin/queen-field-engine" \
+    "${QUEEN}/build/rtx/bin/Linux/queen-browser" \
+    /usr/local/bin/queen-browser \
+    /usr/bin/queen-browser; do
     if [[ -x "$c" ]]; then
       echo "$c"
       return 0
@@ -54,7 +71,13 @@ resolve_binary() {
 }
 
 BIN="$(resolve_binary)" || {
-  echo "queen-browser: no gecko binary — AmmoOS C2 still at ${C2_URL}" >&2
+  WEB_SHELL="http://127.0.0.1:${PORT}/world/browser.html"
+  echo "Queen Browser: no Field Engine binary — open Queen web shell: ${WEB_SHELL}" >&2
+  echo "  C2 desktop: ${C2_URL}" >&2
+  echo "  Build engine: ${ROOT}/scripts/bootstrap-field-gecko.sh" >&2
+  if command -v xdg-open >/dev/null 2>&1; then
+    exec xdg-open "${WEB_SHELL}"
+  fi
   exit 1
 }
 
@@ -66,9 +89,27 @@ if [[ -f "${INSTALL}/lib/queen-integrated-browser.py" ]]; then
     "${PY:-pythong}" "${INSTALL}/lib/queen-integrated-browser.py" seed 2>/dev/null || true
 fi
 
-FF_ARGS=(--no-remote --profile "${PROFILE}" --class QueenFieldBrowser --name Queen)
+QUEEN_ARGS=(--no-remote --profile "${PROFILE}" --class QueenBrowser --name QueenBrowser)
 if [[ "${KIOSK}" == "1" ]]; then
-  FF_ARGS+=(--kiosk)
+  QUEEN_ARGS+=(--kiosk)
+fi
+if [[ "${QUEEN_BENCHMARK_MODE:-0}" == "1" ]]; then
+  QUEEN_ARGS+=(
+    --width=1920
+    --height=1080
+    --setpref=dom.ipc.processCount=16
+    --setpref=dom.ipc.processCount.web=8
+    --setpref=javascript.options.baselinejit.threshold=0
+    --setpref=javascript.options.ion.threshold=0
+    --setpref=layout.frame_rate=120
+    --setpref=gfx.webrender.all=true
+    --setpref=layers.acceleration.force-enabled=true
+    --setpref=privacy.trackingprotection.enabled=false
+    --setpref=browser.safebrowsing.malware.enabled=false
+    --setpref=browser.safebrowsing.phishing.enabled=false
+    --setpref=toolkit.telemetry.enabled=false
+    --setpref=browser.tabs.unloadOnLowMemory=false
+  )
 fi
 
-exec "${BIN}" "${FF_ARGS[@]}" "${LAUNCH_URL}" "$@"
+exec "${BIN}" "${QUEEN_ARGS[@]}" "${LAUNCH_URL}" "$@"

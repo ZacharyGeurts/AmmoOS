@@ -99,6 +99,8 @@ nexus_hostess7_lethal_insight_json() {
 }
 
 nexus_field_antenna_catch_json() {
+  printf '{"schema":"field-antenna-catch/v1","destroyed":true,"caught":false}'
+  return 0
   local cache="${NEXUS_STATE_DIR}/field-antenna-catch.json"
   if [[ -s "$cache" ]]; then
     pythong -c "import json,sys; json.dump(json.load(open(sys.argv[1])), sys.stdout)" "$cache" 2>/dev/null && return 0

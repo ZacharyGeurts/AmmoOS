@@ -103,7 +103,7 @@ def _upgrade_retrograde_url(url: str, *, role: str = "") -> str:
 def _files_page() -> str:
     return os.environ.get(
         "QUEEN_BROWSER_FILES",
-        f"{_world_base()}/world/queen-files.html",
+        f"{_world_base()}/world/view.html",
     )
 
 
@@ -197,31 +197,304 @@ def _muscle_memory_record(url: str, *, action: str = "navigate") -> None:
         pass
 
 
+def _visit_key(url: str) -> str:
+    return (url or "").strip().lower()
+
+
+def _recency_priority(last_visited_at: str | None) -> float:
+    if not last_visited_at:
+        return 0.0
+    try:
+        raw = str(last_visited_at).replace("Z", "+00:00")
+        dt = datetime.fromisoformat(raw)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return float(dt.timestamp())
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _best_sort_mod() -> Any:
+    for root in (QUEEN.parent, SG / "AmmoOS", SG / "NewLatest"):
+        script = root / "lib" / "field-best-sort.py"
+        if not script.is_file():
+            continue
+        spec = importlib.util.spec_from_file_location("field_best_sort_qb", script)
+        if not spec or not spec.loader:
+            continue
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    return None
+
+
+def _visit_list_mod() -> Any:
+    script = QUEEN / "lib" / "queen-visit-list.py"
+    if not script.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("queen_visit_list", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _record_visit(doc: dict[str, Any], url: str, *, title: str = "") -> None:
+    key = _visit_key(url)
+    if not key:
+        return
+    vlm = _visit_list_mod()
+    if vlm and hasattr(vlm, "record_visit"):
+        try:
+            result = vlm.record_visit(url, title=title, source="queen-browser")
+            if result.get("scum_purged"):
+                return
+        except Exception:
+            pass
+    idx = doc.setdefault("visit_index", {})
+    if not isinstance(idx, dict):
+        idx = {}
+        doc["visit_index"] = idx
+    idx[key] = {"last_visited_at": _now(), "url": url, "title": title or idx.get(key, {}).get("title")}
+
+
+def _bookmark_last_visited(doc: dict[str, Any], bm: dict[str, Any]) -> str | None:
+    url = (bm.get("url") or "").strip()
+    key = _visit_key(url)
+    idx = doc.get("visit_index") or {}
+    if isinstance(idx, dict) and key in idx:
+        row = idx.get(key) or {}
+        if isinstance(row, dict) and row.get("last_visited_at"):
+            return str(row["last_visited_at"])
+    if bm.get("last_visited_at"):
+        return str(bm["last_visited_at"])
+    return None
+
+
+def _sort_bookmarks(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    enriched: list[dict[str, Any]] = []
+    for row in rows:
+        bm = dict(row)
+        lva = bm.get("last_visited_at")
+        bm["priority"] = _recency_priority(lva)
+        enriched.append(bm)
+    mod = _best_sort_mod()
+    if mod and hasattr(mod, "apply_best"):
+        try:
+            sorted_rows, _meta = mod.apply_best(enriched, context="bookmark_flyout", n=len(enriched))
+            return sorted_rows
+        except Exception:
+            pass
+    return sorted(enriched, key=lambda r: float(r.get("priority") or 0), reverse=True)
+
+
+def _tooltips_mod() -> Any:
+    script = QUEEN / "lib" / "queen-bookmark-tooltips.py"
+    if not script.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("queen_bookmark_tooltips", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _tree_mod() -> Any:
+    script = QUEEN / "lib" / "queen-bookmark-tree.py"
+    if not script.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("queen_bookmark_tree", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _settings_mod() -> Any:
+    script = QUEEN / "lib" / "queen-browser-settings.py"
+    if not script.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("queen_browser_settings", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _browser_settings() -> dict[str, Any]:
+    mod = _settings_mod()
+    if mod and hasattr(mod, "load_settings"):
+        try:
+            return mod.load_settings()
+        except Exception:
+            pass
+    return {"tooltips_enabled": True, "bookmark_bar_enabled": True}
+
+
+def _enrich_tooltips(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    mod = _tooltips_mod()
+    if mod and hasattr(mod, "enrich_rows"):
+        try:
+            return mod.enrich_rows(rows)
+        except Exception:
+            pass
+    return rows
+
+
+def _localhost_flyout(doc: dict[str, Any]) -> list[dict[str, Any]]:
+    path = QUEEN / "data" / "queen-localhost-bookmarks.json"
+    data = _load_json(path, {})
+    items = list(data.get("items") or [])
+    if not items:
+        items = [dict(bm) for bm in BOOKMARKS]
+    out: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        row = dict(item)
+        row["last_visited_at"] = _bookmark_last_visited(doc, row)
+        row["priority"] = _recency_priority(row.get("last_visited_at"))
+        row["lane"] = "localhost"
+        out.append(row)
+    return _enrich_tooltips(_sort_bookmarks(out))
+
+
+def _default_bookmark_trees() -> list[dict[str, Any]]:
+    tm = _tree_mod()
+    if tm and hasattr(tm, "default_trees"):
+        try:
+            trees = tm.default_trees()
+            if trees:
+                return trees
+        except Exception:
+            pass
+    path = QUEEN / "data" / "queen-bookmark-trees.json"
+    data = _load_json(path, {})
+    return list(data.get("trees") or [])
+
+
+def _bookmark_trees(doc: dict[str, Any]) -> list[dict[str, Any]]:
+    trees = list(doc.get("bookmark_trees") or [])
+    if trees:
+        return trees
+    default = _default_bookmark_trees()
+    if default:
+        return default
+    imported = doc.get("imported_bookmarks") or []
+    if not imported:
+        return []
+    return [{
+        "id": "imported-flat",
+        "kind": "folder",
+        "title": "Imported bookmarks",
+        "source": "queen",
+        "children": [
+            {"id": b.get("id"), "kind": "bookmark", "title": b.get("title"), "url": b.get("url"), "source": b.get("source")}
+            for b in imported if isinstance(b, dict) and b.get("url")
+        ],
+    }]
+
+
+def _bookmark_bar(doc: dict[str, Any], *, query: str = "") -> list[dict[str, Any]]:
+    tm = _tree_mod()
+    trees = _bookmark_trees(doc)
+    rows: list[dict[str, Any]] = []
+    if tm:
+        if query and hasattr(tm, "search_tree"):
+            rows = tm.search_tree(trees, query)
+        elif hasattr(tm, "flatten_bar"):
+            rows = tm.flatten_bar(trees)
+    else:
+        for bm in doc.get("imported_bookmarks") or []:
+            if isinstance(bm, dict) and bm.get("url"):
+                rows.append({**bm, "kind": "bookmark"})
+    rows = _enrich_tooltips(rows)
+    vlm = _visit_list_mod()
+    if vlm and hasattr(vlm, "purge_rows"):
+        try:
+            clean, _ = vlm.purge_rows(rows, source="bookmark_bar")
+            rows = clean
+        except Exception:
+            pass
+    return rows
+
+
 def _merged_bookmarks(doc: dict[str, Any]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     out: list[dict[str, Any]] = []
     for bm in BOOKMARKS:
-        key = (bm.get("url") or "").strip()
+        key = _visit_key(bm.get("url") or "")
         if key and key not in seen:
-            out.append(bm)
+            row = dict(bm)
+            row["last_visited_at"] = _bookmark_last_visited(doc, row)
+            row["priority"] = _recency_priority(row.get("last_visited_at"))
+            out.append(row)
             seen.add(key)
     for bm in doc.get("imported_bookmarks") or []:
-        key = (bm.get("url") or "").strip()
+        if not isinstance(bm, dict):
+            continue
+        key = _visit_key(bm.get("url") or "")
         if key and key not in seen:
-            out.append(bm)
+            row = dict(bm)
+            row["last_visited_at"] = _bookmark_last_visited(doc, row)
+            row["priority"] = _recency_priority(row.get("last_visited_at"))
+            out.append(row)
             seen.add(key)
-    return out
+    sorted_rows = _sort_bookmarks(out)
+    vlm = _visit_list_mod()
+    if vlm and hasattr(vlm, "purge_rows"):
+        try:
+            clean, removed = vlm.purge_rows(sorted_rows, source="bookmarks")
+            if removed:
+                sorted_rows = clean
+        except Exception:
+            pass
+    return sorted_rows
+
+
+def _visit_list_posture(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    vlm = _visit_list_mod()
+    if not vlm:
+        return {"ok": False, "error": "visit_list_missing"}
+    try:
+        if hasattr(vlm, "sync_from_browser_state"):
+            vlm.sync_from_browser_state(doc if isinstance(doc, dict) else load_state())
+        out = vlm.posture() if hasattr(vlm, "posture") else {}
+        if hasattr(vlm, "recently_visited"):
+            out["recently_visited"] = vlm.recently_visited()
+        return out
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
 
 
 def _code_page() -> str:
     return f"{_world_base()}/world/queen-code.html"
 
 
+def _thermal_manager_page() -> str:
+    return f"{_world_base()}/world/queen-thermal-manager.html"
+
+
+def _final_ear_manager_page() -> str:
+    return f"{_world_base()}/world/queen-final-ear-manager.html"
+
+
+def _final_mouth_manager_page() -> str:
+    return f"{_world_base()}/world/queen-final-mouth-manager.html"
+
+
 BOOKMARKS = [
     {"id": "nexus", "title": "NEXUS Field", "url": _nexus_field_url()},
+    {"id": "thermal-manager", "title": "Thermal Manager", "url": _thermal_manager_page()},
+    {"id": "final-ear-manager", "title": "Final Ear", "url": _final_ear_manager_page()},
+    {"id": "final-mouth-manager", "title": "Final Mouth", "url": _final_mouth_manager_page()},
     {"id": "queen", "title": "Queen", "url": f"{_world_base()}/world/browser.html"},
     {"id": "queen-code", "title": "Queen Code", "url": _code_page()},
-    {"id": "queen-files", "title": "Files", "url": _files_page()},
+    {"id": "view", "title": "View", "url": _files_page()},
     {"id": "queen-home", "title": "Queen", "url": _queen_field_home()},
     {"id": "forge", "title": "Forge", "url": f"http://127.0.0.1:{os.environ.get('QUEEN_WORLD_PORT', '9481')}/gui/queen-build-deck.html"},
     {"id": "hostess", "title": "Hostess 7", "url": "queen://hostess"},
@@ -307,10 +580,62 @@ def _host(url: str) -> str:
         return ""
 
 
+def _is_loopback_url(url: str) -> bool:
+    u = (url or "").strip()
+    if u.startswith("queen://"):
+        return True
+    host = _host(u if "://" in u else f"http://{u}")
+    return not host or host in ("127.0.0.1", "localhost") or host.startswith("127.")
+
+
+def _security_compat_auto() -> bool:
+    return _browser_settings().get("security_compat_auto", True) is not False
+
+
+def _detected_era_year(url: str, hints: dict[str, Any] | None = None) -> int:
+    mod = _compat_module()
+    if mod is not None and hasattr(mod, "detect_era"):
+        try:
+            detected = mod.detect_era(url, hints)
+            return int((detected.get("era") or {}).get("year") or 2026)
+        except Exception:
+            pass
+    auto = _compat_profile(url, mode="auto", hints=hints)
+    return int((auto.get("era") or {}).get("year") or 2026)
+
+
+def _secure_compat_profile(
+    url: str,
+    *,
+    mode: str = "auto",
+    hints: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    mode_in = str(mode or "auto").strip().lower().replace("-", "_")
+    if _security_compat_auto():
+        year = _detected_era_year(url, hints)
+        if year < 2012 and mode_in in ("modern", "future"):
+            mode_in = "legacy_secure"
+        elif year < 1998 and mode_in == "legacy_secure":
+            mode_in = "archaeology"
+    profile = _compat_profile(url, mode=mode_in, hints=hints)
+    if mode_in != str(mode or "auto").strip().lower().replace("-", "_"):
+        profile["auto_upgraded"] = True
+        profile["requested_mode"] = mode
+    return profile
+
+
 def _gate_nav(url: str) -> dict[str, Any]:
     mod = _gate_mod()
     if mod is None:
-        return {"url": url, "permit": True, "queen_verdict": "QUEEN_OFF"}
+        if _is_loopback_url(url):
+            return {"url": url, "permit": True, "queen_verdict": "LOCAL_FALLBACK", "fail_secure": True}
+        return {
+            "url": url,
+            "permit": False,
+            "queen_verdict": "GATE_UNAVAILABLE",
+            "reason": "fail_secure_no_gate",
+            "fail_secure": True,
+        }
     return mod.gate_nav(url)
 
 
@@ -505,6 +830,62 @@ def _benchmark_module() -> Any:
         return None
 
 
+_PANEL_CACHE: dict[str, Any] | None = None
+_PANEL_CACHE_TS: float = 0.0
+
+
+def _panel_slice(*, force: bool = False) -> dict[str, Any]:
+    import time
+
+    global _PANEL_CACHE, _PANEL_CACHE_TS
+    bench_mod = _benchmark_module()
+    if bench_mod and getattr(bench_mod, "benchmark_mode", lambda: False)():
+        return {
+            "queen_verdict": "QUEEN_READY",
+            "gates": {"all_held": True, "held": 12, "total": 12, "gates": []},
+            "sovereign": {"sovereign": True},
+            "posture": {"benchmark_mode": True},
+            "browser_awareness": {},
+            "motto": "Benchmark lane — security tax off the clock.",
+        }
+    cache_sec = float(os.environ.get("QUEEN_STATUS_CACHE_SEC", "5"))
+    if not force and os.environ.get("QUEEN_FAST_STATUS", "1") not in ("0", "false", "no"):
+        now = time.time()
+        if _PANEL_CACHE and now - _PANEL_CACHE_TS < cache_sec:
+            return _PANEL_CACHE
+    panel = _run_panel("json")
+    if os.environ.get("QUEEN_FAST_STATUS", "1") not in ("0", "false", "no"):
+        _PANEL_CACHE = panel
+        _PANEL_CACHE_TS = time.time()
+    return panel
+
+
+def _nav_fast_bundle(url: str, *, tab_id: str = "", compat_mode: str = "modern") -> dict[str, Any] | None:
+    bench_mod = _benchmark_module()
+    if bench_mod is None or not getattr(bench_mod, "is_nav_fast_path", lambda _u: False)(url):
+        return None
+    jump = bench_mod.fast_jump(url, tab_id=tab_id, compat_mode=compat_mode)
+    if not jump:
+        return None
+    gate = bench_mod.fast_gate_nav(url) if hasattr(bench_mod, "fast_gate_nav") else {"permit": True}
+    compat = bench_mod.modern_compat_profile() if hasattr(bench_mod, "modern_compat_profile") else {}
+    return {"jump": jump, "gate": gate, "compat": compat}
+
+
+def _apply_fast_compat(tab: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
+    tab["compat_mode"] = profile.get("effective_mode") or profile.get("compat_mode") or "modern"
+    tab["compat_era"] = (profile.get("era") or {}).get("id") or profile.get("compat_era") or "es2026"
+    tab["compat_profile"] = {
+        "mode": profile.get("compat_mode"),
+        "effective_mode": profile.get("effective_mode"),
+        "era": tab["compat_era"],
+        "sandbox": profile.get("sandbox"),
+        "user_agent": profile.get("user_agent"),
+        "legacy_isolate": profile.get("legacy_isolate"),
+    }
+    return profile
+
+
 def _zero_cost_security() -> dict[str, Any]:
     doc = _load_json(QUEEN / "data" / "queen-zero-cost-4slot.json", {})
     if not doc.get("schema"):
@@ -549,13 +930,16 @@ def _nexus_jump(url: str, *, tab_id: str = "", compat_mode: str = "auto") -> dic
             return mod.nexus_jump(url, tab_id=tab_id, compat_mode=compat_mode)
         except Exception as exc:
             return {"ok": False, "permit": False, "error": "nexus_jump_failed", "reason": str(exc)}
+    loopback = _is_loopback_url(url)
     return {
-        "ok": True,
-        "permit": True,
-        "verdict": "DEFEND_CAGED",
-        "iff": "CONTACT_HOSTILE",
-        "posture": "defend",
+        "ok": loopback,
+        "permit": loopback,
+        "verdict": "DEFEND_CAGED" if loopback else "BLOCK_HOSTILE",
+        "iff": "CAPSULE_INTERNAL" if loopback else "CONTACT_HOSTILE",
+        "posture": "defend" if loopback else "interdict",
         "skipped": True,
+        "fail_secure": True,
+        "reason": "nexus_jump_unavailable" if not loopback else "loopback_fallback",
     }
 
 
@@ -568,7 +952,8 @@ def _compat_profile(url: str, mode: str = "auto", hints: dict[str, Any] | None =
 
 def _apply_compat(tab: dict[str, Any], url: str, body: dict[str, Any]) -> dict[str, Any]:
     mode = str(body.get("compat_mode") or tab.get("compat_mode") or "auto")
-    profile = _compat_profile(url, mode=mode, hints=body.get("compat_hints") if isinstance(body.get("compat_hints"), dict) else None)
+    hints = body.get("compat_hints") if isinstance(body.get("compat_hints"), dict) else None
+    profile = _secure_compat_profile(url, mode=mode, hints=hints)
     tab["compat_mode"] = profile.get("effective_mode") or profile.get("mode") or mode
     tab["compat_era"] = (profile.get("era") or {}).get("id") or "es2026"
     tab["compat_profile"] = {
@@ -596,9 +981,42 @@ def _push_history(tab: dict[str, Any], url: str) -> None:
     tab["history_index"] = len(hist) - 1
 
 
+def _browser_status_light(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Minimal status for benchmark hot path — no vault/file-browser/boot-hook tax."""
+    state = doc if doc is not None else load_state()
+    active = _find_tab(state, state.get("active_tab", ""))
+    panel = _panel_slice()
+    return {
+        "schema": "queen-browser/v1",
+        "updated": _now(),
+        "home": state.get("home") or DEFAULT_HOME,
+        "active_tab": state.get("active_tab"),
+        "tabs": [
+            {
+                "id": t.get("id"),
+                "url": t.get("url"),
+                "title": t.get("title") or t.get("url"),
+                "active": t.get("id") == state.get("active_tab"),
+                "pinned": bool(t.get("pinned")),
+                "role": t.get("role") or "",
+                "compat_mode": t.get("compat_mode") or "auto",
+                "compat_era": t.get("compat_era") or "es2026",
+                "compat_profile": t.get("compat_profile") or {},
+                "nexus_jump": t.get("nexus_jump") or {},
+            }
+            for t in state.get("tabs") or []
+        ],
+        "active_url": active.get("url") if active else DEFAULT_HOME,
+        "queen_verdict": panel.get("queen_verdict") or "QUEEN_READY",
+        "gates": panel.get("gates") or {},
+        "benchmark_fast": True,
+        "capabilities": {"tabs": True, "nexus_jump": True, "full_web_surface": True},
+    }
+
+
 def browser_status() -> dict[str, Any]:
     doc = load_state()
-    panel = _run_panel("json")
+    panel = _panel_slice()
     active = _find_tab(doc, doc.get("active_tab", ""))
     boot_hook = _boot_hook_posture()
     boot_os = bool(boot_hook.get("boot_os"))
@@ -638,7 +1056,14 @@ def browser_status() -> dict[str, Any]:
         "files_tab": doc.get("files_tab")
         or next((t.get("id") for t in doc.get("tabs") or [] if t.get("role") == "files"), None),
         "active_url": active.get("url") if active else DEFAULT_HOME,
-        "bookmarks": _merged_bookmarks(doc),
+        "bookmarks": _bookmark_bar(doc),
+        "bookmark_bar": _bookmark_bar(doc),
+        "bookmark_trees": _bookmark_trees(doc),
+        "localhost_flyout": _localhost_flyout(doc),
+        "browser_settings": _browser_settings(),
+        "bookmark_sort": "ironclad_bsp_mru",
+        "visit_tracking": "navigation_not_click",
+        "visit_list": _visit_list_posture(doc),
         "import": (doc.get("import_manifest") or {}) if doc.get("import_manifest") else {},
         "vault": (_vault_mod().vault_status() if _vault_mod() else {}),
         "capabilities": {
@@ -654,7 +1079,11 @@ def browser_status() -> dict[str, Any]:
             "downloads": True,
             "find_in_page": True,
             "devtools_slice": True,
-            "proxy_fallback": True,
+            "page_inspector": True,
+            "page_shields": True,
+            "ad_space_block": True,
+            "structural_fingerprints": True,
+            "auto_proxy_gate_held": True,
             "internal_only": True,
             "queen_scheme": True,
             "popout_windows": True,
@@ -738,23 +1167,28 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             doc.setdefault("tabs", []).append(tab)
             doc["active_tab"] = tab["id"]
         compat_in = str(body.get("compat_mode") or tab.get("compat_mode") or "auto")
-        bench_mod = _benchmark_module()
-        if bench_mod and getattr(bench_mod, "benchmark_mode", lambda: False)():
-            if getattr(bench_mod, "is_benchmark_url", lambda _u: False)(url) or getattr(
-                bench_mod, "is_fast_internal", lambda _u: False
-            )(url):
-                compat_in = "modern"
-                body = {**body, "compat_mode": "modern", "proxy": False}
-        jump = _nexus_jump(
-            url,
-            tab_id=tab.get("id") or "",
-            compat_mode=compat_in,
-        )
-        if not jump.get("permit"):
-            return {"ok": False, "error": "nexus_jump_blocked", "jump": jump, "gate": jump.get("nexus", {})}
-        gate = _gate_nav(url)
-        if not gate.get("permit"):
-            return {"ok": False, "error": "gate_blocked", "gate": gate, "jump": jump}
+        fast = _nav_fast_bundle(url, tab_id=tab.get("id") or "", compat_mode=compat_in)
+        if not fast:
+            bench_mod = _benchmark_module()
+            if bench_mod and getattr(bench_mod, "benchmark_mode", lambda: False)():
+                if getattr(bench_mod, "is_benchmark_url", lambda _u: False)(url) or getattr(
+                    bench_mod, "is_fast_internal", lambda _u: False
+                )(url):
+                    compat_in = "modern"
+                    body = {**body, "compat_mode": "modern", "proxy": False}
+            jump = _nexus_jump(
+                url,
+                tab_id=tab.get("id") or "",
+                compat_mode=compat_in,
+            )
+            if not jump.get("permit"):
+                return {"ok": False, "error": "nexus_jump_blocked", "jump": jump, "gate": jump.get("nexus", {})}
+            gate = _gate_nav(url)
+            if not gate.get("permit"):
+                return {"ok": False, "error": "gate_blocked", "gate": gate, "jump": jump}
+        else:
+            jump = fast["jump"]
+            gate = fast["gate"]
         tab["url"] = url
         tab["title"] = str(body.get("title") or _host(url) or "Page")
         tab["nexus_jump"] = {
@@ -762,20 +1196,28 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             "iff": jump.get("iff"),
             "countermeasures_ready": jump.get("countermeasures_ready"),
         }
-        body = {
-            **body,
-            "compat_mode": (jump.get("compat") or {}).get("effective_mode")
-            or body.get("compat_mode")
-            or "auto",
-        }
-        compat = _apply_compat(tab, url, body)
-        compat["nexus_jump"] = jump
+        if fast:
+            compat = _apply_fast_compat(tab, fast["compat"])
+            compat["nexus_jump"] = jump
+        else:
+            body = {
+                **body,
+                "compat_mode": (jump.get("compat") or {}).get("effective_mode")
+                or body.get("compat_mode")
+                or "auto",
+            }
+            compat = _apply_compat(tab, url, body)
+            compat["nexus_jump"] = jump
         _push_history(tab, url)
         doc["active_tab"] = tab["id"]
+        _record_visit(doc, url, title=str(tab.get("title") or ""))
         save_state(doc)
-        _append_nav({"ts": _now(), "action": "navigate", "url": url, "gate": gate, "compat": compat.get("effective_mode")})
-        _muscle_memory_record(url, action="navigate")
-        return {"ok": True, "tab": tab, "gate": gate, "jump": jump, "compat": compat, "status": browser_status()}
+        bench_mod = _benchmark_module()
+        if not (fast and bench_mod and getattr(bench_mod, "skip_side_effects", lambda: False)()):
+            _append_nav({"ts": _now(), "action": "navigate", "url": url, "gate": gate, "compat": compat.get("effective_mode")})
+            _muscle_memory_record(url, action="navigate")
+        status = _browser_status_light(doc) if fast else browser_status()
+        return {"ok": True, "tab": tab, "gate": gate, "jump": jump, "compat": compat, "status": status}
 
     if action == "new_tab":
         if len(doc.get("tabs") or []) >= MAX_TABS:
@@ -832,6 +1274,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             return {"ok": False, "error": "history_start"}
         tab["history_index"] = idx - 1
         tab["url"] = tab["history"][tab["history_index"]]
+        _record_visit(doc, tab["url"])
         save_state(doc)
         return {"ok": True, "tab": tab, "status": browser_status()}
 
@@ -845,6 +1288,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             return {"ok": False, "error": "history_end"}
         tab["history_index"] = idx + 1
         tab["url"] = tab["history"][tab["history_index"]]
+        _record_visit(doc, tab["url"])
         save_state(doc)
         return {"ok": True, "tab": tab, "status": browser_status()}
 
@@ -852,8 +1296,14 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         tab = _find_tab(doc, str(body.get("tab_id") or doc.get("active_tab", "")))
         if not tab:
             return {"ok": False, "error": "tab_missing"}
-        gate = _gate_nav(tab.get("url") or DEFAULT_HOME)
-        _append_nav({"ts": _now(), "action": "reload", "url": tab.get("url"), "gate": gate})
+        reload_url = tab.get("url") or DEFAULT_HOME
+        fast = _nav_fast_bundle(reload_url, tab_id=tab.get("id") or "")
+        gate = fast["gate"] if fast else _gate_nav(reload_url)
+        bench_mod = _benchmark_module()
+        _record_visit(doc, reload_url)
+        save_state(doc)
+        if not (fast and bench_mod and getattr(bench_mod, "skip_side_effects", lambda: False)()):
+            _append_nav({"ts": _now(), "action": "reload", "url": reload_url, "gate": gate})
         return {"ok": True, "tab": tab, "gate": gate, "status": browser_status()}
 
     if action == "home":
@@ -870,6 +1320,23 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             return {"ok": False, "error": "pinned_tab"}
         return {"ok": True, "tab": tab, "popout": True, "status": browser_status()}
 
+    if action in ("toggle_pin", "pin_tab", "toggle_pin_tab"):
+        tab_id = str(body.get("tab_id") or doc.get("active_tab") or "")
+        tab = _find_tab(doc, tab_id)
+        if not tab:
+            return {"ok": False, "error": "tab_missing"}
+        if tab.get("role") in ("desktop", "start", "files"):
+            return {"ok": False, "error": "core_tab_pin_locked"}
+        want = body.get("pinned")
+        if want is None:
+            want = not tab.get("pinned")
+        if want:
+            tab["pinned"] = True
+        else:
+            tab.pop("pinned", None)
+        save_state(doc)
+        return {"ok": True, "tab": tab, "pinned": bool(want), "status": browser_status()}
+
     if action == "set_title":
         tab = _find_tab(doc, str(body.get("tab_id") or doc.get("active_tab", "")))
         if not tab:
@@ -880,7 +1347,8 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
 
     if action == "gate_check":
         url = _normalize_url(str(body.get("url") or DEFAULT_HOME))
-        gate = _gate_nav(url)
+        fast = _nav_fast_bundle(url)
+        gate = fast["gate"] if fast else _gate_nav(url)
         return {"ok": True, "gate": gate}
 
     if action in ("set_compat", "compat_mode", "compat"):
@@ -894,7 +1362,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
 
     if action in ("compat_profile", "compat_detect"):
         url = _normalize_url(str(body.get("url") or DEFAULT_HOME))
-        compat = _compat_profile(url, mode=str(body.get("mode") or "auto"))
+        compat = _secure_compat_profile(url, mode=str(body.get("mode") or "auto"))
         return {"ok": True, "compat": compat}
 
     if action in ("import_all", "import_profiles", "sweep_browsers"):

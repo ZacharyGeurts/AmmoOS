@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
-AMMOOS_VERSION="${AMMOOS_VERSION:-1.0.0-beta}"
+AMMOOS_VERSION="${AMMOOS_VERSION:-2.0.0-beta3}"
 TAG="v${AMMOOS_VERSION}"
 PUSH=0
 
@@ -43,9 +43,7 @@ rsync -a --delete \
   --exclude='.nexus-state' \
   --exclude='cache' \
   --exclude='state' \
-  --exclude='.github/workflows/ci.yml' \
-  --exclude='.github/workflows/release-v10.yml' \
-  --exclude='Hostess7/.github' \
+  --exclude='.github' \
   "${DIST}/ammoos-${AMMOOS_VERSION}/" "$EXPORT/"
 
 cd "$EXPORT"

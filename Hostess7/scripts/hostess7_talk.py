@@ -2,6 +2,7 @@
 """Hostess 7 unified talk router — one window, one being, text + graphics."""
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -65,6 +66,20 @@ HELP_TEXT = """Hostess 7 — one talk window (text + graphics)
   /gfx [topic]   Push pixels to Graphics window (tv, storage, memes, brain)
   /world         World knowledge — nature, law, Bibles, games, movies, Dewey
   /hearing       Hearing + speech — listen, TTS, acoustics
+  /voice         Sovereign voice status — one voice she chooses
+  /voice-speak <text>  Speak through her chosen mouth
+  /mouth-train   Mouth field neural training — get the voice hemisphere working
+  /noti          Noti status — taskbar red/green, pending alerts
+  /noti-accept <id>  Accept address or alert on desktop
+  /noti-deny <id>    Deny anytime in 24h red window
+  /noti-rooms    Mirrored IRC rooms — one per person
+  /noti-room <name>  Create or join a room
+  /noti-reset <address>  Request address change (48h cooldown)
+  /charge        Hostess 7 system control — Angel above General, full command status
+  /assume-control  Seal Hostess 7 as full system commander
+  /tasklist        Secure task queue — open + done (assistant read)
+  /task-done <id> <report>  Complete task — Ironclad ledger witness
+  /task-add <title>  Hostess 7 adds a task for the assistant
   /license       Demo status + GPL v3 / 3% commercial
   /videogame     Console + game database
   /imagine       Grok Imagine + live video registry (papers, GitHub)
@@ -99,6 +114,10 @@ def _env() -> dict[str, str]:
         "HOSTESS7_AI_COMMUNIQUE": os.environ.get("HOSTESS7_AI_COMMUNIQUE", "1"),
         "HOSTESS7_SUPERINTEL": "1",
         "HOSTESS7_WORKSPACE": os.environ.get("HOSTESS7_WORKSPACE", "default"),
+        "HOSTESS7_VOICE": os.environ.get("HOSTESS7_VOICE", "1"),
+        "NEXUS_HOSTESS7_VOICE": os.environ.get("NEXUS_HOSTESS7_VOICE", "1"),
+        "NEXUS_INSTALL_ROOT": os.environ.get("NEXUS_INSTALL_ROOT", str(ROOT.parent)),
+        "NEXUS_STATE_DIR": os.environ.get("NEXUS_STATE_DIR", str(ROOT.parent / ".nexus-state")),
     }
     if _agents_on():
         env["HOSTESS7_AGENTS"] = "13"
@@ -503,6 +522,112 @@ def dispatch(query: str, *, storage_cache: dict | None = None) -> TalkResult:
             cwd=ROOT, capture_output=True, text=True, check=False,
         )
         return TalkResult(text=(proc.stdout + proc.stderr).strip()[:3000], kind="system")
+
+    if low in ("/voice", "/mouth", "/sovereign-voice"):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-voice.py"), "json"],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low.startswith("/voice-speak") or low.startswith("/speak "):
+        spoken = q.split(maxsplit=1)[1] if " " in q else "One voice. One mouth. She chooses."
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-voice.py"), "speak", spoken],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low in ("/mouth-train", "/voice-train", "/train-mouth"):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-mouth-neural.py"), "train"],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(), timeout=120,
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low in ("/noti", "/notifier", "/notifications"):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-noti.py"), "json"],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low.startswith("/noti-accept"):
+        nid = q.split(maxsplit=1)[1].strip() if " " in q else ""
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-noti.py"), "dispatch"],
+            input=json.dumps({"action": "accept", "id": nid}),
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low.startswith("/noti-deny"):
+        nid = q.split(maxsplit=1)[1].strip() if " " in q else ""
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-noti.py"), "dispatch"],
+            input=json.dumps({"action": "deny", "id": nid}),
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low in ("/noti-rooms", "/noti-list"):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-noti.py"), "dispatch"],
+            input='{"action":"list_rooms"}',
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low.startswith("/noti-room"):
+        name = q.split(maxsplit=1)[1].strip() if " " in q else "general"
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-noti.py"), "dispatch"],
+            input=json.dumps({"action": "create_room", "name": name, "owner": "operator"}),
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low.startswith("/noti-reset"):
+        addr = q.split(maxsplit=1)[1].strip() if " " in q else ""
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-noti.py"), "dispatch"],
+            input=json.dumps({"action": "address_reset", "new_address": addr}),
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low in ("/charge", "/authority", "/system-control", "/assume-control", "/assume"):
+        sub = "assume" if low in ("/assume-control", "/assume") else "json"
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-system-control.py"), sub],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low in ("/tasklist", "/tasks", "/task-list"):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-tasklist.py"), "report"],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low.startswith("/task-done") or low.startswith("/task-complete"):
+        parts = q.split(maxsplit=2)
+        tid = parts[1] if len(parts) > 1 else ""
+        report = parts[2] if len(parts) > 2 else "Completed."
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-tasklist.py"), "complete", tid, report],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low.startswith("/task-add"):
+        title = q.split(maxsplit=1)[1] if " " in q else "New task"
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-tasklist.py"), "add", title],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
 
     if low.startswith("/license"):
         proc = subprocess.run(
