@@ -1,34 +1,38 @@
-# NEXUS-Shield · Universal Protector
+# AmmoOS — Field Operating System
 
-**g16 1.0** — Host desktop landing, Queen Browser OS inside, field C2, host freeze, Underlay F9 Tristate installer.
+**[→ GitHub: ZacharyGeurts/AmmoOS](https://github.com/ZacharyGeurts/AmmoOS)** · [Manual](https://zacharygeurts.github.io/AmmoOS/) · [Stack hub](https://zacharygeurts.github.io/ZacharyGeurts/stack.html) · [Release v2.0.0-beta3](https://github.com/ZacharyGeurts/AmmoOS/releases/tag/v2.0.0-beta3)
 
-> **TL;DR:** Clone repo → `sudo ./install-all.sh` → browser opens **http://127.0.0.1:9477/field** (host desktop) on every boot.
+**AmmoOS 2.0.0-beta3** — field OS on loopback `127.0.0.1`. Queen Browser shell, NEXUS C2, KILROY kernel, ZNetwork pipe. All stack components ship inside the AmmoOS tree.
+
+> **TL;DR:** `git clone https://github.com/ZacharyGeurts/AmmoOS.git` → `./scripts/wire-stack.sh` → `sudo ./install-all.sh` → **http://127.0.0.1:9477/field**
 
 ---
 
 ## What it does
 
-NEXUS is a field command layer — not a traditional AV suite:
+AmmoOS is the sovereign field operating system — not a traditional desktop replacement:
 
 1. **Scores** live connections on 10 axes (gatekeeper).
 2. **You decide** — Trust forever · Stop this site · KILL when corroborated.
-3. **Publishes** everything to a loopback panel (`:9477`) — no cloud required.
-4. **Reloads** field tech on every reboot (`nexus-boot-impl` — hardened, non-destructive).
-5. **Mirrors** the incumbent OS on first page — all apps, familiar menu, field startbar.
-6. **Embeds** field OS inside Queen Browser Start tab — drop/rise underlay beneath host.
-7. **Freezes** the host OS on demand — memory lock, sovereign clock witness on resume.
+3. **Publishes** everything to loopback panel (`:9477`) — no cloud required.
+4. **Reloads** field tech on every reboot (`nexus-boot-impl`).
+5. **Mirrors** the incumbent OS — familiar menu, field startbar.
+6. **Embeds** field OS inside Queen Browser Start tab.
+7. **Freezes** the host OS on demand — sovereign clock witness on resume.
 
 ---
 
 ## Quick install
 
 ```bash
-git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
-cd NEXUS-Shield
+git clone https://github.com/ZacharyGeurts/AmmoOS.git
+cd AmmoOS
+git checkout v2.0.0-beta3
+./scripts/wire-stack.sh
 sudo ./install-all.sh
 ```
 
-Full guide → **[Installers](Installers)**
+Full guide → **[Installers](Installers)** · **[AmmoOS Beta 3](AmmoOS-Beta3)**
 
 ---
 
@@ -36,54 +40,22 @@ Full guide → **[Installers](Installers)**
 
 | URL | Purpose |
 |-----|---------|
-| http://127.0.0.1:9477/field | **Host desktop** — apps + startbar (first page) |
-| http://127.0.0.1:9477/command | **Field command** — full C2 threat panel |
-| http://127.0.0.1:9481/world/browser.html | **Queen Browser** — OS inside Start tab |
-| http://127.0.0.1:9477/underlay-f9?sector=underlay | Tristate / Underlay F9 |
-| http://127.0.0.1:9477/command#training | Hostess7 training tab |
+| http://127.0.0.1:9477/field | **Host desktop** — apps + startbar |
+| http://127.0.0.1:9477/command | **Field command** — C2 threat panel |
+| http://127.0.0.1:9481/world/browser.html | **Queen Browser** — secured shell |
+| http://127.0.0.1:9477/underlay-f9 | **Tristate installer** — Underlay F9 |
 
 ---
 
-## Documentation map
+## Stack siblings
 
-| Guide | Topic |
-|-------|-------|
-| **[Installers](Installers)** | Release tarballs, scripts, boot, troubleshoot |
-| **[Host Desktop](Host-Desktop)** | First page, startbar, app mirror |
-| **[Queen Browser](Queen-Browser)** | Browser chrome, OS inside, drop/rise |
-| **[Host Freeze](Host-Freeze)** | Soft/mem/disk freeze, sovereign resume |
-| **[Field I/O](Field-IO)** | API, state files, diagrams |
-| **[Field Switch Safety](Field-Switch-Safety)** | Painless conversion, no hotspots |
-| **[Field Thermal Guard](Field-Thermal-Guard)** | Landauer budget, incremental redata |
-| **[Panel Guide](Panel-Guide)** | Command deck tabs + screenshots |
-| **[Linux Installation](Linux-Installation)** | systemd, verify, uninstall |
-| **[Underlay F9 Tristate](Underlay-F9-Tristate)** | 2026 installer, F9 hotkey |
-| **[Boot Implementation](Boot-Implementation)** | First install vs reboot refresh |
-| **[Architecture](Architecture)** | Daemon modules |
-| **[Configuration](Configuration)** | Panel vs config files |
+Component repos publish **redirect hubs** on GitHub Pages — all link back to AmmoOS code and manual:
 
-**GitHub Pages manual** (illustrated): https://zacharygeurts.github.io/NEXUS-Shield/
+| Component | Pages hub | Manual in AmmoOS |
+|-----------|-----------|------------------|
+| Queen | [Queen](https://zacharygeurts.github.io/Queen/) | [Queen Browser](https://zacharygeurts.github.io/AmmoOS/queen-browser.html) |
+| Grok16 | [Grok16](https://zacharygeurts.github.io/Grok16/) | [Combinatronic](https://zacharygeurts.github.io/AmmoOS/combinatronic.html) |
+| KILROY | [KILROY](https://zacharygeurts.github.io/KILROY/) | [Architecture](https://zacharygeurts.github.io/AmmoOS/architecture.html) |
+| ZNetwork | [ZNetwork](https://zacharygeurts.github.io/ZNetwork/) | [Field I/O](https://zacharygeurts.github.io/AmmoOS/io.html) |
 
----
-
-## Handy commands
-
-```bash
-./nexus.sh                  # dev tree — host desktop + browser
-Queen/scripts/run-queen.sh  # Queen Browser on :9481
-nexus-install-gui.sh        # Tristate installer in browser
-nexus status                # health
-nexus trust <ip>            # trust forever
-nexus verify                # manifest integrity
-```
-
----
-
-## License
-
-| Project | License |
-|---------|---------|
-| **NEXUS-Shield** | [MIT](https://github.com/ZacharyGeurts/NEXUS-Shield/blob/main/LICENSE) |
-| **AMOURANTHRTX** | GPL v3 or commercial — [separate repo](https://github.com/ZacharyGeurts/AMOURANTHRTX) |
-
-→ **[Licensing](Licensing)**
+**[→ GitHub: ZacharyGeurts/AmmoOS](https://github.com/ZacharyGeurts/AmmoOS)**

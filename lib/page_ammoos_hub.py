@@ -31,6 +31,8 @@ def hub_index_html(hub: dict[str, Any], name: str, entry: dict[str, Any], *, ver
     stack = str(hub.get("canonical_base") or "").rstrip("/") + "/" + str(hub.get("stack_hub_page") or "stack-hub.html")
     ver = f" · {version}" if version else ""
     label = github.replace("https://github.com/", "")
+    ammoos_repo = str(hub.get("canonical_repo") or "https://github.com/ZacharyGeurts/AmmoOS")
+    release_tag = str(hub.get("release_tag") or "v2.0.0-beta3")
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,16 +51,17 @@ def hub_index_html(hub: dict[str, Any], name: str, entry: dict[str, Any], *, ver
   </style>
 </head>
 <body>
-{gh_chrome.chrome_top(github, label=label)}
+{gh_chrome.hub_chrome_top(github, sibling_label=label, ammoos_repo=ammoos_repo, release_tag=release_tag)}
   <h1>{title}</h1>
   <p class="lead">{blurb}</p>
-  <p class="meta">This repo&apos;s GitHub Pages is a <strong>redirect hub</strong>. Full documentation is maintained once in <a href="{hub.get('canonical_base')}">AmmoOS</a>{ver}.</p>
+  <p class="meta">This repo&apos;s GitHub Pages is a <strong>redirect hub</strong>. <strong>Source code</strong> for the full stack lives in <a href="{ammoos_repo}">AmmoOS</a>. Documentation is maintained once in the <a href="{hub.get('canonical_base')}">AmmoOS manual</a>{ver}.</p>
   <p>
-    <a class="cta" href="{manual}">Open AmmoOS manual → {entry.get('ammoos_page', 'index.html')}</a>
+    <a class="cta" href="{ammoos_repo}">Clone AmmoOS (canonical code)</a>
+    <a class="cta" href="{manual}">Open manual → {entry.get('ammoos_page', 'index.html')}</a>
     <a class="cta" href="{stack}">Stack hub</a>
   </p>
   <p class="meta">Auto-redirecting in 4 seconds…</p>
-{gh_chrome.chrome_bottom(github, label=label, version=version)}
+{gh_chrome.hub_chrome_bottom(github, sibling_label=label, ammoos_repo=ammoos_repo, version=version)}
 </body>
 </html>
 """

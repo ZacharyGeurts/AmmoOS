@@ -25,6 +25,9 @@ fi
 log "AmmoOS wiki"
 AMMOOS_VERSION="$VER" bash "${ROOT}/scripts/publish-ammoos-wiki.sh" || true
 
+log "Stack companion releases (link back to AmmoOS code)"
+STACK_VERSION="$VER" bash "${ROOT}/scripts/publish-stack-releases.sh" || true
+
 log "done — canonical manual + hubs:"
 echo "  https://zacharygeurts.github.io/AmmoOS/"
 echo "  https://zacharygeurts.github.io/AmmoOS/stack-hub.html"

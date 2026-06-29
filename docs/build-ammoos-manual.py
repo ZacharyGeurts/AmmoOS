@@ -381,18 +381,19 @@ SG stack (wired via wire-stack.sh)
             "Stack Hub",
             f"""
   <h1>AmmoOS Stack Hub</h1>
-  <p class="lead"><strong>AmmoOS leads.</strong> All stack documentation lives in this manual — sibling GitHub Pages redirect here.</p>
+  <p class="lead"><strong>AmmoOS leads.</strong> All stack <strong>code</strong> and documentation lives here — sibling GitHub Pages redirect to this manual and link back to <a href="https://github.com/ZacharyGeurts/AmmoOS">ZacharyGeurts/AmmoOS</a>.</p>
+  <p><a class="cta" href="https://github.com/ZacharyGeurts/AmmoOS">Clone AmmoOS (canonical code)</a> · <a href="https://github.com/ZacharyGeurts/AmmoOS/releases/tag/v{VER}">Release v{VER}</a></p>
   <h2>Layer diagram</h2>
   <pre class="stack">Hardware → NEXUS C2 (:9477) → ZNetwork → Queen CANVAS → Queen Browser (:9481) → AmmoOS</pre>
   <h2>Stack manuals (canonical — all in AmmoOS)</h2>
   <table>
-    <tr><th>Component</th><th>Manual page</th><th>GitHub repo</th></tr>
-    <tr><td>★ AmmoOS</td><td><a href="index.html">Home</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td></tr>
-    <tr><td>Queen</td><td><a href="queen-browser.html">Queen Browser</a></td><td><a href="https://github.com/ZacharyGeurts/Queen">Queen</a></td></tr>
-    <tr><td>Grok16</td><td><a href="combinatronic.html">Combinatronic</a></td><td><a href="https://github.com/ZacharyGeurts/Grok16">Grok16</a></td></tr>
-    <tr><td>KILROY</td><td><a href="architecture.html">Architecture</a></td><td><a href="https://github.com/ZacharyGeurts/KILROY">KILROY</a></td></tr>
-    <tr><td>ZNetwork</td><td><a href="io.html">Field I/O</a></td><td><a href="https://github.com/ZacharyGeurts/ZNetwork">ZNetwork</a></td></tr>
-    <tr><td>Final Eye / Ear / Mouth</td><td><a href="launch-surfaces.html">Launch Surfaces</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td></tr>
+    <tr><th>Component</th><th>Manual page</th><th>Code</th><th>Pages hub</th></tr>
+    <tr><td>★ AmmoOS</td><td><a href="index.html">Home</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td><td><a href="https://zacharygeurts.github.io/AmmoOS/">Manual</a></td></tr>
+    <tr><td>Queen</td><td><a href="queen-browser.html">Queen Browser</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td><td><a href="https://zacharygeurts.github.io/Queen/">Hub</a></td></tr>
+    <tr><td>Grok16</td><td><a href="combinatronic.html">Combinatronic</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td><td><a href="https://zacharygeurts.github.io/Grok16/">Hub</a></td></tr>
+    <tr><td>KILROY</td><td><a href="architecture.html">Architecture</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td><td><a href="https://zacharygeurts.github.io/KILROY/">Hub</a></td></tr>
+    <tr><td>ZNetwork</td><td><a href="io.html">Field I/O</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td><td><a href="https://zacharygeurts.github.io/ZNetwork/">Hub</a></td></tr>
+    <tr><td>Final Eye / Ear / Mouth</td><td><a href="launch-surfaces.html">Launch Surfaces</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td><td>—</td></tr>
   </table>
   <p>Profile navigation: <a href="https://zacharygeurts.github.io/ZacharyGeurts/stack.html">ZacharyGeurts/stack.html</a></p>
 """,

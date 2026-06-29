@@ -6,6 +6,7 @@ GITHUB_REPO = "https://github.com/ZacharyGeurts/AmmoOS"
 GITHUB_RELEASES = "https://github.com/ZacharyGeurts/AmmoOS/releases"
 PAGES_HOME = "https://zacharygeurts.github.io/AmmoOS/"
 STACK_HUB = "https://zacharygeurts.github.io/ZacharyGeurts/stack.html"
+AMMOOS_CODE_LABEL = "ZacharyGeurts/AmmoOS"
 
 
 def chrome_css() -> str:
@@ -64,5 +65,44 @@ def chrome_bottom(
     return f"""<div class="github-chrome-bottom" role="contentinfo">
   <a class="github-repo-primary" href="{repo_url}">→ GitHub: {label}</a>
   <span class="github-chrome-links">AmmoOS field OS{ver}</span>
+</div>
+"""
+
+
+def hub_chrome_top(
+    sibling_repo: str,
+    *,
+    sibling_label: str = "",
+    ammoos_repo: str = GITHUB_REPO,
+    ammoos_pages: str = PAGES_HOME,
+    stack_url: str = STACK_HUB,
+    release_tag: str = "v2.0.0-beta3",
+) -> str:
+    sib = sibling_label or sibling_repo.replace("https://github.com/", "")
+    rel = f"{ammoos_repo}/releases/tag/{release_tag}"
+    return f"""<div class="github-chrome-top" role="navigation" aria-label="Stack navigation">
+  <a class="github-repo-primary" href="{ammoos_repo}">→ Code: {AMMOOS_CODE_LABEL}</a>
+  <span class="github-chrome-links">
+    <a href="{sibling_repo}">{sib}</a>
+    <a href="{ammoos_pages}">AmmoOS manual</a>
+    <a href="{stack_url}">Stack hub</a>
+    <a href="{rel}">Release {release_tag}</a>
+  </span>
+</div>
+"""
+
+
+def hub_chrome_bottom(
+    sibling_repo: str = GITHUB_REPO,
+    *,
+    sibling_label: str = "",
+    ammoos_repo: str = GITHUB_REPO,
+    version: str = "",
+) -> str:
+    sib = sibling_label or sibling_repo.replace("https://github.com/", "")
+    ver = f" · {version}" if version else ""
+    return f"""<div class="github-chrome-bottom" role="contentinfo">
+  <a class="github-repo-primary" href="{ammoos_repo}">→ Code: {AMMOOS_CODE_LABEL}</a>
+  <span class="github-chrome-links"><a href="{sibling_repo}">{sib}</a> · ships in AmmoOS{ver}</span>
 </div>
 """

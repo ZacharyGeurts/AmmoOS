@@ -3,6 +3,8 @@
   "title": "Stack Pages hub — component gh-pages link to AmmoOS canonical manual",
   "motto": "One manual in AmmoOS — sibling repos publish redirect stubs only.",
   "canonical_base": "https://zacharygeurts.github.io/AmmoOS/",
+  "canonical_repo": "https://github.com/ZacharyGeurts/AmmoOS",
+  "release_tag": "v2.0.0-beta3",
   "stack_hub_page": "stack-hub.html",
   "owner": "ZacharyGeurts",
   "repos": {
@@ -89,6 +91,12 @@
       "ammoos_page": "architecture.html",
       "title": "World Redata",
       "blurb": "WRDT1 envelopes — architecture in AmmoOS manual"
+    },
+    "OBS-FieldVoiceFilter": {
+      "github": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter",
+      "ammoos_page": "launch-surfaces.html",
+      "title": "OBS Field Voice Filter",
+      "blurb": "OBS plugin — launch surfaces in AmmoOS manual; code in AmmoOS tree"
     }
   }
 }
