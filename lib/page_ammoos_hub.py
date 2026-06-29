@@ -32,7 +32,7 @@ def hub_index_html(hub: dict[str, Any], name: str, entry: dict[str, Any], *, ver
     ver = f" · {version}" if version else ""
     label = github.replace("https://github.com/", "")
     ammoos_repo = str(hub.get("canonical_repo") or "https://github.com/ZacharyGeurts/AmmoOS")
-    release_tag = str(hub.get("release_tag") or "v2.0.0-beta3")
+    release_tag = str(hub.get("release_tag") or "v2.0.0-beta3.1")
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>

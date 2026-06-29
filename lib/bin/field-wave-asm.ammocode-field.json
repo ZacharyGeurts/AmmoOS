@@ -1,6 +1,6 @@
 {
   "schema": "g16-ammocode-field-instill/v1",
-  "updated": "2026-06-29T16:03:27Z",
+  "updated": "2026-06-29T16:13:49Z",
   "binary": "/home/default/Desktop/SG/NewLatest/lib/bin/field-wave-asm",
   "instilled": true,
   "ammocode_is_field": true,
@@ -21,8 +21,8 @@
   "_g16_seal": {
     "schema": "g16-sealed-output/v1",
     "algorithm": "sha256",
-    "digest": "047936e63192e2d68fdc4b338cd5e9ffafcdea88045c19e45dc521c3a9b3544c",
-    "sealed_at": "2026-06-29T16:03:27Z",
+    "digest": "8e4ea0504cee6e317e183011af1e3a33f9e39e53d2a8c1554d8068ca57186310",
+    "sealed_at": "2026-06-29T16:13:49Z",
     "path": "/home/default/Desktop/SG/NewLatest/lib/bin/field-wave-asm.ammocode-field.json",
     "g1id_meld": {
       "id": "g1id",
@@ -36,8 +36,8 @@
         "source": "lib/sovereign-time.py",
         "clock": "lib/sovereign-clock.py",
         "schema": "sovereign-time-meld-input/v1",
-        "linear_ns": 1782749007672931573,
-        "derived_utc": "2026-06-29T16:03:27Z",
+        "linear_ns": 1782749630008011869,
+        "derived_utc": "2026-06-29T16:13:50Z",
         "sealed": true,
         "synced": false,
         "never_desync": true,
@@ -47,7 +47,7 @@
         "citation": "ironclad:g1id:2"
       },
       "example_valid": true,
-      "updated": "2026-06-29T16:03:27Z"
+      "updated": "2026-06-29T16:13:50Z"
     }
   }
 }

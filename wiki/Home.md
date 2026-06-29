@@ -1,8 +1,8 @@
 # AmmoOS — Field Operating System
 
-**[→ GitHub: ZacharyGeurts/AmmoOS](https://github.com/ZacharyGeurts/AmmoOS)** · [Manual](https://zacharygeurts.github.io/AmmoOS/) · [Stack hub](https://zacharygeurts.github.io/ZacharyGeurts/stack.html) · [Release v2.0.0-beta3](https://github.com/ZacharyGeurts/AmmoOS/releases/tag/v2.0.0-beta3)
+**[→ GitHub: ZacharyGeurts/AmmoOS](https://github.com/ZacharyGeurts/AmmoOS)** · [Manual](https://zacharygeurts.github.io/AmmoOS/) · [Stack hub](https://zacharygeurts.github.io/ZacharyGeurts/stack.html) · [Release v2.0.0-beta3.1](https://github.com/ZacharyGeurts/AmmoOS/releases/tag/v2.0.0-beta3.1)
 
-**AmmoOS 2.0.0-beta3** — field OS on loopback `127.0.0.1`. Queen Browser shell, NEXUS C2, KILROY kernel, ZNetwork pipe. All stack components ship inside the AmmoOS tree.
+**AmmoOS 2.0.0-beta3.1** — field OS on loopback `127.0.0.1`. Queen Browser shell, NEXUS C2, KILROY kernel, ZNetwork pipe. All stack components ship inside the AmmoOS tree.
 
 > **TL;DR:** `git clone https://github.com/ZacharyGeurts/AmmoOS.git` → `./scripts/wire-stack.sh` → `sudo ./install-all.sh` → **http://127.0.0.1:9477/field**
 
@@ -27,7 +27,7 @@ AmmoOS is the sovereign field operating system — not a traditional desktop rep
 ```bash
 git clone https://github.com/ZacharyGeurts/AmmoOS.git
 cd AmmoOS
-git checkout v2.0.0-beta3
+git checkout v2.0.0-beta3.1
 ./scripts/wire-stack.sh
 sudo ./install-all.sh
 ```

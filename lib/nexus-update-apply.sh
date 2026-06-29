@@ -191,7 +191,7 @@ _find_extract_root() {
   local ver="${TARGET#v}"
   local candidates=(
     "${dest}/ammoos-${ver}"
-    "${dest}/ammooos-${ver}"
+    "${dest}/ammoos-${ver}"
     "${dest}/nexus-shield-${ver}"
     "${dest}/nexus-shield-${TARGET}"
   )

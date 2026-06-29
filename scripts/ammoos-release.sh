@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
-AMMOOS_VERSION="${AMMOOS_VERSION:-2.0.0-beta3}"
+AMMOOS_VERSION="${AMMOOS_VERSION:-2.0.0-beta3.1}"
 TAG="v${AMMOOS_VERSION}"
 PUSH=0
 
@@ -18,7 +18,7 @@ done
 export SG_ROOT AMMOOS_VERSION NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
 export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-$ROOT/.nexus-state}"
 
-log() { printf '[%s] ammooos-release %s\n' "$(date +%H:%M:%S)" "$*"; }
+log() { printf '[%s] ammoos-release %s\n' "$(date +%H:%M:%S)" "$*"; }
 
 if [[ "${SKIP_BETA_PIPELINE:-0}" != "1" ]]; then
   log "beta pipeline (AmmoLang)"

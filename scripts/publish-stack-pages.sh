@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VER="${STACK_VERSION:-2.0.0-beta3}"
+VER="${STACK_VERSION:-2.0.0-beta3.1}"
 GROK_VER="${GROK16_VERSION:-5.2.0}"
 
 log() { echo "==> $*"; }

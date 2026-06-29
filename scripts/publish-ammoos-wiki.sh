@@ -6,11 +6,22 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WIKI_SRC="${ROOT}/wiki"
 WIKI_REPO="${WIKI_REPO:-${ROOT}/.wiki-ammoos-publish}"
 WIKI_REMOTE="${WIKI_REMOTE:-https://github.com/ZacharyGeurts/AmmoOS.wiki.git}"
-VER="${AMMOOS_VERSION:-2.0.0-beta3}"
+VER="${AMMOOS_VERSION:-2.0.0-beta3.1}"
+REPO="${AMMOOS_GITHUB_REPO:-ZacharyGeurts/AmmoOS}"
 
 [[ -d "$WIKI_SRC" ]] || { echo "Missing ${WIKI_SRC}" >&2; exit 1; }
 
-gh repo edit ZacharyGeurts/AmmoOS --enable-wiki 2>/dev/null || true
+gh repo edit "$REPO" --enable-wiki 2>/dev/null || true
+
+# Bootstrap wiki git repo on GitHub when .wiki clone is not yet provisioned.
+if ! git ls-remote "$WIKI_REMOTE" HEAD 2>/dev/null | grep -q .; then
+  home_md="${WIKI_SRC}/Home.md"
+  if [[ -f "$home_md" ]]; then
+    gh api "repos/${REPO}/wiki/pages" \
+      -f title=Home \
+      -f body="$(cat "$home_md")" 2>/dev/null || true
+  fi
+fi
 
 if [[ ! -d "${WIKI_REPO}/.git" ]]; then
   rm -rf "$WIKI_REPO"
@@ -27,10 +38,14 @@ fi
 
 rsync -a --delete --exclude='.git' "${WIKI_SRC}/" "${WIKI_REPO}/"
 
-cd "$WIKI_REPO"
-git add -A
-git diff --cached --quiet && { echo "AmmoOS wiki up to date"; exit 0; }
-git -c user.email="gzac5314@users.noreply.github.com" -c user.name="ZacharyGeurts" \
-  commit -m "wiki: AmmoOS ${VER} — stack tie-in + MCP lane"
-git push origin master 2>/dev/null || git push origin main 2>/dev/null || git push -u origin HEAD
-echo "Wiki: https://github.com/ZacharyGeurts/AmmoOS/wiki"
+git -C "$WIKI_REPO" add -A
+if git -C "$WIKI_REPO" diff --cached --quiet; then
+  echo "AmmoOS wiki up to date"
+  exit 0
+fi
+git -C "$WIKI_REPO" -c user.email="gzac5314@users.noreply.github.com" -c user.name="ZacharyGeurts" \
+  commit -m "wiki: AmmoOS ${VER} — stack tie-in"
+git -C "$WIKI_REPO" push origin master 2>/dev/null \
+  || git -C "$WIKI_REPO" push origin main 2>/dev/null \
+  || git -C "$WIKI_REPO" push -u origin HEAD
+echo "Wiki: https://github.com/${REPO}/wiki"

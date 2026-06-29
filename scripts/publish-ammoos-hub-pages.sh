@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VER="${AMMOOS_VERSION:-2.0.0-beta3}"
+VER="${AMMOOS_VERSION:-2.0.0-beta3.1}"
 STAGE="${ROOT}/.pages-hub-staging"
 HUB_PY="${ROOT}/lib/page_ammoos_hub.py"
 OWNER="${GITHUB_PAGES_OWNER:-ZacharyGeurts}"
@@ -18,7 +18,15 @@ fi
 
 pages_source() {
   local repo="$1"
-  gh api "repos/${OWNER}/${repo}/pages" --jq '.source | "\(.branch)\t\(.path)"' 2>/dev/null || echo -e "gh-pages\t/"
+  local branch path
+  branch="$(gh api "repos/${OWNER}/${repo}/pages" --jq '.source.branch // empty' 2>/dev/null || true)"
+  if [[ -n "$branch" ]]; then
+    path="$(gh api "repos/${OWNER}/${repo}/pages" --jq '.source.path // "/"' 2>/dev/null || echo "/")"
+    path="${path#/}"
+    printf '%s\t%s\n' "$branch" "$path"
+  else
+    echo -e "main\tdocs"
+  fi
 }
 
 publish_one() {

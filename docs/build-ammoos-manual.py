@@ -259,7 +259,7 @@ sudo ./install-all.sh</code></pre>
   <h2>Windows</h2>
   <pre><code># PowerShell (see stealth.ps1 in release assets)
 # Or WSL2:
-tar -xzf ammooos-{VER}-source.tar.gz && cd ammooos-{VER}
+tar -xzf ammoos-{VER}-source.tar.gz && cd ammoos-{VER}
 sudo ./install-all.sh</code></pre>
   <h2>Verify</h2>
   <pre><code>./scripts/ammoos-launch-verify.sh</code></pre>

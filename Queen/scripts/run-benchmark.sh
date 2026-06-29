@@ -38,7 +38,13 @@ fi
 
 WEB_SHELL="http://127.0.0.1:${PORT}/world/browser.html?benchmark=1"
 echo "Queen benchmark · web shell → ${WEB_SHELL}" >&2
-if command -v xdg-open >/dev/null 2>&1; then
-  exec xdg-open "${WEB_SHELL}"
+OPEN_PY="${NEXUS_INSTALL_ROOT:-${ROOT}/..}/lib/field-queen-browser-open.py"
+if [[ -f "${OPEN_PY}" ]]; then
+  exec env \
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${ROOT}/..}" \
+    QUEEN_ROOT="${ROOT}" \
+    QUEEN_BROWSER_URL="${WEB_SHELL}" \
+    QUEEN_NO_OS_BROWSER=1 \
+    "${PY:-pythong}" "${OPEN_PY}" open
 fi
 exec curl -sf "${WEB_SHELL}" >/dev/null

@@ -1,6 +1,6 @@
 **[→ GitHub: AmmoOS](https://github.com/ZacharyGeurts/AmmoOS)**
 
-**[Home](Home)** · **[AmmoOS Beta 3](AmmoOS-Beta3)**
+**[Home](Home)** · **[Beta 3.1](AmmoOS-Beta3.1)** · **[Beta 3](AmmoOS-Beta3)**
 
 ### Install & I/O
 - [Installers](Installers)

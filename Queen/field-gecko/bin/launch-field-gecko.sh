@@ -78,9 +78,17 @@ BIN="$(resolve_binary)" || {
   echo "Queen Browser: no Field Engine binary — open Queen web shell: ${WEB_SHELL}" >&2
   echo "  C2 desktop: ${C2_URL}" >&2
   echo "  Build engine: ${ROOT}/scripts/bootstrap-field-gecko.sh" >&2
-  if command -v xdg-open >/dev/null 2>&1; then
-    exec xdg-open "${WEB_SHELL}"
+  OPEN_PY="${NEXUS_INSTALL_ROOT:-${QUEEN}/..}/lib/field-queen-browser-open.py"
+  if [[ -f "${OPEN_PY}" ]]; then
+    exec env \
+      NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${QUEEN}/..}" \
+      NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/var/lib/nexus-shield}" \
+      QUEEN_ROOT="${QUEEN}" \
+      QUEEN_BROWSER_URL="${WEB_SHELL}" \
+      QUEEN_NO_OS_BROWSER=1 \
+      "${PY:-pythong}" "${OPEN_PY}" open
   fi
+  echo "Open Queen web shell manually: ${WEB_SHELL}" >&2
   exit 1
 }
 

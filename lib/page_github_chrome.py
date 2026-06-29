@@ -76,7 +76,7 @@ def hub_chrome_top(
     ammoos_repo: str = GITHUB_REPO,
     ammoos_pages: str = PAGES_HOME,
     stack_url: str = STACK_HUB,
-    release_tag: str = "v2.0.0-beta3",
+    release_tag: str = "v2.0.0-beta3.1",
 ) -> str:
     sib = sibling_label or sibling_repo.replace("https://github.com/", "")
     rel = f"{ammoos_repo}/releases/tag/{release_tag}"

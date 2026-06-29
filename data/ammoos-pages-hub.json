@@ -4,7 +4,7 @@
   "motto": "One manual in AmmoOS — sibling repos publish redirect stubs only.",
   "canonical_base": "https://zacharygeurts.github.io/AmmoOS/",
   "canonical_repo": "https://github.com/ZacharyGeurts/AmmoOS",
-  "release_tag": "v2.0.0-beta3",
+  "release_tag": "v2.0.0-beta3.1",
   "stack_hub_page": "stack-hub.html",
   "owner": "ZacharyGeurts",
   "repos": {

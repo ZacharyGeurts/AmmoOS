@@ -70,10 +70,10 @@ See [display example page](https://zacharygeurts.github.io/ZacharyGeurts/display
 
 | Component | Version |
 |-----------|---------|
-| AmmoOS | `2.0.0-beta3` (building now) |
+| AmmoOS | `2.0.0-beta3.1` |
 | Queen | ships in AmmoOS tree + [Queen](https://github.com/ZacharyGeurts/Queen) hub |
 | ZNetwork | `2.1.0` Stack |
 | KILROY | `1.0.0-taco` |
-| Grok16 | `5.1.0` |
+| Grok16 | `5.2.0` |
 
 *Navigate by layer — install AmmoOS once, wire siblings with `scripts/wire-stack.sh`.*

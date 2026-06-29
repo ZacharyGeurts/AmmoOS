@@ -157,7 +157,7 @@ lines = [
     "## Quick start (Linux x86_64)",
     "",
     "\`\`\`bash",
-    f"tar xzf ammooos-{ver}-source.tar.gz && cd ammooos-{ver}",
+    f"tar xzf ammoos-{ver}-source.tar.gz && cd ammoos-{ver}",
     "sudo ./install-all.sh",
     "# browser opens http://127.0.0.1:9477/field",
     "\`\`\`",
