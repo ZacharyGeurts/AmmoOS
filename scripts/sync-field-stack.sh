@@ -13,11 +13,10 @@ export NEXUS_INSTALL_ROOT="${ROOT}"
 export NEXUS_STATE_DIR="${STATE}"
 export NEXUS_FIELD_STANDALONE=1
 export QUEEN_ROOT="${QUEEN}"
-export GROK16_ROOT="${GROK16_ROOT:-${SG}/Grok16}"
 export FINAL_EYE_ROOT="${FINAL_EYE_ROOT:-${SG}/Final_Eye}"
 export FINAL_EAR_ROOT="${FINAL_EAR_ROOT:-${SG}/Final_Ear}"
-export ZOCR_ROOT="${ZOCR_ROOT:-${SG}/ZNEWOCR}"
-export ZNEWOCR_ROOT="${ZNEWOCR_ROOT:-${ZOCR_ROOT}}"
+export FINAL_EYE_ROOT="${FINAL_EYE_ROOT:-${ROOT}/Final_Eye}"
+
 export WORLD_REDATA_ROOT="${WORLD_REDATA_ROOT:-${SG}/World_Redata}"
 export HOSTESS7_ROOT="${HOSTESS7_ROOT:-${NEXUS_INSTALL_ROOT:-${SG}/NewLatest}/Hostess7}"
 # shellcheck source=/dev/null
@@ -49,7 +48,7 @@ echo "  Queen:     ${QUEEN}"
 echo "  Grok16:    ${GROK16_ROOT}"
 echo "  Final_Eye: ${FINAL_EYE_ROOT} ($(read_version "${FINAL_EYE_ROOT}/VERSION"))"
 echo "  Final_Ear: ${FINAL_EAR_ROOT} ($(read_version "${FINAL_EAR_ROOT}/VERSION"))"
-echo "  ZOCR:      ${ZOCR_ROOT}"
+echo "  ZOCR:      ${FINAL_EYE_ROOT}"
 echo "  Redata:    ${WORLD_REDATA_ROOT}"
 echo ""
 
@@ -95,9 +94,9 @@ sg = Path(os.environ["SG_ROOT"])
 root = Path(os.environ["NEXUS_INSTALL_ROOT"])
 queen = Path(os.environ["QUEEN_ROOT"])
 eye = Path(os.environ.get("FINAL_EYE_ROOT", str(sg / "Final_Eye")))
-znew = Path(os.environ.get("ZNEWOCR_ROOT", os.environ.get("ZOCR_ROOT", str(sg / "ZNEWOCR"))))
+znew = Path(os.environ.get("Final_Eye_ROOT", os.environ.get("FINAL_EYE_ROOT", str(sg / "Final_Eye"))))
 ear = Path(os.environ["FINAL_EAR_ROOT"])
-zocr = Path(os.environ.get("ZOCR_ROOT", str(znew)))
+zocr = Path(os.environ.get("FINAL_EYE_ROOT", str(znew)))
 wrdt = Path(os.environ.get("WORLD_REDATA_ROOT", str(sg / "World_Redata")))
 g16 = Path(os.environ["GROK16_ROOT"])
 
@@ -117,11 +116,8 @@ doc["layers"]["final_eye"] = {
     "role": "Assist tenant — vision offense, entity weapons, IRTN mesh",
     "port": int(os.environ.get("ZOCR_PORT", os.environ.get("FINAL_EYE_PORT", "9479"))),
 }
-doc["layers"]["znewocr"] = {
-    "root": str(znew.relative_to(sg.parent) if znew.is_relative_to(sg.parent) else znew),
-    "version": ver(znew) or "1.3.0-znewocr",
-    "role": "SG field OCR home — primary vision GUI on :9479",
-}
+doc["layers"].pop("znewocr", None)
+doc["layers"].pop("zocr", None)
 doc["layers"]["final_ear"] = {
     "root": str(ear.relative_to(sg.parent) if ear.is_relative_to(sg.parent) else ear),
     "version": ver(ear) or "1.0.0",
@@ -130,11 +126,7 @@ doc["layers"]["final_ear"] = {
     "bridge": "Queen/lib/queen-earball.py",
 }
 doc["layers"]["final_eye"]["version"] = ver(eye) or doc["layers"].get("final_eye", {}).get("version", "1.3.0")
-legacy = sg / "ZOCR"
-doc["layers"]["zocr"] = {
-    "root": str(legacy.relative_to(sg.parent) if legacy.is_relative_to(sg.parent) else legacy),
-    "role": "Legacy ZOCR root — forge witness, fallback when ZNEWOCR absent",
-}
+doc["layers"]["final_eye"]["root"] = str(eye.relative_to(sg.parent) if eye.is_relative_to(sg.parent) else eye)
 doc["layers"]["world_redata"] = {
     "root": str(wrdt.relative_to(sg.parent) if wrdt.is_relative_to(sg.parent) else wrdt),
     "port": int(os.environ.get("WORLD_REDATA_WEB_PORT", "9478")),
@@ -205,7 +197,7 @@ doc["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 doc.setdefault("stack", {})
 doc["stack"]["final_eye"] = "Final_Eye"
 doc["stack"]["final_ear"] = "Final_Ear"
-doc["stack"]["zocr"] = "ZOCR"
+doc["stack"]["final_eye"] = "Final_Eye"
 doc["stack"]["world_redata"] = "World_Redata"
 doc.setdefault("launch", {})
 doc["launch"]["g16_build"] = "NewLatest/Queen/scripts/g16-build.sh"

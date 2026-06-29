@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# System install only — daily use: ./nexus.sh (NEXUS Field OS launcher).
 # NEXUS Field — system install via NXF manifest (one admin approval).
 set -euo pipefail
 

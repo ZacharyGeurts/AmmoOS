@@ -13,7 +13,7 @@
   --qm-warn: #f59e0b;
   --qm-danger: #f43f5e;
   --qm-radius: 12px;
-  --qm-font: system-ui, "Segoe UI", Roboto, sans-serif;
+  --qm-font: system-ui, sans-serif;
   --qm-mono: ui-monospace, "Cascadia Code", monospace;
   --qm-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
 }

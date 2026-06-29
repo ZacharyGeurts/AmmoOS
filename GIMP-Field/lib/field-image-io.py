@@ -15,7 +15,12 @@ from typing import Any
 
 SG = Path(os.environ.get("SG_ROOT", Path(__file__).resolve().parents[2]))
 WR = Path(os.environ.get("WORLD_REDATA_ROOT", SG / "World_Redata"))
-GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
+_SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+if str(_SG_PATHS_LIB) not in sys.path:
+    sys.path.insert(0, str(_SG_PATHS_LIB))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 RTX_CACHE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "ammoos-rtx-gate"
 RTX_PERMIT_FILE = RTX_CACHE / "permit"
 

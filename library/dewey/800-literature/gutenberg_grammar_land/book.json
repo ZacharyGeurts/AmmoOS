@@ -11,5 +11,48 @@
   "journal": "textbook",
   "cover": "/library/assets/covers/gutenberg_grammar_land/front.png",
   "cover_asset": "library/assets/covers/gutenberg_grammar_land/front.png",
-  "updated": "2026-06-29T08:56:32Z"
+  "updated": "2026-06-29T10:47:38Z",
+  "keywords": [
+    "grammar",
+    "land",
+    "gutenberg",
+    "children",
+    "project",
+    "800",
+    "literature",
+    "rhetoric",
+    "english",
+    "ela",
+    "textbook"
+  ],
+  "keyword_placement": {
+    "title": [
+      "grammar",
+      "land",
+      "gutenberg",
+      "children"
+    ],
+    "author": [
+      "project"
+    ],
+    "dewey": [
+      "800",
+      "literature",
+      "rhetoric"
+    ],
+    "subject": [
+      "english",
+      "ela"
+    ],
+    "collection": [],
+    "format": [
+      "textbook"
+    ],
+    "shelf": [],
+    "description": [],
+    "auto": []
+  },
+  "card_id": "CAT-800-GUTENBERG-GRAMMAR-LAND",
+  "catalog_call_number": "800",
+  "catalog_updated": "2026-06-29T11:03:55Z"
 }

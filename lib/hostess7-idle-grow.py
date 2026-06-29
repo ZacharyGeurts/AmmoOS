@@ -262,6 +262,7 @@ def run_idle_cycle(*, force: bool = False) -> dict[str, Any]:
 
     explore = _explore_internet(topic)
     growth_note = ""
+    ruling_note = ""
     try:
         import importlib.util
 
@@ -281,6 +282,19 @@ def run_idle_cycle(*, force: bool = False) -> dict[str, Any]:
     except Exception:
         pass
 
+    if cycle_n % 3 == 0:
+        try:
+            import importlib.util
+
+            rspec = importlib.util.spec_from_file_location("h7ruler", INSTALL / "lib" / "hostess7-brain-ruler.py")
+            if rspec and rspec.loader:
+                rmod = importlib.util.module_from_spec(rspec)
+                rspec.loader.exec_module(rmod)
+                pulse = rmod.grow_brain(online=False, expand=True)
+                ruling_note = f"brain_ruler_grow score={pulse.get('sovereignty', {}).get('score', 0)}"
+        except Exception:
+            pass
+
     row = {
         "ok": True,
         "schema": "hostess7-idle-grow/v1",
@@ -293,6 +307,7 @@ def run_idle_cycle(*, force: bool = False) -> dict[str, Any]:
         "explore": explore,
         "expansion": expansion,
         "growth": growth_note,
+        "ruling": ruling_note or None,
     }
     _append_log(row)
     st.update({

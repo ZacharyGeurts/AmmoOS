@@ -29,24 +29,19 @@ def _ensure_playwright():
 
 
 def _ocr(img_path: Path) -> str:
-    tess = None
-    for candidate in ("tesseract", "/usr/bin/tesseract"):
+    install = Path(__file__).resolve().parents[1]
+    bridge = install / "lib" / "final-eye-h7-ocr.py"
+    if bridge.is_file():
         try:
-            proc = subprocess.run([candidate, "--version"], capture_output=True, timeout=5)
-            if proc.returncode == 0:
-                tess = candidate
-                break
-        except (FileNotFoundError, PermissionError, subprocess.TimeoutExpired):
-            continue
-    if not tess:
-        return ""
-    for extra in (["-l", "eng", "--psm", "6"], []):
-        try:
-            proc = subprocess.run([tess, str(img_path), "stdout", *extra], capture_output=True, text=True, timeout=30)
-            if proc.returncode == 0 and proc.stdout.strip():
-                return proc.stdout
-        except (FileNotFoundError, PermissionError, subprocess.TimeoutExpired):
-            continue
+            proc = subprocess.run(
+                [sys.executable, str(bridge), "ocr", str(img_path)],
+                capture_output=True, text=True, timeout=90, check=False,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(install)},
+            )
+            doc = json.loads(proc.stdout or "{}")
+            return str(doc.get("text") or doc.get("ocr") or "")
+        except (subprocess.SubprocessError, OSError, json.JSONDecodeError):
+            pass
     return ""
 
 

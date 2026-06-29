@@ -14,7 +14,9 @@ from typing import Any
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
 SG = Path(os.environ.get("SG_ROOT", INSTALL.parent.parent))
-GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 DOCTRINE = INSTALL / "data" / "field-chips-iron-steel-plate-doctrine.json"
 PANEL = STATE / "field-chips-plate-stack-panel.json"
 BATTERY = STATE / "field-chips-plate-stack.json"

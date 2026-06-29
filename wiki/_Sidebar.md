@@ -1,4 +1,6 @@
-**[Home](Home)**
+**[→ GitHub: AmmoOS](https://github.com/ZacharyGeurts/AmmoOS)**
+
+**[Home](Home)** · **[AmmoOS Beta 3](AmmoOS-Beta3)**
 
 ### Install & I/O
 - [Installers](Installers)
@@ -31,4 +33,6 @@
 - [AMOURANTHRTX Integration](AMOURANTHRTX-Integration)
 - [Licensing](Licensing)
 
-**[GitHub Pages Manual](https://zacharygeurts.github.io/NEXUS-Shield/)**
+**[AmmoOS Manual](https://zacharygeurts.github.io/AmmoOS/)** · **[Stack hub](https://zacharygeurts.github.io/ZacharyGeurts/stack.html)**
+
+**[→ GitHub: AmmoOS](https://github.com/ZacharyGeurts/AmmoOS)**

@@ -1,7 +1,9 @@
 {
   "schema": "eye-ear-plate/v1",
-  "title": "Eye ↔ Ear ↔ Mouth Plate — vision, hearing, speech on one melded plate",
-  "motto": "Plate together, not wire — Eye · Ear · Mouth quorum before compiler optimizes.",
+  "title": "Eye ↔ Ear ↔ Mouth Plate — Final_Eye OCR + eyeball melded with ear and mouth",
+  "motto": "Plate together, not wire — Final_Eye · Ear · Mouth quorum before compiler optimizes.",
+  "final_eye_doctrine": "data/final-eye-plate-doctrine.json",
+  "g16": {"version": "5.1.0", "profile": "g16_field_opt"},
   "ironclad_ref": "data/ironclad-doctrine.json",
   "meld_citation": "ironclad:meld:2",
   "fusion_engine": "Final_Ear/zocr_eye_ear_fusion.py",

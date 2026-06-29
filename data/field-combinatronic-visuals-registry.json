@@ -1,11 +1,11 @@
 {
   "schema": "field-combinatronic-visuals-registry/v1",
-  "generated": "2026-06-29T09:10:32Z",
+  "generated": "2026-06-29T12:24:30Z",
   "install_root": "/home/default/Desktop/SG/NewLatest",
-  "chip_count": 90,
+  "chip_count": 105,
   "lang_count": 58,
-  "file_count": 4317,
-  "ok_count": 4259,
+  "file_count": 4347,
+  "ok_count": 4289,
   "broken_count": 58,
   "patterns": {
     "chip_png": {
@@ -2009,6 +2009,306 @@
       "status": "ok",
       "bytes": 482176,
       "sha256": "92df3df30af479a7a127a6220959a09d5640c7a7f94a88551d46a8ad541f96d4",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_6502.png",
+      "chip_id": "chips_6502",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534864,
+      "sha256": "fdffed975f60b0e48f3bd34505be4da742eb4b9ab3082b1216e1702142834f32",
+      "repair_cmd": "chip chips_6502"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_6502.png",
+      "chip_id": "chips_6502",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534864,
+      "sha256": "fdffed975f60b0e48f3bd34505be4da742eb4b9ab3082b1216e1702142834f32",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_2c02.png",
+      "chip_id": "chips_2c02",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 533918,
+      "sha256": "19cbb00f93399956128529f3adfa3f4500c1b5b4b443eb3bdf14578c556afef2",
+      "repair_cmd": "chip chips_2c02"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_2c02.png",
+      "chip_id": "chips_2c02",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 533918,
+      "sha256": "19cbb00f93399956128529f3adfa3f4500c1b5b4b443eb3bdf14578c556afef2",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_68000.png",
+      "chip_id": "chips_68000",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 536011,
+      "sha256": "95647368dd64919f6239829cf7347212a5989ecaeba3c747a46441a9da07ac95",
+      "repair_cmd": "chip chips_68000"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_68000.png",
+      "chip_id": "chips_68000",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 536011,
+      "sha256": "95647368dd64919f6239829cf7347212a5989ecaeba3c747a46441a9da07ac95",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_z80.png",
+      "chip_id": "chips_z80",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 533727,
+      "sha256": "b6effbc72c02ee8ad86c6b345752bf1e43405445d45c6ebc709399d60d2bc264",
+      "repair_cmd": "chip chips_z80"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_z80.png",
+      "chip_id": "chips_z80",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 533727,
+      "sha256": "b6effbc72c02ee8ad86c6b345752bf1e43405445d45c6ebc709399d60d2bc264",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_ym2612.png",
+      "chip_id": "chips_ym2612",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 530813,
+      "sha256": "6e3f6329acd5422b4564112cb964e026b264695e2c9146e0efb4c80f1306d3e3",
+      "repair_cmd": "chip chips_ym2612"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_ym2612.png",
+      "chip_id": "chips_ym2612",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 530813,
+      "sha256": "6e3f6329acd5422b4564112cb964e026b264695e2c9146e0efb4c80f1306d3e3",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_sn76489.png",
+      "chip_id": "chips_sn76489",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 557237,
+      "sha256": "74166c0e32610de59f1fc39a758ee1998c3864c618f5bc2b0768fe636aa2a6d0",
+      "repair_cmd": "chip chips_sn76489"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_sn76489.png",
+      "chip_id": "chips_sn76489",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 557237,
+      "sha256": "74166c0e32610de59f1fc39a758ee1998c3864c618f5bc2b0768fe636aa2a6d0",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_tia.png",
+      "chip_id": "chips_tia",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 532633,
+      "sha256": "1476ace58ee779da47a7a24224ca2c0ad0f02811b94cf0caacadae6614415e60",
+      "repair_cmd": "chip chips_tia"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_tia.png",
+      "chip_id": "chips_tia",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 532633,
+      "sha256": "1476ace58ee779da47a7a24224ca2c0ad0f02811b94cf0caacadae6614415e60",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_2a03.png",
+      "chip_id": "chips_2a03",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534626,
+      "sha256": "17a0ded37570ca915c55f6385d7aee129b51db55dafe972e37689b0d2795bed0",
+      "repair_cmd": "chip chips_2a03"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_2a03.png",
+      "chip_id": "chips_2a03",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534626,
+      "sha256": "17a0ded37570ca915c55f6385d7aee129b51db55dafe972e37689b0d2795bed0",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_6507.png",
+      "chip_id": "chips_6507",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 536085,
+      "sha256": "b843161f887d2b693a7f9f2d9ea464b58420c0f3c3d5e7e5590603f1f2cec134",
+      "repair_cmd": "chip chips_6507"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_6507.png",
+      "chip_id": "chips_6507",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 536085,
+      "sha256": "b843161f887d2b693a7f9f2d9ea464b58420c0f3c3d5e7e5590603f1f2cec134",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_65816.png",
+      "chip_id": "chips_65816",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534806,
+      "sha256": "62584957b113f468e59486d6b59cb354adcb0feffa062b60a310dde9cf01d445",
+      "repair_cmd": "chip chips_65816"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_65816.png",
+      "chip_id": "chips_65816",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534806,
+      "sha256": "62584957b113f468e59486d6b59cb354adcb0feffa062b60a310dde9cf01d445",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_8080.png",
+      "chip_id": "chips_8080",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 533521,
+      "sha256": "f52bc8da65433275cfb652738268621f6e60b4cda7662c681a269949b2fa9f1c",
+      "repair_cmd": "chip chips_8080"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_8080.png",
+      "chip_id": "chips_8080",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 533521,
+      "sha256": "f52bc8da65433275cfb652738268621f6e60b4cda7662c681a269949b2fa9f1c",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_fieldchips.png",
+      "chip_id": "chips_fieldchips",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 555461,
+      "sha256": "daf71e442d776f587d83c88de214b0997e09b23e49a21442158c8c4edf423ca0",
+      "repair_cmd": "chip chips_fieldchips"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_fieldchips.png",
+      "chip_id": "chips_fieldchips",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 555461,
+      "sha256": "daf71e442d776f587d83c88de214b0997e09b23e49a21442158c8c4edf423ca0",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_sid.png",
+      "chip_id": "chips_sid",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534513,
+      "sha256": "6e04e9c61c4bcba2703674122ffc24a69630a89509b5709745ae278eeca8bab3",
+      "repair_cmd": "chip chips_sid"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_sid.png",
+      "chip_id": "chips_sid",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 534513,
+      "sha256": "6e04e9c61c4bcba2703674122ffc24a69630a89509b5709745ae278eeca8bab3",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_sm83.png",
+      "chip_id": "chips_sm83",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 531383,
+      "sha256": "13e8fe5cb220bc5fd72e0a0e1786ef36b26e9e1545a452738c163f5da8cd7678",
+      "repair_cmd": "chip chips_sm83"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_sm83.png",
+      "chip_id": "chips_sm83",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 531383,
+      "sha256": "13e8fe5cb220bc5fd72e0a0e1786ef36b26e9e1545a452738c163f5da8cd7678",
+      "repair_cmd": "repair mirror"
+    },
+    {
+      "pattern": "chip_png",
+      "path": "data/combinatronic-visuals/chips/chips_spc700.png",
+      "chip_id": "chips_spc700",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 530677,
+      "sha256": "a0c710bf4e4d1e03f0dd5cf0730feb9200d2451169f4803eb1de293fcff66cc0",
+      "repair_cmd": "chip chips_spc700"
+    },
+    {
+      "pattern": "chip_mirror",
+      "path": "Queen/world/assets/combinatronic/chips/chips_spc700.png",
+      "chip_id": "chips_spc700",
+      "lang_id": null,
+      "status": "ok",
+      "bytes": 530677,
+      "sha256": "a0c710bf4e4d1e03f0dd5cf0730feb9200d2451169f4803eb1de293fcff66cc0",
       "repair_cmd": "repair mirror"
     },
     {
@@ -40997,7 +41297,7 @@
       "chip_id": null,
       "lang_id": "ada",
       "status": "bad_magic",
-      "bytes": 16786,
+      "bytes": 32412,
       "sha256": null,
       "repair_cmd": "book ada"
     },
@@ -41008,7 +41308,7 @@
       "lang_id": "ada",
       "status": "ok",
       "bytes": 733,
-      "sha256": "2b595a32d68a4f7b10c22f749100e3821945607c15ff7dfbd9edb56a673a2f38",
+      "sha256": "ec2a4ccdd66a8df8e0ffc2f934baf5e6c0e762ee9dd6566c98c670f1916e7bbe",
       "repair_cmd": "book ada"
     },
     {
@@ -41037,7 +41337,7 @@
       "chip_id": null,
       "lang_id": "algol",
       "status": "bad_magic",
-      "bytes": 15397,
+      "bytes": 29917,
       "sha256": null,
       "repair_cmd": "book algol"
     },
@@ -41048,7 +41348,7 @@
       "lang_id": "algol",
       "status": "ok",
       "bytes": 749,
-      "sha256": "7f629a32713127dd3d0a8ea5b5204caa626ad132a60c8b690e3a95cbc5d90341",
+      "sha256": "60e0272de105a282b9936c411f740f17ea0b3c0bf4e7d7a83b51f7356247aaaf",
       "repair_cmd": "book algol"
     },
     {
@@ -41077,7 +41377,7 @@
       "chip_id": null,
       "lang_id": "ammolang",
       "status": "bad_magic",
-      "bytes": 19069,
+      "bytes": 33354,
       "sha256": null,
       "repair_cmd": "book ammolang"
     },
@@ -41088,7 +41388,7 @@
       "lang_id": "ammolang",
       "status": "ok",
       "bytes": 773,
-      "sha256": "ebf1460f032599bf3a5d8de0ece9a2806932e7b01022309f08f4091e01956f57",
+      "sha256": "9d14ba153b9f952521564bd564dfe80aa58c1fccd389c0eb4e12e2fa2f81616a",
       "repair_cmd": "book ammolang"
     },
     {
@@ -41117,7 +41417,7 @@
       "chip_id": null,
       "lang_id": "apl",
       "status": "bad_magic",
-      "bytes": 15417,
+      "bytes": 30343,
       "sha256": null,
       "repair_cmd": "book apl"
     },
@@ -41128,7 +41428,7 @@
       "lang_id": "apl",
       "status": "ok",
       "bytes": 733,
-      "sha256": "8d31c5653c047ffebd377a0fc88e615bff531f9ff6a0575d361f593f71a8212d",
+      "sha256": "c41489a3bb75c6447688c931b66c0ae53c8bf3266699bd9d06b9bb7d8b097f3c",
       "repair_cmd": "book apl"
     },
     {
@@ -41157,7 +41457,7 @@
       "chip_id": null,
       "lang_id": "asm",
       "status": "bad_magic",
-      "bytes": 16316,
+      "bytes": 32579,
       "sha256": null,
       "repair_cmd": "book asm"
     },
@@ -41168,7 +41468,7 @@
       "lang_id": "asm",
       "status": "ok",
       "bytes": 738,
-      "sha256": "32806779ab7d2067bf85ea7959a1641c3fc138ac625a25f2e4a3278cc1352e3b",
+      "sha256": "ab5f13b092b620e764678360bd76dd05e2d444b4134f4ebe937c608936e6a331",
       "repair_cmd": "book asm"
     },
     {
@@ -41197,7 +41497,7 @@
       "chip_id": null,
       "lang_id": "basic",
       "status": "bad_magic",
-      "bytes": 18066,
+      "bytes": 33635,
       "sha256": null,
       "repair_cmd": "book basic"
     },
@@ -41208,7 +41508,7 @@
       "lang_id": "basic",
       "status": "ok",
       "bytes": 749,
-      "sha256": "113bc5e4f5df78967eb7a1388159ac3ea0285a048f2615b908f8be6d519d800c",
+      "sha256": "0bf46200c2322ce267d1346f5280a693e4683dc1f768e84b54637d9f8882cc3d",
       "repair_cmd": "book basic"
     },
     {
@@ -41237,7 +41537,7 @@
       "chip_id": null,
       "lang_id": "c",
       "status": "bad_magic",
-      "bytes": 17320,
+      "bytes": 32293,
       "sha256": null,
       "repair_cmd": "book c"
     },
@@ -41248,7 +41548,7 @@
       "lang_id": "c",
       "status": "ok",
       "bytes": 717,
-      "sha256": "e28cda81b28e8d89f42d428396f093963971d4a8f13b1fda457494cb4938338b",
+      "sha256": "9a9d6c555897e52d724ada4e3672c868ecd4ea97549384bf4a17cf3c51eb7c5d",
       "repair_cmd": "book c"
     },
     {
@@ -41277,7 +41577,7 @@
       "chip_id": null,
       "lang_id": "clojure",
       "status": "bad_magic",
-      "bytes": 15663,
+      "bytes": 31940,
       "sha256": null,
       "repair_cmd": "book clojure"
     },
@@ -41288,7 +41588,7 @@
       "lang_id": "clojure",
       "status": "ok",
       "bytes": 765,
-      "sha256": "4b2192889f630acde94aa1ab10b9ec40b2ff1c02e39209feea08f1b76876ef93",
+      "sha256": "d0b32de119b2c2822d28fa3eacf15aff39f26deb2698263cbe96a152cd2f3f25",
       "repair_cmd": "book clojure"
     },
     {
@@ -41317,7 +41617,7 @@
       "chip_id": null,
       "lang_id": "cobol",
       "status": "bad_magic",
-      "bytes": 15610,
+      "bytes": 31902,
       "sha256": null,
       "repair_cmd": "book cobol"
     },
@@ -41328,7 +41628,7 @@
       "lang_id": "cobol",
       "status": "ok",
       "bytes": 749,
-      "sha256": "b3d5cd0565b5c97905994e8d45eb7ee623019d6fd5f72b3912d22cd65ad2e17b",
+      "sha256": "776e29fbbd9e4672674a570d102300fd703ddf0c8d640bd21ed45b49a391b909",
       "repair_cmd": "book cobol"
     },
     {
@@ -41357,7 +41657,7 @@
       "chip_id": null,
       "lang_id": "cobol_copy",
       "status": "bad_magic",
-      "bytes": 16100,
+      "bytes": 29892,
       "sha256": null,
       "repair_cmd": "book cobol_copy"
     },
@@ -41368,7 +41668,7 @@
       "lang_id": "cobol_copy",
       "status": "ok",
       "bytes": 789,
-      "sha256": "70df8b1adebfbd10b3c84f7279d4af35ea439aa1aa545628d6c50b4bbf9ca07c",
+      "sha256": "cceac346bc770ec7c1becce8ab2ac3ba06e62bcc142138e586407343c3996202",
       "repair_cmd": "book cobol_copy"
     },
     {
@@ -41397,7 +41697,7 @@
       "chip_id": null,
       "lang_id": "csharp",
       "status": "bad_magic",
-      "bytes": 16681,
+      "bytes": 33191,
       "sha256": null,
       "repair_cmd": "book csharp"
     },
@@ -41408,7 +41708,7 @@
       "lang_id": "csharp",
       "status": "ok",
       "bytes": 753,
-      "sha256": "e81cdbc1ef5be917e34fdf945dd35e8f69eb0f758a39a81c38b85677e169f4c4",
+      "sha256": "d616775bbb6de6b3ecee9d84eb11abdc7facf5d3001fea19d6adef8dcc3b4e99",
       "repair_cmd": "book csharp"
     },
     {
@@ -41437,7 +41737,7 @@
       "chip_id": null,
       "lang_id": "cxx",
       "status": "bad_magic",
-      "bytes": 17812,
+      "bytes": 33254,
       "sha256": null,
       "repair_cmd": "book cxx"
     },
@@ -41448,7 +41748,7 @@
       "lang_id": "cxx",
       "status": "ok",
       "bytes": 733,
-      "sha256": "e0074abcfdcb8c092ddf82f801e0704c8bf39ed5eac2d00647985e4dd16d1e2c",
+      "sha256": "2e53aa58811448abc87641917d00d059c8e43ab45acffb26d00179d435c2fd76",
       "repair_cmd": "book cxx"
     },
     {
@@ -41477,7 +41777,7 @@
       "chip_id": null,
       "lang_id": "d",
       "status": "bad_magic",
-      "bytes": 16185,
+      "bytes": 31893,
       "sha256": null,
       "repair_cmd": "book d"
     },
@@ -41488,7 +41788,7 @@
       "lang_id": "d",
       "status": "ok",
       "bytes": 717,
-      "sha256": "dd146f1cb8fb565de2e04a797de600d950ceca9286946a9e4edc3eb9e89c31a4",
+      "sha256": "f40d438c9e3ca95cccf6d657673721e6cc9ac351b2f3effa94cc5f7b409f7341",
       "repair_cmd": "book d"
     },
     {
@@ -41517,7 +41817,7 @@
       "chip_id": null,
       "lang_id": "dart",
       "status": "bad_magic",
-      "bytes": 15791,
+      "bytes": 32079,
       "sha256": null,
       "repair_cmd": "book dart"
     },
@@ -41528,7 +41828,7 @@
       "lang_id": "dart",
       "status": "ok",
       "bytes": 741,
-      "sha256": "9893a2482749ddcff199bb95e6b2738b3805f9f0aeb9e1885b2d4660b6a40882",
+      "sha256": "3a773582bd66dc890a0c8af4322f1e3c8b4e976c574de7de79c9abd064a073ea",
       "repair_cmd": "book dart"
     },
     {
@@ -41557,7 +41857,7 @@
       "chip_id": null,
       "lang_id": "delphi",
       "status": "bad_magic",
-      "bytes": 19069,
+      "bytes": 32067,
       "sha256": null,
       "repair_cmd": "book delphi"
     },
@@ -41568,7 +41868,7 @@
       "lang_id": "delphi",
       "status": "ok",
       "bytes": 757,
-      "sha256": "4b31ace00e3cc9aaee7d7e476028e354a39b03311822b0955a41d22777a20869",
+      "sha256": "c11b1851446fe00e2bb28a6aa3f2ce554a649f5aed3d832e8eba81a4f380e6b8",
       "repair_cmd": "book delphi"
     },
     {
@@ -41597,7 +41897,7 @@
       "chip_id": null,
       "lang_id": "economics",
       "status": "bad_magic",
-      "bytes": 20498,
+      "bytes": 37741,
       "sha256": null,
       "repair_cmd": "book economics"
     },
@@ -41608,7 +41908,7 @@
       "lang_id": "economics",
       "status": "ok",
       "bytes": 781,
-      "sha256": "b9502eb2b156ed2516998ed6af8916987aaed32ddf783b73de14bb505f9a85a6",
+      "sha256": "6afbd738a9c08aa0e56c1e1284aeb337120ef227fcd327d62a57da04a88ef59f",
       "repair_cmd": "book economics"
     },
     {
@@ -41637,7 +41937,7 @@
       "chip_id": null,
       "lang_id": "elixir",
       "status": "bad_magic",
-      "bytes": 15766,
+      "bytes": 31848,
       "sha256": null,
       "repair_cmd": "book elixir"
     },
@@ -41648,7 +41948,7 @@
       "lang_id": "elixir",
       "status": "ok",
       "bytes": 757,
-      "sha256": "2c1d3f28fc6bf4f11dad8fba5421db03b51324170de8e75aef8f2591ba6e73f5",
+      "sha256": "8e7e79673dc774d8f245c4bfbf3bc896b5f5a7a091496bc4418a4fa970b98761",
       "repair_cmd": "book elixir"
     },
     {
@@ -41677,7 +41977,7 @@
       "chip_id": null,
       "lang_id": "erlang",
       "status": "bad_magic",
-      "bytes": 15098,
+      "bytes": 31253,
       "sha256": null,
       "repair_cmd": "book erlang"
     },
@@ -41688,7 +41988,7 @@
       "lang_id": "erlang",
       "status": "ok",
       "bytes": 757,
-      "sha256": "62e0add237b1ec3693993f0964807e668418dad616f098cb77a32892a4b552b7",
+      "sha256": "da8a3b68c60b484e4e81fb86758bdb9ee9492bb52bd9e7749f51157533a962f5",
       "repair_cmd": "book erlang"
     },
     {
@@ -41717,7 +42017,7 @@
       "chip_id": null,
       "lang_id": "field",
       "status": "bad_magic",
-      "bytes": 15275,
+      "bytes": 31426,
       "sha256": null,
       "repair_cmd": "book field"
     },
@@ -41728,7 +42028,7 @@
       "lang_id": "field",
       "status": "ok",
       "bytes": 749,
-      "sha256": "a04c072484358d04e7348278838ca81bd5e04497adb744fb3d2a1dab2d645c32",
+      "sha256": "ca3999595521d7ecd7622175c1fc8834417af677151b1867e10b05e45d2516ef",
       "repair_cmd": "book field"
     },
     {
@@ -41757,7 +42057,7 @@
       "chip_id": null,
       "lang_id": "forth",
       "status": "bad_magic",
-      "bytes": 15871,
+      "bytes": 31068,
       "sha256": null,
       "repair_cmd": "book forth"
     },
@@ -41768,7 +42068,7 @@
       "lang_id": "forth",
       "status": "ok",
       "bytes": 749,
-      "sha256": "e151f78474e8325979edfc506f585e151c1e2a5df0558d54a649483acdf0043d",
+      "sha256": "633627d1726d1cb2253d5eb3a9214db3bcf0f68955c0ad10bb61bedaabb4bd21",
       "repair_cmd": "book forth"
     },
     {
@@ -41797,7 +42097,7 @@
       "chip_id": null,
       "lang_id": "fortran",
       "status": "bad_magic",
-      "bytes": 16082,
+      "bytes": 39634,
       "sha256": null,
       "repair_cmd": "book fortran"
     },
@@ -41808,7 +42108,7 @@
       "lang_id": "fortran",
       "status": "ok",
       "bytes": 765,
-      "sha256": "c13328a2235dfac70ff38d37b6d13181bc8a8ac1ab994f4551c62c8d4236586b",
+      "sha256": "ac95d864302f2d1fe0407a30d5eb807e11fd27ec9def14be2c420e9275d46090",
       "repair_cmd": "book fortran"
     },
     {
@@ -41837,7 +42137,7 @@
       "chip_id": null,
       "lang_id": "freebasic",
       "status": "bad_magic",
-      "bytes": 15901,
+      "bytes": 40907,
       "sha256": null,
       "repair_cmd": "book freebasic"
     },
@@ -41848,7 +42148,7 @@
       "lang_id": "freebasic",
       "status": "ok",
       "bytes": 781,
-      "sha256": "fe087e0a4eb53991d8c71e9eb74bf04cc746eaaed4fcb6cf594e7a82eced803b",
+      "sha256": "9d635833cbf90fa9cd8d9718f91a33b4d7130e7bc129b8a479aa51fd48771ea9",
       "repair_cmd": "book freebasic"
     },
     {
@@ -41877,7 +42177,7 @@
       "chip_id": null,
       "lang_id": "go",
       "status": "bad_magic",
-      "bytes": 17180,
+      "bytes": 40250,
       "sha256": null,
       "repair_cmd": "book go"
     },
@@ -41888,7 +42188,7 @@
       "lang_id": "go",
       "status": "ok",
       "bytes": 725,
-      "sha256": "daa92ab98e2f960d19da8aa43a3f1d190ce32fca0ce251251019c2cba3b0c47d",
+      "sha256": "4e088545a4f33ad8f6d05f616bb1ce8902ce67eb92680005f4b0fa1a38e7f104",
       "repair_cmd": "book go"
     },
     {
@@ -41917,7 +42217,7 @@
       "chip_id": null,
       "lang_id": "haskell",
       "status": "bad_magic",
-      "bytes": 16078,
+      "bytes": 39438,
       "sha256": null,
       "repair_cmd": "book haskell"
     },
@@ -41928,7 +42228,7 @@
       "lang_id": "haskell",
       "status": "ok",
       "bytes": 765,
-      "sha256": "1b06d8178c77ec9e1b29d110ce550bb22d269e5e752fd6f2972901fed2cfacfc",
+      "sha256": "c43f41ed4f73ee11258fe17dfb1c0f8f2444b182d6bd51c7122c180bb571a80f",
       "repair_cmd": "book haskell"
     },
     {
@@ -41957,7 +42257,7 @@
       "chip_id": null,
       "lang_id": "java",
       "status": "bad_magic",
-      "bytes": 16880,
+      "bytes": 39972,
       "sha256": null,
       "repair_cmd": "book java"
     },
@@ -41968,7 +42268,7 @@
       "lang_id": "java",
       "status": "ok",
       "bytes": 741,
-      "sha256": "9a4d74a3e64207e504966033389a63db58995450759ab1ec43c0681b3d1a7714",
+      "sha256": "8e63c98b9cc5cfcf7b02ea265f92cccfb7845bf988f3f17c4864329bfe5ff474",
       "repair_cmd": "book java"
     },
     {
@@ -41997,7 +42297,7 @@
       "chip_id": null,
       "lang_id": "javascript",
       "status": "bad_magic",
-      "bytes": 17659,
+      "bytes": 42090,
       "sha256": null,
       "repair_cmd": "book javascript"
     },
@@ -42008,7 +42308,7 @@
       "lang_id": "javascript",
       "status": "ok",
       "bytes": 789,
-      "sha256": "3cc1ca5eb9cf20262f0d6eabc20fa1d7ed68a6f62ba68ac35c90a3b26a892505",
+      "sha256": "fa08fdf5d86e2c1b75d7962526f00ff2e6097d6435db268cfc3cdb780640dab4",
       "repair_cmd": "book javascript"
     },
     {
@@ -42037,7 +42337,7 @@
       "chip_id": null,
       "lang_id": "julia",
       "status": "bad_magic",
-      "bytes": 15919,
+      "bytes": 39781,
       "sha256": null,
       "repair_cmd": "book julia"
     },
@@ -42048,7 +42348,7 @@
       "lang_id": "julia",
       "status": "ok",
       "bytes": 749,
-      "sha256": "b04844666a26bdb9b7c2101873e800278de738bd94026e7830e6847287f7d5b1",
+      "sha256": "a838e659750ecc33ea6eeb3dec76b1c9e834d656a234ccd7ffb7d42cca30116d",
       "repair_cmd": "book julia"
     },
     {
@@ -42077,7 +42377,7 @@
       "chip_id": null,
       "lang_id": "kotlin",
       "status": "bad_magic",
-      "bytes": 16464,
+      "bytes": 40425,
       "sha256": null,
       "repair_cmd": "book kotlin"
     },
@@ -42088,7 +42388,7 @@
       "lang_id": "kotlin",
       "status": "ok",
       "bytes": 757,
-      "sha256": "75e9e978478642547c2370494414d699b6754856133ad416e7b20fc1acda707a",
+      "sha256": "be1a3f847736587408b96a52485c2f09219b11e90376296fa619b2a14225549c",
       "repair_cmd": "book kotlin"
     },
     {
@@ -42117,7 +42417,7 @@
       "chip_id": null,
       "lang_id": "linux",
       "status": "bad_magic",
-      "bytes": 21538,
+      "bytes": 44648,
       "sha256": null,
       "repair_cmd": "book linux"
     },
@@ -42128,7 +42428,7 @@
       "lang_id": "linux",
       "status": "ok",
       "bytes": 749,
-      "sha256": "01bb88dd06099e43b131824fd2b52ccebb99b70cd63d8ee3b447785c9d45f19d",
+      "sha256": "49bd746ef928b83e478be19cdf1da1426604d1d9ca679a281199d8c4d47d7faa",
       "repair_cmd": "book linux"
     },
     {
@@ -42157,7 +42457,7 @@
       "chip_id": null,
       "lang_id": "lisp",
       "status": "bad_magic",
-      "bytes": 16170,
+      "bytes": 39243,
       "sha256": null,
       "repair_cmd": "book lisp"
     },
@@ -42168,7 +42468,7 @@
       "lang_id": "lisp",
       "status": "ok",
       "bytes": 741,
-      "sha256": "3e9b7f85c6be5c85ccf9bd91b624bca087c9e1fc358fce1205b1da12aebc4799",
+      "sha256": "264b12eb7a3e05ec6bcc32c6fdab0a1d561f536bce09765f702d0935035e2236",
       "repair_cmd": "book lisp"
     },
     {
@@ -42197,7 +42497,7 @@
       "chip_id": null,
       "lang_id": "lua",
       "status": "bad_magic",
-      "bytes": 15419,
+      "bytes": 38546,
       "sha256": null,
       "repair_cmd": "book lua"
     },
@@ -42208,7 +42508,7 @@
       "lang_id": "lua",
       "status": "ok",
       "bytes": 733,
-      "sha256": "37efad1f02d98fb979b81b9b7e86cf8b3ef1ec2685a3180b5533aab4f46d05a0",
+      "sha256": "632094ac6766a871ef4bc5d5a880b6a65cefe635a0a9ad11623b8f35f6250d50",
       "repair_cmd": "book lua"
     },
     {
@@ -42237,7 +42537,7 @@
       "chip_id": null,
       "lang_id": "matlab",
       "status": "bad_magic",
-      "bytes": 14989,
+      "bytes": 39016,
       "sha256": null,
       "repair_cmd": "book matlab"
     },
@@ -42248,7 +42548,7 @@
       "lang_id": "matlab",
       "status": "ok",
       "bytes": 757,
-      "sha256": "5f908a87a24778f1f20d6cf66469afbfedc5ba7db62ff3ec92437bb9f6fa6dac",
+      "sha256": "d65bea496fe093ceeeba6b3b78ab404a1755f53d1bd9c2c7fa328ad743aaeab5",
       "repair_cmd": "book matlab"
     },
     {
@@ -42277,7 +42577,7 @@
       "chip_id": null,
       "lang_id": "modula2",
       "status": "bad_magic",
-      "bytes": 18392,
+      "bytes": 42911,
       "sha256": null,
       "repair_cmd": "book modula2"
     },
@@ -42288,7 +42588,7 @@
       "lang_id": "modula2",
       "status": "ok",
       "bytes": 766,
-      "sha256": "75684f876b15a56d15d82cc04ccfbc1ad680ec6e1d069a4e7c0a84ed34f45d50",
+      "sha256": "d1775d1c355f0e9f8eb321d6596145d5e19ca3d11c3fbd49f07987121b8edc68",
       "repair_cmd": "book modula2"
     },
     {
@@ -42317,7 +42617,7 @@
       "chip_id": null,
       "lang_id": "nim",
       "status": "bad_magic",
-      "bytes": 16122,
+      "bytes": 39859,
       "sha256": null,
       "repair_cmd": "book nim"
     },
@@ -42328,7 +42628,7 @@
       "lang_id": "nim",
       "status": "ok",
       "bytes": 733,
-      "sha256": "05477e2340e9a541a5b02c06119cbbf21504f429b623db5ca19f585fb0630657",
+      "sha256": "0e18c6756693e2b94a45888f372c1f1a0182545b1646dcf32c58f86dc25ce8e2",
       "repair_cmd": "book nim"
     },
     {
@@ -42357,7 +42657,7 @@
       "chip_id": null,
       "lang_id": "objc",
       "status": "bad_magic",
-      "bytes": 16168,
+      "bytes": 41472,
       "sha256": null,
       "repair_cmd": "book objc"
     },
@@ -42368,7 +42668,7 @@
       "lang_id": "objc",
       "status": "ok",
       "bytes": 748,
-      "sha256": "6516203bc7f34e6f04c9a460d1f290b9ea16ad48382abd72ba3ef3767fad9eb7",
+      "sha256": "70f36473296acb1dc185aa0f4db0099734bb47e8b82443e5f7d1d1ea7e3255a5",
       "repair_cmd": "book objc"
     },
     {
@@ -42397,7 +42697,7 @@
       "chip_id": null,
       "lang_id": "ocaml",
       "status": "bad_magic",
-      "bytes": 15203,
+      "bytes": 38411,
       "sha256": null,
       "repair_cmd": "book ocaml"
     },
@@ -42408,7 +42708,7 @@
       "lang_id": "ocaml",
       "status": "ok",
       "bytes": 749,
-      "sha256": "661a48a271d2ec53f709dc99d7e0ec3fa48182c98e181b90792649a8687a256e",
+      "sha256": "942daeb02522fca30519fd5b50e82c1f1acd2a00dd58b7bee3a298559770c01e",
       "repair_cmd": "book ocaml"
     },
     {
@@ -42437,7 +42737,7 @@
       "chip_id": null,
       "lang_id": "pascal",
       "status": "bad_magic",
-      "bytes": 17248,
+      "bytes": 40357,
       "sha256": null,
       "repair_cmd": "book pascal"
     },
@@ -42448,7 +42748,7 @@
       "lang_id": "pascal",
       "status": "ok",
       "bytes": 757,
-      "sha256": "a3d092086e5e2be6ef49a41d3330060078612eebf9c5bc6052d7082ecd4834df",
+      "sha256": "22c9200a43fa27982206724612cb06eab13d665f4578047eeaf49effd8aa2c3a",
       "repair_cmd": "book pascal"
     },
     {
@@ -42477,7 +42777,7 @@
       "chip_id": null,
       "lang_id": "perl",
       "status": "bad_magic",
-      "bytes": 15396,
+      "bytes": 38255,
       "sha256": null,
       "repair_cmd": "book perl"
     },
@@ -42488,7 +42788,7 @@
       "lang_id": "perl",
       "status": "ok",
       "bytes": 741,
-      "sha256": "4f47a5ea954a3b14d1666335c0f866e4cd7012fe93c644260177b278d47eaed0",
+      "sha256": "13f1d31eaac6421997fcf369ba6d52751b724a06e731541af381210da192c591",
       "repair_cmd": "book perl"
     },
     {
@@ -42517,7 +42817,7 @@
       "chip_id": null,
       "lang_id": "php",
       "status": "bad_magic",
-      "bytes": 16262,
+      "bytes": 39397,
       "sha256": null,
       "repair_cmd": "book php"
     },
@@ -42528,7 +42828,7 @@
       "lang_id": "php",
       "status": "ok",
       "bytes": 733,
-      "sha256": "6a1b7a9965516cfeaef021f9dda6a5be1ca0b58c43b4fda32965ab16adc490b7",
+      "sha256": "e2af685d406a5fa0f0a9c0a24109d294b72c6a2f9ca8f3a155180640a9912c8f",
       "repair_cmd": "book php"
     },
     {
@@ -42557,7 +42857,7 @@
       "chip_id": null,
       "lang_id": "prolog",
       "status": "bad_magic",
-      "bytes": 14508,
+      "bytes": 37348,
       "sha256": null,
       "repair_cmd": "book prolog"
     },
@@ -42568,7 +42868,7 @@
       "lang_id": "prolog",
       "status": "ok",
       "bytes": 757,
-      "sha256": "d562aca7a8bc7126e1264b019f681b6c63a7855100fdf2ca141805ebb3c48445",
+      "sha256": "827a6b52e57e8d8eafda3d951980cf758a2378eb8670c33c02eec24ce817a36a",
       "repair_cmd": "book prolog"
     },
     {
@@ -42597,7 +42897,7 @@
       "chip_id": null,
       "lang_id": "python",
       "status": "bad_magic",
-      "bytes": 18118,
+      "bytes": 42176,
       "sha256": null,
       "repair_cmd": "book python"
     },
@@ -42608,7 +42908,7 @@
       "lang_id": "python",
       "status": "ok",
       "bytes": 757,
-      "sha256": "9d4e781fa27b146b8f43cd582e19a88134cf05d496ec9e8c8ef7296602f8baad",
+      "sha256": "b0c98ee7cb4c414ebf5d0f19723f9fcf89a85c2b6b1cd849565df91d91c727cc",
       "repair_cmd": "book python"
     },
     {
@@ -42637,7 +42937,7 @@
       "chip_id": null,
       "lang_id": "qbasic",
       "status": "bad_magic",
-      "bytes": 19679,
+      "bytes": 42933,
       "sha256": null,
       "repair_cmd": "book qbasic"
     },
@@ -42648,7 +42948,7 @@
       "lang_id": "qbasic",
       "status": "ok",
       "bytes": 757,
-      "sha256": "3c16bdfefe8d53c996d7bb535bf8e04233aac723a8039e9db793dbc95376d814",
+      "sha256": "421f4b5e4708351f4b8c721fd8e3122a9d6c2754eda0a97a4f48552d8d13271c",
       "repair_cmd": "book qbasic"
     },
     {
@@ -42677,7 +42977,7 @@
       "chip_id": null,
       "lang_id": "quickbasic",
       "status": "bad_magic",
-      "bytes": 16395,
+      "bytes": 42025,
       "sha256": null,
       "repair_cmd": "book quickbasic"
     },
@@ -42688,7 +42988,7 @@
       "lang_id": "quickbasic",
       "status": "ok",
       "bytes": 789,
-      "sha256": "5ed196e3ead20696d1cd67aa33c3729d3898ea98d59f74d073f20cf1155a0c59",
+      "sha256": "84795a01a459fdf8fe1c8770bfbd08d99f3909f0ed5e972b1f9e3e2fe5d2ae6d",
       "repair_cmd": "book quickbasic"
     },
     {
@@ -42717,7 +43017,7 @@
       "chip_id": null,
       "lang_id": "r",
       "status": "bad_magic",
-      "bytes": 15302,
+      "bytes": 38115,
       "sha256": null,
       "repair_cmd": "book r"
     },
@@ -42728,7 +43028,7 @@
       "lang_id": "r",
       "status": "ok",
       "bytes": 717,
-      "sha256": "5987a6e201e40d79a1603b1a5969c7265defeeb5d49af3764d01aa1bf7ce6869",
+      "sha256": "ccf5100d66cb484ef860cfcd035618f2e0a0d307ca675fa9bb7b0a62f449a160",
       "repair_cmd": "book r"
     },
     {
@@ -42757,7 +43057,7 @@
       "chip_id": null,
       "lang_id": "ruby",
       "status": "bad_magic",
-      "bytes": 16580,
+      "bytes": 39844,
       "sha256": null,
       "repair_cmd": "book ruby"
     },
@@ -42768,7 +43068,7 @@
       "lang_id": "ruby",
       "status": "ok",
       "bytes": 741,
-      "sha256": "e0559b6502d3fc07e3d0ddd30086a95b58e2a3b49ffa2ff1f05f6c553180cd94",
+      "sha256": "b80814872ffb2e45b6b6e0a5f77700386b9ccf0c565af5f00a425d4237b911b1",
       "repair_cmd": "book ruby"
     },
     {
@@ -42797,7 +43097,7 @@
       "chip_id": null,
       "lang_id": "rust",
       "status": "bad_magic",
-      "bytes": 18068,
+      "bytes": 41494,
       "sha256": null,
       "repair_cmd": "book rust"
     },
@@ -42808,7 +43108,7 @@
       "lang_id": "rust",
       "status": "ok",
       "bytes": 741,
-      "sha256": "0c598063710e4ba735c65aa1ac3d8c62d32b118b26b21c466d521259128caff4",
+      "sha256": "c4ac3a020160681a430c94232331bb5d41fbc0fbf061586ce747a669cc1d5bb9",
       "repair_cmd": "book rust"
     },
     {
@@ -42837,7 +43137,7 @@
       "chip_id": null,
       "lang_id": "scala",
       "status": "bad_magic",
-      "bytes": 16071,
+      "bytes": 40010,
       "sha256": null,
       "repair_cmd": "book scala"
     },
@@ -42848,7 +43148,7 @@
       "lang_id": "scala",
       "status": "ok",
       "bytes": 749,
-      "sha256": "65ebd0244845945533ba94929f7f752fe8446b2d0edb7289a96910c204e06f66",
+      "sha256": "bdea8e60bf06279c1c68387de9705bd0902576f13596489232f0e5ee547b3268",
       "repair_cmd": "book scala"
     },
     {
@@ -42877,7 +43177,7 @@
       "chip_id": null,
       "lang_id": "shell",
       "status": "bad_magic",
-      "bytes": 16305,
+      "bytes": 39343,
       "sha256": null,
       "repair_cmd": "book shell"
     },
@@ -42888,7 +43188,7 @@
       "lang_id": "shell",
       "status": "ok",
       "bytes": 749,
-      "sha256": "4e9e5c5ac4fb861d0d7ab9912109c8ce511d57b4e6b5eae26870da0db3d3882c",
+      "sha256": "4368f14c6ad3c0110d109d6c0ee238fe951e408447cb764d46cbd5c87b98ded0",
       "repair_cmd": "book shell"
     },
     {
@@ -42917,7 +43217,7 @@
       "chip_id": null,
       "lang_id": "smalltalk",
       "status": "bad_magic",
-      "bytes": 15494,
+      "bytes": 39368,
       "sha256": null,
       "repair_cmd": "book smalltalk"
     },
@@ -42928,7 +43228,7 @@
       "lang_id": "smalltalk",
       "status": "ok",
       "bytes": 781,
-      "sha256": "1c5afa7e2cca9e0b702a91959e146f92c2b8bad4e3b81c821d221687602c9158",
+      "sha256": "cd0bbd7523b148f5dd40940628982497d1d5e109ad4f1f9a1675a7560484bed2",
       "repair_cmd": "book smalltalk"
     },
     {
@@ -42957,7 +43257,7 @@
       "chip_id": null,
       "lang_id": "snobol",
       "status": "bad_magic",
-      "bytes": 14694,
+      "bytes": 39082,
       "sha256": null,
       "repair_cmd": "book snobol"
     },
@@ -42968,7 +43268,7 @@
       "lang_id": "snobol",
       "status": "ok",
       "bytes": 757,
-      "sha256": "a93aa36836baad51a72aacd5dc5d36f463e91f757c4383cbbf21166cacfebe4c",
+      "sha256": "4b8cdd28d27ce88ddcdf17f1e035936609937ca5ece5ebe725d57f225e142463",
       "repair_cmd": "book snobol"
     },
     {
@@ -42997,7 +43297,7 @@
       "chip_id": null,
       "lang_id": "sql",
       "status": "bad_magic",
-      "bytes": 15417,
+      "bytes": 39187,
       "sha256": null,
       "repair_cmd": "book sql"
     },
@@ -43008,7 +43308,7 @@
       "lang_id": "sql",
       "status": "ok",
       "bytes": 733,
-      "sha256": "0e304daed251f49dfbcbca31fc882a0ae077a30fde94f2353a9326a8fd71bcb7",
+      "sha256": "9c2d1a9f2e627335adbca78a888e82bbcf1ec02950a207862ba88aeb167964c8",
       "repair_cmd": "book sql"
     },
     {
@@ -43037,7 +43337,7 @@
       "chip_id": null,
       "lang_id": "swift",
       "status": "bad_magic",
-      "bytes": 16737,
+      "bytes": 40768,
       "sha256": null,
       "repair_cmd": "book swift"
     },
@@ -43048,7 +43348,7 @@
       "lang_id": "swift",
       "status": "ok",
       "bytes": 749,
-      "sha256": "390683a0599fe732863c248f096594e549cc07cc91122cd7328cd3516507fae1",
+      "sha256": "dc9e1098dbcd6c139636e77672e32c07382d99450ee5ef312c97788275fa755e",
       "repair_cmd": "book swift"
     },
     {
@@ -43077,7 +43377,7 @@
       "chip_id": null,
       "lang_id": "turbo_pascal",
       "status": "bad_magic",
-      "bytes": 19749,
+      "bytes": 43277,
       "sha256": null,
       "repair_cmd": "book turbo_pascal"
     },
@@ -43088,7 +43388,7 @@
       "lang_id": "turbo_pascal",
       "status": "ok",
       "bytes": 805,
-      "sha256": "91ab23ef83f7d4a3616ed524ee26a0f77aebfe274f5994e7ae168d22884f073e",
+      "sha256": "6d6152f6c437a1babd4de0c7efd6a7e0359bc3db5921b22e8df0ba9720f1780f",
       "repair_cmd": "book turbo_pascal"
     },
     {
@@ -43117,7 +43417,7 @@
       "chip_id": null,
       "lang_id": "typescript",
       "status": "bad_magic",
-      "bytes": 18615,
+      "bytes": 42824,
       "sha256": null,
       "repair_cmd": "book typescript"
     },
@@ -43128,7 +43428,7 @@
       "lang_id": "typescript",
       "status": "ok",
       "bytes": 789,
-      "sha256": "b55ac64b22323a924d53ec03985769269432592891db9906096939d9bfaefd8e",
+      "sha256": "f5e682f2b45d7d390e43ad1a8ad09f21b192c1dd29340cda558b1f85029f3012",
       "repair_cmd": "book typescript"
     },
     {
@@ -43157,7 +43457,7 @@
       "chip_id": null,
       "lang_id": "vba",
       "status": "bad_magic",
-      "bytes": 15834,
+      "bytes": 40350,
       "sha256": null,
       "repair_cmd": "book vba"
     },
@@ -43168,7 +43468,7 @@
       "lang_id": "vba",
       "status": "ok",
       "bytes": 733,
-      "sha256": "090d89d14b4e3692eb6fc18c68a604ac3af1c50b44bac7a198d5207361c8fd15",
+      "sha256": "d36d2dbe89b1504017c0af70da1ea01a2474a555ebfd9f00e4b57ab5042cbefa",
       "repair_cmd": "book vba"
     },
     {
@@ -43197,7 +43497,7 @@
       "chip_id": null,
       "lang_id": "verilog",
       "status": "bad_magic",
-      "bytes": 36832,
+      "bytes": 38188,
       "sha256": null,
       "repair_cmd": "book verilog"
     },
@@ -43208,7 +43508,7 @@
       "lang_id": "verilog",
       "status": "ok",
       "bytes": 765,
-      "sha256": "069c9bf70f77977caaa34bc2e46af95209aa3929a25b6ab7300acfd2bc7f81b8",
+      "sha256": "5a260120d8c300c34d822e2662f8cc3caf31b382d44a9e741575f384c4946f5f",
       "repair_cmd": "book verilog"
     },
     {
@@ -43237,7 +43537,7 @@
       "chip_id": null,
       "lang_id": "visual_basic",
       "status": "bad_magic",
-      "bytes": 43607,
+      "bytes": 44943,
       "sha256": null,
       "repair_cmd": "book visual_basic"
     },
@@ -43248,7 +43548,7 @@
       "lang_id": "visual_basic",
       "status": "ok",
       "bytes": 805,
-      "sha256": "8c0e8c7ba973a7f871193f0321b78d38124cd2ff72b06f099d0ba1b323d0cbe4",
+      "sha256": "fe8b664b0bc839367a070cc66113ea757540fe2058970c3b16254a741a920f1e",
       "repair_cmd": "book visual_basic"
     },
     {
@@ -43277,7 +43577,7 @@
       "chip_id": null,
       "lang_id": "zig",
       "status": "bad_magic",
-      "bytes": 39133,
+      "bytes": 40519,
       "sha256": null,
       "repair_cmd": "book zig"
     },
@@ -43288,7 +43588,7 @@
       "lang_id": "zig",
       "status": "ok",
       "bytes": 733,
-      "sha256": "bc71642e013ce73e1bc0f46ff20a64b65b5c39885a583c41c5bec5a83315f5fd",
+      "sha256": "73533c182d5f7edb40f32363597704d03ed9c00a6a252c11310b635707da98a1",
       "repair_cmd": "book zig"
     },
     {
@@ -43297,8 +43597,8 @@
       "chip_id": null,
       "lang_id": null,
       "status": "ok",
-      "bytes": 77431,
-      "sha256": "3ff1990117a286a7c3f25c574638a04792fd9c91e560cced29a692c0ebc43dfc",
+      "bytes": 40201,
+      "sha256": "8cd5091e43d5e9ddca42369164bf2b6db74305f4973698b16344a4fda08a50f2",
       "repair_cmd": "generate"
     },
     {
@@ -43307,8 +43607,8 @@
       "chip_id": null,
       "lang_id": null,
       "status": "ok",
-      "bytes": 1559195,
-      "sha256": "4e96daad21fd6d134a0fa8c89bdc9fa40fa4c08d52394bafa67984070341a540",
+      "bytes": 1569194,
+      "sha256": "549a16b7721216f4a938e3a021d37910b122c6cef92e0cf1c2dc9d490c20d1f8",
       "repair_cmd": "registry"
     },
     {
@@ -43317,8 +43617,8 @@
       "chip_id": null,
       "lang_id": null,
       "status": "ok",
-      "bytes": 274,
-      "sha256": "48e773d5b4bbcfc6158d6df4e29c32711b7580e4e15a1a54cdc613437d6c3230",
+      "bytes": 273,
+      "sha256": "ca76b155148284d033603d52981f2255c30ad02a5cc1a4e05d96e95e6a9de5e9",
       "repair_cmd": "manifest"
     },
     {
@@ -43327,18 +43627,18 @@
       "chip_id": null,
       "lang_id": null,
       "status": "ok",
-      "bytes": 31955,
-      "sha256": "a1a51282e356461049abc622d100de41e047eba3d5e8c262b801a72a178d09aa",
+      "bytes": 36879,
+      "sha256": "46fc43fa169ec4a98c6cae4f3d8be4cd9964c3b70c496c983e8e1af4217e422c",
       "repair_cmd": null
     },
     {
       "pattern": "ironclad_chips",
-      "path": "/tmp/tmp.FdMmHklCeN/field-ironclad-chips-combinatorics.json",
+      "path": ".nexus-state/field-ironclad-chips-combinatorics.json",
       "chip_id": null,
       "lang_id": null,
       "status": "ok",
       "bytes": 1831207,
-      "sha256": "bd7356dc23cd0efd6b4cb9e0e10796d8e5e7bfa19ff6afdc5c90979dd48fa745",
+      "sha256": "be02373809a67a7f44fc54ea0379323f53c25328088437adef76e7319fdf88bc",
       "repair_cmd": null
     },
     {
@@ -43368,7 +43668,7 @@
       "lang_id": null,
       "status": "ok",
       "bytes": null,
-      "sha256": "e54cfab971705f5e96ba750272074e8560526b164d70c9e5b35bd3baee0aaeba",
+      "sha256": "37718f1306bae9b8aa2e2658e8090c2829584b398fe61c6b14149a3945654f7c",
       "repair_cmd": null
     },
     {

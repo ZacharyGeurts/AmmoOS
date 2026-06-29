@@ -1,4 +1,4 @@
-#!/usr/bin/env pythong
+#!/usr/bin/env python3
 """Ironclad immediate — hot-read Bible of AI for all selves, no cycle wait."""
 from __future__ import annotations
 
@@ -209,6 +209,18 @@ def immediate_slice(*, self_id: str = "all") -> dict[str, Any]:
         "books": [{k: b.get(k) for k in ("id", "title")} for b in (doctrine.get("books") or [])],
         "grounding_uri": "/api/ironclad/grounding",
         "immediate_uri": "/api/ironclad/immediate",
+        "secure_api_uri": "/api/ironclad/secure-api",
+        "registry_index_uri": "/api/ironclad/secure-api/registry-index",
+        "search_index_uri": "/api/ironclad/secure-api/search",
+        "search_index_module": "lib/ironclad-search-index.py",
+        "h7_access_uri": "/api/ironclad/h7-access",
+        "h7_access_module": "lib/ironclad-h7-access.py",
+        "h7_no_body_reads": True,
+        "access_uri": "/api/ironclad/access",
+        "access_module": "lib/ironclad-access.py",
+        "access_tools_uri": "/api/ironclad/access/tools",
+        "fast_on_metal": True,
+        "route_index_uri": "/api/ironclad/secure-api/routes",
         "reality_field_uri": "/api/ironclad/reality-field",
         "human_condition_uri": "/api/ironclad/human-condition",
     }

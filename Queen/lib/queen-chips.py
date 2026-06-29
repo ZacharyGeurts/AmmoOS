@@ -18,7 +18,12 @@ SG = QUEEN.parent.parent
 NEXUS = Path(os.environ.get("NEXUS_INSTALL_ROOT", SG / "NewLatest"))
 NEXUS_STATE = Path(os.environ.get("NEXUS_STATE_DIR", NEXUS / ".nexus-state"))
 RTX = Path(os.environ.get("AMOURANTHRTX_ROOT", SG / "NewLatest" / "AMOURANTHRTX"))
-GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
+_SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+if str(_SG_PATHS_LIB) not in sys.path:
+    sys.path.insert(0, str(_SG_PATHS_LIB))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 MANIFEST = QUEEN / "data" / "queen-game-room.json"
 TEST_ROMS = QUEEN / "data" / "queen-test-roms.json"
 G16_CHIPS = QUEEN / "data" / "chips-g16-manifest.json"
@@ -29,7 +34,7 @@ SNAP_DIR = QUEEN / "data" / "snap"
 PUMP_LOG = QUEEN / ".queen-emulator-pump.log"
 RETRO_SYSTEMS = frozenset({
     "nes", "snes", "genesis", "sms", "a2600", "gameboy", "gamegear",
-    "n64", "pce", "neogeo", "msx", "spectrum", "c64", "apple2", "amiga",
+    "n64", "pce", "neogeo", "msx", "spectrum", "c64", "c64_ultimate", "apple2", "amiga",
 })
 
 # Game Room system id → ironclad platform_stack (CHIPS catalog facet)
@@ -42,7 +47,8 @@ SYSTEM_PLATFORM_STACK: dict[str, str | None] = {
     "coco": "retro_m68k",
     "coco2": "retro_m68k",
     "coco3": "retro_m68k",
-    "c64": "retro_6502",
+    "c64": "retro_c64",
+    "c64_ultimate": "c64_ultimate_fpga",
     "apple2": "retro_6502",
     "msx": "retro_z80",
     "spectrum": "retro_z80",
@@ -67,6 +73,14 @@ DEWEY_STACK_PAGE: dict[str, dict[str, str]] = {
     "console_ps1": {"slug": "stack-ps1", "title": "PlayStation Platform Stack"},
     "console_saturn": {"slug": "stack-saturn", "title": "Sega Saturn Platform Stack"},
     "console_n64": {"slug": "stack-n64", "title": "Nintendo 64 Platform Stack"},
+    "retro_c64": {"slug": "stack-retro-c64", "title": "Commodore 64 Classic Platform Stack"},
+    "c64_ultimate_fpga": {"slug": "stack-c64-ultimate", "title": "Commodore 64 Ultimate (FPGA)"},
+    "retro_6502": {"slug": "stack-retro-6502", "title": "6502 Family Platform Stack"},
+    "retro_z80": {"slug": "stack-retro-z80", "title": "Z80 Family Platform Stack"},
+    "retro_m68k": {"slug": "stack-retro-m68k", "title": "Motorola 68000 Platform Stack"},
+    "amiga_chipset": {"slug": "stack-amiga", "title": "Commodore Amiga Chipset Stack"},
+    "pc_pentium": {"slug": "stack-pc-pentium", "title": "PC / DOS Pentium Stack"},
+    "arm_soc_template": {"slug": "stack-arm-soc-pmic", "title": "ARM SoC PMIC Platform Stack"},
 }
 
 
@@ -676,8 +690,9 @@ def system_emulator_info(system_id: str) -> dict[str, Any]:
     platform_stack = SYSTEM_PLATFORM_STACK.get(system_id)
     device_image = _device_image_url(system_id)
 
+    catalog_path = str(sys_row.get("catalog") or f"004-computers/{system_id}")
     dewey_book: dict[str, Any] = {}
-    book_json = NEXUS / "library" / "dewey" / "004-computers" / system_id / "book.json"
+    book_json = NEXUS / "library" / "dewey" / catalog_path / "book.json"
     if book_json.is_file():
         try:
             dewey_book = json.loads(book_json.read_text(encoding="utf-8"))
@@ -771,7 +786,8 @@ def system_emulator_info(system_id: str) -> dict[str, Any]:
             "catalog_stack": catalog_stack_url,
             "chip_detail": f"/world/queen-chips-detail.html?id={chip_id}",
             "chips_catalog": "/world/queen-chips-catalog.html",
-            "dewey_device": f"/library/dewey/004-computers/{system_id}/",
+            "dewey_device": f"/library/dewey/{catalog_path}/",
+            "dewey_catalog": catalog_path,
         },
     }
 
@@ -785,6 +801,8 @@ def game_room_status() -> dict[str, Any]:
         sid = str(row.get("id") or "")
         copy = dict(row)
         copy["info_url"] = f"/world/queen-system-info.html?system={sid}"
+        copy["catalog"] = str(row.get("catalog") or f"004-computers/{sid}")
+        copy["catalog_url"] = f"/library/dewey/{copy['catalog']}/"
         copy["device_image"] = _device_image_url(sid)
         copy["platform_stack"] = SYSTEM_PLATFORM_STACK.get(sid)
         copy["chip_id"] = f"system_{sid}"

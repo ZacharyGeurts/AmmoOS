@@ -198,17 +198,28 @@
     });
   }
 
+  function cardMeta(row) {
+    const bits = [];
+    if (row.mfg_date_start) bits.push(row.mfg_date_start.slice(0, 4));
+    else if (row.era) bits.push(String(row.era).slice(0, 9));
+    if (row.socket && row.socket !== "—") bits.push(row.socket);
+    return bits.length ? `<span class="qcc-card-era">${esc(bits.join(" · "))}</span>` : "";
+  }
+
   function cardHtml(row) {
     return (
       `<button type="button" class="qcc-card" role="listitem" data-id="${esc(row.id)}">` +
       `<div class="qcc-card-media">` +
       `<img src="${esc(thumb(row))}" alt="${esc(row.label)}" loading="lazy" decoding="async" />` +
       (row.kind ? `<span class="qcc-card-badge">${esc(row.kind)}</span>` : "") +
+      (row.featured ? `<span class="qcc-card-badge qcc-card-badge--feat">★</span>` : "") +
       `</div>` +
       `<span class="qcc-card-label">${esc(row.label)}</span>` +
       `<span class="qcc-card-sub">` +
       `<span class="qcc-tag">${esc(row.kind)}</span>${esc(row.vendor)}` +
-      `</span></button>`
+      `</span>` +
+      cardMeta(row) +
+      `</button>`
     );
   }
 

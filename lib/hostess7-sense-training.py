@@ -91,7 +91,33 @@ def _env() -> dict[str, str]:
     return env
 
 
+def _sense_core() -> Any | None:
+    import importlib.util
+    py = INSTALL / "lib" / "hostess7-sense-core.py"
+    if not py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("hostess7_sense_core_train", py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _track_channel(track_id: str) -> str:
+    return {
+        "final_eye": "eye",
+        "final_ear": "ear",
+        "final_mouth": "mouth",
+    }.get(track_id, track_id)
+
+
 def _dispatch(bridge: Path, body: dict[str, Any], *, timeout: int = 120) -> dict[str, Any]:
+    core = _sense_core()
+    if core and hasattr(core, "sense_ball_dispatch"):
+        for track_id, path in BRIDGE.items():
+            if path == bridge:
+                return core.sense_ball_dispatch(_track_channel(track_id), body)
     if not bridge.is_file():
         return {"ok": False, "error": "bridge_missing", "path": str(bridge)}
     try:
@@ -391,6 +417,52 @@ def panel_json() -> dict[str, Any]:
     }
 
 
+_OCR_API: dict | None = None
+
+
+def _ocr_api() -> dict:
+    global _OCR_API
+    if _OCR_API is None:
+        import importlib.util
+        py = INSTALL / "lib" / "hostess7-ocr-bind.py"
+        spec = importlib.util.spec_from_file_location("h7_ocr_bind_sense", py)
+        if not spec or not spec.loader:
+            raise ImportError("hostess7-ocr-bind.py missing")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _OCR_API = mod.bind("sense", install=INSTALL, state=STATE, ledger=LEDGER)
+    return _OCR_API
+
+
+def ingest_ocr_vision(**kw):
+    return _ocr_api()["ingest_ocr_vision"](**kw)
+
+
+def train_ocr_vision(**kw):
+    return _ocr_api()["train_ocr_vision"](**kw)
+
+
+def ocr_vision_status():
+    return _ocr_api()["ocr_vision_status"]()
+
+
+def _handle_ocr_cli(cmd: str) -> int | None:
+    import importlib.util
+    py = INSTALL / "lib" / "hostess7-ocr-feed.py"
+    spec = importlib.util.spec_from_file_location("h7_ocr_feed_sense", py)
+    if not spec or not spec.loader:
+        return None
+    feed = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(feed)
+    return feed.handle_ocr_cli(
+        cmd.lower(),
+        ingest_fn=ingest_ocr_vision,
+        train_fn=train_ocr_vision,
+        status_fn=ocr_vision_status,
+        usage="hostess7-sense-training.py [json|assess|run TRACK|final_eye|final_ear|final_mouth|sense_neural_wire|ocr-ingest|ocr-train|ocr-status]",
+    )
+
+
 def main() -> int:
     cmd = (sys.argv[1] if len(sys.argv) > 1 else "json").strip()
     if cmd == "json":
@@ -408,7 +480,10 @@ def main() -> int:
     if cmd in ("sense_neural_wire", "wire", "wire-all"):
         print(json.dumps(run_sense_neural_wire(), ensure_ascii=False))
         return 0
-    print(json.dumps({"error": "usage: hostess7-sense-training.py [json|assess|run TRACK|final_eye|final_ear|final_mouth|sense_neural_wire]"}))
+    ocr_ret = _handle_ocr_cli(cmd)
+    if ocr_ret is not None:
+        return ocr_ret
+    print(json.dumps({"error": "usage: hostess7-sense-training.py [json|assess|run TRACK|final_eye|final_ear|final_mouth|sense_neural_wire|ocr-ingest|ocr-train|ocr-status]"}))
     return 1
 
 

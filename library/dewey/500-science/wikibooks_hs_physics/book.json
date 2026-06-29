@@ -11,5 +11,44 @@
   "journal": "textbook",
   "cover": "/library/assets/covers/wikibooks_hs_physics/front.png",
   "cover_asset": "library/assets/covers/wikibooks_hs_physics/front.png",
-  "updated": "2026-06-29T08:56:32Z"
+  "updated": "2026-06-29T10:47:38Z",
+  "keywords": [
+    "wikibooks",
+    "high",
+    "school",
+    "physics",
+    "500",
+    "science",
+    "12",
+    "textbook",
+    "hs"
+  ],
+  "keyword_placement": {
+    "title": [
+      "wikibooks",
+      "high",
+      "school",
+      "physics"
+    ],
+    "author": [],
+    "dewey": [
+      "500",
+      "science"
+    ],
+    "subject": [
+      "12"
+    ],
+    "collection": [],
+    "format": [
+      "textbook"
+    ],
+    "shelf": [],
+    "description": [],
+    "auto": [
+      "hs"
+    ]
+  },
+  "card_id": "CAT-500-WIKIBOOKS-HS-PHYSICS",
+  "catalog_call_number": "500",
+  "catalog_updated": "2026-06-29T11:03:55Z"
 }

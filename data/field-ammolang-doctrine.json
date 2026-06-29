@@ -1,12 +1,22 @@
 {
-  "schema": "field-ammolang-doctrine/v1",
-  "title": "AmmoLang — AI-native combinatorics sequence language",
-  "motto": "Pure combinatorics for AI operators — boil, sequence, wire, execute, no gaps.",
+  "schema": "field-ammolang-doctrine/v2",
+  "title": "AmmoLang — #1 AI-native build · compile · execute language",
+  "motto": "Verbose · Clean · Intuitive — AI code that already knows the fastest path.",
   "product": "AmmoOS",
-  "version": "1",
+  "version": "2",
+  "rank": 1,
   "extension": ".aml",
   "module": "lib/field-ammolang.py",
-  "combinators": ["I", "K", "S", "SEQ", "PAR", "LEAF", "BOIL", "GROW", "SURFACE", "WIDTH", "WIRE", "GAP", "EXEC", "COMBINE", "BIND", "COMBINATOR"],
+  "build_module": "lib/field-ammolang-build.py",
+  "build_doctrine": "data/field-ammolang-build-doctrine.json",
+  "combinators": ["I", "K", "S", "SEQ", "PAR", "LEAF", "BOIL", "GROW", "SURFACE", "WIDTH", "WIRE", "GAP", "EXEC", "COMBINE", "BIND", "COMBINATOR", "SAY", "FORGE", "TEST", "FAST", "INVOKE", "CHIPS", "ENSURE", "GITHUB"],
+  "mcp_github": {
+    "default_transport": "mcp_secure",
+    "layer": "data/field-ammolang-mcp-layer.json",
+    "module": "lib/field-github-mcp-transport.py",
+    "grok_mcp_server": "grok_com_github",
+    "motto": "Secure MCP to GitHub — richer than TCP/IP; repo + Pages site in one lane."
+  },
   "grok16": {
     "driver": "g16-aml",
     "discern": "ammolang",
@@ -14,8 +24,22 @@
   },
   "canonical_target": "field-program-combinatronic-seed.json",
   "examples": [
+    "library/dewey/000-computer-science/ammolang/sovereign_build.aml",
+    "library/dewey/000-computer-science/ammolang/compiler_harness.aml",
+    "library/dewey/000-computer-science/ammolang/queen_forge.aml",
+    "library/dewey/000-computer-science/ammolang/beta_pipeline.aml",
+    "library/dewey/000-computer-science/ammolang/compiler_stack.aml",
+    "library/dewey/000-computer-science/ammolang/g16_recompile.aml",
+    "library/dewey/000-computer-science/ammolang/ammoos_update.aml",
+    "library/dewey/000-computer-science/ammolang/self_upgrade.aml",
     "library/dewey/000-computer-science/ammolang/boot_sequence.aml",
-    "library/dewey/000-computer-science/ammolang/gapless_cycle.aml"
+    "library/dewey/000-computer-science/ammolang/gapless_cycle.aml",
+    "library/dewey/000-computer-science/ammolang/grok16_ship.aml",
+    "library/dewey/000-computer-science/ammolang/grok16_gates.aml",
+    "library/dewey/000-computer-science/ammolang/queen_catalog.aml",
+    "library/dewey/000-computer-science/ammolang/agent_tasks.aml",
+    "library/dewey/000-computer-science/ammolang/github_mcp.aml"
   ],
+  "script_router": "lib/ammolang-run.sh",
   "api": "/api/ammolang"
 }

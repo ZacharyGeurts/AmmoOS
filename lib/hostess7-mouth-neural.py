@@ -80,7 +80,22 @@ def _env() -> dict[str, str]:
     return env
 
 
+def _sense_core() -> Any | None:
+    py = INSTALL / "lib" / "hostess7-sense-core.py"
+    if not py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("hostess7_sense_core_mouth", py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _run_mouth_neural(body: dict[str, Any], *, timeout: int = 60) -> dict[str, Any]:
+    core = _sense_core()
+    if core and hasattr(core, "mouth_neural_dispatch"):
+        return core.mouth_neural_dispatch(body)
     if not MOUTH_NEURAL.is_file():
         return {"ok": False, "error": "mouth_neural_missing"}
     try:
@@ -99,6 +114,9 @@ def _run_mouth_neural(body: dict[str, Any], *, timeout: int = 60) -> dict[str, A
 
 
 def _run_mouthball(body: dict[str, Any], *, timeout: int = 90) -> dict[str, Any]:
+    core = _sense_core()
+    if core and hasattr(core, "sense_ball_dispatch"):
+        return core.sense_ball_dispatch("mouth", body)
     if not MOUTHBALL.is_file():
         return {"ok": False, "error": "mouthball_missing"}
     try:

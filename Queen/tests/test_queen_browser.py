@@ -244,14 +244,29 @@ def run_tests() -> list[tuple[str, str]]:
         files_idx = next((i for i, t in enumerate(tabs) if t.get("role") == "files"), -1)
         assert_true(files_idx == start_idx + 1, "Files tab immediately after Start", results)
     assert_true(len(doc.get("bookmarks") or []) >= 3, "bookmarks present", results)
-    bm_ids = {b.get("id") for b in (doc.get("bookmarks") or [])}
-    assert_true("thermal-manager" in bm_ids, "Thermal Manager bookmark", results)
-    assert_true("final-ear-manager" in bm_ids, "Final Ear manager bookmark", results)
-    assert_true("final-mouth-manager" in bm_ids, "Final Mouth manager bookmark", results)
     trees = doc.get("bookmark_trees") or []
+    leaf_ids: set[str] = set()
+    for folder in trees:
+        for child in folder.get("children") or []:
+            if child.get("id"):
+                leaf_ids.add(child.get("id"))
+    assert_true("os-thermal" in leaf_ids, "Thermal Manager bookmark", results)
+    assert_true("h7-ear-neural" in leaf_ids, "Final Ear manager bookmark", results)
+    assert_true("h7-mouth-neural" in leaf_ids, "Final Mouth manager bookmark", results)
+    cmd_ids = {c.get("id") for c in next((t.get("children") or [] for t in trees if t.get("id") == "command"), [])}
+    assert_true({"cmd-field", "cmd-deck", "cmd-threat"} <= cmd_ids, "Control folder localhost bookmarks", results)
     tree_ids = {t.get("id") for t in trees if isinstance(t, dict)}
     for fid in ("hostess-7", "command", "os"):
         assert_true(fid in tree_ids, f"bookmark folder {fid}", results)
+    import subprocess
+    bm_val = subprocess.run(
+        [sys.executable, str(QUEEN / "lib" / "queen-bookmark-tree.py"), "validate"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        cwd=str(QUEEN),
+    )
+    assert_true(bm_val.returncode == 0, "all bookmark tree URLs validate (localhost)", results)
     home = doc.get("home") or ""
     assert_true(home.startswith("http"), "home URL set", results)
     tab1 = (doc.get("tabs") or [{}])[0].get("id")
@@ -519,7 +534,15 @@ def run_tests() -> list[tuple[str, str]]:
     assert_true(gc == 200 and grdoc.get("schema") == "queen-chips/v1", "game room API", results)
     assert_true(grdoc.get("surface") == "webbrowser" and grdoc.get("web_surface") is True, "game room web surface", results)
     assert_true((grdoc.get("rtx") or {}).get("desktop_comp_shader") is False, "no desktop comp shader", results)
-    assert_true(len(grdoc.get("systems") or []) >= 10, "game room systems catalog", results)
+    gr_systems = grdoc.get("systems") or []
+    assert_true(len(gr_systems) >= 26, "game room systems catalog (26 lanes)", results)
+    gr_ids = {str(s.get("id")) for s in gr_systems}
+    assert_true("c64" in gr_ids and "c64_ultimate" in gr_ids, "c64 classic + ultimate separate", results)
+    assert_true(
+        all((s.get("catalog") or "").startswith("004-computers/") for s in gr_systems),
+        "game room dewey catalog paths",
+        results,
+    )
 
     grc, grhtml = _get("/world/queen-game-room.html")
     assert_true(grc == 200 and b"queen-game-room.js" in grhtml, "game room web page", results)
@@ -532,6 +555,19 @@ def run_tests() -> list[tuple[str, str]]:
     sic, sidoc_raw = _get("/api/game-room/system?system=nes")
     sidoc = json.loads(sidoc_raw.decode("utf-8"))
     assert_true(sic == 200 and sidoc.get("schema") == "queen-emulator-system-info/v1", "emulator system info API", results)
+
+    c64c, c64doc_raw = _get("/api/game-room/system?system=c64")
+    c64doc = json.loads(c64doc_raw.decode("utf-8"))
+    c64u, c64udoc_raw = _get("/api/game-room/system?system=c64_ultimate")
+    c64udoc = json.loads(c64udoc_raw.decode("utf-8"))
+    assert_true(
+        c64doc.get("platform_stack") == "retro_c64"
+        and c64udoc.get("platform_stack") == "c64_ultimate_fpga"
+        and (c64doc.get("urls") or {}).get("dewey_catalog") == "004-computers/c64"
+        and (c64udoc.get("urls") or {}).get("dewey_catalog") == "004-computers/c64_ultimate",
+        "c64 vs c64_ultimate catalog stacks",
+        results,
+    )
     assert_true(sidoc.get("ok") is True and sidoc.get("device_image"), "system info device image", results)
     assert_true(len(sidoc.get("stack_chips") or []) >= 1, "system info stack chips", results)
 
@@ -637,6 +673,38 @@ def run_tests() -> list[tuple[str, str]]:
     assert_true(
         fc_t == 200 and fres.get("ok") and "dock=terminal" in (fres.get("resolved") or ""),
         "resolve queen://terminal",
+        results,
+    )
+
+    ps, psdoc_raw = _get("/api/queen-program-surface", timeout=30)
+    psdoc = json.loads(psdoc_raw.decode("utf-8"))
+    assert_true(
+        ps == 200 and psdoc.get("schema") == "queen-program-surface/v1" and psdoc.get("queen_software_only"),
+        "queen-program-surface API",
+        results,
+    )
+    pjs, pjst = _get("/world/queen-program-surface.js")
+    assert_true(
+        pjs == 200 and b"QueenProgramSurface" in pjst and b"openContextMenu" in pjst,
+        "queen-program-surface JS",
+        results,
+    )
+    pp, pprop = _post("/api/queen-program-surface", {"action": "properties", "program_id": "terminal"}, timeout=30)
+    assert_true(
+        pp == 200
+        and pprop.get("schema") == "queen-program-properties/v1"
+        and any(s.get("id") == "launch" for s in (pprop.get("sections") or [])),
+        "terminal program properties menu",
+        results,
+    )
+    pl, plaunch = _post(
+        "/api/queen-program-surface",
+        {"action": "resolve_launch", "program_id": "terminal", "surface": "browser"},
+        timeout=30,
+    )
+    assert_true(
+        pl == 200 and plaunch.get("ok") and plaunch.get("launch_mode") == "queen_browser",
+        "terminal resolve_launch browser surface",
         results,
     )
 

@@ -34,7 +34,7 @@
       btn.textContent = `v${state.current}`;
       return;
     }
-    if (force) detail.textContent = "Checking GitHub NXF…";
+    if (force) detail.textContent = "Checking GitHub…";
     try {
       const res = await fetch(`/api/update/status?force=${force ? 1 : 0}`, { cache: "no-store" });
       const data = await res.json();
@@ -59,7 +59,7 @@
         btn.classList.add("qb-update-ready");
         detail.classList.add("qb-update-ready");
         btn.textContent = "UPDATE";
-        detail.textContent = `${data.previous} → ${data.latest} · NXF`;
+        detail.textContent = `${data.previous} → ${data.latest} · ${data.product || "AmmoOS"}`;
       } else {
         btn.classList.remove("qb-update-ready");
         detail.classList.remove("qb-update-ready");

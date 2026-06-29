@@ -138,8 +138,8 @@ nexus_boot_c2_desktop() {
   local open_py="${NEXUS_INSTALL_ROOT}/lib/field-queen-browser-open.py"
   [[ -f "$open_py" ]] || return 1
   nexus_boot_c2_prune_autostart
-  NEXUS_C2_DESKTOP_LAUNCH=1 \
-  NEXUS_C2_KIOSK="${NEXUS_C2_KIOSK:-1}" \
+  NEXUS_C2_DESKTOP_LAUNCH="${NEXUS_C2_DESKTOP_LAUNCH:-0}" \
+  NEXUS_C2_KIOSK="${NEXUS_C2_KIOSK:-0}" \
   NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" \
   NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
   QUEEN_ROOT="${QUEEN_ROOT:-${NEXUS_INSTALL_ROOT}/Queen}" \

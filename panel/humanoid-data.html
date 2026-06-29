@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#040810" />
   <title>Humanoid Motion · Full Data</title>
+  <link rel="icon" href="/assets/hostess7-training-chamber.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/assets/dusty-midnight.css" />
   <link rel="stylesheet" href="/assets/humanoid-data.css" />
+  <link rel="stylesheet" href="/assets/hostess7-program-frame.css" />
 </head>
 <body class="humanoid-data-page">
   <header class="hd-head">
@@ -56,6 +58,19 @@
     <span>· data peek 60fps · wireframe 60fps · training 85% blast</span>
   </footer>
 
+  <script src="/assets/queen-program-launch.js"></script>
+  <script src="/assets/hostess7-program-frame.js"></script>
   <script src="/assets/humanoid-data.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      Hostess7ProgramFrame.mount({
+        programId: "hostess7-humanoid-data",
+        title: "Humanoid Data",
+        icon: "/assets/hostess7-training-chamber.svg",
+        exportUrl: "/api/humanoid-motion/data-all",
+        onRefresh: function () { document.getElementById("hd-refresh")?.click(); },
+      });
+    });
+  </script>
 </body>
 </html>

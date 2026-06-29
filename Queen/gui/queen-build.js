@@ -230,8 +230,8 @@
     }
   });
 
-  $("qb-queen-zocr")?.addEventListener("click", async () => {
-    const btn = $("qb-queen-zocr");
+  $("qb-queen-final-eye")?.addEventListener("click", async () => {
+    const btn = $("qb-queen-final-eye");
     if (btn) btn.disabled = true;
     try {
       const out = await dispatch("zocr-smoke");

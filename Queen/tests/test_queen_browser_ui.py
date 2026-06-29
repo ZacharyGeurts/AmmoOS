@@ -66,12 +66,12 @@ def main() -> int:
         # Back
         page.click("#qb-back")
         page.wait_for_function(
-            "() => { const s = document.getElementById('qb-frame')?.src || ''; return s.includes('9477/field') || s.includes('queen-field-home') || s.includes('Field_Primer') || s.includes('zacharygeurts'); }",
+            "() => { const s = document.getElementById('qb-frame')?.src || ''; return s.includes('kilroy-home') || s.includes('queen-field-home') || s.includes('Field_Primer') || s.includes('zacharygeurts'); }",
             timeout=15000,
         )
         back_src = page.locator("#qb-frame").get_attribute("src") or ""
         check(
-            "9477/field" in back_src or "queen-field-home" in back_src or "Field_Primer" in back_src or "zacharygeurts" in back_src,
+            "kilroy-home" in back_src or "queen-field-home" in back_src or "Field_Primer" in back_src or "zacharygeurts" in back_src,
             "back returns home",
         )
 
@@ -95,11 +95,11 @@ def main() -> int:
         # Home
         page.click("#qb-home")
         page.wait_for_function(
-            "() => { const s = document.getElementById('qb-frame')?.src || ''; return s.includes('9477/field') || s.includes('queen-field-home') || s.includes('Field_Primer') || s.includes('zacharygeurts'); }",
+            "() => { const s = document.getElementById('qb-frame')?.src || ''; return s.includes('kilroy-home') || s.includes('queen-field-home') || s.includes('Field_Primer') || s.includes('zacharygeurts'); }",
             timeout=15000,
         )
         check(
-            "queen-field-home" in (page.locator("#qb-frame").get_attribute("src") or "")
+            "kilroy-home" in (page.locator("#qb-frame").get_attribute("src") or "")
             or "Field_Primer" in (page.locator("#qb-url").input_value() or "")
             or "zacharygeurts" in (page.locator("#qb-frame").get_attribute("src") or ""),
             "home button",
@@ -108,7 +108,7 @@ def main() -> int:
         # Bookmark click
         page.locator(".qb-bookmark", has_text="Field Primer").click()
         page.wait_for_function(
-            "() => { const s = document.getElementById('qb-frame')?.src || ''; return s.includes('9477/field') || s.includes('queen-field-home') || s.includes('Field_Primer') || s.includes('zacharygeurts'); }",
+            "() => { const s = document.getElementById('qb-frame')?.src || ''; return s.includes('kilroy-home') || s.includes('queen-field-home') || s.includes('Field_Primer') || s.includes('zacharygeurts'); }",
             timeout=15000,
         )
         check(True, "bookmark navigation")

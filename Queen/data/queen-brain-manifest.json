@@ -70,7 +70,7 @@
       "zac_verify": "./Hostess7.sh zac-verify",
       "tools_docs": "./Hostess7.sh tools-docs redata",
       "textbook_ingest": "pythong lib/queen-hostess-brain.py ingest-textbook",
-      "queen_zocr": "pythong lib/queen-zocr.py browser-smoke",
+      "queen_final_eye": "pythong lib/queen_final_eye.py browser-smoke",
       "queen_eyeball": "pythong lib/queen-eyeball.py verify",
       "eyeball_arm_dishes": "pythong lib/queen-eyeball.py arm dishes",
       "eyeball_teach": "pythong lib/queen-eyeball.py dispatch {\"action\":\"teach\",\"lesson\":\"authority\"}",
@@ -83,7 +83,7 @@
     "codename": "eye-stoard",
     "port": 9479,
     "out": "SG/Final_Eye/out",
-    "smoke": "pythong lib/queen-zocr.py browser-smoke",
+    "smoke": "pythong lib/queen_final_eye.py browser-smoke",
     "doctrine": "Final_Eye v1.2 assistive tenant — heaven/hell ops, enemy discernment, disarmament lane, Teach authority"
   },
   "hostess7_final_eye": {
@@ -158,7 +158,7 @@
       "arm_person": "dispatch {\"action\":\"arm\",\"mode\":\"person_present\"}",
       "eye_comfort": "dispatch {\"action\":\"comfort\"}"
     },
-    "hostess_pipeline": "queen_eyeball after queen_zocr in HOSTESS_ORDER",
+    "hostess_pipeline": "queen_eyeball after queen_final_eye in HOSTESS_ORDER",
     "offense": "Final_Eye vision offense — pattern strike, entity weapons, preempt RTX",
     "defense": "IRTN trust mesh + NEXUS gates + assist contract — never overflow"
   },
@@ -252,7 +252,7 @@
     "profile": "field_opt",
     "cxx_std": "gnu++26",
     "c_std": "gnu17",
-    "root": "SG/Grok16",
+    "root": "NewLatest/Grok16",
     "toolchain_sh": "Grok16/scripts/grok16-toolchain.sh",
     "manifest": "Grok16/data/grok16-toolchain.json",
     "queen_manifest": "data/g16-toolchain.json",

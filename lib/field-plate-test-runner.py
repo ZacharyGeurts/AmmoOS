@@ -13,7 +13,9 @@ from typing import Any
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 SG = Path(os.environ.get("SG_ROOT", str(INSTALL.parent.parent)))
-GROK16 = Path(os.environ.get("GROK16_ROOT", str(SG / "Grok16")))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 REGISTRY = INSTALL / "data" / "field-plate-test-registry.json"
 PANEL = STATE / "field-plate-test-runner.json"
 LEDGER = STATE / "field-plate-test-runner-ledger.jsonl"
@@ -85,7 +87,7 @@ def _resource_available(req: str) -> bool:
     if req == "ironclad":
         return (GROK16 / "forge" / "g16-ironclad.py").is_file()
     if req == "final_eye":
-        for c in (SG / "Final_Eye", SG / "ZNEWOCR", SG / "ZOCR"):
+        for c in (INSTALL / "Final_Eye", SG / "NewLatest" / "Final_Eye"):
             if (c / "gui" / "app.py").is_file() or (c / "zocr_security.py").is_file():
                 return True
         return False

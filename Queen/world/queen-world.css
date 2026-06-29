@@ -1,3 +1,4 @@
+/* Queen world — AmmoOS web engine surfaces · Grok16 5.1.0 */
 :root {
   /* Field Technology book palette (Field_Primer) */
   --bg: #020403;
@@ -20,7 +21,7 @@
   --ok: #22c55e;
   --warn: #f0b429;
   --radius: 14px;
-  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font: system-ui, sans-serif;
   --mono: ui-monospace, "Cascadia Code", "Fira Code", monospace;
 }
 
@@ -1488,7 +1489,7 @@ body.queen-game-room-page {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #d4a853;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: system-ui, sans-serif;
 }
 
 .ft-hero h1 {
@@ -1528,7 +1529,7 @@ body.queen-game-room-page {
   border: 1px solid rgba(212, 168, 83, 0.45);
   background: rgba(212, 168, 83, 0.12);
   color: #f4efe4;
-  font: 600 0.78rem Inter, system-ui, sans-serif;
+  font: 600 0.78rem system-ui, sans-serif;
   text-decoration: none;
   cursor: pointer;
 }
@@ -1566,7 +1567,7 @@ body.queen-game-room-page {
 
 .ft-nav h3 {
   margin: 0 0 10px;
-  font: 600 0.68rem Inter, system-ui, sans-serif;
+  font: 600 0.68rem system-ui, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ft-muted);
@@ -1582,7 +1583,7 @@ body.queen-game-room-page {
   border-radius: 6px;
   background: transparent;
   color: var(--ft-ink);
-  font: 0.8rem Inter, system-ui, sans-serif;
+  font: 0.8rem system-ui, sans-serif;
   cursor: pointer;
   line-height: 1.35;
 }
@@ -1649,7 +1650,7 @@ body.queen-game-room-page {
 .ft-axiom strong, .ft-label-card strong, .ft-product strong {
   display: block;
   margin-bottom: 4px;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: system-ui, sans-serif;
   font-size: 0.85rem;
 }
 
@@ -1657,7 +1658,7 @@ body.queen-game-room-page {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 4px;
-  font: 600 0.68rem Inter, system-ui, sans-serif;
+  font: 600 0.68rem system-ui, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -1681,7 +1682,7 @@ body.queen-game-room-page {
 }
 
 .ft-chapter-track {
-  font: 600 0.72rem Inter, system-ui, sans-serif;
+  font: 600 0.72rem system-ui, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--ft-muted);
@@ -1731,7 +1732,7 @@ body.queen-game-room-page {
 
 .ft-rocks-table th {
   background: #ebe4d6;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: system-ui, sans-serif;
   font-size: 0.72rem;
   text-transform: uppercase;
 }
@@ -1748,7 +1749,7 @@ body.queen-game-room-page {
   border-radius: 20px;
   border: 1px solid var(--ft-border);
   background: #fff;
-  font: 0.75rem Inter, system-ui, sans-serif;
+  font: 0.75rem system-ui, sans-serif;
   cursor: pointer;
   color: var(--ft-ink);
 }

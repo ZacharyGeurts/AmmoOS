@@ -397,6 +397,27 @@ def seed_default_tasks() -> dict[str, Any]:
             "added_by": "hostess7",
             "tags": ["library"],
         },
+        {
+            "title": "Training floor complete — sense, footwork, sparring AI, environment",
+            "detail": "Run hostess7-training-floor complete_floor_training — Final_Eye/Ear assistive live, footwork, haptics, reactive sparring, environment mesh.",
+            "priority": 1,
+            "added_by": "hostess7",
+            "tags": ["training_floor", "body", "combat"],
+        },
+        {
+            "title": "Training room complete_all — Earth protection body rehearsal",
+            "detail": "Wire complete_all: try body, combat drill, floor training, assess needs — gap_count near zero.",
+            "priority": 1,
+            "added_by": "hostess7",
+            "tags": ["training_room", "earth_mandate"],
+        },
+        {
+            "title": "Hand dexterity and attachment fluency — stylus and gripper",
+            "detail": "Train hands to ≥72% proficiency; learn precision_stylus and parallel_gripper attachments like native hands.",
+            "priority": 2,
+            "added_by": "hostess7",
+            "tags": ["hands", "attachments"],
+        },
     ]
     for s in seeds:
         if _task_title_exists(doc, str(s.get("title") or "")):

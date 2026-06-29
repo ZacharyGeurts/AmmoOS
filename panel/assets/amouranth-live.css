@@ -5,7 +5,7 @@
   --al-text: #fff0f4;
   --al-dim: #c9a0ad;
   --al-live: #ef4444;
-  --al-font: "Segoe UI", system-ui, sans-serif;
+  --al-font: system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }

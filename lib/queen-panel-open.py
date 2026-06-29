@@ -174,7 +174,9 @@ def _launch_integrated_browser() -> dict[str, Any]:
 def launch_queen_display(*, focus_url: str = "") -> dict[str, Any]:
     """Open Queen integrated field browser — Webbrowser shell + startup tabs, never comp shader."""
     browser_shell = _browser_shell_url()
-    panel_url = (focus_url or _panel_field_url()).strip()
+    launch_url = browser_shell
+    kilroy_home = f"{_world_base()}/world/kilroy-home.html"
+    panel_url = (focus_url or kilroy_home).strip()
     world = ensure_queen_world()
     display = _launch_integrated_browser()
     return {
@@ -183,6 +185,8 @@ def launch_queen_display(*, focus_url: str = "") -> dict[str, Any]:
         "world": world,
         "panel_url": panel_url,
         "shell_url": browser_shell,
+        "launch_url": launch_url,
+        "gecko_url_arg": f"--url={launch_url}",
         "surface": "queen-webbrowser",
         "spawn_rtx": False,
         "comp_shader_boot": False,

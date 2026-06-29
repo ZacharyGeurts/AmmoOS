@@ -70,6 +70,24 @@
       return `${esc(pkg)} · ${esc(socket)} · ${pins}`;
     }
 
+    function formatImprint(row) {
+      const lines = row.imprint;
+      if (!lines?.length) return "";
+      return (
+        `<div class="qcd-imprint">` +
+        lines.map((ln) => `<span>${esc(ln)}</span>`).join("") +
+        `</div>`
+      );
+    }
+
+    function formatPath(row) {
+      const parts = [];
+      if (row.path_pct != null) parts.push(`${esc(row.path_pct)}% path`);
+      if (row.band) parts.push(`band ${esc(row.band)}`);
+      if (row.status) parts.push(esc(row.status));
+      return parts.join(" · ") || "—";
+    }
+
     function companionChips(ids, labelMap, detailRow) {
       if (!ids?.length) return "";
       return ids.map((cid) => {
@@ -124,12 +142,15 @@
         `<img src="${esc(img)}" alt="${esc(row.label)} detail" />` +
         `<figcaption>Detail render · ${esc(row.id)}</figcaption>` +
         `</figure>` +
+        (formatImprint(row) ? `<div class="qcd-imprint-wrap">${formatImprint(row)}</div>` : "") +
         `<dl class="qcd-meta">` +
         `<dt>Die ID</dt><dd><code>${esc(row.id)}</code></dd>` +
         `<dt>Dates</dt><dd>${formatDates(row)}</dd>` +
+        `<dt>Era</dt><dd>${esc(row.era || row.mfg_date_start || "—")}</dd>` +
         `<dt>Package / Socket / Pins</dt><dd>${formatPackage(row)}</dd>` +
         `<dt>Bits / MHz</dt><dd>${esc(row.bits ?? "—")} · ${esc(row.mhz ?? "—")}</dd>` +
         `<dt>Country</dt><dd>${esc(row.country || "—")}</dd>` +
+        `<dt>Path / Band</dt><dd>${formatPath(row)}</dd>` +
         `<dt>Platform stack</dt><dd>${esc(row.platform_stack || "—")}</dd>` +
         `<dt>Combinatorics leaf</dt><dd>${esc(row.combinatorics_leaf || "—")}</dd>` +
         (row.note ? `<dt>Note</dt><dd>${esc(row.note)}</dd>` : "") +
@@ -164,5 +185,6 @@
       });
   })();
   </script>
+  <script src="queen-field-chrome.js" defer></script>
 </body>
 </html>

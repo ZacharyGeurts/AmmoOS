@@ -10,7 +10,7 @@
   --qdash-bar-h: 36px;
   --qdash-gap: 10px;
   --qdash-pad: 8px;
-  --qdash-font: "Segoe UI", system-ui, sans-serif;
+  --qdash-font: system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }

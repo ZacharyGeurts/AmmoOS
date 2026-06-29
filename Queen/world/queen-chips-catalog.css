@@ -25,7 +25,7 @@
     radial-gradient(ellipse 70% 50% at 0% 100%, rgba(62, 207, 142, 0.05), transparent 50%),
     linear-gradient(180deg, var(--qcc-bg) 0%, #040806 100%);
   color: var(--qcc-text);
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.45;
 }
@@ -461,7 +461,7 @@
   min-height: 100vh;
   background: var(--qcc-bg);
   color: var(--qcc-text);
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: system-ui, sans-serif;
 }
 
 .qcd-wrap {
@@ -558,6 +558,39 @@
   font-family: var(--qcc-mono);
   font-size: 0.82em;
   color: var(--qcc-accent);
+}
+
+.qcd-imprint-wrap {
+  margin: 0 0 1rem;
+}
+
+.qcd-imprint {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 1rem;
+  background: var(--qcc-inset);
+  border: 1px solid var(--qcc-line-soft);
+  border-radius: var(--qcc-radius);
+  font-family: var(--qcc-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--qcc-gold);
+  text-transform: uppercase;
+}
+
+.qcc-card-era {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  color: var(--qcc-muted);
+}
+
+.qcc-card-badge--feat {
+  right: auto;
+  left: 0.35rem;
+  background: rgba(212, 176, 106, 0.25);
+  color: var(--qcc-gold);
 }
 
 .qcd-curator {

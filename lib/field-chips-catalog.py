@@ -1,4 +1,4 @@
-#!/usr/bin/env pythong
+#!/usr/bin/env python3
 """Field Chips Catalog — library book: Ironclad truth, universal chipset, every die by kind."""
 from __future__ import annotations
 
@@ -81,7 +81,7 @@ COMPANION_STACK_BY_PLATFORM: dict[str, tuple[int, str]] = {
 
 SEARCH_BLOB_FIELDS: tuple[str, ...] = (
     "id", "label", "vendor", "kind", "family", "source", "era", "status",
-    "note", "curator_note", "socket", "package", "country",
+    "note", "curator_note", "socket", "package", "country", "imprint",
     "companion_role", "platform_stack", "mame_device", "chapter",
 )
 
@@ -203,6 +203,27 @@ DEWEY_PLATFORM_PAGES: tuple[dict[str, Any], ...] = (
     {"slug": "stack-arm-soc-pmic", "stack_id": "arm_soc_template", "title": "ARM SoC PMIC Platform Stack",
      "family": "mobile", "era": "2007–2026", "vendor": "ARM ecosystem",
      "intro": "Mobile SoC companion template — DDRC, PMIC rail sequencing, GIC interrupt, clock/reset, pin controller, USB PHY — paired with Apple/Snapdragon/Exynos/MediaTek host dies."},
+    {"slug": "stack-retro-c64", "stack_id": "retro_c64", "title": "Commodore 64 Classic Platform Stack",
+     "family": "retro", "era": "1982–1994", "vendor": "Commodore",
+     "intro": "Classic **breadbin C64** — MOS **6510**, **VIC-II**, **SID** (6581/8580), dual **CIA** 6526. Queen CHIPS scaffold; **not** the 2025 FPGA C64 Ultimate."},
+    {"slug": "stack-c64-ultimate", "stack_id": "c64_ultimate_fpga", "title": "Commodore 64 Ultimate (FPGA)",
+     "family": "hardware_pair", "era": "2025–2026", "vendor": "Commodore International Corporation",
+     "intro": "**C64U / C64CU** — AMD Xilinx **Artix-7** FPGA, cycle-accurate recreation. Pairs with Grok16 on the host; **g16 does not run on classic 6510 silicon**."},
+    {"slug": "stack-retro-6502", "stack_id": "retro_6502", "title": "6502 Family Platform Stack",
+     "family": "retro", "era": "1975–1990", "vendor": "MOS / Ricoh",
+     "intro": "6502 / 65C02 guest dies — NES, Atari 2600, Apple II, PC Engine, and other 8-bit systems sharing MOS glue."},
+    {"slug": "stack-retro-z80", "stack_id": "retro_z80", "title": "Z80 Family Platform Stack",
+     "family": "retro", "era": "1976–1995", "vendor": "Zilog",
+     "intro": "Z80 / Z180 systems — SMS, MSX, Spectrum, Game Boy, Game Gear."},
+    {"slug": "stack-retro-m68k", "stack_id": "retro_m68k", "title": "Motorola 68000 Platform Stack",
+     "family": "retro", "era": "1979–1996", "vendor": "Motorola",
+     "intro": "68000-line guests — Genesis, Neo Geo, CoCo, and other m68k arcade/home systems."},
+    {"slug": "stack-amiga", "stack_id": "amiga_chipset", "title": "Commodore Amiga Chipset Stack",
+     "family": "retro", "era": "1985–1996", "vendor": "Commodore",
+     "intro": "Agnus, Denise, Paula — OCS/ECS/AGA chipset for Amiga 500/1200/4000 class machines."},
+    {"slug": "stack-pc-pentium", "stack_id": "pc_pentium", "title": "PC / DOS Pentium Stack",
+     "family": "pc", "era": "1993–2006", "vendor": "Intel",
+     "intro": "DOS / early Windows guest — Pentium MMX class north/south companions for Queen Game Room PC lane."},
 )
 
 DEWEY_PLATFORM_TEMPLATE = """# {title}
@@ -300,7 +321,10 @@ def _save(path: Path, doc: dict[str, Any]) -> None:
     tmp.replace(path)
 
 
-def _import_mod(name: str, path: Path) -> Any | None:
+def _import_mod(name: str, path: str | Path) -> Any | None:
+    path = Path(path)
+    if not path.is_file():
+        path = INSTALL / "lib" / path.name
     if not path.is_file():
         return None
     spec = importlib.util.spec_from_file_location(name, path)
@@ -494,6 +518,15 @@ def _curation_map() -> dict[str, dict[str, Any]]:
     return {}
 
 
+def _combinatronic_index() -> dict[str, dict[str, Any]]:
+    doc = _load(COMBINATRONIC_CATALOG, {})
+    out: dict[str, dict[str, Any]] = {}
+    for row in doc.get("chips") or []:
+        if isinstance(row, dict) and row.get("id"):
+            out[str(row["id"])] = row
+    return out
+
+
 def _matches_filter(row: dict[str, Any], filt: dict[str, Any]) -> bool:
     for key, expected in filt.items():
         val = row.get(key)
@@ -510,6 +543,7 @@ def _catalog_entry(
     *,
     curation: dict[str, dict[str, Any]],
     companion_uni: dict[str, dict[str, Any]],
+    combinatronic: dict[str, dict[str, Any]],
     thumb_ids: set[str],
     closeup_ids: set[str],
     page: int,
@@ -518,6 +552,7 @@ def _catalog_entry(
     cid = str(chip.get("id") or "")
     cur = dict(curation.get(cid) or {})
     comp = companion_uni.get(cid) or {}
+    combo = combinatronic.get(cid) or {}
     thumb, thumb_ok = _thumb_url(cid, thumb_ids=thumb_ids, closeup_ids=closeup_ids)
 
     entry: dict[str, Any] = {
@@ -547,7 +582,7 @@ def _catalog_entry(
         "thumb_available": thumb_ok,
         "detail_image_url": _detail_url(cid),
         "curated": bool(cur),
-        "featured": bool(cur.get("featured")),
+        "featured": bool(cur.get("featured") or combo.get("featured")),
     }
 
     for field in (
@@ -556,8 +591,17 @@ def _catalog_entry(
     ):
         if cur.get(field) is not None:
             entry[field] = cur[field]
+        elif combo.get(field) is not None:
+            entry[field] = combo[field]
         elif comp.get(field) is not None:
             entry[field] = comp[field]
+
+    if combo.get("imprint"):
+        entry["imprint"] = list(combo["imprint"])
+    if combo.get("body"):
+        entry["body_color"] = combo["body"]
+    if combo.get("label") and entry.get("label") == cid:
+        entry["label"] = combo["label"]
 
     if not entry.get("mfg_date_start") and entry.get("era"):
         entry["mfg_date_start"] = str(entry["era"])
@@ -607,6 +651,7 @@ def build_catalog(*, refresh: bool = False) -> dict[str, Any]:
     chips = iron.get("chips") or []
     curation = _curation_map()
     companion_uni = _companion_universal_index()
+    combinatronic = _combinatronic_index()
     thumb_ids = _thumb_ids_on_disk()
     closeup_ids = _closeup_ids_on_disk()
 
@@ -645,13 +690,25 @@ def build_catalog(*, refresh: bool = False) -> dict[str, Any]:
             chip,
             curation=curation,
             companion_uni=companion_uni,
+            combinatronic=combinatronic,
             thumb_ids=thumb_ids,
             closeup_ids=closeup_ids,
             page=page,
             chapter=chapter,
         ))
 
-    entries.sort(key=lambda e: (e.get("page", 99), str(e.get("kind") or ""), str(e.get("label") or "")))
+    api = _import_mod("ironclad_api", "ironclad-secure-api.py")
+    if api and hasattr(api, "sort_index"):
+        try:
+            entries, sort_meta = api.sort_index(entries, context="chip_catalog")
+            for i, e in enumerate(entries):
+                e.setdefault("ironclad_index", i)
+        except Exception:
+            entries.sort(key=lambda e: (e.get("page", 99), str(e.get("kind") or ""), str(e.get("label") or "")))
+            sort_meta = {}
+    else:
+        entries.sort(key=lambda e: (e.get("page", 99), str(e.get("kind") or ""), str(e.get("label") or "")))
+        sort_meta = {}
 
     by_kind: dict[str, int] = {}
     for e in entries:
@@ -671,6 +728,7 @@ def build_catalog(*, refresh: bool = False) -> dict[str, Any]:
         "counts": {
             "total": len(entries),
             "curated": sum(1 for e in entries if e.get("curated")),
+            "combinatronic_overlay": len(combinatronic),
             "featured": sum(1 for e in entries if e.get("featured")),
             "active": sum(1 for e in entries if e.get("active") is not False),
             "thumb_available": sum(1 for e in entries if e.get("thumb_available")),
@@ -686,6 +744,8 @@ def build_catalog(*, refresh: bool = False) -> dict[str, Any]:
         "page_lookup": page_lookup,
         "elapsed_ms": elapsed_ms,
         "combinatronic": True,
+        "ironclad_sort": sort_meta or None,
+        "ironclad_citation": "ironclad:api:1",
         "sources": {
             "ironclad": str(IRONCLAD_JSON),
             "curation": str(CURATION.relative_to(INSTALL)) if CURATION.is_relative_to(INSTALL) else str(CURATION),
@@ -751,7 +811,24 @@ def search_autocomplete(query: str, *, limit: int = 20) -> list[dict[str, Any]]:
         if score > 0:
             hits.append((score, row))
     hits.sort(key=lambda x: (-x[0], str(x[1].get("label") or "").lower()))
-    return [_autocomplete_hit(row, score=score, query=q) for score, row in hits[:limit]]
+    rows = [row for _, row in hits[: max(limit, len(hits))]]
+    acc = _import_mod("ironclad_access_chips", "ironclad-access.py")
+    if acc and hasattr(acc, "sort_rows") and rows:
+        try:
+            rows, _ = acc.sort_rows(rows, context="chip_catalog", n=limit)
+        except Exception:
+            rows = rows[:limit]
+    elif rows:
+        api = _import_mod("ironclad_api", "ironclad-secure-api.py")
+        if api and hasattr(api, "sort_index"):
+            try:
+                rows, _ = api.ironclad_secure_api().sort_index(rows, context="chip_catalog", n=limit)
+            except Exception:
+                rows = rows[:limit]
+        else:
+            rows = rows[:limit]
+    score_by_id = {str(row.get("id")): sc for sc, row in hits}
+    return [_autocomplete_hit(row, score=score_by_id.get(str(row.get("id")), 0), query=q) for row in rows]
 
 
 def entry_detail(chip_id: str) -> dict[str, Any] | None:

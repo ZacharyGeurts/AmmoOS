@@ -49,8 +49,8 @@ TAGS = {
 }
 
 BADGE_VERSIONS = {
-    "AmmoOS": "1.9.9h",
-    "Grok16": "5.0.1",
+    "AmmoOS": "2.0.0-beta3",
+    "Grok16": "5.2.0",
     "KILROY": "1.0.0-Taco",
     "ZNetwork": "2.1.0-Stack",
     "AmmoCode": "6.0.0-Stack",

@@ -14,7 +14,7 @@ STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 STATE_FILE = STATE / "keyboard-sovereign.json"
 BACKUP_FILE = STATE / "keyboard-sovereign-backup.json"
 
-# GNOME / mutter shortcuts that bleed through fullscreen C2 — cleared on engage, restored on release.
+# Host desktop shortcuts that bleed through fullscreen AmmoOS C2 — cleared on engage, restored on release.
 GSETTINGS_INHIBIT: list[tuple[str, str, str]] = [
     ("org.gnome.mutter", "overlay-key", ""),
     ("org.gnome.desktop.wm.keybindings", "switch-applications", "[]"),

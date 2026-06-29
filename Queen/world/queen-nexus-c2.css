@@ -20,7 +20,7 @@ html.nexus-military-v8 body {
     repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(94, 207, 122, 0.05) 2px, rgba(94, 207, 122, 0.05) 3px),
     linear-gradient(180deg, #0a0c08 0%, var(--qnc2-bg) 100%);
   color: var(--qnc2-text);
-  font: 13px/1.45 "Segoe UI", system-ui, sans-serif;
+  font: 13px/1.45 system-ui, sans-serif;
 }
 
 .qnc2-shell {

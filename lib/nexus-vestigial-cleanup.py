@@ -30,6 +30,25 @@ VESTIGIAL_DESKTOPS = (
     "nexus-shield-tray.desktop",
     "nexus-genius.desktop",
     "queen-shield.desktop",
+    "ammocode-stack.desktop",
+    "amouranthrtx.desktop",
+    "amouranthrtx-comp.desktop",
+    "amouranthrtx-engine.desktop",
+    "amouranthrtx-spv.desktop",
+    "sg-code-open.desktop",
+    "world-repack.desktop",
+    "queen-browser.desktop",
+    "ammoos-c2.desktop",
+    "ammoos-field.desktop",
+    "ammoos.desktop",
+)
+
+VESTIGIAL_DESKTOP_PREFIXES = (
+    "ammocode",
+    "amouranth",
+    "ammoos",
+    "sg-code",
+    "world-repack",
 )
 
 # Duplicate autostart — keep nexus-panel-tray.desktop only
@@ -123,11 +142,23 @@ def _remove_file(path: Path, *, kind: str, results: dict[str, Any]) -> bool:
         return False
 
 
+def _is_vestigial_desktop_name(name: str) -> bool:
+    if name == "nexus-field.desktop":
+        return False
+    if name in VESTIGIAL_DESKTOPS:
+        return True
+    stem = name.removesuffix(".desktop").lower()
+    return any(stem.startswith(p) for p in VESTIGIAL_DESKTOP_PREFIXES)
+
+
 def _clean_desktop_entries(results: dict[str, Any]) -> int:
     count = 0
     for base in _desktop_dirs():
         for name in VESTIGIAL_DESKTOPS:
             if _remove_file(base / name, kind="desktop", results=results):
+                count += 1
+        for path in base.glob("*.desktop"):
+            if _is_vestigial_desktop_name(path.name) and _remove_file(path, kind="desktop_pattern", results=results):
                 count += 1
         if base.name == "autostart":
             for name in VESTIGIAL_AUTOSTART:

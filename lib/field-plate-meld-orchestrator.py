@@ -15,7 +15,9 @@ from typing import Any, Callable
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
 SG = Path(os.environ.get("SG_ROOT", INSTALL.parent.parent))
-GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 PANEL = STATE / "field-plate-meld-orchestrator-panel.json"
 
 # Canonical meld → combinatorics → exec chain (bottom = FieldX86Die / native BSP)
@@ -88,7 +90,7 @@ def _import_meld() -> Any | None:
 
 
 def _import_combinatorics() -> Any | None:
-    for path in (GROK16 / "lib" / "field_combinatorics.py", SG / "Grok16" / "lib" / "field_combinatorics.py"):
+    for path in (GROK16 / "lib" / "field_combinatorics.py"):
         mod = _import_py(path, "field_combinatorics_orch")
         if mod:
             return mod

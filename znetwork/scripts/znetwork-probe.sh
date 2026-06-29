@@ -1,1 +1,0 @@
-../../ZNetwork/scripts/znetwork-probe.sh

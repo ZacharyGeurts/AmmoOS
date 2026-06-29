@@ -1,14 +1,20 @@
 /**
- * Queen GNU Terminal — tabs (default) · split 2/3/4 · miniview · secured CSS embed.
+ * Queen GNU Terminal — tabs · split 2/3/4 · miniview · ANSI 256/truecolor · Queen Styles.
  */
 (function () {
   "use strict";
 
   const API = "/api/queen-terminal";
   const PROXY = "/browse/view";
+  const THEME_JSON = "/gui/queen-styles-themes.json";
   const MAX_LINES = 400;
   const MAX_SPLIT = 4;
   const TAB_THRESHOLD = 5;
+
+  const PALETTE_16 = [
+    "#000000", "#cd3131", "#0dbc79", "#e5e510", "#2472c8", "#bc3fbc", "#11a8cd", "#e5e5e5",
+    "#666666", "#f14c4c", "#23d18b", "#f5f543", "#3b8eea", "#d670d6", "#29b8db", "#ffffff",
+  ];
 
   const root = {
     shell: null,
@@ -25,6 +31,8 @@
     cwd: "",
     kilroyRoot: "",
     kernel: {},
+    themes: [],
+    themeId: "black_emerald_rose_2026",
     fontSize: 0.88,
     wrap: true,
     bell: false,
@@ -32,6 +40,7 @@
     showMini: true,
     initialized: false,
     scrollDrag: null,
+    uiSyncPending: false,
   };
 
   function esc(s) {
@@ -40,6 +49,177 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  function xterm256(n) {
+    if (n < 16) return PALETTE_16[n];
+    if (n < 232) {
+      const idx = n - 16;
+      const r = (idx / 36) | 0;
+      const g = ((idx / 6) | 0) % 6;
+      const b = idx % 6;
+      const conv = (v) => (v ? 55 + v * 40 : 0);
+      return `rgb(${conv(r)},${conv(g)},${conv(b)})`;
+    }
+    const gray = 8 + (n - 232) * 10;
+    return `rgb(${gray},${gray},${gray})`;
+  }
+
+  function applySgr(state, params) {
+    if (!params.length || (params.length === 1 && params[0] === 0)) {
+      state.fg = null;
+      state.bg = null;
+      state.bold = false;
+      state.dim = false;
+      return;
+    }
+    let i = 0;
+    while (i < params.length) {
+      const p = params[i++];
+      if (p === 0) {
+        state.fg = null;
+        state.bg = null;
+        state.bold = false;
+        state.dim = false;
+      } else if (p === 1) state.bold = true;
+      else if (p === 2) state.dim = true;
+      else if (p === 22) {
+        state.bold = false;
+        state.dim = false;
+      } else if (p >= 30 && p <= 37) state.fg = PALETTE_16[p - 30];
+      else if (p === 39) state.fg = null;
+      else if (p >= 40 && p <= 47) state.bg = PALETTE_16[p - 40];
+      else if (p === 49) state.bg = null;
+      else if (p >= 90 && p <= 97) state.fg = PALETTE_16[p - 90 + 8];
+      else if (p >= 100 && p <= 107) state.bg = PALETTE_16[p - 100 + 8];
+      else if (p === 38 && params[i] === 5 && i + 1 < params.length) {
+        state.fg = xterm256(params[++i]);
+        i++;
+      } else if (p === 38 && params[i] === 2 && i + 3 < params.length) {
+        state.fg = `rgb(${params[++i]},${params[++i]},${params[++i]})`;
+      } else if (p === 48 && params[i] === 5 && i + 1 < params.length) {
+        state.bg = xterm256(params[++i]);
+        i++;
+      } else if (p === 48 && params[i] === 2 && i + 3 < params.length) {
+        state.bg = `rgb(${params[++i]},${params[++i]},${params[++i]})`;
+      }
+    }
+  }
+
+  function parseAnsiText(text) {
+    const frag = document.createDocumentFragment();
+    const state = { fg: null, bg: null, bold: false, dim: false };
+    let i = 0;
+    let chunk = "";
+
+    const flush = () => {
+      if (!chunk) return;
+      const el = document.createElement("span");
+      if (state.fg) el.style.color = state.fg;
+      if (state.bg) el.style.backgroundColor = state.bg;
+      if (state.bold) el.style.fontWeight = "700";
+      if (state.dim) el.style.opacity = "0.72";
+      el.textContent = chunk;
+      frag.appendChild(el);
+      chunk = "";
+    };
+
+    while (i < text.length) {
+      if (text.charCodeAt(i) === 27 && text[i + 1] === "[") {
+        flush();
+        let j = i + 2;
+        while (j < text.length && /[0-9;]/.test(text[j])) j++;
+        const cmd = text[j];
+        if (cmd === "m") {
+          const params = text
+            .slice(i + 2, j)
+            .split(";")
+            .filter((s) => s.length)
+            .map((s) => parseInt(s, 10));
+          if (!params.length) params.push(0);
+          applySgr(state, params);
+        }
+        i = cmd ? j + 1 : j;
+        continue;
+      }
+      chunk += text[i++];
+    }
+    flush();
+    return frag.childNodes.length ? frag : null;
+  }
+
+  function hexAlpha(hex, alpha) {
+    if (!hex || !hex.startsWith("#") || hex.length < 7) return hex || "transparent";
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function applyQueenTheme(theme) {
+    const t = theme || globalThis.QueenStyles?.getActive?.();
+    if (!t?.tokens?.colors) return;
+    const c = t.tokens.colors;
+    const ty = t.tokens.typography || {};
+    const shell = root.shell;
+    if (!shell) return;
+    root.themeId = t.id || root.themeId;
+    shell.dataset.qgtTheme = root.themeId;
+    shell.style.setProperty("--qgt-green", c.accent || c.emerald || "#3ecf8e");
+    shell.style.setProperty("--qgt-green-dim", hexAlpha(c.dim || c.accent, 0.55));
+    shell.style.setProperty("--qgt-green-glow", hexAlpha(c.accent || c.emerald, 0.35));
+    shell.style.setProperty("--qgt-bg", hexAlpha(c.bg || c.void, 0.82));
+    shell.style.setProperty("--qgt-bg-pane", hexAlpha(c.surface || c.panel, 0.78));
+    shell.style.setProperty("--qgt-border", hexAlpha(c.border || c.accent, 0.28));
+    shell.style.setProperty("--qgt-text", c.text || "#e8f2ea");
+    shell.style.setProperty("--qgt-cmd", c.aqua || "#7ec8ff");
+    shell.style.setProperty("--qgt-err", c.danger || c.rose || "#f472b6");
+    shell.style.setProperty("--qgt-url", c.flow || c.aqua || "#6ab0ff");
+    if (ty.mono_font) shell.style.fontFamily = ty.mono_font;
+    const themeEl = shell.querySelector("#qgt-theme-label");
+    if (themeEl) themeEl.textContent = t.label || t.id || "Queen";
+  }
+
+  function bindThemeWatch() {
+    if (root._themeWatch) return;
+    root._themeWatch = true;
+    const obs = new MutationObserver(() => applyQueenTheme());
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-queen-theme"] });
+    document.addEventListener("queen-styles-changed", () => applyQueenTheme());
+  }
+
+  async function loadTerminalThemes() {
+    try {
+      const r = await fetch(THEME_JSON, { cache: "no-store" });
+      if (r.ok) {
+        const doc = await r.json();
+        root.themes = doc.themes || [];
+        return;
+      }
+    } catch (_) {}
+    root.themes = globalThis.QueenStyles?.getThemes?.() || [];
+  }
+
+  function cycleTheme(dir) {
+    const themes = root.themes.length ? root.themes : globalThis.QueenStyles?.getThemes?.() || [];
+    if (!themes.length) return;
+    const idx = Math.max(0, themes.findIndex((t) => t.id === root.themeId));
+    const next = themes[(idx + dir + themes.length) % themes.length];
+    if (globalThis.QueenStyles?.applyTheme) {
+      globalThis.QueenStyles.applyTheme(next.id);
+    }
+    applyQueenTheme(next);
+    appendLine(`Theme → ${next.label || next.id}`, "banner");
+  }
+
+  function scheduleUiSync() {
+    if (root.uiSyncPending) return;
+    root.uiSyncPending = true;
+    requestAnimationFrame(() => {
+      root.uiSyncPending = false;
+      syncScrollbar();
+      renderMiniview();
+    });
   }
 
   function shortCwd(path) {
@@ -247,19 +427,22 @@
     applyLayout(`split-${n}`);
   }
 
-  function appendLine(text, kind, session) {
-    const sess = session || activeSession();
-    if (!sess?.out) return;
+  function buildLineRow(text, kind) {
     const line = { text: String(text ?? ""), kind: kind || "out" };
-    sess.lines.push(line);
-    while (sess.lines.length > MAX_LINES) sess.lines.shift();
-
     const row = document.createElement("p");
     row.className = `qgt-line qgt-line--${line.kind}`;
+    const raw = line.text;
+    const cleaned = raw.replace(/\x1b\[[0-9;]*[A-Za-z]/g, (m) => (m.endsWith("m") ? m : ""));
+    const hasAnsi = cleaned.includes("\x1b");
     const urlRe = /https?:\/\/[^\s<>"']+/g;
-    if (line.kind === "out" && urlRe.test(line.text)) {
+
+    if (hasAnsi) {
+      const parsed = parseAnsiText(cleaned);
+      if (parsed) row.appendChild(parsed);
+      else row.textContent = cleaned.replace(/\x1b\[[0-9;]*m/g, "");
+    } else if (line.kind === "out" && urlRe.test(raw)) {
       urlRe.lastIndex = 0;
-      row.innerHTML = esc(line.text).replace(
+      row.innerHTML = esc(raw).replace(
         urlRe,
         (u) => `<span class="qgt-line--url" data-url="${esc(u)}">${esc(u)}</span>`,
       );
@@ -267,14 +450,47 @@
         el.addEventListener("click", () => miniNavigate(el.dataset.url));
       });
     } else {
-      row.textContent = line.text;
+      row.textContent = raw;
+    }
+    return { row, line };
+  }
+
+  function appendLine(text, kind, session) {
+    const sess = session || activeSession();
+    if (!sess?.out) return;
+    const { row, line } = buildLineRow(text, kind);
+    sess.lines.push(line);
+    while (sess.lines.length > MAX_LINES) {
+      sess.lines.shift();
+      const first = sess.out.firstElementChild;
+      if (first) first.remove();
     }
     sess.out.appendChild(row);
     sess.out.scrollTop = sess.out.scrollHeight;
-    if (sess.id === root.activeId) {
-      syncScrollbar();
-      renderMiniview();
+    if (sess.id === root.activeId) scheduleUiSync();
+    if (sess.label) sess.label.textContent = promptLabel(sess.cwd);
+  }
+
+  function appendLines(text, kind, session) {
+    const sess = session || activeSession();
+    if (!sess?.out || text == null) return;
+    const parts = String(text).split("\n");
+    const frag = document.createDocumentFragment();
+    for (const part of parts) {
+      const { row, line } = buildLineRow(part, kind);
+      sess.lines.push(line);
+      frag.appendChild(row);
     }
+    while (sess.lines.length > MAX_LINES) {
+      const drop = sess.lines.length - MAX_LINES;
+      sess.lines.splice(0, drop);
+      for (let i = 0; i < drop && sess.out.firstElementChild; i++) {
+        sess.out.firstElementChild.remove();
+      }
+    }
+    sess.out.appendChild(frag);
+    sess.out.scrollTop = sess.out.scrollHeight;
+    if (sess.id === root.activeId) scheduleUiSync();
     if (sess.label) sess.label.textContent = promptLabel(sess.cwd);
   }
 
@@ -459,9 +675,7 @@
       }
       if (j.field_kernel) root.kernel = j.field_kernel;
       const out = j.output || j.error || "";
-      if (out) {
-        String(out).split("\n").forEach((ln) => appendLine(ln, j.ok === false ? "err" : "out", sess));
-      }
+      if (out) appendLines(out, j.ok === false ? "err" : "out", sess);
       if (!j.ok && root.bell) {
         try {
           const ctx = new AudioContext();
@@ -579,8 +793,21 @@
           }
           if (act === "mini-home") miniNavigate(`${location.origin}/world/`);
           if (act === "mini-docs") miniNavigate("https://www.gnu.org/software/bash/manual/bash.html");
+          if (act === "theme-next") cycleTheme(1);
+          if (act === "theme-mono") {
+            globalThis.QueenStyles?.applyTheme?.("mono_terminal");
+            applyQueenTheme(globalThis.QueenStyles?.getActive?.());
+          }
+          if (act === "theme-emerald") {
+            globalThis.QueenStyles?.applyTheme?.("black_emerald_rose_2026");
+            applyQueenTheme(globalThis.QueenStyles?.getActive?.());
+          }
+          if (act === "queen-styles") globalThis.QueenStyles?.toggleFlyout?.(true);
+          if (act === "program-props") {
+            globalThis.QueenProgramSurface?.showProperties?.({ id: "terminal", name: "Terminal", url: "queen://terminal" });
+          }
           if (act === "about") {
-            appendLine("Queen GNU Terminal · tabs default · split 2/3/4 · miniview · KILROY cwd", "banner");
+            appendLine("Queen GNU Terminal · ANSI 256/truecolor · Queen Styles · KILROY cwd", "banner");
           }
         });
       });
@@ -638,6 +865,10 @@
         ["font-smaller", "Smaller font"],
         ["toggle-wrap", "Toggle wrap"],
         ["sep", ""],
+        ["theme-next", "Next Queen theme"],
+        ["theme-mono", "Mono Terminal theme"],
+        ["theme-emerald", "Emerald Rose theme"],
+        ["sep", ""],
         ["toggle-miniview", "Toggle miniview"],
         ["toggle-mini", "Toggle minibrowser"],
         ["mini-home", "Minibrowser → Queen home"],
@@ -645,12 +876,15 @@
       menuBlock("Options", [
         ["toggle-bell", "Bell on error"],
         ["mini-docs", "Minibrowser → GNU Bash manual"],
+        ["queen-styles", "Open Queen Styles flyout"],
+        ["program-props", "Queen Program Properties…"],
       ]) +
       menuBlock("Help", [["about", "Queen GNU Terminal"]]) +
       `<span class="qgt-titlebar">Field shell · CSS secured</span></nav></header>` +
       `<div class="qgt-statusbar">` +
       `<span>Cwd: <strong id="qgt-cwd">~/KILROY</strong></span>` +
       `<span id="qgt-profile">field-native</span>` +
+      `<span class="qgt-status-theme" id="qgt-theme-label" title="Queen Styles theme">Queen</span>` +
       `<span class="qgt-status-layout" id="qgt-status-layout">tabs · 1</span>` +
       `</div>` +
       `<div class="qgt-deck" id="qgt-deck" data-miniview="1" data-mini="1">` +
@@ -708,7 +942,7 @@
   }
 
   async function bootSession(sess) {
-    appendLine("Queen GNU Terminal — tabs default · split 2/3/4 · miniview · kilroy · kernel · discern", "banner", sess);
+    appendLine("Queen GNU Terminal — ANSI palette · Queen Styles · tabs · split · miniview · KILROY", "banner", sess);
     const loaded = root.kernel.field_kernel_running || root.kernel.proc_kilroy_field;
     const mode = root.kernel.ai_default_mode || "home";
     appendLine(
@@ -746,16 +980,22 @@
       createSession({ title: "Shell 1" });
     }
 
+    await loadTerminalThemes();
+    bindThemeWatch();
+    applyQueenTheme(globalThis.QueenStyles?.getActive?.());
+
     if (!opts.quiet) {
       try {
         const j = await api({ action: "status" });
         root.kilroyRoot = j.kilroy_root || "";
         root.kernel = j.field_kernel || {};
         root.cwd = j.cwd_default || j.kilroy_root || j.sg_root || "";
+        if (j.theme_default) root.themeId = j.theme_default;
         root.sessions.forEach((s) => {
           if (!s.cwd) s.cwd = root.cwd;
         });
         updateStatusBar();
+        applyQueenTheme(globalThis.QueenStyles?.getActive?.());
         const sess = activeSession();
         if (sess && !sess.lines.length) await bootSession(sess);
         miniNavigate(`${location.origin}/world/?dock=kilroy`);
@@ -783,6 +1023,7 @@
     addSession,
     splitTo,
     applyLayout,
+    applyTheme: applyQueenTheme,
     activeSession,
   };
 })();

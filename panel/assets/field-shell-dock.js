@@ -1,3 +1,7 @@
+/**
+ * Field Shell Dock — AmmoOS program dock, tray, bookmarks flyout.
+ * @g16 5.1.0 · Grok16/field-stack-fabric · field-c2-taskbar-plate
+ */
 (function (global) {
   "use strict";
 
@@ -288,6 +292,53 @@
       if (bmBtn) bmBtn.setAttribute("aria-expanded", "false");
     },
   };
+
+  function ensureIroncladTaskbar() {
+    if (document.body?.dataset?.ironcladTaskbar === "0") return;
+    const onField = (global.location?.pathname || "") === "/field";
+    if (!onField && document.hasFocus && !document.hasFocus()) return;
+    const scripts = [
+      { src: "/assets/ironclad-bus.js?v=1", check: "IroncladBus" },
+      { src: "/assets/field-ironclad-taskbar.js?v=1", check: "FieldIroncladTaskbar" },
+      { src: "/assets/field-nav-spine.js?v=1", check: "FieldNavSpine" },
+    ];
+    const css = "/assets/field-ironclad-taskbar.css?v=1";
+    if (!document.querySelector('link[href*="field-ironclad-taskbar.css"]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = css;
+      document.head.appendChild(link);
+    }
+    if (!document.querySelector('link[href*="field-nav-spine.css"]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "/assets/field-nav-spine.css?v=1";
+      document.head.appendChild(link);
+    }
+    let pending = 0;
+    scripts.forEach(function (row) {
+      if (global[row.check]) return;
+      if (document.querySelector('script[src*="' + row.src.split("?")[0] + '"]')) return;
+      pending += 1;
+      const s = document.createElement("script");
+      s.src = row.src;
+      s.defer = true;
+      s.onload = function () {
+        pending -= 1;
+        if (pending <= 0 && global.FieldIroncladTaskbar?.mountStandalone) {
+          global.FieldIroncladTaskbar.mountStandalone();
+        }
+      };
+      document.head.appendChild(s);
+    });
+    if (pending === 0 && global.FieldIroncladTaskbar?.mountStandalone) {
+      global.FieldIroncladTaskbar.mountStandalone();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(ensureIroncladTaskbar, 50);
+  });
 
   global.FieldShellDock = FieldShellDock;
 })(typeof window !== "undefined" ? window : globalThis);

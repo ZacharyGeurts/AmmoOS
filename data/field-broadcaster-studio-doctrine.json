@@ -1,18 +1,29 @@
 {
-  "schema": "field-broadcaster-studio-doctrine/v1",
-  "title": "AmmoOS Broadcaster Studio — native scenes, no OBS",
-  "motto": "OBS + XSplit best-of — sovereign capture, threat-gated go-live.",
+  "schema": "field-broadcaster-studio-doctrine/v2",
+  "title": "AmmoOS Broadcaster Studio — sovereign live stack",
+  "motto": "Final_Eye is our display and our camera. Secure wire to Queen CANVAS. All codecs. Kick-first platforms.",
   "product": "Broadcaster",
-  "engine": "field-broadcaster-studio",
+  "engine": "field-broadcaster-chamber",
   "legacy_obs": false,
   "ui": {
-    "layout": "obs_xsplit_hybrid",
+    "layout": "studio_dual_view",
     "theme": "ammoos_black_emerald_rose",
     "dual_view": true,
     "menu_bar": true
   },
-  "source_kinds": ["display", "window", "camera", "audio_input", "audio_output", "browser", "image", "text", "media"],
+  "source_kinds": ["final_eye_display", "final_eye", "display", "window", "camera", "audio_input", "audio_output", "browser", "image", "text", "media"],
+  "vision": {
+    "display": "Final_Eye",
+    "camera": "Final_Eye",
+    "canvas_egress": "Queen CANVAS",
+    "canvas_bridge": "lib/field-final-eye-canvas-bridge.py",
+    "default_route": "straight_path",
+    "look_on_demand": true,
+    "truth_before_permanency": true
+  },
+  "codec_chamber": "lib/field-broadcaster-codecs.py",
+  "platforms": "data/field-broadcaster-platforms.json",
   "combinatorics_hook": "field-combinatorics-sequence",
   "threat_hook": "obs-threat-posterity-bridge",
-  "api": "/api/field-broadcaster/studio"
+  "api": "/api/field-broadcaster/chamber"
 }

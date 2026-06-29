@@ -16,6 +16,10 @@ from typing import Any
 from urllib.parse import unquote, urlparse
 
 QUEEN = Path(__file__).resolve().parents[1]
+_SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+if str(_SG_PATHS_LIB) not in sys.path:
+    sys.path.insert(0, str(_SG_PATHS_LIB))
+from sg_paths import grok16_root as _grok16_root
 SG = QUEEN.parent.parent
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", QUEEN / ".nexus-state"))
 HOTBAR_FILE = STATE / "queen-file-hotbar.json"
@@ -73,7 +77,7 @@ def _power_sort_mod():
     if _POWER_SORT is not None:
         return _POWER_SORT
     import importlib.util
-    grok16 = Path(os.environ.get("GROK16_ROOT", str(SG / "Grok16")))
+    grok16 = _grok16_root()
     path = grok16 / "lib" / "field-power-sort.py"
     if not path.is_file():
         return None
@@ -127,7 +131,27 @@ def _power_sort_slice() -> dict[str, Any]:
     return {"mode": "dirs_first", "always_best_sort": False, "available": False, "source": "default"}
 
 
+def _ironclad_index_mod():
+    nexus = SG / "NewLatest"
+    path = nexus / "lib" / "ironclad-search-index.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("ironclad_search_idx_qfb", path)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _sort_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    idx = _ironclad_index_mod()
+    if idx and hasattr(idx, "ironclad_sort"):
+        try:
+            sorted_rows, _ = idx.ironclad_sort(entries, context="file_list", n=len(entries))
+            return sorted_rows
+        except Exception:
+            pass
     mod = _power_sort_mod()
     if mod and hasattr(mod, "apply_sort"):
         try:
@@ -214,7 +238,7 @@ def _roots() -> list[dict[str, str]]:
         "Queen": os.environ.get("QUEEN_ROOT", str(QUEEN)),
         "AMOURANTHRTX": os.environ.get("AMOURANTHRTX_ROOT", str(SG / "NewLatest" / "AMOURANTHRTX")),
         "Hostess7": os.environ.get("HOSTESS7_ROOT", str(SG / "Hostess7")),
-        "Grok16": os.environ.get("GROK16_ROOT", str(SG / "Grok16")),
+        "Grok16": str(_grok16_root()),
         "ZOCR": str(SG / "ZOCR"),
         "Final_Eye": os.environ.get("FINAL_EYE_ROOT", str(SG / "Final_Eye")),
         "Final_Ear": os.environ.get("FINAL_EAR_ROOT", str(SG / "Final_Ear")),
@@ -727,15 +751,42 @@ def _search_tree(path: Path, query: str, *, depth: int, limit: int) -> list[dict
     q = (query or "").strip().lower()
     if not q:
         return []
+
+    idx = _ironclad_index_mod()
+    if idx and hasattr(idx, "search_files_fast"):
+        try:
+            roots = [str(path.resolve())]
+            for base in _allowed_bases():
+                if path == base or str(path).startswith(str(base)):
+                    roots = [str(base)]
+                    break
+            fast = idx.search_files_fast(q, roots=roots, limit=limit, depth=depth)
+            out: list[dict[str, Any]] = []
+            for row in fast:
+                p = Path(str(row.get("path") or ""))
+                if p.is_file() or p.is_dir():
+                    try:
+                        p.relative_to(path.resolve())
+                    except ValueError:
+                        continue
+                    out.append(_entry_row(p))
+                if len(out) >= limit:
+                    break
+            if out:
+                return _sort_entries(out)
+        except Exception:
+            pass
+
     hits: list[dict[str, Any]] = []
 
     def walk(node: Path, remaining: int) -> None:
         if remaining < 0 or len(hits) >= limit:
             return
         try:
-            children = sorted(node.iterdir(), key=lambda x: x.name.lower())
+            children = list(node.iterdir())
         except OSError:
             return
+        children.sort(key=lambda x: (not x.is_dir(), x.name.lower()))
         for child in children:
             if len(hits) >= limit:
                 return
@@ -747,7 +798,7 @@ def _search_tree(path: Path, query: str, *, depth: int, limit: int) -> list[dict
                 walk(child, remaining - 1)
 
     walk(path, depth)
-    return hits
+    return _sort_entries(hits)
 
 
 def _mkdir_jailed(parent_raw: str, name: str) -> dict[str, Any]:

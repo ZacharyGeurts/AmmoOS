@@ -1,5 +1,6 @@
 /**
- * Field Startbar — start button, taskbar, clock, context menus, touch long-press.
+ * Field Startbar — AmmoOS start button, taskbar, Monster rescue, Ironclad search.
+ * @g16 5.1.0 · Grok16/field-c2-taskbar-plate · field-host-desktop
  */
 (function (global) {
   "use strict";
@@ -333,7 +334,7 @@
     const m = data.menu || {};
     const apps = data.programs || [];
     const pinned = m.pinned || m.favorites || m.dock_pinned || [];
-    const theme = data.theme || "gnome";
+    const theme = data.theme || "ammo-field";
 
     let body = "";
     if (usesFlyoutMenu(m)) {
@@ -785,7 +786,7 @@
 
   function mount(root, data) {
     state.data = data;
-    const theme = data.theme || "gnome";
+    const theme = data.theme || "ammo-field";
     document.documentElement.dataset.osTheme = theme;
 
     root.innerHTML =
@@ -804,6 +805,7 @@
       iconEl({ id: "nexus-c2-desktop", icon: "queen-prog-os", name: "Desktop" }, true, 18) +
       "</button>" +
       '<div class="fsb-clock" id="fsb-clock" role="timer"></div>' +
+      '<button type="button" class="fsb-cad" id="fsb-cad" title="Monster rescue (Ctrl+Alt+Del)" aria-label="System rescue">⌁</button>' +
       "</div></nav>" +
       '<div class="fsb-ctx" id="fsb-ctx" role="menu"></div>';
 
@@ -814,12 +816,21 @@
     tickClock();
     setInterval(tickClock, 15000);
 
+    if (global.FieldIroncladTaskbar?.injectIntoStartbar) {
+      global.FieldIroncladTaskbar.injectIntoStartbar();
+    }
+
     document.getElementById("fsb-desktop-min")?.addEventListener("click", function () {
       if (global.NexusFieldShell?.showDesktop) {
         global.NexusFieldShell.showDesktop();
         return;
       }
       global.FieldHostDesktop?.toast?.("Desktop shown");
+    });
+
+    document.getElementById("fsb-cad")?.addEventListener("click", function () {
+      if (global.FieldMonsterMonitor?.open) global.FieldMonsterMonitor.open();
+      else global.FieldHostDesktop?.toast?.("Monster monitor loading…");
     });
 
     const start = document.getElementById("fsb-start");

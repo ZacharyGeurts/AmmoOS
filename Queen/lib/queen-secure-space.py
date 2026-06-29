@@ -45,13 +45,15 @@ def _save_json(path: Path, data: Any) -> None:
 
 
 def grok16_root() -> Path:
-    env = os.environ.get("GROK16_ROOT", "").strip()
-    if env and Path(env).is_dir():
-        return Path(env)
-    for p in (SG / "Grok16", QUEEN / "build" / "g16-prefix"):
-        if p.is_dir():
-            return p
-    return SG / "Grok16"
+    _SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+    if str(_SG_PATHS_LIB) not in sys.path:
+        sys.path.insert(0, str(_SG_PATHS_LIB))
+    from sg_paths import grok16_root as _gr
+    root = _gr()
+    if (root / "bin" / "g16").is_file():
+        return root
+    prefix = QUEEN / "build" / "g16-prefix"
+    return prefix if prefix.is_dir() else root
 
 
 def _g16_bin(name: str) -> Path | None:
@@ -59,7 +61,6 @@ def _g16_bin(name: str) -> Path | None:
     for p in (
         root / "bin" / name,
         QUEEN / "build" / "g16-prefix" / "bin" / name,
-        SG / "Grok16" / "bin" / name,
     ):
         if p.is_file():
             return p

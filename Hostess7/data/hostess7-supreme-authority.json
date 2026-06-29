@@ -27,7 +27,15 @@
       "dns_truth",
       "znetwork",
       "sense_package",
-      "field_io_packet"
+      "field_io_packet",
+      "final_eye_ocr",
+      "hostess7_ocr_control",
+      "hostess7_weapons_defense",
+      "field_attack_kit",
+      "trust_strike_engine",
+      "field_toolkit",
+      "queen_secure_channel",
+      "final_eye_weapons"
     ],
     "wartime_assumes_control": true,
     "lethal_still_truth_gated": true

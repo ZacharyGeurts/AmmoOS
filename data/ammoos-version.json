@@ -6,17 +6,24 @@
   "version": "2.0.0-beta3",
   "tag": "v2.0.0-beta3",
   "codename": "CANVAS",
-  "build_status": "building_now",
-  "build_note": "Source on main — release tarballs and Pages manual pending; pack pipeline in progress.",
+  "build_status": "shipping",
+  "build_note": "AmmoOS 2.0.0-beta3 — AmmoLang ship lane via ammooos-release.sh --push",
   "nexus_lineage": "NewLatest",
-  "g16_pairing": "5.0.1",
+  "g16_pairing": "5.2.0",
   "pythong_pairing": "16.1.0-gpy16",
   "kilroy_pairing": "1.0.0-taco",
   "release_model": "source_bootstrap_per_platform",
   "statement": "AmmoOS 2.0.0 — Queen CANVAS renderer above ZNetwork; Thermal Manager ironclad block; AMOURANTHRTX display technology only in NewLatest.",
   "stack_model": {
     "doctrine": "data/field-stack-layer-doctrine.json",
-    "order": ["hardware", "nexus_c2", "znetwork", "queen_canvas", "queen", "ammoos"],
+    "order": [
+      "hardware",
+      "nexus_c2",
+      "znetwork",
+      "queen_canvas",
+      "queen",
+      "ammoos"
+    ],
     "ammoos_inside_queen": true
   },
   "surfaces": {
@@ -52,8 +59,6 @@
     "Final_Eye",
     "Final_Ear",
     "Final_Mouth",
-    "ZNEWOCR",
-    "ZOCR",
     "ZNetwork",
     "World_Redata",
     "World_Repack",
@@ -82,6 +87,7 @@
     "final_ear_block",
     "final_mouth_block",
     "rtx_canvas_block",
-    "final_eye_ocr"
+    "final_eye_ocr",
+    "grok16_stack_fabric"
   ]
 }

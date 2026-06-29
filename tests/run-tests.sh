@@ -10,7 +10,7 @@ export NEXUS_ALERT_LOG="${NEXUS_ALERT_LOG:-/tmp/nexus-test-alerts-$$.log}"
 PASS=0
 FAIL=0
 SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
-GROK16_ROOT="${GROK16_ROOT:-${SG_ROOT}/Grok16}"
+GROK16_ROOT="${GROK16_ROOT:-${ROOT}/Grok16}"
 G16_MONITOR_SH="${G16_MONITOR_SH:-${GROK16_ROOT}/scripts/g16-run-monitored.sh}"
 G16_TEST_TIMEOUT_SEC="${G16_TEST_TIMEOUT_SEC:-180}"
 G16_TEST_HEARTBEAT_SEC="${G16_TEST_HEARTBEAT_SEC:-10}"
@@ -587,8 +587,9 @@ test_queen_visit_list() {
 }
 
 test_queen_browser_os_inside() {
-  grep -q '9477/field' "${ROOT}/Queen/world/browser.html"
-  grep -q 'data-queen-start="http://127.0.0.1:9477/field"' "${ROOT}/Queen/world/browser.html"
+  grep -q 'kilroy-home.html' "${ROOT}/Queen/world/browser.html"
+  grep -q 'data-queen-start="/world/kilroy-home.html"' "${ROOT}/Queen/world/browser.html"
+  grep -q 'qb-bookmarks-flyout-btn' "${ROOT}/Queen/world/browser.html"
   grep -q 'qb-underlay-drop' "${ROOT}/Queen/world/browser.html"
   grep -q '_nexus_field_url' "${ROOT}/Queen/lib/queen-browser.py"
   ! grep -A6 '_RETROGRADE_FRAGMENTS' "${ROOT}/Queen/lib/queen-browser.py" | grep -q ':9477/field'
@@ -616,7 +617,7 @@ test_field_host_desktop_module() {
   grep -q 'Queen Browser' "${ROOT}/data/field-host-desktop-doctrine.json"
   grep -q 'host_programs' "${ROOT}/Queen/lib/queen-desktop.py"
   grep -q 'return \[\]' "${ROOT}/Queen/lib/queen-desktop.py"
-  grep -q 'data-queen-start-button="classic"' "${ROOT}/Queen/world/browser.html"
+  grep -q 'data-queen-start-button="bookmarks"' "${ROOT}/Queen/world/browser.html"
   grep -q 'qb-start-secured' "${ROOT}/Queen/world/browser.html"
   grep -q 'hidden aria-hidden="true"' "${ROOT}/Queen/world/browser.html"
   ! grep -q 'underlaySurface' "${ROOT}/Queen/world/queen-browser-shell.js"
@@ -628,6 +629,13 @@ test_field_host_desktop_module() {
   grep -q 'wishlist_menu' "${ROOT}/Queen/lib/queen-file-browser.py"
   grep -q 'field_kernel' "${ROOT}/Queen/lib/queen-terminal.py"
   grep -q 'kilroy-status' "${ROOT}/Queen/lib/queen-terminal.py"
+  [[ -f "${ROOT}/Queen/lib/queen-program-surface.py" ]]
+  [[ -f "${ROOT}/Queen/data/queen-program-surface-doctrine.json" ]]
+  [[ -f "${ROOT}/Queen/world/queen-program-surface.js" ]]
+  grep -q 'queen-program-surface' "${ROOT}/Queen/lib/queen-world.py"
+  grep -q 'QueenProgramSurface' "${ROOT}/Queen/world/queen-desktop.js"
+  grep -q 'queen_software_unified' "${ROOT}/data/field-host-desktop-doctrine.json"
+  pythong "${ROOT}/Queen/lib/queen-program-surface.py" json | grep -q 'queen-program-surface/v1'
   grep -q 'qf-search' "${ROOT}/Queen/world/queen-files.html"
   [[ -f "${ROOT}/Queen/world/queen-syntax.css" ]]
   [[ -f "${ROOT}/Queen/world/queen-viewer.js" ]]
@@ -696,7 +704,7 @@ test_field_os_shell() {
   grep -q 'nexus_boot_c2_desktop' "${ROOT}/nexus.sh"
   grep -q 'nexus_boot_c2_desktop' "${ROOT}/lib/panel-browser.sh"
   grep -q 'NEXUS_BOOT_C2_ONLY' "${ROOT}/config/nexus.conf"
-  grep -q 'nexus-c2-desktop' "${ROOT}/data/field-host-desktop-doctrine.json"
+  grep -q 'queen-browser' "${ROOT}/data/field-host-desktop-doctrine.json"
   ! grep -q '_nexus_launch_c2_desktop' "${ROOT}/nexus.sh"
   ! grep -q '_nexus_queen_layer_autostart' "${ROOT}/nexus.sh"
   grep -q 'nfs-kiosk' "${ROOT}/panel/assets/nexus-field-shell.css"
@@ -1208,9 +1216,9 @@ test_ammoos_update_os() {
   grep -q 'ZacharyGeurts/AmmoOS' "${ROOT}/data/ammoos-update-doctrine.json"
   grep -q 'AmmoCode' "${ROOT}/data/ammoos-update-doctrine.json"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    pythong "${ROOT}/lib/ammoos-update-inplace.py" check | grep -q 'ammoos-update/v1'
+    python3 "${ROOT}/lib/ammoos-update-inplace.py" check | grep -q 'ammoos-update/v1'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    pythong "${ROOT}/lib/ammoos-update-inplace.py" doctrine | grep -q 'getting_started'
+    python3 "${ROOT}/lib/ammoos-update-inplace.py" doctrine | grep -q 'getting_started'
 }
 
 test_field_popcorn() {
@@ -2654,12 +2662,34 @@ test_vestigial_cleanup() {
   grep -q 'Bypassed OS Networking' "${ROOT}/lib/panel-tray.py"
   grep -q 'Bypassed OS Networking' "${ROOT}/lib/panel-tray.sh"
   grep -q 'nexus-shield.desktop' "${ROOT}/lib/nexus-vestigial-cleanup.py"
+  grep -q 'ammocode-stack.desktop' "${ROOT}/lib/nexus-vestigial-cleanup.py"
   grep -q 'never_harm_os' "${ROOT}/lib/nexus-vestigial-cleanup.py"
   local tmp_state
   tmp_state="$(mktemp -d)"
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$(cd "${ROOT}/.." && pwd)" \
     pythong "${ROOT}/lib/nexus-vestigial-cleanup.py" json | grep -q 'nexus-vestigial-cleanup/v1'
   rm -rf "$tmp_state"
+}
+
+test_host_desktop_install() {
+  [[ -f "${ROOT}/lib/nexus-host-desktop-install.py" ]]
+  [[ -f "${ROOT}/lib/nexus-host-desktop-install.sh" ]]
+  grep -q 'nexus_field_os_install_host_desktop' "${ROOT}/lib/nexus-field-os.sh"
+  grep -q 'nexus_field_os_install_host_desktop' "${ROOT}/nexus.sh"
+  grep -q 'nexus-host-desktop/v1' "${ROOT}/lib/nexus-host-desktop-install.py"
+  grep -q 'ammocode-stack' "${ROOT}/lib/nexus-host-desktop-install.py"
+  grep -q 'pinned-apps' "${ROOT}/lib/nexus-host-desktop-install.py"
+  local tmp_state tmp_home
+  tmp_state="$(mktemp -d)"
+  tmp_home="$(mktemp -d)"
+  mkdir -p "${tmp_home}/.local/share/applications"
+  printf '[Desktop Entry]\nType=Application\nName=Old\nExec=true\n' >"${tmp_home}/.local/share/applications/ammocode-stack.desktop"
+  NEXUS_HOST_DESKTOP_HOME="$tmp_home" NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" \
+    NEXUS_HOST_DESKTOP_PIN=0 NEXUS_HOST_DESKTOP_FORCE=1 \
+    python3 "${ROOT}/lib/nexus-host-desktop-install.py" run | grep -q 'nexus-host-desktop/v1'
+  [[ ! -f "${tmp_home}/.local/share/applications/ammocode-stack.desktop" ]]
+  [[ -f "${tmp_home}/.local/share/applications/nexus-field.desktop" ]]
+  rm -rf "$tmp_state" "$tmp_home"
 }
 
 test_znetwork_tray_flow() {
@@ -3521,6 +3551,74 @@ test_combinatorics_sequence_ammolang() {
 
 run_test "combinatorics sequence ammolang" test_combinatorics_sequence_ammolang
 
+test_ammolang_script_router() {
+  [[ -f "${ROOT}/lib/ammolang-run.sh" ]]
+  [[ -f "${ROOT}/lib/field-ammolang-build.py" ]]
+  [[ -f "${ROOT}/library/dewey/000-computer-science/ammolang/beta_pipeline.aml" ]]
+  [[ -f "${ROOT}/library/dewey/000-computer-science/ammolang/compiler_stack.aml" ]]
+  [[ -f "${ROOT}/library/dewey/000-computer-science/ammolang/self_upgrade.aml" ]]
+  grep -q 'script_routes' "${ROOT}/data/field-ammolang-build-doctrine.json"
+  grep -q 'beta_pipeline' "${ROOT}/data/field-ammolang-build-doctrine.json"
+  grep -q 'ammolang-run.sh' "${ROOT}/scripts/ammoos-beta-pipeline.sh"
+  grep -q 'ammolang-run.sh' "${ROOT}/scripts/integrate-compiler-stack.sh"
+  python3 "${ROOT}/lib/field-ammolang.py" compile \
+    library/dewey/000-computer-science/ammolang/beta_pipeline.aml | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    python3 "${ROOT}/lib/field-ammolang-build.py" route self_upgrade --dry | grep -q 'field-ammolang-build/v1'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    python3 "${ROOT}/lib/field-ammolang-build.py" self-upgrade | grep -q 'ammolang-self-upgrade/v1'
+}
+
+run_test "ammolang script router" test_ammolang_script_router
+
+test_ammolang_timing_and_grok16_ship() {
+  [[ -f "${ROOT}/library/dewey/000-computer-science/ammolang/grok16_ship.aml" ]]
+  [[ -f "${ROOT}/library/dewey/000-computer-science/ammolang/grok16_gates.aml" ]]
+  [[ -f "${ROOT}/library/dewey/000-computer-science/ammolang/queen_catalog.aml" ]]
+  [[ -f "${ROOT}/library/dewey/000-computer-science/ammolang/agent_tasks.aml" ]]
+  grep -q '"timing"' "${ROOT}/data/field-ammolang-build-doctrine.json"
+  grep -q 'slack_sec' "${ROOT}/data/field-ammolang-build-doctrine.json"
+  grep -q 'hang_freeze' "${ROOT}/data/field-ammolang-build-doctrine.json"
+  grep -q 'task_registry' "${ROOT}/data/field-ammolang-build-doctrine.json"
+  grep -q 'grok16_ship' "${ROOT}/data/field-ammolang-build-doctrine.json"
+  grep -q 'AML_INLINE' "${ROOT}/lib/field-ammolang-build.py"
+  python3 "${ROOT}/lib/field-ammolang.py" compile \
+    library/dewey/000-computer-science/ammolang/grok16_ship.aml | grep -q '"ok": true'
+  python3 "${ROOT}/lib/field-ammolang.py" compile \
+    library/dewey/000-computer-science/ammolang/agent_tasks.aml | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    python3 "${ROOT}/lib/field-ammolang-build.py" route grok16_ship --dry | grep -q 'grok16_ship.aml'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    python3 "${ROOT}/lib/field-ammolang-build.py" tasks | grep -q 'agent_tasks'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    python3 "${ROOT}/lib/field-ammolang-build.py" assist hang | grep -q 'ammolang-hang-freeze-assist'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    python3 "${ROOT}/lib/field-ammolang-build.py" route self_upgrade | grep -q 'field-ammolang-build/v1'
+  [[ -f "${NEXUS_STATE_DIR}/ammolang-timing-ledger.json" ]]
+  grep -q 'ammolang-timing/v1' "${NEXUS_STATE_DIR}/ammolang-timing-ledger.json"
+}
+
+run_test "ammolang timing and grok16 ship" test_ammolang_timing_and_grok16_ship
+
+test_ammolang_github_mcp() {
+  [[ -f "${ROOT}/lib/field-github-mcp-transport.py" ]]
+  [[ -f "${ROOT}/data/field-ammolang-mcp-layer.json" ]]
+  [[ -f "${ROOT}/library/dewey/000-computer-science/ammolang/github_mcp.aml" ]]
+  grep -q 'AML_GITHUB_TRANSPORT' "${ROOT}/lib/ammolang-run.sh"
+  grep -q 'mcp_github' "${ROOT}/data/field-ammolang-doctrine.json"
+  grep -q 'GITHUB' "${ROOT}/data/field-ammolang-build-doctrine.json"
+  grep -q 'ammolang_layer' "${ROOT}/data/ammoos-mcp-layer.json"
+  python3 "${ROOT}/lib/field-ammolang.py" compile \
+    library/dewey/000-computer-science/ammolang/github_mcp.aml | grep -q '"ok": true'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    python3 "${ROOT}/lib/field-github-mcp-transport.py" status | grep -q 'github-mcp-transport'
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+    python3 "${ROOT}/lib/field-ammolang-build.py" route github_mcp --dry | grep -q 'field-ammolang-build/v1'
+  grep -q 'field-github-mcp-transport' "${ROOT}/lib/ammoos-update-inplace.py"
+}
+
+run_test "ammolang github mcp transport" test_ammolang_github_mcp
+
 test_plate_dimensions_consolidation() {
   [[ -f "${ROOT}/lib/field-plate-dimensions.py" ]]
   [[ -f "${ROOT}/data/field-plate-dimensions-doctrine.json" ]]
@@ -4165,6 +4263,27 @@ test_chips_program_usage() {
 }
 
 run_test "chips program usage universal" test_chips_program_usage
+
+test_kilroy_kernel_grok16() {
+  [[ -f "${ROOT}/KILROY/scripts/kilroy-kernel-test.sh" ]]
+  [[ -f "${ROOT}/KILROY/scripts/kilroy-grok16-sync.sh" ]]
+  [[ -f "${ROOT}/KILROY/data/kilroy-grok16-bridge.json" ]]
+  [[ -f "${ROOT}/KILROY/scripts/kilroy-toolchain.sh" ]]
+  grep -q 'grok16_pair' "${ROOT}/KILROY/data/kilroy-version.json"
+  grep -q 'kilroy-kernel-test' "${ROOT}/KILROY/data/kilroy-grok16-bridge.json"
+  grep -q 'sync_kilroy' "${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}/Grok16/scripts/grok16-integrate.sh"
+  grep -q 'grok16_bridge' "${ROOT}/Queen/lib/queen-kilroy.py"
+  chmod +x "${ROOT}/KILROY/scripts/kilroy-kernel-test.sh" \
+    "${ROOT}/KILROY/scripts/kilroy-grok16-sync.sh" \
+    "${ROOT}/KILROY/scripts/kilroy-toolchain.sh" \
+    "${ROOT}/KILROY/scripts/test-grok16-kilroy-userspace.sh" 2>/dev/null || true
+  KILROY_ENHANCED=0 FULL_BUILD=0 GROK_FULL_BUILD=0 \
+    SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}" \
+    GROK16_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}/Grok16" \
+    bash "${ROOT}/KILROY/scripts/kilroy-kernel-test.sh"
+}
+
+run_test "kilroy kernel grok16 regression" test_kilroy_kernel_grok16
 
 test_cpu_library_font_clipboard() {
   [[ -f "${ROOT}/lib/field-cpu-library.py" ]]
@@ -4937,6 +5056,7 @@ run_test "ZNetwork handler retire no sudo" test_znetwork_handler_retire
 run_test "ZNetwork startup retire host networking" test_znetwork_startup_retire
 run_test "ZNetwork wireless FCC trace strike" test_znetwork_wireless_fcc
 run_test "vestigial cleanup on boot" test_vestigial_cleanup
+run_test "host desktop install and pin" test_host_desktop_install
 run_test "ZNetwork tray flow and panel slice" test_znetwork_tray_flow
 run_test "ZNetwork secure vault ZISV" test_znetwork_secure_vault
 run_test "ZNetwork operator registry BSP" test_znetwork_operator_registry
@@ -5471,9 +5591,9 @@ test_hostess7_calculator() {
   grep -q 'hostess7-calculator-ocr-doctrine.json' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
   grep -q 'calculator_ocr_train' "${ROOT}/data/hostess7-master-curriculum.json"
   grep -q '/api/hostess7/calculator/ocr-ingest' "${ROOT}/lib/threat-panel-http.py"
-  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" FINAL_EYE_ROOT="$ROOT/Final_Eye" HOSTESS7_ROOT="$ROOT/Hostess7" \
     pythong "${ROOT}/lib/hostess7-calculator.py" ocr-ingest | grep -q '"ok": true'
-  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" FINAL_EYE_ROOT="$ROOT/Final_Eye" HOSTESS7_ROOT="$ROOT/Hostess7" \
     pythong "${ROOT}/lib/hostess7-calculator.py" ocr-train 200 | grep -q 'hostess7-calculator-ocr-train'
 }
 
@@ -5530,9 +5650,9 @@ test_hostess7_biology() {
   grep -q 'hostess7-biology-ocr-doctrine.json' "${ROOT}/data/hostess7-brain-guard-doctrine.json"
   grep -q 'biology_ocr_train' "${ROOT}/data/hostess7-master-curriculum.json"
   grep -q '/api/hostess7/biology/ocr-ingest' "${ROOT}/lib/threat-panel-http.py"
-  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" FINAL_EYE_ROOT="$ROOT/Final_Eye" HOSTESS7_ROOT="$ROOT/Hostess7" \
     pythong "${ROOT}/lib/hostess7-biology.py" ocr-ingest | grep -q '"ok": true'
-  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" FINAL_EYE_ROOT="$ROOT/Final_Eye" HOSTESS7_ROOT="$ROOT/Hostess7" \
     pythong "${ROOT}/lib/hostess7-biology.py" ocr-train 200 | grep -q 'hostess7-biology-ocr-train'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
     pythong "${ROOT}/lib/hostess7-biology.py" teach 'biology fluency' | grep -q 'not medical advice'
@@ -5556,7 +5676,7 @@ test_hostess7_engineering() {
     pythong "${ROOT}/lib/hostess7-engineering.py" battery | grep -q '"passed": true'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
     pythong "${ROOT}/lib/hostess7-command.py" ask 'explain torque and gear ratio' | grep -q 'hostess7_engineering'
-  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" FINAL_EYE_ROOT="$ROOT/Final_Eye" HOSTESS7_ROOT="$ROOT/Hostess7" \
     pythong "${ROOT}/lib/hostess7-engineering.py" ocr-ingest | grep -q '"ok": true'
 }
 
@@ -5576,7 +5696,7 @@ test_hostess7_combat() {
     pythong "${ROOT}/lib/hostess7-combat.py" battery | grep -q '"passed": true'
   NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" HOSTESS7_ROOT="$ROOT/Hostess7" \
     pythong "${ROOT}/lib/hostess7-command.py" ask 'explain MMA sprawl defense' | grep -q 'hostess7_combat'
-  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" ZOCR_ROOT="$(dirname "$ROOT")/ZOCR" HOSTESS7_ROOT="$ROOT/Hostess7" \
+  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$(dirname "$ROOT")" FINAL_EYE_ROOT="$ROOT/Final_Eye" HOSTESS7_ROOT="$ROOT/Hostess7" \
     pythong "${ROOT}/lib/hostess7-combat.py" ocr-ingest | grep -q '"ok": true'
 }
 

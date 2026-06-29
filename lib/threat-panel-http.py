@@ -1,4 +1,4 @@
-#!/usr/bin/env pythong
+#!/usr/bin/env python3
 """Local threat panel server — HTTP on loopback only (Hostess7-secured)."""
 
 import importlib.util
@@ -87,6 +87,26 @@ def _load_plate_meld_cached() -> dict:
 
 
 _LOOPBACK_CLIENTS = frozenset({"127.0.0.1", "::1", "::ffff:127.0.0.1"})
+_IRONCLAD_SECURE_API_MOD: Any | None = None
+
+
+def _ironclad_secure_api_mod() -> Any | None:
+    global _IRONCLAD_SECURE_API_MOD
+    if _IRONCLAD_SECURE_API_MOD is not None:
+        return _IRONCLAD_SECURE_API_MOD
+    script = INSTALL_ROOT / "lib" / "ironclad-secure-api.py"
+    if not script.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("ironclad_secure_api", script)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            _IRONCLAD_SECURE_API_MOD = mod
+            return mod
+    except Exception:
+        pass
+    return None
 
 DATA_FILES = {
     "threat-panel": STATE_DIR / "threat-panel.json",
@@ -1605,9 +1625,153 @@ def _field_always_files_dispatch(body: dict[str, Any] | None = None, *, timeout:
         return {"ok": False, "error": "field_always_files_dispatch_failed"}
 
 
+def _field_broadcaster_chamber_dispatch(body: dict[str, Any] | None = None, *, timeout: int = 90) -> dict:
+    script = INSTALL_ROOT / "lib" / "field-broadcaster-chamber.py"
+    if not script.is_file():
+        return {"ok": False, "error": "broadcaster_chamber_missing"}
+    env = _field_stack_env()
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "dispatch"],
+            input=json.dumps(body if isinstance(body, dict) else {}),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+        return json.loads(proc.stdout or "{}")
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "broadcaster_chamber_timeout"}
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "broadcaster_chamber_dispatch_failed"}
+
+
+def _field_broadcaster_studio_dispatch(body: dict[str, Any] | None = None, *, timeout: int = 90) -> dict:
+    script = INSTALL_ROOT / "lib" / "field-broadcaster-studio.py"
+    if not script.is_file():
+        return {"ok": False, "error": "studio_missing"}
+    env = _field_stack_env()
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "dispatch", json.dumps(body if isinstance(body, dict) else {})],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+        return json.loads(proc.stdout or "{}")
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "studio_dispatch_timeout"}
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "studio_dispatch_failed"}
+
+
+def _field_body_system_dispatch(body: dict[str, Any] | None = None, *, timeout: int = 120) -> dict:
+    script = INSTALL_ROOT / "lib" / "field-body-system.py"
+    if not script.is_file():
+        return {"ok": False, "error": "field_body_system_missing"}
+    env = _field_stack_env()
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "dispatch"],
+            input=json.dumps(body if isinstance(body, dict) else {}),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+        return json.loads(proc.stdout or "{}")
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "field_body_system_timeout"}
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "field_body_system_dispatch_failed"}
+
+
+def _field_audio_dac_dispatch(body: dict[str, Any] | None = None, *, timeout: int = 90) -> dict:
+    script = INSTALL_ROOT / "lib" / "field-audio-dac-chamber.py"
+    if not script.is_file():
+        return {"ok": False, "error": "audio_dac_missing"}
+    env = _field_stack_env()
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "dispatch"],
+            input=json.dumps(body if isinstance(body, dict) else {}),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+        return json.loads(proc.stdout or "{}")
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "audio_dac_timeout"}
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "audio_dac_dispatch_failed"}
+
+
+def _field_eye_threat_dispatch(body: dict[str, Any] | None = None, *, timeout: int = 60) -> dict:
+    script = INSTALL_ROOT / "lib" / "field-eye-threat-chamber.py"
+    if not script.is_file():
+        return {"ok": False, "error": "field_eye_threat_missing"}
+    env = _field_stack_env()
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "dispatch"],
+            input=json.dumps(body if isinstance(body, dict) else {}),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+        return json.loads(proc.stdout or "{}")
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "field_eye_threat_timeout"}
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "field_eye_threat_dispatch_failed"}
+
+
+def _field_final_eye_canvas_dispatch(body: dict[str, Any] | None = None, *, timeout: int = 60) -> dict:
+    script = INSTALL_ROOT / "lib" / "field-final-eye-canvas-bridge.py"
+    if not script.is_file():
+        return {"ok": False, "error": "canvas_bridge_missing"}
+    env = _field_stack_env()
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "dispatch"],
+            input=json.dumps(body if isinstance(body, dict) else {}),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+        return json.loads(proc.stdout or "{}")
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "canvas_bridge_timeout"}
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "canvas_bridge_dispatch_failed"}
+
+
 _FIELD_OPERATOR_MOD: Any = None
 _FIELD_PERF_FLYOUT_MOD: Any = None
 _FIELD_DEPTH_SING_MOD: Any = None
+_G16_LANGUAGE_TEST_MOD: Any = None
+
+
+def _g16_language_test_mod():
+    global _G16_LANGUAGE_TEST_MOD
+    if _G16_LANGUAGE_TEST_MOD is not None:
+        return _G16_LANGUAGE_TEST_MOD
+    script = INSTALL_ROOT / "lib" / "g16-language-test-matrix.py"
+    if not script.is_file():
+        return None
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("g16_language_test_panel", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _G16_LANGUAGE_TEST_MOD = mod
+    return mod
 
 
 def _field_depth_singularizer_mod():
@@ -1903,6 +2067,100 @@ def _field_popcorn_mod():
     return mod
 
 
+def _broadcaster_media_mod():
+    script = INSTALL_ROOT / "lib" / "field-broadcaster.py"
+    if not script.is_file():
+        return None
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("field_broadcaster_media", script)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _serve_broadcaster_playback(handler: "Handler", query: dict[str, list[str]]) -> None:
+    mod = _broadcaster_media_mod()
+    if not mod:
+        handler._send(404, '{"ok":false,"error":"broadcaster_missing"}', "application/json")
+        return
+    name = str((query.get("name") or [""])[0]).strip()
+    item = mod.resolve_recording(name) if name else None
+    if not item:
+        handler._send(404, '{"ok":false,"error":"recording_not_found"}', "application/json")
+        return
+    path = Path(str(item["path"]))
+    try:
+        size = path.stat().st_size
+    except OSError:
+        handler._send(404, '{"ok":false,"error":"recording_unreadable"}', "application/json")
+        return
+    mime = str(item.get("mime") or "video/x-matroska")
+    range_hdr = handler.headers.get("Range", "")
+    parsed = mod.parse_range_header(range_hdr, size) if range_hdr and hasattr(mod, "parse_range_header") else None
+    if parsed:
+        start, end = parsed
+        data = mod.read_recording_range(path, start, end)
+        handler.send_response(206)
+        handler.send_header("Content-Type", mime)
+        handler.send_header("Content-Length", str(len(data)))
+        handler.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        handler.send_header("Accept-Ranges", "bytes")
+        handler.send_header("Cache-Control", "no-store")
+        handler.send_header("X-Content-Type-Options", "nosniff")
+        handler.end_headers()
+        handler.wfile.write(data)
+        return
+    handler.send_response(200)
+    handler.send_header("Content-Type", mime)
+    handler.send_header("Content-Length", str(size))
+    handler.send_header("Accept-Ranges", "bytes")
+    handler.send_header("Cache-Control", "no-store")
+    handler.send_header("X-Content-Type-Options", "nosniff")
+    handler.end_headers()
+    try:
+        with path.open("rb") as fh:
+            while True:
+                chunk = fh.read(1024 * 512)
+                if not chunk:
+                    break
+                handler.wfile.write(chunk)
+    except OSError:
+        pass
+
+
+def _serve_broadcaster_desktop_preview(handler: "Handler", query: dict[str, list[str]]) -> None:
+    cap_py = INSTALL_ROOT / "lib" / "field-broadcaster-capture.py"
+    if not cap_py.is_file():
+        handler._send(404, '{"ok":false,"error":"capture_missing"}', "application/json")
+        return
+    monitor = str((query.get("monitor") or query.get("id") or [""])[0]).strip()
+    if not monitor:
+        handler._send(400, '{"ok":false,"error":"monitor_required"}', "application/json")
+        return
+    payload = _nexus_py_json(cap_py, ["preview", monitor], timeout=20)
+    if not payload.get("ok"):
+        handler._send(403 if payload.get("error") == "threat_blocked" else 404, json.dumps(payload), "application/json")
+        return
+    path = Path(str(payload.get("path") or ""))
+    try:
+        if not path.is_file():
+            raise OSError("missing")
+        data = path.read_bytes()
+    except OSError:
+        handler._send(404, '{"ok":false,"error":"preview_missing"}', "application/json")
+        return
+    handler.send_response(200)
+    handler.send_header("Content-Type", "image/jpeg")
+    handler.send_header("Content-Length", str(len(data)))
+    handler.send_header("Cache-Control", "no-store, max-age=0")
+    handler.send_header("X-Content-Type-Options", "nosniff")
+    handler.end_headers()
+    handler.wfile.write(data)
+
+
 def _serve_popcorn_stream(handler: "Handler", query: dict[str, list[str]]) -> None:
     mod = _field_popcorn_mod()
     if not mod:
@@ -2067,6 +2325,37 @@ class Handler(BaseHTTPRequestHandler):
         except (json.JSONDecodeError, UnicodeDecodeError):
             return {}
 
+    def _ironclad_api_gate(self, path: str, method: str = "GET", body: dict | None = None) -> bool:
+        mod = _ironclad_secure_api_mod()
+        if not mod or not hasattr(mod, "ironclad_secure_api"):
+            return True
+        peer = self.client_address[0] if self.client_address else ""
+        try:
+            verdict = mod.ironclad_secure_api().gate(
+                peer=str(peer),
+                path=path,
+                method=method,
+                headers={k: v for k, v in self.headers.items()},
+                body=body,
+            )
+        except Exception:
+            return True
+        if verdict.get("ok"):
+            return True
+        extra = {}
+        if hasattr(mod, "security_headers"):
+            try:
+                extra = mod.security_headers()
+            except Exception:
+                extra = {}
+        self._send(
+            int(verdict.get("code") or 403),
+            json.dumps(verdict, ensure_ascii=False),
+            "application/json",
+            extra_headers=extra,
+        )
+        return False
+
     def do_GET(self):
         depth_redirect = _enforce_depth_field_http_path(self.path)
         if depth_redirect is not None:
@@ -2078,6 +2367,8 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         path = unquote(self.path.split("?", 1)[0])
+        if path.startswith("/api/") and not self._ironclad_api_gate(path, "GET"):
+            return
         query = parse_qs(urlparse(self.path).query)
 
         if path == "/api/status":
@@ -2144,21 +2435,71 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
-        if path == "/api/field-broadcaster":
-            script = INSTALL_ROOT / "lib" / "field-broadcaster.py"
-            if script.is_file():
-                payload = _nexus_py_json(script, ["json"], timeout=45)
+        if path.startswith("/api/field-final-eye-canvas"):
+            canvas_py = INSTALL_ROOT / "lib" / "field-final-eye-canvas-bridge.py"
+            sub = path[len("/api/field-final-eye-canvas"):].strip("/")
+            if not canvas_py.is_file():
+                payload = {"ok": False, "error": "canvas_bridge_missing"}
+            elif sub in ("", "status", "json", "posture", "panel"):
+                payload = _nexus_py_json(canvas_py, ["json"], timeout=30)
+            elif sub == "feed":
+                payload = _nexus_py_json(canvas_py, ["feed"], timeout=30)
+            elif sub == "connect":
+                payload = _nexus_py_json(canvas_py, ["connect"], timeout=45)
             else:
-                payload = {"schema": "field-broadcaster/v1", "ok": False, "error": "broadcaster_missing"}
+                payload = {"ok": False, "error": "unknown_canvas_action", "sub": sub}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
-        if path == "/api/field-broadcaster/audio":
-            script = INSTALL_ROOT / "lib" / "field-broadcaster-audio.py"
-            if script.is_file():
-                payload = _nexus_py_json(script, ["json"], timeout=30)
+        chamber_py = INSTALL_ROOT / "lib" / "field-broadcaster-chamber.py"
+        if path.startswith("/api/field-broadcaster"):
+            sub = path[len("/api/field-broadcaster"):].strip("/")
+            if sub == "audio":
+                script = INSTALL_ROOT / "lib" / "field-broadcaster-audio.py"
+                if script.is_file():
+                    payload = _nexus_py_json(script, ["json"], timeout=30)
+                else:
+                    payload = {"schema": "field-broadcaster-audio/v1", "ok": False, "error": "broadcaster_audio_missing"}
+            elif sub in ("chamber", "chamber/status", "chamber/json", "chamber/panel"):
+                if chamber_py.is_file():
+                    cmd = "panel" if sub.endswith("/panel") else "json"
+                    payload = _nexus_py_json(chamber_py, [cmd], timeout=45)
+                else:
+                    payload = {"schema": "field-broadcaster-chamber-panel/v1", "ok": False, "error": "broadcaster_chamber_missing"}
+            elif sub == "platforms":
+                payload = (
+                    _nexus_py_json(chamber_py, ["platforms"], timeout=30)
+                    if chamber_py.is_file()
+                    else {"ok": False, "error": "broadcaster_chamber_missing"}
+                )
+            elif sub == "codecs":
+                payload = (
+                    _nexus_py_json(chamber_py, ["codecs"], timeout=30)
+                    if chamber_py.is_file()
+                    else {"ok": False, "error": "broadcaster_chamber_missing"}
+                )
+            elif sub in ("final-eye", "final_eye"):
+                payload = (
+                    _field_broadcaster_chamber_dispatch({"action": "final_eye"}, timeout=30)
+                    if chamber_py.is_file()
+                    else {"ok": False, "error": "broadcaster_chamber_missing"}
+                )
+            elif sub == "studio":
+                studio_py = INSTALL_ROOT / "lib" / "field-broadcaster-studio.py"
+                payload = (
+                    _nexus_py_json(studio_py, ["json"], timeout=45)
+                    if studio_py.is_file()
+                    else {"ok": False, "error": "studio_missing"}
+                )
+            elif sub in ("", "status", "json"):
+                script = INSTALL_ROOT / "lib" / "field-broadcaster.py"
+                if script.is_file():
+                    payload = _nexus_py_json(script, ["json"], timeout=45)
+                else:
+                    payload = {"schema": "field-broadcaster/v1", "ok": False, "error": "broadcaster_missing"}
             else:
-                payload = {"schema": "field-broadcaster-audio/v1", "ok": False, "error": "broadcaster_audio_missing"}
+                self._send(404, json.dumps({"ok": False, "error": "unknown_broadcaster_route", "sub": sub}), "application/json")
+                return
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -2360,6 +2701,28 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path == "/api/ammoos-update/components":
+            script = INSTALL_ROOT / "lib" / "ammoos-update-inplace.py"
+            force = str(query.get("force", ["0"])[0]).strip() in ("1", "true", "yes")
+            payload = _nexus_py_json(script, ["components"] + (["--force"] if force else []), timeout=45)
+            self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/ammoos-update/preflight":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ammoos-update-inplace.py", ["preflight"], timeout=30)
+            self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/ammoos-update/log":
+            lines = str(query.get("lines", ["80"])[0]).strip() or "80"
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "ammoos-update-inplace.py",
+                ["log", f"--lines={lines}"],
+                timeout=15,
+            )
+            self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path in ("/api/ammoos-incorporate/check", "/api/ammoos-incorporate/status"):
             payload = _ammoos_incorporate_posture()
             self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
@@ -2400,6 +2763,15 @@ class Handler(BaseHTTPRequestHandler):
             script = INSTALL_ROOT / "lib" / "ammoos-theme-engine.py"
             if script.is_file():
                 payload = _nexus_py_json(script, ["catalog"], timeout=15)
+            else:
+                payload = {"ok": False, "error": "ammoos_theme_engine_missing"}
+            self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/ammoos-themes/default":
+            script = INSTALL_ROOT / "lib" / "ammoos-theme-engine.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["default"], timeout=15)
             else:
                 payload = {"ok": False, "error": "ammoos_theme_engine_missing"}
             self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
@@ -2675,6 +3047,25 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path.startswith("/api/compile-autocorrect"):
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-compile-autocorrect.py",
+                ["emulator-series"],
+                timeout=20,
+            ) or {}
+            self._send(200, json.dumps({
+                "schema": "field-compile-autocorrect/v1",
+                "ok": True,
+                "doctrine": "data/field-compile-autocorrect-doctrine.json",
+                "human_explanations": "data/compile-error-human-explanations.json",
+                "module": "lib/field-compile-autocorrect.py",
+                "policy": "confidence 1.0 only — never guess",
+                "collect_all_errors": True,
+                "human_explanation_at_end": True,
+                "emulator_series": payload,
+            }, ensure_ascii=False), "application/json")
+            return
+
         if path == "/api/universal-protector/meld":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "universal-protector.py", ["meld"], timeout=90)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -2818,6 +3209,24 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path in ("/api/hostess7/weapons-defense", "/api/hostess7-weapons-defense"):
+            script = INSTALL_ROOT / "lib" / "hostess7-weapons-defense.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["posture"], timeout=45)
+            else:
+                payload = {"ok": False, "error": "hostess7_weapons_defense_missing"}
+            self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/hostess7/system-control", "/api/hostess7-system-control"):
+            script = INSTALL_ROOT / "lib" / "hostess7-system-control.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=30)
+            else:
+                payload = {"ok": False, "error": "hostess7_system_control_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path in ("/api/hostess7/brain-guard", "/api/hostess7-brain-guard"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-brain-guard.py", ["json"], timeout=25)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -2830,6 +3239,27 @@ class Handler(BaseHTTPRequestHandler):
 
         if path in ("/api/hostess7/brain-guard/witness", "/api/hostess7-brain-guard/witness"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-brain-guard.py", ["witness"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/brain/ruling", "/api/hostess7-brain-ruler", "/api/hostess7/brain-ruler"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-brain-ruler.py", ["json"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/brain/sovereignty", "/api/hostess7/brain/assess"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-brain-ruler.py", ["assess"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/brain/ruling/explain":
+            qparams = parse_qs(urlparse(self.path).query)
+            q = (qparams.get("q") or qparams.get("query") or [""])[0]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "hostess7-brain-ruler.py",
+                ["teach", str(q or "earth mandate rule")],
+                timeout=30,
+            )
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -2906,6 +3336,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path in ("/api/g16/secure-chamber", "/api/g16/secure-chamber/posture", "/api/g16-secure-chamber"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "g16-secure-chamber.py", ["posture"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/grok15/language-core", "/api/g15/language-core", "/api/grok15-language-core"):
+            payload = _nexus_py_json(INSTALL_ROOT / "Grok16" / "lib" / "grok15-language-core.py", ["posture"], timeout=35)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path in ("/api/g16/rtx-gate", "/api/g16/rtx"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "nexus-g16-bridge.py", ["rtx"], timeout=20)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -2966,6 +3406,48 @@ class Handler(BaseHTTPRequestHandler):
                 timeout=180,
             )
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/ironclad/secure-api"):
+            mod = _ironclad_secure_api_mod()
+            if mod and hasattr(mod, "ironclad_secure_api"):
+                payload = mod.ironclad_secure_api().handle_api(path, query=query)
+                extra = mod.security_headers() if hasattr(mod, "security_headers") else {}
+                self._send(200, json.dumps(payload, ensure_ascii=False), "application/json", extra_headers=extra)
+                return
+            self._send(503, json.dumps({"ok": False, "error": "ironclad_secure_api_missing"}), "application/json")
+            return
+
+        if path.startswith("/api/ironclad/access") or path.startswith("/api/ironclad/h7-access"):
+            acc = INSTALL_ROOT / "lib" / "ironclad-access.py"
+            if acc.is_file():
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("ironclad_access_http", acc)
+                if spec and spec.loader:
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)
+                    action = str(query.get("action", [""])[0] or "").strip().lower()
+                    if path.rstrip("/").endswith("/tools"):
+                        action = "tools"
+                    elif path.rstrip("/").endswith("/search") or query.get("q") or query.get("query"):
+                        action = action or "search"
+                    elif path.rstrip("/").endswith("/h7") or path.startswith("/api/ironclad/h7-access"):
+                        sub = path.rstrip("/").split("/")[-1]
+                        action = {"resolve": "h7_resolve", "catalog": "h7_catalog", "search": "h7_search"}.get(sub, "h7_catalog")
+                    elif not action:
+                        action = "posture"
+                    payload = mod.dispatch(action, body={
+                        "query": str(query.get("q", query.get("query", [""]))[0] if query.get("q") or query.get("query") else ""),
+                        "q": str(query.get("q", query.get("query", [""]))[0] if query.get("q") or query.get("query") else ""),
+                        "context": str(query.get("context", ["all"])[0]),
+                        "limit": int(query.get("limit", ["48"])[0] or 48),
+                        "book_id": str(query.get("book_id", query.get("id", [""]))[0] or ""),
+                    })
+                    sec = _ironclad_secure_api_mod()
+                    extra = sec.security_headers() if sec and hasattr(sec, "security_headers") else {}
+                    self._send(200, json.dumps(payload, ensure_ascii=False), "application/json", extra_headers=extra)
+                    return
+            self._send(503, json.dumps({"ok": False, "error": "ironclad_access_missing"}), "application/json")
             return
 
         if path in ("/api/ironclad", "/api/ironclad/plate"):
@@ -3123,6 +3605,161 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path in ("/api/hostess7/hands", "/api/hostess7/hands/status"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-hand-core.py", ["json"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/attachments", "/api/hostess7/attachments/status"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-attachment-core.py", ["json"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/program-help"):
+            help_path = INSTALL_ROOT / "data" / "hostess7-program-help.json"
+            try:
+                catalog = json.loads(help_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                catalog = {}
+            qparams = parse_qs(urlparse(self.path).query)
+            pid = (qparams.get("id") or ["hostess7-training"])[0]
+            help_doc = (catalog.get("programs") or {}).get(pid) or {}
+            self._send(200, json.dumps({"ok": True, "id": pid, "help": help_doc}, ensure_ascii=False), "application/json")
+            return
+
+        training_py = INSTALL_ROOT / "lib" / "hostess7-training-chamber.py"
+
+        if path.startswith("/api/hostess7/training-chamber"):
+            sub = path.replace("/api/hostess7-training-chamber", "").replace("/api/hostess7/training-chamber", "").strip("/")
+            if sub.startswith("floor/"):
+                floor_sub = sub[6:]
+                if floor_sub in ("complete", "complete-all", "complete_all"):
+                    payload = _nexus_py_json(training_py, ["floor-complete"], timeout=600)
+                else:
+                    payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            elif sub in ("", "status", "json", "panel"):
+                payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            elif sub in ("session", "train", "full"):
+                payload = _nexus_py_json(training_py, ["session"], timeout=600)
+            elif sub in ("complete-all", "complete_all", "complete"):
+                payload = _nexus_py_json(training_py, ["complete-all"], timeout=600)
+            elif sub == "needs":
+                payload = _nexus_py_json(training_py, ["needs"], timeout=120)
+            elif sub in ("try-body", "try_body"):
+                payload = _nexus_py_json(training_py, ["try-body"], timeout=180)
+            elif sub == "combat":
+                qparams = parse_qs(urlparse(self.path).query)
+                skill = (qparams.get("skill") or ["wing_chun"])[0]
+                payload = _nexus_py_json(training_py, ["combat", str(skill)], timeout=300)
+            elif sub == "meta":
+                payload = _nexus_py_json(training_py, ["meta"], timeout=30)
+            else:
+                payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/training") and not path.startswith("/api/hostess7/training-room") and not path.startswith("/api/hostess7/training-floor") and not path.startswith("/api/hostess7/training-chamber"):
+            sub = path.replace("/api/hostess7-training", "").replace("/api/hostess7/training", "").strip("/")
+            if sub.startswith("floor/"):
+                floor_sub = sub[6:]
+                if floor_sub in ("complete", "complete-all", "complete_all"):
+                    payload = _nexus_py_json(training_py, ["floor-complete"], timeout=600)
+                else:
+                    payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            elif sub in ("", "status", "json", "panel"):
+                payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            elif sub in ("session", "train", "full"):
+                payload = _nexus_py_json(training_py, ["session"], timeout=600)
+            elif sub in ("complete-all", "complete_all", "complete"):
+                payload = _nexus_py_json(training_py, ["complete-all"], timeout=600)
+            elif sub == "needs":
+                payload = _nexus_py_json(training_py, ["needs"], timeout=120)
+            elif sub in ("try-body", "try_body"):
+                payload = _nexus_py_json(training_py, ["try-body"], timeout=180)
+            elif sub == "combat":
+                qparams = parse_qs(urlparse(self.path).query)
+                skill = (qparams.get("skill") or ["wing_chun"])[0]
+                payload = _nexus_py_json(training_py, ["combat", str(skill)], timeout=300)
+            elif sub == "meta":
+                payload = _nexus_py_json(training_py, ["meta"], timeout=30)
+            else:
+                payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/training-room") or path in ("/api/hostess7-training-room",):
+            sub = path.replace("/api/hostess7-training-room", "").replace("/api/hostess7/training-room", "").strip("/")
+            if sub in ("", "status", "json", "panel"):
+                payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            elif sub in ("session", "train", "full"):
+                payload = _nexus_py_json(training_py, ["session"], timeout=600)
+            elif sub in ("complete-all", "complete_all", "complete"):
+                payload = _nexus_py_json(training_py, ["complete-all"], timeout=600)
+            elif sub == "needs":
+                payload = _nexus_py_json(training_py, ["needs"], timeout=120)
+            elif sub in ("try-body", "try_body"):
+                payload = _nexus_py_json(training_py, ["try-body"], timeout=180)
+            elif sub == "combat":
+                qparams = parse_qs(urlparse(self.path).query)
+                skill = (qparams.get("skill") or ["wing_chun"])[0]
+                payload = _nexus_py_json(training_py, ["combat", str(skill)], timeout=300)
+            else:
+                payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/training-floor") or path in ("/api/hostess7-training-floor",):
+            sub = path.replace("/api/hostess7-training-floor", "").replace("/api/hostess7/training-floor", "").strip("/")
+            if sub in ("complete", "complete-all", "complete_all"):
+                payload = _nexus_py_json(training_py, ["floor-complete"], timeout=600)
+            else:
+                payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/body") or path in ("/api/hostess7-body", "/api/hostess7-body-control"):
+            body_py = INSTALL_ROOT / "lib" / "hostess7-body-control.py"
+            sub = path.replace("/api/hostess7-body-control", "").replace("/api/hostess7-body", "").replace("/api/hostess7/body", "").strip("/")
+            if sub in ("", "status", "json", "panel"):
+                payload = _nexus_py_json(body_py, ["status"], timeout=90)
+            elif sub in ("touch-toes", "touch_toes"):
+                payload = _nexus_py_json(body_py, ["touch-toes"], timeout=60)
+            elif sub == "bend":
+                qparams = parse_qs(urlparse(self.path).query)
+                deg = (qparams.get("degrees") or ["45"])[0]
+                payload = _nexus_py_json(body_py, ["bend", str(deg)], timeout=60)
+            elif sub == "cycle":
+                payload = _nexus_py_json(body_py, ["cycle"], timeout=120)
+            else:
+                payload = _nexus_py_json(body_py, ["status"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/ocr") or path in ("/api/hostess7-ocr", "/api/hostess7-ocr-control"):
+            ocr_py = INSTALL_ROOT / "lib" / "hostess7-ocr-control.py"
+            sub = path.replace("/api/hostess7-ocr-control", "").replace("/api/hostess7-ocr", "").replace("/api/hostess7/ocr", "").strip("/")
+            if sub in ("", "status", "json", "panel"):
+                payload = _nexus_py_json(ocr_py, ["status"], timeout=90)
+            elif sub in ("ingest-all", "ingest_all"):
+                payload = _nexus_py_json(ocr_py, ["ingest-all"], timeout=600)
+            elif sub in ("train-all", "train_all"):
+                payload = _nexus_py_json(ocr_py, ["train-all"], timeout=900)
+            elif sub == "cycle":
+                payload = _nexus_py_json(ocr_py, ["cycle"], timeout=900)
+            elif sub in ("assume", "charge"):
+                payload = _nexus_py_json(ocr_py, ["assume"], timeout=60)
+            else:
+                qparams = parse_qs(urlparse(self.path).query)
+                chamber = (qparams.get("chamber") or [""])[0]
+                if sub == "ingest" and chamber:
+                    payload = _nexus_py_json(ocr_py, ["ingest", str(chamber)], timeout=300)
+                elif sub == "train" and chamber:
+                    payload = _nexus_py_json(ocr_py, ["train", str(chamber)], timeout=300)
+                else:
+                    payload = _nexus_py_json(ocr_py, ["status"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path in ("/api/hostess7/calculator", "/api/hostess7-calculator"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-calculator.py", ["json"], timeout=60)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -3137,6 +3774,32 @@ class Handler(BaseHTTPRequestHandler):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-imaging.py", ["work-queue"], timeout=120)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
+
+        _ocr_chamber_scripts = {
+            "calculator": "hostess7-calculator.py",
+            "biology": "hostess7-biology.py",
+            "engineering": "hostess7-engineering.py",
+            "combat": "hostess7-combat.py",
+            "mos": "hostess7-mos.py",
+            "programming": "hostess7-programming.py",
+            "g16": "hostess7-g16.py",
+            "codecraft": "hostess7-codecraft.py",
+            "geography": "hostess7-geography-training.py",
+            "music": "hostess7-music-training.py",
+            "imaging": "hostess7-imaging.py",
+            "sense": "hostess7-sense-training.py",
+            "reality_physics": "hostess7-reality-physics-training.py",
+        }
+        if path.startswith("/api/hostess7/") and "/ocr-" in path:
+            parts = path.strip("/").split("/")
+            if len(parts) == 4 and parts[0] == "api" and parts[1] == "hostess7":
+                chamber, ocr_cmd = parts[2], parts[3]
+                script = _ocr_chamber_scripts.get(chamber)
+                if script and ocr_cmd in ("ocr-ingest", "ocr-train", "ocr-status"):
+                    timeout = 180 if ocr_cmd == "ocr-train" else (30 if ocr_cmd == "ocr-status" else 120)
+                    payload = _nexus_py_json(INSTALL_ROOT / "lib" / script, [ocr_cmd], timeout=timeout)
+                    self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+                    return
 
         if path == "/api/hostess7/calculator/ocr-ingest":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-calculator.py", ["ocr-ingest"], timeout=120)
@@ -3333,6 +3996,21 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path == "/api/hostess7/mos/ocr-ingest":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-mos.py", ["ocr-ingest"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/mos/ocr-train":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-mos.py", ["ocr-train"], timeout=180)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/mos/ocr-status":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-mos.py", ["ocr-status"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path == "/api/hostess7/g16/explain":
             qparams = parse_qs(urlparse(self.path).query)
             q = (qparams.get("q") or qparams.get("query") or [""])[0]
@@ -3510,6 +4188,17 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path.startswith("/api/field-monster-monitor"):
+            script = INSTALL_ROOT / "lib" / "field-monster-monitor.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "monster_monitor_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-monster-monitor") :].strip("/") or "json"
+            args = ["json"] if sub in ("", "json", "status") else [sub]
+            payload = _nexus_py_json(script, args, timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path.startswith("/api/field-host-desktop/icon/"):
             token = unquote(path.split("/api/field-host-desktop/icon/", 1)[-1].split("?", 1)[0])
             script = INSTALL_ROOT / "lib" / "field-host-desktop.py"
@@ -3665,6 +4354,74 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path.startswith("/api/field-body-system"):
+            body_py = INSTALL_ROOT / "lib" / "field-body-system.py"
+            sub = path[len("/api/field-body-system"):].strip("/")
+            if not body_py.is_file():
+                payload = {"ok": False, "error": "field_body_system_missing"}
+            elif sub in ("", "status", "json", "panel"):
+                payload = _nexus_py_json(body_py, ["json"], timeout=120)
+            elif sub == "consult":
+                payload = _nexus_py_json(body_py, ["consult"], timeout=120)
+            elif sub == "correlate":
+                payload = _nexus_py_json(body_py, ["correlate"], timeout=60)
+            elif sub == "lanes":
+                payload = _nexus_py_json(body_py, ["lanes"], timeout=60)
+            else:
+                payload = _field_body_system_dispatch({"action": sub.replace("-", "_")}, timeout=120)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-eye-threat"):
+            sub = path[len("/api/field-eye-threat"):].strip("/")
+            eye_py = INSTALL_ROOT / "lib" / "field-eye-threat-chamber.py"
+            if not eye_py.is_file():
+                payload = {"ok": False, "error": "field_eye_threat_missing"}
+            elif sub in ("", "status", "json", "panel"):
+                payload = _nexus_py_json(eye_py, ["json"], timeout=30)
+            elif sub == "catalog":
+                payload = _nexus_py_json(eye_py, ["catalog"], timeout=20)
+            elif sub in ("scan", "hostile"):
+                payload = _field_eye_threat_dispatch({"action": sub}, timeout=45)
+            else:
+                payload = _field_eye_threat_dispatch({"action": sub.replace("-", "_")}, timeout=45)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/anatomy-books"):
+            sub = path[len("/api/hostess7/anatomy-books"):].strip("/")
+            book_py = INSTALL_ROOT / "lib" / "hostess7-anatomy-book.py"
+            if not book_py.is_file():
+                payload = {"ok": False, "error": "anatomy_book_missing"}
+            elif sub in ("", "index", "list"):
+                payload = _nexus_py_json(book_py, ["index"], timeout=30)
+            elif sub == "build":
+                payload = _nexus_py_json(book_py, ["build"], timeout=120)
+            elif sub == "build-all":
+                payload = _nexus_py_json(book_py, ["build-all"], timeout=180)
+            else:
+                payload = _nexus_py_json(book_py, ["build-one", sub], timeout=60)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-audio-dac"):
+            dac_py = INSTALL_ROOT / "lib" / "field-audio-dac-chamber.py"
+            sub = path[len("/api/field-audio-dac"):].strip("/")
+            if not dac_py.is_file():
+                payload = {"ok": False, "error": "audio_dac_missing"}
+            elif sub in ("", "status", "json", "panel"):
+                payload = _nexus_py_json(dac_py, ["json"], timeout=30)
+            elif sub == "devices":
+                payload = _nexus_py_json(dac_py, ["devices"], timeout=20)
+            elif sub == "znetwork":
+                payload = _nexus_py_json(dac_py, ["znetwork"], timeout=20)
+            elif sub == "broadcaster":
+                payload = _nexus_py_json(dac_py, ["broadcaster"], timeout=20)
+            else:
+                payload = _field_audio_dac_dispatch({"action": sub.replace("-", "_")}, timeout=30)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path == "/api/field-audio-settings":
             script = INSTALL_ROOT / "lib" / "field-audio-settings.py"
             if script.is_file():
@@ -3735,6 +4492,23 @@ class Handler(BaseHTTPRequestHandler):
                 }
             else:
                 payload = {"ok": False, "error": "unknown_video_codec_action"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-broadcaster/playback":
+            _serve_broadcaster_playback(self, query)
+            return
+
+        if path == "/api/field-broadcaster/desktop-preview":
+            _serve_broadcaster_desktop_preview(self, query)
+            return
+
+        if path == "/api/field-broadcaster/recordings":
+            mod = _broadcaster_media_mod()
+            if mod and hasattr(mod, "list_recordings"):
+                payload = {"ok": True, "recordings": mod.list_recordings()}
+            else:
+                payload = {"ok": False, "error": "broadcaster_missing"}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -4504,6 +5278,60 @@ class Handler(BaseHTTPRequestHandler):
                 payload = _nexus_py_json(cpu_py, ["detail", eid], timeout=30)
             else:
                 payload = _nexus_py_json(cpu_py, ["library"], timeout=60)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/card-catalog"):
+            cat_py = INSTALL_ROOT / "lib" / "field-card-catalog.py"
+            if not cat_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-card-catalog/v1",
+                    "ok": False,
+                    "hint": "field-card-catalog missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            if path.endswith("/autocomplete") or "/autocomplete" in path:
+                q = str(qparams.get("q", [""])[0])
+                limit = str(qparams.get("limit", ["20"])[0])
+                payload = _nexus_py_json(cat_py, ["autocomplete", q, "--limit", limit], timeout=60)
+            elif path.endswith("/search") or "/search" in path:
+                q = str(qparams.get("q", [""])[0])
+                limit = str(qparams.get("limit", ["48"])[0])
+                payload = _nexus_py_json(cat_py, ["search", q, "--limit", limit], timeout=90)
+            elif path.endswith("/sort") or "/sort" in path:
+                mode = str(qparams.get("mode", ["call_number"])[0])
+                payload = _nexus_py_json(cat_py, ["sort", mode], timeout=90)
+            elif path.endswith("/card") or "/card" in path:
+                cid = str(qparams.get("id", [""])[0])
+                payload = _nexus_py_json(cat_py, ["card", cid], timeout=30)
+            elif path.endswith("/detect") or path.endswith("/build") or path.endswith("/publish"):
+                payload = _nexus_py_json(cat_py, ["detect"], timeout=300)
+            elif path.endswith("/panel"):
+                payload = _nexus_py_json(cat_py, ["panel"], timeout=60)
+            else:
+                payload = _nexus_py_json(cat_py, ["catalog"], timeout=120)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/tobins-spirit-guide"):
+            tobin_py = INSTALL_ROOT / "lib" / "tobins-spirit-guide.py"
+            if not tobin_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "tobins-spirit-guide/v1",
+                    "ok": False,
+                    "hint": "tobins-spirit-guide missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            if path.endswith("/library-book") or "/library-book" in path:
+                refresh = "1" if str(qparams.get("refresh", ["0"])[0]) in ("1", "true") else "0"
+                argv = ["library-book"] + (["--refresh"] if refresh == "1" else [])
+                payload = _nexus_py_json(tobin_py, argv, timeout=90)
+            elif path.endswith("/panel") or path.endswith("/build") or path.endswith("/publish"):
+                payload = _nexus_py_json(tobin_py, ["publish"], timeout=90)
+            else:
+                payload = _nexus_py_json(tobin_py, ["catalog"], timeout=60)
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -5618,6 +6446,35 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(payload), "application/json")
                 return
 
+            if path == "/api/library/checkout":
+                book_id = str(query.get("book", [""])[0]).strip()
+                if book_id:
+                    payload = _lib_json(["checkout-status"])
+                    if payload.get("active"):
+                        hit = next((r for r in payload["active"] if r.get("book_id") == book_id), None)
+                        payload = {"ok": bool(hit), "checkout": hit, "book_id": book_id}
+                    else:
+                        payload = {"ok": False, "checkout": None, "book_id": book_id}
+                else:
+                    payload = _lib_json(["checkout-status"])
+                self._send(200, json.dumps(payload), "application/json")
+                return
+
+            if path.startswith("/api/g16/language-test/"):
+                matrix_py = INSTALL_ROOT / "lib" / "g16-language-test-matrix.py"
+                sub = path[len("/api/g16/language-test/") :].strip("/") or "posture"
+                if sub == "log":
+                    offset = int(query.get("offset", ["0"])[0] or "0")
+                    payload = _nexus_py_json(matrix_py, ["log", str(offset)], timeout=30)
+                elif sub == "matrix":
+                    payload = _nexus_py_json(matrix_py, ["matrix"], timeout=45)
+                elif sub in ("status", "posture"):
+                    payload = _nexus_py_json(matrix_py, ["posture"], timeout=25)
+                else:
+                    payload = {"ok": False, "error": "unknown_g16_language_test_route", "sub": sub}
+                self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+                return
+
             if path == "/api/library/cover":
                 book_id = str(query.get("book", [""])[0]).strip()
                 side = str(query.get("side", ["front"])[0]).strip() or "front"
@@ -5756,6 +6613,10 @@ class Handler(BaseHTTPRequestHandler):
             target = PANEL_DIR / "field-znetwork.html"
         elif path in ("/field-znetwork-vault", "/field-znetwork-vault/"):
             target = PANEL_DIR / "field-znetwork-vault.html"
+        elif path in ("/g16-build-output", "/g16-build-output/", "/g16-build-output.html"):
+            target = PANEL_DIR / "g16-build-output.html"
+        elif path in ("/hands-attachments", "/hands-attachments/", "/hands-attachments.html"):
+            target = PANEL_DIR / "hands-attachments.html"
         elif path in ("/field-lang-manuals", "/field-lang-manuals/"):
             target = PANEL_DIR / "field-lang-manuals.html"
         elif path in ("/field-broadcaster", "/field-broadcaster/"):
@@ -5764,6 +6625,10 @@ class Handler(BaseHTTPRequestHandler):
             target = PANEL_DIR / "field-broadcaster.html"
         elif path in ("/field-gpu", "/field-gpu/"):
             target = PANEL_DIR / "field-gpu.html"
+        elif path in ("/field-audio-dac", "/field-audio-dac/"):
+            target = PANEL_DIR / "field-audio-dac.html"
+        elif path in ("/field-audio-dac", "/field-audio-dac/"):
+            target = PANEL_DIR / "field-audio-dac.html"
         elif path in ("/field-audio-settings", "/field-audio-settings/"):
             target = PANEL_DIR / "field-audio-settings.html"
         elif path in ("/field-display-settings", "/field-display-settings/"):
@@ -5869,6 +6734,71 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = unquote(self.path.split("?", 1)[0])
+        if path.startswith("/api/compile-autocorrect"):
+            body = self._read_json_body()
+            content = str(body.get("content") or "")
+            lang = str(body.get("language") or body.get("lang") or "")
+            profile = str(body.get("profile") or "belt_2_0")
+            g16_py = INSTALL_ROOT / "Grok16" / "lib" / "g16-universal-compiler.py"
+            if not g16_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "g16_universal_missing"}), "application/json")
+                return
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("g16_uni_panel", g16_py)
+            payload: dict[str, Any] = {"ok": False, "error": "compile_unavailable"}
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "compile_source"):
+                    payload = mod.compile_source(
+                        content,
+                        lang=lang,
+                        path=str(body.get("path") or "snippet"),
+                        profile=profile,
+                    )
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+        if path.startswith("/api/ironclad/access") or path.startswith("/api/ironclad/h7-access"):
+            acc = INSTALL_ROOT / "lib" / "ironclad-access.py"
+            body = self._read_json_body()
+            if acc.is_file():
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("ironclad_access_http_post", acc)
+                if spec and spec.loader:
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)
+                    action = str(body.get("action") or "search").strip().lower()
+                    payload = mod.dispatch(action, body=body)
+                    sec = _ironclad_secure_api_mod()
+                    extra = sec.security_headers() if sec and hasattr(sec, "security_headers") else {}
+                    self._send(200, json.dumps(payload, ensure_ascii=False), "application/json", extra_headers=extra)
+                    return
+            self._send(503, json.dumps({"ok": False, "error": "ironclad_access_missing"}), "application/json")
+            return
+        if path.startswith("/api/ironclad/secure-api"):
+            mod = _ironclad_secure_api_mod()
+            body = self._read_json_body()
+            if mod and hasattr(mod, "ironclad_secure_api"):
+                api = mod.ironclad_secure_api()
+                entries = body.get("entries") if isinstance(body.get("entries"), list) else None
+                if entries is not None:
+                    sorted_rows, sort_meta = api.sort_index(
+                        entries, context=str(body.get("context") or "registry_index"),
+                    )
+                    payload = {"ok": True, "entries": sorted_rows, "sort": sort_meta, "singleton": True}
+                elif path.rstrip("/").endswith("/search") or body.get("query") is not None or body.get("q") is not None:
+                    payload = api.search_index(
+                        str(body.get("query") or body.get("q") or ""),
+                        context=str(body.get("context") or "all"),
+                        limit=int(body.get("limit") or 48),
+                    )
+                else:
+                    payload = api.handle_api(path, query=parse_qs(urlparse(self.path).query))
+                extra = mod.security_headers() if hasattr(mod, "security_headers") else {}
+                self._send(200, json.dumps(payload, ensure_ascii=False), "application/json", extra_headers=extra)
+                return
+            self._send(503, json.dumps({"ok": False, "error": "ironclad_secure_api_missing"}), "application/json")
+            return
         max_body = 8_388_608 if path.startswith("/api/library/") else 48_000_000 if path.startswith("/api/znetwork/vault/") else 65536
         if self.headers.get("Content-Length"):
             try:
@@ -5879,6 +6809,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(413, "payload too large", "text/plain")
                 return
         body = self._read_json_body()
+        if path.startswith("/api/") and not self._ironclad_api_gate(path, "POST", body):
+            return
 
         if path.startswith("/api/znetwork/registry/"):
             reg_py = INSTALL_ROOT / "lib" / "znetwork-operator-registry.py"
@@ -5921,6 +6853,265 @@ class Handler(BaseHTTPRequestHandler):
                 return
             code = 200 if isinstance(payload, dict) and payload.get("ok") else 400
             self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        ruler_py = INSTALL_ROOT / "lib" / "hostess7-brain-ruler.py"
+        if path.startswith("/api/hostess7/brain/"):
+            if not ruler_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "brain_ruler_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            sub = path.replace("/api/hostess7/brain/", "").strip("/")
+            if not req.get("action"):
+                req = {
+                    "grow": {"action": "grow"},
+                    "rule": {"action": "rule"},
+                    "sovereignty": {"action": "assess_sovereignty"},
+                    "assess": {"action": "assess_sovereignty"},
+                    "expand": {"action": "expand_chambers"},
+                }.get(sub.split("/")[0], {"action": "status"})
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(ruler_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "brain_ruler_timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "brain_ruler_bad_json", "tail": (proc.stdout or "")[-1500:]}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        training_py = INSTALL_ROOT / "lib" / "hostess7-training-chamber.py"
+        if path.startswith("/api/hostess7/training-chamber"):
+            if not training_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "training_chamber_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            if not req.get("action"):
+                sub = path.replace("/api/hostess7-training-chamber", "").replace("/api/hostess7/training-chamber", "").strip("/")
+                if sub.startswith("floor/"):
+                    req = {"zone": "floor", "action": sub[6:].replace("-", "_") or "status"}
+                else:
+                    req = {
+                        "session": {"action": "session"},
+                        "complete-all": {"action": "complete_all"},
+                        "needs": {"action": "needs"},
+                        "try-body": {"action": "try_body"},
+                        "combat": {"action": "combat_drill"},
+                    }.get(sub, {"action": "status"})
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(training_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "training_chamber_timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "training_chamber_parse_failed"}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/training") and not path.startswith("/api/hostess7/training-room") and not path.startswith("/api/hostess7/training-floor") and not path.startswith("/api/hostess7/training-chamber"):
+            if not training_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "training_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            if not req.get("action"):
+                sub = path.replace("/api/hostess7-training", "").replace("/api/hostess7/training", "").strip("/")
+                if sub.startswith("floor/"):
+                    req = {"zone": "floor", "action": sub[6:].replace("-", "_") or "status"}
+                else:
+                    req = {
+                        "session": {"action": "session"},
+                        "train": {"action": "session"},
+                        "complete-all": {"action": "complete_all"},
+                        "complete_all": {"action": "complete_all"},
+                        "complete": {"action": "complete_all"},
+                        "needs": {"action": "needs"},
+                        "try-body": {"action": "try_body"},
+                        "try_body": {"action": "try_body"},
+                        "combat": {"action": "combat_drill"},
+                    }.get(sub, {"action": "status"})
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(training_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "training_timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "training_parse_failed"}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/training-room") or path in ("/api/hostess7-training-room",):
+            if not training_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "training_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            if not req.get("action"):
+                sub = path.replace("/api/hostess7-training-room", "").replace("/api/hostess7/training-room", "").strip("/")
+                req = {
+                    "session": {"action": "session"},
+                    "train": {"action": "session"},
+                    "complete-all": {"action": "complete_all"},
+                    "complete_all": {"action": "complete_all"},
+                    "complete": {"action": "complete_all"},
+                    "needs": {"action": "needs"},
+                    "try-body": {"action": "try_body"},
+                    "try_body": {"action": "try_body"},
+                    "combat": {"action": "combat_drill"},
+                }.get(sub, {"action": "status"})
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(training_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "training_timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "training_parse_failed"}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/training-floor") or path in ("/api/hostess7-training-floor",):
+            if not training_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "training_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            if not req.get("action"):
+                sub = path.replace("/api/hostess7-training-floor", "").replace("/api/hostess7/training-floor", "").strip("/")
+                req = {
+                    "complete": {"zone": "floor", "action": "complete"},
+                    "complete-all": {"zone": "floor", "action": "complete"},
+                    "complete_all": {"zone": "floor", "action": "complete"},
+                }.get(sub, {"zone": "floor", "action": "status"})
+            elif not req.get("zone"):
+                req = {**req, "zone": "floor"}
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(training_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "training_timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "training_parse_failed"}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/body") or path in ("/api/hostess7-body", "/api/hostess7-body-control"):
+            body_py = INSTALL_ROOT / "lib" / "hostess7-body-control.py"
+            if not body_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "hostess7_body_control_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            if not req.get("action"):
+                sub = path.replace("/api/hostess7-body-control", "").replace("/api/hostess7-body", "").replace("/api/hostess7/body", "").strip("/")
+                if sub in ("touch-toes", "touch_toes"):
+                    req = {"action": "touch_toes"}
+                elif sub == "bend":
+                    req = {"action": "bend", "degrees": float(req.get("degrees") or 45)}
+                elif sub == "cycle":
+                    req = {"action": "cycle"}
+                else:
+                    req = {"action": "status"}
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(body_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=180,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "hostess7_body_timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "hostess7_body_parse_failed"}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/ocr") or path in ("/api/hostess7-ocr", "/api/hostess7-ocr-control"):
+            ocr_py = INSTALL_ROOT / "lib" / "hostess7-ocr-control.py"
+            if not ocr_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "hostess7_ocr_control_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            if not req.get("action"):
+                sub = path.replace("/api/hostess7-ocr-control", "").replace("/api/hostess7-ocr", "").replace("/api/hostess7/ocr", "").strip("/")
+                if sub in ("ingest-all", "ingest_all"):
+                    req = {"action": "ingest_all"}
+                elif sub in ("train-all", "train_all"):
+                    req = {"action": "train_all"}
+                elif sub == "cycle":
+                    req = {"action": "cycle"}
+                elif sub in ("assume", "charge"):
+                    req = {"action": "assume"}
+                else:
+                    req = {"action": "status"}
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(ocr_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=900,
+                    env=env,
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "hostess7_ocr_timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "hostess7_ocr_parse_failed"}
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
         if path.startswith("/api/hostess7/znetwork") or path.startswith("/api/znetwork/hostess7"):
@@ -6106,6 +7297,51 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self._send(404, json.dumps({"ok": False, "error": "unknown_field_shell_dock_action"}), "application/json")
                 return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-body-system"):
+            sub = path[len("/api/field-body-system"):].strip("/")
+            req = body if isinstance(body, dict) else {}
+            if not req.get("action"):
+                req = {"action": sub.replace("-", "_") if sub else "status"}
+            payload = _field_body_system_dispatch(req, timeout=120)
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-eye-threat"):
+            sub = path[len("/api/field-eye-threat"):].strip("/")
+            req = body if isinstance(body, dict) else {}
+            if not req.get("action"):
+                req = {"action": sub.replace("-", "_") if sub else "status"}
+            payload = _field_eye_threat_dispatch(req, timeout=60)
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/anatomy-books"):
+            sub = path[len("/api/hostess7/anatomy-books"):].strip("/")
+            book_py = INSTALL_ROOT / "lib" / "hostess7-anatomy-book.py"
+            if not book_py.is_file():
+                payload = {"ok": False, "error": "anatomy_book_missing"}
+            elif sub in ("build", "build-all"):
+                payload = _nexus_py_json(book_py, [sub], timeout=180)
+            elif sub in ("", "index", "list"):
+                payload = _nexus_py_json(book_py, ["index"], timeout=30)
+            else:
+                payload = _nexus_py_json(book_py, ["build-one", sub], timeout=60)
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-audio-dac"):
+            sub = path[len("/api/field-audio-dac"):].strip("/")
+            req = body if isinstance(body, dict) else {}
+            if not req.get("action"):
+                req = {"action": sub.replace("-", "_") if sub else "apply"}
+            payload = _field_audio_dac_dispatch(req, timeout=90)
             code = 200 if payload.get("ok", True) else 400
             self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
             return
@@ -6380,6 +7616,20 @@ class Handler(BaseHTTPRequestHandler):
             self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path.startswith("/api/field-final-eye-canvas"):
+            sub = path[len("/api/field-final-eye-canvas"):].strip("/")
+            req = body if isinstance(body, dict) else {}
+            if sub == "connect":
+                req = {**req, "action": "connect", "connect": True}
+            elif sub == "feed":
+                req = {**req, "action": "feed"}
+            elif not req.get("action"):
+                req = {**req, "action": "status"}
+            payload = _field_final_eye_canvas_dispatch(req, timeout=60)
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path.startswith("/api/field-broadcaster") or path.startswith("/api/field-obs"):
             script = INSTALL_ROOT / "lib" / "field-broadcaster.py"
             if not script.is_file():
@@ -6389,7 +7639,12 @@ class Handler(BaseHTTPRequestHandler):
                 return
             prefix = "/api/field-broadcaster" if path.startswith("/api/field-broadcaster") else "/api/field-obs"
             sub = path[len(prefix) :].strip("/")
-            if sub in ("", "status", "json"):
+            if sub == "chamber":
+                req = body if isinstance(body, dict) else {}
+                if not req.get("action"):
+                    req = {"action": "status"}
+                payload = _field_broadcaster_chamber_dispatch(req, timeout=90)
+            elif sub in ("", "status", "json"):
                 payload = _nexus_py_json(script, ["json"], timeout=45)
             elif sub in ("launch", "go-live", "golive"):
                 cmd = "go-live" if sub in ("go-live", "golive") else "launch"
@@ -6398,8 +7653,6 @@ class Handler(BaseHTTPRequestHandler):
                 payload = _nexus_py_json(script, ["record"], timeout=30)
             elif sub == "virtualcam":
                 payload = _nexus_py_json(script, ["virtualcam"], timeout=30)
-            elif sub == "studio":
-                payload = _nexus_py_json(script, ["studio"], timeout=30)
             elif sub in ("clear-filters", "clear_filters", "passthrough"):
                 payload = _nexus_py_json(script, ["clear-filters"], timeout=30)
             elif sub == "audio":
@@ -6414,22 +7667,8 @@ class Handler(BaseHTTPRequestHandler):
                 patch = body if isinstance(body, dict) else {}
                 payload = _nexus_py_json(script, ["settings", json.dumps(patch)], timeout=30)
             elif sub == "studio":
-                studio_py = INSTALL_ROOT / "lib" / "field-broadcaster-studio.py"
                 req = body if isinstance(body, dict) else {}
-                if studio_py.is_file():
-                    try:
-                        proc = subprocess.run(
-                            [sys.executable, str(studio_py), "dispatch", json.dumps(req)],
-                            capture_output=True,
-                            text=True,
-                            timeout=90,
-                            env=_field_stack_env(),
-                        )
-                        payload = json.loads(proc.stdout or "{}")
-                    except (subprocess.TimeoutExpired, json.JSONDecodeError):
-                        payload = {"ok": False, "error": "studio_dispatch_failed"}
-                else:
-                    payload = {"ok": False, "error": "studio_missing"}
+                payload = _field_broadcaster_studio_dispatch(req, timeout=90)
             else:
                 self._send(404, json.dumps({"ok": False, "error": "unknown_broadcaster_action"}), "application/json")
                 return
@@ -6455,6 +7694,83 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 payload = {"ok": False, "error": "taskbar_pins_missing"}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/ammoos-themes":
+            script = INSTALL_ROOT / "lib" / "ammoos-theme-engine.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "ammoos_theme_engine_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    env=env,
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+                payload = {"ok": False, "error": str(exc)}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/weapons-defense", "/api/hostess7-weapons-defense"):
+            script = INSTALL_ROOT / "lib" / "hostess7-weapons-defense.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "hostess7_weapons_defense_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            env["NEXUS_HOSTESS7_FULL_CONTROL"] = "1"
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=90,
+                    env=env,
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+                payload = {"ok": False, "error": str(exc)}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/system-control", "/api/hostess7-system-control"):
+            script = INSTALL_ROOT / "lib" / "hostess7-system-control.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "hostess7_system_control_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            env = os.environ.copy()
+            env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
+            env["NEXUS_STATE_DIR"] = str(STATE_DIR)
+            env["NEXUS_HOSTESS7_FULL_CONTROL"] = "1"
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    env=env,
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+                payload = {"ok": False, "error": str(exc)}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
             return
 
         if path == "/api/field-shell-settings":
@@ -6486,6 +7802,29 @@ class Handler(BaseHTTPRequestHandler):
                 except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
                     payload = {"ok": False, "error": str(exc)}
             code = 200 if payload.get("ok", True) and not payload.get("error") else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-monster-monitor"):
+            script = INSTALL_ROOT / "lib" / "field-monster-monitor.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "monster_monitor_missing"}), "application/json")
+                return
+            if path.rstrip("/").endswith("/action") or isinstance(body, dict) and body.get("action"):
+                try:
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location("monster", script)
+                    if spec and spec.loader:
+                        mod = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(mod)
+                        payload = mod.handle_action(body if isinstance(body, dict) else {})
+                    else:
+                        payload = {"ok": False, "error": "monster_load_failed"}
+                except Exception as exc:
+                    payload = {"ok": False, "error": str(exc)}
+            else:
+                payload = _nexus_py_json(script, ["json"], timeout=25) or {"ok": False}
+            code = 200 if payload.get("ok") else 400
             self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -6908,6 +8247,46 @@ class Handler(BaseHTTPRequestHandler):
 
             reader_py = INSTALL_ROOT / "lib" / "h7-library-secure-reader.py"
 
+            if path == "/api/library/checkout":
+                action = str(body.get("action", "checkout")).strip().lower()
+                book_id = str(body.get("book_id", body.get("book", ""))).strip()
+                if action == "remind":
+                    payload = _lib_json(["checkout-remind"], timeout=30)
+                    self._send(200, json.dumps(payload), "application/json")
+                    return
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book_id"}), "application/json")
+                    return
+                if action in ("checkin", "return"):
+                    payload = _lib_json(["checkin", book_id, str(body.get("patron", "operator"))], timeout=30)
+                else:
+                    co_body = {
+                        "days": body.get("days", 14),
+                        "patron": body.get("patron", "operator"),
+                        "book": body.get("book_meta") or body.get("book"),
+                    }
+                    payload = _lib_json(["checkout", book_id, json.dumps(co_body)], timeout=30)
+                self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
+                return
+
+            if path == "/api/g16/language-test/start":
+                mod = _g16_language_test_mod()
+                if not mod:
+                    self._send(500, json.dumps({"ok": False, "error": "g16_language_test_missing"}), "application/json")
+                    return
+                import threading
+
+                if getattr(mod, "_RUNNING", False):
+                    self._send(200, json.dumps({"ok": True, "started": False, "message": "already_running"}), "application/json")
+                    return
+
+                def _bg() -> None:
+                    mod.run_all()
+
+                threading.Thread(target=_bg, daemon=True).start()
+                self._send(200, json.dumps({"ok": True, "started": True}), "application/json")
+                return
+
             if path == "/api/library/reader/issue":
                 book_id = str(body.get("book_id", body.get("book", ""))).strip()
                 if not book_id:
@@ -7193,6 +8572,66 @@ class Handler(BaseHTTPRequestHandler):
                 }),
                 "application/json",
             )
+            return
+
+        if path == "/api/ammoos-update/sudo-prompt":
+            lock = _nexus_update_lock(["status"])
+            needs = _nexus_update_needs_sudo()
+            if not needs and not lock.get("locked"):
+                self._send(
+                    400,
+                    json.dumps({"ok": False, "error": "no_pending_sudo"}),
+                    "application/json",
+                )
+                return
+            git_dir = _resolve_ammoos_source_root()
+            token = str(lock.get("token") or os.environ.get("NEXUS_UPDATE_LOCK_TOKEN", ""))
+            previous = str(lock.get("previous_version") or (needs.get("previous") if needs else ""))
+            target = str(lock.get("target_version") or (needs.get("target") if needs else ""))
+            update_mode = str(
+                os.environ.get("AMMOOS_UPDATE_MODE", "git_tree")
+                if not needs else needs.get("update_mode") or os.environ.get("AMMOOS_UPDATE_MODE", "git_tree")
+            )
+            env = os.environ.copy()
+            env.update({
+                "NEXUS_INSTALL_ROOT": str(INSTALL_ROOT),
+                "NEXUS_STATE_DIR": str(STATE_DIR),
+                "NEXUS_UPDATE_LOCK_TOKEN": token,
+                "NEXUS_UPDATE_TARGET": target,
+                "NEXUS_UPDATE_PREVIOUS": previous,
+                "NEXUS_UPDATE_MODE": update_mode,
+                "AMMOOS_UPDATE_MODE": update_mode,
+            })
+            if git_dir:
+                env["NEXUS_UPDATE_GIT_DIR"] = str(git_dir)
+            cache_upd = _ammoos_update_check()
+            if cache_upd.get("source_tarball"):
+                env["NEXUS_UPDATE_TARBALL_URL"] = str(cache_upd["source_tarball"])
+            helper = INSTALL_ROOT / "lib" / "nexus-update-apply.sh"
+            try:
+                subprocess.Popen(
+                    ["bash", str(helper)],
+                    env=env,
+                    start_new_session=True,
+                    cwd=str(git_dir or INSTALL_ROOT),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                self._send(
+                    202,
+                    json.dumps({
+                        "ok": True,
+                        "prompt_started": True,
+                        "message": "Password prompt opened — complete sudo to finish AmmoOS update",
+                    }),
+                    "application/json",
+                )
+            except OSError as exc:
+                self._send(
+                    500,
+                    json.dumps({"ok": False, "error": str(exc)}),
+                    "application/json",
+                )
             return
 
         if path == "/api/update/apply":

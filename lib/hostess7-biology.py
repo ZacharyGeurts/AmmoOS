@@ -25,8 +25,19 @@ OCR_CORPUS = STATE / "hostess7-biology-ocr-corpus.json"
 OCR_LEDGER = STATE / "hostess7-biology-ocr-ledger.jsonl"
 SG_ROOT = Path(os.environ.get("SG_ROOT", str(INSTALL.parent.parent)))
 HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
-ZOCR_ROOT = Path(os.environ.get("ZOCR_ROOT", str(SG_ROOT / "ZOCR")))
-FINAL_EYE_ROOT = Path(os.environ.get("FINAL_EYE_ROOT", str(SG_ROOT / "Final_Eye")))
+def _final_eye_root() -> Path:
+    try:
+        from sg_paths import final_eye_root as _fer
+        return _fer()
+    except ImportError:
+        pass
+    env = os.environ.get("FINAL_EYE_ROOT", "").strip()
+    if env:
+        return Path(env).expanduser().resolve()
+    return (INSTALL / "Final_Eye").resolve()
+
+
+FINAL_EYE_ROOT = _final_eye_root()
 
 ENABLED = os.environ.get("NEXUS_HOSTESS7_BIOLOGY", "1") == "1"
 
@@ -547,16 +558,21 @@ def extract_biology_candidates(text: str, *, source_id: str = "") -> list[dict[s
 
 
 def _ocr_tesseract(path: Path) -> str:
-    if not path.is_file():
+    core_py = INSTALL / "lib" / "final-eye-ocr-core.py"
+    if not core_py.is_file():
         return ""
     try:
-        proc = subprocess.run(
-            ["tesseract", str(path), "stdout", "-l", "eng", "--psm", "6"],
-            capture_output=True, text=True, timeout=25, check=False,
-        )
-        return (proc.stdout or "").strip()
-    except (OSError, subprocess.TimeoutExpired):
-        return ""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("final_eye_ocr_bio", core_py)
+        if not spec or not spec.loader:
+            return ""
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "ocr_image_text"):
+            return str(mod.ocr_image_text(path) or "").strip()
+    except Exception:
+        pass
+    return ""
 
 
 def _resolve_source_path(spec: dict[str, Any]) -> Path | None:
@@ -564,8 +580,9 @@ def _resolve_source_path(spec: dict[str, Any]) -> Path | None:
         return Path(str(spec["path_abs"]))
     env = str(spec.get("path_env") or "")
     root = {
-        "ZOCR_ROOT": ZOCR_ROOT,
         "FINAL_EYE_ROOT": FINAL_EYE_ROOT,
+        "ZOCR_ROOT": FINAL_EYE_ROOT,
+        "ZNEWOCR_ROOT": FINAL_EYE_ROOT,
         "HOSTESS7_ROOT": HOSTESS7_ROOT,
         "NEXUS_INSTALL_ROOT": INSTALL,
         "SG_ROOT": SG_ROOT,

@@ -1105,6 +1105,38 @@ def pack_h7c(
     return b"".join(parts)
 
 
+def read_h7c_header_only(data: bytes) -> dict[str, Any]:
+    """Parse H7c JSON header only — no payload decompress (Ironclad fast catalog)."""
+    inner, block_hdr = unwrap_h7c_block(data)
+    if len(inner) < 8 or inner[:4] not in (MAGIC_V1, MAGIC_V2, MAGIC_V3):
+        raise H7cError("not an H7c book (bad magic)")
+    header_len = struct.unpack("<I", inner[4:8])[0]
+    end = 8 + header_len
+    if end > len(inner):
+        raise H7cError("truncated H7c header")
+    header = json.loads(inner[8:end].decode("utf-8"))
+    if block_hdr:
+        header["_ironclad_block"] = block_hdr
+    return header
+
+
+def read_h7c_header_file(path: Path, *, max_read: int = 262144) -> dict[str, Any]:
+    """Read H7c header from disk without decompressing body — stat + prefix read."""
+    p = Path(path)
+    if not p.is_file():
+        raise H7cError("not_found")
+    with p.open("rb") as fh:
+        chunk = fh.read(max_read)
+    try:
+        return read_h7c_header_only(chunk)
+    except H7cError:
+        if p.stat().st_size > max_read:
+            with p.open("rb") as fh:
+                chunk = fh.read(min(p.stat().st_size, max_read * 4))
+            return read_h7c_header_only(chunk)
+        raise
+
+
 def parse_h7c(data: bytes) -> tuple[dict[str, Any], bytes, bytes, bytes, bytes, bytes, bytes, bytes]:
     data, _block = unwrap_h7c_block(data)
     if len(data) < 8 or data[:4] not in (MAGIC_V1, MAGIC_V2, MAGIC_V3):

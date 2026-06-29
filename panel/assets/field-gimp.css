@@ -5,7 +5,7 @@
   --fg-text: #eef4ff;
   --fg-dim: #94a3b8;
   --fg-accent: #3b82f6;
-  --fg-font: "Segoe UI", system-ui, sans-serif;
+  --fg-font: system-ui, sans-serif;
 }
 
 html, body { margin: 0; min-height: 100%; background: var(--fg-bg); color: var(--fg-text); font-family: var(--fg-font); }

@@ -8,15 +8,18 @@ SG="$(cd "${QUEEN}/../.." && pwd)"
 PROFILE="${ROOT}/profile"
 PORT="${QUEEN_WORLD_PORT:-9481}"
 PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
-HOME_URL="${QUEEN_BROWSER_HOME:-https://duckduckgo.com/}"
+HOME_URL="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${PORT}/world/kilroy-home.html}"
+BROWSER_SHELL="http://127.0.0.1:${PORT}/world/browser.html"
 C2_URL="${NEXUS_C2_LAUNCH_URL:-http://127.0.0.1:${PANEL_PORT}/field}"
 KIOSK="${NEXUS_C2_KIOSK:-0}"
 C2_DESKTOP="${NEXUS_C2_DESKTOP_LAUNCH:-0}"
 
 if [[ "${C2_DESKTOP}" == "1" ]]; then
   LAUNCH_URL="${C2_URL}"
+elif [[ -n "${QUEEN_BROWSER_URL:-}" ]]; then
+  LAUNCH_URL="${QUEEN_BROWSER_URL}"
 else
-  LAUNCH_URL="${HOME_URL}"
+  LAUNCH_URL="${BROWSER_SHELL}"
 fi
 
 export QUEEN_ROOT="${QUEEN}"

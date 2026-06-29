@@ -1,5 +1,5 @@
 #!/bin/bash
-# NEXUS Field — single launcher (panel, tray, Tristate underlay).
+# NEXUS Field OS — ./nexus.sh does it all: boot, panel, underlay, ZNetwork, Queen, Grok16.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -30,6 +30,9 @@ declare -f nexus_field_services_boot >/dev/null 2>&1 && nexus_field_services_boo
 # shellcheck source=/dev/null
 [[ -f "${ROOT}/lib/nexus-boot-impl.sh" ]] && source "${ROOT}/lib/nexus-boot-impl.sh"
 declare -f nexus_boot_impl_run >/dev/null 2>&1 && nexus_boot_impl_run || true
+# shellcheck source=/dev/null
+source "${ROOT}/lib/nexus-field-os.sh"
+nexus_field_os_export_paths
 # shellcheck source=/dev/null
 source "${ROOT}/lib/panel-browser.sh"
 # shellcheck source=/dev/null
@@ -179,13 +182,14 @@ nexus_launch_underlay() {
 
 nexus_usage() {
   cat <<EOF
-NewLatest NEXUS field — start the threat panel and open the browser
+NEXUS Field OS — single launcher for panel, underlay, ZNetwork, Queen, Grok16, AmmoLang
   Version: $(nexus_read_version 2>/dev/null || echo unknown)
   Install: ${NEXUS_INSTALL_ROOT}
   State:   ${NEXUS_STATE_DIR}
+  Grok16:  ${GROK16_ROOT:-${NEXUS_INSTALL_ROOT}/Grok16}
 
 Usage:
-  ./nexus.sh                 Start panel (if needed), launch NEXUS C2 desktop, tray icon
+  ./nexus.sh                 Boot stack → panel → underlay witness → NEXUS C2 desktop + tray
   ./nexus.sh --help          Show this help (-h, help)
   ./nexus.sh --url           Print panel URL only
   ./nexus.sh --wait          Block until panel responds
@@ -194,6 +198,8 @@ Usage:
   ./nexus.sh --tray          Start tray icon only (right-click → jump to tab)
   ./nexus.sh --underlay      Open 2026 Tristate / Underlay F9 installer
   ./nexus.sh --drop-in       Forceful drop-in pipeline (defield → redata → secure net)
+  ./nexus.sh --clean         Remove stale build trees (Queen/build, Grok16/build, …)
+  ./nexus.sh --build         AmmoLang sovereign build (CHIPs → harness → forge)
   ./nexus.sh --browser-f9    F9 action once (Queen browser or Tristate installer)
   ./nexus.sh --tab <view>    Open a panel tab in the browser (e.g. command, library)
   ./nexus.sh --shutdown      Stop panel, tray, and watchdog immediately (--stop)
@@ -222,6 +228,14 @@ case "${1:-}" in
   -h|--help|help)
     nexus_usage
     exit 0
+    ;;
+  --clean|--cleanup)
+    nexus_field_os_build_clean
+    exit $?
+    ;;
+  --build|--forge|--sovereign-build)
+    nexus_field_os_sovereign_build
+    exit $?
     ;;
   --underlay|--tristate|--install-gui)
     nexus_launch_underlay browser
@@ -290,11 +304,15 @@ if [[ -f "${ROOT}/lib/nexus-vestigial-cleanup.sh" ]]; then
   source "${ROOT}/lib/nexus-vestigial-cleanup.sh"
   nexus_vestigial_cleanup_run 2>/dev/null || true
 fi
+# Host OS — one AmmoOS start-menu entry + taskbar pin (idempotent).
+nexus_field_os_install_host_desktop 2>/dev/null || true
 
 nexus_field_standalone_ensure_panel || {
   echo "Try: ./nexus.sh --no-browser" >&2
   exit 1
 }
+
+nexus_field_os_underlay_witness 2>/dev/null || true
 
 nexus_panel_publish_if_needed() {
   local panel_root="$1"

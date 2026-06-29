@@ -3,7 +3,7 @@
   "page_num": 14,
   "slug": "chips-hot",
   "title": "CHIPS Hot Paths",
-  "body": "# CHIPS Hot Paths\n\n**Kind:** `chips_hot` · **Count:** 15 · **Family:** queen\n\nThis page lists every `chips_hot` die in the Ironclad CHIPS combinatorics catalog. Each id is a combinatorics leaf off the truth plate (`ironclad:chips:3`), merged from seed, Queen, MAME, CPU library, world seeds, and companion populate.\n\n## Catalog ids\n\nThe `chip_ids` array on this page holds all **15** entries for this kind, sorted alphabetically. Open Queen CHIPS Combinatronic or run `field-ironclad-chips-combinatorics.py combinatronic` for path percents, bands, and imprint renders.\n\n*Regenerated from live combinatorics · facet ironclad_chips*",
+  "body": "# CHIPS Hot Paths\n\n**Kind:** `chips_hot` · **Count:** 11 · **Family:** queen\n\nThis page lists every `chips_hot` die in the Ironclad CHIPS combinatorics catalog. Each id is a combinatorics leaf off the truth plate (`ironclad:chips:3`), merged from seed, Queen, MAME, CPU library, world seeds, and companion populate.\n\n## Catalog ids\n\nThe `chip_ids` array on this page holds all **11** entries for this kind, sorted alphabetically. Open Queen CHIPS Combinatronic or run `field-ironclad-chips-combinatorics.py combinatronic` for path percents, bands, and imprint renders.\n\n*Regenerated from live combinatorics · facet ironclad_chips*",
   "chip_ids": [
     "chips_2a03",
     "chips_2c02",
@@ -13,19 +13,15 @@
     "chips_68000",
     "chips_8080",
     "chips_fieldchips",
-    "chips_sid",
     "chips_sm83",
-    "chips_sn76489",
     "chips_spc700",
-    "chips_tia",
-    "chips_ym2612",
     "chips_z80"
   ],
-  "chip_count": 15,
+  "chip_count": 11,
   "kind": "chips_hot",
   "family": "queen",
-  "combinatorics_total": 974,
-  "cover": "/world/assets/combinatronic/chips/cyrix_6x86.png",
-  "thumb": "/panel/assets/queen-prog-chips.png",
-  "updated": "2026-06-27T22:53:22Z"
+  "combinatorics_total": 978,
+  "cover": "/world/assets/combinatronic/chips/thumbs/chips_2a03.png",
+  "thumb": "/world/assets/combinatronic/chips/thumbs/chips_2a03.png",
+  "updated": "2026-06-29T14:48:47Z"
 }

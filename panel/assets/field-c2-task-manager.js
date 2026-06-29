@@ -1,5 +1,6 @@
 /**
- * C2 task manager bullet — compact running-task strip + Alt+Tab companion.
+ * C2 task manager bullet — AmmoOS running-task strip + field switch companion.
+ * @g16 5.1.0 · Grok16/nexus-field-shell · field-host-desktop
  */
 (function (global) {
   "use strict";
@@ -29,7 +30,7 @@
     const root = document.getElementById("c2tm-root");
     if (!root) return;
     const tasks = state.tasks || [];
-    let html = '<span class="c2tm-hint">Alt+Tab</span>';
+    let html = '<span class="c2tm-hint">Switch</span>';
     html +=
       '<button type="button" class="c2tm-btn c2tm-home" data-c2tm="home" title="Six tools (desktop)">' +
       HOME_ICON +

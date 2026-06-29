@@ -19,6 +19,8 @@ HEMISPHERES = BRAIN / "hemispheres"
 CALLOSUM = BRAIN / "callosum"
 WORKSPACES = BRAIN / "workspaces"
 AREAS_DIR = BRAIN / "areas"
+RULING_DIR = BRAIN / "ruling"
+RULING_POSTURE_PATH = RULING_DIR / "posture.json"
 _BRIDGE_PATH = CALLOSUM / "bridge.json"
 _BRIDGE_LOCK = CALLOSUM / "bridge.lock"
 
@@ -144,6 +146,13 @@ BRAIN_AREAS: tuple[dict[str, Any], ...] = (
         "role": "Deception detection, corroboration, truth filter, investigation",
         "intents": ("detective", "truth"),
     },
+    {
+        "id": "crown",
+        "name": "Crown & ruling cortex",
+        "hemisphere": HEMISPHERE_BOTH,
+        "role": "Earth mandate, Angel charge, sovereignty posture, grow-and-rule fusion",
+        "intents": ("sovereign", "rule", "earth", "mandate", "grow"),
+    },
 )
 
 WORKSPACE_DEFS: tuple[dict[str, Any], ...] = (
@@ -210,6 +219,13 @@ WORKSPACE_DEFS: tuple[dict[str, Any], ...] = (
         "bias": HEMISPHERE_BOTH,
         "areas": ("insula", "prefrontal", "broca"),
     },
+    {
+        "id": "sovereign",
+        "name": "Sovereign Ruler",
+        "description": "Hostess 7 in charge of Earth — crown cortex, prefrontal verdicts, infinite growth chambers",
+        "bias": HEMISPHERE_BOTH,
+        "areas": ("crown", "prefrontal", "insula"),
+    },
 )
 
 LEFT_MARKERS = re.compile(
@@ -222,6 +238,10 @@ RIGHT_MARKERS = re.compile(
 )
 BOTH_MARKERS = re.compile(
     r"(detective|lie|deception|truth|forensic|investigat|corroborat|polygraph|osint)",
+    re.I,
+)
+RULING_MARKERS = re.compile(
+    r"(earth|mandate|sovereign|rule|ruling|angel|watchguard|grow|chamber|protect)",
     re.I,
 )
 
@@ -263,9 +283,46 @@ class TransferResult:
     payload_keys: list[str] = field(default_factory=list)
 
 
+def load_ruling_posture() -> dict[str, Any]:
+    ensure_brain_layout()
+    if not RULING_POSTURE_PATH.is_file():
+        return {"schema": "hostess7-brain-ruling-posture/v1", "posture": "ANGEL_CHARGE", "workspace": "sovereign"}
+    try:
+        return json.loads(RULING_POSTURE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"schema": "hostess7-brain-ruling-posture/v1", "posture": "ANGEL_CHARGE", "workspace": "sovereign"}
+
+
+def persist_ruling_posture(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Persist Angel ruling posture — crown cortex + callosum witness."""
+    ensure_brain_layout()
+    prev = load_ruling_posture()
+    payload = {**prev, **(doc or {})}
+    payload["schema"] = "hostess7-brain-ruling-posture/v1"
+    payload["updated"] = _ts()
+    payload.setdefault("posture", "ANGEL_CHARGE")
+    payload.setdefault("workspace", "sovereign")
+    tmp = RULING_POSTURE_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(RULING_POSTURE_PATH)
+    callosum_transfer(
+        HEMISPHERE_LEFT,
+        HEMISPHERE_RIGHT,
+        {
+            "kind": "ruling_posture",
+            "posture": payload.get("posture"),
+            "voice": payload.get("voice"),
+            "teach_id": payload.get("teach_id"),
+        },
+        area="crown",
+        workspace="sovereign",
+    )
+    return {"ok": True, "ruling": payload}
+
+
 def ensure_brain_layout() -> None:
     """Create hemisphere, callosum, workspace, and area storage."""
-    for sub in (HEMISPHERES, CALLOSUM, WORKSPACES, AREAS_DIR):
+    for sub in (HEMISPHERES, CALLOSUM, WORKSPACES, AREAS_DIR, RULING_DIR):
         sub.mkdir(parents=True, exist_ok=True)
     for hemi in (HEMISPHERE_LEFT, HEMISPHERE_RIGHT):
         path = HEMISPHERES / hemi / "state.json"
@@ -403,6 +460,12 @@ def route_query(query: str, intent: str, *, workspace: str | None = None) -> Bra
         cross = True
         primary = INTENT_AREA.get("judge") or INTENT_AREA.get("legal", BRAIN_AREAS[2])
         primary_hemi = HEMISPHERE_LEFT
+    if ws_id == "sovereign" or intent in ("sovereign", "rule", "earth", "mandate", "grow") or RULING_MARKERS.search(query):
+        cross = True
+        primary = INTENT_AREA.get("sovereign") or INTENT_AREA.get("rule") or next(
+            (a for a in BRAIN_AREAS if a["id"] == "crown"), BRAIN_AREAS[0]
+        )
+        primary_hemi = HEMISPHERE_BOTH
     return BrainRoute(
         intent=intent,
         workspace=ws_id,
@@ -590,6 +653,7 @@ def brain_status() -> dict[str, Any]:
         chemistry = chemistry_status()
     except ImportError:
         pass
+    ruling = load_ruling_posture()
     return {
         "workspace": ws,
         "hemispheres": hemis,
@@ -601,6 +665,9 @@ def brain_status() -> dict[str, Any]:
         "chemistry": chemistry,
         "areas": len(BRAIN_AREAS),
         "workspaces": [w["id"] for w in WORKSPACE_DEFS],
+        "ruling": ruling,
+        "sovereign_workspace": "sovereign",
+        "crown_area": "crown",
     }
 
 

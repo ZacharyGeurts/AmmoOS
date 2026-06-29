@@ -14,8 +14,8 @@
   "chip_count": 5,
   "kind": "arcade_asic",
   "family": "arcade",
-  "combinatorics_total": 974,
-  "cover": "/world/assets/combinatronic/chips/cyrix_6x86.png",
-  "thumb": "/panel/assets/queen-prog-chips.png",
-  "updated": "2026-06-27T22:53:22Z"
+  "combinatorics_total": 978,
+  "cover": "/world/assets/combinatronic/chips/thumbs/capcom_cps_b_a.png",
+  "thumb": "/world/assets/combinatronic/chips/thumbs/capcom_cps_b_a.png",
+  "updated": "2026-06-29T14:48:47Z"
 }

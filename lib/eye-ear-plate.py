@@ -67,7 +67,7 @@ def _fusion_mod() -> Any | None:
     if not spec or not spec.loader:
         return None
     mod = importlib.util.module_from_spec(spec)
-    for p in (str(ear), str(SG / "Final_Eye"), str(SG / "ZNEWOCR")):
+    for p in (str(ear), str(SG / "NewLatest" / "Final_Eye"), str(INSTALL / "Final_Eye")):
         if p not in sys.path:
             sys.path.insert(0, p)
     spec.loader.exec_module(mod)

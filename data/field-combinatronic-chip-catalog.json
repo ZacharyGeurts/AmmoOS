@@ -1570,6 +1570,261 @@
       "pins": 2577,
       "id": "elbrus_8cb",
       "body": "#222228"
+    },
+    {
+      "featured": true,
+      "label": "MOS 6502",
+      "imprint": [
+        "MOS",
+        "6502",
+        "1975",
+        "CHIPS"
+      ],
+      "kind": "chips_hot",
+      "socket": "DIP-40",
+      "vendor": "MOS",
+      "package": "dip",
+      "pins": 40,
+      "id": "chips_6502",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "Ricoh 2C02 PPU",
+      "imprint": [
+        "RICOH",
+        "2C02",
+        "PPU",
+        "NES"
+      ],
+      "kind": "chips_hot",
+      "socket": "DIP-40",
+      "vendor": "Ricoh",
+      "package": "dip",
+      "pins": 40,
+      "id": "chips_2c02",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "Motorola 68000",
+      "imprint": [
+        "MOTOROLA",
+        "68000",
+        "16-BIT",
+        "GENESIS"
+      ],
+      "kind": "chips_hot",
+      "socket": "DIP-64",
+      "vendor": "Motorola",
+      "package": "dip",
+      "pins": 64,
+      "id": "chips_68000",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "Zilog Z80",
+      "imprint": [
+        "ZILOG",
+        "Z80",
+        "1976",
+        "SMS"
+      ],
+      "kind": "chips_hot",
+      "socket": "DIP-40",
+      "vendor": "Zilog",
+      "package": "dip",
+      "pins": 40,
+      "id": "chips_z80",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "Yamaha YM2612",
+      "imprint": [
+        "YAMAHA",
+        "YM2612",
+        "OPN2",
+        "FM"
+      ],
+      "kind": "sound",
+      "socket": "QFP-24",
+      "vendor": "Yamaha",
+      "package": "qfp",
+      "pins": 24,
+      "id": "chips_ym2612",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "TI SN76489",
+      "imprint": [
+        "TI",
+        "SN76489",
+        "PSG",
+        "SMS"
+      ],
+      "kind": "sound",
+      "socket": "DIP-16",
+      "vendor": "TI",
+      "package": "dip",
+      "pins": 16,
+      "id": "chips_sn76489",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "Atari TIA",
+      "imprint": [
+        "ATARI",
+        "TIA",
+        "1977",
+        "A2600"
+      ],
+      "kind": "video",
+      "socket": "DIP-48",
+      "vendor": "Atari",
+      "package": "dip",
+      "pins": 48,
+      "id": "chips_tia",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "Ricoh 2A03",
+      "imprint": [
+        "RICOH",
+        "2A03",
+        "CPU+APU",
+        "NES"
+      ],
+      "kind": "chips_hot",
+      "socket": "DIP-40",
+      "vendor": "Ricoh",
+      "package": "dip",
+      "pins": 40,
+      "id": "chips_2a03",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "MOS 6507",
+      "imprint": [
+        "MOS",
+        "6507",
+        "A2600",
+        "13-BIT"
+      ],
+      "kind": "chips_hot",
+      "socket": "DIP-28",
+      "vendor": "MOS",
+      "package": "dip",
+      "pins": 28,
+      "id": "chips_6507",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "WDC 65C816",
+      "imprint": [
+        "WDC",
+        "65C816",
+        "SNES",
+        "HDMA"
+      ],
+      "kind": "chips_hot",
+      "socket": "DIP-40",
+      "vendor": "WDC",
+      "package": "dip",
+      "pins": 40,
+      "id": "chips_65816",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "Intel 8080",
+      "imprint": [
+        "INTEL",
+        "8080",
+        "1974",
+        "ARCADE"
+      ],
+      "kind": "chips_hot",
+      "socket": "DIP-40",
+      "vendor": "Intel",
+      "package": "dip",
+      "pins": 40,
+      "id": "chips_8080",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "FieldChips",
+      "imprint": [
+        "CHIPS",
+        "FIELD",
+        "g16",
+        "field_opt"
+      ],
+      "kind": "chips_hot",
+      "socket": "BGA",
+      "vendor": "CHIPS",
+      "package": "bga",
+      "pins": 0,
+      "id": "chips_fieldchips",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "MOS SID 6581",
+      "imprint": [
+        "MOS",
+        "6581",
+        "SID",
+        "C64"
+      ],
+      "kind": "sound",
+      "socket": "DIP-28",
+      "vendor": "MOS",
+      "package": "dip",
+      "pins": 28,
+      "id": "chips_sid",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "Sharp SM83",
+      "imprint": [
+        "SHARP",
+        "SM83",
+        "LR35902",
+        "GB"
+      ],
+      "kind": "chips_hot",
+      "socket": "QFP-56",
+      "vendor": "Sharp",
+      "package": "qfp",
+      "pins": 56,
+      "id": "chips_sm83",
+      "body": "#1e1810"
+    },
+    {
+      "featured": true,
+      "label": "Sony SPC700",
+      "imprint": [
+        "SONY",
+        "SPC700",
+        "SNES",
+        "AUDIO"
+      ],
+      "kind": "chips_hot",
+      "socket": "QFP-80",
+      "vendor": "Sony",
+      "package": "qfp",
+      "pins": 80,
+      "id": "chips_spc700",
+      "body": "#1e1810"
     }
   ],
   "role": "featured_render_overlay",

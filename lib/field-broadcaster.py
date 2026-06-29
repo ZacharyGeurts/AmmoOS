@@ -1,15 +1,19 @@
 #!/usr/bin/env pythong
-"""Broadcaster — NEXUS C2 capture: simple surface, OBS engine, field audio chain."""
+"""AmmoOS Broadcaster — Final_Eye vision chamber, all codecs, all platforms."""
 from __future__ import annotations
 
 import importlib.util
 import json
+import mimetypes
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+_RECORDING_SAFE = re.compile(r"^[A-Za-z0-9._-]+\.(mkv|mp4|webm|mov|flv)$", re.I)
 
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
@@ -44,6 +48,18 @@ def _save_atomic(path: Path, doc: dict[str, Any]) -> None:
 
 def _legacy_obs() -> bool:
     return os.environ.get("FIELD_BROADCASTER_LEGACY_OBS", "0") in ("1", "true", "yes")
+
+
+def _chamber_mod() -> Any | None:
+    path = INSTALL / "lib" / "field-broadcaster-chamber.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("field_broadcaster_chamber", path)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def _studio_mod() -> Any | None:
@@ -179,17 +195,79 @@ def clear_filters() -> dict[str, Any]:
     return {**posture(), "cleared": True, "audio": audio_out}
 
 
+def _recording_roots() -> list[Path]:
+    roots: list[Path] = []
+    for raw in (RECORDINGS, STATE / "field-obs-portable" / "recordings"):
+        try:
+            r = raw.resolve()
+            if r.is_dir() and r not in roots:
+                roots.append(r)
+        except OSError:
+            pass
+    return roots
+
+
+def resolve_recording(name: str) -> dict[str, Any] | None:
+    """Safe local recording resolve — basename only, no path traversal."""
+    base = str(name or "").strip()
+    if not base or not _RECORDING_SAFE.match(base):
+        return None
+    for root in _recording_roots():
+        try:
+            path = (root / base).resolve()
+            if not str(path).startswith(str(root) + os.sep) and path != root:
+                continue
+            if path.is_file():
+                mime, _ = mimetypes.guess_type(path.name)
+                return {
+                    "name": path.name,
+                    "path": path,
+                    "bytes": path.stat().st_size,
+                    "mime": mime or "video/x-matroska",
+                    "legacy": root.name == "recordings" and "obs-portable" in str(root),
+                    "playback_url": f"/api/field-broadcaster/playback?name={path.name}",
+                }
+        except OSError:
+            continue
+    return None
+
+
+def read_recording_range(path: Path, start: int, end: int) -> bytes:
+    with path.open("rb") as fh:
+        fh.seek(start)
+        return fh.read(end - start + 1)
+
+
+def parse_range_header(range_hdr: str, size: int) -> tuple[int, int] | None:
+    m = re.match(r"bytes=(\d+)-(\d*)", range_hdr.strip())
+    if not m:
+        return None
+    start = int(m.group(1))
+    end = int(m.group(2)) if m.group(2) else size - 1
+    end = min(end, size - 1)
+    if start > end or start < 0:
+        return None
+    return start, end
+
+
 def list_recordings() -> list[dict[str, Any]]:
     RECORDINGS.mkdir(parents=True, exist_ok=True)
+    seen: set[str] = set()
     out: list[dict[str, Any]] = []
-    for p in sorted(RECORDINGS.glob("*"), key=lambda x: x.stat().st_mtime, reverse=True):
-        if p.is_file() and p.suffix.lower() in (".mkv", ".mp4", ".mov", ".flv", ".webm"):
-            out.append({"name": p.name, "path": str(p), "bytes": p.stat().st_size})
-    legacy = STATE / "field-obs-portable" / "recordings"
-    if legacy.is_dir():
-        for p in sorted(legacy.glob("*"), key=lambda x: x.stat().st_mtime, reverse=True):
-            if p.is_file() and p.suffix.lower() in (".mkv", ".mp4", ".mov", ".flv", ".webm"):
-                out.append({"name": p.name, "path": str(p), "bytes": p.stat().st_size, "legacy": True})
+    for root in _recording_roots():
+        for p in sorted(root.glob("*"), key=lambda x: x.stat().st_mtime, reverse=True):
+            if not p.is_file() or p.name in seen:
+                continue
+            item = resolve_recording(p.name)
+            if item:
+                seen.add(p.name)
+                out.append({
+                    "name": item["name"],
+                    "bytes": item["bytes"],
+                    "mime": item["mime"],
+                    "legacy": item.get("legacy"),
+                    "playback_url": item["playback_url"],
+                })
     out.sort(key=lambda r: r.get("bytes", 0), reverse=True)
     return out[:24]
 
@@ -225,6 +303,17 @@ def studio_dispatch(body: dict[str, Any]) -> dict[str, Any]:
 def posture() -> dict[str, Any]:
     doctrine = _doctrine()
     if not _legacy_obs():
+        chamber = _chamber_mod()
+        if chamber and hasattr(chamber, "build_panel"):
+            doc = chamber.build_panel(write=True)
+            doc["ts"] = _now()
+            doc["product"] = "Broadcaster"
+            doc["recordings"] = list_recordings()
+            doc["settings"] = _load(SETTINGS, {"simple_mode": False})
+            audio = _audio_mod()
+            doc["audio"] = doc.get("audio") or (audio.posture() if audio and hasattr(audio, "posture") else {})
+            _save_atomic(PANEL, doc)
+            return doc
         st = _studio_mod()
         if st and hasattr(st, "posture"):
             studio_panel = st.posture()
@@ -232,12 +321,12 @@ def posture() -> dict[str, Any]:
             audio_snap = audio.posture() if audio and hasattr(audio, "posture") else {}
             saved = _load(SETTINGS, {"simple_mode": False})
             doc = {
-                "schema": "field-broadcaster/v1",
+                "schema": "field-broadcaster/v2",
                 "ts": _now(),
                 "ok": True,
                 "product": "Broadcaster",
-                "motto": "AmmoOS Broadcaster Studio — scenes, devices, threat-gated live.",
-                "engine": {"backend": "studio", "legacy_obs": False},
+                "motto": "AmmoOS Broadcaster — Final_Eye display+camera, all codecs, Kick-first platforms.",
+                "engine": {"backend": "chamber", "legacy_obs": False},
                 "studio": studio_panel,
                 "scenes": studio_panel.get("scenes"),
                 "scene_count": studio_panel.get("scene_count"),
@@ -245,13 +334,16 @@ def posture() -> dict[str, Any]:
                 "devices": studio_panel.get("devices"),
                 "streaming": studio_panel.get("streaming"),
                 "recording": studio_panel.get("recording"),
+                "platform": studio_panel.get("platform"),
+                "codecs": studio_panel.get("codecs"),
+                "canvas_wire": studio_panel.get("canvas_wire"),
                 "threat": studio_panel.get("threat"),
                 "combinatorics": studio_panel.get("combinatorics"),
                 "audio": audio_snap,
                 "settings": saved,
                 "recordings": list_recordings(),
-                "routes": {"panel": "/field-broadcaster", "api": "/api/field-broadcaster", "studio": "/api/field-broadcaster/studio"},
-                "posture": f"Studio — {studio_panel.get('scene_count', 0)} scenes · {'LIVE' if studio_panel.get('streaming') else 'ready'}",
+                "routes": {"panel": "/field-broadcaster", "api": "/api/field-broadcaster", "chamber": "/api/field-broadcaster/chamber"},
+                "posture": f"Broadcaster — {studio_panel.get('scene_count', 0)} scenes · {'LIVE' if studio_panel.get('streaming') else 'ready'}",
             }
             _save_atomic(PANEL, doc)
             return doc

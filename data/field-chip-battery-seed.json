@@ -957,7 +957,7 @@
       },
       {
         "id": "system_c64",
-        "label": "Commodore 64",
+        "label": "Commodore 64 (classic)",
         "vendor": "Commodore",
         "kind": "guest_cpu",
         "platforms": [
@@ -965,6 +965,19 @@
         ],
         "cpu": "6510",
         "era": "1982"
+      },
+      {
+        "id": "system_c64_ultimate",
+        "label": "Commodore 64 Ultimate",
+        "vendor": "Commodore International Corporation",
+        "kind": "isa_platform",
+        "platforms": [
+          "c64_ultimate"
+        ],
+        "cpu": "FPGA Artix-7",
+        "era": "2025",
+        "platform_stack": "c64_ultimate_fpga",
+        "note": "C64U/C64CU — cycle-accurate FPGA; pairs with Grok16 host, not a g16 target"
       },
       {
         "id": "system_apple2",
@@ -1130,6 +1143,18 @@
         ],
         "cpu": "Tom/Jerry",
         "era": "1993"
+      },
+      {
+        "id": "system_cinema",
+        "label": "Cinema",
+        "vendor": "Queen",
+        "kind": "media",
+        "platforms": [
+          "cinema"
+        ],
+        "cpu": "—",
+        "era": "—",
+        "note": "GRKMF/GVC1 movie theater — browser-decoded containers"
       }
     ],
     "retro_nes": [
@@ -3405,6 +3430,111 @@
         "kind": "host_cpu",
         "note": "featured render — package=bga pins=2577",
         "family": "elbrus"
+      },
+      {
+        "id": "chips_6502",
+        "label": "MOS 6502",
+        "vendor": "MOS",
+        "kind": "chips_hot",
+        "note": "featured render — package=dip pins=40"
+      },
+      {
+        "id": "chips_2c02",
+        "label": "Ricoh 2C02 PPU",
+        "vendor": "Ricoh",
+        "kind": "chips_hot",
+        "note": "featured render — package=dip pins=40"
+      },
+      {
+        "id": "chips_68000",
+        "label": "Motorola 68000",
+        "vendor": "Motorola",
+        "kind": "chips_hot",
+        "note": "featured render — package=dip pins=64"
+      },
+      {
+        "id": "chips_z80",
+        "label": "Zilog Z80",
+        "vendor": "Zilog",
+        "kind": "chips_hot",
+        "note": "featured render — package=dip pins=40"
+      },
+      {
+        "id": "chips_ym2612",
+        "label": "Yamaha YM2612",
+        "vendor": "Yamaha",
+        "kind": "sound",
+        "note": "featured render — package=qfp pins=24"
+      },
+      {
+        "id": "chips_sn76489",
+        "label": "TI SN76489",
+        "vendor": "TI",
+        "kind": "sound",
+        "note": "featured render — package=dip pins=16"
+      },
+      {
+        "id": "chips_tia",
+        "label": "Atari TIA",
+        "vendor": "Atari",
+        "kind": "video",
+        "note": "featured render — package=dip pins=48"
+      },
+      {
+        "id": "chips_2a03",
+        "label": "Ricoh 2A03",
+        "vendor": "Ricoh",
+        "kind": "chips_hot",
+        "note": "featured render — package=dip pins=40"
+      },
+      {
+        "id": "chips_6507",
+        "label": "MOS 6507",
+        "vendor": "MOS",
+        "kind": "chips_hot",
+        "note": "featured render — package=dip pins=28"
+      },
+      {
+        "id": "chips_65816",
+        "label": "WDC 65C816",
+        "vendor": "WDC",
+        "kind": "chips_hot",
+        "note": "featured render — package=dip pins=40"
+      },
+      {
+        "id": "chips_8080",
+        "label": "Intel 8080",
+        "vendor": "Intel",
+        "kind": "chips_hot",
+        "note": "featured render — package=dip pins=40"
+      },
+      {
+        "id": "chips_fieldchips",
+        "label": "FieldChips",
+        "vendor": "CHIPS",
+        "kind": "chips_hot",
+        "note": "featured render — package=bga pins=40"
+      },
+      {
+        "id": "chips_sid",
+        "label": "MOS SID 6581",
+        "vendor": "MOS",
+        "kind": "sound",
+        "note": "featured render — package=dip pins=28"
+      },
+      {
+        "id": "chips_sm83",
+        "label": "Sharp SM83",
+        "vendor": "Sharp",
+        "kind": "chips_hot",
+        "note": "featured render — package=qfp pins=56"
+      },
+      {
+        "id": "chips_spc700",
+        "label": "Sony SPC700",
+        "vendor": "Sony",
+        "kind": "chips_hot",
+        "note": "featured render — package=qfp pins=80"
       }
     ]
   }

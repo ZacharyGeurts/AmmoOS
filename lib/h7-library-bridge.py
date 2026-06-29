@@ -79,6 +79,7 @@ _library_profiles: dict[str, Any] | None = None
 _librarian_mod: Any = None
 _field_tie_mod: Any = None
 _balance_mod: Any = None
+_checkout_mod: Any = None
 
 
 def _field_tie() -> Any:
@@ -216,6 +217,35 @@ def _read_content(
                 pass
     text = _source_text_legacy(book_id)
     return text, {}
+
+
+def _checkout() -> Any | None:
+    global _checkout_mod
+    if _checkout_mod is not None:
+        return _checkout_mod
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "h7_library_checkout",
+        INSTALL / "lib" / "h7-library-checkout.py",
+    )
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _checkout_mod = mod
+    return mod
+
+
+def _attach_checkouts(doc: dict[str, Any], books: list[dict[str, Any]]) -> None:
+    co = _checkout()
+    if not co:
+        return
+    try:
+        co.run_daily_reminders()
+        doc["checkout"] = co.posture()
+        doc["books"] = co.attach_to_books(books)
+    except Exception:
+        doc.setdefault("checkout", {"ok": False})
 
 
 def _librarian() -> Any:
@@ -848,24 +878,42 @@ def _scan_books() -> list[dict[str, Any]]:
         row = {**book, **_txt_meta_from_text(bid, book, text)}
         by_id[bid] = row
 
-    for row in _glob_dewey_books():
-        bid = str(row.get("id") or "")
-        if not bid:
-            continue
-        prev = by_id.get(bid) or {}
-        merged = {**prev, **row, "format": row.get("format") or "h7c", "ready": True}
-        if row.get("h7c"):
-            merged["path"] = str(INSTALL / str(row["h7c"])) if not str(row["h7c"]).startswith("/") else row["h7c"]
-        by_id[bid] = merged
+    iron = _ironclad_h7_access()
+    if iron and hasattr(iron, "catalog_entries"):
+        try:
+            for row in iron.catalog_entries():
+                bid = str(row.get("id") or "")
+                if not bid:
+                    continue
+                prev = by_id.get(bid) or {}
+                merged = {**prev, **row, "format": row.get("format") or "h7c", "ready": bool(row.get("ready", True))}
+                if row.get("h7c_path"):
+                    merged["path"] = row["h7c_path"]
+                elif row.get("h7c"):
+                    merged["path"] = str(INSTALL / str(row["h7c"])) if not str(row["h7c"]).startswith("/") else row["h7c"]
+                by_id[bid] = merged
+        except Exception:
+            iron = None
 
-    for path in _iter_h7c_files():
-        row = _h7c_meta(path)
-        if not row:
-            continue
-        bid = row["id"]
-        if bid not in by_id or row.get("char_count", 0) > by_id[bid].get("char_count", 0):
-            row["page_count"] = max(1, row.get("char_count", 0) // PAGE_CHARS)
-            by_id[bid] = row
+    if not iron:
+        for row in _glob_dewey_books():
+            bid = str(row.get("id") or "")
+            if not bid:
+                continue
+            prev = by_id.get(bid) or {}
+            merged = {**prev, **row, "format": row.get("format") or "h7c", "ready": True}
+            if row.get("h7c"):
+                merged["path"] = str(INSTALL / str(row["h7c"])) if not str(row["h7c"]).startswith("/") else row["h7c"]
+            by_id[bid] = merged
+
+        for path in _iter_h7c_files():
+            row = _h7c_meta(path)
+            if not row:
+                continue
+            bid = row["id"]
+            if bid not in by_id or row.get("char_count", 0) > by_id[bid].get("char_count", 0):
+                row["page_count"] = max(1, row.get("char_count", 0) // PAGE_CHARS)
+                by_id[bid] = row
 
     for base in (BOOKS_SRC, STATE / "field-books"):
         if not base.is_dir():
@@ -1027,7 +1075,28 @@ def _atlas_mod() -> Any:
     return mod
 
 
+def _ironclad_h7_access() -> Any | None:
+    import importlib.util
+    path = INSTALL / "lib" / "ironclad-h7-access.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("ironclad_h7_access_bridge", path)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def search_books(query: str, *, limit: int = 24) -> list[dict[str, Any]]:
+    iron = _ironclad_h7_access()
+    if iron and hasattr(iron, "search_books"):
+        try:
+            hits = iron.search_books(query, limit=limit)
+            if hits:
+                return hits
+        except Exception:
+            pass
     toks = [t for t in re.split(r"\W+", query.lower()) if len(t) > 1]
     if not toks:
         return []
@@ -1057,6 +1126,48 @@ def search_books(query: str, *, limit: int = 24) -> list[dict[str, Any]]:
 
 
 def search_library(query: str, *, limit: int = 24) -> dict[str, Any]:
+    card_cat = None
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "field_card_catalog",
+            INSTALL / "lib" / "field-card-catalog.py",
+        )
+        if spec and spec.loader:
+            card_cat = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(card_cat)
+    except Exception:
+        card_cat = None
+    if card_cat and hasattr(card_cat, "search_cards"):
+        try:
+            hits = card_cat.search_cards(query, limit=limit)
+            cards = hits.get("hits") or []
+            books = [
+                {
+                    "id": c.get("id"),
+                    "title": c.get("title"),
+                    "author": c.get("author"),
+                    "dewey": c.get("dewey") or c.get("call_number"),
+                    "card_id": c.get("card_id"),
+                    "keywords": c.get("keywords"),
+                    "shelf": c.get("shelf"),
+                    "format": c.get("format"),
+                    "score": c.get("score"),
+                    "source": "field-card-catalog",
+                }
+                for c in cards
+            ]
+            if books or query.strip():
+                return {
+                    "ok": True,
+                    "query": query,
+                    "books": books,
+                    "passages": [],
+                    "topics": [],
+                    "catalog": "field-card-catalog",
+                    "catalog_hits": hits.get("count", len(books)),
+                }
+        except Exception:
+            pass
     atlas = _atlas_mod()
     if atlas:
         return atlas.search_unified(query, _scan_books(), book_search_fn=search_books, limit=limit)
@@ -1177,6 +1288,7 @@ def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict
                 snap["war_shelves"] = war_shelves(profile_id=pid)
                 _attach_book_knowledge(snap, snap.get("books") or [])
                 snap["librarian_corps"] = (lib.librarian_status().get("corps") if lib else {}) or {}
+                _attach_checkouts(snap, snap.get("books") or [])
                 return snap
 
     if lib:
@@ -1252,6 +1364,7 @@ def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict
         )
     doc["librarian_corps"] = (lib.librarian_status().get("corps") if lib else {}) or {}
     _attach_book_knowledge(doc, books)
+    _attach_checkouts(doc, doc.get("books") or books)
     return doc
 
 
@@ -1730,6 +1843,63 @@ def main() -> int:
         sys.stdout.write("\n")
         return 0
 
+    if cmd == "checkout" and len(sys.argv) >= 3:
+        co = _checkout()
+        if not co:
+            json.dump({"ok": False, "error": "checkout_missing"}, sys.stdout, indent=2)
+        else:
+            body: dict[str, Any] = {}
+            if len(sys.argv) > 3:
+                try:
+                    body = json.loads(sys.argv[3])
+                except json.JSONDecodeError:
+                    body = {"days": sys.argv[3]}
+            book_id = sys.argv[2]
+            meta = body.get("book") if isinstance(body.get("book"), dict) else None
+            if not meta:
+                meta = next((b for b in _scan_books() if b["id"] == book_id), None)
+            json.dump(
+                co.checkout_book(
+                    book_id,
+                    days=body.get("days", 14),
+                    patron=str(body.get("patron") or "operator"),
+                    book_meta=meta,
+                ),
+                sys.stdout,
+                indent=2,
+            )
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "checkin" and len(sys.argv) >= 3:
+        co = _checkout()
+        if not co:
+            json.dump({"ok": False, "error": "checkout_missing"}, sys.stdout, indent=2)
+        else:
+            patron = sys.argv[3] if len(sys.argv) > 3 else "operator"
+            json.dump(co.checkin_book(sys.argv[2], patron=patron), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd in ("checkout-status", "checkout-posture"):
+        co = _checkout()
+        if not co:
+            json.dump({"ok": False, "error": "checkout_missing"}, sys.stdout, indent=2)
+        else:
+            json.dump(co.posture(), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if cmd == "checkout-remind":
+        co = _checkout()
+        if not co:
+            json.dump({"ok": False, "error": "checkout_missing"}, sys.stdout, indent=2)
+        else:
+            force = "--force" in sys.argv
+            json.dump(co.run_daily_reminders(force=force), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
     if cmd == "upload" and len(sys.argv) >= 3:
         try:
             payload = json.loads(sys.argv[2])
@@ -1753,7 +1923,8 @@ def main() -> int:
 
     print(
         "usage: h7-library-bridge.py [build [--force] [--profile <id>]|fingerprint|page <id> <n> [chars]|"
-        "full <id>|search <q>|atlas|passages <q>|topics|dewey [--profile <id>]|profiles|war|organize [--dry-run]|tracking|fonts|upload <json>]",
+        "full <id>|search <q>|atlas|passages <q>|topics|dewey [--profile <id>]|profiles|war|organize [--dry-run]|tracking|fonts|"
+        "checkout <id> [json]|checkin <id>|checkout-status|checkout-remind|upload <json>]",
         file=sys.stderr,
     )
     return 1

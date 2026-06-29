@@ -20,14 +20,19 @@
   },
   "body_zones": {
     "head": {"z": 0.92},
+    "spine": {"z": 0.62},
+    "shoulders": {"z": 0.68, "x_span": 0.28},
     "hands": {"z": 0.75, "x_span": 0.4},
     "elbows": {"z": 0.65},
     "centerline": {"x": 0.0, "z": 0.55},
     "hips": {"z": 0.45},
     "knees": {"z": 0.28},
-    "feet": {"z": 0.12}
+    "ankles": {"z": 0.18},
+    "feet": {"z": 0.12},
+    "toes": {"z": 0.09}
   },
   "families": {
+    "mobility": "Flexibility — bend, hinge, touch toes, spinal flexion",
     "kung_fu": "Chinese martial arts — centerline, forms, sticky hands",
     "mma": "Mixed rules — clinch, ground, cage awareness",
     "striking": "Punches, kicks, elbows, knees",
@@ -35,6 +40,41 @@
     "defense": "Blocks, slips, counters — lethal only when corroborated"
   },
   "skills": [
+    {
+      "id": "touch_toes",
+      "label": "Touch toes",
+      "family": "mobility",
+      "matrix_quote": "I can touch my toes.",
+      "primitives": ["hip_hinge", "spinal_flexion", "hamstring_lengthen", "toe_reach"],
+      "motion": [
+        {"primitive": "spinal_flexion", "zone": "spine", "norm": {"x": 0.0, "y": 0.0, "z": 0.35}, "weight": 0.92},
+        {"primitive": "hip_hinge", "zone": "hips", "norm": {"x": 0.0, "y": 0.0, "z": 0.38}, "weight": 0.9},
+        {"primitive": "toe_reach", "zone": "hands", "norm": {"x": 0.0, "y": 0.0, "z": 0.15}, "weight": 0.88},
+        {"primitive": "ankle_fold", "zone": "ankles", "norm": {"x": 0.0, "y": 0.0, "z": 0.14}, "weight": 0.75}
+      ]
+    },
+    {
+      "id": "forward_fold",
+      "label": "Forward fold",
+      "family": "mobility",
+      "matrix_quote": "I know forward fold.",
+      "primitives": ["spinal_flexion", "hip_hinge", "hamstring_lengthen"],
+      "motion": [
+        {"primitive": "spinal_flexion", "zone": "spine", "norm": {"x": 0.0, "y": 0.0, "z": 0.42}, "weight": 0.9},
+        {"primitive": "hip_hinge", "zone": "hips", "norm": {"x": 0.0, "y": 0.0, "z": 0.4}, "weight": 0.85}
+      ]
+    },
+    {
+      "id": "cat_cow",
+      "label": "Cat-cow spinal wave",
+      "family": "mobility",
+      "matrix_quote": "I know cat-cow.",
+      "primitives": ["spinal_wave", "lumbar_mobility", "cervical_mobility"],
+      "motion": [
+        {"primitive": "spinal_wave", "zone": "spine", "norm": {"x": 0.0, "y": 0.0, "z": 0.5}, "weight": 0.8},
+        {"primitive": "cervical_mobility", "zone": "head", "norm": {"x": 0.0, "y": 0.0, "z": 0.88}, "weight": 0.7}
+      ]
+    },
     {
       "id": "wing_chun",
       "label": "Wing Chun",

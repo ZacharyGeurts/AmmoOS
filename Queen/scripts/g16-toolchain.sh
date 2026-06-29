@@ -3,7 +3,7 @@
 set -euo pipefail
 QUEEN="$(cd "$(dirname "$0")/.." && pwd)"
 SG="$(cd "$QUEEN/../.." && pwd)"
-GROK16_ROOT="${GROK16_ROOT:-$SG/Grok16}"
+GROK16_ROOT="${GROK16_ROOT:-${NEXUS_INSTALL_ROOT:-$SG/NewLatest}/Grok16}"
 G16_SH="$GROK16_ROOT/scripts/grok16-toolchain.sh"
 
 if [[ -f "$G16_SH" ]]; then

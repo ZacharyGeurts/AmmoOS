@@ -8,5 +8,60 @@
   "ready": true,
   "h7": "library/dewey/700-arts/games/nes/nes_bio_senshi_dan_increaser_to_no_tatakai/nes_bio_senshi_dan_increaser_to_no_tatakai.h7",
   "face_format": "h7b",
-  "properties_only_h7": true
+  "properties_only_h7": true,
+  "keywords": [
+    "bio",
+    "senshi",
+    "dan",
+    "increaser",
+    "tatakai",
+    "field",
+    "extensive",
+    "library",
+    "7948",
+    "794.8",
+    "indoor",
+    "games",
+    "amusements",
+    "h7",
+    "700",
+    "arts",
+    "nes"
+  ],
+  "keyword_placement": {
+    "title": [
+      "bio",
+      "senshi",
+      "dan",
+      "increaser",
+      "tatakai"
+    ],
+    "author": [
+      "field",
+      "extensive",
+      "library"
+    ],
+    "dewey": [
+      "7948",
+      "794.8",
+      "indoor",
+      "games",
+      "amusements"
+    ],
+    "subject": [],
+    "collection": [],
+    "format": [
+      "h7"
+    ],
+    "shelf": [
+      "700",
+      "arts",
+      "nes"
+    ],
+    "description": [],
+    "auto": []
+  },
+  "card_id": "CAT-7948-NES-BIO-SENSHI-DAN-INCRE",
+  "catalog_call_number": "794.8",
+  "catalog_updated": "2026-06-29T11:03:55Z"
 }

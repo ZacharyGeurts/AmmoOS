@@ -25,7 +25,9 @@ PANEL = STATE / "field-obs-panel.json"
 PORTABLE = Path(os.environ.get("FIELD_BROADCASTER_PORTABLE_DIR", os.environ.get("FIELD_OBS_PORTABLE_DIR", str(STATE / "field-obs-portable"))))
 SETTINGS = STATE / "field-obs-settings.json"
 RECORDINGS = PORTABLE / "recordings"
-GROK16 = SG / "Grok16"
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 
 
 def _now() -> str:
@@ -71,12 +73,12 @@ def _display_size() -> tuple[int, int]:
 
 
 def _rtx_detected() -> bool:
-    gate = SG / "Grok16" / "forge" / "rtx_gate.py"
+    gate = GROK16 / "forge" / "rtx_gate.py"
     if gate.is_file():
         try:
             proc = subprocess.run(
                 [sys.executable, str(gate), "json", "queen_rtx"],
-                capture_output=True, text=True, timeout=12, cwd=str(SG / "Grok16"),
+                capture_output=True, text=True, timeout=12, cwd=str(GROK16),
             )
             if proc.returncode == 0 and '"permit":true' in (proc.stdout or "").replace(" ", ""):
                 return True

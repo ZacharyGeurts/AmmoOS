@@ -282,6 +282,9 @@ def kilroy_status() -> dict[str, Any]:
             "slots": ["TIME", "RAM", "THERMO", "CONTEXT", "CPU", "FLOW", "CACHE", "DIRECT"],
         },
         "forge_tools": ["field_substrate", "field_kernel", "field_boot", "field_rootfs", "field_package"],
+        "grok16_bridge": _load_json(kr / "data" / "kilroy-grok16-bridge.json"),
+        "grok16_pair": version.get("grok16_pair") or _load_json(kr / "data" / "kilroy-version.json").get("stack_pairing", {}).get("grok16"),
+        "kernel_test": str(kr / "scripts" / "kilroy-kernel-test.sh") if (kr / "scripts" / "kilroy-kernel-test.sh").is_file() else None,
         "amouranthrtx": amouranthrtx_status(),
     }
 

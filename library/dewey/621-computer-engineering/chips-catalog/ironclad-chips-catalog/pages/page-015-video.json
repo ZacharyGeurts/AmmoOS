@@ -3,7 +3,7 @@
   "page_num": 15,
   "slug": "video",
   "title": "Video & Display",
-  "body": "# Video & Display\n\n**Kind:** `video` · **Count:** 69 · **Family:** peripheral\n\nThis page lists every `video` die in the Ironclad CHIPS combinatorics catalog. Each id is a combinatorics leaf off the truth plate (`ironclad:chips:3`), merged from seed, Queen, MAME, CPU library, world seeds, and companion populate.\n\n## Catalog ids\n\nThe `chip_ids` array on this page holds all **69** entries for this kind, sorted alphabetically. Open Queen CHIPS Combinatronic or run `field-ironclad-chips-combinatorics.py combinatronic` for path percents, bands, and imprint renders.\n\n*Regenerated from live combinatorics · facet ironclad_chips*",
+  "body": "# Video & Display\n\n**Kind:** `video` · **Count:** 71 · **Family:** peripheral\n\nThis page lists every `video` die in the Ironclad CHIPS combinatorics catalog. Each id is a combinatorics leaf off the truth plate (`ironclad:chips:3`), merged from seed, Queen, MAME, CPU library, world seeds, and companion populate.\n\n## Catalog ids\n\nThe `chip_ids` array on this page holds all **71** entries for this kind, sorted alphabetically. Open Queen CHIPS Combinatronic or run `field-ironclad-chips-combinatorics.py combinatronic` for path percents, bands, and imprint renders.\n\n*Regenerated from live combinatorics · facet ironclad_chips*",
   "chip_ids": [
     "a2600_tia",
     "a8_gtia",
@@ -19,6 +19,7 @@
     "arcade_sega_315_5881",
     "au_microbee_6545",
     "c64_vic2",
+    "chips_tia",
     "coco3_gime",
     "coco_mc6847",
     "commodore_8362_denis",
@@ -28,6 +29,7 @@
     "gb_ppu",
     "genesis_vdp",
     "glue_amiga_denise",
+    "glue_c64u_hdmi",
     "glue_genesis_vdp",
     "glue_n64_rdp",
     "glue_n64_vi",
@@ -75,11 +77,11 @@
     "uk_ferranti_ula",
     "yamaha_v9938"
   ],
-  "chip_count": 69,
+  "chip_count": 71,
   "kind": "video",
   "family": "peripheral",
-  "combinatorics_total": 974,
-  "cover": "/world/assets/combinatronic/chips/thumbs/coco3_gime.png",
-  "thumb": "/world/assets/combinatronic/chips/thumbs/coco3_gime.png",
-  "updated": "2026-06-27T22:53:22Z"
+  "combinatorics_total": 978,
+  "cover": "/world/assets/combinatronic/chips/thumbs/chips_tia.png",
+  "thumb": "/world/assets/combinatronic/chips/thumbs/chips_tia.png",
+  "updated": "2026-06-29T14:48:47Z"
 }

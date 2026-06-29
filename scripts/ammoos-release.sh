@@ -20,8 +20,14 @@ export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-$ROOT/.nexus-state}"
 
 log() { printf '[%s] ammooos-release %s\n' "$(date +%H:%M:%S)" "$*"; }
 
-log "beta pipeline"
-bash "${ROOT}/scripts/ammoos-beta-pipeline.sh"
+if [[ "${SKIP_BETA_PIPELINE:-0}" != "1" ]]; then
+  log "beta pipeline (AmmoLang)"
+  bash "${ROOT}/scripts/ammoos-beta-pipeline.sh" || {
+    log "WARN beta pipeline partial — continuing pack (SKIP_BETA_PIPELINE=1 to skip)"
+  }
+else
+  log "SKIP beta pipeline"
+fi
 
 log "build manual"
 if [[ -f "${ROOT}/docs/build-ammoos-manual.py" ]]; then
@@ -96,5 +102,18 @@ fi
 log "publish GitHub Pages"
 bash "${ROOT}/scripts/publish-ammoos-pages.sh" --version "$AMMOOS_VERSION" --remote "$REMOTE"
 
+log "publish AmmoOS wiki"
+AMMOOS_VERSION="$AMMOOS_VERSION" bash "${ROOT}/scripts/publish-ammoos-wiki.sh" || log "WARN wiki publish partial"
+
+log "publish stack hub + component Pages"
+STACK_VERSION="$AMMOOS_VERSION" bash "${ROOT}/scripts/publish-stack-pages.sh" || log "WARN stack pages partial"
+
+if [[ -f "${ROOT}/lib/github-profile-sync.py" ]]; then
+  log "sync GitHub profile + favorites manifest"
+  python3 "${ROOT}/lib/github-profile-sync.py" sync || log "WARN profile sync partial"
+fi
+
 log "released ${TAG} → https://github.com/ZacharyGeurts/AmmoOS/releases/tag/${TAG}"
 log "manual → https://zacharygeurts.github.io/AmmoOS/"
+log "wiki → https://github.com/ZacharyGeurts/AmmoOS/wiki"
+log "stack → https://zacharygeurts.github.io/ZacharyGeurts/stack.html"

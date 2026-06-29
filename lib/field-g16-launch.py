@@ -50,15 +50,8 @@ def _queen_root() -> Path:
 
 
 def _grok16_root() -> Path:
-    env = os.environ.get("GROK16_ROOT", "").strip()
-    if env:
-        p = Path(env).expanduser()
-        if p.is_dir():
-            return p.resolve()
-    for cand in (SG / "Grok16", INSTALL.parent / "Grok16"):
-        if (cand / "bin" / "g16").is_file() or (cand / "build" / "gcc" / "gcc" / "x86_64-pc-linux-gnu" / "g16").is_file():
-            return cand.resolve()
-    return (SG / "Grok16").resolve()
+    from sg_paths import grok16_root
+    return grok16_root()
 
 
 def _g16_bin() -> Path | None:
@@ -137,7 +130,7 @@ def g16_probe() -> dict[str, Any]:
             ver = (proc.stdout or proc.stderr or "").strip().splitlines()[0][:40]
         except (OSError, subprocess.TimeoutExpired):
             pass
-    doctrine = _load(SG / "Grok16" / "data" / "field-exec-uncompiled-doctrine.json", {})
+    doctrine = _load(_grok16_root() / "data" / "field-exec-uncompiled-doctrine.json", {})
     return {
         "ok": bool(g16),
         "g16_path": str(g16) if g16 else None,

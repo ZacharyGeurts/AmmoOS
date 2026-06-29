@@ -397,12 +397,23 @@ nexus_boot_impl_first() {
   nexus_log "INFO" "boot-impl" "FIRST_INSTALL done wired=${wired} meld=${meld}"
 }
 
+nexus_boot_impl_build_cleanup() {
+  [[ "${NEXUS_CLEAN_BUILD_ON_BOOT:-0}" == "1" ]] || return 0
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-field-build-cleanup.py" ]] || return 0
+  local py
+  py="$(nexus_boot_impl_resolve_python)" || return 0
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+    "$py" "${NEXUS_INSTALL_ROOT}/lib/nexus-field-build-cleanup.py" run \
+    >>"$(nexus_boot_impl_log_path)" 2>&1 || true
+}
+
 nexus_boot_impl_refresh() {
   local wired=0 meld=0
   nexus_boot_impl_ensure_dirs
   nexus_boot_impl_host_freeze_resume || true
   nexus_boot_impl_permanent_fielding || true
   nexus_boot_impl_vestigial_cleanup
+  nexus_boot_impl_build_cleanup
   nexus_log "INFO" "boot-impl" "BOOT_REFRESH begin root=${NEXUS_INSTALL_ROOT}"
 
   if [[ -f "${NEXUS_INSTALL_ROOT}/lib/ironclad-immediate.sh" ]]; then

@@ -16,6 +16,7 @@ from typing import Any
 
 QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
+from sg_paths import grok16_root
 _LIB = Path(__file__).resolve().parent
 CAPSULE = QUEEN / "data" / "queen-sovereign-capsule.json"
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", QUEEN / ".nexus-state"))
@@ -62,7 +63,7 @@ def _env() -> dict[str, str]:
         "QUEEN_INTERNAL_ONLY": "1",
         "NEXUS_INSTALL_ROOT": os.environ.get("NEXUS_INSTALL_ROOT", str(QUEEN)),
         "NEXUS_STATE_DIR": str(STATE),
-        "GROK16_ROOT": os.environ.get("GROK16_ROOT", str(SG / "Grok16")),
+        "GROK16_ROOT": str(grok16_root()),
         "PYTHONG_ROOT": os.environ.get("PYTHONG_ROOT", str(SG / "PythonG")),
         "HOSTESS7_ROOT": os.environ.get("HOSTESS7_ROOT", str(SG / "Hostess7")),
         "KILROY_ROOT": os.environ.get("KILROY_ROOT", str(SG / "KILROY")),

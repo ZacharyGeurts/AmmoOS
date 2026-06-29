@@ -1,5 +1,5 @@
 #!/usr/bin/env pythong
-"""Host desktop — enumerate incumbent OS programs, mirror start menu, serve icons."""
+"""AmmoOS host desktop — programs, start menu, themes, icons. Grok16 5.1.0 field stamp."""
 from __future__ import annotations
 
 import base64
@@ -75,18 +75,20 @@ def _guest_system() -> str:
     return "linux"
 
 
-def _linux_de() -> str:
-    for key in ("XDG_CURRENT_DESKTOP", "DESKTOP_SESSION", "XDG_SESSION_DESKTOP"):
-        val = os.environ.get(key, "").lower()
-        if "kde" in val or "plasma" in val:
-            return "kde"
-        if "gnome" in val:
-            return "gnome"
-        if "xfce" in val:
-            return "xfce"
-        if "cinnamon" in val or "mate" in val:
-            return "cinnamon"
-    return "gnome"
+_THEME_ALIASES = {
+    "gnome": "ammo-field",
+    "windows11": "ammo-c2",
+    "windows10": "ammo-c2",
+    "kde": "ammo-deep",
+    "macos": "ammo-rose",
+    "cinnamon": "ammo-field",
+    "xfce": "ammo-field",
+}
+
+
+def _normalize_theme(theme: str) -> str:
+    t = str(theme or "").strip()
+    return _THEME_ALIASES.get(t, t or "ammo-field")
 
 
 def _theme_id() -> str:
@@ -94,13 +96,10 @@ def _theme_id() -> str:
     themes = doctrine.get("themes") or {}
     guest = _guest_system()
     if guest == "windows":
-        return os.environ.get("NEXUS_START_MENU_THEME", themes.get("windows", "windows11"))
+        return _normalize_theme(os.environ.get("NEXUS_START_MENU_THEME", themes.get("windows", "ammo-c2")))
     if guest == "darwin":
-        return themes.get("darwin", "macos")
-    de = _linux_de()
-    if de == "kde":
-        return "kde"
-    return themes.get("linux", "gnome")
+        return _normalize_theme(themes.get("darwin", "ammo-rose"))
+    return _normalize_theme(themes.get("linux", "ammo-field"))
 
 
 def _parse_desktop(path: Path) -> dict[str, Any] | None:
@@ -425,15 +424,15 @@ def _field_apps() -> list[dict[str, Any]]:
 def _running_programs() -> list[dict[str, Any]]:
     names = {
         "nexus-genius": "NEXUS Daemon",
-        "threat-panel-http": "Field Panel",
+        "threat-panel-http": "AmmoOS Panel",
         "queen-world": "Queen World",
         "firefox": "Queen Browser",
         "fieldfox": "Queen Browser",
         "queen-browser": "Queen Browser",
-        "chromium": "Chromium",
-        "google-chrome": "Chrome",
-        "code": "VS Code",
-        "obs": "OBS Studio",
+        "chromium": "Queen Browser",
+        "google-chrome": "Queen Browser",
+        "code": "AmmoCode",
+        "obs": "Field Broadcaster",
     }
     running: list[dict[str, Any]] = []
     try:
@@ -506,10 +505,15 @@ def _power_actions(*, boot_os: bool | None = None, window_mode: bool | None = No
             "danger": True,
         })
     actions.extend([
-        {"id": "freeze-soft", "label": "Soft freeze host", "action": "freeze-soft"},
-        {"id": "sleep", "label": "Sleep", "action": "freeze-mem"},
+        {
+            "id": "yield-to-host",
+            "label": "Return to host OS",
+            "action": "yield-to-host",
+            "hint": "Drop AmmoOS to background — security hold stays on, no freeze",
+        },
         {"id": "underlay", "label": "Underlay F9", "exec": "/underlay-f9"},
         {"id": "control-panel", "label": "Control Panel", "exec": "/control-panel"},
+        {"id": "monster", "label": "Monster", "action": "monster"},
     ])
     return actions
 
@@ -668,27 +672,28 @@ def _menu_for_theme(theme: str, apps: list[dict[str, Any]]) -> dict[str, Any]:
         categories.setdefault(cat, []).append(app)
     pinned = [a for a in apps if a.get("pinned")]
     alpha = sorted(apps, key=lambda x: x["name"].lower())
-    if theme.startswith("windows"):
+    theme = _normalize_theme(theme)
+    if theme == "ammo-c2":
         return {
-            "style": "windows",
+            "style": "ammo-c2",
             "layout": "two_column",
             "pinned": pinned[:12],
             "programs": alpha,
             "power": _power_actions(),
             "search": True,
         }
-    if theme == "kde":
+    if theme == "ammo-deep":
         return {
-            "style": "kde",
+            "style": "ammo-deep",
             "layout": "sidebar_categories",
             "categories": {k: sorted(v, key=lambda x: x["name"].lower()) for k, v in sorted(categories.items())},
             "favorites": pinned,
             "power": _power_actions(),
             "search": True,
         }
-    if theme == "macos":
+    if theme == "ammo-rose":
         return {
-            "style": "macos",
+            "style": "ammo-rose",
             "layout": "launchpad_grid",
             "programs": alpha,
             "dock_pinned": pinned,
@@ -696,7 +701,7 @@ def _menu_for_theme(theme: str, apps: list[dict[str, Any]]) -> dict[str, Any]:
             "search": True,
         }
     return {
-        "style": "gnome",
+        "style": "ammo-field",
         "layout": "grid_search",
         "frequent": pinned,
         "programs": alpha,

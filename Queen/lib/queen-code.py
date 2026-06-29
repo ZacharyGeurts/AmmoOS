@@ -13,7 +13,12 @@ from typing import Any
 
 QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
-GROK16 = Path(os.environ.get("GROK16_ROOT", str(SG / "Grok16")))
+_SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+if str(_SG_PATHS_LIB) not in sys.path:
+    sys.path.insert(0, str(_SG_PATHS_LIB))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 LANG_DOC = QUEEN / "data" / "queen-code-languages.json"
 RECENT_DOC = QUEEN / "data" / "queen-code-recent.json"
 MAX_READ = int(os.environ.get("QUEEN_CODE_MAX_BYTES", str(2 * 1024 * 1024)))

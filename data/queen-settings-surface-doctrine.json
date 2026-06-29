@@ -15,11 +15,16 @@
     "reject_audio_advanced": true
   },
   "operator_exposed": {
-    "shell": ["ui_scale"],
+    "shell": ["ui_scale", "ammoos_theme"],
     "audio": ["default_sink", "default_source", "sink_volume", "source_volume", "sink_muted", "source_muted"],
     "client_only": ["comfort_reading"]
   },
-  "operator_panels": ["comfort", "znetwork", "diagnostic", "audio_routing", "gpu_select"],
+  "operator_panels": ["comfort", "ammoos_theme", "znetwork", "diagnostic", "audio_routing", "gpu_select"],
+  "ammoos_theme": {
+    "index": "/control-panel?tab=themes",
+    "engine": "lib/ammoos-theme-engine.py",
+    "api": "/api/ammoos-themes"
+  },
   "locked_nexus_keys": [
     "NEXUS_AI_SECURE_CHANNEL",
     "QUEEN_AI_TELEMETRY_OK",

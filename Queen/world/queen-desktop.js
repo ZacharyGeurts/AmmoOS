@@ -1,5 +1,6 @@
 /**
- * Queen classic desktop — vertical icons, in-desktop fullscreen apps, taskbar, pins, search.
+ * Queen classic desktop — AmmoOS vertical icons, in-desktop apps, Ironclad search, Monster path.
+ * @g16 5.1.0 · Grok16/field-stack-fabric · queen-desktop.py
  */
 (function () {
   "use strict";
@@ -32,6 +33,48 @@
     el.textContent = msg;
     el.classList.add("show");
     setTimeout(() => el.classList.remove("show"), 2400);
+  }
+
+  function ironcladHitsEl() {
+    let el = $("qd-ironclad-hits");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "qd-ironclad-hits";
+      el.className = "qd-ironclad-hits";
+      el.setAttribute("role", "listbox");
+      $("qd-search-wrap")?.appendChild(el);
+    }
+    return el;
+  }
+
+  function hideIroncladHits() {
+    $("qd-ironclad-hits")?.classList.remove("open");
+  }
+
+  function showIroncladHits(hits) {
+    const el = ironcladHitsEl();
+    if (!hits.length) {
+      el.innerHTML = '<p class="qd-ironclad-empty">No Ironclad matches</p>';
+      el.classList.add("open");
+      return;
+    }
+    el.innerHTML = hits
+      .map((hit) => {
+        const label = global.IroncladBus?.hitLabel ? global.IroncladBus.hitLabel(hit) : hit.title || hit.label || "result";
+        const url = global.IroncladBus?.hitUrl ? global.IroncladBus.hitUrl(hit) : hit.url || hit.exec || "";
+        return '<button type="button" class="qd-ironclad-hit" data-url="' + esc(url) + '">' + esc(label) + "</button>";
+      })
+      .join("");
+    el.querySelectorAll(".qd-ironclad-hit").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const url = btn.dataset.url;
+        hideIroncladHits();
+        if (!url) return;
+        if (inQueenShell()) shellPost("navigate", url);
+        else window.open(url, "_blank", "noopener");
+      });
+    });
+    el.classList.add("open");
   }
 
   function inQueenShell() {
@@ -224,14 +267,22 @@
     toast("Opened · " + (item.name || ""));
   }
 
-  function launch(item, opts) {
+  async function launch(item, opts) {
     const url = item.url || item.exec || "";
     if (!url) return;
 
+    if (globalThis.QueenProgramSurface?.launchProgram && item.id) {
+      const out = await globalThis.QueenProgramSurface.launchProgram(item, { ...opts });
+      if (out?.ok) {
+        if (out.launch_mode === "queen_window") trackTask(item);
+        toast("Opened · " + (item.name || ""));
+        return;
+      }
+    }
+
     if (url.startsWith("queen://")) {
       if (inQueenShell()) {
-        const action = opts?.newTab ? "new_tab" : "new_tab";
-        if (shellPost(action, url)) {
+        if (shellPost("new_tab", url)) {
           trackTask(item);
           toast("Opened · " + (item.name || ""));
         }
@@ -249,17 +300,8 @@
       return;
     }
 
-    if (shouldOpenInDesktop(item, url)) {
+    if (inQueenShell() || shouldOpenInDesktop(item, url)) {
       openWindow(item);
-      return;
-    }
-
-    if (inQueenShell()) {
-      const action = opts?.newTab ? "new_tab" : "navigate";
-      if (shellPost(action, resolveLaunchUrl(item))) {
-        trackTask(item);
-        toast("Opened · " + (item.name || ""));
-      }
       return;
     }
 
@@ -524,17 +566,42 @@
     el.textContent = `${h % 12 || 12}:${m} ${ap}`;
   }
 
-  function openCtx(x, y, item) {
-    const ctx = $("qd-ctx");
+  function appendDesktopCtxExtras(item) {
+    const ctx = document.getElementById("qps-ctx");
     if (!ctx) return;
     const pinned = mergedPrograms().find((p) => p.id === item.id)?.pinned;
+    const extra = document.createElement("div");
+    extra.className = "qps-ctx-group";
+    extra.innerHTML =
+      `<span class="qps-ctx-title">Desktop</span>` +
+      `<button type="button" data-desk="pin">${pinned ? "Unpin" : "Pin to desktop"}</button>` +
+      `<button type="button" data-desk="wall">Set wallpaper…</button>` +
+      `<button type="button" data-desk="clearwall">Clear wallpaper</button>`;
+    extra.querySelectorAll("[data-desk]").forEach((btn) => {
+      btn.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        ctx.classList.remove("open");
+        const a = btn.dataset.desk;
+        if (a === "pin") togglePin(item);
+        else if (a === "wall") {
+          const url = prompt("Wallpaper URL or /world/... path", state.data?.wallpaper || "");
+          if (url !== null) await setWallpaper(url);
+        } else if (a === "clearwall") await setWallpaper("");
+      });
+    });
+    ctx.appendChild(extra);
+  }
+
+  function openCtx(x, y, item) {
+    if (globalThis.QueenProgramSurface?.openContextMenu) {
+      void globalThis.QueenProgramSurface.openContextMenu(x, y, item).then(() => appendDesktopCtxExtras(item));
+      return;
+    }
+    const ctx = $("qd-ctx");
+    if (!ctx) return;
     ctx.innerHTML =
       '<button type="button" data-a="open">Open</button>' +
-      '<button type="button" data-a="newtab">Open in browser tab</button>' +
-      `<button type="button" data-a="pin">${pinned ? (state.data?.desktop_icons_in_start ? "Unpin from Start" : "Unpin from desktop") : (state.data?.desktop_icons_in_start ? "Pin to Start" : "Pin to desktop")}</button>` +
-      '<hr />' +
-      '<button type="button" data-a="wall">Set wallpaper…</button>' +
-      '<button type="button" data-a="clearwall">Clear wallpaper</button>';
+      '<button type="button" data-a="props">Properties…</button>';
     ctx.style.left = Math.min(x, innerWidth - 180) + "px";
     ctx.style.top = Math.min(y, innerHeight - 140) + "px";
     ctx.classList.add("open");
@@ -542,14 +609,8 @@
       const b = ev.target.closest("[data-a]");
       if (!b) return;
       ctx.classList.remove("open");
-      const a = b.dataset.a;
-      if (a === "open") launch(item);
-      else if (a === "newtab") launch(item, { newTab: true });
-      else if (a === "pin") togglePin(item);
-      else if (a === "wall") {
-        const url = prompt("Wallpaper URL or /world/... path", state.data?.wallpaper || "");
-        if (url !== null) await setWallpaper(url);
-      } else if (a === "clearwall") await setWallpaper("");
+      if (b.dataset.a === "open") launch(item);
+      else if (b.dataset.a === "props") globalThis.QueenProgramSurface?.showProperties?.(item);
     };
   }
 
@@ -611,20 +672,38 @@
     });
     $("qd-quick-files")?.addEventListener("click", openFiles);
     $("qd-quick-browser")?.addEventListener("click", openBrowser);
+    $("qd-home")?.addEventListener("click", () => {
+      const home = global.IroncladBus?.PANEL_ORIGIN ? global.IroncladBus.PANEL_ORIGIN + "/field" : "http://127.0.0.1:9477/field";
+      if (inQueenShell()) window.parent.location.href = home;
+      else window.location.href = home;
+    });
 
     const search = $("qd-search");
+    const sortSel = $("qd-sort");
     search?.addEventListener("input", () => {
       state.searchQ = search.value;
       applySearch(mergedPrograms());
     });
-    search?.addEventListener("keydown", (e) => {
+    search?.addEventListener("keydown", async (e) => {
       if (e.key === "Escape") {
         search.value = "";
         state.searchQ = "";
         applySearch(mergedPrograms());
+        hideIroncladHits();
+        return;
       }
-      if (e.key === "Enter" && state.selected) {
-        launch(state.selected);
+      if (e.key === "Enter") {
+        const q = search.value.trim();
+        if (q.length >= 2 && global.IroncladBus?.search) {
+          try {
+            const doc = await global.IroncladBus.search(q, { context: sortSel?.value || "all", limit: 24 });
+            showIroncladHits(doc.hits || []);
+          } catch (_) {
+            toast("Ironclad search unavailable");
+          }
+          return;
+        }
+        if (state.selected) launch(state.selected);
       }
     });
 
@@ -638,9 +717,14 @@
   }
 
   window.addEventListener("message", (ev) => {
-    if (ev.data?.type === "queen:desktop" && ev.data.action === "launch_secured") {
+    if (ev.origin !== location.origin && !/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(ev.origin)) return;
+    if (ev.data?.type !== "queen:desktop") return;
+    if (ev.data.action === "launch_secured") {
       const item = ev.data.item;
       if (item) launch(item, { newTab: true });
+    }
+    if (ev.data.action === "open_window" && ev.data.item) {
+      openWindow(ev.data.item);
     }
   });
 

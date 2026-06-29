@@ -21,5 +21,45 @@
   "updated": "2026-06-27T16:48:21Z",
   "h7": "library/dewey/000-computer-science/training_python/training_python.h7",
   "face_format": "h7c",
-  "properties_only_h7": true
+  "properties_only_h7": true,
+  "keywords": [
+    "training",
+    "python",
+    "hostess",
+    "000",
+    "computer",
+    "science",
+    "information",
+    "general",
+    "works",
+    "h7"
+  ],
+  "keyword_placement": {
+    "title": [
+      "training",
+      "python"
+    ],
+    "author": [
+      "hostess"
+    ],
+    "dewey": [
+      "000",
+      "computer",
+      "science",
+      "information",
+      "general",
+      "works"
+    ],
+    "subject": [],
+    "collection": [],
+    "format": [
+      "h7"
+    ],
+    "shelf": [],
+    "description": [],
+    "auto": []
+  },
+  "card_id": "CAT-000-TRAINING-PYTHON",
+  "catalog_call_number": "000",
+  "catalog_updated": "2026-06-29T11:03:55Z"
 }

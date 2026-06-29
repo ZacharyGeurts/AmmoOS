@@ -14,7 +14,12 @@ QUEEN = Path(__file__).resolve().parents[1]
 _LIB = Path(__file__).resolve().parent
 SG = QUEEN.parent.parent
 HOSTESS = Path(os.environ.get("HOSTESS7_ROOT", SG / "Hostess7"))
-GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
+_SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+if str(_SG_PATHS_LIB) not in sys.path:
+    sys.path.insert(0, str(_SG_PATHS_LIB))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 FORGE = _LIB / "queen-forge.py"
 MANIFEST_PATH = QUEEN / "data" / "queen-field-tools.json"
 
@@ -68,7 +73,7 @@ FIELD_TOOL_CATALOG: tuple[dict[str, str], ...] = (
     {"id": "binutils_build", "track": "toolchain", "label": "Grok16 field binutils build",
      "role": "Field assembler + linker", "hostess_cmd": "pythong Queen/lib/queen-forge.py run binutils_build"},
     {"id": "build_essential_install", "track": "build-essential", "label": "Grok16 build-essential (Ubuntu parity+)",
-     "role": "g16 + binutils + cmake/ninja + autotools + utilities — all in SG/Grok16", "hostess_cmd": "./Grok16/scripts/grok16-build-essential.sh install"},
+     "role": "g16 + binutils + cmake/ninja + autotools + utilities — all in NewLatest/Grok16", "hostess_cmd": "./Grok16/scripts/grok16-build-essential.sh install"},
     {"id": "build_essential_verify", "track": "build-essential", "label": "Grok16 build-essential verify",
      "role": "Compile+link smoke with g16-build-env", "hostess_cmd": "./Grok16/scripts/grok16-build-essential.sh verify"},
     {"id": "field_build_install", "track": "field-build", "label": "Grok16 field build fabric install",

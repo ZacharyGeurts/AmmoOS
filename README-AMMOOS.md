@@ -2,11 +2,11 @@
 
 ![Release](https://img.shields.io/badge/release-1.9.9h-brightgreen)
 ![Edition](https://img.shields.io/badge/edition-Grok_Expert_Review-blue)
-![G16](https://img.shields.io/badge/Grok16-5.0.0-gold)
+![G16](https://img.shields.io/badge/Grok16-5.1.0-gold)
 ![Queen](https://img.shields.io/badge/Queen-browser-purple)
 ![License](https://img.shields.io/badge/license-GPLv3-green)
 
-**AmmoOS** is the **1.9.9h Grok Expert Review** field operating system on **`127.0.0.1`**. Once **ZNetwork** is running, you are the loopback field — **not** a generic web browser tab. Queen is the secured system shell; AmmoOS lives **inside** Queen. Stack layers: Hardware → NEXUS C2 → ZNetwork → Queen → AmmoOS. Program-glyph icons; Grok16 5.0.1 `ammoos` profile; MCP GitHub publish.
+**AmmoOS** is the **1.9.9h Grok Expert Review** field operating system on **`127.0.0.1`**. Once **ZNetwork** is running, you are the loopback field — **not** a generic web browser tab. Queen is the secured system shell; AmmoOS lives **inside** Queen. Stack layers: Hardware → NEXUS C2 → ZNetwork → Queen → AmmoOS. Program-glyph icons; Grok16 5.1.0 `ammoos` profile; MCP GitHub publish.
 
 ## Live surfaces (after install)
 

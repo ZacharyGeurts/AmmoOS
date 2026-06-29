@@ -7,7 +7,7 @@
   --qd-light: #dfdfdf;
   --qd-text: #000;
   --qd-task-h: 28px;
-  --qd-font: "MS Sans Serif", "Tahoma", "Segoe UI", system-ui, sans-serif;
+  --qd-font: system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -345,6 +345,54 @@ html, body {
   color: #000;
   outline: none;
 }
+
+.qd-sort {
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  color: #333;
+  max-width: 72px;
+}
+
+.qd-home {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0a4028;
+}
+
+.qd-search-wrap {
+  position: relative;
+  max-width: 240px;
+}
+
+.qd-ironclad-hits {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 4px);
+  max-height: 200px;
+  overflow: auto;
+  background: #0a1210;
+  border: 1px solid #2a6b4a;
+  z-index: 50;
+  padding: 4px;
+}
+.qd-ironclad-hits.open { display: block; }
+.qd-ironclad-hit {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: #c9f0d8;
+  font-size: 11px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+.qd-ironclad-hit:hover { background: rgba(61, 214, 140, 0.15); }
+.qd-ironclad-empty { margin: 4px; font-size: 10px; color: #8aa896; }
 
 .qd-tray {
   display: flex;

@@ -6,7 +6,7 @@
   "motto": "SPIR-V is the ABI. Queen owns GPU dispatch. KILROY never loads libvulkan. Grok16 compiles; AmmoCode edits.",
   "canonical_root": "NewLatest",
   "pairing": {
-    "grok16": "5.0.1",
+    "grok16": "5.1.0",
     "ammocode": "6.0.0",
     "kilroy": "1.0.0-taco",
     "queen": "field-rtx-sovereign"

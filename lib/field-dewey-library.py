@@ -128,11 +128,23 @@ def ensure_h7c_for_book(book_id: str) -> Path | None:
     return find_h7c(book_id, auto_convert=False)
 
 
+def _ironclad_h7_access() -> Any | None:
+    return _import_mod("ironclad_h7_access", "ironclad-h7-access.py")
+
+
 def find_h7c(book_id: str, *, auto_convert: bool = True) -> Path | None:
     """Locate H7c for a book anywhere under library/dewey."""
     cid = str(book_id or "").strip()
     if not cid or not DEWEY_ROOT.is_dir():
         return None
+    iron = _ironclad_h7_access()
+    if iron and hasattr(iron, "resolve_h7c_path"):
+        try:
+            hit = iron.resolve_h7c_path(cid)
+            if hit and hit.is_file():
+                return hit
+        except Exception:
+            pass
     for hit in sorted(DEWEY_ROOT.rglob(f"{cid}.h7c")):
         if hit.is_file():
             return hit
@@ -514,9 +526,39 @@ def rebuild_shelf_manifests() -> dict[str, Any]:
 
 def h7c_meta(path: Path) -> dict[str, Any] | None:
     path = ensure_h7c_path(path) if path.suffix.lower() == ".h7" else path
+    iron = _ironclad_h7_access()
+    if iron and hasattr(iron, "h7c_meta_fast"):
+        try:
+            row = iron.h7c_meta_fast(path)
+            if row:
+                return row
+        except Exception:
+            pass
     h7c_mod = _h7c_mod()
     if not h7c_mod or not path.is_file():
         return None
+    if hasattr(h7c_mod, "read_h7c_header_file"):
+        try:
+            header = h7c_mod.read_h7c_header_file(path)
+            book_id = str(header.get("id") or path.stem)
+            shelf_slug = _shelf_slug(path.parent.parent)
+            return {
+                "id": book_id,
+                "title": str(header.get("title") or book_id),
+                "author": str(header.get("author", "")),
+                "category": str(header.get("category") or header.get("subject") or ""),
+                "char_count": int(header.get("char_count") or 0),
+                "file_bytes": path.stat().st_size,
+                "format": "h7c",
+                "path": str(path),
+                "h7c": _rel(path),
+                "dewey": str(header.get("dewey") or ""),
+                "shelf": shelf_slug,
+                "ready": True,
+                "source": "field-dewey-library",
+            }
+        except Exception:
+            pass
     try:
         header, _, stats = h7c_mod.decompress_h7c(path.read_bytes(), verify=False)
         book_id = str(header.get("id") or path.stem)

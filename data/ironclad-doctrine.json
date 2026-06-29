@@ -271,6 +271,9 @@
     "neural_selftest": "lib/hostess7-neural.py",
     "geography_training": "data/hostess7-geography-doctrine.json",
     "operator_location": "lib/operator-location.py",
-    "postal_address_corpus": "data/hostess7-geography-addresses.json"
+    "postal_address_corpus": "data/hostess7-geography-addresses.json",
+    "secure_api_singleton": "lib/ironclad-secure-api.py",
+    "secure_api_doctrine": "data/ironclad-secure-api-doctrine.json",
+    "best_sort": "lib/field-best-sort.py"
   }
 }

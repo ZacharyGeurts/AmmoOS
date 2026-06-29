@@ -155,15 +155,15 @@ nexus_install_write_desktop() {
 [Desktop Entry]
 Version=${ver}
 Type=Application
-Name=NEXUS Field Command Center
-GenericName=Field C2
-Comment=Queen field browser — NEXUS opens in Queen tabs — tray + ZNetwork
+Name=AmmoOS
+GenericName=NEXUS Field C2
+Comment=AmmoOS field command — Queen browser, panel, ZNetwork, Grok16
 Exec=${exec}
 Icon=nexus-field
 Path=${root}
 Terminal=false
 Categories=Security;Network;System;
-Keywords=security;firewall;nexus;field;znetwork;underlay;
+Keywords=ammoos;nexus;field;znetwork;queen;grok16;
 StartupNotify=true
 Actions=Underlay;Tray;
 
@@ -220,8 +220,11 @@ nexus_install_linux_desktop() {
   rm -f "${apps}/nexus-shield.desktop" "${apps}/nexus-tristate-installer.desktop" 2>/dev/null || true
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps" 2>/dev/null || true
   nexus_install_desktop_shortcut "$home" "$exec" "$root"
-  if [[ -f "${root}/Queen/scripts/queen-browser-primary.sh" ]]; then
-    bash "${root}/Queen/scripts/queen-browser-primary.sh" >/dev/null 2>&1 || true
+  if [[ -f "${root}/lib/nexus-host-desktop-install.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${root}/lib/nexus-host-desktop-install.sh"
+    NEXUS_INSTALL_ROOT="$root" NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${root}/.nexus-state}" \
+      nexus_host_desktop_install_run 2>/dev/null || true
   fi
   echo "Start menu: ${apps}/nexus-field.desktop"
   echo "Launcher: ${exec}"

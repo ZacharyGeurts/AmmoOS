@@ -190,6 +190,8 @@ _find_extract_root() {
   local dest="$1"
   local ver="${TARGET#v}"
   local candidates=(
+    "${dest}/ammoos-${ver}"
+    "${dest}/ammooos-${ver}"
     "${dest}/nexus-shield-${ver}"
     "${dest}/nexus-shield-${TARGET}"
   )
@@ -362,6 +364,13 @@ main() {
   fi
 
   _log "update apply complete ${PREVIOUS} → ${TARGET} mode=${UPDATE_MODE}"
+  local post_py="${NEXUS_INSTALL_ROOT}/lib/ammoos-update-inplace.py"
+  if [[ -f "$post_py" ]]; then
+    local py="${NEXUS_PYTHONG:-pythong}"
+    command -v "$py" >/dev/null 2>&1 || py="python3"
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      "$py" "$post_py" post-update >>"$LOG" 2>&1 || true
+  fi
   exit 0
 }
 

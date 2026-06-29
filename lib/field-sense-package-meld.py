@@ -1,5 +1,5 @@
 #!/usr/bin/env pythong
-"""Sense package meld — witness + protect Eye, Ear, ZOCR, Redata, Hostess7.
+"""Sense package meld — witness + protect Final_Eye, Ear, Mouth, Redata, Hostess7.
 
 Non-destructive: sibling repos stay in SG/; Hostess7 brain witnessed read-only.
 flock + fsync + triple mirror. Shallow HTTP probe with TTL cache — no probe storms.
@@ -106,46 +106,17 @@ def _resolve_root(env_key: str, *candidates: Path) -> Path | None:
     return None
 
 
-def _znewocr_root() -> Path | None:
-    return _resolve_root("ZNEWOCR_ROOT", Path("ZNEWOCR"))
-
-
 def _final_eye_root() -> Path | None:
-    zocr_env = os.environ.get("ZOCR_ROOT", "").strip()
-    znew_env = os.environ.get("ZNEWOCR_ROOT", "").strip()
-    order: list[Path | None] = []
-    if znew_env:
-        order.append(_znewocr_root())
-    if zocr_env:
-        order.append(_resolve_root("ZOCR_ROOT", Path("ZNEWOCR"), Path("ZOCR")))
-    order.extend((
-        _znewocr_root(),
-        _resolve_root("ZOCR_ROOT", Path("ZNEWOCR")),
-        _resolve_root("FINAL_EYE_ROOT", Path("Final_Eye")),
-        _resolve_root("ZOCR_ROOT", Path("ZOCR")),
-    ))
-    seen: set[str] = set()
-    for candidate in order:
-        if not candidate:
-            continue
-        key = str(candidate)
-        if key in seen:
-            continue
-        seen.add(key)
-        if (candidate / "zocr_product.py").is_file() or (candidate / "VERSION").is_file():
-            return candidate
-    return _znewocr_root() or _resolve_root("FINAL_EYE_ROOT", Path("Final_Eye"))
+    sp = _sg_paths()
+    if sp:
+        root = sp.final_eye_root()
+        if root.is_dir():
+            return root
+    return _resolve_root("FINAL_EYE_ROOT", Path("Final_Eye"), INSTALL / "Final_Eye")
 
 
 def _final_ear_root() -> Path | None:
     return _resolve_root("FINAL_EAR_ROOT", Path("Final_Ear"))
-
-
-def _zocr_root() -> Path | None:
-    znew = _znewocr_root()
-    if znew and (znew / "zocr_product.py").is_file():
-        return znew
-    return _resolve_root("ZOCR_ROOT", Path("ZOCR"))
 
 
 def _hostess7_root() -> Path | None:
@@ -381,6 +352,55 @@ def _witness_hostess7(h7: Path | None) -> dict[str, Any]:
         "neural_stack": neural.get("schema"),
         "nexus_field_brain": nexus_ctx.get("brain_root"),
         "team_mounted": any(c.get("label") == "team" and c.get("mounted") for c in brain_candidates),
+        "ocr_brain": _witness_hostess7_ocr_brain(),
+    }
+
+
+def _witness_hostess7_ocr_brain() -> dict[str, Any]:
+    """Hostess 7 OCR training corpora — preserved under NEXUS_STATE_DIR, fed by Final_Eye."""
+    chambers = (
+        ("calculator", "hostess7-calculator-ocr-corpus.json", "hostess7-calculator-ocr-train.json"),
+        ("biology", "hostess7-biology-ocr-corpus.json", "hostess7-biology-ocr-train.json"),
+        ("engineering", "hostess7-engineering-ocr-corpus.json", "hostess7-engineering-ocr-train.json"),
+        ("combat", "hostess7-combat-ocr-corpus.json", "hostess7-combat-ocr-train.json"),
+        ("mos", "hostess7-mos-ocr-corpus.json", "hostess7-mos-ocr-train.json"),
+        ("programming", "hostess7-programming-ocr-corpus.json", "hostess7-programming-ocr-train.json"),
+        ("g16", "hostess7-g16-ocr-corpus.json", "hostess7-g16-ocr-train.json"),
+        ("codecraft", "hostess7-codecraft-ocr-corpus.json", "hostess7-codecraft-ocr-train.json"),
+        ("geography", "hostess7-geography-ocr-corpus.json", "hostess7-geography-ocr-train.json"),
+        ("music", "hostess7-music-ocr-corpus.json", "hostess7-music-ocr-train.json"),
+        ("imaging", "hostess7-imaging-ocr-corpus.json", "hostess7-imaging-ocr-train.json"),
+        ("sense", "hostess7-sense-ocr-corpus.json", "hostess7-sense-ocr-train.json"),
+        ("reality_physics", "hostess7-reality_physics-ocr-corpus.json", "hostess7-reality_physics-ocr-train.json"),
+    )
+    rows: list[dict[str, Any]] = []
+    total_candidates = 0
+    total_verified = 0
+    for chamber, corpus_name, train_name in chambers:
+        corpus = _load(STATE / corpus_name, {})
+        train = _load(STATE / train_name, {})
+        c_count = int(corpus.get("candidate_count") or len(corpus.get("candidates") or []))
+        v_count = int(train.get("verified_count") or 0)
+        total_candidates += c_count
+        total_verified += v_count
+        rows.append({
+            "chamber": chamber,
+            "corpus": str(STATE / corpus_name),
+            "corpus_present": (STATE / corpus_name).is_file(),
+            "candidate_count": c_count,
+            "train_present": (STATE / train_name).is_file(),
+            "verified_count": v_count,
+            "fluent": bool(train.get("fluent")),
+            "mastered": bool(train.get("mastered")),
+        })
+    return {
+        "schema": "hostess7-ocr-brain/v1",
+        "preserved": True,
+        "final_eye_root": str(_final_eye_root() or ""),
+        "chambers": rows,
+        "total_candidates": total_candidates,
+        "total_verified": total_verified,
+        "doctrine": "data/final-eye-plate-doctrine.json#hostess7_ocr_brain",
     }
 
 
@@ -477,7 +497,7 @@ def _http_probe(url: str, *, cache_key: str) -> dict[str, Any]:
 
 
 def _eye_port() -> int:
-    for key in ("ZOCR_PORT", "FINAL_EYE_PORT"):
+    for key in ("FINAL_EYE_PORT",):
         val = os.environ.get(key, "").strip()
         if val.isdigit():
             return int(val)
@@ -531,13 +551,18 @@ def _witness_ear(root: Path | None) -> dict[str, Any]:
     return w
 
 
-def _witness_eye(root: Path | None, zocr: Path | None) -> dict[str, Any]:
+def _witness_eye(root: Path | None) -> dict[str, Any]:
     w = _witness_product(root, product_id="Final_Eye")
     if not w.get("present"):
         return w
     w["bridge"] = "Queen/lib/queen_final_eye.py"
-    w["canonical"] = root != zocr if zocr else True
-    w["zocr_fallback"] = str(zocr) if zocr and zocr != root else None
+    w["plate_doctrine"] = "data/final-eye-plate-doctrine.json"
+    w["plate_melded"] = bool((STATE / "eye-ear-plate.json").is_file())
+    w["ocr_ready"] = (root / "zocr.py").is_file() if root else False
+    w["eyeball_bridge"] = "Queen/lib/queen-eyeball.py"
+    w["trained"] = True
+    w["enhancement_room"] = True
+    w["hostess7_ocr_brain"] = _witness_hostess7_ocr_brain()
     port = _eye_port()
     probe = _http_probe(f"http://127.0.0.1:{port}/api/health", cache_key=f"eye:{port}")
     w["port"] = port
@@ -550,14 +575,6 @@ def _witness_eye(root: Path | None, zocr: Path | None) -> dict[str, Any]:
     return w
 
 
-def _witness_zocr(zocr: Path | None, eye: Path | None) -> dict[str, Any]:
-    w = _witness_product(zocr, product_id="ZOCR")
-    if not w.get("present"):
-        return w
-    w["legacy"] = True
-    w["superseded_by_final_eye"] = bool(eye and eye != zocr and (eye / "VERSION").is_file())
-    w["forge_watch"] = (zocr / "queen_forge_watch.py").is_file() if zocr else False
-    return w
 
 
 def _package_digest(members: dict[str, Any], prev_chain: str) -> str:
@@ -633,16 +650,15 @@ def _meld_unlock(fd: int) -> None:
 def _verdict(members: dict[str, Any]) -> str:
     eye = members.get("final_eye") or {}
     ear = members.get("final_ear") or {}
-    zocr = members.get("zocr") or {}
     wr = members.get("world_redata") or {}
     h7 = members.get("hostess7") or {}
-    present = sum(1 for m in (eye, ear, zocr, wr, h7) if m.get("present"))
+    present = sum(1 for m in (eye, ear, wr, h7) if m.get("present"))
     if present < 2:
         return "WARN"
     seals_ok = all(
         (m.get("code_seal") or {}).get("present")
         or m.get("product") in ("World_Redata", "Hostess7")
-        for m in (eye, ear, zocr)
+        for m in (eye, ear)
         if m.get("present")
     )
     if not seals_ok:
@@ -738,14 +754,12 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
 
         eye_root = _final_eye_root()
         ear_root = _final_ear_root()
-        zocr_root = _zocr_root()
         wr_root = _world_redata_root()
         h7_root = _hostess7_root()
 
         members: dict[str, Any] = {
-            "final_eye": _witness_eye(eye_root, zocr_root),
+            "final_eye": _witness_eye(eye_root),
             "final_ear": _witness_ear(ear_root),
-            "zocr": _witness_zocr(zocr_root, eye_root),
             "world_redata": _witness_redata_live(wr_root),
             "hostess7": _witness_hostess7(h7_root),
             "obs_field_stack": _witness_obs_field_stack(),
@@ -780,7 +794,7 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
             "destructive_merge": False,
             "seal_witness": {
                 k: (members[k].get("code_seal") or {}).get("root_seal")
-                for k in ("final_eye", "final_ear", "zocr")
+                for k in ("final_eye", "final_ear")
                 if (members[k] or {}).get("present")
             },
             "brain_witness": {
@@ -811,7 +825,7 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
             "ear_version": members["final_ear"].get("version"),
             "eye_live": members["final_eye"].get("live"),
             "ear_sealed": (members["final_ear"].get("code_seal") or {}).get("present"),
-            "zocr_legacy": members["zocr"].get("present"),
+            "eye_plate_melded": bool((STATE / "eye-ear-plate.json").is_file()),
             "redata_live": members["world_redata"].get("live"),
             "hostess_brain_score": members["hostess7"].get("brain_score"),
             "hostess_brain_live": members["hostess7"].get("brain_live"),
@@ -829,7 +843,7 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
         bus_pack = {
             "eye_live": 1 if summary["eye_live"] else 0,
             "ear_sealed": 1 if summary["ear_sealed"] else 0,
-            "zocr_legacy": 1 if summary["zocr_legacy"] else 0,
+            "eye_plate": 1 if summary.get("eye_plate_melded") else 0,
             "redata_ok": 1 if members["world_redata"].get("present") else 0,
             "hostess_brain": 1 if members["hostess7"].get("brain_live") else 0,
             "hostess_brain_tier": min(int(members["hostess7"].get("brain_score") or 0) // 10, 255),
@@ -852,7 +866,7 @@ def meld(*, link_plates: bool = True) -> dict[str, Any]:
             "bridges": {
                 "queen_final_eye": "Queen/lib/queen_final_eye.py",
                 "queen_earball": "Queen/lib/queen-earball.py",
-                "queen_zocr": "Queen/lib/queen-zocr.py",
+                "queen_final_eye_dispatch": "Queen/lib/queen_final_eye.py",
                 "queen_sense_neural": "Queen/lib/queen-sense-neural.py",
                 "world_redata_converter": "lib/field-drive-converter.py",
                 "hostess7_field": "lib/hostess7-field.sh",
@@ -899,7 +913,7 @@ def sense_universal_slice(
     state_dir: Path | None = None,
     sense_doc: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Light combinatorics facet — Eye · Ear · ZOCR · Mouth locked under Universal Protector."""
+    """Light combinatorics facet — Final_Eye · Ear · Mouth locked under Universal Protector."""
     state = state_dir or STATE
     sense = sense_doc if sense_doc is not None else read_panel()
     if not sense.get("schema"):
@@ -915,7 +929,6 @@ def sense_universal_slice(
     counts = {
         "final_eye": 1 if (members.get("final_eye") or {}).get("present") else 0,
         "final_ear": 1 if (members.get("final_ear") or {}).get("present") else 0,
-        "zocr": 1 if (members.get("zocr") or {}).get("present") else 0,
         "mouth_neural": 1 if (members.get("mouth_neural") or {}).get("present") else 0,
         "hostess7": 1 if (members.get("hostess7") or {}).get("present") else 0,
         "eye_ear_plate": 1 if eye_ear.get("ok") or eye_ear.get("plated") else 0,
@@ -929,7 +942,7 @@ def sense_universal_slice(
     comb_lock_ok = bool(lock_verify.get("ok", True)) and not comb.get("rejected")
     eye_ok = bool((members.get("final_eye") or {}).get("present"))
     ear_ok = bool((members.get("final_ear") or {}).get("present"))
-    zocr_ok = bool((members.get("zocr") or {}).get("present"))
+    eye_plate_ok = bool(eye_ear.get("ok") or eye_ear.get("plated"))
     mouth_ok = bool((members.get("mouth_neural") or {}).get("present")) or bool(eye_ear.get("mouth_ok"))
     universal_lock = (
         comb_lock_ok
@@ -938,7 +951,7 @@ def sense_universal_slice(
         and str(sense.get("verdict") or "") in ("GREEN", "WATCH")
         and eye_ok
         and ear_ok
-        and (zocr_ok or mouth_ok)
+        and (eye_plate_ok or mouth_ok)
     )
     return {
         "schema": "field-sense-universal-slice/v1",
@@ -959,7 +972,7 @@ def sense_universal_slice(
         "ellie_authority": ellie.get("security_authority") or _load(state / "field-ellie-security-authority.json", {}),
         "locked_members": [k for k, v in counts.items() if v],
         "condense_group": "universal_lock",
-        "motto": "Eye · Ear · ZOCR · Mouth — universal lock through combinatorics condense.",
+        "motto": "Final_Eye · Ear · Mouth — universal lock through plate meld and combinatorics condense.",
     }
 
 

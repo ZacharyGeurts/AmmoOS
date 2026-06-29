@@ -67,6 +67,88 @@ def search_tree(trees: list[dict[str, Any]], query: str) -> list[dict[str, Any]]
     return acc
 
 
+def _collect_bookmarks(trees: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for node in trees:
+        if not isinstance(node, dict):
+            continue
+        if node.get("kind") == "folder":
+            for child in node.get("children") or []:
+                if isinstance(child, dict) and child.get("url"):
+                    out.append(child)
+        elif node.get("url"):
+            out.append(node)
+    return out
+
+
+def _localhost_url(url: str) -> bool:
+    u = (url or "").strip()
+    if not u:
+        return False
+    if u.startswith("queen://"):
+        return True
+    if u.startswith("/"):
+        return True
+    try:
+        from urllib.parse import urlparse
+        host = (urlparse(u).hostname or "").lower()
+    except Exception:
+        return False
+    return host in ("127.0.0.1", "localhost", "::1") or host.startswith("127.")
+
+
+def validate_bookmarks(*, timeout: float = 8.0) -> dict[str, Any]:
+    """HTTP-check every tree bookmark — loopback pages only."""
+    import urllib.error
+    import urllib.request
+
+    trees = default_trees()
+    rows = _collect_bookmarks(trees)
+    world_port = int(__import__("os").environ.get("QUEEN_WORLD_PORT", "9481"))
+    world_base = f"http://127.0.0.1:{world_port}"
+    checked: list[dict[str, Any]] = []
+    for bm in rows:
+        raw = str(bm.get("url") or "")
+        probe = raw.split("#")[0]
+        if probe.startswith("/"):
+            probe = world_base + probe
+        ok = False
+        status: int | None = None
+        err = ""
+        if not _localhost_url(raw):
+            err = "non_localhost"
+        else:
+            try:
+                req = urllib.request.Request(probe, method="GET")
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    status = int(resp.status)
+                    ok = 200 <= status < 400
+            except urllib.error.HTTPError as exc:
+                status = int(exc.code)
+                err = f"http_{status}"
+            except Exception as exc:
+                err = str(exc)
+        checked.append({
+            "id": bm.get("id"),
+            "title": bm.get("title"),
+            "url": raw,
+            "probe": probe,
+            "ok": ok,
+            "status": status,
+            "error": err or None,
+        })
+    fails = [c for c in checked if not c.get("ok")]
+    return {
+        "schema": "queen-bookmark-validate/v1",
+        "ok": len(fails) == 0,
+        "total": len(checked),
+        "passed": len(checked) - len(fails),
+        "failed": len(fails),
+        "bookmarks": checked,
+        "failures": fails,
+    }
+
+
 def posture() -> dict[str, Any]:
     trees = default_trees()
     return {
@@ -83,7 +165,11 @@ def main() -> int:
     if cmd == "json":
         print(json.dumps(posture(), ensure_ascii=False, indent=2))
         return 0
-    print(json.dumps({"error": "usage: queen-bookmark-tree.py [json]"}, ensure_ascii=False))
+    if cmd in ("validate", "check"):
+        out = validate_bookmarks()
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+        return 0 if out.get("ok") else 1
+    print(json.dumps({"error": "usage: queen-bookmark-tree.py [json|validate]"}, ensure_ascii=False))
     return 1
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env pythong
+#!/usr/bin/env python3
 """Field Library Registry — single point of informational value for every collection on the globe."""
 from __future__ import annotations
 
@@ -291,6 +291,41 @@ def collect_entries() -> list[dict[str, Any]]:
         "cover": "/library/assets/formats/h7c.png",
         "description": "Complete format table — H7, H7c, media, geometry, sovereign formats.",
     })
+    card_catalog = DEWEY_ROOT / "020-library-science" / "card-catalog" / "catalog.json"
+    if card_catalog.is_file():
+        cc = _load(card_catalog, {})
+        entries.append({
+            "id": "field-card-catalog",
+            "title": "Field Card Catalog",
+            "author": "Hostess7 Librarian Corps",
+            "category": "library science",
+            "dewey": "020",
+            "format": "card-catalog",
+            "ready": True,
+            "source": "field-card-catalog",
+            "collection": "catalogs",
+            "description": "Auto-detected books — call numbers, keywords placed, sort & search.",
+            "page_count": cc.get("card_count"),
+            "ironclad_citation": "ironclad:catalog:1",
+        })
+    tobin_book = DEWEY_ROOT / "133-parapsychology" / "tobins-spirit-guide" / "book.json"
+    if tobin_book.is_file():
+        tb = _load(tobin_book, {})
+        entries.append({
+            "id": "tobins-spirit-guide",
+            "title": tb.get("title", "THE PINNACLE Tobin's Spirit Guide"),
+            "author": tb.get("author", "Tobin / Hostess 7 Field Corps"),
+            "category": "parapsychology",
+            "dewey": "133",
+            "format": "spirit-guide",
+            "ready": True,
+            "source": "tobins-spirit-guide",
+            "collection": "spirit_guides",
+            "cover": tb.get("cover"),
+            "description": tb.get("motto", "Elite field manual for demon hunters — Emperor is Bowie."),
+            "page_count": tb.get("page_count"),
+            "ironclad_citation": tb.get("ironclad_citation", "ironclad:tobin:1"),
+        })
     return [_stamp_entry(e) for e in entries]
 
 
@@ -385,6 +420,13 @@ def build_registry(*, sync_shelves: bool = True, sync_covers: bool = True) -> di
             shelf_sync = {"covers": covers_mod.sync_textbook_covers()}
 
     entries = collect_entries()
+    api = _import_mod("ironclad_api", "ironclad-secure-api.py")
+    sort_meta: dict[str, Any] = {}
+    if api and hasattr(api, "sort_index"):
+        try:
+            entries, sort_meta = api.sort_index(entries, context="registry_index")
+        except Exception:
+            pass
     collections: dict[str, int] = {}
     for e in entries:
         col = str(e.get("collection") or "other")
@@ -413,6 +455,8 @@ def build_registry(*, sync_shelves: bool = True, sync_covers: bool = True) -> di
             if bal and hasattr(bal, "read_content_balance")
             else {}
         ),
+        "ironclad_sort": sort_meta or None,
+        "ironclad_citation": "ironclad:api:1",
     }
 
 
@@ -443,18 +487,42 @@ def registry_entries() -> list[dict[str, Any]]:
 
 
 def search_registry(query: str, *, limit: int = 48) -> list[dict[str, Any]]:
-    entries = registry_entries()
     q = query.lower().strip()
     if not q:
+        entries = registry_entries()
+        api = _import_mod("ironclad_api", "ironclad-secure-api.py")
+        if api:
+            try:
+                rows, _ = api.IroncladSecureAPI.instance().sort_index(entries, context="registry_index", n=limit)
+                return rows[:limit]
+            except Exception:
+                pass
         return entries[:limit]
+    idx = _import_mod("ironclad_search", "ironclad-search-index.py")
+    if idx and hasattr(idx, "search_registry_fast"):
+        try:
+            return idx.search_registry_fast(q, limit=limit)
+        except Exception:
+            pass
+    entries = registry_entries()
     hits: list[tuple[int, dict[str, Any]]] = []
     for row in entries:
-        blob = json.dumps(row, ensure_ascii=False).lower()
+        blob = " ".join(
+            str(row.get(k) or "") for k in ("title", "label", "id", "collection", "path", "kind")
+        ).lower()
         score = sum(4 if tok in blob else 0 for tok in q.split())
         if score:
             hits.append((score, row))
     hits.sort(key=lambda x: (-x[0], x[1].get("title", "")))
-    return [h[1] for h in hits[:limit]]
+    rows = [h[1] for h in hits[: max(limit, len(hits))]]
+    api = _import_mod("ironclad_api", "ironclad-secure-api.py")
+    if api and hasattr(api, "sort_index") and rows:
+        try:
+            rows, _ = api.IroncladSecureAPI.instance().sort_index(rows, context="registry_index", n=limit)
+            return rows[:limit]
+        except Exception:
+            pass
+    return rows[:limit]
 
 
 def catalog_for_h7_bridge() -> list[dict[str, Any]]:

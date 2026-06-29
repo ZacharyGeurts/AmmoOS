@@ -16,8 +16,8 @@
   "chip_count": 7,
   "kind": "coprocessor",
   "family": "execution",
-  "combinatorics_total": 974,
-  "cover": "/world/assets/combinatronic/chips/cyrix_6x86.png",
-  "thumb": "/panel/assets/queen-prog-chips.png",
-  "updated": "2026-06-27T22:53:22Z"
+  "combinatorics_total": 978,
+  "cover": "/world/assets/combinatronic/chips/thumbs/cyrix_fasmath_83d87.png",
+  "thumb": "/world/assets/combinatronic/chips/thumbs/cyrix_fasmath_83d87.png",
+  "updated": "2026-06-29T14:48:47Z"
 }

@@ -57,6 +57,14 @@
     "smart_inside_default": true,
     "motto": "Mirror live L3, own policy inside, passthrough all traffic — mask native manager only when L3 replacement is ready."
   },
+  "audio_layer": {
+    "module": "lib/field-audio-dac-chamber.py",
+    "secure_bind": "lib/field-audio-secure-bind.py",
+    "doctrine": "data/field-audio-dac-doctrine.json",
+    "ui": "/field-audio-dac",
+    "api": "/api/field-audio-dac",
+    "motto": "ZNetwork audio layer — pick any mic/speaker, SDL 8ch, Dolby/DTS emu"
+  },
   "hardening": {
     "ddos_shield": true,
     "negotiation_guard": true,
@@ -119,6 +127,7 @@
     "canonical_root": "NewLatest/ZNetwork",
     "approved_must_be": true
   },
+
   "orchestrator": "lib/znetwork-orchestrator.py",
   "shell_bridge": "lib/znetwork-field.sh",
   "smart_inside_module": "lib/znetwork-smart-inside.py",

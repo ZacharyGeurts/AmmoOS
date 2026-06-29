@@ -41,7 +41,7 @@
   },
   "schemes": {
     "standard": {
-      "label": "PC standard — Windows/Linux GTK/Qt",
+      "label": "AmmoOS field standard",
       "bindings": [
         {"action": "copy", "chord": "Control+c"},
         {"action": "copy", "chord": "Control+Insert"},
@@ -54,7 +54,7 @@
       ]
     },
     "windows": {
-      "label": "Windows classic",
+      "label": "AmmoOS C2 classic",
       "bindings": [
         {"action": "copy", "chord": "Control+c"},
         {"action": "copy", "chord": "Control+Insert"},
@@ -65,7 +65,7 @@
       ]
     },
     "mac": {
-      "label": "macOS Command chords",
+      "label": "AmmoOS Rose command chords",
       "bindings": [
         {"action": "copy", "chord": "Meta+c"},
         {"action": "paste", "chord": "Meta+v"},

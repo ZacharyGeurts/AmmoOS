@@ -1,11 +1,14 @@
 /**
- * NEXUS Field OS shell — borderless program windows, auto-hide taskbar, Alt+Tab, integration bus.
+ * NEXUS Field OS shell — AmmoOS borderless programs, taskbar, field switch, Monster rescue.
+ * @g16 5.1.0 · Grok16/field-stack-fabric · field-host-desktop
  */
 (function (global) {
   "use strict";
 
   const QUEEN_ICON = "/assets/ammoos-field-48.png";
   const PANEL = "";
+
+  const YIELD_KEY = "nexus_field_yielded_to_host";
 
   const state = {
     settings: null,
@@ -16,6 +19,7 @@
     altIndex: 0,
     programsById: {},
     zTop: 8100,
+    yieldedToHost: false,
   };
 
   function desktopIconsEnabled() {
@@ -141,7 +145,15 @@
       document.documentElement.style.fontSize = Math.round(16 * scale) + "px";
     }
     if (state.settings.theme_override) {
-      document.documentElement.dataset.osTheme = state.settings.theme_override;
+      const themeAliases = {
+        gnome: "ammo-field",
+        windows11: "ammo-c2",
+        windows10: "ammo-c2",
+        kde: "ammo-deep",
+        macos: "ammo-rose",
+      };
+      const t = themeAliases[state.settings.theme_override] || state.settings.theme_override;
+      document.documentElement.dataset.osTheme = t;
     }
   }
 
@@ -456,9 +468,16 @@
       (s.desktop_icon_size || 40) +
       '" /></div>' +
       '<div class="nfs-modal-row"><label>Theme</label><select id="nfs-prop-theme">' +
-      ["", "gnome", "windows11", "kde", "macos"]
-        .map(function (t) {
-          const label = t || "Auto (host)";
+      [
+        ["", "Auto"],
+        ["ammo-field", "AmmoOS Field"],
+        ["ammo-c2", "AmmoOS C2"],
+        ["ammo-deep", "AmmoOS Deep"],
+        ["ammo-rose", "AmmoOS Rose"],
+      ]
+        .map(function (row) {
+          const t = row[0];
+          const label = row[1];
           return (
             '<option value="' +
             esc(t) +
@@ -589,7 +608,63 @@
     };
   }
 
+  function isYieldedToHost() {
+    return !!state.yieldedToHost || document.documentElement.classList.contains("field-yielded-to-host");
+  }
+
+  function applyYieldUi(on) {
+    state.yieldedToHost = !!on;
+    document.documentElement.classList.toggle("field-yielded-to-host", !!on);
+    const chip = document.getElementById("nfs-yield-chip");
+    if (chip) chip.classList.toggle("open", !!on);
+    try {
+      localStorage.setItem(YIELD_KEY, on ? "1" : "0");
+    } catch (_) {}
+  }
+
+  function yieldToHost() {
+    if (!confirm("Return to host OS? AmmoOS drops to background — security hold stays on, no freeze.")) return;
+    showDesktop();
+    closeAltTab();
+    applyYieldUi(true);
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(function () {});
+    }
+    document.documentElement.classList.remove("nfs-kiosk");
+    toast("Security hold active — host OS in front. Alt+Tab is yours.");
+  }
+
+  function returnFromHost() {
+    applyYieldUi(false);
+    document.documentElement.classList.add("nfs-kiosk");
+    enterFullscreenDesktop();
+    toast("AmmoOS restored — security hold unchanged.");
+  }
+
+  function restoreYieldFromStorage() {
+    try {
+      if (localStorage.getItem(YIELD_KEY) === "1") applyYieldUi(true);
+    } catch (_) {}
+  }
+
   function handlePower(action) {
+    if (action === "yield-to-host" || action === "yield_to_host") {
+      yieldToHost();
+      return;
+    }
+    if (action === "return-from-host" || action === "return_from_host") {
+      returnFromHost();
+      return;
+    }
+    if (action === "monster") {
+      global.FieldMonsterMonitor?.open?.();
+      return;
+    }
+    if (action === "freeze-soft" || action === "freeze-mem" || action === "freeze_mem") {
+      toast("Security hold — we no longer freeze the guest OS. Use Return to host OS.");
+      global.FieldMonsterMonitor?.open?.();
+      return;
+    }
     if (action === "sign-out") {
       showDesktop();
       toast("Signed out — desktop shown");
@@ -730,8 +805,10 @@
         '<div class="nfs-display-modal" id="nfs-display-modal" role="dialog" aria-label="Display settings">' +
         '<div class="nfs-modal-panel"><h2>Display</h2><div id="nfs-display-body"></div>' +
         '<div class="nfs-modal-actions"><button type="button" id="nfs-display-cancel">Cancel</button>' +
-        '<button type="button" class="primary" id="nfs-display-save">Apply</button></div></div></div>';
+        '<button type="button" class="primary" id="nfs-display-save">Apply</button></div></div></div>' +
+        '<button type="button" class="nfs-yield-chip" id="nfs-yield-chip" title="Restore AmmoOS">AmmoOS · security hold</button>';
       while (wrap.firstChild) document.body.appendChild(wrap.firstChild);
+      $("nfs-yield-chip")?.addEventListener("click", returnFromHost);
       $("nfs-props-cancel")?.addEventListener("click", function () {
         $("nfs-props-modal")?.classList.remove("open");
       });
@@ -759,6 +836,7 @@
     }
 
     document.addEventListener("keydown", function (ev) {
+      if (isYieldedToHost()) return;
       if (!(state.settings?.alt_tab_enabled !== false)) return;
       if (ev.altKey && ev.key === "Tab") {
         ev.preventDefault();
@@ -790,6 +868,7 @@
     global.addEventListener("message", onMessage);
     enterFullscreenDesktop();
     bindFullscreenRetry();
+    restoreYieldFromStorage();
     loadSettings().then(function () {
       bootDesktop(data);
     });
@@ -870,6 +949,9 @@
     openDisplaySettings: openDisplaySettings,
     openDesktopContext: openDesktopContext,
     handlePower: handlePower,
+    yieldToHost: yieldToHost,
+    returnFromHost: returnFromHost,
+    isYieldedToHost: isYieldedToHost,
     saveSettings: saveSettings,
     queueQueenNavigate: queueQueenNavigate,
     enterFullscreen: enterFullscreenDesktop,

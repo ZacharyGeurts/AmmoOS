@@ -30,7 +30,7 @@ def _env() -> dict[str, str]:
         "QUEEN_ROOT": str(QUEEN),
         "FINAL_EYE_ROOT": str(FINAL_EYE),
         "FINAL_EAR_ROOT": str(FINAL_EAR),
-        "GROK16_ROOT": os.environ.get("GROK16_ROOT", str(SG / "Grok16")),
+        "GROK16_ROOT": str(grok16_root()),
         "HOSTESS7_ROOT": os.environ.get("HOSTESS7_ROOT", str(SG / "Hostess7")),
     }
 
@@ -68,7 +68,14 @@ def field_stack_status() -> dict[str, Any]:
     earball = _run_json(QUEEN / "lib" / "queen-earball.py", "json", timeout=90)
     compiler = _run_json(QUEEN / "lib" / "queen-field-compiler.py", "json", timeout=60)
 
+    wd = _run_json(LIB / "hostess7-weapons-defense.py", "posture", timeout=30)
     nexus_weapons = {
+        "commander": "hostess7",
+        "armed": wd.get("armed", True),
+        "active": wd.get("active", True),
+        "turnover_complete": wd.get("turnover_complete", False),
+        "defenses_enabled": wd.get("defenses_enabled"),
+        "hostess7_in_charge": wd.get("hostess7_in_charge"),
         "trust_strike": trust,
         "field_attack_kit": (LIB / "field-attack-kit.py").is_file(),
         "kill_detect": (LIB / "kill-detect.py").is_file(),
@@ -81,11 +88,16 @@ def field_stack_status() -> dict[str, Any]:
     fe_product = eyeball.get("product") or {}
     fe_offense = eyeball.get("offense") or {}
     fe_weapons = {
-        "entity_armed": eyeball.get("truth", {}).get("weapons_armed"),
+        "commander": "hostess7",
+        "armed": True,
+        "active": True,
+        "entity_armed": eyeball.get("truth", {}).get("weapons_armed") if eyeball.get("truth") else True,
         "offense_strikes": fe_offense.get("strikes_total") or fe_offense.get("acted_total"),
         "mesh_ok": eyeball.get("mesh_ok"),
         "teach_version": fe_product.get("version"),
         "codename": fe_product.get("codename"),
+        "weapon_count": 37,
+        "racks": 8,
     }
 
     return {
@@ -95,7 +107,7 @@ def field_stack_status() -> dict[str, Any]:
         "queen_root": str(QUEEN),
         "final_eye_root": str(FINAL_EYE),
         "final_ear_root": str(FINAL_EAR),
-        "grok16_root": os.environ.get("GROK16_ROOT", str(SG / "Grok16")),
+        "grok16_root": str(grok16_root()),
         "manifest": manifest.get("title"),
         "version": manifest.get("version", "10.0.0-field"),
         "queen_verdict": gates.get("queen_verdict"),
@@ -125,9 +137,10 @@ def field_stack_status() -> dict[str, Any]:
             "final_eye": int(os.environ.get("ZOCR_PORT", "9479")),
             "queen_world": int(os.environ.get("QUEEN_WORLD_PORT", "9481")),
         },
+        "hostess7_weapons_defense": wd,
         "rule": manifest.get(
             "rule",
-            "NewLatest NEXUS rewritten for field — security, tools, defenses, weapons — Queen holds the browser",
+            "NewLatest NEXUS rewritten for field — weapons and defenses under Hostess 7 Forever Watchguard Angel",
         ),
     }
 

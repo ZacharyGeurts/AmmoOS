@@ -1,7 +1,7 @@
 /* Host desktop — wallpaper, program grid, OS theme shells */
 
 :root {
-  --hd-font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --hd-font: system-ui, sans-serif;
   --hd-text: #eef4ff;
   --hd-dim: #94a3b8;
 }
@@ -67,27 +67,26 @@ html:not(.nfs-taskbar-hidden) .hd-monitor {
   display: none;
 }
 
-/* Wallpapers per OS theme */
-html[data-os-theme="windows11"] .hd-desktop,
-html[data-os-theme="windows10"] .hd-desktop {
+/* Wallpapers per AmmoOS theme */
+html[data-os-theme="ammo-c2"] .hd-desktop {
   background:
     radial-gradient(ellipse 80% 60% at 70% 10%, rgba(0, 120, 212, 0.35), transparent 55%),
     linear-gradient(160deg, #0a1628 0%, #1a2744 45%, #0d1117 100%);
 }
 
-html[data-os-theme="gnome"] .hd-desktop {
+html[data-os-theme="ammo-field"] .hd-desktop {
   background:
     radial-gradient(ellipse 90% 70% at 20% 0%, rgba(53, 132, 228, 0.28), transparent 50%),
     linear-gradient(180deg, #241f31 0%, #1a1624 100%);
 }
 
-html[data-os-theme="kde"] .hd-desktop {
+html[data-os-theme="ammo-deep"] .hd-desktop {
   background:
     radial-gradient(ellipse 70% 50% at 80% 20%, rgba(61, 174, 233, 0.22), transparent),
     linear-gradient(135deg, #1d2028 0%, #232830 100%);
 }
 
-html[data-os-theme="macos"] .hd-desktop {
+html[data-os-theme="ammo-rose"] .hd-desktop {
   background:
     radial-gradient(ellipse 100% 80% at 50% 100%, rgba(255, 120, 80, 0.2), transparent 60%),
     linear-gradient(180deg, #2a2040 0%, #141018 50%, #0a0810 100%);

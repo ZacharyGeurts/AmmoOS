@@ -487,6 +487,52 @@ def panel_json() -> dict[str, Any]:
     return build_panel(write=True)
 
 
+_OCR_API: dict | None = None
+
+
+def _ocr_api() -> dict:
+    global _OCR_API
+    if _OCR_API is None:
+        import importlib.util
+        py = INSTALL / "lib" / "hostess7-ocr-bind.py"
+        spec = importlib.util.spec_from_file_location("h7_ocr_bind_g16", py)
+        if not spec or not spec.loader:
+            raise ImportError("hostess7-ocr-bind.py missing")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _OCR_API = mod.bind("g16", install=INSTALL, state=STATE, ledger=LEDGER)
+    return _OCR_API
+
+
+def ingest_ocr_vision(**kw):
+    return _ocr_api()["ingest_ocr_vision"](**kw)
+
+
+def train_ocr_vision(**kw):
+    return _ocr_api()["train_ocr_vision"](**kw)
+
+
+def ocr_vision_status():
+    return _ocr_api()["ocr_vision_status"]()
+
+
+def _handle_ocr_cli(cmd: str) -> int | None:
+    import importlib.util
+    py = INSTALL / "lib" / "hostess7-ocr-feed.py"
+    spec = importlib.util.spec_from_file_location("h7_ocr_feed_g16", py)
+    if not spec or not spec.loader:
+        return None
+    feed = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(feed)
+    return feed.handle_ocr_cli(
+        cmd,
+        ingest_fn=ingest_ocr_vision,
+        train_fn=train_ocr_vision,
+        status_fn=ocr_vision_status,
+        usage="hostess7-g16.py [json|score|probe|battery|explain|teach|ocr-ingest|ocr-train|ocr-status]",
+    )
+
+
 def main() -> int:
     cmd = (sys.argv[1] if len(sys.argv) > 1 else "json").strip().lower()
     if cmd in ("json", "panel", "status"):
@@ -505,6 +551,9 @@ def main() -> int:
         q = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "g16 compiler fluency"
         print(json.dumps(explain_g16_structured(q), ensure_ascii=False))
         return 0
+    ocr_ret = _handle_ocr_cli(cmd)
+    if ocr_ret is not None:
+        return ocr_ret
     print(json.dumps({
         "error": "usage: hostess7-g16.py [json|score|probe|battery|explain|teach <q>]",
     }, ensure_ascii=False))

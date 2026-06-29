@@ -19,7 +19,8 @@
     {"id": "broadcaster", "title": "Broadcaster", "url": "/field-broadcaster"},
     {"id": "lock", "title": "Lock", "url": "/field-lock"},
     {"id": "gpu", "title": "GPU Control", "url": "/field-gpu"},
-    {"id": "popcorn", "title": "Popcorn", "url": "/field-popcorn"}
+    {"id": "popcorn", "title": "Popcorn", "url": "/field-popcorn"},
+    {"id": "ammoos-update", "title": "Software Update Manager", "url": "/ammoos-update-os"}
   ],
   "time_formats": [
     {"id": "long", "label": "Saturday, June 27, 03:35"},

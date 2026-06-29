@@ -1,0 +1,25 @@
+{
+  "id": "exploring_ammolang",
+  "title": "Exploring AmmoLang",
+  "author": "Grok16 Field",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-EXPLORE-ba83970e50f5",
+  "format": "h7c",
+  "format_version": 3,
+  "book_kind": "exploring",
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map",
+    "memory",
+    "compile"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/exploring_ammolang/exploring_ammolang.h7c",
+  "field_path": "library/dewey/000-computer-science/exploring_ammolang/exploring_ammolang.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "ammolang",
+  "cover": "/world/assets/combinatronic/books/ammolang.png",
+  "updated": "2026-06-29T13:17:45Z"
+}

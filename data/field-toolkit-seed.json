@@ -1,6 +1,8 @@
 {
   "schema": "nexus-hell-kit-v2",
   "kit_name": "Hell Kit",
+  "commander": "hostess7",
+  "posture": {"armed": true, "active": true, "turnover": "hostess7"},
   "motto": "Hell goes to Hell — precision kit severs wire, region, and human threat itself.",
   "tagline": "Sever · regional disable · forever kill · human dossier sweep. Heaven never bumped ahead of harm.",
   "disablement_profiles": [
@@ -114,7 +116,7 @@
     {"id": "precision_field_kit", "label": "Precision field kit · sub-µm GPS", "module": "precision-field", "default": true, "description": "Sub-micron detected GPS placement for map, spiderweb, and regional disablement.", "setting_key": null, "hell_kit": true},
     {"id": "rf_lawful_kick", "label": "FCC shoot-to-kill (permitted spectrum only)", "module": "field-rf-sentinel", "default": true, "description": "Whitelist FCC bands; wipe unpermitted APs on the wire. Disconnect, firewall, 100% autokill. No bursts or jamming.", "setting_key": null},
     {"id": "gatekeeper_block_high", "label": "Gatekeeper high-trust block", "module": "connection-gatekeeper", "default": true, "description": "Score and throttle high-risk egress before they become dossier entries.", "setting_key": null},
-    {"id": "paranoia_mode", "label": "Paranoia mode", "module": "paranoia-mode", "default": false, "description": "Aggressive overlap response — tighter autosanitize and warnings.", "setting_key": "NEXUS_PARANOIA_MODE"},
+    {"id": "paranoia_mode", "label": "Paranoia mode", "module": "paranoia-mode", "default": true, "armed": true, "active": true, "commander": "hostess7", "description": "Aggressive overlap response — tighter autosanitize and warnings.", "setting_key": "NEXUS_PARANOIA_MODE"},
     {"id": "packet_permission_dpi", "label": "Packet permission DPI", "module": "packet-permission", "default": true, "description": "Deep packet intent — harmful sections blocked, good flows pass.", "setting_key": null},
     {"id": "shutdown_guard", "label": "Shutdown guard", "module": "shutdown-guard", "default": true, "description": "Capture forensics when NEXUS is killed — bloody murder banner.", "setting_key": null},
     {"id": "github_update_lock", "label": "GitHub update lock", "module": "nexus-update-lock", "default": true, "description": "Prevent mid-update breaks when UPDATE NOW is clicked during install.", "setting_key": null},

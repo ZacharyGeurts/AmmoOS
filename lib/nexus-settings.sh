@@ -212,3 +212,28 @@ nexus_settings_json() {
   fi
   printf '}'
 }
+
+nexus_settings_apply_hostess7_armed_defaults() {
+  nexus_settings_apply_extreme_defaults || nexus_settings_apply_consumer_defaults || return 1
+  local wd="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/hostess7-weapons-defense.py"
+  if [[ -f "$wd" ]]; then
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      NEXUS_HOSTESS7_FULL_CONTROL=1 NEXUS_HOSTESS7_SYSTEM_CONTROL=1 \
+      pythong "$wd" turnover >/dev/null 2>&1 || true
+  fi
+  nexus_log "INFO" "nexus-settings" "Hostess 7 armed defaults — weapons and defenses turnover"
+}
+
+nexus_settings_apply_ammoos_defaults() {
+  local engine="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/lib/ammoos-theme-engine.py"
+  local doctrine="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}/data/ammoos-themes-doctrine.json"
+  local theme="nexus_c2"
+  if [[ -f "$doctrine" ]]; then
+    theme="$(pythong -c 'import json,sys; print(json.load(open(sys.argv[1])).get("default_ammoos_theme","nexus_c2"))' "$doctrine" 2>/dev/null || echo nexus_c2)"
+  fi
+  if [[ -f "$engine" ]]; then
+    NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+      pythong "$engine" apply <<<"{\"active_c2\":\"${theme}\"}" >/dev/null 2>&1 || true
+  fi
+  nexus_log "INFO" "nexus-settings" "ammoos theme defaults applied (${theme})"
+}

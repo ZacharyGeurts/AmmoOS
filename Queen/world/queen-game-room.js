@@ -359,7 +359,7 @@
     ctx.font = `bold ${Math.max(16, w / 32)}px Georgia, serif`;
     ctx.textAlign = "center";
     ctx.fillText(sys, w / 2, h / 2 - 8);
-    ctx.font = `${Math.max(11, w / 48)}px Inter, sans-serif`;
+    ctx.font = `${Math.max(11, w / 48)}px system-ui, sans-serif`;
     ctx.fillStyle = "#9a8b72";
     ctx.fillText("Queen Webbrowser · web canvas", w / 2, h / 2 + 16);
   }

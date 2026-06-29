@@ -1,1 +1,0 @@
-../../ZNetwork/scripts/znetwork-test-battery.sh

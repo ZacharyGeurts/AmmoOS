@@ -1,0 +1,25 @@
+{
+  "id": "exploring_d",
+  "title": "Exploring D",
+  "author": "Grok16 Field",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-EXPLORE-886a19608195",
+  "format": "h7c",
+  "format_version": 3,
+  "book_kind": "exploring",
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map",
+    "memory",
+    "compile"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/exploring_d/exploring_d.h7c",
+  "field_path": "library/dewey/000-computer-science/exploring_d/exploring_d.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "d",
+  "cover": "/world/assets/combinatronic/books/d.png",
+  "updated": "2026-06-29T13:22:15Z"
+}

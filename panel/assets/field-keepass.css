@@ -18,7 +18,7 @@ html, body {
   min-height: 100%;
   background: var(--fk-bg);
   color: var(--fk-text);
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: system-ui, sans-serif;
   font-size: var(--text-base);
 }
 

@@ -5,10 +5,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SG="$(cd "${ROOT}/.." && pwd)"
 QUEEN="${QUEEN_ROOT:-${ROOT}/Queen}"
-FINAL_EYE="${FINAL_EYE_ROOT:-${SG}/Final_Eye}"
-FINAL_EAR="${FINAL_EAR_ROOT:-${SG}/Final_Ear}"
-ZOCR="${ZOCR_ROOT:-${SG}/ZNEWOCR}"
-ZNEWOCR="${ZNEWOCR_ROOT:-${ZOCR}}"
+FINAL_EYE="${FINAL_EYE_ROOT:-${ROOT}/Final_Eye}"
+FINAL_EAR="${FINAL_EAR_ROOT:-${ROOT}/Final_Ear}"
 WORLD_REDATA="${WORLD_REDATA_ROOT:-${SG}/World_Redata}"
 _state_explicit=0
 [[ -n "${NEXUS_STATE_DIR:-}" ]] && _state_explicit=1
@@ -26,7 +24,7 @@ STATE="${NEXUS_STATE_DIR}"
 
 PY="${QUEEN}/scripts/queen-py"
 PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
-EYE_PORT="${ZOCR_PORT:-${FINAL_EYE_PORT:-9479}}"
+EYE_PORT="${FINAL_EYE_PORT:-9479}"
 WORLD_PORT="${QUEEN_WORLD_PORT:-9481}"
 
 export SG_ROOT="${SG}"
@@ -35,14 +33,12 @@ export NEXUS_FIELD_STANDALONE=1
 export QUEEN_ROOT="${QUEEN}"
 export FINAL_EYE_ROOT="${FINAL_EYE}"
 export FINAL_EAR_ROOT="${FINAL_EAR}"
-export ZOCR_ROOT="${ZOCR}"
-export ZNEWOCR_ROOT="${ZNEWOCR}"
 export WORLD_REDATA_ROOT="${WORLD_REDATA}"
 export HOSTESS7_ROOT="${HOSTESS7_ROOT:-${NEXUS_INSTALL_ROOT:-${SG}/NewLatest}/Hostess7}"
 # shellcheck source=/dev/null
 source "${ROOT}/lib/sg-paths.sh"
 sg_paths_export_defaults
-export GROK16_ROOT="${GROK16_ROOT:-${SG}/Grok16}"
+
 export NEXUS_FIELD_BROWSER_QUEEN=1
 export HOSTESS7_ANGEL_MANDATE=1
 export NEXUS_HOSTESS7_INTERNET=1
@@ -53,11 +49,12 @@ export QUEEN_SKIP_RTX_BOOT=1
 export NEXUS_EMBED_PANEL_IN_ENGINE=0
 export NEXUS_BOOT_C2_ONLY=1
 export NEXUS_QUEEN_LAYER_AUTOSTART=0
-export NEXUS_C2_DESKTOP_LAUNCH=1
+export NEXUS_C2_DESKTOP_LAUNCH="${NEXUS_C2_DESKTOP_LAUNCH:-0}"
 export NEXUS_C2_KIOSK="${NEXUS_C2_KIOSK:-0}"
 export AMMOOS_WINDOW_MODE="${AMMOOS_WINDOW_MODE:-1}"
-export QUEEN_BROWSER_START="http://127.0.0.1:${PANEL_PORT}/field"
-export QUEEN_BROWSER_HOME="http://127.0.0.1:${PANEL_PORT}/field"
+export QUEEN_BROWSER_URL="http://127.0.0.1:${WORLD_PORT}/world/browser.html"
+export QUEEN_BROWSER_START="http://127.0.0.1:${WORLD_PORT}/world/kilroy-home.html"
+export QUEEN_BROWSER_HOME="http://127.0.0.1:${WORLD_PORT}/world/kilroy-home.html"
 
 mkdir -p "${STATE}"
 
@@ -102,6 +99,10 @@ if [[ -f "${ROOT}/lib/nexus-vestigial-cleanup.sh" ]]; then
   source "${ROOT}/lib/nexus-vestigial-cleanup.sh"
   nexus_vestigial_cleanup_run 2>/dev/null || true
 fi
+# shellcheck source=/dev/null
+[[ -f "${ROOT}/lib/nexus-field-os.sh" ]] && source "${ROOT}/lib/nexus-field-os.sh"
+declare -f nexus_field_os_install_host_desktop >/dev/null 2>&1 && \
+  nexus_field_os_install_host_desktop 2>/dev/null || true
 if [[ -x "${ROOT}/scripts/integrate-znetwork.sh" ]]; then
   ZNETWORK_INTEGRATE_SKIP_BATTERY="${ZNETWORK_INTEGRATE_SKIP_BATTERY:-1}" \
     bash "${ROOT}/scripts/integrate-znetwork.sh" || true

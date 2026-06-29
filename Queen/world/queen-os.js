@@ -319,7 +319,11 @@
       pill.title = held ? "All gates held" : "Gates incomplete";
     }
     const zc = doc.zero_cost_security || {};
-    if (secStrip) {
+    if (secStrip && document.body?.dataset?.queenSurface === "browser") {
+      const zn = doc.znetwork?.mode || doc.field_net?.znetwork || "ACTIVE";
+      secStrip.textContent = `KILROY · ZNetwork ${zn} · Alt+Tab internal · Ctrl+Alt+Del rescue`;
+      secStrip.title = "ZNetwork hooks keyboard · Queen Browser is the shell · AmmoOS is a bookmark";
+    } else if (secStrip) {
       const slots = (zc.slots || []).map((s) => (typeof s === "string" ? s : s.id)).join("·");
       secStrip.textContent = `4-slot ${zc.runtime_tax ?? 0}% · ${slots || "TIME·MEMORY·THERMO·CONTEXT"}`;
       secStrip.title = zc.rule || "AMOURANTHRTX zero-cost security — Queen exceeds baseline";
@@ -399,6 +403,8 @@
     browser.doc = doc;
     renderTabs(doc);
     renderBookmarks(doc);
+    globalThis.QueenBookmarksFlyout?.render?.(doc);
+    globalThis.QueenBookmarksBar?.render?.(doc);
     renderGateChrome(doc);
     const active = (doc.tabs || []).find((t) => t.active) || doc.tabs?.[0];
     if (active) loadFrame(active.url);
@@ -641,6 +647,29 @@
     return Promise.resolve({ ok: false, error: "browser_unavailable" });
   }
 
+  let _terminalScriptPromise = null;
+
+  function ensureTerminalReady() {
+    if (globalThis.QueenGnuTerminal?.init) return Promise.resolve();
+    if (_terminalScriptPromise) return _terminalScriptPromise;
+    _terminalScriptPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[src*="queen-gnu-terminal.js"]');
+      if (existing) {
+        existing.addEventListener("load", () => resolve(), { once: true });
+        existing.addEventListener("error", reject, { once: true });
+        if (globalThis.QueenGnuTerminal) resolve();
+        return;
+      }
+      const s = document.createElement("script");
+      s.src = "queen-gnu-terminal.js";
+      s.defer = true;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error("queen-gnu-terminal.js load failed"));
+      document.body.appendChild(s);
+    });
+    return _terminalScriptPromise;
+  }
+
   function setDockTab(name) {
     const isBrowser = name === "browser";
     const isTheater = name === "gameroom";
@@ -663,8 +692,8 @@
     if (isTheater && globalThis.QueenGameRoom?.refresh) {
       globalThis.QueenGameRoom.refresh();
     }
-    if (isTerminal && globalThis.QueenGnuTerminal?.init) {
-      void globalThis.QueenGnuTerminal.init();
+    if (isTerminal) {
+      void ensureTerminalReady().then(() => globalThis.QueenGnuTerminal?.init?.());
     }
   }
 

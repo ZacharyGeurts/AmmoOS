@@ -1,2 +1,1 @@
-{"ok": true, "url": "http://127.0.0.1:9488/", "state_dir": "/home/default/Desktop/SG/NewLatest/.nexus-state", "install_root": "/home/default/Desktop/SG/NewLatest"}
-127.0.0.1 - [27/Jun/2026 21:41:34] "GET /api/health HTTP/1.1" 200 -
+/home/default/Desktop/SG/NewLatest/PythonG/bin/pythong: line 5: /home/default/Desktop/SG/GrokPy/bin/gpy-16: No such file or directory

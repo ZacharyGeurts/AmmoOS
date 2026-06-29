@@ -2,7 +2,8 @@
   "schema": "nexus-g16-integrate-doctrine/v1",
   "title": "Grok16 integrated into NewLatest \u2014 optimize, balance, recompile",
   "motto": "Grok16 lives inside NewLatest \u2014 combinatronics balanced before every compile; Queen browser rides the ideal profile.",
-  "grok16_ref": "SG/Grok16",
+  "grok16_ref": "NewLatest/Grok16",
+  "distro_pairing": "5.1.0",
   "module": "lib/nexus-g16-recompile.py",
   "bridge": "lib/nexus-g16-bridge.py",
   "combinatronics": {

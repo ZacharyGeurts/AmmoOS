@@ -124,8 +124,8 @@
   "chip_count": 115,
   "kind": "soc",
   "family": "integration",
-  "combinatorics_total": 974,
+  "combinatorics_total": 978,
   "cover": "/world/assets/combinatronic/chips/thumbs/cyrix_geode_gx1.png",
   "thumb": "/world/assets/combinatronic/chips/thumbs/cyrix_geode_gx1.png",
-  "updated": "2026-06-27T22:53:22Z"
+  "updated": "2026-06-29T14:48:47Z"
 }

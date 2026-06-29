@@ -125,7 +125,51 @@ def _global_truth_posture() -> dict[str, Any]:
 
 
 def _grok16_root() -> Path:
-    return Path(os.environ.get("GROK16_ROOT", str(SG / "Grok16")))
+    _SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+    if str(_SG_PATHS_LIB) not in sys.path:
+        sys.path.insert(0, str(_SG_PATHS_LIB))
+    from sg_paths import grok16_root
+    return grok16_root()
+
+
+_CHAMBER_EXEMPT_RUNTIMES = frozenset({
+    "emulator", "cmake", "make", "executable", "elf", "native", "wasm", "shell",
+})
+
+
+def _secure_runtimes() -> frozenset[str]:
+    path = _grok16_root() / "data" / "grok16-languages.json"
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        langs = set((doc.get("languages") or {}).keys())
+        langs.update({"shell", "cobol_copy"})
+        return frozenset(langs - _CHAMBER_EXEMPT_RUNTIMES)
+    except (OSError, json.JSONDecodeError):
+        return frozenset({
+            "java", "kotlin", "javascript", "typescript", "pascal", "turbo_pascal",
+            "delphi", "fortran", "cobol", "cobol_copy", "ruby", "perl", "php", "lua",
+        })
+
+
+def _secure_chamber_mod():
+    import importlib.util
+    nexus = Path(__file__).resolve().parents[2]
+    sec_py = nexus / "lib" / "g16-secure-chamber.py"
+    if not sec_py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("g16_secure_chamber_queen", sec_py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _secure_chamber_run(path: str, *, lang: str = "") -> dict[str, Any]:
+    mod = _secure_chamber_mod()
+    if not mod or not hasattr(mod, "run_path"):
+        return {"ok": False, "error": "secure_chamber_missing"}
+    return mod.run_path(path, lang=lang)
 
 
 def _iron_plate_mod():
@@ -1078,11 +1122,22 @@ def resolve_organized_runner(
             "compile_ms": 0,
         }
 
+    runtime = _runtime_for_entry(entry)
+    if policy.get(runtime) == "chamber" or runtime in _secure_runtimes():
+        return {
+            "ok": True,
+            "plane_kind": "secure_chamber",
+            "runner": str(entry_path),
+            "runtime": runtime,
+            "compile_ms": 0,
+            "organized_field": True,
+        }
+
     return {
         "ok": True,
         "plane_kind": "interpreter",
         "runner": str(entry_path),
-        "runtime": _runtime_for_entry(entry),
+        "runtime": runtime,
         "compile_ms": 0,
     }
 
@@ -1147,6 +1202,16 @@ def run_organized_field(
             "plane": plane,
             "launch_path": launch_path,
         }
+
+    if plane.get("plane_kind") == "secure_chamber":
+        out = _secure_chamber_run(str(plane["runner"]), lang=str(plane.get("runtime") or ""))
+        out["launch_mode"] = "organized_field"
+        out["uncompiled"] = True
+        out["organized_field"] = fields
+        out["plane"] = plane
+        out["launch_path"] = launch_path
+        out["cwd"] = str(root)
+        return out
 
     if plane.get("plane_kind") == "binary":
         cmd = [str(plane["runner"])]
@@ -1425,6 +1490,15 @@ def run_chamber(
         emu["cwd"] = str(root)
         emu["message"] = emu.get("message") or f"Emulator routed to Game Room — {entry.name}"
         return emu
+
+    if runtime in _secure_runtimes():
+        out = _secure_chamber_run(str(entry), lang=runtime)
+        out["launch_mode"] = "chamber"
+        out["manifest"] = {k: v for k, v in manifest.items() if not k.startswith("_")}
+        out["launch_path"] = launch_path
+        out["cwd"] = str(root)
+        out["runtime"] = runtime
+        return out
 
     cmd = _run_cmd(runtime, entry, root)
     if args:

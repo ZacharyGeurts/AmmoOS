@@ -788,6 +788,20 @@ def _growth_prompt_block() -> str:
     return ""
 
 
+def _ruling_prompt_block() -> str:
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7ruler", INSTALL / "lib" / "hostess7-brain-ruler.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.ruling_prompt_block()
+    except Exception:
+        pass
+    return ""
+
+
 def _angel_mandate_block() -> str:
     try:
         import importlib.util
@@ -916,8 +930,10 @@ def _compose_prompt(user_message: str, github: dict[str, Any], panel: dict[str, 
     growth = _growth_prompt_block()
     neural = _neural_prompt_block()
     master = _master_prompt_block()
+    ruling = _ruling_prompt_block()
     prompt = (
         f"{_angel_mandate_block()}\n"
+        + (f"{ruling}\n" if ruling else "")
         + (f"{master}\n" if master else "")
         + (f"{neural}\n" if neural else "")
         + (f"{growth}\n" if growth else "")

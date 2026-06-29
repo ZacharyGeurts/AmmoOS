@@ -12,7 +12,9 @@ from typing import Any, Callable
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
 SG = Path(os.environ.get("SG_ROOT", INSTALL.parent.parent))
-GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 DOCTRINE = INSTALL / "data" / "iron-plate-organize-doctrine.json"
 PANEL = STATE / "iron-plate-organize-panel.json"
 RUNTIME = STATE / "iron-plate-organize-runtime.json"
@@ -149,6 +151,13 @@ def _sort_rows(
     else:
         alg = alg or "dirs_first"
 
+    acc = _import_py(INSTALL / "lib" / "ironclad-access.py", "iron_organize_acc")
+    if acc and hasattr(acc, "sort_rows"):
+        try:
+            out, meta = acc.sort_rows(rows, context=context, n=n or len(rows))
+            return out, meta
+        except Exception:
+            pass
     if alg == "composite_bsp":
         out = _composite_bsp_sort(rows)
         meta = {"algorithm": alg, "context": context, "power_sort": pick or None, "bsp_partitions": True}

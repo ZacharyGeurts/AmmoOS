@@ -14,6 +14,30 @@
     "algorithm": "composite_bsp",
     "statement": "field_one_best_ever — THE sort for every chip in combinatorics"
   },
+  "registry_index": {
+    "algorithm": "family_then_label",
+    "statement": "field_one_best_ever — library/registry/catalog index via Ironclad singleton"
+  },
+  "api_registry": {
+    "algorithm": "dirs_first",
+    "statement": "field_one_best_ever — secure API route table"
+  },
+  "chip_catalog": {
+    "algorithm": "composite_bsp",
+    "statement": "field_one_best_ever — CHIPS catalog search results"
+  },
+  "catalog_index": {
+    "algorithm": "family_then_label",
+    "statement": "field_one_best_ever — library card catalog index"
+  },
+  "card_catalog": {
+    "algorithm": "call_number_then_title",
+    "statement": "field_one_best_ever — Dewey call number primary sort"
+  },
+  "bookmark_flyout": {
+    "algorithm": "recency_then_priority",
+    "statement": "field_one_best_ever — bookmarks hub MRU under ZNetwork"
+  },
   "integrations": {
     "power_sort": "Grok16/lib/field-power-sort.py",
     "iron_plate_organize": "lib/iron-plate-organize.py",

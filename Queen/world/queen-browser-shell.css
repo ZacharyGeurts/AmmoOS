@@ -498,7 +498,7 @@ body.qw-browser-shell .qb-viewport .qb-tab-panes {
   grid-template-rows: auto 1fr;
   background: #010302;
   color: #e8f2ea;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: system-ui, sans-serif;
 }
 
 .qbp-chrome {

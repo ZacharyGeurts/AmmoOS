@@ -1,4 +1,4 @@
-/* Field Startbar — OS-mirrored taskbar overlay (bottom-left start, clock right) */
+/* AmmoOS Field Startbar — bottom taskbar, Ironclad search, Monster rescue · Grok16 5.1.0 */
 
 .fsb-root {
   --fsb-h: 44px;
@@ -11,7 +11,7 @@
   --fsb-active: rgba(59, 130, 246, 0.35);
   --fsb-menu-bg: rgba(24, 28, 40, 0.98);
   --fsb-radius: 8px;
-  --fsb-font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --fsb-font: system-ui, sans-serif;
   position: fixed;
   left: 0;
   right: 0;
@@ -34,25 +34,24 @@
   touch-action: manipulation;
 }
 
-html[data-os-theme="windows11"] .fsb-root,
-html[data-os-theme="windows10"] .fsb-root {
+html[data-os-theme="ammo-c2"] .fsb-root {
   --fsb-bg: rgba(32, 32, 40, 0.88);
   --fsb-accent: #60cdff;
   --fsb-radius: 0;
   border-radius: 0;
 }
 
-html[data-os-theme="gnome"] .fsb-root {
+html[data-os-theme="ammo-field"] .fsb-root {
   --fsb-bg: rgba(36, 36, 44, 0.94);
   --fsb-accent: #3584e4;
 }
 
-html[data-os-theme="kde"] .fsb-root {
+html[data-os-theme="ammo-deep"] .fsb-root {
   --fsb-bg: rgba(29, 32, 40, 0.95);
   --fsb-accent: #3daee9;
 }
 
-html[data-os-theme="macos"] .fsb-root {
+html[data-os-theme="ammo-rose"] .fsb-root {
   --fsb-h: 52px;
   --fsb-bg: rgba(40, 40, 48, 0.72);
   --fsb-radius: 14px;
@@ -354,6 +353,21 @@ html[data-os-theme="macos"] .fsb-root {
   color: rgba(62, 207, 142, 0.95);
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+.fsb-cad {
+  border: 1px solid rgba(248, 81, 73, 0.35);
+  background: rgba(248, 81, 73, 0.1);
+  color: #f85149;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+}
+.fsb-cad:hover {
+  background: rgba(248, 81, 73, 0.22);
+  color: #ffb4b0;
 }
 
 .fsb-desktop-tray {

@@ -14,7 +14,9 @@ from typing import Any
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 SG = Path(os.environ.get("SG_ROOT", str(INSTALL.parent.parent if INSTALL.name == "nexus-shield" else INSTALL.parent)))
-GROK16 = Path(os.environ.get("GROK16_ROOT", str(SG / "Grok16")))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 PANEL = STATE / "field-combinatorics-comb-panel.json"
 LEDGER = STATE / "field-combinatorics-comb-ledger.jsonl"
 LEDGER_MAX = 2000
@@ -81,7 +83,7 @@ def _tail_ledger(limit: int = CHART_TAIL) -> list[dict[str, Any]]:
 
 
 def _import_combinatorics() -> Any | None:
-    for path in (GROK16 / "lib" / "field_combinatorics.py", SG / "Grok16" / "lib" / "field_combinatorics.py"):
+    for path in (GROK16 / "lib" / "field_combinatorics.py"):
         if not path.is_file():
             continue
         spec = importlib.util.spec_from_file_location("field_combinatorics_comb", path)

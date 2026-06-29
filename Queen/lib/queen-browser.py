@@ -58,8 +58,15 @@ def _panel_alive(port: int | None = None) -> bool:
         return False
 
 
+def _kilroy_home() -> str:
+    return os.environ.get(
+        "QUEEN_BROWSER_KILROY_HOME",
+        f"{_world_base()}/world/kilroy-home.html",
+    )
+
+
 def _queen_field_home() -> str:
-    return f"{_world_base()}/world/queen-field-home.html"
+    return _kilroy_home()
 
 
 def _desktop_page() -> str:
@@ -70,20 +77,21 @@ def _desktop_page() -> str:
 
 
 def _sovereign_start_url() -> str:
-    return _desktop_page()
+    return _kilroy_home()
 
 
 def _start_page() -> str:
     override = os.environ.get("QUEEN_BROWSER_START", "").strip()
     if override:
         return override
-    return _desktop_page()
+    return _kilroy_home()
 
 
 _RETROGRADE_FRAGMENTS = (
     "queen-start.html",
     "/world/index.html",
     "queen-field-home.html",
+    "queen-desktop.html",
     "/field",
     "9477/field",
 )
@@ -116,7 +124,7 @@ def _default_home() -> str:
     override = os.environ.get("QUEEN_BROWSER_HOME", "").strip()
     if override:
         return override
-    return _desktop_page()
+    return _kilroy_home()
 
 
 DEFAULT_HOME = _default_home()
@@ -382,21 +390,7 @@ def _bookmark_trees(doc: dict[str, Any]) -> list[dict[str, Any]]:
     if trees:
         return trees
     default = _default_bookmark_trees()
-    if default:
-        return default
-    imported = doc.get("imported_bookmarks") or []
-    if not imported:
-        return []
-    return [{
-        "id": "imported-flat",
-        "kind": "folder",
-        "title": "Imported bookmarks",
-        "source": "queen",
-        "children": [
-            {"id": b.get("id"), "kind": "bookmark", "title": b.get("title"), "url": b.get("url"), "source": b.get("source")}
-            for b in imported if isinstance(b, dict) and b.get("url")
-        ],
-    }]
+    return default or []
 
 
 def _bookmark_bar(doc: dict[str, Any], *, query: str = "") -> list[dict[str, Any]]:
@@ -409,7 +403,7 @@ def _bookmark_bar(doc: dict[str, Any], *, query: str = "") -> list[dict[str, Any
         elif hasattr(tm, "flatten_bar"):
             rows = tm.flatten_bar(trees)
     else:
-        for bm in doc.get("imported_bookmarks") or []:
+        for bm in _merged_bookmarks(doc):
             if isinstance(bm, dict) and bm.get("url"):
                 rows.append({**bm, "kind": "bookmark"})
     rows = _enrich_tooltips(rows)
@@ -434,14 +428,19 @@ def _merged_bookmarks(doc: dict[str, Any]) -> list[dict[str, Any]]:
             row["priority"] = _recency_priority(row.get("last_visited_at"))
             out.append(row)
             seen.add(key)
-    for bm in doc.get("imported_bookmarks") or []:
-        if not isinstance(bm, dict):
+    path = QUEEN / "data" / "queen-localhost-bookmarks.json"
+    localhost = _load_json(path, {})
+    for bm in localhost.get("items") or []:
+        if not isinstance(bm, dict) or not bm.get("url"):
+            continue
+        if not _is_loopback_url(str(bm.get("url") or "")):
             continue
         key = _visit_key(bm.get("url") or "")
         if key and key not in seen:
             row = dict(bm)
             row["last_visited_at"] = _bookmark_last_visited(doc, row)
             row["priority"] = _recency_priority(row.get("last_visited_at"))
+            row["lane"] = "localhost"
             out.append(row)
             seen.add(key)
     sorted_rows = _sort_bookmarks(out)
@@ -488,6 +487,8 @@ def _final_mouth_manager_page() -> str:
 
 
 BOOKMARKS = [
+    {"id": "kilroy-home", "title": "KILROY Home", "url": _kilroy_home()},
+    {"id": "ammoos", "title": "AmmoOS", "url": _nexus_field_url(), "hint": "Fullscreen field desktop · bookmark only"},
     {"id": "nexus", "title": "NEXUS Field", "url": _nexus_field_url()},
     {"id": "thermal-manager", "title": "Thermal Manager", "url": _thermal_manager_page()},
     {"id": "final-ear-manager", "title": "Final Ear", "url": _final_ear_manager_page()},
@@ -495,14 +496,14 @@ BOOKMARKS = [
     {"id": "queen", "title": "Queen", "url": f"{_world_base()}/world/browser.html"},
     {"id": "queen-code", "title": "Queen Code", "url": _code_page()},
     {"id": "view", "title": "View", "url": _files_page()},
-    {"id": "queen-home", "title": "Queen", "url": _queen_field_home()},
-    {"id": "forge", "title": "Forge", "url": f"http://127.0.0.1:{os.environ.get('QUEEN_WORLD_PORT', '9481')}/gui/queen-build-deck.html"},
-    {"id": "hostess", "title": "Hostess 7", "url": "queen://hostess"},
-    {"id": "kilroy", "title": "KILROY", "url": "queen://kilroy"},
-    {"id": "eyeball", "title": "Final_Eye", "url": "queen://eyeball"},
-    {"id": "chips", "title": "CHIPS", "url": "queen://chips"},
-    {"id": "cores", "title": "Cores", "url": "queen://cores"},
-    {"id": "gameroom", "title": "Game Room", "url": "queen://gameroom"},
+    {"id": "queen-home", "title": "KILROY", "url": _kilroy_home()},
+    {"id": "forge", "title": "Forge", "url": f"{_world_base()}/gui/queen-build-deck.html"},
+    {"id": "hostess", "title": "Hostess 7", "url": f"{_world_base()}/world/queen-hostess7-hub.html"},
+    {"id": "kilroy", "title": "KILROY", "url": f"{_world_base()}/world/index.html?os=1"},
+    {"id": "eyeball", "title": "Final_Eye", "url": f"{_world_base()}/world/queen-hostess7-hub.html#eye"},
+    {"id": "chips", "title": "CHIPS", "url": f"{_world_base()}/world/queen-chips-cores.html"},
+    {"id": "cores", "title": "Cores", "url": f"{_world_base()}/world/queen-chips-cores.html"},
+    {"id": "gameroom", "title": "Game Room", "url": f"{_world_base()}/world/queen-game-room.html"},
 ]
 
 
@@ -678,7 +679,7 @@ def _boot_hook_posture() -> dict[str, Any]:
 
 
 def default_state() -> dict[str, Any]:
-    start = _new_tab(_start_page(), pinned=True, role="desktop", title="Desktop")
+    start = _new_tab(_start_page(), pinned=True, role="desktop", title="KILROY")
     _apply_compat(start, start["url"], {"compat_mode": "modern"})
     files = _new_tab(_files_page(), pinned=True, role="files", title="Files")
     _apply_compat(files, files["url"], {"compat_mode": "modern"})
@@ -698,7 +699,7 @@ def _migrate_themed_ship(doc: dict[str, Any]) -> bool:
     changed = False
     ship = doc.get("theme_ship") or {}
     if doc.get("home") and _is_retrograde_url(str(doc["home"])):
-        doc["home"] = _desktop_page()
+        doc["home"] = _start_page()
         changed = True
     for tab in doc.get("tabs") or []:
         role = str(tab.get("role") or "")
@@ -710,8 +711,12 @@ def _migrate_themed_ship(doc: dict[str, Any]) -> bool:
             role = "desktop"
         if _is_retrograde_url(url) or (role == "desktop" and url != _start_page()):
             tab["url"] = _start_page() if role == "desktop" else _upgrade_retrograde_url(url, role=role)
+            if role == "desktop":
+                tab["title"] = "KILROY"
             hist = tab.get("history") or []
             tab["history"] = [_upgrade_retrograde_url(str(h), role=role) for h in hist]
+            if role == "desktop" and tab["history"]:
+                tab["history"][-1] = _start_page()
             tab["history_index"] = min(tab.get("history_index", 0), max(0, len(tab["history"]) - 1))
             changed = True
     target_ship = {
@@ -744,18 +749,30 @@ def _ensure_files_tab(doc: dict[str, Any]) -> bool:
     return True
 
 
+def _purge_external_bookmarks(doc: dict[str, Any]) -> bool:
+    """Operator bookmarks are localhost-only — drop imported host-browser rows."""
+    changed = False
+    if doc.pop("imported_bookmarks", None):
+        changed = True
+    if doc.pop("import_manifest", None):
+        changed = True
+    if doc.get("bookmark_trees"):
+        doc.pop("bookmark_trees", None)
+        changed = True
+    return changed
+
+
 def load_state() -> dict[str, Any]:
     doc = _load_json(STATE_FILE, {})
     if doc.get("schema") != "queen-browser/v1" or not doc.get("tabs"):
         doc = default_state()
         save_state(doc)
-        _maybe_auto_import()
         return doc
     migrated = _migrate_themed_ship(doc)
     files_added = _ensure_files_tab(doc)
-    if migrated or files_added:
+    purged = _purge_external_bookmarks(doc)
+    if migrated or files_added or purged:
         save_state(doc)
-    _maybe_auto_import()
     return doc
 
 

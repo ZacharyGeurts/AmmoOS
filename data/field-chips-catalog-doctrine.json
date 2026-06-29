@@ -23,13 +23,14 @@
     "bits", "mhz", "era", "status",
     "mfg_date_start", "mfg_date_end", "discontinued",
     "socket", "package", "pins", "country",
-    "combinatorics_leaf", "thumb_url", "thumb_available",
+    "combinatorics_leaf", "thumb_url", "thumb_available", "detail_image_url",
+    "imprint", "body_color", "path_pct", "band",
     "curated", "curator_note", "featured",
     "companion_role", "platform_stack", "always_with",
     "mame_device", "platforms", "note", "page", "chapter"
   ],
   "chapters": [
-    {"page": 1, "id": "ironclad_truth", "title": "Ironclad Truth", "layout": "index", "description": "Every die grounded on Ironclad — 920 combinatorics leaves off truth plate."},
+    {"page": 1, "id": "ironclad_truth", "title": "Ironclad Truth", "layout": "index", "description": "Every die grounded on Ironclad — 974 combinatorics leaves off truth plate."},
     {"page": 2, "id": "universal_chipset", "title": "Universal Chipset", "layout": "featured", "filter": {"source": "cpu_companion", "family": "cpu_companion_universal"}, "description": "North/south bridge glue, PIC, DMA, RTC, Super I/O — always-with-CPU companions."},
     {"page": 3, "id": "host_cpu", "title": "Host CPUs", "layout": "grid", "filter": {"kind": "host_cpu"}},
     {"page": 4, "id": "guest_cpu", "title": "Guest CPUs", "layout": "grid", "filter": {"kind": "guest_cpu"}},
@@ -56,7 +57,13 @@
     {"page": 25, "id": "glue", "title": "Glue Logic", "layout": "grid", "filter": {"kind": "glue"}},
     {"page": 26, "id": "pio", "title": "PIO", "layout": "grid", "filter": {"kind": "pio"}},
     {"page": 27, "id": "fdc", "title": "FDC", "layout": "grid", "filter": {"kind": "fdc"}},
-    {"page": 28, "id": "mmu", "title": "MMU", "layout": "grid", "filter": {"kind": "mmu"}}
+    {"page": 28, "id": "mmu", "title": "MMU", "layout": "grid", "filter": {"kind": "mmu"}},
+    {"page": 29, "id": "console_snes", "title": "SNES Platform Stack", "layout": "grid", "filter": {"platform_stack": "console_snes"}, "description": "Ricoh 5A22, dual PPU, SPC700 audio sub-system."},
+    {"page": 30, "id": "console_ps1", "title": "PlayStation Platform Stack", "layout": "grid", "filter": {"platform_stack": "console_ps1"}, "description": "R3000A, GPU, SPU, CD-ROM glue."},
+    {"page": 31, "id": "zhaoxin", "title": "Zhaoxin / VIA KX Stack", "layout": "grid", "filter": {"platform_stack": "pc_zhaoxin_kx"}, "description": "Centaur/VIA through KX-7000 domestic x86."},
+    {"page": 32, "id": "loongson", "title": "Loongson Platform Stack", "layout": "grid", "filter": {"platform_stack": "pc_loongson"}, "description": "MIPS through LoongArch 3A5000 + 7A1000 bridge."},
+    {"page": 33, "id": "elbrus", "title": "Elbrus MCST Stack", "layout": "grid", "filter": {"platform_stack": "pc_elbrus"}, "description": "E2K VLIW Elbrus-8CB server stack."},
+    {"page": 34, "id": "arm_soc", "title": "ARM SoC Stack", "layout": "grid", "filter": {"platform_stack": "arm_soc_template"}, "description": "Mobile SoC PMIC, GIC, DDRC companion template."}
   ],
   "api": {
     "catalog": "/api/chips/catalog",
@@ -75,5 +82,10 @@
     {"path": "Queen/lib/queen-world.py", "role": "api", "routes": ["/api/chips/catalog"]},
     {"path": "lib/field-panel-parallel.py", "role": "panel", "cmd": "chips_catalog"}
   ],
-  "cli": ["build", "publish", "search", "detail", "pages", "library-book", "autocomplete", "panel", "verify"]
+  "cli": ["build", "publish", "search", "detail", "pages", "library-book", "autocomplete", "panel", "verify"],
+  "ironclad": {
+    "secure_api": "/api/ironclad/secure-api",
+    "sort_context": "chip_catalog",
+    "singleton": true
+  }
 }

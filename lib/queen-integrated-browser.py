@@ -37,7 +37,10 @@ WORLD_PORT = int(os.environ.get("QUEEN_WORLD_PORT", "9481"))
 PANEL_PORT = int(os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477"))
 FIELD_GECKO = QUEEN / "field-gecko"
 LAUNCH_SH = FIELD_GECKO / "bin" / "launch-field-gecko.sh"
-DUCKDUCKGO_HOME = os.environ.get("QUEEN_BROWSER_HOME", "https://duckduckgo.com/").strip() or "https://duckduckgo.com/"
+KILROY_HOME = os.environ.get(
+    "QUEEN_BROWSER_HOME",
+    f"http://127.0.0.1:{WORLD_PORT}/world/kilroy-home.html",
+).strip() or f"http://127.0.0.1:{WORLD_PORT}/world/kilroy-home.html"
 
 
 def _world_base() -> str:
@@ -54,7 +57,10 @@ def _shell_url() -> str:
         return custom
     if os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "0").strip().lower() not in ("0", "false", "no", "off"):
         return _c2_field_url()
-    return DUCKDUCKGO_HOME
+    custom = os.environ.get("QUEEN_BROWSER_URL", "").strip()
+    if custom:
+        return custom
+    return f"{_world_base()}/world/browser.html"
 
 
 def _http_json(method: str, url: str, body: dict[str, Any] | None = None, *, timeout: float = 12.0) -> dict[str, Any]:
@@ -129,7 +135,7 @@ def startup_tab_specs() -> list[dict[str, Any]]:
         except (OSError, json.JSONDecodeError):
             pass
     return [
-        {"role": "browser", "title": "Queen Browser", "url": DUCKDUCKGO_HOME, "pinned": True},
+        {"role": "browser", "title": "KILROY", "url": KILROY_HOME, "pinned": True},
     ]
 
 
@@ -200,8 +206,8 @@ def launch_integrated_display() -> dict[str, Any]:
         "NEXUS_C2_KIOSK": os.environ.get("NEXUS_C2_KIOSK", "0"),
         "NEXUS_C2_LAUNCH_URL": os.environ.get("NEXUS_C2_LAUNCH_URL", c2_url),
         "QUEEN_BROWSER_URL": shell,
-        "QUEEN_BROWSER_START": os.environ.get("QUEEN_BROWSER_START", DUCKDUCKGO_HOME),
-        "QUEEN_BROWSER_HOME": os.environ.get("QUEEN_BROWSER_HOME", DUCKDUCKGO_HOME),
+        "QUEEN_BROWSER_START": os.environ.get("QUEEN_BROWSER_START", KILROY_HOME),
+        "QUEEN_BROWSER_HOME": os.environ.get("QUEEN_BROWSER_HOME", KILROY_HOME),
     }
     try:
         subprocess.Popen(

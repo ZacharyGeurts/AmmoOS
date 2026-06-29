@@ -18,7 +18,8 @@ SHELL_DOCK = INSTALL / "data" / "field-shell-dock-doctrine.json"
 SETTINGS = STATE / "field-gpu-control-settings.json"
 PANEL = STATE / "field-gpu-control-panel.json"
 QUEEN_GPU = SG / "NewLatest" / "Queen" / "data" / "gpu-probe.json"
-RTX_GATE = SG / "Grok16" / "forge" / "rtx_gate.py"
+from sg_paths import grok16_root as _grok16_root
+RTX_GATE = _grok16_root() / "forge" / "rtx_gate.py"
 
 VENDOR_MAP = {
     "10de": "nvidia",
@@ -316,7 +317,7 @@ def _rtx_status() -> dict[str, Any]:
     try:
         proc = subprocess.run(
             [os.environ.get("PYTHON", "pythong"), str(RTX_GATE), "json"],
-            capture_output=True, text=True, timeout=12, cwd=str(SG / "Grok16"),
+            capture_output=True, text=True, timeout=12, cwd=str(_grok16_root()),
         )
         if proc.returncode == 0 and proc.stdout.strip():
             return json.loads(proc.stdout)

@@ -110,84 +110,18 @@
 
   function applyTokens(theme) {
     if (!theme?.tokens) return;
+    if (window.AmmoosThemes?.applyQueenTokens) {
+      window.AmmoosThemes.applyQueenTokens(theme);
+      return;
+    }
     const root = document.documentElement;
     const c = theme.tokens.colors || {};
-    const t = theme.tokens.typography || {};
-    const w = theme.tokens.widgets || {};
-    const ch = theme.tokens.chrome || {};
-
-    const qm = {
-      bg: c.bg,
-      surface: c.surface,
-      elevated: c.elevated,
-      border: c.border,
-      text: c.text,
-      dim: c.dim,
-      accent: c.accent,
-      rose: c.rose,
-      gold: c.gold,
-      ok: c.ok,
-      warn: c.warn,
-      danger: c.danger,
-      radius: w.radius,
-      shadow: w.shadow,
-      font: t.ui_font,
-      mono: t.mono_font,
-    };
-    for (const [k, v] of Object.entries(qm)) {
-      if (v != null) root.style.setProperty(`--qm-${k.replace(/_/g, "-")}`, String(v));
-    }
-
-    const world = {
-      bg: c.bg || c.void,
-      bg2: c.surface,
-      void: c.void || c.bg,
-      panel: c.panel || c.surface,
-      border: c.border,
-      phi: c.phi || c.accent,
-      emerald: c.emerald || c.ok,
-      thermo: c.thermo || c.warn,
-      flow: c.flow || c.accent,
-      gold: c.gold,
-      aqua: c.aqua || c.accent,
-      rose: c.rose,
-      "rose-soft": c.rose_soft || c.rose,
-      accent: c.accent,
-      text: c.text,
-      dim: c.dim,
-      muted: c.dim,
-      ok: c.ok,
-      warn: c.warn,
-      radius: w.radius,
-      font: t.ui_font,
-      mono: t.mono_font,
-    };
-    for (const [k, v] of Object.entries(world)) {
-      if (v != null) root.style.setProperty(`--${k}`, String(v));
-    }
-
     for (const [k, v] of Object.entries(c)) {
       if (v != null) root.style.setProperty(`--qb-${k.replace(/_/g, "-")}`, String(v));
     }
-
-    if (w.btn_radius) root.style.setProperty("--qs-btn-radius", w.btn_radius);
-    if (w.btn_padding) root.style.setProperty("--qs-btn-padding", w.btn_padding);
-    if (w.input_radius) root.style.setProperty("--qs-input-radius", w.input_radius);
-    if (w.pill_radius) root.style.setProperty("--qs-pill-radius", w.pill_radius);
-    if (w.dropdown_radius) root.style.setProperty("--qs-dropdown-radius", w.dropdown_radius);
-    if (ch.tab_height) root.style.setProperty("--qs-tab-height", ch.tab_height);
-    if (ch.url_bar_height) root.style.setProperty("--qs-url-height", ch.url_bar_height);
-    if (ch.corner_radius) root.style.setProperty("--qs-chrome-radius", ch.corner_radius);
-
-    if (t.ui_font) {
-      document.documentElement.style.fontFamily = t.ui_font;
-      if (document.body) document.body.style.fontFamily = t.ui_font;
-    }
-    if (t.base_size) document.documentElement.style.fontSize = t.base_size;
-    if (t.line_height && document.body) document.body.style.lineHeight = t.line_height;
-
     document.documentElement.dataset.queenTheme = theme.id;
     if (document.body) document.body.dataset.queenTheme = theme.id;
+    document.dispatchEvent(new CustomEvent("queen-styles-changed", { detail: { id: theme.id } }));
   }
 
   function applyTheme(id) {
@@ -305,7 +239,7 @@
     el.innerHTML = [
       '<header class="qs-head">',
       "<h2>Styles</h2>",
-      '<p class="qs-muted">Colors · typography · widgets · dropdowns — every Queen surface.</p>',
+      '<p class="qs-muted">Quick flyout — <a href="/control-panel?tab=themes" class="qs-index-link">Queen Settings → Themes</a> is the full index.</p>',
       '<div class="qs-theme-bar">',
       '<select id="qs-theme-select" class="qs-theme-select" aria-label="Theme"></select>',
       '<button type="button" id="qs-theme-add" class="qs-theme-add" title="Add custom from current theme">+</button>',

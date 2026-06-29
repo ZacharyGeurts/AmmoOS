@@ -42,7 +42,7 @@ def _g16_posture() -> dict[str, Any]:
     tc = _load(G16_TOOLCHAIN, {})
     profile = tc.get("profiles") or {}
     field_opt = profile.get("field_opt") or {}
-    g16_bin = Path(tc.get("prefix") or SG / "Grok16") / "bin" / "g16"
+    g16_bin = Path(tc.get("prefix") or grok16_root()) / "bin" / "g16"
     ready = g16_bin.is_file() and os.access(g16_bin, os.X_OK)
     build_script = QUEEN / "scripts" / "g16-build.sh"
     status_doc: dict[str, Any] = {}
@@ -54,7 +54,7 @@ def _g16_posture() -> dict[str, Any]:
                 text=True,
                 timeout=20,
                 cwd=str(QUEEN),
-                env={**os.environ, "GROK16_ROOT": str(tc.get("root") or SG / "Grok16")},
+                env={**os.environ, "GROK16_ROOT": str(tc.get("root") or grok16_root())},
             )
             raw = proc.stdout or ""
             candidates: list[dict[str, Any]] = []

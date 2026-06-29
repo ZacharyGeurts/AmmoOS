@@ -110,11 +110,11 @@ if (!canvas) {
     const c = document.createElement("canvas");
     const ctx = c.getContext("2d");
     const label = String(text || "").slice(0, 20);
-    ctx.font = "bold 22px Segoe UI, system-ui, sans-serif";
+    ctx.font = "bold 22px system-ui, sans-serif";
     const tw = ctx.measureText(label).width;
     c.width = Math.ceil(tw + 16);
     c.height = 34;
-    ctx.font = "bold 22px Segoe UI, system-ui, sans-serif";
+    ctx.font = "bold 22px system-ui, sans-serif";
     ctx.fillStyle = "rgba(10,15,24,0.75)";
     ctx.fillRect(0, 0, c.width, c.height);
     ctx.fillStyle = "#e8f2ff";

@@ -22,6 +22,30 @@ from forge.tools import CORE_ORDER, HOSTESS_PIPELINE_ORDER, SOVEREIGN_FIELD_ORDE
 QUEEN = _LIB.parent
 
 
+def _aml_build_enabled() -> bool:
+    return os.environ.get("AML_BUILD", "1").strip().lower() not in ("0", "false", "no", "off")
+
+
+def _run_via_ammolang(script: str) -> dict[str, Any] | None:
+    if not _aml_build_enabled():
+        return None
+    build_py = QUEEN.parent / "lib" / "field-ammolang-build.py"
+    if not build_py.is_file():
+        return None
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("aml_build_forge", build_py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if not hasattr(mod, "execute_build_script"):
+        return None
+    path = QUEEN.parent / "library" / "dewey" / "000-computer-science" / "ammolang" / script
+    if not path.is_file():
+        return None
+    return mod.execute_build_script(path, live=True)
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -177,7 +201,15 @@ def run_hostess_pipeline(*, clear_log: bool = True) -> dict[str, Any]:
 
 
 def run_all_core(*, clear_log: bool = True) -> dict[str, Any]:
-    """Field Technology optimized core — gcc_build optional, vendors on QUEEN_VENDORS=1."""
+    """Field Technology optimized core — AmmoLang sovereign when AML_BUILD=1."""
+    aml = _run_via_ammolang("queen_forge.aml")
+    if aml is not None:
+        return {
+            "ok": bool(aml.get("ok")),
+            "pipeline": "ammolang_queen_forge",
+            "ammolang": aml,
+            "status": forge_status(),
+        }
     ctx = ForgeContext.from_env()
     order = field_tech_plan(ctx)
     results: list[dict[str, Any]] = []
@@ -268,6 +300,10 @@ def main() -> int:
         out = run_all_core()
         print(json.dumps(out, ensure_ascii=False))
         return 0 if out.get("ok") else 1
+    if cmd in ("aml-build", "aml_build", "sovereign"):
+        aml = _run_via_ammolang("sovereign_build.aml")
+        print(json.dumps(aml or {"ok": False, "error": "ammolang_build_unavailable"}, ensure_ascii=False))
+        return 0 if aml and aml.get("ok") else 1
     if cmd in ("field-tech", "field_tech"):
         out = run_field_tech()
         print(json.dumps(out, ensure_ascii=False))

@@ -16,7 +16,7 @@
   --ti-danger: #f43f5e;
   --ti-radius: 20px;
   --ti-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --ti-font: "Inter", "Segoe UI", system-ui, sans-serif;
+  --ti-font: system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }

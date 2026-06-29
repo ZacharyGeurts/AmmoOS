@@ -108,11 +108,24 @@ def build_field_brain(*, profile: str | None = None) -> dict[str, Any]:
             "source": "github/data/field-brain",
         }
 
+    ruling: dict[str, Any] = {}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7ruler", INSTALL / "lib" / "hostess7-brain-ruler.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            ruling = mod.build_panel(write=False)
+    except Exception:
+        ruling = _read_json(STATE / "hostess7-brain-ruler-panel.json")
+
     return {
         "schema": "field-brain/v1",
         "ok": True,
         "field_root": str(root),
         "hostess7_root": str(HOSTESS7_ROOT),
+        "brain_ruler": ruling,
         "superintelligence": superintel,
         "sdf_redata": sdf_redata,
         "inventory": inventory,

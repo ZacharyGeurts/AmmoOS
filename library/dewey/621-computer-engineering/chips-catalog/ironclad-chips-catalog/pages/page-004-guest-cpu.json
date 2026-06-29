@@ -3,7 +3,7 @@
   "page_num": 4,
   "slug": "guest-cpu",
   "title": "Guest CPUs",
-  "body": "# Guest CPUs\n\n**Kind:** `guest_cpu` · **Count:** 182 · **Family:** emulation\n\nThis page lists every `guest_cpu` die in the Ironclad CHIPS combinatorics catalog. Each id is a combinatorics leaf off the truth plate (`ironclad:chips:3`), merged from seed, Queen, MAME, CPU library, world seeds, and companion populate.\n\n## Catalog ids\n\nThe `chip_ids` array on this page holds all **182** entries for this kind, sorted alphabetically. Open Queen CHIPS Combinatronic or run `field-ironclad-chips-combinatorics.py combinatronic` for path percents, bands, and imprint renders.\n\n*Regenerated from live combinatorics · facet ironclad_chips*",
+  "body": "# Guest CPUs\n\n**Kind:** `guest_cpu` · **Count:** 181 · **Family:** emulation\n\nThis page lists every `guest_cpu` die in the Ironclad CHIPS combinatorics catalog. Each id is a combinatorics leaf off the truth plate (`ironclad:chips:3`), merged from seed, Queen, MAME, CPU library, world seeds, and companion populate.\n\n## Catalog ids\n\nThe `chip_ids` array on this page holds all **181** entries for this kind, sorted alphabetically. Open Queen CHIPS Combinatronic or run `field-ironclad-chips-combinatorics.py combinatronic` for path percents, bands, and imprint renders.\n\n*Regenerated from live combinatorics · facet ironclad_chips*",
   "chip_ids": [
     "a2600_6507",
     "amiga_68000",
@@ -160,7 +160,6 @@
     "system_amiga",
     "system_apple2",
     "system_c64",
-    "system_cinema",
     "system_coco",
     "system_coco2",
     "system_coco3",
@@ -188,11 +187,11 @@
     "us_fairchild_f8",
     "wdc_65c02"
   ],
-  "chip_count": 182,
+  "chip_count": 181,
   "kind": "guest_cpu",
   "family": "emulation",
-  "combinatorics_total": 974,
+  "combinatorics_total": 978,
   "cover": "/world/assets/combinatronic/chips/thumbs/coco_mc6809e.png",
   "thumb": "/world/assets/combinatronic/chips/thumbs/coco_mc6809e.png",
-  "updated": "2026-06-27T22:53:22Z"
+  "updated": "2026-06-29T14:48:47Z"
 }

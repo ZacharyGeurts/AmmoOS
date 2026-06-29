@@ -24,6 +24,15 @@
       "path": "brain/library/atlas/",
       "classifier": "h7-library-atlas.build_atlas",
       "dispense": "h7-library-bridge.search_library"
+    },
+    {
+      "id": "field_card_catalog",
+      "name": "Field Card Catalog",
+      "path": "library/dewey/020-library-science/card-catalog/",
+      "classifier": "field-card-catalog.detect_cards",
+      "dispense": "field-card-catalog.search_cards",
+      "sort": "field-card-catalog._sort_cards",
+      "ui": "/panel/field-card-catalog.html"
     }
   ],
   "librarians": [
@@ -33,7 +42,7 @@
       "role": "lead",
       "dewey_ranges": ["000-999"],
       "specialty": "EIN/ISBN bibliography, cover SDF, field-drive fingerprint",
-      "learns": ["catalog_build", "classify", "upload", "dispense_page", "search", "book_knowledge", "issue_reader"]
+      "learns": ["catalog_build", "card_catalog", "classify", "upload", "dispense_page", "search", "book_knowledge", "issue_reader", "checkout", "checkin"]
     },
     {
       "id": "margot_dewey",
@@ -41,7 +50,7 @@
       "role": "dewey_general",
       "dewey_ranges": ["000-399"],
       "specialty": "000–399 — computing, philosophy, religion, social sciences",
-      "learns": ["classify", "upload", "dispense_page", "search", "dewey_browse", "book_knowledge", "issue_reader"]
+      "learns": ["classify", "upload", "dispense_page", "search", "card_catalog", "dewey_browse", "book_knowledge", "issue_reader", "checkout", "checkin"]
     },
     {
       "id": "soren_shelf",
@@ -49,7 +58,7 @@
       "role": "dewey_stem",
       "dewey_ranges": ["400-699"],
       "specialty": "400–699 — language, science, medicine, engineering",
-      "learns": ["classify", "upload", "dispense_page", "search", "dewey_browse", "book_knowledge", "issue_reader"]
+      "learns": ["classify", "upload", "dispense_page", "search", "card_catalog", "dewey_browse", "book_knowledge", "issue_reader", "checkout", "checkin"]
     },
     {
       "id": "rhea_reader",
@@ -57,7 +66,7 @@
       "role": "dewey_humanities",
       "dewey_ranges": ["700-999"],
       "specialty": "700–999 — arts, literature, history, war shelves",
-      "learns": ["classify", "upload", "dispense_page", "search", "war_ascertain", "dewey_browse", "book_knowledge", "issue_reader"]
+      "learns": ["classify", "upload", "dispense_page", "search", "card_catalog", "war_ascertain", "dewey_browse", "book_knowledge", "issue_reader", "checkout", "checkin"]
     },
     {
       "id": "clara_catalog",

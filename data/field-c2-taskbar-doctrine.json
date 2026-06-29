@@ -26,9 +26,28 @@
       "lib/field-broadcaster.py"
     ]
   },
+  "ironclad_taskbar": {
+    "search_api": "/api/ironclad/secure-api/search",
+    "sort_api": "/api/ironclad/secure-api/sort",
+    "default_search_context": "all",
+    "default_sort_context": "registry_index",
+    "home_panel": "/field",
+    "home_queen": "http://127.0.0.1:9481/world/browser.html"
+  },
   "combinatorics_role": "c2_surface_quint",
   "g16": {
+    "version": "5.1.0",
+    "profile": "g16_field_opt",
+    "compiler": "Grok16/lib/g16-universal-compiler.py",
     "poll_ms": 2500,
     "handshake_every_n": 4
+  },
+  "monster_rescue": {
+    "module": "lib/field-monster-monitor.py",
+    "cad_chords": ["Control+Alt+Delete", "Control+Shift+Escape"],
+    "product": "Monster",
+    "tabs": ["graphs", "vision", "security", "processes", "resources", "services", "rescue"],
+    "theme": "chrome_black_green_pink",
+    "security_hold": true
   }
 }

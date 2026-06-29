@@ -20,7 +20,7 @@ html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  font-family: system-ui, sans-serif;
   background: var(--void);
   color: var(--text);
 }

@@ -2,9 +2,23 @@
   "schema": "nexus-field-stack-manifest/v1",
   "title": "NewLatest Field Stack",
   "version": "10.0.0-field",
-  "rule": "Layered stack: hardware (no break) \u2192 NEXUS C2 \u2192 ZNetwork \u2192 Queen (secure shell) \u2192 AmmoOS inside Queen",
+  "rule": "Layered stack: hardware (no break) \u2192 NEXUS C2 \u2192 ZNetwork \u2192 Queen (secure shell) \u2192 AmmoOS inside Queen — weapons and defenses under Hostess 7",
+  "hostess7_weapons_defense": {
+    "commander": "hostess7",
+    "armed": true,
+    "active": true,
+    "module": "lib/hostess7-weapons-defense.py",
+    "doctrine": "data/hostess7-weapons-defense-doctrine.json",
+    "api": "/api/hostess7/weapons-defense"
+  },
   "stack_layer_doctrine": "data/field-stack-layer-doctrine.json",
-  "stack_order": ["hardware", "nexus_c2", "znetwork", "queen", "ammoos"],
+  "stack_order": [
+    "hardware",
+    "nexus_c2",
+    "znetwork",
+    "queen",
+    "ammoos"
+  ],
   "ammoos_inside_queen": true,
   "install_root": "SG/NewLatest",
   "layers": {
@@ -20,17 +34,11 @@
       "panel_port": 9477
     },
     "final_eye": {
-      "root": "SG/ZNEWOCR",
-      "lineage": "SG/Final_Eye",
+      "root": "NewLatest/Final_Eye",
       "version": "1.3.0",
       "codename": "heaven-hell-ops",
       "role": "Assist tenant \u2014 vision offense, entity weapons, IRTN mesh",
       "port": 9479
-    },
-    "znewocr": {
-      "root": "SG/ZNEWOCR",
-      "version": "1.3.0-znewocr",
-      "role": "SG field OCR home \u2014 primary vision GUI on :9479"
     },
     "final_ear": {
       "root": "SG/Final_Ear",
@@ -38,10 +46,6 @@
       "codename": "auditus-gac1",
       "role": "Audio offense \u2014 truth filter, GAC1, eye-ear fusion",
       "bridge": "Queen/lib/queen-earball.py"
-    },
-    "zocr": {
-      "root": "SG/ZOCR",
-      "role": "Legacy ZOCR root \u2014 forge witness, fallback when ZNEWOCR absent"
     },
     "world_redata": {
       "root": "SG/World_Redata",
@@ -70,11 +74,20 @@
     },
     "grok16": {
       "root": "NewLatest/Grok16",
-      "distro_version": "5.0.1",
-      "tag": "v5.0.1",
+      "distro_version": "5.1.0",
+      "tag": "v5.1.0",
       "g16_version": "16.2.0",
+      "stack_fabric": "Grok16/data/g16-stack-fabric-doctrine.json",
       "build": "g16 + Ninja (Queen/scripts/g16-build.sh)",
-      "profiles": ["field_opt", "vulkan_rtx", "ai", "ammoos", "queen_rtx"],
+      "profiles": [
+        "field_opt",
+        "vulkan_rtx",
+        "ai",
+        "ammoos",
+        "znetwork_wire",
+        "single_fabric",
+        "queen_rtx"
+      ],
       "integrate": "scripts/grok16-integrate.sh",
       "role": "Field compiler @ gnu++26 \u2014 primary toolchain"
     },
@@ -104,10 +117,16 @@
       "queen_binary": "Queen/build/rtx/bin/Linux/queen-browser",
       "integrate": "scripts/integrate-amouranthrtx.sh",
       "open_handler": "scripts/amouranthrtx-open.sh",
-      "shaders": "Navigator/shaders → assets/shaders/compute/*.spv",
-      "double_click": [".spv", ".comp"],
-      "build": ["Queen/scripts/g16-build.sh", "AMOURANTHRTX/kilroy.sh"],
-      "role": "Vulkan field die — games, x86.comp canvas, double-click SPIR-V/compute shaders"
+      "shaders": "Navigator/shaders \u2192 assets/shaders/compute/*.spv",
+      "double_click": [
+        ".spv",
+        ".comp"
+      ],
+      "build": [
+        "Queen/scripts/g16-build.sh",
+        "AMOURANTHRTX/kilroy.sh"
+      ],
+      "role": "Vulkan field die \u2014 games, x86.comp canvas, double-click SPIR-V/compute shaders"
     },
     "vulkan_os": {
       "doctrine": "data/vulkan-os-doctrine.json",
@@ -124,7 +143,9 @@
       "brain_sync": "lib/field-brain-sync.sh",
       "noti_bridge": "lib/hostess7-noti.py",
       "system_control": "lib/hostess7-system-control.py",
-      "role": "Forever Watchguard Angel \u2014 full system control; brain melded onto sense stack; read-only witness, never relocated"
+      "ocr_control": "lib/hostess7-ocr-control.py",
+      "ocr_api": "/api/hostess7/ocr",
+      "role": "Forever Watchguard Angel \u2014 full system + OS OCR control; brain melded onto sense stack; read-only witness, never relocated"
     },
     "noti": {
       "root": "NewLatest",
@@ -135,7 +156,7 @@
     },
     "znetwork": {
       "root": "NewLatest/ZNetwork",
-      "integrated_pointer": "NewLatest/znetwork/OUTSIDE_LAB.json",
+      "outside_lab_pointer": "ZNetwork/data/outside-lab-pointer.json",
       "orchestrator": "lib/znetwork-orchestrator.py",
       "shell_bridge": "lib/znetwork-field.sh",
       "relayer": "lib/znetwork-relayer.py",
@@ -267,7 +288,6 @@
     "queen_final_eye": "Queen/lib/queen_final_eye.py",
     "queen_final_ear": "Queen/lib/queen_final_ear.py",
     "queen_field_nexus": "lib/queen_field_nexus.py",
-    "queen_zocr": "Queen/lib/queen-zocr.py",
     "g16_build": "Queen/scripts/g16-build.sh",
     "integrate_compiler": "scripts/integrate-compiler-stack.sh",
     "integrate_ammocode": "scripts/integrate-ammocode.sh"
@@ -283,5 +303,5 @@
     "forge_test"
   ],
   "start": "scripts/start-field-stack.sh",
-  "updated": "2026-06-29T06:55:00Z"
+  "updated": "2026-06-29T12:57:29Z"
 }

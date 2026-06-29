@@ -10,5 +10,42 @@
   "format": "H7",
   "field_path": "/media/default/HOSTESS7_TEAM/fieldstorage/textbooks/gutenberg_origin_species.h7",
   "github_shelf": "500-science",
-  "updated": "2026-06-24T03:12:05Z"
+  "updated": "2026-06-24T03:12:05Z",
+  "keywords": [
+    "origin",
+    "species",
+    "charles",
+    "darwin",
+    "500",
+    "science",
+    "h7",
+    "gutenberg"
+  ],
+  "keyword_placement": {
+    "title": [
+      "origin",
+      "species"
+    ],
+    "author": [
+      "charles",
+      "darwin"
+    ],
+    "dewey": [
+      "500",
+      "science"
+    ],
+    "subject": [],
+    "collection": [],
+    "format": [
+      "h7"
+    ],
+    "shelf": [],
+    "description": [],
+    "auto": [
+      "gutenberg"
+    ]
+  },
+  "card_id": "CAT-500-GUTENBERG-ORIGIN-SPECIES",
+  "catalog_call_number": "500",
+  "catalog_updated": "2026-06-29T11:03:55Z"
 }

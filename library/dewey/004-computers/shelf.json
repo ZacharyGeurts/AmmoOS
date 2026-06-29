@@ -3,9 +3,9 @@
   "shelf": "004-computers",
   "code": "004",
   "title": "004-computers",
-  "updated": "2026-06-29T09:43:43Z",
+  "updated": "2026-06-29T14:34:14Z",
   "format_primary": "h7c",
-  "book_count": 78,
+  "book_count": 79,
   "h7c_count": 0,
   "books": [
     {
@@ -160,13 +160,23 @@
     },
     {
       "id": "c64",
-      "title": "Commodore 64",
+      "title": "Commodore 64 (classic)",
       "author": "Field Extensive Library",
       "dewey": "004.678",
       "format": "h7/7",
       "h7c": null,
       "cover": "/library/assets/devices/c64.png",
       "ready": false
+    },
+    {
+      "id": "c64_ultimate",
+      "title": "Commodore 64 Ultimate",
+      "author": "Field Extensive Library",
+      "dewey": "004.678",
+      "format": "h7/7",
+      "h7c": null,
+      "cover": "/library/assets/devices/c64_ultimate.png",
+      "ready": true
     },
     {
       "id": "commodore_64",

@@ -227,15 +227,21 @@ def _dom_ids_present(html: str, ids: list[str]) -> list[str]:
 def _ocr_smoke(asset: Path) -> str:
     if not asset.is_file():
         return "missing asset"
-    try:
-        out = subprocess.check_output(
-            ["tesseract", str(asset), "stdout", "-l", "eng", "--psm", "6"],
-            stderr=subprocess.DEVNULL,
-            timeout=15,
-        )
-        return out.decode("utf-8", errors="replace").strip()[:120]
-    except (subprocess.SubprocessError, OSError):
-        return ""
+    bridge = ROOT / "lib" / "final-eye-h7-ocr.py"
+    if bridge.is_file():
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(bridge), "ocr", str(asset)],
+                capture_output=True, text=True, timeout=90, check=False,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(ROOT)},
+            )
+            doc = json.loads(proc.stdout or "{}")
+            text = str(doc.get("text") or doc.get("ocr") or "").strip()
+            if text:
+                return text[:120]
+        except (subprocess.SubprocessError, OSError, json.JSONDecodeError):
+            pass
+    return ""
 
 
 def audit_tab(name: str, data: dict[str, Any], html: str) -> tuple[bool, list[str]]:

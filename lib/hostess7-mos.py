@@ -26,8 +26,19 @@ LEDGER = STATE / "hostess7-mos-ledger.jsonl"
 OCR_CORPUS = STATE / "hostess7-mos-ocr-corpus.json"
 SG_ROOT = Path(os.environ.get("SG_ROOT", str(INSTALL.parent.parent)))
 HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
-ZOCR_ROOT = Path(os.environ.get("ZOCR_ROOT", str(SG_ROOT / "ZOCR")))
-FINAL_EYE_ROOT = Path(os.environ.get("FINAL_EYE_ROOT", str(SG_ROOT / "Final_Eye")))
+def _final_eye_root() -> Path:
+    try:
+        from sg_paths import final_eye_root as _fer
+        return _fer()
+    except ImportError:
+        pass
+    env = os.environ.get("FINAL_EYE_ROOT", "").strip()
+    if env:
+        return Path(env).expanduser().resolve()
+    return (INSTALL / "Final_Eye").resolve()
+
+
+FINAL_EYE_ROOT = _final_eye_root()
 
 ENABLED = os.environ.get("NEXUS_HOSTESS7_MOS", "1") == "1"
 
@@ -595,25 +606,201 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
     return doc
 
 
+def _text_quality_ok(text: str) -> bool:
+    sample = (text or "")[:400]
+    if len(sample.strip()) < 3:
+        return False
+    printable = sum(1 for c in sample if c.isprintable() or c in "\n\t")
+    return printable / max(len(sample), 1) >= 0.85
+
+
+def _ocr_tesseract(path: Path) -> str:
+    core_py = INSTALL / "lib" / "final-eye-ocr-core.py"
+    if not core_py.is_file():
+        return ""
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("final_eye_ocr_mos", core_py)
+        if not spec or not spec.loader:
+            return ""
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "ocr_image_text"):
+            return str(mod.ocr_image_text(path) or "").strip()
+    except Exception:
+        pass
+    return ""
+
+
+def _resolve_source_path(spec: dict[str, Any]) -> Path | None:
+    if spec.get("path_abs"):
+        return Path(str(spec["path_abs"]))
+    env = str(spec.get("path_env") or "")
+    root = {
+        "FINAL_EYE_ROOT": FINAL_EYE_ROOT,
+        "ZOCR_ROOT": FINAL_EYE_ROOT,
+        "ZNEWOCR_ROOT": FINAL_EYE_ROOT,
+        "HOSTESS7_ROOT": HOSTESS7_ROOT,
+        "NEXUS_INSTALL_ROOT": INSTALL,
+        "SG_ROOT": SG_ROOT,
+    }.get(env, Path(os.environ.get(env, "")) if env else SG_ROOT)
+    rel = str(spec.get("path_rel") or "")
+    if not rel:
+        return None
+    return Path(root) / rel
+
+
+def _tail_jsonl(path: Path, *, limit: int = 500) -> list[dict[str, Any]]:
+    if not path.is_file() or limit <= 0:
+        return []
+    rows: list[dict[str, Any]] = []
+    try:
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    except OSError:
+        return []
+    return rows
+
+
+def _text_chunks_from_row(row: dict[str, Any], spec: dict[str, Any]) -> list[str]:
+    chunks: list[str] = []
+    for field in spec.get("text_fields") or []:
+        val = row.get(field)
+        if isinstance(val, str) and val.strip():
+            chunks.append(val)
+    ocr_file = row.get(spec.get("ocr_file_field") or "ocr_file")
+    if ocr_file:
+        fp = Path(str(ocr_file))
+        if fp.is_file():
+            try:
+                chunks.append(fp.read_text(encoding="utf-8", errors="replace"))
+            except OSError:
+                pass
+    return chunks
+
+
+def _ingest_mos_text(text: str, *, source_id: str, path: str, corpus: dict[str, Any]) -> int:
+    if not _text_quality_ok(text):
+        return 0
+    ocr_doc = _load(OCR_DOCTRINE, {})
+    min_len = int((ocr_doc.get("train") or {}).get("min_candidate_len") or 10)
+    max_c = int((ocr_doc.get("ingest") or {}).get("max_candidates_per_ingest") or 6000)
+    if len(corpus.get("candidates") or []) >= max_c:
+        return 0
+    added = 0
+    known = corpus.setdefault("seen_hashes", [])
+    seen_set = set(known[-50000:])
+    for line in re.split(r"[\n.;]+", text):
+        cand = re.sub(r"\s+", " ", line.strip())[:500]
+        if len(cand) < min_len:
+            continue
+        if not _looks_like_mos(cand):
+            continue
+        h = hashlib.sha256(f"{source_id}:{cand}".encode()).hexdigest()[:24]
+        if h in seen_set:
+            continue
+        seen_set.add(h)
+        known.append(h)
+        corpus["candidates"].append({
+            "text": cand,
+            "source_id": source_id,
+            "hash": h,
+            "path": path,
+            "ingested_at": _now(),
+        })
+        added += 1
+        if len(corpus["candidates"]) >= max_c:
+            break
+    return added
+
+
 def ingest_ocr_vision(*, limit_per_source: int | None = None) -> dict[str, Any]:
-    """Light OCR ingest for MOS-related text."""
+    """Feed MOS think tank from Final_Eye vision + Hostess7 brain corpora."""
     ocr_doc = _load(OCR_DOCTRINE, {})
     ingest_cfg = ocr_doc.get("ingest") or {}
     max_files = limit_per_source or int(ingest_cfg.get("max_files_per_source") or 400)
-    corpus = _load(OCR_CORPUS, {"candidates": [], "seen_hashes": []})
+    max_bytes = int(ingest_cfg.get("max_bytes_per_file") or 250000)
+    corpus = _load(OCR_CORPUS, {
+        "schema": "hostess7-mos-ocr-corpus/v1",
+        "candidates": [],
+        "seen_hashes": [],
+        "sources": {},
+    })
     corpus.setdefault("candidates", [])
-    added = 0
+    corpus.setdefault("seen_hashes", [])
+    corpus.setdefault("sources", {})
+    total_added = 0
+    source_stats: dict[str, Any] = {}
+
+    for spec in ocr_doc.get("feed_sources") or []:
+        sid = str(spec.get("id") or "unknown")
+        kind = str(spec.get("kind") or "jsonl")
+        files_read = 0
+        bytes_read = 0
+        added = 0
+        if kind == "jsonl":
+            fp = _resolve_source_path(spec)
+            if fp and fp.is_file():
+                for row in _tail_jsonl(fp, limit=max_files):
+                    for chunk in _text_chunks_from_row(row, spec):
+                        bytes_read += len(chunk)
+                        added += _ingest_mos_text(chunk, source_id=sid, path=str(fp), corpus=corpus)
+                    files_read += 1
+        elif kind == "json":
+            fp = _resolve_source_path(spec)
+            if fp and fp.is_file():
+                try:
+                    doc = json.loads(fp.read_text(encoding="utf-8", errors="replace")[:max_bytes])
+                    nested = spec.get("nested")
+                    rows = doc.get(nested) if nested else [doc]
+                    for row in rows or []:
+                        if isinstance(row, dict):
+                            for chunk in _text_chunks_from_row(row, spec):
+                                bytes_read += len(chunk)
+                                added += _ingest_mos_text(chunk, source_id=sid, path=str(fp), corpus=corpus)
+                    files_read = 1
+                except (OSError, json.JSONDecodeError):
+                    pass
+        elif kind == "glob":
+            import glob as globmod
+            base = _resolve_source_path(spec)
+            if spec.get("path_abs") and "*" in str(spec["path_abs"]):
+                paths = [Path(p) for p in globmod.glob(str(spec["path_abs"]))[:max_files]]
+            elif base and "*" in base.name:
+                paths = sorted(base.parent.glob(base.name))[:max_files]
+            elif base and base.suffix:
+                paths = sorted(base.parent.glob(base.name))[:max_files]
+            else:
+                paths = []
+            for fp in paths:
+                if not fp.is_file():
+                    continue
+                try:
+                    text = _ocr_tesseract(fp) if spec.get("ocr_tesseract") else fp.read_text(encoding="utf-8", errors="replace")[:max_bytes]
+                    bytes_read += len(text)
+                    added += _ingest_mos_text(text, source_id=sid, path=str(fp), corpus=corpus)
+                    files_read += 1
+                except OSError:
+                    continue
+        total_added += added
+        source_stats[sid] = {"files_read": files_read, "bytes_read": bytes_read, "candidates_added": added, "kind": kind}
+        corpus["sources"][sid] = {**source_stats[sid], "updated": _now()}
+
     for entry in _catalog_entries():
         text = f"{entry.get('title')} {entry.get('duties')} {entry.get('assist')}"
-        h = hashlib.sha256(text.encode()).hexdigest()[:20]
-        if h not in set(corpus.get("seen_hashes") or []):
-            corpus["candidates"].append({"text": text[:500], "source_id": "mos_catalog", "hash": h})
-            corpus.setdefault("seen_hashes", []).append(h)
-            added += 1
-    corpus["candidate_count"] = len(corpus.get("candidates") or [])
+        total_added += _ingest_mos_text(text, source_id="mos_catalog", path=str(CATALOG), corpus=corpus)
+
     corpus["updated"] = _now()
+    corpus["candidate_count"] = len(corpus.get("candidates") or [])
+    corpus["ingest_total_added"] = int(corpus.get("ingest_total_added") or 0) + total_added
     _save(OCR_CORPUS, corpus)
-    return {"ok": True, "added": added, "candidate_count": corpus["candidate_count"], "max_files": max_files}
+    return {"ok": True, "added": total_added, "candidate_count": corpus["candidate_count"], "sources": source_stats}
 
 
 def train_ocr_vision(*, limit: int = 300) -> dict[str, Any]:

@@ -23,7 +23,7 @@
   --fm-rf: #2dd4bf;
   --fm-radius: 18px;
   --fm-radius-sm: 12px;
-  --fm-font: "Inter", "Segoe UI", system-ui, sans-serif;
+  --fm-font: system-ui, sans-serif;
   --fm-mono: "JetBrains Mono", ui-monospace, monospace;
   --fm-rail-w: 17rem;
   --fm-top-h: 5.5rem;

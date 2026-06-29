@@ -6,7 +6,7 @@
 
   const WORLD_CACHE = "queen-world-fast-v2";
   const LAZY_SCRIPTS = {
-    terminal: ["queen-gnu-terminal.js"],
+    terminal: ["queen-styles.js", "queen-gnu-terminal.js"],
     gameroom: ["queen-game-room.js"],
     field: ["field-technology-guide.js"],
     os: ["queen-os.js"],

@@ -4,8 +4,8 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-a3f5c391bb2a",
-  "format": "h7/7",
+  "ein": "H7C-FIELD-35307519172b",
+  "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
@@ -15,12 +15,11 @@
     "compile"
   ],
   "manual_reader": "/field-lang-manuals",
-  "h7": "library/dewey/000-computer-science/explaining_perl/explaining_perl.h7",
+  "h7c": "library/dewey/000-computer-science/explaining_perl/explaining_perl.h7c",
+  "h7": null,
   "field_path": "library/dewey/000-computer-science/explaining_perl/explaining_perl.h7c",
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "perl",
   "cover": "/world/assets/combinatronic/books/perl.png",
-  "updated": "2026-06-29T08:58:34Z",
-  "face_format": "h7c",
-  "properties_only_h7": true
+  "updated": "2026-06-29T12:12:42Z"
 }

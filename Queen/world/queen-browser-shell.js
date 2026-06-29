@@ -16,6 +16,7 @@
     startSide: "classic",
     desktopDoc: null,
     autoProxyExternal: true,
+    keysEngaged: false,
   };
 
   function $(id) {
@@ -30,12 +31,61 @@
   }
 
   function startUrl() {
-    const raw = document.body?.dataset?.queenStart || "/world/queen-desktop.html";
+    const raw = document.body?.dataset?.queenStart || "/world/kilroy-home.html";
     if (raw.startsWith("/")) return `${location.origin}${raw}`;
     return raw;
   }
 
-  const SHELL_ACTIONS = new Set(["navigate", "new_tab", "attach_tab", "home", "command"]);
+  function panelPort() {
+    return document.body?.dataset?.nexusPanelPort || "9477";
+  }
+
+  function panelBase() {
+    return `http://127.0.0.1:${panelPort()}`;
+  }
+
+  function engageKeyboardSovereign() {
+    if (shell.keysEngaged) return;
+    fetch(`${panelBase()}/api/field-keyboard-sovereign/engage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+      credentials: "omit",
+    })
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.ok !== false) shell.keysEngaged = true;
+      })
+      .catch(() => {});
+  }
+
+  function releaseKeyboardSovereign(reason) {
+    if (!shell.keysEngaged) return;
+    const body = JSON.stringify({ reason: reason || "pagehide" });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(`${panelBase()}/api/field-keyboard-sovereign/release`, body);
+    }
+    shell.keysEngaged = false;
+  }
+
+  function wireZNetworkHooks() {
+    if (document.body?.dataset?.znetworkHooks !== "1") return;
+    engageKeyboardSovereign();
+    fetch(`${panelBase()}/api/znetwork`, { cache: "no-store" }).catch(() => {});
+    window.addEventListener("pagehide", () => releaseKeyboardSovereign("pagehide"));
+    window.addEventListener("beforeunload", () => releaseKeyboardSovereign("unload"));
+  }
+
+  function openCadRescue() {
+    const fieldUrl = `${panelBase()}/field`;
+    globalThis.QueenOS?.browser?.newTab?.(fieldUrl);
+    const status = $("qb-status");
+    if (status) status.textContent = "Ctrl+Alt+Del · ZNetwork keyboard hook · AmmoOS rescue";
+  }
+
+  const SHELL_ACTIONS = new Set([
+    "navigate", "new_tab", "attach_tab", "home", "command", "open_window", "open_program", "dock", "desktop_window",
+  ]);
 
   function tabTip(t) {
     const title = t.title || t.url || "Tab";
@@ -512,6 +562,50 @@
     if (action === "navigate") globalThis.QueenOS?.browser?.navigate?.(url);
     if (action === "new_tab" || action === "command") globalThis.QueenOS?.browser?.newTab?.(url);
     if (action === "home") globalThis.QueenOS?.browser?.navigate?.(url);
+    if (action === "open_window" || action === "open_program" || action === "desktop_window") {
+      forwardOpenWindow(data.item || { url, name: data.title || data.name || "Program", icon: data.icon });
+    }
+    if (action === "dock" && data.dock) {
+      const dockUrl = url || `${location.origin}/world/?dock=${encodeURIComponent(data.dock)}`;
+      globalThis.QueenOS?.world?.setDockTab?.(data.dock);
+      globalThis.QueenOS?.browser?.navigate?.(`/world/?dock=${encodeURIComponent(data.dock)}`);
+      if (!globalThis.QueenOS?.world?.setDockTab) {
+        globalThis.QueenOS?.browser?.newTab?.(dockUrl);
+      }
+    }
+  }
+
+  function desktopFrame() {
+    const startTab = (globalThis.QueenOS?.browser?.doc?.tabs || []).find(
+      (t) => t.role === "start" || t.role === "desktop" || (t.url || "").includes("queen-desktop"),
+    );
+    const tabId = startTab?.id;
+    if (!tabId) return null;
+    const entry = shell.panes.get(tabId);
+    return entry?.frame?.contentWindow || null;
+  }
+
+  function forwardOpenWindow(item) {
+    const url = item?.url;
+    if (!isSafeShellUrl(url)) return;
+    const win = desktopFrame();
+    if (win) {
+      try {
+        win.postMessage({ type: "queen:desktop", action: "open_window", item }, location.origin);
+        return;
+      } catch (_) {}
+    }
+    globalThis.QueenOS?.browser?.newTab?.(url);
+  }
+
+  function handleLaunchQuery() {
+    try {
+      const params = new URLSearchParams(location.search);
+      const launch = params.get("launch");
+      if (!launch || !isSafeShellUrl(launch)) return;
+      const title = params.get("title") || "Program";
+      setTimeout(() => forwardOpenWindow({ url: launch, name: title, id: launch }), 400);
+    } catch (_) {}
   }
 
   function wireSecurity() {
@@ -523,10 +617,26 @@
     });
   }
 
+  function isCadChord(e) {
+    const del = e.key === "Delete" || e.key === "Del";
+    const esc = e.key === "Escape";
+    if (e.ctrlKey && e.altKey && del) return true;
+    if (e.ctrlKey && e.shiftKey && esc) return true;
+    return false;
+  }
+
   function wireKeyboard() {
     document.addEventListener("keydown", (e) => {
+      if (isCadChord(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+        engageKeyboardSovereign();
+        openCadRescue();
+        return;
+      }
       if (e.altKey && e.key === "Tab") {
         e.preventDefault();
+        e.stopPropagation();
         cycleTabs(e.shiftKey);
         return;
       }
@@ -544,7 +654,7 @@
         e.preventDefault();
         $("qb-reload")?.click();
       }
-    });
+    }, true);
     document.addEventListener("fullscreenchange", () => {
       shell.viewportFs = !!document.fullscreenElement;
       document.body.classList.toggle("qw-viewport-fs", shell.viewportFs);
@@ -610,7 +720,7 @@
     const strip = document.createElement("span");
     strip.className = "qb-security-strip";
     strip.id = "qb-security-strip";
-    strip.textContent = "AmmoOS · Queen Browser · PRESUME HOSTILE · DEFEND";
+    strip.textContent = "KILROY · ZNetwork hooks · Queen Browser shell";
     $("qb-gate-strip")?.prepend(strip);
   }
 
@@ -712,8 +822,11 @@
     bindTabChrome();
     wireSecurity();
     wireKeyboard();
+    wireZNetworkHooks();
     wireStartButton();
+    globalThis.QueenBookmarksFlyout?.init?.();
     if (browserFacade) patchBrowser(browserFacade);
+    handleLaunchQuery();
     shell.ready = true;
   }
 

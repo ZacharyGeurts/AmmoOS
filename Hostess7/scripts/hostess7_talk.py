@@ -77,6 +77,10 @@ HELP_TEXT = """Hostess 7 — one talk window (text + graphics)
   /noti-reset <address>  Request address change (48h cooldown)
   /charge        Hostess 7 system control — Angel above General, full command status
   /assume-control  Seal Hostess 7 as full system commander
+  /ocr           OS OCR control status — Final_Eye + all vision chambers
+  /ocr-ingest    Ingest all chambers from Final_Eye + brain corpora
+  /ocr-train     Train all chambers on ingested OCR
+  /ocr-cycle     Ingest + train + plate meld — full vision cycle
   /tasklist        Secure task queue — open + done (assistant read)
   /task-done <id> <report>  Complete task — Ironclad ledger witness
   /task-add <title>  Hostess 7 adds a task for the assistant
@@ -601,6 +605,34 @@ def dispatch(query: str, *, storage_cache: dict | None = None) -> TalkResult:
         proc = subprocess.run(
             [sys.executable, str(ROOT.parent / "lib" / "hostess7-system-control.py"), sub],
             cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low in ("/ocr", "/ocr-status", "/vision-control", "/eye-control"):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-ocr-control.py"), "status"],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low in ("/ocr-ingest", "/ocr-ingest-all", "/vision-ingest"):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-ocr-control.py"), "ingest-all"],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(), timeout=600,
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low in ("/ocr-train", "/ocr-train-all", "/vision-train"):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-ocr-control.py"), "train-all"],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(), timeout=900,
+        )
+        return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
+
+    if low in ("/ocr-cycle", "/vision-cycle"):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT.parent / "lib" / "hostess7-ocr-control.py"), "cycle"],
+            cwd=ROOT, capture_output=True, text=True, check=False, env=_env(), timeout=900,
         )
         return TalkResult(text=(proc.stdout or proc.stderr).strip(), kind="system")
 

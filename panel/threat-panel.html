@@ -62,6 +62,7 @@
   <script defer src="/assets/nexus-military-v82.js"></script>
   <script defer src="/assets/nexus-universal-protector.js"></script>
   <link rel="stylesheet" href="/assets/humanoid-wireframe.css" />
+  <script defer src="/assets/queen-program-launch.js"></script>
   <script defer src="/assets/humanoid-wireframe.js"></script>
 
   <link rel="stylesheet" href="/assets/nexus-rtx-zero.css" />
@@ -110,7 +111,7 @@
     .murder-actions button.ghost { background: transparent; border: 1px solid var(--murder); color: #ffd6de; }
     * { box-sizing: border-box; }
     body {
-      margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: var(--text); min-height: 100vh;
+      margin: 0; font-family: system-ui, sans-serif; color: var(--text); min-height: 100vh;
       font-size: var(--text-base); line-height: 1.55;
       -webkit-font-smoothing: antialiased;
       background: radial-gradient(1200px 600px at 10% -10%, #152040 0%, transparent 55%),
@@ -1165,6 +1166,15 @@
     .library-book-btn em { display: block; color: var(--muted); font-size: 14pt; margin-top: 4px; font-style: normal; }
     .library-main { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: rgba(8,12,20,0.75); display: flex; flex-direction: column; gap: 12px; }
     .library-meta-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 0.95rem; color: var(--muted); }
+    .library-checkout-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 8px; border: 1px solid #2a4060; background: rgba(12,20,36,0.55); }
+    .library-checkout-row label { font-size: 0.88rem; color: var(--internet); }
+    .library-checkout-days { width: 4.5rem; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); background: #0d1520; color: var(--text); }
+    .library-checkout-btn { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: #1a2430; color: var(--text); cursor: pointer; font-size: 0.88rem; }
+    .library-checkout-btn.primary { border-color: var(--gold); color: var(--gold); }
+    .library-checkout-btn.return { border-color: var(--ok); color: var(--ok); }
+    .library-checkout-status { font-size: 0.88rem; color: var(--muted); min-width: 8rem; }
+    .library-checkout-status.overdue { color: #f87171; }
+    .library-checkout-status.out { color: var(--gold); }
     .library-open-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--gold); background: rgba(30,24,12,0.45); color: var(--gold); cursor: pointer; font-size: 0.95rem; }
     .library-upload-panel { display: none; border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: rgba(10,16,26,0.8); }
     .library-upload-panel.open { display: block; }
@@ -1199,6 +1209,7 @@
     .h7r-slider-wrap { flex: 1; display: flex; align-items: center; gap: 10px; }
     .h7r-slider { flex: 1; }
     .h7r-page-label { font-size: 0.95rem; color: var(--muted); min-width: 72px; text-align: center; }
+    .h7r-read-timer { font-size: 0.82rem; color: var(--internet); margin-left: auto; white-space: nowrap; }
     .h7r-nav { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #1a2430; color: var(--text); cursor: pointer; }
     .h7r-nav:disabled { opacity: 0.35; cursor: not-allowed; }
     .h7r-close { position: absolute; top: 8px; right: 10px; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #1a2430; color: var(--text); cursor: pointer; z-index: 2; }
@@ -2423,6 +2434,11 @@
               <option value="wing_chun">Wing Chun</option>
             </select>
             <button type="button" id="humanoid-data-window-btn" data-tip="Open second window — full motion, spatial, opponents, meld, ledger data.">Data window</button>
+            <button type="button" id="humanoid-hands-btn" data-tip="Hands &amp; attachments — per-finger control, look, learn, wield.">Hands</button>
+            <button type="button" id="humanoid-try-body-btn" data-tip="Wear new body in training room — spine, hands, mounts.">Try body</button>
+            <button type="button" id="humanoid-combat-room-btn" data-tip="Combat drill — martial skill under Earth protection mandate.">Combat room</button>
+            <button type="button" id="humanoid-needs-btn" data-tip="Hostess 7 reports what else she needs.">What she needs</button>
+            <button type="button" id="humanoid-complete-all-btn" data-tip="Complete all — body, floor, combat, attachments, Earth protection rehearsal.">Complete all</button>
             <button type="button" id="humanoid-load-btn" data-tip="Load skill scaffold — physics floor, not instant Matrix proficiency.">Load skill</button>
             <button type="button" id="humanoid-train-btn" data-tip="Physics blast — gravity-ticked training batch. Auto FULL BLAST runs continuously.">Physics blast</button>
           </div>
@@ -3049,6 +3065,14 @@
         </aside>
         <div class="library-meta-bar">
           <span id="library-meta" role="status" aria-live="polite"></span>
+          <div class="library-checkout-row" aria-label="Librarian checkout">
+            <label for="library-checkout-days">Loan days</label>
+            <input type="number" id="library-checkout-days" class="library-checkout-days" min="0" max="365" value="14" title="0 = infinite loan · default 14 days" aria-describedby="library-checkout-hint">
+            <span id="library-checkout-hint" class="library-checkout-status">0 = ∞ infinite</span>
+            <button type="button" class="library-checkout-btn primary" id="library-checkout-btn">Check out</button>
+            <button type="button" class="library-checkout-btn return" id="library-checkin-btn" disabled>Return</button>
+            <span id="library-checkout-status" class="library-checkout-status" role="status" aria-live="polite"></span>
+          </div>
           <button type="button" class="library-open-btn" id="library-open-reader" disabled aria-label="Open full-screen reader for selected book">Open full-screen reader</button>
           <button type="button" class="library-upload-btn" id="library-upload-toggle">Upload to Dewey shelf</button>
         </div>
@@ -6589,14 +6613,23 @@
       $("library-title").textContent = book?.title || bookId;
       global.NexusBraille?.updateLibraryBraille(book, { index: idx >= 0 ? idx : 0, total: sorted.length });
       global.NexusBraille?.announce?.(`${book?.title || bookId} selected. ${idx >= 0 ? idx + 1 : 1} of ${sorted.length}.`);
+      const co = book?.checkout;
+      const coBits = [];
+      if (co?.status === "active") {
+        if (co.infinite) coBits.push("Checked out · infinite loan");
+        else if (co.overdue) coBits.push(`OVERDUE · due ${(co.due_at || "").slice(0, 10)}`);
+        else coBits.push(`Checked out · due ${(co.due_at || "").slice(0, 10)}`);
+      }
       $("library-meta").textContent = [
         book?.author || "",
         book?.dewey ? `Dewey ${book.dewey} — ${book.dewey_label || ""}` : "",
         book?.reading_time_min ? `~${book.reading_time_min} min read` : "",
+        ...coBits,
         book?.char_count ? `${book.char_count.toLocaleString()} chars` : "",
         book?.format || "",
         (book?.topics || []).slice(0, 3).join(", "),
       ].filter(Boolean).join(" · ");
+      updateLibraryCheckoutUi(book);
       const blurb = $("library-human-blurb");
       if (blurb) {
         blurb.textContent = book?.for_humans || book?.summary || book?.description
@@ -6812,6 +6845,97 @@
     $("library-search")?.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter") searchLibrary(ev.target.value);
     });
+    function updateLibraryCheckoutUi(book) {
+      const statusEl = $("library-checkout-status");
+      const checkinBtn = $("library-checkin-btn");
+      const checkoutBtn = $("library-checkout-btn");
+      const co = book?.checkout;
+      const active = co?.status === "active";
+      if (checkinBtn) checkinBtn.disabled = !active;
+      if (checkoutBtn) checkoutBtn.textContent = active ? "Renew loan" : "Check out";
+      if (!statusEl) return;
+      statusEl.classList.remove("overdue", "out");
+      if (!active) {
+        statusEl.textContent = "On shelf — librarian tracks loans";
+        return;
+      }
+      statusEl.classList.add(co.overdue ? "overdue" : "out");
+      if (co.infinite) {
+        statusEl.textContent = `Out · infinite · ${(co.librarian?.name || "Librarian").split(" ")[0]}`;
+      } else if (co.overdue) {
+        statusEl.textContent = `Overdue ${Math.abs(co.days_left || 0)}d — return when ready`;
+      } else {
+        statusEl.textContent = `Due ${(co.due_at || "").slice(0, 10)} · ${co.days_left ?? "?"}d left`;
+      }
+    }
+
+    function libraryCheckoutDays() {
+      const el = $("library-checkout-days");
+      let n = parseInt(el?.value ?? "14", 10);
+      if (Number.isNaN(n)) n = 14;
+      if (n === 0) return 0;
+      return Math.max(1, Math.min(365, n));
+    }
+
+    async function libraryCheckOut() {
+      if (!libraryBookId) return;
+      const book = (libraryCatalog.books || []).find((b) => b.id === libraryBookId);
+      const days = libraryCheckoutDays();
+      const btn = $("library-checkout-btn");
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/library/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "checkout", book_id: libraryBookId, days, book_meta: book }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "checkout_failed");
+        if (book) book.checkout = data.checkout;
+        if (book) book.checked_out = true;
+        selectLibraryBook(libraryBookId);
+        global.NexusBraille?.announce?.(`Checked out for ${days === 0 ? "infinite time" : days + " days"}.`);
+      } catch (err) {
+        console.warn("library checkout", err);
+        const st = $("library-checkout-status");
+        if (st) st.textContent = `Checkout failed: ${err.message || err}`;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function libraryCheckIn() {
+      if (!libraryBookId) return;
+      const book = (libraryCatalog.books || []).find((b) => b.id === libraryBookId);
+      const btn = $("library-checkin-btn");
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/api/library/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "checkin", book_id: libraryBookId }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "checkin_failed");
+        if (book) { book.checkout = null; book.checked_out = false; }
+        selectLibraryBook(libraryBookId);
+        global.NexusBraille?.announce?.("Book returned — still on shelf.");
+      } catch (err) {
+        console.warn("library checkin", err);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    $("library-checkout-days")?.addEventListener("input", (ev) => {
+      const hint = $("library-checkout-hint");
+      if (!hint) return;
+      const n = parseInt(ev.target.value, 10);
+      hint.textContent = n === 0 ? "0 = ∞ infinite" : (n === 14 ? "14 days (default)" : `${n} days`);
+    });
+    $("library-checkout-btn")?.addEventListener("click", () => libraryCheckOut());
+    $("library-checkin-btn")?.addEventListener("click", () => libraryCheckIn());
+
     $("library-open-reader")?.addEventListener("click", () => {
       if (!libraryBookId || !window.H7Reader) return;
       const book = (libraryCatalog.books || []).find((b) => b.id === libraryBookId);

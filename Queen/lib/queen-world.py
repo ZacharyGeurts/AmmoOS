@@ -24,6 +24,7 @@ from urllib.request import Request, urlopen
 
 QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
+from sg_paths import grok16_root
 _LIB = Path(__file__).resolve().parent
 WORLD = QUEEN / "world"
 GUI = QUEEN / "gui"
@@ -129,7 +130,7 @@ def _env() -> dict[str, str]:
         "NEXUS_INSTALL_ROOT": str(nexus_root),
         "NEXUS_STATE_DIR": str(nexus_state),
         "HOSTESS7_ROOT": os.environ.get("HOSTESS7_ROOT", str(SG / "Hostess7")),
-        "GROK16_ROOT": os.environ.get("GROK16_ROOT", str(SG / "Grok16")),
+        "GROK16_ROOT": str(grok16_root()),
         "KILROY_ROOT": os.environ.get("KILROY_ROOT", str(SG / "KILROY")),
         "AMOURANTHRTX_ROOT": os.environ.get(
             "AMOURANTHRTX_ROOT", str(SG / "NewLatest" / "AMOURANTHRTX")
@@ -1057,6 +1058,17 @@ def dispatch_desktop(body: dict[str, Any]) -> dict[str, Any]:
     return _run_json(script, "dispatch", body=body, timeout=60)
 
 
+def _program_surface_status() -> dict[str, Any]:
+    return _run_json(_LIB / "queen-program-surface.py", "json", timeout=30)
+
+
+def dispatch_program_surface(body: dict[str, Any]) -> dict[str, Any]:
+    script = _LIB / "queen-program-surface.py"
+    if not script.is_file():
+        return {"ok": False, "error": "queen_program_surface_missing"}
+    return _run_json(script, "dispatch", body=body, timeout=45)
+
+
 def _browser_import_status() -> dict[str, Any]:
     return _run_json(_LIB / "queen-browser-import.py", "json", timeout=30)
 
@@ -1451,6 +1463,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/api/queen-desktop", "/api/desktop"):
             self._send_json(200, _desktop_status())
+            return
+        if path in ("/api/queen-program-surface", "/api/program-surface"):
+            self._send_json(200, _program_surface_status())
             return
         if path in ("/api/nexus-c2", "/api/nexus-c2-panels", "/api/queen-dashboard", "/api/dashboard"):
             qs = parse_qs(urlparse(self.path).query)
@@ -1861,6 +1876,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/api/queen-desktop", "/api/desktop"):
             self._send_json(200, dispatch_desktop(body))
+            return
+        if path in ("/api/queen-program-surface", "/api/program-surface"):
+            self._send_json(200, dispatch_program_surface(body))
             return
         if path in ("/api/nexus-c2", "/api/nexus-c2-panels", "/api/queen-dashboard", "/api/dashboard"):
             self._send_json(200, dispatch_nexus_c2(body))

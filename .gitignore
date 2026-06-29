@@ -24,8 +24,7 @@ operator-location.json
 /KILROY
 /Final_Eye
 /Final_Ear
-/ZNEWOCR
-/ZOCR
+# ZOCR/ZNEWOCR retired — Final_Eye canonical
 /ZNetwork
 /World_Redata
 /World_Repack
@@ -61,6 +60,7 @@ MANIFEST.sha256.bak
 
 # Release pack staging (tarballs uploaded to GitHub releases only)
 /dist/
+/_archive/
 
 # Hostess7 cache + field storage (source lives in-tree)
 Hostess7/cache/

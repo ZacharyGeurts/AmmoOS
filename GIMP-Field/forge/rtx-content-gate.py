@@ -11,7 +11,12 @@ from pathlib import Path
 from typing import Any
 
 SG = Path(os.environ.get("SG_ROOT", Path(__file__).resolve().parents[2]))
-GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
+_SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+if str(_SG_PATHS_LIB) not in sys.path:
+    sys.path.insert(0, str(_SG_PATHS_LIB))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 OVERLAY = Path(__file__).resolve().parents[1]
 DOCTRINE = OVERLAY / "data" / "field-gimp-doctrine.json"
 GATED = OVERLAY / "data" / "rtx-gated-content.json"

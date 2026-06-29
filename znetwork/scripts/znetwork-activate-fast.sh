@@ -1,1 +1,0 @@
-/home/default/Desktop/SG/ZNetwork/scripts/znetwork-activate-fast.sh

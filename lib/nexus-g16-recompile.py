@@ -48,11 +48,8 @@ def _append_ledger(row: dict[str, Any]) -> None:
 
 
 def grok16_root() -> Path:
-    env = os.environ.get("GROK16_ROOT", "").strip()
-    if env:
-        return Path(env)
-    sibling = SG / "Grok16"
-    return sibling if sibling.is_dir() else INSTALL.parent.parent / "Grok16"
+    from sg_paths import grok16_root as _gr
+    return _gr()
 
 
 def _import_mod(name: str, path: Path) -> Any | None:

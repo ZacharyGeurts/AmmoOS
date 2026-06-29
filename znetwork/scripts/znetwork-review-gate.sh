@@ -1,1 +1,0 @@
-../../ZNetwork/scripts/znetwork-review-gate.sh

@@ -9,6 +9,10 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parent
+sys.path.insert(0, str(REPO_ROOT / "lib"))
+import page_github_chrome as gh_chrome  # noqa: E402
+
+GITHUB_REPO = "https://github.com/ZacharyGeurts/AmmoOS"
 VER_DOC = REPO_ROOT / "data" / "ammoos-version.json"
 PLAT_DOC = REPO_ROOT / "data" / "ammoos-platform-release.json"
 CACHE = "3"
@@ -25,12 +29,14 @@ NAV = [
     ("index.html", "Home"),
     ("getting-started.html", "Getting Started"),
     ("launch-surfaces.html", "Launch Surfaces"),
+    ("update-your-os.html", "Software Updates"),
     ("combinatronic.html", "Combinatronic"),
     ("platforms.html", "Platforms"),
     ("io.html", "Field I/O"),
     ("queen-browser.html", "Queen Browser"),
     ("architecture.html", "Architecture"),
     ("profile.html", "Profile"),
+    ("stack-hub.html", "Stack Hub"),
 ]
 
 
@@ -44,8 +50,10 @@ def head(title: str) -> str:
   <meta name="description" content="AmmoOS {VER} beta manual — field OS, browser surfaces, combinatronic engine." />
   <link rel="canonical" href="https://zacharygeurts.github.io/AmmoOS/{'index.html' if title == 'Home' else title.lower().replace(' ', '-') + '.html'}" />
   <link rel="stylesheet" href="manual.css?v{CACHE}" />
+  <style>{gh_chrome.chrome_css()}</style>
 </head>
 <body>
+{gh_chrome.chrome_top(GITHUB_REPO, label="ZacharyGeurts/AmmoOS")}
 """
 
 
@@ -128,10 +136,12 @@ def favorites_wall() -> str:
 
 
 def foot() -> str:
-    return f"""  <footer>
+    return f"""{gh_chrome.chrome_bottom(GITHUB_REPO, label="ZacharyGeurts/AmmoOS", version=VER)}
+  <footer>
     <a href="index.html">Home</a> ·
     <a href="https://github.com/ZacharyGeurts/AmmoOS/releases/tag/v{VER}">Release v{VER}</a> ·
-    <a href="https://github.com/ZacharyGeurts/AmmoOS">GitHub</a>
+    <a href="https://github.com/ZacharyGeurts/AmmoOS">GitHub</a> ·
+    <a href="https://zacharygeurts.github.io/ZacharyGeurts/stack.html">Stack hub</a>
     <p class="footer-meta">AmmoOS {VER} · field OS beta · GPLv3</p>
   </footer>
 </body>
@@ -255,6 +265,19 @@ sudo ./install-all.sh</code></pre>
   <pre><code>./scripts/ammoos-launch-verify.sh</code></pre>
 """,
         ),
+        "update-your-os.html": (
+            "Software Updates",
+            f"""
+  <h1>Software Update Manager</h1>
+  <p>Update AmmoOS safely from inside the field — GitHub releases, component tracking, global update lock.</p>
+  <h2>Open in browser</h2>
+  <pre><code>{SURFACES.get('host_desktop', 'http://127.0.0.1:9477/field').replace('/field', '/ammoos-update-os')}</code></pre>
+  <h2>API</h2>
+  <pre><code>curl -s http://127.0.0.1:9477/api/ammoos-update/check | jq .
+curl -s -X POST http://127.0.0.1:9477/api/ammoos-update/apply</code></pre>
+  <p>Queen Browser chip uses the same lock — only one update at a time.</p>
+""",
+        ),
         "launch-surfaces.html": (
             "Launch Surfaces",
             f"""
@@ -352,6 +375,26 @@ Combinatronic engine
 
 SG stack (wired via wire-stack.sh)
   Grok16 · Queen · Hostess7 · KILROY · ZOCR · World_Redata</code></pre>
+""",
+        ),
+        "stack-hub.html": (
+            "Stack Hub",
+            f"""
+  <h1>AmmoOS Stack Hub</h1>
+  <p class="lead"><strong>AmmoOS leads.</strong> All stack documentation lives in this manual — sibling GitHub Pages redirect here.</p>
+  <h2>Layer diagram</h2>
+  <pre class="stack">Hardware → NEXUS C2 (:9477) → ZNetwork → Queen CANVAS → Queen Browser (:9481) → AmmoOS</pre>
+  <h2>Stack manuals (canonical — all in AmmoOS)</h2>
+  <table>
+    <tr><th>Component</th><th>Manual page</th><th>GitHub repo</th></tr>
+    <tr><td>★ AmmoOS</td><td><a href="index.html">Home</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td></tr>
+    <tr><td>Queen</td><td><a href="queen-browser.html">Queen Browser</a></td><td><a href="https://github.com/ZacharyGeurts/Queen">Queen</a></td></tr>
+    <tr><td>Grok16</td><td><a href="combinatronic.html">Combinatronic</a></td><td><a href="https://github.com/ZacharyGeurts/Grok16">Grok16</a></td></tr>
+    <tr><td>KILROY</td><td><a href="architecture.html">Architecture</a></td><td><a href="https://github.com/ZacharyGeurts/KILROY">KILROY</a></td></tr>
+    <tr><td>ZNetwork</td><td><a href="io.html">Field I/O</a></td><td><a href="https://github.com/ZacharyGeurts/ZNetwork">ZNetwork</a></td></tr>
+    <tr><td>Final Eye / Ear / Mouth</td><td><a href="launch-surfaces.html">Launch Surfaces</a></td><td><a href="https://github.com/ZacharyGeurts/AmmoOS">AmmoOS</a></td></tr>
+  </table>
+  <p>Profile navigation: <a href="https://zacharygeurts.github.io/ZacharyGeurts/stack.html">ZacharyGeurts/stack.html</a></p>
 """,
         ),
         "profile.html": (

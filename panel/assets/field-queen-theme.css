@@ -18,7 +18,7 @@
   --qf-gold: #f0d060;
   --qf-accent: var(--qf-emerald-glow);
   --qf-radius: 10px;
-  --qf-font: system-ui, "Segoe UI", -apple-system, sans-serif;
+  --qf-font: system-ui, sans-serif;
   --qf-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", monospace;
   --qf-glow-blue: rgba(53, 132, 228, 0.28);
   --qf-glow-emerald: rgba(62, 207, 142, 0.18);

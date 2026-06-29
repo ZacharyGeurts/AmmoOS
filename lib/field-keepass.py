@@ -22,6 +22,9 @@ HARDEN = FIELD / "forge" / "field-keepass-harden.py"
 PANEL = STATE / "field-keepass-panel.json"
 VAULT_DIR = STATE / "field-keepass-vault"
 SETTINGS = STATE / "field-keepass-settings.json"
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 
 
 def _now() -> str:
@@ -72,7 +75,7 @@ def _display_size() -> tuple[int, int]:
 
 
 def _rtx_detected() -> bool:
-    gate = SG / "Grok16" / "forge" / "rtx_gate.py"
+    gate = GROK16 / "forge" / "rtx_gate.py"
     if gate.is_file():
         try:
             proc = subprocess.run(
@@ -80,7 +83,7 @@ def _rtx_detected() -> bool:
                 capture_output=True,
                 text=True,
                 timeout=12,
-                cwd=str(SG / "Grok16"),
+                cwd=str(GROK16),
             )
             if proc.returncode == 0 and "permit" in (proc.stdout or ""):
                 return '"permit": true' in proc.stdout or '"permit":true' in proc.stdout.replace(" ", "")

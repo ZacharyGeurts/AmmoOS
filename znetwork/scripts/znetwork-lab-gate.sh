@@ -1,1 +1,0 @@
-../../ZNetwork/scripts/znetwork-lab-gate.sh

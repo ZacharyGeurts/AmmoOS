@@ -122,7 +122,7 @@ html.nexus-blind-mode .library-book-option:focus-visible {
   line-height: 1.65;
   letter-spacing: 0.12em;
   word-break: break-word;
-  font-family: "DejaVu Sans", "Noto Sans Symbols2", "Segoe UI Symbol", sans-serif;
+  font-family: system-ui, sans-serif;
 }
 .library-braille-plain {
   margin-top: 8px;

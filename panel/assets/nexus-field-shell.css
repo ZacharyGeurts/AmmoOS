@@ -148,6 +148,53 @@ html.nfs-kiosk .fsb-menu {
   object-fit: contain;
 }
 
+/* Security hold — yield to host OS without freezing guest */
+html.field-yielded-to-host #hd-monitor,
+html.field-yielded-to-host #fsb-mount,
+html.field-yielded-to-host #c2tm-mount,
+html.field-yielded-to-host #nfs-root,
+html.field-yielded-to-host .nfs-alt-overlay {
+  opacity: 0;
+  pointer-events: none !important;
+  visibility: hidden;
+}
+
+html.field-yielded-to-host,
+html.field-yielded-to-host body {
+  background: transparent !important;
+}
+
+html.field-yielded-to-host #hd-toast {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nfs-yield-chip {
+  display: none;
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 100100;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 160, 200, 0.45);
+  background: linear-gradient(135deg, rgba(10, 14, 20, 0.92), rgba(61, 214, 140, 0.18));
+  color: #e8edf7;
+  font: 12px/1.2 system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+
+.nfs-yield-chip.open {
+  display: block;
+}
+
+.nfs-yield-chip:hover {
+  border-color: #3dd68c;
+  color: #3dd68c;
+}
+
 .nfs-props-modal,
 .nfs-display-modal {
   position: fixed;
@@ -174,7 +221,7 @@ html.nfs-kiosk .fsb-menu {
   border-radius: 12px;
   padding: 20px;
   color: #eef4ff;
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: system-ui, sans-serif;
   font-size: 13px;
 }
 

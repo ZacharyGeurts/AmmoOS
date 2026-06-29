@@ -271,13 +271,17 @@ def train_blast(skill_id: str | None = None, *, ticks: int | None = None) -> dic
 
 
 ZONE_JOINTS: dict[str, tuple[str, ...]] = {
-    "head": ("head",),
-    "hands": ("hand_l", "hand_r"),
+    "head": ("head", "neck"),
+    "spine": ("spine_upper", "spine_mid", "spine_lower", "chest"),
+    "shoulders": ("shoulder_l", "shoulder_r"),
+    "hands": ("hand_l", "hand_r", "wrist_l", "wrist_r"),
     "elbows": ("elbow_l", "elbow_r"),
-    "centerline": ("chest",),
+    "centerline": ("chest", "spine_mid", "hip"),
     "hips": ("hip",),
     "knees": ("knee_l", "knee_r"),
+    "ankles": ("ankle_l", "ankle_r"),
     "feet": ("foot_l", "foot_r"),
+    "toes": ("toe_l", "toe_r"),
 }
 
 
@@ -317,6 +321,43 @@ def _geometry_mod() -> Any | None:
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+def _training_floor_opponents(*, active_skill: str | None = None) -> list[dict[str, Any]]:
+    """Reactive sparring AI from training floor when runtime is live."""
+    py = INSTALL / "lib" / "hostess7-training-floor.py"
+    if not py.is_file():
+        return []
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("h7_tf_opp", py)
+        if not spec or not spec.loader:
+            return []
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "reactive_sparring_opponents"):
+            return mod.reactive_sparring_opponents(active_skill=active_skill)
+    except Exception:
+        return []
+    return []
+
+
+def _training_floor_environment() -> dict[str, Any]:
+    py = INSTALL / "lib" / "hostess7-training-floor.py"
+    if not py.is_file():
+        return {}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("h7_tf_env", py)
+        if not spec or not spec.loader:
+            return {}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "environment_mesh"):
+            return mod.environment_mesh()
+    except Exception:
+        return {}
+    return {}
 
 
 def arena_opponents(*, doctrine: dict[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -376,6 +417,18 @@ def arena_opponents(*, doctrine: dict[str, Any] | None = None) -> list[dict[str,
             "live": True,
             "wireframe": "hostile",
         })
+    rt = _runtime()
+    reactive = _training_floor_opponents(active_skill=rt.get("active_skill"))
+    if reactive:
+        by_id = {str(o.get("id")): o for o in opponents}
+        for ro in reactive:
+            rid = str(ro.get("id") or "")
+            if rid in by_id:
+                merged = {**by_id[rid], **ro}
+                by_id[rid] = merged
+            else:
+                by_id[rid or f"sparring_{len(by_id)}"] = ro
+        opponents = list(by_id.values())
     return opponents
 
 
@@ -469,6 +522,8 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "body_motion": body_motion_amplitudes(),
         "joint_amplitudes": joint_amplitudes(),
         "arena": (doctrine.get("arena") or {}),
+        "environment_mesh": _training_floor_environment(),
+        "training_floor": _load(STATE / "hostess7-training-floor-panel.json", {}),
         "full_blast": FULL_BLAST,
         "train_intensity": TRAIN_INTENSITY,
         "wireframe_fps": WIREFRAME_FPS,
@@ -725,6 +780,32 @@ def main() -> int:
             if mv == "technique_ready"
             else ("train_continue" if mv == "train_continue" else None)
         )
+        tr_py = INSTALL / "lib" / "hostess7-training-room.py"
+        if tr_py.is_file():
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("h7_training_room_wf", tr_py)
+                if spec and spec.loader:
+                    tr = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(tr)
+                    if hasattr(tr, "build_panel"):
+                        doc["training_room"] = tr.build_panel(write=False)
+                    if hasattr(tr, "earth_mandate"):
+                        doc["earth_mandate"] = tr.earth_mandate()
+            except Exception:
+                pass
+        hand_py = INSTALL / "lib" / "hostess7-hand-core.py"
+        if hand_py.is_file():
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("h7_hand_wf", hand_py)
+                if spec and spec.loader:
+                    hc = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(hc)
+                    if hasattr(hc, "hand_wireframe"):
+                        doc["hand_wireframe"] = hc.hand_wireframe()
+            except Exception:
+                pass
         print(json.dumps(doc, ensure_ascii=False))
         return 0
     if cmd in ("data-all", "data_all", "data"):

@@ -2,11 +2,17 @@
   "schema": "sg-canonical/v1",
   "updated": "2026-06-29",
   "canonical_root": "NewLatest",
-  "motto": "SG/NewLatest — NEXUS C2 · ZNetwork · Queen (secure) · AmmoOS inside Queen on 127.0.0.1 — hardware no-break",
+  "motto": "SG/NewLatest \u2014 NEXUS C2 \u00b7 ZNetwork \u00b7 Queen (secure) \u00b7 AmmoOS inside Queen on 127.0.0.1 \u2014 hardware no-break",
   "stack_layers": {
     "doctrine": "NewLatest/data/field-stack-layer-doctrine.json",
     "posture": "NewLatest/lib/field-stack-layer.py",
-    "order": ["hardware", "nexus_c2", "znetwork", "queen", "ammoos"]
+    "order": [
+      "hardware",
+      "nexus_c2",
+      "znetwork",
+      "queen",
+      "ammoos"
+    ]
   },
   "sovereignty": {
     "doctrine": "NewLatest/data/queen-ammoos-sovereignty-doctrine.json",
@@ -34,8 +40,8 @@
     "network_shield": "NewLatest",
     "compiler": "NewLatest/Grok16",
     "ammocode": "NewLatest/AmmoCode",
-    "final_eye": "Final_Eye",
-    "final_ear": "Final_Ear",
+    "final_eye": "NewLatest/Final_Eye",
+    "final_ear": "NewLatest/Final_Ear",
     "final_mouth": "NewLatest/Final_Mouth",
     "field_research": "NewLatest/Field_Research",
     "gimp_field": "NewLatest/GIMP-Field",
@@ -43,9 +49,6 @@
     "keepass_field": "NewLatest/KeePass-Field",
     "gdb_field": "NewLatest/GDB-Field",
     "ammosecurity": "NewLatest/ammosecurity",
-    "zocr": "ZOCR",
-    "zocr_legacy": "NewLatest/ZOCR",
-    "znewocr": "NewLatest/ZNEWOCR",
     "world_redata": "World_Redata",
     "hostess_brain": "NewLatest/Hostess7",
     "field_kernel": "NewLatest/KILROY",
@@ -59,7 +62,11 @@
   },
   "wire_script": "NewLatest/scripts/wire-stack.sh",
   "retired": {
-    "Latest/NEXUS-Shield": "superseded by NewLatest \u2014 remove after migration"
+    "Latest/NEXUS-Shield": "superseded by NewLatest \u2014 remove after migration",
+    "ZOCR": "use Final_Eye only",
+    "ZNEWOCR": "use Final_Eye only",
+    "znetwork": "use ZNetwork only",
+    "NewLatest/NewLatest": "nested stub removed"
   },
   "cpu_vulnerability_shield": {
     "doctrine": "NewLatest/data/cpu-vulnerability-doctrine.json",
@@ -77,7 +84,7 @@
     "doctrine": "NewLatest/data/field-sense-package-doctrine.json",
     "meld": "NewLatest/lib/field-sense-package-meld.py",
     "api": "/api/sense-package",
-    "motto": "Eye \u00b7 Ear \u00b7 ZOCR \u00b7 Redata \u00b7 Hostess7 \u2014 melded and protected; brain witnessed read-only"
+    "motto": "Eye \u00b7 Ear \u00b7 Final_Eye \u00b7 Redata \u00b7 Hostess7 \u2014 melded and protected; brain witnessed read-only"
   },
   "security": {
     "root_sovereign": "NewLatest/Queen/lib/queen-root-sovereign.py",

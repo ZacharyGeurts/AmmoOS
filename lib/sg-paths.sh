@@ -83,23 +83,23 @@ sg_paths_hostess7_nexus_cache() {
   printf '%s\n' "${state%/}/hostess7-cache/fieldstorage"
 }
 
-sg_paths_znewocr_root() {
-  if [[ -n "${ZNEWOCR_ROOT:-}" ]]; then
-    printf '%s\n' "$(cd "${ZNEWOCR_ROOT}" 2>/dev/null && pwd || echo "${ZNEWOCR_ROOT}")"
-    return 0
-  fi
-  if [[ -n "${ZOCR_ROOT:-}" ]]; then
-    printf '%s\n' "$(cd "${ZOCR_ROOT}" 2>/dev/null && pwd || echo "${ZOCR_ROOT}")"
+sg_paths_final_eye_root() {
+  if [[ -n "${FINAL_EYE_ROOT:-}" ]]; then
+    printf '%s\n' "$(cd "${FINAL_EYE_ROOT}" 2>/dev/null && pwd || echo "${FINAL_EYE_ROOT}")"
     return 0
   fi
   local candidate resolved=""
-  for candidate in ZNEWOCR ZOCR Final_Eye; do
+  for candidate in Final_Eye; do
     resolved="$(sg_paths_stack_child "$candidate" 2>/dev/null || true)"
     [[ -n "$resolved" && -e "$resolved" ]] || continue
     printf '%s\n' "$resolved"
     return 0
   done
-  sg_paths_stack_child "ZNEWOCR"
+  sg_paths_stack_child "Final_Eye"
+}
+
+sg_paths_znewocr_root() {
+  sg_paths_final_eye_root
 }
 
 sg_paths_znetwork_root() {
@@ -180,19 +180,33 @@ sg_paths_ammocode_root() {
   sg_paths_stack_child "AmmoCode"
 }
 
+sg_paths_grok16_root() {
+  local inst parent candidate resolved=""
+  if [[ -n "${GROK16_ROOT:-}" && -x "${GROK16_ROOT}/bin/g16" ]]; then
+    printf '%s\n' "$(cd "${GROK16_ROOT}" && pwd)"
+    return 0
+  fi
+  inst="$(sg_paths_root)"
+  parent="$(cd "${inst}/.." 2>/dev/null && pwd || true)"
+  for candidate in "${inst}/Grok16" "${parent}/Grok16"; do
+    [[ -x "${candidate}/bin/g16" ]] || continue
+    printf '%s\n' "$(cd "${candidate}" && pwd)"
+    return 0
+  done
+  sg_paths_stack_child Grok16
+}
+
 sg_paths_export_defaults() {
   export SG_ROOT="${SG_ROOT:-$(sg_paths_root)}"
   export QUEEN_ROOT="${QUEEN_ROOT:-$(sg_paths_queen_root)}"
   export HOSTESS7_ROOT="${HOSTESS7_ROOT:-$(sg_paths_hostess7_root)}"
   export HOSTESS7_TEAM_FIELD="${HOSTESS7_TEAM_FIELD:-$(sg_paths_hostess7_team_field)}"
   export HOSTESS7_NEXUS_CACHE="${HOSTESS7_NEXUS_CACHE:-$(sg_paths_hostess7_nexus_cache)}"
-  export ZNEWOCR_ROOT="${ZNEWOCR_ROOT:-$(sg_paths_znewocr_root)}"
-  export ZOCR_ROOT="${ZOCR_ROOT:-${ZNEWOCR_ROOT}}"
+  export FINAL_EYE_ROOT="${FINAL_EYE_ROOT:-$(sg_paths_final_eye_root)}"
   export ZNETWORK_ROOT="${ZNETWORK_ROOT:-$(sg_paths_znetwork_root)}"
   export ZNETWORK_BIN="${ZNETWORK_BIN:-$(sg_paths_znetwork_bin 2>/dev/null || true)}"
   export NEXUS_SHIELD_SOURCE="${NEXUS_SHIELD_SOURCE:-${NEXUS_INSTALL_ROOT:-}}"
-  export FINAL_EYE_ROOT="${FINAL_EYE_ROOT:-$(sg_paths_stack_child Final_Eye)}"
-  export GROK16_ROOT="${GROK16_ROOT:-$(sg_paths_stack_child Grok16)}"
+  export GROK16_ROOT="${GROK16_ROOT:-$(sg_paths_grok16_root)}"
   export AMMOCODE_ROOT="${AMMOCODE_ROOT:-$(sg_paths_ammocode_root)}"
   export KILROY_ROOT="${KILROY_ROOT:-$(sg_paths_stack_child KILROY)}"
   export PYTHONG_ROOT="${PYTHONG_ROOT:-$(sg_paths_stack_child PythonG)}"

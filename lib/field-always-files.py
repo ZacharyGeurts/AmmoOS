@@ -482,6 +482,31 @@ def system_security(*, af: dict[str, Any] | None = None) -> dict[str, Any]:
     }
 
 
+def _theme_engine_mod() -> Any | None:
+    return _import_py(INSTALL / "lib" / "ammoos-theme-engine.py", "ammoos_theme_engine_af")
+
+
+def _theme_properties_section(af: dict[str, Any]) -> dict[str, Any] | None:
+    mod = _theme_engine_mod()
+    if not mod or not hasattr(mod, "properties_menu_for_file"):
+        return None
+    try:
+        sec = mod.properties_menu_for_file(af)
+        if not sec:
+            return None
+        return {
+            "id": sec.get("id") or "theme_file_type",
+            "title": sec.get("title") or "File type & launch",
+            "banner": sec.get("hint"),
+            "fields": sec.get("fields") or [],
+            "surface_options": sec.get("surface_options") or [],
+            "type_id": sec.get("type_id"),
+            "settings_link": sec.get("rule", {}).get("settings_link") or "/control-panel?tab=themes&section=file_types",
+        }
+    except Exception:
+        return None
+
+
 def properties_menu(af: dict[str, Any]) -> dict[str, Any]:
     """Rich properties + context actions for Queen Files UI."""
     base = _panel_base()
@@ -573,6 +598,10 @@ def properties_menu(af: dict[str, Any]) -> dict[str, Any]:
             field("Grep allowed", ai.get("grep_ok")),
         ],
     })
+
+    theme_sec = _theme_properties_section(af)
+    if theme_sec:
+        sections.insert(2, theme_sec)
 
     resolve_href = f"{base}/api/field-vfs/resolve?path={rel or path}"
     actions: list[dict[str, Any]] = [

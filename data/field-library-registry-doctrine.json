@@ -26,5 +26,10 @@
     "games": "library/dewey/700-arts/games",
     "greats": "library/dewey/920-biography/game-programming-greats"
   },
-  "api": ["/api/library-registry", "/api/library-registry/search"]
+  "api": ["/api/library-registry", "/api/library-registry/search"],
+  "ironclad": {
+    "secure_api": "/api/ironclad/secure-api",
+    "sort_context": "registry_index",
+    "singleton": true
+  }
 }

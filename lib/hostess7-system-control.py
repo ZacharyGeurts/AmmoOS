@@ -228,6 +228,21 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         return {"ok": True, **charge_state()}
     if action == "commander":
         return {"ok": True, **commander_slice()}
+    if action in ("turnover_weapons", "arm_weapons", "weapons_defense"):
+        wd = INSTALL / "lib" / "hostess7-weapons-defense.py"
+        if not wd.is_file():
+            return {"ok": False, "error": "hostess7_weapons_defense_missing"}
+        try:
+            spec = importlib.util.spec_from_file_location("h7_wd_sysc", wd)
+            if not spec or not spec.loader:
+                return {"ok": False, "error": "import_failed"}
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "turnover"):
+                return mod.turnover(reason=str(body.get("reason") or "system_control_turnover"))
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+        return {"ok": False, "error": "turnover_unavailable"}
     return {"ok": False, "error": "unknown_action"}
 
 

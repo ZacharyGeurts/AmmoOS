@@ -149,9 +149,8 @@ def panel_json(*, sync_ledger: bool = False) -> dict[str, Any]:
 
     ear_ref = sg / "Final_Ear/data/ear-truth-filter.json"
     eye_ref = sg / "Final_Eye/data/zocr-pattern-registry.json"
-    znew_eye = sg / "ZNEWOCR/data/zocr-pattern-registry.json"
-    if not eye_ref.is_file() and znew_eye.is_file():
-        eye_ref = znew_eye
+    if not eye_ref.is_file() and eye_ref.is_file():
+        eye_ref = eye_ref
 
     doc: dict[str, Any] = {
         "schema": "obs-threat-posterity/v1",

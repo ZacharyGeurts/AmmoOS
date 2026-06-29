@@ -16,7 +16,9 @@ from typing import Any
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
 SG = Path(os.environ.get("SG_ROOT", INSTALL.parent.parent))
-GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 DOCTRINE = INSTALL / "data" / "field-ironclad-chips-combinatorics-doctrine.json"
 SEED = INSTALL / "data" / "field-chip-battery-seed.json"
 WORLD_SEED = INSTALL / "data" / "field-world-chips-seed.json"
@@ -1305,6 +1307,20 @@ def build_ironclad_chips_combinatorics(*, mame_live: bool = False, force: bool =
     return result
 
 
+def _g16_lang_health_slice() -> dict[str, Any]:
+    """CHIPs ↔ G16 compiler test health — field_opt toolchain gate."""
+    path = STATE / "g16-chips-lang-health.json"
+    doc = _load(path, {})
+    if doc:
+        return {"ok": doc.get("ok"), "facet": "g16_lang_health", "hydrate": str(path), **doc}
+    return {
+        "ok": (GROK16 / "bin" / "g16").is_file(),
+        "facet": "g16_lang_health",
+        "hint": "Run lib/g16-compiler-test-harness.py",
+        "manifest": "Queen/data/chips-g16-manifest.json",
+    }
+
+
 def publish_panel(*, mame_live: bool = False, write_combinatorics: bool = True) -> dict[str, Any]:
     combinatorics = build_ironclad_chips_combinatorics(mame_live=mame_live)
     panel = {
@@ -1334,6 +1350,7 @@ def publish_panel(*, mame_live: bool = False, write_combinatorics: bool = True) 
             "the_sort": True,
             "algorithm": "composite_bsp",
         },
+        "g16_lang_health": _g16_lang_health_slice(),
     }
     _save(PANEL, panel)
     if write_combinatorics:

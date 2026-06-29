@@ -129,6 +129,9 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "hostess7_brain": ("hostess7-brain-guard.py", ["json"]),
     "ironclad": ("ironclad-plate.py", ["json"]),
     "ironclad_immediate": ("ironclad-immediate.py", ["json"]),
+    "ironclad_secure_api": ("ironclad-secure-api.py", ["status"]),
+    "compile_autocorrect": ("field-compile-autocorrect.py", ["json"]),
+
     "ironclad_reality_field": ("ironclad-reality-field.py", ["json"]),
     "ironclad_field_sanity": ("ironclad-field-sanity.py", ["json"]),
     "hostess7_programming": ("hostess7-programming.py", ["json"]),

@@ -48,14 +48,16 @@ def open_sovereign_browser(*, route: str = "", focus_url: str = "") -> dict[str,
     port = int(os.environ.get("QUEEN_WORLD_PORT", "9481"))
     panel_port = int(os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477"))
     c2_url = f"http://127.0.0.1:{panel_port}/field"
-    c2_launch = os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "1").strip().lower() not in (
+    kilroy_home = f"http://127.0.0.1:{port}/world/kilroy-home.html"
+    browser_shell = f"http://127.0.0.1:{port}/world/browser.html"
+    c2_launch = os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "0").strip().lower() not in (
         "0",
         "false",
         "no",
         "off",
     )
     shell_url = os.environ.get("QUEEN_BROWSER_URL", "").strip() or (
-        c2_url if c2_launch else f"http://127.0.0.1:{port}/world/browser.html"
+        c2_url if c2_launch else browser_shell
     )
     env = {
         **os.environ,
@@ -71,12 +73,12 @@ def open_sovereign_browser(*, route: str = "", focus_url: str = "") -> dict[str,
         "QUEEN_SKIP_RTX_BOOT": "1",
         "NEXUS_EMBED_PANEL_IN_ENGINE": "0",
         "NEXUS_FIELD_BROWSER_QUEEN": "1",
-        "NEXUS_C2_DESKTOP_LAUNCH": os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "1"),
-        "NEXUS_C2_KIOSK": os.environ.get("NEXUS_C2_KIOSK", "1"),
+        "NEXUS_C2_DESKTOP_LAUNCH": os.environ.get("NEXUS_C2_DESKTOP_LAUNCH", "0"),
+        "NEXUS_C2_KIOSK": os.environ.get("NEXUS_C2_KIOSK", "0"),
         "NEXUS_C2_LAUNCH_URL": os.environ.get("NEXUS_C2_LAUNCH_URL", c2_url),
         "QUEEN_BROWSER_URL": shell_url,
-        "QUEEN_BROWSER_START": os.environ.get("QUEEN_BROWSER_START", c2_url),
-        "QUEEN_BROWSER_HOME": os.environ.get("QUEEN_BROWSER_HOME", c2_url),
+        "QUEEN_BROWSER_START": os.environ.get("QUEEN_BROWSER_START", kilroy_home),
+        "QUEEN_BROWSER_HOME": os.environ.get("QUEEN_BROWSER_HOME", kilroy_home),
         "QUEEN_NO_OS_BROWSER": os.environ.get("QUEEN_NO_OS_BROWSER", "1"),
     }
     opener = _load_panel_open()
@@ -98,7 +100,7 @@ def open_sovereign_browser(*, route: str = "", focus_url: str = "") -> dict[str,
     if not panel_url and route:
         panel_url = opener._panel_field_url(route)  # noqa: SLF001
     if not panel_url:
-        panel_url = env.get("QUEEN_BROWSER_START", "").strip() or opener._panel_field_url()  # noqa: SLF001
+        panel_url = env.get("QUEEN_BROWSER_START", "").strip() or kilroy_home
     integrated_py = INSTALL / "lib" / "queen-integrated-browser.py"
     if integrated_py.is_file():
         try:

@@ -53,7 +53,7 @@ def _import_mod(name: str, rel: str) -> Any | None:
 
 
 def _sovereign_wire_formats() -> list[dict[str, Any]]:
-    """Formats that presume the 2D platform field — require SG/Grok16; never create field files."""
+    """Formats that presume the 2D platform field — require NewLatest/Grok16; never create field files."""
     flags = {
         "presumes_field_underneath": True,
         "requires_grok16": True,

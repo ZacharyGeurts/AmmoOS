@@ -13,7 +13,12 @@ from typing import Any
 
 QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
-GROK16 = SG / "Grok16"
+_SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+if str(_SG_PATHS_LIB) not in sys.path:
+    sys.path.insert(0, str(_SG_PATHS_LIB))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 GPY = SG / "GrokPy"
 
 DANGEROUS = re.compile(
@@ -31,6 +36,7 @@ ALLOWED_BASES = frozenset({
     "git", "make", "bash", "sh", "clear", "history", "true", "false", "test",
     "dirname", "basename", "realpath", "readlink",
     "kilroy", "kilroy-status", "kernel", "discern",
+    "ammolang-run.sh", "export", "cd",
 })
 
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(QUEEN.parent / "NewLatest")))
@@ -270,12 +276,32 @@ def _format_kernel_status() -> str:
     return "\n".join(lines)
 
 
+def _queen_themes() -> list[dict[str, Any]]:
+    paths = (
+        QUEEN / "gui" / "queen-styles-themes.json",
+        SG / "Queen" / "gui" / "queen-styles-themes.json",
+    )
+    for path in paths:
+        if path.is_file():
+            try:
+                doc = json.loads(path.read_text(encoding="utf-8"))
+                return [
+                    {"id": t.get("id"), "label": t.get("label"), "built_in": t.get("built_in", True)}
+                    for t in (doc.get("themes") or [])
+                    if t.get("id")
+                ]
+            except (OSError, json.JSONDecodeError):
+                break
+    return []
+
+
 def terminal_status() -> dict[str, Any]:
     env = _field_env()
     g16 = GROK16 / "bin" / "g16"
     gpy = GPY / "bin" / "gpy-16"
     kernel = _kernel_slice()
     default = _default_cwd()
+    themes = _queen_themes()
     return {
         "ok": True,
         "schema": "queen-gnu-terminal/v1",
@@ -290,9 +316,14 @@ def terminal_status() -> dict[str, Any]:
             "path": env.get("PATH", "")[:240],
             "kilroy_by_default": True,
         },
+        "ansi": {"enabled": True, "palette": "256+truecolor", "parser": "ellie-nav"},
+        "themes": themes,
+        "theme_default": "black_emerald_rose_2026",
+        "theme_mono": "mono_terminal",
+        "queen_styles": "/gui/queen-styles-themes.json",
         "minibrowser_proxy": "/browse/view",
         "menus": ["File", "Edit", "View", "Options", "Help"],
-        "posture": "Queen GNU Terminal — KILROY cwd by default, proc witness when loaded",
+        "posture": "Queen GNU Terminal — ANSI palette, Queen Styles, KILROY cwd, proc witness when loaded",
     }
 
 
@@ -340,7 +371,8 @@ def dispatch_terminal(body: dict[str, Any]) -> dict[str, Any]:
         out = (proc.stdout or "") + (proc.stderr or "")
         return {
             "ok": proc.returncode == 0,
-            "output": out[:8000] or f"(exit {proc.returncode})",
+            "output": out[:16000] or f"(exit {proc.returncode})",
+            "ansi": True,
             "returncode": proc.returncode,
             "cwd": str(cwd),
             "field_kernel": _kernel_slice(),

@@ -1,0 +1,25 @@
+{
+  "id": "exploring_graphql",
+  "title": "Exploring Graphql",
+  "author": "Grok16 Field",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-EXPLORE-68f28cf9bb1a",
+  "format": "h7c",
+  "format_version": 3,
+  "book_kind": "exploring",
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map",
+    "memory",
+    "compile"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/exploring_graphql/exploring_graphql.h7c",
+  "field_path": "library/dewey/000-computer-science/exploring_graphql/exploring_graphql.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "graphql",
+  "cover": "/world/assets/combinatronic/books/graphql.png",
+  "updated": "2026-06-29T13:27:52Z"
+}

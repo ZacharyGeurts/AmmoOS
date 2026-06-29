@@ -9,8 +9,8 @@ CANON="${ROOT}/data/field-programming-filetypes.json"
 [[ -f "$CANON" ]] || { echo "missing $CANON" >&2; exit 1; }
 
 targets=(
-  "${SG}/Grok16/data/field-programming-filetypes.json"
-  "${SG}/AmmoCode/data/field-programming-filetypes.json"
+  "${ROOT}/Grok16/data/field-programming-filetypes.json"
+  "${ROOT}/AmmoCode/data/field-programming-filetypes.json"
   "${ROOT}/.nexus-state/field-programming-filetypes.json"
 )
 
@@ -28,8 +28,8 @@ canon = json.loads(Path("$CANON").read_text())
 exts = canon.get("extensions") or {}
 mime = canon.get("mime_hints") or {}
 for path in [
-    Path("$SG/Grok16/data/g16-universal-extensions.json"),
-    Path("$SG/AmmoCode/data/internet-filetypes.json"),
+    Path("$ROOT/Grok16/data/g16-universal-extensions.json"),
+    Path("$ROOT/AmmoCode/data/internet-filetypes.json"),
 ]:
     doc = {"schema": path.stem.replace("g16-universal-extensions","g16-universal-extensions/v1").replace("internet-filetypes","g16-universal-extensions/v1"), "extensions": exts, "mime_hints": mime}
     if "internet" in path.name:

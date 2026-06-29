@@ -7,6 +7,7 @@ import json
 import os
 import re
 import sys
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +37,26 @@ _SEQ_START = re.compile(r"^seq\s*[·.]", re.I)
 _PAR_START = re.compile(r"^par\s*[⊕+]", re.I)
 _COMB_BLOCK_START = re.compile(r"^combinator\s+(\w+)\s*\{", re.I)
 _COMB_BLOCK_END = re.compile(r"^\}\s*$")
+_SAY = re.compile(r'^say\s+(?:"([^"]*)"|\'([^\']*)\'|(.+))$', re.I)
+_FORGE = re.compile(r"^forge\s+(\S+)", re.I)
+_TEST = re.compile(r"^test\s+(.+)$", re.I)
+_FAST = re.compile(r"^fast\s+(.+)$", re.I)
+_INVOKE = re.compile(r"^invoke\s+(.+)$", re.I)
+_CHIPS = re.compile(r"^chips\s+(\S+)", re.I)
+_ENSURE = re.compile(r"^ensure\s+(\S+)", re.I)
+_STACK_WIRE = re.compile(r"^stack\s+wire\b", re.I)
+_PLATE_MELD = re.compile(r"^plate\s+meld\b", re.I)
+_REBALANCE = re.compile(r"^rebalance\s+(\S+)", re.I)
+_CLEAN = re.compile(r"^clean\s+(\S+)", re.I)
+_UPDATE = re.compile(r"^update\s+(\S+)", re.I)
+_PROGRAM = re.compile(r"^program\s+(\S+)", re.I)
+_VERIFY = re.compile(r"^verify\s+(\S+)", re.I)
+_SELF = re.compile(r"^self\s+(\S+)", re.I)
+_RUN = re.compile(r"^run\s+(.+)$", re.I)
+_ASSIST = re.compile(r"^assist\s*(\S*)", re.I)
+_GITHUB = re.compile(r"^github\s+(.+)$", re.I)
+_POST = re.compile(r"^post\s+(.+)$", re.I)
+_PROGRESS = re.compile(r"^progress\s+(.+)$", re.I)
 
 
 def _now() -> str:
@@ -90,12 +111,17 @@ def _append_step(steps: list[dict[str, Any]], step: dict[str, Any]) -> None:
         steps.append(step)
 
 
-def parse_ammolang(source: str) -> dict[str, Any]:
-    """Parse AmmoLang source into AST — v1 sequence + combinamatrix blocks."""
+def clear_parse_cache() -> None:
+    """Drop parse LRU after AmmoLang self-upgrade."""
+    _parse_cached.cache_clear()
+
+
+@lru_cache(maxsize=64)
+def _parse_cached(source: str) -> tuple[dict[str, str], list[dict[str, Any]], int, tuple[str, ...], bool]:
+    """Cached parse core — directives, steps, step_count, errors, ok."""
     directives: dict[str, str] = {}
     steps: list[dict[str, Any]] = []
     block_stack: list[dict[str, Any]] = []
-    mode = "top"
     errors: list[str] = []
     for lineno, raw in enumerate(source.splitlines(), 1):
         line = _strip(raw)
@@ -108,14 +134,12 @@ def parse_ammolang(source: str) -> dict[str, Any]:
             if block_stack:
                 block = block_stack.pop()
                 _append_step(steps, block)
-                mode = "top" if not block_stack else f"block:{block_stack[-1].get('name')}"
             else:
                 errors.append(f"line {lineno}: unmatched `}}`")
             continue
         if m := _COMB_BLOCK_START.match(line):
             block = {"op": "COMBINATOR", "name": m.group(1).lower(), "line": lineno, "entries": []}
             block_stack.append(block)
-            mode = f"block:{block['name']}"
             continue
         if block_stack:
             parts = line.split(None, 1)
@@ -124,18 +148,56 @@ def parse_ammolang(source: str) -> dict[str, Any]:
             block_stack[-1]["entries"].append({"key": key, "value": val, "line": lineno})
             continue
         if _SEQ_START.match(line):
-            mode = "seq"
             steps.append({"op": "SEQ", "line": lineno, "children": []})
             continue
         if _PAR_START.match(line):
-            mode = "par"
             steps.append({"op": "PAR", "line": lineno, "children": []})
             continue
         body = line.lstrip()
         if body.startswith("  "):
             body = body.strip()
         step: dict[str, Any] | None = None
-        if _GROW.match(body):
+        if m := _SAY.match(body):
+            step = {"op": "SAY", "spec": m.group(1) or m.group(2) or m.group(3) or "", "line": lineno}
+        elif m := _FORGE.match(body):
+            step = {"op": "FORGE", "spec": m.group(1), "line": lineno}
+        elif m := _TEST.match(body):
+            step = {"op": "TEST", "spec": m.group(1).strip(), "line": lineno}
+        elif m := _FAST.match(body):
+            step = {"op": "FAST", "spec": m.group(1).strip(), "line": lineno}
+        elif m := _INVOKE.match(body):
+            step = {"op": "INVOKE", "spec": m.group(1).strip(), "line": lineno}
+        elif m := _CHIPS.match(body):
+            step = {"op": "CHIPS", "spec": m.group(1), "line": lineno}
+        elif m := _ENSURE.match(body):
+            step = {"op": "ENSURE", "spec": m.group(1), "line": lineno}
+        elif _STACK_WIRE.match(body):
+            step = {"op": "WIRE_STACK", "spec": "wire", "line": lineno}
+        elif _PLATE_MELD.match(body):
+            step = {"op": "MELD", "spec": "fuse", "line": lineno}
+        elif m := _REBALANCE.match(body):
+            step = {"op": "REBALANCE", "spec": m.group(1), "line": lineno}
+        elif m := _CLEAN.match(body):
+            step = {"op": "CLEAN", "spec": m.group(1), "line": lineno}
+        elif m := _UPDATE.match(body):
+            step = {"op": "UPDATE", "spec": m.group(1), "line": lineno}
+        elif m := _PROGRAM.match(body):
+            step = {"op": "PROGRAM", "spec": m.group(1), "line": lineno}
+        elif m := _VERIFY.match(body):
+            step = {"op": "VERIFY", "spec": m.group(1), "line": lineno}
+        elif m := _SELF.match(body):
+            step = {"op": "SELF", "spec": m.group(1), "line": lineno}
+        elif m := _RUN.match(body):
+            step = {"op": "RUN", "spec": m.group(1).strip(), "line": lineno}
+        elif m := _ASSIST.match(body):
+            step = {"op": "ASSIST", "spec": (m.group(1) or "all").strip(), "line": lineno}
+        elif m := _GITHUB.match(body):
+            step = {"op": "GITHUB", "spec": m.group(1).strip(), "line": lineno}
+        elif m := _POST.match(body):
+            step = {"op": "POST", "spec": m.group(1).strip(), "line": lineno}
+        elif m := _PROGRESS.match(body):
+            step = {"op": "PROGRESS", "spec": m.group(1).strip(), "line": lineno}
+        elif _GROW.match(body):
             step = {"op": "GROW", "action": "scan", "line": lineno}
         elif m := _SURFACE.match(body):
             step = {"op": "SURFACE", "depth": int(m.group(1) or 4), "line": lineno}
@@ -165,13 +227,19 @@ def parse_ammolang(source: str) -> dict[str, Any]:
     if block_stack:
         for block in block_stack:
             errors.append(f"line {block.get('line')}: unclosed combinator `{block.get('name')}`")
+    return directives, steps, _count_steps(steps), tuple(errors), len(errors) == 0
+
+
+def parse_ammolang(source: str) -> dict[str, Any]:
+    """Parse AmmoLang source into AST — v1 sequence + combinamatrix + sovereign build ops."""
+    directives, steps, step_count, errors, ok = _parse_cached(source)
     return {
-        "schema": "ammolang-ast/v1",
+        "schema": "ammolang-ast/v2",
         "directives": directives,
         "steps": steps,
-        "step_count": _count_steps(steps),
-        "errors": errors,
-        "ok": len(errors) == 0,
+        "step_count": step_count,
+        "errors": list(errors),
+        "ok": ok,
     }
 
 
@@ -230,6 +298,9 @@ def compile_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 ir.append(row)
             elif op == "COMBINATOR":
                 row.update({"name": node.get("name"), "entries": node.get("entries") or []})
+                ir.append(row)
+            elif op in ("SAY", "FORGE", "TEST", "FAST", "INVOKE", "CHIPS", "ENSURE"):
+                row["spec"] = node.get("spec")
                 ir.append(row)
             else:
                 ir.append(row)
@@ -322,6 +393,18 @@ def interpret_ir(ir_doc: dict[str, Any], *, dry_run: bool = True) -> dict[str, A
             entries = row.get("entries") or []
             entry["combinator"] = name
             entry["result"] = _execute_combinator(name, entries, dry_run=dry_run)
+        elif op in ("SAY", "FORGE", "TEST", "FAST", "INVOKE", "CHIPS", "ENSURE") and not dry_run:
+            build = _import_mod("aml_build", "field-ammolang-build.py")
+            if build and hasattr(build, "execute_build_script"):
+                entry["build_op"] = op
+                entry["spec"] = row.get("spec")
+                entry["note"] = "delegated_to_sovereign_build"
+            else:
+                entry["spec"] = row.get("spec")
+                entry["note"] = "build_op_dry"
+        elif op in ("SAY", "FORGE", "TEST", "FAST", "INVOKE", "CHIPS", "ENSURE"):
+            entry["spec"] = row.get("spec")
+            entry["build_op"] = op
         elif op == "BIND":
             bindings[str(row.get("name"))] = str(row.get("leaf"))
             entry["bindings"] = dict(bindings)
@@ -436,6 +519,33 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
     return {"ok": False, "error": "unknown_action", "actions": ["panel", "compile", "interpret"]}
 
 
+def run_live(path: Path) -> dict[str, Any]:
+    """Fastest live execution — sovereign build engine when build ops present."""
+    source = path.read_text(encoding="utf-8")
+    ast = parse_ammolang(source)
+    build_ops = (
+        "SAY", "FORGE", "TEST", "FAST", "INVOKE", "CHIPS", "ENSURE",
+        "WIRE_STACK", "MELD", "REBALANCE", "CLEAN", "UPDATE", "PROGRAM", "VERIFY", "SELF", "RUN", "ASSIST", "GITHUB", "POST", "PROGRESS",
+    )
+    has_build = any(s.get("op") in build_ops for s in _flatten_steps(ast.get("steps") or []))
+    if has_build or os.environ.get("AML_BUILD", "1") != "0":
+        build = _import_mod("aml_build", "field-ammolang-build.py")
+        if build and hasattr(build, "execute_build_script"):
+            return build.execute_build_script(path, live=True)
+    compiled = compile_file(path)
+    return interpret_ir(compiled.get("ir") or {}, dry_run=False)
+
+
+def _flatten_steps(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    flat: list[dict[str, Any]] = []
+    for s in steps:
+        if s.get("op") in ("SEQ", "PAR"):
+            flat.extend(_flatten_steps(s.get("children") or []))
+        else:
+            flat.append(s)
+    return flat
+
+
 def main() -> int:
     cmd = (sys.argv[1] if len(sys.argv) > 1 else "panel").strip().lower()
     if cmd in ("panel", "json"):
@@ -454,10 +564,25 @@ def main() -> int:
         path = Path(sys.argv[2]) if len(sys.argv) > 2 else EXAMPLES / "boot_sequence.aml"
         if not path.is_absolute():
             path = INSTALL / path
+        if "--live" in sys.argv:
+            doc = run_live(path)
+            print(json.dumps(doc, ensure_ascii=False, indent=2))
+            return 0 if doc.get("ok", True) else 1
         compiled = compile_file(path)
-        trace = interpret_ir(compiled.get("ir") or {}, dry_run="--live" not in sys.argv)
+        trace = interpret_ir(compiled.get("ir") or {}, dry_run=True)
         print(json.dumps(trace, ensure_ascii=False, indent=2))
         return 0
+    if cmd == "build":
+        build = _import_mod("aml_build", "field-ammolang-build.py")
+        if not build:
+            print(json.dumps({"ok": False, "error": "field-ammolang-build missing"}, indent=2))
+            return 1
+        path = Path(sys.argv[2]) if len(sys.argv) > 2 else INSTALL / "library/dewey/000-computer-science/ammolang/sovereign_build.aml"
+        if not path.is_absolute():
+            path = INSTALL / path
+        doc = build.execute_build_script(path, live="--dry" not in sys.argv)
+        print(json.dumps(doc, ensure_ascii=False, indent=2))
+        return 0 if doc.get("ok") else 1
     if cmd == "example":
         EXAMPLES.mkdir(parents=True, exist_ok=True)
         boot = EXAMPLES / "boot_sequence.aml"
@@ -467,7 +592,7 @@ def main() -> int:
         return 0
     print(json.dumps({
         "error": "usage",
-        "hint": "field-ammolang.py [panel|compile|interpret|example] [path.aml] [--refresh] [--live]",
+        "hint": "field-ammolang.py [panel|compile|interpret|build|example] [path.aml] [--refresh] [--live]",
     }, indent=2))
     return 1
 

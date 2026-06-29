@@ -37,7 +37,11 @@ def _load(path: Path, default: Any = None) -> Any:
 
 
 def _grok16_root() -> Path:
-    return Path(os.environ.get("GROK16_ROOT", str(SG / "Grok16")))
+    _SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
+    if str(_SG_PATHS_LIB) not in sys.path:
+        sys.path.insert(0, str(_SG_PATHS_LIB))
+    from sg_paths import grok16_root
+    return grok16_root()
 
 
 def _g16_bin() -> Path | None:

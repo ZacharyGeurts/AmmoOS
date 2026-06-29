@@ -11,7 +11,7 @@
   --bc-rec: #f97316;
   --bc-accent: #38bdf8;
   --bc-radius: 6px;
-  --bc-font: "Segoe UI", system-ui, sans-serif;
+  --bc-font: system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -46,9 +46,26 @@ html, body { margin: 0; height: 100%; background: var(--bc-bg); color: var(--bc-
 }
 .bc-list li:hover { background: rgba(255,255,255,0.04); }
 .bc-list li.active { background: rgba(62, 207, 142, 0.15); border-color: rgba(62, 207, 142, 0.35); color: var(--bc-emerald); }
+.bc-list li.preview { border-color: rgba(56, 189, 248, 0.35); color: var(--bc-accent); }
 .bc-list li .bc-src-kind { font-size: 10px; color: var(--bc-muted); margin-left: auto; }
 
 .bc-stage { display: flex; flex-direction: column; padding: 8px; gap: 8px; min-width: 0; }
+
+.bc-platform-bar {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; padding: 8px;
+  background: var(--bc-panel2); border: 1px solid var(--bc-edge); border-radius: var(--bc-radius);
+}
+.bc-platform-bar label { display: flex; flex-direction: column; gap: 4px; font-size: 10px; color: var(--bc-muted); }
+.bc-platform-bar select, .bc-platform-bar input {
+  min-width: 140px; padding: 6px 8px; border-radius: 4px; border: 1px solid var(--bc-edge);
+  background: var(--bc-panel); color: var(--bc-text); font-size: 12px;
+}
+
+.bc-preview-feed { width: 100%; height: 100%; object-fit: contain; background: #000; }
+.bc-codecs, .bc-canvas { padding: 6px 8px; font-size: 11px; color: var(--bc-muted); }
+.bc-canvas { margin-top: 6px; padding: 8px; border-radius: var(--bc-radius); background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.2); }
+.bc-canvas.linked { background: rgba(62, 207, 142, 0.08); border-color: rgba(62, 207, 142, 0.3); color: var(--bc-emerald); }
+.bc-muted { color: var(--bc-muted); font-style: italic; padding: 8px; }
 .bc-views { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; }
 .bc-view { display: flex; flex-direction: column; min-height: 0; }
 .bc-view-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--bc-muted); margin-bottom: 4px; }
@@ -57,6 +74,10 @@ html, body { margin: 0; height: 100%; background: var(--bc-bg); color: var(--bc-
   display: flex; align-items: center; justify-content: center; position: relative;
 }
 .bc-viewport--program { border-color: rgba(244, 114, 182, 0.45); }
+.bc-viewport.bc-fade-out .bc-preview-feed { animation: bc-fade-out 0.5s ease forwards; }
+.bc-viewport.bc-fade-in .bc-preview-feed { animation: bc-fade-in 0.5s ease forwards; }
+@keyframes bc-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes bc-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .bc-view-placeholder { color: #475569; font-size: 12px; }
 .bc-transitions { display: flex; gap: 6px; justify-content: center; }
 
@@ -77,6 +98,14 @@ html, body { margin: 0; height: 100%; background: var(--bc-bg); color: var(--bc-
 .bc-devices, .bc-mixer { padding: 6px 8px; font-size: 11px; color: var(--bc-muted); max-height: 140px; overflow: auto; }
 .bc-dev-row { padding: 4px 0; border-bottom: 1px solid var(--bc-edge); }
 .bc-dev-row strong { color: var(--bc-text); display: block; font-size: 11px; }
+.bc-dac-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--bc-green, #34d399);
+  text-decoration: none;
+}
+.bc-dac-link:hover { text-decoration: underline; }
 
 .bc-btn, .bc-icon-btn {
   padding: 5px 10px; border-radius: 4px; border: 1px solid var(--bc-edge); background: var(--bc-panel2);
@@ -100,6 +129,16 @@ html, body { margin: 0; height: 100%; background: var(--bc-bg); color: var(--bc-
   color: var(--bc-text); cursor: pointer; font-size: 12px;
 }
 .bc-dropdown button:hover { background: rgba(62, 207, 142, 0.12); }
+
+.bc-dock--recordings { min-height: 100px; }
+.bc-recordings { max-height: 120px; }
+.bc-playback {
+  width: 100%;
+  margin-top: 6px;
+  border-radius: var(--bc-radius);
+  background: #000;
+  max-height: 140px;
+}
 
 @media (max-width: 900px) {
   .bc-workspace { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }

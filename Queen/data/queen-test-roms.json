@@ -103,10 +103,17 @@
       "sources": []
     },
     "c64": {
-      "label": "Commodore 64",
+      "label": "Commodore 64 (classic)",
       "filename": "c64-test.prg",
       "extensions": [".prg", ".crt", ".d64"],
       "sources": []
+    },
+    "c64_ultimate": {
+      "label": "Commodore 64 Ultimate",
+      "filename": "",
+      "extensions": [".prg", ".crt", ".d64", ".tap", ".t64"],
+      "sources": [],
+      "note": "Hardware pair — load via USB cassette / CommoServe on device; no host test ROM"
     },
     "apple2": {
       "label": "Apple II",

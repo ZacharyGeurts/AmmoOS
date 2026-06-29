@@ -69,7 +69,7 @@ def default_home() -> str:
     custom = os.environ.get("QUEEN_BROWSER_HOME", "").strip()
     if custom:
         return custom
-    return f"{world_base()}/world/queen-field-home.html"
+    return f"{world_base()}/world/kilroy-home.html"
 
 
 def internal_routes() -> list[dict[str, Any]]:

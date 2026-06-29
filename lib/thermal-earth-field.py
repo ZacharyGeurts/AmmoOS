@@ -13,6 +13,7 @@ import math
 import os
 import re
 import subprocess
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -195,29 +196,21 @@ def _ocr_images() -> list[dict[str, Any]]:
         except OSError:
             pass
     out: list[dict[str, Any]] = []
-    tess = None
-    for candidate in ("tesseract", "/usr/bin/tesseract"):
-        try:
-            proc = subprocess.run([candidate, "--version"], capture_output=True, timeout=4)
-            if proc.returncode == 0:
-                tess = candidate
-                break
-        except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
-            continue
+    core_py = INSTALL / "lib" / "final-eye-ocr-core.py"
     for img in sorted(OCR_IMAGE_DIR.glob("*")):
         if img.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp", ".bmp"):
             continue
         text = ""
-        if tess:
+        if core_py.is_file():
             try:
-                proc = subprocess.run(
-                    [tess, str(img), "stdout", "-l", "eng", "--psm", "6"],
-                    capture_output=True,
-                    text=True,
-                    timeout=45,
-                )
-                text = (proc.stdout or "").strip()
-            except (OSError, subprocess.TimeoutExpired):
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("final_eye_ocr_thermal", core_py)
+                if spec and spec.loader:
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)
+                    if hasattr(mod, "ocr_image_text"):
+                        text = str(mod.ocr_image_text(img) or "").strip()
+            except Exception:
                 pass
         warm_hits = len(OCR_WARM_TERMS.findall(text))
         cold_hits = len(OCR_COLD_TERMS.findall(text))

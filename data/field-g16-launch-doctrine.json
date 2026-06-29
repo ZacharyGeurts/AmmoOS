@@ -15,9 +15,11 @@
     "~/Desktop/SG"
   ],
   "g16": {
+    "version": "5.1.0",
     "bin_names": ["g16", "g++", "gcc"],
     "root_env": "GROK16_ROOT",
-    "statement": "SG/Grok16 provides g16; queen-launch-chamber runs organized field without AmmoOS build"
+    "canonical_root": "NewLatest/Grok16",
+    "statement": "NewLatest/Grok16 provides g16; queen-launch-chamber runs organized field without AmmoOS build"
   },
   "desktop_actions": {
     ".launch": [

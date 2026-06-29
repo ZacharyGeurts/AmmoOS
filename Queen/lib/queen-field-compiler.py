@@ -31,7 +31,7 @@ def _security_gate(operation: str) -> dict[str, Any]:
 
 
 def _zocr_compiler():
-    zocr = Path(os.environ.get("ZOCR_ROOT", SG / "ZOCR"))
+    final_eye = Path(os.environ.get("FINAL_EYE_ROOT", SG / "NewLatest" / "Final_Eye"))
     sys.path.insert(0, str(zocr))
     from zocr_field_compiler import dispatch as zdispatch  # type: ignore
     return zdispatch
@@ -40,7 +40,7 @@ def _zocr_compiler():
 def field_compiler_status() -> dict[str, Any]:
     gate = _security_gate("compiler_probe")
     try:
-        zocr = Path(os.environ.get("ZOCR_ROOT", SG / "ZOCR"))
+        final_eye = Path(os.environ.get("FINAL_EYE_ROOT", SG / "NewLatest" / "Final_Eye"))
         sys.path.insert(0, str(zocr))
         from zocr_field_compiler import field_compiler_status as zstatus  # type: ignore
         out = zstatus()
@@ -67,7 +67,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         return {"ok": True, **field_compiler_status()}
     if action == "doctrine":
         try:
-            zocr = Path(os.environ.get("ZOCR_ROOT", SG / "ZOCR"))
+            final_eye = Path(os.environ.get("FINAL_EYE_ROOT", SG / "NewLatest" / "Final_Eye"))
             doc = json.loads((zocr / "data" / "field-compiler.json").read_text(encoding="utf-8"))
             return {"ok": True, "doctrine": doc}
         except (OSError, json.JSONDecodeError) as exc:

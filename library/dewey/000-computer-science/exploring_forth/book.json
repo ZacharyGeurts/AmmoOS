@@ -1,0 +1,25 @@
+{
+  "id": "exploring_forth",
+  "title": "Exploring Forth",
+  "author": "Grok16 Field",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-EXPLORE-453b35652ee1",
+  "format": "h7c",
+  "format_version": 3,
+  "book_kind": "exploring",
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map",
+    "memory",
+    "compile"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/exploring_forth/exploring_forth.h7c",
+  "field_path": "library/dewey/000-computer-science/exploring_forth/exploring_forth.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "forth",
+  "cover": "/world/assets/combinatronic/books/forth.png",
+  "updated": "2026-06-29T13:25:44Z"
+}

@@ -47,6 +47,7 @@ def _log(row: dict[str, Any]) -> None:
 def _urls() -> dict[str, str]:
     return {
         "field_desktop": f"http://127.0.0.1:{PANEL_PORT}/field",
+        "kilroy_home": f"http://127.0.0.1:{WORLD_PORT}/world/kilroy-home.html",
         "command": f"http://127.0.0.1:{PANEL_PORT}/command",
         "underlay_f9": f"http://127.0.0.1:{PANEL_PORT}/underlay-f9",
         "queen_browser": f"http://127.0.0.1:{WORLD_PORT}/world/browser.html",
@@ -127,8 +128,8 @@ def rise(*, open_browser: bool = True) -> dict[str, Any]:
         opener = INSTALL / "lib" / "field-queen-browser-open.py"
         if opener.is_file():
             env = {**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)}
-            env.setdefault("QUEEN_BROWSER_START", _urls()["field_desktop"])
-            env.setdefault("QUEEN_BROWSER_HOME", _urls()["field_desktop"])
+            env.setdefault("QUEEN_BROWSER_START", _urls()["kilroy_home"])
+            env.setdefault("QUEEN_BROWSER_HOME", _urls()["kilroy_home"])
             try:
                 proc = subprocess.run(
                     [sys.executable, str(opener), "f9"],

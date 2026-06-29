@@ -88,7 +88,28 @@ def amouranthrtx_root() -> Path:
 
 
 def grok16_root() -> Path:
-    return stack_path("Grok16")
+    """Canonical Grok16 — NewLatest/Grok16 when bin/g16 exists; ignore data-only stubs."""
+    candidates: list[Path] = []
+    env = os.environ.get("GROK16_ROOT", "").strip()
+    if env:
+        candidates.append(Path(env).expanduser())
+    inst = sg_root()
+    candidates.extend([inst / "Grok16", inst.parent / "Grok16"])
+    seen: set[str] = set()
+    ordered: list[Path] = []
+    for p in candidates:
+        key = str(p)
+        if key in seen:
+            continue
+        seen.add(key)
+        ordered.append(p)
+    for p in ordered:
+        if p.is_dir() and (p / "bin" / "g16").is_file():
+            return p.resolve()
+    for p in ordered:
+        if p.is_dir():
+            return p.resolve()
+    return (inst / "Grok16").resolve()
 
 
 def kilroy_root() -> Path:
@@ -99,22 +120,25 @@ def pythong_root() -> Path:
     return stack_path("PythonG", "GrokPy")
 
 
-def znewocr_root() -> Path:
-    for key in ("ZNEWOCR_ROOT", "ZOCR_ROOT", "FINAL_EYE_ROOT"):
-        env = os.environ.get(key, "").strip()
-        if env:
-            p = Path(env).expanduser().resolve()
-            if p.is_dir() or p.is_symlink():
-                return p
-    for name in ("ZNEWOCR", "ZOCR", "Final_Eye"):
-        p = stack_path(name)
-        if p.exists():
-            return p
-    return stack_path("ZNEWOCR")
-
-
 def final_eye_root() -> Path:
+    """Canonical vision OCR + eyeball — NewLatest/Final_Eye only; ZOCR retired."""
+    env = os.environ.get("FINAL_EYE_ROOT", "").strip()
+    if env:
+        p = Path(env).expanduser().resolve()
+        if p.is_dir() or p.is_symlink():
+            return p
+    inst = sg_root()
+    for candidate in (inst / "Final_Eye", inst.parent / "Final_Eye"):
+        if candidate.is_dir() and (
+            (candidate / "zocr_product.py").is_file() or (candidate / "VERSION").is_file()
+        ):
+            return candidate.resolve()
     return stack_path("Final_Eye")
+
+
+def znewocr_root() -> Path:
+    """Deprecated — alias to final_eye_root()."""
+    return final_eye_root()
 
 
 def final_ear_root() -> Path:

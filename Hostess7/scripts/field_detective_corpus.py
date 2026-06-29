@@ -11,6 +11,7 @@ import json
 import os
 import re
 from pathlib import Path
+import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -223,7 +224,11 @@ def ironclad_slice() -> dict[str, Any]:
         except Exception as exc:
             return {"ok": False, "source": "ironclad-immediate", "error": str(exc), "install": str(install)}
 
-    g16 = SG / "Grok16" / "forge" / "g16-ironclad.py"
+    _lib = Path(__file__).resolve().parents[2] / "lib"
+    if str(_lib) not in sys.path:
+        sys.path.insert(0, str(_lib))
+    from sg_paths import grok16_root
+    g16 = grok16_root() / "forge" / "g16-ironclad.py"
     g16_mod = _load_module(g16, "g16_ironclad_detective")
     if g16_mod and hasattr(g16_mod, "meld_slice"):
         try:

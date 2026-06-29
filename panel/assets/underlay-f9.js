@@ -423,7 +423,7 @@
       '<div class="f9-grid f9-wide">' +
       card("Last tick", state.lastTick || "—", "auto every " + POLL_MS / 1000 + "s") +
       card("Host freeze", frozen, isolated) +
-      card("Sense meld", "POST /api/sense-package/meld", "eye · ear · zocr · redata · hostess7") +
+      card("Sense meld", "POST /api/sense-package/meld", "eye · ear · mouth · redata · hostess7") +
       card("Meld cycle", "POST /api/plate-meld/cycle", "sense → firmware → kernel → plates → bus") +
       card("Bus pack", "POST /api/field-bus/cycle", "data_bus[64] copilot") +
       "</div>" +

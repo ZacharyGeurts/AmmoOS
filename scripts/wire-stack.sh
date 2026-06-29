@@ -15,8 +15,6 @@ STACK=(
   Final_Eye
   Final_Ear
   Final_Mouth
-  ZNEWOCR
-  ZOCR
   World_Redata
   World_Repack
   Field_Primer

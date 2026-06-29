@@ -48,6 +48,8 @@
     bookmarks: [],
     librarian: null,
     progressTimer: null,
+    readStartedAt: null,
+    readTimerInterval: null,
   };
 
   function loadPrefs() {
@@ -154,6 +156,46 @@
     return res.json();
   }
 
+  function formatElapsed(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(s / 60);
+    const h = Math.floor(m / 60);
+    if (h > 0) return `${h}:${String(m % 60).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+    return `${m}:${String(s % 60).padStart(2, "0")}`;
+  }
+
+  function checkoutDueLabel() {
+    const co = state.book?.checkout;
+    if (!co || co.status !== "active") return "";
+    if (co.infinite) return "Loan · ∞";
+    if (co.overdue) return `Overdue · ${Math.abs(co.days_left || 0)}d`;
+    if (co.due_at) return `Due ${String(co.due_at).slice(0, 10)}`;
+    return "";
+  }
+
+  function startReadTimer() {
+    stopReadTimer();
+    state.readStartedAt = Date.now();
+    const tick = () => {
+      const el = overlay?.querySelector(".h7r-read-timer");
+      if (!el || !state.readStartedAt) return;
+      const elapsed = formatElapsed(Date.now() - state.readStartedAt);
+      const due = checkoutDueLabel();
+      const est = state.book?.reading_time_min ? `~${state.book.reading_time_min} min` : "";
+      el.textContent = [elapsed, due, est].filter(Boolean).join(" · ");
+    };
+    tick();
+    state.readTimerInterval = setInterval(tick, 1000);
+  }
+
+  function stopReadTimer() {
+    if (state.readTimerInterval) {
+      clearInterval(state.readTimerInterval);
+      state.readTimerInterval = null;
+    }
+    state.readStartedAt = null;
+  }
+
   function scheduleProgressSave() {
     if (!state.session) return;
     clearTimeout(state.progressTimer);
@@ -211,6 +253,7 @@
       renderContent();
       renderChrome();
       announce(`${state.librarian?.name || "Librarian"} issued secure reader — page ${state.page} of ${state.pages.length}.`);
+      startReadTimer();
     } catch (err) {
       state.loading = false;
       const body = overlay.querySelector(".h7r-body");
@@ -240,6 +283,7 @@
       state.loading = false;
       renderContent();
       renderChrome();
+      startReadTimer();
     } catch (err) {
       state.loading = false;
       const body = overlay.querySelector(".h7r-body");
@@ -253,6 +297,7 @@
     state.pages = [];
     state.session = null;
     clearTimeout(state.progressTimer);
+    stopReadTimer();
     document.body.style.overflow = "";
   }
 
@@ -441,12 +486,17 @@
       </div>`;
 
     const max = Math.max(1, state.pages.length);
+    const timerText = state.readStartedAt
+      ? formatElapsed(Date.now() - state.readStartedAt)
+      : "0:00";
+    const due = checkoutDueLabel();
     bottom.innerHTML = `
       <button type="button" class="h7r-nav h7r-prev" ${state.page <= 1 ? "disabled" : ""}>◀</button>
       <div class="h7r-slider-wrap">
         <input type="range" class="h7r-slider" min="1" max="${max}" value="${state.page}">
         <span class="h7r-page-label">${state.page} / ${max}</span>
       </div>
+      <span class="h7r-read-timer" aria-live="off">${esc([timerText, due].filter(Boolean).join(" · "))}</span>
       <button type="button" class="h7r-nav h7r-next" ${state.page >= max ? "disabled" : ""}>▶</button>`;
 
     top.querySelector(".h7r-theme").addEventListener("change", (e) => {

@@ -49,7 +49,7 @@ body {
   width: 100%;
   background: var(--fmd-bg);
   color: var(--fmd-text);
-  font-family: system-ui, "Segoe UI", sans-serif;
+  font-family: system-ui, sans-serif;
   overflow: hidden;
   display: flex;
   flex-direction: column;

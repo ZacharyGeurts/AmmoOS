@@ -1,4 +1,4 @@
-#!/usr/bin/env pythong
+#!/usr/bin/env python3
 """Field best sort — Ironclad meld: exactly one best sort ever per context."""
 from __future__ import annotations
 
@@ -12,7 +12,9 @@ from typing import Any, Callable
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
 SG = Path(os.environ.get("SG_ROOT", INSTALL.parent.parent))
-GROK16 = Path(os.environ.get("GROK16_ROOT", str(SG / "Grok16")))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 DOCTRINE = INSTALL / "data" / "field-best-sort-doctrine.json"
 PANEL = STATE / "field-best-sort-panel.json"
 
@@ -147,10 +149,14 @@ def resolve_best(context: str, *, n: int | None = None) -> dict[str, Any]:
 
     if context == "format_table":
         alg = str((doctrine.get("format_table") or {}).get("algorithm") or "family_then_label")
-    elif context in ("chip_paths", "chips_battery", "chips_combinatronic"):
+    elif context in ("chip_paths", "chips_battery", "chips_combinatronic", "chip_catalog"):
         alg = "composite_bsp"
-    elif context == "recombinatorics":
+    elif context in ("recombinatorics",):
         alg = "composite_bsp"
+    elif context in ("registry_index", "library_registry", "catalog_index", "card_catalog"):
+        alg = "family_then_label" if context != "card_catalog" else "locale_ci"
+    elif context in ("api_registry", "api_index", "route_index"):
+        alg = "dirs_first"
     elif mod and hasattr(mod, "select_sort"):
         try:
             pick = mod.select_sort(context, n=n)
@@ -208,7 +214,10 @@ def apply_best(
 
 def meld_slice() -> dict[str, Any]:
     """Slice for ironclad-plate / field-plate-meld."""
-    contexts = ("format_table", "file_list", "thermal_layers", "recombinatorics", "chip_paths")
+    contexts = (
+        "format_table", "file_list", "thermal_layers", "recombinatorics", "chip_paths",
+        "registry_index", "api_registry", "chip_catalog", "catalog_index", "card_catalog",
+    )
     resolved = {ctx: resolve_best(ctx) for ctx in contexts}
     return {
         "id": "field_best_sort",

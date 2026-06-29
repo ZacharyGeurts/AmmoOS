@@ -24,6 +24,7 @@ DEFAULTS: dict[str, Any] = {
     "taskbar_peek": True,
     "desktop_icon_size": 50,
     "ui_scale": DESKTOP_SCALE_DEFAULT,
+    "ammoos_theme": "nexus_c2",
     "theme_override": "",
     "wallpaper": "default",
     "sort_desktop": "name",
@@ -171,12 +172,13 @@ def posture() -> dict[str, Any]:
         "version": _version(),
         "control_panel": {
             "display": True,
-            "theme": False,
+            "theme": True,
+            "themes_index": "/control-panel?tab=themes",
             "hardware": False,
             "system": True,
             "personalization": False,
             "surface_locked": True,
-            "operator_only": ["ui_scale", "restart"],
+            "operator_only": ["ui_scale", "ammoos_theme", "restart"],
         },
         "sovereignty": _sovereignty_posture(),
     }
@@ -239,7 +241,7 @@ def apply_patch(patch: dict[str, Any]) -> dict[str, Any]:
             merged[key] = bool(val)
         elif key == "alt_tab_enabled":
             merged[key] = bool(val)
-        elif key in ("theme_override", "wallpaper", "sort_desktop"):
+        elif key in ("ammoos_theme", "theme_override", "wallpaper", "sort_desktop"):
             merged[key] = str(val or "")
     doc = {"schema": "field-shell-settings/v1", "ts": _now(), **merged}
     _save_atomic(SETTINGS, doc)

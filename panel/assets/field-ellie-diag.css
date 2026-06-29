@@ -28,7 +28,7 @@ body {
   overflow: hidden;
   background: var(--ed-bg);
   color: var(--ed-text);
-  font-family: system-ui, "Segoe UI", sans-serif;
+  font-family: system-ui, sans-serif;
   font-size: 13px;
   line-height: 1.45;
 }

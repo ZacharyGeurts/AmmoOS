@@ -40,15 +40,25 @@ def _capture(path: Path) -> bool:
 def _ocr(path: Path) -> str:
     if not path.is_file():
         return ""
-    try:
-        out = subprocess.check_output(
-            ["tesseract", str(path), "stdout", "-l", "eng", "--psm", "6"],
-            stderr=subprocess.DEVNULL,
-            timeout=30,
-        )
-        return out.decode("utf-8", errors="replace")
-    except (OSError, subprocess.SubprocessError):
-        return ""
+    install = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
+    bridge = install / "lib" / "final-eye-h7-ocr.py"
+    if bridge.is_file():
+        try:
+            proc = subprocess.run(
+                [os.environ.get("PYTHON", "python3"), str(bridge), "ocr", str(path)],
+                capture_output=True, text=True, timeout=90, check=False,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(install), "NEXUS_STATE_DIR": str(STATE)},
+            )
+            doc = json.loads(proc.stdout or "{}")
+            text = str(doc.get("text") or doc.get("ocr") or "")
+            if text.strip():
+                h7 = doc.get("h7_file") or doc.get("ocr_file")
+                if h7:
+                    (OUT / "last-capture.h7").write_bytes(Path(h7).read_bytes()) if Path(h7).is_file() else None
+                return text
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError):
+            pass
+    return ""
 
 
 def _desktop_items() -> list[Path]:

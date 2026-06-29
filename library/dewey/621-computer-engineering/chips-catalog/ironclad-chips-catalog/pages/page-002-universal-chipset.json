@@ -12,6 +12,9 @@
     "glue_arm_pinctrl",
     "glue_arm_pmu",
     "glue_arm_usb_phy",
+    "glue_c64u_fpga_core",
+    "glue_c64u_hdmi",
+    "glue_c64u_sid_sockets",
     "glue_elbrus_ddr_mc",
     "glue_elbrus_pcie_switch",
     "glue_elbrus_x86_trans",
@@ -122,11 +125,11 @@
     "uni_national_pc87309",
     "uni_winbond_w83627"
   ],
-  "chip_count": 116,
+  "chip_count": 119,
   "kind": "chipset_companion",
   "family": "chipset",
-  "combinatorics_total": 974,
+  "combinatorics_total": 978,
   "cover": "/world/assets/combinatronic/chips/cyrix_6x86.png",
   "thumb": "/panel/assets/queen-prog-chips.png",
-  "updated": "2026-06-27T22:53:22Z"
+  "updated": "2026-06-29T14:48:47Z"
 }

@@ -14,7 +14,9 @@ from typing import Any
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 SG = Path(os.environ.get("SG_ROOT", str(INSTALL.parent.parent)))
-GROK16 = Path(os.environ.get("GROK16_ROOT", str(SG / "Grok16")))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 PANEL = STATE / "plate-compiler-panel.json"
 LEDGER = STATE / "plate-compiler-ledger.jsonl"
 

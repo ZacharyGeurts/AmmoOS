@@ -21,20 +21,24 @@ body.qw-terminal-mode .qb-viewport {
 
 .qgt-shell,
 .qgt-shell[data-qgt-secured="1"] {
-  --qgt-green: #3ecf8e;
-  --qgt-green-dim: rgba(62, 207, 142, 0.55);
-  --qgt-green-glow: rgba(62, 207, 142, 0.35);
-  --qgt-bg: rgba(6, 16, 10, 0.82);
-  --qgt-bg-pane: rgba(4, 14, 8, 0.78);
-  --qgt-border: rgba(34, 197, 94, 0.28);
+  --qgt-green: var(--qb-accent, #3ecf8e);
+  --qgt-green-dim: color-mix(in srgb, var(--qb-dim, #7a9a88) 55%, transparent);
+  --qgt-green-glow: color-mix(in srgb, var(--qb-accent, #3ecf8e) 35%, transparent);
+  --qgt-bg: color-mix(in srgb, var(--qb-bg, #060a08) 82%, transparent);
+  --qgt-bg-pane: color-mix(in srgb, var(--qb-surface, #08100c) 78%, transparent);
+  --qgt-border: color-mix(in srgb, var(--qb-border, #1a4d32) 28%, transparent);
+  --qgt-text: var(--qb-text, #8dffb8);
+  --qgt-cmd: var(--qb-aqua, #7ec8ff);
+  --qgt-err: var(--qb-danger, #f472b6);
+  --qgt-url: var(--qb-flow, #6ab0ff);
   --qgt-font-size: 0.88rem;
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
   height: 100%;
-  color: #8dffb8;
-  font-family: "JetBrains Mono", ui-monospace, "Liberation Mono", monospace;
+  color: var(--qgt-text);
+  font-family: var(--qm-mono, "JetBrains Mono", ui-monospace, "Liberation Mono", monospace);
   background: var(--qgt-bg);
 }
 
@@ -184,6 +188,13 @@ body.qw-terminal-mode .qb-viewport {
   color: var(--qgt-green);
   font-weight: 600;
   text-shadow: 0 0 8px var(--qgt-green-glow);
+}
+
+.qgt-status-theme {
+  color: var(--qgt-green-dim);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .qgt-status-layout {
@@ -353,8 +364,9 @@ body.qw-terminal-mode .qb-viewport {
   font-size: var(--qgt-font-size);
   line-height: 1.45;
   scrollbar-width: none;
-  color: #6ee7a8;
-  text-shadow: 0 0 6px rgba(62, 207, 142, 0.28);
+  color: var(--qgt-text);
+  text-shadow: 0 0 6px var(--qgt-green-glow);
+  contain: layout style paint;
 }
 
 .qgt-terminal-out::-webkit-scrollbar {
@@ -378,21 +390,21 @@ body.qw-terminal-mode .qb-viewport {
 }
 
 .qgt-line--cmd {
-  color: #7ec8ff;
-  text-shadow: 0 0 6px rgba(126, 200, 255, 0.25);
+  color: var(--qgt-cmd);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--qgt-cmd) 25%, transparent);
 }
 
 .qgt-line--out {
-  color: #6ee7a8;
+  color: var(--qgt-text);
 }
 
 .qgt-line--err {
-  color: #f472b6;
-  text-shadow: 0 0 8px rgba(244, 114, 182, 0.35);
+  color: var(--qgt-err);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--qgt-err) 35%, transparent);
 }
 
 .qgt-line--url {
-  color: #6ab0ff;
+  color: var(--qgt-url);
   cursor: pointer;
   text-decoration: underline;
 }

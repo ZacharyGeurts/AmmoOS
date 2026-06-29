@@ -41,10 +41,22 @@ def _run_json(script: Path, *args: str, timeout: int = 30) -> dict[str, Any]:
         return {"ok": False, "tail": (proc.stdout or "")[-1500:] + (proc.stderr or "")[-1500:]}
 
 
+def _update_script() -> Path:
+    ammoos = INSTALL / "lib" / "ammoos-update-inplace.py"
+    if ammoos.is_file():
+        return ammoos
+    return INSTALL / "lib" / "nexus-update.py"
+
+
 def status(*, force: bool = False) -> dict[str, Any]:
-    upd = _run_json(INSTALL / "lib" / "nexus-update.py")
-    if force:
-        upd = _run_json(INSTALL / "lib" / "nexus-update.py", "--force")
+    script = _update_script()
+    if script.name == "ammoos-update-inplace.py":
+        args = ["check"] + (["--force"] if force else [])
+        upd = _run_json(script, *args)
+    else:
+        upd = _run_json(script)
+        if force:
+            upd = _run_json(script, "--force")
     lock = _run_json(INSTALL / "lib" / "nexus-update-lock.py", "status")
     upd["update_lock"] = lock
     upd["update_in_progress"] = bool(lock.get("locked"))
@@ -79,9 +91,12 @@ def apply() -> dict[str, Any]:
     upd = status(force=True)
     if not upd.get("update_available"):
         return {"ok": True, "already_current": True, **upd}
+    script = _update_script()
+    product = "AmmoOS" if script.name == "ammoos-update-inplace.py" else "NEXUS"
     target = str(upd.get("latest") or "")
     previous = str(upd.get("previous") or upd.get("current") or "")
-    mode = str(upd.get("update_mode") or "release")
+    mode = str(upd.get("update_mode") or ("git_tree" if product == "AmmoOS" else "release"))
+    git_dir = str(upd.get("source_root") or NEXUS)
     phase = "download_tarball" if mode == "release" else "git_fetch"
     acq = _run_json(
         INSTALL / "lib" / "nexus-update-lock.py",
@@ -114,8 +129,9 @@ def apply() -> dict[str, Any]:
         "NEXUS_UPDATE_TARGET": target,
         "NEXUS_UPDATE_PREVIOUS": previous,
         "NEXUS_UPDATE_MODE": mode,
-        "NEXUS_UPDATE_GIT_DIR": str(NEXUS),
+        "NEXUS_UPDATE_GIT_DIR": git_dir,
         "NEXUS_UPDATE_TARBALL_URL": tarball,
+        "AMMOOS_UPDATE_MODE": mode,
     })
     helper = INSTALL / "lib" / "nexus-update-apply.sh"
     if not helper.is_file():
@@ -126,7 +142,7 @@ def apply() -> dict[str, Any]:
             ["bash", str(helper)],
             env=env,
             start_new_session=True,
-            cwd=str(NEXUS),
+            cwd=git_dir,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -139,7 +155,7 @@ def apply() -> dict[str, Any]:
         "started": True,
         "update_in_progress": True,
         "reload_panel": True,
-        "message": f"NXF release installer — {previous} → {target}",
+        "message": f"{product} update — {previous} → {target}",
         "previous": previous,
         "latest": target,
         "apply_via": upd.get("apply_via") or "nxf_release",

@@ -5,7 +5,7 @@
   --qdp-accent: #3ecf8e;
   --qdp-warn: #f59e0b;
   --qdp-bad: #f87171;
-  --qdp-font: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  --qdp-font: ui-monospace, system-ui, monospace;
 }
 
 html, body {

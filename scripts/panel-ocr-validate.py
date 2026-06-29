@@ -52,36 +52,23 @@ def _fetch(url: str, timeout: int = 15) -> str:
         return resp.read().decode("utf-8", errors="replace")
 
 
-def _final_eye_ocr(path: Path) -> str:
-    """Prefer SG/Final_Eye/zocr.py; fall back to tesseract."""
+def _ocr_image(path: Path) -> str:
+    """Final_Eye OCR → H7/7 via canonical bridge."""
     if not path.is_file():
         return ""
-    zocr = FINAL_EYE / "zocr.py"
-    if zocr.is_file():
+    bridge = INSTALL / "lib" / "final-eye-h7-ocr.py"
+    if bridge.is_file():
         try:
-            import importlib.util
-
-            spec = importlib.util.spec_from_file_location("zocr_validate", zocr)
-            if spec and spec.loader:
-                mod = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(mod)
-                if hasattr(mod, "ocr_image"):
-                    return str(mod.ocr_image(path) or "")
-        except Exception:
+            proc = subprocess.run(
+                [sys.executable, str(bridge), "ocr", str(path)],
+                capture_output=True, text=True, timeout=90, check=False,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "SG_ROOT": str(SG)},
+            )
+            doc = json.loads(proc.stdout or "{}")
+            return str(doc.get("text") or doc.get("ocr") or "")
+        except (subprocess.SubprocessError, OSError, json.JSONDecodeError):
             pass
-    try:
-        out = subprocess.check_output(
-            ["tesseract", str(path), "stdout", "-l", "eng", "--psm", "6"],
-            stderr=subprocess.DEVNULL,
-            timeout=20,
-        )
-        return out.decode("utf-8", errors="replace")
-    except (subprocess.SubprocessError, OSError):
-        return ""
-
-
-def _ocr_image(path: Path) -> str:
-    return _final_eye_ocr(path)
+    return ""
 
 
 def _screenshot_panel(out: Path, url: str) -> bool:

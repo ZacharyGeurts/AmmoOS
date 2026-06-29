@@ -254,15 +254,15 @@ def _ocr_image(path: Path) -> dict[str, Any]:
             return {"ocr_text": "", "ocr_confidence": 0.0, "ocr_engine": "skipped_size"}
     except OSError:
         return {"ocr_text": "", "ocr_confidence": 0.0, "ocr_engine": "unreadable"}
-    zocr_root = Path(os.environ.get(str(doctrine.get("bridge") or "ZOCR_ROOT"), SG / "ZOCR"))
-    assist = zocr_root / "zocr_product.py"
+    eye_root = Path(os.environ.get(str(doctrine.get("bridge") or "FINAL_EYE_ROOT"), SG / "NewLatest" / "Final_Eye"))
+    assist = eye_root / "zocr_product.py"
     if assist.is_file():
         try:
             spec = importlib.util.spec_from_file_location("zocr_product", assist)
             if spec and spec.loader:
                 mod = importlib.util.module_from_spec(spec)
-                if str(zocr_root) not in sys.path:
-                    sys.path.insert(0, str(zocr_root))
+                if str(eye_root) not in sys.path:
+                    sys.path.insert(0, str(eye_root))
                 spec.loader.exec_module(mod)
                 if hasattr(mod, "ocr_file"):
                     out = mod.ocr_file(str(path))

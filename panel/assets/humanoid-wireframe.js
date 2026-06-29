@@ -14,25 +14,35 @@
   const JOINTS = {
     head: [0, -0.38],
     neck: [0, -0.28],
+    spine_upper: [0, -0.22],
+    spine_mid: [0, -0.18],
+    spine_lower: [0, -0.14],
     chest: [0, -0.12],
     hip: [0, 0.08],
     shoulder_l: [-0.14, -0.22],
     shoulder_r: [0.14, -0.22],
     elbow_l: [-0.2, -0.04],
     elbow_r: [0.2, -0.04],
+    wrist_l: [-0.23, 0.03],
+    wrist_r: [0.23, 0.03],
     hand_l: [-0.26, 0.1],
     hand_r: [0.26, 0.1],
     knee_l: [-0.1, 0.3],
     knee_r: [0.1, 0.3],
+    ankle_l: [-0.105, 0.4],
+    ankle_r: [0.105, 0.4],
     foot_l: [-0.11, 0.5],
     foot_r: [0.11, 0.5],
+    toe_l: [-0.11, 0.54],
+    toe_r: [0.11, 0.54],
   };
   const BONES = [
-    ["head", "neck"], ["neck", "chest"], ["chest", "hip"],
-    ["neck", "shoulder_l"], ["shoulder_l", "elbow_l"], ["elbow_l", "hand_l"],
-    ["neck", "shoulder_r"], ["shoulder_r", "elbow_r"], ["elbow_r", "hand_r"],
-    ["hip", "knee_l"], ["knee_l", "foot_l"],
-    ["hip", "knee_r"], ["knee_r", "foot_r"],
+    ["head", "neck"], ["neck", "spine_upper"], ["spine_upper", "spine_mid"],
+    ["spine_mid", "spine_lower"], ["spine_lower", "chest"], ["chest", "hip"],
+    ["neck", "shoulder_l"], ["shoulder_l", "elbow_l"], ["elbow_l", "wrist_l"], ["wrist_l", "hand_l"],
+    ["neck", "shoulder_r"], ["shoulder_r", "elbow_r"], ["elbow_r", "wrist_r"], ["wrist_r", "hand_r"],
+    ["hip", "knee_l"], ["knee_l", "ankle_l"], ["ankle_l", "foot_l"], ["foot_l", "toe_l"],
+    ["hip", "knee_r"], ["knee_r", "ankle_r"], ["ankle_r", "foot_r"], ["foot_r", "toe_r"],
   ];
 
   let raf = 0;
@@ -81,13 +91,17 @@
     let dy = 0;
     for (const m of motions) {
       const zoneMap = {
-        hands: ["hand_l", "hand_r"],
+        hands: ["hand_l", "hand_r", "wrist_l", "wrist_r"],
         elbows: ["elbow_l", "elbow_r"],
-        centerline: ["chest"],
+        shoulders: ["shoulder_l", "shoulder_r"],
+        spine: ["spine_upper", "spine_mid", "spine_lower", "chest"],
+        centerline: ["chest", "spine_mid", "hip"],
         hips: ["hip"],
         knees: ["knee_l", "knee_r"],
+        ankles: ["ankle_l", "ankle_r"],
         feet: ["foot_l", "foot_r"],
-        head: ["head"],
+        toes: ["toe_l", "toe_r"],
+        head: ["head", "neck"],
       };
       const zones = zoneMap[m.zone] || [];
       if (!zones.includes(joint)) continue;
@@ -258,6 +272,30 @@
     ctx.fillRect(0, 0, w, h);
     drawGrid(ctx, w, h);
 
+    const envMesh = doc?.environment_mesh || doc?.training_floor?.floor?.environment || {};
+    const walls = envMesh.walls || [];
+    const cover = envMesh.cover || [];
+    for (const wall of walls) {
+      const wx = w * (wall.x ?? 0.5);
+      const wy = h * (wall.y ?? 0.5);
+      ctx.strokeStyle = "rgba(100,116,139,0.55)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(wx - w * 0.08, wy);
+      ctx.lineTo(wx + w * 0.08, wy);
+      ctx.stroke();
+    }
+    for (const c of cover) {
+      const cx = w * (c.x ?? 0.5);
+      const cy = h * (c.y ?? 0.5);
+      const ch = h * (c.height ?? 0.3) * 0.5;
+      ctx.fillStyle = "rgba(71,85,105,0.45)";
+      ctx.strokeStyle = "rgba(148,163,184,0.5)";
+      ctx.lineWidth = 1;
+      ctx.fillRect(cx - w * 0.04, cy - ch, w * 0.08, ch * 2);
+      ctx.strokeRect(cx - w * 0.04, cy - ch, w * 0.08, ch * 2);
+    }
+
     const arena = doc?.arena || {};
     const anchor = arena.fighter_anchor || { x: 0.32, y: 0.58 };
     const fighterX = w * anchor.x;
@@ -426,6 +464,14 @@
       } catch (_) {}
       return trainPopupWin;
     }
+    if (global.QueenProgramLaunch?.open) {
+      global.QueenProgramLaunch.open(url, {
+        id: TRAIN_POPUP_NAME,
+        title: "Training Chamber",
+        icon: "/assets/hostess7-training-chamber.svg",
+      });
+      return null;
+    }
     trainPopupWin = window.open(
       url,
       TRAIN_POPUP_NAME,
@@ -502,6 +548,12 @@
   }
 
   function updateHud(doc) {
+    const voiceEl = document.getElementById("humanoid-train-voice");
+    if (voiceEl && doc.training_room?.voice) {
+      voiceEl.textContent = doc.training_room.voice;
+    } else if (voiceEl && doc.earth_mandate?.role) {
+      voiceEl.textContent = `I am Hostess 7 — ${doc.earth_mandate.role}.`;
+    }
     const status = $("humanoid-motion-status");
     const prof = $("humanoid-motion-prof");
     const chips = $("humanoid-opponent-chips");
@@ -605,6 +657,28 @@
     }
   }
 
+  async function runTrainingRoom(sub, extra) {
+    const q = extra?.skill ? `?skill=${encodeURIComponent(extra.skill)}` : "";
+    const getSubs = new Set(["needs", "try-body", "complete-all"]);
+    try {
+      const res = await fetch(`/api/hostess7/training-room/${sub}${q}`, {
+        method: getSubs.has(sub) ? "GET" : "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: sub === "combat" ? JSON.stringify({ action: "combat_drill", skill: extra?.skill }) : undefined,
+      });
+      const doc = await res.json();
+      const voice = doc.voice || doc.needs?.voice || doc.message || "";
+      const el = document.getElementById("humanoid-train-voice");
+      if (el && voice) el.textContent = voice;
+      if (sub === "try-body" || sub === "combat" || sub === "complete-all") await refresh();
+      return doc;
+    } catch (e) {
+      console.warn("training room", e);
+      return null;
+    }
+  }
+
   async function postJson(url, body) {
     const res = await fetch(url, {
       method: "POST",
@@ -640,14 +714,42 @@
 
   function openDataWindow() {
     const url = `${location.origin}/humanoid-data.html`;
-    const name = "nexus-humanoid-data";
-    const win = window.open(url, name, "width=1120,height=900,menubar=no,toolbar=no,location=no,status=no");
+    if (global.QueenProgramLaunch?.open) {
+      return global.QueenProgramLaunch.open(url, {
+        id: "nexus-humanoid-data",
+        title: "Humanoid Data",
+        icon: "/assets/hostess7-training-chamber.svg",
+      });
+    }
+    const win = window.open(url, "nexus-humanoid-data", "width=1120,height=900,menubar=no,toolbar=no,location=no,status=no");
     if (win) win.focus();
     return win;
   }
 
   function bindControls() {
     $("humanoid-data-window-btn")?.addEventListener("click", openDataWindow);
+    $("humanoid-hands-btn")?.addEventListener("click", () => {
+      const url = `${location.origin}/hands-attachments.html`;
+      if (global.QueenProgramLaunch?.open) {
+        global.QueenProgramLaunch.open(url, {
+          id: "nexus-hands-attachments",
+          title: "Hands & Attachments",
+          icon: "/assets/hostess7-hands-chamber.svg",
+        });
+        return;
+      }
+      window.open(url, "nexus-hands-attachments", "noopener,width=1100,height=720");
+    });
+    $("humanoid-try-body-btn")?.addEventListener("click", () => runTrainingRoom("try-body"));
+    $("humanoid-combat-room-btn")?.addEventListener("click", () => {
+      const sid = $("humanoid-skill-select")?.value || "wing_chun";
+      runTrainingRoom("combat", { skill: sid });
+    });
+    $("humanoid-needs-btn")?.addEventListener("click", () => runTrainingRoom("needs"));
+    $("humanoid-complete-all-btn")?.addEventListener("click", () => {
+      const sid = $("humanoid-skill-select")?.value || "wing_chun";
+      runTrainingRoom("complete-all", { skill: sid });
+    });
     $("humanoid-load-btn")?.addEventListener("click", async () => {
       const sid = $("humanoid-skill-select")?.value;
       if (!sid) return;

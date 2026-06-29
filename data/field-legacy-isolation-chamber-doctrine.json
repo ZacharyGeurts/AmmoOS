@@ -89,6 +89,43 @@
         {"command": "Range", "expect": "call"},
         {"command": "Worksheets", "expect": "module"}
       ]
+    },
+    {
+      "id": "java",
+      "era": "jvm",
+      "secure_chamber": true,
+      "boil_probes": [
+        {"command": "public class", "expect": "module"},
+        {"command": "System.out", "expect": "io"}
+      ]
+    },
+    {
+      "id": "javascript",
+      "era": "ecma",
+      "secure_chamber": true,
+      "boil_probes": [
+        {"command": "console.log", "expect": "io"},
+        {"command": "function", "expect": "declare"}
+      ]
+    },
+    {
+      "id": "typescript",
+      "era": "ecma",
+      "extends": "javascript",
+      "secure_chamber": true,
+      "boil_probes": [
+        {"command": "interface", "expect": "struct"},
+        {"command": "type", "expect": "declare"}
+      ]
+    },
+    {
+      "id": "fortran",
+      "era": "scientific",
+      "secure_chamber": true,
+      "boil_probes": [
+        {"command": "program", "expect": "module"},
+        {"command": "print", "expect": "io"}
+      ]
     }
   ],
   "chamber_tests": ["boil", "seed_pack", "manual_book"],

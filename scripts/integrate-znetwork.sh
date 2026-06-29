@@ -105,6 +105,7 @@ ENV_FILE="${STATE}/znetwork-integrated.env"
   echo "export ZNETWORK_LAB_GATE_OK=${ZNETWORK_LAB_GATE_OK:-0}"
   echo "export ZNETWORK_REVIEW_APPROVED=${ZNETWORK_REVIEW_APPROVED:-1}"
   echo "export ZNETWORK_FAST=1"
+  echo "export ZNETWORK_DEFER_RETALIATE=1"
 } >"${ENV_FILE}"
 
 # shellcheck source=/dev/null

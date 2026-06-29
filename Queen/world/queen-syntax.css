@@ -16,7 +16,7 @@
   --qs-rose-deep: #eb488c;
   --qs-glow: rgba(62, 207, 142, 0.12);
   --qs-font: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
-  --qs-ui: "Inter", "Segoe UI", system-ui, sans-serif;
+  --qs-ui: system-ui, sans-serif;
 
   /* Token palette — rich, high contrast */
   --qs-kw: #ff7b72;

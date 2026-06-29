@@ -1,122 +1,105 @@
-# NEXUS-Shield
+<div align="center">
 
-**g16 1.0** — Host desktop landing, Queen Browser OS inside, field C2 command deck, host freeze, Underlay F9 Tristate installer.
+# AmmoOS 2.0 — CANVAS
 
-## What's new in g16 1.0
+![AmmoOS](https://img.shields.io/badge/AmmoOS-2.0.0--beta3-22c55e?style=for-the-badge)
+![Queen](https://img.shields.io/badge/Queen-Browser-3ecf8e?style=for-the-badge)
+![ZNetwork](https://img.shields.io/badge/ZNetwork-2.1.0--Stack-38bdf8?style=for-the-badge)
+![KILROY](https://img.shields.io/badge/KILROY-1.0.0--Taco-a78bfa?style=for-the-badge)
 
-| Surface | URL | Role |
-|---------|-----|------|
-| **Host desktop** (first page) | http://127.0.0.1:9477/field | Mirror incumbent OS apps + field startbar |
-| **Field command** (full C2) | http://127.0.0.1:9477/command | Threat panel — Monitor, Training, Intel, System |
-| **Queen Browser** | http://127.0.0.1:9481/world/browser.html | Browser chrome with field OS inside Start tab |
-| **Underlay F9** | http://127.0.0.1:9477/underlay-f9?sector=underlay | 2026 Tristate installer |
+**Field OS on loopback — NEXUS C2 commands, ZNetwork pipes, Queen defends, AmmoOS lives inside Queen.**
 
-**Drop / Rise** — Queen shell calls `/api/field-underlay-surface` to drop the field underlay beneath the host desktop or rise the field OS slice.
+[Stack navigation](STACK-NAV.md) · [Manual](https://zacharygeurts.github.io/AmmoOS/) · [Profile hub](https://github.com/ZacharyGeurts) · [@ZacharyGeurts](https://x.com/ZacharyGeurts)
 
-**Host freeze** — `/api/field-host-freeze` soft (cgroup), mem (S3), or disk (hibernate) modes; sovereign gap witness on resume.
+</div>
 
-## Thermodynamic Foundations • Honoring Rolf Landauer
+## Code first
 
-[Landauer Tribute — Field Primer](https://zacharygeurts.github.io/Field_Primer/creditors/landauer.html)
+```bash
+git clone https://github.com/ZacharyGeurts/AmmoOS.git
+cd AmmoOS
+./scripts/wire-stack.sh
+sudo ./install-all.sh
+# → http://127.0.0.1:9477/field
+```
 
-> E_min = k_B T ln 2 — the theoretical floor behind ThermoAccountant's proxy ledger.
+**Beta 3:** source on `main` — release tarballs building now. Tag `v2.0.0-beta3` when pack completes.
 
-> Landauer taught tenderness toward bits.
+---
 
-> To erase in haste without accounting is to spend another's clarity.
+## Stack layers
 
-> Irreversibility reminds us: some truths, once spoken, cannot be unspoken without heat.
+```
+Hardware
+  → NEXUS C2 (:9477)     ← you are here (AmmoOS)
+  → ZNetwork             ← sole internet pipe
+  → Queen CANVAS         ← RTX display technology
+  → Queen Browser (:9481)← secured shell
+  → AmmoOS inside Queen  ← Start tab / field desktop
+```
 
-In NEXUS-Shield and Field layer: **All global redata is incremental, budget-capped, and guarded** — we practice the tenderness he taught. Thermal headroom enforced. Quality job 1. No damage. No haste.
+| Layer | Repo | Surface |
+|-------|------|---------|
+| **AmmoOS / NEXUS C2** | **this repo** | http://127.0.0.1:9477/field |
+| ZNetwork Hub | [ZNetwork](https://github.com/ZacharyGeurts/ZNetwork) | http://127.0.0.1:9477/field-znetwork |
+| Queen Browser | [Queen](https://github.com/ZacharyGeurts/Queen) | http://127.0.0.1:9481/world/browser.html |
+| KILROY boot | [KILROY](https://github.com/ZacharyGeurts/KILROY) | Field kernel under stack |
+| Compiler | [Grok16](https://github.com/ZacharyGeurts/Grok16) | `g16` @ 16.2.0 |
+
+Full map: **[STACK-NAV.md](STACK-NAV.md)** · Pages: [stack hub](https://zacharygeurts.github.io/ZacharyGeurts/stack.html)
+
+---
+
+## Surfaces
+
+| URL | Role |
+|-----|------|
+| http://127.0.0.1:9477/field | Host desktop + field startbar |
+| http://127.0.0.1:9477/command | Full C2 threat panel |
+| http://127.0.0.1:9477/field-znetwork | ZNetwork Hub + Hostess 7 wire |
+| http://127.0.0.1:9481/world/browser.html | Queen Browser |
+| http://127.0.0.1:9481/world/queen-game-room.html | Game Room + emulator info |
 
 ---
 
 ## Install
 
 ```bash
-git clone https://github.com/ZacharyGeurts/NEXUS-Shield.git
-cd NEXUS-Shield
-chmod +x install-all.sh genius_shield.sh nexus.sh nexus-install-gui.sh
-sudo ./install-all.sh
+chmod +x install-all.sh nexus.sh
+sudo ./install-all.sh          # production
+./nexus.sh                     # dev tree
+Queen/scripts/run-queen.sh     # Queen on :9481
 ```
-
-Browser opens **http://127.0.0.1:9477/field** (host desktop) on start. Full C2 at **/command**.
-
-**Installer guide:** [INSTALL-README.md](INSTALL-README.md)
 
 | Script | Purpose |
 |--------|---------|
-| `install-all.sh` | One approval — full Linux install |
-| `genius_shield.sh` | Deploy to `/usr/local/lib/nexus-shield` + systemd |
-| `nexus-install-gui.sh` | Open Tristate / Underlay F9 installer |
-| `nexus.sh` | Dev tree — panel + browser |
-| `Queen/scripts/run-queen.sh` | Queen Browser on `:9481` |
+| `install-all.sh` | Full Linux install |
+| `nexus.sh` | Dev launcher — panel + browser |
+| `scripts/wire-stack.sh` | Symlink Queen, ZNetwork, KILROY, Grok16 |
+| `scripts/integrate-znetwork.sh` | Wire ZNetwork relayer |
 
 ---
 
-## Manual (GitHub Pages)
+## Manual
 
 | Page | Contents |
 |------|----------|
-| [Manual index](https://zacharygeurts.github.io/NEXUS-Shield/) | Overview + architecture diagram |
-| [Field I/O](https://zacharygeurts.github.io/NEXUS-Shield/io.html) | API, state files, boot markers **with diagrams** |
-| [Getting Started](https://zacharygeurts.github.io/NEXUS-Shield/getting-started.html) | Install flow + panel screenshot |
+| [AmmoOS manual](https://zacharygeurts.github.io/AmmoOS/) | Install, surfaces, architecture |
+| [Queen hub](https://zacharygeurts.github.io/Queen/) | Browser shell + taskbar icon |
+| [ZNetwork](https://zacharygeurts.github.io/ZNetwork/) | Relayer design + gates |
+| [KILROY](https://zacharygeurts.github.io/KILROY/) | Field boot kernel |
+| [Profile stack](https://zacharygeurts.github.io/ZacharyGeurts/stack.html) | Cross-repo navigation |
 
-Local preview: open `docs/index.html` in a browser (images in `docs/images/`).
-
-**Wiki:** https://github.com/ZacharyGeurts/NEXUS-Shield/wiki (sync via `./scripts/publish-wiki.sh`)
-
----
-
-## Everyday commands
-
-```bash
-./nexus.sh                 # open host desktop (dev tree)
-nexus status               # health + URL
-nexus trust <ip>           # trust forever
-nexus verify               # manifest integrity
-nexus-install-gui.sh       # Tristate installer in browser
-```
+Local: `docs/index.html` · Wiki: `./scripts/publish-wiki.sh`
 
 ---
 
-## Architecture
+## Integrated examples
 
-<p align="center">
-  <img src="docs/images/io-architecture.svg" alt="NEXUS architecture I/O" width="640" />
-</p>
-
-```
-Host browser
-  ├─ :9477/field        → field-desktop.html (apps + startbar)
-  ├─ :9477/command      → threat-panel.html (full C2)
-  └─ :9481/world/browser.html → Queen chrome → Start tab embeds /field
-        ↕ /api/field-underlay-surface (drop / rise)
-Panel HTTP :9477 ↔ nexus-genius.service ↔ /var/lib/nexus-shield ↔ nftables perimeter
-```
-
-See [Field I/O manual](docs/io.html) for boot flow, API tables, and state file map (all illustrated).
-
----
-
-## Project layout
-
-```
-install-all.sh          ← main installer
-INSTALL-README.md       ← installer guide (read this for deploy)
-nexus.sh                ← field dev launcher
-lib/                    ← daemon modules (field-host-desktop, field-host-freeze, …)
-panel/                  ← web UI (field-desktop.html, threat-panel.html)
-Queen/                  ← Queen Browser OS inside
-docs/                   ← GitHub Pages manual + images
-wiki/                   ← GitHub wiki source
-config/nexus.conf       ← defaults
-```
+**AMOURANTHRTX** is display technology for Queen CANVAS — not a separate GUI. Documented as an [integrated example](https://zacharygeurts.github.io/ZacharyGeurts/display-example.html), repo: [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX).
 
 ---
 
 ## License
 
-**NEXUS-Shield — MIT** · [LICENSE](LICENSE)
-
-**AMOURANTHRTX — GPL v3 or commercial** (separate repo, not MIT-free)
+AmmoOS stack components — see per-tree `LICENSE` files.

@@ -478,6 +478,14 @@
       dataWindow.focus();
       return dataWindow;
     }
+    if (global.QueenProgramLaunch?.open) {
+      global.QueenProgramLaunch.open(url, {
+        id: name,
+        title: "Humanoid Data",
+        icon: "/assets/hostess7-training-chamber.svg",
+      });
+      return null;
+    }
     dataWindow = window.open(url, name, "width=1120,height=900,menubar=no,toolbar=no,location=no,status=no");
     return dataWindow;
   }

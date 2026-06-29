@@ -18,8 +18,7 @@ if [[ -f "${_NEXUS_COMMON_DIR}/sg-paths.sh" ]]; then
   source "${_NEXUS_COMMON_DIR}/sg-paths.sh"
   sg_paths_export_defaults 2>/dev/null || true
 fi
-ZOCR_ROOT="${ZOCR_ROOT:-${SG_ROOT}/ZNEWOCR}"
-ZNEWOCR_ROOT="${ZNEWOCR_ROOT:-${ZOCR_ROOT}}"
+FINAL_EYE_ROOT="${FINAL_EYE_ROOT:-${NEXUS_INSTALL_ROOT:-${SG_ROOT}/NewLatest}/Final_Eye}"
 if declare -f sg_paths_queen_root >/dev/null 2>&1; then
   QUEEN_ROOT="${QUEEN_ROOT:-$(sg_paths_queen_root)}"
 else

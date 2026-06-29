@@ -1,41 +1,95 @@
-# AmmoOS 2.0.0-beta3
+# AmmoOS 2.0.0-beta3 — CANVAS
 
-**Tag:** `v2.0.0-beta3` · **Repo:** [ZacharyGeurts/AmmoOS](https://github.com/ZacharyGeurts/AmmoOS) · **Lineage:** `NewLatest` canonical
+**Tag:** `v2.0.0-beta3` · **Repo:** [ZacharyGeurts/AmmoOS](https://github.com/ZacharyGeurts/AmmoOS) · **Manual:** [zacharygeurts.github.io/AmmoOS](https://zacharygeurts.github.io/AmmoOS/) · **Stack:** [stack hub](https://zacharygeurts.github.io/ZacharyGeurts/stack.html)
 
-## Status: building now
+## Loopback identity
 
-Source is pushed to `main` — **release tarballs and GitHub Pages manual are not published yet.** We are actively building beta 3 artifacts; watch this repo for `v2.0.0-beta3` assets when the pack pipeline completes.
+When **ZNetwork** is running, AmmoOS is **`127.0.0.1`** — the sovereign field OS on loopback, not a generic browser tab. **Queen Browser** is the secured shell; **KILROY** is the field kernel; **AmmoLang** routes all build tasks.
 
-## What landed in source (beta 3)
+## Stack layering
 
-- **SG → NewLatest consolidation** — stack siblings absorbed into one canonical tree; `SG/` is `NewLatest` + runtime state only
-- **ZNetwork Hub** — NEXUS C2 page at `/field-znetwork` with stack layers, Queen Browser + AmmoOS links, live relayer posture
-- **Hostess 7 ↔ ZNetwork** — Super Intelligence wire; local communication profile from [x.com/ZacharyGeurts](https://x.com/ZacharyGeurts); Queen sole egress through ZNetwork relayer
-- **Emulator system info** — each Game Room system has device visual + CHIPS catalog stack (`/world/queen-system-info.html`)
-- **CHIPS catalog deep links** — `?stack=` platform stack views
+| Layer | Role |
+|-------|------|
+| Hardware | Witness — no breaks, coexist host desktop |
+| NEXUS C2 | Command, security, defense (`:9477`) |
+| ZNetwork | 100% internet pipe on loopback |
+| Queen CANVAS | RTX display block |
+| Queen Browser | Secured shell — `:9481` |
+| AmmoOS | Field OS inside Queen — CANVAS codename |
 
-## Stack (unchanged doctrine)
+## Beta 3 highlights
 
-Hardware → **NEXUS C2** → **ZNetwork** → Queen CANVAS → **Queen Browser** → **AmmoOS** inside Queen on `127.0.0.1`.
+- **KILROY-first UX** — KILROY homepage, bookmarks flyout, Queen keyboard sovereignty (Ctrl+Alt+Del, Alt+Tab internal)
+- **AmmoLang #1** — all field tasks via `lib/ammolang-run.sh`; adaptive timing · hang guard · freeze assist
+- **Secure GitHub MCP** — AmmoLang `github` op defaults to `mcp_secure` (not raw TCP); `grok_com_github` scoped token
+- **KILROY ↔ Grok16** — kernel regression `kilroy-kernel-test.sh`; `grok16_pair` 5.2.0
+- **SG → NewLatest** — canonical tree; stack siblings materialized in release tarballs
+- **ZNetwork Hub** — `/field-znetwork` with Hostess 7 wire and live relayer posture
+- **MCP publish layer** — `ammoos-mcp-layer.json` + `github-mcp-stdio.sh` for releases and Pages
+
+## Pairings
+
+| Component | Version |
+|-----------|---------|
+| Grok16 | 5.2.0 |
+| KILROY | 1.0.0 Taco |
+| ZNetwork | 2.1.0 |
+| Kill-Grok-Orphans | 1.1.0 |
 
 ## Surfaces
 
 | URL | Role |
 |-----|------|
 | http://127.0.0.1:9477/field | NEXUS C2 host desktop |
-| http://127.0.0.1:9477/field-znetwork | ZNetwork Hub + Hostess 7 wire |
-| http://127.0.0.1:9481/world/browser.html | Queen Browser |
-| http://127.0.0.1:9481/world/queen-game-room.html | Game Room |
-| http://127.0.0.1:9481/world/queen-system-info.html?system=nes | Emulator info + CHIPS |
+| http://127.0.0.1:9477/field-znetwork | ZNetwork Hub |
+| http://127.0.0.1:9481/world/browser.html | Queen Browser (KILROY home) |
+| http://127.0.0.1:9481/world/kilroy-home.html | KILROY homepage |
+| http://127.0.0.1:9477/underlay-f9?sector=kilroy | KILROY tristate underlay |
 
-## Install (from git — until tarballs ship)
+## Install
 
 ```bash
 git clone https://github.com/ZacharyGeurts/AmmoOS.git
 cd AmmoOS
-git checkout v2.0.0-beta3   # or main
+git checkout v2.0.0-beta3
 ./scripts/wire-stack.sh
 sudo ./install-all.sh
 ```
 
-**Note:** Large stack siblings (Grok16, Final_Eye, …) wire via `scripts/wire-stack.sh` from your local tree or future release bundles.
+Or extract release tarball:
+
+```bash
+tar -xzf ammooos-2.0.0-beta3-source.tar.gz
+cd ammooos-2.0.0-beta3
+sudo ./install-all.sh
+```
+
+## AmmoLang ship lane
+
+```bash
+./lib/ammolang-run.sh beta_pipeline
+./lib/ammolang-run.sh github_mcp
+./scripts/ammoos-release.sh --version 2.0.0-beta3 --push
+./scripts/publish-stack-pages.sh
+```
+
+## Associated GitHub sites
+
+| Repo | Pages | Wiki |
+|------|-------|------|
+| [AmmoOS](https://github.com/ZacharyGeurts/AmmoOS) | [Manual](https://zacharygeurts.github.io/AmmoOS/) | [Wiki](https://github.com/ZacharyGeurts/AmmoOS/wiki) |
+| [Queen](https://github.com/ZacharyGeurts/Queen) | [Hub](https://zacharygeurts.github.io/Queen/) | — |
+| [Grok16](https://github.com/ZacharyGeurts/Grok16) | [Manual](https://zacharygeurts.github.io/Grok16/) | [Wiki](https://github.com/ZacharyGeurts/Grok16/wiki) |
+| [KILROY](https://github.com/ZacharyGeurts/KILROY) | [Manual](https://zacharygeurts.github.io/KILROY/) | [Wiki](https://github.com/ZacharyGeurts/KILROY/wiki) |
+| [ZNetwork](https://github.com/ZacharyGeurts/ZNetwork) | [Manual](https://zacharygeurts.github.io/ZNetwork/) | [Wiki](https://github.com/ZacharyGeurts/ZNetwork/wiki) |
+| [Stack hub](https://github.com/ZacharyGeurts/ZacharyGeurts) | [stack.html](https://zacharygeurts.github.io/ZacharyGeurts/stack.html) | — |
+
+## Expert review
+
+| Gate | Verdict |
+|------|---------|
+| AmmoLang router | PASS |
+| GitHub MCP transport | PASS |
+| KILROY legacy regression | PASS |
+| Launch verify | PASS |
+| MCP publish | PASS |

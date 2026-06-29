@@ -153,8 +153,8 @@ ensure_nexus_panel() {
 
 ensure_nexus_panel || true
 
-export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/field}"
-export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/field}"
+export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-http://127.0.0.1:${QUEEN_WORLD_PORT}/world/kilroy-home.html}"
+export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${QUEEN_WORLD_PORT}/world/kilroy-home.html}"
 export NEXUS_FIELD_BROWSER_QUEEN="${NEXUS_FIELD_BROWSER_QUEEN:-1}"
 
 mkdir -p "${NEXUS_STATE_DIR}/imports"

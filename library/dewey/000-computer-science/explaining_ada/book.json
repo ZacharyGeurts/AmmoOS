@@ -4,8 +4,8 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-9233efedad83",
-  "format": "h7/7",
+  "ein": "H7C-FIELD-38121ad0081b",
+  "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
@@ -15,12 +15,11 @@
     "compile"
   ],
   "manual_reader": "/field-lang-manuals",
-  "h7": "library/dewey/000-computer-science/explaining_ada/explaining_ada.h7",
+  "h7c": "library/dewey/000-computer-science/explaining_ada/explaining_ada.h7c",
+  "h7": null,
   "field_path": "library/dewey/000-computer-science/explaining_ada/explaining_ada.h7c",
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "ada",
   "cover": "/world/assets/combinatronic/books/ada.png",
-  "updated": "2026-06-29T08:45:35Z",
-  "face_format": "h7c",
-  "properties_only_h7": true
+  "updated": "2026-06-29T12:18:44Z"
 }

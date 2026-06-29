@@ -591,6 +591,17 @@ def _sovereignty_slice() -> dict[str, Any]:
     return {"ok": False, "skipped": True}
 
 
+def _audio_dac_hook() -> dict[str, Any]:
+    py = INSTALL / "lib" / "field-audio-dac-chamber.py"
+    mod = _mod(py, "znet_audio_dac")
+    if mod and hasattr(mod, "znetwork_hook"):
+        try:
+            return mod.znetwork_hook()
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+    return {"ok": False, "skipped": True, "hint": "field-audio-dac-chamber.py"}
+
+
 def posture() -> dict[str, Any]:
     op = _load(OPERATOR, {})
     tray = _load(TRAY_MODE, {})
@@ -598,6 +609,7 @@ def posture() -> dict[str, Any]:
     sov = _sovereignty_slice()
     zn = sov.get("znetwork") or {}
     pipe = int(sov.get("internet_pipe_percent") or zn.get("internet_pipe_percent") or 0)
+    audio_dac = _audio_dac_hook()
     return {
         "schema": SCHEMA,
         "ok": True,
@@ -609,6 +621,8 @@ def posture() -> dict[str, Any]:
         "binary": str(znetwork_bin() or ""),
         "doctrine": str(DOCTRINE),
         "sovereignty": sov,
+        "audio_layer": audio_dac,
+        "audio_dac": audio_dac,
         "internet_pipe_percent": pipe,
         "internet_pipe_target": int(sov.get("internet_pipe_target") or 100),
         "sole_internet_stack": True,

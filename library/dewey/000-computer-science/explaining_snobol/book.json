@@ -4,8 +4,8 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-6d1a61262213",
-  "format": "h7/7",
+  "ein": "H7C-FIELD-5d6fbcd8fbde",
+  "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
@@ -15,12 +15,11 @@
     "compile"
   ],
   "manual_reader": "/field-lang-manuals",
-  "h7": "library/dewey/000-computer-science/explaining_snobol/explaining_snobol.h7",
+  "h7c": "library/dewey/000-computer-science/explaining_snobol/explaining_snobol.h7c",
+  "h7": null,
   "field_path": "library/dewey/000-computer-science/explaining_snobol/explaining_snobol.h7c",
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "snobol",
   "cover": "/world/assets/combinatronic/books/snobol.png",
-  "updated": "2026-06-29T09:04:54Z",
-  "face_format": "h7c",
-  "properties_only_h7": true
+  "updated": "2026-06-29T12:20:01Z"
 }

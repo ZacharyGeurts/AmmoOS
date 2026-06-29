@@ -14,7 +14,9 @@ from typing import Any
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
 SG = Path(os.environ.get("SG_ROOT", INSTALL.parent.parent))
-GROK16 = Path(os.environ.get("GROK16_ROOT", SG / "Grok16"))
+from sg_paths import grok16_root
+
+GROK16 = grok16_root()
 DOCTRINE = INSTALL / "data" / "field-program-combinatronic-doctrine.json"
 SEED = INSTALL / "data" / "field-program-combinatronic-seed.json"
 PANEL = STATE / "field-program-combinatronic-panel.json"
@@ -87,7 +89,11 @@ def _heuristic_boil(cmd: str, heuristics: dict[str, list[str]]) -> str:
 
 
 def _grok16_languages() -> dict[str, Any]:
-    for path in (GROK16 / "data" / "grok16-languages.json", SG / "Grok16" / "data" / "grok16-languages.json"):
+    for path in (
+        GROK16 / "data" / "grok16-languages.json",
+        INSTALL / "Grok16" / "data" / "grok16-languages.json",
+        SG / "Grok16" / "data" / "grok16-languages.json",
+    ):
         doc = _load(path, {})
         if doc.get("languages"):
             return doc

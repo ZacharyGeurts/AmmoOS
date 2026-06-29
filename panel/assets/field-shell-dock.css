@@ -1,4 +1,4 @@
-/* Queen field shell dock — shared taskbar, bookmarks flyout, sovereign tray */
+/* AmmoOS field shell dock — taskbar, bookmarks flyout, sovereign tray · Grok16 5.1.0 */
 :root {
   --fsd-base: rgba(18, 22, 32, 0.92);
   --fsd-edge: rgba(26, 77, 50, 0.45);

@@ -142,7 +142,7 @@ doc = {
         "shaders": "make -C Navigator/shaders",
     },
     "pairing": {
-        "grok16": "5.0.1",
+        "grok16": "5.1.0",
         "vulkan_doctrine": "data/vulkan-os-doctrine.json",
     },
 }

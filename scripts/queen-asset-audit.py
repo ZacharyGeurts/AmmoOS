@@ -37,15 +37,19 @@ REQUIRED_ICONS = (
 def _ocr(path: Path) -> str:
     if not path.is_file():
         return ""
-    try:
-        out = subprocess.check_output(
-            ["tesseract", str(path), "stdout", "-l", "eng", "--psm", "6"],
-            stderr=subprocess.DEVNULL,
-            timeout=15,
-        )
-        return out.decode("utf-8", errors="replace")
-    except (subprocess.SubprocessError, OSError, FileNotFoundError):
-        return ""
+    bridge = ROOT / "lib" / "final-eye-h7-ocr.py"
+    if bridge.is_file():
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(bridge), "ocr", str(path)],
+                capture_output=True, text=True, timeout=90, check=False,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(ROOT)},
+            )
+            doc = json.loads(proc.stdout or "{}")
+            return str(doc.get("text") or doc.get("ocr") or "")
+        except (subprocess.SubprocessError, OSError, json.JSONDecodeError):
+            pass
+    return ""
 
 
 def _grep_remote_refs() -> list[str]:

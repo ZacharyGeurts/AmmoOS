@@ -58,9 +58,6 @@ def _append_ledger(row: dict[str, Any]) -> None:
 
 
 def grok16_root() -> Path:
-    env = os.environ.get("GROK16_ROOT", "").strip()
-    if env:
-        return Path(env)
     try:
         sys.path.insert(0, str(INSTALL / "lib"))
         from sg_paths import grok16_root as _gr  # type: ignore
@@ -68,10 +65,15 @@ def grok16_root() -> Path:
         return _gr()
     except Exception:
         pass
-    sibling = INSTALL.parent.parent / "Grok16"
-    if sibling.is_dir():
-        return sibling
-    return INSTALL.parent.parent / "Grok16"
+    for candidate in (INSTALL / "Grok16", INSTALL.parent / "Grok16"):
+        if candidate.is_dir() and (candidate / "bin" / "g16").is_file():
+            return candidate
+    env = os.environ.get("GROK16_ROOT", "").strip()
+    if env:
+        p = Path(env)
+        if p.is_dir():
+            return p
+    return INSTALL / "Grok16"
 
 
 def _g16_script(name: str) -> Path:
@@ -241,12 +243,50 @@ def effective_profile(requested: str | None = None) -> str:
     return str(_load(DOCTRINE, {}).get("compile", {}).get("profile_default") or "field_opt")
 
 
+def _grok16_distro_version() -> str:
+    for path in (grok16_root() / "data" / "grok16-version.json",):
+        doc = _load(path, {})
+        if doc.get("distro_version"):
+            return str(doc["distro_version"])
+    return "unknown"
+
+
+def _grok15_status() -> dict[str, Any]:
+    path = INSTALL / "Grok16" / "lib" / "grok15-language-core.py"
+    if not path.is_file():
+        return {"ok": False, "error": "grok15_missing"}
+    spec = importlib.util.spec_from_file_location("grok15_bridge", path)
+    if not spec or not spec.loader:
+        return {"ok": False, "error": "grok15_load_failed"}
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if hasattr(mod, "posture"):
+        return mod.posture()
+    return {"ok": False, "error": "posture_unavailable"}
+
+
+def _secure_chamber_status() -> dict[str, Any]:
+    path = INSTALL / "lib" / "g16-secure-chamber.py"
+    if not path.is_file():
+        return {"ok": False, "error": "secure_chamber_missing"}
+    spec = importlib.util.spec_from_file_location("g16_secure_chamber_bridge", path)
+    if not spec or not spec.loader:
+        return {"ok": False, "error": "secure_chamber_load_failed"}
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if hasattr(mod, "posture"):
+        return mod.posture()
+    return {"ok": False, "error": "posture_unavailable"}
+
+
 def stack_status() -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     probe = _probe_g16()
     linker = linker_status()
     rtx = rtx_gate_status()
     iron = ironclad_sanity_status()
+    secure = _secure_chamber_status()
+    grok15 = _grok15_status()
     req_profile = os.environ.get("GROK16_FIELD_PROFILE", "") or _sense_plate_profile() or "field_opt"
     eff = effective_profile(req_profile)
     sense_plate = _load(STATE / "g16-compiler-sense-plate.json", {})
@@ -262,6 +302,8 @@ def stack_status() -> dict[str, Any]:
         "title": "NEXUS G16 Stack",
         "motto": doctrine.get("motto"),
         "grok16_root": str(grok16_root()),
+        "distro_version": _grok16_distro_version(),
+        "ammoos_pairing": _load(INSTALL / "data" / "ammoos-version.json", {}).get("g16_pairing"),
         "ok": optimized,
         "optimized": optimized,
         "compile": {
@@ -289,6 +331,9 @@ def stack_status() -> dict[str, Any]:
             "os_families": linker.get("os_families"),
             "host_target": linker.get("host_target"),
         },
+        "secure_chamber": secure,
+        "grok15_language_core": grok15,
+        "user_code_languages": (doctrine.get("compile") or {}).get("user_code_languages") or [],
     }
 
 

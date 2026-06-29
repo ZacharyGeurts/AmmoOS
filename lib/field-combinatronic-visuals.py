@@ -1568,6 +1568,18 @@ def _explaining_body_sections(
         "G16 unified driver (`g16`) compiles C/C++ neighbors; python runner hosts dynamic facets.",
         "Use `g16-compile-combinatronics.py` when program facet gates must pass at compile time.",
         "",
+        "## Secure compile & run chamber",
+        "",
+        f"Every {label} compile and run path is sealed — **no bare host exec**. User code passes",
+        "`g16-code-security.py` first, then executes inside `g16-secure-chamber.py` with scrubbed",
+        "env (`HOME`, `TMPDIR`, `PATH` limited) so AmmoOS, Hostess 7, and Grok16/bin stay protected.",
+        "",
+        f"- **Check:** `g16-secure-chamber.py compile` (stdin JSON: content, lang)",
+        f"- **Run:** `g16-secure-chamber.py run <path> --lang {lang_id}`",
+        f"- **Posture:** `/api/g16/secure-chamber` · `nexus-g16-bridge.py json` → `secure_chamber`",
+        f"- **Queen launch:** `runner_policy.{lang_id}` = `chamber` in `.launch` manifests",
+        "- **Forbidden:** Hostess7, AmmoCode, Grok16/bin, /usr/bin — cannot execute in place",
+        "",
         "## Performance notes",
         "",
         "belt_2_0 native_bsp is the default for hot paths; belt_1_0 python runner applies",
@@ -1584,8 +1596,26 @@ def _explaining_body_sections(
     return lines
 
 
+def _grok15_mod() -> Any | None:
+    path = INSTALL / "Grok16" / "lib" / "grok15-language-core.py"
+    if not path.is_file():
+        path = INSTALL.parent / "Grok16" / "lib" / "grok15-language-core.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("grok15_language_core", path)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def write_explaining_manual(lang_id: str, *, seed: dict[str, Any] | None = None) -> str:
     seed = seed or _load(SEED, {})
+    g15 = _grok15_mod()
+    if g15 and hasattr(g15, "condensed_explaining_manual"):
+        if os.environ.get("GROK15_FULL_MANUAL", "").strip().lower() not in ("1", "true", "yes"):
+            return g15.condensed_explaining_manual(lang_id, seed=seed)
     pack = _resolve_language_pack(seed, lang_id)
     cmds: dict[str, str] = pack.get("commands") or {}
     canon = _canonical_labels(seed)
@@ -1687,6 +1717,8 @@ def write_explaining_manual(lang_id: str, *, seed: dict[str, Any] | None = None)
         "- **Universal facet:** `field-g16-universal-combinatronic.json`",
         "- **Grok16 compile:** `g16-compile-combinatronics.py` with program facet profile",
         "- **Belt runners:** native_bsp (belt_2_0) and python (belt_1_0) per canonical op",
+        "- **Secure chamber:** `lib/g16-secure-chamber.py` — mandatory for all 57 Grok16 languages",
+        f"- **Filetype actions:** `run` / `compile` → `secure_chamber` in field-programming-filetypes.json",
         "",
         "## Code patterns",
         "",
@@ -1706,6 +1738,9 @@ def write_explaining_manual(lang_id: str, *, seed: dict[str, Any] | None = None)
         "- Extended packs inherit parent commands; check `extends` in the seed.",
         "- Unknown tokens fall through to heuristic_keywords before defaulting to exec.",
         "- CDN and macro expansion are advisory until combinatronic rebalance runs.",
+        f"- **Never run {label} on the bare host** — shell escapes, `eval`, `system`, and JVM/Node",
+        "  subprocess calls are blocked transparently; use the sealed chamber lane.",
+        "- Missing host toolchains (javac, node, cobc, fpc) return clear errors inside the chamber.",
         "",
         "## Where in NEXUS-Shield",
         "",
@@ -1904,6 +1939,224 @@ def generate_chip(chip_id: str) -> dict[str, Any]:
     }
 
 
+def write_exploring_manual(lang_id: str, *, seed: dict[str, Any] | None = None) -> str:
+    """Hands-on Exploring book — labs, hello sample, G16 compile path, CHIPs notes."""
+    seed = seed or _load(SEED, {})
+    pack = _resolve_language_pack(seed, lang_id) if lang_id in (seed.get("language_packs") or {}) else {
+        "commands": {"print": "io", "run": "exec", "compile": "exec"},
+    }
+    cmds: dict[str, str] = pack.get("commands") or {}
+    label = LANG_LABELS.get(lang_id, lang_id.replace("_", " ").title())
+    profile = _lang_profile(lang_id)
+    g16_root = Path(os.environ.get("GROK16_ROOT", INSTALL / "Grok16"))
+    g16_doc = _load(g16_root / "data" / "grok16-languages.json", {}) if g16_root.is_dir() else {}
+    g16_row = (g16_doc.get("languages") or {}).get(lang_id) or {}
+    hello = g16_root / "examples" / "languages" / lang_id
+    hello_file = ""
+    if hello.is_dir():
+        for p in sorted(hello.glob("hello.*")):
+            hello_file = p.name
+            break
+    lines = [
+        f"# Exploring {label}",
+        "",
+        "![Cover — Exploring " + label + "](h7fig:cover)",
+        "",
+        f"Grok16 **Exploring** manual — learn by doing. No host JDK, no third-party toolchains.",
+        f"Every exercise compiles through **bin/g16** inside the secure chamber.",
+        "",
+        f"- **Language id:** `{lang_id}`",
+        f"- **G16 driver:** `{g16_row.get('driver', 'g16-interp')}`",
+        f"- **Hello sample:** `{hello_file or 'examples/languages/' + lang_id + '/hello.*'}`",
+        f"- **Generated:** {_now()}",
+        "",
+        "## Lab 0 — Prerequisites",
+        "",
+        "1. `GROK16_ROOT` points at your Grok16 tree.",
+        "2. `bin/g16` exists — Grok16 compiles everything itself.",
+        "3. Secure chamber: `lib/g16-secure-chamber.py`.",
+        "4. Test harness: `lib/g16-compiler-test-harness.py`.",
+        "",
+        "## Lab 1 — Hello world",
+        "",
+        f"Open `Grok16/examples/languages/{lang_id}/{hello_file or 'hello.*'}` and run:",
+        "",
+        "```bash",
+        f"python3 lib/g16-compiler-test-harness.py --lang {lang_id} --no-halt --json",
+        "```",
+        "",
+        "## Lab 2 — Compile lane",
+        "",
+        "```bash",
+        f"python3 Grok16/lib/g16-native-compile.py compile --lang {lang_id} \\",
+        f"  Grok16/examples/languages/{lang_id}/{hello_file or 'hello.*'}",
+        "```",
+        "",
+        "## Lab 3 — Interpreter lane",
+        "",
+        "If driver is `g16-interp` or `gpy-16`, benchmark the interpreter path:",
+        "",
+        "```bash",
+        f"python3 Grok16/lib/g16-native-compile.py run \\",
+        f"  Grok16/examples/languages/{lang_id}/{hello_file or 'hello.*'} --lang {lang_id}",
+        "```",
+        "",
+        "## Lab 4 — CHIPs compatibility",
+        "",
+        "CHIPs silicon uses Grok16 `field_opt` (`-DCHIPS_G16_ACCURATE=1`). Languages on",
+        "`native_bsp` runners share the same toolchain. Check health:",
+        "",
+        "```bash",
+        "cat .nexus-state/g16-chips-lang-health.json",
+        "```",
+        "",
+        "![Syntax overview](h7fig:syntax)",
+        "![Canonical op map](h7fig:op_map)",
+        "",
+    ]
+    if profile:
+        lines.extend([
+            f"- **Paradigm:** {profile.get('paradigm', '—')}",
+            f"- **Typing:** {profile.get('typing', '—')}",
+            f"- **Memory:** {profile.get('memory', '—')}",
+            "",
+        ])
+    lines.extend([
+        "## Canonical atoms (quick reference)",
+        "",
+    ])
+    for op in (seed.get("canonical_ops") or [])[:12]:
+        lines.append(f"- **{op['id']}** — {op.get('label', '')}")
+    lines.extend([
+        "",
+        f"## {label} command sampler",
+        "",
+    ])
+    for cmd in sorted(cmds.keys(), key=str.lower)[:24]:
+        lines.append(f"- `{cmd}` → `{cmds[cmd]}`")
+    lines.extend([
+        "",
+        "## Issue detection",
+        "",
+        "The compiler test harness reports: `security_block`, `compile_fail`, `interp_fail`,",
+        "`missing_exploring_book`, `chips_gate_fail`. Halt severity stops the suite on critical gates.",
+        "",
+        "## Pair with Explaining",
+        "",
+        f"Read **Explaining {label}** (`explaining_{lang_id}/`) for the full command reference.",
+        "",
+        f"- Manual shelf: `library/dewey/000-computer-science/exploring_{lang_id}/`",
+        f"- GUI: `/field-lang-manuals` (Exploring tab when available)",
+        "",
+    ])
+    return "\n".join(lines) + "\n"
+
+
+def pack_exploring_h7(lang_id: str, text: str) -> Path:
+    h7c_mod = _h7c_module()
+    if not h7c_mod:
+        raise RuntimeError("field-h7c-compression.py missing")
+    label = LANG_LABELS.get(lang_id, lang_id.replace("_", " ").title())
+    book_id = f"exploring_{lang_id}"
+    dest = LIBRARY_SHELF / book_id
+    dest.mkdir(parents=True, exist_ok=True)
+    h7c_path = dest / f"{book_id}.h7c"
+    meta = {
+        "id": book_id,
+        "title": f"Exploring {label}",
+        "author": "Grok16 Field",
+        "license": "Field",
+        "subject": "programming languages — hands-on",
+        "category": "computer science",
+        "dewey": "000",
+        "combinatronic_lang": lang_id,
+        "book_kind": "exploring",
+        "uploaded": _now(),
+        "reader": "NEXUS_H7C",
+    }
+    seed = _load(SEED, {})
+    pack = _resolve_language_pack(seed, lang_id) if lang_id in (seed.get("language_packs") or {}) else {"commands": {}}
+    profile = _lang_profile(lang_id)
+    accent = LANG_ACCENT.get(lang_id, (168, 85, 247))
+    cover_path = BOOKS_DIR / f"{lang_id}.png"
+    syntax_path = render_syntax_diagram(lang_id, label=label, commands=pack.get("commands") or {})
+    opmap_path = render_op_map_diagram(lang_id, label=label, commands=pack.get("commands") or {}, seed=seed)
+    memory_path = render_memory_diagram(lang_id, label=label, profile=profile)
+    compile_path = render_compile_path_diagram(lang_id, label=label)
+    figures = {
+        "cover": {"path": cover_path if cover_path.is_file() else syntax_path, "alt": f"Exploring {label}", "mime": "image/png", "plate_key": "cover", "accent": accent},
+        "syntax": {"path": syntax_path, "alt": f"{label} syntax", "mime": "image/png", "plate_key": "syntax", "accent": accent},
+        "op_map": {"path": opmap_path, "alt": f"{label} op map", "mime": "image/png", "plate_key": "op_map", "accent": accent},
+        "memory": {"path": memory_path, "alt": f"{label} memory", "mime": "image/png", "plate_key": "memory", "accent": accent},
+        "compile": {"path": compile_path, "alt": f"{label} g16 path", "mime": "image/png", "plate_key": "compile", "accent": accent},
+    }
+    packed = h7c_mod.pack_h7c(text, meta, use_optimizer=True, format_version=3, figures=figures)
+    h7c_path.write_bytes(packed)
+    ein = "H7C-EXPLORE-" + hashlib.sha256(text.encode()).hexdigest()[:12]
+    book_json = {
+        "id": book_id,
+        "title": f"Exploring {label}",
+        "author": "Grok16 Field",
+        "dewey": "000",
+        "dewey_label": "Computer science, information & general works",
+        "ein": ein,
+        "format": "h7c",
+        "format_version": 3,
+        "book_kind": "exploring",
+        "embedded_figures": ["cover", "syntax", "op_map", "memory", "compile"],
+        "manual_reader": "/field-lang-manuals",
+        "h7c": _rel(h7c_path),
+        "field_path": _rel(h7c_path),
+        "github_shelf": "000-computer-science",
+        "combinatronic_lang": lang_id,
+        "cover": f"/world/assets/combinatronic/books/{lang_id}.png",
+        "updated": _now(),
+    }
+    (dest / "book.json").write_text(json.dumps(book_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return h7c_path
+
+
+def generate_exploring_book(lang_id: str) -> dict[str, Any]:
+    seed = _load(SEED, {})
+    label = LANG_LABELS.get(lang_id, lang_id.replace("_", " ").title())
+    cover = render_book_cover(lang_id, label=f"Exploring {label}", command_count=0)
+    mirrored = _mirror_asset(cover, "books")
+    text = write_exploring_manual(lang_id, seed=seed)
+    h7c_path = pack_exploring_h7(lang_id, text)
+    return {
+        "ok": True,
+        "lang_id": lang_id,
+        "kind": "exploring",
+        "label": label,
+        "cover": str(cover),
+        "world_url": f"/world/assets/combinatronic/books/{lang_id}_exploring.png",
+        "mirrored": str(mirrored),
+        "h7c_path": str(h7c_path),
+        "char_count": len(text),
+    }
+
+
+def ensure_exploring_books(*, limit: int | None = None) -> dict[str, Any]:
+    g16 = _load(Path(os.environ.get("GROK16_ROOT", INSTALL / "Grok16")) / "data" / "grok16-languages.json", {})
+    langs = sorted((g16.get("languages") or {}).keys())
+    if limit:
+        langs = langs[:limit]
+    created, skipped, errors = [], [], []
+    for lang_id in langs:
+        if (LIBRARY_SHELF / f"exploring_{lang_id}" / "book.json").is_file():
+            skipped.append(lang_id)
+            continue
+        try:
+            rep = generate_exploring_book(lang_id)
+            if rep.get("ok"):
+                created.append(lang_id)
+            else:
+                errors.append({"lang": lang_id, "error": rep.get("error")})
+        except Exception as exc:
+            errors.append({"lang": lang_id, "error": type(exc).__name__})
+    return {"ok": not errors, "created": created, "skipped": skipped, "errors": errors}
+
+
 def generate_book(lang_id: str) -> dict[str, Any]:
     seed = _load(SEED, {})
     packs = seed.get("language_packs") or {}
@@ -2069,6 +2322,16 @@ def main() -> int:
         return 0
     if cmd == "book" and len(sys.argv) > 2:
         print(json.dumps(generate_book(sys.argv[2]), ensure_ascii=False, indent=2))
+        return 0
+    if cmd == "exploring" and len(sys.argv) > 2:
+        print(json.dumps(generate_exploring_book(sys.argv[2]), ensure_ascii=False, indent=2))
+        return 0
+    if cmd == "exploring-all":
+        limit = None
+        for arg in sys.argv[2:]:
+            if arg.startswith("--limit="):
+                limit = int(arg.split("=", 1)[1])
+        print(json.dumps(ensure_exploring_books(limit=limit), ensure_ascii=False, indent=2))
         return 0
     if cmd == "inventory":
         print(json.dumps(inventory(), ensure_ascii=False, indent=2))

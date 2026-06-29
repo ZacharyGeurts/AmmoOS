@@ -1,77 +1,44 @@
 {
-  "schema": "field-broadcaster-doctrine/v1",
-  "title": "Broadcaster — sovereign local capture for NEXUS C2",
+  "schema": "field-broadcaster-doctrine/v2",
+  "title": "AmmoOS Broadcaster — sovereign local capture for NEXUS C2",
   "product": "Broadcaster",
-  "legacy_product": "Field OBS",
   "os_brand": "AmmoOS",
-  "motto": "Simple up front. Powerful in the back. Best of OBS, XSplit, and what operators actually want — no cloud login.",
+  "motto": "Final_Eye display+camera · Queen CANVAS egress · all Field codecs · Kick-first platforms.",
   "policy": {
     "offline_first": true,
     "no_cloud_login_required": true,
     "no_auto_updates": true,
-    "only_bundled_plugins_default": true,
-    "safe_mode_available": true,
     "local_recordings_only_default": true,
-    "no_rtmp_auto_connect": true,
-    "portable_config": true,
+    "secure_localhost_egress": true,
     "queen_capture_ready": true,
-    "simple_surface_default": true,
+    "simple_surface_default": false,
     "advanced_foldout": true
   },
   "gui": {
     "surface": "field-broadcaster",
-    "hero_actions": ["go_live", "record", "virtual_cam"],
+    "hero_actions": ["go_live", "record", "canvas_wire", "platform_pick"],
     "quick_audio": ["input_db", "output_db"],
-    "advanced": ["studio_mode", "scene_guard", "encoder", "ui_scale", "sources"]
+    "advanced": ["studio_mode", "scene_guard", "encoder", "codecs", "sources"]
   },
-  "audio_chain": {
-    "doctrine": "NewLatest/data/field-broadcaster-audio-doctrine.json",
-    "order": ["input_gain_db", "highpass", "noise_gate", "echo_cancel", "static_suppress", "compressor", "output_gain_db", "limiter"],
-    "sample_rate": 48000,
-    "frame_ms": 10
+  "vision": {
+    "camera": "Final_Eye",
+    "display": "Final_Eye",
+    "canvas": "Queen CANVAS",
+    "bridge": "lib/field-final-eye-canvas-bridge.py"
   },
-  "field_mandate": {
-    "g16": "G16_FIELD_SAFETY_MANDATE_v1",
-    "default_profile": "field_opt",
-    "rtx_profile": "queen_rtx",
-    "rtx_gate_module": "Grok16/forge/rtx_gate.py"
-  },
-  "ui": {
-    "desktop_bump_pct": 10,
-    "default_ui_scale_pct": 110,
-    "min_ui_scale_pct": 85,
-    "max_ui_scale_pct": 200,
-    "rtx_reduce_default": true,
-    "rtx_reduce_factor": 0.92,
-    "doctrine": "data/field-obs-ui-tiers.json",
-    "qss": "themes/field-broadcaster.qss",
-    "palette": {
-      "base": "#06080f",
-      "panel": "#0e1118",
-      "live": "#ef4444",
-      "accent": "#38bdf8",
-      "gold": "#fbbf24"
-    }
+  "chamber": {
+    "engine": "field-broadcaster-chamber",
+    "codecs": "lib/field-broadcaster-codecs.py",
+    "platforms": "data/field-broadcaster-platforms.json",
+    "default_platform": "kick"
   },
   "capture": {
     "default_profile": "Broadcaster",
     "default_collection": "NEXUS-C2",
     "record_dir": "recordings",
-    "encoder_rtx": "ffmpeg_nvenc",
-    "encoder_cpu": "x264",
+    "encoder_rtx": "nvenc_h264",
+    "encoder_cpu": "h264",
     "format": "mkv"
-  },
-  "engine": {
-    "backend": "obs-studio",
-    "root": "OBS-Field",
-    "harden_script": "forge/field-obs-harden.py",
-    "build_script": "build-field-obs.sh",
-    "plugin": "OBS-FieldVoiceFilter",
-    "scene_guard_filter": "sg_field_scene_guard"
-  },
-  "upstream": {
-    "path": "upstream/obs-studio",
-    "ref": "30.0.2"
   },
   "nexus_program": {
     "id": "field-broadcaster",

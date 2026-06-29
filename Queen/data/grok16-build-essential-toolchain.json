@@ -1,6 +1,6 @@
 {
   "schema": "grok16-build-essential-toolchain/v1",
-  "updated": "2026-06-29T08:43:32.472384+00:00",
+  "updated": "2026-06-29T14:48:34.413554+00:00",
   "product": "Grok16-build-essential",
   "replaces": "ubuntu:build-essential",
   "field_version": "16.2.0",
@@ -52,17 +52,17 @@
           "hostess_stack": true
         },
         "ai_field": {
-          "truth_floor": 58,
-          "overlay_only": true,
-          "max_encourage_delta": 0.05,
-          "sense_neural_nets": 15,
-          "pythong_runtime_nets": 5,
-          "final_ear": "/home/default/Desktop/SG/NewLatest/Final_Ear",
-          "final_eye": "/home/default/Desktop/SG/NewLatest/Final_Eye",
-          "queen_sense_neural": "/home/default/Desktop/SG/NewLatest/Queen/lib/queen-sense-neural.py",
-          "hostess_supreme": true,
-          "never_override_priorities": true
+          "fast_mode": true
         },
+        "bytecode_cache": {
+          "enabled": true,
+          "version": "16.1.1-fast1",
+          "memory_entries": 0,
+          "disk_entries": 0,
+          "cache_dir": "/home/default/Desktop/SG/NewLatest/.nexus-state/gpy16-bytecode-cache"
+        },
+        "fast_mode": true,
+        "profile": "fastest",
         "ready": true,
         "driver": "/home/default/Desktop/SG/NewLatest/Grok16/bin/gpy-16"
       },

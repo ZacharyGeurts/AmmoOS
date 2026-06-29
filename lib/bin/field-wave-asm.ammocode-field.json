@@ -1,6 +1,6 @@
 {
   "schema": "g16-ammocode-field-instill/v1",
-  "updated": "2026-06-29T10:04:19Z",
+  "updated": "2026-06-29T15:39:23Z",
   "binary": "/home/default/Desktop/SG/NewLatest/lib/bin/field-wave-asm",
   "instilled": true,
   "ammocode_is_field": true,
@@ -13,16 +13,16 @@
   "max_field_depth": 0,
   "doctrine": "data/g16-ammocode-field-doctrine.json",
   "citation": "ammocode:field:no_subfields",
-  "binary_bytes": 16480,
-  "binary_sha256": "fbf173254ac65a11b67cb3874fb5326b725401cd04dac150db78e094fe072a81",
+  "binary_bytes": 16488,
+  "binary_sha256": "eabdc3554ccaf0a9063cf76b7d4a744e6ceb8f7ef82098492ad7ae63641b89a1",
   "meta": {
     "lane": "link"
   },
   "_g16_seal": {
     "schema": "g16-sealed-output/v1",
     "algorithm": "sha256",
-    "digest": "42a62d0a90c953f1683284a4394e38a7d149039740062f2cea5dbfb5bc825207",
-    "sealed_at": "2026-06-29T10:04:19Z",
+    "digest": "44d91acbbeeb3e53a901a3444bb34295728089bfde14cfa377ea10fa1182feae",
+    "sealed_at": "2026-06-29T15:39:23Z",
     "path": "/home/default/Desktop/SG/NewLatest/lib/bin/field-wave-asm.ammocode-field.json",
     "g1id_meld": {
       "id": "g1id",
@@ -36,8 +36,8 @@
         "source": "lib/sovereign-time.py",
         "clock": "lib/sovereign-clock.py",
         "schema": "sovereign-time-meld-input/v1",
-        "linear_ns": 1782727459320014829,
-        "derived_utc": "2026-06-29T10:04:19Z",
+        "linear_ns": 1782747563834455884,
+        "derived_utc": "2026-06-29T15:39:23Z",
         "sealed": true,
         "synced": false,
         "never_desync": true,
@@ -47,7 +47,7 @@
         "citation": "ironclad:g1id:2"
       },
       "example_valid": true,
-      "updated": "2026-06-29T10:04:19Z"
+      "updated": "2026-06-29T15:39:23Z"
     }
   }
 }
