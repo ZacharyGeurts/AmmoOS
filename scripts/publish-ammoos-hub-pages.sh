@@ -36,22 +36,18 @@ publish_one() {
     git -C "$repo_dir" init -b "$PAGES_BRANCH"
     git -C "$repo_dir" remote add origin "$remote"
   fi
+  [[ -d "${repo_dir}/.git" ]] || { log "FAIL ${name} — no .git after clone/init"; return 0; }
 
-  rsync -a --delete "${STAGE}/${name}/" "${repo_dir}/"
-  (
-    cd "$repo_dir"
-    export GIT_DIR="$repo_dir/.git"
-    export GIT_WORK_TREE="$repo_dir"
-    git add -A
-    if git diff --cached --quiet; then
-      log "${name} up to date"
-      exit 0
-    fi
-    git -c user.email="gzac5314@users.noreply.github.com" -c user.name="ZacharyGeurts" \
-      commit -m "pages: ${name} hub → AmmoOS code + manual v${VER}"
-    git push origin "$PAGES_BRANCH" 2>/dev/null || git push -u origin "$PAGES_BRANCH"
-    log "published https://${OWNER,,}.github.io/${name}/"
-  )
+  rsync -a --delete --exclude='.git' "${STAGE}/${name}/" "${repo_dir}/"
+  git -C "$repo_dir" add -A
+  if git -C "$repo_dir" diff --cached --quiet; then
+    log "${name} up to date"
+    return 0
+  fi
+  git -C "$repo_dir" -c user.email="gzac5314@users.noreply.github.com" -c user.name="ZacharyGeurts" \
+    commit -m "pages: ${name} hub → AmmoOS code + manual v${VER}"
+  git -C "$repo_dir" push origin "$PAGES_BRANCH" 2>/dev/null || git -C "$repo_dir" push -u origin "$PAGES_BRANCH"
+  log "published https://${OWNER,,}.github.io/${name}/"
 }
 
 while IFS=$'\t' read -r name manual_url; do
