@@ -1,0 +1,14 @@
+{
+  "id": "nes_vegas_dream",
+  "title": "Vegas Dream",
+  "author": "HAL Laboratory",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_vegas_dream-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Traditional",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_vegas_dream/nes_vegas_dream.h7c"
+}

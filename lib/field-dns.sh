@@ -209,10 +209,50 @@ nexus_field_dhcp_serve_loop() {
   done
 }
 
+nexus_field_local_connect() {
+  [[ "${NEXUS_FIELD_LOCAL_DNS_CONNECT:-1}" == "1" ]] || return 0
+  local py="${NEXUS_INSTALL_ROOT}/lib/field-local-dns-connect.py"
+  [[ -f "$py" ]] || return 0
+  local runner="pythong"
+  command -v pythong >/dev/null 2>&1 || runner="python3"
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    "$runner" "$py" connect >/dev/null 2>&1 || true
+}
+
+nexus_field_local_connect_loop() {
+  [[ "${NEXUS_FIELD_LOCAL_DNS_CONNECT:-1}" == "1" ]] || return 0
+  while true; do
+    declare -f nexus_field_local_connect >/dev/null 2>&1 && nexus_field_local_connect || true
+    sleep "${NEXUS_FIELD_LOCAL_CONNECT_INTERVAL:-8}"
+  done
+}
+
+nexus_field_services_boot() {
+  [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
+  declare -f nexus_field_dns_publish >/dev/null 2>&1 && nexus_field_dns_publish || true
+  if ! pgrep -f 'field-dns.py serve' >/dev/null 2>&1; then
+    nohup env NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      bash -c 'source "'"${NEXUS_INSTALL_ROOT}"'/lib/field-dns.sh" && nexus_field_dns_serve_loop' \
+      >>"${NEXUS_STATE_DIR}/field-dns-serve.log" 2>&1 &
+  fi
+  if [[ "${NEXUS_FIELD_DHCP:-1}" == "1" ]] && ! pgrep -f 'field-dhcp.py serve' >/dev/null 2>&1; then
+    nohup env NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      bash -c 'source "'"${NEXUS_INSTALL_ROOT}"'/lib/field-dns.sh" && nexus_field_dhcp_serve_loop' \
+      >>"${NEXUS_STATE_DIR}/field-dhcp-serve.log" 2>&1 &
+  fi
+  if [[ "${NEXUS_FIELD_LOCAL_DNS_CONNECT:-1}" == "1" ]] && ! pgrep -f 'nexus_field_local_connect_loop' >/dev/null 2>&1; then
+    nohup env NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      bash -c 'source "'"${NEXUS_INSTALL_ROOT}"'/lib/field-dns.sh" && nexus_field_local_connect_loop' \
+      >>"${NEXUS_STATE_DIR}/field-local-connect.log" 2>&1 &
+  fi
+  declare -f nexus_field_local_connect >/dev/null 2>&1 && nexus_field_local_connect || true
+}
+
 nexus_field_dns_enforce_cycle() {
   [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
   declare -f nexus_field_dns_takeover_cycle >/dev/null 2>&1 && nexus_field_dns_takeover_cycle || true
   declare -f nexus_field_dns_publish >/dev/null 2>&1 && nexus_field_dns_publish || true
+  declare -f nexus_field_local_connect >/dev/null 2>&1 && nexus_field_local_connect || true
 }
 
 nexus_sovereign_time_serve_loop() {

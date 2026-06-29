@@ -54,8 +54,8 @@
       "connection_hint_limit": 32,
       "facet_sub_map": {
         "code": "program_combinatronic",
-        "prose": "chips_battery",
-        "heading": "chips_battery"
+        "prose": "ironclad_chips",
+        "heading": "ironclad_chips"
       }
     }
   },

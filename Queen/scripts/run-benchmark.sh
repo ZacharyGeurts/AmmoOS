@@ -22,8 +22,8 @@ export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${PORT}/world/
 
 # Ensure Queen world is up
 if ! curl -sf --max-time 2 "http://127.0.0.1:${PORT}/api/queen-browser" >/dev/null 2>&1; then
-  echo "Starting Queen world on :${PORT}…" >&2
-  "${ROOT}/scripts/run-queen.sh" --world-only 2>/dev/null &
+  echo "Starting Queen world on :${PORT} (benchmark mode)…" >&2
+  QUEEN_BENCHMARK_MODE=1 QUEEN_INLINE_BROWSER=1 "${ROOT}/scripts/run-queen.sh" --world-only 2>/dev/null &
   for _ in $(seq 1 40); do
     curl -sf --max-time 1 "http://127.0.0.1:${PORT}/api/queen-browser" >/dev/null 2>&1 && break
     sleep 0.25
@@ -31,7 +31,7 @@ if ! curl -sf --max-time 2 "http://127.0.0.1:${PORT}/api/queen-browser" >/dev/nu
 fi
 
 GECKO="${ROOT}/field-gecko/bin/launch-field-gecko.sh"
-if [[ -x "${GECKO}" ]] && "${GECKO}" --help >/dev/null 2>&1 || [[ -x /usr/bin/firefox || -x /usr/bin/firefox-esr ]]; then
+if [[ -x "${GECKO}" ]] || [[ -x /usr/bin/firefox || -x /usr/bin/firefox-esr ]]; then
   echo "Queen benchmark · Field Gecko → ${BENCH_URL}" >&2
   exec "${GECKO}" "${BENCH_URL}"
 fi

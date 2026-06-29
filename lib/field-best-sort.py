@@ -71,7 +71,37 @@ def _sort_family_then_label(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(rows, key=key)
 
 
+def _composite_bsp_sort(
+    rows: list[dict[str, Any]],
+    *,
+    key: str = "path_pct",
+    reverse: bool = True,
+) -> list[dict[str, Any]]:
+    if len(rows) <= 1:
+        return list(rows)
+
+    def score(row: dict[str, Any], idx: int) -> float:
+        raw = row.get(key)
+        if raw is None:
+            raw = row.get("weight")
+        if raw is None:
+            raw = row.get("priority")
+        if raw is None:
+            raw = len(rows) - idx
+        return float(raw)
+
+    scored = [(score(r, i), r) for i, r in enumerate(rows)]
+    scored.sort(key=lambda t: t[0], reverse=reverse)
+    mid = len(scored) // 2
+    left = _composite_bsp_sort([r for _, r in scored[:mid]], key=key, reverse=reverse)
+    right = _composite_bsp_sort([r for _, r in scored[mid:]], key=key, reverse=reverse)
+    return left + right
+
+
 def _apply_algorithm(rows: list[dict[str, Any]], alg: str, *, context: str) -> list[dict[str, Any]]:
+    if alg == "composite_bsp" or (context == "chip_paths" and alg != "narrow_band"):
+        key = "path_pct" if context == "chip_paths" else "priority"
+        return _composite_bsp_sort(rows, key=key)
     if alg == "family_then_label" or context == "format_table":
         return _sort_family_then_label(rows)
     mod = _power_sort_mod()
@@ -117,6 +147,10 @@ def resolve_best(context: str, *, n: int | None = None) -> dict[str, Any]:
 
     if context == "format_table":
         alg = str((doctrine.get("format_table") or {}).get("algorithm") or "family_then_label")
+    elif context in ("chip_paths", "chips_battery", "chips_combinatronic"):
+        alg = "composite_bsp"
+    elif context == "recombinatorics":
+        alg = "composite_bsp"
     elif mod and hasattr(mod, "select_sort"):
         try:
             pick = mod.select_sort(context, n=n)
@@ -146,6 +180,18 @@ def resolve_best(context: str, *, n: int | None = None) -> dict[str, Any]:
     }
 
 
+def _ironclad_connected() -> dict[str, Any]:
+    imm_path = STATE / "ironclad-immediate.json"
+    imm = _load(imm_path, {})
+    pts = imm.get("plate_to_sense") or {}
+    return {
+        "ironclad_connected": True,
+        "meld_citation": MELD_CITATION,
+        "truth_percent": imm.get("truth_percent") or pts.get("truth_percent"),
+        "ironclad_grounded": bool(imm.get("ironclad_sealed") or pts.get("ironclad_grounded")),
+    }
+
+
 def apply_best(
     rows: list[dict[str, Any]],
     *,
@@ -156,13 +202,13 @@ def apply_best(
     pick = resolve_best(context, n=n or len(rows))
     alg = str(pick.get("algorithm") or "family_then_label")
     sorted_rows = _apply_algorithm(list(rows), alg, context=context)
-    meta = {**pick, "count": len(sorted_rows), "applied": True}
+    meta = {**pick, "count": len(sorted_rows), "applied": True, **_ironclad_connected()}
     return sorted_rows, meta
 
 
 def meld_slice() -> dict[str, Any]:
     """Slice for ironclad-plate / field-plate-meld."""
-    contexts = ("format_table", "file_list", "thermal_layers", "recombinatorics")
+    contexts = ("format_table", "file_list", "thermal_layers", "recombinatorics", "chip_paths")
     resolved = {ctx: resolve_best(ctx) for ctx in contexts}
     return {
         "id": "field_best_sort",

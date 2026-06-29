@@ -1,12 +1,12 @@
 # AmmoOS
 
-![Release](https://img.shields.io/badge/release-1.0.0--beta-brightgreen)
-![Edition](https://img.shields.io/badge/edition-field%20OS-blue)
-![G16](https://img.shields.io/badge/Grok16-4.7.1-gold)
+![Release](https://img.shields.io/badge/release-1.9.9--pre--grok--heavy-brightgreen)
+![Edition](https://img.shields.io/badge/edition-Pre_Grok_Heavy-blue)
+![G16](https://img.shields.io/badge/Grok16-5.0.0-gold)
 ![Queen](https://img.shields.io/badge/Queen-browser-purple)
 ![License](https://img.shields.io/badge/license-GPLv3-green)
 
-**AmmoOS** is the **field operating system beta** built from the SG/NewLatest engine — every component either **launches as a native program** or **opens in your web browser** on loopback. Combinatronic rebalance wires chips, languages, and plates before boot.
+**AmmoOS** is the **1.9.9 Pre Grok Heavy** field operating system on **`127.0.0.1`**. Once **ZNetwork** is running, you are the loopback field — **not** a generic web browser tab. Queen is the system shell; native programs and **View** (folder manager) launch from the Start menu. Program-glyph icons; Grok16 5.0.0; MCP GitHub publish.
 
 ## Live surfaces (after install)
 
@@ -30,13 +30,13 @@ sudo ./install-all.sh
 
 Browser opens **http://127.0.0.1:9477/field** on start.
 
-## Beta pipeline (from dev tree)
+## Release pipeline (1.0)
 
 ```bash
 export SG_ROOT=/path/to/SG
 ./scripts/ammoos-beta-pipeline.sh    # combinatronic · plate · engine · integrate
-./scripts/ammoos-launch-verify.sh     # every surface registered
-./scripts/pack-ammoos-release.sh      # source + installers + platforms
+./scripts/ammoos-launch-verify.sh     # surfaces · sovereignty · local DNS/DHCP
+./scripts/pack-ammoos-release.sh --version 1.0.0
 ```
 
 ## Combinatronic integration
@@ -53,7 +53,7 @@ Doctrine: `lib/g16-combinatronic-rebalance.py` · State: `.nexus-state/ammoos-*.
 
 ## Platform matrix
 
-AmmoOS beta ships **source bootstrap** for:
+AmmoOS 1.0 ships **source bootstrap** for:
 
 | Platform | Installer |
 |----------|-----------|
@@ -64,7 +64,7 @@ AmmoOS beta ships **source bootstrap** for:
 | FreeBSD amd64 | `install.sh` |
 | Android aarch64 | Queen `browser.html` WebView shell |
 
-Full matrix: [ammoos-1.0.1-beta-PLATFORMS.md](dist/ammoos-1.0.1-beta-PLATFORMS.md) · JSON: `data/ammoos-platform-release.json`
+Full matrix: [ammoos-2.0.0-beta-PLATFORMS.md](dist/ammoos-2.0.0-beta-PLATFORMS.md) · JSON: `data/ammoos-platform-release.json`
 
 ## Architecture
 
@@ -101,6 +101,6 @@ Combinatronic engine
 
 ## Lineage
 
-AmmoOS beta **1.0.1-beta** packages **NEXUS-Shield / NewLatest 10.4.1** with Grok16 **4.7.1** pairing. NEXUS-Shield remains the upstream operator tree; AmmoOS is the product-facing field OS release.
+AmmoOS beta **2.0.0-beta** packages **NEXUS-Shield / NewLatest 10.4.1** with Grok16 **4.7.1** pairing and **KILROY Field Die** syscall truth. Full SG stack siblings are wired and materialized in release archives.
 
-**Release notes:** [RELEASE-1.0.1-beta.md](RELEASE-1.0.1-beta.md)
+**Release notes:** [RELEASE-2.0.0-beta.md](RELEASE-2.0.0-beta.md)

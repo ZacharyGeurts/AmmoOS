@@ -35,7 +35,12 @@
     "positive_identification_before_permit": true,
     "forever_watchguard_angel": true,
     "queen_layer_hostess7": true,
-    "angel_mandate": "queen-angel-mandate.json"
+    "angel_mandate": "queen-angel-mandate.json",
+    "ammoos_sovereignty": true,
+    "loopback_authority": "127.0.0.1",
+    "znetwork_internet_pipe_percent": 100,
+    "own_drivers_on_any_hardware": true,
+    "presume_sole_internet": true
   },
   "engines": {
     "ship_now": {
@@ -100,7 +105,11 @@
     {"id": "nexus_jump_iff", "label": "NEXUS Jump — hostile presumption at every navigation boundary", "held": true, "layer": "security"},
     {"id": "forever_watchguard_angel", "label": "Hostess 7 Forever Watchguard Angel — Queen layer", "held": true, "layer": "angel"},
     {"id": "grok_build_secure", "label": "Grok Build — AI secure channel + Queen branded page", "held": true, "layer": "ai"},
-    {"id": "field_virus_scanner", "label": "Field Virus scanner — own heuristics gate every file in/out; HOSTILE until CIVILIAN or THREAT", "held": true, "layer": "security"}
+    {"id": "field_virus_scanner", "label": "Field Virus scanner — own heuristics gate every file in/out; HOSTILE until CIVILIAN or THREAT", "held": true, "layer": "security"},
+    {"id": "ammoos_sovereignty", "label": "AmmoOS sovereignty — Queen underlying browser, 127.0.0.1 local authority", "held": true, "layer": "sovereign"},
+    {"id": "znetwork_sole_pipe", "label": "ZNetwork sole internet — 100% ingress/egress pipe in and out", "held": true, "layer": "network"},
+    {"id": "own_drivers_hardware", "label": "Own drivers on any hardware — FieldGpuDispatch, iron plate, full wire", "held": true, "layer": "chip"},
+    {"id": "presume_sole_internet", "label": "Presume Queen+ZNetwork is the only internet on the system — hardened", "held": true, "layer": "network"}
   ],
   "codecs": {
     "container": ["video/mp4", "video/webm", "video/ogg", "audio/mp4", "audio/mpeg", "audio/ogg", "audio/webm"],

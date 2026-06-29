@@ -1,0 +1,14 @@
+{
+  "id": "nes_metroid",
+  "title": "Metroid",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_metroid-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1986,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_metroid/nes_metroid.h7c"
+}

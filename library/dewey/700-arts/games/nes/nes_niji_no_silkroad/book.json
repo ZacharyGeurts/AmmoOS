@@ -1,0 +1,14 @@
+{
+  "id": "nes_niji_no_silkroad",
+  "title": "Niji no Silkroad",
+  "author": "Marvelous Interactive",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_niji_no_silkroad-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_niji_no_silkroad/nes_niji_no_silkroad.h7c"
+}

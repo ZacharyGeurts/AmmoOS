@@ -1026,6 +1026,154 @@ body.qw-theater-mode .qw-os-panel--theater { top: 0; bottom: 52px; }
   max-height: 34vh;
 }
 
+/* NES Library — separate API tiles */
+.gr-nes-room {
+  padding: 12px 16px 8px;
+  background: linear-gradient(180deg, rgba(26, 18, 16, 0.95) 0%, rgba(8, 6, 4, 0.98) 100%);
+  border-top: 1px solid rgba(212, 168, 83, 0.15);
+}
+.gr-nes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 10px;
+}
+.gr-nes-toolbar h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #f5e6c8;
+  font-weight: 600;
+}
+.gr-nes-stats { font-size: 0.75rem; color: #9a8b72; }
+.gr-nes-sort-label { font-size: 0.72rem; color: #9a8b72; display: flex; align-items: center; gap: 6px; }
+.gr-nes-search {
+  flex: 1;
+  min-width: 140px;
+  padding: 6px 10px;
+  border: 1px solid #3a3228;
+  border-radius: 4px;
+  background: #120e0a;
+  color: #f5e6c8;
+  font: inherit;
+  font-size: 0.8rem;
+}
+.gr-nes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 10px;
+  max-height: min(42vh, 420px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 2px 12px;
+  scroll-behavior: smooth;
+}
+.gr-nes-cart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px 10px;
+  border: 1px solid #3a3228;
+  border-radius: 6px;
+  background: #1a1410;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, transform 0.12s;
+}
+.gr-nes-cart:hover { border-color: #c9a227; transform: translateY(-2px); }
+.gr-nes-cart.selected { border-color: #d4a853; box-shadow: 0 0 14px rgba(212, 168, 83, 0.2); }
+.gr-nes-cart img {
+  width: 72px;
+  height: 88px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.gr-nes-cart-title {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #f5e6c8;
+  line-height: 1.2;
+  max-height: 2.4em;
+  overflow: hidden;
+}
+.gr-nes-cart-meta { font-size: 0.58rem; color: #7a6f5c; }
+.gr-nes-cart.missing {
+  opacity: 0.42;
+  filter: grayscale(0.85);
+  background: #141210;
+}
+.gr-nes-cart.missing .gr-nes-cart-title { color: #8a8278; }
+.gr-nes-badge {
+  font-size: 0.55rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.gr-nes-badge.have { background: rgba(61, 214, 140, 0.15); color: #3dd68c; }
+.gr-nes-badge.miss { background: rgba(120, 120, 120, 0.12); color: #888; }
+.gr-nes-detail {
+  font-size: 0.78rem;
+  color: #9a8b72;
+  padding: 8px 0 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.gr-nes-fix { margin: 0; font-size: 0.7rem; color: #7a9ab0; width: 100%; }
+.gr-nes-miss { margin: 0; font-size: 0.72rem; color: #8a7a6a; }
+.gr-nes-empty { color: #7a6f5c; font-size: 0.8rem; grid-column: 1 / -1; }
+
+/* Sweet Anita Protocol — Queen multiplayer */
+.gr-sap-panel {
+  padding: 10px 16px 14px;
+  border-top: 1px solid rgba(100, 180, 220, 0.12);
+  background: rgba(10, 14, 22, 0.6);
+}
+.gr-sap-head h3 { margin: 0; font-size: 0.92rem; color: #a8d4f0; }
+.gr-sap-sub { margin: 4px 0 8px; font-size: 0.72rem; color: #6a8a9a; }
+.gr-sap-status { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.gr-sap-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.gr-sap-field {
+  width: 120px;
+  padding: 6px 8px;
+  font-size: 0.75rem;
+  border: 1px solid #2a3a48;
+  border-radius: 4px;
+  background: #0a1018;
+  color: #c8e0f0;
+}
+.gr-sap-invite {
+  flex: 1;
+  min-width: 200px;
+  font-size: 0.68rem;
+  padding: 6px 8px;
+  border: 1px dashed #3a5a68;
+  background: transparent;
+  color: #8ab0c0;
+}
+
+@media (max-width: 768px) {
+  .gr-nes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    max-height: 36vh;
+  }
+  .gr-nes-cart img { width: 56px; height: 68px; }
+  .gr-sap-controls .gr-nes-search { min-width: 100%; }
+  .gr-deck { flex-direction: column; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .gr-nes-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+}
+
 .gr-stage:fullscreen {
   padding: 0;
   background: #000;

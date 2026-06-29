@@ -1,0 +1,14 @@
+{
+  "id": "nes_pinball",
+  "title": "Pinball",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_pinball-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Traditional",
+  "year": 1985,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_pinball/nes_pinball.h7c"
+}

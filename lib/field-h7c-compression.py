@@ -32,8 +32,8 @@ _UNIVERSAL_CACHE: dict[str, Any] | None = None
 
 FACET_UNI_SUB: dict[str, str] = {
     "code": "program_combinatronic",
-    "prose": "chips_battery",
-    "heading": "chips_battery",
+    "prose": "ironclad_chips",
+    "heading": "ironclad_chips",
 }
 
 
@@ -163,7 +163,7 @@ def _map_bands_universal(
     hints: list[dict[str, Any]] = []
     for band in bands:
         facet = str(band.get("facet") or "prose")
-        sub = FACET_UNI_SUB.get(facet, "chips_battery")
+        sub = FACET_UNI_SUB.get(facet, "ironclad_chips")
         candidates = sub_index.get(sub) or sub_index.get("g16_universal") or []
         if not candidates:
             refs.append(-1)
@@ -202,7 +202,7 @@ def _universal_connection_hints(
         leaf = leaves[ref]
         lid = str(leaf.get("source_leaf") or leaf.get("id") or "")
         sub = str(leaf.get("sub_facet") or "")
-        if sub == "chips_battery":
+        if sub in ("ironclad_chips", "chips_battery"):
             chip_ids.add(lid)
         elif sub == "program_combinatronic":
             lang_ids.add(str(leaf.get("lang") or lid))
@@ -688,12 +688,29 @@ def balance_store(digest: str, text: str, *, facet: str = "", meta: dict[str, An
     save_balance_table(table)
 
 
+def _figure_condenser() -> Any | None:
+    path = INSTALL / "lib" / "field-h7c-figure-compress.py"
+    if not path.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("field_h7c_figure_compress", path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod
+    except Exception:
+        pass
+    return None
+
+
 def _pack_figures(figures: dict[str, dict[str, Any]] | None) -> tuple[bytes, list[dict[str, Any]]]:
-    """Embed PNG/SVG figures — keyed by id referenced as ![alt](h7fig:id) in text."""
+    """Embed PNG figures — field plate condense, meld dedupe, keyed as ![alt](h7fig:id)."""
     if not figures:
         return b"", []
+    condenser = _figure_condenser()
     manifest: list[dict[str, Any]] = []
     blobs: list[bytes] = []
+    seen_sha: dict[str, int] = {}
     for fig_id, spec in figures.items():
         raw = spec.get("data")
         if raw is None and spec.get("path"):
@@ -704,13 +721,46 @@ def _pack_figures(figures: dict[str, dict[str, Any]] | None) -> tuple[bytes, lis
         if not isinstance(raw, (bytes, bytearray)) or not raw:
             continue
         raw = bytes(raw)
+        plate_key = str(spec.get("plate_key") or fig_id)
+        meta_extra: dict[str, Any] = {}
+        if condenser and hasattr(condenser, "condense_figure_png"):
+            try:
+                accent = spec.get("accent")
+                accent_t = tuple(accent) if isinstance(accent, (list, tuple)) and len(accent) == 3 else None
+                raw, meta_extra = condenser.condense_figure_png(
+                    raw,
+                    plate_key=plate_key,
+                    accent=accent_t,
+                    use_meld=True,
+                    use_plate_snap=spec.get("plate_snap", True),
+                )
+            except Exception:
+                meta_extra = {}
+        sha = meta_extra.get("sha256") or hashlib.sha256(raw).hexdigest()
+        if sha in seen_sha:
+            manifest.append({
+                "id": str(fig_id),
+                "mime": str(spec.get("mime") or "image/png"),
+                "alt": str(spec.get("alt") or fig_id),
+                "sha256": sha,
+                "bytes": len(raw),
+                "offset": seen_sha[sha],
+                "plate_key": plate_key,
+                "meld_ref": True,
+                **meta_extra,
+            })
+            continue
+        offset = sum(len(b) for b in blobs)
+        seen_sha[sha] = offset
         manifest.append({
             "id": str(fig_id),
             "mime": str(spec.get("mime") or "image/png"),
             "alt": str(spec.get("alt") or fig_id),
-            "sha256": hashlib.sha256(raw).hexdigest(),
+            "sha256": sha,
             "bytes": len(raw),
-            "offset": sum(len(b) for b in blobs),
+            "offset": offset,
+            "plate_key": plate_key,
+            **meta_extra,
         })
         blobs.append(raw)
     if not manifest:

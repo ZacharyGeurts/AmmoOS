@@ -1,0 +1,14 @@
+{
+  "id": "nes_ninja_kid",
+  "title": "Ninja Kid",
+  "author": "Bandai",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_ninja_kid-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1986,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_ninja_kid/nes_ninja_kid.h7c"
+}

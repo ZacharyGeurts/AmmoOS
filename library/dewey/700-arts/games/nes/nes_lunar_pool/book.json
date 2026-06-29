@@ -1,0 +1,14 @@
+{
+  "id": "nes_lunar_pool",
+  "title": "Lunar Pool",
+  "author": "Pony Canyon",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_lunar_pool-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_lunar_pool/nes_lunar_pool.h7c"
+}

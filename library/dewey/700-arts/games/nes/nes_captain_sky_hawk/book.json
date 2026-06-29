@@ -1,0 +1,14 @@
+{
+  "id": "nes_captain_sky_hawk",
+  "title": "Captain Sky Hawk",
+  "author": "Milton Bradley",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_captain_sky_hawk-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_captain_sky_hawk/nes_captain_sky_hawk.h7c"
+}

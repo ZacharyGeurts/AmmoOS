@@ -64,6 +64,7 @@
     "queen_field_sanity": "Queen/lib/queen-field-sanity.py",
     "queen_field_engine": "Queen/world/queen-field-engine.js",
     "non_fielded_safety": "lib/field-non-fielded-safety.py",
-    "depth_singularizer": "lib/field-depth-singularizer.py"
+    "depth_singularizer": "lib/field-depth-singularizer.py",
+    "no_field_files": "lib/field-no-file-gate.py"
   }
 }

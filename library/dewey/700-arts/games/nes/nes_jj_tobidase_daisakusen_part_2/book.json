@@ -1,0 +1,14 @@
+{
+  "id": "nes_jj_tobidase_daisakusen_part_2",
+  "title": "JJ - Tobidase Daisakusen Part 2",
+  "author": "Square Co., Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_jj_tobidase_daisakusen_part_2-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_jj_tobidase_daisakusen_part_2/nes_jj_tobidase_daisakusen_part_2.h7c"
+}

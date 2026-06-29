@@ -4,13 +4,15 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-18e815cfe10b",
+  "ein": "H7C-FIELD-68cd24091f0f",
   "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
   "h7c": "library/dewey/000-computer-science/explaining_freebasic/explaining_freebasic.h7c",
@@ -19,5 +21,5 @@
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "freebasic",
   "cover": "/world/assets/combinatronic/books/freebasic.png",
-  "updated": "2026-06-27T13:08:46Z"
+  "updated": "2026-06-27T21:30:50Z"
 }

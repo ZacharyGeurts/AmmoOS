@@ -1,0 +1,14 @@
+{
+  "id": "nes_akagawa_jirou_no_yuurei_ressha",
+  "title": "Akagawa Jirou no Yuurei Ressha",
+  "author": "King Records",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_akagawa_jirou_no_yuurei_ressha-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Adventure",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_akagawa_jirou_no_yuurei_ressha/nes_akagawa_jirou_no_yuurei_ressha.h7c"
+}

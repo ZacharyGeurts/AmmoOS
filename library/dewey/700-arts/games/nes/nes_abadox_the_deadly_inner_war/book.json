@@ -1,0 +1,14 @@
+{
+  "id": "nes_abadox_the_deadly_inner_war",
+  "title": "Abadox: The Deadly Inner War",
+  "author": "Milton Bradley",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_abadox_the_deadly_inner_war-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_abadox_the_deadly_inner_war/nes_abadox_the_deadly_inner_war.h7c"
+}

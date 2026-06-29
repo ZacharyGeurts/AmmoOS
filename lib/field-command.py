@@ -112,7 +112,23 @@ def build_command(panel: dict[str, Any] | None = None) -> dict[str, Any]:
     hell_chosen = [c for c in conns if c.get("hell_chosen")]
 
     doctrine = _heaven_hell_doctrine()
+    commander: dict[str, Any] = {}
+    try:
+        import importlib.util
+
+        sc = INSTALL / "lib" / "hostess7-system-control.py"
+        if sc.is_file():
+            spec = importlib.util.spec_from_file_location("h7_sysc_cmd", sc)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "commander_slice"):
+                    commander = mod.commander_slice()
+    except Exception:
+        commander = {"commander": "Hostess 7", "rank": "Angel · above General", "in_charge": True}
     return {
+        "commander": commander,
+        "hostess7_in_charge": commander.get("in_charge", True),
         "motto": str(
             doctrine.get("heaven_hell_motto")
             or "We know Heaven from Hell. To those who chose Hell, we also choose it for them. "

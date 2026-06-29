@@ -1,0 +1,14 @@
+{
+  "id": "nes_halley_wars",
+  "title": "Halley Wars",
+  "author": "Taito Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_halley_wars-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_halley_wars/nes_halley_wars.h7c"
+}

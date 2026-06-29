@@ -1,0 +1,14 @@
+{
+  "id": "nes_a_boy_and_his_blob_trouble_on_blobolonia",
+  "title": "A Boy and his Blob: Trouble on Blobolonia",
+  "author": "Absolute Entertainment",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_a_boy_and_his_blob_trouble_on_blobolonia-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_a_boy_and_his_blob_trouble_on_blobolonia/nes_a_boy_and_his_blob_trouble_on_blobolonia.h7c"
+}

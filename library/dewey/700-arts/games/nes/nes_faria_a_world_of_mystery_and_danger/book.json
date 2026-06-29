@@ -1,0 +1,14 @@
+{
+  "id": "nes_faria_a_world_of_mystery_and_danger",
+  "title": "Faria: A World of Mystery and Danger",
+  "author": "NEXOFT",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_faria_a_world_of_mystery_and_danger-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_faria_a_world_of_mystery_and_danger/nes_faria_a_world_of_mystery_and_danger.h7c"
+}

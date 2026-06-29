@@ -1,0 +1,14 @@
+{
+  "id": "nes_garry_kitchens_battletank",
+  "title": "Garry Kitchen's Battletank",
+  "author": "Absolute Entertainment",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_garry_kitchens_battletank-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Simulation",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_garry_kitchens_battletank/nes_garry_kitchens_battletank.h7c"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "nes_kid_kool_and_the_quest_for_the_seven_wonder_herbs",
+  "title": "Kid Kool and the Quest for the Seven Wonder Herbs",
+  "author": "Vic Tokai, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_kid_kool_and_the_quest_for_the_seven_wonder_herbs-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_kid_kool_and_the_quest_for_the_seven_wonder_herbs/nes_kid_kool_and_the_quest_for_the_seven_wonder_herbs.h7c"
+}

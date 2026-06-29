@@ -55,7 +55,7 @@
   },
   "one_field": {
     "package": "field/sovereign",
-    "manifest": "field/sovereign/queen-field.json",
+    "manifest": "field/sovereign/queen-sovereign-bundle.json",
     "forge": "lib/queen-forge.py field",
     "publish": "lib/queen-forge.py run field_publish"
   },

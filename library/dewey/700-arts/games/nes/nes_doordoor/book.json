@@ -1,0 +1,14 @@
+{
+  "id": "nes_doordoor",
+  "title": "DoorDoor",
+  "author": "Enix Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_doordoor-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1985,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_doordoor/nes_doordoor.h7c"
+}

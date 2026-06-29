@@ -1,0 +1,14 @@
+{
+  "id": "nes_jordan_vs_bird_one_on_one",
+  "title": "Jordan vs. Bird: One-on-One",
+  "author": "Milton Bradley",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_jordan_vs_bird_one_on_one-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_jordan_vs_bird_one_on_one/nes_jordan_vs_bird_one_on_one.h7c"
+}

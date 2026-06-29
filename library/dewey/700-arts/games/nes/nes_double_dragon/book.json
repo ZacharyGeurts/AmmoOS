@@ -1,0 +1,14 @@
+{
+  "id": "nes_double_dragon",
+  "title": "Double Dragon",
+  "author": "Tradewest, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_double_dragon-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_double_dragon/nes_double_dragon.h7c"
+}

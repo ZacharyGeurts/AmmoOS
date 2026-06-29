@@ -1,0 +1,14 @@
+{
+  "id": "nes_artelius",
+  "title": "Artelius",
+  "author": "Nihon Corp.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_artelius-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_artelius/nes_artelius.h7c"
+}

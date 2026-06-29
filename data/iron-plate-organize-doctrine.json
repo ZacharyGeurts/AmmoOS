@@ -10,7 +10,7 @@
     "taskbar_quint": {"algorithm": "composite_bsp", "consumer": "c2_taskbar", "context": "recombinatorics"},
     "tray_icons": {"algorithm": "dirs_first", "consumer": "field_host_desktop", "context": "file_list"},
     "condense_groups": {"algorithm": "composite_bsp", "consumer": "combinatorics_bridge", "context": "recombinatorics"},
-    "chip_paths": {"algorithm": "narrow_band", "consumer": "chip_battery", "context": "chip_paths"},
+    "chip_paths": {"algorithm": "composite_bsp", "consumer": "ironclad_chips", "context": "chip_paths", "field_unique_best": true, "one_best_ever": true},
     "h7_library": {"algorithm": "cool_sort", "consumer": "h7_library_bridge", "context": "thermal_layers"},
     "format_table": {"algorithm": "family_then_label", "consumer": "field_file_formats", "context": "format_table", "field_unique_best": true}
   },

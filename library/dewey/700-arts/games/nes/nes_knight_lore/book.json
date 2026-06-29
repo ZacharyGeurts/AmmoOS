@@ -1,0 +1,14 @@
+{
+  "id": "nes_knight_lore",
+  "title": "Knight Lore",
+  "author": "Jaleco Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_knight_lore-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1986,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_knight_lore/nes_knight_lore.h7c"
+}

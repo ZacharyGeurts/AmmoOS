@@ -1,0 +1,14 @@
+{
+  "id": "nes_bakushou_jinsei_gekijou",
+  "title": "Bakushou!! Jinsei Gekijou",
+  "author": "Taito Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_bakushou_jinsei_gekijou-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Traditional",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_bakushou_jinsei_gekijou/nes_bakushou_jinsei_gekijou.h7c"
+}

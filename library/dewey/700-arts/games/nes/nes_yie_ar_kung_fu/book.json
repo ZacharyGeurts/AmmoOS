@@ -1,0 +1,14 @@
+{
+  "id": "nes_yie_ar_kung_fu",
+  "title": "Yie Ar Kung-Fu",
+  "author": "Konami",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_yie_ar_kung_fu-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1985,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_yie_ar_kung_fu/nes_yie_ar_kung_fu.h7c"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "nes_splatterhouse_wanpaku_graffiti",
+  "title": "Splatterhouse: Wanpaku Graffiti",
+  "author": "Namco Limited",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_splatterhouse_wanpaku_graffiti-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_splatterhouse_wanpaku_graffiti/nes_splatterhouse_wanpaku_graffiti.h7c"
+}

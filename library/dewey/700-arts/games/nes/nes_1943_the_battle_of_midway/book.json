@@ -1,0 +1,14 @@
+{
+  "id": "nes_1943_the_battle_of_midway",
+  "title": "1943: The Battle of Midway",
+  "author": "Capcom Co., Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_1943_the_battle_of_midway-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_1943_the_battle_of_midway/nes_1943_the_battle_of_midway.h7c"
+}

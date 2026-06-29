@@ -1,0 +1,14 @@
+{
+  "id": "nes_super_xevious",
+  "title": "Super Xevious",
+  "author": "Namco Limited",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_super_xevious-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1986,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_super_xevious/nes_super_xevious.h7c"
+}

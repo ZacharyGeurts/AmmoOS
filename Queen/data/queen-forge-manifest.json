@@ -62,7 +62,7 @@
   "field_tech_drops": "data/field-tech-drops.json",
   "hostess_order": ["compiler_probe", "hostess_teach", "textbook_zac", "textbook_ingest", "hostess_verify", "queen_zocr", "queen_eyeball", "forge_test"],
   "field_order": ["inside", "field_substrate", "field_kernel", "field_boot", "field_rootfs", "rtx", "field_package", "compiler_probe", "hostess_teach", "textbook_zac", "forge_test", "verify"],
-  "one_field": "field/sovereign/queen-field.json",
+  "one_field": "field/sovereign/queen-sovereign-bundle.json",
   "external_binaries": {
     "cmake": "configure + compile RTX engine",
     "make": "shader SPIR-V fallback",

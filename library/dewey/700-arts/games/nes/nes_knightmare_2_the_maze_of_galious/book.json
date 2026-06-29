@@ -1,0 +1,14 @@
+{
+  "id": "nes_knightmare_2_the_maze_of_galious",
+  "title": "Knightmare 2: The Maze of Galious",
+  "author": "Konami",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_knightmare_2_the_maze_of_galious-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Adventure",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_knightmare_2_the_maze_of_galious/nes_knightmare_2_the_maze_of_galious.h7c"
+}

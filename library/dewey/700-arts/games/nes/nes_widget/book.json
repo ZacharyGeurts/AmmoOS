@@ -1,0 +1,14 @@
+{
+  "id": "nes_widget",
+  "title": "Widget",
+  "author": "Atlus Co., Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_widget-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_widget/nes_widget.h7c"
+}

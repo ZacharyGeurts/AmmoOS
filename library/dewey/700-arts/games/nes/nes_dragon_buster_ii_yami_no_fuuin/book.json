@@ -1,0 +1,14 @@
+{
+  "id": "nes_dragon_buster_ii_yami_no_fuuin",
+  "title": "Dragon Buster II: Yami no Fuuin",
+  "author": "Namco Limited",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dragon_buster_ii_yami_no_fuuin-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_dragon_buster_ii_yami_no_fuuin/nes_dragon_buster_ii_yami_no_fuuin.h7c"
+}

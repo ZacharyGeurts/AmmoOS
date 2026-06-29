@@ -1,0 +1,14 @@
+{
+  "id": "nes_cobra_triangle",
+  "title": "Cobra Triangle",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_cobra_triangle-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Racing",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_cobra_triangle/nes_cobra_triangle.h7c"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "nes_break_time_the_national_pool_tour",
+  "title": "Break Time: The National Pool Tour",
+  "author": "Pony Canyon",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_break_time_the_national_pool_tour-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1993,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_break_time_the_national_pool_tour/nes_break_time_the_national_pool_tour.h7c"
+}

@@ -244,6 +244,19 @@ def publish_immediate(*, write: bool = True) -> dict[str, Any]:
                         mod.build_panel(write=True)
             except Exception:
                 pass
+        if doc.get("ironclad_sealed") and os.environ.get("NEXUS_CHIPS_CORE", "1") == "1":
+            cc_py = INSTALL / "lib" / "field-chips-core.py"
+            if cc_py.is_file():
+                try:
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location("ironclad_chips_core", cc_py)
+                    if spec and spec.loader:
+                        cc_mod = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(cc_mod)
+                        if hasattr(cc_mod, "maybe_condense_after_ironclad"):
+                            cc_mod.maybe_condense_after_ironclad(refresh=False)
+                except Exception:
+                    pass
     return doc
 
 

@@ -1,0 +1,14 @@
+{
+  "id": "nes_bugs_bunny_birthday_blowout",
+  "title": "Bugs Bunny Birthday Blowout",
+  "author": "Kotobuki System",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_bugs_bunny_birthday_blowout-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Adventure",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_bugs_bunny_birthday_blowout/nes_bugs_bunny_birthday_blowout.h7c"
+}

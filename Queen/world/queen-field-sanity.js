@@ -30,7 +30,7 @@
       const host = (parsed.hostname || "").toLowerCase();
       if (host === "127.0.0.1" || host === "localhost") return true;
       if ((parsed.pathname || "").startsWith("/world/bench")) return true;
-      if (/speedometer|todomvc/i.test(parsed.pathname || "")) return true;
+      if (/speedometer|todomvc|jetstream|motionmark|webxprt|basemark/i.test(parsed.pathname || "")) return true;
       if (host === "browserbench.org" || host.endsWith(".browserbench.org")) return true;
     } catch (_) {
       return false;

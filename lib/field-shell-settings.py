@@ -15,15 +15,19 @@ STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 SETTINGS = STATE / "field-shell-settings.json"
 DOCTRINE = INSTALL / "data" / "field-host-desktop-doctrine.json"
 
+DESKTOP_SCALE_DEFAULT = 125
+DESKTOP_SCALE_MIN = 50
+DESKTOP_SCALE_MAX = 200
+
 DEFAULTS: dict[str, Any] = {
     "taskbar_auto_hide": False,
     "taskbar_peek": True,
-    "desktop_icon_size": 40,
-    "ui_scale": 100,
+    "desktop_icon_size": 50,
+    "ui_scale": DESKTOP_SCALE_DEFAULT,
     "theme_override": "",
     "wallpaper": "default",
     "sort_desktop": "name",
-    "show_desktop_icons": True,
+    "show_desktop_icons": False,
     "fullscreen_programs": True,
     "fullscreen_desktop": True,
     "alt_tab_enabled": True,
@@ -107,9 +111,46 @@ def _version() -> str:
     return "0.9.0"
 
 
+def _doctrine_policy() -> dict[str, Any]:
+    return (_load(DOCTRINE, {}).get("policy") or {}) if DOCTRINE.is_file() else {}
+
+
+def _doctrine_defaults() -> dict[str, Any]:
+    policy = _doctrine_policy()
+    out: dict[str, Any] = {}
+    if "show_desktop_icons" in policy:
+        out["show_desktop_icons"] = bool(policy.get("show_desktop_icons"))
+    if policy.get("desktop_icons_in_start"):
+        out["show_desktop_icons"] = False
+    if policy.get("desktop_ui_scale_default") is not None:
+        out["ui_scale"] = int(policy["desktop_ui_scale_default"])
+    if policy.get("desktop_icon_size_default") is not None:
+        out["desktop_icon_size"] = int(policy["desktop_icon_size_default"])
+    return out
+
+
+def desktop_scale_posture(settings: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Unified desktop scale slice — shell, Lock, OBS, control panel."""
+    s = {**DEFAULTS, **_doctrine_defaults(), **(settings or {})}
+    pct = int(s.get("ui_scale") or DESKTOP_SCALE_DEFAULT)
+    pct = max(DESKTOP_SCALE_MIN, min(DESKTOP_SCALE_MAX, pct))
+    scale = round(pct / 100.0, 3)
+    icon = int(s.get("desktop_icon_size") or 50)
+    icon = max(24, min(96, icon))
+    return {
+        "ui_scale_pct": pct,
+        "scale_factor": scale,
+        "icon_size_px": icon,
+        "min_pct": DESKTOP_SCALE_MIN,
+        "max_pct": DESKTOP_SCALE_MAX,
+        "default_pct": DESKTOP_SCALE_DEFAULT,
+        "quality": True,
+    }
+
+
 def posture() -> dict[str, Any]:
     saved = _load(SETTINGS, {})
-    settings = {**DEFAULTS, **{k: v for k, v in saved.items() if k in DEFAULTS}}
+    settings = {**DEFAULTS, **_doctrine_defaults(), **{k: v for k, v in saved.items() if k in DEFAULTS}}
     displays = _display_modes()
     hw = _hardware_summary()
     return {
@@ -118,6 +159,7 @@ def posture() -> dict[str, Any]:
         "ok": True,
         "settings": settings,
         "defaults": DEFAULTS,
+        "desktop_scale": desktop_scale_posture(settings),
         "displays": displays,
         "hardware": hw,
         "host": {
@@ -129,22 +171,62 @@ def posture() -> dict[str, Any]:
         "version": _version(),
         "control_panel": {
             "display": True,
-            "theme": True,
-            "hardware": bool(hw.get("ok", True)),
+            "theme": False,
+            "hardware": False,
             "system": True,
-            "personalization": True,
+            "personalization": False,
+            "surface_locked": True,
+            "operator_only": ["ui_scale", "restart"],
         },
+        "sovereignty": _sovereignty_posture(),
     }
 
 
+def _sovereignty_posture() -> dict[str, Any]:
+    script = INSTALL / "lib" / "queen-ammoos-sovereignty.py"
+    if not script.is_file():
+        script = Path(__file__).resolve().parent / "queen-ammoos-sovereignty.py"
+    if not script.is_file():
+        return {"ok": False, "skipped": True}
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("queen_ammoos_sov_shell", script)
+        mod = importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(mod)
+        return mod.posture()
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _filter_patch(patch: dict[str, Any]) -> dict[str, Any]:
+    try:
+        import importlib.util
+
+        mod_path = INSTALL / "lib" / "queen-settings-surface.py"
+        if not mod_path.is_file():
+            mod_path = Path(__file__).resolve().parent / "queen-settings-surface.py"
+        if mod_path.is_file():
+            spec = importlib.util.spec_from_file_location("queen_settings_surface", mod_path)
+            mod = importlib.util.module_from_spec(spec)
+            assert spec and spec.loader
+            spec.loader.exec_module(mod)
+            return mod.shell_patch_allowed(patch)
+    except Exception:
+        pass
+    return dict(patch or {})
+
+
 def apply_patch(patch: dict[str, Any]) -> dict[str, Any]:
+    patch = _filter_patch(patch or {})
     current = _load(SETTINGS, {})
     merged = {**DEFAULTS, **{k: v for k, v in current.items() if k in DEFAULTS}}
     for key, val in (patch or {}).items():
         if key not in DEFAULTS:
             continue
         if key == "ui_scale":
-            merged[key] = max(75, min(200, int(val)))
+            merged[key] = max(DESKTOP_SCALE_MIN, min(DESKTOP_SCALE_MAX, int(val)))
         elif key == "desktop_icon_size":
             merged[key] = max(24, min(96, int(val)))
         elif key == "taskbar_auto_hide":

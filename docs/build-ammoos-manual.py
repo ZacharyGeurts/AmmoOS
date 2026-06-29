@@ -11,7 +11,8 @@ ROOT = pathlib.Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parent
 VER_DOC = REPO_ROOT / "data" / "ammoos-version.json"
 PLAT_DOC = REPO_ROOT / "data" / "ammoos-platform-release.json"
-CACHE = "v2"
+CACHE = "3"
+FAV_DOC = ROOT / "github-favorites.json"
 
 VER = "1.0.1-beta"
 SURFACES: dict[str, str] = {}
@@ -29,6 +30,7 @@ NAV = [
     ("io.html", "Field I/O"),
     ("queen-browser.html", "Queen Browser"),
     ("architecture.html", "Architecture"),
+    ("profile.html", "Profile"),
 ]
 
 
@@ -47,16 +49,20 @@ def head(title: str) -> str:
 """
 
 
-def nav() -> str:
+def nav(current: str = "index.html") -> str:
     links = "\n".join(
-        f'      <a href="{h}"{" aria-current=\"page\"" if h == "index.html" else ""}>{l}</a>'
+        f'      <a href="{h}"{" aria-current=\"page\"" if h == current else ""}>{l}</a>'
         for h, l in NAV
     )
     return f"""  <nav>
     <div class="nav-top">
       <div class="nav-brand">
-        <strong>AmmoOS</strong>
+        <strong>AmmoOS C2</strong>
         <span class="nav-version">{VER} beta</span>
+      </div>
+      <div class="nav-profile">
+        <a href="https://github.com/ZacharyGeurts">@ZacharyGeurts</a>
+        · <a href="profile.html">Profile</a>
       </div>
     </div>
     <div class="nav-links">
@@ -64,6 +70,60 @@ def nav() -> str:
       <a href="https://github.com/ZacharyGeurts/AmmoOS">GitHub</a>
     </div>
   </nav>
+"""
+
+
+def code_first_block() -> str:
+    field_url = SURFACES.get("host_desktop", "http://127.0.0.1:9477/field")
+    return f"""  <section class="code-first" aria-label="Quick code layout">
+    <div class="code-first-head">
+      <span class="code-first-label">Code first</span>
+      <span class="code-first-note">Clone · install · open C2 <code>{field_url}</code></span>
+    </div>
+    <pre><code>git clone https://github.com/ZacharyGeurts/AmmoOS.git
+cd AmmoOS
+sudo ./install-all.sh
+# dev tree:
+export SG_ROOT=/path/to/SG && ./nexus.sh</code></pre>
+    <div class="code-first-actions">
+      <a href="getting-started.html">Install guide</a>
+      <a href="{field_url}">Open /field</a>
+      <a href="https://github.com/ZacharyGeurts">GitHub profile</a>
+    </div>
+  </section>
+"""
+
+
+def favorites_wall() -> str:
+    if not FAV_DOC.is_file():
+        return ""
+    doc = json.loads(FAV_DOC.read_text(encoding="utf-8"))
+    cards = []
+    for fav in doc.get("favorites") or []:
+        name = fav.get("name") or "?"
+        url = fav.get("url") or "#"
+        tag = fav.get("tag") or ""
+        repo = fav.get("repo") or ""
+        local = " local" if fav.get("local") else ""
+        star = "★" if fav.get("star", True) else "☆"
+        repo_line = f'<span class="fav-repo">{repo}</span>' if repo else ""
+        cards.append(
+            f'    <a class="fav-card{local}" href="{url}" rel="noopener">'
+            f'<div class="fav-card-top"><span class="fav-star" aria-hidden="true">{star}</span>'
+            f'<span class="fav-name">{name}</span></div>'
+            f'<span class="fav-tag">{tag}</span>{repo_line}</a>'
+        )
+    grid = "\n".join(cards)
+    subtitle = doc.get("subtitle") or "Unlimited favorites — no cap on starred projects."
+    return f"""  <section class="favorites-wall" aria-label="GitHub favorites">
+    <div class="favorites-head">
+      <h2><span class="star-mark" aria-hidden="true">★</span> {doc.get("title", "Favorites")}</h2>
+      <p class="favorites-sub">{subtitle}</p>
+    </div>
+    <div class="favorites-grid">
+{grid}
+    </div>
+  </section>
 """
 
 
@@ -79,8 +139,9 @@ def foot() -> str:
 """
 
 
-def page(title: str, body: str) -> str:
-    return head(title) + nav() + body + foot()
+def page(title: str, body: str, *, current: str = "index.html", shell: bool = True) -> str:
+    prefix = code_first_block() + favorites_wall() if shell else ""
+    return head(title) + nav(current) + prefix + body + foot()
 
 
 def readme_html(md: str) -> str:
@@ -293,10 +354,33 @@ SG stack (wired via wire-stack.sh)
   Grok16 · Queen · Hostess7 · KILROY · ZOCR · World_Redata</code></pre>
 """,
         ),
+        "profile.html": (
+            "Profile",
+            f"""
+  <h1>ZacharyGeurts — field footprint</h1>
+  <p class="lead">GitHub profile and Pages presence styled like <strong>AmmoOS C2</strong> (<code>/field</code>). Unlimited star favorites — add repos to <code>docs/github-favorites.json</code> and rebuild.</p>
+  <h2>Publish profile README</h2>
+  <pre><code># Create github.com/ZacharyGeurts/ZacharyGeurts (same name as user)
+cp profile/README.md /path/to/ZacharyGeurts/README.md
+git add README.md && git commit -m "profile: AmmoOS C2 footprint" && git push</code></pre>
+  <h2>Pages</h2>
+  <table>
+    <tr><th>Site</th><th>URL</th></tr>
+    <tr><td>AmmoOS manual</td><td><a href="https://zacharygeurts.github.io/AmmoOS/">zacharygeurts.github.io/AmmoOS</a></td></tr>
+    <tr><td>NEXUS-Shield</td><td><a href="https://zacharygeurts.github.io/NEXUS-Shield/">zacharygeurts.github.io/NEXUS-Shield</a></td></tr>
+    <tr><td>Hostess7</td><td><a href="https://zacharygeurts.github.io/Hostess7/">zacharygeurts.github.io/Hostess7</a></td></tr>
+    <tr><td>Field Primer</td><td><a href="https://zacharygeurts.github.io/Field_Primer/">zacharygeurts.github.io/Field_Primer</a></td></tr>
+  </table>
+  <h2>Rebuild + publish</h2>
+  <pre><code>python3 docs/build-ammoos-manual.py
+./scripts/publish-ammoos-pages.sh</code></pre>
+""",
+        ),
     }
 
     for name, (title, body) in pages.items():
-        (ROOT / name).write_text(page(title, body), encoding="utf-8")
+        current = name
+        (ROOT / name).write_text(page(title, body, current=current), encoding="utf-8")
         print(f"wrote {name}")
 
 

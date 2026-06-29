@@ -1,0 +1,14 @@
+{
+  "id": "nes_golgo_13_top_secret_episode",
+  "title": "Golgo 13: Top Secret Episode",
+  "author": "Vic Tokai, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_golgo_13_top_secret_episode-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Adventure",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_golgo_13_top_secret_episode/nes_golgo_13_top_secret_episode.h7c"
+}

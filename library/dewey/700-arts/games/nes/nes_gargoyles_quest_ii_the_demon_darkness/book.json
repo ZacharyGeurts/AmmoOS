@@ -1,0 +1,14 @@
+{
+  "id": "nes_gargoyles_quest_ii_the_demon_darkness",
+  "title": "Gargoyle's Quest II: The Demon Darkness",
+  "author": "Capcom Co., Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_gargoyles_quest_ii_the_demon_darkness-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Adventure",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_gargoyles_quest_ii_the_demon_darkness/nes_gargoyles_quest_ii_the_demon_darkness.h7c"
+}

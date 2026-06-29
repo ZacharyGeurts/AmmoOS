@@ -715,6 +715,64 @@
       "commands": {
         "COPY": "import", "REPLACE": "meta", "EJECT": "io", "SKIP1": "io", "SKIP2": "io", "SKIP3": "io"
       }
+    },
+    "linux": {
+      "commands": {
+        "if": "branch", "elif": "branch", "else": "branch", "case": "match", "esac": "branch",
+        "for": "loop", "while": "loop", "until": "loop", "break": "break", "continue": "continue",
+        "function": "declare", "export": "export", "source": "import", ".": "import",
+        "echo": "io", "cat": "io", "read": "io", "printf": "io", "tee": "io",
+        "exec": "exec", "eval": "exec", "fork": "exec", "spawn": "exec", "$(...)": "exec",
+        "&&": "logic", "||": "logic", "|": "io", ">": "io", ">>": "io", "<": "io",
+        "trap": "catch", "set -e": "throw", "exit": "return", "return": "return",
+        "wait": "async", "bg": "async", "&": "async",
+        "chmod": "assign", "chown": "assign", "chgrp": "assign", "umask": "declare",
+        "mount": "io", "umount": "io", "ls": "io", "cp": "io", "mv": "assign", "rm": "free",
+        "mkdir": "alloc", "rmdir": "free", "ln": "declare", "find": "loop", "grep": "query",
+        "systemctl": "call", "service": "call", "journalctl": "io", "systemd": "module",
+        "apt": "import", "apt-get": "import", "dpkg": "import", "dnf": "import", "pacman": "import",
+        "iptables": "branch", "nft": "branch", "ip": "io", "ss": "io", "netstat": "io",
+        "ps": "io", "kill": "throw", "killall": "throw", "nice": "assign", "renice": "assign",
+        "cron": "loop", "at": "async", "nohup": "async",
+        "sudo": "sync", "su": "call", "passwd": "assign", "useradd": "declare", "groupadd": "declare",
+        "insmod": "import", "rmmod": "free", "modprobe": "import", "lsmod": "io",
+        "proc": "load", "/proc": "load", "/sys": "load", "sysctl": "assign",
+        "cgroup": "declare", "cgexec": "exec", "namespace": "module", "unshare": "declare",
+        "strace": "io", "ltrace": "io", "ldd": "io", "ldconfig": "assign",
+        "make": "exec", "cmake": "exec", "gcc": "exec", "g++": "exec", "ld": "call",
+        "docker": "module", "podman": "module", "container": "struct",
+        "kilroy": "load", "/proc/kilroy_field": "load", "HostPassthrough": "declare",
+        "install-all.sh": "exec", "Hostess7.sh": "exec", "linux.sh": "exec",
+        "nftables": "sync", "polkit": "sync", "tristate": "branch"
+      }
+    },
+    "economics": {
+      "commands": {
+        "supply": "declare", "demand": "declare", "equilibrium": "compare", "price": "assign",
+        "quantity": "assign", "elasticity": "math", "surplus": "math", "deadweight": "math",
+        "GDP": "declare", "GNP": "declare", "inflation": "math", "deflation": "math",
+        "CPI": "index", "PPI": "index", "unemployment": "declare", "employment": "declare",
+        "interest_rate": "assign", "discount_rate": "assign", "money_supply": "declare",
+        "fiscal_policy": "branch", "monetary_policy": "sync", "tax": "assign", "subsidy": "assign",
+        "tariff": "import", "quota": "sync", "trade_balance": "compare", "balance_of_payments": "declare",
+        "import": "import", "export": "export", "comparative_advantage": "compare",
+        "market": "module", "monopoly": "struct", "oligopoly": "struct", "competition": "branch",
+        "marginal_cost": "math", "marginal_revenue": "math", "average_cost": "math", "fixed_cost": "declare",
+        "variable_cost": "declare", "profit": "math", "loss": "math", "revenue": "math",
+        "CAC": "math", "LTV": "math", "runway": "math", "burn_rate": "math", "unit_economics": "declare",
+        "opportunity_cost": "compare", "sunk_cost": "declare", "externality": "struct",
+        "public_good": "struct", "private_good": "struct", "utility": "declare", "preference": "declare",
+        "budget_constraint": "branch", "indifference_curve": "loop", "production_function": "call",
+        "labor": "declare", "capital": "declare", "land": "declare", "entrepreneurship": "declare",
+        "recession": "throw", "depression": "throw", "stagflation": "throw", "recovery": "catch",
+        "stimulus": "assign", "austerity": "free", "quantitative_easing": "alloc",
+        "stock": "index", "bond": "struct", "derivative": "struct", "portfolio": "struct",
+        "risk": "compare", "return": "math", "diversification": "sync", "hedge": "catch",
+        "bank": "module", "credit": "alloc", "debt": "declare", "default": "throw",
+        "field_economics": "module", "sovereign_compute": "declare", "bandwidth_cost": "math",
+        "energy_cost": "math", "defense_cost": "math", "truth_gate": "compare",
+        "openstax": "import", "master_economist": "call", "corroborate": "verify"
+      }
     }
   }
 }

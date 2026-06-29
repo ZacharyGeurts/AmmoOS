@@ -34,11 +34,48 @@
     <div class="gr-curtain gr-curtain--right" id="gr-curtain-r" aria-hidden="true"></div>
     <div class="gr-screen-wrap" id="gr-screen-wrap">
       <canvas class="gr-canvas" id="gr-canvas" width="640" height="480" aria-label="CHIPS emulator viewport"></canvas>
+      <img class="gr-fb" id="gr-fb" alt="CHIPS live framebuffer" hidden />
       <video class="gr-video" id="gr-video" controls playsinline hidden></video>
       <div class="gr-screen-glow" aria-hidden="true"></div>
       <div class="gr-screen-hud" id="gr-hud" hidden></div>
     </div>
   </main>
+  <section class="gr-nes-room" id="gr-nes-room" hidden>
+    <div class="gr-nes-toolbar">
+      <h2>Nintendo Entertainment System</h2>
+      <span class="gr-nes-stats" id="gr-nes-stats">—</span>
+      <label class="gr-nes-sort-label">
+        Sort
+        <select id="gr-nes-sort" class="gr-select" aria-label="Sort library">
+          <option value="title_az">A → Z</option>
+          <option value="title_za">Z → A</option>
+          <option value="have_first">Have first</option>
+          <option value="have_last">Have last</option>
+        </select>
+      </label>
+      <input type="search" id="gr-nes-search" class="gr-nes-search" placeholder="Search titles…" aria-label="Search NES library" />
+      <button type="button" class="gr-btn" id="gr-nes-more">Load more</button>
+    </div>
+    <div class="gr-nes-grid" id="gr-nes-grid" role="listbox" aria-label="NES cartridge library"></div>
+    <div class="gr-nes-detail" id="gr-nes-detail"></div>
+  </section>
+
+  <section class="gr-sap-panel" id="gr-sap-panel" aria-label="Sweet Anita Protocol multiplayer">
+    <div class="gr-sap-head">
+      <h3>Sweet Anita Protocol</h3>
+      <p class="gr-sap-sub">Queen ↔ Queen only · HTTP tunnel · pixel-perfect lockstep</p>
+      <div class="gr-sap-status" id="gr-sap-status"></div>
+    </div>
+    <div class="gr-sap-controls">
+      <button type="button" class="gr-btn gr-btn--gold" id="gr-sap-host">Host session</button>
+      <input type="text" id="gr-sap-remote" class="gr-nes-search" placeholder="Friend Queen host:9481" aria-label="Remote Queen host" />
+      <input type="text" id="gr-sap-session" class="gr-sap-field" placeholder="session id" aria-label="SAP session id" />
+      <input type="text" id="gr-sap-token" class="gr-sap-field" placeholder="token" aria-label="SAP token" />
+      <button type="button" class="gr-btn" id="gr-sap-join">Join</button>
+      <input type="text" id="gr-sap-invite" class="gr-sap-invite" readonly hidden aria-label="Invite link" />
+    </div>
+  </section>
+
   <div class="gr-deck">
     <aside class="gr-sidebar">
       <h3>Computer · all systems</h3>
@@ -65,6 +102,8 @@
     </aside>
     <pre class="gr-log" id="gr-log"></pre>
   </div>
+  <script src="queen-game-room-nes.js" defer></script>
+  <script src="queen-game-room-sap.js" defer></script>
   <script src="queen-game-room.js" defer></script>
 </body>
 </html>

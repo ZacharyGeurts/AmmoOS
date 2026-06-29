@@ -1,0 +1,14 @@
+{
+  "id": "nes_armadillo",
+  "title": "Armadillo",
+  "author": "Information Global Service",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_armadillo-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Adventure",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_armadillo/nes_armadillo.h7c"
+}

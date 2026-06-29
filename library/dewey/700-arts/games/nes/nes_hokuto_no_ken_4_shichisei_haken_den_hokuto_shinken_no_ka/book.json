@@ -1,0 +1,14 @@
+{
+  "id": "nes_hokuto_no_ken_4_shichisei_haken_den_hokuto_shinken_no_ka",
+  "title": "Hokuto no Ken 4: Shichisei Haken Den: Hokuto Shinken no Kanata e",
+  "author": "Toei Animation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_hokuto_no_ken_4_shichisei_haken_den_hokuto_shinken_no_ka-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_hokuto_no_ken_4_shichisei_haken_den_hokuto_shinken_no_ka/nes_hokuto_no_ken_4_shichisei_haken_den_hokuto_shinken_no_ka.h7c"
+}

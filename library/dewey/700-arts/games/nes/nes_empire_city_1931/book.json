@@ -1,0 +1,14 @@
+{
+  "id": "nes_empire_city_1931",
+  "title": "Empire City: 1931",
+  "author": "Toshiba-EMI Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_empire_city_1931-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_empire_city_1931/nes_empire_city_1931.h7c"
+}

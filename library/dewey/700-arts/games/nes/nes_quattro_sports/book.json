@@ -1,0 +1,14 @@
+{
+  "id": "nes_quattro_sports",
+  "title": "Quattro Sports",
+  "author": "Camerica",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_quattro_sports-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1993,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_quattro_sports/nes_quattro_sports.h7c"
+}

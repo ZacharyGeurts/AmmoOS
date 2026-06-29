@@ -1,0 +1,14 @@
+{
+  "id": "nes_herakles_no_eikou_toujin_makyou_den",
+  "title": "Herakles no Eikou: Toujin Makyou Den",
+  "author": "Data East Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_herakles_no_eikou_toujin_makyou_den-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_herakles_no_eikou_toujin_makyou_den/nes_herakles_no_eikou_toujin_makyou_den.h7c"
+}

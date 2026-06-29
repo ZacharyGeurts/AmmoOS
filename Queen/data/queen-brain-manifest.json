@@ -272,7 +272,7 @@
     "doctrine": "Every build tool rewritten inside Queen Forge. Shell scripts are thin entry points only.",
     "sovereign_field": {
       "manifest": "data/queen-field-manifest.json",
-      "package": "field/sovereign/queen-field.json",
+      "package": "field/sovereign/queen-sovereign-bundle.json",
       "forge": "lib/queen-forge.py field",
       "kernel": "SG/KILROY — CONFIG_RTX_FIELD_DIE",
       "drive": "HOSTESS7_TEAM/fieldstorage/queen-field/sovereign"

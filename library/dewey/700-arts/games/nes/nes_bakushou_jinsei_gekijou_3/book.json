@@ -1,0 +1,14 @@
+{
+  "id": "nes_bakushou_jinsei_gekijou_3",
+  "title": "Bakushou!! Jinsei Gekijou 3",
+  "author": "Taito Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_bakushou_jinsei_gekijou_3-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Traditional",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_bakushou_jinsei_gekijou_3/nes_bakushou_jinsei_gekijou_3.h7c"
+}

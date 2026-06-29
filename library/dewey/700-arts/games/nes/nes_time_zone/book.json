@@ -1,0 +1,14 @@
+{
+  "id": "nes_time_zone",
+  "title": "Time Zone",
+  "author": "Sigma Enterprises",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_time_zone-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_time_zone/nes_time_zone.h7c"
+}

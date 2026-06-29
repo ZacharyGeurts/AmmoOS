@@ -1,0 +1,14 @@
+{
+  "id": "nes_legacy_of_the_wizard",
+  "title": "Legacy of the Wizard",
+  "author": "Br\u00f8derbund Software",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_legacy_of_the_wizard-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_legacy_of_the_wizard/nes_legacy_of_the_wizard.h7c"
+}

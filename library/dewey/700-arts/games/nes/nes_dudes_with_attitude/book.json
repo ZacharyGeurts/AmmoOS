@@ -1,0 +1,14 @@
+{
+  "id": "nes_dudes_with_attitude",
+  "title": "Dudes with Attitude",
+  "author": "American Video Entertainment",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dudes_with_attitude-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_dudes_with_attitude/nes_dudes_with_attitude.h7c"
+}

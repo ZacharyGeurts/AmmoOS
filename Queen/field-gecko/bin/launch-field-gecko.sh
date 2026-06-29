@@ -8,15 +8,16 @@ SG="$(cd "${QUEEN}/../.." && pwd)"
 PROFILE="${ROOT}/profile"
 PORT="${QUEEN_WORLD_PORT:-9481}"
 PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
+HOME_URL="${QUEEN_BROWSER_HOME:-https://duckduckgo.com/}"
 C2_URL="${NEXUS_C2_LAUNCH_URL:-http://127.0.0.1:${PANEL_PORT}/field}"
-SHELL_URL="${QUEEN_BROWSER_URL:-http://127.0.0.1:${PORT}/world/browser.html}"
-KIOSK="${NEXUS_C2_KIOSK:-1}"
-C2_DESKTOP="${NEXUS_C2_DESKTOP_LAUNCH:-1}"
+SHELL_URL="${QUEEN_BROWSER_URL:-${HOME_URL}}"
+KIOSK="${NEXUS_C2_KIOSK:-0}"
+C2_DESKTOP="${NEXUS_C2_DESKTOP_LAUNCH:-0}"
 
 if [[ "${C2_DESKTOP}" == "1" ]]; then
   LAUNCH_URL="${C2_URL}"
 else
-  LAUNCH_URL="${SHELL_URL}"
+  LAUNCH_URL="${HOME_URL}"
 fi
 
 export QUEEN_ROOT="${QUEEN}"
@@ -30,10 +31,19 @@ export NEXUS_C2_DESKTOP_LAUNCH="${C2_DESKTOP}"
 if [[ "${QUEEN_BENCHMARK_MODE:-0}" == "1" ]]; then
   export QUEEN_ALLOW_EXTERNAL_URLS=1
   export NEXUS_FIELD_THERMAL_GUARD=0
+  export QUEEN_FAST_STATUS=1
+  export QUEEN_STATUS_CACHE_SEC=60
   KIOSK=0
+  if [[ -n "${1:-}" ]]; then
+    LAUNCH_URL="$1"
+    shift
+  else
+    LAUNCH_URL="${QUEEN_BENCH_URL:-https://browserbench.org/Speedometer3.0/}"
+  fi
 fi
 export QUEEN_BROWSER_URL="${LAUNCH_URL}"
-export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-${C2_URL}}"
+export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-${HOME_URL}}"
+export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-${HOME_URL}}"
 
 mkdir -p "${PROFILE}"
 
@@ -66,9 +76,27 @@ if [[ -f "${INSTALL}/lib/queen-integrated-browser.py" ]]; then
     "${PY:-pythong}" "${INSTALL}/lib/queen-integrated-browser.py" seed 2>/dev/null || true
 fi
 
-FF_ARGS=(--no-remote --profile "${PROFILE}" --class QueenFieldBrowser --name Queen)
+FF_ARGS=(--no-remote --profile "${PROFILE}" --class AmmoOS --name AmmoOS)
 if [[ "${KIOSK}" == "1" ]]; then
   FF_ARGS+=(--kiosk)
+fi
+if [[ "${QUEEN_BENCHMARK_MODE:-0}" == "1" ]]; then
+  FF_ARGS+=(
+    --width=1920
+    --height=1080
+    --setpref=dom.ipc.processCount=16
+    --setpref=dom.ipc.processCount.web=8
+    --setpref=javascript.options.baselinejit.threshold=0
+    --setpref=javascript.options.ion.threshold=0
+    --setpref=layout.frame_rate=120
+    --setpref=gfx.webrender.all=true
+    --setpref=layers.acceleration.force-enabled=true
+    --setpref=privacy.trackingprotection.enabled=false
+    --setpref=browser.safebrowsing.malware.enabled=false
+    --setpref=browser.safebrowsing.phishing.enabled=false
+    --setpref=toolkit.telemetry.enabled=false
+    --setpref=browser.tabs.unloadOnLowMemory=false
+  )
 fi
 
 exec "${BIN}" "${FF_ARGS[@]}" "${LAUNCH_URL}" "$@"

@@ -1,0 +1,14 @@
+{
+  "id": "nes_low_g_man",
+  "title": "Low G Man",
+  "author": "Taxan",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_low_g_man-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_low_g_man/nes_low_g_man.h7c"
+}

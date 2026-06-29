@@ -1,0 +1,14 @@
+{
+  "id": "nes_harlem_globetrotters",
+  "title": "Harlem Globetrotters",
+  "author": "Gametek",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_harlem_globetrotters-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_harlem_globetrotters/nes_harlem_globetrotters.h7c"
+}

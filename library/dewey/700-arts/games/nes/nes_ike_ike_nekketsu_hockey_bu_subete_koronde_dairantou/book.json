@@ -1,0 +1,14 @@
+{
+  "id": "nes_ike_ike_nekketsu_hockey_bu_subete_koronde_dairantou",
+  "title": "Ike Ike! Nekketsu Hockey-bu: Subete Koronde Dairantou",
+  "author": "Technos",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_ike_ike_nekketsu_hockey_bu_subete_koronde_dairantou-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_ike_ike_nekketsu_hockey_bu_subete_koronde_dairantou/nes_ike_ike_nekketsu_hockey_bu_subete_koronde_dairantou.h7c"
+}

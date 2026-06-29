@@ -158,22 +158,27 @@ ENTRY="$(_read_nxf_field "$NXF_MANIFEST" entry)"
 
 echo "=== NEXUS NXF install (${MODE}) v${VER} (${TAG}) ==="
 
+INSTALL_TREE="$ROOT"
 if [[ "$FROM_GITHUB" == "1" || ! -f "${ROOT}/${ENTRY}" ]]; then
   [[ -n "$SOURCE_URL" ]] || { echo "NXF missing pack.source.url" >&2; exit 1; }
   ARCHIVE="${STAGING}/nexus-shield-${VER}-source.tar.gz"
   _download_pack "$SOURCE_URL" "$ARCHIVE"
   EXTRACT="${STAGING}/tree-${VER}"
   rm -rf "$EXTRACT"
-  TREE="$(_extract_source "$ARCHIVE" "$EXTRACT")" || {
+  INSTALL_TREE="$(_extract_source "$ARCHIVE" "$EXTRACT")" || {
     echo "Extract failed — install-all.sh not found" >&2
     exit 1
   }
-  cp -f "$NXF_MANIFEST" "${TREE}/nxf/latest.nxf" 2>/dev/null || mkdir -p "${TREE}/nxf" && cp -f "$NXF_MANIFEST" "${TREE}/nxf/latest.nxf"
-  _install_tree "$TREE"
+  cp -f "$NXF_MANIFEST" "${INSTALL_TREE}/nxf/latest.nxf" 2>/dev/null \
+    || mkdir -p "${INSTALL_TREE}/nxf" && cp -f "$NXF_MANIFEST" "${INSTALL_TREE}/nxf/latest.nxf"
+  _install_tree "$INSTALL_TREE"
 else
   cp -f "$NXF_MANIFEST" "${ROOT}/nxf/latest.nxf" 2>/dev/null || mkdir -p "${ROOT}/nxf" && cp -f "$NXF_MANIFEST" "${ROOT}/nxf/latest.nxf"
   _install_tree "$ROOT"
 fi
+
+export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$INSTALL_TREE}"
+export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${INSTALL_TREE}/.nexus-state}"
 
 IMPORTS="${NEXUS_STATE_DIR:-${ROOT}/.nexus-state}/imports"
 mkdir -p "$IMPORTS"
@@ -195,3 +200,18 @@ echo "NEXUS panel:   http://127.0.0.1:9477/field"
 echo "Launcher:      ./nexus.sh  or  ./Queen/scripts/run-queen.sh"
 echo "Import drop:   ${IMPORTS}/  (bookmarks.html · passwords.csv)"
 echo "Report:        ${NEXUS_STATE_DIR:-${ROOT}/.nexus-state}/install-report.json"
+
+# ZNetwork startup — restore network, board relayer, install login autostart.
+if [[ -f "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh"
+  export SG_ROOT="${SG_ROOT:-$(cd "${NEXUS_INSTALL_ROOT}/.." 2>/dev/null && pwd)}"
+  export ZNETWORK_STARTUP_RETIRE="${ZNETWORK_STARTUP_RETIRE:-1}"
+  export ZNETWORK_RETIRE_NM_SYSTEMD="${ZNETWORK_RETIRE_NM_SYSTEMD:-0}"
+  export ZNETWORK_NO_REVIEW="${ZNETWORK_NO_REVIEW:-1}"
+  export NEXUS_ZNETWORK_NO_SUDO="${NEXUS_ZNETWORK_NO_SUDO:-0}"
+  nexus_znetwork_startup_with_us 2>/dev/null || true
+  nexus_znetwork_install_autostart 2>/dev/null || true
+fi
+
+NEXUS_INSTALL_NO_REBOOT="${NEXUS_INSTALL_NO_REBOOT:-0}" nexus_install_reboot_prompt "$MODE"

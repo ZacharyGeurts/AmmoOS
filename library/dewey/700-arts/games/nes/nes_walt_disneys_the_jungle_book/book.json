@@ -1,0 +1,14 @@
+{
+  "id": "nes_walt_disneys_the_jungle_book",
+  "title": "Walt Disney's The Jungle Book",
+  "author": "Virgin Games, Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_walt_disneys_the_jungle_book-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1994,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_walt_disneys_the_jungle_book/nes_walt_disneys_the_jungle_book.h7c"
+}

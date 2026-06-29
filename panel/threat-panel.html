@@ -2091,6 +2091,113 @@
     html.nexus-field-embed #murder-banner.active {
       display: block;
     }
+    /* Queen settings — /field C2 theming when embedded from host desktop */
+    html.nexus-field-embed #view-settings {
+      background:
+        radial-gradient(ellipse 90% 70% at 20% 0%, rgba(53, 132, 228, 0.22), transparent 50%),
+        radial-gradient(ellipse 60% 50% at 90% 8%, rgba(244, 114, 182, 0.1), transparent 45%),
+        linear-gradient(180deg, #241f31 0%, #1a1624 100%);
+      min-height: 100%;
+    }
+    html.nexus-field-embed .settings-wrap {
+      padding: 20px 28px 40px;
+    }
+    html.nexus-field-embed .settings-profile-card {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px 18px;
+      background: linear-gradient(135deg, rgba(10, 12, 18, 0.95), rgba(26, 22, 36, 0.88));
+      border: 1px solid rgba(26, 77, 50, 0.55);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(62, 207, 142, 0.1);
+    }
+    html.nexus-field-embed .settings-profile-card::before {
+      content: "";
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      background: url("/assets/ammoos-field-48.png") center / cover no-repeat;
+      box-shadow: 0 0 0 1px rgba(26, 77, 50, 0.65), 0 0 14px rgba(62, 207, 142, 0.2);
+    }
+    html.nexus-field-embed .settings-profile-card h2 {
+      color: #e8edf7;
+      font-size: 1.15rem;
+      letter-spacing: 0.04em;
+    }
+    html.nexus-field-embed .settings-profile-card p {
+      color: #7c8aa3;
+    }
+    html.nexus-field-embed .settings-group {
+      border-color: rgba(148, 163, 184, 0.14);
+      background: rgba(4, 5, 8, 0.72);
+      border-radius: 10px;
+    }
+    html.nexus-field-embed .settings-group h3 {
+      color: #3ecf8e;
+      background: rgba(4, 5, 8, 0.88);
+      border-bottom-color: rgba(26, 77, 50, 0.45);
+    }
+    html.nexus-field-embed .settings-group .group-summary {
+      background: rgba(4, 5, 8, 0.55);
+      border-bottom-color: rgba(26, 77, 50, 0.25);
+    }
+    html.nexus-field-embed .settings-group .group-summary strong {
+      color: #3ecf8e;
+    }
+    html.nexus-field-embed .setting-row.setting-on {
+      background: linear-gradient(90deg, rgba(62, 207, 142, 0.1) 0%, transparent 100%);
+      border-left-color: #22c55e;
+    }
+    html.nexus-field-embed .settings-profile-stats .chip.on {
+      color: #3ecf8e;
+      border-color: rgba(26, 77, 50, 0.65);
+      background: rgba(34, 197, 94, 0.12);
+    }
+    html.nexus-field-embed .settings-profile-stats .chip.profile {
+      color: #f472b6;
+      border-color: rgba(235, 72, 140, 0.35);
+    }
+    html.nexus-field-embed .znetwork-status-card,
+    html.nexus-field-embed .compatibility-layers-card,
+    html.nexus-field-embed .ai-telemetry-card {
+      border-color: rgba(26, 77, 50, 0.45);
+      background: linear-gradient(135deg, rgba(10, 12, 18, 0.92), rgba(26, 22, 36, 0.82));
+    }
+    html.nexus-field-embed .znetwork-status-card h3 span:first-child,
+    html.nexus-field-embed .compatibility-layers-card h3 span:first-child {
+      color: #3ecf8e;
+    }
+    html.nexus-field-embed .ai-telemetry-card h3 span:first-child {
+      color: #6ee7b7;
+    }
+    html.nexus-field-embed .policy-pick.active {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.12);
+    }
+    html.nexus-field-embed .fair-ad-card strong {
+      color: #3ecf8e;
+    }
+    .settings-locked {
+      display: none !important;
+    }
+    .settings-posture-readonly {
+      border-color: rgba(26, 77, 50, 0.55);
+      background: linear-gradient(135deg, rgba(10, 12, 18, 0.95), rgba(26, 22, 36, 0.88));
+    }
+    .settings-posture-readonly h3 span:first-child {
+      color: #3ecf8e;
+    }
+    .settings-operator h3 span:first-child {
+      color: #f472b6;
+    }
+    .settings-locked-hint {
+      margin: 0;
+      padding: 0 16px 14px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
   </style>
 </head>
 <body>
@@ -3401,19 +3508,14 @@
         <strong>Signals · Field Antennas</strong> — gorgeous pulsing fields · FCC lookup on every signal · threat tags live.
       </p>
       <div id="signals-operator" class="signals-operator" aria-label="Operator GPS and profile"></div>
-      <div id="signals-antenna-banner" class="gov-merge-banner blaster-warming" style="margin-bottom:12px;"></div>
+      <div id="signals-antenna-banner" class="gov-merge-banner blaster-warming" style="display:none;margin-bottom:12px;" hidden></div>
       <div id="signals-fcc-banner" class="gov-merge-banner" style="border-color:#3a5080;background:rgba(20,36,56,0.55);margin-bottom:12px;"></div>
       <div id="signals-stats" class="signals-stats" style="margin-bottom:12px;"></div>
       <div class="signals-hero-wrap">
         <canvas id="signals-field-hero" aria-label="Pulsing multi-antenna field visualization"></canvas>
       </div>
       <div class="signals-grid-main">
-        <div class="signals-panel">
-          <h4>Field antenna · blaster readiness</h4>
-          <div id="signals-antenna-readiness" class="signals-readiness"></div>
-          <div id="signals-antenna-grid" class="signals-antenna-grid" style="margin-top:10px;"><div class="empty">Awaiting antenna fields…</div></div>
-        </div>
-        <div class="signals-panel signals-radio-panel">
+        <div class="signals-panel signals-radio-panel" style="display:none;" hidden aria-hidden="true">
           <h4>Field radio catcher · AM/FM · tune &amp; play</h4>
           <div id="signals-world-placement" class="signals-radio-player" style="margin-bottom:10px;border-color:rgba(100,200,255,0.35);">
             <div class="player-title">Your place in this world</div>
@@ -3479,8 +3581,7 @@
           <h4>Pulse channels · live energy</h4>
           <div id="signals-channels" class="signals-channels" style="max-height:min(52vh,420px);"><div class="empty">Pulse channels load with scan…</div></div>
           <div style="margin-top:14px;">
-            <button type="button" id="signals-refresh" data-tip="Full antenna cycle: RF, radio, signals, blaster test.">Rescan antenna</button>
-            <button type="button" id="signals-antenna-test" data-tip="Run blaster readiness test." style="margin-left:8px;">Test blaster</button>
+            <button type="button" id="signals-refresh" data-tip="Refresh signals field scan.">Rescan signals</button>
             <button type="button" data-view-jump="intel/field-rf" style="margin-left:8px;">Field RF →</button>
           </div>
         </div>
@@ -3712,9 +3813,26 @@
   <section id="view-settings" class="view">
     <div class="settings-wrap">
       <div id="settings-profile" class="settings-profile-card" role="status" aria-live="polite">
-        <h2>Your settings</h2>
-        <p id="settings-profile-desc">Loading current choices…</p>
+        <h2>Queen settings</h2>
+        <p id="settings-profile-desc">Always optimal · secured — loading posture…</p>
         <div id="settings-profile-stats" class="settings-profile-stats"></div>
+      </div>
+      <div class="settings-group settings-posture-readonly" id="queen-settings-posture">
+        <h3><span>Always optimal</span><span data-tip="Best settings held by Queen doctrine — protection, watchers, and guardian locked."></span></h3>
+        <div class="group-summary" id="summary-always-optimal"><strong>Secured</strong> — surface minimized</div>
+        <p class="settings-locked-hint">AmmoOS · 127.0.0.1 — Queen is the underlying browser with full local system control. ZNetwork holds 100% of internet in/out. Own drivers on any hardware. Security toggles stay doctrine-locked; comfort, audio routing, ZNetwork, and diagnostic recovery remain operator-facing. God Bless.</p>
+        <div id="queen-settings-posture-chips" class="settings-profile-stats" style="padding:0 16px 16px"></div>
+      </div>
+      <div class="settings-group settings-operator" id="queen-comfort-group" data-settings-group="comfort">
+        <h3><span>Operator comfort</span><span data-tip="The only client-side preference on the secured settings surface."></span></h3>
+        <div class="group-summary" id="summary-comfort">Comfort reading for longer sessions</div>
+        <div class="setting-row" id="old-man-setting-row">
+          <label class="toggle">
+            <input type="checkbox" id="set-old-man" />
+            <span><strong>Comfort reading</strong><span class="hint">Modest text bump + high contrast — not giant fonts.</span></span>
+          </label>
+          <span class="has-tip-row" data-tip="Slightly larger base text (18→20px) and high-contrast colors. Off by default. No super-giant scaling."></span>
+        </div>
       </div>
       <div id="znetwork-status-card" class="settings-group znetwork-status-card" data-settings-group="znetwork">
         <h3><span>ZNetwork</span><span data-tip="Field secure network manager — truth-gated activate, tray swap, connection replace."></span></h3>
@@ -3722,7 +3840,7 @@
         <div id="znetwork-status-body" class="meta">Loading ZNetwork posture…</div>
         <div id="znetwork-status-actions" class="znetwork-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
       </div>
-      <div class="settings-group ai-telemetry-card" data-settings-group="ai-telemetry">
+      <div class="settings-group ai-telemetry-card settings-locked" data-settings-group="ai-telemetry">
         <h3><span>AI telemetry</span><span data-tip="Local secure channel for Grok Build and field AI — ON by default. Zero phone-home; we never release your data."></span></h3>
         <div class="group-summary" id="summary-ai-telemetry">—</div>
         <div class="setting-row">
@@ -3744,7 +3862,7 @@
           <button type="button" class="ghost" id="diag-card-clear">Clear</button>
         </div>
       </div>
-      <div id="compatibility-layers-card" class="settings-group compatibility-layers-card" data-settings-group="compatibility">
+      <div id="compatibility-layers-card" class="settings-group compatibility-layers-card settings-locked" data-settings-group="compatibility">
         <h3><span>Compatibility Layers</span><span data-tip="Auto-stacked substrate → exec → program → web → CHIPS → surface. Sync bumps .launch seal — secured chambers refresh only after layer sync."></span></h3>
         <div class="group-summary" id="summary-compatibility">—</div>
         <div id="compatibility-layers-body" class="meta">Loading compatibility stack…</div>
@@ -3752,14 +3870,14 @@
           <a class="ghost" href="/compatibility" target="_blank" rel="noopener" style="padding:8px 14px;border-radius:8px;border:1px solid #2d6a8f;text-decoration:none;color:#5eead4;">Open layers →</a>
         </div>
       </div>
-      <div class="settings-group field-clarity-group" id="field-clarity" data-settings-group="field-clarity">
+      <div class="settings-group field-clarity-group settings-locked" id="field-clarity" data-settings-group="field-clarity">
         <details class="field-clarity-fold">
           <summary>Field clarity — all slices &amp; live values</summary>
           <p class="meta field-clarity-hint">Search any field slice (gatekeeper, lethal, Hostess7, DNS, antenna). Click a row for detail and jump to its tab.</p>
           <div id="field-clarity-mount" class="field-clarity-mount"></div>
         </details>
       </div>
-      <div class="settings-group" data-settings-group="protection">
+      <div class="settings-group settings-locked" data-settings-group="protection">
         <h3><span>Protection</span><span data-tip="v4.0 Packet Permission: DPI classifies every flow. Good traffic passes at zero nft cost; only harmful packet sections are blocked."></span></h3>
         <div class="group-summary" id="summary-protection">—</div>
         <div class="setting-row">
@@ -3792,7 +3910,7 @@
         </div>
       </div>
 
-      <div class="settings-group" data-settings-group="watchers">
+      <div class="settings-group settings-locked" data-settings-group="watchers">
         <h3><span>Watchers</span><span data-tip="Background helpers that run quietly. Turning one OFF reduces work — only do that if you know you don't need it."></span></h3>
         <div class="group-summary" id="summary-watchers">—</div>
         <div class="setting-row">
@@ -3828,7 +3946,7 @@
             <input type="checkbox" data-setting="NEXUS_BEHAVIOR_WATCH" id="set-behavior" />
             <span><strong>App behavior watch</strong><span class="hint">Scores running programs — whitelists browsers and games.</span></span>
           </label>
-          <span class="has-tip-row" data-tip="Looks at which programs launched which. Normal apps like Firefox are whitelisted so you won't get nagged."></span>
+          <span class="has-tip-row" data-tip="Looks at which programs launched which. Normal apps like Queen Browser are whitelisted so you won't get nagged."></span>
         </div>
         <div class="setting-row">
           <label class="toggle">
@@ -3858,13 +3976,6 @@
           </label>
           <span class="has-tip-row" data-tip="ON by default. Autokill runs only at 100% strike certainty: permanent firewall block, connection teardown, process kill, LAN isolate, dossier archived forever. Registry re-applies hardware destroy on boot. RE-KILL when a killed attacker returns online with same-host identity."></span>
         </div>
-        <div class="setting-row" id="old-man-setting-row">
-          <label class="toggle">
-            <input type="checkbox" id="set-old-man" />
-            <span><strong>Comfort reading</strong><span class="hint">Modest text bump + high contrast — not giant fonts.</span></span>
-          </label>
-          <span class="has-tip-row" data-tip="Slightly larger base text (18→20px) and high-contrast colors. Off by default. No super-giant scaling."></span>
-        </div>
         <div class="setting-row">
           <label class="toggle">
             <input type="checkbox" data-setting="NEXUS_PANEL_AUTO_OPEN" id="set-panel-open" />
@@ -3875,7 +3986,7 @@
         <p class="meta" style="padding:8px 16px 12px;margin:0;font-size: 0.95rem;">Checkboxes save right away. If something still looks wrong after toggling, restart: <code>sudo systemctl restart nexus-genius.service</code></p>
       </div>
 
-      <div class="settings-group" data-settings-group="adblock">
+      <div class="settings-group settings-locked" data-settings-group="adblock">
         <h3><span>Fair Ad Guardian</span><span data-tip="Friendly, non-intrusive protection. Blocks popups, lockouts, and complained-about third parties — fair to sites that require ads."></span></h3>
         <div class="group-summary" id="summary-adblock">—</div>
         <div class="fair-ad-card" id="fair-ad-motto">
@@ -3922,7 +4033,7 @@
         </div>
       </div>
 
-      <div class="settings-group" data-settings-group="debug">
+      <div class="settings-group settings-locked" data-settings-group="debug">
         <h3><span>Debug</span><span data-tip="Developer overlays — loopback only, no telemetry. Flyout closes when you leave or close the panel."></span></h3>
         <div class="setting-row">
           <label class="toggle">
@@ -3933,17 +4044,17 @@
         </div>
       </div>
 
-      <div class="settings-group">
+      <div class="settings-group settings-locked">
         <h3><span>Suspicious event history</span><span data-tip="A diary of things NEXUS thought were odd enough to write down. Empty is good."></span></h3>
         <div class="list" id="paranoia-list"><div class="empty">Nothing recorded yet — quiet is good.</div></div>
       </div>
 
-      <div class="settings-group">
+      <div class="settings-group settings-locked">
         <h3><span>Auto-fix history</span><span data-tip="If auto-fix was ever on, past actions show here. Check Undo to reverse one."></span></h3>
         <div class="list" id="sanitize-list"><div class="empty">No auto-fix actions yet.</div></div>
       </div>
 
-      <div class="settings-group" data-settings-group="plugins">
+      <div class="settings-group settings-locked" data-settings-group="plugins">
         <h3><span>Panel plugins</span><span data-tip="Unlimited plugins — each adds a dock at the bottom of every tab. Drop a folder under plugins/ with manifest.json + plugin.py."></span></h3>
         <div class="group-summary" id="summary-plugins">—</div>
         <p class="meta" style="padding:4px 16px 8px;margin:0;font-size: 0.95rem;">
@@ -4350,7 +4461,7 @@
       { key: "signals_field", url: "/api/signals-field" },
       { key: "field_hardware", url: "/api/field-hardware" },
       { key: "field_hazard_onset", url: "/api/field-hazard-onset" },
-      { key: "field_antenna", url: "/api/field-antenna" },
+
       { key: "field_radio", url: "/api/field-radio" },
       { key: "field_dns", url: "/api/field-dns" },
       { key: "field_outside_talk", url: "/api/field-outside-talk" },
@@ -4386,7 +4497,7 @@
       "final-ear": { keys: ["field_earball"], subs: { "final-ear": ["field_earball"] } },
       "final-mouth": { keys: ["field_mouthball"], subs: { "final-mouth": ["field_mouthball"] } },
       system: { keys: ["settings", "znetwork", "diagnostic_mode", "compatibility"], subs: { settings: ["settings", "znetwork", "diagnostic_mode", "compatibility"], logs: ["settings"] } },
-      signals: { keys: ["signals_field", "field_antenna", "field_radio", "field_hardware", "field_hazard_onset"], subs: { signals: ["signals_field", "field_antenna", "field_radio", "field_hardware"] } },
+      signals: { keys: ["signals_field", "field_hardware", "field_hazard_onset"], subs: { signals: ["signals_field", "field_hardware"] } },
       dns: { keys: ["field_dns"], subs: { dns: ["field_dns"] } },
       outside: { keys: ["field_outside_talk", "field_drive"], subs: { outside: ["field_outside_talk", "field_drive"] } },
     };
@@ -4400,7 +4511,7 @@
       if (key === "home_protector") return typeof val === "object" && (val.schema === "home-protector/v1" || val.stats != null);
       if (key === "local_services") return typeof val === "object" && (val.schema === "local-services/v1" || val.stats != null);
       if (key === "signals_field") return typeof val === "object" && (val.schema === "signals-field/v1" || val.stats != null || val.antenna != null || (val.antennas || []).length > 0);
-      if (key === "field_antenna") return typeof val === "object" && (val.schema === "field-antenna/v1" || (val.readiness || {}).score != null);
+
       if (key === "field_radio") return typeof val === "object" && (val.schema === "field-radio-catcher/v1" || (val.station_menu || []).length > 0);
       if (key === "field_dns") {
         return typeof val === "object" && (
@@ -4872,7 +4983,6 @@
           renderFieldProtect(data);
           break;
         case "signals_field":
-        case "field_antenna":
         case "field_radio":
         case "field_hardware":
         case "field_hazard_onset":
@@ -5309,33 +5419,37 @@
     $("set-old-man")?.addEventListener("change", (e) => applyOldManMode(e.target.checked));
     applyOldManMode(localStorage.getItem("nexus_old_man") === "1");
 
-    $("set-ai-telemetry")?.addEventListener("change", async (e) => {
-      const on = e.target.checked;
-      const row = e.target.closest(".setting-row");
-      applySettingRowVisual(row, on);
-      const val = on ? "1" : "0";
-      try {
-        const res = await fetch("/api/settings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            settings: {
-              NEXUS_AI_SECURE_CHANNEL: val,
-              QUEEN_AI_TELEMETRY_OK: val,
-            },
-          }),
-        });
-        const j = await res.json();
-        if (!j.ok) throw new Error("settings failed");
-        refresh();
-      } catch {
-        e.target.checked = !on;
-        applySettingRowVisual(row, !on);
-        alert("Could not save AI telemetry setting");
+    const QUEEN_SETTINGS_LOCKED = true;
+    const QUEEN_LOCKED_NEXUS_KEYS = new Set([
+      "NEXUS_AI_SECURE_CHANNEL", "QUEEN_AI_TELEMETRY_OK", "NEXUS_PARANOIA_BLOCK", "NEXUS_PARANOIA_MODE",
+      "NEXUS_FIREWALL_AUTO_BLOCK", "NEXUS_AUTOSANITIZE", "NEXUS_ADBLOCK", "NEXUS_ADBLOCK_RESPECT_POLICY",
+      "NEXUS_PANEL_AUTO_OPEN", "NEXUS_CONNECTION_GATEKEEPER", "NEXUS_PACKET_ORACLE", "NEXUS_SHADOW_WATCH",
+      "NEXUS_ENTROPY_WATCH", "NEXUS_BEHAVIOR_WATCH", "NEXUS_PRIVACY_GUARD", "NEXUS_SHUTDOWN_GUARD",
+      "NEXUS_HOSTESS7_CORROBORATE", "NEXUS_ATTACK_KIT_AUTO_CRUSH", "NEXUS_FIELD_AUTO_REKILL",
+      "NEXUS_GATEKEEPER_STRICT_TRUST", "NEXUS_PACKET_PERMISSION",
+    ]);
+
+    function lockQueenSettingsSurface() {
+      document.querySelectorAll(".settings-locked [data-setting], .settings-locked input, .settings-locked button, .settings-locked select, .settings-locked textarea").forEach((el) => {
+        el.disabled = true;
+        el.setAttribute("aria-hidden", "true");
+      });
+      const ai = $("set-ai-telemetry");
+      if (ai) {
+        ai.disabled = true;
+        ai.checked = true;
       }
+    }
+
+    $("set-ai-telemetry")?.addEventListener("change", (e) => {
+      e.preventDefault();
+      e.target.checked = true;
     });
 
     async function setSetting(key, value) {
+      if (QUEEN_SETTINGS_LOCKED && QUEEN_LOCKED_NEXUS_KEYS.has(key)) {
+        throw new Error("locked");
+      }
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -5459,19 +5573,28 @@
       const prot = countGroupOn(s, SETTING_GROUPS.protection);
       const watch = countGroupOn(s, SETTING_GROUPS.watchers);
       const abOn = settingIsOn(s.NEXUS_ADBLOCK);
-      $("settings-profile-desc").textContent = extreme
-        ? "EXTREME envelope — every watcher and protection point at maximum for your 4★/5★ host. Adblock stays relaxed (fair) so trusted sites flow; shadow, entropy, privacy, paranoia, firewall, DPI all hardened."
-        : everyday
-        ? "Packet permission v4.0 — DPI knows who and intent on every flow. Good traffic passes at zero nft cost; only harmful sections get blocked."
-        : "Custom profile — your choices are saved on this machine. Rows below show ON (green edge) vs OFF (muted).";
+      $("settings-profile-desc").textContent = "AmmoOS · 127.0.0.1 — Queen underlying, ZNetwork internet pipe, own drivers. Best settings locked; comfort, ZNetwork, diagnostic only.";
       const chips = [
-        `<span class="chip profile">${extreme ? "EXTREME · 4-5★ host" : everyday ? "Secure profile" : "Custom profile"}</span>`,
+        `<span class="chip profile">Always optimal · locked</span>`,
         hostSec.extreme_active ? `<span class="chip on">Host ${hostSec.host_star_tier || "?"}★</span>` : "",
-        `<span class="chip ${prot ? "on" : "off"}">Protection ${prot}/${SETTING_GROUPS.protection.length}</span>`,
-        `<span class="chip ${watch ? "on" : "off"}">Watchers ${watch}/${SETTING_GROUPS.watchers.length}</span>`,
-        `<span class="chip ${abOn ? "on" : "off"}">Guardian ${abOn ? (s.NEXUS_ADBLOCK_POLICY || "annoyance") : "OFF"}</span>`,
+        `<span class="chip on">Protection ${prot}/${SETTING_GROUPS.protection.length}</span>`,
+        `<span class="chip on">Watchers ${watch}/${SETTING_GROUPS.watchers.length}</span>`,
+        `<span class="chip on">Guardian ${abOn ? (s.NEXUS_ADBLOCK_POLICY || "annoyance") : "held"}</span>`,
       ];
       $("settings-profile-stats").innerHTML = chips.join("");
+      const postureChips = $("queen-settings-posture-chips");
+      if (postureChips) {
+        postureChips.innerHTML = chips.join("");
+      }
+      const summary = $("summary-always-optimal");
+      if (summary) {
+        summary.innerHTML = extreme
+          ? `<strong>EXTREME</strong> — ${prot}/${SETTING_GROUPS.protection.length} protection · ${watch}/${SETTING_GROUPS.watchers.length} watchers · locked`
+          : everyday
+          ? `<strong>Secure profile</strong> — ${prot}/${SETTING_GROUPS.protection.length} protection · ${watch}/${SETTING_GROUPS.watchers.length} watchers · locked`
+          : `<strong>Custom held</strong> — doctrine will re-apply best settings on sync`;
+      }
+      lockQueenSettingsSurface();
     }
 
     document.querySelectorAll("[data-setting]").forEach((cb) => {
@@ -5948,17 +6071,31 @@
       const trayOn = tray.active && String(tray.mode || "").toLowerCase() === "znetwork";
       const mode = op.mode || st.mode || zn.mode || "REVIEW_ONLY";
       const iface = st.iface || st.interface || "—";
+      const sov = zn.sovereignty || {};
+      const localSvc = sov.local_services || zn.local_services || {};
+      const localDns = localSvc.dns || {};
+      const localDhcp = localSvc.dhcp || {};
+      const relayerOn = sov.znetwork?.relayer_enabled !== false;
+      const pipe = zn.internet_pipe_percent ?? sov.internet_pipe_percent ?? (relayerOn || (running && mode === "ACTIVE") ? 100 : 0);
+      const pipeTarget = zn.internet_pipe_target ?? sov.internet_pipe_target ?? 100;
+      const loopback = zn.loopback_authority || sov.loopback_authority || "127.0.0.1";
       const chips = [
+        `<span class="chip ${pipe >= pipeTarget ? "on" : "off"}">Pipe ${pipe}%</span>`,
         `<span class="chip ${running ? "on" : "off"}">${running ? "Running" : "Not running"}</span>`,
         `<span class="chip profile">${mode}</span>`,
+        `<span class="chip on">${loopback}</span>`,
         `<span class="chip ${trayOn ? "on" : "off"}">Tray ${trayOn ? "Z" : "NEXUS"}</span>`,
         `<span class="chip ${gate.ok ? "on" : "off"}">Truth gate ${gate.ok ? "OK" : "blocked"}</span>`,
+        `<span class="chip ${localDns.connected || localDns.running ? "on" : "off"}">Local DNS ${localDns.connected ? "connected" : (localDns.running ? "up" : "—")}</span>`,
+        `<span class="chip ${localDhcp.connected || localDhcp.running ? "on" : "off"}">Local DHCP ${localDhcp.connected ? "connected" : (localDhcp.running ? "up" : "—")}</span>`,
       ];
       body.innerHTML =
         `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">${chips.join("")}</div>` +
-        `<div>Choice: <strong>${choice || "unset"}</strong> · iface <strong>${iface}</strong>` +
+        `<div><strong>AmmoOS 1.0</strong> — Queen underlying · ZNetwork sole internet · <strong>${pipe}%</strong> pipe (target ${pipeTarget}%) · local Truth DNS + Field DHCP auto-connect · iface <strong>${iface}</strong>` +
         (zn.binary ? ` · binary present` : " · binary missing") + `</div>`;
-      summary.textContent = running ? `Active · ${mode}` : (choice === "skip" ? "Skipped" : "Ready");
+      summary.textContent = running
+        ? `Active · ${mode} · ${pipe}% internet pipe`
+        : (choice === "skip" ? "Skipped" : `Ready · target ${pipeTarget}% pipe`);
       if (actions) {
         actions.innerHTML = running
           ? `<button type="button" class="ghost" id="zn-open-packets">Packets</button>` +

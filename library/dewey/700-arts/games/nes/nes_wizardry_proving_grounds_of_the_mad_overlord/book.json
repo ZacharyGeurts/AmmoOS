@@ -1,0 +1,14 @@
+{
+  "id": "nes_wizardry_proving_grounds_of_the_mad_overlord",
+  "title": "Wizardry: Proving Grounds of the Mad Overlord",
+  "author": "NEXOFT",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_wizardry_proving_grounds_of_the_mad_overlord-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_wizardry_proving_grounds_of_the_mad_overlord/nes_wizardry_proving_grounds_of_the_mad_overlord.h7c"
+}

@@ -7,11 +7,13 @@
 
   let state = null;
   let step = "welcome";
-  let znChoice = null;
+  let znChoice = "yes";
   let znLoaded = false;
   let rootReady = false;
   let defieldOk = false;
   let unfieldAutoRan = false;
+  let launchRootDone = false;
+  const ROOT_SESSION_KEY = "tristate-root-session";
 
   const $ = (id) => document.getElementById(id);
 
@@ -45,7 +47,7 @@
   function canAdvance(id) {
     if (id === "root") return rootReady;
     if (id === "unfield") return defieldOk;
-    if (id === "znetwork") return !!znChoice;
+    if (id === "znetwork") return znChoice === "yes";
     if (id === "arrive") return rootReady && defieldOk;
     return true;
   }
@@ -101,12 +103,15 @@
 
     updateChrome(next);
 
-    if (next === "root" && !rootReady) maybeAutoAcquireRoot();
+    if (next === "root" && !rootReady && !launchRootDone) maybeAutoAcquireRoot();
     if (next === "unfield" && !unfieldAutoRan) {
       unfieldAutoRan = true;
       runUnfieldAudit(true);
     }
-    if (next === "znetwork" && !znLoaded) loadZnetworkOffer();
+    if (next === "znetwork") {
+      if (!znLoaded) loadZnetworkOffer();
+      else ensureZnetworkIngrained(true);
+    }
   }
 
   function updateChrome(id) {
@@ -115,7 +120,7 @@
       welcome: ["Welcome to the Field", "Seven guided steps — root first, unfield drives, then install."],
       root: ["Administrator access", "One approval for install, network, WRDT, and commit — not just ZNetwork."],
       unfield: ["Unfield files on drive", "Quarantine nested field copies and clear tail formats before install."],
-      znetwork: ["ZNetwork replacer", "Slide-in field network — review disable vs replace, then choose."],
+      znetwork: ["ZNetwork ingrained", "Field network is built in — review the replacer plan, then continue."],
       arrive: ["Install protections", "NEXUS Shield, Queen, perimeter — uses root granted at step 2."],
       transform: ["Transform", "Re-field shadow first — then sovereign restore, audit, World redump."],
       commit: ["Commit — permanent", "We are always the underlay from this point. No off switch."],
@@ -244,13 +249,8 @@
     if (status) {
       status.textContent = zn.running ? "RUNNING" : zn.choice ? zn.choice.toUpperCase() : "PENDING";
     }
-    const choice = znChoice || zn.choice;
-    if (choiceLbl) choiceLbl.textContent = choice ? choice.toUpperCase() : "—";
-
-    document.querySelectorAll(".ti-choice").forEach((btn) => {
-      btn.classList.toggle("selected", btn.dataset.znChoice === choice);
-    });
-    if (zn.choice && !znChoice) znChoice = zn.choice;
+    znChoice = "yes";
+    if (choiceLbl) choiceLbl.textContent = "INGRAINED";
     const nxt = $("ti-wizard-next");
     if (nxt && step === "znetwork") nxt.disabled = !canAdvance("znetwork");
   }
@@ -381,31 +381,58 @@
     }
   }
 
-  async function acquireRoot() {
-    toast("Approve administrator access in the system dialog…");
+  async function acquireRoot(silent) {
+    if (!silent) toast("Approve administrator access in the system dialog…");
     try {
       const j = await apiPost("/acquire-root", {});
       if (j.root) renderRoot(j.root);
       if (j.posture) renderStatus(j.posture);
       else await refresh();
       if (j.ok || j.already || rootReady) {
-        toast("Administrator access granted");
+        launchRootDone = true;
+        try {
+          sessionStorage.setItem(ROOT_SESSION_KEY, "1");
+        } catch (_) { /* ignore */ }
+        if (!silent) toast("Administrator access granted — this session only");
         const nxt = $("ti-wizard-next");
         if (nxt && step === "root") nxt.disabled = false;
-      } else {
+      } else if (!silent) {
         toast(j.error || "Elevation declined");
       }
+      return j;
     } catch (e) {
-      toast(String(e.message || e));
+      if (!silent) toast(String(e.message || e));
+      return { ok: false, error: String(e.message || e) };
+    }
+  }
+
+  async function launchAcquireRoot() {
+    if (launchRootDone && rootReady) return;
+    try {
+      if (sessionStorage.getItem(ROOT_SESSION_KEY) === "1") {
+        const data = await apiGet();
+        renderStatus(data);
+        if (rootReady) {
+          launchRootDone = true;
+          return;
+        }
+      }
+    } catch (_) { /* panel may still be warming */ }
+    toast("Launch: one administrator approval (UAC/sudo) for the whole installer…");
+    await acquireRoot(true);
+    if (rootReady) {
+      toast("Administrator access cached — no further prompts this session");
+    } else {
+      toast("Approve administrator access when ready (step 2 or Grant button)");
     }
   }
 
   function maybeAutoAcquireRoot() {
-    if (rootReady) return;
+    if (rootReady || launchRootDone) return;
     const btn = $("ti-acquire-root");
     if (btn && !btn.dataset.autoTried) {
       btn.dataset.autoTried = "1";
-      acquireRoot();
+      acquireRoot(false);
     }
   }
 
@@ -423,6 +450,16 @@
     }
   }
 
+  async function ensureZnetworkIngrained(silent) {
+    znChoice = "yes";
+    const nxt = $("ti-wizard-next");
+    if (nxt && step === "znetwork") nxt.disabled = false;
+    if (silent) return;
+    try {
+      await apiPost("/znetwork-choice", { choice: "yes" });
+    } catch (_) { /* offer step may retry */ }
+  }
+
   async function loadZnetworkOffer() {
     toast("Loading ZNetwork replacer plan…");
     try {
@@ -430,7 +467,14 @@
       znLoaded = true;
       if (j.offer) state = { ...(state || {}), znetwork: j };
       renderZnetwork(j);
-      toast("ZNetwork plan ready");
+      await ensureZnetworkIngrained(true);
+      try {
+        const saved = await apiPost("/znetwork-choice", { choice: "yes" });
+        renderStatus(saved.posture || saved);
+        toast("ZNetwork ingrained — auto-enabled");
+      } catch (e) {
+        toast("ZNetwork plan ready");
+      }
     } catch (e) {
       toast(String(e.message || e));
     }
@@ -472,20 +516,13 @@
       const hints = {
         root: "Grant administrator access first",
         unfield: "Run unfield audit — drives must be clean before install",
-        znetwork: "Choose Yes, No, or Skip first",
+        znetwork: "Loading ZNetwork plan…",
         arrive: "Root and unfield must pass before install",
       };
       toast(hints[step] || "Complete this step first");
       return;
     }
     setStep(STEPS[idx + 1]);
-  });
-
-  document.querySelectorAll(".ti-choice").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const choice = btn.dataset.znChoice;
-      if (choice) saveZnetworkChoice(choice);
-    });
   });
 
   $("ti-refresh")?.addEventListener("click", refresh);
@@ -666,10 +703,15 @@
     });
   });
 
-  if (location.hash === "#committed") {
-    setStep("committed");
-  } else {
-    setStep(restoreStep());
+  async function boot() {
+    await launchAcquireRoot();
+    if (location.hash === "#committed") {
+      setStep("committed");
+    } else {
+      setStep(restoreStep());
+    }
+    await refresh();
   }
-  refresh();
+
+  boot().catch(() => refresh());
 })();

@@ -1,0 +1,14 @@
+{
+  "id": "nes_nightshade_part_1_the_claws_of_sutekh",
+  "title": "Nightshade: Part 1 - The Claws of Sutekh",
+  "author": "Ultra Software",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_nightshade_part_1_the_claws_of_sutekh-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_nightshade_part_1_the_claws_of_sutekh/nes_nightshade_part_1_the_claws_of_sutekh.h7c"
+}

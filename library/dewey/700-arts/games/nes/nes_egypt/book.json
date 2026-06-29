@@ -1,0 +1,14 @@
+{
+  "id": "nes_egypt",
+  "title": "Egypt",
+  "author": "Human Entertainment",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_egypt-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_egypt/nes_egypt.h7c"
+}

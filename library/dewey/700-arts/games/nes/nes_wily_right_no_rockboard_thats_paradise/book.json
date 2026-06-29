@@ -1,0 +1,14 @@
+{
+  "id": "nes_wily_right_no_rockboard_thats_paradise",
+  "title": "Wily & Right no RockBoard: That's Paradise",
+  "author": "Capcom Co., Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_wily_right_no_rockboard_thats_paradise-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Traditional",
+  "year": 1993,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_wily_right_no_rockboard_thats_paradise/nes_wily_right_no_rockboard_thats_paradise.h7c"
+}

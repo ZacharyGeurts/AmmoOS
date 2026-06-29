@@ -45,11 +45,17 @@ sg_paths_export_defaults
 export GROK16_ROOT="${GROK16_ROOT:-${SG}/Grok16}"
 export NEXUS_FIELD_BROWSER_QUEEN=1
 export HOSTESS7_ANGEL_MANDATE=1
+export NEXUS_HOSTESS7_INTERNET=1
+export HOSTESS7_INTERNET=1
 export FINAL_EYE_ASSIST=1
 export QUEEN_WEB_SHELL=1
 export QUEEN_SKIP_RTX_BOOT=1
 export NEXUS_EMBED_PANEL_IN_ENGINE=0
-export QUEEN_BROWSER_URL="http://127.0.0.1:${WORLD_PORT}/world/browser.html"
+export NEXUS_BOOT_C2_ONLY=1
+export NEXUS_QUEEN_LAYER_AUTOSTART=0
+export NEXUS_C2_DESKTOP_LAUNCH=1
+export NEXUS_C2_KIOSK="${NEXUS_C2_KIOSK:-0}"
+export AMMOOS_WINDOW_MODE="${AMMOOS_WINDOW_MODE:-1}"
 export QUEEN_BROWSER_START="http://127.0.0.1:${PANEL_PORT}/field"
 export QUEEN_BROWSER_HOME="http://127.0.0.1:${PANEL_PORT}/field"
 
@@ -90,11 +96,19 @@ echo "  World_Redata ${WORLD_REDATA}"
 echo "  Install     ${ROOT}"
 echo ""
 
-# Vestigial cleanup + ZNetwork with us — replace legacy networking on stack start.
+# Vestigial cleanup + ZNetwork (SG/ZNetwork canonical) — relayer + smart_inside best-of.
 if [[ -f "${ROOT}/lib/nexus-vestigial-cleanup.sh" ]]; then
   # shellcheck source=/dev/null
   source "${ROOT}/lib/nexus-vestigial-cleanup.sh"
   nexus_vestigial_cleanup_run 2>/dev/null || true
+fi
+if [[ -x "${ROOT}/scripts/integrate-znetwork.sh" ]]; then
+  ZNETWORK_INTEGRATE_SKIP_BATTERY="${ZNETWORK_INTEGRATE_SKIP_BATTERY:-1}" \
+    bash "${ROOT}/scripts/integrate-znetwork.sh" || true
+fi
+if [[ -f "${STATE}/znetwork-integrated.env" ]]; then
+  # shellcheck source=/dev/null
+  source "${STATE}/znetwork-integrated.env"
 fi
 # shellcheck source=/dev/null
 source "${ROOT}/lib/znetwork-field.sh"
@@ -121,6 +135,7 @@ NEXUS_BOOT_IMPL="${NEXUS_BOOT_IMPL:-0}" NEXUS_ZNETWORK_PROMPT=0 \
 if [[ -f "${ROOT}/lib/queen-layer-boot.sh" ]]; then
   # shellcheck source=/dev/null
   source "${ROOT}/lib/queen-layer-boot.sh"
+  nexus_queen_layer_refresh 2>/dev/null || true
   nexus_queen_layer_install_autostart 2>/dev/null || true
 fi
 
@@ -150,25 +165,16 @@ echo ""
 echo "URLs:"
 echo "  NEXUS panel  http://127.0.0.1:${PANEL_PORT}/field"
 echo "  Final_Eye    http://127.0.0.1:${EYE_PORT}/ops"
-echo "  Queen Browser  http://127.0.0.1:${WORLD_PORT}/world/browser.html"
+echo "  NEXUS C2       http://127.0.0.1:${PANEL_PORT}/field"
 
 if [[ "${NEXUS_FIELD_LAUNCH_BROWSER:-1}" == "1" ]]; then
   echo ""
-  echo "=== Launch Queen integrated field browser ==="
-  pkill -f "${QUEEN}/build/rtx/bin/Linux/queen-browser" 2>/dev/null || true
-  export QUEEN_NO_OS_BROWSER=1
-  export QUEEN_WEB_SHELL=1
-  export QUEEN_SKIP_RTX_BOOT=1
-  export NEXUS_EMBED_PANEL_IN_ENGINE=0
-  export NEXUS_C2_DESKTOP_LAUNCH=1
-  export NEXUS_C2_KIOSK=1
-  PY_LAUNCH="${PY:-pythong}"
-  if command -v "${PY_LAUNCH}" >/dev/null 2>&1; then
-    launch_out="$("${PY_LAUNCH}" "${ROOT}/lib/queen-integrated-browser.py" open 2>/dev/null || true)"
-    if echo "${launch_out}" | grep -q '"ok": true'; then
-      echo "  Queen Field Gecko + Webbrowser shell (no comp shader · no OS browser)"
-    else
-      echo "  WARN: integrated browser launch incomplete — ${launch_out}" >&2
-    fi
+  echo "=== Launch NEXUS C2 desktop ==="
+  # shellcheck source=/dev/null
+  [[ -f "${ROOT}/lib/panel-browser.sh" ]] && source "${ROOT}/lib/panel-browser.sh"
+  if declare -f nexus_boot_c2_desktop >/dev/null 2>&1 && nexus_boot_c2_desktop; then
+    echo "  NEXUS C2 desktop — fullscreen kiosk at /field"
+  else
+    echo "  WARN: NEXUS C2 desktop launch incomplete — ./nexus.sh" >&2
   fi
 fi

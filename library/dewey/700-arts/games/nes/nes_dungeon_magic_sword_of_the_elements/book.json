@@ -1,0 +1,14 @@
+{
+  "id": "nes_dungeon_magic_sword_of_the_elements",
+  "title": "Dungeon Magic: Sword of the Elements",
+  "author": "Taito Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dungeon_magic_sword_of_the_elements-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_dungeon_magic_sword_of_the_elements/nes_dungeon_magic_sword_of_the_elements.h7c"
+}

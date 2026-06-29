@@ -1,0 +1,14 @@
+{
+  "id": "nes_adventure_island",
+  "title": "Adventure Island",
+  "author": "Hudson Soft",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_adventure_island-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_adventure_island/nes_adventure_island.h7c"
+}

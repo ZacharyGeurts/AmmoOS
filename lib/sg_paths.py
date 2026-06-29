@@ -126,4 +126,19 @@ def world_redata_root() -> Path:
 
 
 def znetwork_root() -> Path:
-    return stack_path("ZNetwork", "znetwork")
+    """Canonical outside lab at SG/ZNetwork; NewLatest/znetwork is pointer-only."""
+    env = os.environ.get("ZNETWORK_ROOT", "").strip()
+    if env:
+        return Path(env).expanduser().resolve()
+    inst = sg_root()
+    parent = inst.parent
+    outside = parent / "ZNetwork"
+    if outside.is_dir():
+        return outside.resolve()
+    nested = inst / "znetwork"
+    if nested.exists():
+        return nested.resolve()
+    for candidate in (parent / "znetwork",):
+        if candidate.exists():
+            return candidate.resolve()
+    return outside.resolve()

@@ -14,7 +14,7 @@
     "rootfs/": "Busybox production rootfs — LABEL=KILROY_FIELD",
     "queen/": "queen-browser + GUI + brain + forge",
     "secure/": "gates, grok-build, RTX sovereign doctrine",
-    "queen-field.json": "sealed manifest",
+    "queen-sovereign-bundle.json": "sealed sovereign bundle — no field file",
     "paths.json": "SG + drive resolution snapshot"
   },
   "tools": [

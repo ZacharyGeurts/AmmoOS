@@ -237,6 +237,43 @@ body.qw-browser-shell.qw-viewport-fs .qb-chrome {
   display: none;
 }
 
+.qb-tab-pin {
+  opacity: 0.55;
+  font-size: 0.7rem;
+  padding: 0 3px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.qb-tab-pin:hover,
+.qb-tab-pinned .qb-tab-pin {
+  opacity: 1;
+}
+
+body.qw-desktop-embed {
+  overflow: hidden;
+}
+
+body.qw-desktop-embed .qb-chrome,
+body.qw-desktop-embed .qb-chrome-restore,
+body.qw-desktop-embed .qm-threat-bar,
+body.qw-desktop-embed .qb-field-plate {
+  display: none !important;
+}
+
+body.qw-desktop-embed .qb-viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+body.qw-desktop-embed .qb-tab-panes,
+body.qw-desktop-embed .qb-tab-pane,
+body.qw-desktop-embed .qb-frame {
+  width: 100%;
+  height: 100%;
+}
+
 .qb-tab-popout,
 .qb-tab-fs {
   opacity: 0.55;

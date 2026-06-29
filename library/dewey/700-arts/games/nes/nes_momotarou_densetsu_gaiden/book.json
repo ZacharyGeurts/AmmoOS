@@ -1,0 +1,14 @@
+{
+  "id": "nes_momotarou_densetsu_gaiden",
+  "title": "Momotarou Densetsu Gaiden",
+  "author": "Hudson Soft",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_momotarou_densetsu_gaiden-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1993,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_momotarou_densetsu_gaiden/nes_momotarou_densetsu_gaiden.h7c"
+}

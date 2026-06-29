@@ -1,0 +1,14 @@
+{
+  "id": "nes_f_15_strike_eagle",
+  "title": "F-15 Strike Eagle",
+  "author": "MicroProse Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_f_15_strike_eagle-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Simulation",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_f_15_strike_eagle/nes_f_15_strike_eagle.h7c"
+}

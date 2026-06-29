@@ -1,0 +1,14 @@
+{
+  "id": "nes_nekketsu_kakuto_densetsu",
+  "title": "Nekketsu Kakuto Densetsu",
+  "author": "Technos",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_nekketsu_kakuto_densetsu-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_nekketsu_kakuto_densetsu/nes_nekketsu_kakuto_densetsu.h7c"
+}

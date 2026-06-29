@@ -1,0 +1,14 @@
+{
+  "id": "nes_mouryou_senki_madara",
+  "title": "Mouryou Senki Madara",
+  "author": "Konami",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_mouryou_senki_madara-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_mouryou_senki_madara/nes_mouryou_senki_madara.h7c"
+}

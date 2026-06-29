@@ -51,10 +51,10 @@
         ? '<span class="fk-tier">RTX ' + (ui.rtx_reduce ? "comfort" : "native") + "</span>"
         : "") +
       '<div class="fk-slider-row"><label for="fk-scale">UI scale</label><span class="fk-slider-val" id="fk-scale-val">' +
-      esc(String(ui.ui_scale_pct || 110)) +
+      esc(String(ui.ui_scale_pct || 125)) +
       "%</span></div>" +
       '<input type="range" id="fk-scale" min="85" max="150" step="5" value="' +
-      esc(String(ui.ui_scale_pct || 110)) +
+      esc(String(ui.ui_scale_pct || 125)) +
       '" />' +
       '<label class="fk-dim"><input type="checkbox" id="fk-rtx" ' +
       (ui.rtx_reduce ? "checked" : "") +
@@ -134,7 +134,7 @@
     const scaleVal = document.getElementById("fk-scale-val");
     const rtx = document.getElementById("fk-rtx");
     function saveUi() {
-      const pct = parseInt(scale?.value || "110", 10);
+      const pct = parseInt(scale?.value || "125", 10);
       if (scaleVal) scaleVal.textContent = pct + "%";
       api("/api/field-lock/settings", {
         method: "POST",

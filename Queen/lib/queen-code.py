@@ -240,6 +240,81 @@ def _g16_check(path: str, *, profile: str = "belt_2_0") -> dict[str, Any]:
     }
 
 
+def _g16_build(path: str, *, profile: str = "belt_2_0") -> dict[str, Any]:
+    g16 = GROK16 / "bin" / "g16"
+    if not g16.is_file():
+        return {"ok": False, "error": "g16_missing"}
+    resolved = _read_text(path)
+    if not resolved.get("ok"):
+        return resolved
+    real = Path(resolved["path"])
+    lang = resolved.get("g16_discern") or "cxx"
+    out_bin = real.with_suffix(real.suffix + ".queen-build")
+    flags: list[str] = []
+    flags_py = GROK16 / "scripts" / "grok16-profile-flags.py"
+    if flags_py.is_file() and lang in ("c", "cxx"):
+        kind = "cxx" if lang == "cxx" else "c"
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(flags_py), profile, kind],
+                capture_output=True, text=True, timeout=15, check=False,
+                env={**os.environ, "GROK16_ROOT": str(GROK16), "G16_PREFIX": str(GROK16)},
+            )
+            flags = [f for f in (proc.stdout or "").split() if f]
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    if lang in ("c", "cxx"):
+        cmd = [str(g16), *flags, "-o", str(out_bin), str(real)]
+    elif lang == "python":
+        cmd = [str(g16), "-m", "py_compile", str(real)]
+        out_bin = real
+    else:
+        return {"ok": False, "error": "unsupported_build_lang", "language": lang}
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180, check=False, cwd=str(real.parent))
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"ok": False, "error": str(exc)}
+    return {
+        "ok": proc.returncode == 0,
+        "language": lang,
+        "profile": profile,
+        "artifact": str(out_bin),
+        "message": f"g16 build {'OK' if proc.returncode == 0 else 'failed'} · {lang} · {profile}",
+        "stderr": (proc.stderr or "")[-4000:],
+        "stdout": (proc.stdout or "")[-2000:],
+    }
+
+
+def _g16_run_python(path: str, *, profile: str = "belt_2_0") -> dict[str, Any]:
+    resolved = _read_text(path)
+    if not resolved.get("ok"):
+        return resolved
+    real = Path(resolved["path"])
+    drivers = [
+        GROK16 / "bin" / "gpy-16",
+        Path(os.environ.get("NEXUS_PYTHONG", "")),
+        GROK16 / "python" / "bin" / "pythong",
+    ]
+    driver = next((d for d in drivers if d and Path(str(d)).is_file()), None)
+    if not driver:
+        driver = Path(sys.executable)
+    env = {**os.environ, "GROK16_ROOT": str(GROK16), "GPY16_FIELD": "1", "PYTHONG_FIELD": "1"}
+    try:
+        proc = subprocess.run(
+            [str(driver), str(real)],
+            capture_output=True, text=True, timeout=30, check=False, env=env,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"ok": False, "error": str(exc)}
+    return {
+        "ok": proc.returncode == 0,
+        "driver": str(driver),
+        "profile": profile,
+        "stdout": (proc.stdout or "")[-4000:],
+        "stderr": (proc.stderr or "")[-4000:],
+    }
+
+
 def dispatch(body: dict[str, Any]) -> dict[str, Any]:
     action = str(body.get("action") or "status").strip().lower().replace("-", "_")
     if action in ("status", "json"):
@@ -264,10 +339,14 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             str(body.get("path") or ""),
             profile=str(body.get("profile") or "belt_2_0"),
         )
+    if action in ("g16_build", "build"):
+        return _g16_build(str(body.get("path") or ""), profile=str(body.get("profile") or "belt_2_0"))
+    if action in ("g16_run_python", "run_python"):
+        return _g16_run_python(str(body.get("path") or ""), profile=str(body.get("profile") or "belt_2_0"))
     return {
         "ok": False,
         "error": "unknown_action",
-        "actions": ["status", "languages", "read", "write", "discern", "g16_check", "recent", "touch_recent"],
+        "actions": ["status", "languages", "read", "write", "discern", "g16_check", "g16_build", "g16_run_python", "recent", "touch_recent"],
     }
 
 

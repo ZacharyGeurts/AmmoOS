@@ -761,28 +761,66 @@ def _env_on(key: str) -> bool:
     return os.environ.get(key, "") in ("1", "true", "yes", "on")
 
 
+def _grok_max_sockets() -> int:
+    raw = os.environ.get("GROK_MAX_SOCKETS", "5").strip()
+    try:
+        return max(1, min(32, int(raw)))
+    except ValueError:
+        return 5
+
+
 def _grok_secure_hosts() -> frozenset[str]:
     return frozenset({
         "x.ai", "api.x.ai", "grok.x.ai", "grok.com", "x.com", "api.x.com",
+        "cloudflare.com", "cf.cloudflare.com",
         "127.0.0.1", "localhost",
     })
+
+
+def _grok_process(proc: str) -> bool:
+    return "grok" in (proc or "").lower()
+
+
+def _grok_secure_channel_match(proc: str, rip: str, intel: dict[str, Any]) -> bool:
+    if not _grok_process(proc):
+        return False
+    if rip in ("127.0.0.1", "::1"):
+        return True
+    host = str(intel.get("hostname") or intel.get("reverse_dns") or "").lower()
+    host = HOST_ALIASES.get(host, host)
+    org = str(intel.get("org") or intel.get("asn_name") or "").lower()
+    blob = f"{host} {rip or ''} {org}".lower()
+    if "cloudflare" in org or "x.ai" in org or "x corp" in org:
+        return True
+    if rip.startswith(("104.18.", "104.16.", "172.64.", "172.66.", "2606:4700:")):
+        return True
+    for allowed in _grok_secure_hosts():
+        if allowed in blob or host == allowed or host.endswith("." + allowed):
+            return True
+    return False
 
 
 def _apply_grok_secure_channel(
     proc: str, rip: str, intel: dict[str, Any], verdict: str, trust_rank: int, reason: str,
 ) -> tuple[str, int, str]:
-    if not _env_on("QUEEN_GROK_BUILD_SECURE") or not _env_on("NEXUS_AI_SECURE_CHANNEL"):
+    secure_env = _env_on("QUEEN_GROK_BUILD_SECURE") or _env_on("GROK_SECURE_CHANNEL")
+    channel_env = _env_on("NEXUS_AI_SECURE_CHANNEL") or _env_on("GROK_SECURE_CHANNEL")
+    if not secure_env or not channel_env:
         return verdict, trust_rank, reason
-    if not _ai_secure_telemetry_ok(proc):
+    if not _grok_process(proc) and not _ai_secure_telemetry_ok(proc):
         return verdict, trust_rank, reason
-    host = str(intel.get("hostname") or intel.get("reverse_dns") or "").lower()
-    host = HOST_ALIASES.get(host, host)
-    blob = f"{host} {rip or ''}".lower()
-    if rip in ("127.0.0.1", "::1") or host in ("localhost", "127.0.0.1"):
-        return "USER_OK", TRUST_RANK["USER_OK"], "CIVILIAN · Grok Build loopback ACP"
-    for allowed in _grok_secure_hosts():
-        if allowed in blob or host == allowed or host.endswith("." + allowed):
-            return "USER_OK", TRUST_RANK["USER_OK"], f"CIVILIAN · xAI secure channel ({allowed})"
+    if _grok_secure_channel_match(proc, rip, intel):
+        return (
+            "USER_OK",
+            TRUST_RANK["USER_OK"],
+            "CIVILIAN · Grok secure xAI channel (TLS CA-pinned, no injection)",
+        )
+    if _grok_process(proc):
+        return (
+            "SUSPICIOUS",
+            TRUST_RANK["SUSPICIOUS"],
+            "HOLD — Grok egress outside xAI/Cloudflare allowlist; MITM or injection risk",
+        )
     return verdict, trust_rank, reason
 
 

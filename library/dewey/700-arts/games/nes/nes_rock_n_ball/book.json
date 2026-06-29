@@ -1,0 +1,14 @@
+{
+  "id": "nes_rock_n_ball",
+  "title": "Rock 'n Ball",
+  "author": "NTVIC",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_rock_n_ball-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Traditional",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_rock_n_ball/nes_rock_n_ball.h7c"
+}

@@ -4,13 +4,15 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-ece9971975af",
+  "ein": "H7C-FIELD-d9fdf7fc0196",
   "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
   "h7c": "library/dewey/000-computer-science/explaining_algol/explaining_algol.h7c",
@@ -19,5 +21,5 @@
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "algol",
   "cover": "/world/assets/combinatronic/books/algol.png",
-  "updated": "2026-06-27T13:08:24Z"
+  "updated": "2026-06-27T21:22:43Z"
 }

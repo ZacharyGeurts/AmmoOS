@@ -1,0 +1,14 @@
+{
+  "id": "nes_goonies_2",
+  "title": "Goonies 2",
+  "author": "Konami",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_goonies_2-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_goonies_2/nes_goonies_2.h7c"
+}

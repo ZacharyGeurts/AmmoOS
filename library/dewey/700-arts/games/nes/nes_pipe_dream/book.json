@@ -1,0 +1,14 @@
+{
+  "id": "nes_pipe_dream",
+  "title": "Pipe Dream",
+  "author": "Bullet-Proof Software",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_pipe_dream-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_pipe_dream/nes_pipe_dream.h7c"
+}

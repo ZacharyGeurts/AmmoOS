@@ -14,17 +14,18 @@
   <link rel="stylesheet" href="queen-styles.css" data-queen-theme="1" />
   <link rel="stylesheet" href="queen-world.css" data-queen-theme="1" />
   <link rel="stylesheet" href="queen-browser-shell.css" data-queen-theme="1" />
+  <link rel="stylesheet" href="queen-page-inspector.css" data-queen-theme="1" />
   <link rel="stylesheet" href="queen-branding.css" data-queen-theme="1" />
   <link rel="stylesheet" href="queen-field-plate.css" data-queen-theme="1" />
   <link rel="stylesheet" href="queen-syntax.css" data-queen-theme="1" />
   <link rel="stylesheet" href="queen-viewer.css" data-queen-theme="1" />
   <link rel="stylesheet" href="field-performance-flyout.css" />
   <link rel="stylesheet" href="queen-dashboard-flyout.css" />
-  <link rel="icon" href="assets/branding/queen-favicon-48.png" type="image/png" sizes="48x48" />
-  <link rel="apple-touch-icon" href="assets/branding/queen-browser-256.png" />
+  <link rel="icon" href="/assets/ammoos-field-48.png" type="image/png" sizes="48x48" />
+  <link rel="apple-touch-icon" href="/assets/ammoos-field-256.png" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:*; frame-src 'self' http://127.0.0.1:* https:; object-src 'none'; base-uri 'self'; form-action 'self'" />
 </head>
-<body class="qw qw-browser-shell" data-queen-surface="browser" data-queen-theme="black_emerald_rose_2026" data-queen-start="http://127.0.0.1:9477/field" data-queen-command="http://127.0.0.1:9477/command" data-nexus-panel-port="9477" data-media-egress="locked" data-hardware-wire="queen-browser" data-front-hook="1" data-queen-boot-os="0" data-queen-start-button="classic">
+<body class="qw qw-browser-shell" data-queen-surface="browser" data-queen-theme="black_emerald_rose_2026" data-queen-start="/world/queen-desktop.html" data-queen-command="http://127.0.0.1:9477/command" data-nexus-panel-port="9477" data-media-egress="locked" data-hardware-wire="queen-browser" data-front-hook="1" data-queen-boot-os="0" data-queen-start-button="classic">
   <script>
     (function () {
       try {
@@ -49,7 +50,7 @@
         <p class="qb-field-plate__sanity" id="qb-field-sanity">Integral · simplify layers · never build under heat</p>
       </div>
     </div>
-    <iframe class="qb-frame" id="qb-frame" title="AmmoOS Field desktop" src="http://127.0.0.1:9477/field" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads allow-presentation allow-popups-to-escape-sandbox"></iframe>
+    <iframe class="qb-frame" id="qb-frame" title="Queen Desktop" src="/world/queen-desktop.html" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads allow-presentation allow-popups-to-escape-sandbox"></iframe>
   </main>
 
   <header class="qb-chrome" id="qb-chrome" aria-label="Queen browser">
@@ -99,6 +100,9 @@
       <button type="button" class="qb-icon-btn" id="qb-proxy" title="Queen proxy fallback" aria-label="Queen proxy">
         <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#proxy"/></svg>
       </button>
+      <button type="button" class="qb-icon-btn qpi-toggle" id="qpi-inspect-btn" title="Page inspector — right-click ads to block (Ctrl+Shift+I)" aria-label="Page inspector">
+        <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#inspect"/></svg>
+      </button>
       <button type="button" class="qb-icon-btn" id="qb-styles" title="Styles — themes, fonts, widgets" aria-label="Styles">
         <svg class="qb-ico" aria-hidden="true"><use href="assets/branding/queen-chrome-icons.svg#styles"/></svg>
       </button>
@@ -117,8 +121,8 @@
     <div class="qb-row qb-row--bookmarks">
       <nav class="qb-bookmarks" id="qb-bookmarks" aria-label="Bookmarks"></nav>
       <span class="qb-brand-strip">
-        <img class="qb-brand-avatar" src="assets/branding/queen-favicon-48.png" alt="" width="28" height="28" />
-        <span>Queen</span>
+        <img class="qb-brand-avatar" src="/assets/ammoos-field-48.png" alt="" width="28" height="28" />
+        <span>AmmoOS</span>
       </span>
       <span class="qb-security-strip" id="qb-security-strip" title="Queen Webbrowser · CHIPS/cores web surface">CHIPS · web</span>
       <div class="qb-import-chip" id="qb-import-chip" title="Secure import — click to re-sweep · Shift+click = default browser">
@@ -161,6 +165,7 @@
   <script src="queen-root-threats.js" defer></script>
   <script src="queen-branding.js" defer></script>
   <script src="queen-humans-ai.js" defer></script>
+  <script src="queen-page-inspector.js" defer></script>
   <script src="queen-browser-shell.js" defer></script>
   <script src="queen-chrome-dock.js" defer></script>
   <script src="queen-field-engine.js" defer></script>
@@ -169,6 +174,8 @@
   <script src="queen-import.js" defer></script>
   <script src="field-performance-flyout.js" defer></script>
   <script src="queen-dashboard-flyout.js" defer></script>
+  <script src="queen-icon-engine.js" defer></script>
+  <script src="queen-ai-surface.js" defer></script>
   <script src="queen-os.js" defer></script>
 </body>
 </html>

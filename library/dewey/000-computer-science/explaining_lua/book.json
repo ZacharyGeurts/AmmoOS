@@ -4,13 +4,15 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-b7e182e75e0f",
+  "ein": "H7C-FIELD-63a7f98d3ba3",
   "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
   "h7c": "library/dewey/000-computer-science/explaining_lua/explaining_lua.h7c",
@@ -19,5 +21,5 @@
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "lua",
   "cover": "/world/assets/combinatronic/books/lua.png",
-  "updated": "2026-06-27T13:08:54Z"
+  "updated": "2026-06-27T20:50:15Z"
 }

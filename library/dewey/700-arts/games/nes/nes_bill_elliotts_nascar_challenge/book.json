@@ -1,0 +1,14 @@
+{
+  "id": "nes_bill_elliotts_nascar_challenge",
+  "title": "Bill Elliott's NASCAR Challenge",
+  "author": "Konami",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_bill_elliotts_nascar_challenge-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Racing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_bill_elliotts_nascar_challenge/nes_bill_elliotts_nascar_challenge.h7c"
+}

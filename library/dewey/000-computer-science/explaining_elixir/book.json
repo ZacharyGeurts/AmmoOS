@@ -4,13 +4,15 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-d906dd7289af",
+  "ein": "H7C-FIELD-32768b855850",
   "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
   "h7c": "library/dewey/000-computer-science/explaining_elixir/explaining_elixir.h7c",
@@ -19,5 +21,5 @@
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "elixir",
   "cover": "/world/assets/combinatronic/books/elixir.png",
-  "updated": "2026-06-27T13:08:42Z"
+  "updated": "2026-06-27T21:28:18Z"
 }

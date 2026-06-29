@@ -7,6 +7,7 @@ SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
 export SG_ROOT NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
 export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-$ROOT/.nexus-state}"
 export TDIR="${TDIR:-${HOME}/.grok/projects/home-default-Desktop-SG/terminals}"
+mkdir -p "$TDIR" 2>/dev/null || true
 export GROK16_ROOT="${GROK16_ROOT:-$SG_ROOT/Grok16}"
 export G16_PREFIX="${G16_PREFIX:-$GROK16_ROOT}"
 

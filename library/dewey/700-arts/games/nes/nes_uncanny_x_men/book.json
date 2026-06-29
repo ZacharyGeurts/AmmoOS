@@ -1,0 +1,14 @@
+{
+  "id": "nes_uncanny_x_men",
+  "title": "Uncanny X-Men",
+  "author": "LJN, Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_uncanny_x_men-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_uncanny_x_men/nes_uncanny_x_men.h7c"
+}

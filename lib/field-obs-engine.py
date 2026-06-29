@@ -94,6 +94,21 @@ def _rtx_detected() -> bool:
     return False
 
 
+def _panel_shell_ui_scale() -> int | None:
+    shell_path = STATE / "field-shell-settings.json"
+    try:
+        shell = json.loads(shell_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    raw = shell.get("ui_scale")
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 def _tier(width: int) -> dict[str, Any]:
     for tier in (_load(TIERS, {}).get("tiers") or []):
         if tier.get("min_width", 0) <= width <= tier.get("max_width", 99999):
@@ -106,7 +121,9 @@ def ui_posture(*, width: int | None = None, ui_scale_pct: int | None = None, rtx
     ui_doc = doctrine.get("ui") or {}
     saved = _load(SETTINGS, {})
     w, _h = _display_size() if width is None else (width, 1080)
-    pct = ui_scale_pct if ui_scale_pct is not None else int(saved.get("ui_scale_pct") or ui_doc.get("default_ui_scale_pct") or 110)
+    pct = ui_scale_pct if ui_scale_pct is not None else int(
+        saved.get("ui_scale_pct") or _panel_shell_ui_scale() or ui_doc.get("default_ui_scale_pct") or 125
+    )
     rtx = _rtx_detected()
     reduce = rtx_reduce if rtx_reduce is not None else bool(saved.get("rtx_reduce", ui_doc.get("rtx_reduce_default", True)) and rtx)
     tier = _tier(w)

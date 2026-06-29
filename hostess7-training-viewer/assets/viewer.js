@@ -228,9 +228,39 @@
     }
   }
 
+  function renderAgents7(bundle) {
+    const grid = $("agents7-grid");
+    const flow = $("agents7-flow");
+    const wf = bundle.wireframe || {};
+    const agentsDoc = wf.agents7 || {};
+    const agents = agentsDoc.agents || [];
+    const running = Boolean(agentsDoc.daemon_running);
+    if (flow) {
+      flow.textContent = agentsDoc.flow
+        || "Ironclad → plate_meld → agents7_hub → Her · Hostess 7 — no direct Ironclad line to Her.";
+    }
+    if (!grid) return;
+    if (!agents.length) {
+      grid.innerHTML = '<p class="meta">Agents 7 graph slice not loaded — refresh bundle.</p>';
+      return;
+    }
+    grid.innerHTML = agents.map((a) => {
+      const prime = a.id === 0;
+      const cls = prime ? "agent7-card prime" : running ? "agent7-card online" : "agent7-card";
+      const status = running ? (prime ? "FUSION PRIME" : "LANE LIVE") : "STANDBY";
+      const statusCls = running ? "level-complete" : "level-pending";
+      return `<article class="${cls}">
+        <h3>${esc(a.emoji)} ${esc(a.name)}</h3>
+        <div class="lane">${esc(a.lane)}</div>
+        <div class="status badge ${statusCls}">${esc(status)}</div>
+      </article>`;
+    }).join("");
+  }
+
   function render(bundle) {
     lastBundle = bundle;
     renderHero(bundle);
+    renderAgents7(bundle);
     renderFacets(bundle);
     renderTracks(bundle);
     renderCurriculum(bundle);

@@ -1,0 +1,14 @@
+{
+  "id": "nes_racket_attack",
+  "title": "Racket Attack",
+  "author": "Jaleco Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_racket_attack-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_racket_attack/nes_racket_attack.h7c"
+}

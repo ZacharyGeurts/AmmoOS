@@ -286,3 +286,63 @@ nexus_install_portable() {
   echo "Launch: ${root}/nexus.sh"
   echo "Panel:  http://127.0.0.1:9477/field"
 }
+
+nexus_install_has_gui() {
+  [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]
+}
+
+nexus_install_reboot_prompt() {
+  local mode="${1:-portable}"
+  [[ "${NEXUS_INSTALL_NO_REBOOT:-0}" == "1" ]] && return 0
+  local body extra=""
+  body="NEXUS Field install is complete."
+  if [[ -f "${NEXUS_STATE_DIR:-}/znetwork-needs-reboot.marker" ]]; then
+    extra="\n\nZNetwork retired old networking startup entries. Reboot once so only ZNetwork owns startup."
+  elif [[ "$mode" == "system" ]]; then
+    extra="\n\nReboot once so systemd services, tray icon, and ZNetwork startup settle cleanly."
+  else
+    extra="\n\nReboot once so the ZNetwork tray icon and networking stack start without old collisions."
+  fi
+  if ! nexus_install_has_gui; then
+    echo ""
+    echo "Reboot recommended:${extra}"
+    echo "When ready: sudo reboot   (or log out and back in for portable)"
+    return 0
+  fi
+  local ok=1
+  if command -v zenity >/dev/null 2>&1; then
+    zenity --question --title="NEXUS Field — Reboot recommended" --width=460 \
+      --text="${body}${extra}\n\nReboot now?" \
+      --ok-label="Reboot now" --cancel-label="Later" 2>/dev/null && ok=0
+  elif command -v kdialog >/dev/null 2>&1; then
+    kdialog --title "NEXUS Field — Reboot recommended" \
+      --yesno "${body}${extra}\n\nReboot now?" 2>/dev/null && ok=0
+  elif command -v yad >/dev/null 2>&1; then
+    yad --title "NEXUS Field — Reboot recommended" \
+      --text "${body}${extra}\n\nReboot now?" \
+      --button="Reboot now:0" --button="Later:1" 2>/dev/null
+    ok=$?
+  else
+    echo ""
+    echo "Reboot recommended:${extra}"
+    echo "When ready: sudo reboot"
+    return 0
+  fi
+  [[ "$ok" -ne 0 ]] && return 0
+  if command -v systemctl >/dev/null 2>&1; then
+    if systemctl reboot 2>/dev/null; then
+      return 0
+    fi
+    if command -v pkexec >/dev/null 2>&1; then
+      pkexec systemctl reboot 2>/dev/null && return 0
+    fi
+    if command -v sudo >/dev/null 2>&1; then
+      sudo reboot 2>/dev/null && return 0
+    fi
+  fi
+  if command -v loginctl >/dev/null 2>&1; then
+    loginctl reboot 2>/dev/null && return 0
+  fi
+  echo "Could not reboot automatically — run: sudo reboot" >&2
+  return 0
+}

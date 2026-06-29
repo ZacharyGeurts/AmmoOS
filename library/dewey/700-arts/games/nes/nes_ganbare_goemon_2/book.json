@@ -1,0 +1,14 @@
+{
+  "id": "nes_ganbare_goemon_2",
+  "title": "Ganbare Goemon 2",
+  "author": "Konami",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_ganbare_goemon_2-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_ganbare_goemon_2/nes_ganbare_goemon_2.h7c"
+}

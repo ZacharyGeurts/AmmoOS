@@ -136,6 +136,19 @@ button:disabled { opacity: 0.5; cursor: wait; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
 
+.agents7-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; margin-bottom: 22px;
+}
+.agent7-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+  display: grid; gap: 4px; min-height: 92px;
+}
+.agent7-card.prime { border-color: rgba(244, 162, 97, 0.45); }
+.agent7-card.online { border-color: rgba(231, 111, 138, 0.35); }
+.agent7-card h3 { margin: 0; font-size: 0.92rem; color: var(--rose); }
+.agent7-card .lane { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.agent7-card .status { font-size: 0.72rem; font-weight: 700; }
+
 .facets-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px;
 }

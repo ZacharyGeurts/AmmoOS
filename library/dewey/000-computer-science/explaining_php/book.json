@@ -4,13 +4,15 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-ca2c3c4a675e",
+  "ein": "H7C-FIELD-80a0e9de7aef",
   "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
   "h7c": "library/dewey/000-computer-science/explaining_php/explaining_php.h7c",
@@ -19,5 +21,5 @@
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "php",
   "cover": "/world/assets/combinatronic/books/php.png",
-  "updated": "2026-06-27T13:09:07Z"
+  "updated": "2026-06-27T17:41:00Z"
 }

@@ -1,0 +1,14 @@
+{
+  "id": "nes_nintendo_world_championships_1990",
+  "title": "Nintendo World Championships 1990",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_nintendo_world_championships_1990-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Various",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_nintendo_world_championships_1990/nes_nintendo_world_championships_1990.h7c"
+}

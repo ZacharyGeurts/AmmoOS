@@ -1,0 +1,14 @@
+{
+  "id": "nes_secret_scout_in_the_temple_of_demise",
+  "title": "Secret Scout in the Temple of Demise",
+  "author": "Color Dreams",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_secret_scout_in_the_temple_of_demise-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_secret_scout_in_the_temple_of_demise/nes_secret_scout_in_the_temple_of_demise.h7c"
+}

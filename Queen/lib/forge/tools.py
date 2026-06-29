@@ -717,7 +717,7 @@ def run_verify(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
     req(root / "data/grok-build-mandate.json", "grok-build-mandate.json")
     req(root / "data/field-rtx-sovereign.json", "field-rtx-sovereign.json")
     req(root / "data/queen-field-manifest.json", "queen-field-manifest.json")
-    pkg = root / "field/sovereign/queen-field.json"
+    pkg = root / "field/sovereign/queen-sovereign-bundle.json"
     if pkg.is_file():
         engine.log("OK: sovereign field package sealed")
     else:

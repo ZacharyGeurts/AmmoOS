@@ -1,0 +1,14 @@
+{
+  "id": "nes_danny_sullivans_indy_heat",
+  "title": "Danny Sullivan's Indy Heat",
+  "author": "Tradewest, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_danny_sullivans_indy_heat-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Racing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_danny_sullivans_indy_heat/nes_danny_sullivans_indy_heat.h7c"
+}

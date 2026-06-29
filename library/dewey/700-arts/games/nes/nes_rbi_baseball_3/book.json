@@ -1,0 +1,14 @@
+{
+  "id": "nes_rbi_baseball_3",
+  "title": "RBI Baseball 3",
+  "author": "Tengen Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_rbi_baseball_3-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_rbi_baseball_3/nes_rbi_baseball_3.h7c"
+}

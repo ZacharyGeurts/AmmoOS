@@ -5,35 +5,35 @@
   "theme": "black_emerald_rose_2026",
   "branding": {
     "palette": "black · emerald · rose",
-    "shell": "world/browser.html",
-    "favicon": "world/assets/branding/queen-favicon-48.png",
+    "shell": "standalone",
+    "favicon": "panel/assets/ammoos-field-48.png",
     "wordmark": "world/assets/branding/ammoos-wordmark.svg",
     "easter_egg": "world/assets/branding/freddie-easter-egg.png"
   },
   "license": "MPL-2.0",
-  "engine": "queen-browser",
-  "surface": "queen-webbrowser",
+  "engine": "queen-field-gecko",
+  "surface": "standalone-web",
   "comp_shader_boot": false,
   "telemetry": false,
-  "ai_operator": true,
+  "search": {
+    "provider": "DuckDuckGo",
+    "homepage": "https://duckduckgo.com/",
+    "search_url": "https://duckduckgo.com/?q=%s"
+  },
   "g16": {
     "toolchain": "Grok16 g16",
     "profile": "field_opt",
     "build_target": "queen-browser",
-    "note": "Queen Browser — no Fox branding, no phone-home"
+    "note": "Queen Browser — standalone web, DuckDuckGo home/search"
   },
-  "shell_url": "http://127.0.0.1:9481/world/browser.html",
+  "shell_url": "https://duckduckgo.com/",
   "startup_tabs": [
-    {"role": "start", "title": "AmmoOS Field", "url": "http://127.0.0.1:9477/field"},
-    {"role": "chips", "title": "CHIPS", "url": "queen://chips"},
-    {"role": "cores", "title": "Cores", "url": "queen://cores"},
-    {"role": "code", "title": "Queen Code", "url": "/world/queen-code.html"},
-    {"role": "files", "title": "Files", "url": "/world/queen-files.html"}
+    {"role": "browser", "title": "Queen Browser", "url": "https://duckduckgo.com/", "pinned": true}
   ],
   "profile_dir": "profile",
   "binary_candidates": [
-    "bin/queen-browser",
-    "bin/launch-queen-browser.sh"
+    "bin/fieldfox",
+    "bin/firefox"
   ],
   "legacy": {
     "schema": "queen-field-gecko/v1",

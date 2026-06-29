@@ -1,0 +1,14 @@
+{
+  "id": "nes_home_alone",
+  "title": "Home Alone",
+  "author": "THQ, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_home_alone-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_home_alone/nes_home_alone.h7c"
+}

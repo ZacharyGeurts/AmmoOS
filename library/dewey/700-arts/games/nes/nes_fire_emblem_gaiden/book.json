@@ -1,0 +1,14 @@
+{
+  "id": "nes_fire_emblem_gaiden",
+  "title": "Fire Emblem Gaiden",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_fire_emblem_gaiden-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_fire_emblem_gaiden/nes_fire_emblem_gaiden.h7c"
+}

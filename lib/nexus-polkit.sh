@@ -121,6 +121,11 @@ nexus_pol_has_cached_sudo() {
   sudo -n true 2>/dev/null
 }
 
+nexus_polkit_pkexec_supports_action() {
+  command -v pkexec >/dev/null 2>&1 || return 1
+  pkexec --help 2>&1 | grep -q -- '--action'
+}
+
 nexus_pol_secure_sudo() {
   local prompt="${1:-NEXUS Field — administrator password required.}"
   if [[ "$(id -u)" -eq 0 ]]; then
@@ -143,6 +148,14 @@ nexus_pol_secure_sudo() {
   sudo -v || return 1
 }
 
+nexus_pol_start_sudo_keepalive() {
+  # shellcheck source=/dev/null
+  [[ -f "${_NEXUS_POLKIT_LIB}/nexus-elevate.sh" ]] && source "${_NEXUS_POLKIT_LIB}/nexus-elevate.sh"
+  if declare -f nexus_elevate_sudo_keepalive_start >/dev/null 2>&1; then
+    nexus_elevate_sudo_keepalive_start
+  fi
+}
+
 # Ensure root via pol — pkexec bridge first on Linux GUI, else secure sudo -v.
 nexus_pol_ensure_root() {
   local purpose="${1:-general}"
@@ -151,6 +164,7 @@ nexus_pol_ensure_root() {
     return 0
   fi
   if nexus_pol_has_cached_sudo; then
+    nexus_pol_start_sudo_keepalive
     export NEXUS_ELEVATED_ROOT=1
     return 0
   fi
@@ -166,13 +180,21 @@ nexus_pol_ensure_root() {
       mkdir -p "$(dirname "$marker")" 2>/dev/null || true
       : >"$marker"
       chmod 600 "$marker" 2>/dev/null || true
-      if pkexec --action "$action" "$bridge" run-znetwork "$marker"; then
+      if nexus_polkit_pkexec_supports_action; then
+        if pkexec --action "$action" "$bridge" run-znetwork "$marker"; then
+          nexus_pol_start_sudo_keepalive
+          export NEXUS_ELEVATED_ROOT=1
+          return 0
+        fi
+      elif pkexec "$bridge" run-znetwork "$marker" 2>/dev/null; then
+        nexus_pol_start_sudo_keepalive
         export NEXUS_ELEVATED_ROOT=1
         return 0
       fi
     fi
   fi
   nexus_pol_secure_sudo "Authenticate once for ${purpose}." || return 1
+  nexus_pol_start_sudo_keepalive
   export NEXUS_ELEVATED_ROOT=1
   return 0
 }

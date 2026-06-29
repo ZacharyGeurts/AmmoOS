@@ -21,7 +21,14 @@ def main() -> int:
     if truth_score_text("substantive legal medical code evidence") < 6:
         return fail("truth_score too low")
 
-    os.environ.pop("HOSTESS7_INTERNET", None)
+    for key in (
+        "HOSTESS7_INTERNET",
+        "NEXUS_HOSTESS7_INTERNET",
+        "HOSTESS7_ANGEL_MANDATE",
+        "NEXUS_HOSTESS7_AUTONOMOUS",
+    ):
+        os.environ.pop(key, None)
+    os.environ["NEXUS_HOSTESS7_INTERNET"] = "0"
     blocked = fetch_url("https://example.com/")
     if blocked.get("ok"):
         return fail("fetch should fail when gate closed")

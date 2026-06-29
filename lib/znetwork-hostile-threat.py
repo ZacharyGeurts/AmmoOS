@@ -182,6 +182,22 @@ def _hostile_signature(hostiles: list[dict[str, Any]], *, immediate: bool) -> st
     return hashlib.sha256(";".join(parts).encode()).hexdigest()[:24]
 
 
+def _grok_civilian_bypass(row: dict[str, Any]) -> bool:
+    proc = str(row.get("process") or "").lower()
+    if "grok" not in proc:
+        return False
+    rip = str(row.get("remote_ip") or "").strip()
+    if not rip or PRIVATE_RE.match(rip):
+        return True
+    intel = row.get("intel") if isinstance(row.get("intel"), dict) else {}
+    org = str(intel.get("org") or intel.get("asn_name") or "").lower()
+    if "cloudflare" in org or "x.ai" in org or "x corp" in org:
+        return True
+    if rip.startswith(("104.18.", "104.16.", "172.64.", "172.66.", "2606:4700:")):
+        return True
+    return False
+
+
 def _classify_row(
     row: dict[str, Any],
     *,
@@ -189,9 +205,23 @@ def _classify_row(
     registry: set[str],
     corpus_ips: set[str],
 ) -> dict[str, Any] | None:
+    if _grok_civilian_bypass(row):
+        return None
     rip = str(row.get("remote_ip") or "").strip()
     if not rip or PRIVATE_RE.match(rip):
         return None
+    wireless = _mod(INSTALL / "lib" / "znetwork-wireless-fcc.py", "hostile_wireless")
+    if wireless and hasattr(wireless, "is_own_router") and wireless.is_own_router(ip=rip):
+        if hasattr(wireless, "trace_action_behind"):
+            traced = wireless.trace_action_behind({"ip": rip, "kind": "hostile_gateway_symptom", "process": row.get("process")})
+            action_ip = str(traced.get("action_ip") or "")
+            if traced.get("strike_eligible") and action_ip and not wireless.is_own_router(ip=action_ip):
+                rip = action_ip
+                row = {**row, "remote_ip": rip, "reason": f"traced_behind_router:{traced.get('action_source')}"}
+            else:
+                return None
+        else:
+            return None
     verdict = str(row.get("verdict") or "")
     iff = str(row.get("iff") or "")
     block_rec = bool(row.get("block_recommended"))

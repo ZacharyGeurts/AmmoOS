@@ -1,0 +1,14 @@
+{
+  "id": "nes_kiki_kaikai_dotou_hen",
+  "title": "Kiki Kaikai: Dotou-hen",
+  "author": "Taito Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_kiki_kaikai_dotou_hen-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_kiki_kaikai_dotou_hen/nes_kiki_kaikai_dotou_hen.h7c"
+}

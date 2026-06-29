@@ -1,0 +1,14 @@
+{
+  "id": "nes_dragon_warrior_4",
+  "title": "Dragon Warrior 4",
+  "author": "Enix Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dragon_warrior_4-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": null,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_dragon_warrior_4/nes_dragon_warrior_4.h7c"
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env pythong
-"""ZNetwork orchestrator v2 — NewLatest integrated; truth-gated; sovereign time; tray swap."""
+"""ZNetwork orchestrator — protection and hardening only; no field bridge transmit."""
 from __future__ import annotations
 
 import importlib.util
@@ -23,8 +23,15 @@ ACTIVATE_LOG = STATE / "znetwork-activate.jsonl"
 SHADOW = STATE / "znetwork-shadow.json"
 SOCK = STATE / "znetwork-field.sock"
 RUNNING_MARKER = STATE / "znetwork-running.marker"
-SCHEMA = "znetwork-orchestrator/v2"
-MELD_CITATION = "ironclad:meld:2"
+SCHEMA = "znetwork-orchestrator/v3"
+
+
+def _protection_only() -> bool:
+    return os.environ.get("ZNETWORK_PROTECTION_ONLY", "1") != "0"
+
+
+def _smart_inside() -> bool:
+    return os.environ.get("ZNETWORK_SMART_INSIDE", "1") != "0"
 
 _MOD_CACHE: dict[str, Any] = {}
 _SOVEREIGN_CLOCK_MOD = None
@@ -93,9 +100,11 @@ def znetwork_bin() -> Path | None:
         p = Path(env)
         if p.is_file():
             return p.resolve()
+    sg = Path(os.environ.get("SG_ROOT", str(INSTALL.parent)))
     for candidate in (
-        INSTALL / "bin" / "znetwork",
+        sg / "ZNetwork" / "build" / "znetwork",
         INSTALL.parent / "ZNetwork" / "build" / "znetwork",
+        INSTALL / "bin" / "znetwork",
     ):
         if candidate.is_file():
             return candidate.resolve()
@@ -103,7 +112,7 @@ def znetwork_bin() -> Path | None:
 
 
 def truth_gate(*, refresh: bool = False) -> dict[str, Any]:
-    """Gate ZNetwork activate on Ironclad + field sanity + G1ID baselines + voltage."""
+    """Local protection posture — binary + probe; never blocks on field stack gates."""
     global _TRUTH_GATE_CACHE, _TRUTH_GATE_CACHE_AT
     if (
         not refresh
@@ -112,38 +121,24 @@ def truth_gate(*, refresh: bool = False) -> dict[str, Any]:
     ):
         return dict(_TRUTH_GATE_CACHE)
 
-    gates: dict[str, Any] = {}
-    io = _mod(INSTALL / "lib" / "field-io-packet.py", "field_io_znet_gate")
-    if io and hasattr(io, "truth_gate"):
-        try:
-            full = io.truth_gate()
-            for key in ("ironclad", "field_sanity", "g1id_baselines", "voltage"):
-                gates[key] = full.get(key) or {"ok": False, "id": key}
-        except Exception as exc:
-            gates["error"] = str(exc)
-    else:
-        for key in ("ironclad", "field_sanity", "g1id_baselines", "voltage"):
-            gates[key] = {"ok": False, "id": key, "error": "field_io_packet_missing"}
-
     mode = os.environ.get("ZNETWORK_MODE", "REVIEW_ONLY")
-    core_keys = ("ironclad", "field_sanity", "g1id_baselines")
-    core_ok = all(bool(gates.get(k, {}).get("ok")) for k in core_keys)
-    voltage_ok = bool(gates.get("voltage", {}).get("ok"))
-    # REVIEW_ONLY / SHADOW: core gates required; voltage recommended not blocking.
-    if mode in ("REVIEW_ONLY", "SHADOW"):
-        ok = core_ok
-        voltage_required = False
-    else:
-        ok = core_ok and voltage_ok
-        voltage_required = True
+    bin_ok = znetwork_bin() is not None
+    probe_ok = False
+    if bin_ok:
+        rc, out, _ = _run_bin(["probe", "--json"], timeout=8)
+        probe_ok = rc == 0 and bool(out.strip())
+    gates = {
+        "binary": {"ok": bin_ok, "id": "binary"},
+        "probe": {"ok": probe_ok, "id": "probe"},
+        "protection_only": {"ok": _protection_only(), "id": "protection_only"},
+        "field_bridges": {"ok": False, "id": "field_bridges", "forbidden": _protection_only()},
+    }
     rep = {
-        "schema": "znetwork-truth-gate/v2",
-        "ok": ok,
+        "schema": "znetwork-protection-gate/v3",
+        "ok": bin_ok and probe_ok,
         "gates": gates,
         "mode": mode,
-        "voltage_required": voltage_required,
-        "voltage_ok": voltage_ok,
-        "meld_citation": MELD_CITATION,
+        "protection_only": _protection_only(),
         "checked_at": _now(),
     }
     _TRUTH_GATE_CACHE = dict(rep)
@@ -182,32 +177,35 @@ def triple_check() -> dict[str, Any]:
             status_ok = 1
         except json.JSONDecodeError:
             pass
-    for gate_script in (
-        INSTALL / "znetwork" / "scripts" / "znetwork-review-gate.sh",
-        INSTALL.parent / "ZNetwork" / "scripts" / "znetwork-review-gate.sh",
-    ):
-        if not gate_script.is_file():
-            continue
-        env = {
-            **os.environ,
-            "NEXUS_INSTALL_ROOT": str(INSTALL),
-            "NEXUS_STATE_DIR": str(STATE),
-            "ZNETWORK_BIN": str(znetwork_bin() or ""),
-            "ZNETWORK_MODE": os.environ.get("ZNETWORK_MODE", "REVIEW_ONLY"),
-        }
-        try:
-            proc = subprocess.run(
-                ["bash", str(gate_script)],
-                capture_output=True,
-                text=True,
-                timeout=20,
-                env=env,
-            )
-            if proc.returncode == 0:
-                gate_ok = 1
-                break
-        except (subprocess.SubprocessError, OSError):
-            pass
+    if not _protection_only():
+        for gate_script in (
+            INSTALL / "znetwork" / "scripts" / "znetwork-review-gate.sh",
+            INSTALL.parent / "ZNetwork" / "scripts" / "znetwork-review-gate.sh",
+        ):
+            if not gate_script.is_file():
+                continue
+            env = {
+                **os.environ,
+                "NEXUS_INSTALL_ROOT": str(INSTALL),
+                "NEXUS_STATE_DIR": str(STATE),
+                "ZNETWORK_BIN": str(znetwork_bin() or ""),
+                "ZNETWORK_MODE": os.environ.get("ZNETWORK_MODE", "REVIEW_ONLY"),
+            }
+            try:
+                proc = subprocess.run(
+                    ["bash", str(gate_script)],
+                    capture_output=True,
+                    text=True,
+                    timeout=20,
+                    env=env,
+                )
+                if proc.returncode == 0:
+                    gate_ok = 1
+                    break
+            except (subprocess.SubprocessError, OSError):
+                pass
+    else:
+        gate_ok = 1
     ok = probe_ok and status_ok and gate_ok
     rep = {
         "schema": "znetwork-triple-check/v2",
@@ -238,12 +236,60 @@ def _bridge_field_dns() -> dict[str, Any]:
             timeout=15,
             env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
         )
-        return {"ok": True}
+        connect_py = INSTALL / "lib" / "field-local-dns-connect.py"
+        connect: dict[str, Any] = {"ok": False, "skipped": True}
+        if connect_py.is_file():
+            proc = subprocess.run(
+                [os.environ.get("NEXUS_PYTHONG", "pythong"), str(connect_py), "connect"],
+                capture_output=True,
+                text=True,
+                timeout=20,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+            )
+            try:
+                connect = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                connect = {"ok": proc.returncode == 0}
+        return {"ok": True, "local_connect": connect}
     except (subprocess.SubprocessError, OSError) as exc:
         return {"ok": False, "error": str(exc)}
 
 
+def _relayer_mode() -> bool:
+    return os.environ.get("ZNETWORK_RELAYER", "1") != "0" and os.environ.get("ZNETWORK_UNDERHOOK", "0") != "1"
+
+
 def _bridge_gatekeeper() -> dict[str, Any]:
+    if _relayer_mode() or not _smart_inside():
+        gk_sh = INSTALL / "lib" / "gatekeeper-enforce.sh"
+        if not gk_sh.is_file():
+            return {"ok": False, "skipped": True, "mode": "enforce"}
+        try:
+            subprocess.run(
+                ["bash", "-c", f'source "{gk_sh}" && nexus_gatekeeper_enforce_strict'],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+            )
+            return {"ok": True, "mode": "enforce", "relayer": _relayer_mode()}
+        except (subprocess.SubprocessError, OSError) as exc:
+            return {"ok": False, "error": str(exc), "mode": "enforce"}
+    if _smart_inside():
+        gk_py = INSTALL / "lib" / "connection-gatekeeper.py"
+        if not gk_py.is_file():
+            return {"ok": False, "skipped": True, "mode": "advisory"}
+        try:
+            proc = subprocess.run(
+                [os.environ.get("NEXUS_PYTHONG", "pythong"), str(gk_py)],
+                capture_output=True,
+                text=True,
+                timeout=12,
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+            )
+            return {"ok": proc.returncode == 0, "mode": "advisory", "passthrough": True}
+        except (subprocess.SubprocessError, OSError) as exc:
+            return {"ok": False, "error": str(exc), "mode": "advisory"}
     gk_sh = INSTALL / "lib" / "gatekeeper-enforce.sh"
     if not gk_sh.is_file():
         return {"ok": False, "skipped": True}
@@ -296,11 +342,30 @@ def _hostile_mod() -> Any | None:
     return _mod(INSTALL / "lib" / "znetwork-hostile-threat.py", "znetwork_hostile_threat")
 
 
+def _exploit_shield_mod() -> Any | None:
+    return _mod(INSTALL / "lib" / "znetwork-exploit-shield.py", "znetwork_exploit_shield")
+
+
 def hostile_scan(*, publish: bool = True) -> dict[str, Any]:
     mod = _hostile_mod()
     if not mod or not hasattr(mod, "scan"):
         return {"ok": False, "error": "hostile_threat_missing"}
     return mod.scan(publish=publish)
+
+
+def exploit_shield_scan(*, publish: bool = True) -> dict[str, Any]:
+    mod = _exploit_shield_mod()
+    if not mod or not hasattr(mod, "scan"):
+        return {"ok": False, "error": "exploit_shield_missing"}
+    return mod.scan(publish=publish)
+
+
+def exploit_shield_interdict(*, force: bool = False) -> dict[str, Any]:
+    mod = _exploit_shield_mod()
+    if not mod or not hasattr(mod, "interdict"):
+        return {"ok": False, "error": "exploit_shield_missing"}
+    report = mod.scan(publish=True) if hasattr(mod, "scan") else None
+    return mod.interdict(report, force=force)
 
 
 def hostile_countermeasures(*, force: bool = False) -> dict[str, Any]:
@@ -338,7 +403,7 @@ def tray_swap(*, force: bool = False) -> dict[str, Any]:
         "app_id": swap_policy.get("app_id", "znetwork-field-panel"),
         "icon": swap_policy.get("icon", "znetwork-tray"),
         "swapped_at": _now(),
-        "title": "Bypassed OS Networking",
+        "title": "ZNetwork — smart inside",
         "active": True,
     }
     _save(TRAY_MODE, doc)
@@ -424,36 +489,15 @@ def mark_running(choice: str = "yes") -> dict[str, Any]:
 
 
 def activate(*, elevated: bool = False) -> dict[str, Any]:
-    """Full activate path: truth gate → triple check → bridges → mark → tray swap."""
+    """Protection-only activate: triple check → connection snapshot → mark → tray."""
     gate = truth_gate()
-    if not gate.get("ok"):
-        _append_jsonl(
-            ACTIVATE_LOG,
-            {"ts": _now(), "step": "truth_gate", "status": "FAIL", "detail": json.dumps(gate)[:400]},
-        )
-        return {"ok": False, "error": "truth_gate_failed", "truth_gate": gate}
-
-    _append_jsonl(ACTIVATE_LOG, {"ts": _now(), "step": "truth_gate", "status": "OK", "detail": "all_gates_green"})
-
-    retire = retire_legacy_handlers()
     _append_jsonl(
         ACTIVATE_LOG,
         {
             "ts": _now(),
-            "step": "handler_retire",
-            "status": "OK" if retire.get("ok") else "PARTIAL",
-            "detail": json.dumps(retire)[:400],
-        },
-    )
-
-    replace = replace_connection()
-    _append_jsonl(
-        ACTIVATE_LOG,
-        {
-            "ts": _now(),
-            "step": "replace_connection",
-            "status": "OK" if replace.get("ok") else "PARTIAL",
-            "detail": json.dumps(replace)[:400],
+            "step": "protection_gate",
+            "status": "OK" if gate.get("ok") else "PARTIAL",
+            "detail": json.dumps(gate)[:400],
         },
     )
 
@@ -470,42 +514,39 @@ def activate(*, elevated: bool = False) -> dict[str, Any]:
         {"ts": _now(), "step": "triple_check", "status": "OK", "detail": f"mode={triple.get('mode')}"},
     )
 
-    bridges = _attach_bridges()
-    _append_jsonl(
-        ACTIVATE_LOG,
-        {"ts": _now(), "step": "bridges", "status": "OK", "detail": json.dumps(bridges)[:400]},
-    )
-
-    hostile = hostile_scan(publish=True)
-    hostile_status = "OK" if hostile.get("ok") else "PARTIAL"
+    replace = replace_connection()
     _append_jsonl(
         ACTIVATE_LOG,
         {
             "ts": _now(),
-            "step": "hostile_scan",
-            "status": hostile_status,
-            "detail": json.dumps(
-                {
-                    "hostile_count": hostile.get("hostile_count"),
-                    "immediate_count": hostile.get("immediate_count"),
-                }
-            )[:400],
+            "step": "connection_snapshot",
+            "status": "OK" if replace.get("ok") else "PARTIAL",
+            "detail": json.dumps(replace)[:400],
         },
     )
-    counter = {"ok": True, "skipped": True, "reason": "no_immediate_hostiles"}
-    if hostile.get("immediate_count"):
-        counter = hostile_countermeasures(force=True)
-        _append_jsonl(
-            ACTIVATE_LOG,
-            {
-                "ts": _now(),
-                "step": "hostile_countermeasure",
-                "status": "OK" if counter.get("ok") else "PARTIAL",
-                "detail": json.dumps(
-                    {"executed_count": counter.get("executed_count", 0)}
-                )[:400],
-            },
-        )
+
+    bridges: dict[str, Any] = {"ok": True, "skipped": True, "reason": "protection_only"}
+    hostile = {"ok": True, "skipped": True, "reason": "protection_only"}
+    counter = {"ok": True, "skipped": True, "reason": "protection_only"}
+    exploit = {"ok": True, "skipped": True, "reason": "protection_only"}
+    exploit_interdict = {"ok": True, "skipped": True, "reason": "protection_only"}
+    if not _protection_only():
+        bridges = _attach_bridges()
+        exploit = exploit_shield_scan(publish=True)
+        hostile = hostile_scan(publish=True)
+        if os.environ.get("ZNETWORK_RELAYER", "1") != "0":
+            relayer = _mod(INSTALL / "lib" / "znetwork-relayer.py", "znetwork_relayer_orch")
+            if relayer and hasattr(relayer, "retaliate_all"):
+                exploit_interdict = relayer.retaliate_all(exploit if exploit.get("ok") else hostile, force=False)
+            elif exploit.get("immediate_count") or exploit.get("zero_day_count"):
+                exploit_interdict = exploit_shield_interdict(force=False)
+        elif _smart_inside():
+            if exploit.get("immediate_count") or exploit.get("zero_day_count"):
+                exploit_interdict = exploit_shield_interdict(force=False)
+            elif hostile.get("immediate_count"):
+                counter = {"ok": True, "skipped": True, "reason": "hostile_deferred_to_exploit_shield"}
+        elif hostile.get("immediate_count"):
+            counter = hostile_countermeasures(force=True)
 
     op = mark_running("yes")
     tray = tray_swap()
@@ -520,22 +561,43 @@ def activate(*, elevated: bool = False) -> dict[str, Any]:
     )
     return {
         "ok": True,
-        "truth_gate": gate,
+        "protection_gate": gate,
         "triple_check": triple,
+        "connection_snapshot": replace,
         "bridges": bridges,
+        "exploit_shield": exploit,
+        "exploit_interdict": exploit_interdict,
         "hostile_scan": hostile,
         "hostile_countermeasure": counter,
         "operator": op,
         "tray_swap": tray,
         "elevated": elevated,
+        "protection_only": _protection_only(),
+        "smart_inside": _smart_inside(),
         "activated_at": _now(),
     }
+
+
+def _sovereignty_slice() -> dict[str, Any]:
+    py = INSTALL / "lib" / "queen-ammoos-sovereignty.py"
+    if not py.is_file():
+        py = Path(__file__).resolve().parent / "queen-ammoos-sovereignty.py"
+    mod = _mod(py, "queen_ammoos_sov_orch")
+    if mod and hasattr(mod, "posture"):
+        try:
+            return mod.posture()
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+    return {"ok": False, "skipped": True}
 
 
 def posture() -> dict[str, Any]:
     op = _load(OPERATOR, {})
     tray = _load(TRAY_MODE, {})
     hostile_state = _load(STATE / "znetwork-hostile-state.json", {})
+    sov = _sovereignty_slice()
+    zn = sov.get("znetwork") or {}
+    pipe = int(sov.get("internet_pipe_percent") or zn.get("internet_pipe_percent") or 0)
     return {
         "schema": SCHEMA,
         "ok": True,
@@ -546,6 +608,11 @@ def posture() -> dict[str, Any]:
         "hostile_threat": hostile_state or None,
         "binary": str(znetwork_bin() or ""),
         "doctrine": str(DOCTRINE),
+        "sovereignty": sov,
+        "internet_pipe_percent": pipe,
+        "internet_pipe_target": int(sov.get("internet_pipe_target") or 100),
+        "sole_internet_stack": True,
+        "loopback_authority": sov.get("loopback_authority") or "127.0.0.1",
         "checked_at": _now(),
     }
 
@@ -569,6 +636,9 @@ def main() -> int:
         "hostile-scan": lambda: hostile_scan(publish=True),
         "hostile-respond": lambda: hostile_countermeasures(force="--force" in sys.argv),
         "hostile-watch": lambda: (_hostile_mod().watch() if _hostile_mod() and hasattr(_hostile_mod(), "watch") else {"ok": False}),
+        "exploit-scan": lambda: exploit_shield_scan(publish=True),
+        "exploit-interdict": lambda: exploit_shield_interdict(force="--force" in sys.argv),
+        "exploit-watch": lambda: exploit_shield_interdict(force=False),
     }
     fn = handlers.get(mode)
     if not fn:

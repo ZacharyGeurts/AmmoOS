@@ -1,0 +1,14 @@
+{
+  "id": "nes_attack_of_the_killer_tomatoes",
+  "title": "Attack of the Killer Tomatoes",
+  "author": "THQ, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_attack_of_the_killer_tomatoes-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_attack_of_the_killer_tomatoes/nes_attack_of_the_killer_tomatoes.h7c"
+}

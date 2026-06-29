@@ -1,0 +1,14 @@
+{
+  "id": "nes_attack_animal_gakuen",
+  "title": "Attack Animal Gakuen",
+  "author": "Pony Canyon",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_attack_animal_gakuen-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_attack_animal_gakuen/nes_attack_animal_gakuen.h7c"
+}

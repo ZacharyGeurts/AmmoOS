@@ -1,0 +1,14 @@
+{
+  "id": "nes_nobunagas_ambition",
+  "title": "Nobunaga's Ambition",
+  "author": "KOEI Co., Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_nobunagas_ambition-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Strategy",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_nobunagas_ambition/nes_nobunagas_ambition.h7c"
+}

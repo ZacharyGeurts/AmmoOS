@@ -1,0 +1,14 @@
+{
+  "id": "nes_godzilla_2_war_of_the_monsters",
+  "title": "Godzilla 2: War of the Monsters",
+  "author": "Toho Company",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_godzilla_2_war_of_the_monsters-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Strategy",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_godzilla_2_war_of_the_monsters/nes_godzilla_2_war_of_the_monsters.h7c"
+}

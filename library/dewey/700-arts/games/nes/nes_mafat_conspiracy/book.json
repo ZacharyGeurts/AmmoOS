@@ -1,0 +1,14 @@
+{
+  "id": "nes_mafat_conspiracy",
+  "title": "Mafat Conspiracy",
+  "author": "Vic Tokai, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_mafat_conspiracy-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_mafat_conspiracy/nes_mafat_conspiracy.h7c"
+}

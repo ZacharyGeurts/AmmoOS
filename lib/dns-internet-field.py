@@ -18,8 +18,8 @@ from typing import Any
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 SEED = INSTALL / "data" / "dns-internet-tld-seed.json"
-OUT_JSON = STATE / "dns-internet-field.json"
-PANEL_SLICE = STATE / "dns-internet-field-panel.json"
+OUT_JSON = STATE / "dns-internet-harvest.json"
+PANEL_SLICE = STATE / "dns-internet-harvest-panel.json"
 DNS_STATE = STATE / "field-dns.json"
 CACHE_HINT = STATE / "field-dns-cache-hints.jsonl"
 
@@ -172,7 +172,7 @@ def build_internet_field(*, pull_live: bool = True, probe_limit: int = 48) -> di
         by_tld.setdefault(str(e.get("tld") or ""), []).append(e)
 
     out = {
-        "schema": "dns-internet-field/v1",
+        "schema": "dns-internet-harvest/v1",
         "updated": _now(),
         "motto": "WHOLE internet in field storage — every TLD slot. LOCAL NOW merges live resolver cache.",
         "model": {

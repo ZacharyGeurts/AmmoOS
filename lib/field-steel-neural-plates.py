@@ -85,12 +85,22 @@ def _norm_tokens(row: dict[str, Any], keys: list[str]) -> set[str]:
     return out
 
 
-def _plate_members(doc: dict[str, Any], leaf_key: str, bridge_keys: list[str], *, limit: int = 128) -> list[dict[str, Any]]:
+def _source_state_path(src: dict[str, Any]) -> str:
+    """Resolve state file — combinatorics, battery, or panel."""
+    for key in ("combinatorics", "battery", "panel"):
+        val = str(src.get(key) or "").strip()
+        if val:
+            return val
+    return ""
+
+
+def _plate_members(doc: dict[str, Any], leaf_key: str, bridge_keys: list[str], *, limit: int = 0) -> list[dict[str, Any]]:
     rows = doc.get(leaf_key) or []
     if not isinstance(rows, list):
         return []
     members: list[dict[str, Any]] = []
-    for i, row in enumerate(rows[:limit]):
+    cap = len(rows) if limit <= 0 else min(len(rows), limit)
+    for i, row in enumerate(rows[:cap]):
         if not isinstance(row, dict):
             continue
         mid = str(row.get("id") or row.get("chip_id") or row.get("instruction") or f"m:{i}")
@@ -109,8 +119,8 @@ def _build_plates(doctrine: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[
     by_id: dict[str, dict[str, Any]] = {}
     for src in doctrine.get("plate_sources") or []:
         pid = str(src.get("id") or "")
-        bat = str(src.get("battery") or "")
-        doc = _load(STATE / bat, {})
+        bat = _source_state_path(src)
+        doc = _load(STATE / bat, {}) if bat else {}
         members = _plate_members(
             doc,
             str(src.get("leaf_key") or "combinatorics_leaves"),

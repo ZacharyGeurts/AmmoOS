@@ -1,0 +1,14 @@
+{
+  "id": "nes_silent_service",
+  "title": "Silent Service",
+  "author": "Ultra Software",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_silent_service-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Simulation",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_silent_service/nes_silent_service.h7c"
+}

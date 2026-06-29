@@ -52,6 +52,54 @@ def _import_mod(name: str, rel: str) -> Any | None:
     return mod
 
 
+def _sovereign_wire_formats() -> list[dict[str, Any]]:
+    """Formats that presume the 2D platform field — require SG/Grok16; never create field files."""
+    flags = {
+        "presumes_field_underneath": True,
+        "requires_grok16": True,
+        "creates_field_file": False,
+        "never_poison_the_well": True,
+    }
+    return [
+        _norm_row(
+            fid="wrdt", label="World Redata WRDT1", family="sovereign", extensions=[".wrdt"],
+            magic="WRDT", mime="application/vnd.ironclad.wrdt", lossless=True, sovereign=True, ironclad=True,
+            description="WRDT1 lossless in-place snapshot — presumes field underneath.", source="World_Redata/redata/core",
+            extra=flags,
+        ),
+        _norm_row(
+            fid="wrzc", label="World Redata WRZC1", family="sovereign", extensions=[".wrzc"],
+            magic="WRZC", mime="application/vnd.ironclad.wrzc", lossless=True, sovereign=True, ironclad=True,
+            description="WRZC1 disguised ZAC7 shard — presumes field underneath.", source="World_Redata/redata/disguise",
+            extra=flags,
+        ),
+        _norm_row(
+            fid="field_io_packet", label="Field I/O Packet", family="sovereign", extensions=[],
+            mime="application/vnd.ironclad.field-io-packet+json", sovereign=True, ironclad=True,
+            description="Wire envelope — stream only, file_write_forbidden.", source="field-io-packet",
+            extra={**flags, "file_write_forbidden": True},
+        ),
+    ]
+
+
+def _stamp_sovereign_flags(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    gate = _import_mod("field_no_file_gate", "field-no-file-gate.py")
+    stamped: list[dict[str, Any]] = []
+    for row in rows:
+        fid = str(row.get("id") or "")
+        extra = dict(row)
+        if gate and hasattr(gate, "sovereign_format_flags"):
+            extra.update(gate.sovereign_format_flags(fid))
+        elif fid in ("h7c", "g1id", "fielddrive", "h7snap", "wrdt", "wrzc", "field_io_packet"):
+            extra.update({
+                "presumes_field_underneath": True,
+                "requires_grok16": True,
+                "creates_field_file": False,
+            })
+        stamped.append(extra)
+    return stamped
+
+
 def _norm_row(
     *,
     fid: str,
@@ -101,8 +149,9 @@ def _library_formats() -> list[dict[str, Any]]:
                   description="H7B with fly codec layer.", source="field_h7_book"),
         _norm_row(fid="h7c", label="Hostess 7 Condenser", family="library", extensions=[".h7c"], magic="H7C\\x02",
                   mime="application/vnd.hostess7.h7c", compression="combinatronic+zlib+optimizer", lossless=True, ironclad=True,
-                  dewey="005.74", description="H7c — Hostess 7 Condenser; lossless combinatronic condenser with small optimizer autoplate, spider-wire, recondense until balance.", source="field-h7c-compression",
-                  extra={"acronym": "H7c", "expands_to": "Hostess 7 Condenser"}),
+                  sovereign=True, dewey="005.74", description="H7c — Hostess 7 Condenser; lossless combinatronic condenser with small optimizer autoplate, spider-wire, recondense until balance.", source="field-h7c-compression",
+                  extra={"acronym": "H7c", "expands_to": "Hostess 7 Condenser",
+                         "presumes_field_underneath": True, "requires_grok16": True, "creates_field_file": False}),
         _norm_row(fid="h7snap", label="Field Snap", family="library", extensions=[".h7snap", ".field-snap"],
                   mime="application/x-field-snap", description="Field state snapshot.", source="field-formats"),
         _norm_row(fid="book_json", label="Dewey Book Card", family="library", extensions=["book.json"],
@@ -114,7 +163,8 @@ def _geometry_formats() -> list[dict[str, Any]]:
     return [
         _norm_row(fid="g1id", label="G1ID Geometric Identity", family="geometry", extensions=[".g1id"],
                   mime="application/vnd.ironclad.g1id+json", ironclad=True, lossless=True, sovereign=True,
-                  description="Cold 3D proportions — this one hardened, plate preserved.", source="g1id-format"),
+                  description="Cold 3D proportions — this one hardened, plate preserved.", source="g1id-format",
+                  extra={"presumes_field_underneath": True, "requires_grok16": True, "creates_field_file": False}),
         _norm_row(fid="plate_json", label="Field Plate", family="geometry", extensions=[".plate.json", "-plate.json"],
                   mime="application/x-field-plate", ironclad=True, description="Ironclad witness plate JSON.", source="field-plate"),
     ]
@@ -208,6 +258,29 @@ def _virus_formats() -> list[dict[str, Any]]:
     return rows
 
 
+def _storage_formats() -> list[dict[str, Any]]:
+    bd = _load(INSTALL / "data" / "field-big-drive-doctrine.json", {})
+    rows: list[dict[str, Any]] = []
+    for row in bd.get("formats") or []:
+        fid = str(row.get("id", ""))
+        if not fid:
+            continue
+        family_key = str(row.get("family") or "storage")
+        family = "sovereign" if family_key == "sovereign" else "storage"
+        rows.append(_norm_row(
+            fid=fid,
+            label=str(row.get("label") or fid),
+            family=family,
+            extensions=row.get("extensions") or [],
+            sovereign=bool(row.get("sovereign")),
+            ironclad=bool(row.get("sovereign")),
+            description=f"Big Drive storage — {family_key}.",
+            source="field-big-drive-doctrine",
+            extra={"big_drive": True, "boot": row.get("boot"), "vm": row.get("vm")},
+        ))
+    return rows
+
+
 def _common_formats() -> list[dict[str, Any]]:
     return [
         _norm_row(fid="png", label="PNG Image", family="media", extensions=[".png"], magic="89504e47",
@@ -253,6 +326,8 @@ def build_table(*, force: bool = False) -> dict[str, Any]:
         + _image_field_formats()
         + _media_formats()
         + _virus_formats()
+        + _storage_formats()
+        + _sovereign_wire_formats()
         + _common_formats()
     ):
         fid = str(row.get("id", ""))
@@ -263,7 +338,7 @@ def build_table(*, force: bool = False) -> dict[str, Any]:
         else:
             by_id[fid] = row
 
-    formats = list(by_id.values())
+    formats = _stamp_sovereign_flags(list(by_id.values()))
     doctrine = _load(DOCTRINE, {})
     best = _import_mod("field_best_sort", "field-best-sort.py")
     sort_meta: dict[str, Any] = {}

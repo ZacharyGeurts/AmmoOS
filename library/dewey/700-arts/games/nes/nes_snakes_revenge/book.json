@@ -1,0 +1,14 @@
+{
+  "id": "nes_snakes_revenge",
+  "title": "Snake's Revenge",
+  "author": "Ultra Software",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_snakes_revenge-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Adventure",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_snakes_revenge/nes_snakes_revenge.h7c"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "nes_dragon_warrior",
+  "title": "Dragon Warrior",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dragon_warrior-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_dragon_warrior/nes_dragon_warrior.h7c"
+}

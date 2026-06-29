@@ -1,0 +1,14 @@
+{
+  "id": "nes_city_connection",
+  "title": "City Connection",
+  "author": "Jaleco Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_city_connection-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Racing",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_city_connection/nes_city_connection.h7c"
+}

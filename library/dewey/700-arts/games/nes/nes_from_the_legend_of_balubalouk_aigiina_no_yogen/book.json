@@ -1,0 +1,14 @@
+{
+  "id": "nes_from_the_legend_of_balubalouk_aigiina_no_yogen",
+  "title": "From the Legend of Balubalouk: Aigiina no Yogen",
+  "author": "Vic Tokai, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_from_the_legend_of_balubalouk_aigiina_no_yogen-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Adventure",
+  "year": 1986,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_from_the_legend_of_balubalouk_aigiina_no_yogen/nes_from_the_legend_of_balubalouk_aigiina_no_yogen.h7c"
+}

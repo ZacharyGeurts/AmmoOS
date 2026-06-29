@@ -1,0 +1,14 @@
+{
+  "id": "nes_lee_trevinos_fighting_golf",
+  "title": "Lee Trevino's Fighting Golf",
+  "author": "SNK Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_lee_trevinos_fighting_golf-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_lee_trevinos_fighting_golf/nes_lee_trevinos_fighting_golf.h7c"
+}

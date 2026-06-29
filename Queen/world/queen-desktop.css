@@ -1,4 +1,4 @@
-/* Queen classic desktop — Win95 layout, no default wallpaper, SDF icons */
+/* Queen classic desktop — Win95 layout, in-desktop fullscreen apps, taskbar search */
 
 :root {
   --qd-teal: #008080;
@@ -30,9 +30,7 @@ html, body {
   background: var(--qd-teal);
 }
 
-.qd-root.has-wallpaper {
-  background: #000;
-}
+.qd-root.has-wallpaper { background: #000; }
 
 .qd-wallpaper {
   position: absolute;
@@ -69,7 +67,13 @@ html, body {
   scrollbar-width: thin;
 }
 
+.qd-root.has-window .qd-icons {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 .qd-icon {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -87,10 +91,46 @@ html, body {
 }
 
 .qd-icon:hover,
-.qd-icon.selected {
+.qd-icon.selected,
+.qd-icon.match {
   background: rgba(0, 0, 128, 0.45);
   border-color: rgba(255, 255, 255, 0.5);
 }
+
+.qd-icon.match {
+  animation: qd-pulse 0.6s ease 2;
+}
+
+@keyframes qd-pulse {
+  0%, 100% { background: rgba(0, 0, 128, 0.45); }
+  50% { background: rgba(0, 128, 255, 0.65); }
+}
+
+.qd-icon.hidden-by-search { display: none; }
+
+.qd-icon-pin {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffd700;
+  font-size: 9px;
+  line-height: 14px;
+  cursor: pointer;
+  opacity: 0;
+  border-radius: 2px;
+}
+
+.qd-icon:hover .qd-icon-pin,
+.qd-icon.pinned .qd-icon-pin {
+  opacity: 1;
+}
+
+.qd-icon.pinned .qd-icon-pin { color: #ffea00; }
 
 .qd-icon-glyph {
   width: 32px;
@@ -111,10 +151,82 @@ html, body {
   object-fit: contain;
 }
 
-.qd-icon span {
+.qd-icon span.qd-icon-label {
   max-width: 68px;
   line-height: 1.15;
   word-break: break-word;
+}
+
+/* In-desktop fullscreen app layer */
+.qd-windows {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+}
+
+.qd-windows:not([hidden]) { display: flex; }
+
+.qd-win {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  background: var(--qd-gray);
+  border: 2px outset var(--qd-light);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.qd-win.active { display: flex; }
+
+.qd-win-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 4px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.qd-win-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.qd-win-btn {
+  width: 18px;
+  height: 16px;
+  padding: 0;
+  border: 1px outset var(--qd-light);
+  background: var(--qd-gray);
+  color: #000;
+  font: inherit;
+  font-size: 10px;
+  line-height: 14px;
+  cursor: default;
+}
+
+.qd-win-btn:active { border-style: inset; }
+
+.qd-win-frame-wrap {
+  flex: 1;
+  min-height: 0;
+  background: #000;
+}
+
+.qd-win-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background: #020403;
 }
 
 .qd-taskbar {
@@ -122,12 +234,12 @@ html, body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 2;
+  z-index: 6;
   height: var(--qd-task-h);
   display: flex;
   align-items: stretch;
   gap: 2px;
-  padding: 2px 2px 2px 2px;
+  padding: 2px;
   background: var(--qd-gray);
   border-top: 2px solid var(--qd-light);
   box-shadow: inset 0 1px 0 var(--qd-dark);
@@ -142,11 +254,25 @@ html, body {
   font-weight: 700;
   font-size: 11px;
   cursor: default;
+  flex-shrink: 0;
 }
 
-.qd-taskbar-start:active {
-  border-style: inset;
+.qd-taskbar-start:active { border-style: inset; }
+
+.qd-quick {
+  width: 28px;
+  padding: 0;
+  border: 2px outset var(--qd-light);
+  background: var(--qd-gray);
+  cursor: default;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
 }
+
+.qd-quick:active { border-style: inset; }
+
+.qd-quick-glyph { font-size: 14px; line-height: 1; }
 
 .qd-tasks {
   flex: 1;
@@ -154,10 +280,11 @@ html, body {
   gap: 2px;
   overflow-x: auto;
   scrollbar-width: none;
+  min-width: 0;
 }
 
 .qd-task {
-  min-width: 120px;
+  min-width: 100px;
   max-width: 180px;
   padding: 0 8px;
   border: 2px outset var(--qd-light);
@@ -169,11 +296,54 @@ html, body {
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: default;
+  flex-shrink: 0;
 }
 
 .qd-task.active {
   border-style: inset;
   font-weight: 700;
+}
+
+.qd-task.minimized { opacity: 0.75; font-style: italic; }
+
+.qd-tray-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.qd-tray-tools .qdf-anchor { margin: 0; }
+
+.qd-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+  border: 2px inset var(--qd-light);
+  background: #fff;
+  flex-shrink: 0;
+  min-width: 120px;
+  max-width: 180px;
+}
+
+.qd-search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.qd-search {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  color: #000;
+  outline: none;
 }
 
 .qd-tray {
@@ -185,6 +355,7 @@ html, body {
   font-size: 11px;
   min-width: 72px;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .qd-net-seal {
@@ -198,6 +369,21 @@ html, body {
   color: #9fe8b8;
   border: 1px solid rgba(61, 214, 140, 0.4);
   pointer-events: none;
+}
+
+.qd-tip {
+  position: fixed;
+  z-index: 20;
+  max-width: 220px;
+  padding: 4px 8px;
+  background: #ffffe1;
+  color: #000;
+  border: 1px solid #000;
+  box-shadow: 1px 1px 0 #808080;
+  font-size: 11px;
+  line-height: 1.25;
+  pointer-events: none;
+  white-space: normal;
 }
 
 .qd-toast {
@@ -219,7 +405,7 @@ html, body {
 .qd-ctx {
   position: fixed;
   z-index: 10;
-  min-width: 140px;
+  min-width: 160px;
   background: var(--qd-gray);
   border: 2px outset var(--qd-light);
   box-shadow: 2px 2px 0 #000;
@@ -243,4 +429,10 @@ html, body {
 .qd-ctx button:hover {
   background: #000080;
   color: #fff;
+}
+
+.qd-ctx hr {
+  border: none;
+  border-top: 1px solid var(--qd-dark);
+  margin: 2px 4px;
 }

@@ -1,0 +1,14 @@
+{
+  "id": "nes_gremlins_2_the_new_batch",
+  "title": "Gremlins 2: The New Batch",
+  "author": "SunSoft, Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_gremlins_2_the_new_batch-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_gremlins_2_the_new_batch/nes_gremlins_2_the_new_batch.h7c"
+}

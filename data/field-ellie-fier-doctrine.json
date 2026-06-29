@@ -72,8 +72,14 @@
     "delegated_to_ellie": [
       "universal-protector threat_warn_level",
       "field-command threat_warn_level",
-      "logic_gate threat_warn_level"
-    ]
+      "logic_gate threat_warn_level",
+      "field-znetwork standalone panel",
+      "field-gpu standalone panel",
+      "control-panel display slot",
+      "field-broadcaster monitor slot",
+      "field-audio-settings monitor slot"
+    ],
+    "diagnostic_pages_authority": "ELLIE owns all pillar diagnostics — dashboard loads /field-ellie/* only"
   },
   "feeds": [
     {"id": "gatekeeper", "panel": "connection-intent.json", "pillar": "network"},
@@ -96,8 +102,17 @@
     {"id": "sovereign_sync", "panel": "sovereign-sync-manifest.json", "pillar": "sovereign"},
     {"id": "last_host", "script": "ellie-last-host.py", "pillar": "sovereign"}
   ],
+  "diagnostic_pages": [
+    {"id": "network", "pillar": "network", "title": "Network Threat", "route": "/field-ellie/network", "program_id": "ellie-diag-network"},
+    {"id": "truth", "pillar": "truth", "title": "Truth & Ironclad", "route": "/field-ellie/truth", "program_id": "ellie-diag-truth"},
+    {"id": "thermal_power", "pillar": "thermal_power", "title": "Thermal & Power", "route": "/field-ellie/thermal", "program_id": "ellie-diag-thermal"},
+    {"id": "firmware_vault", "pillar": "firmware_vault", "title": "Firmware & Vault", "route": "/field-ellie/firmware", "program_id": "ellie-diag-firmware"},
+    {"id": "media", "pillar": "media", "title": "Media Integrity", "route": "/field-ellie/media", "program_id": "ellie-diag-media"},
+    {"id": "sovereign", "pillar": "sovereign", "title": "Sovereign Stack", "route": "/field-ellie/sovereign", "program_id": "ellie-diag-sovereign"}
+  ],
   "routes": {
     "panel": "/field-ellie-fier",
+    "diag": "/field-ellie-diag",
     "api": "/api/field-ellie-fier"
   },
   "plate_model": {

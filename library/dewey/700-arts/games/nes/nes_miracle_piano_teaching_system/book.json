@@ -1,0 +1,14 @@
+{
+  "id": "nes_miracle_piano_teaching_system",
+  "title": "Miracle Piano Teaching System",
+  "author": "Software Toolworks, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_miracle_piano_teaching_system-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Educational",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_miracle_piano_teaching_system/nes_miracle_piano_teaching_system.h7c"
+}

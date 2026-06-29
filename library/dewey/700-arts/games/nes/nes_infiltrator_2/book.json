@@ -1,0 +1,14 @@
+{
+  "id": "nes_infiltrator_2",
+  "title": "Infiltrator 2",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_infiltrator_2-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Simulation",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_infiltrator_2/nes_infiltrator_2.h7c"
+}

@@ -107,7 +107,8 @@ def rebalance(*, refresh: bool = True, force: bool = False) -> dict[str, Any]:
     if gate:
         steps.append({"step": "balance_gate", **gate})
     if refresh:
-        steps.append({"step": "chip_battery", **_py_json(INSTALL / "lib" / "field-chip-battery.py", ["combinatronic", "--refresh"])})
+        steps.append({"step": "ironclad_chips", **_py_json(INSTALL / "lib" / "field-ironclad-chips-combinatorics.py", ["publish"])})
+        steps.append({"step": "chips_plate_stack", **_py_json(INSTALL / "lib" / "field-chips-plate-stack.py", ["publish", "--refresh"])})
         steps.append({"step": "program_combinatronic", **_py_json(INSTALL / "lib" / "field-program-combinatronic.py", ["combinatronic", "--refresh"])})
     uni = _import_mod("g16_uni", "field-g16-universal-combinatronic.py")
     if uni and hasattr(uni, "publish_panel"):
@@ -343,6 +344,77 @@ def teach_universal_neural(*, force: bool = False) -> dict[str, Any]:
     return {"schema": "g16-combinatronic-rebalance/v1", "action": "teach_universal_neural", "ok": False, "error": "universal_neural_missing"}
 
 
+def chips_core(*, refresh: bool = True) -> dict[str, Any]:
+    cc = _import_mod("chips_core", "field-chips-core.py")
+    if cc and hasattr(cc, "publish_panel"):
+        pub = cc.publish_panel(refresh=refresh, write_core=True)
+        panel = pub.get("panel") or {}
+        core = pub.get("core") or {}
+        return {
+            "schema": "g16-combinatronic-rebalance/v1",
+            "updated": _now(),
+            "action": "chips_core",
+            "ok": pub.get("ok", True),
+            "condensed": panel.get("condensed"),
+            "pending": panel.get("pending"),
+            "ironclad_sealed": panel.get("ironclad_sealed"),
+            "core_module_count": (panel.get("counts") or {}).get("core_modules"),
+            "chip_count": (panel.get("counts") or {}).get("chips"),
+            "compression_ratio": (panel.get("counts") or {}).get("compression_ratio"),
+            "posture": core.get("posture") or panel.get("posture"),
+            "motto": "CHIPS core — condense scattered layers after Ironclad.",
+        }
+    return {"schema": "g16-combinatronic-rebalance/v1", "action": "chips_core", "ok": False, "error": "chips_core_missing"}
+
+
+def chips_plate_stack(*, refresh: bool = True) -> dict[str, Any]:
+    cps = _import_mod("chips_plate_stack", "field-chips-plate-stack.py")
+    if cps and hasattr(cps, "publish_panel"):
+        pub = cps.publish_panel(refresh=refresh, write_battery=True)
+        panel = pub.get("panel") or {}
+        battery = pub.get("battery") or {}
+        deriv = battery.get("plate_rebalance_derivatives") or panel.get("plate_rebalance_derivatives") or {}
+        deriv_meta = deriv.get("meta") or {}
+        return {
+            "schema": "g16-combinatronic-rebalance/v1",
+            "updated": _now(),
+            "action": "chips_plate_stack",
+            "ok": pub.get("ok", True),
+            "module_count": (panel.get("counts") or {}).get("modules"),
+            "sovereign_time_only": (panel.get("connection_policy") or {}).get("sovereign_time_only"),
+            "derivatives": {
+                "ok": deriv.get("ok"),
+                "super_quick": deriv.get("super_quick") or deriv_meta.get("fast_path"),
+                "elapsed_ms": deriv_meta.get("elapsed_ms_total") or deriv_meta.get("elapsed_ms"),
+                "organize_gain_derivative": deriv.get("organize_gain_derivative"),
+                "method": deriv_meta.get("method"),
+                "top_marginal": deriv_meta.get("top_marginal"),
+            },
+            "ironclad": (battery.get("ironclad_chain") or {}),
+            "motto": "CHIPS Iron + Steel plate — THE sort + Ironclad truth throughout.",
+        }
+    return {"schema": "g16-combinatronic-rebalance/v1", "action": "chips_plate_stack", "ok": False, "error": "chips_plate_stack_missing"}
+
+
+def plate_rebalance_derivatives() -> dict[str, Any]:
+    deriv = _import_mod("plate_deriv", "field-plate-rebalance-derivatives.py")
+    stack = _load(STATE / "field-chips-plate-stack.json", {})
+    modules = list(stack.get("modules") or [])
+    if deriv and hasattr(deriv, "rebalance_plate_stack") and modules:
+        doc = deriv.rebalance_plate_stack(
+            modules,
+            iron_meta=(stack.get("layers") or {}).get("iron_plate"),
+            truth_percent=float((stack.get("layers") or {}).get("ironclad", {}).get("truth_percent") or 0),
+        )
+        return {
+            "schema": "g16-combinatronic-rebalance/v1",
+            "updated": _now(),
+            "action": "plate_rebalance_derivatives",
+            **doc,
+        }
+    return {"schema": "g16-combinatronic-rebalance/v1", "action": "plate_rebalance_derivatives", "ok": False, "error": "derivatives_missing"}
+
+
 def steel_neural_plates(*, refresh: bool = True) -> dict[str, Any]:
     snp = _import_mod("steel_plates", "field-steel-neural-plates.py")
     if snp and hasattr(snp, "publish_panel"):
@@ -385,6 +457,8 @@ def optimal(*, full: bool = False) -> dict[str, Any]:
     steps.append(dimensions_consolidate(metadata_only=not full))
     steps.append(combinamatrix_build(refresh=True))
     steps.append(steel_neural_plates(refresh=True))
+    steps.append(chips_plate_stack(refresh=True))
+    steps.append(chips_core(refresh=True))
     steps.append(teach_universal_neural(force=full))
     steps.append(sequence_build(fill=True))
     steps.append(ammolang_panel(refresh=True))
@@ -424,6 +498,11 @@ def main() -> int:
         "combinamatrix": lambda: combinamatrix_build(refresh=refresh),
         "steel_plates": lambda: steel_neural_plates(refresh=refresh),
         "steel_neural_plates": lambda: steel_neural_plates(refresh=refresh),
+        "chips_plate_stack": lambda: chips_plate_stack(refresh=refresh),
+        "chips_iron_steel": lambda: chips_plate_stack(refresh=refresh),
+        "chips_core": lambda: chips_core(refresh=refresh),
+        "plate_derivatives": plate_rebalance_derivatives,
+        "derivatives": plate_rebalance_derivatives,
         "teach_neural": lambda: teach_universal_neural(force=full),
         "universal_neural": lambda: teach_universal_neural(force=full),
         "sequence": lambda: sequence_build(fill="--no-fill" not in sys.argv),

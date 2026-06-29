@@ -1,0 +1,14 @@
+{
+  "id": "nes_ultima_iv_quest_of_the_avatar",
+  "title": "Ultima IV: Quest of the Avatar",
+  "author": "Pony Canyon",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_ultima_iv_quest_of_the_avatar-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_ultima_iv_quest_of_the_avatar/nes_ultima_iv_quest_of_the_avatar.h7c"
+}

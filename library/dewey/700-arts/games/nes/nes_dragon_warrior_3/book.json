@@ -1,0 +1,14 @@
+{
+  "id": "nes_dragon_warrior_3",
+  "title": "Dragon Warrior 3",
+  "author": "Enix Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dragon_warrior_3-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": null,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_dragon_warrior_3/nes_dragon_warrior_3.h7c"
+}

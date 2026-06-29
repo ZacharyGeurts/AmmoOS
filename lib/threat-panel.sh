@@ -31,11 +31,12 @@ NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-/usr/local/lib/nexus-shield}"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/hostess7-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/hostess7-field.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/hostess7-operator.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/hostess7-operator.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/human-registry.sh"
-[[ -f "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh"
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-antenna-guard.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-antenna-guard.sh"
+[[ "${NEXUS_AUDIO_TRAIN:-0}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/audio-train.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/home-protector.sh"
-[[ -f "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh"
-[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-antenna.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-antenna.sh"
-[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-radio-catcher.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-radio-catcher.sh"
+[[ "${NEXUS_SIGNALS_FIELD:-0}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/signals-field.sh"
+
+[[ "${NEXUS_FIELD_RADIO:-0}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/field-radio-catcher.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-radio-catcher.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-dns.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-outside-talk.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-outside-talk.sh"
 [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-drive-system.sh" ]] && source "${NEXUS_INSTALL_ROOT}/lib/field-drive-system.sh"
@@ -96,17 +97,11 @@ nexus_threat_panel_publish() {
     if declare -f nexus_home_protector_publish >/dev/null 2>&1; then
       nexus_home_protector_publish
     fi
-    if declare -f nexus_field_antenna_cycle >/dev/null 2>&1; then
-      nexus_field_antenna_cycle
-    fi
     if declare -f nexus_field_radio_publish >/dev/null 2>&1; then
       nexus_field_radio_publish
     fi
     if declare -f nexus_signals_field_publish >/dev/null 2>&1; then
       nexus_signals_field_publish
-    fi
-    if declare -f nexus_field_antenna_publish >/dev/null 2>&1; then
-      nexus_field_antenna_publish
     fi
     if declare -f nexus_field_dns_publish >/dev/null 2>&1; then
       nexus_field_dns_publish
@@ -332,12 +327,7 @@ nexus_threat_panel_publish() {
     else
       printf '{"schema":"signals-field/v1","stats":{"antenna_fields":0},"antennas":[],"pulse_channels":[]}'
     fi
-    printf ',"field_antenna":'
-    if declare -f nexus_field_antenna_json >/dev/null 2>&1; then
-      nexus_field_antenna_json
-    else
-      printf '{"schema":"field-antenna/v1","readiness":{"blaster_ready":false,"score":0},"frequency_knowledge":{"modalities":[]}}'
-    fi
+    printf ',"field_antenna":{"schema":"field-antenna/v1","removed":true,"reason":"field_antenna_removed"}'
     printf ',"field_radio":'
     if declare -f nexus_field_radio_json >/dev/null 2>&1; then
       nexus_field_radio_json
@@ -486,12 +476,7 @@ nexus_threat_panel_publish() {
     else
       printf '{"schema":"field-brain/v1","ok":false}'
     fi
-    printf ',"field_antenna_catch":'
-    if declare -f nexus_field_antenna_catch_json >/dev/null 2>&1; then
-      nexus_field_antenna_catch_json
-    else
-      printf '{"schema":"field-antenna-catch/v1"}'
-    fi
+    printf ',"field_antenna_catch":{"schema":"field-antenna-catch/v1","removed":true}'
     printf ',"field":true'
     printf ',"panel_ready":true'
     printf ',"version":"%s"' "${NEXUS_VERSION}"

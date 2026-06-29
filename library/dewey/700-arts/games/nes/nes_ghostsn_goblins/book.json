@@ -1,0 +1,14 @@
+{
+  "id": "nes_ghostsn_goblins",
+  "title": "Ghosts'n Goblins",
+  "author": "Capcom Co., Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_ghostsn_goblins-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1986,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_ghostsn_goblins/nes_ghostsn_goblins.h7c"
+}

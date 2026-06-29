@@ -1,0 +1,14 @@
+{
+  "id": "nes_wheel_of_fortune_family_edition",
+  "title": "Wheel Of Fortune: Family Edition",
+  "author": "IJE",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_wheel_of_fortune_family_edition-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Strategy",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_wheel_of_fortune_family_edition/nes_wheel_of_fortune_family_edition.h7c"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "nes_dai_2_ji_super_robot_taisen",
+  "title": "Dai-2-ji Super Robot Taisen",
+  "author": "Banpresto",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dai_2_ji_super_robot_taisen-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_dai_2_ji_super_robot_taisen/nes_dai_2_ji_super_robot_taisen.h7c"
+}

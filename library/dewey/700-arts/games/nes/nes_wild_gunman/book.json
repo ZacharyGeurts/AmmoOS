@@ -1,0 +1,14 @@
+{
+  "id": "nes_wild_gunman",
+  "title": "Wild Gunman",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_wild_gunman-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1985,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_wild_gunman/nes_wild_gunman.h7c"
+}

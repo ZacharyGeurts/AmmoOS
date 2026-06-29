@@ -1,0 +1,14 @@
+{
+  "id": "nes_dragon_fighter",
+  "title": "Dragon Fighter",
+  "author": "SOFEL",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dragon_fighter-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_dragon_fighter/nes_dragon_fighter.h7c"
+}

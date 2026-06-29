@@ -1,13 +1,15 @@
-/* NEXUS Field OS Control Panel */
+/* Queen Control Panel — /field C2 theming */
+
+@import url("field-queen-theme.css");
 
 :root {
-  --cp-bg: #0d1117;
-  --cp-panel: #141a24;
-  --cp-edge: rgba(255, 255, 255, 0.1);
-  --cp-text: #eef4ff;
-  --cp-dim: #94a3b8;
-  --cp-accent: #3b82f6;
-  --cp-font: "Segoe UI", system-ui, sans-serif;
+  --cp-bg: var(--qf-bg-deep);
+  --cp-panel: var(--qf-panel);
+  --cp-edge: var(--qf-edge);
+  --cp-text: var(--qf-text);
+  --cp-dim: var(--qf-dim);
+  --cp-accent: var(--qf-emerald-glow);
+  --cp-font: var(--qf-font);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -16,20 +18,58 @@ html, body {
   margin: 0;
   height: 100%;
   font-family: var(--cp-font);
-  background: var(--cp-bg);
   color: var(--cp-text);
+}
+
+html, body {
+  background:
+    radial-gradient(ellipse 90% 70% at 20% 0%, var(--qf-glow-blue), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 8%, var(--qf-glow-rose), transparent 45%),
+    linear-gradient(180deg, var(--qf-bg-mid) 0%, var(--qf-bg) 100%);
 }
 
 .cp-root {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 248px 1fr;
   min-height: 100%;
 }
 
+.cp-root--minimal {
+  grid-template-columns: 220px 1fr;
+}
+
+.cp-root--minimal .cp-nav nav {
+  display: none;
+}
+
+.cp-locked-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--qf-emerald-glow);
+  border: 1px solid var(--qf-edge-emerald);
+  background: var(--qf-glow-emerald);
+}
+
+.cp-hint-block {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--cp-dim);
+  line-height: 1.5;
+}
+
+.cp-posture-card .cp-row label {
+  color: var(--qf-dim);
+}
+
 .cp-nav {
-  background: var(--cp-panel);
-  border-right: 1px solid var(--cp-edge);
+  background: rgba(4, 5, 8, 0.88);
+  border-right: 1px solid var(--qf-edge-emerald);
   padding: 20px 0;
+  backdrop-filter: blur(12px);
 }
 
 .cp-brand {
@@ -37,20 +77,40 @@ html, body {
   gap: 12px;
   align-items: center;
   padding: 0 20px 20px;
-  border-bottom: 1px solid var(--cp-edge);
+  border-bottom: 1px solid var(--qf-edge);
   margin-bottom: 12px;
+}
+
+.cp-brand img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 1px var(--qf-edge-emerald),
+    0 0 14px var(--qf-glow-emerald);
 }
 
 .cp-brand h1 {
   margin: 0;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .cp-brand p {
   margin: 2px 0 0;
   font-size: 11px;
   color: var(--cp-dim);
+  letter-spacing: 0.05em;
+}
+
+.cp-brand .cp-motto {
+  color: var(--qf-emerald-glow);
+}
+
+.cp-brand .cp-motto em {
+  font-style: normal;
+  color: var(--qf-rose-soft);
 }
 
 .cp-nav nav {
@@ -63,19 +123,31 @@ html, body {
 .cp-nav button {
   text-align: left;
   padding: 10px 14px;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
   color: var(--cp-dim);
   font: inherit;
   font-size: 13px;
   cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
-.cp-nav button:hover,
-.cp-nav button.active {
-  background: rgba(59, 130, 246, 0.15);
+.cp-nav button:hover {
+  background: var(--qf-glow-emerald);
   color: var(--cp-text);
+  border-color: rgba(62, 207, 142, 0.25);
+}
+
+.cp-nav button.active {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(235, 72, 140, 0.08));
+  color: var(--qf-emerald-glow);
+  border-color: var(--qf-edge-emerald);
+  box-shadow: inset 0 -2px 0 var(--qf-emerald);
 }
 
 .cp-main {
@@ -90,20 +162,30 @@ html, body {
 .cp-section h2 {
   margin: 0 0 6px;
   font-size: 20px;
+  font-weight: 600;
 }
 
 .cp-section .cp-lead {
   margin: 0 0 20px;
   color: var(--cp-dim);
   font-size: 13px;
+  line-height: 1.55;
+}
+
+.cp-hint {
+  font-size: 11px;
+  color: var(--cp-dim);
+  opacity: 0.85;
+  white-space: nowrap;
 }
 
 .cp-card {
-  background: var(--cp-panel);
+  background: var(--qf-elevated);
   border: 1px solid var(--cp-edge);
-  border-radius: 12px;
+  border-radius: var(--qf-radius);
   padding: 16px 18px;
   margin-bottom: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .cp-row {
@@ -119,15 +201,19 @@ html, body {
 
 .cp-row label { color: var(--cp-dim); font-size: 13px; }
 
-.cp-row input[type="range"] { width: 160px; }
+.cp-row input[type="range"] { width: 160px; accent-color: var(--qf-emerald); }
 
 .cp-row select {
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid var(--cp-edge);
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(4, 5, 8, 0.65);
   color: var(--cp-text);
   font: inherit;
+}
+
+.cp-row input[type="checkbox"] {
+  accent-color: var(--qf-emerald);
 }
 
 .cp-actions {
@@ -141,20 +227,31 @@ html, body {
   padding: 9px 16px;
   border-radius: 8px;
   border: 1px solid var(--cp-edge);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--cp-text);
   font: inherit;
   cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.cp-actions button:hover {
+  border-color: var(--qf-emerald-glow);
+  color: var(--qf-emerald-glow);
 }
 
 .cp-actions button.primary {
-  border-color: var(--cp-accent);
-  background: rgba(59, 130, 246, 0.22);
+  border-color: var(--qf-edge-emerald);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.22), rgba(62, 207, 142, 0.1));
+  color: var(--qf-emerald-glow);
+}
+
+.cp-actions button.primary:hover {
+  box-shadow: 0 0 16px var(--qf-glow-emerald);
 }
 
 .cp-actions button.danger {
-  border-color: #7f1d1d;
-  color: #fca5a5;
+  border-color: rgba(244, 63, 94, 0.45);
+  color: #fda4af;
 }
 
 .cp-hw-grid {
@@ -166,12 +263,16 @@ html, body {
 .cp-hw-chip {
   padding: 12px;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(4, 5, 8, 0.45);
   border: 1px solid var(--cp-edge);
   font-size: 12px;
 }
 
-.cp-hw-chip strong { display: block; margin-bottom: 4px; }
+.cp-hw-chip strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--qf-emerald-glow);
+}
 
 .cp-prog-list {
   display: grid;
@@ -185,14 +286,23 @@ html, body {
   gap: 8px;
   padding: 8px 10px;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(4, 5, 8, 0.45);
+  border: 1px solid transparent;
   font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.cp-prog-item:hover {
+  border-color: var(--qf-edge-emerald);
+  background: var(--qf-glow-emerald);
 }
 
 .cp-prog-item img {
   width: 24px;
   height: 24px;
   object-fit: contain;
+  border-radius: 4px;
 }
 
 @media (max-width: 720px) {

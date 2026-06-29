@@ -547,7 +547,15 @@ def play_wimk_until_working(
     seconds: float = 25.0,
     max_attempts: int | None = None,
 ) -> dict[str, Any]:
-    """Try every OTA path for 93.1 WIMK until working — report each attempt."""
+    """Field antenna destroyed — OTA play disabled."""
+    if not (INSTALL / "lib" / "field-antenna-orchestrator.py").is_file():
+        return {
+            "ok": False,
+            "destroyed": True,
+            "error": "field_antenna_destroyed",
+            "working": False,
+            "attempts": [],
+        }
     limit = max_attempts if max_attempts is not None else MAX_WIMK_ATTEMPTS
     world = build_world_placement()
     target: dict[str, Any] | None = None

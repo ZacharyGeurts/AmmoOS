@@ -1,0 +1,14 @@
+{
+  "id": "nes_captain_silver",
+  "title": "Captain Silver",
+  "author": "Tokuma Shoten",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_captain_silver-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_captain_silver/nes_captain_silver.h7c"
+}

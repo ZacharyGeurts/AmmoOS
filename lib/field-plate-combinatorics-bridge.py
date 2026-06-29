@@ -311,6 +311,111 @@ def _consolidated_plate_condense(comb: dict[str, Any]) -> dict[str, Any]:
     return comb.get("plate_condense") or {}
 
 
+RETRO_PLATFORMS = frozenset({
+    "nes", "snes", "genesis", "sms", "a2600", "gameboy", "gamegear", "n64", "pce",
+    "neogeo", "msx", "spectrum", "c64", "apple2", "amiga", "dreamcast", "saturn",
+    "3do", "jaguar", "coco", "coco2", "coco3", "ps1", "dos",
+})
+
+
+def _ironclad_chips_retro_hint() -> dict[str, Any] | None:
+    """Top Ironclad CHIPS combinatorics leaf — prefer FieldChips for retro platforms."""
+    for path in (
+        INSTALL / "lib" / "field-ironclad-chips-combinatorics.py",
+        SG / "NewLatest" / "lib" / "field-ironclad-chips-combinatorics.py",
+    ):
+        if not path.is_file():
+            continue
+        try:
+            spec = importlib.util.spec_from_file_location("fpw_ironclad_chips", path)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "combinatronic_panel"):
+                    panel = mod.combinatronic_panel()
+                    leaves = panel.get("leaves") or panel.get("combinatorics_leaves") or []
+                    for leaf in leaves:
+                        if str(leaf.get("emulator") or "") != "FieldChips":
+                            continue
+                        chip_id = str(leaf.get("chip_id") or leaf.get("id") or "")
+                        platforms = leaf.get("platforms") or []
+                        if chip_id.startswith("system_"):
+                            plat = chip_id.replace("system_", "", 1)
+                            if plat in RETRO_PLATFORMS:
+                                return {
+                                    "emulator": "FieldChips",
+                                    "runner": "emulator",
+                                    "launch_surface": "queen_game_room",
+                                    "system": plat,
+                                    "chip_id": chip_id,
+                                    "source": "ironclad_chips",
+                                }
+                        if any(str(p) in RETRO_PLATFORMS for p in platforms):
+                            plat = next((str(p) for p in platforms if str(p) in RETRO_PLATFORMS), "nes")
+                            return {
+                                "emulator": "FieldChips",
+                                "runner": "emulator",
+                                "launch_surface": "queen_game_room",
+                                "system": plat,
+                                "chip_id": chip_id,
+                                "source": "ironclad_chips",
+                            }
+                    for leaf in leaves:
+                        if str(leaf.get("runner") or "") == "emulator":
+                            return {
+                                "emulator": str(leaf.get("emulator") or "FieldChips"),
+                                "runner": "emulator",
+                                "launch_surface": "queen_game_room",
+                                "chip_id": leaf.get("chip_id"),
+                                "source": "ironclad_chips_runner",
+                            }
+        except Exception:
+            continue
+    return None
+
+
+def _retro_chips_posture(terminal: dict[str, Any], pattern: dict[str, Any], comb: dict[str, Any]) -> dict[str, Any] | None:
+    facets = pattern.get("facets") or {}
+    chip_em = str(terminal.get("emulator") or facets.get("emulator") or "")
+    runner = str(terminal.get("runner") or facets.get("runner") or "")
+    facet = str(terminal.get("facet") or facets.get("facet") or "")
+    chip_id = str(terminal.get("chip_id") or "")
+    platforms = terminal.get("platforms") or facets.get("platforms") or []
+
+    if chip_em == "FieldChips" or runner == "emulator":
+        plat = "nes"
+        if chip_id.startswith("system_"):
+            plat = chip_id.replace("system_", "", 1)
+        elif platforms:
+            plat = str(platforms[0])
+        return {
+            "emulator": "FieldChips",
+            "runner": "emulator",
+            "launch_surface": "queen_game_room",
+            "system": plat if plat in RETRO_PLATFORMS else "nes",
+            "source": "terminal_leaf",
+        }
+    if facet in ("ironclad_chips", "chips_battery", "retro_nes") or "nes" in chip_id or "chips" in chip_id.lower():
+        return {
+            "emulator": "FieldChips",
+            "runner": "emulator",
+            "launch_surface": "queen_game_room",
+            "system": "nes",
+            "source": "facet",
+        }
+    g16u = comb.get("g16_universal") or {}
+    for leaf in (g16u.get("leaves") or [])[:32]:
+        if str(leaf.get("sub_facet") or "") in ("ironclad_chips", "chips_battery"):
+            return {
+                "emulator": "FieldChips",
+                "runner": "emulator",
+                "launch_surface": "queen_game_room",
+                "system": "nes",
+                "source": "g16_universal",
+            }
+    return _ironclad_chips_retro_hint()
+
+
 def _tree_terminal(
     *,
     comb: dict[str, Any],
@@ -376,11 +481,16 @@ def select_exec_posture(
         or ("native_bsp" if fm else "python")
     )
 
-    emulator = str(terminal.get("emulator") or "FieldX86Die")
-    if runner == "python" and not fm:
-        emulator = "FieldX86Emu"
-    elif runner in ("native_bsp", "iron_exec"):
-        emulator = "FieldX86Die"
+    retro = _retro_chips_posture(terminal, pattern, comb)
+    if retro:
+        runner = str(retro.get("runner") or "emulator")
+        emulator = str(retro.get("emulator") or "FieldChips")
+    else:
+        emulator = str(terminal.get("emulator") or "FieldX86Die")
+        if runner == "python" and not fm:
+            emulator = "FieldX86Emu"
+        elif runner in ("native_bsp", "iron_exec"):
+            emulator = "FieldX86Die"
 
     condense = comb.get("plate_condense") or {}
     larger_plate = bool(condense.get("condensed")) and die_slots < 512 and fm
@@ -424,11 +534,18 @@ def select_exec_posture(
             profile = "belt_1_0"
             die_slots = min(die_slots, 256)
 
+    launch_surface = retro.get("launch_surface") if retro else None
+    launch_system = retro.get("system") if retro else None
+
     return {
         "pattern_id": pattern.get("id", chosen_id),
         "label": pattern.get("label", ""),
         "runner": runner,
         "emulator": emulator,
+        "launch_surface": launch_surface,
+        "launch_system": launch_system,
+        "retro_chips": bool(retro),
+        "retro_source": (retro or {}).get("source"),
         "free_meld": fm,
         "belt_profile": profile,
         "die_slots": die_slots,
@@ -628,6 +745,15 @@ def build_bridge(*, write: bool = True) -> dict[str, Any]:
     chain = organize.get("ironclad_chain") or {}
     field_surfaces["exec_hook"] = {
         "queen_launch_iron_exec": posture.get("queen_launch_iron_exec"),
+        "emulator_launch": {
+            "surface": posture.get("launch_surface") or (
+                "queen_game_room" if posture.get("emulator") == "FieldChips" else None
+            ),
+            "api": "/api/game-room",
+            "action": "launch",
+            "system": posture.get("launch_system"),
+            "spawn_rtx": posture.get("emulator") == "FieldChips",
+        } if posture.get("emulator") == "FieldChips" else None,
         "uncompiled_launch": any(
             r.get("id") == "field_g16_launch" and r.get("ok") for r in surface_rows
         ),
@@ -698,7 +824,7 @@ def build_bridge(*, write: bool = True) -> dict[str, Any]:
         "doctrine": (
             "Plate meld + truth blocks + library clear sentences → condense groups into larger plates. "
             "Combinatoric tree walked to end; terminal leaf picks runner/emulator/die. "
-            "FieldX86Die default; FieldX86Emu only when Python runner and no free_meld."
+            "FieldChips + queen_game_room for retro CHIPS leaves; FieldX86Die default otherwise."
         ),
     }
     if write:

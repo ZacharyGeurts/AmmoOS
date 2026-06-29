@@ -1,0 +1,14 @@
+{
+  "id": "nes_might_and_magic_secret_of_the_inner_sanctum",
+  "title": "Might and Magic: Secret of the Inner Sanctum",
+  "author": "Sammy Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_might_and_magic_secret_of_the_inner_sanctum-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_might_and_magic_secret_of_the_inner_sanctum/nes_might_and_magic_secret_of_the_inner_sanctum.h7c"
+}

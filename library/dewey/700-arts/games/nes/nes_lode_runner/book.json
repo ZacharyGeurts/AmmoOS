@@ -1,0 +1,14 @@
+{
+  "id": "nes_lode_runner",
+  "title": "Lode Runner",
+  "author": "Br\u00f8derbund Software",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_lode_runner-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_lode_runner/nes_lode_runner.h7c"
+}

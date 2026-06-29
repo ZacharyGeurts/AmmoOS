@@ -1,0 +1,14 @@
+{
+  "id": "nes_short_order_eggsplode",
+  "title": "Short Order & Eggsplode",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_short_order_eggsplode-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Strategy",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_short_order_eggsplode/nes_short_order_eggsplode.h7c"
+}

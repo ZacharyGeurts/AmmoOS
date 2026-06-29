@@ -1,0 +1,14 @@
+{
+  "id": "nes_magic_of_scheherazade",
+  "title": "Magic of Scheherazade",
+  "author": "Culture Brain",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_magic_of_scheherazade-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_magic_of_scheherazade/nes_magic_of_scheherazade.h7c"
+}

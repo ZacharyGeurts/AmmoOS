@@ -96,6 +96,43 @@ VECTOR_MAP = {
 }
 
 _PERMITTED_CACHE: dict[str, Any] | None = None
+_OWN_ROUTER_MOD: Any | None = None
+
+
+def _own_router_mod() -> Any | None:
+    global _OWN_ROUTER_MOD
+    if _OWN_ROUTER_MOD is not None:
+        return _OWN_ROUTER_MOD
+    py = INSTALL / "lib" / "znetwork-wireless-fcc.py"
+    if not py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("znetwork_wireless_fcc_rf", py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _OWN_ROUTER_MOD = mod
+    return mod
+
+
+def _is_own_router(
+    *,
+    ip: str = "",
+    mac: str = "",
+    bssid: str = "",
+    ssid: str = "",
+) -> bool:
+    mod = _own_router_mod()
+    if mod and hasattr(mod, "is_own_router"):
+        return bool(mod.is_own_router(ip=ip, mac=mac, bssid=bssid, ssid=ssid))
+    return False
+
+
+def _fix_own_router(issue: str, detail: str = "") -> dict[str, Any] | None:
+    mod = _own_router_mod()
+    if mod and hasattr(mod, "fix_own_router"):
+        return mod.fix_own_router(issue=issue, detail=detail)
+    return None
 
 
 def _now() -> str:
@@ -1367,6 +1404,9 @@ def _disable_unhealthy_forever(threat: dict[str, Any]) -> dict[str, Any] | None:
 
     bssid = str(threat.get("bssid") or "")
     ip = str(threat.get("ip") or "")
+    if _is_own_router(ip=ip, bssid=bssid, ssid=str(threat.get("ssid") or "")):
+        _fix_own_router("forever_disable_own_router", f"Blocked forever-disable on home router ({kind})")
+        return {"action": "own_router_fix_not_forever", "bssid": bssid, "ip": ip or None}
     bnorm = _norm_mac(bssid)
     reg = _forever_registry()
     entries = reg.setdefault("entries", {})
@@ -1529,6 +1569,10 @@ def _detect_wireless_threats(
             if ok:
                 permitted_n += 1
             elif permitted_only:
+                if _is_own_router(bssid=str(ap.get("bssid") or ""), ssid=str(ap.get("ssid") or "")):
+                    ap["own_router"] = True
+                    permitted_n += 1
+                    continue
                 unpermitted_aps.append(ap)
                 threats.append({
                     "ts": ts,
@@ -1660,9 +1704,20 @@ def _detect_wireless_threats(
 
     if active:
         active_bssid = _norm_mac(str(active.get("bssid") or ""))
+        active_ssid = str(active.get("ssid") or "")
+        if _is_own_router(bssid=active_bssid, ssid=active_ssid):
+            active["own_router"] = True
+            hist["own_router_active"] = True
         active_ok, active_reason = _is_permitted_frequency(
             active.get("freq_mhz"), active.get("channel"),
         )
+        if active.get("own_router") and not active_ok:
+            _fix_own_router(
+                "connected_own_router_freq_parse",
+                f"Home router on ch{active.get('channel')} — refresh path, no disconnect",
+            )
+            active_ok = True
+            active_reason = "own_router_fix_not_kill"
         if not active_ok and permitted_only:
             threats.append({
                 "ts": ts,
@@ -1681,6 +1736,12 @@ def _detect_wireless_threats(
         for t in threats:
             if t.get("severity") in ("high", "critical") and t.get("bssid"):
                 if _norm_mac(str(t.get("bssid"))) == active_bssid:
+                    if active.get("own_router"):
+                        _fix_own_router(
+                            "own_router_false_rogue",
+                            f"Skipped kill — home router {active_ssid} flagged by {t.get('kind')}",
+                        )
+                        break
                     threats.append({
                         "ts": ts,
                         "kind": "connected_rogue",
@@ -1830,6 +1891,33 @@ def _lawful_kick(
         disconnect_kinds.update(kickable)
 
     must_disconnect = bool(kickable & disconnect_kinds) or "connected_unpermitted" in kickable
+    if active and _is_own_router(
+        bssid=str(active.get("bssid") or ""),
+        ssid=str(active.get("ssid") or ""),
+    ):
+        fix = _fix_own_router("lawful_kick_own_router", "Home router — fix path instead of disconnect")
+        strikes: list[dict[str, Any]] = []
+        mod = _own_router_mod()
+        if mod and hasattr(mod, "strike_action_behind"):
+            for t in threats:
+                if t.get("severity") not in ("high", "critical"):
+                    continue
+                if _is_own_router(
+                    ip=str(t.get("ip") or ""),
+                    bssid=str(t.get("bssid") or ""),
+                    ssid=str(t.get("ssid") or ""),
+                ):
+                    strikes.append(mod.strike_action_behind(t))
+                elif t.get("kind") in ("hot_attack_correlated", "correlated_hostile_ip", "outbound_wireless_signal"):
+                    strikes.append(mod.strike_action_behind(t))
+        return {
+            "active": True,
+            "action": "fix_own_router_strike_actor",
+            "fcc_passive_only": cfg.get("fcc_passive_only", True),
+            "own_router_fix": fix,
+            "action_strikes": strikes,
+            "kicks": [],
+        }
     if active and wifi_dev and must_disconnect:
         reason = "fcc_shoot_to_kill_unpermitted" if "connected_unpermitted" in kickable else "fcc_lawful_kick_rogue_ap"
         if _disconnect_wifi(wifi_dev, reason):

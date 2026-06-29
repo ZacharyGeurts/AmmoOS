@@ -1,0 +1,14 @@
+{
+  "id": "nes_ikari_iii_the_rescue",
+  "title": "Ikari III - The Rescue",
+  "author": "SNK Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_ikari_iii_the_rescue-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_ikari_iii_the_rescue/nes_ikari_iii_the_rescue.h7c"
+}

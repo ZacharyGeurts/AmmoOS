@@ -270,8 +270,28 @@ def snapshot(advanced: bool | None = None) -> dict[str, Any]:
     return payload
 
 
+def _filter_audio_patch(patch: dict[str, Any]) -> dict[str, Any]:
+    try:
+        import importlib.util
+
+        mod_path = INSTALL / "lib" / "queen-settings-surface.py"
+        if not mod_path.is_file():
+            mod_path = Path(__file__).resolve().parent / "queen-settings-surface.py"
+        if mod_path.is_file():
+            spec = importlib.util.spec_from_file_location("queen_settings_surface", mod_path)
+            mod = importlib.util.module_from_spec(spec)
+            assert spec and spec.loader
+            spec.loader.exec_module(mod)
+            return mod.audio_patch_allowed(patch)
+    except Exception:
+        pass
+    return dict(patch or {})
+
+
 def apply_settings(patch: dict[str, Any]) -> dict[str, Any]:
+    patch = _filter_audio_patch(patch or {})
     settings = _load_settings()
+    settings["advanced"] = False
     allowed = set(DEFAULT_SETTINGS.keys())
     for key, val in patch.items():
         if key in allowed:

@@ -1,0 +1,14 @@
+{
+  "id": "nes_futebol",
+  "title": "Futebol",
+  "author": "Milmar Ind\u00fastria e Com\u00e9rcio",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_futebol-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_futebol/nes_futebol.h7c"
+}

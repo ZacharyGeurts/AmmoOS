@@ -1,0 +1,14 @@
+{
+  "id": "nes_guardian_legend",
+  "title": "Guardian Legend",
+  "author": "Br\u00f8derbund Software",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_guardian_legend-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_guardian_legend/nes_guardian_legend.h7c"
+}

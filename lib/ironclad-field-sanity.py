@@ -159,6 +159,23 @@ def _truth_receipt(
     }
 
 
+def _preflight_no_file(body: dict[str, Any]) -> dict[str, Any]:
+    gate_py = INSTALL / "lib" / "field-no-file-gate.py"
+    if not gate_py.is_file():
+        return {"ok": True, "skipped": "gate_missing"}
+    try:
+        spec = importlib.util.spec_from_file_location("field_no_file_gate_ic", gate_py)
+        if not spec or not spec.loader:
+            return {"ok": True, "skipped": "gate_load_failed"}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "preflight_body"):
+            return mod.preflight_body(body)
+    except (ImportError, OSError, AttributeError, ValueError):
+        pass
+    return {"ok": True, "skipped": "gate_error"}
+
+
 def _preflight_singularize(body: dict[str, Any]) -> tuple[dict[str, Any], int]:
     sing_py = INSTALL / "lib" / "field-depth-singularizer.py"
     if not sing_py.is_file():
@@ -179,6 +196,7 @@ def _preflight_singularize(body: dict[str, Any]) -> tuple[dict[str, Any], int]:
 def field_sanity_operator(body: dict[str, Any] | None = None) -> dict[str, Any]:
     """Run Queen simplify pass and meld receipt into Ironclad truth."""
     body = body or {}
+    no_file = _preflight_no_file(body)
     body, preflight_fixes = _preflight_singularize(body)
     doctrine = _load(DOCTRINE, {})
     queen = _queen_sanity_mod()
@@ -233,7 +251,9 @@ def field_sanity_operator(body: dict[str, Any] | None = None) -> dict[str, Any]:
         },
         "preflight_fixes": preflight_fixes,
         "depth_singularized": preflight_fixes > 0,
-        "ok": bool(queen_result.get("ok")) and receipt.get("pass_ok"),
+        "no_field_files": no_file,
+        "never_poison_the_well": bool(no_file.get("ok")),
+        "ok": bool(queen_result.get("ok")) and receipt.get("pass_ok") and bool(no_file.get("ok")),
         "operator_ok": receipt.get("pass_ok"),
         "detail": receipt.get("detail"),
     }

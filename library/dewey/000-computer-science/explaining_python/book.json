@@ -4,13 +4,15 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-4743c1b9a62f",
+  "ein": "H7C-FIELD-6e067a5e25ca",
   "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
   "h7c": "library/dewey/000-computer-science/explaining_python/explaining_python.h7c",
@@ -19,5 +21,5 @@
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "python",
   "cover": "/world/assets/combinatronic/books/python.png",
-  "updated": "2026-06-27T13:09:08Z"
+  "updated": "2026-06-27T17:41:59Z"
 }

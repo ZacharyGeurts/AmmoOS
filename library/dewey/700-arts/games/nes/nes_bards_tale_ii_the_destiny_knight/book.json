@@ -1,0 +1,14 @@
+{
+  "id": "nes_bards_tale_ii_the_destiny_knight",
+  "title": "Bard's Tale II: The Destiny Knight",
+  "author": "Pony Canyon",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_bards_tale_ii_the_destiny_knight-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_bards_tale_ii_the_destiny_knight/nes_bards_tale_ii_the_destiny_knight.h7c"
+}

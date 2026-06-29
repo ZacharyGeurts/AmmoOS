@@ -1,0 +1,14 @@
+{
+  "id": "nes_tower_of_druaga",
+  "title": "Tower of Druaga",
+  "author": "Namco Limited",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_tower_of_druaga-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1985,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_tower_of_druaga/nes_tower_of_druaga.h7c"
+}

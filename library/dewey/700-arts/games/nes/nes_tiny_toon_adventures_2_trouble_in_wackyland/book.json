@@ -1,0 +1,14 @@
+{
+  "id": "nes_tiny_toon_adventures_2_trouble_in_wackyland",
+  "title": "Tiny Toon Adventures 2: Trouble in Wackyland",
+  "author": "Konami",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_tiny_toon_adventures_2_trouble_in_wackyland-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1993,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_tiny_toon_adventures_2_trouble_in_wackyland/nes_tiny_toon_adventures_2_trouble_in_wackyland.h7c"
+}

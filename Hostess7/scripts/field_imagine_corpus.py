@@ -10,7 +10,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS_CACHE = ROOT / "cache" / "fieldstorage" / "brain" / "imagine" / "corpus.json"
 REGISTRY = ROOT / "cache" / "fieldstorage" / "brain" / "imagine" / "live_video_registry.json"
-CORPUS_VERSION = 2
+CORPUS_VERSION = 3
 
 # Grok Imagine workflow (from xAI docs + Imagine skill)
 IMAGINE_WORKFLOW: tuple[dict[str, str], ...] = (
@@ -379,6 +379,8 @@ def ensure_corpus() -> Path:
                 "imagine_api": "XAI_API_KEY → grok-imagine-image / grok-imagine-video-1.5",
                 "recommended_backend": recommend_live_backend(),
                 "realtime_count": len(list_realtime_entries()),
+                "nexus_imaging_teach": "field_imagine_nexus_teach.py",
+                "nexus_imaging_chamber": "lib/hostess7-imaging.py",
             },
         }
         CORPUS_CACHE.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")

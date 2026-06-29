@@ -1,16 +1,21 @@
 {
   "schema": "ammoos-platform-release/v1",
   "product": "AmmoOS",
-  "version": "1.0.1-beta",
-  "tag": "v1.0.1-beta",
+  "version": "1.0.0",
+  "tag": "v1.0.0",
+  "edition": "stable",
+  "channel": "release",
   "release_model": "source_bootstrap_per_platform",
-  "statement": "AmmoOS beta \u2014 browser-first field OS with native Queen shell. Bootstrap source on each target; web surfaces run on loopback.",
+  "statement": "AmmoOS 1.0.0 — stable field OS. Queen underlying browser, ZNetwork sole internet pipe, local Truth DNS + Field DHCP auto-connect on 127.0.0.1.",
   "doctrine": "data/ammoos-version.json",
   "launch": {
     "browser_primary": true,
     "panel_port": 9477,
     "queen_port": 9481,
-    "verify": "scripts/ammoos-launch-verify.sh"
+    "verify": "scripts/ammoos-launch-verify.sh",
+    "local_dns": "lib/field-dns.py",
+    "local_dhcp": "lib/field-dhcp.py",
+    "local_connect": "lib/field-local-dns-connect.py"
   },
   "platforms": [
     {
@@ -22,7 +27,7 @@
         "installer": "install-all.sh",
         "dev": "nexus.sh"
       },
-      "notes": "Primary \u2014 full panel, Queen browser, systemd deploy"
+      "notes": "Primary — full panel, Queen browser, local DNS/DHCP, systemd deploy"
     },
     {
       "id": "linux-gnu-aarch64",
@@ -33,7 +38,7 @@
         "installer": "install-all.sh",
         "cross_host": "linux-gnu-x86_64"
       },
-      "notes": "ARM64 Linux \u2014 source bootstrap; Queen RTX build on target"
+      "notes": "ARM64 Linux — source bootstrap; Queen RTX build on target"
     },
     {
       "id": "linux-gnu-arm",
@@ -54,7 +59,7 @@
         "installer": "install-all.sh",
         "g16_cross": "riscv64-linux-gnu-"
       },
-      "notes": "RISC-V 64 \u2014 pairs with Grok16 RISC-V linker doctrine"
+      "notes": "RISC-V 64 — pairs with Grok16 RISC-V linker doctrine"
     },
     {
       "id": "linux-gnu-i386",
@@ -86,7 +91,7 @@
         "dev": "nexus.sh",
         "browser_only": true
       },
-      "notes": "Apple Silicon \u2014 browser surfaces + dev tree; no systemd deploy"
+      "notes": "Apple Silicon — browser surfaces + dev tree; no systemd deploy"
     },
     {
       "id": "darwin-x86_64",
@@ -97,7 +102,7 @@
         "dev": "nexus.sh",
         "browser_only": true
       },
-      "notes": "Intel macOS \u2014 browser surfaces + dev tree"
+      "notes": "Intel macOS — browser surfaces + dev tree"
     },
     {
       "id": "freebsd-amd64",
@@ -107,7 +112,7 @@
       "bootstrap": {
         "installer": "install.sh"
       },
-      "notes": "FreeBSD \u2014 panel HTTP stack; verify Queen forge on target"
+      "notes": "FreeBSD — panel HTTP stack; verify Queen forge on target"
     },
     {
       "id": "android-aarch64",
@@ -118,7 +123,7 @@
         "webview": "Queen/world/browser.html",
         "ndk": true
       },
-      "notes": "WebView shell \u2014 Queen world browser surface"
+      "notes": "WebView shell — Queen world browser surface"
     }
   ],
   "g16_pairing": "4.7.1"

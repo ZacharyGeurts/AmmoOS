@@ -1,0 +1,14 @@
+{
+  "id": "nes_casino_kid_2",
+  "title": "Casino Kid 2",
+  "author": "SOFEL",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_casino_kid_2-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Traditional",
+  "year": 1993,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_casino_kid_2/nes_casino_kid_2.h7c"
+}

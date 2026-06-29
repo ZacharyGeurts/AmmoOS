@@ -1,0 +1,14 @@
+{
+  "id": "nes_sted_iseki_wakusei_no_yabou",
+  "title": "STED: Iseki Wakusei no Yabou",
+  "author": "K. Amusement Leasing Co.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_sted_iseki_wakusei_no_yabou-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_sted_iseki_wakusei_no_yabou/nes_sted_iseki_wakusei_no_yabou.h7c"
+}

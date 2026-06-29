@@ -1,0 +1,14 @@
+{
+  "id": "nes_legend_of_the_ghost_lion",
+  "title": "Legend of the Ghost Lion",
+  "author": "Kotobuki System",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_legend_of_the_ghost_lion-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1993,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_legend_of_the_ghost_lion/nes_legend_of_the_ghost_lion.h7c"
+}

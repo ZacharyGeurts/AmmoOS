@@ -23,6 +23,9 @@ MANIFEST = INSTALL / "data" / "field-combinatronic-visuals-manifest.json"
 REGISTRY = INSTALL / "data" / "field-combinatronic-visuals-registry.json"
 ASSETS = INSTALL / "data" / "combinatronic-visuals"
 CHIPS_DIR = ASSETS / "chips"
+CHIPS_THUMBS_DIR = CHIPS_DIR / "thumbs"
+CHIPS_DETAIL_DIR = CHIPS_DIR / "detail"
+IRONCLAD_CHIPS = STATE / "field-ironclad-chips-combinatorics.json"
 BOOKS_DIR = ASSETS / "books"
 WORLD_ASSETS = QUEEN / "world" / "assets" / "combinatronic"
 LIBRARY_SHELF = INSTALL / "library" / "dewey" / "000-computer-science"
@@ -88,6 +91,8 @@ LANG_LABELS: dict[str, str] = {
     "algol": "Algol",
     "snobol": "SNOBOL",
     "cobol_copy": "COBOL COPY",
+    "linux": "Linux",
+    "economics": "Economics",
 }
 
 LANG_ACCENT: dict[str, tuple[int, int, int]] = {
@@ -105,6 +110,8 @@ LANG_ACCENT: dict[str, tuple[int, int, int]] = {
     "turbo_pascal": (0, 48, 96),
     "basic": (0, 128, 128),
     "ammolang": (96, 32, 128),
+    "linux": (252, 198, 45),
+    "economics": (46, 139, 87),
 }
 
 
@@ -148,6 +155,258 @@ def _chip_ids() -> list[str]:
     return [str(c["id"]) for c in catalog.get("chips") or [] if c.get("id")]
 
 
+def _ironclad_chip_ids() -> list[str]:
+    doc = _load(IRONCLAD_CHIPS, {})
+    return [str(c["id"]) for c in doc.get("chips") or [] if c.get("id")]
+
+
+def _ironclad_chip_row(chip_id: str) -> dict[str, Any] | None:
+    doc = _load(IRONCLAD_CHIPS, {})
+    for row in doc.get("chips") or []:
+        if str(row.get("id")) == chip_id:
+            return dict(row)
+    return None
+
+
+def _catalog_chip(chip_id: str) -> dict[str, Any] | None:
+    catalog = _load(CATALOG, {})
+    for row in catalog.get("chips") or []:
+        if str(row.get("id")) == chip_id:
+            return dict(row)
+    return None
+
+
+_KIND_VISUAL_DEFAULTS: dict[str, dict[str, Any]] = {
+    "host_cpu": {"package": "pga", "pins": 168, "body": "#1a1a1a", "socket": "CPU socket"},
+    "guest_cpu": {"package": "dip", "pins": 40, "body": "#1c1c1c", "socket": "DIP-40"},
+    "mame_device": {"package": "dip", "pins": 40, "body": "#222228", "socket": "DIP-40"},
+    "chips_hot": {"package": "dip", "pins": 40, "body": "#1a1a1a", "socket": "DIP-40"},
+    "soc": {"package": "qfp", "pins": 208, "body": "#252530", "socket": "BGA/QFP"},
+    "gpu": {"package": "qfp", "pins": 256, "body": "#1a1a22", "socket": "BGA"},
+    "logic": {"package": "dip", "pins": 14, "body": "#1a1a18", "socket": "DIP-14"},
+    "memory": {"package": "dip", "pins": 32, "body": "#22221a", "socket": "DIP-32"},
+    "analog": {"package": "dip", "pins": 16, "body": "#1c1c20", "socket": "DIP-16"},
+    "sound": {"package": "dip", "pins": 28, "body": "#1a1a1a", "socket": "DIP-28"},
+    "video": {"package": "dip", "pins": 40, "body": "#1a1a1a", "socket": "DIP-40"},
+    "network": {"package": "plcc", "pins": 68, "body": "#252528", "socket": "PLCC-68"},
+    "northbridge": {"package": "qfp", "pins": 304, "body": "#222228", "socket": "BGA"},
+    "southbridge": {"package": "qfp", "pins": 208, "body": "#222228", "socket": "BGA"},
+    "super_io": {"package": "qfp", "pins": 128, "body": "#282830", "socket": "QFP-128"},
+    "chipset": {"package": "dip", "pins": 28, "body": "#222228", "socket": "DIP-28"},
+    "fpga": {"package": "plcc", "pins": 84, "body": "#1a2028", "socket": "PLCC-84"},
+    "dsp": {"package": "qfp", "pins": 144, "body": "#1c1c22", "socket": "QFP-144"},
+    "coprocessor": {"package": "dip", "pins": 68, "body": "#1a1a1a", "socket": "DIP-68"},
+    "fab": {"package": "qfp", "pins": 0, "body": "#303038", "socket": "wafer die"},
+    "glue": {"package": "plcc", "pins": 84, "body": "#222228", "socket": "PLCC-84"},
+    "pio": {"package": "dip", "pins": 24, "body": "#1c1c1c", "socket": "DIP-24"},
+    "fdc": {"package": "dip", "pins": 40, "body": "#1a1a1a", "socket": "DIP-40"},
+    "mmu": {"package": "dip", "pins": 40, "body": "#222228", "socket": "DIP-40"},
+    "isa_platform": {"package": "dip", "pins": 40, "body": "#1a1a1a", "socket": "ISA"},
+    "arcade_asic": {"package": "dip", "pins": 40, "body": "#1a1a1a", "socket": "DIP-40"},
+}
+
+_KIND_SCHEMATIC_DEFAULTS: dict[str, str] = {
+    "host_cpu": "Fetch → decode → dispatch → ALU/FPU → L1 · bus · MMU · interrupt controller",
+    "guest_cpu": "Opcode fetch · address latch · ALU · flags · IRQ/NMI acknowledge",
+    "mame_device": "MAME device bus · clock domain · memory map hook · save-state leaf",
+    "chips_hot": "Hot-path dispatch vector · register file · cycle-accurate timing band",
+    "soc": "CPU cluster · GPU tile · NPU/ISP · memory controller · I/O PHY south",
+    "gpu": "Command processor · shader cores · ROP · VRAM controller · display PHY",
+    "logic": "Combinatorial gates · propagation delay · fan-in/out · truth table",
+    "memory": "Address decode · row/column · sense amp · refresh · bus timing",
+    "analog": "Op-amp stages · reference · comparator · filter network",
+    "sound": "FM/PSG/wavetable channels · mixer · envelope · DAC output",
+    "video": "Tile/sprite fetch · palette · scanline IRQ · composite/RGB encoder",
+    "network": "MAC · PHY · DMA ring · packet buffer · IRQ coalesce",
+    "northbridge": "CPU front-side bus · AGP/PCIe root · DRAM controller",
+    "southbridge": "PCI/ISA bridge · ACPI · LPC · SATA/USB legacy",
+    "super_io": "Floppy · parallel · serial · keyboard · RTC · ACPI SCI",
+    "chipset": "Address decode · glue logic · wait-state generator · IRQ router",
+    "fpga": "LUT fabric · routing · DSP slices · PLL · transceivers",
+    "dsp": "MAC array · program/data memory · DMA · serial I/O",
+    "coprocessor": "FPU/MMU extension · opcode decode · register file · bus master",
+    "fab": "Wafer die · process node · reticle · yield bin",
+    "glue": "Timer · IRQ · DMA glue · board-specific ASIC",
+    "pio": "Parallel port latch · handshake · IRQ on strobe",
+    "fdc": "MFM/FM decode · DMA · index pulse · drive select",
+    "mmu": "TLB · page tables · protection bits · TLB shootdown",
+    "isa_platform": "ISA slot decode · wait states · IRQ/DMA cascade",
+    "arcade_asic": "Board timing · sprite priority · scanline counter · coin/IRQ glue",
+}
+
+_DESIGN_OVER_STANDARD = (
+    "Field catalog: pink felt #d4899a macro on #080808 — exact imprint + pin geometry from seed, "
+    "not stock clip art. Combinatronics assigns path_pct band; ironclad detail adds vendor/kind/era. "
+    "Differs from datasheet photos: package type drives render (PGA/QFP/DIP/BGA), pin count is authoritative."
+)
+
+CPU_LIBRARY_SEED = INSTALL / "data" / "field-cpu-library-seed.json"
+
+
+def _cpu_library_row(chip_id: str) -> dict[str, Any] | None:
+    seed = _load(CPU_LIBRARY_SEED, {})
+    for row in seed.get("detailed") or []:
+        if str(row.get("id")) == chip_id:
+            return dict(row)
+    return None
+
+
+def _kind_schematic(kind: str, label: str, *, pins: int = 0, package: str = "") -> str:
+    base = _KIND_SCHEMATIC_DEFAULTS.get(kind) or _KIND_SCHEMATIC_DEFAULTS["mame_device"]
+    pin_bit = f" · {pins}-pin {package.upper()}" if pins and package else ""
+    return f"{label}{pin_bit} — {base}"
+
+
+def _catalog_design_over_standard(chip_row: dict[str, Any]) -> str:
+    custom = str(chip_row.get("design_over_standard") or "").strip()
+    if custom:
+        return custom
+    pins = chip_row.get("pins")
+    package = str(chip_row.get("package") or "dip")
+    kind = str(chip_row.get("kind") or "mame_device").replace("_", " ")
+    extra = ""
+    cpu = _cpu_library_row(str(chip_row.get("id") or ""))
+    if cpu and cpu.get("ai_detail"):
+        extra = f" CPU library: {cpu['ai_detail']}"
+    return f"{_DESIGN_OVER_STANDARD} This die: {kind}, {pins} pins, {package.upper()}.{extra}"
+
+
+def enrich_chip_catalog(*, write: bool = False) -> dict[str, Any]:
+    """Verify featured render overlay — schematic/design computed at render, not stored in catalog."""
+    icc = _import_py(INSTALL / "lib" / "field-ironclad-chips-combinatorics.py", "icc_vis_enrich")
+    if icc and hasattr(icc, "clean_catalog_render_layer") and write:
+        icc.clean_catalog_render_layer(write=True)
+    catalog = _load(CATALOG, {})
+    iron_ids = set(_ironclad_chip_ids())
+    chips = catalog.get("chips") or []
+    missing: list[str] = []
+    stripped = 0
+    for row in chips:
+        cid = str(row.get("id") or "")
+        if cid and iron_ids and cid not in iron_ids:
+            missing.append(cid)
+        for drop in ("schematic_blueprint", "design_over_standard", "note", "source"):
+            if drop in row:
+                row.pop(drop, None)
+                stripped += 1
+    if write and stripped:
+        catalog["role"] = "featured_render_overlay"
+        catalog["truth_source"] = "field-ironclad-chips-combinatorics.json"
+        _save(CATALOG, catalog)
+    return {
+        "ok": len(missing) == 0,
+        "chip_count": len(chips),
+        "role": catalog.get("role") or "featured_render_overlay",
+        "missing_in_ironclad": missing[:24],
+        "stripped_stored_truth": stripped,
+        "note": "schematic/design_over_standard render-time only via _chip_visual_spec",
+    }
+
+
+def _import_py(path: Path, name: str) -> Any | None:
+    if not path.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location(name, path)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _parse_note_visuals(note: str | None) -> dict[str, Any]:
+    if not note:
+        return {}
+    out: dict[str, Any] = {}
+    pkg = re.search(r"package\s*=\s*(\w+)", note, re.I)
+    pins = re.search(r"pins\s*=\s*(\d+)", note, re.I)
+    if pkg:
+        out["package"] = pkg.group(1).lower()
+    if pins:
+        out["pins"] = int(pins.group(1))
+    return out
+
+
+def _build_chip_imprint(chip_row: dict[str, Any], catalog_row: dict[str, Any] | None = None) -> list[str]:
+    if catalog_row and catalog_row.get("imprint"):
+        return [str(x) for x in catalog_row["imprint"]]
+    lines: list[str] = []
+    vendor = str(chip_row.get("vendor") or "").strip()
+    label = str(chip_row.get("label") or chip_row.get("id") or "CHIP").strip()
+    if vendor and vendor not in ("—", "-", "?"):
+        lines.append(vendor.upper()[:18])
+    if label:
+        lines.append(label[:22])
+    mhz = chip_row.get("mhz")
+    bits = chip_row.get("bits")
+    era = chip_row.get("era")
+    if mhz:
+        lines.append(f"{mhz}MHz")
+    if bits:
+        lines.append(f"{bits}-bit")
+    if era:
+        lines.append(f"©{era}")
+    kind = str(chip_row.get("kind") or "")
+    if kind and len(lines) < 4:
+        lines.append(kind.replace("_", " ").upper()[:16])
+    if not lines:
+        lines.append(str(chip_row.get("id", "CHIP"))[:18])
+    return lines[:5]
+
+
+def _chip_visual_spec(chip_id: str, chip_row: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Derive package/pins/body/imprint from ironclad row, catalog, or kind defaults."""
+    row = chip_row or _ironclad_chip_row(chip_id) or {}
+    catalog_row = _catalog_chip(chip_id)
+    kind = str(row.get("kind") or "mame_device")
+    defaults = dict(_KIND_VISUAL_DEFAULTS.get(kind) or _KIND_VISUAL_DEFAULTS["mame_device"])
+    note_vis = _parse_note_visuals(row.get("note"))
+    spec: dict[str, Any] = {
+        "id": chip_id,
+        "label": row.get("label") or ((catalog_row or {}).get("label")) or chip_id,
+        "vendor": row.get("vendor") or (catalog_row or {}).get("vendor") or "—",
+        "kind": kind,
+        "family": row.get("family"),
+        "era": row.get("era"),
+        "mhz": row.get("mhz"),
+        "bits": row.get("bits"),
+        "note": row.get("note"),
+        "source": row.get("source"),
+        "mame_device": row.get("mame_device"),
+        "package": str((catalog_row or {}).get("package") or note_vis.get("package") or defaults.get("package") or "dip"),
+        "pins": int((catalog_row or {}).get("pins") or note_vis.get("pins") or defaults.get("pins") or 40),
+        "body": str((catalog_row or {}).get("body") or defaults.get("body") or "#1a1a1a"),
+        "socket": str((catalog_row or {}).get("socket") or defaults.get("socket") or ""),
+        "imprint": _build_chip_imprint(row, catalog_row),
+    }
+    if catalog_row:
+        for key in ("schematic_blueprint", "design_over_standard", "kind", "family", "bits", "mhz", "era"):
+            if catalog_row.get(key) is not None and spec.get(key) in (None, "", "—"):
+                spec[key] = catalog_row[key]
+    cpu = _cpu_library_row(chip_id)
+    if cpu:
+        if not spec.get("schematic_blueprint") and cpu.get("schematic_blueprint"):
+            spec["schematic_blueprint"] = cpu["schematic_blueprint"]
+        if not spec.get("design_over_standard") and cpu.get("ai_detail"):
+            spec["design_over_standard"] = _catalog_design_over_standard({**spec, "design_over_standard": cpu["ai_detail"]})
+    if not spec.get("schematic_blueprint"):
+        spec["schematic_blueprint"] = _kind_schematic(
+            str(spec.get("kind") or "mame_device"),
+            str(spec.get("label") or chip_id),
+            pins=int(spec.get("pins") or 0),
+            package=str(spec.get("package") or "dip"),
+        )
+    if not spec.get("design_over_standard"):
+        spec["design_over_standard"] = _catalog_design_over_standard(spec)
+    if kind == "fab":
+        spec["package"] = "die"
+        spec["pins"] = 0
+    return spec
+
+
 def _lang_ids() -> list[str]:
     seed = _load(SEED, {})
     return sorted((seed.get("language_packs") or {}).keys())
@@ -171,6 +430,41 @@ def _expected_file_rows() -> list[dict[str, Any]]:
                 "path": _rel(WORLD_ASSETS / "chips" / f"{chip_id}.png"),
                 "repair_cmd": "repair mirror",
                 "mirror_of": _rel(CHIPS_DIR / f"{chip_id}.png"),
+            }
+        )
+    for chip_id in _ironclad_chip_ids():
+        rows.append(
+            {
+                "pattern": "chip_thumb_png",
+                "chip_id": chip_id,
+                "path": _rel(CHIPS_THUMBS_DIR / f"{chip_id}.png"),
+                "repair_cmd": f"ironclad-chip {chip_id}",
+            }
+        )
+        rows.append(
+            {
+                "pattern": "chip_detail_png",
+                "chip_id": chip_id,
+                "path": _rel(CHIPS_DETAIL_DIR / f"{chip_id}.png"),
+                "repair_cmd": f"ironclad-chip {chip_id}",
+            }
+        )
+        rows.append(
+            {
+                "pattern": "chip_thumb_mirror",
+                "chip_id": chip_id,
+                "path": _rel(WORLD_ASSETS / "chips" / "thumbs" / f"{chip_id}.png"),
+                "repair_cmd": "repair mirror ironclad",
+                "mirror_of": _rel(CHIPS_THUMBS_DIR / f"{chip_id}.png"),
+            }
+        )
+        rows.append(
+            {
+                "pattern": "chip_detail_mirror",
+                "chip_id": chip_id,
+                "path": _rel(WORLD_ASSETS / "chips" / "detail" / f"{chip_id}.png"),
+                "repair_cmd": "repair mirror ironclad",
+                "mirror_of": _rel(CHIPS_DETAIL_DIR / f"{chip_id}.png"),
             }
         )
     for lang_id in _lang_ids():
@@ -214,6 +508,7 @@ def _expected_file_rows() -> list[dict[str, Any]]:
             {"pattern": "registry", "path": _rel(REGISTRY), "repair_cmd": "registry"},
             {"pattern": "panel", "path": "field-combinatronic-visuals-panel.json", "root": "state", "repair_cmd": "manifest"},
             {"pattern": "chip_catalog", "path": _rel(CATALOG), "role": "source"},
+            {"pattern": "ironclad_chips", "path": _rel(IRONCLAD_CHIPS), "role": "source", "root": "state"},
             {"pattern": "program_seed", "path": _rel(SEED), "role": "source"},
             {"pattern": "doctrine", "path": _rel(DOCTRINE), "role": "source"},
             {"pattern": "generator", "path": _rel(Path(__file__)), "role": "source"},
@@ -225,7 +520,10 @@ def _expected_file_rows() -> list[dict[str, Any]]:
 
 def _resolve_row_path(row: dict[str, Any]) -> Path:
     if row.get("root") == "state":
-        return STATE / Path(row["path"]).name
+        name = Path(row["path"]).name
+        if name == "field-ironclad-chips-combinatorics.json":
+            return IRONCLAD_CHIPS
+        return STATE / name
     return INSTALL / row["path"]
 
 
@@ -319,12 +617,19 @@ def _verify_json(path: Path) -> dict[str, Any]:
 def _verify_row(row: dict[str, Any]) -> dict[str, Any]:
     path = _resolve_row_path(row)
     pattern = row.get("pattern", "")
-    if pattern in ("chip_png", "book_cover", "chip_mirror", "book_mirror"):
-        min_b = 8000 if "chip" in pattern else 3000
+    if pattern in ("chip_png", "chip_thumb_png", "chip_detail_png", "book_cover", "chip_mirror", "book_mirror", "chip_thumb_mirror", "chip_detail_mirror"):
+        if pattern == "chip_thumb_png":
+            min_b = 1500
+        elif pattern == "chip_detail_png":
+            min_b = 12000
+        elif "chip" in pattern:
+            min_b = 8000
+        else:
+            min_b = 3000
         check = _verify_png(path, min_bytes=min_b)
     elif pattern == "h7_manual":
         check = _verify_h7(path)
-    elif pattern in ("book_json", "manifest", "registry", "chip_catalog", "program_seed", "doctrine"):
+    elif pattern in ("book_json", "manifest", "registry", "chip_catalog", "ironclad_chips", "program_seed", "doctrine"):
         check = _verify_json(path)
     elif pattern == "panel":
         check = _verify_json(path) if path.is_file() else {"ok": False, "status": "missing"}
@@ -371,16 +676,26 @@ def verify_all() -> dict[str, Any]:
     }
 
 
-def repair_mirror() -> dict[str, Any]:
+def repair_mirror(*, ironclad: bool = False) -> dict[str, Any]:
     fixed: list[str] = []
     errors: list[dict[str, Any]] = []
-    for chip_id in _chip_ids():
-        src = CHIPS_DIR / f"{chip_id}.png"
-        if not src.is_file():
-            errors.append({"path": _rel(src), "error": "source_missing"})
-            continue
-        _mirror_asset(src, "chips")
-        fixed.append(_rel(WORLD_ASSETS / "chips" / f"{chip_id}.png"))
+    if not ironclad:
+        for chip_id in _chip_ids():
+            src = CHIPS_DIR / f"{chip_id}.png"
+            if not src.is_file():
+                errors.append({"path": _rel(src), "error": "source_missing"})
+                continue
+            _mirror_chip_asset(src)
+            fixed.append(_rel(WORLD_ASSETS / "chips" / f"{chip_id}.png"))
+    for chip_id in _ironclad_chip_ids():
+        for variant, src_dir in (("thumbs", CHIPS_THUMBS_DIR), ("detail", CHIPS_DETAIL_DIR)):
+            src = src_dir / f"{chip_id}.png"
+            if not src.is_file():
+                if ironclad:
+                    errors.append({"path": _rel(src), "error": "source_missing"})
+                continue
+            _mirror_chip_asset(src, variant=variant)
+            fixed.append(_rel(WORLD_ASSETS / "chips" / variant / f"{chip_id}.png"))
     for lang_id in _lang_ids():
         src = BOOKS_DIR / f"{lang_id}.png"
         if not src.is_file():
@@ -395,15 +710,24 @@ def repair_row(row: dict[str, Any]) -> dict[str, Any]:
     pattern = row.get("pattern", "")
     cmd = row.get("repair_cmd", "")
     try:
-        if pattern in ("chip_png", "chip_mirror"):
+        if pattern in ("chip_png", "chip_mirror", "chip_thumb_png", "chip_detail_png", "chip_thumb_mirror", "chip_detail_mirror"):
             chip_id = row.get("chip_id")
             if not chip_id:
                 return {"ok": False, "error": "no_chip_id"}
+            if pattern in ("chip_thumb_png", "chip_detail_png", "chip_thumb_mirror", "chip_detail_mirror"):
+                if pattern.endswith("_mirror"):
+                    variant = "thumbs" if "thumb" in pattern else "detail"
+                    src_dir = CHIPS_THUMBS_DIR if variant == "thumbs" else CHIPS_DETAIL_DIR
+                    src = src_dir / f"{chip_id}.png"
+                    if not src.is_file():
+                        return generate_ironclad_chip(str(chip_id))
+                    return {"ok": True, "mirrored": str(_mirror_chip_asset(src, variant=variant))}
+                return generate_ironclad_chip(str(chip_id))
             if pattern == "chip_mirror":
                 src = CHIPS_DIR / f"{chip_id}.png"
                 if not src.is_file():
                     return generate_chip(chip_id)
-                return {"ok": True, "mirrored": str(_mirror_asset(src, "chips"))}
+                return {"ok": True, "mirrored": str(_mirror_chip_asset(src))}
             return generate_chip(chip_id)
         if pattern in ("book_cover", "book_mirror", "h7_manual", "book_json"):
             lang_id = row.get("lang_id")
@@ -516,6 +840,30 @@ def _hex_rgb(hex_color: str) -> tuple[int, int, int]:
     return 30, 30, 30
 
 
+def _figure_compress_mod():
+    path = INSTALL / "lib" / "field-h7c-figure-compress.py"
+    if not path.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("field_h7c_figure_compress_v", path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod
+    except Exception:
+        pass
+    return None
+
+
+def _save_plate_figure(img, path: Path, *, plate_key: str, accent: tuple[int, int, int]) -> Path:
+    mod = _figure_compress_mod()
+    if mod and hasattr(mod, "save_plate_figure"):
+        return mod.save_plate_figure(img, path, plate_key=plate_key, accent=accent)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(path, "PNG", optimize=True, compress_level=9)
+    return path
+
+
 def _font(size: int, *, bold: bool = False):
     from PIL import ImageFont  # noqa: WPS433
 
@@ -622,6 +970,70 @@ def _draw_pga_pins(draw, cx: int, cy: int, bw: int, bh: int, pins: int, pin_colo
             drawn += 1
 
 
+def _chip_body_scale(pins: int, package: str) -> float:
+    if package == "die":
+        return 0.9
+    if pins > 200:
+        return 1.35
+    if pins > 100:
+        return 1.15
+    if pins <= 16:
+        return 0.75
+    return 1.0
+
+
+def _draw_chip_package(
+    draw,
+    cx: int,
+    cy: int,
+    *,
+    package: str,
+    pins: int,
+    body: tuple[int, int, int],
+    bg: tuple[int, int, int],
+    imprint: list[str],
+    scale: float = 1.0,
+    pin_color: tuple[int, int, int] = (192, 192, 200),
+):
+    bw = int(220 * scale)
+    bh = int(180 * scale) if package == "dip" else int(200 * scale)
+    if package == "die":
+        bw, bh = int(180 * scale), int(180 * scale)
+        draw.ellipse((cx - bw // 2, cy - bh // 2, cx + bw // 2, cy + bh // 2), fill=body, outline=(90, 90, 98), width=2)
+        draw.ellipse((cx - bw // 4, cy - bh // 4, cx + bw // 4, cy + bh // 4), outline=(70, 70, 78), width=1)
+    else:
+        if package == "dip":
+            _draw_dip_pins(draw, cx, cy, bw, bh, pins, pin_color)
+        elif package == "qfp":
+            _draw_qfp_pins(draw, cx, cy, bw, bh, pins, pin_color)
+        elif package == "plcc":
+            _draw_plcc_pins(draw, cx, cy, bw, bh, pins, pin_color)
+        else:
+            _draw_pga_pins(draw, cx, cy, bw + 40, bh + 40, pins, pin_color)
+        draw.rounded_rectangle(
+            (cx - bw // 2, cy - bh // 2, cx + bw // 2, cy + bh // 2),
+            radius=max(4, int(8 * scale)),
+            fill=body,
+            outline=(60, 60, 68),
+            width=max(1, int(2 * scale)),
+        )
+        notch_x = cx - bw // 2 + max(4, int(12 * scale))
+        draw.polygon(
+            [
+                (notch_x, cy - bh // 2),
+                (notch_x + max(8, int(18 * scale)), cy - bh // 2 + max(4, int(10 * scale))),
+                (notch_x, cy - bh // 2 + max(8, int(20 * scale))),
+            ],
+            fill=bg,
+        )
+    line_font = _font(max(8, int(14 * scale)))
+    line_h = max(12, int(18 * scale))
+    y0 = cy - (len(imprint) * line_h) // 2
+    for i, line in enumerate(imprint):
+        tw = draw.textlength(str(line), font=line_font)
+        draw.text((cx - tw / 2, y0 + i * line_h), str(line), fill=(210, 210, 218), font=line_font)
+
+
 def render_chip_closeup(chip: dict[str, Any], *, out: Path | None = None) -> Path:
     from PIL import Image, ImageDraw  # noqa: WPS433
 
@@ -645,45 +1057,12 @@ def render_chip_closeup(chip: dict[str, Any], *, out: Path | None = None) -> Pat
     cx, cy = w // 2, h // 2 + 10
     package = str(chip.get("package", "dip"))
     pins = int(chip.get("pins", 40))
-    body_hex = chip.get("body", "#1a1a1a")
-    body = _hex_rgb(str(body_hex))
-    pin_color = (192, 192, 200)
-
-    scale = 1.0
-    if pins > 200:
-        scale = 1.35
-    elif pins > 100:
-        scale = 1.15
-    elif pins <= 16:
-        scale = 0.75
-    bw = int(220 * scale)
-    bh = int(180 * scale) if package == "dip" else int(200 * scale)
-
-    if package == "dip":
-        _draw_dip_pins(draw, cx, cy, bw, bh, pins, pin_color)
-    elif package == "qfp":
-        _draw_qfp_pins(draw, cx, cy, bw, bh, pins, pin_color)
-    elif package == "plcc":
-        _draw_plcc_pins(draw, cx, cy, bw, bh, pins, pin_color)
-    else:
-        _draw_pga_pins(draw, cx, cy, bw + 40, bh + 40, pins, pin_color)
-
-    draw.rounded_rectangle((cx - bw // 2, cy - bh // 2, cx + bw // 2, cy + bh // 2), radius=8, fill=body, outline=(60, 60, 68), width=2)
-
-    notch_x = cx - bw // 2 + 12
-    draw.polygon(
-        [(notch_x, cy - bh // 2), (notch_x + 18, cy - bh // 2 + 10), (notch_x, cy - bh // 2 + 20)],
-        fill=(bg[0], bg[1], bg[2]),
-    )
-
+    body = _hex_rgb(str(chip.get("body", "#1a1a1a")))
+    scale = _chip_body_scale(pins, package)
     imprint = chip.get("imprint") or [chip.get("label", chip_id)]
-    line_font = _font(max(11, int(14 * scale)))
-    y0 = cy - (len(imprint) * 16) // 2
-    for i, line in enumerate(imprint):
-        tw = draw.textlength(str(line), font=line_font)
-        draw.text((cx - tw / 2, y0 + i * 18), str(line), fill=(210, 210, 218), font=line_font)
+    _draw_chip_package(draw, cx, cy, package=package, pins=pins, body=body, bg=bg, imprint=imprint, scale=scale)
 
-    badge = f"{pins} PINS"
+    badge = f"{pins} PINS" if package != "die" else "WAFER DIE"
     socket = chip.get("socket", "")
     badge_font = _font(18, bold=True)
     pin_font = _font(14)
@@ -695,6 +1074,175 @@ def render_chip_closeup(chip: dict[str, Any], *, out: Path | None = None) -> Pat
 
     img = _vignette(img, 0.42)
     out = out or CHIPS_DIR / f"{chip_id}.png"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    img.save(out, "PNG", optimize=True)
+    return out
+
+
+def render_chip_thumbnail(chip: dict[str, Any], *, out: Path | None = None) -> Path:
+    """Small labeled ironclad chip thumb — 320×240 with name band."""
+    from PIL import Image, ImageDraw  # noqa: WPS433
+
+    catalog = _load(CATALOG, {})
+    backdrop = catalog.get("backdrop") or {}
+    felt = _hex_rgb(backdrop.get("felt", "#d4899a"))
+    felt_dark = _hex_rgb(backdrop.get("felt_dark", "#b86b7f"))
+    bg = _hex_rgb(backdrop.get("background", "#080808"))
+
+    chip_id = str(chip.get("id", "chip"))
+    label = str(chip.get("label", chip_id))
+    w, h = 320, 240
+    rng_seed = int(hashlib.md5((chip_id + ":thumb").encode()).hexdigest()[:8], 16)
+
+    img = Image.new("RGB", (w, h), bg)
+    felt_h = int(h * 0.68)
+    felt_w = int(w * 0.88)
+    fx, fy = (w - felt_w) // 2, 8
+    felt_img = _felt_texture(felt_w, felt_h, felt, felt_dark, rng_seed)
+    img.paste(felt_img, (fx, fy))
+
+    draw = ImageDraw.Draw(img)
+    package = str(chip.get("package", "dip"))
+    pins = int(chip.get("pins", 40))
+    body = _hex_rgb(str(chip.get("body", "#1a1a1a")))
+    scale = _chip_body_scale(pins, package) * 0.42
+    imprint = chip.get("imprint") or [label]
+    cx, cy = w // 2, fy + felt_h // 2 + 4
+    _draw_chip_package(draw, cx, cy, package=package, pins=pins, body=body, bg=bg, imprint=imprint[:3], scale=scale)
+
+    band_y = h - 44
+    draw.rectangle((0, band_y, w, h), fill=(16, 18, 24))
+    draw.rectangle((0, band_y, w, band_y + 2), fill=(94, 234, 212))
+    title_font = _font(14, bold=True)
+    sub_font = _font(10)
+    title = label if len(label) <= 28 else label[:25] + "…"
+    tw = draw.textlength(title, font=title_font)
+    draw.text(((w - tw) / 2, band_y + 8), title, fill=(235, 238, 245), font=title_font)
+    meta = f"{chip.get('vendor', '—')} · {chip.get('kind', 'chip').replace('_', ' ')}"
+    mw = draw.textlength(meta, font=sub_font)
+    draw.text(((w - mw) / 2, band_y + 26), meta, fill=(140, 150, 165), font=sub_font)
+
+    img = _vignette(img, 0.28)
+    out = out or CHIPS_THUMBS_DIR / f"{chip_id}.png"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    img.save(out, "PNG", optimize=True)
+    return out
+
+
+def render_chip_detail_page(chip: dict[str, Any], *, out: Path | None = None) -> Path:
+    """Big ironclad catalog page — 1200×900 with imprint, vendor, kind, dates, note."""
+    from PIL import Image, ImageDraw  # noqa: WPS433
+
+    catalog = _load(CATALOG, {})
+    backdrop = catalog.get("backdrop") or {}
+    felt = _hex_rgb(backdrop.get("felt", "#d4899a"))
+    felt_dark = _hex_rgb(backdrop.get("felt_dark", "#b86b7f"))
+    bg = _hex_rgb(backdrop.get("background", "#080808"))
+
+    chip_id = str(chip.get("id", "chip"))
+    w, h = 1200, 900
+    rng_seed = int(hashlib.md5((chip_id + ":detail").encode()).hexdigest()[:8], 16)
+
+    img = Image.new("RGB", (w, h), bg)
+    draw = ImageDraw.Draw(img)
+
+    panel_w = 380
+    draw.rectangle((0, 0, panel_w, h), fill=(14, 16, 22))
+    draw.rectangle((panel_w - 2, 0, panel_w, h), fill=(94, 234, 212))
+
+    title_font = _font(30, bold=True)
+    head_font = _font(13, bold=True)
+    body_font = _font(13)
+    small_font = _font(11)
+
+    label = str(chip.get("label", chip_id))
+    vendor = str(chip.get("vendor", "—"))
+    kind = str(chip.get("kind", "chip")).replace("_", " ")
+    family = str(chip.get("family") or "—")
+    era = chip.get("era")
+    mhz = chip.get("mhz")
+    bits = chip.get("bits")
+    note = str(chip.get("note") or "").strip()
+    schematic = str(chip.get("schematic_blueprint") or "").strip()
+    design_over = str(chip.get("design_over_standard") or "").strip()
+    source = str(chip.get("source") or "—")
+    mame_device = chip.get("mame_device")
+    package = str(chip.get("package", "dip"))
+    pins = int(chip.get("pins", 40))
+    socket = str(chip.get("socket") or "")
+
+    y = 28
+    draw.text((24, y), label, fill=(240, 242, 248), font=title_font)
+    y += 44
+    draw.text((24, y), vendor, fill=(94, 234, 212), font=head_font)
+    y += 30
+
+    def _line(key: str, val: str) -> None:
+        nonlocal y
+        if not val or val in ("—", "None"):
+            return
+        draw.text((24, y), key, fill=(110, 120, 135), font=small_font)
+        draw.text((24, y + 14), val[:72], fill=(200, 205, 215), font=body_font)
+        y += 38
+
+    _line("Kind", kind.title())
+    _line("Family", family.replace("_", " "))
+    if era:
+        _line("Era / date", str(era))
+    if mhz:
+        _line("Clock", f"{mhz} MHz")
+    if bits:
+        _line("Width", f"{bits}-bit")
+    pin_line = f"{pins} pins · {package.upper()}" if package != "die" else "wafer die"
+    if socket:
+        pin_line += f" · {socket}"
+    _line("Package", pin_line)
+    _line("Source", source.replace("_", " "))
+    if mame_device:
+        _line("MAME device", str(mame_device))
+    if note:
+        wrapped = note
+        if len(note) > 120:
+            wrapped = note[:117] + "…"
+        _line("Note", wrapped)
+    if schematic:
+        wrapped = schematic
+        if len(schematic) > 120:
+            wrapped = schematic[:117] + "…"
+        _line("Schematic", wrapped)
+    if design_over:
+        wrapped = design_over
+        if len(design_over) > 120:
+            wrapped = design_over[:117] + "…"
+        _line("Design vs standard", wrapped)
+
+    draw.text((24, h - 52), "Ironclad CHIPS · combinatorics catalog", fill=(90, 100, 115), font=small_font)
+    draw.text((24, h - 34), chip_id, fill=(70, 80, 95), font=small_font)
+
+    macro_x0 = panel_w + 24
+    felt_w, felt_h = w - macro_x0 - 24, int(h * 0.72)
+    fx, fy = macro_x0, 48
+    felt_img = _felt_texture(felt_w, felt_h, felt, felt_dark, rng_seed)
+    img.paste(felt_img, (fx, fy))
+
+    body = _hex_rgb(str(chip.get("body", "#1a1a1a")))
+    scale = _chip_body_scale(pins, package) * 1.25
+    imprint = chip.get("imprint") or [label]
+    cx = fx + felt_w // 2
+    cy = fy + felt_h // 2 + 10
+    _draw_chip_package(draw, cx, cy, package=package, pins=pins, body=body, bg=bg, imprint=imprint, scale=scale)
+
+    badge_font = _font(18, bold=True)
+    pin_font = _font(14)
+    draw.text((macro_x0, 16), label, fill=(230, 230, 235), font=_font(22, bold=True))
+    badge = f"{pins} PINS · {package.upper()}" if package != "die" else "WAFER DIE"
+    draw.text((macro_x0, 44), badge, fill=(94, 234, 212), font=badge_font)
+    if socket:
+        draw.text((macro_x0, 68), socket, fill=(180, 190, 200), font=pin_font)
+    draw.text((macro_x0, h - 36), f"ironclad detail · {kind}", fill=(120, 130, 140), font=pin_font)
+
+    img = _vignette(img, 0.38)
+    out = out or CHIPS_DETAIL_DIR / f"{chip_id}.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     img.save(out, "PNG", optimize=True)
     return out
@@ -736,9 +1284,7 @@ def render_book_cover(lang_id: str, *, label: str | None = None, command_count: 
     draw.text((28, h - 36), "NEXUS-Shield · Dewey 000", fill=(90, 100, 115), font=small_font)
 
     out = out or BOOKS_DIR / f"{lang_id}.png"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    img.save(out, "PNG", optimize=True)
-    return out
+    return _save_plate_figure(img, out, plate_key="cover", accent=accent)
 
 
 def _resolve_language_pack(seed: dict[str, Any], lang_id: str) -> dict[str, Any]:
@@ -770,6 +1316,8 @@ _LANG_PROFILE_ALIASES = {
     "objc": "objc",
     "csharp": "csharp",
     "cobol_copy": "cobol",
+    "linux": "linux",
+    "economics": "economics",
 }
 
 
@@ -823,9 +1371,7 @@ def render_syntax_diagram(
         draw.text((24, 80), "No commands in seed pack.", fill=(140, 150, 165), font=_font(14))
     draw.text((16, h - 28), "Hostess 7 · H7c embedded figure · syntax", fill=(100, 110, 125), font=_font(11))
     out = out or BOOKS_DIR / f"{lang_id}_syntax.png"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    img.save(out, "PNG", optimize=True)
-    return out
+    return _save_plate_figure(img, out, plate_key="syntax", accent=accent)
 
 
 def render_op_map_diagram(
@@ -864,9 +1410,178 @@ def render_op_map_diagram(
             draw.text((x0 + 8, y0 + 24), f"{count} cmd", fill=accent, font=_font(10))
     draw.text((16, h - 28), "36 canonical atoms · shaded = used by this language", fill=(100, 110, 125), font=_font(11))
     out = out or BOOKS_DIR / f"{lang_id}_opmap.png"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    img.save(out, "PNG", optimize=True)
-    return out
+    return _save_plate_figure(img, out, plate_key="op_map", accent=accent)
+
+
+def render_memory_diagram(
+    lang_id: str,
+    *,
+    label: str | None = None,
+    profile: dict[str, Any] | None = None,
+    out: Path | None = None,
+) -> Path:
+    from PIL import Image, ImageDraw  # noqa: WPS433
+
+    title_label = label or LANG_LABELS.get(lang_id, lang_id.replace("_", " ").title())
+    accent = LANG_ACCENT.get(lang_id, (94, 234, 212))
+    memory = str((profile or {}).get("memory") or "runtime-managed")
+    w, h = 720, 360
+    img = Image.new("RGB", (w, h), (14, 16, 22))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((0, 0, w, 44), fill=accent)
+    draw.text((16, 10), f"{title_label} — memory & objects", fill=(12, 14, 18), font=_font(18, bold=True))
+    rows = [
+        ("Stack", "call frames · locals · fast path"),
+        ("Heap", "objects · containers · shared state"),
+        ("Model", memory),
+        ("GC / reclaim", "language runtime policy"),
+        ("Interop", "FFI · g16 belt · NEXUS-Shield"),
+    ]
+    y = 64
+    for title, detail in rows:
+        draw.rectangle((24, y, w - 24, y + 44), fill=(24, 28, 36), outline=(50, 55, 65))
+        draw.text((36, y + 6), title, fill=accent, font=_font(13, bold=True))
+        draw.text((36, y + 24), detail, fill=(185, 190, 200), font=_font(11))
+        y += 52
+    draw.text((16, h - 28), "Hostess 7 · H7c plate · memory facet", fill=(100, 110, 125), font=_font(11))
+    out = out or BOOKS_DIR / f"{lang_id}_memory.png"
+    return _save_plate_figure(img, out, plate_key="memory", accent=accent)
+
+
+def render_compile_path_diagram(
+    lang_id: str,
+    *,
+    label: str | None = None,
+    out: Path | None = None,
+) -> Path:
+    from PIL import Image, ImageDraw  # noqa: WPS433
+
+    title_label = label or LANG_LABELS.get(lang_id, lang_id.replace("_", " ").title())
+    accent = LANG_ACCENT.get(lang_id, (94, 234, 212))
+    w, h = 720, 400
+    img = Image.new("RGB", (w, h), (14, 16, 22))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((0, 0, w, 44), fill=accent)
+    draw.text((16, 10), f"{title_label} — g16 compile path", fill=(12, 14, 18), font=_font(18, bold=True))
+    steps = [
+        "source → token surface",
+        "boil → 36 canonical ops",
+        "belt runner → native_bsp / python",
+        "g16-compile-combinatronics.py gate",
+        "link · field combinatronic verify",
+    ]
+    x0, y0 = 32, 70
+    for i, step in enumerate(steps):
+        yy = y0 + i * 58
+        draw.rectangle((x0, yy, w - 32, yy + 46), fill=(28, 32, 42), outline=accent if i == 2 else (55, 60, 72))
+        draw.text((x0 + 14, yy + 14), f"{i + 1}. {step}", fill=(210, 215, 225), font=_font(13, bold=(i == 2)))
+        if i < len(steps) - 1:
+            draw.line((w // 2, yy + 46, w // 2, yy + 58), fill=accent, width=2)
+    draw.text((16, h - 28), "Field program facet · belt_2_0 default", fill=(100, 110, 125), font=_font(11))
+    out = out or BOOKS_DIR / f"{lang_id}_compile.png"
+    return _save_plate_figure(img, out, plate_key="compile", accent=accent)
+
+
+def _explaining_body_sections(
+    lang_id: str,
+    label: str,
+    cmds: dict[str, str],
+    by_canon: dict[str, list[str]],
+    profile: dict[str, Any],
+    seed: dict[str, Any],
+) -> list[str]:
+    """Information-manual sections — target ~1 figure per 1,100 words."""
+    lines: list[str] = []
+    parad = profile.get("paradigm") or "multi-paradigm"
+    typing = profile.get("typing") or "see language reference"
+    memory = profile.get("memory") or "runtime-managed"
+
+    lines.extend([
+        "## Execution model",
+        "",
+        f"{label} programs execute through the Field program combinatronic facet. Surface syntax",
+        "maps to 36 canonical ops; each op selects a belt runner (native_bsp on belt_2_0 or",
+        "python on belt_1_0). The explaining manual documents semantics — not a tutorial walkthrough.",
+        "",
+        f"- **Paradigm:** {parad}",
+        f"- **Typing discipline:** {typing}",
+        f"- **Memory:** {memory}",
+        f"- **Commands in seed:** {len(cmds)}",
+        f"- **Canonical ops exercised:** {len(by_canon)}",
+        "",
+        "![Memory and objects](h7fig:memory)",
+        "",
+        "## Lexical structure",
+        "",
+        "Tokens partition into identifiers, literals, operators, and significant whitespace",
+        f"per {label} reference rules. Hostess7 boil heuristics treat unknown tokens as exec",
+        "unless a seed keyword maps them. Extended packs inherit parent commands.",
+        "",
+    ])
+    sample_cmds = sorted(cmds.keys(), key=str.lower)[:24]
+    for cmd in sample_cmds:
+        lines.append(f"- `{cmd}` → `{cmds[cmd]}`")
+    lines.extend(["", "## Type and value space", ""])
+    if profile.get("body"):
+        for para in str(profile["body"]).split("\n\n"):
+            para = para.strip()
+            if para:
+                lines.extend([para, ""])
+    else:
+        lines.extend([
+            f"The {label} value space follows the language reference: primitives, aggregates,",
+            "and callables compose through assign, call, and return canonical ops.",
+            "",
+        ])
+    lines.extend([
+        "## Control flow",
+        "",
+        "branch · loop · break · continue · return — all languages converge on these atoms.",
+        f"In {label}, control constructs in the seed pack boil as follows:",
+        "",
+    ])
+    for cop in ("branch", "loop", "return", "throw"):
+        hits = by_canon.get(cop) or []
+        if hits:
+            lines.append(f"- **{cop}:** {', '.join(f'`{c}`' for c in hits[:8])}")
+    lines.extend([
+        "",
+        "## Modules and boundaries",
+        "",
+        "import · export · module · package — boundary ops isolate compilation units.",
+        "NEXUS-Shield indexes each manual under Dewey 000; combinatronic rebalance may extend packs.",
+        "",
+        "![G16 compile path](h7fig:compile)",
+        "",
+        "## Standard library surface",
+        "",
+        f"Where the seed lists I/O or runtime commands, they map to the io and call ops.",
+        f"Verify any keyword with `field-program-combinatronic.py boil {lang_id} \"<cmd>\"`.",
+        "",
+    ])
+    io_cmds = [c for c, k in cmds.items() if k in ("io", "call", "import")]
+    for cmd in sorted(io_cmds, key=str.lower)[:16]:
+        lines.append(f"- `{cmd}`")
+    lines.extend(["", "## Interop and embedding", ""])
+    lines.extend([
+        f"{label} may embed in Queen Code, Grok16 belt builds, or NEXUS panel scripts.",
+        "G16 unified driver (`g16`) compiles C/C++ neighbors; python runner hosts dynamic facets.",
+        "Use `g16-compile-combinatronics.py` when program facet gates must pass at compile time.",
+        "",
+        "## Performance notes",
+        "",
+        "belt_2_0 native_bsp is the default for hot paths; belt_1_0 python runner applies",
+        "when combinatorics bridge degrades the gate. Always-optimal panel pins the best belt",
+        "from bench receipts — not guessed from language family alone.",
+        "",
+        "## Research references",
+        "",
+        "Training manuals (school-style textbooks) complement this explaining manual.",
+        f"See `training_{lang_id}` on the Dewey shelf when published.",
+        "Field Research book and g16-power-sort plates inform algorithm choices in tooling.",
+        "",
+    ])
+    return lines
 
 
 def write_explaining_manual(lang_id: str, *, seed: dict[str, Any] | None = None) -> str:
@@ -963,6 +1678,8 @@ def write_explaining_manual(lang_id: str, *, seed: dict[str, Any] | None = None)
             "",
         ])
 
+    lines.extend(_explaining_body_sections(lang_id, label, cmds, by_canon, profile or {}, seed))
+
     lines.extend([
         "## G16 compile path",
         "",
@@ -996,7 +1713,7 @@ def write_explaining_manual(lang_id: str, *, seed: dict[str, Any] | None = None)
         "- Battery: `field-program-combinatronic.json` (STATE)",
         "- Manual: `library/dewey/000-computer-science/explaining_" + lang_id + "/`",
         "- Reader API: `/api/lang-manuals` · `/api/lang-manuals/" + lang_id + "`",
-        "- H7c figures: cover, syntax, op_map (embedded lossless)",
+        "- H7c figures: cover, syntax, op_map, memory, compile (field plate + meld)",
         "",
     ])
     if pack.get("extends"):
@@ -1040,17 +1757,30 @@ def pack_explaining_h7(lang_id: str, text: str) -> Path:
     figures_dir = dest / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
     cover_path = BOOKS_DIR / f"{lang_id}.png"
-    syntax_path = render_syntax_diagram(lang_id, label=label, commands=_resolve_language_pack(_load(SEED, {}), lang_id).get("commands") or {})
+    pack = _resolve_language_pack(_load(SEED, {}), lang_id)
+    profile = _lang_profile(lang_id)
+    accent = LANG_ACCENT.get(lang_id, (94, 234, 212))
+    syntax_path = render_syntax_diagram(lang_id, label=label, commands=pack.get("commands") or {})
     opmap_path = render_op_map_diagram(
         lang_id,
         label=label,
-        commands=_resolve_language_pack(_load(SEED, {}), lang_id).get("commands") or {},
+        commands=pack.get("commands") or {},
         seed=_load(SEED, {}),
     )
+    memory_path = render_memory_diagram(lang_id, label=label, profile=profile)
+    compile_path = render_compile_path_diagram(lang_id, label=label)
     figures = {
-        "cover": {"path": cover_path if cover_path.is_file() else syntax_path, "alt": f"Explaining {label} cover", "mime": "image/png"},
-        "syntax": {"path": syntax_path, "alt": f"{label} syntax overview", "mime": "image/png"},
-        "op_map": {"path": opmap_path, "alt": f"{label} canonical op map", "mime": "image/png"},
+        "cover": {
+            "path": cover_path if cover_path.is_file() else syntax_path,
+            "alt": f"Explaining {label} cover",
+            "mime": "image/png",
+            "plate_key": "cover",
+            "accent": accent,
+        },
+        "syntax": {"path": syntax_path, "alt": f"{label} syntax overview", "mime": "image/png", "plate_key": "syntax", "accent": accent},
+        "op_map": {"path": opmap_path, "alt": f"{label} canonical op map", "mime": "image/png", "plate_key": "op_map", "accent": accent},
+        "memory": {"path": memory_path, "alt": f"{label} memory model", "mime": "image/png", "plate_key": "memory", "accent": accent},
+        "compile": {"path": compile_path, "alt": f"{label} g16 compile path", "mime": "image/png", "plate_key": "compile", "accent": accent},
     }
     packed = h7c_mod.pack_h7c(text, meta, use_optimizer=True, format_version=3, figures=figures)
     h7c_path.write_bytes(packed)
@@ -1064,7 +1794,7 @@ def pack_explaining_h7(lang_id: str, text: str) -> Path:
         "ein": ein,
         "format": "h7c",
         "format_version": 3,
-        "embedded_figures": ["cover", "syntax", "op_map"],
+        "embedded_figures": ["cover", "syntax", "op_map", "memory", "compile"],
         "manual_reader": "/field-lang-manuals",
         "h7c": _rel(h7c_path),
         "h7": None,
@@ -1085,13 +1815,84 @@ def _mirror_asset(src: Path, sub: str) -> Path:
     return dest
 
 
+def _mirror_chip_asset(src: Path, *, variant: str = "") -> Path:
+    if variant:
+        dest = WORLD_ASSETS / "chips" / variant / src.name
+    else:
+        dest = WORLD_ASSETS / "chips" / src.name
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(src.read_bytes())
+    return dest
+
+
+def generate_ironclad_chip(chip_id: str, *, thumbs_only: bool = False, detail_only: bool = False) -> dict[str, Any]:
+    row = _ironclad_chip_row(chip_id)
+    if not row:
+        return {"ok": False, "error": "chip_not_in_ironclad", "chip_id": chip_id}
+    spec = _chip_visual_spec(chip_id, row)
+    result: dict[str, Any] = {
+        "ok": True,
+        "chip_id": chip_id,
+        "label": spec.get("label"),
+        "vendor": spec.get("vendor"),
+        "kind": spec.get("kind"),
+        "package": spec.get("package"),
+        "pins": spec.get("pins"),
+    }
+    if not detail_only:
+        thumb = render_chip_thumbnail(spec)
+        thumb_mirror = _mirror_chip_asset(thumb, variant="thumbs")
+        result["thumb"] = str(thumb)
+        result["thumb_mirror"] = str(thumb_mirror)
+        result["thumb_url"] = f"/world/assets/combinatronic/chips/thumbs/{chip_id}.png"
+    if not thumbs_only:
+        detail = render_chip_detail_page(spec)
+        detail_mirror = _mirror_chip_asset(detail, variant="detail")
+        result["detail"] = str(detail)
+        result["detail_mirror"] = str(detail_mirror)
+        result["detail_url"] = f"/world/assets/combinatronic/chips/detail/{chip_id}.png"
+    return result
+
+
+def generate_ironclad_all(*, thumbs_only: bool = False, limit: int | None = None) -> dict[str, Any]:
+    chip_ids = _ironclad_chip_ids()
+    if limit is not None and limit > 0:
+        chip_ids = chip_ids[:limit]
+    results: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    for chip_id in chip_ids:
+        try:
+            row = generate_ironclad_chip(chip_id, thumbs_only=thumbs_only)
+            if row.get("ok"):
+                results.append(row)
+            else:
+                errors.append(row)
+        except Exception as exc:
+            errors.append({"ok": False, "chip_id": chip_id, "error": str(exc)})
+    ok_count = sum(1 for r in results if r.get("ok"))
+    return {
+        "ok": len(errors) == 0,
+        "schema": "field-combinatronic-visuals-ironclad/v1",
+        "generated": _now(),
+        "ironclad_source": str(IRONCLAD_CHIPS),
+        "total": len(chip_ids),
+        "ok_count": ok_count,
+        "error_count": len(errors),
+        "thumbs_only": thumbs_only,
+        "thumb_dir": _rel(CHIPS_THUMBS_DIR),
+        "detail_dir": _rel(CHIPS_DETAIL_DIR) if not thumbs_only else None,
+        "sample": results[:8],
+        "errors": errors[:12],
+    }
+
+
 def generate_chip(chip_id: str) -> dict[str, Any]:
     catalog = _load(CATALOG, {})
     chip = next((c for c in catalog.get("chips") or [] if c.get("id") == chip_id), None)
     if not chip:
         return {"ok": False, "error": "chip_not_in_catalog", "chip_id": chip_id}
     png = render_chip_closeup(chip)
-    mirrored = _mirror_asset(png, "chips")
+    mirrored = _mirror_chip_asset(png)
     return {
         "ok": True,
         "chip_id": chip_id,
@@ -1278,9 +2079,27 @@ def main() -> int:
     if cmd == "registry":
         print(json.dumps(build_registry(), ensure_ascii=False, indent=2))
         return 0
+    if cmd == "ironclad-chip" and len(sys.argv) > 2:
+        print(json.dumps(generate_ironclad_chip(sys.argv[2]), ensure_ascii=False, indent=2))
+        return 0
+    if cmd == "ironclad-all":
+        limit = None
+        for arg in sys.argv[2:]:
+            if arg.startswith("--limit="):
+                limit = int(arg.split("=", 1)[1])
+        print(json.dumps(generate_ironclad_all(limit=limit), ensure_ascii=False, indent=2))
+        return 0
+    if cmd == "ironclad-thumbs":
+        limit = None
+        for arg in sys.argv[2:]:
+            if arg.startswith("--limit="):
+                limit = int(arg.split("=", 1)[1])
+        print(json.dumps(generate_ironclad_all(thumbs_only=True, limit=limit), ensure_ascii=False, indent=2))
+        return 0
     if cmd == "repair":
         if len(sys.argv) > 2 and sys.argv[2] == "mirror":
-            print(json.dumps(repair_mirror(), ensure_ascii=False, indent=2))
+            ironclad = len(sys.argv) > 3 and sys.argv[3] == "ironclad"
+            print(json.dumps(repair_mirror(ironclad=ironclad), ensure_ascii=False, indent=2))
             return 0
         only_broken = "--all" not in sys.argv
         print(json.dumps(repair_all(only_broken=only_broken), ensure_ascii=False, indent=2))
@@ -1294,13 +2113,18 @@ def main() -> int:
     if cmd == "panel":
         print(json.dumps(visuals_panel(), ensure_ascii=False, indent=2))
         return 0
+    if cmd == "enrich-catalog":
+        print(json.dumps(enrich_chip_catalog(), ensure_ascii=False, indent=2))
+        return 0
     print(
         json.dumps(
             {
                 "error": "usage",
                 "hint": (
                     "field-combinatronic-visuals.py "
-                    "[generate|manifest|inventory|verify|registry|repair|repair mirror|pattern <id>|chip <id>|book <lang>]"
+                    "[generate|manifest|inventory|verify|registry|repair|repair mirror|"
+                    "enrich-catalog|ironclad-chip <id>|ironclad-all|ironclad-thumbs|"
+                    "pattern <id>|chip <id>|book <lang>]"
                 ),
                 "doctrine": _rel(DOCTRINE),
             },

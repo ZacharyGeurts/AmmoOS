@@ -1,0 +1,14 @@
+{
+  "id": "nes_ganbare_goemon_gaiden_kieta_ougon_kiseru",
+  "title": "Ganbare Goemon Gaiden: Kieta Ougon Kiseru",
+  "author": "Konami",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_ganbare_goemon_gaiden_kieta_ougon_kiseru-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_ganbare_goemon_gaiden_kieta_ougon_kiseru/nes_ganbare_goemon_gaiden_kieta_ougon_kiseru.h7c"
+}

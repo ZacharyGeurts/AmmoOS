@@ -73,7 +73,7 @@ def _entry_battery_path(domain: str) -> Path | None:
                 return STATE / bat
     fallback = {
         "universal": STATE / "field-g16-universal-combinatronic.json",
-        "chips": STATE / "field-chip-battery.json",
+        "chips": STATE / "field-ironclad-chips-combinatorics.json",
         "programs": STATE / "field-program-combinatronic.json",
         "program": STATE / "field-program-combinatronic.json",
         "files": STATE / "field-file-formats-table.json",

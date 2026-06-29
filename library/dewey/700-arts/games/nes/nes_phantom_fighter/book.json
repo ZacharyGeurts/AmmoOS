@@ -1,0 +1,14 @@
+{
+  "id": "nes_phantom_fighter",
+  "title": "Phantom Fighter",
+  "author": "Fujisankei Communications International",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_phantom_fighter-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_phantom_fighter/nes_phantom_fighter.h7c"
+}

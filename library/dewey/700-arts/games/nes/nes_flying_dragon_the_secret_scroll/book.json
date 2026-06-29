@@ -1,0 +1,14 @@
+{
+  "id": "nes_flying_dragon_the_secret_scroll",
+  "title": "Flying Dragon: The Secret Scroll",
+  "author": "Culture Brain",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_flying_dragon_the_secret_scroll-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_flying_dragon_the_secret_scroll/nes_flying_dragon_the_secret_scroll.h7c"
+}

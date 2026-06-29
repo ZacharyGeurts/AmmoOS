@@ -1,0 +1,14 @@
+{
+  "id": "nes_mappy_land",
+  "title": "Mappy Land",
+  "author": "Taxan",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_mappy_land-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_mappy_land/nes_mappy_land.h7c"
+}

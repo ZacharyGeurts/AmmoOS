@@ -79,16 +79,33 @@
       "root": "SG/Hostess7",
       "brain_witness": "lib/field-sense-package-meld.py",
       "brain_sync": "lib/field-brain-sync.sh",
-      "role": "Forever Watchguard Angel \u2014 brain melded onto sense stack; read-only witness, never relocated"
+      "noti_bridge": "lib/hostess7-noti.py",
+      "system_control": "lib/hostess7-system-control.py",
+      "role": "Forever Watchguard Angel \u2014 full system control; brain melded onto sense stack; read-only witness, never relocated"
+    },
+    "noti": {
+      "root": "NewLatest",
+      "module": "lib/noti.py",
+      "doctrine": "data/noti-doctrine.json",
+      "hostess7_bridge": "lib/hostess7-noti.py",
+      "role": "Sovereign notifier \u2014 mirrored IRC rooms, address accept/deny, immutable ledger, taskbar red/green"
     },
     "znetwork": {
-      "root": "NewLatest/znetwork",
+      "root": "SG/ZNetwork",
+      "integrated_pointer": "NewLatest/znetwork/OUTSIDE_LAB.json",
       "orchestrator": "lib/znetwork-orchestrator.py",
       "shell_bridge": "lib/znetwork-field.sh",
+      "relayer": "lib/znetwork-relayer.py",
+      "smart_inside": "lib/znetwork-smart-inside.py",
+      "exploit_shield": "lib/znetwork-exploit-shield.py",
       "doctrine": "data/znetwork-doctrine.json",
+      "outside_lab_doctrine": "SG/ZNetwork/data/znetwork-outside-lab-doctrine.json",
       "binary": "bin/znetwork",
-      "default_mode": "REVIEW_ONLY",
-      "role": "Field secure network manager \u2014 truth-gated slide-in; taskbar swap on activate"
+      "default_mode": "ACTIVE",
+      "relayer_default": true,
+      "smart_inside_default": true,
+      "never_harm_os": true,
+      "role": "SG/ZNetwork canonical \u2014 relayer sole internet in/out, smart_inside advisory, exploit shield"
     }
   },
   "nexus_defenses": [

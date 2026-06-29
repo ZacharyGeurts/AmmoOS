@@ -1,0 +1,14 @@
+{
+  "id": "nes_dragonball_z_kyoushuu_saiyajin",
+  "title": "Dragonball Z: Kyoushuu! Saiyajin",
+  "author": "Bandai",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dragonball_z_kyoushuu_saiyajin-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_dragonball_z_kyoushuu_saiyajin/nes_dragonball_z_kyoushuu_saiyajin.h7c"
+}

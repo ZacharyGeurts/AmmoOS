@@ -48,10 +48,10 @@
       "×</span>" +
       (ui.nvenc ? '<span class="fo-tier">NVENC</span>' : '<span class="fo-tier">x264</span>') +
       '<div class="fo-slider-row"><label for="fo-scale">UI scale</label><span class="fo-slider-val" id="fo-scale-val">' +
-      esc(String(ui.ui_scale_pct || 110)) +
+      esc(String(ui.ui_scale_pct || 125)) +
       "%</span></div>" +
       '<input type="range" id="fo-scale" min="85" max="150" step="5" value="' +
-      esc(String(ui.ui_scale_pct || 110)) +
+      esc(String(ui.ui_scale_pct || 125)) +
       '" />' +
       '<label class="fo-dim"><input type="checkbox" id="fo-rtx" ' +
       (ui.rtx_reduce ? "checked" : "") +
@@ -86,7 +86,7 @@
     const scaleVal = document.getElementById("fo-scale-val");
     const rtx = document.getElementById("fo-rtx");
     function saveUi() {
-      const pct = parseInt(scale?.value || "110", 10);
+      const pct = parseInt(scale?.value || "125", 10);
       if (scaleVal) scaleVal.textContent = pct + "%";
       api("/api/field-broadcaster/settings", {
         method: "POST",

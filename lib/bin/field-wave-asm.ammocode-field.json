@@ -1,0 +1,21 @@
+{
+  "schema": "g16-ammocode-field-instill/v1",
+  "updated": "2026-06-29T05:59:03Z",
+  "binary": "/home/default/Desktop/SG/NewLatest/lib/bin/field-wave-asm",
+  "instilled": true,
+  "ammocode_is_field": true,
+  "no_subfields": true,
+  "subfields_forbidden": true,
+  "posture": "field",
+  "field": true,
+  "resting_on_field": false,
+  "defield_if_resting_on_field": true,
+  "max_field_depth": 0,
+  "doctrine": "data/g16-ammocode-field-doctrine.json",
+  "citation": "ammocode:field:no_subfields",
+  "binary_bytes": 16480,
+  "binary_sha256": "fbf173254ac65a11b67cb3874fb5326b725401cd04dac150db78e094fe072a81",
+  "meta": {
+    "lane": "link"
+  }
+}

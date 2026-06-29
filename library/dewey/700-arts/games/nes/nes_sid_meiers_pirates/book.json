@@ -1,0 +1,14 @@
+{
+  "id": "nes_sid_meiers_pirates",
+  "title": "Sid Meier's Pirates",
+  "author": "Ultra Software",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_sid_meiers_pirates-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_sid_meiers_pirates/nes_sid_meiers_pirates.h7c"
+}

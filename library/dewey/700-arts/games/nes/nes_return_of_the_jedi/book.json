@@ -1,0 +1,14 @@
+{
+  "id": "nes_return_of_the_jedi",
+  "title": "Return of the Jedi",
+  "author": "Hack",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_return_of_the_jedi-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": null,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_return_of_the_jedi/nes_return_of_the_jedi.h7c"
+}

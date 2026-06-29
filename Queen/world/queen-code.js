@@ -17,6 +17,8 @@
     autodetect: true,
     trackRecent: true,
     profile: "belt_2_0",
+    theme: "queen_emerald",
+    compiler: "belt_2_0",
   });
 
   const state = {
@@ -104,7 +106,10 @@
     $("qc-set-wrap") && ($("qc-set-wrap").checked = !!s.wordWrap);
     $("qc-set-autodetect") && ($("qc-set-autodetect").checked = !!s.autodetect);
     $("qc-set-recent") && ($("qc-set-recent").checked = !!s.trackRecent);
-    $("qc-set-profile") && ($("qc-set-profile").value = s.profile || "belt_2_0");
+    $("qc-set-profile") && ($("qc-set-profile").value = s.profile || s.compiler || "belt_2_0");
+    $("qc-set-theme") && ($("qc-set-theme").value = s.theme || "queen_emerald");
+    $("qc-menu-compiler") && ($("qc-menu-compiler").value = s.compiler || s.profile || "belt_2_0");
+    document.body.dataset.qcTheme = s.theme || "queen_emerald";
   }
 
   function loadRecentLocal() {
@@ -273,15 +278,54 @@
     toast("Saved", true);
   }
 
+  function activeProfile() {
+    return state.settings.compiler || state.settings.profile || "belt_2_0";
+  }
+
   async function g16Check() {
     if (!state.path) {
       toast("Open a file first", false);
       return;
     }
     await saveFile();
-    const doc = await codeApi({ action: "g16_check", path: state.path, profile: state.settings.profile || "belt_2_0" });
+    const doc = await codeApi({ action: "g16_check", path: state.path, profile: activeProfile() });
     if (doc.ok) toast(`g16 check OK · ${doc.language}`, true);
     else toast((doc.stderr || doc.error || "g16 check failed").slice(0, 200), false);
+  }
+
+  async function g16Build() {
+    if (!state.path) {
+      toast("Open a source file first", false);
+      return;
+    }
+    await saveFile();
+    toast("Building…", true);
+    const doc = await codeApi({ action: "g16_build", path: state.path, profile: activeProfile() });
+    if (doc.ok) toast(doc.message || `Build OK · ${doc.artifact || ""}`, true);
+    else toast((doc.stderr || doc.error || "build failed").slice(0, 240), false);
+  }
+
+  async function g16Launch() {
+    const launchPath = state.path?.endsWith(".launch") ? state.path : state.path?.replace(/\.[^.]+$/, ".launch");
+    if (!launchPath) {
+      toast("Open a .launch chamber or source with matching .launch", false);
+      return;
+    }
+    toast("Launching chamber…", true);
+    const doc = await filesApi({ action: "run_launch", path: launchPath, profile: activeProfile() });
+    if (doc.ok) toast(doc.message || "Launch OK", true);
+    else toast((doc.error || doc.stderr || "launch failed").slice(0, 240), false);
+  }
+
+  async function runPython() {
+    if (!state.path) {
+      toast("Open a .py file first", false);
+      return;
+    }
+    await saveFile();
+    const doc = await codeApi({ action: "g16_run_python", path: state.path, profile: activeProfile() });
+    if (doc.ok) toast(`Python OK · ${(doc.stdout || "").slice(0, 120)}`, true);
+    else toast((doc.stderr || doc.error || "run failed").slice(0, 240), false);
   }
 
   function bindMenus() {
@@ -322,8 +366,23 @@
     });
     $("qc-set-profile")?.addEventListener("change", (e) => {
       state.settings.profile = e.target.value || "belt_2_0";
+      state.settings.compiler = state.settings.profile;
       saveSettings();
     });
+    $("qc-set-theme")?.addEventListener("change", (e) => {
+      state.settings.theme = e.target.value || "queen_emerald";
+      saveSettings();
+    });
+    $("qc-menu-compiler")?.addEventListener("change", (e) => {
+      state.settings.compiler = e.target.value || "belt_2_0";
+      state.settings.profile = state.settings.compiler;
+      saveSettings();
+    });
+    $("qc-menu-build")?.addEventListener("click", g16Build);
+    $("qc-menu-launch")?.addEventListener("click", g16Launch);
+    $("qc-menu-run-py")?.addEventListener("click", runPython);
+    $("qc-build")?.addEventListener("click", g16Build);
+    $("qc-launch")?.addEventListener("click", g16Launch);
   }
 
   function bindEditor() {

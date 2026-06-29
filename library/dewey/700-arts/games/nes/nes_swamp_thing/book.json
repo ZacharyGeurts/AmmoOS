@@ -1,0 +1,14 @@
+{
+  "id": "nes_swamp_thing",
+  "title": "Swamp Thing",
+  "author": "THQ, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_swamp_thing-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_swamp_thing/nes_swamp_thing.h7c"
+}

@@ -164,6 +164,24 @@ nexus_boot_impl_export_paths() {
   fi
 }
 
+nexus_boot_impl_znetwork_relayer() {
+  [[ "${NEXUS_ZNETWORK:-1}" == "1" ]] || return 0
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh" ]] || return 0
+  nexus_boot_impl_script_trusted "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh" || return 1
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/znetwork-field.sh"
+  export ZNETWORK_NO_REVIEW="${ZNETWORK_NO_REVIEW:-1}"
+  export ZNETWORK_REVIEW_APPROVED="${ZNETWORK_REVIEW_APPROVED:-1}"
+  export NEXUS_ZNETWORK_NO_SUDO="${NEXUS_ZNETWORK_NO_SUDO:-0}"
+  export ZNETWORK_RETIRE_NM_SYSTEMD="${ZNETWORK_RETIRE_NM_SYSTEMD:-0}"
+  nexus_znetwork_ensure_host_network 2>/dev/null || true
+  nexus_znetwork_relayer_board 2>/dev/null || true
+  nexus_znetwork_install_autostart 2>/dev/null || true
+}
+
+# Deprecated alias
+nexus_boot_impl_znetwork_underhook() { nexus_boot_impl_znetwork_relayer; }
+
 nexus_boot_impl_front_hook() {
   [[ -f "${NEXUS_INSTALL_ROOT}/lib/front-hook.sh" ]] || return 0
   nexus_boot_impl_script_trusted "${NEXUS_INSTALL_ROOT}/lib/front-hook.sh" || return 1
@@ -270,6 +288,23 @@ nexus_boot_impl_thermal_guard_init() {
     pythong "${NEXUS_INSTALL_ROOT}/lib/field-thermal-guard.py" evaluate >/dev/null 2>&1 || true
 }
 
+nexus_boot_impl_permanent_fielding() {
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-permanent-fielding.py" ]] || return 0
+  local py marker sg_marker
+  py="$(nexus_boot_impl_resolve_python)" || return 0
+  marker="${NEXUS_STATE_DIR}/permanent-field.marker"
+  sg_marker="${SG_ROOT:-}/.nexus-state/permanent-field.marker"
+  [[ -f "$marker" || -f "$sg_marker" ]] || return 0
+  NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" \
+    SG_ROOT="${SG_ROOT:-}" "$py" "${NEXUS_INSTALL_ROOT}/lib/field-permanent-fielding.py" ensure \
+    >>"$(nexus_boot_impl_log_path)" 2>&1 && {
+    nexus_log "INFO" "boot-impl" "permanent_fielding_ensure_ok"
+    return 0
+  }
+  nexus_log "WARN" "boot-impl" "permanent_fielding_ensure_deferred"
+  return 1
+}
+
 nexus_boot_impl_always_optimal() {
   local sg grok16 py ao_py
   sg="${SG_ROOT:-}"
@@ -322,6 +357,7 @@ nexus_boot_impl_first() {
   local wired=0 meld=0
   nexus_boot_impl_ensure_dirs
   nexus_boot_impl_host_freeze_resume || true
+  nexus_boot_impl_permanent_fielding || true
   nexus_boot_impl_vestigial_cleanup
   nexus_boot_impl_log_path >/dev/null
   nexus_log "INFO" "boot-impl" "FIRST_INSTALL begin root=${NEXUS_INSTALL_ROOT}"
@@ -334,6 +370,7 @@ nexus_boot_impl_first() {
   wired="$(nexus_boot_impl_wire_stack)"
   nexus_boot_impl_migrate_state
   nexus_boot_impl_export_paths
+  nexus_boot_impl_znetwork_relayer
   nexus_boot_impl_front_hook
   nexus_apply_permissions 2>/dev/null || true
   nexus_boot_impl_sign_manifest || nexus_log "WARN" "boot-impl" "sign_skipped"
@@ -364,6 +401,7 @@ nexus_boot_impl_refresh() {
   local wired=0 meld=0
   nexus_boot_impl_ensure_dirs
   nexus_boot_impl_host_freeze_resume || true
+  nexus_boot_impl_permanent_fielding || true
   nexus_boot_impl_vestigial_cleanup
   nexus_log "INFO" "boot-impl" "BOOT_REFRESH begin root=${NEXUS_INSTALL_ROOT}"
 
@@ -374,6 +412,7 @@ nexus_boot_impl_refresh() {
   fi
   wired="$(nexus_boot_impl_wire_stack)"
   nexus_boot_impl_export_paths
+  nexus_boot_impl_znetwork_relayer
   nexus_boot_impl_front_hook
   if ! nexus_boot_impl_verify_integrity; then
     nexus_log "WARN" "boot-impl" "refresh_integrity_fail"

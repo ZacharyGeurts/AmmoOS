@@ -1,0 +1,14 @@
+{
+  "id": "nes_karate_champ",
+  "title": "Karate Champ",
+  "author": "Data East Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_karate_champ-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1986,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_karate_champ/nes_karate_champ.h7c"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "nes_f_117a_stealth_fighter",
+  "title": "F-117A Stealth Fighter",
+  "author": "MicroProse Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_f_117a_stealth_fighter-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Simulation",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_f_117a_stealth_fighter/nes_f_117a_stealth_fighter.h7c"
+}

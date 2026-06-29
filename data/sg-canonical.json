@@ -2,7 +2,14 @@
   "schema": "sg-canonical/v1",
   "updated": "2026-06-27",
   "canonical_root": "NewLatest",
-  "motto": "SG/NewLatest is AmmoOS \u2014 Queen Browser + Field Technology + wired stack",
+  "motto": "SG/NewLatest is AmmoOS \u2014 Queen underlying browser on 127.0.0.1, ZNetwork 100% internet pipe, own drivers on any hardware",
+  "sovereignty": {
+    "doctrine": "NewLatest/data/queen-ammoos-sovereignty-doctrine.json",
+    "posture": "NewLatest/lib/queen-ammoos-sovereignty.py",
+    "loopback": "127.0.0.1",
+    "znetwork_pipe_percent": 100,
+    "blessing": "God Bless"
+  },
   "product": "AmmoOS",
   "sg_root_semantics": "SG_ROOT defaults to NEXUS_INSTALL_ROOT (NewLatest). Stack siblings are symlinked inside NewLatest via scripts/wire-stack.sh.",
   "stack": {

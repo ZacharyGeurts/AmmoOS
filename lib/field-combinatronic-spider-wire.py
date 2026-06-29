@@ -129,7 +129,7 @@ def _ironclad_outward_root() -> dict[str, Any]:
 
 def _collect_sources() -> dict[str, Any]:
     uni = _load(STATE / "field-g16-universal-combinatronic.json", {})
-    chips = _load(STATE / "field-chip-battery.json", {})
+    chips = _load(STATE / "field-ironclad-chips-combinatorics.json", {})
     prog = _load(STATE / "field-program-combinatronic.json", {})
     bridge = _load(STATE / "field-plate-combinatorics-bridge.json", {})
     if not uni.get("combinatorics_leaves"):
@@ -142,7 +142,7 @@ def _collect_sources() -> dict[str, Any]:
                 if bat.get("combinatorics_leaves"):
                     uni = bat
     if not chips.get("combinatorics_leaves"):
-        cm = _import_mod("fcb", "field-chip-battery.py")
+        cm = _import_mod("ic_chips", "field-ironclad-chips-combinatorics.py")
         if cm and hasattr(cm, "combinatronic_panel"):
             chips = cm.combinatronic_panel(refresh=True)
     if not prog.get("combinatorics_leaves"):
@@ -210,7 +210,7 @@ def _build_wire_graph(sources: dict[str, Any]) -> list[dict[str, Any]]:
     }
     wires.append(layer1)
     for facet_id, label in (
-        ("chips_battery", "chips"),
+        ("ironclad_chips", "chips"),
         ("program_combinatronic", "program"),
         ("sense_universal", "sense"),
     ):

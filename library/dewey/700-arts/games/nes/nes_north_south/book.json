@@ -1,0 +1,14 @@
+{
+  "id": "nes_north_south",
+  "title": "North & South",
+  "author": "Kemco",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_north_south-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Strategy",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_north_south/nes_north_south.h7c"
+}

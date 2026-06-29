@@ -4,13 +4,15 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-b6a26e72132f",
+  "ein": "H7C-FIELD-0bb4ae8efd1a",
   "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
   "h7c": "library/dewey/000-computer-science/explaining_quickbasic/explaining_quickbasic.h7c",
@@ -19,5 +21,5 @@
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "quickbasic",
   "cover": "/world/assets/combinatronic/books/quickbasic.png",
-  "updated": "2026-06-27T13:09:13Z"
+  "updated": "2026-06-27T17:42:57Z"
 }

@@ -142,12 +142,27 @@ def _merge_devices(seed: dict[str, Any]) -> list[dict[str, Any]]:
     return devices
 
 
+def _nes_catalog_games() -> list[dict[str, Any]]:
+    cat = INSTALL / "data" / "nes-cartridge-catalog.json"
+    doc = _load(cat, {})
+    out: list[dict[str, Any]] = []
+    for row in doc.get("entries") or []:
+        if not isinstance(row, dict) or not row.get("id"):
+            continue
+        out.append({**row, "source": "nes_cartridge_catalog"})
+    return out
+
+
 def _merge_games(seed: dict[str, Any]) -> list[dict[str, Any]]:
     by_id: dict[str, dict[str, Any]] = {}
     for row in seed.get("games") or []:
         if isinstance(row, dict) and row.get("id"):
             by_id[str(row["id"])] = {**row, "source": "seed"}
     for row in _videogame_games():
+        gid = str(row.get("id", ""))
+        if gid:
+            by_id[gid] = {**by_id.get(gid, {}), **row}
+    for row in _nes_catalog_games():
         gid = str(row.get("id", ""))
         if gid:
             by_id[gid] = {**by_id.get(gid, {}), **row}
@@ -199,18 +214,42 @@ def _entry_text_great(g: dict[str, Any]) -> str:
 
 
 def _entry_text_game(game: dict[str, Any]) -> str:
+    title = game.get("title", game.get("id"))
     lines = [
-        f"# {game.get('title', game.get('id'))}",
+        f"# {title}",
         "",
-        f"**Console:** {game.get('console_id', '—')}",
-        f"**Year:** {game.get('year', '—')}",
-        f"**Publisher:** {game.get('publisher', '—')}",
-        f"**Genre:** {game.get('genre', '—')}",
+        "| Field | Value |",
+        "| --- | --- |",
+        f"| Console | {game.get('console_id', '—')} |",
+        f"| Year | {game.get('year', '—')} |",
+        f"| Publisher | {game.get('publisher', '—')} |",
+        f"| Developer | {game.get('developer', '—')} |",
+        f"| Genre | {game.get('genre', '—')} |",
+        f"| Media | {game.get('media_type', 'cartridge')} |",
+    ]
+    if game.get("rom"):
+        rom = game["rom"]
+        lines.append(f"| ROM file | `{rom.get('filename', '—')}` |")
+    if game.get("ines"):
+        ines = game["ines"]
+        lines.extend([
+            f"| PRG ROM | {ines.get('prg_kb', 0)} KB |",
+            f"| CHR ROM | {ines.get('chr_kb', 0)} KB |",
+            f"| Mapper | {ines.get('mapper', '—')} ({ines.get('mapper_name', '')}) |",
+        ])
+    lines.extend([
         "",
         "## Catalog entry",
         "Part of the Field extensive game catalog — every game ever, expand via ingest.",
         f"Dewey: {game.get('dewey', '794.8')}",
-    ]
+    ])
+    if game.get("cover") or game.get("box_path"):
+        lines.extend([
+            "",
+            "## Cover art",
+            f"- Box: `{game.get('cover') or game.get('box_path')}`",
+            f"- Cartridge: `{game.get('cart_path', '')}`",
+        ])
     return "\n".join(lines)
 
 
@@ -227,7 +266,7 @@ def _pack_entry_h7c(entry_id: str, text: str, meta: dict[str, Any], shelf: Path)
         dest.write_bytes(packed)
         cover = f"/library/assets/devices/{entry_id}.png"
         if meta.get("category") == "game":
-            cover = ""
+            cover = str(meta.get("cover") or meta.get("box_path") or "")
         elif meta.get("category") == "biography":
             cover = ""
         (book_dir / "book.json").write_text(json.dumps({
@@ -280,8 +319,16 @@ def sync_dewey_shelves(*, pack: bool = True) -> dict[str, Any]:
         if not eid:
             continue
         text = _entry_text_game(game)
-        meta = {"title": game.get("title"), "category": "game", "dewey": game.get("dewey", "794.8")}
-        if pack and _pack_entry_h7c(eid, text, meta, SHELF_GAMES):
+        meta = {
+            "title": game.get("title"),
+            "category": "game",
+            "dewey": game.get("dewey", "794.8"),
+            "cover": game.get("cover") or game.get("box_path"),
+            "box_path": game.get("box_path"),
+            "cart_path": game.get("cart_path"),
+        }
+        shelf = SHELF_GAMES / "nes" if str(game.get("console_id")) == "nes" and str(game.get("id", "")).startswith("nes_") else SHELF_GAMES
+        if pack and _pack_entry_h7c(eid, text, meta, shelf):
             synced["h7c"] += 1
         synced["games"] += 1
 

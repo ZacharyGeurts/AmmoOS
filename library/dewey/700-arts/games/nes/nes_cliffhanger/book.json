@@ -1,0 +1,14 @@
+{
+  "id": "nes_cliffhanger",
+  "title": "Cliffhanger",
+  "author": "Sony Computer Entertainment",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_cliffhanger-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1993,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_cliffhanger/nes_cliffhanger.h7c"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "nes_archon_the_light_and_the_dark",
+  "title": "Archon: The Light and the Dark",
+  "author": "Activision",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_archon_the_light_and_the_dark-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Strategy",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_archon_the_light_and_the_dark/nes_archon_the_light_and_the_dark.h7c"
+}

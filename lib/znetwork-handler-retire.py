@@ -5,6 +5,7 @@ No sudo. User-space bypass alongside OS networking — link stays up, OS stack u
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import platform
@@ -14,6 +15,23 @@ import sys
 import time
 from pathlib import Path
 from typing import Any
+
+_MOD_CACHE: dict[str, Any] = {}
+
+
+def _mod(py: Path, name: str) -> Any | None:
+    key = str(py)
+    if key in _MOD_CACHE:
+        return _MOD_CACHE[key]
+    if not py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location(name, py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _MOD_CACHE[key] = mod
+    return mod
 
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
@@ -145,33 +163,91 @@ def _znetwork_bin() -> Path | None:
     env = os.environ.get("ZNETWORK_BIN", "").strip()
     if env and Path(env).is_file():
         return Path(env).resolve()
+    sg = Path(os.environ.get("SG_ROOT", str(INSTALL.parent)))
     for candidate in (
-        INSTALL / "bin" / "znetwork",
+        sg / "ZNetwork" / "build" / "znetwork",
         INSTALL.parent / "ZNetwork" / "build" / "znetwork",
+        INSTALL / "bin" / "znetwork",
     ):
         if candidate.is_file():
             return candidate.resolve()
     return None
 
 
+def _probe_connection_fallback() -> dict[str, Any]:
+    """Minimal link snapshot when znetwork probe is slow — protection-only, no field bridges."""
+    iface = ""
+    ipv4 = ""
+    gateway = ""
+    try:
+        proc = subprocess.run(
+            ["ip", "-4", "route", "show", "default"],
+            capture_output=True,
+            text=True,
+            timeout=4,
+        )
+        if proc.returncode == 0 and proc.stdout.strip():
+            parts = proc.stdout.split()
+            if "via" in parts:
+                gateway = parts[parts.index("via") + 1]
+            if "dev" in parts:
+                iface = parts[parts.index("dev") + 1]
+    except (subprocess.SubprocessError, OSError):
+        pass
+    if iface:
+        try:
+            proc = subprocess.run(
+                ["ip", "-4", "-o", "addr", "show", "dev", iface],
+                capture_output=True,
+                text=True,
+                timeout=4,
+            )
+            if proc.returncode == 0:
+                for line in proc.stdout.splitlines():
+                    bits = line.split()
+                    if len(bits) >= 4 and bits[2] == "inet":
+                        ipv4 = bits[3].split("/", 1)[0]
+                        break
+        except (subprocess.SubprocessError, OSError):
+            pass
+    if not iface:
+        return {"ok": False, "error": "fallback_no_iface"}
+    conn = {
+        "os": platform.system().lower(),
+        "platform_backend": "kernel_route",
+        "iface": iface,
+        "iface_type": "unknown",
+        "ipv4": ipv4,
+        "gateway": gateway,
+        "state": "connected" if ipv4 else "unknown",
+        "is_default_route": True,
+    }
+    return {
+        "ok": True,
+        "connection": conn,
+        "backend": {"id": "kernel_route", "label": "kernel_route", "running": True},
+        "fallback": True,
+    }
+
+
 def _probe_connection() -> dict[str, Any]:
     bin_path = _znetwork_bin()
     if not bin_path:
-        return {"ok": False, "error": "znetwork_binary_missing"}
+        return _probe_connection_fallback()
     try:
         proc = subprocess.run(
             [str(bin_path), "probe", "--json"],
             capture_output=True,
             text=True,
-            timeout=20,
+            timeout=8,
             env={**os.environ, "SG_ROOT": str(INSTALL.parent)},
         )
-        if proc.returncode != 0 or not proc.stdout.strip():
-            return {"ok": False, "error": proc.stderr or "probe_failed"}
-        doc = json.loads(proc.stdout)
-        return {"ok": True, "connection": doc.get("connection") or doc, "backend": doc.get("backend") or {}}
-    except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as exc:
-        return {"ok": False, "error": str(exc)}
+        if proc.returncode == 0 and proc.stdout.strip():
+            doc = json.loads(proc.stdout)
+            return {"ok": True, "connection": doc.get("connection") or doc, "backend": doc.get("backend") or {}}
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError):
+        pass
+    return _probe_connection_fallback()
 
 
 def detect_legacy_handlers(*, znetwork_active: bool = False) -> dict[str, Any]:
@@ -367,11 +443,37 @@ def _try_nm_unmanaged(iface: str) -> dict[str, Any]:
         return {"ok": False, "iface": iface, "error": str(exc), "no_sudo": True}
 
 
+def _takeover_mod() -> Any | None:
+    return _mod(INSTALL / "lib" / "znetwork-os-takeover.py", "znetwork_os_takeover")
+
+
+def _smart_inside_mod() -> Any | None:
+    return _mod(INSTALL / "lib" / "znetwork-smart-inside.py", "znetwork_smart_inside")
+
+
+def _smart_inside_active() -> bool:
+    return os.environ.get("ZNETWORK_SMART_INSIDE", "1") != "0"
+
+
+def _takeover_active() -> bool:
+    if _smart_inside_active():
+        return False
+    if os.environ.get("ZNETWORK_PROTECTION_ONLY", "0") == "1":
+        return False
+    mode = os.environ.get("ZNETWORK_MODE", "REVIEW_ONLY")
+    return mode == "ACTIVE" or os.environ.get("ZNETWORK_TAKEOVER", "0") == "1"
+
+
 def replace_connection() -> dict[str, Any]:
-    """Mirror live connection into ZNetwork state — bypass alongside OS, never harm host stack."""
+    """Mirror live connection — smart inside owns policy; destructive handoff only when explicitly requested."""
     probe = _probe_connection()
     if not probe.get("ok"):
         return {"ok": False, "error": "probe_failed", "probe": probe}
+
+    if _smart_inside_active():
+        mod = _smart_inside_mod()
+        if mod and hasattr(mod, "own_connection"):
+            return mod.own_connection(probe=probe)
 
     conn = probe.get("connection") or {}
     backend = probe.get("backend") or {}
@@ -382,24 +484,38 @@ def replace_connection() -> dict[str, Any]:
         "updated": _now(),
         "policy_owner": "znetwork",
         "link_preserved": True,
-        "no_sudo": True,
         "connection": conn,
         "backend": backend,
         "supersedes": {
             "native_id": backend.get("id"),
             "native_label": backend.get("label"),
-            "method": "user_space_bridges",
+            "method": "bottom_up_handoff",
         },
-        "bridges_pending": True,
     }
     _save(CONNECTION, doc)
 
-    handoff = _try_nm_unmanaged(iface)
+    handoff: dict[str, Any]
+    takeover_rep: dict[str, Any] | None = None
+    if _takeover_active():
+        mod = _takeover_mod()
+        if mod and hasattr(mod, "takeover"):
+            takeover_rep = mod.takeover(snapshot=probe)
+            handoff = takeover_rep
+            doc["coexist_os"] = False
+            doc["native_backend_superseded"] = bool(takeover_rep.get("ok"))
+            doc["verdict"] = "ZNETWORK_ACTIVE_HANDOFF" if takeover_rep.get("ok") else "ZNETWORK_HANDOFF_PARTIAL"
+        else:
+            handoff = _try_nm_unmanaged(iface)
+            doc["coexist_os"] = True
+            doc["verdict"] = "ZNETWORK_HANDOFF_FALLBACK"
+    else:
+        handoff = _try_nm_unmanaged(iface)
+        doc["coexist_os"] = True
+        doc["never_harm_os"] = _never_harm_os()
+        doc["verdict"] = "ZNETWORK_BYPASS_ALONGSIDE"
+
     doc["handoff"] = handoff
-    doc["coexist_os"] = True
-    doc["never_harm_os"] = _never_harm_os()
-    doc["bridges_pending"] = False
-    doc["verdict"] = "ZNETWORK_BYPASS_ALONGSIDE"
+    doc["no_sudo"] = not _takeover_active()
     _save(CONNECTION, doc)
 
     status_path = STATE / "znetwork-status.json"
@@ -413,14 +529,19 @@ def replace_connection() -> dict[str, Any]:
     status["effective_mode"] = os.environ.get("ZNETWORK_MODE", "REVIEW_ONLY")
     status["policy_owner"] = "znetwork"
     status["native_backend_bypassed"] = True
-    status["native_backend_superseded"] = False
-    status["coexist_os"] = True
+    status["native_backend_superseded"] = bool(doc.get("native_backend_superseded"))
+    status["coexist_os"] = bool(doc.get("coexist_os", True))
+    status["link_preserved"] = True
+    status["appears_connected"] = True
     status["connection_owner"] = doc
     status["updated"] = _now()
+    if takeover_rep:
+        status["takeover"] = takeover_rep
     _save(status_path, status)
 
     _append_log({"event": "replace_connection", "iface": iface, "handoff": handoff})
-    return {"ok": True, "connection": doc, "handoff": handoff}
+    ok = True if not _takeover_active() else bool((takeover_rep or {}).get("ok", False))
+    return {"ok": ok, "connection": doc, "handoff": handoff}
 
 
 def guard_blocks_restart(handler_id: str) -> bool:

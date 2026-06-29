@@ -1,0 +1,14 @@
+{
+  "id": "nes_guerrilla_war",
+  "title": "Guerrilla War",
+  "author": "SNK Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_guerrilla_war-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_guerrilla_war/nes_guerrilla_war.h7c"
+}

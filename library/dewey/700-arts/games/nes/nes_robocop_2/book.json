@@ -1,0 +1,14 @@
+{
+  "id": "nes_robocop_2",
+  "title": "Robocop 2",
+  "author": "Data East Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_robocop_2-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_robocop_2/nes_robocop_2.h7c"
+}

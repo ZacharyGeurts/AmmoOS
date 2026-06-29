@@ -1,0 +1,14 @@
+{
+  "id": "nes_barker_bills_trick_shooting",
+  "title": "Barker Bill's Trick Shooting",
+  "author": "Nintendo",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_barker_bills_trick_shooting-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_barker_bills_trick_shooting/nes_barker_bills_trick_shooting.h7c"
+}

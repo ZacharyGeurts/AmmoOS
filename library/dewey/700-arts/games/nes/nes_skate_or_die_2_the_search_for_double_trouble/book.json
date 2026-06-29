@@ -1,0 +1,14 @@
+{
+  "id": "nes_skate_or_die_2_the_search_for_double_trouble",
+  "title": "Skate or Die 2: The Search for Double Trouble",
+  "author": "Electronic Arts",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_skate_or_die_2_the_search_for_double_trouble-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_skate_or_die_2_the_search_for_double_trouble/nes_skate_or_die_2_the_search_for_double_trouble.h7c"
+}

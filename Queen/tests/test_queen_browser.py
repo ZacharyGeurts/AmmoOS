@@ -167,8 +167,11 @@ def run_tests() -> list[tuple[str, str]]:
     code, desk_raw = _get("/api/queen-desktop")
     desk = json.loads(desk_raw.decode("utf-8"))
     assert_true(code == 200 and desk.get("schema") == "queen-desktop/v1", "queen-desktop API", results)
-    desk_ids = {p.get("id") for p in desk.get("classic_programs") or []}
-    assert_true("nexus-c2" in desk_ids or "dashboard" in desk_ids, "nexus c2 in classic programs", results)
+    start_src = desk.get("start_programs") if desk.get("desktop_icons_in_start") else desk.get("classic_programs")
+    desk_ids = {p.get("id") for p in start_src or []}
+    assert_true("nexus-c2" in desk_ids or "dashboard" in desk_ids, "nexus c2 in start programs", results)
+    if desk.get("desktop_icons_in_start"):
+        assert_true(not desk.get("classic_programs"), "desktop surface clear when icons in start", results)
 
     code, c2_api_raw = _get("/api/nexus-c2")
     c2_api = json.loads(c2_api_raw.decode("utf-8"))

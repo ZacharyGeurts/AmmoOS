@@ -35,6 +35,7 @@ _INSPECT = None
 _CHAMBER = None
 _POWER_SORT = None
 _ALWAYS_FILES = None
+_PROGRAM_LIB = None
 _ALWAYS_ENRICH = os.environ.get("QUEEN_ALWAYS_FILES", "1").strip().lower() not in ("0", "false", "no")
 
 
@@ -153,6 +154,19 @@ def _chamber_mod():
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     _CHAMBER = mod
+    return mod
+
+
+def _program_library_mod():
+    global _PROGRAM_LIB
+    if _PROGRAM_LIB is not None:
+        return _PROGRAM_LIB
+    spec = importlib.util.spec_from_file_location("queen_program_library", QUEEN / "lib" / "queen-program-library.py")
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _PROGRAM_LIB = mod
     return mod
 
 
@@ -285,6 +299,42 @@ def _resolve_jailed(raw: str) -> tuple[Path | None, str | None]:
     return None, "jail_denied"
 
 
+_FOLDER_HEAT_CAP = int(os.environ.get("QUEEN_FOLDER_HEAT_CAP", "2500"))
+
+
+def _folder_heat(p: Path) -> dict[str, Any]:
+    """Shallow folder metrics — blue=file count, yellow=bytes, darken=subdirs."""
+    child_count = 0
+    file_count = 0
+    subdir_count = 0
+    total_bytes = 0
+    try:
+        with os.scandir(p) as it:
+            for ent in it:
+                if ent.name.startswith("."):
+                    continue
+                child_count += 1
+                try:
+                    if ent.is_dir(follow_symlinks=False):
+                        subdir_count += 1
+                    elif ent.is_file(follow_symlinks=False):
+                        file_count += 1
+                        total_bytes += ent.stat(follow_symlinks=False).st_size
+                except OSError:
+                    pass
+                if child_count >= _FOLDER_HEAT_CAP:
+                    break
+    except OSError:
+        pass
+    return {
+        "child_count": child_count,
+        "file_count": file_count,
+        "subdir_count": subdir_count,
+        "total_bytes": total_bytes,
+        "capped": child_count >= _FOLDER_HEAT_CAP,
+    }
+
+
 def _entry_kind(p: Path) -> str:
     try:
         st = p.lstat()
@@ -299,7 +349,7 @@ def _entry_kind(p: Path) -> str:
     return "other"
 
 
-def _entry_row(p: Path) -> dict[str, Any]:
+def _entry_row(p: Path, *, with_folder_heat: bool = True) -> dict[str, Any]:
     kind = _entry_kind(p)
     row: dict[str, Any] = {
         "name": p.name,
@@ -330,6 +380,8 @@ def _entry_row(p: Path) -> dict[str, Any]:
     else:
         row["icon"] = "📄"
         row["action"] = "open_tab"
+    if kind == "dir" and with_folder_heat:
+        row["folder_heat"] = _folder_heat(p)
     return _maybe_enrich_row(row)
 
 
@@ -428,10 +480,12 @@ def _list_dir(path: Path, *, show_hidden: bool = False, browse_inside: bool = Fa
 
     entries: list[dict[str, Any]] = []
     facade_names: set[str] = set()
+    heat_budget = int(os.environ.get("QUEEN_FOLDER_HEAT_BUDGET", "64"))
     try:
         children = sorted(path.iterdir(), key=lambda x: (x.is_file(), x.name.lower()))
     except OSError as exc:
         return {"ok": False, "error": "list_failed", "detail": str(exc)[:120]}
+    want_heat = os.environ.get("QUEEN_FOLDER_HEAT", "1").strip().lower() not in ("0", "false", "no")
     for child in children:
         if child.name in _BLOCKED_PARTS:
             continue
@@ -449,7 +503,10 @@ def _list_dir(path: Path, *, show_hidden: bool = False, browse_inside: bool = Fa
                 continue
         if child.suffix.lower() == ".launch" and child.name.lower() in facade_names:
             continue
-        entries.append(_entry_row(child))
+        use_heat = want_heat and child.is_dir() and heat_budget > 0
+        if use_heat:
+            heat_budget -= 1
+        entries.append(_entry_row(child, with_folder_heat=use_heat))
         list_cap = int(os.environ.get("QUEEN_FILE_LIST_CAP", "0") or "0")
         if list_cap > 0 and len(entries) >= list_cap:
             break
@@ -764,6 +821,8 @@ def browser_status() -> dict[str, Any]:
             "context_menu": True,
             "file_type_inspect": True,
             "icon_overrides": True,
+            "program_library_v2": True,
+            "zero_copy_icons": True,
             "launch_spv": True,
             "launch_chamber": True,
             "singular_field_plane": True,
@@ -979,6 +1038,83 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         if not insp:
             return {"ok": False, "error": "inspect_unavailable"}
         return {"ok": True, **insp.file_types_registry(), "zero_cost_4_slot": zero_cost_slice()}
+
+    if action in ("set_type_pref", "type_pref", "toggle_type_flag"):
+        insp = _inspect_mod()
+        if not insp:
+            return {"ok": False, "error": "inspect_unavailable"}
+        tid = str(body.get("type_id") or body.get("id") or "").strip()
+        key = str(body.get("key") or body.get("flag") or "").strip()
+        if not tid or not key:
+            return {"ok": False, "error": "type_id_and_key_required"}
+        value = body.get("value")
+        if body.get("toggle") and key == "compileable":
+            reg = insp.file_types_registry()
+            cur = (reg.get("types") or {}).get(tid, {}).get("flags", {}).get("compileable")
+            value = not cur
+        if body.get("toggle") and key == "on_bar":
+            prefs = insp.load_type_prefs()
+            pins = list(prefs.get("bar_pins") or [])
+            if tid in pins:
+                pins = [x for x in pins if x != tid]
+            else:
+                pins.append(tid)
+            insp.set_bar_pins(pins)
+            return {"ok": True, **insp.file_types_registry(), "zero_cost_4_slot": zero_cost_slice()}
+        insp.set_type_pref(tid, key, value)
+        return {"ok": True, **insp.file_types_registry(), "zero_cost_4_slot": zero_cost_slice()}
+
+    if action in ("set_bar_pins", "bar_pins"):
+        insp = _inspect_mod()
+        if not insp:
+            return {"ok": False, "error": "inspect_unavailable"}
+        pins = body.get("pins") or body.get("bar_pins") or []
+        insp.set_bar_pins(list(pins) if isinstance(pins, list) else [])
+        return {"ok": True, **insp.file_types_registry(), "zero_cost_4_slot": zero_cost_slice()}
+
+    if action in ("nes_catalog", "nes_library"):
+        cat_path = QUEEN.parent / "data" / "nes-cartridge-catalog.json"
+        try:
+            doc = json.loads(cat_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {"ok": False, "error": "nes_catalog_missing"}
+        entries = list(doc.get("entries") or [])
+        if body.get("rom_only"):
+            entries = [e for e in entries if e.get("rom")]
+        q = str(body.get("query") or body.get("q") or "").lower().strip()
+        if q:
+            entries = [
+                e for e in entries
+                if q in json.dumps(e, ensure_ascii=False).lower()
+            ]
+        limit = int(body.get("limit") or 48)
+        return {
+            "ok": True,
+            "count": doc.get("count", len(entries)),
+            "rom_count": doc.get("rom_count", 0),
+            "entries": entries[:limit],
+            "zero_cost_4_slot": zero_cost_slice(),
+        }
+
+    if action in ("program_library", "library", "library_scan", "library_search"):
+        lib = _program_library_mod()
+        if not lib:
+            return {"ok": False, "error": "library_unavailable"}
+        sub = "library_scan" if action == "library_scan" else "library_search" if action == "library_search" else "library"
+        if sub == "library_scan":
+            out = lib.build_library(include_host=body.get("host", True) is not False)
+        elif sub == "library_search":
+            out = lib.search_library(
+                str(body.get("query") or body.get("q") or ""),
+                limit=int(body.get("limit") or 80),
+                kind=str(body.get("kind") or body.get("facet_kind") or ""),
+                dewey=str(body.get("dewey") or body.get("facet_dewey") or ""),
+                platform=str(body.get("platform") or body.get("facet_platform") or ""),
+            )
+        else:
+            out = lib.library_doc()
+        out["zero_cost_4_slot"] = zero_cost_slice()
+        return out
 
     if action in ("icon_get", "icons"):
         insp = _inspect_mod()
@@ -1270,6 +1406,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
 
     return {"ok": False, "error": "unknown_action", "actions": [
         "status", "list", "tree", "stat", "inspect", "file_types", "icon_get", "icon_save",
+        "set_type_pref", "set_bar_pins", "program_library", "library_scan", "library_search",
         "compile_mode", "run_launch", "run_launchable", "create_launch", "launch",
         "dock", "dock_push", "dock_save", "nav_get", "nav_push", "nav_back", "nav_forward",
         "scan", "hotbar", "hotbar_save", "wishlist_save", "search", "mkdir", "resolve", "verify_jail",

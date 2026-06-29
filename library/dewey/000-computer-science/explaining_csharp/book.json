@@ -4,13 +4,15 @@
   "author": "Hostess 7",
   "dewey": "000",
   "dewey_label": "Computer science, information & general works",
-  "ein": "H7C-FIELD-adc9c76d0d53",
+  "ein": "H7C-FIELD-cf4a8a5db2c8",
   "format": "h7c",
   "format_version": 3,
   "embedded_figures": [
     "cover",
     "syntax",
-    "op_map"
+    "op_map",
+    "memory",
+    "compile"
   ],
   "manual_reader": "/field-lang-manuals",
   "h7c": "library/dewey/000-computer-science/explaining_csharp/explaining_csharp.h7c",
@@ -19,5 +21,5 @@
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "csharp",
   "cover": "/world/assets/combinatronic/books/csharp.png",
-  "updated": "2026-06-27T13:08:35Z"
+  "updated": "2026-06-27T21:25:43Z"
 }

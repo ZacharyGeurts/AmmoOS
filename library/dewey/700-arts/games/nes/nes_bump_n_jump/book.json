@@ -1,0 +1,14 @@
+{
+  "id": "nes_bump_n_jump",
+  "title": "Bump 'n' Jump",
+  "author": "Vic Tokai, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_bump_n_jump-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Racing",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_bump_n_jump/nes_bump_n_jump.h7c"
+}

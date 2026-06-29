@@ -10,6 +10,10 @@
     "algorithm": "family_then_label",
     "fallback": "locale_ci"
   },
+  "chip_paths": {
+    "algorithm": "composite_bsp",
+    "statement": "field_one_best_ever — THE sort for every chip in combinatorics"
+  },
   "integrations": {
     "power_sort": "Grok16/lib/field-power-sort.py",
     "iron_plate_organize": "lib/iron-plate-organize.py",

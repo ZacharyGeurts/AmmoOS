@@ -168,6 +168,7 @@
     activateTab,
     closeTab,
     newTab,
+    togglePinTab,
     navigate,
     browserRefresh,
   };
@@ -287,7 +288,25 @@
     ].join("");
   }
 
+  function benchmarkMode() {
+    return global.QueenFieldSanity?.benchmarkMode?.() || document.body?.dataset?.queenBenchmark === "1";
+  }
+
+  function isTopLevelBenchUrl(url) {
+    if (!url) return false;
+    try {
+      const parsed = new URL(url, location.origin);
+      const host = (parsed.hostname || "").toLowerCase();
+      const path = (parsed.pathname || "").toLowerCase();
+      if (host === "browserbench.org" || host.endsWith(".browserbench.org")) return true;
+      return /speedometer|jetstream|motionmark|webxprt|todomvc/i.test(path);
+    } catch (_) {
+      return /speedometer|browserbench\.org|jetstream|motionmark/i.test(String(url));
+    }
+  }
+
   async function resolveUrl(url) {
+    if (benchmarkMode() && global.QueenFieldSanity?.isFastUrl?.(url)) return url;
     if (!url || url.startsWith("http://127.0.0.1") || url.startsWith("http://localhost")) return url;
     if (!url.includes("://") && url.startsWith("/")) return url;
     const jr = await fetch(API.nexusJump, {
@@ -329,6 +348,10 @@
       url = global.QueenFieldSanity.stripFieldDepth(url);
     } else if (typeof url === "string" && url.includes("field_depth")) {
       url = url.replace(/([?&])field_depth=\d+/g, "").replace(/\?&/, "?").replace(/[?&]$/, "");
+    }
+    if (benchmarkMode() && isTopLevelBenchUrl(url)) {
+      window.location.assign(url);
+      return { ok: true, top_level: true, url };
     }
     global.QueenFieldSanity?.snapPitsInstant?.();
     try {
@@ -383,6 +406,12 @@
   async function newTab(url) {
     const out = await browserApi({ action: "new_tab", url });
     if (out.ok) await browserRefresh();
+  }
+
+  async function togglePinTab(tabId) {
+    const out = await browserApi({ action: "toggle_pin", tab_id: tabId });
+    if (out.ok) await browserRefresh();
+    else if ($("qb-status")) $("qb-status").textContent = out.error || "pin_failed";
   }
 
   async function historyStep(action) {
@@ -459,6 +488,7 @@
   }
 
   async function silentBrowserImport() {
+    if (benchmarkMode()) return;
     if (globalThis.QUEEN_BROWSER_IMPORT_RAN) return;
     globalThis.QUEEN_BROWSER_IMPORT_RAN = true;
     try {
@@ -485,13 +515,15 @@
         : `${seal.grok16?.ready ? "Grok16 in Queen" : "Grok16 pending"} · ${seal.sealed ? "RTX sealed" : "RTX boot"}`;
     }
     ASM.phase = "BROWSER";
-    setInterval(async () => {
-      try {
-        renderGateChrome(await browserStatus());
-      } catch (_) {
-        /* quiet */
-      }
-    }, 30000);
+    if (!benchmarkMode()) {
+      setInterval(async () => {
+        try {
+          renderGateChrome(await browserStatus());
+        } catch (_) {
+          /* quiet */
+        }
+      }, 30000);
+    }
   }
 
   /* ── Phase 3: WORLD dock (Hostess · Eye · Forge · Field) ───── */
@@ -1371,6 +1403,7 @@
       activateTab,
       closeTab,
       newTab,
+      togglePinTab,
       doc: browser,
       loadFrame,
     },

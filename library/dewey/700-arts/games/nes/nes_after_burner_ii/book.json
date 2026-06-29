@@ -1,0 +1,14 @@
+{
+  "id": "nes_after_burner_ii",
+  "title": "After Burner II",
+  "author": "SunSoft, Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_after_burner_ii-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1989,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_after_burner_ii/nes_after_burner_ii.h7c"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "nes_blades_of_steel",
+  "title": "Blades of Steel",
+  "author": "Konami",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_blades_of_steel-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_blades_of_steel/nes_blades_of_steel.h7c"
+}

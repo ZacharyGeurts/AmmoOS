@@ -157,20 +157,64 @@ def extract_video_frame(video: Path, *, frame_index: int = 0) -> Path | None:
         return None
 
 
+def _voice_enabled() -> bool:
+    if os.environ.get("HOSTESS7_VOICE", "") in ("0", "false", "no"):
+        return False
+    if os.environ.get("NEXUS_HOSTESS7_VOICE", "") in ("0", "false", "no"):
+        return False
+    if os.environ.get("HOSTESS7_TALK", "") in ("1", "true", "yes"):
+        return True
+    return os.environ.get("HOSTESS7_VOICE", os.environ.get("NEXUS_HOSTESS7_VOICE", "1")) not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def _polish_for_speak(text: str) -> str:
+    polish_py = ROOT.parent / "lib" / "hostess7-voice-polish.py"
+    if not polish_py.is_file():
+        return text[:500]
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(polish_py), text[:1200]],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=15,
+            env={
+                **os.environ,
+                "NEXUS_INSTALL_ROOT": str(ROOT.parent),
+                "NEXUS_STATE_DIR": str(ROOT.parent / ".nexus-state"),
+            },
+        )
+        doc = json.loads(proc.stdout or "{}")
+        return str(doc.get("utterance") or text)[:500]
+    except (json.JSONDecodeError, subprocess.TimeoutExpired, OSError):
+        return text[:500]
+
+
 def sync_talk_reply(text: str) -> dict[str, Any]:
-    """Called after Language Expert reply — push frame + optional voice."""
+    """Called after Language Expert reply — push frame + sovereign voice speak."""
     _ensure()
     frame_state = present_talk_frame(text)
-    voice = os.environ.get("HOSTESS7_VOICE", "0") == "1"
+    voice = _voice_enabled()
     if voice:
         voice_script = ROOT / "scripts" / "hostess7_voice.py"
         if voice_script.is_file():
             try:
+                spoken = _polish_for_speak(text)
                 subprocess.Popen(
-                    [sys.executable, str(voice_script), "speak", text[:500]],
+                    [sys.executable, str(voice_script), "speak", spoken],
                     cwd=ROOT,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
+                    env={
+                        **os.environ,
+                        "NEXUS_INSTALL_ROOT": str(ROOT.parent),
+                        "NEXUS_STATE_DIR": str(ROOT.parent / ".nexus-state"),
+                        "HOSTESS7_VOICE": "1",
+                    },
                 )
             except OSError:
                 pass

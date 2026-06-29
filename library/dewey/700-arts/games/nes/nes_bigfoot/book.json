@@ -1,0 +1,14 @@
+{
+  "id": "nes_bigfoot",
+  "title": "Bigfoot",
+  "author": "Acclaim Entertainment",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_bigfoot-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Racing",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_bigfoot/nes_bigfoot.h7c"
+}

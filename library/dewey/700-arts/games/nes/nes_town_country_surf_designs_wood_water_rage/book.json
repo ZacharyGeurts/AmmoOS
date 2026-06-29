@@ -1,0 +1,14 @@
+{
+  "id": "nes_town_country_surf_designs_wood_water_rage",
+  "title": "Town & Country Surf Designs: Wood & Water Rage",
+  "author": "LJN, Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_town_country_surf_designs_wood_water_rage-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_town_country_surf_designs_wood_water_rage/nes_town_country_surf_designs_wood_water_rage.h7c"
+}

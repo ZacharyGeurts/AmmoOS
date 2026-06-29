@@ -1,0 +1,14 @@
+{
+  "id": "nes_8_eyes",
+  "title": "8 Eyes",
+  "author": "Taxan",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_8_eyes-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": null,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_8_eyes/nes_8_eyes.h7c"
+}

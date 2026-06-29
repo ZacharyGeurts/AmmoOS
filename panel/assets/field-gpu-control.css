@@ -1,17 +1,19 @@
+@import url("field-queen-theme.css");
+
 :root {
-  --fg-base: #0a0c10;
-  --fg-panel: #12151f;
-  --fg-edge: rgba(255, 255, 255, 0.08);
-  --fg-text: #f0f4ff;
-  --fg-dim: #8b949e;
-  --fg-green: #3fb950;
-  --fg-pink: #f472b6;
+  --fg-base: var(--qf-bg-deep);
+  --fg-panel: var(--qf-panel);
+  --fg-edge: var(--qf-edge);
+  --fg-text: var(--qf-text);
+  --fg-dim: var(--qf-dim);
+  --fg-green: var(--qf-emerald-glow);
+  --fg-pink: var(--qf-rose-soft);
   --fg-red: #f85149;
-  --fg-blue: #58a6ff;
+  --fg-blue: #7dd3fc;
   --fg-nvidia: #76b900;
   --fg-amd: #ed1c24;
   --fg-intel: #0071c5;
-  --fg-legacy: #c9a227;
+  --fg-legacy: var(--qf-gold);
   --dock-h: 52px;
 }
 
@@ -20,9 +22,12 @@
 html, body {
   margin: 0;
   min-height: 100%;
-  background: var(--fg-base);
+  background:
+    radial-gradient(ellipse 90% 70% at 20% 0%, var(--qf-glow-blue), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 8%, var(--qf-glow-rose), transparent 45%),
+    linear-gradient(180deg, var(--qf-bg-mid) 0%, var(--qf-bg) 100%);
   color: var(--fg-text);
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: var(--qf-font);
 }
 
 .fg-root { min-height: 100vh; display: flex; flex-direction: column; }
@@ -34,8 +39,8 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
-  background: #111318;
-  border-bottom: 1px solid var(--fg-edge);
+  background: rgba(18, 22, 32, 0.92);
+  border-bottom: 1px solid var(--qf-edge-emerald);
   flex-shrink: 0;
 }
 .fg-dock-left, .fg-dock-right { display: flex; align-items: center; gap: 10px; }
@@ -83,9 +88,10 @@ html, body {
 }
 
 .fg-vendors {
-  border-right: 1px solid var(--fg-edge);
+  border-right: 1px solid var(--qf-edge-emerald);
   padding: 16px 12px;
-  background: rgba(0,0,0,0.25);
+  background: rgba(4, 5, 8, 0.55);
+  backdrop-filter: blur(10px);
 }
 .fg-vendors h3 {
   margin: 0 0 12px;

@@ -78,6 +78,36 @@ def _compact_bullets(paragraphs: list[str], *, max_items: int = 12) -> list[str]
     return bullets
 
 
+def _communique_intent(query: str) -> str | None:
+    """Route AI communique traffic — avoid people-registry hijack on Owner/field queries."""
+    q = (query or "").strip().lower()
+    if not q:
+        return "status"
+    if any(k in q for k in ("communications history closure", "ledger-sealed", "inbox items are answered")):
+        return "status"
+    if q in ("status", "health", "brief") or q.startswith("status "):
+        return "status"
+    if any(
+        k in q
+        for k in (
+            "seven wants", "all seven wants", "anything else", "what you want first", "wants list",
+            "what does hostess", "want newlatest", "do first", "wants first",
+        )
+    ):
+        return "online_learn"
+    if any(
+        k in q
+        for k in (
+            "depth zero", "2d field", "field files", "sovereign format", "h7c library",
+            "portal send", "znetwork", "field underneath",
+        )
+    ):
+        return "reach"
+    if any(k in q for k in ("nexus", "panel", "imaging", "library", "english train", "ironclad")):
+        return "updates"
+    return None
+
+
 def operate_superintel(
     query: str,
     *,
@@ -102,7 +132,7 @@ def operate_superintel(
     setup()
     ctx = _load_context()
     env = envelope or {}
-    intent = force_intent or env.get("intent") or _classify_intent(query)
+    intent = force_intent or env.get("intent") or _communique_intent(query) or _classify_intent(query)
     ws = active_workspace()
     route = route_query(query, intent, workspace=ws)
     prime_workspace_chemistry(ws)

@@ -125,18 +125,37 @@ def _normalize_url(url: str) -> str:
     return u
 
 
+def _default_pinned() -> set[str]:
+    return {"kilroy", "files", "browser", "terminal", "code"}
+
+
+def _pinned_ids() -> set[str]:
+    doc = _load(DESKTOP_STATE, {})
+    stored = doc.get("pinned_programs")
+    if isinstance(stored, list) and stored:
+        return {str(x) for x in stored}
+    return _default_pinned()
+
+
 def _classic_icons() -> list[dict[str, Any]]:
-    pinned = {"kilroy", "files", "browser", "terminal", "code"}
+    pinned = _pinned_ids()
     out = []
     for p in CLASSIC_PROGRAMS:
         out.append({
             **p,
             "icon": f"prog-{p['id']}-48",
             "sdf_kind": p.get("kind") or "program",
-            "pinned": p["id"] in pinned or p.get("category") == "System",
+            "pinned": p["id"] in pinned,
             "url": _normalize_url(p.get("url") or ""),
         })
     return out
+
+
+def _desktop_icons_in_start(host_doc: dict[str, Any]) -> bool:
+    policy = host_doc.get("policy") or {}
+    if "desktop_icons_in_start" in policy:
+        return bool(policy.get("desktop_icons_in_start"))
+    return policy.get("show_desktop_icons") is False
 
 
 def _host_programs(host_doc: dict[str, Any]) -> list[dict[str, Any]]:
@@ -187,6 +206,8 @@ def desktop_posture() -> dict[str, Any]:
     if hook and hasattr(hook, "is_boot_os"):
         boot_os = hook.is_boot_os()
 
+    classic = _classic_icons()
+    icons_in_start = _desktop_icons_in_start(host_doc)
     return {
         "schema": "queen-desktop/v1",
         "ts": _now(),
@@ -198,7 +219,9 @@ def desktop_posture() -> dict[str, Any]:
         "wallpaper_fit": prefs["wallpaper_fit"],
         "icon_columns": prefs["icon_columns"],
         "theme": prefs["theme"],
-        "classic_programs": _classic_icons(),
+        "desktop_icons_in_start": icons_in_start,
+        "classic_programs": [] if icons_in_start else classic,
+        "start_programs": classic if icons_in_start else [],
         "host_programs": _host_programs(host_doc),
         "host_theme": host_doc.get("theme") or "gnome",
         "host_menu": host_doc.get("menu") or {},
@@ -214,7 +237,7 @@ def desktop_posture() -> dict[str, Any]:
             "show_clock": True,
             "show_tasks": True,
         },
-        "posture": "Queen classic desktop — AmmoOS C2 is the program surface; Queen Browser is the web engine",
+        "posture": "Queen classic desktop — program icons live in Start folders; Queen Browser is the web engine",
     }
 
 
@@ -233,6 +256,28 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         doc["updated"] = _now()
         _save(DESKTOP_STATE, doc)
         return {"ok": True, **desktop_posture()}
+
+    if action in ("toggle_pin", "set_pin", "pin_program"):
+        doc = _load(DESKTOP_STATE, {"schema": "queen-desktop-prefs/v1"})
+        prog_id = str(body.get("program_id") or body.get("id") or "").strip()
+        if not prog_id:
+            return {"ok": False, "error": "program_id_required"}
+        valid = {p["id"] for p in CLASSIC_PROGRAMS}
+        if prog_id not in valid:
+            return {"ok": False, "error": "unknown_program", "program_id": prog_id}
+        pins = list(_pinned_ids())
+        want = body.get("pinned")
+        if want is None:
+            want = prog_id not in pins
+        if want:
+            if prog_id not in pins:
+                pins.append(prog_id)
+        else:
+            pins = [x for x in pins if x != prog_id]
+        doc["pinned_programs"] = pins
+        doc["updated"] = _now()
+        _save(DESKTOP_STATE, doc)
+        return {"ok": True, "program_id": prog_id, "pinned": bool(want), **desktop_posture()}
 
     return {"ok": False, "error": "unknown_action", "action": action}
 

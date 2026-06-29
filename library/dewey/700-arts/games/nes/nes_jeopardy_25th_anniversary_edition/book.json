@@ -1,0 +1,14 @@
+{
+  "id": "nes_jeopardy_25th_anniversary_edition",
+  "title": "Jeopardy! 25th Anniversary Edition",
+  "author": "Gametek",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_jeopardy_25th_anniversary_edition-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Educational",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_jeopardy_25th_anniversary_edition/nes_jeopardy_25th_anniversary_edition.h7c"
+}

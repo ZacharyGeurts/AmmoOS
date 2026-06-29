@@ -1,0 +1,14 @@
+{
+  "id": "nes_wheres_waldo",
+  "title": "Where's Waldo?",
+  "author": "THQ, Inc.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_wheres_waldo-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_wheres_waldo/nes_wheres_waldo.h7c"
+}

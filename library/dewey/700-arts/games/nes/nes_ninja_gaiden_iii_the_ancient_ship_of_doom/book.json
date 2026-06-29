@@ -1,0 +1,14 @@
+{
+  "id": "nes_ninja_gaiden_iii_the_ancient_ship_of_doom",
+  "title": "Ninja Gaiden III: The Ancient Ship of Doom",
+  "author": "Tecmo, Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_ninja_gaiden_iii_the_ancient_ship_of_doom-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_ninja_gaiden_iii_the_ancient_ship_of_doom/nes_ninja_gaiden_iii_the_ancient_ship_of_doom.h7c"
+}

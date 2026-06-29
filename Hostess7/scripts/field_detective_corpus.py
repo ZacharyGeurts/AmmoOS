@@ -257,6 +257,64 @@ def ironclad_slice() -> dict[str, Any]:
     }
 
 
+def ironclad_chips_slice() -> dict[str, Any]:
+    """Ask Ironclad for CHIPS — condensed core after seal, else combinatorics panel."""
+    install = _nexus_install()
+    os.environ.setdefault("NEXUS_INSTALL_ROOT", str(install))
+    state = Path(os.environ.get("NEXUS_STATE_DIR", install / ".nexus-state"))
+    os.environ.setdefault("NEXUS_STATE_DIR", str(state))
+
+    iron = ironclad_slice()
+    sealed = bool(iron.get("ironclad_sealed"))
+
+    core_mod = _load_module(install / "lib" / "field-chips-core.py", "chips_core_detective")
+    if sealed and core_mod and hasattr(core_mod, "chips_core_slice"):
+        try:
+            doc = core_mod.chips_core_slice()
+            if doc.get("ok") or doc.get("condensed"):
+                return {
+                    "ok": True,
+                    "source": "chips_core",
+                    "ironclad_sealed": True,
+                    "condensed": bool(doc.get("condensed")),
+                    "chip_count": (doc.get("counts") or {}).get("chips"),
+                    "core_modules": (doc.get("counts") or {}).get("core_modules"),
+                    "posture": doc.get("posture"),
+                    "layer": "chips_core",
+                    "ask_path": "ironclad → chips_core",
+                }
+        except Exception as exc:
+            pass
+
+    icc_mod = _load_module(install / "lib" / "field-ironclad-chips-combinatorics.py", "icc_detective")
+    if icc_mod and hasattr(icc_mod, "ironclad_chips_slice"):
+        try:
+            doc = icc_mod.ironclad_chips_slice()
+            counts = doc.get("counts") or {}
+            return {
+                "ok": bool(doc.get("ok")),
+                "source": "ironclad_chips",
+                "ironclad_sealed": sealed,
+                "condensed": False,
+                "chip_count": counts.get("total") or doc.get("chip_count"),
+                "leaf_count": counts.get("leaves") or doc.get("leaf_count"),
+                "featured_render_overlay": doc.get("featured_render_overlay"),
+                "layer": "ironclad_chips",
+                "ask_path": "ironclad → ironclad_chips",
+                "catalog_role": "featured_render_overlay",
+            }
+        except Exception as exc:
+            return {"ok": False, "source": "ironclad_chips", "error": str(exc), "ironclad_sealed": sealed}
+
+    return {
+        "ok": False,
+        "source": "none",
+        "ironclad_sealed": sealed,
+        "error": "chips_layer_not_found",
+        "ask_path": "ironclad → (chips_core | ironclad_chips)",
+    }
+
+
 def build_corpus() -> dict:
     return {
         "version": DETECTIVE_CORPUS_VERSION,

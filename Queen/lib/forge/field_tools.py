@@ -19,6 +19,30 @@ from forge.field_paths import (
 )
 from forge.common import fail_result, ok_result, rtx_bin, rtx_ready
 
+SOVEREIGN_BUNDLE_NAME = "queen-sovereign-bundle.json"
+SOVEREIGN_BUNDLE_SCHEMA = "queen-sovereign-bundle/v1"
+
+
+def _guarded_json(path: Path, doc: dict[str, Any], engine: ForgeEngine) -> bool:
+    queen = Path(__file__).resolve().parents[2]
+    nexus = sg_root(queen)
+    gate_py = nexus / "NewLatest" / "lib" / "field-no-file-gate.py"
+    if not gate_py.is_file():
+        path.write_text(json.dumps(doc, indent=2), encoding="utf-8")
+        return True
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("field_no_file_gate_ft", gate_py)
+    if not spec or not spec.loader:
+        return False
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    rep = mod.guarded_write_json(path, doc)
+    if not rep.get("ok"):
+        engine.log(f"BLOCKED field file poison: {path.name} — {rep.get('reason')}")
+        return False
+    return True
+
 
 def _run_script(engine: ForgeEngine, script: Path, *, env: dict[str, str] | None = None) -> int:
     if not script.is_file():
@@ -97,7 +121,7 @@ def run_field_rootfs(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
 
 
 def check_field_package(ctx: ForgeContext) -> bool:
-    manifest = ctx.queen / "field" / "sovereign" / "queen-field.json"
+    manifest = ctx.queen / "field" / "sovereign" / SOVEREIGN_BUNDLE_NAME
     if not manifest.is_file():
         return False
     try:
@@ -262,8 +286,8 @@ def run_field_package(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
 
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     manifest = {
-        "schema": "queen-field/v1",
-        "title": "Queen Sovereign Field — kernel + browser + secure stack",
+        "schema": SOVEREIGN_BUNDLE_SCHEMA,
+        "title": "Queen Sovereign Bundle — kernel + browser + secure stack",
         "motto": "One field. Field Kernel. Queen browser. All gates held.",
         "sealed": True,
         "stamped": stamp,
@@ -302,8 +326,10 @@ def run_field_package(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
         if src.is_file():
             shutil.copy2(src, field_books / extra)
 
-    (out / "queen-field.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    engine.log(f"=== FIELD PACKAGE SEALED: {out} ===")
+    bundle_path = out / SOVEREIGN_BUNDLE_NAME
+    if not _guarded_json(bundle_path, manifest, engine):
+        return fail_result(engine, "field_package", "sovereign bundle blocked — field file poison")
+    engine.log(f"=== SOVEREIGN BUNDLE SEALED: {out} ===")
     return ok_result(engine, "field_package", str(out))
 
 
@@ -311,7 +337,7 @@ def check_field_publish(ctx: ForgeContext) -> bool:
     storage = field_storage_root(ctx.queen)
     if not storage:
         return False
-    published = storage / "queen-field" / "sovereign" / "queen-field.json"
+    published = storage / "queen-field" / "sovereign" / SOVEREIGN_BUNDLE_NAME
     return published.is_file()
 
 

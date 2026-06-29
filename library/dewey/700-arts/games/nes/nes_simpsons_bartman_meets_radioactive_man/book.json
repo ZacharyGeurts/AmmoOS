@@ -1,0 +1,14 @@
+{
+  "id": "nes_simpsons_bartman_meets_radioactive_man",
+  "title": "Simpsons: Bartman Meets Radioactive Man",
+  "author": "Acclaim Entertainment",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_simpsons_bartman_meets_radioactive_man-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_simpsons_bartman_meets_radioactive_man/nes_simpsons_bartman_meets_radioactive_man.h7c"
+}

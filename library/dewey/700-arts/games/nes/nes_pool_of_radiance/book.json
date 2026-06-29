@@ -1,0 +1,14 @@
+{
+  "id": "nes_pool_of_radiance",
+  "title": "Pool of Radiance",
+  "author": "U.S. Gold Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_pool_of_radiance-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1990,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_pool_of_radiance/nes_pool_of_radiance.h7c"
+}

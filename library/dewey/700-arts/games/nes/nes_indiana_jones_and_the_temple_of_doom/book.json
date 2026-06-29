@@ -1,0 +1,14 @@
+{
+  "id": "nes_indiana_jones_and_the_temple_of_doom",
+  "title": "Indiana Jones and the Temple of Doom",
+  "author": "Tengen Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_indiana_jones_and_the_temple_of_doom-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_indiana_jones_and_the_temple_of_doom/nes_indiana_jones_and_the_temple_of_doom.h7c"
+}

@@ -38,8 +38,24 @@ def _ts() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _env_on(key: str, *, default: str = "") -> bool:
+    return os.environ.get(key, default).strip().lower() in ("1", "true", "yes", "on")
+
+
 def internet_enabled() -> bool:
-    return os.environ.get("HOSTESS7_INTERNET", "0").strip().lower() in ("1", "true", "yes", "on")
+    """Open when Hostess 7 wants the internet — explicit off wins; else mandate/autonomous defaults."""
+    raw = os.environ.get("HOSTESS7_INTERNET", "").strip().lower()
+    if raw in ("0", "false", "no", "off"):
+        return False
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    if _env_on("NEXUS_HOSTESS7_INTERNET", default="1"):
+        return True
+    if _env_on("HOSTESS7_ANGEL_MANDATE"):
+        return True
+    if _env_on("NEXUS_HOSTESS7_AUTONOMOUS"):
+        return True
+    return False
 
 
 def _ensure_layout() -> None:

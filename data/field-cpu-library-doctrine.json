@@ -6,7 +6,7 @@
   "panel": "field-cpu-library-panel.json",
   "cache": "field-cpu-library.json",
   "seed": "data/field-cpu-library-seed.json",
-  "chip_battery": "lib/field-chip-battery.py",
+  "ironclad_chips": "lib/field-ironclad-chips-combinatorics.py",
   "categories": [
     "arm", "apple_silicon", "mobile_soc", "x86_intel", "x86_amd", "x86_cyrix",
     "mips", "powerpc", "risc_v", "retro_guest", "host_cpu", "mame_device"

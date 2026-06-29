@@ -1,0 +1,14 @@
+{
+  "id": "nes_kabuki_quantum_fighter",
+  "title": "Kabuki: Quantum Fighter",
+  "author": "HAL Laboratory",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_kabuki_quantum_fighter-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_kabuki_quantum_fighter/nes_kabuki_quantum_fighter.h7c"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "nes_fushigi_no_umi_no_nadia",
+  "title": "Fushigi no Umi no Nadia",
+  "author": "Toho Company",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_fushigi_no_umi_no_nadia-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_fushigi_no_umi_no_nadia/nes_fushigi_no_umi_no_nadia.h7c"
+}

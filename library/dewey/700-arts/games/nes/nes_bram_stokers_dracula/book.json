@@ -1,0 +1,14 @@
+{
+  "id": "nes_bram_stokers_dracula",
+  "title": "Bram Stoker's Dracula",
+  "author": "Sony Computer Entertainment",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_bram_stokers_dracula-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Puzzle",
+  "year": 1993,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_bram_stokers_dracula/nes_bram_stokers_dracula.h7c"
+}

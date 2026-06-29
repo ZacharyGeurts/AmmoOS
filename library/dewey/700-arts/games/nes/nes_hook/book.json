@@ -1,0 +1,14 @@
+{
+  "id": "nes_hook",
+  "title": "Hook",
+  "author": "Sony Computer Entertainment",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_hook-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Fighting",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_hook/nes_hook.h7c"
+}

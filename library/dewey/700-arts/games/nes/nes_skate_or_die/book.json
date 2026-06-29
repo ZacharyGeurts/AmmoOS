@@ -1,0 +1,14 @@
+{
+  "id": "nes_skate_or_die",
+  "title": "Skate or Die",
+  "author": "Ultra Games",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_skate_or_die-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_skate_or_die/nes_skate_or_die.h7c"
+}

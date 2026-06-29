@@ -1,0 +1,14 @@
+{
+  "id": "nes_rockin_kats",
+  "title": "Rockin' Kats",
+  "author": "Atlus Co., Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_rockin_kats-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Adventure",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_rockin_kats/nes_rockin_kats.h7c"
+}

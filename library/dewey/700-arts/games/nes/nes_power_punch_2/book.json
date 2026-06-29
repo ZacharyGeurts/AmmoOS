@@ -1,0 +1,14 @@
+{
+  "id": "nes_power_punch_2",
+  "title": "Power Punch 2",
+  "author": "American Softworks Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_power_punch_2-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_power_punch_2/nes_power_punch_2.h7c"
+}

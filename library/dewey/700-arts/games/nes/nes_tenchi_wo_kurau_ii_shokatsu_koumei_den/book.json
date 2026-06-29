@@ -1,0 +1,14 @@
+{
+  "id": "nes_tenchi_wo_kurau_ii_shokatsu_koumei_den",
+  "title": "Tenchi wo Kurau II: Shokatsu Koumei-den",
+  "author": "Capcom Co., Ltd.",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_tenchi_wo_kurau_ii_shokatsu_koumei_den-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_tenchi_wo_kurau_ii_shokatsu_koumei_den/nes_tenchi_wo_kurau_ii_shokatsu_koumei_den.h7c"
+}

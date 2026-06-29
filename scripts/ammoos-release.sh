@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
-AMMOOS_VERSION="${AMMOOS_VERSION:-1.0.1-beta}"
+AMMOOS_VERSION="${AMMOOS_VERSION:-2.0.0-beta}"
 TAG="v${AMMOOS_VERSION}"
 PUSH=0
 

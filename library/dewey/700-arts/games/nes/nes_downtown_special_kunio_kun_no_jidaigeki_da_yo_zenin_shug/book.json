@@ -1,0 +1,14 @@
+{
+  "id": "nes_downtown_special_kunio_kun_no_jidaigeki_da_yo_zenin_shug",
+  "title": "Downtown Special: Kunio-kun no Jidaigeki da yo - Zenin Shugo",
+  "author": "Technos",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_downtown_special_kunio_kun_no_jidaigeki_da_yo_zenin_shug-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Role-Playing",
+  "year": 1991,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_downtown_special_kunio_kun_no_jidaigeki_da_yo_zenin_shug/nes_downtown_special_kunio_kun_no_jidaigeki_da_yo_zenin_shug.h7c"
+}

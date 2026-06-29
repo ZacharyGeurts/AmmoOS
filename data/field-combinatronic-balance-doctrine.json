@@ -18,7 +18,7 @@
     "predictive_meld": true
   },
   "fingerprint_sources": [
-    {"id": "chips", "panel": "field-chip-battery.json", "key": "chips", "id_field": "id"},
+    {"id": "chips", "panel": "field-ironclad-chips-combinatorics.json", "key": "chips", "id_field": "id"},
     {"id": "programs", "panel": "field-program-combinatronic.json", "key": "commands", "id_field": "combinatorics_leaf"},
     {"id": "program_langs", "panel": "field-program-combinatronic.json", "key": "languages", "id_field": "id", "dict_keys": true},
     {"id": "files", "panel": "field-file-formats-table.json", "key": "formats", "id_field": "id"},
@@ -37,7 +37,7 @@
     {"id": "steel_plates", "panel": "field-steel-neural-plates.json", "key": "plates", "id_field": "id"}
   ],
   "entry_batteries": [
-    {"id": "chips", "battery": "field-chip-battery.json", "module": "field-chip-battery.py", "publish": "publish"},
+    {"id": "chips", "combinatorics": "field-ironclad-chips-combinatorics.json", "module": "field-ironclad-chips-combinatorics.py", "publish": "publish"},
     {"id": "programs", "battery": "field-program-combinatronic.json", "module": "field-program-combinatronic.py", "publish": "publish_panel"},
     {"id": "files", "battery": "field-file-formats-table.json", "module": "field-file-formats.py", "publish": "publish_panel"},
     {"id": "library", "battery": "field-extensive-library.json", "module": "field-extensive-library.py", "publish": "publish_panel"},

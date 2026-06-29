@@ -317,18 +317,18 @@ def _expand_catalog(seed: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def _chip_battery_rows() -> list[dict[str, Any]]:
-    chip_py = INSTALL / "lib" / "field-chip-battery.py"
+def _ironclad_chips_rows() -> list[dict[str, Any]]:
+    chip_py = INSTALL / "lib" / "field-ironclad-chips-combinatorics.py"
     if not chip_py.is_file():
         return []
     try:
-        spec = importlib.util.spec_from_file_location("field_chip_battery_lib", chip_py)
+        spec = importlib.util.spec_from_file_location("field_ironclad_chips_lib", chip_py)
         if not spec or not spec.loader:
             return []
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        if hasattr(mod, "build_chip_battery"):
-            bat = mod.build_chip_battery()
+        if hasattr(mod, "build_ironclad_chips_combinatorics"):
+            bat = mod.build_ironclad_chips_combinatorics()
             out: list[dict[str, Any]] = []
             for chip in bat.get("chips") or []:
                 cid = str(chip.get("id") or "")
@@ -339,7 +339,7 @@ def _chip_battery_rows() -> list[dict[str, Any]]:
                     company=str(chip.get("vendor") or "—"),
                     family=str(chip.get("family") or chip.get("kind") or "chips"),
                     bits=chip.get("bits") or 0,
-                    source="chip_battery",
+                    source="ironclad_chips",
                     combinatorics_leaf=chip.get("combinatorics_leaf"),
                     path_pct=chip.get("path_pct"),
                     band=chip.get("band"),
@@ -399,7 +399,7 @@ def build_library(*, force: bool = False) -> dict[str, Any]:
         seen.add(row["id"])
         entries.append(row)
 
-    for row in _chip_battery_rows():
+    for row in _ironclad_chips_rows():
         if row["id"] in seen:
             continue
         seen.add(row["id"])

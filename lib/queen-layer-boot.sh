@@ -136,15 +136,20 @@ nexus_queen_layer_refresh() {
 }
 
 nexus_queen_layer_install_autostart() {
-  [[ "${NEXUS_QUEEN_LAYER_AUTOSTART:-1}" == "1" ]] || return 0
-  [[ -n "${DISPLAY:-}" || -n "${WAYLAND_DISPLAY:-}" ]] || return 0
-  local home root autostart desktop state_dir
+  local home autostart desktop
   home="${HOME:-}"
   [[ -n "$home" ]] || return 0
-  root="${NEXUS_INSTALL_ROOT}"
-  state_dir="${NEXUS_STATE_DIR}"
   autostart="${home}/.config/autostart"
   desktop="${autostart}/nexus-queen-world.desktop"
+  if [[ "${NEXUS_BOOT_C2_ONLY:-1}" == "1" ]] || [[ "${NEXUS_QUEEN_LAYER_AUTOSTART:-0}" != "1" ]]; then
+    rm -f "$desktop" 2>/dev/null || true
+    nexus_log "INFO" "queen-layer" "AUTOSTART_SKIP c2_only boot=${NEXUS_BOOT_C2_ONLY:-1}"
+    return 0
+  fi
+  [[ -n "${DISPLAY:-}" || -n "${WAYLAND_DISPLAY:-}" ]] || return 0
+  local root state_dir
+  root="${NEXUS_INSTALL_ROOT}"
+  state_dir="${NEXUS_STATE_DIR}"
   mkdir -p "$autostart" 2>/dev/null || return 0
   cat >"$desktop" <<EOF
 [Desktop Entry]

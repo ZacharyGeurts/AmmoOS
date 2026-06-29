@@ -1,0 +1,14 @@
+{
+  "id": "nes_pinball_2",
+  "title": "Pinball 2",
+  "author": "Hack",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_pinball_2-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": null,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_pinball_2/nes_pinball_2.h7c"
+}

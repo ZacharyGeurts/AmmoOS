@@ -1,0 +1,14 @@
+{
+  "id": "nes_street_cop",
+  "title": "Street Cop",
+  "author": "Bandai",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_street_cop-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Action",
+  "year": 1987,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_street_cop/nes_street_cop.h7c"
+}

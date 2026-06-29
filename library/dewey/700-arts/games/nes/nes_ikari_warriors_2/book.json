@@ -1,0 +1,14 @@
+{
+  "id": "nes_ikari_warriors_2",
+  "title": "Ikari Warriors 2",
+  "author": "SNK Corporation",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_ikari_warriors_2-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Shooter",
+  "year": 1988,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_ikari_warriors_2/nes_ikari_warriors_2.h7c"
+}

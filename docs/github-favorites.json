@@ -1,0 +1,31 @@
+{
+  "schema": "github-favorites/v1",
+  "owner": "ZacharyGeurts",
+  "title": "Favorites",
+  "subtitle": "Unlimited star space — pin every repo, surface, and field project.",
+  "unlimited": true,
+  "favorites": [
+    {"star": true, "name": "AmmoOS", "repo": "AmmoOS", "tag": "field OS", "url": "https://github.com/ZacharyGeurts/AmmoOS", "pages": "https://zacharygeurts.github.io/AmmoOS/"},
+    {"star": true, "name": "NEXUS-Shield", "repo": "NEXUS-Shield", "tag": "C2 panel", "url": "https://github.com/ZacharyGeurts/NEXUS-Shield", "pages": "https://zacharygeurts.github.io/NEXUS-Shield/"},
+    {"star": true, "name": "AMOURANTHRTX", "repo": "AMOURANTHRTX", "tag": "Field Die", "url": "https://github.com/ZacharyGeurts/AMOURANTHRTX"},
+    {"star": true, "name": "Hostess7", "repo": "Hostess7", "tag": "SI brain", "url": "https://github.com/ZacharyGeurts/Hostess7", "pages": "https://zacharygeurts.github.io/Hostess7/"},
+    {"star": true, "name": "Grok16", "repo": "Grok16", "tag": "G16 engine", "url": "https://github.com/ZacharyGeurts/Grok16"},
+    {"star": true, "name": "KILROY", "repo": "KILROY", "tag": "Field boot", "url": "https://github.com/ZacharyGeurts/KILROY"},
+    {"star": true, "name": "Field_Primer", "repo": "Field_Primer", "tag": "primer", "url": "https://github.com/ZacharyGeurts/Field_Primer", "pages": "https://zacharygeurts.github.io/Field_Primer/"},
+    {"star": true, "name": "Final_Eye", "repo": "Final_Eye", "tag": "vision", "url": "https://github.com/ZacharyGeurts/Final_Eye"},
+    {"star": true, "name": "Final_Ear", "repo": "Final_Ear", "tag": "audio", "url": "https://github.com/ZacharyGeurts/Final_Ear"},
+    {"star": true, "name": "ZNetwork", "repo": "ZNetwork", "tag": "net relayer", "url": "https://github.com/ZacharyGeurts/ZNetwork"},
+    {"star": true, "name": "ZOCR", "repo": "ZOCR", "tag": "OCR", "url": "https://github.com/ZacharyGeurts/ZOCR"},
+    {"star": true, "name": "ZNEWOCR", "repo": "ZNEWOCR", "tag": "OCR v2", "url": "https://github.com/ZacharyGeurts/ZNEWOCR"},
+    {"star": true, "name": "World_Redata", "repo": "World_Redata", "tag": "redata", "url": "https://github.com/ZacharyGeurts/World_Redata"},
+    {"star": true, "name": "World_Repack", "repo": "World_Repack", "tag": "repack", "url": "https://github.com/ZacharyGeurts/World_Repack"},
+    {"star": true, "name": "PythonG", "repo": "PythonG", "tag": "pythong", "url": "https://github.com/ZacharyGeurts/PythonG"},
+    {"star": true, "name": "Spiderweb", "repo": "Spiderweb", "tag": "wire", "url": "https://github.com/ZacharyGeurts/Spiderweb"},
+    {"star": true, "name": "GrokPy", "repo": "GrokPy", "tag": "driver", "url": "https://github.com/ZacharyGeurts/GrokPy"},
+    {"star": true, "name": "memes", "repo": "memes", "tag": "vision feed", "url": "https://github.com/ZacharyGeurts/memes"},
+    {"star": true, "name": "AmmoOS C2", "repo": null, "tag": "live surface", "url": "http://127.0.0.1:9477/field", "local": true},
+    {"star": true, "name": "Queen Browser", "repo": null, "tag": "world tab", "url": "http://127.0.0.1:9481/world/browser.html", "local": true},
+    {"star": true, "name": "Field command", "repo": null, "tag": "training", "url": "http://127.0.0.1:9477/command", "local": true},
+    {"star": true, "name": "Underlay F9", "repo": null, "tag": "installer", "url": "http://127.0.0.1:9477/underlay-f9", "local": true}
+  ]
+}

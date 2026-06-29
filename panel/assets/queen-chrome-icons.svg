@@ -51,6 +51,11 @@
     <path fill="none" stroke="currentColor" stroke-width="1.7" d="M12 4 20 12 12 20 4 12z"/>
     <circle cx="12" cy="12" r="2.2" fill="url(#qci-rose)"/>
   </symbol>
+  <symbol id="inspect" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 7h16M4 12h10M4 17h7"/>
+    <rect x="14" y="10" width="7" height="9" rx="1.2" fill="none" stroke="url(#qci-rose)" stroke-width="1.5"/>
+    <path fill="url(#qci-emerald)" d="M15.5 12.5h4v1.5h-4zM15.5 15.5h3v1.5h-3z"/>
+  </symbol>
   <symbol id="styles" viewBox="0 0 24 24">
     <path fill="currentColor" d="M12 2.5c-1.6 2.4-4.2 2.8-4.2 7 0 2.4 1.5 4.3 3.7 5.1V20h1v3.5h3V20h1v-5.4c2.2-.8 3.7-2.7 3.7-5.1 0-4.2-2.6-4.6-4.2-7zm0 2.4c.9 1.3 1.7 2.1 1.7 3.6 0 1.6-1.1 2.7-1.7 2.7s-1.7-1.1-1.7-2.7c0-1.5.8-2.3 1.7-3.6z"/>
     <circle cx="18" cy="6" r="1.5" fill="url(#qci-rose)"/>

@@ -1,0 +1,14 @@
+{
+  "id": "nes_best_of_the_best_championship_karate",
+  "title": "Best of the Best Championship Karate",
+  "author": "Electro-Brain",
+  "dewey": "794.8",
+  "format": "h7c",
+  "cover": "/library/assets/cartridges/nes/nes_best_of_the_best_championship_karate-box.png",
+  "ready": true,
+  "console_id": "nes",
+  "genre": "Sports",
+  "year": 1992,
+  "has_rom": false,
+  "h7c": "library/dewey/700-arts/games/nes/nes_best_of_the_best_championship_karate/nes_best_of_the_best_championship_karate.h7c"
+}

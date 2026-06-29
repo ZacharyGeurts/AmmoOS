@@ -38,6 +38,7 @@ PID_FILE = STATE / "panel-tray.pid"
 _SERVE_LOCK_HANDLE = None
 
 ZNETWORK_TAB_CHOICES: list[tuple[str, str]] = [
+    ("ZNetwork · Secure Vault", "__vault__"),
     ("ZNetwork · Status", "system/settings"),
     ("ZNetwork · Connection", "packets/monitor"),
     ("ZNetwork · DNS truth", "dns"),
@@ -162,8 +163,12 @@ def _install_xdg_tray_icon(icon: Path) -> str:
             spec.loader.exec_module(mod)
             if _tray_mode() == "znetwork" and hasattr(mod, "install_znetwork_xdg_icons"):
                 mod.install_znetwork_xdg_icons(INSTALL)
+                if icon.is_file() and icon.stat().st_size > 0:
+                    return str(icon.resolve())
                 return APP_ID_ZNETWORK
             mod.install_xdg_tray_icons(INSTALL)
+            if icon.is_file() and icon.stat().st_size > 0:
+                return str(icon.resolve())
             return APP_ID_NEXUS
     except Exception:
         pass
@@ -274,6 +279,8 @@ def open_tab(route: str = "command") -> None:
     if route == "__revert_tray__":
         _revert_tray_to_nexus()
         return
+    if route == "__vault__":
+        route = "/field-znetwork-vault"
     _save_last_tab(route)
     opener = INSTALL / "lib" / "queen-panel-open.py"
     if not opener.is_file():
@@ -295,9 +302,15 @@ def open_tab(route: str = "command") -> None:
     env.setdefault("NEXUS_THREAT_PANEL_PORT", PORT)
     env.setdefault("QUEEN_WORLD_PORT", "9481")
     py = shutil.which("pythong") or sys.executable
+    panel_url = (
+        f"http://127.0.0.1:{PORT}{route}"
+        if route.startswith("/field-")
+        else ""
+    )
+    opener_argv = [py, str(opener), "url", panel_url] if panel_url else [py, str(opener), "nexus", route]
     try:
         subprocess.run(
-            [py, str(opener), "nexus", route],
+            opener_argv,
             env=env,
             timeout=25,
             check=False,
@@ -476,6 +489,31 @@ def _release_tray_lock() -> None:
         _SERVE_LOCK_HANDLE = None
 
 
+def _pid_running_tray(pid: int) -> bool:
+    """True only for a live python panel-tray.py daemon (not stale/bash PIDs)."""
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    try:
+        raw = Path(f"/proc/{pid}/cmdline").read_bytes()
+    except OSError:
+        return False
+    cmd = raw.replace(b"\x00", b" ").decode("utf-8", errors="replace")
+    if "panel-tray.py open" in cmd:
+        return False
+    return "panel-tray.py" in cmd and "python" in cmd
+
+
+def _tray_log(msg: str) -> None:
+    try:
+        STATE.mkdir(parents=True, exist_ok=True)
+        with (STATE / "panel-tray.log").open("a", encoding="utf-8") as handle:
+            handle.write(msg + "\n")
+    except OSError:
+        pass
+
+
 def _acquire_tray_lock() -> bool:
     """Single GTK tray instance — second start exits quietly."""
     global _SERVE_LOCK_HANDLE
@@ -483,10 +521,11 @@ def _acquire_tray_lock() -> bool:
     if PID_FILE.is_file():
         try:
             old = int(PID_FILE.read_text(encoding="utf-8").strip().split()[0])
-            os.kill(old, 0)
-            return False
+            if _pid_running_tray(old):
+                return False
         except (OSError, ValueError):
-            PID_FILE.unlink(missing_ok=True)
+            pass
+        PID_FILE.unlink(missing_ok=True)
     try:
         handle = open(TRAY_LOCK, "w", encoding="utf-8")
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -514,12 +553,18 @@ def main() -> int:
         open_tab(sys.argv[2] if len(sys.argv) > 2 else _load_last_tab())
         return 0
     if not _acquire_tray_lock():
+        _tray_log(f"panel-tray lock held — exiting pid={os.getpid()}")
         return 0
+    _tray_log(
+        f"panel-tray started pid={os.getpid()} mode={_tray_mode()} "
+        f"app_id={_app_id()} display={os.environ.get('DISPLAY', '')}"
+    )
     Gtk.init(sys.argv)
     NexusTray()
     try:
         Gtk.main()
     finally:
+        _tray_log(f"panel-tray stopping pid={os.getpid()}")
         _release_tray_lock()
     return 0
 
