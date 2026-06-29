@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>AmmoOS — Launch Surfaces</title>
+  <title>AmmoOS — Software Updates</title>
   <meta name="description" content="AmmoOS 2.0.0-beta3 beta manual — field OS, browser surfaces, combinatronic engine." />
-  <link rel="canonical" href="https://zacharygeurts.github.io/AmmoOS/launch-surfaces.html" />
+  <link rel="canonical" href="https://zacharygeurts.github.io/AmmoOS/software-updates.html" />
   <link rel="stylesheet" href="manual.css?v3" />
   <style>
 .github-chrome-top, .github-chrome-bottom {
@@ -57,8 +57,8 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="getting-started.html">Getting Started</a>
-      <a href="launch-surfaces.html" aria-current="page">Launch Surfaces</a>
-      <a href="update-your-os.html">Software Updates</a>
+      <a href="launch-surfaces.html">Launch Surfaces</a>
+      <a href="update-your-os.html" aria-current="page">Software Updates</a>
       <a href="combinatronic.html">Combinatronic</a>
       <a href="platforms.html">Platforms</a>
       <a href="io.html">Field I/O</a>
@@ -110,26 +110,14 @@ export SG_ROOT=/path/to/SG && ./nexus.sh</code></pre>
     </div>
   </section>
 
-  <h1>Launch surfaces</h1>
-  <p>Policy: <strong>browser or native program</strong> — no orphan components.</p>
-  <table>
-    <tr><th>Surface</th><th>Path</th><th>Kind</th></tr>
-    <tr><td>Host desktop</td><td><code>http://127.0.0.1:9477/field</code></td><td>Browser</td></tr>
-    <tr><td>Field command</td><td><code>http://127.0.0.1:9477/command</code></td><td>Browser</td></tr>
-    <tr><td>Queen Browser</td><td><code>http://127.0.0.1:9481/world/browser.html</code></td><td>Browser</td></tr>
-    <tr><td>thermal_manager</td><td><code>http://127.0.0.1:9481/world/queen-thermal-manager.html</code></td><td>Browser</td></tr>
-    <tr><td>final_ear_manager</td><td><code>http://127.0.0.1:9481/world/queen-final-ear-manager.html</code></td><td>Browser</td></tr>
-    <tr><td>final_mouth_manager</td><td><code>http://127.0.0.1:9481/world/queen-final-mouth-manager.html</code></td><td>Browser</td></tr>
-    <tr><td>view_folder_manager</td><td><code>http://127.0.0.1:9481/world/view.html</code></td><td>Browser</td></tr>
-    <tr><td>Underlay F9</td><td><code>http://127.0.0.1:9477/underlay-f9?sector=underlay</code></td><td>Browser</td></tr>
-    <tr><td>Training viewer</td><td><code>http://127.0.0.1:9477/command#training</code></td><td>Browser</td></tr>
-    <tr><td>kilroy_tristate</td><td><code>http://127.0.0.1:9477/underlay-f9?sector=kilroy</code></td><td>Browser</td></tr>
-    <tr><td>Queen shell</td><td><code>Queen/build/rtx/bin/Linux/queen-browser</code></td><td>Native</td></tr>
-    <tr><td>Dev launcher</td><td><code>./nexus.sh</code></td><td>Native</td></tr>
-  </table>
-  <h2>Verify registry</h2>
-  <pre><code>./scripts/ammoos-launch-verify.sh
-cat .nexus-state/ammoos-launch-registry.json</code></pre>
+  <h1>Software Update Manager</h1>
+  <p>Update AmmoOS safely from inside the field — GitHub releases, component tracking, global update lock.</p>
+  <h2>Open in browser</h2>
+  <pre><code>http://127.0.0.1:9477/ammoos-update-os</code></pre>
+  <h2>API</h2>
+  <pre><code>curl -s http://127.0.0.1:9477/api/ammoos-update/check | jq .
+curl -s -X POST http://127.0.0.1:9477/api/ammoos-update/apply</code></pre>
+  <p>Queen Browser chip uses the same lock — only one update at a time.</p>
 <div class="github-chrome-bottom" role="contentinfo">
   <a class="github-repo-primary" href="https://github.com/ZacharyGeurts/AmmoOS">→ GitHub: ZacharyGeurts/AmmoOS</a>
   <span class="github-chrome-links">AmmoOS field OS · 2.0.0-beta3</span>
