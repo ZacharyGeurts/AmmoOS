@@ -434,7 +434,15 @@ def _removable_module(
 
 def _ensure_ironclad_chips(*, refresh: bool = False) -> dict[str, Any]:
     cached = _load(IRONCLAD_CHIPS, {})
-    if cached.get("chips") and not refresh:
+    if os.environ.get("AML_TEST_DIRECT", "0") == "1" and not cached.get("chips"):
+        for seed in (
+            INSTALL / ".nexus-state" / "field-ironclad-chips-combinatorics.json",
+            INSTALL / ".nexus-state-comb" / "field-ironclad-chips-combinatorics.json",
+        ):
+            cached = _load(seed, {})
+            if cached.get("chips"):
+                break
+    if cached.get("chips") and (not refresh or os.environ.get("AML_TEST_DIRECT", "0") == "1"):
         return cached
     mod = _import_py(INSTALL / "lib" / "field-ironclad-chips-combinatorics.py", "ic_chips_cps")
     if mod and hasattr(mod, "publish_panel"):
@@ -475,6 +483,14 @@ def build_plate_stack(*, refresh: bool = False, force: bool = False) -> dict[str
     doctrine = _load(DOCTRINE, {})
     if os.environ.get("AML_TEST_DIRECT", "0") == "1" and not force:
         cached = _load(BATTERY, {})
+        if not cached.get("modules"):
+            for seed in (
+                INSTALL / ".nexus-state" / "field-chips-plate-stack.json",
+                INSTALL / ".nexus-state-comb" / "field-chips-plate-stack.json",
+            ):
+                cached = _load(seed, {})
+                if cached.get("modules"):
+                    break
         if cached.get("modules"):
             elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
             out = dict(cached)
@@ -684,7 +700,11 @@ def publish_panel(*, refresh: bool = False, write_battery: bool = True, force: b
         _save(BATTERY, stack)
     core_out: dict[str, Any] = {}
     cc = INSTALL / "lib" / "field-chips-core.py"
-    if cc.is_file() and os.environ.get("NEXUS_CHIPS_CORE", "1") == "1":
+    if (
+        cc.is_file()
+        and os.environ.get("NEXUS_CHIPS_CORE", "1") == "1"
+        and os.environ.get("AML_TEST_DIRECT", "0") != "1"
+    ):
         try:
             spec = importlib.util.spec_from_file_location("chip_core_pub", cc)
             if spec and spec.loader:
