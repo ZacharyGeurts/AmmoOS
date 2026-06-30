@@ -1,14 +1,14 @@
 {
   "schema": "field-chips-program-usage-doctrine/v1",
-  "facet": "chips_program_usage",
+  "title": "CHIPs program usage — Queen programs to ironclad facets",
   "kilroy_integration": {
-    "enabled": true,
+    "abi": "kilroy-field-1.0",
     "program_id": "kilroy",
-    "bridge": "KILROY/data/kilroy-grok16-bridge.json"
+    "usage_lane": "chips_program_usage",
+    "api": "/api/chips/usage"
   },
   "resolve_defaults": {
-    "browser": "queen://browser",
-    "kilroy": "queen://kilroy"
-  },
-  "registry": "data/field-chips-program-usage-registry.json"
+    "browser": "http://127.0.0.1:9481/world/browser.html",
+    "kilroy": "http://127.0.0.1:9477/underlay-f9?sector=kilroy"
+  }
 }

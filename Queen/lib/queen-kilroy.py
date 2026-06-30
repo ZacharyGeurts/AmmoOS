@@ -312,23 +312,23 @@ def _queen_binary() -> Path | None:
     return None
 
 
-def chips_usage() -> dict[str, Any]:
-    """CHIPs program usage — KILROY ironclad facet."""
+def resolve_program_usage(program_id: str) -> dict[str, Any]:
+    """CHIPs program usage lane — kilroy_integration via field-chips-program-usage."""
     install = Path(os.environ.get("NEXUS_INSTALL_ROOT", SG / "NewLatest"))
     script = install / "lib" / "field-chips-program-usage.py"
     if not script.is_file():
-        return {"schema": "field-chips-program-usage/v1", "ok": False, "hint": "missing"}
+        return {"schema": "field-chips-program-usage/v1", "ok": False, "program_id": program_id}
     try:
-        out = subprocess.run(
-            [sys.executable, str(script), "kilroy"],
+        proc = subprocess.run(
+            [sys.executable, str(script), "resolve", program_id],
             capture_output=True,
             text=True,
-            timeout=60,
-            cwd=str(install),
+            timeout=30,
+            env={**os.environ, "NEXUS_INSTALL_ROOT": str(install)},
         )
-        return json.loads(out.stdout or "{}")
-    except Exception as exc:
-        return {"schema": "field-chips-program-usage/v1", "ok": False, "error": str(exc)}
+        return json.loads(proc.stdout or "{}")
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+        return {"schema": "field-chips-program-usage/v1", "ok": False, "program_id": program_id}
 
 
 def kilroy_status() -> dict[str, Any]:
@@ -345,10 +345,13 @@ def kilroy_status() -> dict[str, Any]:
     config_die = False
     config_brain = False
     cfg = kr / "build" / "config"
-    if cfg.is_file():
-        cfg_text = cfg.read_text(encoding="utf-8", errors="replace")
-        config_die = "CONFIG_RTX_FIELD_DIE=y" in cfg_text
-        config_brain = "CONFIG_RTX_FIELD_BRAIN_STACK=y" in cfg_text
+    try:
+        if cfg.is_file():
+            cfg_text = cfg.read_text(encoding="utf-8", errors="replace")
+            config_die = "CONFIG_RTX_FIELD_DIE=y" in cfg_text
+            config_brain = "CONFIG_RTX_FIELD_BRAIN_STACK=y" in cfg_text
+    except OSError:
+        pass
     return {
         "schema": "queen-kilroy/v1",
         "updated": _now(),
@@ -388,6 +391,7 @@ def kilroy_status() -> dict[str, Any]:
             "slots": ["TIME", "RAM", "THERMO", "CONTEXT", "CPU", "FLOW", "CACHE", "DIRECT"],
         },
         "forge_tools": ["field_substrate", "field_kernel", "field_boot", "field_rootfs", "field_package"],
+        "chips_usage": resolve_program_usage("kilroy"),
         "grok16_bridge": _load_json(kr / "data" / "kilroy-grok16-bridge.json"),
         "grok16_pair": version.get("grok16_pair") or _load_json(kr / "data" / "kilroy-version.json").get("stack_pairing", {}).get("grok16"),
         "kernel_test": str(kr / "scripts" / "kilroy-kernel-test.sh") if (kr / "scripts" / "kilroy-kernel-test.sh").is_file() else None,

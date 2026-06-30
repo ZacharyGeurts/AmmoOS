@@ -33,12 +33,13 @@ CLASSIC_PROGRAMS = [
     {"id": "thermal-manager", "name": "Thermal Manager", "kind": "program", "url": "/world/queen-thermal-manager.html", "category": "OS", "menu_folder": "os", "panel_thumbnail": True, "icon": "ammoos-field"},
     {"id": "code", "name": "Queen Code", "kind": "program", "url": "/world/queen-code.html", "category": "OS", "menu_folder": "os"},
     {"id": "gameroom", "name": "Game Room", "kind": "program", "url": "queen://gameroom", "category": "OS", "menu_folder": "os"},
-    {"id": "kilroy", "name": "KILROY", "kind": "program", "url": "/world/?dock=kilroy", "category": "Command", "menu_folder": "command"},
+    {"id": "kilroy", "name": "KILROY", "kind": "program", "url": "/world/?dock=kilroy", "category": "Command", "menu_folder": "command", "chips_usage": "kilroy"},
     {"id": "nexus-c2", "name": "AmmoOS C2", "kind": "program", "url": "/world/queen-nexus-c2.html", "category": "Command", "menu_folder": "command", "panel_thumbnail": True, "icon": "ammoos-field"},
     {"id": "dashboard", "name": "AmmoOS C2", "kind": "program", "url": "/world/queen-nexus-c2.html", "category": "Command", "menu_folder": "command", "panel_thumbnail": True, "legacy_id": "dashboard", "icon": "ammoos-field"},
     {"id": "ammoos", "name": "NEXUS Field", "kind": "program", "url": "http://127.0.0.1:9477/field", "category": "Command", "menu_folder": "command", "icon": "ammoos-field", "legacy_id": "nexus"},
     {"id": "field-command", "name": "Field Command", "kind": "program", "url": "http://127.0.0.1:9477/command", "category": "Command", "menu_folder": "command"},
-    {"id": "chips", "name": "CHIPS", "kind": "program", "url": "queen://chips", "category": "Command", "menu_folder": "command"},
+    {"id": "browser", "name": "Queen Browser", "kind": "program", "url": "/world/browser.html", "category": "Command", "menu_folder": "command", "chips_usage": "browser"},
+    {"id": "chips", "name": "CHIPS", "kind": "program", "url": "queen://chips", "category": "Command", "menu_folder": "command", "chips_usage": "registry"},
     {"id": "cores", "name": "Cores", "kind": "program", "url": "queen://cores", "category": "Command", "menu_folder": "command"},
     {"id": "ammoos-image", "name": "AmmoOS Image", "kind": "program", "url": "queen://field-gimp", "category": "Command", "menu_folder": "command"},
     {"id": "field", "name": "Field Tech", "kind": "folder", "url": "/world/?embed=1&dock=field", "category": "Command", "menu_folder": "command"},
@@ -140,27 +141,6 @@ def _normalize_url(url: str) -> str:
     if u.startswith("/"):
         return _world_base() + u
     return u
-
-
-def chips_usage(program_id: str = "browser") -> dict[str, Any]:
-    """Desktop CHIPs usage lane — resolves program chip facets."""
-    install = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[2]))
-    script = install / "lib" / "field-chips-program-usage.py"
-    if not script.is_file():
-        return {"schema": "field-chips-program-usage/v1", "ok": False}
-    import subprocess
-    import sys
-    try:
-        proc = subprocess.run(
-            [sys.executable, str(script), "resolve", program_id],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            cwd=str(install),
-        )
-        return json.loads(proc.stdout or "{}")
-    except Exception as exc:
-        return {"schema": "field-chips-program-usage/v1", "ok": False, "error": str(exc)}
 
 
 def _default_pinned() -> set[str]:

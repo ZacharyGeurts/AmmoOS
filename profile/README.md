@@ -46,8 +46,8 @@ G16 compiler · `v2.0.0-beta4`
 <br/>
 
 **★ [KILROY](https://zacharygeurts.github.io/KILROY/)**  
-Field boot · `v1.1.0`
-<br/><a href="https://zacharygeurts.github.io/KILROY/" title="GitHub Pages">📄</a> <a href="https://zacharygeurts.github.io/KILROY/releases.html" title="Releases page — SHA-256">📦</a> <a href="https://github.com/ZacharyGeurts/KILROY/wiki" title="Wiki">📖</a> <a href="https://github.com/ZacharyGeurts/KILROY/releases" title="GitHub Releases — v1.1.0">🏷️</a> <a href="https://github.com/ZacharyGeurts/KILROY" title="Repository">💻</a> <a href="https://github.com/ZacharyGeurts/KILROY/issues" title="Issues">🐛</a>
+Field boot · `v2.0.0-beta4`
+<br/><a href="https://zacharygeurts.github.io/KILROY/" title="GitHub Pages">📄</a> <a href="https://zacharygeurts.github.io/KILROY/releases.html" title="Releases page — SHA-256">📦</a> <a href="https://github.com/ZacharyGeurts/KILROY/wiki" title="Wiki">📖</a> <a href="https://github.com/ZacharyGeurts/KILROY/releases" title="GitHub Releases — v2.0.0-beta4">🏷️</a> <a href="https://github.com/ZacharyGeurts/KILROY" title="Repository">💻</a> <a href="https://github.com/ZacharyGeurts/KILROY/issues" title="Issues">🐛</a>
 
 <br/>
 

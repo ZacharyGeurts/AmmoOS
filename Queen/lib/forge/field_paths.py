@@ -109,23 +109,33 @@ def kernel_artifacts(queen: Path) -> dict[str, Path | None]:
         "grok_iso": None,
         "rootfs_staging": None,
     }
+    def _safe_file(path: Path) -> Path | None:
+        try:
+            return path.resolve() if path.is_file() else None
+        except OSError:
+            return None
+
     for bz in (
         kilroy / "build" / "bzImage",
         kilroy / "rootfs" / "production-staging" / "boot" / "kilroy" / "bzImage",
         queen.parent / "AMOURANTHRTX" / "build" / "kernel-rtx" / "bzImage",
     ):
-        if bz.is_file():
-            out["bzImage"] = bz.resolve()
+        found = _safe_file(bz)
+        if found is not None:
+            out["bzImage"] = found
             break
-    for img in (kilroy / "build" / "grok-kilroy.img",):
-        if img.is_file():
-            out["grok_img"] = img.resolve()
-    for iso in (kilroy / "build" / "grok-kilroy.iso",):
-        if iso.is_file():
-            out["grok_iso"] = iso.resolve()
+    found = _safe_file(kilroy / "build" / "grok-kilroy.img")
+    if found is not None:
+        out["grok_img"] = found
+    found = _safe_file(kilroy / "build" / "grok-kilroy.iso")
+    if found is not None:
+        out["grok_iso"] = found
     staging = kilroy / "rootfs" / "production-staging"
-    if staging.is_dir() and (staging / "bin" / "busybox").is_file():
-        out["rootfs_staging"] = staging.resolve()
+    try:
+        if staging.is_dir() and (staging / "bin" / "busybox").is_file():
+            out["rootfs_staging"] = staging.resolve()
+    except OSError:
+        pass
     return out
 
 

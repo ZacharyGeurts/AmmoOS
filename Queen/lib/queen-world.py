@@ -257,7 +257,7 @@ def _chips_core(*, refresh: bool = False) -> dict[str, Any]:
     return {"schema": "field-chips-core-panel/v1", "ok": False, "hint": "field-chips-core missing"}
 
 
-def _chips_usage(*, program: str = "", refresh: bool = False) -> dict[str, Any]:
+def _chips_program_usage(*, program: str = "", refresh: bool = False) -> dict[str, Any]:
     script = _nexus_lib_script("field-chips-program-usage.py")
     argv: list[str] = ["resolve", program] if program else ["json"]
     if refresh:
@@ -1641,7 +1641,7 @@ class Handler(BaseHTTPRequestHandler):
             qs = parse_qs(urlparse(self.path).query)
             program = (qs.get("program") or qs.get("program_id") or qs.get("id") or [""])[0]
             refresh = (qs.get("refresh") or ["0"])[0] in ("1", "true", "yes")
-            self._send_json(200, _chips_usage(program=str(program), refresh=refresh))
+            self._send_json(200, _chips_program_usage(program=str(program), refresh=refresh))
             return
         if path in ("/api/combinatronics/growth", "/api/combinatronics-growth"):
             qs = parse_qs(urlparse(self.path).query)

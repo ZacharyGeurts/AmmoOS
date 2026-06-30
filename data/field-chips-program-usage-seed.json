@@ -4,21 +4,16 @@
     "browser": {
       "program_id": "browser",
       "label": "Queen Browser",
-      "chip_facet": "queen_browser",
-      "usage_pct": 12
+      "chip_facet": "browser_shell",
+      "usage_pct": 42,
+      "kilroy": false
     },
     "kilroy": {
       "program_id": "kilroy",
-      "label": "KILROY",
-      "chip_facet": "kilroy_kernel",
-      "usage_pct": 18,
+      "label": "KILROY Field OS",
+      "chip_facet": "kernel_stack",
+      "usage_pct": 88,
       "kilroy": true
-    },
-    "terminal": {
-      "program_id": "terminal",
-      "label": "Terminal",
-      "chip_facet": "shell",
-      "usage_pct": 8
     }
   }
 }
