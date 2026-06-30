@@ -1,0 +1,24 @@
+{
+  "schema": "grok16-field-native/v1",
+  "product": "Grok16",
+  "doctrine": "Everything field-native — g16, GPY GrokVM, g16-as/ld, Hostess7. No host-python fallback. No cache-for-speed.",
+  "stack": {
+    "compiler": "g16 unified → libexec g16-cc/cxx",
+    "python": "GPY-16 GrokVM + GPY16_TOOLING for forge scripts",
+    "binutils": "g16-as g16-ld g16-objdump",
+    "pair": "g16 discerns python → gpy-16",
+    "truth_floor": 58
+  },
+  "rules": [
+    "g16_gpy_run invokes gpy-16 only — fail closed without field driver",
+    "GrokVM handles -c and .gpy hot paths",
+    "Forge tooling runs GPY16_TOOLING in-process with field env",
+    "ccache only when GROK16_CCACHE_SAFETY=1",
+    "500x target is field kernel runtime + GrokVM throughput"
+  ],
+  "forbidden": [
+    "host python3 fallback in toolchain scripts",
+    "bootstrap prefix python build tier",
+    "ccache as speed tier"
+  ]
+}

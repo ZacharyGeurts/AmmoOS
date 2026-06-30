@@ -1,0 +1,15 @@
+{
+  "id": "format-media_ogg",
+  "title": "Ogg",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".ogv",
+    ".ogg",
+    ".oga"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_ogg.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

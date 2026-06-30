@@ -1,0 +1,1851 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" />
+<title>Volume 03 — Operator (Chapters 9–12)</title>
+<link rel="stylesheet" href="../css/field-primer.css" />
+<link rel="stylesheet" href="../css/chapters.css" />
+<link rel="stylesheet" href="../css/print.css" />
+<style>body.print-volume{background:#fff;color:#1a1a1a;}</style>
+</head><body class="print-volume chapter-page">
+<div class="volume-title-page">
+<p style="letter-spacing:0.12em;text-transform:uppercase;color:#8b6914">Field Technology v5</p>
+<h1>Volume 03 — Operator (Chapters 9–12)</h1>
+<p>Zachary Robert Geurts · Field Primer PDF edition</p>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 9</p>
+<h1>Stability Under Load — FCC & Tesla</h1>
+<p class="eyebrow">Chapter 9 · Stability Under Load — FCC &amp; Tesla</p>
+
+<div class="objectives">
+<h2 id="toc-09-learning-objectives">Learning objectives</h2>
+<ul>
+<li>State wave and diffusion CFL inequalities and why the host enforces them before <code>vkCmdDispatch</code>.</li>
+<li>Map FCC floats to <code>data_bus[16–23]</code> and describe harmonics guard scaling.</li>
+<li>Quote Tesla constants and explain directional damping on spiderweb edges.</li>
+<li>Contrast PropalacticScale knob with planetary RF visual shell.</li>
+<li>Describe KILROY kernel FCC parallel and entropy feedback clamps.</li>
+</ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-09-introduction-stability-is-offense-ethics">Introduction — stability is offense ethics</a></li><li><a href="#toc-09-wave-cfl-intuition-on-a-grid">Wave CFL — intuition on a grid</a></li><li><a href="#toc-09-diffusion-cfl-why-x-matters">Diffusion CFL — why Δx² matters</a></li><li><a href="#toc-09-harmonics-guard-implementation-posture">Harmonics guard implementation posture</a></li><li><a href="#toc-09-fcc-floats-complete-slot-map">FCC floats — complete slot map</a></li><li><a href="#toc-09-gatefidelity-sharp-gates-and-stability">GateFidelity — sharp gates and stability</a></li><li><a href="#toc-09-entropyfloor-second-law-as-engineering">EntropyFloor — second law as engineering</a></li><li><a href="#toc-09-propalacticscale-honesty-label">PropalacticScale — honesty label</a></li><li><a href="#toc-09-tesla-valve-constants-and-publication">Tesla valve — constants and publication</a></li><li><a href="#toc-09-tesla-on-flow-fabric">Tesla on Flow fabric</a></li><li><a href="#toc-09-kilroy-fcc-kernel-parallel">KILROY FCC — kernel parallel</a></li><li><a href="#toc-09-failure-modes-nan-theology">Failure modes — NaN theology</a></li><li><a href="#toc-09-operator-drills">Operator drills</a></li><li><a href="#toc-09-chapter-summary">Chapter summary</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-09-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Before beauty runs hot, the host refuses NaN theology. On the way you will enforce CFL wave and thermo guards, publish Tesla valve bias to the bus, and parallel KILROY FCC discipline at the kernel boundary.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch09-tesla-valve.jpg" alt="Tesla valve metaphor" loading="lazy" /><figcaption>On the way — Tesla valve metaphor</figcaption></figure>
+<ul class="on-the-way-journey"><li>Courant-Friedrichs-Lewy harmonics guard</li><li>TESLA_R_FORWARD / REVERSE metaphor</li><li>data_bus slots 31 and 34</li><li>Stability under load without censorship</li></ul>
+</div>
+
+
+<h2 id="toc-09-introduction-stability-is-offense-ethics">Introduction — stability is offense ethics</h2>
+<p>Offense without stability is vandalism against your own field. Chapter 7 placed the CFL harmonics guard on the dispatch spine; Chapter 9 teaches the science, constants, and operator drills behind that guard. FCC here means <strong>Field Control Constants</strong> — analog floats packed to <code>data_bus[16–23]</code> — not Federal Communications Commission, though NEXUS ITU-R path loss docs live beside RF teaching in Chapter 6.</p>
+<p>Before fabric evolution each <code>dispatch_canvas()</code>, host computes:</p>
+<div class="eq">waveCFL = c·Δt/Δx ≤ 1 · thermoCFL = α·Δt/Δx² ≤ 1</div>
+<p>Violations scale down unsafe parameters. Plain English: the engine refuses diffusion so hot the simulation explodes into NaN. This is numerical ethics — creditor debt to Courant, Friedrichs, and Lewy. <a href="../creditors/cfl.html">CFL creditor page</a>.</p>
+<p>Cross-links: Chapter 3 thermo knobs, Chapter 7 dispatch placement, Chapter 8 bus slots, Chapter 10 spiderweb Tesla edges, Chapter 12 honesty rows for Propalactic and Tesla metaphor.</p>
+
+<figure class="figure"><img src="../assets/images/chapters/ch09-tesla-valve.jpg" alt="Tesla valve" loading="lazy" /><figcaption>Figure 9.1 — Directional damping metaphor with constants in <code>FieldRtxFieldAbs.hpp</code>.</figcaption></figure>
+
+<h2 id="toc-09-wave-cfl-intuition-on-a-grid">Wave CFL — intuition on a grid</h2>
+<p>Explicit wave integrators allow information to travel at most one cell per step. If c·Δt exceeds Δx, the scheme tries to move wave energy farther than the mesh can represent — instability follows. Host reads render resolution for Δx proxy, WaveSpeed for c, TimeScale for effective Δt multiplier. Product waveCFL ≤ 1 is the guard line.</p>
+<p>Operators who crank WaveSpeed in prompt without reading stderr may never see NaN — host scales c down first. That is care, not censorship. Compare list AnalogFields after aggressive set — admitted value may differ from requested.</p>
+
+<h2 id="toc-09-diffusion-cfl-why-x-matters">Diffusion CFL — why Δx² matters</h2>
+<p>Diffusion stiffens faster as meshes refine. thermoCFL = α·Δt/Δx² ≤ 1 shrinks admissible Δt when resolution upscale halves Δx. RayCanvas adaptive 4K path interacts with guard — Chapter 7 warned adaptive scale is not vanity. Adept operators watch STATUS when changing resolution and TimeScale together.</p>
+
+<h2 id="toc-09-harmonics-guard-implementation-posture">Harmonics guard implementation posture</h2>
+<p>From OptionsMenu.hpp commentary: FCC floats are pre-conditioned in dispatch_canvas before GPU. Hard caps include waveSpeed ∈ [0.01, 2.0], dT ≤ 0.033, inject strength cooperation. Body-temperature seeding and similar simulation flavor remain labeled <span class="tag meta">Metaphor</span> in Chapter 3 — not hidden as SI measurement.</p>
+<table><thead><tr><th>Input</th><th>Guard effect</th></tr></thead>
+<tbody>
+<tr><td>TimeScale ↑</td><td>Effective Δt ↑ — both CFL products ↑</td></tr>
+<tr><td>ThermoAlpha ↑</td><td>thermoCFL ↑</td></tr>
+<tr><td>WaveSpeed ↑</td><td>waveCFL ↑</td></tr>
+<tr><td>Resolution ↑</td><td>Δx ↓ — thermoCFL ↑↑</td></tr>
+<tr><td>InjectStrength ↑</td><td>May clamp with coupling workload</td></tr>
+</tbody></table>
+
+<h2 id="toc-09-fcc-floats-complete-slot-map">FCC floats — complete slot map</h2>
+<pre class="eq">[16] TimeScale  [17] ThermoAlpha  [18] WaveSpeed  [19] GateFidelity
+[20] EntropyFloor [21] InjectStrength [22] PropalacticScale [23] FieldCoupling</pre>
+<p>Each float is mirrored for guest HUD and grep. Shader bindings 8–10 receive admitted values post-guard. FieldSocket path and Classic path share guard philosophy even when push layout differs.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch09-fcc-bus.jpg" alt="FCC slot map on data_bus" loading="lazy" /><figcaption>Figure 9.3 — Slots 16–23: FCC floats on the telemetry spine beside CFL guard.</figcaption></figure>
+
+
+<h2 id="toc-09-gatefidelity-sharp-gates-and-stability">GateFidelity — sharp gates and stability</h2>
+<p>0 = soft analog gates; 1 = transistor-sharp Flow gates. Sharpness changes gradient stories and indirect coupling workload — can raise effective field work and prevMaintCost. Stability is not only CFL; coupling spikes can challenge entropy proxy without violating CFL if clamps already admitted parameters.</p>
+
+<h2 id="toc-09-entropyfloor-second-law-as-engineering">EntropyFloor — second law as engineering</h2>
+<p>Minimum irreversible noise in fabric — Chapter 3 entropy floor. Prevents unphysical reversibility. Works with CFL as dual ethics: one limits step size, one enforces noise floor.</p>
+
+<h2 id="toc-09-propalacticscale-honesty-label">PropalacticScale — honesty label</h2>
+<p>Large-wavelength forcing on Phi. Chapter 12 honesty: dynamics knob, not cosmic oracle. Moves fabric; does not replace packet field or GPS precision maps. <span class="tag meta">Metaphor</span> when marketing says cosmic weave.</p>
+
+<h2 id="toc-09-tesla-valve-constants-and-publication">Tesla valve — constants and publication</h2>
+<pre class="eq">TESLA_R_FORWARD = 0.18   TESLA_R_REVERSE = 3.2   FIELD_PHI_MILLI = 618
+TESLA_R_FWD_MILLI = 180  TESLA_R_REV_MILLI = 3200</pre>
+<p>teslaBias() in updateHardwareFromAnalogFields dampens reverse flow on spiderweb edges more than forward. Published to data_bus[31] and [34]. TeslaBiasStrength FCC knob mirrors coherence. <span class="tag meta">Fluidic diode metaphor — not literal chassis part.</span> <a href="../creditors/tesla.html">Tesla creditor</a>.</p>
+
+<h2 id="toc-09-tesla-on-flow-fabric">Tesla on Flow fabric</h2>
+<p>Flow channel mixes gradient magnitude with GateFidelity and Tesla relaxation — Chapter 3 per-texel evolution. Directional preference appears in color stories operators see on Classic canvas and in edge util mirror Chapter 10.</p>
+
+<h2 id="toc-09-kilroy-fcc-kernel-parallel">KILROY FCC — kernel parallel</h2>
+<p>When CONFIG_RTX_FIELD_DIE kernel stack runs, scale 0–1,000,000 µ from overshoot; entropy feedback clamps aggressive modes. Userspace guard and kernel FCC share vocabulary — Chapter 21 Queen + KILROY sovereign field. Ring transition does not reset operator literacy — same constants, stronger enforcement boundary.</p>
+
+<h2 id="toc-09-failure-modes-nan-theology">Failure modes — NaN theology</h2>
+<p>Disabled guard in a fork yields white noise HDR, NaN entropy, frozen spiderweb, lying FCC mirrors. Recovery: restore harmonics guard, reset analog defaults, clear fabrics, new sealed session. Do not ship screenshots of accidents as <span class="tag vis">Visual</span> without label.</p>
+<figure class="figure"><img src="../assets/images/field-die.jpg" alt="NaN and stability" loading="lazy" /><figcaption>Figure 9.5 — NaN theology: FCC and CFL refuse dishonest steps. <span class="claim-tie">Claim: Default ./linux.sh run boots Field Die — x86.comp path</span></figcaption></figure>
+
+
+<h2 id="toc-09-operator-drills">Operator drills</h2>
+<div class="callout drill"><strong>Drill 9.A — CFL clamp</strong></div>
+<pre class="eq">set AnalogFields.WaveSpeed 9.9
+set AnalogFields.TimeScale 4.0
+list AnalogFields
+grep -iE 'cfl|clamp|scale' run.log</pre>
+<div class="callout drill"><strong>Drill 9.B — Tesla grep</strong></div>
+<pre class="eq">grep -E 'TESLA_R_|FIELD_PHI_MILLI|data_bus' Navigator/engine/FieldRtxFieldAbs.hpp</pre>
+<div class="callout drill"><strong>Drill 9.C — Propalactic honesty</strong></div>
+<pre class="eq">set AnalogFields.PropalacticScale 2.0
+# Observe Phi forcing — label dynamics knob in operator notes</pre>
+
+<h2 id="toc-09-chapter-summary">Chapter summary</h2>
+<p>CFL guard enforces wave and diffusion limits before GPU evolution. FCC floats pack to data_bus[16–23]. Tesla constants bias direction — slots 31, 34. KILROY extends discipline to kernel. PropalacticScale and GateFidelity are powerful — grep and label.</p>
+<p>Prior: <a href="08-field-die.html">Chapter 8</a>. Next: <a href="10-spiderweb.html">Chapter 10</a>.</p>
+
+<h2 id="toc-09-study-questions">Study questions</h2>
+<ol>
+<li>Write CFL inequalities and explain Δx².</li>
+<li>What happens when waveCFL &gt; 1 before dispatch?</li>
+<li>Quote Tesla forward/reverse resistance.</li>
+<li>Which slots publish Tesla bias?</li>
+<li>How is PropalacticScale labeled in Chapter 12?</li>
+<li>What is KILROY FCC overshoot scale?</li>
+<li>Why does resolution upscale interact with thermoCFL?</li>
+<li>Name three FCC floats and stability roles.</li>
+<li>What is NaN theology?</li>
+<li>How does Tesla affect spiderweb edges?</li>
+</ol>
+
+
+<h2 id="toc-09-coupling-energy-maxwell-neighborhood-on-fcc-bus">Coupling energy — Maxwell neighborhood on FCC bus</h2>
+<p>FieldCoupling slot 23 is the dial Chapter 15 credits to Maxwell's insight: neighbors exchange state. Raising coupling without CFL violation still raises field work — ThermoAccountant entropyThisFrame responds. Operators tuning coupling should grep THERMO and slot 23 together across ten dispatches.</p>
+<h2 id="toc-09-injectstrength-and-probe-ethics">InjectStrength and probe ethics</h2>
+<p>Mouse probes inject energy — InjectStrength slot 21. CFL guard may clamp inject when coupled with high TimeScale. Offense with probes is operator consent to move energy; document sessions when teaching.</p>
+<h2 id="toc-09-cross-chapter-capstone-fcc-to-fabric-to-spiderwe">Cross-chapter capstone — FCC to fabric to spiderweb</h2>
+<p>FCC admitted post-guard → bindings 8–10 evolve → updateHardwareFromAnalogFields mirrors → list Hardware. One chain, three witnesses. Chapter 12 says label each.</p>
+
+<h2 id="toc-09-case-study-1-operator-adjusts-fcc-under-load">Case study 1 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 1 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 1 begins on default x86 die. Sealed time T0. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-2-operator-adjusts-fcc-under-load">Case study 2 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 2 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 2 begins on default x86 die. Sealed time T1. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-3-operator-adjusts-fcc-under-load">Case study 3 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 3 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 3 begins on default x86 die. Sealed time T2. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-4-operator-adjusts-fcc-under-load">Case study 4 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 4 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 4 begins on default x86 die. Sealed time T3. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-5-operator-adjusts-fcc-under-load">Case study 5 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 5 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 5 begins on default x86 die. Sealed time T4. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-6-operator-adjusts-fcc-under-load">Case study 6 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 6 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 6 begins on default x86 die. Sealed time T5. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-7-operator-adjusts-fcc-under-load">Case study 7 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 7 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 7 begins on default x86 die. Sealed time T6. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-8-operator-adjusts-fcc-under-load">Case study 8 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 8 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 8 begins on default x86 die. Sealed time T7. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-9-operator-adjusts-fcc-under-load">Case study 9 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 9 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 9 begins on default x86 die. Sealed time T8. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-10-operator-adjusts-fcc-under-load">Case study 10 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 10 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 10 begins on default x86 die. Sealed time T9. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-11-operator-adjusts-fcc-under-load">Case study 11 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 11 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 11 begins on default x86 die. Sealed time T10. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-12-operator-adjusts-fcc-under-load">Case study 12 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 12 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 12 begins on default x86 die. Sealed time T11. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-13-operator-adjusts-fcc-under-load">Case study 13 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 13 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 13 begins on default x86 die. Sealed time T12. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-14-operator-adjusts-fcc-under-load">Case study 14 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 14 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 14 begins on default x86 die. Sealed time T13. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-15-operator-adjusts-fcc-under-load">Case study 15 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 15 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 15 begins on default x86 die. Sealed time T14. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-16-operator-adjusts-fcc-under-load">Case study 16 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 16 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 16 begins on default x86 die. Sealed time T15. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-17-operator-adjusts-fcc-under-load">Case study 17 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 17 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 17 begins on default x86 die. Sealed time T16. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-18-operator-adjusts-fcc-under-load">Case study 18 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 18 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 18 begins on default x86 die. Sealed time T17. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-19-operator-adjusts-fcc-under-load">Case study 19 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 19 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 19 begins on default x86 die. Sealed time T18. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-20-operator-adjusts-fcc-under-load">Case study 20 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 20 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 20 begins on default x86 die. Sealed time T19. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-21-operator-adjusts-fcc-under-load">Case study 21 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 21 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 21 begins on default x86 die. Sealed time T20. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-22-operator-adjusts-fcc-under-load">Case study 22 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 22 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 22 begins on default x86 die. Sealed time T21. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-23-operator-adjusts-fcc-under-load">Case study 23 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 23 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 23 begins on default x86 die. Sealed time T22. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-24-operator-adjusts-fcc-under-load">Case study 24 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 24 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 24 begins on default x86 die. Sealed time T23. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-25-operator-adjusts-fcc-under-load">Case study 25 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 25 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 25 begins on default x86 die. Sealed time T24. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-26-operator-adjusts-fcc-under-load">Case study 26 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 26 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 26 begins on default x86 die. Sealed time T25. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-27-operator-adjusts-fcc-under-load">Case study 27 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 27 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 27 begins on default x86 die. Sealed time T26. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+<h2 id="toc-09-case-study-28-operator-adjusts-fcc-under-load">Case study 28 — operator adjusts FCC under load</h2>
+<p>Pedagogical scenario 28 for harmonics internalization.</p>
+<h3>Scenario setup</h3>
+<p>Operator session 28 begins on default x86 die. Sealed time T27. Resolution tier moderate. Baseline WaveSpeed 1.0, TimeScale 1.0, ThermoAlpha default, FieldCoupling 0.5.</p>
+<p>Operator increases TimeScale by 0.3 steps until STATUS shows entropy shift or grep hints clamp. Record admitted WaveSpeed and slot 18 mirror at each step.</p>
+<h3>Interpretation</h3>
+<p>If THERMO rises without CFL message, coupling or inject may dominate — not every entropy change is CFL.</p>
+<p>If list AnalogFields shows lower WaveSpeed than set command requested, harmonics guard admitted lower value — document requested vs admitted in operator journal.</p>
+<h3>Tesla witness</h3>
+<p>After FCC stable, toggle TeslaBiasStrength if exposed in build. Watch data_bus 31/34 and spiderweb edge util in list Hardware — directional story should appear without claiming fluidics lab measurement.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch09">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Wave CFL</td><td>Stability before step</td><td><span class="tag impl">Implemented</span></td><td><code>Host guard scales unsafe dt</code></td></tr><tr><td>Tesla bias</td><td>Directional preference</td><td><span class="tag meta">Metaphor</span></td><td><code>TESLA_R_* → data_bus 31/34</code></td></tr><tr><td>FCC bus slots</td><td>Telemetry floats</td><td><span class="tag impl">Implemented</span></td><td><code>data_bus[16–23]</code></td></tr><tr><td>Fluidic valve</td><td>Physical Tesla part</td><td><span class="tag meta">Metaphor</span></td><td><code>Not in chassis</code></td></tr></tbody></table>
+<pre class="eq">forward ease / reverse drag via TESLA_R_* constants</pre>
+<pre class="eq">grep -E &#x27;TESLA_R_|waveCFL&#x27; Navigator/engine/</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/engine/HarmonicsGuard.cpp</code></li><li><code>Navigator/engine/FCC.cpp</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-09-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>CFL and Tesla bias are numerical ethics before fabric evolution — forward ease, reverse drag, host refuses explosion. KILROY FCC parallels userspace guards.</p>
+</div>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 10</p>
+<h1>Hardware Mirror — Spiderweb</h1>
+<p class="eyebrow">Chapter 10 · Hardware Spiderweb — Sub-Micron Mirror</p>
+
+<div class="objectives">
+<h2 id="toc-10-learning-objectives">Learning objectives</h2>
+<ul>
+<li>Explain <code>hardwareFabric</code> as read-only mirror of fabric averages.</li>
+<li>Trace <code>updateHardwareFromAnalogFields()</code> six-step frame ritual.</li>
+<li>Define voltageFactor, thermalThrottle, parallelEff roles.</li>
+<li>Operate mastery tiers Puny, Adept, Tidewalker with honest expectations.</li>
+<li>Apply sub-micron honesty table before marketing language.</li>
+</ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-10-introduction-dashboard-not-microscope">Introduction — dashboard, not microscope</a></li><li><a href="#toc-10-six-step-frame-ritual">Six-step frame ritual</a></li><li><a href="#toc-10-derived-factors">Derived factors</a></li><li><a href="#toc-10-mastery-tiers">Mastery tiers</a></li><li><a href="#toc-10-sub-micron-honesty-table">Sub-micron honesty table</a></li><li><a href="#toc-10-precision-field-py-nexus-cousin">precision-field.py — NEXUS cousin</a></li><li><a href="#toc-10-operator-drills">Operator drills</a></li><li><a href="#toc-10-chapter-summary">Chapter summary</a></li><li><a href="#toc-10-study-questions">Study questions</a></li><li><a href="#toc-10-coupling-fabric-averages-to-sysfs-puny-tier">Coupling fabric averages to sysfs Puny tier</a></li><li><a href="#toc-10-simulatesubmicron-what-changes">SimulateSubMicron — what changes</a></li><li><a href="#toc-10-tidewalker-responsibility">Tidewalker responsibility</a></li><li><a href="#toc-10-mirror-anatomy-1-units-edges-and-sysfs">Mirror anatomy 1 — units, edges, and sysfs</a></li><li><a href="#toc-10-mirror-anatomy-2-units-edges-and-sysfs">Mirror anatomy 2 — units, edges, and sysfs</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-10-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">The spiderweb is a <strong>read-only mirror</strong> — fabric averages compressed for the operator dashboard, not a second simulation. On the way you will follow <code>updateHardwareFromAnalogFields()</code>, read per-core MHz and util, and refuse SEM marketing as instrumentation.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch10-spiderweb.jpg" alt="Spiderweb graph" loading="lazy" /><figcaption>On the way — Spiderweb graph</figcaption></figure>
+<ul class="on-the-way-journey"><li>voltageFactor, thermalThrottle, parallelEff</li><li>Puny tier sysfs witness</li><li>Lossy pipeline: averages hide texels</li><li>list Hardware prompt ritual</li></ul>
+</div>
+
+
+<h2 id="toc-10-introduction-dashboard-not-microscope">Introduction — dashboard, not microscope</h2>
+<p><code>updateHardwareFromAnalogFields()</code> mirrors averaged Phi/Thermo/Flow into <code>hardwareFabric</code> — per-core MHz, util, temp, power, spiderweb edge currents. Read-only mirror — not second simulation, not SEM imaging. Chapter 9 Tesla constants damp reverse edges; Chapter 7 dispatch calls mirror every frame after fabric evolution.</p>
+
+<figure class="figure"><img src="../assets/images/chapters/ch10-spiderweb.jpg" alt="Spiderweb" loading="lazy" /><figcaption>Figure 10.1 — Fabric averages drive util graph.</figcaption></figure>
+
+<h2 id="toc-10-six-step-frame-ritual">Six-step frame ritual</h2>
+<figure class="figure"><img src="../assets/images/v3/science/fabric-schematic.jpg" alt="Fabric to hardware mirror" loading="lazy" /><figcaption>Figure 10.2 — Fabric averages compress into spiderweb util — lossy mirror.</figcaption></figure>
+
+<ol>
+<li>Sample avg Phi, Thermo, Flow</li>
+<li>Apply fluid velocity/density + Tesla bias</li>
+<li>Compute voltageFactor, thermalThrottle, parallelEff</li>
+<li>Update hardwareFabric.units[] — operationalFreqMHz, util, voltage, temp, power</li>
+<li>Update spiderweb edges[].currentUtil</li>
+<li>Accumulate simulatedChipCycles</li>
+</ol>
+
+<h2 id="toc-10-derived-factors">Derived factors</h2>
+<table><thead><tr><th>Factor</th><th>Story</th><th>Label</th></tr></thead>
+<tbody>
+<tr><td>voltageFactor</td><td>Phi-linked electrical metaphor</td><td><span class="tag meta">Metaphor</span> + fabric witness</td></tr>
+<tr><td>thermalThrottle</td><td>Thermo-linked heat story</td><td><span class="tag meta">Proxy</span></td></tr>
+<tr><td>parallelEff</td><td>Flow-linked utilization shape</td><td><span class="tag meta">Proxy</span></td></tr>
+</tbody></table>
+
+<h2 id="toc-10-mastery-tiers">Mastery tiers</h2>
+<table><thead><tr><th>Tier</th><th>Controls</th></tr></thead>
+<tbody>
+<tr><td>Puny</td><td>ShowInStatusLog, AutoUseRealClocks — sysfs MHz Linux</td></tr>
+<tr><td>Adept</td><td>TargetCoreClockMHz, ThermalSensitivity, SimulateSubMicron</td></tr>
+<tr><td>Tidewalker</td><td>EnableSpiderwebGraph, ForcedVendor, SubMicronDetail</td></tr>
+</tbody></table>
+
+<h2 id="toc-10-sub-micron-honesty-table">Sub-micron honesty table</h2>
+<table><thead><tr><th>Claim</th><th>Reality</th><th>Label</th></tr></thead>
+<tbody>
+<tr><td>Adaptive 320×200 → 4K+</td><td>Implemented</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>SDF epsilons + accumulation</td><td>Implemented</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>Zero-cost SEM fidelity</td><td>Procedural pixel detail</td><td><span class="tag meta">Metaphor</span></td></tr>
+</tbody></table>
+
+<h2 id="toc-10-precision-field-py-nexus-cousin">precision-field.py — NEXUS cousin</h2>
+<p>GPS-anchored entity map, spiderweb nodes, thermal-earth bodies — separate codebase, cousin metaphor. Correlate at operator mind with engine spiderweb, not automatic merge.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch07-gpu-engine.jpg" alt="Dispatch to spiderweb" loading="lazy" /><figcaption>Figure 10.3 — Dispatch thermo feeds spiderweb averages — know the compression. <span class="claim-tie">Claim: Thin host → vkCmdDispatch — offensive write each tick</span></figcaption></figure>
+
+<figure class="figure"><img src="../assets/images/chapters/ch08-die-bus.jpg" alt="Telemetry spine" loading="lazy" /><figcaption>Figure 10.4 — data_bus witness beside spiderweb mirror — honesty table. <span class="claim-tie">Claim: data_bus[64] telemetry spine per dispatch</span></figcaption></figure>
+
+
+<h2 id="toc-10-operator-drills">Operator drills</h2>
+<div class="callout drill"><strong>Drill 10.A</strong></div>
+<pre class="eq">list Hardware
+set Hardware.SimulateSubMicron 1
+grep -i spiderweb run.log</pre>
+
+<h2 id="toc-10-chapter-summary">Chapter summary</h2>
+<p>Spiderweb mirrors fabric. Six steps each frame. Tiers unlock controls. SEM is metaphor. Prior: <a href="09-fcc-tesla.html">Ch 9</a>. Next: <a href="11-observability.html">Ch 11</a>.</p>
+
+<h2 id="toc-10-study-questions">Study questions</h2>
+<ol>
+<li>List six mirror steps.</li>
+<li>What does Puny tier read for clocks?</li>
+<li>Label SimulateSubMicron honesty.</li>
+<li>How does Tesla reach edges?</li>
+<li>What is precision-field cousin?</li>
+</ol>
+
+
+<h2 id="toc-10-coupling-fabric-averages-to-sysfs-puny-tier">Coupling fabric averages to sysfs Puny tier</h2>
+<p>Puny AutoUseRealClocks reads Linux sysfs MHz as freq witness — Chapter 19 sovereign time extends witness doctrine. Spiderweb simulated MHz should not be confused with sysfs — honesty table: mirror vs hardware read.</p>
+<h2 id="toc-10-simulatesubmicron-what-changes">SimulateSubMicron — what changes</h2>
+<p>Adept tier SimulateSubMicron enables procedural detail path — still not SEM. SDF epsilons accumulate; label Metaphor when presenting screenshots externally.</p>
+<h2 id="toc-10-tidewalker-responsibility">Tidewalker responsibility</h2>
+<p>Graph override is power — Chapter 18 covenant: operator conscience, not daemon. ForcedVendor and SubMicronDetail can lie beautifully; stderr and sysfs Puny tier anchor honesty.</p>
+
+<h2 id="toc-10-mirror-anatomy-1-units-edges-and-sysfs">Mirror anatomy 1 — units, edges, and sysfs</h2>
+<p>Depth pass 1 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 0 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-2-units-edges-and-sysfs">Mirror anatomy 2 — units, edges, and sysfs</h2>
+<p>Depth pass 2 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 1 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-3-units-edges-and-sysfs">Mirror anatomy 3 — units, edges, and sysfs</h2>
+<p>Depth pass 3 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 2 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-4-units-edges-and-sysfs">Mirror anatomy 4 — units, edges, and sysfs</h2>
+<p>Depth pass 4 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 3 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-5-units-edges-and-sysfs">Mirror anatomy 5 — units, edges, and sysfs</h2>
+<p>Depth pass 5 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 4 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-6-units-edges-and-sysfs">Mirror anatomy 6 — units, edges, and sysfs</h2>
+<p>Depth pass 6 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 5 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-7-units-edges-and-sysfs">Mirror anatomy 7 — units, edges, and sysfs</h2>
+<p>Depth pass 7 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 6 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-8-units-edges-and-sysfs">Mirror anatomy 8 — units, edges, and sysfs</h2>
+<p>Depth pass 8 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 7 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-9-units-edges-and-sysfs">Mirror anatomy 9 — units, edges, and sysfs</h2>
+<p>Depth pass 9 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 8 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-10-units-edges-and-sysfs">Mirror anatomy 10 — units, edges, and sysfs</h2>
+<p>Depth pass 10 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 9 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-11-units-edges-and-sysfs">Mirror anatomy 11 — units, edges, and sysfs</h2>
+<p>Depth pass 11 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 10 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-12-units-edges-and-sysfs">Mirror anatomy 12 — units, edges, and sysfs</h2>
+<p>Depth pass 12 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 11 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-13-units-edges-and-sysfs">Mirror anatomy 13 — units, edges, and sysfs</h2>
+<p>Depth pass 13 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 12 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-14-units-edges-and-sysfs">Mirror anatomy 14 — units, edges, and sysfs</h2>
+<p>Depth pass 14 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 13 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-15-units-edges-and-sysfs">Mirror anatomy 15 — units, edges, and sysfs</h2>
+<p>Depth pass 15 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 14 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-16-units-edges-and-sysfs">Mirror anatomy 16 — units, edges, and sysfs</h2>
+<p>Depth pass 16 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 15 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-17-units-edges-and-sysfs">Mirror anatomy 17 — units, edges, and sysfs</h2>
+<p>Depth pass 17 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 16 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-18-units-edges-and-sysfs">Mirror anatomy 18 — units, edges, and sysfs</h2>
+<p>Depth pass 18 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 17 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-19-units-edges-and-sysfs">Mirror anatomy 19 — units, edges, and sysfs</h2>
+<p>Depth pass 19 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 18 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-20-units-edges-and-sysfs">Mirror anatomy 20 — units, edges, and sysfs</h2>
+<p>Depth pass 20 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 19 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-21-units-edges-and-sysfs">Mirror anatomy 21 — units, edges, and sysfs</h2>
+<p>Depth pass 21 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 20 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-22-units-edges-and-sysfs">Mirror anatomy 22 — units, edges, and sysfs</h2>
+<p>Depth pass 22 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 21 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-23-units-edges-and-sysfs">Mirror anatomy 23 — units, edges, and sysfs</h2>
+<p>Depth pass 23 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 22 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-24-units-edges-and-sysfs">Mirror anatomy 24 — units, edges, and sysfs</h2>
+<p>Depth pass 24 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 23 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-25-units-edges-and-sysfs">Mirror anatomy 25 — units, edges, and sysfs</h2>
+<p>Depth pass 25 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 24 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-26-units-edges-and-sysfs">Mirror anatomy 26 — units, edges, and sysfs</h2>
+<p>Depth pass 26 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 25 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-27-units-edges-and-sysfs">Mirror anatomy 27 — units, edges, and sysfs</h2>
+<p>Depth pass 27 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 26 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-28-units-edges-and-sysfs">Mirror anatomy 28 — units, edges, and sysfs</h2>
+<p>Depth pass 28 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 27 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-29-units-edges-and-sysfs">Mirror anatomy 29 — units, edges, and sysfs</h2>
+<p>Depth pass 29 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 28 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-30-units-edges-and-sysfs">Mirror anatomy 30 — units, edges, and sysfs</h2>
+<p>Depth pass 30 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 29 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-31-units-edges-and-sysfs">Mirror anatomy 31 — units, edges, and sysfs</h2>
+<p>Depth pass 31 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 30 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-32-units-edges-and-sysfs">Mirror anatomy 32 — units, edges, and sysfs</h2>
+<p>Depth pass 32 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 31 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-33-units-edges-and-sysfs">Mirror anatomy 33 — units, edges, and sysfs</h2>
+<p>Depth pass 33 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 32 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-34-units-edges-and-sysfs">Mirror anatomy 34 — units, edges, and sysfs</h2>
+<p>Depth pass 34 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 33 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-35-units-edges-and-sysfs">Mirror anatomy 35 — units, edges, and sysfs</h2>
+<p>Depth pass 35 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 34 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+<h2 id="toc-10-mirror-anatomy-36-units-edges-and-sysfs">Mirror anatomy 36 — units, edges, and sysfs</h2>
+<p>Depth pass 36 on hardwareFabric literacy.</p>
+<h3>Per-core units[]</h3>
+<p>Each unit entry tracks operationalFreqMHz, utilization subfunctions, voltage, temperature, power proxy. Entry 35 is not a physical core map — it is dashboard metaphor aligned to sysfs when Puny AutoUseRealClocks reads real MHz.</p>
+<p>Compare list Hardware output to grep STATUS — numbers should move together when fabric injected.</p>
+<h3>Spiderweb edges</h3>
+<p>Edges carry currentUtil as fabric-driven story. Tesla reverse damping from Chapter 9 modifies edge update — forward ease, reverse resist.</p>
+<p>Tidewalker tier EnableSpiderwebGraph allows override — operator responsibility rises; Chapter 18 covenant applies.</p>
+<h3>simulatedChipCycles</h3>
+<p>Accumulated cycles are comparative telemetry — useful for session shape, not billing. Headless CI can track monotonic increase as dispatch health.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch10">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>hardwareFabric</td><td>Spiderweb graph mirror</td><td><span class="tag impl">Implemented</span></td><td><code>updateHardwareFromAnalogFields()</code></td></tr><tr><td>Fabric averages</td><td>Dashboard compression</td><td><span class="tag meta">Metaphor</span></td><td><code>Lossy — not SEM</code></td></tr><tr><td>Adept tier</td><td>SimulateSubMicron</td><td><span class="tag meta">Metaphor</span></td><td><code>Procedural detail — not lab SEM</code></td></tr><tr><td>list Hardware</td><td>Operator readout</td><td><span class="tag impl">Implemented</span></td><td><code>Prompt terminal command</code></td></tr></tbody></table>
+<pre class="eq">util(core) ← sample(avg(Phi, Thermo, Flow))</pre>
+<pre class="eq">grep -n &#x27;hardwareFabric&#x27; Navigator/engine/</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/engine/Spiderweb.cpp</code></li><li><code>Navigator/engine/rtx.cpp</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-10-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Spiderweb mirrors fabric averages read-only — dashboard compression, not SEM truth. Recover detail in stderr and Classic canvas when averages lie by loss.</p>
+</div>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 11</p>
+<h1>Reading the Battlefield</h1>
+<p class="eyebrow">Chapter 11 · Observability — Reading the Battlefield</p>
+
+<div class="objectives">
+<h2 id="toc-11-learning-objectives">Learning objectives</h2>
+<ul>
+<li>Use ELLIE categories and STATUS block fields as primary witnesses.</li>
+<li>Operate prompt <code>set</code>/<code>list</code> for AnalogFields and Hardware.</li>
+<li>Enable RTXProbe with zero cost when off.</li>
+<li>Navigate NEXUS panel <code>https://127.0.0.1:9477/</code> and RTX Zero mode.</li>
+<li>Execute week-one lab correlating stderr, die bus, and packet field jsonl.</li>
+</ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-11-introduction-grep-is-forensic-defense">Introduction — grep is forensic defense</a></li><li><a href="#toc-11-ellie-logging-categories">ELLIE logging categories</a></li><li><a href="#toc-11-prompt-terminal-partial-but-real">Prompt terminal — partial but real</a></li><li><a href="#toc-11-rtxprobe">RTXProbe</a></li><li><a href="#toc-11-nexus-panel">NEXUS panel</a></li><li><a href="#toc-11-week-one-operator-lab">Week-one operator lab</a></li><li><a href="#toc-11-sovereign-time-preview">Sovereign time preview</a></li><li><a href="#toc-11-chapter-summary">Chapter summary</a></li><li><a href="#toc-11-study-questions">Study questions</a></li><li><a href="#toc-11-ellie-status-block-field-by-field">ELLIE STATUS block — field by field</a></li><li><a href="#toc-11-correlating-three-scales-at-panel">Correlating three scales at panel</a></li><li><a href="#toc-11-rtx-zero-idle-posture">RTX Zero idle posture</a></li><li><a href="#toc-11-observability-drill-block-1">Observability drill block 1</a></li><li><a href="#toc-11-observability-drill-block-2">Observability drill block 2</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-11-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Observability is grep discipline made weekly habit. On the way you will partition ELLIE categories, read STATUS and THERMO cadence, correlate panel JSON with stderr, and build an operator journal that survives long sessions.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch11-observability.jpg" alt="Observability stack" loading="lazy" /><figcaption>On the way — Observability stack</figcaption></figure>
+<ul class="on-the-way-journey"><li>MAIN, VULKAN, CANVAS, THERMO, STATUS</li><li>RTX_PROBE and headless dispatch receipts</li><li>Battlefield reading without screenshots alone</li><li>Week-twelve drift detection</li></ul>
+</div>
+
+
+<h2 id="toc-11-introduction-grep-is-forensic-defense">Introduction — grep is forensic defense</h2>
+<p>Trust stderr before screenshots. Time is linear — logs are timeline. Chapter 11 unifies ELLIE logging, prompt terminal, RTXProbe, NEXUS panel into one observability doctrine spanning AMOURANTHRTX and NEXUS-Shield.</p>
+
+<figure class="figure"><img src="../assets/images/chapters/ch11-observability.jpg" alt="Observability" loading="lazy" /><figcaption>Figure 11.1 — Logs, probes, panel — one battlefield.</figcaption></figure>
+
+<h2 id="toc-11-ellie-logging-categories">ELLIE logging categories</h2>
+<p>MAIN, VULKAN, CANVAS, THERMO, STATUS, RTXPROBE. STATUS ~5s: FPS, GPU ms, VRAM, adaptive scale, entropy, boundary thermo, maintenance cost.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch19-sovereign-time.jpg" alt="Sovereign pulse timeline" loading="lazy" /><figcaption>Figure 11.2 — SQUIDGIE and THERMO share stderr timelines — grep both.</figcaption></figure>
+
+<pre class="eq">grep -E '^(MAIN|VULKAN|CANVAS|THERMO|STATUS)' run.log</pre>
+
+<h2 id="toc-11-prompt-terminal-partial-but-real">Prompt terminal — partial but real</h2>
+<pre class="eq">set AnalogFields.GateFidelity 0.85
+list Hardware
+guide</pre>
+<p><span class="tag impl">set/list AnalogFields + Hardware.</span> Glassmorphism sliders / ImGui ESC — feasibility doc only, not hidden as shipped.</p>
+
+<h2 id="toc-11-rtxprobe">RTXProbe</h2>
+<p>RTX_PROBES=1 → GPU timestamps, invocation counts. Zero cost when off.</p>
+
+<h2 id="toc-11-nexus-panel">NEXUS panel</h2>
+<p>https://127.0.0.1:9477/ — command, packets, threats, signals, DNS, library, system. RTX Zero ?rtx=1 — Aqua chrome, cache-first refresh.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch05-packet-perimeter.jpg" alt="Panel and perimeter" loading="lazy" /><figcaption>Figure 11.4 — Panel slice beside packet perimeter — one battlefield map.</figcaption></figure>
+
+
+<h2 id="toc-11-week-one-operator-lab">Week-one operator lab</h2>
+<ol>
+<li>./linux.sh run or ./nexus.sh</li>
+<li>Read STATUS/THERMO 60s</li>
+<li>Mouse on classic — entropyThisFrame</li>
+<li>Archive gatekeeper decision at panel</li>
+</ol>
+
+<h2 id="toc-11-sovereign-time-preview">Sovereign time preview</h2>
+<p>Run your timeserver, verify at receive, grep SQUIDGIE — <a href="19-sovereign-time.html">Chapter 19</a>.</p>
+<figure class="figure"><img src="../assets/images/packet-field.jpg" alt="Jsonl forensic grep" loading="lazy" /><figcaption>Figure 11.3 — field jsonl timestamps cross-check sealed time preview. <span class="claim-tie">Claim: NEXUS packet field — local jsonl perimeter</span></figcaption></figure>
+
+
+<h2 id="toc-11-chapter-summary">Chapter summary</h2>
+<p>Observability is weapon. Prior: <a href="10-spiderweb.html">Ch 10</a>. Next: <a href="12-reality-theory.html">Ch 12</a>.</p>
+
+<h2 id="toc-11-study-questions">Study questions</h2>
+<ol>
+<li>Six ELLIE categories?</li>
+<li>STATUS fields?</li>
+<li>RTXProbe enable?</li>
+<li>RTX Zero?</li>
+<li>Panel port?</li>
+</ol>
+
+
+<h2 id="toc-11-ellie-status-block-field-by-field">ELLIE STATUS block — field by field</h2>
+<p>FPS — presentation cadence. GPU ms — dispatch cost witness. VRAM — budget Chapter 7. Adaptive scale — CFL interaction Chapter 9. Entropy — ThermoAccountant proxy. Boundary thermo — holographic boundary metaphor with number. Maintenance — prevMaintCost story.</p>
+<h2 id="toc-11-correlating-three-scales-at-panel">Correlating three scales at panel</h2>
+<p>stderr THERMO + data_bus concept + NEXUS jsonl row + sealed time — Chapter 2 integration. Panel :9477 is human correlate surface, not automatic merge engine.</p>
+<h2 id="toc-11-rtx-zero-idle-posture">RTX Zero idle posture</h2>
+<p>?rtx=1 Aqua chrome cache-first — zero-cost idle when honored. Observability includes knowing when refresh paused vs threat stale.</p>
+
+<h2 id="toc-11-observability-drill-block-1">Observability drill block 1</h2>
+<p>Structured grep and panel exercise 1 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 1: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-2">Observability drill block 2</h2>
+<p>Structured grep and panel exercise 2 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 2: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-3">Observability drill block 3</h2>
+<p>Structured grep and panel exercise 3 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 3: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-4">Observability drill block 4</h2>
+<p>Structured grep and panel exercise 4 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 4: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-5">Observability drill block 5</h2>
+<p>Structured grep and panel exercise 5 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 5: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-6">Observability drill block 6</h2>
+<p>Structured grep and panel exercise 6 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 6: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-7">Observability drill block 7</h2>
+<p>Structured grep and panel exercise 7 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 7: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-8">Observability drill block 8</h2>
+<p>Structured grep and panel exercise 8 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 8: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-9">Observability drill block 9</h2>
+<p>Structured grep and panel exercise 9 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 9: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-10">Observability drill block 10</h2>
+<p>Structured grep and panel exercise 10 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 10: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-11">Observability drill block 11</h2>
+<p>Structured grep and panel exercise 11 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 11: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-12">Observability drill block 12</h2>
+<p>Structured grep and panel exercise 12 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 12: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-13">Observability drill block 13</h2>
+<p>Structured grep and panel exercise 13 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 13: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-14">Observability drill block 14</h2>
+<p>Structured grep and panel exercise 14 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 14: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-15">Observability drill block 15</h2>
+<p>Structured grep and panel exercise 15 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 15: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-16">Observability drill block 16</h2>
+<p>Structured grep and panel exercise 16 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 16: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-17">Observability drill block 17</h2>
+<p>Structured grep and panel exercise 17 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 17: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-18">Observability drill block 18</h2>
+<p>Structured grep and panel exercise 18 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 18: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-19">Observability drill block 19</h2>
+<p>Structured grep and panel exercise 19 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 19: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-20">Observability drill block 20</h2>
+<p>Structured grep and panel exercise 20 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 20: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-21">Observability drill block 21</h2>
+<p>Structured grep and panel exercise 21 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 21: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-22">Observability drill block 22</h2>
+<p>Structured grep and panel exercise 22 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 22: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-23">Observability drill block 23</h2>
+<p>Structured grep and panel exercise 23 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 23: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-24">Observability drill block 24</h2>
+<p>Structured grep and panel exercise 24 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 24: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-25">Observability drill block 25</h2>
+<p>Structured grep and panel exercise 25 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 25: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-26">Observability drill block 26</h2>
+<p>Structured grep and panel exercise 26 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 26: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-27">Observability drill block 27</h2>
+<p>Structured grep and panel exercise 27 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 27: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-28">Observability drill block 28</h2>
+<p>Structured grep and panel exercise 28 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 28: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-29">Observability drill block 29</h2>
+<p>Structured grep and panel exercise 29 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 29: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-30">Observability drill block 30</h2>
+<p>Structured grep and panel exercise 30 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 30: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-31">Observability drill block 31</h2>
+<p>Structured grep and panel exercise 31 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 31: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-32">Observability drill block 32</h2>
+<p>Structured grep and panel exercise 32 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 32: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-33">Observability drill block 33</h2>
+<p>Structured grep and panel exercise 33 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 33: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-34">Observability drill block 34</h2>
+<p>Structured grep and panel exercise 34 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 34: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-35">Observability drill block 35</h2>
+<p>Structured grep and panel exercise 35 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 35: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-36">Observability drill block 36</h2>
+<p>Structured grep and panel exercise 36 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 36: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-37">Observability drill block 37</h2>
+<p>Structured grep and panel exercise 37 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 37: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-38">Observability drill block 38</h2>
+<p>Structured grep and panel exercise 38 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 38: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch11">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>ELLIE categories</td><td>Categorized stderr</td><td><span class="tag impl">Implemented</span></td><td><code>MAIN/VULKAN/CANVAS/THERMO/STATUS</code></td></tr><tr><td>Panel :9477</td><td>Human correlation UI</td><td><span class="tag impl">Implemented</span></td><td><code>NEXUS local panel</code></td></tr><tr><td>Screenshot culture</td><td>Pretty frames as proof</td><td><span class="tag phil">Philosophy</span></td><td><code>Rejected — grep first</code></td></tr><tr><td>Operator journal</td><td>Weekly rhythm</td><td><span class="tag phil">Philosophy</span></td><td><code>Receipts over vibes</code></td></tr></tbody></table>
+<pre class="eq">observability = stderr_categories × panel_correlation × jsonl_archive</pre>
+<pre class="eq">grep -E &#x27;^(MAIN|VULKAN|THERMO)&#x27; run.log | tail -40</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/engine/ELLIE.hpp</code></li><li><code>NEXUS-Shield/panel_server.py</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-11-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Observability is categorized stderr, panel correlation, and operator journal discipline — receipts culture over screenshot culture.</p>
+</div>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 12</p>
+<h1>The Rocks We Do Not Hide</h1>
+<p class="eyebrow">Chapter 12 · Reality vs Theory — The Rocks</p>
+
+<div class="objectives">
+<h2 id="toc-12-learning-objectives">Learning objectives</h2>
+<ul>
+<li>Apply status tags (impl, meta, phil, vis) to any stack claim.</li>
+<li>Recite the complete honesty table from memory with operator reality column.</li>
+<li>Resolve disputes using trust ordering: headers, stderr, default run path.</li>
+<li>Separate product licenses and roles without merger mythology.</li>
+<li>Use capstone equations at correct measurement layer.</li>
+</ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-12-introduction-bookmark-this-chapter">Introduction — bookmark this chapter</a></li><li><a href="#toc-12-the-honesty-table-complete">The honesty table — complete</a></li><li><a href="#toc-12-what-to-trust">What to trust</a></li><li><a href="#toc-12-product-boundaries">Product boundaries</a></li><li><a href="#toc-12-capstone-equations">Capstone equations</a></li><li><a href="#toc-12-category-errors-catalog">Category errors catalog</a></li><li><a href="#toc-12-chapter-summary">Chapter summary</a></li><li><a href="#toc-12-study-questions">Study questions</a></li><li><a href="#toc-12-status-tags-complete-operator-legend">Status tags — complete operator legend</a></li><li><a href="#toc-12-engineering-core-chapters-2-11-what-was-real">Engineering core chapters 2–11 — what was real</a></li><li><a href="#toc-12-enjoy-the-field-honestly">Enjoy the field — honestly</a></li><li><a href="#toc-12-honesty-application-1-dispute-resolution">Honesty application 1 — dispute resolution</a></li><li><a href="#toc-12-honesty-application-2-dispute-resolution">Honesty application 2 — dispute resolution</a></li><li><a href="#toc-12-honesty-application-3-dispute-resolution">Honesty application 3 — dispute resolution</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-12-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">This is the chapter you bookmark. On the way you will catalog every <strong>rock</strong> — what is implemented, metaphor, philosophy, visual — and practice refusing vendor cosmology, joule fantasy, and shader-as-spectrum lies.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch12-honesty.jpg" alt="Honesty mirror" loading="lazy" /><figcaption>On the way — Honesty mirror</figcaption></figure>
+<ul class="on-the-way-journey"><li>Full honesty table with stack examples</li><li>Category error encyclopedia</li><li>When poetry is welcome versus forbidden</li><li>Return here when marketing sells 3D hype</li></ul>
+</div>
+
+
+<h2 id="toc-12-introduction-bookmark-this-chapter">Introduction — bookmark this chapter</h2>
+<p>Field Technology v5 is serious because it labels poetry before newcomers confuse it with measurement. When someone sells cosmology, return here. Theory inspires vocabulary; implementation is what you grep, set, screenshot — with labels.</p>
+
+<figure class="figure"><img src="../assets/images/chapters/ch12-honesty.jpg" alt="Honesty" loading="lazy" /><figcaption>Figure 12.1 — Metaphor glow vs measured grid.</figcaption></figure>
+
+<h2 id="toc-12-the-honesty-table-complete">The honesty table — complete</h2>
+<figure class="figure"><img src="../assets/images/chapters/ch04-entropy-layers.jpg" alt="Three entropy layers" loading="lazy" /><figcaption>Figure 12.2 — Layers share words, not measurements — four labels prevent summing.</figcaption></figure>
+
+<table><thead><tr><th>Claim (theory / marketing)</th><th>Operator reality</th><th>Label</th></tr></thead>
+<tbody>
+<tr><td>Greatest weapon</td><td>Field literacy + local tools</td><td><span class="tag phil">Philosophy</span></td></tr>
+<tr><td>Living thermodynamic computer</td><td>ThermoAccountant in logs</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>Packet field sees everything</td><td>Local sockets + heuristics</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>RF planetary shell</td><td>planetary_weave.comp visual</td><td><span class="tag vis">Visual</span></td></tr>
+<tr><td>Landauer joules from GPU</td><td>Proxy integral entropyThisFrame</td><td><span class="tag meta">Metaphor</span></td></tr>
+<tr><td>Sub-micron SEM</td><td>Procedural pixel detail</td><td><span class="tag meta">Metaphor</span></td></tr>
+<tr><td>Love / God chapters</td><td>Sacred operator language</td><td><span class="tag phil">Philosophy</span></td></tr>
+<tr><td>Queen holds all gates</td><td>QUEEN_READY when built</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>KILROY kernel on host today</td><td>QEMU/bare-metal image; host may run generic Linux</td><td><span class="tag impl">Implemented</span> image</td></tr>
+<tr><td>Propalactic cosmic weave</td><td>PropalacticScale knob on Phi</td><td><span class="tag meta">Metaphor</span></td></tr>
+<tr><td>Tamper abort / sealed time</td><td>TotalTime::seal() + verify posture</td><td><span class="tag impl">Implemented</span> session</td></tr>
+<tr><td>Hardware-gate fidelity</td><td>GateFidelity sharpens Flow; spiderweb util mirror</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>Tesla valve in chassis</td><td>TESLA_R_* constants; data_bus 31/34</td><td><span class="tag meta">Metaphor</span></td></tr>
+<tr><td>96% lies device cannot drift</td><td>Security posture narrative</td><td><span class="tag phil">Philosophy</span></td></tr>
+<tr><td>data_bus is SI telemetry</td><td>64-word packed dashboard per dispatch</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>x86.comp is decorative</td><td>Default Field Die product path</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>FIELD_LAYOUT_VERSION cosmetic</td><td>Host/shader layout contract v5</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>ELLIE is optional polish</td><td>Primary observability spine</td><td><span class="tag impl">Implemented</span></td></tr>
+</tbody></table>
+
+<h2 id="toc-12-what-to-trust">What to trust</h2>
+<ol>
+<li>Headers over cover art</li>
+<li>stderr over screenshots for thermo numbers</li>
+<li>./linux.sh run default = Field Die</li>
+<li>Headless dispatch — valid CI signal</li>
+</ol>
+
+<h2 id="toc-12-product-boundaries">Product boundaries</h2>
+<table><thead><tr><th>Product</th><th>License</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td>AMOURANTHRTX</td><td>GPL v3 or commercial</td><td>Vulkan Field Die</td></tr>
+<tr><td>NEXUS-Shield</td><td>MIT</td><td>Endpoint security</td></tr>
+<tr><td>Queen</td><td>Field sovereign browser</td><td>RTX + gates in-engine</td></tr>
+<tr><td>Field Primer</td><td>CC BY-NC-SA 4.0</td><td>This textbook</td></tr>
+</tbody></table>
+
+<h2 id="toc-12-capstone-equations">Capstone equations</h2>
+<table><thead><tr><th>Domain</th><th>Relation</th><th>Layer</th></tr></thead>
+<tbody>
+<tr><td>Wave CFL</td><td>c·Δt/Δx ≤ 1</td><td>Host guard</td></tr>
+<tr><td>Diffusion CFL</td><td>α·Δt/Δx² ≤ 1</td><td>Host guard</td></tr>
+<tr><td>Entropy proxy</td><td>Ṡ ≈ fieldWork + probeDiss + prevMaint</td><td>ThermoAccountant</td></tr>
+<tr><td>Shannon (NEXUS)</td><td>H = −Σ pᵢ log₂ pᵢ</td><td>Entropy Oracle files</td></tr>
+<tr><td>Landauer (theory)</td><td>E_min = k_B T ln 2</td><td>Theory — proxy labeled</td></tr>
+</tbody></table>
+
+<h2 id="toc-12-category-errors-catalog">Category errors catalog</h2>
+<div class="callout science"><strong>Do not</strong> treat shader art as instrumentation. <strong>Do not</strong> treat jsonl verdict as joules. <strong>Do not</strong> treat guest RAM metaphor as cloud perimeter. <strong>Do not</strong> conflate Shannon file H with ThermoAccountant entropy.</div>
+
+<h2 id="toc-12-chapter-summary">Chapter summary</h2>
+<p>Enjoy the field — honestly. Next: <a href="13-landauer-deep.html">Chapter 13 Landauer</a>. Prior engineering core: Chapters 2–11.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch06-planetary-weave.jpg" alt="Visual RF shell" loading="lazy" /><figcaption>Figure 12.4 — Category error: <span class="tag vis">Visual</span> ionosphere ≠ instrumentation.</figcaption></figure>
+
+
+<h2 id="toc-12-study-questions">Study questions</h2>
+<ol>
+<li>Five honesty rows from memory.</li>
+<li>stderr vs screenshots?</li>
+<li>MIT product?</li>
+<li>Diffusion CFL?</li>
+<li>PropalacticScale label?</li>
+</ol>
+
+
+<h2 id="toc-12-status-tags-complete-operator-legend">Status tags — complete operator legend</h2>
+<table><thead><tr><th>Tag</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><span class="tag impl">Implemented</span></td><td>Grep, set, screenshot in source</td></tr>
+<tr><td><span class="tag meta">Metaphor</span></td><td>Poetic naming; not SI units</td></tr>
+<tr><td><span class="tag phil">Philosophy</span></td><td>Operator discipline</td></tr>
+<tr><td><span class="tag vis">Visual</span></td><td>Shader art; not instrumentation</td></tr>
+</tbody></table>
+<h2 id="toc-12-engineering-core-chapters-2-11-what-was-real">Engineering core chapters 2–11 — what was real</h2>
+<p>Ch2 three scales. Ch3 thermo fabric. Ch4 entropy layers. Ch5 packet field. Ch6 RF separation. Ch7 dispatch. Ch8 die bus. Ch9 CFL Tesla. Ch10 spiderweb mirror. Ch11 observability. All labeled. Ch13+ creditors and sacred long-form follow with same posture.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch01-illustration-theory.jpg" alt="Illustration honesty" loading="lazy" /><figcaption>Figure 12.3 — Seductive details weed: signaled figures only (Mayer coherence).</figcaption></figure>
+
+<h2 id="toc-12-enjoy-the-field-honestly">Enjoy the field — honestly</h2>
+<p>Theory inspires vocabulary. Implementation is grep, set, screenshot. We do not hide the rocks.</p>
+
+<h2 id="toc-12-honesty-application-1-dispute-resolution">Honesty application 1 — dispute resolution</h2>
+<p>Worked example 1 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 1: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-2-dispute-resolution">Honesty application 2 — dispute resolution</h2>
+<p>Worked example 2 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 2: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-3-dispute-resolution">Honesty application 3 — dispute resolution</h2>
+<p>Worked example 3 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 3: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-4-dispute-resolution">Honesty application 4 — dispute resolution</h2>
+<p>Worked example 4 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 4: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-5-dispute-resolution">Honesty application 5 — dispute resolution</h2>
+<p>Worked example 5 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 5: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-6-dispute-resolution">Honesty application 6 — dispute resolution</h2>
+<p>Worked example 6 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 6: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-7-dispute-resolution">Honesty application 7 — dispute resolution</h2>
+<p>Worked example 7 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 7: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-8-dispute-resolution">Honesty application 8 — dispute resolution</h2>
+<p>Worked example 8 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 8: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-9-dispute-resolution">Honesty application 9 — dispute resolution</h2>
+<p>Worked example 9 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 9: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-10-dispute-resolution">Honesty application 10 — dispute resolution</h2>
+<p>Worked example 10 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 10: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-11-dispute-resolution">Honesty application 11 — dispute resolution</h2>
+<p>Worked example 11 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 11: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-12-dispute-resolution">Honesty application 12 — dispute resolution</h2>
+<p>Worked example 12 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 12: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-13-dispute-resolution">Honesty application 13 — dispute resolution</h2>
+<p>Worked example 13 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 13: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-14-dispute-resolution">Honesty application 14 — dispute resolution</h2>
+<p>Worked example 14 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 14: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-15-dispute-resolution">Honesty application 15 — dispute resolution</h2>
+<p>Worked example 15 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 15: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-16-dispute-resolution">Honesty application 16 — dispute resolution</h2>
+<p>Worked example 16 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 16: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-17-dispute-resolution">Honesty application 17 — dispute resolution</h2>
+<p>Worked example 17 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 17: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-18-dispute-resolution">Honesty application 18 — dispute resolution</h2>
+<p>Worked example 18 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 18: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-19-dispute-resolution">Honesty application 19 — dispute resolution</h2>
+<p>Worked example 19 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 19: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-20-dispute-resolution">Honesty application 20 — dispute resolution</h2>
+<p>Worked example 20 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 20: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-21-dispute-resolution">Honesty application 21 — dispute resolution</h2>
+<p>Worked example 21 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 21: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-22-dispute-resolution">Honesty application 22 — dispute resolution</h2>
+<p>Worked example 22 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 22: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-23-dispute-resolution">Honesty application 23 — dispute resolution</h2>
+<p>Worked example 23 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 23: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-24-dispute-resolution">Honesty application 24 — dispute resolution</h2>
+<p>Worked example 24 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 24: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-25-dispute-resolution">Honesty application 25 — dispute resolution</h2>
+<p>Worked example 25 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 25: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-26-dispute-resolution">Honesty application 26 — dispute resolution</h2>
+<p>Worked example 26 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 26: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-27-dispute-resolution">Honesty application 27 — dispute resolution</h2>
+<p>Worked example 27 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 27: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-28-dispute-resolution">Honesty application 28 — dispute resolution</h2>
+<p>Worked example 28 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 28: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-29-dispute-resolution">Honesty application 29 — dispute resolution</h2>
+<p>Worked example 29 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 29: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-30-dispute-resolution">Honesty application 30 — dispute resolution</h2>
+<p>Worked example 30 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 30: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-31-dispute-resolution">Honesty application 31 — dispute resolution</h2>
+<p>Worked example 31 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 31: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-32-dispute-resolution">Honesty application 32 — dispute resolution</h2>
+<p>Worked example 32 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 32: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-33-dispute-resolution">Honesty application 33 — dispute resolution</h2>
+<p>Worked example 33 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 33: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-34-dispute-resolution">Honesty application 34 — dispute resolution</h2>
+<p>Worked example 34 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 34: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-35-dispute-resolution">Honesty application 35 — dispute resolution</h2>
+<p>Worked example 35 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 35: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+<h2 id="toc-12-honesty-application-36-dispute-resolution">Honesty application 36 — dispute resolution</h2>
+<p>Worked example 36 applying rocks table.</p>
+<h3>Dispute setup</h3>
+<p>Example 36: A vendor claims sub-micron SEM fidelity from spiderweb screenshot. Operator opens Chapter 12 table — procedural pixel detail, Metaphor label. Resolution: screenshot is Visual pedagogy, not lab.</p>
+<p>Second dispute: jsonl shows SUSPICIOUS — colleague says GPU is compromised. Operator separates packet field local sockets from Vulkan dispatch — corroborate before permanent KILL.</p>
+<h3>Trust ordering</h3>
+<p>grep FieldRtxFieldAbs.hpp beats marketing PDF. run.log THERMO beats influencer stream. Default x86 die beats rumor about decorative engine.</p>
+<h3>Capstone equation layer</h3>
+<p>Landauer E_min is theory anchor — entropyThisFrame remains proxy. Shannon H on executable is NEXUS — not mixed into thermo boundary without label.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch12">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Honesty table</td><td>Claim vs operator reality</td><td><span class="tag impl">Implemented</span></td><td><code>This chapter — bookmark</code></td></tr><tr><td>Trust order</td><td>Headers &gt; stderr &gt; art</td><td><span class="tag phil">Philosophy</span></td><td><code>Dispute resolution</code></td></tr><tr><td>Capstone equations</td><td>Layer-tagged math</td><td><span class="tag meta">Metaphor</span></td><td><code>Theory vs proxy vs file H</code></td></tr><tr><td>Product boundaries</td><td>Four licenses</td><td><span class="tag impl">Implemented</span></td><td><code>AMOURANTHRTX / NEXUS / Queen / Primer</code></td></tr></tbody></table>
+<pre class="eq">See capstone table — CFL, Landauer, Shannon, entropy proxy</pre>
+<pre class="eq">grep -r &#x27;tag impl\|tag meta&#x27; docs/chapters/12-reality-theory.html</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>content/chapters/12.html</code></li><li><code>scripts/master_rocks_table.py</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-12-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Rocks visible. Labels mandatory. Return when sold cosmology, joule fantasy, or shader instrumentation. This chapter is the honesty contract for the whole book.</p>
+</div>
+</div>
+</body></html>

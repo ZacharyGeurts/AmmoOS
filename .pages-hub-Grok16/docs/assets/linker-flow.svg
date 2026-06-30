@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 220" role="img" aria-label="G16 field linker dispatch">
+  <defs>
+    <style>
+      .n { fill:#1a2130; stroke:#3a4558; stroke-width:2; rx:6 }
+      .a { fill:#243044; stroke:#5fa8bc; stroke-width:2; rx:6 }
+      .l { stroke:#5fa8bc; stroke-width:2; fill:none; marker-end:url(#m) }
+      .t { font:600 12px ui-monospace,Consolas,monospace; fill:#e6e4df }
+      .s { font:10px ui-monospace,Consolas,monospace; fill:#a8a49c }
+      .h { font:700 14px system-ui,sans-serif; fill:#5fa8bc }
+    </style>
+    <marker id="m" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#5fa8bc"/>
+    </marker>
+  </defs>
+  <rect width="880" height="220" fill="#0e1117" rx="10"/>
+  <text x="20" y="28" class="h">g16-ld — field linker pass</text>
+  <rect class="a" x="20" y="44" width="120" height="56"/><text x="36" y="68" class="t">argv</text><text x="36" y="86" class="s">-o out …</text>
+  <rect class="n" x="168" y="44" width="140" height="56"/><text x="184" y="68" class="t">discern</text><text x="184" y="86" class="s">16 targets</text>
+  <rect class="n" x="336" y="44" width="150" height="56"/><text x="352" y="68" class="t">ironclad</text><text x="352" y="86" class="s">witness</text>
+  <rect class="n" x="514" y="44" width="150" height="56"/><text x="530" y="68" class="t">mandate</text><text x="530" y="86" class="s">RELRO · NX</text>
+  <rect class="a" x="692" y="44" width="168" height="56"/><text x="708" y="68" class="t">dispatch</text><text x="708" y="86" class="s">g16-ld-bfd</text>
+  <path class="l" d="M140 72 H168"/><path class="l" d="M308 72 H336"/><path class="l" d="M486 72 H514"/><path class="l" d="M664 72 H692"/>
+  <rect class="n" x="20" y="128" width="200" height="72"/><text x="36" y="152" class="t">-shared links</text><text x="36" y="170" class="s">skip -pie (1.0 fix)</text><text x="36" y="186" class="s">keeps libgcc_s valid</text>
+  <rect class="n" x="240" y="128" width="200" height="72"/><text x="256" y="152" class="t">executables</text><text x="256" y="170" class="s">-pie · -zrelro</text><text x="256" y="186" class="s">-znow · -znoexecstack</text>
+  <rect class="n" x="460" y="128" width="200" height="72"/><text x="476" y="152" class="t">mach-o / PE</text><text x="476" y="170" class="s">darwin · win32</text><text x="476" y="186" class="s">android-ndk</text>
+  <rect class="n" x="680" y="128" width="180" height="72"/><text x="696" y="152" class="t">16 backends</text><text x="696" y="170" class="s">linux-gnu-*</text><text x="696" y="186" class="s">bare-elf-*</text>
+</svg>

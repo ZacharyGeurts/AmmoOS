@@ -1,0 +1,12 @@
+{
+  "schema": "field-combinatorics-engine-lock/v1",
+  "locked": true,
+  "generation": 1,
+  "engine_sha256": "7269ea315396cde32844988e06def3a0e236da2731c886bb90132bbdafd8e884",
+  "panel_sha256": "c89d7ba92fb89fd0e6ff1991a77d540c357ff1210a216b6eecd5a4ac22087749",
+  "algorithm": "sha256",
+  "source_count": 27,
+  "rebuild_required": false,
+  "updated": "2026-06-27T17:47:35Z",
+  "motto": "Auto-detected engine SHA — no partial additions; rebuild whole engine to extend"
+}

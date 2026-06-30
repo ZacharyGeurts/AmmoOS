@@ -1,0 +1,15 @@
+{
+  "id": "openstax_prealgebra",
+  "title": "OpenStax Prealgebra 2e",
+  "author": "OpenStax",
+  "dewey": "510",
+  "publisher": "OpenStax",
+  "license": "CC BY 4.0",
+  "grade_band": "6-8",
+  "subject": "math",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/openstax_prealgebra/front.png",
+  "cover_asset": "library/assets/covers/openstax_prealgebra/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "format-wrzc1",
+  "title": "World Redata ZAC container",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "sovereign",
+  "extensions": [
+    ".wrzc"
+  ],
+  "magic": "WRZC1",
+  "cover": "/library/assets/formats/wrzc1.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

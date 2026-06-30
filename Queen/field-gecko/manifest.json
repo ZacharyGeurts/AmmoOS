@@ -1,0 +1,48 @@
+{
+  "schema": "queen-browser-engine/v1",
+  "name": "Queen Browser",
+  "product": "Queen",
+  "theme": "black_emerald_rose_2026",
+  "branding": {
+    "palette": "black · emerald · rose",
+    "shell": "stripped-webbrowser",
+    "favicon": "panel/assets/ammoos-field-48.png",
+    "wordmark": "world/assets/branding/ammoos-wordmark.svg",
+    "crown_surprise": "world/assets/branding/queen-crown-surprise.svg",
+    "user_guide": "world/queen-browser-guide.html"
+  },
+  "license": "MPL-2.0",
+  "engine": "queen-field-gecko",
+  "surface": "stripped-webbrowser",
+  "comp_shader_boot": false,
+  "telemetry": false,
+  "search": {
+    "provider": "DuckDuckGo",
+    "homepage": "http://127.0.0.1:9481/world/kilroy-home.html",
+    "search_url": "https://duckduckgo.com/?q=%s"
+  },
+  "g16": {
+    "toolchain": "Grok16 g16",
+    "profile": "field_opt",
+    "build_target": "queen-browser",
+    "note": "Queen stripped webbrowser — AMOURANTHRTX RTX binary when built; field-gecko fallback"
+  },
+  "shell_url": "http://127.0.0.1:9481/world/browser.html",
+  "ammoos_desktop_url": "http://127.0.0.1:9477/field",
+  "startup_tabs": [
+    {"role": "home", "title": "New Tab", "url": "http://127.0.0.1:9481/world/kilroy-home.html", "url_env": "QUEEN_BROWSER_HOME", "pinned": true}
+  ],
+  "profile_dir": "profile",
+  "binary_candidates": [
+    "build/rtx/bin/Linux/queen-browser",
+    "bin/queen-browser",
+    "bin/queen-field-engine"
+  ],
+  "engine_launcher": "bin/launch-field-gecko.sh",
+  "rtx": {
+    "preferred": true,
+    "env": "AMOURANTHRTX_ROOT",
+    "skip_env": "QUEEN_SKIP_RTX_BOOT"
+  },
+  "note": "AmmoOS desktop is :9477/field — Queen is the browser only"
+}

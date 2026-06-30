@@ -1,0 +1,10 @@
+{
+  "id": "macbook_pro_m1",
+  "title": "MacBook Pro M1",
+  "author": "Field Extensive Library",
+  "dewey": "004.165",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/macbook_pro_m1/macbook_pro_m1.h7c",
+  "cover": "/library/assets/devices/macbook_pro_m1.png",
+  "ready": true
+}

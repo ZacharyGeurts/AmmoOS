@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_hs_math",
+  "title": "Wikibooks High School Mathematics Extensions",
+  "author": "Wikibooks",
+  "dewey": "510",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "9-12",
+  "subject": "math",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_hs_math/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_hs_math/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

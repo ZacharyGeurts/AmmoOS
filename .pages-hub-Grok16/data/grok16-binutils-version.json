@@ -1,0 +1,28 @@
+{
+  "binutils_version": "2.44",
+  "field_version": "16.1.1",
+  "pkgversion": "Grok16-binutils-16.1.1",
+  "tag": "v16.1.1-binutils",
+  "product": "Grok16-binutils",
+  "pair": "Grok16/g16",
+  "branch": "binutils-2_44-branch",
+  "repo": "https://sourceware.org/git/binutils-gdb.git",
+  "tools": {
+    "assembler": "g16-as",
+    "linker": "g16-ld",
+    "disassembler": "g16-objdump",
+    "objcopy": "g16-objcopy",
+    "strip": "g16-strip",
+    "readelf": "g16-readelf",
+    "nm": "g16-nm",
+    "ar": "g16-ar",
+    "ranlib": "g16-ranlib",
+    "addr2line": "g16-addr2line",
+    "c++filt": "g16-c++filt",
+    "elfedit": "g16-elfedit",
+    "strings": "g16-strings",
+    "size": "g16-size"
+  },
+  "compat_symlinks": ["as", "ld", "objdump", "objcopy", "strip", "readelf", "nm", "ar", "ranlib", "addr2line", "c++filt", "elfedit", "strings", "size"],
+  "rule": "Field rewrite of GNU binutils — replaces build-essential as/ld/objdump on PATH"
+}

@@ -1,0 +1,384 @@
+{
+  "schema": "g16-field-research-book-panel/v1",
+  "updated": "2026-06-30T02:53:59Z",
+  "ok": false,
+  "title": "Field Research — Grok16 technology spine",
+  "edition": "1.0",
+  "site_base": "https://zacharygeurts.github.io/Field_Research",
+  "repo": "https://github.com/ZacharyGeurts/Field_Research",
+  "motto": "Problems detected → research recorded → conclusions shipped with receipts.",
+  "axioms": [
+    "Reality is 3D",
+    "Time is linear",
+    "Energy can be moved"
+  ],
+  "honesty_labels": [
+    "Implemented",
+    "Metaphor",
+    "Philosophy",
+    "Visual"
+  ],
+  "research_question": "How do we hold all execution facets — belt, die, runner, emulator, truth tier — without making the operator turn a combinatorics crank on every boot?",
+  "research_conclusion": "Combinatorics became background physics. Compatibility layers became interface. Launch seals became trust. Diagnostic became kindness under failure.",
+  "single_fabric": {
+    "declaration": "Parallel I/O may fan in; truth collapses to one amplitude on one belt.",
+    "default_profile": "belt_2_0",
+    "max_field_depth": 0
+  },
+  "ironclad": {
+    "realized": "2026-06-26",
+    "ref": "NewLatest/data/ironclad-doctrine.json",
+    "meld": "data/g16-ironclad-meld.json",
+    "chain": "God → Ironclad → Field → Hostess7"
+  },
+  "chapters": [
+    {
+      "num": 1,
+      "slug": "01-preface-ironclad",
+      "title": "Preface — Field Literacy, Ironclad, and the Three Axioms",
+      "accent": "heart",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/01-preface-ironclad.html",
+      "grok16_owned": false
+    },
+    {
+      "num": 2,
+      "slug": "02-three-field-families",
+      "title": "Three Field Families — GPU Fabric, Field Die, Packet Field",
+      "accent": "phi",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/02-three-field-families.html",
+      "grok16_owned": false
+    },
+    {
+      "num": 3,
+      "slug": "03-thermodynamics-entropy",
+      "title": "Thermodynamics & Entropy in the Engine",
+      "accent": "thermo",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/03-thermodynamics-entropy.html",
+      "grok16_owned": false
+    },
+    {
+      "num": 4,
+      "slug": "04-grok16-forge",
+      "title": "Grok16 Forge — From GCC to the Unified g16 Driver",
+      "accent": "forge",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/04-grok16-forge.html",
+      "grok16_owned": true
+    },
+    {
+      "num": 5,
+      "slug": "05-single-fabric-belt",
+      "title": "Single Fabric & Belt 2.0 — One Amplitude, Chunked Redata",
+      "accent": "fabric",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/05-single-fabric-belt.html",
+      "grok16_owned": true
+    },
+    {
+      "num": 6,
+      "slug": "06-iron-plate-truth-blocks",
+      "title": "Iron Plate, Truth Blocks & Uncompiled Execution",
+      "accent": "iron",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/06-iron-plate-truth-blocks.html",
+      "grok16_owned": true
+    },
+    {
+      "num": 7,
+      "slug": "07-field-combinatorics",
+      "title": "Field Combinatorics — Trees, Speed Cap, Plate Condense",
+      "accent": "combo",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/07-field-combinatorics.html",
+      "grok16_owned": true
+    },
+    {
+      "num": 8,
+      "slug": "08-plate-meld",
+      "title": "Plate Meld — Uninterruptable Truth Between Plates",
+      "accent": "meld",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/08-plate-meld.html",
+      "grok16_owned": false
+    },
+    {
+      "num": 9,
+      "slug": "09-compatibility-layers",
+      "title": "Compatibility Layers & Launch Seals",
+      "accent": "layers",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/09-compatibility-layers.html",
+      "grok16_owned": false
+    },
+    {
+      "num": 10,
+      "slug": "10-chips-emulation",
+      "title": "CHIPS — Field-Native Silicon Emulation",
+      "accent": "chips",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/10-chips-emulation.html",
+      "grok16_owned": false
+    },
+    {
+      "num": 11,
+      "slug": "11-nexus-perimeter",
+      "title": "NEXUS Perimeter — Packet Field, Gatekeeper, Diagnostic Mode",
+      "accent": "nexus",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/11-nexus-perimeter.html",
+      "grok16_owned": false
+    },
+    {
+      "num": 12,
+      "slug": "12-queen-host-desktop",
+      "title": "Queen Field Browser & Host Desktop Shell",
+      "accent": "queen",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/12-queen-host-desktop.html",
+      "grok16_owned": false
+    },
+    {
+      "num": 13,
+      "slug": "13-operator-covenant",
+      "title": "Operator Covenant — Bench Receipts & What Ships",
+      "accent": "covenant",
+      "url": "https://zacharygeurts.github.io/Field_Research/chapters/13-operator-covenant.html",
+      "grok16_owned": true
+    }
+  ],
+  "technology_spine": [
+    {
+      "chapter": 4,
+      "slug": "04-grok16-forge",
+      "label": "Grok16 Forge",
+      "grok16_owned": true,
+      "modules_ok": 4,
+      "modules_total": 4,
+      "sg_modules_ok": 0,
+      "sg_modules_total": 0,
+      "doctrine_ok": 0,
+      "doctrine_total": 1
+    },
+    {
+      "chapter": 5,
+      "slug": "05-single-fabric-belt",
+      "label": "Single Fabric & Belt 2.0",
+      "grok16_owned": true,
+      "modules_ok": 2,
+      "modules_total": 2,
+      "sg_modules_ok": 0,
+      "sg_modules_total": 0,
+      "doctrine_ok": 1,
+      "doctrine_total": 2
+    },
+    {
+      "chapter": 6,
+      "slug": "06-iron-plate-truth-blocks",
+      "label": "Iron Plate & Truth Blocks",
+      "grok16_owned": true,
+      "modules_ok": 2,
+      "modules_total": 2,
+      "sg_modules_ok": 0,
+      "sg_modules_total": 0,
+      "doctrine_ok": 3,
+      "doctrine_total": 3
+    },
+    {
+      "chapter": 7,
+      "slug": "07-field-combinatorics",
+      "label": "Field Combinatorics",
+      "grok16_owned": true,
+      "modules_ok": 1,
+      "modules_total": 1,
+      "sg_modules_ok": 0,
+      "sg_modules_total": 1,
+      "doctrine_ok": 1,
+      "doctrine_total": 1
+    },
+    {
+      "chapter": 8,
+      "slug": "08-plate-meld",
+      "label": "Plate Meld",
+      "grok16_owned": false,
+      "modules_ok": 0,
+      "modules_total": 0,
+      "sg_modules_ok": 0,
+      "sg_modules_total": 1,
+      "doctrine_ok": 1,
+      "doctrine_total": 1
+    },
+    {
+      "chapter": 9,
+      "slug": "09-compatibility-layers",
+      "label": "Compatibility Layers",
+      "grok16_owned": false,
+      "modules_ok": 0,
+      "modules_total": 0,
+      "sg_modules_ok": 0,
+      "sg_modules_total": 1,
+      "doctrine_ok": 0,
+      "doctrine_total": 1
+    },
+    {
+      "chapter": 13,
+      "slug": "13-operator-covenant",
+      "label": "Operator Covenant",
+      "grok16_owned": true,
+      "modules_ok": 2,
+      "modules_total": 2,
+      "sg_modules_ok": 0,
+      "sg_modules_total": 0,
+      "doctrine_ok": 0,
+      "doctrine_total": 0
+    }
+  ],
+  "verify": {
+    "ok": false,
+    "schema": "g16-field-research-verify/v1",
+    "updated": "2026-06-30T02:53:59Z",
+    "manifest_ok": true,
+    "chapters": 13,
+    "missing_modules": [
+      "NewLatest/data/g16-compiler-sense-doctrine.json",
+      "NewLatest/data/single-field-depth-doctrine.json",
+      "NewLatest/lib/field-plate-combinatorics-bridge.py",
+      "NewLatest/lib/field-plate-meld.py",
+      "NewLatest/lib/field-compatibility-layers.py",
+      "NewLatest/data/field-compatibility-layers-doctrine.json"
+    ],
+    "spine": [
+      {
+        "chapter": 4,
+        "slug": "04-grok16-forge",
+        "label": "Grok16 Forge",
+        "grok16_owned": true,
+        "modules_ok": 4,
+        "modules_total": 4,
+        "sg_modules_ok": 0,
+        "sg_modules_total": 0,
+        "doctrine_ok": 0,
+        "doctrine_total": 1
+      },
+      {
+        "chapter": 5,
+        "slug": "05-single-fabric-belt",
+        "label": "Single Fabric & Belt 2.0",
+        "grok16_owned": true,
+        "modules_ok": 2,
+        "modules_total": 2,
+        "sg_modules_ok": 0,
+        "sg_modules_total": 0,
+        "doctrine_ok": 1,
+        "doctrine_total": 2
+      },
+      {
+        "chapter": 6,
+        "slug": "06-iron-plate-truth-blocks",
+        "label": "Iron Plate & Truth Blocks",
+        "grok16_owned": true,
+        "modules_ok": 2,
+        "modules_total": 2,
+        "sg_modules_ok": 0,
+        "sg_modules_total": 0,
+        "doctrine_ok": 3,
+        "doctrine_total": 3
+      },
+      {
+        "chapter": 7,
+        "slug": "07-field-combinatorics",
+        "label": "Field Combinatorics",
+        "grok16_owned": true,
+        "modules_ok": 1,
+        "modules_total": 1,
+        "sg_modules_ok": 0,
+        "sg_modules_total": 1,
+        "doctrine_ok": 1,
+        "doctrine_total": 1
+      },
+      {
+        "chapter": 8,
+        "slug": "08-plate-meld",
+        "label": "Plate Meld",
+        "grok16_owned": false,
+        "modules_ok": 0,
+        "modules_total": 0,
+        "sg_modules_ok": 0,
+        "sg_modules_total": 1,
+        "doctrine_ok": 1,
+        "doctrine_total": 1
+      },
+      {
+        "chapter": 9,
+        "slug": "09-compatibility-layers",
+        "label": "Compatibility Layers",
+        "grok16_owned": false,
+        "modules_ok": 0,
+        "modules_total": 0,
+        "sg_modules_ok": 0,
+        "sg_modules_total": 1,
+        "doctrine_ok": 0,
+        "doctrine_total": 1
+      },
+      {
+        "chapter": 13,
+        "slug": "13-operator-covenant",
+        "label": "Operator Covenant",
+        "grok16_owned": true,
+        "modules_ok": 2,
+        "modules_total": 2,
+        "sg_modules_ok": 0,
+        "sg_modules_total": 0,
+        "doctrine_ok": 0,
+        "doctrine_total": 0
+      }
+    ]
+  },
+  "bench_receipts": {
+    "schema": "g16-field-research-receipts/v1",
+    "bench_at": "2026-06-27T19:20:27Z",
+    "report_version": "5.0.0",
+    "best_execution": {
+      "label": "C++ — g16 belt_2_0",
+      "ops_per_sec": 102843184.74
+    },
+    "best_g16_cxx": {
+      "label": "C++ — g16 belt_2_0",
+      "ops_per_sec": 102843184.74
+    },
+    "fastest_compile": {
+      "label": null,
+      "compile_ms": null
+    },
+    "best_python": {
+      "label": "Python — host CPython 3",
+      "ops_per_sec": 843828.62
+    },
+    "source": "docs/field-exec-full-bench.json",
+    "label": "Implemented"
+  },
+  "grok16_root": "/home/default/Desktop/SG/NewLatest/Grok16",
+  "sg_root": "/home/default/Desktop/SG/NewLatest",
+  "_g16_seal": {
+    "schema": "g16-sealed-output/v1",
+    "algorithm": "sha256",
+    "digest": "45814137de63433f2665775732a4c412e30bb1478b64ed423a435c8077f31073",
+    "sealed_at": "2026-06-30T02:53:59Z",
+    "path": "/home/default/Desktop/SG/NewLatest/Grok16/data/g16-field-research-book-panel.json",
+    "g1id_meld": {
+      "id": "g1id",
+      "absorbed": true,
+      "meld_citation": "ironclad:meld:2",
+      "citation": "ironclad:time:1",
+      "policy": "sovereign_time_only",
+      "time_is_linear": true,
+      "sovereign_time_ok": true,
+      "sovereign_time": {
+        "source": "lib/sovereign-time.py",
+        "clock": "lib/sovereign-clock.py",
+        "schema": "sovereign-time-meld-input/v1",
+        "linear_ns": 1782788039258319803,
+        "derived_utc": "2026-06-30T02:53:59Z",
+        "sealed": true,
+        "synced": false,
+        "never_desync": true,
+        "immutable_linear": true,
+        "witness_only": true,
+        "not_geometry_t": true,
+        "citation": "ironclad:g1id:2"
+      },
+      "example_valid": true,
+      "updated": "2026-06-30T02:53:59Z"
+    }
+  }
+}

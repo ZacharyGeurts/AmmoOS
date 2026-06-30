@@ -1,0 +1,2823 @@
+{
+  "schema": "field-steel-neural-plates/v1",
+  "updated": "2026-06-26T22:09:14Z",
+  "motto": "Steel holds depth — every domain a plate, every plate wired neural-deep across the combinatoric base.",
+  "ok": true,
+  "plate_count": 10,
+  "plates": [
+    {
+      "id": "steel:chips",
+      "domain": "chips",
+      "facet": "ironclad_chips",
+      "member_count": 974,
+      "members": [
+        {
+          "id": "chip:chips_hot:chips_6502",
+          "label": "6502",
+          "tokens": [
+            "chips_6502",
+            "chips_hot"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0472
+        },
+        {
+          "id": "chip:chips_hot:chips_2c02",
+          "label": "2C02",
+          "tokens": [
+            "chips_2c02",
+            "chips_hot"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0387
+        },
+        {
+          "id": "chip:chips_hot:chips_68000",
+          "label": "68000",
+          "tokens": [
+            "chips_68000",
+            "chips_hot"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0301
+        },
+        {
+          "id": "chip:chips_hot:chips_z80",
+          "label": "Z80",
+          "tokens": [
+            "chips_hot",
+            "chips_z80"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0236
+        },
+        {
+          "id": "chip:chips_hot:chips_ym2612",
+          "label": "YM2612",
+          "tokens": [
+            "chips_hot",
+            "chips_ym2612"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0172
+        },
+        {
+          "id": "chip:systems:system_nes",
+          "label": "Nintendo Entertainment System",
+          "tokens": [
+            "system_nes",
+            "systems"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0129
+        },
+        {
+          "id": "chip:systems:system_genesis",
+          "label": "Sega Genesis",
+          "tokens": [
+            "system_genesis",
+            "systems"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0113
+        },
+        {
+          "id": "chip:chips_hot:chips_sn76489",
+          "label": "SN76489",
+          "tokens": [
+            "chips_hot",
+            "chips_sn76489"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.010700000000000001
+        },
+        {
+          "id": "chip:chips_hot:chips_tia",
+          "label": "TIA",
+          "tokens": [
+            "chips_hot",
+            "chips_tia"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0097
+        },
+        {
+          "id": "chip:retro_nes:nes_ricoh_2a03",
+          "label": "Ricoh 2A03 (6502+APU)",
+          "tokens": [
+            "nes_ricoh_2a03",
+            "retro_nes",
+            "rp2a03"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.009000000000000001
+        },
+        {
+          "id": "chip:coco:coco_mc6809e",
+          "label": "MC6809E",
+          "tokens": [
+            "coco",
+            "coco_mc6809e",
+            "m6809"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.008100000000000001
+        },
+        {
+          "id": "chip:retro_snes:snes_wdc_65816",
+          "label": "WDC 65C816 (S-CPU)",
+          "tokens": [
+            "retro_snes",
+            "snes_wdc_65816",
+            "w65c816"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0070999999999999995
+        },
+        {
+          "id": "chip:chips_hot:chips_2a03",
+          "label": "2A03",
+          "tokens": [
+            "chips_2a03",
+            "chips_hot"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0054
+        },
+        {
+          "id": "chip:chips_hot:chips_6507",
+          "label": "6507",
+          "tokens": [
+            "chips_6507",
+            "chips_hot"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0054
+        },
+        {
+          "id": "chip:chips_hot:chips_65816",
+          "label": "65816",
+          "tokens": [
+            "chips_65816",
+            "chips_hot"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0054
+        },
+        {
+          "id": "chip:chips_hot:chips_8080",
+          "label": "8080",
+          "tokens": [
+            "chips_8080",
+            "chips_hot"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0054
+        },
+        {
+          "id": "chip:chips_hot:chips_fieldchips",
+          "label": "FieldChips",
+          "tokens": [
+            "chips_fieldchips",
+            "chips_hot"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0054
+        },
+        {
+          "id": "chip:chips_hot:chips_sid",
+          "label": "SID",
+          "tokens": [
+            "chips_hot",
+            "chips_sid"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0054
+        },
+        {
+          "id": "chip:chips_hot:chips_sm83",
+          "label": "SM83",
+          "tokens": [
+            "chips_hot",
+            "chips_sm83"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0054
+        },
+        {
+          "id": "chip:chips_hot:chips_spc700",
+          "label": "SPC700",
+          "tokens": [
+            "chips_hot",
+            "chips_spc700"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0054
+        },
+        {
+          "id": "chip:retro_gb:gb_sm83",
+          "label": "Sharp SM83 (LR35902)",
+          "tokens": [
+            "gb_sm83",
+            "retro_gb",
+            "sm83"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0039000000000000003
+        },
+        {
+          "id": "chip:retro_genesis:genesis_ym2612",
+          "label": "YM2612 FM",
+          "tokens": [
+            "genesis_ym2612",
+            "retro_genesis",
+            "ym2612"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0034999999999999996
+        },
+        {
+          "id": "chip:systems:system_c64",
+          "label": "Commodore 64",
+          "tokens": [
+            "system_c64",
+            "systems"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0032
+        },
+        {
+          "id": "chip:systems:system_amiga",
+          "label": "Commodore Amiga",
+          "tokens": [
+            "system_amiga",
+            "systems"
+          ],
+          "facet": "ironclad_chips",
+          "activation": 0.0032
+        }
+      ],
+      "mean_activation": 0.001,
+      "steel_weight": 1.0005,
+      "depth_layer": 2,
+      "combinatronic": true,
+      "intra_wire_count": 48,
+      "cross_wire_count": 64
+    },
+    {
+      "id": "steel:programs",
+      "domain": "programs",
+      "facet": "program_combinatronic",
+      "member_count": 2418,
+      "members": [
+        {
+          "id": "prog:canonical:exec",
+          "label": "Execute / eval / run",
+          "tokens": [
+            "exec",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:assign",
+          "label": "Assign / bind / set",
+          "tokens": [
+            "assign",
+            "python"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:call",
+          "label": "Call / invoke / apply",
+          "tokens": [
+            "call",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:return",
+          "label": "Return / exit function",
+          "tokens": [
+            "native_bsp",
+            "return"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:branch",
+          "label": "Branch / if / switch",
+          "tokens": [
+            "branch",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:loop",
+          "label": "Loop / iterate / repeat",
+          "tokens": [
+            "loop",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:break",
+          "label": "Break / leave loop",
+          "tokens": [
+            "break",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:continue",
+          "label": "Continue / next iteration",
+          "tokens": [
+            "continue",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:declare",
+          "label": "Declare / define / let",
+          "tokens": [
+            "declare",
+            "python"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:type",
+          "label": "Type / typedef / interface",
+          "tokens": [
+            "native_bsp",
+            "type"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:cast",
+          "label": "Cast / convert / coerce",
+          "tokens": [
+            "cast",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:load",
+          "label": "Load / read memory",
+          "tokens": [
+            "load",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:store",
+          "label": "Store / write memory",
+          "tokens": [
+            "native_bsp",
+            "store"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:alloc",
+          "label": "Allocate / new / malloc",
+          "tokens": [
+            "alloc",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:free",
+          "label": "Free / delete / drop",
+          "tokens": [
+            "free",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:io",
+          "label": "I/O / print / read / write file",
+          "tokens": [
+            "io",
+            "python"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:import",
+          "label": "Import / use / require",
+          "tokens": [
+            "import",
+            "python"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:export",
+          "label": "Export / pub / module out",
+          "tokens": [
+            "export",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:module",
+          "label": "Module / package / namespace",
+          "tokens": [
+            "module",
+            "python"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:compare",
+          "label": "Compare / eq / ord",
+          "tokens": [
+            "compare",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:logic",
+          "label": "Logic / and / or / not",
+          "tokens": [
+            "logic",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:math",
+          "label": "Math / arithmetic",
+          "tokens": [
+            "math",
+            "native_bsp"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:string",
+          "label": "String / format / concat",
+          "tokens": [
+            "python",
+            "string"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        },
+        {
+          "id": "prog:canonical:struct",
+          "label": "Struct / record / object",
+          "tokens": [
+            "native_bsp",
+            "struct"
+          ],
+          "facet": "program_combinatronic",
+          "activation": 0.0
+        }
+      ],
+      "mean_activation": 0.0,
+      "steel_weight": 1.0,
+      "depth_layer": 2,
+      "combinatronic": true,
+      "intra_wire_count": 48,
+      "cross_wire_count": 64
+    },
+    {
+      "id": "steel:files",
+      "domain": "files",
+      "facet": "file_formats",
+      "member_count": 0,
+      "members": [],
+      "mean_activation": 0.0,
+      "steel_weight": 1.0,
+      "depth_layer": 1,
+      "combinatronic": true,
+      "intra_wire_count": 0,
+      "cross_wire_count": 0
+    },
+    {
+      "id": "steel:library",
+      "domain": "library",
+      "facet": "extensive_library",
+      "member_count": 0,
+      "members": [],
+      "mean_activation": 0.0,
+      "steel_weight": 1.0,
+      "depth_layer": 1,
+      "combinatronic": true,
+      "intra_wire_count": 0,
+      "cross_wire_count": 0
+    },
+    {
+      "id": "steel:cpu",
+      "domain": "cpu",
+      "facet": "cpu_library",
+      "member_count": 0,
+      "members": [],
+      "mean_activation": 0.0,
+      "steel_weight": 1.0,
+      "depth_layer": 1,
+      "combinatronic": true,
+      "intra_wire_count": 0,
+      "cross_wire_count": 0
+    },
+    {
+      "id": "steel:universal",
+      "domain": "universal",
+      "facet": "g16_universal",
+      "member_count": 2851,
+      "members": [
+        {
+          "id": "g16:chip:chip:chips_hot:chips_6502",
+          "label": "6502",
+          "tokens": [
+            "chip:chips_hot:chips_6502",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0706
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_2c02",
+          "label": "2C02",
+          "tokens": [
+            "chip:chips_hot:chips_2c02",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.057699999999999994
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_68000",
+          "label": "68000",
+          "tokens": [
+            "chip:chips_hot:chips_68000",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0449
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_z80",
+          "label": "Z80",
+          "tokens": [
+            "chip:chips_hot:chips_z80",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0353
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_ym2612",
+          "label": "YM2612",
+          "tokens": [
+            "chip:chips_hot:chips_ym2612",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0256
+        },
+        {
+          "id": "g16:chip:chip:systems:system_nes",
+          "label": "Nintendo Entertainment System",
+          "tokens": [
+            "chip:systems:system_nes",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0192
+        },
+        {
+          "id": "g16:chip:chip:systems:system_genesis",
+          "label": "Sega Genesis",
+          "tokens": [
+            "chip:systems:system_genesis",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0168
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_sn76489",
+          "label": "SN76489",
+          "tokens": [
+            "chip:chips_hot:chips_sn76489",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.016
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_tia",
+          "label": "TIA",
+          "tokens": [
+            "chip:chips_hot:chips_tia",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0144
+        },
+        {
+          "id": "g16:chip:chip:retro_nes:nes_ricoh_2a03",
+          "label": "Ricoh 2A03 (6502+APU)",
+          "tokens": [
+            "chip:retro_nes:nes_ricoh_2a03",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.013500000000000002
+        },
+        {
+          "id": "g16:chip:chip:coco:coco_mc6809e",
+          "label": "MC6809E",
+          "tokens": [
+            "chip:coco:coco_mc6809e",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.012
+        },
+        {
+          "id": "g16:chip:chip:retro_snes:snes_wdc_65816",
+          "label": "WDC 65C816 (S-CPU)",
+          "tokens": [
+            "chip:retro_snes:snes_wdc_65816",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0106
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_2a03",
+          "label": "2A03",
+          "tokens": [
+            "chip:chips_hot:chips_2a03",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.008
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_6507",
+          "label": "6507",
+          "tokens": [
+            "chip:chips_hot:chips_6507",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.008
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_65816",
+          "label": "65816",
+          "tokens": [
+            "chip:chips_hot:chips_65816",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.008
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_8080",
+          "label": "8080",
+          "tokens": [
+            "chip:chips_hot:chips_8080",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.008
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_fieldchips",
+          "label": "FieldChips",
+          "tokens": [
+            "chip:chips_hot:chips_fieldchips",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.008
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_sid",
+          "label": "SID",
+          "tokens": [
+            "chip:chips_hot:chips_sid",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.008
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_sm83",
+          "label": "SM83",
+          "tokens": [
+            "chip:chips_hot:chips_sm83",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.008
+        },
+        {
+          "id": "g16:chip:chip:chips_hot:chips_spc700",
+          "label": "SPC700",
+          "tokens": [
+            "chip:chips_hot:chips_spc700",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.008
+        },
+        {
+          "id": "g16:chip:chip:retro_gb:gb_sm83",
+          "label": "Sharp SM83 (LR35902)",
+          "tokens": [
+            "chip:retro_gb:gb_sm83",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0058
+        },
+        {
+          "id": "g16:chip:chip:retro_genesis:genesis_ym2612",
+          "label": "YM2612 FM",
+          "tokens": [
+            "chip:retro_genesis:genesis_ym2612",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0053
+        },
+        {
+          "id": "g16:chip:chip:systems:system_c64",
+          "label": "Commodore 64",
+          "tokens": [
+            "chip:systems:system_c64",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0048
+        },
+        {
+          "id": "g16:chip:chip:systems:system_amiga",
+          "label": "Commodore Amiga",
+          "tokens": [
+            "chip:systems:system_amiga",
+            "ironclad_chips"
+          ],
+          "facet": "g16_universal",
+          "activation": 0.0048
+        }
+      ],
+      "mean_activation": -5.3556,
+      "steel_weight": -1.6778,
+      "depth_layer": 1,
+      "combinatronic": true,
+      "intra_wire_count": 48,
+      "cross_wire_count": 0
+    },
+    {
+      "id": "steel:matrix",
+      "domain": "matrix",
+      "facet": "combinamatrix",
+      "member_count": 0,
+      "members": [],
+      "mean_activation": 0.0,
+      "steel_weight": 1.0,
+      "depth_layer": 1,
+      "combinatronic": true,
+      "intra_wire_count": 0,
+      "cross_wire_count": 0
+    },
+    {
+      "id": "steel:growth",
+      "domain": "growth",
+      "facet": "growth",
+      "member_count": 0,
+      "members": [],
+      "mean_activation": 0.0,
+      "steel_weight": 1.0,
+      "depth_layer": 1,
+      "combinatronic": true,
+      "intra_wire_count": 0,
+      "cross_wire_count": 0
+    },
+    {
+      "id": "steel:sequence",
+      "domain": "sequence",
+      "facet": "sequence",
+      "member_count": 0,
+      "members": [],
+      "mean_activation": 0.0,
+      "steel_weight": 1.0,
+      "depth_layer": 1,
+      "combinatronic": true,
+      "intra_wire_count": 0,
+      "cross_wire_count": 0
+    },
+    {
+      "id": "steel:spider",
+      "domain": "spider",
+      "facet": "spider_wire",
+      "member_count": 0,
+      "members": [],
+      "mean_activation": 0.0,
+      "steel_weight": 1.0,
+      "depth_layer": 1,
+      "combinatronic": true,
+      "intra_wire_count": 0,
+      "cross_wire_count": 0
+    }
+  ],
+  "connection_depth": {
+    "max": 4,
+    "achieved": 4,
+    "mean_hops": 4.0,
+    "deep_path_count": 128
+  },
+  "wires": {
+    "intra": 144,
+    "cross": 64,
+    "matrix": 0,
+    "total": 208
+  },
+  "intra_wires_sample": [
+    {
+      "from": "chip:chips_hot:chips_6502",
+      "to": "chip:chips_hot:chips_2c02",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_6502",
+      "to": "chip:chips_hot:chips_68000",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_6502",
+      "to": "chip:chips_hot:chips_z80",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_6502",
+      "to": "chip:chips_hot:chips_ym2612",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_6502",
+      "to": "chip:chips_hot:chips_sn76489",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_6502",
+      "to": "chip:chips_hot:chips_tia",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "chip:chips_hot:chips_68000",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "chip:chips_hot:chips_z80",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "chip:chips_hot:chips_ym2612",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "chip:chips_hot:chips_sn76489",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "chip:chips_hot:chips_tia",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_68000",
+      "to": "chip:chips_hot:chips_z80",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_68000",
+      "to": "chip:chips_hot:chips_ym2612",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_68000",
+      "to": "chip:chips_hot:chips_sn76489",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_68000",
+      "to": "chip:chips_hot:chips_tia",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_z80",
+      "to": "chip:chips_hot:chips_ym2612",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_z80",
+      "to": "chip:chips_hot:chips_sn76489",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_z80",
+      "to": "chip:chips_hot:chips_tia",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_ym2612",
+      "to": "chip:chips_hot:chips_sn76489",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_ym2612",
+      "to": "chip:chips_hot:chips_tia",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_ym2612",
+      "to": "chip:chips_hot:chips_2a03",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:systems:system_nes",
+      "to": "chip:systems:system_genesis",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "systems"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_sn76489",
+      "to": "chip:chips_hot:chips_tia",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_sn76489",
+      "to": "chip:chips_hot:chips_2a03",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_sn76489",
+      "to": "chip:chips_hot:chips_6507",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_sn76489",
+      "to": "chip:chips_hot:chips_65816",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_sn76489",
+      "to": "chip:chips_hot:chips_8080",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_tia",
+      "to": "chip:chips_hot:chips_2a03",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_tia",
+      "to": "chip:chips_hot:chips_6507",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_tia",
+      "to": "chip:chips_hot:chips_65816",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_tia",
+      "to": "chip:chips_hot:chips_8080",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    },
+    {
+      "from": "chip:chips_hot:chips_tia",
+      "to": "chip:chips_hot:chips_fieldchips",
+      "depth": 1,
+      "kind": "intra_plate",
+      "weight": 0.5,
+      "shared": [
+        "chips_hot"
+      ],
+      "plate": "chips"
+    }
+  ],
+  "cross_wires_sample": [
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:exec",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:call",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:branch",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:continue",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:declare",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:cast",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:alloc",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:compare",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:logic",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:struct",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:catch",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:match",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:async",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_2c02",
+      "to": "prog:canonical:sync",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:exec",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:call",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:branch",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:continue",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:declare",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:cast",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:alloc",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:compare",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:logic",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:struct",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:catch",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:match",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:async",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_68000",
+      "to": "prog:canonical:sync",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:exec",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:call",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:branch",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:continue",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:declare",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:cast",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:alloc",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:compare",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:logic",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:struct",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:catch",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:match",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:async",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_z80",
+      "to": "prog:canonical:sync",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_ym2612",
+      "to": "prog:canonical:exec",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_ym2612",
+      "to": "prog:canonical:call",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_ym2612",
+      "to": "prog:canonical:branch",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_ym2612",
+      "to": "prog:canonical:continue",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_ym2612",
+      "to": "prog:canonical:declare",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    },
+    {
+      "from_plate": "chips",
+      "to_plate": "programs",
+      "from": "chip:chips_hot:chips_ym2612",
+      "to": "prog:canonical:cast",
+      "depth": 2,
+      "kind": "isa_lang",
+      "weight": 0.25,
+      "via": "universal_graph"
+    }
+  ],
+  "deep_paths": [
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:continue"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:loop",
+        "prog:canonical:break",
+        "prog:canonical:continue"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:continue",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:continue",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:continue",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:continue",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:continue",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:continue",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:break"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:return",
+        "prog:canonical:continue",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:return",
+        "prog:canonical:continue",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:return",
+        "prog:canonical:continue",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:return",
+        "prog:canonical:continue",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:return",
+        "prog:canonical:continue",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:call",
+        "prog:canonical:return",
+        "prog:canonical:continue",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    }
+  ],
+  "top_deep_paths": [
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:break",
+        "prog:canonical:continue",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:free"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:alloc"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:store"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:load"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:cast"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    },
+    {
+      "path": [
+        "chip:chips_hot:chips_2c02",
+        "prog:canonical:branch",
+        "prog:canonical:loop",
+        "prog:canonical:continue",
+        "prog:canonical:type"
+      ],
+      "hops": 4,
+      "depth": 4,
+      "score": 0.0312,
+      "kind": "deep_steel"
+    }
+  ],
+  "neural_weights": {
+    "same_facet": 0.22,
+    "shared_key": 0.28,
+    "cross_domain": 0.18,
+    "matrix_adjacency": 0.15,
+    "universal_edge": 0.25,
+    "depth_decay": 0.12,
+    "coolness": 0.1
+  },
+  "combinatronic": true,
+  "all_data_combinatronic": true,
+  "optimized_combinatronic": false,
+  "entry_synchronous": true,
+  "balance_gate": {
+    "schema": "field-combinatronic-balance-gate/v1",
+    "requested_refresh": false,
+    "effective_refresh": true,
+    "skip_reorganize": false,
+    "fast_path": false,
+    "reorganize": true,
+    "reason": "new_corpus",
+    "balanced": false,
+    "new_items": true,
+    "fingerprint": {
+      "schema": "field-combinatronic-fingerprint/v1",
+      "updated": "2026-06-29T06:30:08Z",
+      "corpus_hash": "fef5c7ef17adc775770691a1b66c8b7e7acf30d923bef5843f3545512dd864bc",
+      "domains": {
+        "chips": {
+          "count": 974,
+          "ids_hash": "e81029297e8c9a48"
+        },
+        "programs": {
+          "count": 2382,
+          "ids_hash": "23dadc9a9c8749d2"
+        },
+        "program_langs": {
+          "count": 72,
+          "ids_hash": "b5f57ed0d5ee22d8"
+        },
+        "files": {
+          "count": 0,
+          "ids_hash": "empty"
+        },
+        "library_devices": {
+          "count": 21,
+          "ids_hash": "1c6b94a1d27229a3"
+        },
+        "library_games": {
+          "count": 30,
+          "ids_hash": "99c3915e70866684"
+        },
+        "library_greats": {
+          "count": 20,
+          "ids_hash": "eb702c105dc594c8"
+        },
+        "cpu": {
+          "count": 0,
+          "ids_hash": "empty"
+        },
+        "universal": {
+          "count": 2851,
+          "ids_hash": "a15171782eada16d"
+        },
+        "matrix": {
+          "count": 0,
+          "ids_hash": "empty"
+        },
+        "growth": {
+          "count": 0,
+          "ids_hash": "empty"
+        },
+        "sequence": {
+          "count": 0,
+          "ids_hash": "empty"
+        },
+        "spider": {
+          "count": 0,
+          "ids_hash": "empty"
+        },
+        "visuals": {
+          "count": 288
+        },
+        "h7c": {
+          "count": 0
+        },
+        "library_registry": {
+          "count": 0,
+          "ids_hash": "empty"
+        },
+        "steel_plates": {
+          "count": 0,
+          "ids_hash": "empty"
+        }
+      },
+      "material_lines": 17,
+      "entry_base": 13
+    },
+    "prev_hash": "25df439cb6e59644aecf106b602c43179c36999169a3b714f8dd17821c7e1982",
+    "corpus_hash": "fef5c7ef17adc775770691a1b66c8b7e7acf30d923bef5843f3545512dd864bc",
+    "predictive_meld": {
+      "schema": "field-predictive-meld/v1",
+      "updated": "2026-06-29T06:30:08Z",
+      "plate_hash": "c8427632d71be05ed1fbf9f4bbbb147040677ef282253b2e9941b7bcf720b85e",
+      "corpus_hash": "fef5c7ef17adc775770691a1b66c8b7e7acf30d923bef5843f3545512dd864bc",
+      "prev_plate_hash": null,
+      "prev_corpus_hash": null,
+      "plate_count": 6,
+      "predicted_ms_saved": 0,
+      "skip_refresh": false,
+      "skip_meld_refresh": false,
+      "fast_path": false,
+      "reason": "initial"
+    }
+  },
+  "elapsed_ms": 124.28
+}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final_Eye · Field Ops — AI & Robotics</title>
+  <link rel="stylesheet" href="/tester.css">
+</head>
+<body>
+  <header class="ops-header">
+    <div>
+      <h1 id="productTitle">Final_Eye Field Ops</h1>
+      <div class="meta" id="productVer">loading…</div>
+    </div>
+    <div class="ops-health">
+      <div class="health" id="healthPct">—</div>
+      <div class="meta">sections ok</div>
+      <div id="copilotIntegrity" class="copilot-integrity">—</div>
+    </div>
+    <div class="toolbar">
+      <button type="button" class="primary" id="btnRefresh">Refresh all</button>
+      <button type="button" id="btnPoll">Stop poll</button>
+      <a href="/" class="nav-link">Live UI</a>
+      <a href="#raw" class="nav-link">Raw JSON</a>
+    </div>
+  </header>
+
+  <nav class="ops-nav" id="opsNav" aria-label="Section jump"></nav>
+
+  <section class="copilot-strip" id="copilotStrip">
+    <div class="copilot-ask">
+      <input type="text" id="copilotQuery" placeholder="Co-Pilot: what holds weapons and trust together?" />
+      <button type="button" id="btnCopilotAsk">Ask</button>
+    </div>
+    <p class="copilot-speak" id="copilotSpeak">—</p>
+    <pre class="copilot-answer" id="copilotAnswer"></pre>
+  </section>
+
+  <main id="opsMain" class="ops-main"></main>
+
+  <section class="ops-section" id="sec-matrix">
+    <h2 class="sec-title">Release matrix <span class="sec-badge" id="matrixSummary">—</span></h2>
+    <div class="matrix-grid" id="matrixGrid"></div>
+  </section>
+
+  <section class="ops-section" id="raw">
+    <h2 class="sec-title">Raw ops JSON</h2>
+    <pre class="raw" id="rawJson"></pre>
+  </section>
+
+  <footer id="footerTs">Field Ops · AI & robotics priority · details first</footer>
+  <script src="/tester.js"></script>
+</body>
+</html>

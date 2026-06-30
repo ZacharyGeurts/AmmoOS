@@ -1,0 +1,10 @@
+{
+  "id": "ibm_pc_at",
+  "title": "IBM PC/AT",
+  "author": "Field Extensive Library",
+  "dewey": "004.16",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/ibm_pc_at/ibm_pc_at.h7c",
+  "cover": "/library/assets/devices/ibm_pc_at.png",
+  "ready": true
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "gpy-16-speed-doctrine/v1",
+  "title": "GPY-16 speed — CHIPs + 79-language toolchain acceleration",
+  "motto": "Bytecode cache · GrokVM hot path · CHIPs field_opt · ai_agent compile tier",
+  "rank": 1,
+  "target_speedup": "10-100x VM throughput · 2-4x compile via ai_agent",
+  "layers": [
+    {
+      "id": "bytecode_cache",
+      "speedup": "10-50x repeat runs",
+      "env": ["GPY16_FAST=1", "GPY16_CACHE=1"],
+      "note": "Parse/compile once — .nexus-state/gpy16-bytecode-cache/"
+    },
+    {
+      "id": "grokvm_hot_path",
+      "speedup": "2-5x per run",
+      "env": ["GPY16_FAST=1", "GPY16_SKIP_AI_BOOT=1"],
+      "note": "Singleton VM, lazy AI globals, local opcode bindings"
+    },
+    {
+      "id": "chips_field_opt",
+      "speedup": "native BSP lanes",
+      "env": ["GROKPY_PROFILE=field_opt", "G16_OPTIMAL_COMBINATRONICS_AT_COMPILE=0"],
+      "note": "CHIPs manifest hot_paths inform g16 pair lowering"
+    },
+    {
+      "id": "ai_agent_compile",
+      "speedup": "2-4x agent scripts",
+      "env": ["G16_AI_PROFILE=ai_agent"],
+      "note": "Fast compile tier for tooling .py via GPY16_TOOLING"
+    },
+    {
+      "id": "ammolang_orchestration",
+      "speedup": "build pipeline",
+      "env": ["AML_BUILD=1", "AML_FAST=1"],
+      "note": "AmmoLang sovereign build pre-warms gpy-16 hot modules"
+    }
+  ],
+  "profiles": {
+    "field_opt": "default Grok16 pair — CHIPs accurate",
+    "fastest": "GPY16_FAST + cache + skip combinatorics-at-compile",
+    "ai_agent": "tooling compile tier — forge/harness scripts"
+  },
+  "fast_env": {
+    "GPY16_FAST": "1",
+    "GPY16_CACHE": "1",
+    "GPY16_SKIP_AI_BOOT": "1",
+    "GROKPY_PROFILE": "fastest",
+    "GPY16_PROFILE": "fastest",
+    "G16_OPTIMAL_COMBINATRONICS_AT_COMPILE": "0",
+    "G16_AI_PROFILE": "ai_agent",
+    "AML_FAST": "1"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "format-wrdt1",
+  "title": "World Redata tar shard",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "sovereign",
+  "extensions": [
+    ".wrdt"
+  ],
+  "magic": "WRDT1",
+  "cover": "/library/assets/formats/wrdt1.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

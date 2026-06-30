@@ -1,0 +1,82 @@
+{
+  "schema": "hostess7-chips-coding-explain/v1",
+  "title": "CHIPS G16 Python die — coding and debugging for Hostess 7",
+  "format": ["what", "why", "how", "pitfalls", "where", "example"],
+  "chosen_die": {
+    "id": "gpy16_python",
+    "label": "G16 Python / gpy-16 die",
+    "reason": "Hostess 7 stack is Python-first on pathlib panels; G16 discern routes Python through the CHIPS compiler lane with field_opt safety mandate."
+  },
+  "introduction": "I code on the CHIPS G16 Python die. Every change starts in the virtual workspace — never live INSTALL first. I py_compile, smoke-run, debug, then promote.",
+  "workflow": [
+    "mirror — copy target module into hostess7-virtual/install/",
+    "edit — write only in virtual mirror",
+    "compile — py_compile on virtual file",
+    "smoke — run module json/status via CHIPS gpy die or pythong with HOSTESS7_VIRTUAL_ROOT",
+    "debug — read stderr, fix in virtual, re-test",
+    "gate — codecraft testing-center --fast + brain-guard witness",
+    "promote — copy virtual → live only with confirm PROMOTE"
+  ],
+  "topics": [
+    {
+      "id": "virtual_first",
+      "keywords": ["virtual", "virtual space", "test before", "sandbox", "mirror", "promote"],
+      "what": "The virtual workspace is a copy of editable modules under NEXUS_STATE_DIR/hostess7-virtual/install/. Live INSTALL is read-only for Hostess 7 self-edits until promote passes all gates.",
+      "why": "A bad edit to hostess7-brain-guard.py or plate meld consumers can corrupt the whole stack mid-tick. Virtual die isolates failure.",
+      "how": "hostess7-virtual-workspace.py mirror lib/hostess7-tasklist.py → edit virtual copy → test → promote with confirm PROMOTE.",
+      "pitfalls": "Editing live lib/*.py directly; promoting without testing-center; skipping brain-guard after promote.",
+      "where": "lib/hostess7-virtual-workspace.py, data/hostess7-virtual-workspace-doctrine.json",
+      "example": "./PythonG/bin/pythong lib/hostess7-virtual-workspace.py mirror hostess7-noti.py"
+    },
+    {
+      "id": "chips_py_compile",
+      "keywords": ["py_compile", "syntax", "compile check", "python compile"],
+      "what": "py_compile.compile() validates syntax without executing module top-level side effects beyond compile.",
+      "why": "First gate before any smoke run — catches typos before CHIPS die executes.",
+      "how": "python3 -m py_compile virtual/install/lib/hostess7-*.py or virtual_workspace test action.",
+      "pitfalls": "Assuming import-time side effects are safe; only syntax is checked.",
+      "where": "hostess7-codecraft.py testing_center_run, hostess7-virtual-workspace.py _py_compile_ok",
+      "example": "py_compile.compile('virtual/install/lib/hostess7-operator.py', doraise=True)"
+    },
+    {
+      "id": "chips_gpy_smoke",
+      "keywords": ["gpy", "gpy16", "smoke", "json status", "chips die", "discern"],
+      "what": "CHIPS G16 Python die runs the virtual module with json/status argv — same contract as every lib/*.py panel module.",
+      "why": "Proves the module boots under field_opt env without touching live STATE panels.",
+      "how": "NEXUS_INSTALL_ROOT=virtual/install NEXUS_STATE_DIR=virtual/state pythong lib/mod.py json",
+      "pitfalls": "Using live STATE while testing virtual INSTALL; hardcoded paths ignoring env.",
+      "where": "Grok16/bin/g16 --g16-discern, hostess7-g16-doctrine.json g16_discern pattern",
+      "example": "virtual_workspace smoke lib/hostess7-operator.py"
+    },
+    {
+      "id": "chips_debug",
+      "keywords": ["debug", "traceback", "stderr", "fix bug", "debugging"],
+      "what": "Debug means: run virtual module, capture stderr/stdout, fix in virtual mirror only, re-run compile + smoke until ok.",
+      "why": "CHIPS die exposes real stack traces — I read them against programming-explain topics (atomic write, safe_json_load, INSTALL/STATE).",
+      "how": "1) test fails → read error 2) edit virtual file 3) py_compile 4) smoke json 5) ledger row in virtual-workspace-ledger.jsonl",
+      "pitfalls": "Patching live tree to 'fix fast'; skipping ledger witness; debugging without virtual mirror.",
+      "where": "hostess7-programming-explain.json, hostess7-virtual-workspace.py debug action",
+      "example": "Traceback in _load → check path is STATE not INSTALL doctrine"
+    },
+    {
+      "id": "chips_recompile",
+      "keywords": ["recompile", "g16_recompile", "stack rebuild", "nexus-g16"],
+      "what": "After Python self-edit promotes, optional G16 native recompile refreshes CHIPS C/C++ dies — via AmmoLang g16_recompile task only.",
+      "why": "Python panel modules do not need full G16 rebuild; native Queen/CHIPS changes do.",
+      "how": "lib/ammolang-run.sh g16_recompile — only after virtual Python gates pass.",
+      "pitfalls": "Running g16_recompile before virtual Python tests; bypassing AmmoLang router.",
+      "where": "lib/nexus-g16-recompile.py, data/field-ammolang-build-doctrine.json task_registry",
+      "example": "./lib/ammolang-run.sh g16_recompile"
+    },
+    {
+      "id": "promote_gate",
+      "keywords": ["promote", "apply", "ship change", "testing center"],
+      "what": "Promote copies one vetted virtual file to live INSTALL after py_compile, smoke, codecraft testing-center, and confirm phrase PROMOTE.",
+      "why": "Operator authority + automated gates — she does not silently rewrite production.",
+      "how": "dispatch {action: promote, path: lib/hostess7-operator.py, confirm: PROMOTE}",
+      "pitfalls": "Promote without confirm; promoting forbidden paths (MANIFEST, plate-meld).",
+      "where": "hostess7-virtual-workspace-doctrine.json policy.gates",
+      "example": "confirm must equal PROMOTE"
+    }
+  ]
+}

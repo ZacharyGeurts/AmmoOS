@@ -1,0 +1,13 @@
+{
+  "id": "format-media_wma",
+  "title": "WMA",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".wma"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_wma.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

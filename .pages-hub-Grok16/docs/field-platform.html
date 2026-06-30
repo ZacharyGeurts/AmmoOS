@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — Field Platform</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/field-platform.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>2D field platform</h1>
+  <p>Grok16 <strong>5.2.0</strong> — flat operator plane. Everything on the plane is <strong>auto-field</strong> at depth 0.</p>
+
+  <aside class="callout callout-warn">
+    <strong>DO NOT CREATE FIELD FILES.</strong> Standalone <code>.field</code>, depth-field, or subfield JSON heats neighboring fields on the fabric. Gates flatten stray depth, but thermo debt hits adjacent dies first. Place entities on the 2D platform instead.
+  </aside>
+
+  <h2 id="rule">Platform rule</h2>
+  <table>
+    <tr><th>Axis</th><th>Policy</th></tr>
+    <tr><td>Plane</td><td>Flat <code>(x, y)</code> — placement implies field</td></tr>
+    <tr><td>Depth</td><td><code>max_field_depth: 0</code> always</td></tr>
+    <tr><td>Belt</td><td><code>belt_2_0</code> — 8192 redata chunk, 512 die slots</td></tr>
+    <tr><td>Production</td><td><code>field_physics</code> — thermal guard, no fast-math</td></tr>
+  </table>
+  <p>Doctrine: <code>data/grok16-field-platform-doctrine.json</code></p>
+
+  <h2 id="modules">Code modules</h2>
+  <table>
+    <tr><th>Role</th><th>Path</th></tr>
+    <tr><td>Plate amplitude</td><td><code>NewLatest/lib/field-plate-field.py</code></td></tr>
+    <tr><td>Panel truth</td><td><code>NewLatest/lib/field-panel-field.py</code></td></tr>
+    <tr><td>Depth singularizer</td><td><code>NewLatest/lib/field-depth-singularizer.py</code></td></tr>
+    <tr><td>Field sanity</td><td><code>Grok16/forge/g16-field-sanity.py</code></td></tr>
+    <tr><td>AmmoCode instill</td><td><code>lib/g16-ammocode-field-instill.py</code></td></tr>
+  </table>
+
+  <h2 id="ammocode">AmmoCode</h2>
+  <p>AmmoCode is a flat field — no subfields. Resting on a fielded host → <strong>defield</strong>. <code>data/g16-ammocode-field-doctrine.json</code></p>
+  <p><a href="safety.html">Safety</a> · <a href="single-fabric.html">Single Fabric</a></p>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

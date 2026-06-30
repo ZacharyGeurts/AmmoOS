@@ -1,0 +1,7 @@
+/build/
+/.lab-state/
+/dist/
+__pycache__/
+*.o
+*.a
+*.so

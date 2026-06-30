@@ -1,0 +1,14 @@
+{
+  "id": "format-h7snap",
+  "title": "Field Snap",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "library",
+  "extensions": [
+    ".h7snap",
+    ".field-snap"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/h7snap.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

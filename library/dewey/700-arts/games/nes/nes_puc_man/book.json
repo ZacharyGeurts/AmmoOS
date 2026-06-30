@@ -1,0 +1,10 @@
+{
+  "id": "nes_puc_man",
+  "title": "Puc-Man",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_puc_man/nes_puc_man.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_puc_man-box.png",
+  "ready": true
+}

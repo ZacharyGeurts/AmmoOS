@@ -1,0 +1,33 @@
+{
+  "schema": "znetwork-outside-lab/v1",
+  "title": "ZNetwork — NewLatest/ZNetwork canonical, stack attach-only",
+  "version": "0.2.0-lab",
+  "motto": "Work outside the integrated stack. No wide open. Lab gate before SHADOW; double gate before ACTIVE.",
+  "canonical_root": "NewLatest/ZNetwork",
+  "integrated_attach": "SG/NewLatest/lib/znetwork-field.sh",
+  "policy": {
+    "wide_open_forbidden": true,
+    "field_stream_forbidden_until_lab": true,
+    "default_mode": "REVIEW_ONLY",
+    "shadow_requires": ["ZNETWORK_OUTSIDE_LAB=1", "ZNETWORK_LAB_GATE_OK=1", "lab_test_battery_pass"],
+    "active_requires": ["ZNETWORK_REVIEW_APPROVED=1", "review_checklist_approved", "shadow_soak_72h"],
+    "field_stream_requires": ["field_stream_lab_approved", "fec_repair_battery_pass", "thermal_vent_battery_pass"]
+  },
+  "outside_copy": {
+    "purpose": "Isolated C++ core + scripts + checklist — develop and test without mutating NewLatest tree",
+    "newlatest_znetwork_dir": "NewLatest/ZNetwork — canonical only; no SG sibling",
+    "never_copy_binary_into_newlatest": "build here; NewLatest resolves ZNETWORK_ROOT to this tree"
+  },
+  "test_battery": {
+    "script": "scripts/znetwork-test-battery.sh",
+    "gate": "scripts/znetwork-lab-gate.sh",
+    "receipt": ".lab-state/test-battery-last.json",
+    "tiers": ["probe", "review_gate", "mode_effective", "handshake_sim", "fec_repair_sim", "thermal_vent_sim", "no_wide_open"]
+  },
+  "field_bridges_readonly": {
+    "note": "Lab may call NewLatest Python bridges read-only — never ACTIVE handoff from lab without checklist",
+    "gatekeeper": "../NewLatest/lib/connection-gatekeeper.py",
+    "field_io_packet": "../NewLatest/lib/field-io-packet.py",
+    "packet_field": "../NewLatest/lib/packet-field.py"
+  }
+}

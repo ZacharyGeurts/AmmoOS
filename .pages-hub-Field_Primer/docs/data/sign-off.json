@@ -1,0 +1,33 @@
+{
+  "stamped": "2026-06-25T06:30:41Z",
+  "rows": {
+    "zac_sync": {
+      "ok": true,
+      "detail": "732 files \u00b7 verify=True"
+    },
+    "hostess_ingest": {
+      "ok": true,
+      "detail": "123 segments \u00b7 sdf-verify-redata"
+    },
+    "editorial_web": {
+      "ok": true,
+      "detail": "read-first \u00b7 KaTeX \u00b7 horizon \u00b7 schematics"
+    },
+    "pdf_regen": {
+      "ok": true,
+      "detail": "8.80 MiB total"
+    },
+    "rtx_binary": {
+      "ok": false,
+      "detail": "building"
+    },
+    "voice_pass": {
+      "ok": true,
+      "detail": "22 chapters clean"
+    },
+    "redata_section": {
+      "ok": true,
+      "detail": "Ch02 + wiki"
+    }
+  }
+}

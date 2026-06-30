@@ -1,0 +1,45 @@
+{
+  "schema": "g16-ammocode-field-doctrine/v1",
+  "title": "AmmoCode field \u2014 flat field only, defield when resting on a field",
+  "motto": "AmmoCode is a field. No subfields. Resting on a field \u2192 defield.",
+  "module": "lib/g16-ammocode-field-instill.py",
+  "ammocode_root": "NewLatest/AmmoCode",
+  "policy": {
+    "ammocode_is_field": true,
+    "no_subfields": true,
+    "subfields_forbidden": true,
+    "max_field_depth": 0,
+    "defield_if_resting_on_field": true,
+    "field_on_field_forbidden": true,
+    "instill_at_link": true,
+    "instill_at_compile_stamp": true
+  },
+  "postures": {
+    "field": {
+      "field": true,
+      "no_subfields": true,
+      "rule": "AmmoCode operates as a single flat field amplitude \u2014 no nested subfield lattice."
+    },
+    "defield": {
+      "field": false,
+      "no_subfields": true,
+      "rule": "When the host surface is already a field, AmmoCode defields \u2014 detach and restore, never stack."
+    }
+  },
+  "ironclad_ref": "NewLatest/data/single-field-depth-doctrine.json",
+  "receipt": {
+    "schema": "g16-ammocode-field-instill/v1",
+    "suffix": ".ammocode-field.json"
+  },
+  "wired": [
+    "lib/g16-ammocode-field-instill.py",
+    "lib/g16-compile-combinatronics.py",
+    "lib/g16-universal-compiler.py",
+    "lib/g16-code-security.py",
+    "forge/g16-linker.py",
+    "scripts/grok16-ai-compile.py"
+  ],
+  "universal": "data/g16-universal-compilers.json",
+  "filetypes_db": "NewLatest/data/field-programming-filetypes.json",
+  "stack_version": "6.0.0"
+}

@@ -1,0 +1,112 @@
+{
+  "schema": "field-combinatronic-balance-table/v1",
+  "history": [
+    {
+      "at": "2026-06-27T16:58:35Z",
+      "reorganized": true,
+      "elapsed_ms": 16.69,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T16:58:35Z",
+      "reorganized": true,
+      "elapsed_ms": 36.91,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T16:58:35Z",
+      "reorganized": true,
+      "elapsed_ms": 109.21,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T16:58:35Z",
+      "reorganized": false,
+      "elapsed_ms": 99.52,
+      "balance": 0.25,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T16:58:36Z",
+      "reorganized": true,
+      "elapsed_ms": 795.47,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T16:58:36Z",
+      "reorganized": true,
+      "elapsed_ms": 180.5,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T16:58:36Z",
+      "reorganized": false,
+      "elapsed_ms": 198.45,
+      "balance": 0.2857,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T19:14:27Z",
+      "reorganized": false,
+      "elapsed_ms": 199.79,
+      "balance": 0.375,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T19:16:56Z",
+      "reorganized": false,
+      "elapsed_ms": 125.4,
+      "balance": 0.4444,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-29T06:30:08Z",
+      "reorganized": true,
+      "elapsed_ms": 112.94,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-29T06:30:08Z",
+      "reorganized": false,
+      "elapsed_ms": 97.84,
+      "balance": 0.4545,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-29T06:30:08Z",
+      "reorganized": true,
+      "elapsed_ms": 124.28,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-29T06:30:09Z",
+      "reorganized": true,
+      "elapsed_ms": 1114.91,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    }
+  ],
+  "updated": "2026-06-29T06:30:09Z",
+  "balanced": true,
+  "balance": 0.97
+}

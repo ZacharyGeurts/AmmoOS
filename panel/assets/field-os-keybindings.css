@@ -1,0 +1,38 @@
+/* AmmoOS keybinding layer — classic black · green · pink accents */
+
+html[data-ammoos-theme="nexus-military-v8"],
+html[data-os-theme="ammo-c2"] {
+  --ammo-os-bg: #040806;
+  --ammo-os-green: #22c55e;
+  --ammo-os-green-dim: #14532d;
+  --ammo-os-pink: #f472b6;
+  --ammo-os-pink-dim: #9d174d;
+  --ammo-os-text: #e8f5e9;
+}
+
+html[data-os-theme="ammo-c2"] .fsb-root {
+  --fsb-bg: rgba(4, 8, 6, 0.94);
+  --fsb-edge: rgba(34, 197, 94, 0.22);
+  --fsb-accent: #22c55e;
+  --fsb-active: rgba(244, 114, 182, 0.28);
+  --fsb-hover: rgba(34, 197, 94, 0.1);
+  --fsb-text: #e8f5e9;
+  --fsb-dim: #86efac;
+}
+
+html[data-os-theme="ammo-c2"] .hd-desktop {
+  background:
+    radial-gradient(ellipse 70% 55% at 15% 8%, rgba(34, 197, 94, 0.14), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 88% 92%, rgba(244, 114, 182, 0.1), transparent 50%),
+    linear-gradient(165deg, #040806 0%, #08120c 42%, #020403 100%);
+}
+
+html[data-os-theme="ammo-c2"] .fsb-cad {
+  color: #f9a8d4;
+  border-color: rgba(244, 114, 182, 0.35);
+}
+
+html[data-os-theme="ammo-c2"] .fsb-cad:hover {
+  background: rgba(157, 23, 77, 0.35);
+  box-shadow: 0 0 10px rgba(244, 114, 182, 0.25);
+}

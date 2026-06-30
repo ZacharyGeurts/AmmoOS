@@ -1,0 +1,257 @@
+{
+  "schema": "grok16-platform-release/v1",
+  "distro_version": "5.0.0",
+  "distro_tag": "v5.0.0",
+  "staging_from": "4.8.0",
+  "shipped_as": "4.8-update",
+  "g16_version": "16.2.0",
+  "pkgversion": "Grok16-16.2.0",
+  "upstream_gcc": "releases/gcc-15",
+  "release_model": "source_bootstrap_per_platform",
+  "statement": "Grok16 ships source + forge; each silicon/OS family bootstraps locally on the host. Hardware pairs (e.g. C64 Ultimate) document companion devices — g16 never runs on classic MOS 6510.",
+  "hardware_pair_count": 1,
+  "bootstrap_platform_count": 17,
+  "doctrine": "data/g16-linker-doctrine.json",
+  "launch": {
+    "extension": ".launch",
+    "schema": "queen-launch/v1",
+    "verify": "scripts/grok16-launch-verify.sh",
+    "module": "Queen/lib/queen-launch-chamber.py",
+    "portable_root": "${GROK16_ROOT}/examples/<name>"
+  },
+  "platforms": [
+    {
+      "id": "linux-gnu-x86_64",
+      "os": "linux",
+      "arch": "x86_64",
+      "format": "elf",
+      "bootstrap": {
+        "CC": "gcc",
+        "CXX": "g++",
+        "deps": "grok16-build-essential",
+        "bootstrap_apt_fallback": "build-essential flex bison libgmp-dev libmpfr-dev libmpc-dev",
+        "grok16_install": "./scripts/grok16-build-essential.sh install"
+      },
+      "cross_prefix": null,
+      "notes": "Primary dev + bench host"
+    },
+    {
+      "id": "linux-gnu-i386",
+      "os": "linux",
+      "arch": "i386",
+      "format": "elf",
+      "bootstrap": {
+        "CC": "gcc",
+        "CXX": "g++",
+        "multilib": true
+      },
+      "cross_prefix": "i686-linux-gnu-",
+      "notes": "32-bit GNU/Linux"
+    },
+    {
+      "id": "linux-gnu-aarch64",
+      "os": "linux",
+      "arch": "aarch64",
+      "format": "elf",
+      "bootstrap": {
+        "host": "linux-gnu-x86_64"
+      },
+      "cross_prefix": "aarch64-linux-gnu-",
+      "notes": "ARM64 Linux \u2014 cross bootstrap from x86_64 host"
+    },
+    {
+      "id": "linux-gnu-arm",
+      "os": "linux",
+      "arch": "arm",
+      "format": "elf",
+      "bootstrap": {
+        "host": "linux-gnu-x86_64"
+      },
+      "cross_prefix": "arm-linux-gnueabihf-",
+      "notes": "ARM32 GNU/Linux"
+    },
+    {
+      "id": "linux-gnu-riscv64",
+      "os": "linux",
+      "arch": "riscv64",
+      "format": "elf",
+      "bootstrap": {
+        "host": "linux-gnu-x86_64"
+      },
+      "cross_prefix": "riscv64-linux-gnu-",
+      "notes": "RISC-V 64 \u2014 cross GCC + binutils; g16 linker emulation elf64lriscv"
+    },
+    {
+      "id": "android-aarch64",
+      "os": "android",
+      "arch": "aarch64",
+      "format": "elf",
+      "bootstrap": {
+        "ndk": true,
+        "ANDROID_NDK_ROOT": "required"
+      },
+      "triple": "aarch64-linux-android",
+      "notes": "NDK r26+ recommended"
+    },
+    {
+      "id": "android-arm",
+      "os": "android",
+      "arch": "arm",
+      "format": "elf",
+      "bootstrap": {
+        "ndk": true
+      },
+      "triple": "armv7a-linux-androideabi"
+    },
+    {
+      "id": "android-x86_64",
+      "os": "android",
+      "arch": "x86_64",
+      "format": "elf",
+      "bootstrap": {
+        "ndk": true
+      },
+      "triple": "x86_64-linux-android"
+    },
+    {
+      "id": "darwin-x86_64",
+      "os": "darwin",
+      "arch": "x86_64",
+      "format": "mach-o",
+      "bootstrap": {
+        "CC": "clang",
+        "CXX": "clang++"
+      },
+      "notes": "macOS Intel \u2014 bootstrap on host"
+    },
+    {
+      "id": "darwin-aarch64",
+      "os": "darwin",
+      "arch": "aarch64",
+      "format": "mach-o",
+      "bootstrap": {
+        "CC": "clang",
+        "CXX": "clang++"
+      },
+      "notes": "Apple Silicon"
+    },
+    {
+      "id": "ios-aarch64",
+      "os": "ios",
+      "arch": "aarch64",
+      "format": "mach-o",
+      "bootstrap": {
+        "xcode": true
+      },
+      "triple": "arm64-apple-ios"
+    },
+    {
+      "id": "win32-x86_64",
+      "os": "windows",
+      "arch": "x86_64",
+      "format": "pe",
+      "bootstrap": {
+        "mingw": true
+      },
+      "triple": "x86_64-pc-windows-msvc"
+    },
+    {
+      "id": "win32-aarch64",
+      "os": "windows",
+      "arch": "aarch64",
+      "format": "pe",
+      "bootstrap": {
+        "mingw": true
+      },
+      "triple": "aarch64-pc-windows-msvc"
+    },
+    {
+      "id": "bare-elf-x86_64",
+      "os": "none",
+      "arch": "x86_64",
+      "format": "elf",
+      "bootstrap": {
+        "host": "linux-gnu-x86_64"
+      },
+      "notes": "Bare-metal ELF"
+    },
+    {
+      "id": "bare-elf-aarch64",
+      "os": "none",
+      "arch": "aarch64",
+      "format": "elf",
+      "bootstrap": {
+        "host": "linux-gnu-x86_64"
+      },
+      "notes": "Bare-metal AArch64"
+    },
+    {
+      "id": "bare-elf-riscv64",
+      "os": "none",
+      "arch": "riscv64",
+      "format": "elf",
+      "bootstrap": {
+        "host": "linux-gnu-x86_64"
+      },
+      "cross_prefix": "riscv64-linux-gnu-",
+      "notes": "Bare-metal RISC-V"
+    },
+    {
+      "id": "pair-c64-ultimate",
+      "os": "commodore",
+      "arch": "fpga-artix7",
+      "format": "hardware_pair",
+      "pair": {
+        "grok16_host": "linux-gnu-x86_64",
+        "g16_runs_on": ["linux-gnu-x86_64", "darwin-aarch64", "darwin-x86_64", "win32-x86_64"],
+        "does_not_run_on": ["classic-c64-mos6510", "breadbin-1982", "original-c64c"],
+        "statement": "g16 never runs on classic 6510 silicon — pairs with new FPGA C64 Ultimate only"
+      },
+      "hardware": {
+        "vendor": "Commodore International Corporation",
+        "site": "https://commodore.net/computer/",
+        "models": [
+          {
+            "id": "c64u",
+            "label": "Commodore 64 Ultimate",
+            "form": "breadbin",
+            "sku": "c64u-bb",
+            "core": "AMD Xilinx Artix-7 FPGA",
+            "ship": "2025"
+          },
+          {
+            "id": "c64cu",
+            "label": "Commodore 64C Ultimate",
+            "form": "slimline",
+            "sku": "c64cu-bb",
+            "core": "AMD Xilinx Artix-7 FPGA",
+            "ship": "late-2026",
+            "note": "Original 1986 injection tooling"
+          }
+        ],
+        "compatibility": ">99.9% original C64 software and peripherals",
+        "sid": "6581/8580 sockets + 8 FPGA SIDs",
+        "media": [".prg", ".crt", ".d64", ".d71", ".d81", ".tap", ".t64", ".g64", ".rom"]
+      },
+      "chip_battery": "c64_ultimate_fpga",
+      "queen": {
+        "game_room": "c64_ultimate",
+        "app_id": "C64U",
+        "chips": "pair/C64Ultimate",
+        "classic_game_room": "c64",
+        "classic_chips": "CHIPS/C64"
+      },
+      "notes": "Hardware pair — Grok16 on host; C64 Ultimate FPGA runs PRG/media. Classic breadbin C64 is a separate Queen/catalog lane (retro_c64)."
+    }
+  ],
+  "assets": [
+    "grok16-{version}-src.tar.gz",
+    "grok16-{version}-platforms.json",
+    "grok16-{version}-PLATFORMS.md"
+  ],
+  "gates": [
+    "scripts/grok16-test-gate.sh smoke",
+    "scripts/grok16-launch-verify.sh",
+    "scripts/grok16-toolchain.sh test-battery-release"
+  ]
+}

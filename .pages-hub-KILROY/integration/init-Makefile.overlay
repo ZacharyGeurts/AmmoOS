@@ -1,0 +1,3 @@
+# KILROY init objects — append to substrate init/Makefile once
+obj-$(CONFIG_RTX_FIELD_DIE) += kilroy-banner.o
+obj-$(CONFIG_RTX_FIELD_UTS_NAME) += kilroy-uts.o

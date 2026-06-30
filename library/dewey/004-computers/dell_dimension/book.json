@@ -1,0 +1,10 @@
+{
+  "id": "dell_dimension",
+  "title": "Dell Dimension",
+  "author": "Field Extensive Library",
+  "dewey": "004.16",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/dell_dimension/dell_dimension.h7c",
+  "cover": "/library/assets/devices/dell_dimension.png",
+  "ready": true
+}

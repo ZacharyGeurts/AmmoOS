@@ -1,0 +1,6 @@
+# KILROY Field OS — production root
+LABEL=KILROY_FIELD  /       ext4  defaults,noatime  0 1
+tmpfs               /tmp    tmpfs defaults,mode=1777  0 0
+tmpfs               /run    tmpfs defaults,mode=755   0 0
+proc                /proc   proc  defaults          0 0
+sysfs               /sys    sysfs defaults          0 0

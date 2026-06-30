@@ -1,0 +1,25 @@
+{
+  "id": "explaining_nim",
+  "title": "Explaining Nim",
+  "author": "Hostess 7",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-FIELD-5f1aa2b85380",
+  "format": "h7c",
+  "format_version": 3,
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map",
+    "memory",
+    "compile"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/explaining_nim/explaining_nim.h7c",
+  "h7": null,
+  "field_path": "library/dewey/000-computer-science/explaining_nim/explaining_nim.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "nim",
+  "cover": "/world/assets/combinatronic/books/nim.png",
+  "updated": "2026-06-30T06:46:50Z"
+}

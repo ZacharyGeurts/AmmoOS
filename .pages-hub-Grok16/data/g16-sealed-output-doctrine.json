@@ -1,0 +1,32 @@
+{
+  "schema": "g16-sealed-output-doctrine/v1",
+  "title": "Grok16 sealed output",
+  "motto": "Only make files that verify their own SHA — silent unless mismatch.",
+  "module": "lib/g16-sealed-output.py",
+  "policy": {
+    "durable_outputs_only": true,
+    "embedded_seal_json": "_g16_seal",
+    "sidecar_non_json": ".sha256",
+    "algorithm": "sha256",
+    "verify_silent_on_match": true,
+    "verify_speak_on_mismatch": true,
+    "temp_compile_exempt": ["/tmp", ".g16-", ".tmp"]
+  },
+  "writers": [
+    "lib/field_combinatorics.py",
+    "lib/g16-compile-combinatronics.py",
+    "lib/g16-power-sort-plate.py",
+    "lib/g16-iron-plate-spot-detector.py",
+    "lib/g16-ammocode-field-instill.py",
+    "lib/field_truth_blocks.py",
+    "lib/field-power-sort.py",
+    "lib/field-always-optimal.py",
+    "lib/field-research-book.py",
+    "lib/field_exec_bsp.py"
+  ],
+  "verify": {
+    "cli": "python3 lib/g16-sealed-output.py verify <path>",
+    "tree": "python3 lib/g16-sealed-output.py verify-tree data",
+    "toolchain": "grok16-toolchain.sh verify-sealed"
+  }
+}

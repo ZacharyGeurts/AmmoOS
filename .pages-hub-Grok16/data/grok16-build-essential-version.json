@@ -1,0 +1,20 @@
+{
+  "field_version": "16.2.0",
+  "pkgversion": "Grok16-build-essential-16.2.0",
+  "tag": "v16.2.0-build-essential",
+  "product": "Grok16-build-essential",
+  "replaces": "ubuntu:build-essential",
+  "ubuntu_parity": {
+    "source": "/usr/share/build-essential/list",
+    "core": ["g16", "g++16", "g16-make", "g16-as", "g16-ld", "g16-ar", "libc-dev"],
+    "note": "g16/g++16 replace gcc/g++; g16-binutils replace as/ld/ar; libc-dev staged from prefix + host sysroot"
+  },
+  "extends": [
+    "binutils-full",
+    "autotools",
+    "meta-build",
+    "utilities",
+    "packaging"
+  ],
+  "doctrine": "Better than build-essential — one prefix, one compiler, one linker, field cmake/ninja, autotools, and packaging wrappers. All code lives in SG/Grok16; host apt is bootstrap-only."
+}

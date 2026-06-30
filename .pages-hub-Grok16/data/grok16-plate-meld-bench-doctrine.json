@@ -1,0 +1,31 @@
+{
+  "schema": "grok16-plate-meld-bench/v1",
+  "title": "Plate meld vs bare execution — when meld helps",
+  "meld_module": "NewLatest/lib/field-plate-meld.py",
+  "compiler_sense_module": "NewLatest/lib/g16-compiler-sense-plate.py",
+  "state_dir_env": "NEXUS_STATE_DIR",
+  "hypotheses": [
+    {
+      "id": "profile_ladder",
+      "claim": "Plate meld generation unlocks compiler-sense profile ladder (expert/heavy/forever) vs static belt_2_0",
+      "measure": "ops_per_sec delta on speed_demo after sense-guided compile"
+    },
+    {
+      "id": "exec_variance",
+      "claim": "Post-meld re-exec of identical binary stays within field tolerance — meld does not slow hot path",
+      "measure": "ops_per_sec ratio post_meld / baseline on same ELF"
+    },
+    {
+      "id": "compile_amortize",
+      "claim": "Meld-stable generation improves amortized first-run when sense picks faster-compile profile",
+      "measure": "amortized_ops_per_sec across sense vs belt_2_0"
+    }
+  ],
+  "situations": {
+    "dev_uncompiled": "Python interpreter — meld irrelevant to hot loop",
+    "chamber_compile_ahead": "Meld wires sense plates before wave-convert — profile selection matters",
+    "release_plane": "Staged ELF exec — meld witness only; timed path excludes convert_ms"
+  },
+  "tolerance_ratio_min": 0.98,
+  "tolerance_ratio_max": 1.02
+}

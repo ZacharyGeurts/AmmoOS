@@ -1,0 +1,13 @@
+{
+  "id": "format-h7b",
+  "title": "H7B Book (legacy inner)",
+  "dewey": "005.74",
+  "format": "registry-entry",
+  "family": "library",
+  "extensions": [
+    ".h7"
+  ],
+  "magic": "H7B\\x01",
+  "cover": "/library/assets/formats/h7b.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

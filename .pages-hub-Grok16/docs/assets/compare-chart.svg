@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" role="img" aria-label="Field vs host compile comparison">
+  <rect width="920" height="300" fill="#0a0f18" rx="12"/>
+  <text x="24" y="32" fill="#e8c878" font-size="18" font-weight="700">bench-compare — field g16 vs host gcc/g++</text>
+  <text x="24" y="54" fill="#8fb4d9" font-size="12">profile field_opt · 5 cases</text>
+  <text x="24" y="78" fill="#a8a49c" font-size="11">■ field g16  ■ host gcc/g++</text>
+  <text x="24" y="108" fill="#ccc" font-size="10">c_smoke</text>
+  <rect x="160" y="96" width="13" height="14" fill="#38bdf8" rx="3"/>
+  <rect x="160" y="114" width="9" height="14" fill="#c8a030" rx="3"/>
+  <text x="510" y="108" fill="#8fb4d9" font-size="10">g16 32ms · host 23ms · 0.72x</text>
+  <text x="24" y="152" fill="#ccc" font-size="10">cxx_profile</text>
+  <rect x="160" y="140" width="340" height="14" fill="#38bdf8" rx="3"/>
+  <rect x="160" y="158" width="285" height="14" fill="#c8a030" rx="3"/>
+  <text x="510" y="152" fill="#8fb4d9" font-size="10">g16 787ms · host 662ms · 0.84x</text>
+  <text x="24" y="196" fill="#ccc" font-size="10">cxx_matrix</text>
+  <rect x="160" y="184" width="283" height="14" fill="#38bdf8" rx="3"/>
+  <rect x="160" y="202" width="226" height="14" fill="#c8a030" rx="3"/>
+  <text x="510" y="196" fill="#8fb4d9" font-size="10">g16 656ms · host 524ms · 0.80x</text>
+  <text x="24" y="240" fill="#ccc" font-size="10">cxx_ai_agent</text>
+  <rect x="160" y="228" width="283" height="14" fill="#38bdf8" rx="3"/>
+  <rect x="160" y="246" width="224" height="14" fill="#c8a030" rx="3"/>
+  <text x="510" y="240" fill="#8fb4d9" font-size="10">g16 656ms · host 520ms · 0.79x</text>
+  <text x="24" y="284" fill="#ccc" font-size="10">asm_snippet</text>
+  <rect x="160" y="272" width="0" height="14" fill="#38bdf8" rx="3"/>
+  <rect x="160" y="290" width="1" height="14" fill="#c8a030" rx="3"/>
+  <text x="510" y="284" fill="#8fb4d9" font-size="10">g16 2ms · host 3ms · 1.50x</text>
+</svg>

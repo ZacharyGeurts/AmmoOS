@@ -1,0 +1,10 @@
+{
+  "id": "acorn_archimedes",
+  "title": "Acorn Archimedes",
+  "author": "Field Extensive Library",
+  "dewey": "004.167",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/acorn_archimedes/acorn_archimedes.h7c",
+  "cover": "/library/assets/devices/acorn_archimedes.png",
+  "ready": true
+}

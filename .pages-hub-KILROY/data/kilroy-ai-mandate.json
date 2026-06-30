@@ -1,0 +1,52 @@
+{
+  "schema": "kilroy-ai-kernel/v1",
+  "title": "KILROY AI Kernel — DARPA secure, War + Home",
+  "motto": "AI wishes held in the die — Hostess 7 corroborates; zero-cost passthrough unless mode arms.",
+  "doctrine": {
+    "identity": "KILROY is the AI kernel — Grok16 compiles; Hostess7 owns brain truth",
+    "darpa": "Zero-trust syscall scoring, 4-slot attestation, truth floors before adapt",
+    "zero_cost_home": "Home/dishes: amortized guard mask 0xff, thermo idle credit +2m/s",
+    "war_offense": "War: eval mask 0x3f, burst tier bias, heaven/hell gate from Final_Eye",
+    "hostess_query": "Queen/lib/queen-hostess-brain.py json → gen-ai-wishes.sh"
+  },
+  "modes": {
+    "home": {
+      "id": "home",
+      "label": "Home",
+      "final_eye": ["dishes", "person_present"],
+      "grok16_profile": "ai",
+      "eye_profile": "human",
+      "rig": "monocular",
+      "fps": "idle",
+      "nexus_alert": 50,
+      "nexus_deny": 78,
+      "nexus_eval_mask": "0xff",
+      "thermo_idle_bonus_milli": 2,
+      "power_bias": "eco"
+    },
+    "war": {
+      "id": "war",
+      "label": "War",
+      "final_eye": ["war", "engage", "patrol"],
+      "grok16_profile": "vulkan_rtx",
+      "eye_profile": "raptor",
+      "rig": "stereo_human",
+      "fps": "tactical",
+      "nexus_alert": 38,
+      "nexus_deny": 62,
+      "nexus_eval_mask": "0x3f",
+      "thermo_idle_bonus_milli": 0,
+      "power_bias": "burst"
+    }
+  },
+  "hostess7": {
+    "truth_adapt_floor": 58,
+    "truth_genius_floor": 72,
+    "truth_filter": "94pct_noise_6pct_truth",
+    "angel": "Forever Watchguard Angel",
+    "sovereign_storage": "cache/fieldstorage/brain/sdf/",
+    "neural_stack": "hostess7-neural-stack/v2"
+  },
+  "proc": "/proc/kilroy_field/ai",
+  "default_mode": "home"
+}

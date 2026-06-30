@@ -1,0 +1,11 @@
+{
+  "id": "format-vcodec_mpeg2",
+  "title": "MPEG-2 Video",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [],
+  "magic": null,
+  "cover": "/library/assets/formats/vcodec_mpeg2.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

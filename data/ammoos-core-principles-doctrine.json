@@ -1,0 +1,44 @@
+{
+  "schema": "ammoos-core-principles/v1",
+  "title": "AmmoOS core principles",
+  "motto": "Simple · informative · secure · protecting — zero tolerance for hostility.",
+  "principles": [
+    {
+      "id": "simple",
+      "label": "Simple",
+      "rule": "One field, one start menu, one task router. No nested launchers, no duplicate surfaces, no stub programs in the menu."
+    },
+    {
+      "id": "informative",
+      "label": "Informative",
+      "rule": "Every program and task names what it does. Hostess 7 briefs with evidence; panels show status, not mystery."
+    },
+    {
+      "id": "secure",
+      "label": "Secure",
+      "rule": "Ironclad gates, brain guard, logic gate on comms, Monster shell on execution. Virtual workspace before live edits."
+    },
+    {
+      "id": "protecting",
+      "label": "Protecting",
+      "rule": "Root mounts, sovereign stack, thermal gate, ELLIE diagnostics — protect operator, stack, and friendlies first."
+    },
+    {
+      "id": "no_hostility",
+      "label": "Does not tolerate hostility",
+      "rule": "Threat panel, attack kit, universal protector, and Hostess 7 truth floor — hostile actors are identified, contained, and removed. No friendly fire."
+    }
+  ],
+  "menu_policy": {
+    "hide_duplicates": true,
+    "hide_stubs": true,
+    "hide_unimplemented_blocks": true,
+    "pinned_core_only": ["nexus-c2-desktop", "nexus-command", "field-storage", "ammoos-update-os", "nexus-znetwork"]
+  },
+  "execution_policy": {
+    "field_tasks_via": "lib/ammolang-run.sh",
+    "hostess7_edits_via": "lib/hostess7-virtual-workspace.py",
+    "never_raw_pythong_for_field_tasks": true
+  },
+  "hostess7_mandate": "Brief → Evaluate → Task in virtual space first; promote only after CHIPS die test + testing center pass."
+}

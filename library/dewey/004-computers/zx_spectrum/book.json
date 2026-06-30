@@ -1,0 +1,10 @@
+{
+  "id": "zx_spectrum",
+  "title": "ZX Spectrum",
+  "author": "Field Extensive Library",
+  "dewey": "004.167",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/zx_spectrum/zx_spectrum.h7c",
+  "cover": "/library/assets/devices/zx_spectrum.png",
+  "ready": true
+}

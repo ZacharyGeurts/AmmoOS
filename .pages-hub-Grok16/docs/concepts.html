@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 Manual — C/C++ Concepts</title>
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light") {
+        t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) { d.documentElement.setAttribute("data-theme", "light"); }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand"><strong>Grok16</strong> <span class="nav-version">distro 3.0.0</span><span class="nav-g16">g16 @ 16.2.0</span></div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+            <option value="1.5">XXL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false"><span class="seg-icon" aria-hidden="true">☀</span><span class="seg-text">Light</span></button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false"><span class="seg-icon" aria-hidden="true">☾</span><span class="seg-text">Dark</span></button>
+        </div>
+      </div>
+    </div>
+                                                                                                <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>C/C++ Concepts — Textbook Reference</h1>
+  <p class="lead">Visual primers for ideas you hit every day with <code>g16</code>. Reference-first, with textbook diagrams. Compile examples with <code>g16 -std=gnu17</code> (C) or <code>g16 -std=gnu++26</code> (C++).</p>
+
+    <aside class="callout callout-accent">
+    <strong>Single fabric (2.0):</strong> Knowing is fixed-size on one belt die — parallel I/O fans in, truth stays one amplitude at depth 0. Time is linear (<code>ironclad:time:1</code>). See <a href="single-fabric.html">Single Fabric</a> and <a href="safety.html">Safety</a>.
+  </aside>
+
+<aside class="callout">
+    <strong>Workflow tip:</strong> Press <kbd>Ctrl</kbd>+<kbd>K</kbd> anywhere in the manual to search commands, env vars, and these concepts.
+  </aside>
+
+  <h2 id="pointers">Pointers</h2>
+  <p>A pointer holds an <em>address</em>. <code>*p</code> reads the value at that address; <code>&amp;x</code> takes the address of <code>x</code>.</p>
+  <figure class="fig">
+    <svg viewBox="0 0 520 200" role="img" aria-label="Pointer diagram: variable x holds 42, pointer p holds address of x">
+      <rect x="40" y="60" width="100" height="50" fill="var(--fig-box)" stroke="var(--fig-stroke)" rx="6"/>
+      <text x="90" y="92" text-anchor="middle" fill="var(--fig-text)" font-size="14" font-family="ui-monospace,monospace">x = 42</text>
+      <rect x="220" y="60" width="120" height="50" fill="var(--fig-box2)" stroke="var(--fig-stroke)" rx="6"/>
+      <text x="280" y="85" text-anchor="middle" fill="var(--fig-text)" font-size="12" font-family="ui-monospace,monospace">p</text>
+      <text x="280" y="102" text-anchor="middle" fill="var(--fig-muted)" font-size="11" font-family="ui-monospace,monospace">0x7ffd…a4</text>
+      <path d="M 220 85 L 140 85" stroke="var(--accent)" stroke-width="2" marker-end="url(#arr)"/>
+      <text x="175" y="75" fill="var(--accent)" font-size="11">*p → 42</text>
+      <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--accent)"/></marker></defs>
+    </svg>
+    <figcaption>Pointer <code>p</code> stores the address of <code>x</code>; dereferencing reads <code>42</code>.</figcaption>
+  </figure>
+  <pre><code>int x = 42;
+int *p = &amp;x;
+printf("%d\n", *p);   /* 42 */
+*p = 7;               /* x is now 7 */</code></pre>
+  <p>C++ adds <code>nullptr</code>, references <code>int&amp; r = x</code>, and smart pointers (<code>std::unique_ptr</code>) for RAII.</p>
+
+  <h2 id="arrays">Arrays &amp; contiguous memory</h2>
+  <p>Arrays are a fixed-length contiguous block. Index <code>i</code> lands at <code>base + i * sizeof(T)</code>. In C, array names decay to a pointer to the first element.</p>
+  <figure class="fig">
+    <svg viewBox="0 0 520 160" role="img" aria-label="Array layout indices 0 to 4">
+      <text x="60" y="35" fill="var(--fig-muted)" font-size="12">index</text>
+      <text x="200" y="35" fill="var(--fig-muted)" font-size="12">value</text>
+      <g font-family="ui-monospace,monospace" font-size="13" fill="var(--fig-text)">
+        <rect x="40" y="50" width="440" height="44" fill="var(--fig-box)" stroke="var(--fig-stroke)" rx="4"/>
+        <line x1="128" y1="50" x2="128" y2="94" stroke="var(--fig-stroke)"/>
+        <line x1="216" y1="50" x2="216" y2="94" stroke="var(--fig-stroke)"/>
+        <line x1="304" y1="50" x2="304" y2="94" stroke="var(--fig-stroke)"/>
+        <line x1="392" y1="50" x2="392" y2="94" stroke="var(--fig-stroke)"/>
+        <text x="84" y="78" text-anchor="middle">10</text>
+        <text x="172" y="78" text-anchor="middle">20</text>
+        <text x="260" y="78" text-anchor="middle">30</text>
+        <text x="348" y="78" text-anchor="middle">40</text>
+        <text x="436" y="78" text-anchor="middle">50</text>
+        <text x="84" y="118" text-anchor="middle" fill="var(--fig-muted)">[0]</text>
+        <text x="172" y="118" text-anchor="middle" fill="var(--fig-muted)">[1]</text>
+        <text x="260" y="118" text-anchor="middle" fill="var(--fig-muted)">[2]</text>
+        <text x="348" y="118" text-anchor="middle" fill="var(--fig-muted)">[3]</text>
+        <text x="436" y="118" text-anchor="middle" fill="var(--fig-muted)">[4]</text>
+      </g>
+    </svg>
+    <figcaption><code>int a[5]</code> — five elements in one contiguous slab; cache-friendly iteration.</figcaption>
+  </figure>
+  <p>C++ prefer <code>std::array&lt;T,N&gt;</code> or <code>std::vector&lt;T&gt;</code> with bounds-aware interfaces; Field code often uses stack arrays in hot paths.</p>
+
+  <h2 id="sorting">Sorting methods</h2>
+  <table>
+    <tr><th>API</th><th>Typical complexity</th><th>Notes</th></tr>
+    <tr><td><code>qsort</code> (C)</td><td>O(n log n) avg</td><td>Function pointer comparator; not type-safe</td></tr>
+    <tr><td><code>std::sort</code></td><td>O(n log n)</td><td>Introsort; mutates range; random-access iterators</td></tr>
+    <tr><td><code>std::stable_sort</code></td><td>O(n log n)</td><td>Preserves order of equal elements</td></tr>
+  </table>
+  <figure class="fig">
+    <svg viewBox="0 0 520 180" role="img" aria-label="Sorting: unsorted bars become ordered">
+      <text x="20" y="24" fill="var(--fig-muted)" font-size="12">before</text>
+      <rect x="40" y="40" width="30" height="80" fill="var(--fig-bar3)"/>
+      <rect x="80" y="70" width="30" height="50" fill="var(--fig-bar1)"/>
+      <rect x="120" y="55" width="30" height="65" fill="var(--fig-bar2)"/>
+      <rect x="160" y="90" width="30" height="30" fill="var(--fig-bar4)"/>
+      <text x="280" y="24" fill="var(--fig-muted)" font-size="12">after std::sort</text>
+      <rect x="300" y="90" width="30" height="30" fill="var(--fig-bar4)"/>
+      <rect x="340" y="70" width="30" height="50" fill="var(--fig-bar1)"/>
+      <rect x="380" y="55" width="30" height="65" fill="var(--fig-bar2)"/>
+      <rect x="420" y="40" width="30" height="80" fill="var(--fig-bar3)"/>
+      <path d="M 230 90 L 270 90" stroke="var(--accent)" stroke-width="2" marker-end="url(#arr2)"/>
+      <defs><marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--accent)"/></marker></defs>
+    </svg>
+    <figcaption>Comparison sort reorders elements; choose stable sort when satellite data order matters.</figcaption>
+  </figure>
+
+  <h2 id="memory">Stack vs heap</h2>
+  <figure class="fig fig-row">
+    <div class="fig-card">
+      <h3>Stack</h3>
+      <p>Automatic storage: locals, small fixed arrays. Freed on scope exit. Fast, LIFO, limited size.</p>
+    </div>
+    <div class="fig-card">
+      <h3>Heap</h3>
+      <p><code>malloc</code> / <code>new</code> — explicit lifetime. Larger, flexible. Pair with <code>free</code> / <code>delete</code> or smart pointers.</p>
+    </div>
+  </figure>
+
+  <h2 id="cpp-templates">Templates (C++)</h2>
+  <p>Compile-time generics: one definition, many types. Instantiations happen at compile time — zero runtime polymorphism cost when inlined.</p>
+  <pre><code>template &lt;typename T&gt;
+T add(T a, T b) { return a + b; }</code></pre>
+
+  <h2 id="raii">RAII</h2>
+  <p><strong>Resource Acquisition Is Initialization</strong> — bind resource lifetime to object lifetime. Destructor releases handles, locks, memory. Core to modern C++ and Grok16 field mandates (no leaks in L2).</p>
+
+  <h2 id="move">Move semantics</h2>
+  <p>Rvalue references (<code>T&amp;&amp;</code>) and <code>std::move</code> transfer ownership without copying heavy buffers — critical for FieldX86 vectors and matrix paths under <code>-O3</code>.</p>
+
+  <footer><a href="index.html">Index</a> · <a href="master-coder-c.html">Master Coder C</a> · <a href="master-coder-cxx.html">Master Coder C++</a></footer>
+</body>
+</html>

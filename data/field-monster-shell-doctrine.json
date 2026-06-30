@@ -1,0 +1,39 @@
+{
+  "id": "field-monster-shell",
+  "version": "1.0.0",
+  "name": "Monster",
+  "role": "Secure task shell — invisible launch wrapper, hang dialogs, full kill on quit",
+  "invisible": true,
+  "never_crash": true,
+  "ui": "native_popup",
+  "launch_wrapper": "lib/field-monster-launch.sh",
+  "shell": "lib/field-monster-shell.py",
+  "popup": "lib/field-monster-popup.py",
+  "hang_dialog_js": "panel/assets/field-monster-hang-dialog.js",
+  "cad_popup_js": "panel/assets/field-monster-cad-popup.js",
+  "cad_chord": "Ctrl+Alt+Del",
+  "cad_action": "monster_native_popup",
+  "api_routes": {
+    "hang_pending": "/api/field-monster-shell/hang-pending",
+    "hang_respond": "/api/field-monster-shell/hang-respond",
+    "dispatch": "/api/field-monster-shell/dispatch",
+    "nuke": "/api/field-monster-shell/nuke"
+  },
+  "defaults": {
+    "grace_sec": 5,
+    "stall_sec": 90,
+    "timeout_sec": 7200,
+    "poll_ms": 500,
+    "smart_vitals": true,
+    "prompt_only_when_idle": true,
+    "vitals_quiet_sec": 5,
+    "max_prompts_per_session": 2
+  },
+  "hang_policy": "Wait grace_sec after output stops, then read /proc vitals (CPU, IO, state). Resource activity counts as progress — popup only when truly idle and operator action may be needed.",
+  "kill_chain": ["SIGTERM", "SIGKILL", "pkill_tree"],
+  "wired_launchers": [
+    "lib/ammolang-run.sh",
+    "lib/field-ammolang-build.py",
+    "lib/field-ammolang-test.py"
+  ]
+}

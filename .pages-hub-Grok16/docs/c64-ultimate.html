@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — C64 Ultimate Pair</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/c64-ultimate-pair.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Commodore 64 Ultimate — hardware pair</h1>
+  <p>Pair ID <code>pair-c64-ultimate</code> · Grok16 <strong>5.2.0</strong> · catalog <code>004-computers/c64_ultimate</code>.</p>
+
+  <aside class="callout callout-warn">
+    <strong>g16 does not run on classic 6510 breadbin.</strong> This page documents pairing with the <em>new</em> FPGA machines from <a href="https://commodore.net/computer/">commodore.net</a> only.
+  </aside>
+
+  <h2 id="new-c64">The new C64 (2025–2026)</h2>
+  <table>
+    <tr><th>Model</th><th>Form</th><th>Core</th></tr>
+    <tr><td><strong>Commodore 64 Ultimate</strong> (c64u)</td><td>Breadbin · 2025</td><td rowspan="2">AMD Xilinx Artix-7 FPGA · dual SID sockets + 8 FPGA SIDs</td></tr>
+    <tr><td><strong>Commodore 64C Ultimate</strong> (c64cu)</td><td>Slimline · late 2026</td></tr>
+  </table>
+  <p>Media on the C64: <code>.PRG</code> <code>.D64</code> <code>.TAP</code> etc. — loaded on the machine, not compiled by <code>g16</code>.</p>
+
+  <h2 id="grok16-role">What Grok16 does</h2>
+  <ul>
+    <li>Build <code>g16</code> on normal host platforms (<a href="platforms.html">Linux, macOS, Windows…</a>)</li>
+    <li><code>c64_ultimate_fpga</code> chip battery for Queen pairing</li>
+    <li>Queen game room <code>c64_ultimate</code> · <code>app_id: C64U</code> · <code>pair/C64Ultimate</code></li>
+  </ul>
+  <pre><code>export G16_PREFIX=$(pwd) G16_BELT_PROFILE=belt_2_0
+./scripts/grok16-toolchain.sh rebuild   # on your Linux/macOS/Windows host</code></pre>
+  <p><a href="c64-classic.html">Classic C64</a> · <a href="platforms.html">Bootstrap platforms</a> · <a href="batteries.html">Batteries</a></p>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

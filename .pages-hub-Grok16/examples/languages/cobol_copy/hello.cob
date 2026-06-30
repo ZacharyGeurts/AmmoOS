@@ -1,0 +1,4 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. HELLOCP.
+       PROCEDURE DIVISION.
+           DISPLAY "grok16 cobol copy".

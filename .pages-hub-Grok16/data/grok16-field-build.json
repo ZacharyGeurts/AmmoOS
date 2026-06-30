@@ -1,0 +1,40 @@
+{
+  "schema": "grok16-field-build/v1",
+  "product": "Grok16 Field Build",
+  "motto": "One compiler, one linker, one build fabric — cmake/make/ninja/bison/flex pinned to g16.",
+  "policy": {
+    "no_prebuilts": true,
+    "self_host": true,
+    "unified_discern": true,
+    "legacy_fallback_last": true,
+    "compiler": "g16",
+    "linker": "g16-ld",
+    "assembler": "g16-as"
+  },
+  "entry": {
+    "script": "scripts/grok16-field-build.sh",
+    "forge": "forge/field_build_tools.py",
+    "field_cmake": "scripts/field-cmake.sh",
+    "toolchain_cmake": "cmake/grok16-toolchain.cmake",
+    "project_include": "cmake/grok16-field.cmake",
+    "version_pair": "data/grok16-field-build-version.json"
+  },
+  "tools": {
+    "cmake": {"field": "g16-cmake", "role": "configure", "compat": ["cmake"]},
+    "ninja": {"field": "g16-ninja", "role": "build", "compat": ["ninja"]},
+    "make": {"field": "g16-make", "role": "build", "compat": ["make", "gmake"]},
+    "bison": {"field": "g16-bison", "role": "parser_gen", "compat": ["bison", "yacc"]},
+    "flex": {"field": "g16-flex", "role": "lexer_gen", "compat": ["flex", "lex"]},
+    "autoconf": {"field": "g16-autoconf", "role": "configure_gen", "compat": ["autoconf"]},
+    "automake": {"field": "g16-automake", "role": "makefile_gen", "compat": ["automake"]},
+    "libtoolize": {"field": "g16-libtoolize", "role": "libtool", "compat": ["libtoolize"]},
+    "pkg-config": {"field": "g16-pkg-config", "role": "deps", "compat": ["pkg-config"]},
+    "m4": {"field": "g16-m4", "role": "macro", "compat": ["m4"]},
+    "meson": {"field": "g16-meson", "role": "meta_build", "compat": ["meson"]},
+    "gperf": {"field": "g16-gperf", "role": "perfect_hash", "compat": ["gperf"]}
+  },
+  "install": "./scripts/grok16-field-build.sh install",
+  "rebuild": "./scripts/grok16-field-build.sh install",
+  "discern": "./scripts/grok16-field-build.sh discern",
+  "status": "./scripts/grok16-field-build.sh status"
+}

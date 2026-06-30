@@ -1,0 +1,10 @@
+{
+  "id": "gameboy",
+  "title": "Game Boy",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/gameboy/gameboy.h7c",
+  "cover": "/library/assets/devices/gameboy.png",
+  "ready": true
+}

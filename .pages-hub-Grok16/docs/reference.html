@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 Manual — Reference</title>
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light") {
+        t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "light");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand"><strong>Grok16</strong> <span class="nav-version">distro 3.0.0</span><span class="nav-g16">g16 @ 16.2.0</span></div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+            <option value="1.5">XXL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☀</span><span class="seg-text">Light</span>
+          </button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☾</span><span class="seg-text">Dark</span>
+          </button>
+        </div>
+      </div>
+    </div>
+                                                                                                <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Reference</h1>
+  <p>Grok16 @ 16.1.1 — unified <code>g16</code> driver. See <a href="master-coder-c.html">Master Coder C</a> and <a href="master-coder-cxx.html">Master Coder C++</a> for full command indexes.</p>
+
+  <h2 id="unified-g16">Unified g16 driver</h2>
+  <table>
+    <tr><th>Path</th><th>Role</th></tr>
+    <tr><td>bin/g16</td><td>Single front door — auto-detects C vs C++ from argv[0], -std=, -x, extensions, -lstdc++</td></tr>
+    <tr><td>bin/g++16</td><td>Symlink to g16 (compat alias; forces C++ detection via basename)</td></tr>
+    <tr><td>libexec/grok16/g16-cc</td><td>Relocated GCC C backend (real ELF)</td></tr>
+    <tr><td>libexec/grok16/g16-cxx</td><td>Relocated GCC C++ backend (real ELF)</td></tr>
+  </table>
+  <p>Override: <code>G16_FORCE_C=1</code> or <code>G16_FORCE_CXX=1</code>. Defaults: <code>G16_C_STD=gnu17</code>, <code>G16_CXX_STD=gnu++26</code>.</p>
+
+  <h2>grok16-toolchain.sh</h2>
+  <table>
+    <tr><th>Command</th><th>Description</th></tr>
+    <tr id="cmd-bootstrap"><td>bootstrap</td><td>Fetch GCC, host build, install</td></tr>
+    <tr><td>rebuild</td><td>Self-host with g16/g++16</td></tr>
+    <tr id="cmd-install"><td>install</td><td>Write VERSION, cmake, manifest (requires unified g16)</td></tr>
+    <tr><td>verify</td><td>C gnu17 + C++ gnu++26 compile via g16</td></tr>
+    <tr id="cmd-status"><td>status</td><td>Check unified g16 ready</td></tr>
+    <tr><td>bench</td><td>Run profile benchmark (default field_opt)</td></tr>
+    <tr><td>field-bench</td><td>Field-Opt benchmark</td></tr>
+    <tr><td>bench-all</td><td>All profiles → data/bench/latest.json</td></tr>
+    <tr><td>profile</td><td>PGO generate via field workload</td></tr>
+    <tr id="cmd-paths"><td>paths</td><td>Print resolved paths/env</td></tr>
+    <tr id="cmd-config"><td>config</td><td>paths + config template path</td></tr>
+    <tr id="cmd-manifest"><td>manifest</td><td>Regenerate cmake + grok16-toolchain.json</td></tr>
+    <tr><td>consolidate</td><td>Queen → Grok16 vendor migration</td></tr>
+  </table>
+
+  <h2>Environment variables</h2>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Purpose</th></tr>
+    <tr id="env-grok16-root"><td>GROK16_ROOT</td><td>repo root</td><td>Repository root</td></tr>
+    <tr id="env-g16-prefix"><td>G16_PREFIX</td><td>$GROK16_ROOT</td><td>Install prefix</td></tr>
+    <tr id="env-gcc-src"><td>GROK16_GCC_SRC</td><td>$GROK16_ROOT/vendor/gcc</td><td>GCC source</td></tr>
+    <tr id="env-gcc-build"><td>GROK16_GCC_BUILD</td><td>$GROK16_ROOT/build/gcc</td><td>Build tree</td></tr>
+    <tr><td>GROK16_QUEEN_ROOT</td><td>$SG/NewLatest/Queen</td><td>Queen path</td></tr>
+    <tr id="env-g16-c-std"><td>G16_C_STD</td><td>gnu17</td><td>Default C standard</td></tr>
+    <tr><td>G16_CXX_STD</td><td>gnu++26</td><td>Default C++ standard</td></tr>
+    <tr id="env-force-c"><td>G16_FORCE_C</td><td>unset</td><td>Force g16-cc backend</td></tr>
+    <tr id="env-force-cxx"><td>G16_FORCE_CXX</td><td>unset</td><td>Force g16-cxx backend</td></tr>
+    <tr id="env-pkgversion"><td>G16_PKGVERSION</td><td>Grok16-16.1.1</td><td>Compiler pkgversion</td></tr>
+    <tr><td>GROK16_BUILD_JOBS</td><td>nproc</td><td>Parallel make</td></tr>
+    <tr><td>G16_FAST_REBUILD</td><td>1</td><td>Incremental rebuild</td></tr>
+    <tr><td>G16_FULL_REBUILD</td><td>unset</td><td>Full bootstrap rebuild</td></tr>
+    <tr><td>G16_RELEASE_PROFILE</td><td>unset</td><td>LTO+PGO+field_opt</td></tr>
+    <tr><td>G16_FIELD_SPEED</td><td>unset</td><td>field_opt profile</td></tr>
+    <tr><td>G16_ENABLE_LTO</td><td>unset</td><td>LTO on forge</td></tr>
+    <tr><td>G16_ENABLE_PGO</td><td>unset</td><td>PGO use flags</td></tr>
+    <tr><td>G16_PGO_GENERATE</td><td>unset</td><td>PGO generate (profile cmd)</td></tr>
+    <tr><td>GROK16_USE_CCACHE</td><td>auto</td><td>ccache wrapper</td></tr>
+    <tr><td>G16_DISABLE_BOOTSTRAP</td><td>auto with fast</td><td>make all vs bootstrap</td></tr>
+    <tr><td>G16_BENCH_PROFILE</td><td>field_opt</td><td>bench profile name</td></tr>
+    <tr><td>WRDT_G16_PREFIX</td><td>—</td><td>World_Redata override</td></tr>
+    <tr><td>WRDT_G16_TOOLCHAIN</td><td>—</td><td>Override toolchain.sh path</td></tr>
+  </table>
+
+  <h2>Key files</h2>
+  <table>
+    <tr><th>File</th><th>Role</th></tr>
+    <tr><td>data/grok16-profiles.json</td><td>Profile definitions</td></tr>
+    <tr><td>data/grok16-config.json</td><td>Config template</td></tr>
+    <tr><td>data/grok16-toolchain.json</td><td>Generated manifest</td></tr>
+    <tr><td>cmake/grok16-toolchain.cmake</td><td>Generated toolchain</td></tr>
+    <tr><td>cmake/g16-field-mandate.cmake</td><td>Security compile/link flags</td></tr>
+    <tr><td>SELFHOST.json</td><td>Self-host stamp (prefix)</td></tr>
+  </table>
+
+  <h2 id="forge-status">grok16-forge.py</h2>
+  <p id="fn-driver-extra"><code>grok16_driver_extra_flags()</code> — <code>-B$GROK16_GCC_BUILD/gcc/</code> when prefix lacks lib/gcc.</p>
+  <p id="fn-ready"><code>grok16_ready()</code> — real ELF g++16 @ 16.1.1.</p>
+  <p id="py-g16-status"><code>g16_status(ctx)</code> — forge status dict.</p>
+  <p id="py-manifest"><code>write_manifest(ctx)</code> — <code>data/grok16-toolchain.json</code>.</p>
+  <p id="py-cmake"><code>write_cmake_toolchain(ctx)</code> — <code>cmake/grok16-toolchain.cmake</code>.</p>
+  <p id="py-verify"><code>verify_g16_install(ctx)</code> — ELF + version check.</p>
+  <pre><code>pythong forge/grok16-forge.py status
+pythong forge/grok16-forge.py run gcc
+pythong forge/grok16-forge.py run gcc_rebuild</code></pre>
+
+  <footer><a href="index.html">Index</a></footer>
+</body>
+</html>

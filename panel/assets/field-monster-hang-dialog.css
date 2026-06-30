@@ -1,0 +1,78 @@
+.monster-hang-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 12, 18, 0.72);
+  backdrop-filter: blur(4px);
+  font-family: system-ui, "Segoe UI", sans-serif;
+}
+
+.monster-hang-card {
+  min-width: 320px;
+  max-width: 420px;
+  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  background: linear-gradient(165deg, #1a2332 0%, #121820 100%);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  color: #e8eef6;
+}
+
+.monster-hang-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7eb8ff;
+  margin-bottom: 0.75rem;
+}
+
+.monster-hang-msg {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.monster-hang-sub {
+  margin: 0 0 1.1rem;
+  font-size: 0.82rem;
+  color: #9aa8bc;
+  line-height: 1.4;
+}
+
+.monster-hang-actions {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.monster-hang-btn {
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.monster-hang-wait {
+  background: rgba(60, 90, 130, 0.45);
+  border-color: rgba(120, 160, 220, 0.4);
+  color: #dce8f8;
+}
+
+.monster-hang-wait:hover {
+  background: rgba(70, 110, 160, 0.55);
+}
+
+.monster-hang-quit {
+  background: rgba(180, 50, 45, 0.85);
+  border-color: rgba(255, 120, 110, 0.5);
+  color: #fff;
+}
+
+.monster-hang-quit:hover {
+  background: rgba(210, 60, 55, 0.95);
+}

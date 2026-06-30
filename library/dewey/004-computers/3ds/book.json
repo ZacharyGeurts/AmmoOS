@@ -1,0 +1,10 @@
+{
+  "id": "3ds",
+  "title": "Nintendo 3DS",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/3ds/3ds.h7c",
+  "cover": "/library/assets/devices/3ds.png",
+  "ready": true
+}

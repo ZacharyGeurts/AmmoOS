@@ -1,0 +1,13 @@
+{
+  "schema": "g16-rtx-gate/v1",
+  "title": "G16 RTX Gate — queen_rtx and vulkan_rtx require an RTX-class GPU",
+  "policy": "RTX profiles gate behind detected NVIDIA RTX silicon; field_opt/ai/field_compute always available.",
+  "profiles_gated": ["queen_rtx", "vulkan_rtx"],
+  "profiles_open": ["field_opt", "field_compute", "ai", "hostess_secure"],
+  "detection": {
+    "primary": "nvidia-smi",
+    "fallback": ["sysfs_drm", "lspci"],
+    "match": ["RTX", "GeForce RTX", "Quadro RTX", "NVIDIA RTX"]
+  },
+  "override_env": "G16_RTX_GATE_FORCE"
+}

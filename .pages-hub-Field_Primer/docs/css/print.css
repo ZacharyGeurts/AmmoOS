@@ -1,0 +1,119 @@
+/* Field Technology v5 — print / PDF textbook layout */
+
+@media print {
+  nav.top,
+  footer,
+  .reader-launch,
+  .reader-shell,
+  .reader-settings,
+  .reader-settings-overlay,
+  .chapter-nav,
+  header.chapter-hero {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #1a1a1a !important;
+  }
+
+  .chapter-main {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .chapter-main h2 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .chapter-main h3,
+  .chapter-main h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .figure,
+  .on-the-way,
+  .objectives,
+  .chapter-summary-box,
+  .evidence-anchor,
+  table,
+  pre,
+  .callout {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .chapter-toc {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  a {
+    color: #1a1a1a !important;
+    text-decoration: none !important;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555;
+  }
+
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+
+@page {
+  size: letter;
+  margin: 0.85in 0.9in 1in 0.9in;
+
+  @bottom-center {
+    content: "Field Technology v5 · Field Primer";
+    font-size: 8pt;
+    color: #666;
+  }
+}
+
+/* Screen-only wrapper for stitched volume preview */
+body.print-volume {
+  background: #fff;
+  color: #1a1a1a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11pt;
+  line-height: 1.55;
+  max-width: 7in;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.print-volume .volume-title-page {
+  text-align: center;
+  padding: 3rem 1rem 4rem;
+  page-break-after: always;
+}
+
+.print-volume .volume-title-page h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem;
+}
+
+.print-volume .chapter-break {
+  page-break-before: always;
+  break-before: page;
+  margin-top: 0;
+  padding-top: 0.5rem;
+  border-top: 2px solid #8b6914;
+}
+
+.print-volume .chapter-break h2.chapter-num {
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8b6914;
+  margin: 0 0 0.25rem;
+}

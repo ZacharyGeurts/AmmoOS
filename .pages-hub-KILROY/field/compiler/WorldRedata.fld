@@ -1,0 +1,13 @@
+// WorldRedata.fld — WRDT1 lossless envelope + tail-clear (FIELDC v4)
+// Source: github.com/ZacharyGeurts/World_Redata
+
+module WorldRedata {
+  import FieldStackCore;
+
+  const FORMAT = "WRDT1";
+  const MAGIC = "WRDT1";
+  const RULE = "ftruncate after pack — ghost bytes forbidden";
+
+  fn tail_clear_required() -> bool { return true; }
+  fn lossless_sha256() -> bool { return true; }
+}

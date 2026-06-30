@@ -1,0 +1,31 @@
+{
+  "schema": "znetwork-review-checklist/v2",
+  "title": "ZNetwork gates \u2014 LAB \u2192 SHADOW soak \u2192 ACTIVE",
+  "approved": true,
+  "lab_gate_ok": true,
+  "shadow_soak_approved": true,
+  "field_stream_lab_approved": false,
+  "wide_open_forbidden": true,
+  "required_reviews": [
+    "Canonical: NewLatest/ZNetwork only \u2014 no SG sibling duplicate",
+    "znetwork-test-battery.sh passes all smoke + safety tiers",
+    "znetwork-lab-gate.sh writes ZNETWORK_LAB_GATE_OK receipt",
+    "Slide-in plan reviewed \u2014 no carrier drop on primary iface",
+    "NetworkManager handoff tested in VM with rollback",
+    "Field DNS cutover does not break captive portals",
+    "DDoS policy limits validated under load test",
+    "Gatekeeper IFF path signed off (read-only lab calls)",
+    "Handshake sim \u2014 truth_gate + belt_sync only, no steady stream",
+    "FEC repair sim \u2014 repair burst only, thermal backoff verified",
+    "Thermal vent sim \u2014 cool_sort routes to venting dies",
+    "Field stream NOT enabled \u2014 field_stream_lab_approved stays false until soak",
+    "SHADOW 72h soak on isolated iface before ACTIVE consideration",
+    "Windows and macOS backend stubs replaced or waived",
+    "Rollback: unmask NetworkManager within 60s documented"
+  ],
+  "sign_off": {
+    "operator": "default",
+    "date": "2026-06-27",
+    "notes": "Fast ACTIVE \u2014 lab battery passed; field stream remains locked."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "g16-no-field-files-doctrine/v1",
+  "title": "Grok16 compile/link — no poison field file outputs",
+  "motto": "G16 builds on the 2D plane. Link outputs are silicon artifacts — never standalone field files.",
+  "platform_ref": "data/grok16-field-platform-doctrine.json",
+  "depth_ref": "NewLatest/data/single-field-depth-doctrine.json",
+  "no_file_ref": "NewLatest/data/field-no-file-doctrine.json",
+  "policy": {
+    "no_field_files": true,
+    "requires_sg_root": true,
+    "requires_grok16_root": true,
+    "never_poison_the_well": true,
+    "compile_outputs_forbidden": [".field"],
+    "link_outputs_forbidden": [".field"]
+  },
+  "module": "forge/g16-no-field-files.py",
+  "gates": ["g16-no-field-files", "g16-linker", "g16-field-sanity"]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "tg16",
+  "title": "TurboGrafx-16",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/tg16/tg16.h7c",
+  "cover": "/library/assets/devices/tg16.png",
+  "ready": true
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "field-storage-doctrine/v1",
+  "title": "Storage — AmmoOS disk & partition manager",
+  "motto": "Our fdisk — disks, partitions, mount, format. Sovereign iron plate guards root.",
+  "module": "lib/field-storage.py",
+  "panel": "/field-storage",
+  "api": "/api/field-storage",
+  "product": "AmmoOS",
+  "protected_mounts": ["/", "/boot", "/boot/efi", "/usr", "/var"],
+  "protected_prefixes": ["/proc", "/sys", "/dev", "/run"],
+  "allowed_fs": ["ext4", "ext3", "vfat", "fat32", "ntfs", "btrfs", "xfs"],
+  "partition_table_types": ["gpt", "msdos"],
+  "confirm_phrase_format": "FORMAT",
+  "confirm_phrase_partition": "PARTITION",
+  "tools": {
+    "scan": ["lsblk", "findmnt", "df"],
+    "partition": ["parted", "sfdisk"],
+    "format": ["mkfs.ext4", "mkfs.vfat", "mkfs.ntfs", "mkfs.btrfs"],
+    "mount": ["udisksctl", "mount"]
+  }
+}

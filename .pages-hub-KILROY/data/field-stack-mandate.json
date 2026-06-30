@@ -1,0 +1,101 @@
+{
+  "schema": "kilroy-field-stack/v1",
+  "title": "KILROY #1 Field Stack — doctrine + compiler + sovereign brain",
+  "motto": "Number one with KILROY — Field OS kernel holds the die; Grok16 + FIELDC recompile after every field update.",
+  "doctrine": {
+    "identity": "KILROY Field OS — Linux-compatible, not Linux",
+    "abi": "kilroy-field-1.0",
+    "layout": 9,
+    "compiler_primary": "Grok16 5.0.1 g16 @ gnu++26 field_physics / belt_2_0",
+    "compiler_runtime": "FIELDC v4.0.2026 — .fld → guest modules",
+    "recompile_rule": "Field update → gen-field-stack → kilroy-become-substrate → build-kilroy.sh"
+  },
+  "repos": [
+    {
+      "id": "kilroy",
+      "name": "KILROY Field OS",
+      "path": "SG/KILROY",
+      "role": "Canonical kernel Field Die — CONFIG_RTX_FIELD_DIE",
+      "github": "https://github.com/ZacharyGeurts/KILROY",
+      "version": "1.0.0",
+      "codename": "Taco",
+      "proc": "/proc/kilroy_field"
+    },
+    {
+      "id": "amouranthrtx",
+      "name": "AMOURANTHRTX",
+      "path": "SG/NewLatest/AMOURANTHRTX",
+      "role": "RTX engine · FieldKilroy userspace pump",
+      "github": "https://github.com/ZacharyGeurts/AMOURANTHRTX",
+      "bridge": "FieldKilroy/"
+    },
+    {
+      "id": "field_primer",
+      "name": "Field_Primer",
+      "path": "SG/Field_Primer",
+      "role": "Field Technology v5 — textbook web/PDF/ZAC doctrine",
+      "github": "https://github.com/ZacharyGeurts/Field_Primer",
+      "wiki": "wiki/08-Field-Die-And-Data-Bus.md",
+      "redata": "wiki/Redata-Pipeline.md"
+    },
+    {
+      "id": "final_eye",
+      "name": "Final_Eye",
+      "path": "SG/Final_Eye",
+      "role": "Assistive offense tenant — vision, stoard, field compiler bridge",
+      "github": "https://github.com/ZacharyGeurts/Final_Eye",
+      "version": "1.2.1",
+      "compiler": "zocr_field_compiler.py",
+      "stoard": "stoard/"
+    },
+    {
+      "id": "world_redata",
+      "name": "World_Redata",
+      "path": "SG/World_Redata",
+      "role": "WRDT1 lossless envelopes — tail-clear, Hostess7 sibling",
+      "github": "https://github.com/ZacharyGeurts/World_Redata",
+      "format": "WRDT1",
+      "bridge": "wiki/Hostess7-Bridge.md"
+    },
+    {
+      "id": "queen",
+      "name": "Queen Browser",
+      "path": "SG/NewLatest/Queen",
+      "role": "Standalone secured browser — sibling to AmmoOS desktop",
+      "api": "http://127.0.0.1:9481/api/kilroy",
+      "ammoos": "2.0.0-beta3.1",
+      "standalone": true
+    }
+  ],
+  "fieldc_targets": [
+    {"id": "field_primer", "fld": "field/compiler/FieldPrimer.fld", "repo": "field_primer"},
+    {"id": "final_eye", "fld": "field/compiler/FinalEye.fld", "repo": "final_eye"},
+    {"id": "world_redata", "fld": "field/compiler/WorldRedata.fld", "repo": "world_redata"},
+    {"id": "field_stack", "fld": "field/compiler/FieldStackCore.fld", "repo": "kilroy"},
+    {"id": "field_net", "fld": "AmmoOS/net/FieldNetCore.fld", "repo": "queen", "note": "Queen AmmoOS guest net"}
+  ],
+  "kernel_slots": ["TIME", "RAM", "THERMO", "CONTEXT", "CPU", "FLOW", "CACHE", "DIRECT"],
+  "proc_nodes": ["status", "security", "stack", "sdf", "ai", "boot", "power", "thermo", "flow", "cache", "direct", "gpu"],
+  "ai_kernel": {
+    "schema": "kilroy-ai-kernel/v1",
+    "mandate": "data/kilroy-ai-mandate.json",
+    "gen": "scripts/gen-ai-wishes.sh",
+    "proc": "/proc/kilroy_field/ai",
+    "modes": ["home", "war"],
+    "hostess_query": "Queen/lib/queen-hostess-brain.py json"
+  },
+  "io_doctrine": {
+    "zero_cost": "passthrough ~6ns; proc/SDF read-only; no hot-path hooks",
+    "sdf": "/proc/kilroy_field/sdf — Hostess7 brain imaging, Final_Eye vision ingress",
+    "chardev": "/dev/kilroy_field — ioctl ABI layout v9",
+    "grok16_manual": "https://zacharygeurts.github.io/Grok16/io.html",
+    "final_eye": "https://zacharygeurts.github.io/Final_Eye/"
+  },
+  "build": {
+    "check": "scripts/check-field-stack.sh",
+    "gen": "scripts/gen-field-stack.sh",
+    "recompile": "scripts/field-recompile.sh",
+    "kernel": "scripts/build-kilroy.sh",
+    "full_os": "../NewLatest/AMOURANTHRTX/scripts/build_kilroy_os.sh all"
+  }
+}

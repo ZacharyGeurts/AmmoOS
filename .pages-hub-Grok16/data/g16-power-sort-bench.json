@@ -1,0 +1,200 @@
+{
+  "schema": "g16-power-sort-bench/v1",
+  "updated": "2026-06-30T02:54:07Z",
+  "ok": true,
+  "elapsed_ms": 23.87,
+  "contexts": {
+    "file_list_small": {
+      "best": "locale_ci",
+      "candidates": [
+        {
+          "algorithm": "locale_ci",
+          "elapsed_us": 21.78,
+          "ops_per_sec": 9183721.5,
+          "n": 200
+        },
+        {
+          "algorithm": "timsort_key",
+          "elapsed_us": 34.6,
+          "ops_per_sec": 5779512.02,
+          "n": 200
+        },
+        {
+          "algorithm": "radix_bucket_name",
+          "elapsed_us": 45.44,
+          "ops_per_sec": 4401537.69,
+          "n": 200
+        },
+        {
+          "algorithm": "dirs_first",
+          "elapsed_us": 52.79,
+          "ops_per_sec": 3788859.36,
+          "n": 200,
+          "semantic_bonus": 0.92,
+          "effective_us": 48.57
+        }
+      ],
+      "n": 200
+    },
+    "file_list_large": {
+      "best": "locale_ci",
+      "candidates": [
+        {
+          "algorithm": "locale_ci",
+          "elapsed_us": 187.14,
+          "ops_per_sec": 6412231.63,
+          "n": 1200
+        },
+        {
+          "algorithm": "radix_bucket_name",
+          "elapsed_us": 366.41,
+          "ops_per_sec": 3275049.59,
+          "n": 1200
+        },
+        {
+          "algorithm": "timsort_key",
+          "elapsed_us": 377.01,
+          "ops_per_sec": 3182911.3,
+          "n": 1200
+        },
+        {
+          "algorithm": "dirs_first",
+          "elapsed_us": 503.82,
+          "ops_per_sec": 2381793.56,
+          "n": 1200,
+          "semantic_bonus": 0.92,
+          "effective_us": 463.51
+        }
+      ],
+      "n": 1200
+    },
+    "integer_keys": {
+      "best": "radix_bucket_256",
+      "candidates": [
+        {
+          "algorithm": "radix_bucket_256",
+          "elapsed_us": 594.6,
+          "ops_per_sec": 13454423.43,
+          "n": 8000
+        },
+        {
+          "algorithm": "timsort",
+          "elapsed_us": 718.15,
+          "ops_per_sec": 11139703.16,
+          "n": 8000
+        }
+      ],
+      "n": 8000
+    },
+    "nearly_sorted": {
+      "best": "timsort",
+      "candidates": [
+        {
+          "algorithm": "timsort",
+          "elapsed_us": 161.4,
+          "ops_per_sec": 49565068.43,
+          "n": 8000
+        },
+        {
+          "algorithm": "radix_bucket_256",
+          "elapsed_us": 361.24,
+          "ops_per_sec": 22145942.45,
+          "n": 8000
+        }
+      ],
+      "n": 8000
+    },
+    "reversed": {
+      "best": "timsort",
+      "candidates": [
+        {
+          "algorithm": "timsort",
+          "elapsed_us": 38.68,
+          "ops_per_sec": 206809155.21,
+          "n": 8000
+        },
+        {
+          "algorithm": "radix_bucket_256",
+          "elapsed_us": 300.64,
+          "ops_per_sec": 26610253.71,
+          "n": 8000
+        }
+      ],
+      "n": 8000
+    },
+    "thermal_layers": {
+      "best": "cool_sort",
+      "candidates": [
+        {
+          "algorithm": "cool_sort",
+          "elapsed_us": 4.52,
+          "ops_per_sec": 10630444.78,
+          "n": 48
+        }
+      ],
+      "n": 48
+    },
+    "bench_rank": {
+      "best": "desc_numeric",
+      "candidates": [
+        {
+          "algorithm": "desc_numeric",
+          "elapsed_us": 5.34,
+          "ops_per_sec": 11992502.75,
+          "n": 64
+        }
+      ],
+      "n": 64
+    },
+    "drive_index": {
+      "best": "radix_bucket_256",
+      "candidates": [
+        {
+          "algorithm": "radix_bucket_256",
+          "elapsed_us": 712.93,
+          "ops_per_sec": 16831876.11,
+          "n": 12000
+        },
+        {
+          "algorithm": "timsort_key",
+          "elapsed_us": 7106.52,
+          "ops_per_sec": 1688589.25,
+          "n": 12000
+        }
+      ],
+      "n": 12000
+    }
+  },
+  "_g16_seal": {
+    "schema": "g16-sealed-output/v1",
+    "algorithm": "sha256",
+    "digest": "da011471dc2ff005a8ca5da91c4f936a4d5f131f1039cd564a523b1c7ffb13a8",
+    "sealed_at": "2026-06-30T02:54:07Z",
+    "path": "/home/default/Desktop/SG/NewLatest/Grok16/data/g16-power-sort-bench.json",
+    "g1id_meld": {
+      "id": "g1id",
+      "absorbed": true,
+      "meld_citation": "ironclad:meld:2",
+      "citation": "ironclad:time:1",
+      "policy": "sovereign_time_only",
+      "time_is_linear": true,
+      "sovereign_time_ok": true,
+      "sovereign_time": {
+        "source": "lib/sovereign-time.py",
+        "clock": "lib/sovereign-clock.py",
+        "schema": "sovereign-time-meld-input/v1",
+        "linear_ns": 1782788047924542797,
+        "derived_utc": "2026-06-30T02:54:07Z",
+        "sealed": true,
+        "synced": false,
+        "never_desync": true,
+        "immutable_linear": true,
+        "witness_only": true,
+        "not_geometry_t": true,
+        "citation": "ironclad:g1id:2"
+      },
+      "example_valid": true,
+      "updated": "2026-06-30T02:54:07Z"
+    }
+  }
+}

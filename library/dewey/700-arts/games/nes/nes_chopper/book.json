@@ -1,0 +1,10 @@
+{
+  "id": "nes_chopper",
+  "title": "Chopper",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_chopper/nes_chopper.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_chopper-box.png",
+  "ready": true
+}

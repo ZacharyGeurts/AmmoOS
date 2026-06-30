@@ -1,0 +1,10 @@
+{
+  "id": "cdi",
+  "title": "Philips CD-i",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/cdi/cdi.h7c",
+  "cover": "/library/assets/devices/cdi.png",
+  "ready": true
+}

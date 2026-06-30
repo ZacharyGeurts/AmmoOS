@@ -1,0 +1,99 @@
+{
+  "schema": "g16-power-sort-doctrine/v2",
+  "title": "Power sort — always pick the best ordering for the problem",
+  "motto": "We understand the shape of the data; bench receipts pick the sort; never pay for the wrong comparator.",
+  "meld_citation": "ironclad:meld:2",
+  "ironclad_ref": "ironclad:field_sanity:2",
+  "plate_not_wire": true,
+  "line_safety": {
+    "narrow_band_width": 16,
+    "pipe_policy": "adjacent_narrow_only",
+    "wide_piping_prevented": true,
+    "consumer": "ironclad_chips",
+    "hot_pipe": "narrow",
+    "cold_pipe": "cold"
+  },
+  "pass": ["classify", "strip", "dedupe", "flatten", "cool_sort"],
+  "policy": {
+    "always_best_sort": true,
+    "auto_on_integrate": true,
+    "auto_on_always_optimal": true,
+    "auto_on_compatibility_refresh": true,
+    "auto_on_panel_boot": true,
+    "auto_on_plate_meld": true,
+    "bench_on_apply": true,
+    "bench_max_ms": 800,
+    "fallback_sort": "timsort",
+    "never_operator_crank": true,
+    "never_bench_under_heat": true,
+    "cool_sort_under_heat": true,
+    "sections_run_cool": true
+  },
+  "sections": {
+    "file_list": {"gate": true, "cool": true, "consumer": "queen_files", "context": "file_list"},
+    "drive_index": {"gate": true, "cool": true, "consumer": "field_drive_indexer", "context": "drive_index"},
+    "recombinatorics": {"gate": true, "cool": true, "consumer": "combinatorics_bridge", "context": "recombinatorics"},
+    "chip_paths": {"gate": true, "cool": true, "consumer": "ironclad_chips", "context": "chip_paths", "algorithm": "composite_bsp"},
+    "bench_rank": {"gate": true, "cool": true, "consumer": "field_exec_bench", "context": "bench_rank"},
+    "thermal_layers": {"gate": true, "cool": true, "consumer": "field_sanity", "context": "thermal_layers", "algorithm": "cool_sort"},
+    "queen_files": {"gate": true, "cool": true, "consumer": "queen_file_browser", "context": "file_list"},
+    "compat_layers": {"gate": true, "cool": true, "consumer": "field_compatibility_layers"},
+    "panel": {"gate": true, "manifest_api": "/api/power-sort"},
+    "physics": {"gate": true, "consumer": "field_physics_witness", "manifest_api": "/api/physics-witness"},
+    "format_table": {"gate": true, "cool": true, "consumer": "field_file_formats", "context": "format_table", "algorithm": "family_then_label"}
+  },
+  "contexts": {
+    "file_list": {
+      "label": "Queen file browser listings",
+      "default_n_threshold": 500,
+      "semantic_prefer": "dirs_first",
+      "candidates": ["dirs_first", "locale_ci", "timsort_key", "radix_bucket_name"]
+    },
+    "drive_index": {
+      "label": "Field drive indexer",
+      "candidates": ["timsort_key", "radix_bucket_256"]
+    },
+    "recombinatorics": {
+      "label": "BSP composite profile ranking",
+      "candidates": ["composite_bsp"]
+    },
+    "bench_rank": {
+      "label": "Bench row ranking",
+      "candidates": ["desc_numeric"]
+    },
+    "thermal_layers": {
+      "label": "Field sanity cool_sort",
+      "candidates": ["cool_sort"]
+    },
+    "chip_paths": {
+      "label": "Ironclad chips code path — composite BSP via field-best-sort",
+      "candidates": ["composite_bsp"],
+      "narrow_band_width": 16,
+      "pipe_policy": "adjacent_narrow_only",
+      "best_sort_ref": "field-best-sort-panel.json",
+      "consumer": "ironclad_chips"
+    },
+    "format_table": {
+      "label": "Field file format tables — family then label",
+      "semantic_prefer": "family_then_label",
+      "candidates": ["family_then_label", "locale_ci", "timsort_key"]
+    }
+  },
+  "algorithms": {
+    "timsort": {"impl": "python_sorted", "stable": true, "thermal_weight": 1.0},
+    "timsort_key": {"impl": "python_sorted_key", "stable": true, "thermal_weight": 1.0},
+    "dirs_first": {"impl": "dirs_then_locale", "stable": true, "thermal_weight": 0.9},
+    "locale_ci": {"impl": "casefold_locale", "stable": true, "thermal_weight": 0.9},
+    "radix_bucket_name": {"impl": "first_char_bucket", "stable": false, "thermal_weight": 1.2},
+    "radix_bucket_256": {"impl": "byte_bucket", "stable": false, "thermal_weight": 1.5},
+    "composite_bsp": {"impl": "combinatorics_composite", "stable": false, "thermal_weight": 1.0},
+    "desc_numeric": {"impl": "numeric_desc", "stable": false, "thermal_weight": 0.8},
+    "cool_sort": {"impl": "thermo_proxy_asc", "stable": true, "thermal_weight": 0.5},
+    "narrow_band": {"impl": "band_slot_pct_desc", "stable": true, "thermal_weight": 0.6},
+    "family_then_label": {"impl": "family_order_then_label", "stable": true, "thermal_weight": 0.7}
+  },
+  "module": "lib/field-power-sort.py",
+  "plate_module": "lib/g16-power-sort-plate.py",
+  "panel": "g16-power-sort-panel.json",
+  "receipts": ["data/g16-power-sort-bench.json"]
+}

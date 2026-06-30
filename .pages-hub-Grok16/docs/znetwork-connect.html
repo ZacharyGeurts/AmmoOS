@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — ZNetwork Connect</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/znetwork-connect.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>ZNetwork — secure connect (design)</h1>
+  <p>Doctrine: <code>data/grok16-znetwork-field-wire-doctrine.json</code> · status: <strong>design review</strong></p>
+
+  <h2 id="verdict">Verdict</h2>
+  <table>
+    <tr><th>Question</th><th>Answer</th></tr>
+    <tr><td>Connect everyone securely?</td><td><strong>Yes in layers</strong> — not one open global directory today</td></tr>
+    <tr><td>Name + address, no phone?</td><td><strong>Wire-point tokens</strong> + sovereign receipts + invites</td></tr>
+    <tr><td>Fake accounts?</td><td><strong>Truth gate</strong> + gatekeeper — no username registry</td></tr>
+    <tr><td>Address theft?</td><td><strong>No central DB</strong> — local friends list, beacon pins</td></tr>
+    <tr><td>Both field computers?</td><td><strong>Direct belt talk</strong> — convert at egress, deconvert at ingress</td></tr>
+  </table>
+
+  <h2 id="field-wire">Field expansion down the wire</h2>
+  <pre><code>[Field A] → field-io packet (sealed) → wire → verify + deconvert → [Field B]</code></pre>
+  <p>Never ship raw field files on the wire. Modules: <code>field-io-packet.py</code>, <code>packet-field.py</code>, <code>connection-gatekeeper.py</code>.</p>
+
+  <h2 id="identity">Identity without cellphone</h2>
+  <ul>
+    <li><strong>Display name</strong> — public label only, not root of trust</li>
+    <li><strong>Wire-point</strong> — opaque HMAC token, rotates with sovereign receipt</li>
+    <li><strong>LAN beacon</strong> — polite discovery (AmmoCode port 9555)</li>
+    <li><strong>Invite URL</strong> — one-time collab token (WS :9556)</li>
+    <li><strong>USB sovereign key</strong> — optional physical anchor (no SMS)</li>
+  </ul>
+
+  <h2 id="safety">Safety concerns</h2>
+  <table>
+    <tr><th>Risk</th><th>Mitigation</th></tr>
+    <tr><td>Field files on wire</td><td>Sealed envelopes only; depth 0 at ingress</td></tr>
+    <tr><td>Central directory scrape</td><td>No shared plaintext address book</td></tr>
+    <tr><td>Sybil operators</td><td>Truth gate + block rating &lt; 25</td></tr>
+    <tr><td>Sustained wire heat</td><td><code>field_physics</code> + per-peer token bucket</td></tr>
+    <tr><td>ZNetwork ACTIVE early</td><td><code>REVIEW_ONLY</code> default; human checklist</td></tr>
+    <tr><td>MITM on open net</td><td>beacon_pin before tunnel_connect</td></tr>
+  </table>
+  <p>ZNetwork modes: <code>REVIEW_ONLY</code> (default) · <code>SHADOW</code> · <code>ACTIVE</code> (gated). AmmoCode: attach-only.</p>
+  <p><a href="field-platform.html">Field Platform</a> · <a href="safety.html">Safety</a></p>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

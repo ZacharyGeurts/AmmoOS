@@ -1,0 +1,98 @@
+{
+  "schema": "grok16-build-essential/v1",
+  "product": "Grok16 Build-Essential",
+  "motto": "Ubuntu build-essential, rebuilt better — g16 + g16-binutils + field build + autotools + packaging. Everything in SG/Grok16.",
+  "replaces": "ubuntu:build-essential",
+  "policy": {
+    "no_prebuilts": true,
+    "self_host": true,
+    "unified_discern": true,
+    "legacy_fallback_last": true,
+    "prefix": "${G16_PREFIX}",
+    "bootstrap_host_apt": "build-essential flex bison libgmp-dev libmpfr-dev libmpc-dev",
+    "bootstrap_note": "Host apt is one-time bootstrap only; runtime builds use Grok16 prefix"
+  },
+  "entry": {
+    "script": "scripts/grok16-build-essential.sh",
+    "env": "scripts/g16-build-env.sh",
+    "forge": "forge/build_essential_tools.py",
+    "vendor": "data/grok16-vendor-build-tools.json",
+    "version_pair": "data/grok16-build-essential-version.json"
+  },
+  "layers": {
+    "ubuntu_parity": {
+      "label": "Ubuntu build-essential parity",
+      "required": true,
+      "tools": {
+        "gcc": {"field": "g16", "compat": ["gcc", "cc"], "built": true, "role": "compiler"},
+        "g++": {"field": "g++16", "compat": ["g++", "c++"], "built": true, "role": "compiler"},
+        "make": {"field": "g16-make", "compat": ["make", "gmake"], "role": "build"},
+        "as": {"field": "g16-as", "compat": ["as"], "built": true, "role": "assembler"},
+        "ld": {"field": "g16-ld", "compat": ["ld"], "built": true, "role": "linker"},
+        "ar": {"field": "g16-ar", "compat": ["ar"], "built": true, "role": "archive"},
+        "libc-dev": {"field": "g16-sysroot", "compat": ["libc6-dev"], "role": "headers", "staged": true}
+      }
+    },
+    "binutils": {
+      "label": "GNU binutils (field rebuild)",
+      "required": true,
+      "manifest": "data/grok16-binutils-version.json",
+      "tools": ["g16-objdump", "g16-objcopy", "g16-nm", "g16-ranlib", "g16-readelf", "g16-strings", "g16-size", "g16-strip"]
+    },
+    "autotools": {
+      "label": "Parser + configure generators",
+      "required": true,
+      "tools": {
+        "bison": {"field": "g16-bison", "compat": ["bison", "yacc"]},
+        "flex": {"field": "g16-flex", "compat": ["flex", "lex"]},
+        "autoconf": {"field": "g16-autoconf", "compat": ["autoconf"]},
+        "automake": {"field": "g16-automake", "compat": ["automake"]},
+        "libtoolize": {"field": "g16-libtoolize", "compat": ["libtoolize"]},
+        "m4": {"field": "g16-m4", "compat": ["m4"]}
+      }
+    },
+    "meta_build": {
+      "label": "CMake / Ninja / Meson",
+      "required": true,
+      "tools": {
+        "cmake": {"field": "g16-cmake", "compat": ["cmake"]},
+        "ninja": {"field": "g16-ninja", "compat": ["ninja"]},
+        "meson": {"field": "g16-meson", "compat": ["meson"]},
+        "pkg-config": {"field": "g16-pkg-config", "compat": ["pkg-config"]},
+        "gperf": {"field": "g16-gperf", "compat": ["gperf"]}
+      }
+    },
+    "utilities": {
+      "label": "Core build utilities (extended parity)",
+      "required": false,
+      "tools": {
+        "patch": {"field": "g16-patch", "compat": ["patch"]},
+        "diff": {"field": "g16-diff", "compat": ["diff"]},
+        "install": {"field": "g16-install", "compat": ["install"]},
+        "tar": {"field": "g16-tar", "compat": ["tar"]},
+        "gzip": {"field": "g16-gzip", "compat": ["gzip"]},
+        "gunzip": {"field": "g16-gunzip", "compat": ["gunzip"]},
+        "sed": {"field": "g16-sed", "compat": ["sed"]},
+        "awk": {"field": "g16-awk", "compat": ["awk", "gawk"]},
+        "file": {"field": "g16-file", "compat": ["file"]},
+        "cp": {"field": "g16-cp", "compat": ["cp"]},
+        "mkdir": {"field": "g16-mkdir", "compat": ["mkdir"]},
+        "rm": {"field": "g16-rm", "compat": ["rm"]},
+        "ln": {"field": "g16-ln", "compat": ["ln"]}
+      }
+    },
+    "packaging": {
+      "label": "Debian packaging (dpkg-dev parity)",
+      "required": false,
+      "tools": {
+        "dpkg-buildpackage": {"field": "g16-dpkg-buildpackage", "compat": ["dpkg-buildpackage"]},
+        "dpkg-architecture": {"field": "g16-dpkg-architecture", "compat": ["dpkg-architecture"]},
+        "dpkg-source": {"field": "g16-dpkg-source", "compat": ["dpkg-source"]}
+      }
+    }
+  },
+  "install": "./scripts/grok16-build-essential.sh install",
+  "rebuild": "./scripts/grok16-build-essential.sh rebuild",
+  "status": "./scripts/grok16-build-essential.sh status",
+  "verify": "./scripts/grok16-build-essential.sh verify"
+}

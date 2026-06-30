@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — CMake & Link</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/cmake-&-link.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>CMake and linking</h1>
+  <p>Canonical Grok16 Field CMake + <code>g16-ld</code> mandate for <code>speed_demo</code> and all field targets.</p>
+
+  <figure class="fig-wide">
+    <img src="assets/cmake-link-pipeline.svg" alt="CMake configure build link pipeline" width="920" height="300" />
+    <figcaption>Configure → g16 compile → g16-ld link with field mandate flags</figcaption>
+  </figure>
+
+  <h2 id="speed-demo">speed_demo CMake project</h2>
+  <p><code>examples/speed-demo/CMakeLists.txt</code> builds <code>grok16_speed_demo</code> from <code>speed_demo.cpp</code>.</p>
+
+  <h3>Host plane</h3>
+  <pre><code>cmake -S examples/speed-demo -B build/host \
+  -DCMAKE_CXX_COMPILER=$(which g++) \
+  -DGROK16_HOST_PLANE=ON
+cmake --build build/host -j$(nproc)</code></pre>
+
+  <h3>G16 belt plane</h3>
+  <pre><code>cmake -S examples/speed-demo -B build/g16 \
+  -DCMAKE_TOOLCHAIN_FILE=$G16_PREFIX/cmake/grok16-toolchain.cmake \
+  -DGROK16_PROFILE=belt_2_0
+cmake --build build/g16 -j$(nproc)</code></pre>
+
+  <h2 id="toolchain">Toolchain file</h2>
+  <p><code>cmake/grok16-toolchain.cmake</code> sets:</p>
+  <ul>
+    <li><code>CMAKE_C_COMPILER</code> / <code>CMAKE_CXX_COMPILER</code> → <code>g16</code></li>
+    <li>Profile flags from <code>data/grok16-profiles.json</code></li>
+    <li>Linker wrapper → <code>g16-ld</code></li>
+  </ul>
+
+  <h2 id="mandate">Linking mandate</h2>
+  <table>
+    <tr><th>File</th><th>Role</th></tr>
+    <tr><td><code>cmake/g16-linker-mandate.cmake</code></td><td>Field link flags, <code>-pie</code>, shared rules</td></tr>
+    <tr><td><code>cmake/g16-field-mandate.cmake</code></td><td><code>G16_FIELD_SAFETY_MANDATE_v1</code> on field targets</td></tr>
+    <tr><td><code>forge/g16-linker.py</code></td><td><code>g16-ld</code> backend — 16 target families</td></tr>
+  </table>
+  <p>Full linker manual: <a href="linker.html">Linker</a></p>
+
+  <h2 id="bench">Bench with CMake row</h2>
+  <pre><code>SPEED_DEMO_TARGET_SEC=3 ./scripts/grok16-toolchain.sh exec-full-bench
+./scripts/field-exec-stage.py</code></pre>
+  <p>CMake runner included in speed bench report v5.0.0. Versions: <code>data/grok16-speed-bench-version.json</code></p>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

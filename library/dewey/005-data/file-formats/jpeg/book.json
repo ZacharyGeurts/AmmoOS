@@ -1,0 +1,14 @@
+{
+  "id": "format-jpeg",
+  "title": "JPEG Image",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".jpg",
+    ".jpeg"
+  ],
+  "magic": "ffd8ff",
+  "cover": "/library/assets/formats/jpeg.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

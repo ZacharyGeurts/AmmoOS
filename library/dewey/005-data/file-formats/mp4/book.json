@@ -1,0 +1,11 @@
+{
+  "id": "format-mp4",
+  "title": "MP4 container",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [],
+  "magic": "ftyp",
+  "cover": "/library/assets/formats/mp4.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

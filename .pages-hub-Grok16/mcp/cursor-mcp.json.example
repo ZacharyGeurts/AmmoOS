@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "grok16": {
+      "command": "python3",
+      "args": ["${GROK16_ROOT}/mcp/grok16_mcp_server.py"],
+      "env": {
+        "GROK16_ROOT": "${GROK16_ROOT}",
+        "G16_PREFIX": "${GROK16_ROOT}"
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "grok16-ammoos-integrate/v1",
+  "grok16_root": "/home/default/Desktop/SG/NewLatest/Grok16",
+  "grok16_version": "5.0.0",
+  "ammoos_root": "/home/default/Desktop/SG/NewLatest",
+  "profile": "ammoos",
+  "belt_profile": "belt_2_0",
+  "cmake_profile": "cmake/grok16-profile-ammoos.cmake",
+  "review": "docs/AMMOOS-REVIEW-FOR-GROK-BUILD.md",
+  "ironclad": "data/g16-ironclad-meld.json",
+  "single_fabric": "data/grok16-single-fabric-doctrine.json",
+  "stack_layers": "data/field-stack-layer-doctrine.json",
+  "verify": "scripts/grok16-verify-ammoos.sh",
+  "launch_smoke": "examples/ammoos-smoke/ammoos-smoke.launch",
+  "pipelines": [
+    "scripts/ammoos-beta-pipeline.sh",
+    "scripts/ammoos-launch-verify.sh",
+    "scripts/pack-ammoos-release.sh"
+  ],
+  "queen_binary": "Queen/build/rtx/bin/Linux/queen-browser",
+  "combinatronic": "lib/g16-combinatronic-rebalance.py"
+}

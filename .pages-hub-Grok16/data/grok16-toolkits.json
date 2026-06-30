@@ -1,0 +1,72 @@
+{
+  "schema": "grok16-toolkits/v1",
+  "title": "Rebuilt toolkits — carried in-tree",
+  "motto": "Grok16 ships its own compilers, linker, binutils, Python, and language drivers. Rebuild locally; no prebuilts; sibling repos optional legacy fallback only.",
+  "policy": {
+    "no_prebuilts": true,
+    "self_host": true,
+    "builtin_python": true,
+    "unified_discern": true,
+    "legacy_fallback_last": true
+  },
+  "core": {
+    "g16": {
+      "driver": "bin/g16",
+      "compat": ["bin/g++16", "bin/gcc", "bin/g++"],
+      "backends": ["libexec/grok16/g16-cc", "libexec/grok16/g16-cxx"],
+      "rebuild": "./scripts/grok16-toolchain.sh rebuild",
+      "std": {"c": "gnu17", "cxx": "gnu++26"}
+    },
+    "gpy16": {
+      "driver": "bin/gpy-16",
+      "launcher": "scripts/gpy-16",
+      "tree": "python/",
+      "runtime": "grok_vm",
+      "extensions": [".py", ".gpy"],
+      "discern": "python",
+      "pair": "data/gpy-16-version.json"
+    }
+  },
+  "binutils": {
+    "driver": "bin/g16-ld",
+    "tools": [
+      "g16-as", "g16-ld", "g16-objdump", "g16-objcopy", "g16-nm", "g16-ar",
+      "g16-ranlib", "g16-readelf", "g16-strings", "g16-size", "g16-strip"
+    ],
+    "rebuild": "./scripts/grok16-binutils.sh install"
+  },
+  "build_essential": {
+    "driver": "bin/g16",
+    "replaces": "ubuntu:build-essential",
+    "manifest": "data/grok16-build-essential.json",
+    "env": "scripts/g16-build-env.sh",
+    "install": "./scripts/grok16-build-essential.sh install",
+    "verify": "./scripts/grok16-build-essential.sh verify",
+    "layers": ["ubuntu_parity", "binutils", "autotools", "meta_build", "utilities", "packaging"],
+    "rule": "Better than build-essential — entire compile/link/build stack in SG/Grok16"
+  },
+  "field_build": {
+    "driver": "bin/g16-cmake",
+    "tools": [
+      "g16-cmake", "g16-ninja", "g16-make", "g16-bison", "g16-flex",
+      "g16-autoconf", "g16-automake", "g16-libtoolize", "g16-pkg-config",
+      "g16-m4", "g16-meson", "g16-gperf"
+    ],
+    "manifest": "data/grok16-field-build.json",
+    "rebuild": "./scripts/grok16-field-build.sh install",
+    "field_cmake": "./scripts/field-cmake.sh",
+    "rule": "Single build fabric — configure via g16-cmake, compile via g16-ninja/g16-make, parse via g16-bison/g16-flex"
+  },
+  "languages": {
+    "asm": {"driver": "g16-as", "extensions": [".s", ".S", ".asm"]},
+    "rust": {"driver": "g16-rust", "extensions": [".rs"], "memory": "ownership"},
+    "go": {"driver": "g16-go", "extensions": [".go"]},
+    "zig": {"driver": "g16-zig", "extensions": [".zig"]},
+    "fortran": {"driver": "g16-gfortran", "extensions": [".f", ".f90", ".f95", ".f03", ".for"]},
+    "d": {"driver": "g16-gdc", "extensions": [".d"]},
+    "ada": {"driver": "g16-gnat", "extensions": [".adb", ".ads"]},
+    "objc": {"driver": "g16-objc", "extensions": [".m", ".mm"]}
+  },
+  "install": "./scripts/grok16-languages.sh install",
+  "discern": "./scripts/grok16-languages.sh discern"
+}

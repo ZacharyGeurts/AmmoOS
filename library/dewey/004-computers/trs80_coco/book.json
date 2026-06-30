@@ -1,0 +1,10 @@
+{
+  "id": "trs80_coco",
+  "title": "TRS-80 Color Computer",
+  "author": "Field Extensive Library",
+  "dewey": "004.167",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/trs80_coco/trs80_coco.h7c",
+  "cover": "/library/assets/devices/trs80_coco.png",
+  "ready": true
+}

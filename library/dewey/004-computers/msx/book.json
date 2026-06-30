@@ -1,0 +1,10 @@
+{
+  "id": "msx",
+  "title": "MSX",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/msx/msx.h7c",
+  "cover": "/library/assets/devices/msx.png",
+  "ready": true
+}

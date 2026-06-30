@@ -1,0 +1,10 @@
+{
+  "id": "c64",
+  "title": "Commodore 64 (classic)",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/c64/c64.h7c",
+  "cover": "/library/assets/devices/c64.png",
+  "ready": true
+}

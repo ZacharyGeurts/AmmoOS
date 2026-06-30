@@ -1,0 +1,10 @@
+{
+  "id": "ps_vita",
+  "title": "PlayStation Vita",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/ps_vita/ps_vita.h7c",
+  "cover": "/library/assets/devices/ps_vita.png",
+  "ready": true
+}

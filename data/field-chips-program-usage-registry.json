@@ -1,0 +1,27 @@
+{
+  "schema": "field-chips-program-usage-registry/v1",
+  "generated": "2026-06-30T07:36:58Z",
+  "program_count": 3,
+  "programs": [
+    {
+      "program_id": "browser",
+      "label": "Queen Browser",
+      "chip_facet": "queen_browser",
+      "usage_pct": 12
+    },
+    {
+      "program_id": "kilroy",
+      "label": "KILROY",
+      "chip_facet": "kilroy_kernel",
+      "usage_pct": 18,
+      "kilroy": true
+    },
+    {
+      "program_id": "terminal",
+      "label": "Terminal",
+      "chip_facet": "shell",
+      "usage_pct": 8
+    }
+  ],
+  "ok": true
+}

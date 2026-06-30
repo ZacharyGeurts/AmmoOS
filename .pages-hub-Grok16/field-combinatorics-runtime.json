@@ -1,0 +1,9 @@
+{
+  "last_retaliate_level": "monitor",
+  "last_retaliate_action": "record",
+  "last_retaliate_reason": "engine_stale_rebuild_required",
+  "last_retaliate_at": "2026-06-29T06:30:08Z",
+  "attempt_count": 1,
+  "caller": "combinatorics_bridge",
+  "updated": "2026-06-29T06:30:08Z"
+}

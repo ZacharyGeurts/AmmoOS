@@ -1,0 +1,98 @@
+{
+  "schema": "g16-stack-fabric-doctrine/v1",
+  "title": "Grok16 Stack Fabric — G1 through G15",
+  "version": "1.0.0",
+  "motto": "One fabric: sealed output, silent gates, profile autoload, truth floor everywhere.",
+  "items": {
+    "G1": {
+      "name": "Sealed release packs",
+      "module": "lib/g16-sealed-release.py",
+      "hook": "scripts/grok16-release.sh seal_dist_artifacts",
+      "verify": "grok16-toolchain.sh verify-sealed"
+    },
+    "G2": {
+      "name": "Compile receipt chain",
+      "module": "lib/g16-compile-receipt.py",
+      "ledger": "data/g16-compile-receipt.jsonl",
+      "hook": "scripts/grok16-ai-compile.py"
+    },
+    "G3": {
+      "name": "Silent bench gate",
+      "module": "lib/g16-silent-bench.py",
+      "hook": "grok16-toolchain.sh bench-silent-gate",
+      "threshold_pct": 5.0
+    },
+    "G4": {
+      "name": "Profile autoload from stack manifest",
+      "module": "lib/g16-stack-fabric.py",
+      "manifest": "NewLatest/data/field-stack-manifest.json",
+      "hook": "scripts/grok16-integrate.sh write_consumer_env"
+    },
+    "G5": {
+      "name": "znetwork_wire profile",
+      "cmake": "cmake/grok16-profile-znetwork_wire.cmake",
+      "profile": "znetwork_wire",
+      "doctrine": "data/grok16-znetwork-field-wire-doctrine.json"
+    },
+    "G6": {
+      "name": "Truth-gate compile floor",
+      "module": "lib/g16-stack-fabric.py",
+      "floor": 58,
+      "hook": "lib/g16-compile-combinatronics.py compile_gate"
+    },
+    "G7": {
+      "name": "Thermal-aware profile downgrade",
+      "module": "lib/g16-stack-fabric.py",
+      "downgrade_to": "field_physics",
+      "signal": "NEXUS_STATE_DIR znetwork thermal"
+    },
+    "G8": {
+      "name": "AmmoOS 2.0 Stack release driver",
+      "script": "scripts/grok16-ammoos-stack-release.sh",
+      "pair": {"grok16": "5.1.0", "ammoos": "2.0.0"}
+    },
+    "G9": {
+      "name": "243-filetype g16 run",
+      "module": "NewLatest/lib/field-programming-filetypes.py",
+      "hook": "lib/g16-universal-compiler.py run_file"
+    },
+    "G10": {
+      "name": "Combinatorics status silent",
+      "hook": "grok16-toolchain.sh combinatorics-status",
+      "module": "lib/g16-stack-fabric.py combinatorics_status_silent"
+    },
+    "G11": {
+      "name": "MCP compile stdio",
+      "module": "lib/g16-mcp-compile.py",
+      "hook": "grok16-toolchain.sh mcp-compile"
+    },
+    "G12": {
+      "name": "g16-discern + MIME",
+      "hook": "lib/g16-universal-compiler.py discern",
+      "db": "NewLatest/data/field-programming-filetypes.json"
+    },
+    "G13": {
+      "name": "Single-fabric link profiles",
+      "cmake": "cmake/grok16-profile-single-fabric.cmake",
+      "profile": "single_fabric"
+    },
+    "G14": {
+      "name": "SPIR-V-only rtx lane",
+      "cmake": "cmake/grok16-profile-vulkan.cmake",
+      "rule": "GROK16_SPIRV_ONLY=1 GROK16_NO_LIBVULKAN=1"
+    },
+    "G15": {
+      "name": "g1id meld on sealed writes",
+      "module": "lib/g16-sealed-output.py attach_seal",
+      "forge": "forge/g16-g1id.py",
+      "env": "G16_SEAL_G1ID_MELD=1"
+    },
+    "Grok15": {
+      "name": "Language core condense — Explaining series non-redundant with Grok16",
+      "module": "lib/grok15-language-core.py",
+      "doctrine": "data/grok15-language-core-doctrine.json",
+      "core_shelf": "library/dewey/000-computer-science/explaining_core",
+      "pairs_with": "G15"
+    }
+  }
+}

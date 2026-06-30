@@ -1,0 +1,25 @@
+{
+  "id": "exploring_haskell",
+  "title": "Exploring Haskell",
+  "author": "Grok16 Field",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-EXPLORE-01908feae88c",
+  "format": "h7c",
+  "format_version": 3,
+  "book_kind": "exploring",
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map",
+    "memory",
+    "compile"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/exploring_haskell/exploring_haskell.h7c",
+  "field_path": "library/dewey/000-computer-science/exploring_haskell/exploring_haskell.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "haskell",
+  "cover": "/world/assets/combinatronic/books/haskell.png",
+  "updated": "2026-06-29T13:28:13Z"
+}

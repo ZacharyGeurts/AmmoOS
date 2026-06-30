@@ -1,0 +1,13 @@
+{
+  "id": "format-h7c",
+  "title": "Hostess 7 Condenser",
+  "dewey": "005.74",
+  "format": "registry-entry",
+  "family": "library",
+  "extensions": [
+    ".h7c"
+  ],
+  "magic": "H7C\\x02",
+  "cover": "/library/assets/formats/h7c.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

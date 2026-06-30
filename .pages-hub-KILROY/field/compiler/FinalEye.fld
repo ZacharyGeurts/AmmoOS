@@ -1,0 +1,15 @@
+// FinalEye.fld — Final_Eye assistive offense + stoard witness (FIELDC v4)
+// Source: github.com/ZacharyGeurts/Final_Eye v1.2.1
+
+module FinalEye {
+  import FieldStackCore;
+
+  const PRODUCT = "Final_Eye";
+  const VERSION = "1.2.1";
+  const COMPILER_BRIDGE = "zocr_field_compiler.py";
+  const STOARD = "stoard/ledger.jsonl";
+
+  fn witness_receipt(event: str) -> str {
+    return "eye-stoard:" + event;
+  }
+}

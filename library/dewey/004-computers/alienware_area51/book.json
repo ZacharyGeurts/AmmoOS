@@ -1,0 +1,10 @@
+{
+  "id": "alienware_area51",
+  "title": "Alienware Area-51",
+  "author": "Field Extensive Library",
+  "dewey": "004.16",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/alienware_area51/alienware_area51.h7c",
+  "cover": "/library/assets/devices/alienware_area51.png",
+  "ready": true
+}

@@ -1,0 +1,24 @@
+// FieldStackCore.fld — KILROY #1 ecosystem stack (FIELDC v4)
+// Repos: Field_Primer · Final_Eye · World_Redata · AMOURANTHRTX · Queen
+
+module FieldStackCore {
+  const ABI = "kilroy-field-1.0";
+  const LAYOUT = 9;
+
+  struct Repo {
+    id: str;
+    github: str;
+    role: str;
+  }
+
+  repos: Repo[] = [
+    { id: "field_primer", github: "ZacharyGeurts/Field_Primer", role: "doctrine" },
+    { id: "final_eye", github: "ZacharyGeurts/Final_Eye", role: "vision+compiler" },
+    { id: "world_redata", github: "ZacharyGeurts/World_Redata", role: "wrdt1" },
+    { id: "amouranthrtx", github: "ZacharyGeurts/AMOURANTHRTX", role: "rtx+fieldkilroy" },
+  ];
+
+  fn stack_line(repo: Repo) -> str {
+    return repo.id + "=" + repo.role;
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "format-media_wmv",
+  "title": "Windows Media",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".wmv",
+    ".asf"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_wmv.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

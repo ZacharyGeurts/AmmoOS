@@ -1,0 +1,5 @@
+Grok Bootloader 1.1.0
+KILROY Field OS boot chain
+Themes: field midnight dawn mono
+Security: mandatory major/minor — grok-firmware-audit.sh
+Compat engine: Limine 9.x-binary

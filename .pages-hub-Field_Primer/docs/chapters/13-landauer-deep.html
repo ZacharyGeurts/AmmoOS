@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>13 — Landauer Deep Dive — Thermodynamic Receipts · Field Technology v6</title>
+  <meta name="description" content="Chapter 13: Landauer Deep Dive — Thermodynamic Receipts. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Field_Primer/chapters/13-landauer-deep.html" />
+  <meta name="theme-color" content="#040810" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon.png" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Field Technology v6" />
+  <meta property="og:title" content="13 — Landauer Deep Dive — Thermodynamic Receipts · Field Technology v6" />
+  <meta property="og:description" content="Chapter 13: Landauer Deep Dive — Thermodynamic Receipts. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta property="og:url" content="https://zacharygeurts.github.io/Field_Primer/chapters/13-landauer-deep.html" />
+  <meta property="og:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch13-landauer-plate.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Landauer layer" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ZacharyGeurts" />
+  <meta name="twitter:creator" content="@ZacharyGeurts" />
+  <meta name="twitter:title" content="13 — Landauer Deep Dive — Thermodynamic Receipts · Field Technology v6" />
+  <meta name="twitter:description" content="Chapter 13: Landauer Deep Dive — Thermodynamic Receipts. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta name="twitter:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch13-landauer-plate.jpg" />
+  <meta name="twitter:image:alt" content="Landauer layer" />
+  <link rel="stylesheet" href="../css/field-primer.css" />
+  <link rel="stylesheet" href="../css/chapters.css" />
+  <link rel="stylesheet" href="../css/reader.css" />
+</head>
+<body class="chapter-page accent-thermo">
+  <nav class="top"><div class="inner">
+    <a class="logo" href="../index.html">FIELD TECHNOLOGY <span class="v6-badge">v6</span></a>
+    <ul>
+      <li><a href="../creditors/index.html">Creditors</a></li>
+      <li><a href="../index.html#love-god">Love &amp; God</a></li>
+      <li><a href="../index.html#chapters">Chapters</a></li>
+      <li><a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/04-Entropy-Receipts-And-Oracles">Wiki</a></li>
+    </ul>
+  </div></nav>
+  <header class="chapter-hero" style="background-image:url('../assets/images/chapters/ch13-landauer-plate.jpg')">
+    <div class="chapter-hero-overlay"></div>
+    <div class="chapter-hero-content">
+      <p class="eyebrow">Chapter 13 · Field Technology v6</p>
+      <h1>Landauer Deep Dive — Thermodynamic Receipts</h1>
+      
+    </div>
+  </header>
+  <main class="chapter-main">
+    <nav class="chapter-nav"><a class="btn secondary" href="12-reality-theory.html">← Ch 12</a> <a class="btn" href="14-shannon-oracle.html">Ch 14 →</a></nav>
+    <p class="eyebrow">Chapter 13 · Creditor deep dive · Thermodynamic receipts</p>
+
+<div class="on-the-way">
+<h2 id="toc-13-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Landauer taught the floor on erasing information. On the way you will connect <code>E_min = k_B T ln 2</code> to <code>entropyThisFrame</code> proxy — honoring the creditor without faking wattmeter readings.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch13-landauer-plate.jpg" alt="Landauer layer" loading="lazy" /><figcaption>On the way — Landauer layer</figcaption></figure>
+<ul class="on-the-way-journey"><li>Bit erasure thermodynamic bound</li><li>Proxy integral semantics in-engine</li><li>Comparative science across sessions</li><li>Rock: not joules from stderr</li></ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-13-1-introduction-why-landauer-after-the-rocks-tabl">1. Introduction — why Landauer after the rocks table</a></li><li><a href="#toc-13-2-landauer-x27-s-bound-e-min-k-b-t-ln-2">2. Landauer&#x27;s bound — E_min = k_B T ln 2</a></li><li><a href="#toc-13-3-from-maxwell-x27-s-demon-to-the-operator-keybo">3. From Maxwell&#x27;s demon to the operator keyboard</a></li><li><a href="#toc-13-4-thermoaccountant-structure-binding-2">4. ThermoAccountant structure — binding 2</a></li><li><a href="#toc-13-5-decomposing-entropythisframe">5. Decomposing entropyThisFrame</a></li><li><a href="#toc-13-6-avgboundarythermo-and-edge-discipline">6. avgBoundaryThermo and edge discipline</a></li><li><a href="#toc-13-7-freeenergyincome-and-sealed-time">7. freeEnergyIncome and sealed time</a></li><li><a href="#toc-13-8-entropy-floor-second-law-as-code">8. Entropy floor — second law as code</a></li><li><a href="#toc-13-9-lab-versus-log-the-rock-restated">9. Lab versus log — the rock restated</a></li><li><a href="#toc-13-10-comparative-practice-without-watt-meters">10. Comparative practice without watt meters</a></li><li><a href="#toc-13-11-shannon-oracle-separation">11. Shannon oracle separation</a></li><li><a href="#toc-13-12-historical-weight-1961-in-a-2026-textbook">12. Historical weight — 1961 in a 2026 textbook</a></li><li><a href="#toc-13-operator-drill-13-a-baseline-grep">Operator drill 13.A — baseline grep</a></li><li><a href="#toc-13-operator-drill-13-b-coupling-a-b">Operator drill 13.B — coupling A/B</a></li></ol></nav>
+
+<h2 id="toc-13-1-introduction-why-landauer-after-the-rocks-tabl">1. Introduction — why Landauer after the rocks table</h2>
+<p>Chapter 4 introduced entropy as the receipt that time ran forward. Chapter 12 named the rock that separates poetry from measurement: the value printed as entropyThisFrame inside ThermoAccountant is a proxy integral labeled Metaphor until calorimetry says otherwise. This chapter is the creditor deep dive that explains the theory behind that label without walking it back.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch13-landauer-plate.jpg" alt="Landauer three plates" loading="lazy" /><figcaption>Figure 13.2 — Three plates: GPU proxy, fabric floor, file oracle — never summed. <span class="claim-tie">Claim: Landauer floor as proxy language — not wattmeter</span></figcaption></figure>
+
+<p>Rolf Landauer is not a mascot on our cover art. He is a physicist whose 1961 result linked logical irreversibility to thermodynamic cost. We honor him at ../creditors/landauer.html with portrait and tribute. We honor Clausius and Boltzmann at ../creditors/clausius-boltzmann.html for the entropy concept that precedes bit erasure. Field Technology stands on their math and refuses to pretend their laboratories became our Vulkan bindings.</p>
+<p>By the end of this chapter you should articulate Landauer's bound in symbols and plain English, enumerate what ThermoAccountant integrates each dispatch, and explain why comparative proxy curves help operators even when they are not utility bills from the power company.</p>
+<h2 id="toc-13-2-landauer-x27-s-bound-e-min-k-b-t-ln-2">2. Landauer's bound — E_min = k_B T ln 2</h2>
+<p>Landauer's theorem: any logically irreversible manipulation of information must be accompanied by entropy increase elsewhere. Erasing one bit at temperature T has a minimum energy cost:</p>
+<p>The constant k_B is Boltzmann's constant, approximately 1.380649×10⁻²³ joules per kelvin. The factor ln 2 appears because one bit represents ln 2 nats of uncertainty resolved — the thermodynamic price of forgetting which branch you were on.</p>
+<p>At room temperature near 300 K, E_min is on the order of 2.9×10⁻²¹ joules per bit. Individually negligible. Collectively decisive when DRAM refreshes, caches evict, log files rotate, and framebuffers swap at billions of events per second. The bound is a floor in principle, not a direct readout from stderr in AMOURANTHRTX.</p>
+<p>Charles Bennett's reversible computing program shows that if you never erase, you can approach zero dissipation in the limit. Real machines erase constantly. Your engine erases when it drops history, when it clamps away distinguishable states, when it commits to one frame over another. ThermoAccountant exists because operators should practice thinking irreversibly while grep remains honest.</p>
+<h2 id="toc-13-3-from-maxwell-x27-s-demon-to-the-operator-keybo">3. From Maxwell's demon to the operator keyboard</h2>
+<p>Maxwell imagined a demon sorting fast and slow molecules at a gate. Szilard placed information-bearing memory in the loop. Landauer priced erasing that memory. The paradoxes teach one discipline: information is physical.</p>
+<p>In our stack the demon is not a sprite in CANVAS.comp. The demon is you — choosing injection strength, choosing whether to run maintenance, choosing whether to preserve coherence with the previous frame. Each choice has a thermodynamic story even when the story is logged as proxy, not watts.</p>
+<p>This is why Field Technology treats offense and defense as the same literacy applied to different writable surfaces. Dispatch writes the next tick. Logs record that the tick was not free. Chapter 18 will name your conscience at the keyboard; here we name the accountant beside it.</p>
+<h2 id="toc-13-4-thermoaccountant-structure-binding-2">4. ThermoAccountant structure — binding 2</h2>
+<p>ThermoAccountant is Implemented at Vulkan binding 2. It is populated every dispatch_canvas() and mirrored into data_bus slots 24 through 28 for HUD and grep correlation.</p>
+<p>The struct fields are not decorative names. entropyThisFrame is the per-frame proxy integral discussed throughout this chapter. avgBoundaryThermo averages boundary entropy density — where the fabric meets clamps and eventually where rendering meets the operator's eye. prevMaintCost is the coherence tax paid to remember the previous frame responsibly. freeEnergyIncome couples sealed session time with structured input activity. steps counts dispatches — the heartbeat that proves time ran forward in the engine loop.</p>
+<p>When stderr prints THERMO lines, treat them as shadows of this struct on the host CPU. When fabric moves but these shadows stay flat, suspect broken telemetry before suspecting physics betrayal.</p>
+<h2 id="toc-13-5-decomposing-entropythisframe">5. Decomposing entropyThisFrame</h2>
+<p>Operators should read entropyThisFrame as a sum of interpretable stories rather than a single mystical number:</p>
+<p>Field work accumulates from coupled evolution across Phi, Thermo, and Flow when FieldCoupling is non-zero. Diffusion, wave steps, and cross-channel mixing each contribute. Turning FieldCoupling to zero for pedagogy isolates channels; turning it up reveals Maxwell's neighborhood on a grid.</p>
+<p>Probe dissipation tracks intentional injection — mouse paths, operator probes, InjectStrength deposits. An idle canvas should show low probe cost. Aggressive injection should raise it. If visuals respond but probe cost does not, fix telemetry before writing papers.</p>
+<p>prevMaintCost rises when the engine pays to stay coherent with history — stability is not free. High maintenance with subtle visual change is often legitimate, not automatically a leak bug.</p>
+<p>The Landauer proxy term uses k_B T ln 2 as vocabulary tied to activity scales. It is not a claim that the driver counted bit erasures this frame. Temperature in proxy space may reference boundary thermo or body-temperature seeding — read Chapter 12 before quoting numbers externally.</p>
+<h2 id="toc-13-6-avgboundarythermo-and-edge-discipline">6. avgBoundaryThermo and edge discipline</h2>
+<p>Boundaries are where fields meet constraints. avgBoundaryThermo summarizes entropy density near those edges. Interpreting it requires comparative habit: rising boundary thermo with calm interior may mean energy exits correctly through edges. Violent interior with flat boundary may mean internal clamps absorb what should have exited.</p>
+<p>Do not equate this with GPU junction temperature from nvidia-smi. Package thermals and simulation boundary accounting live in different layers. Both can be true. Conflating them in marketing is how demo culture sells thermodynamic rendering without receipts.</p>
+<p>Chapter 17 will speak sacred language about holographic boundaries. This chapter keeps the engineering account: edges cost stories in logs.</p>
+<h2 id="toc-13-7-freeenergyincome-and-sealed-time">7. freeEnergyIncome and sealed time</h2>
+<p>freeEnergyIncome links sealed session genesis with input activity. TotalTime::seal() in the engine spine locks session start into FieldSocket::sealed_time so frame-rate jitter cannot rewrite physics time. Income metaphors usable drive — not free money, but structured capacity in the fabric budget.</p>
+<p>Chapter 19 extends sealed time across hosts with sovereign sync and SQUIDGIE detection. Here, note the sibling relationship: Landauer receipts and time receipts both refuse retroactive myth. You seal forward. You verify at receive. Thermo steps and monotonic clocks should move together in healthy sessions.</p>
+<h2 id="toc-13-8-entropy-floor-second-law-as-code">8. Entropy floor — second law as code</h2>
+<p>clearFieldImages() seeds thermo with roughly 0.015 minimum to prevent unphysical reversibility. The second law appears as engineering bias: diffusion injects minimum noise. You cannot undo a frame by wishing.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch03-coupled-fabric.jpg" alt="Coupled fabric floor" loading="lazy" /><figcaption>Figure 13.4 — Entropy floor on fabric channel — second law as engineering guard. <span class="claim-tie">Claim: FieldCoupling moves energy between fabric channels</span></figcaption></figure>
+
+<p>Students ask why bias noise instead of pure reversible simulation. Because operators live in dissipative hardware, because panels archive monotonic jsonl, because honesty prefers a labeled floor to silent zero entropy while texels clearly moved.</p>
+<h2 id="toc-13-9-lab-versus-log-the-rock-restated">9. Lab versus log — the rock restated</h2>
+<p>Rock: proxy integrals are comparative receipts, not utility bills.</p>
+<p>If entropy reads zero while fabric texels move, dispatch failed or telemetry broke. Physics refuses to lie for you. If entropy spikes while idle, investigate maintenance bleed, stuck probes, or runaway coupling — still a signal, still not joules from the wall meter.</p>
+<p>Modern GPU calorimetry is hard: fast switching, distributed heat, driver opacity. We do not claim stderr equals junction watts. We claim comparative curves help experts form hypotheses when lab gear arrives — hypothesis, not verdict.</p>
+<h2 id="toc-13-10-comparative-practice-without-watt-meters">10. Comparative practice without watt meters</h2>
+<p>Expert operators compare sessions, not absolutes:</p>
+<p>Did steps increment? If not, dispatch did not run — CI signal even headless. Did injection raise probe dissipation relative to idle? If not, injection path may be broken. Does raising FieldCoupling raise field work? If not, coupling knob path may be disconnected. Does prevMaintCost dominate while visuals freeze? Maintenance may be buying stability. Does avgBoundaryThermo trend with clamp changes? Boundary story may be healthy.</p>
+<p>None of these questions require believing proxies are SI joules. All require believing the engine should tell a consistent story when time runs forward.</p>
+<h2 id="toc-13-11-shannon-oracle-separation">11. Shannon oracle separation</h2>
+<p>Chapter 14 treats Shannon entropy H on files in NEXUS. ThermoAccountant lives in the GPU dispatch loop. Same word entropy, different layers. Vendors fuse them into one dashboard; Field Technology refuses.</p>
+<p>Landauer prices bit erasure thermodynamically. Shannon measures surprise in symbol distributions. Boltzmann links microstates to macro entropy. Keep creditors named and separated. Read ../creditors/shannon.html when file storms rise; read this chapter when frame receipts matter.</p>
+<h2 id="toc-13-12-historical-weight-1961-in-a-2026-textbook">12. Historical weight — 1961 in a 2026 textbook</h2>
+<p>Landauer worked when computers filled rooms. His bound survived vacuum tubes, CMOS, GPUs, and will survive whatever compute substrate follows. As devices approach atomic limits, per-bit thermodynamics becomes engineering constraint rather than philosophy footnote.</p>
+<p>AMOURANTHRTX is not a laboratory Landauer engine. It is operator training: grep irreversibility before someone sells reversible cloud myth. The textbook is serious because it teaches mechanism and labels rocks visible.</p>
+<h2 id="toc-13-operator-drill-13-a-baseline-grep">Operator drill 13.A — baseline grep</h2>
+<pre class="eq">./linux.sh run 2>&1 | tee ch13-run.log
+# Classic canvas: idle 30s, inject 60s
+grep -E 'THERMO|entropy|Boundary|prevMaint|steps' ch13-run.log | tail -60</pre>
+
+<h2 id="toc-13-operator-drill-13-b-coupling-a-b">Operator drill 13.B — coupling A/B</h2>
+<pre class="eq"># Session A: FieldCoupling = 0, 120s
+# Session B: FieldCoupling = 1.0, 120s
+# Compare entropyThisFrame distributions — field work should rise with coupling</pre>
+
+<h2 id="toc-13-operator-drill-13-c-data-bus-mirror">Operator drill 13.C — data_bus mirror</h2>
+<pre class="eq"># Correlate HUD / debug read of data_bus[24-28] with stderr THERMO lines</pre>
+
+<figure class="figure"><img src="../assets/images/entropy-chapter.jpg" alt="Entropy receipts" loading="lazy" /><figcaption>Figure 13.1 — Theory floor, proxy ledger, honest label.</figcaption></figure>
+
+<h2 id="toc-13-study-questions">Study questions</h2>
+<ol>
+<li>State Landauer's bound in symbols and plain English. Why does ln 2 appear?</li>
+<li>Enumerate ThermoAccountant fields and their roles.</li>
+<li>Why must entropyThisFrame stay labeled Metaphor in public writing?</li>
+<li>Fabric moves, entropy zero — what do you check first?</li>
+<li>Explain prevMaintCost as coherence tax.</li>
+<li>How is avgBoundaryThermo different from GPU junction temperature?</li>
+<li>What is the entropy floor defending against?</li>
+<li>Name three comparative uses of proxy curves.</li>
+<li>How do Landauer receipts relate to sealed time?</li>
+<li>Distinguish ThermoAccountant entropy from Shannon file H.</li>
+<li>Read ../creditors/landauer.html — what does the love block claim?</li>
+<li>When would you escalate from proxy grep to laboratory calorimetry?</li>
+</ol>
+<p>Tributes: <a href="../creditors/landauer.html">Rolf Landauer</a> · <a href="../creditors/clausius-boltzmann.html">Clausius &amp; Boltzmann</a> · <a href="../creditors/index.html">All creditors</a></p>
+<p><a href="14-shannon-oracle.html">Chapter 14 — Shannon Oracle →</a></p>
+<h2 id="toc-13-13-bennett-and-reversible-computing-contrast-cas">13. Bennett and reversible computing — contrast case</h2>
+<p>Charles Bennett showed that computation can be logically reversible if you never erase information — trading memory for heat avoidance. AMOURANTHRTX is not a reversible computer. It maintains frame history, pays prevMaintCost, injects entropy floor noise, and commits to one dispatched state per tick.</p>
+<p>Teaching Bennett beside Landauer clarifies what our proxy is not claiming. We are not selling infinite efficiency. We are training operators to see that commits have stories. When you rotate logs, wipe a texture, or reinitialize guest RAM on the Field Die, you are performing erasures in the engineering sense even when no one prints E_min in joules.</p>
+
+<h2 id="toc-13-14-data-bus-forensic-walkthrough">14. data_bus forensic walkthrough</h2>
+<p>Slot 24 mirrors entropyThisFrame for HUD consumers. Slot 25 carries avgBoundaryThermo. Slots 26–28 complete the accountant picture alongside steps mirrored through THERMO stderr channels. When debugging, read headers in Pipeline.hpp and FieldRtxFieldAbs.hpp before trusting a screenshot of the HUD.</p>
+<p>Forensic discipline: capture run.log, capture a fabric screenshot, capture data_bus readout if your debug build exposes it. Three witnesses, one session. If they disagree, telemetry is broken — not physics.</p>
+
+<h2 id="toc-13-15-headless-ci-and-steps-counter">15. Headless CI and steps counter</h2>
+<p>Headless dispatch still increments steps. CI pipelines that only check exit code miss half the story. A passing build with frozen steps is a silent dispatch failure. Landauer discipline in CI means asserting monotonic steps across golden frames.</p>
+<p>Document golden THERMO ranges as comparative bands, not absolute watts. Your lab temperature differs from CI runners; proxy shape should still match within tolerance when shaders match.</p>
+
+<h2 id="toc-13-16-writing-about-thermodynamics-in-papers">16. Writing about thermodynamics in papers</h2>
+<p>When citing Landauer in academic work, cite Landauer 1961 and Bennett reviews from primary literature. When citing AMOURANTHRTX, cite bindings and label proxy integrals Metaphor in figure captions. Mixing citations without labels is how honest engineers get embarrassed in peer review.</p>
+<p>Field Primer exists so your students do not embarrass you: Chapter 12 table is copy-pasteable into lab reports as honesty boilerplate.</p>
+
+<h2 id="toc-13-17-failure-mode-catalog">17. Failure mode catalog</h2>
+<p>Zero entropy with moving texels: dispatch or mirror failure. Idle entropy spike: maintenance bleed or stuck probe. Coupling knob ineffective: FieldCoupling not reaching CANVAS.comp path. Boundary flat with violent interior: clamp fighting solver. Each failure maps to grep verbs before opening gdb.</p>
+
+<h2 id="toc-13-18-bridge-to-shannon-and-maxwell">18. Bridge to Shannon and Maxwell</h2>
+<p>Landauer is the receipt floor. Shannon (Chapter 14) is file surprise. Maxwell (Chapter 15) is spatial coupling that raises field work. The trilogy of creditor chapters 13–15 should be assigned as one two-week module with three grep labs.</p>
+
+
+<div class="creditor-workshop">
+<h2 id="toc-13-creditor-deep-dive-workshop-complete-once">Creditor deep-dive workshop — complete once</h2>
+<p>Chapters 13–15 share one drill set — complete after reading all three creditor chapters.</p>
+<ol>
+<li><strong>Primary source:</strong> Footnote one Landauer, Shannon, or Maxwell paper (not Wikipedia alone).</li>
+<li><strong>Grep proof:</strong> One <code>grep</code> command tying this chapter's equation to an <span class="tag impl">Implemented</span> or <span class="tag meta">Metaphor</span> label from Chapter 12.</li>
+<li><strong>Layer separation:</strong> Write three sentences — GPU proxy, file oracle, theory — never summed into one entropy number.</li>
+<li><strong>Comparative run:</strong> Two matched sessions; plot <code>entropyThisFrame</code> or file H trend — comparative only, no joule billing.</li>
+</ol>
+</div>
+
+<h2 id="toc-13-operator-journal-landauer-and-thermoaccountant">Operator journal — Landauer and ThermoAccountant</h2>
+<p>Maintain a paper or markdown operator journal for Landauer and ThermoAccountant. Each drill entry: date, hardware, driver, git hash, three THERMO or jsonl lines, one surprise, one label (Implemented / Metaphor / Philosophy). Journals become your personal creditor — future you inherits coupled state from past you. Bring the journal to Chapter 18 covenant audit drill 18.A as evidence.</p>
+
+<h2 id="toc-13-reading-companion-landauer-and-thermoaccountant">Reading companion — Landauer and ThermoAccountant</h2>
+<p>This reading companion reinforces Landauer and ThermoAccountant for self-study tracks. Week one: read the chapter straight through with Chapter 12 open. Week two: complete all operator drills on hardware you own. Week three: write a one-page creditor tribute response linking ../creditors/ reading to a grep result from your machine. Week four: teach another human one section using the three-tag labeling exercise. Field Technology v5 measures success in reproduced receipts, not in vibes.</p>
+<p>Cross-links: Chapter 4 entropy receipts, Chapter 5 packet field, Chapter 8 data bus, Chapter 10 Spiderweb mirror, Chapter 11 observability, Chapters 16–18 sacred covenant. Landauer and ThermoAccountant is not an island — it is a creditor lens on the same stack you already run.</p>
+<p>Honesty reminder: AMOURANTHRTX, NEXUS-Shield, Queen, and Field Primer have different licenses. Teaching from this chapter does not automatically license commercial engine use. Point students to product headers and FIELD-TECHNOLOGY-V5.md for edition boundaries.</p>
+
+<h2 id="toc-13-chapter-closing-landauer-and-thermoaccountant">Chapter closing — Landauer and ThermoAccountant</h2>
+<p>Chapter 13 closes the creditor loop on irreversibility. You now hold theory (E_min), structure (ThermoAccountant), practice (grep drills), and honesty (Metaphor label) in one hand. In the other hand, hold ../creditors/landauer.html open long enough to read the love block: tenderness toward bits is not softness — it is refusal to erase another operator's clarity in haste. Carry that into Chapter 14 where a different entropy measures file surprise, not frame heat.</p>
+
+
+
+
+<div class="evidence-anchor" id="evidence-ch13">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Landauer floor</td><td>k_B T ln 2 per bit erased</td><td><span class="tag meta">Metaphor</span></td><td><code>Theory — GPU uses proxy</code></td></tr><tr><td>ThermoAccountant</td><td>Operational receipt</td><td><span class="tag meta">Metaphor</span></td><td><code>entropyThisFrame integral</code></td></tr><tr><td>Comparative sessions</td><td>Δproxy across runs</td><td><span class="tag impl">Implemented</span></td><td><code>Valid grep science</code></td></tr><tr><td>Wattmeter billing</td><td>Package power as Landauer</td><td><span class="tag meta">Metaphor</span></td><td><code>Explicit rock — forbidden</code></td></tr></tbody></table>
+<pre class="eq">E_min = k_B T ln 2  |  ΔS_proxy between sealed sessions</pre>
+<pre class="eq">grep THERMO run.log | awk &#x27;{print $NF}&#x27; | sort -n | tail -5</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>docs/creditors/landauer.html</code></li><li><code>Navigator/engine/ThermoAccountant.hpp</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-13-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Landauer floor honored in proxy language — humility without wattmeter fraud. Comparative receipts across sessions remain valid science.</p>
+</div>
+
+    <nav class="chapter-nav bottom"><a class="btn secondary" href="12-reality-theory.html">← Ch 12</a> <a class="btn" href="14-shannon-oracle.html">Ch 14 →</a></nav>
+  </main>
+  <footer><p>Field Technology v6 · Serious book · We do not hide the rocks.</p></footer>
+  <script src="../js/reader.js" defer></script>
+</body>
+</html>

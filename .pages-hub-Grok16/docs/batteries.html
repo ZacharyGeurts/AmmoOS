@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — Batteries</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/batteries.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Battery validation</h1>
+  <p>Grok16 5.2.0 gates releases through layered batteries. Run locally before tagging or deploying a prefix.</p>
+
+  <figure class="fig-wide">
+    <img src="assets/battery-gate.svg" alt="Battery tier diagram" width="920" height="200" />
+  </figure>
+
+  <h2 id="smoke">Smoke — <code>test-battery</code></h2>
+  <pre><code>./scripts/grok16-toolchain.sh test-battery</code></pre>
+  <p>paths · discern · status · verify · manifest · ironclad sanity · hostess gate</p>
+
+  <h2 id="expert">Expert — <code>test-battery-expert</code></h2>
+  <pre><code>./scripts/grok16-toolchain.sh test-battery-expert</code></pre>
+  <p>Smoke + ironclad verify + linker verify + RTX gate + <code>expert</code> profile compile</p>
+
+  <h2 id="heavy">Heavy — <code>test-battery-heavy</code></h2>
+  <pre><code>G16_RELEASE_PROFILE=1 ./scripts/grok16-toolchain.sh test-battery-heavy</code></pre>
+  <p>Expert chain + <code>profile=heavy</code> bench + field-bench under release profile</p>
+
+  <h2 id="release">Release — <code>test-battery-release</code></h2>
+  <pre><code>G16_RELEASE_PROFILE=1 ./scripts/grok16-toolchain.sh test-battery-release</code></pre>
+  <table>
+    <tr><th>Step</th><th>What it proves</th></tr>
+    <tr><td>heavy</td><td>Release-profile compile + bench</td></tr>
+    <tr><td>py-battery</td><td><code>tests/test_g16_battery.py</code></td></tr>
+    <tr><td>forever-battery</td><td>Hostess7 forever profile contract</td></tr>
+    <tr><td>binutils-battery</td><td>g16-as / g16-ld / g16-objdump</td></tr>
+    <tr><td>verify</td><td>Full verify incl. linker link smoke</td></tr>
+  </table>
+
+  <h2 id="belt">Belt — <code>test-battery-belt</code> (2.0)</h2>
+  <pre><code>./scripts/grok16-toolchain.sh test-battery-belt</code></pre>
+  <p>Doctrine <code>data/grok16-single-fabric-doctrine.json</code> · profiles <code>belt_1_0</code> / <code>belt_2_0</code> · <code>tests/test_g16_belt_battery.py</code> · triad artifact optional.</p>
+
+  <h2 id="triage">Failure triage</h2>
+  <ul>
+    <li><strong>Linker / libgcc_s</strong> — ensure <code>file lib64/libgcc_s.so.1</code> shows <em>shared object</em>, not PIE executable</li>
+    <li><strong>LTO</strong> — profile flags normalize <code>-flto=thin</code> per compiler capability</li>
+    <li><strong>PGO</strong> — use flags only when <code>data/pgo/*.gcda</code> exist</li>
+    <li><strong>g16-ld missing</strong> — <code>./scripts/grok16-binutils.sh install</code></li>
+  </ul>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

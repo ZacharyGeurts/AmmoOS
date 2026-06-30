@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "games": [
+    {
+      "id": "wolf3d",
+      "title": "Wolfenstein 3D",
+      "zip": "WOLF3D.ZIP",
+      "exe": null,
+      "dos_path": "C:\\GAMES\\WOLF3D\\WOLF3D.ZIP",
+      "files": [
+        "WOLF3D.ZIP"
+      ],
+      "extract_hint": "AMMOZIP C:\\GAMES\\WOLF3D\\WOLF3D.ZIP"
+    },
+    {
+      "id": "cosmo",
+      "title": "Cosmo's Cosmic Adventure",
+      "zip": "COSMO.ZIP",
+      "exe": null,
+      "dos_path": "C:\\GAMES\\COSMO\\COSMO.ZIP",
+      "files": [
+        "COSMO.ZIP"
+      ],
+      "extract_hint": "AMMOZIP C:\\GAMES\\COSMO\\COSMO.ZIP"
+    },
+    {
+      "id": "keen4",
+      "title": "Commander Keen 4 (shareware)",
+      "zip": null,
+      "exe": "KEEN4E.EXE",
+      "dos_path": "C:\\GAMES\\KEEN4\\KEEN4E.EXE",
+      "files": [
+        "AUDIO.CK4",
+        "CONFIG.CK4",
+        "EGAGRAPH.CK4",
+        "GAMEMAPS.CK4",
+        "KEEN4E.EXE"
+      ],
+      "extract_hint": "Run KEEN4E.EXE from C:\\GAMES\\KEEN4"
+    },
+    {
+      "id": "doom",
+      "title": "Doom (shareware)",
+      "zip": null,
+      "exe": "DOOM.EXE",
+      "dos_path": "C:\\GAMES\\DOOM\\DOOM.EXE",
+      "files": [
+        "DOOM.EXE",
+        "DOOM1.WAD"
+      ],
+      "extract_hint": "Run DOOM.EXE from C:\\GAMES\\DOOM"
+    }
+  ]
+}

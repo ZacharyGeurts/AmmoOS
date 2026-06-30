@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 Manual — {title}</title>
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light") {
+        t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "light");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v8"></script>
+  <script src="manual-search.js?v8"></script>
+  <script src="manual-layout.js?v8"></script>
+  <link rel="stylesheet" href="manual.css?v8" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand"><strong>Grok16</strong> <span class="nav-version">distro 1.0.0</span> <span class="nav-g16">g16 @ 16.1.1</span></div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+            <option value="1.5">XXL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☀</span><span class="seg-text">Light</span>
+          </button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☾</span><span class="seg-text">Dark</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="release.html">Release 1.0</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Master Coder — C</h1>
+  <p>Every C command and flag for Grok16 @ 16.1.1. Use <code>g16</code> only — it detects <code>.c</code> / <code>-std=gnu17</code> and runs <code>g16-cc</code>.</p>
+  <h2>C commands &amp; driver</h2>
+  <table class="idx idx-rich">
+    <tr><th>#</th><th>Item</th><th>Short</th><th>Detail</th></tr>
+    <tr><td class="idx-num">1</td><td><a href="reference.html#unified-g16">g16</a></td><td class="tip">Unified driver</td><td class="idx-detail">Single ELF at bin/g16. Inspects argv[0], -std=, -x, and source extensions (.c vs .cpp). Dispatches to libexec/grok16/g16-cc for C. No separate C command — always g16.</td></tr>
+    <tr><td class="idx-num">2</td><td><a href="architecture.html#unified-driver">g16-cc</a></td><td class="tip">C backend</td><td class="idx-detail">Relocated GCC C driver after install. Real ELF from upstream program-transform. Unified g16 execv() here when C mode is detected.</td></tr>
+    <tr><td class="idx-num">3</td><td><a href="field-primer.html#standard-c">g16 -std=gnu17</a></td><td class="tip">Default C standard</td><td class="idx-detail">G16_C_STD defaults to gnu17 (C17 + GNU extensions). Applied when compiling .c files or when -std=gnu17|c17|… is passed. Override per translation unit.</td></tr>
+    <tr><td class="idx-num">4</td><td><a href="getting-started.html#verify">verify (C leg)</a></td><td class="tip">C smoke compile</td><td class="idx-detail">grok16-toolchain.sh verify compiles verify.c with g16 -std=${G16_C_STD}. Proves unified driver reaches g16-cc and frontend accepts gnu17.</td></tr>
+    <tr><td class="idx-num">5</td><td><a href="profiles.html#flags-c">PROFILE c</a></td><td class="tip">C compile flags</td><td class="idx-detail">pythong grok16-profile-flags.py field_opt c — emits -std=gnu17 -O3 -march=native plus profile -D macros. Use for C kernels and L0 glue.</td></tr>
+    <tr><td class="idx-num">6</td><td><a href="profiles.html#flags-c">PROFILE c_link</a></td><td class="tip">C link flags</td><td class="idx-detail">Same link_flags as CXX profiles (LTO/OpenMP). Unified g16 still auto-selects g16-cc for link when inputs are C-only.</td></tr>
+    <tr><td class="idx-num">7</td><td><a href="profiles.html#flags-c">PROFILE c_pgo_gen</a></td><td class="tip">C PGO generate</td><td class="idx-detail">Adds -fprofile-generate=${GROK16_ROOT}/data/pgo to C flags. Run profile command, then rebuild consumers with G16_ENABLE_PGO=1.</td></tr>
+    <tr><td class="idx-num">8</td><td><a href="profiles.html#flags-c">PROFILE c_pgo_use</a></td><td class="tip">C PGO use</td><td class="idx-detail">Adds -fprofile-use for C builds after training. Pairs with cxx_pgo_use for mixed projects.</td></tr>
+    <tr><td class="idx-num">9</td><td><a href="reference.html#env-g16-c-std">G16_C_STD</a></td><td class="tip">C standard env</td><td class="idx-detail">Exported by grok16-config.sh from data/grok16-version.json. Default gnu17. Used by verify, CMake GROK16_C_STD, and manual g16 invocations.</td></tr>
+    <tr><td class="idx-num">10</td><td><a href="reference.html#env-force-c">G16_FORCE_C=1</a></td><td class="tip">Force C backend</td><td class="idx-detail">Override detection — unified g16 always execs g16-cc even for .cpp (debug only).</td></tr>
+    <tr><td class="idx-num">11</td><td><a href="getting-started.html#bootstrap">bootstrap</a></td><td class="tip">First build</td><td class="idx-detail">Fetch GCC 15, patch BASE-VER 16.1.1, host-build, install, relocate backends, install unified g16. Produces working C path without separate gcc binary name.</td></tr>
+    <tr><td class="idx-num">12</td><td><a href="getting-started.html#rebuild">rebuild</a></td><td class="tip">Self-host</td><td class="idx-detail">Self-host uses libexec/g16-cc and g16-cxx as CC/CXX during gcc_rebuild — not the unified wrapper — avoiding bootstrap recursion.</td></tr>
+    <tr><td class="idx-num">13</td><td><a href="reference.html#cmd-install">install</a></td><td class="tip">Post-install</td><td class="idx-detail">Regenerates VERSION, cmake, manifest. Confirms g16 -dumpversion == 16.1.1. Re-runs driver/Makefile install if present.</td></tr>
+    <tr><td class="idx-num">14</td><td><a href="reference.html#cmd-paths">paths</a></td><td class="tip">Paths dump</td><td class="idx-detail">Prints G16_DRIVER, G16_BACKEND_CC, G16_C_STD, GROK16_ROOT, G16_PREFIX. Use before scripting C builds.</td></tr>
+    <tr><td class="idx-num">15</td><td><a href="performance.html#bench">bench (C future)</a></td><td class="tip">C benchmarks</td><td class="idx-detail">16.1.1 benches remain CXX-first; C flags available via PROFILE c for mixed stacks. Add examples/minimal-c-project to CI smoke.</td></tr>
+    <tr><td class="idx-num">16</td><td><a href="integration.html#gates">build-cpp.sh</a></td><td class="tip">WRDT L2</td><td class="idx-detail">World_Redata C++ engine; C sources in redata use host python. Grok16 C path validates toolchain for embedded .c in future L2 splits.</td></tr>
+    <tr><td class="idx-num">17</td><td><a href="architecture.html#unified-driver">libexec/grok16/</a></td><td class="tip">Backend dir</td><td class="idx-detail">g16-cc and g16-cxx live here after relocate. Marker .relocated prevents double-move on reinstall.</td></tr>
+  </table>  <footer><a href="index.html">Index</a> · <a href="master-coder.html">Master Coder</a></footer>
+</body>
+</html>

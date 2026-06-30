@@ -1,0 +1,16 @@
+{
+  "gpy16_version": "16.1.1",
+  "pkgversion": "GPY-16.1.1",
+  "product": "GPY-16",
+  "driver": "gpy-16",
+  "builtin": true,
+  "tree": "python/",
+  "pair": "Grok16/g16",
+  "rule": "Built-in Grok16 toolkit — g16 auto-discerns .py/.gpy; no sibling GrokPy bootstrap",
+  "runtime": "grok_vm",
+  "language_version": "3.12",
+  "bytecode_magic": "GPY16",
+  "ai_ready": true,
+  "compat": ["pythong", "grokpy"],
+  "build_with": "Grok16/g16 @ field_opt"
+}

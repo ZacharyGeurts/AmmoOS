@@ -1,0 +1,51 @@
+{
+  "schema": "queen-launch/v1",
+  "title": "cxx",
+  "chamber_root": "${GROK16_ROOT}/examples/languages/cxx",
+  "entry": "hello.cpp",
+  "runtime": "cxx",
+  "cwd": ".",
+  "env": {},
+  "chamber": {
+    "mode": "folder_mirror",
+    "include": [
+      "**/*"
+    ],
+    "exclude": [
+      "*.a",
+      "*.o",
+      "*.pyc",
+      "*.so",
+      "*.tmp",
+      ".git",
+      ".nexus-state",
+      ".venv",
+      "__pycache__",
+      "build",
+      "dist",
+      "node_modules"
+    ]
+  },
+  "uncompiled": false,
+  "launch_packaging": true,
+  "organized_field": {
+    "schema": "queen-organized-field/v1",
+    "field_depth": 0,
+    "inspect_files": true,
+    "compile": false,
+    "compile_gate": false,
+    "free_meld": true,
+    "trim_excess": true,
+    "runner_policy": {
+      "python": "interpreter",
+      "native": "bsp_reuse",
+      "cmake": "staged_binary",
+      "shell": "interpreter",
+      "cxx": "interpreter",
+      "iron_exec_when_free_meld": true
+    }
+  },
+  "created": "2026-06-29T22:32:06Z",
+  "updated": "2026-06-29T22:32:06Z",
+  "scan": "fast"
+}

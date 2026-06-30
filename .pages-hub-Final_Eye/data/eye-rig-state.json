@@ -1,0 +1,17 @@
+{
+  "schema": "zocr-eye-rig-state/v1",
+  "mode": "monocular",
+  "stereoscopic": {
+    "enabled": false
+  },
+  "eyes": [
+    {
+      "id": "primary",
+      "role": "center",
+      "profile": "human",
+      "offset_x": 0,
+      "enabled": true
+    }
+  ],
+  "updated": "2026-06-25T13:57:47.620287+00:00"
+}

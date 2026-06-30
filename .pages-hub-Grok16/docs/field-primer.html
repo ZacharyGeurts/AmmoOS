@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 Manual — Field Primer</title>
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light") {
+        t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "light");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand"><strong>Grok16</strong> <span class="nav-version">distro 3.0.0</span><span class="nav-g16">g16 @ 16.2.0</span></div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+            <option value="1.5">XXL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☀</span><span class="seg-text">Light</span>
+          </button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☾</span><span class="seg-text">Dark</span>
+          </button>
+        </div>
+      </div>
+    </div>
+                                                                                                <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Field Primer — Consumer Requirements</h1>
+  <p>Minimum steps to use Grok16 as the C/C++ toolchain for Field stack projects.</p>
+
+  <h2>Checklist</h2>
+  <ol>
+    <li>Bootstrap Grok16; <code>verify</code> and <code>field-bench</code> pass.</li>
+    <li>Export <code>G16_PREFIX</code> (install prefix with <code>bin/g++16</code>).</li>
+    <li>Point CMake at <code>cmake/grok16-toolchain.cmake</code>.</li>
+    <li>Include <code>g16-field-mandate.cmake</code> on all field targets.</li>
+    <li>Run World_Redata <code>parity</code> before push.</li>
+  </ol>
+
+  <h2 id="standard-c">C standard</h2>
+  <p>Default: <code>gnu17</code> (<code>G16_C_STD</code>). Compile with unified <code>g16</code> on <code>.c</code> sources — no separate C driver command.</p>
+
+  <h2 id="standard">C++ standard</h2>
+  <p>Default: <code>gnu++26</code> (<code>G16_CXX_STD</code>). World_Redata: <code>field_g16.hh</code> requires <code>__cplusplus >= 202400</code>.</p>
+
+  <h2>Profile selection</h2>
+  <table>
+    <tr><th>Project type</th><th>Profile</th></tr>
+    <tr><td>FieldX86 / entropy / NEXUS CPU</td><td>field_opt</td></tr>
+    <tr><td>Matrix scoring</td><td>ai</td></tr>
+    <tr><td>CANVAS dispatch kernels</td><td>field_compute</td></tr>
+    <tr><td>AMOURANTHRTX CPU prep</td><td>vulkan_rtx</td></tr>
+  </table>
+
+  <h2>Hot paths</h2>
+  <ul>
+    <li>Use <code>-std=gnu++26 -fcontracts</code> where contracts are required.</li>
+    <li>Bounded I/O: <code>core::read_file_bounded</code> (World_Redata pattern).</li>
+    <li>No fake g16 wrappers — gates check ELF + dumpversion 16.1.1.</li>
+  </ul>
+
+  <h2>CMake example</h2>
+  <pre><code>cmake -S . -B build \
+  -DCMAKE_TOOLCHAIN_FILE=$GROK16_ROOT/cmake/grok16-toolchain.cmake \
+  -DCMAKE_PROJECT_INCLUDE=$GROK16_ROOT/cmake/grok16-profile-field-opt.cmake</code></pre>
+
+  <footer><a href="index.html">Index</a></footer>
+</body>
+</html>

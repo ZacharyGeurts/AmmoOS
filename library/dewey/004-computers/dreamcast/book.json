@@ -1,0 +1,10 @@
+{
+  "id": "dreamcast",
+  "title": "Dreamcast",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/dreamcast/dreamcast.h7c",
+  "cover": "/library/assets/devices/dreamcast.png",
+  "ready": true
+}

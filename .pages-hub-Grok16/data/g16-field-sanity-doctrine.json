@@ -1,0 +1,29 @@
+{
+  "schema": "g16-field-sanity/v1",
+  "title": "Grok16 Field Sanity — integral simplify for the whole G16 stack",
+  "motto": "Integral field sanity on Grok16 — simplify layers, never obtuse, never build under heat.",
+  "meld_citation": "ironclad:meld:2",
+  "ironclad_meld_ref": "data/g16-ironclad-meld.json",
+  "g16_mandate": "G16_FIELD_SAFETY_MANDATE_v1",
+  "integral": {
+    "rule": "one_pass_simplify",
+    "never_obtuse": true,
+    "never_build_under_heat": true,
+    "infinite_resolution_aspiration": true
+  },
+  "pass": ["classify", "strip", "dedupe", "flatten", "cool_sort"],
+  "layers": [
+    {"id": "unified_driver", "path": "driver/g16-unified.c", "role": "discern dispatch", "internal": true},
+    {"id": "compiler_forge", "path": "forge/compiler_tools.py", "role": "gcc bootstrap/rebuild", "internal": true},
+    {"id": "binutils_forge", "path": "forge/binutils_tools.py", "role": "g16-as/ld", "internal": true},
+    {"id": "g16_mandate", "path": "cmake/g16-field-mandate.cmake", "role": "fortify RELRO PIE", "internal": true},
+    {"id": "field_cmake", "path": "cmake/grok16-field.cmake", "role": "profile bootstrap", "internal": true},
+    {"id": "profiles", "path": "data/grok16-profiles.json", "role": "field_opt ai vulkan", "internal": true},
+    {"id": "toolchain_manifest", "path": "data/grok16-toolchain.json", "role": "live manifest", "internal": true},
+    {"id": "ironclad_bridge", "path": "forge/g16-ironclad.py", "role": "Ironclad capstone read", "internal": true},
+    {"id": "sanity_operator", "path": "forge/g16-field-sanity.py", "role": "integral simplify pass", "internal": true},
+    {"id": "linker_orchestrator", "path": "forge/g16-linker.py", "role": "field linker pass to silicon", "internal": true},
+    {"id": "linker_mandate", "path": "cmake/g16-linker-mandate.cmake", "role": "CMake link mandate", "internal": true},
+    {"id": "spatial_existence", "path": "forge/g16-spatial-existence.py", "role": "this one / that one Ironclad meld", "internal": true}
+  ]
+}

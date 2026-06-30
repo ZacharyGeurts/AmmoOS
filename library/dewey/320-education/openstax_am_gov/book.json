@@ -1,0 +1,15 @@
+{
+  "id": "openstax_am_gov",
+  "title": "OpenStax American Government 3e",
+  "author": "OpenStax",
+  "dewey": "320",
+  "publisher": "OpenStax",
+  "license": "CC BY 4.0",
+  "grade_band": "9-12",
+  "subject": "civics",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/openstax_am_gov/front.png",
+  "cover_asset": "library/assets/covers/openstax_am_gov/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

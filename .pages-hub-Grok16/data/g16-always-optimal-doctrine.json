@@ -1,0 +1,27 @@
+{
+  "schema": "g16-always-optimal-doctrine/v1",
+  "title": "Always optimal — collapse to best, ride the layers",
+  "motto": "Combinatorics scores every facet; bench receipts pick the belt; one amplitude at depth 0.",
+  "policy": {
+    "always_optimal": true,
+    "auto_on_integrate": true,
+    "auto_on_bench_publish": true,
+    "auto_on_compatibility_refresh": true,
+    "auto_on_panel_boot": true,
+    "collapse_to_terminal_leaf": true,
+    "bench_driven_belt": true,
+    "compiler_sense_merge": true,
+    "default_belt_profile": "belt_2_0",
+    "default_die_slots": 512,
+    "gate_degraded_runner": "python",
+    "gate_live_runner": "native_bsp",
+    "never_operator_crank": true
+  },
+  "pipeline": ["fast_cycle", "recombinatorics", "bridge", "power_sort", "compatibility_refresh", "integrate_env"],
+  "power_sort": "data/g16-power-sort-doctrine.json",
+  "module": "lib/field-always-optimal.py",
+  "panel": "g16-always-optimal-panel.json",
+  "field_research_book": "data/g16-field-research-book.json",
+  "compare_axis": "field_execution_ops_per_sec",
+  "receipts": ["docs/field-exec-full-bench.json", "g16-ideal-compile.json"]
+}

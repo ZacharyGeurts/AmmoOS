@@ -1,0 +1,25 @@
+# Grok speedup suggestions — enable in BIOS when hardware supports (optional, not security)
+
+[gpu]
+resize_bar           = Resize BAR / ReBAR ON — full VRAM visible to OS (major FPS/latency win)
+above_4g_decoding    = Above 4G Decoding ON — required for ReBAR on many boards
+pcie_gen_max         = PCIe link speed max (Gen4/Gen5) for GPU and NVMe slots
+aspm_gpu             = ASPM: performance bias for discrete GPU; L1 ok for iGPU
+
+[cpu_memory]
+xmp_expo             = XMP/EXPO profile enabled if RAM rated (check thermals)
+cppc_preferred       = AMD CPPC preferred cores / Intel Speed Shift — OS governor partners
+smt_match_workload   = SMT on for throughput; off only if you measured regression
+numa_aware           = NUMA nodes exposed — KILROY Field Die uses topology hints
+
+[storage]
+nvme_native          = NVMe native mode, not RAID legacy wrapper unless you need RAID
+pcie_nvme_slot       = Boot NVMe in CPU-direct M.2 slot when available (lower latency)
+
+[boot_time]
+grok_timeout         = Grok default 8s — lower to 3 after BIOS stable
+quiet_kernel         = quiet splash on normal entry (already in grok.entries.conf)
+uefi_only            = Dropping CSM saves POST seconds
+
+[firmware_checks]
+run_audit            = ./scripts/grok-firmware-audit.sh — prints pass/fail per line above

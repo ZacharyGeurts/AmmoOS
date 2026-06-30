@@ -1,0 +1,19 @@
+{
+  "name": "ZNetwork",
+  "version": "2.1.0",
+  "codename": "Stack",
+  "status": "ACTIVE",
+  "outside_lab": true,
+  "wide_open_forbidden": true,
+  "field_stream_forbidden_until_lab": true,
+  "canonical_root": "NewLatest/ZNetwork",
+  "doctrine": "data/znetwork-outside-lab-doctrine.json",
+  "test_matrix": "data/znetwork-lab-test-matrix.json",
+  "review_checklist": "data/review-checklist.json",
+  "lab_scripts": {
+    "gate": "scripts/znetwork-lab-gate.sh",
+    "battery": "scripts/znetwork-test-battery.sh"
+  },
+  "integrated_pointer": "../NewLatest/znetwork/OUTSIDE_LAB.json",
+  "field_wire_ref": "../Grok16/data/grok16-znetwork-field-wire-doctrine.json"
+}

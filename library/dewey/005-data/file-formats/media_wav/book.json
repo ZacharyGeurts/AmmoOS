@@ -1,0 +1,13 @@
+{
+  "id": "format-media_wav",
+  "title": "WAV / PCM",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".wav"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_wav.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

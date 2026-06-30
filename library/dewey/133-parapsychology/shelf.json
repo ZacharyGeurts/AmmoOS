@@ -1,0 +1,22 @@
+{
+  "schema": "dewey-shelf/v1",
+  "shelf": "133-parapsychology",
+  "code": "133",
+  "title": "133-parapsychology",
+  "updated": "2026-06-29T16:16:18Z",
+  "format_primary": "h7c",
+  "book_count": 1,
+  "h7c_count": 0,
+  "books": [
+    {
+      "id": "tobins-spirit-guide",
+      "title": "THE PINNACLE Tobin's Spirit Guide",
+      "author": "Tobin / Hostess 7 Field Corps",
+      "dewey": "133",
+      "format": "spirit-guide",
+      "h7c": null,
+      "cover": "https://raw.githubusercontent.com/ZacharyGeurts/memes/main/DemonHunterStarterKit/IV%20-%20Emperor.jpg",
+      "ready": false
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+Grok16 — Written Offer for Corresponding Source (GPL v3 §6b)
+=============================================================
+
+This offer applies to object-code distributions of the Grok16 compiler
+toolchain (g16, g++16, g16-as, g16-ld, and related binutils/gcc binaries)
+built from GNU Compiler Collection and GNU Binutils sources.
+
+Corresponding Source
+--------------------
+
+1. Upstream GCC (branch releases/gcc-15):
+   https://gcc.gnu.org/git/gcc.git
+
+2. Upstream GNU Binutils (release used at bootstrap):
+   https://sourceware.org/git/binutils-gdb.git
+
+3. Grok16 modifications (patches, forge, driver, scripts, cmake):
+   https://github.com/ZacharyGeurts/Grok16
+
+   Documented field deltas:
+   - patches/gcc-base-ver-16.0.0.patch (BASE-VER 15.3.1 → 16.0.0)
+   - forge bootstrap configures --program-transform-name for g16/g++16
+   - driver/g16-unified.c (original Grok16 dispatch driver)
+
+4. Rebuild from source on this machine:
+   ./scripts/grok16-toolchain.sh bootstrap
+   ./scripts/grok16-toolchain.sh verify
+
+Written offer
+-------------
+
+For at least three years from the date you received these binaries, we offer
+to provide the Corresponding Source on a durable physical medium for a charge
+no more than our reasonable cost of physically performing source conveyance.
+
+Contact: Zachary Geurts <gzac5314@gmail.com>
+
+License
+-------
+
+GCC and Binutils: Copyright (C) Free Software Foundation, Inc. — GPLv3.
+Grok16 scripts/forge/driver: Copyright (C) 2026 Zachary Geurts — GPLv3.
+See LICENSE and CREDITS.md in this repository.

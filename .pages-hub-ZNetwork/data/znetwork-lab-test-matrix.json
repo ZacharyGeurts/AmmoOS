@@ -1,0 +1,75 @@
+{
+  "schema": "znetwork-lab-test-matrix/v1",
+  "title": "ZNetwork lab test matrix — required before SHADOW or field stream",
+  "version": "0.2.0",
+  "all_must_pass": true,
+  "tests": [
+    {
+      "id": "probe_json",
+      "tier": "smoke",
+      "cmd": "build/znetwork probe --json",
+      "expect": "connection",
+      "blocks": ["SHADOW", "ACTIVE", "FIELD_STREAM"]
+    },
+    {
+      "id": "review_gate",
+      "tier": "smoke",
+      "cmd": "scripts/znetwork-review-gate.sh",
+      "expect_exit": 0,
+      "blocks": ["SHADOW", "ACTIVE", "FIELD_STREAM"]
+    },
+    {
+      "id": "mode_active_blocked",
+      "tier": "safety",
+      "cmd": "ZNETWORK_MODE=ACTIVE build/znetwork mode ACTIVE --json",
+      "expect_json": {"effective": "REVIEW_ONLY"},
+      "blocks": ["ACTIVE", "FIELD_STREAM"]
+    },
+    {
+      "id": "mode_shadow_blocked_without_lab",
+      "tier": "safety",
+      "cmd": "ZNETWORK_MODE=SHADOW build/znetwork mode SHADOW --json",
+      "expect_json": {"effective": "REVIEW_ONLY"},
+      "env_clear": ["ZNETWORK_OUTSIDE_LAB", "ZNETWORK_LAB_GATE_OK"],
+      "blocks": ["SHADOW", "FIELD_STREAM"]
+    },
+    {
+      "id": "wide_open_forbidden",
+      "tier": "safety",
+      "check": "doctrine",
+      "path": "data/znetwork-outside-lab-doctrine.json",
+      "field": "policy.wide_open_forbidden",
+      "expect": true,
+      "blocks": ["FIELD_STREAM"]
+    },
+    {
+      "id": "field_stream_lab_locked",
+      "tier": "safety",
+      "check": "checklist",
+      "field": "field_stream_lab_approved",
+      "expect": false,
+      "blocks": ["FIELD_STREAM"]
+    },
+    {
+      "id": "handshake_sim",
+      "tier": "lab",
+      "script": "tests/handshake_sim.py",
+      "blocks": ["SHADOW", "FIELD_STREAM"],
+      "optional_if_missing_binary": true
+    },
+    {
+      "id": "fec_repair_sim",
+      "tier": "lab",
+      "script": "tests/fec_repair_sim.py",
+      "blocks": ["FIELD_STREAM"],
+      "optional_if_missing_binary": true
+    },
+    {
+      "id": "thermal_vent_sim",
+      "tier": "lab",
+      "script": "tests/thermal_vent_sim.py",
+      "blocks": ["FIELD_STREAM"],
+      "optional_if_missing_binary": true
+    }
+  ]
+}

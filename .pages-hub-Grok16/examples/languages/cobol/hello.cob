@@ -1,0 +1,4 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. HELLO.
+       PROCEDURE DIVISION.
+           DISPLAY "grok16 cobol".

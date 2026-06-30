@@ -1,0 +1,10 @@
+{
+  "id": "macintosh_lc",
+  "title": "Macintosh LC",
+  "author": "Field Extensive Library",
+  "dewey": "004.165",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/macintosh_lc/macintosh_lc.h7c",
+  "cover": "/library/assets/devices/macintosh_lc.png",
+  "ready": true
+}

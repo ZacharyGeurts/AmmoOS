@@ -1,0 +1,10 @@
+{
+  "id": "psp",
+  "title": "PlayStation Portable",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/psp/psp.h7c",
+  "cover": "/library/assets/devices/psp.png",
+  "ready": true
+}

@@ -1,0 +1,50 @@
+# Installed compiler tree (build locally via forge)
+/bin/
+/lib/*
+!/lib/*.py
+/lib64/
+/libexec/
+/include/
+/share/
+/x86_64-pc-linux-gnu/
+/etc/gprofng.rc
+
+# Upstream GCC clone (~1.6G) — fetched by grok16-forge gcc_fetch
+/vendor/*
+!/vendor/.gitkeep
+
+# Local build tree (keep .gitkeep only)
+/build/*
+!/build/.gitkeep
+
+# Generated at install
+/VERSION
+/SELFHOST.json
+/cmake/grok16-toolchain.cmake
+/data/grok16-toolchain.json
+/data/grok16-integrate.env
+/data/bench/
+/data/pgo/
+/data/rebuild.log
+/.grok16-forge.log
+/.grok16-state/
+
+# Built unified driver (source in driver/g16-unified.c)
+/driver/g16-unified
+
+# Example build dirs
+/examples/**/build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Packaged distro tree (local only)
+/dist/
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.la
+*.log

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>11 — Reading the Battlefield · Field Technology v6</title>
+  <meta name="description" content="Chapter 11: Reading the Battlefield. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Field_Primer/chapters/11-observability.html" />
+  <meta name="theme-color" content="#040810" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon.png" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Field Technology v6" />
+  <meta property="og:title" content="11 — Reading the Battlefield · Field Technology v6" />
+  <meta property="og:description" content="Chapter 11: Reading the Battlefield. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta property="og:url" content="https://zacharygeurts.github.io/Field_Primer/chapters/11-observability.html" />
+  <meta property="og:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch11-observability.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Observability stack" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ZacharyGeurts" />
+  <meta name="twitter:creator" content="@ZacharyGeurts" />
+  <meta name="twitter:title" content="11 — Reading the Battlefield · Field Technology v6" />
+  <meta name="twitter:description" content="Chapter 11: Reading the Battlefield. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta name="twitter:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch11-observability.jpg" />
+  <meta name="twitter:image:alt" content="Observability stack" />
+  <link rel="stylesheet" href="../css/field-primer.css" />
+  <link rel="stylesheet" href="../css/chapters.css" />
+  <link rel="stylesheet" href="../css/reader.css" />
+</head>
+<body class="chapter-page accent-flow">
+  <nav class="top"><div class="inner">
+    <a class="logo" href="../index.html">FIELD TECHNOLOGY <span class="v6-badge">v6</span></a>
+    <ul>
+      <li><a href="../creditors/index.html">Creditors</a></li>
+      <li><a href="../index.html#love-god">Love &amp; God</a></li>
+      <li><a href="../index.html#chapters">Chapters</a></li>
+      <li><a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/11-Observability-Operator-Tools">Wiki</a></li>
+    </ul>
+  </div></nav>
+  <header class="chapter-hero" style="background-image:url('../assets/images/chapters/ch11-observability.jpg')">
+    <div class="chapter-hero-overlay"></div>
+    <div class="chapter-hero-content">
+      <p class="eyebrow">Chapter 11 · Field Technology v6</p>
+      <h1>Reading the Battlefield</h1>
+      
+    </div>
+  </header>
+  <main class="chapter-main">
+    <nav class="chapter-nav"><a class="btn secondary" href="10-spiderweb.html">← Ch 10</a> <a class="btn" href="12-reality-theory.html">Ch 12 →</a></nav>
+    <p class="eyebrow">Chapter 11 · Observability — Reading the Battlefield</p>
+
+<div class="objectives">
+<h2 id="toc-11-learning-objectives">Learning objectives</h2>
+<ul>
+<li>Use ELLIE categories and STATUS block fields as primary witnesses.</li>
+<li>Operate prompt <code>set</code>/<code>list</code> for AnalogFields and Hardware.</li>
+<li>Enable RTXProbe with zero cost when off.</li>
+<li>Navigate NEXUS panel <code>https://127.0.0.1:9477/</code> and RTX Zero mode.</li>
+<li>Execute week-one lab correlating stderr, die bus, and packet field jsonl.</li>
+</ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-11-introduction-grep-is-forensic-defense">Introduction — grep is forensic defense</a></li><li><a href="#toc-11-ellie-logging-categories">ELLIE logging categories</a></li><li><a href="#toc-11-prompt-terminal-partial-but-real">Prompt terminal — partial but real</a></li><li><a href="#toc-11-rtxprobe">RTXProbe</a></li><li><a href="#toc-11-nexus-panel">NEXUS panel</a></li><li><a href="#toc-11-final-eye-1-0-sovereign-vision-layer">Final_Eye 1.0 — sovereign vision layer</a></li><li><a href="#toc-11-week-one-operator-lab">Week-one operator lab</a></li><li><a href="#toc-11-sovereign-time-preview">Sovereign time preview</a></li><li><a href="#toc-11-chapter-summary">Chapter summary</a></li><li><a href="#toc-11-study-questions">Study questions</a></li><li><a href="#toc-11-ellie-status-block-field-by-field">ELLIE STATUS block — field by field</a></li><li><a href="#toc-11-correlating-three-scales-at-panel">Correlating three scales at panel</a></li><li><a href="#toc-11-rtx-zero-idle-posture">RTX Zero idle posture</a></li><li><a href="#toc-11-observability-drill-block-1">Observability drill block 1</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-11-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Observability is grep discipline made weekly habit. On the way you will partition ELLIE categories, read STATUS and THERMO cadence, correlate panel JSON with stderr, and build an operator journal that survives long sessions.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch11-observability.jpg" alt="Observability stack" loading="lazy" /><figcaption>On the way — Observability stack</figcaption></figure>
+<ul class="on-the-way-journey"><li>MAIN, VULKAN, CANVAS, THERMO, STATUS</li><li>RTX_PROBE and headless dispatch receipts</li><li>Battlefield reading without screenshots alone</li><li>Week-twelve drift detection</li></ul>
+</div>
+
+
+<h2 id="toc-11-introduction-grep-is-forensic-defense">Introduction — grep is forensic defense</h2>
+<p>Trust stderr before screenshots. Time is linear — logs are timeline. Chapter 11 unifies ELLIE logging, prompt terminal, RTXProbe, NEXUS panel into one observability doctrine spanning AMOURANTHRTX and NEXUS-Shield.</p>
+
+<figure class="figure"><img src="../assets/images/chapters/ch11-observability.jpg" alt="Observability" loading="lazy" /><figcaption>Figure 11.1 — Logs, probes, panel — one battlefield.</figcaption></figure>
+
+<h2 id="toc-11-ellie-logging-categories">ELLIE logging categories</h2>
+<p>MAIN, VULKAN, CANVAS, THERMO, STATUS, RTXPROBE. STATUS ~5s: FPS, GPU ms, VRAM, adaptive scale, entropy, boundary thermo, maintenance cost.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch19-sovereign-time.jpg" alt="Sovereign pulse timeline" loading="lazy" /><figcaption>Figure 11.2 — SQUIDGIE and THERMO share stderr timelines — grep both.</figcaption></figure>
+
+<pre class="eq">grep -E '^(MAIN|VULKAN|CANVAS|THERMO|STATUS)' run.log</pre>
+
+<h2 id="toc-11-prompt-terminal-partial-but-real">Prompt terminal — partial but real</h2>
+<pre class="eq">set AnalogFields.GateFidelity 0.85
+list Hardware
+guide</pre>
+<p><span class="tag impl">set/list AnalogFields + Hardware.</span> Glassmorphism sliders / ImGui ESC — feasibility doc only, not hidden as shipped.</p>
+
+<h2 id="toc-11-rtxprobe">RTXProbe</h2>
+<p>RTX_PROBES=1 → GPU timestamps, invocation counts. Zero cost when off.</p>
+
+<h2 id="toc-11-nexus-panel">NEXUS panel</h2>
+<p>https://127.0.0.1:9477/ — command, packets, threats, signals, DNS, library, system. RTX Zero ?rtx=1 — Aqua chrome, cache-first refresh.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch05-packet-perimeter.jpg" alt="Panel and perimeter" loading="lazy" /><figcaption>Figure 11.4 — Panel slice beside packet perimeter — one battlefield map.</figcaption></figure>
+
+
+<h2 id="toc-11-final-eye-1-0-sovereign-vision-layer">Final_Eye 1.0 — sovereign vision layer</h2>
+<p><span class="tag impl">Implemented.</span> <strong>Final_Eye v1.0.0</strong> (<a href="https://github.com/ZacharyGeurts/Final_Eye">Final_Eye</a>) is the robotics vision operator surface at <code>http://127.0.0.1:9479/ops</code> — Field Ops UI with honesty-labeled panels, release matrix, and eight subsystem sections (robotics → integration).</p>
+<p>Stack: <strong>ZOCRSM1</strong> field vision ingress · <strong>GRKMF1/GVC1</strong> proprietary media (not MPEG) · silent capture by default · Grok16 <code>field_opt</code> compiler · Queen forge · Hostess7 truth bridge · ZAC vision pack/restore.</p>
+<p>War mode: combat fps 3–20 AI on demand. Dishes mode: cinema up to 240 fps doctrine. Code seal + GVC1 tamper rejection + stream AES-GCM/HMAC — grep <code>zocr_security.py</code> before protected capture.</p>
+<p>Quick verify: <code>python3 zocr_security.py seal</code> · <code>./tests/run_tests.sh</code> · <code>GET /api/ops/full</code>. Field compiler C/C++: <code>GET /api/field/compile/full</code>.</p>
+<p>Cross-read: <a href="21-field-browser-queen.html">Chapter 21 Queen</a> (browser gates) · <a href="19-sovereign-time.html">Chapter 19 Sovereign Time</a> (eyeball ticks) · <a href="22-glossary.html#final-eye">Glossary — Final_Eye</a>.</p>
+
+<h2 id="toc-11-week-one-operator-lab">Week-one operator lab</h2>
+<ol>
+<li>./linux.sh run or ./nexus.sh</li>
+<li>Read STATUS/THERMO 60s</li>
+<li>Mouse on classic — entropyThisFrame</li>
+<li>Archive gatekeeper decision at panel</li>
+</ol>
+
+<h2 id="toc-11-sovereign-time-preview">Sovereign time preview</h2>
+<p>Run your timeserver, verify at receive, grep SQUIDGIE — <a href="19-sovereign-time.html">Chapter 19</a>.</p>
+<figure class="figure"><img src="../assets/images/packet-field.jpg" alt="Jsonl forensic grep" loading="lazy" /><figcaption>Figure 11.3 — field jsonl timestamps cross-check sealed time preview. <span class="claim-tie">Claim: NEXUS packet field — local jsonl perimeter</span></figcaption></figure>
+
+
+<h2 id="toc-11-chapter-summary">Chapter summary</h2>
+<p>Observability is weapon. Prior: <a href="10-spiderweb.html">Ch 10</a>. Next: <a href="12-reality-theory.html">Ch 12</a>.</p>
+
+<h2 id="toc-11-study-questions">Study questions</h2>
+<ol>
+<li>Six ELLIE categories?</li>
+<li>STATUS fields?</li>
+<li>RTXProbe enable?</li>
+<li>RTX Zero?</li>
+<li>Panel port?</li>
+</ol>
+
+
+<h2 id="toc-11-ellie-status-block-field-by-field">ELLIE STATUS block — field by field</h2>
+<p>FPS — presentation cadence. GPU ms — dispatch cost witness. VRAM — budget Chapter 7. Adaptive scale — CFL interaction Chapter 9. Entropy — ThermoAccountant proxy. Boundary thermo — holographic boundary metaphor with number. Maintenance — prevMaintCost story.</p>
+<h2 id="toc-11-correlating-three-scales-at-panel">Correlating three scales at panel</h2>
+<p>stderr THERMO + data_bus concept + NEXUS jsonl row + sealed time — Chapter 2 integration. Panel :9477 is human correlate surface, not automatic merge engine.</p>
+<h2 id="toc-11-rtx-zero-idle-posture">RTX Zero idle posture</h2>
+<p>?rtx=1 Aqua chrome cache-first — zero-cost idle when honored. Observability includes knowing when refresh paused vs threat stale.</p>
+
+<h2 id="toc-11-observability-drill-block-1">Observability drill block 1</h2>
+<p>Structured grep and panel exercise 1 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 1: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-2">Observability drill block 2</h2>
+<p>Structured grep and panel exercise 2 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 2: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-3">Observability drill block 3</h2>
+<p>Structured grep and panel exercise 3 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 3: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-4">Observability drill block 4</h2>
+<p>Structured grep and panel exercise 4 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 4: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-5">Observability drill block 5</h2>
+<p>Structured grep and panel exercise 5 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 5: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-6">Observability drill block 6</h2>
+<p>Structured grep and panel exercise 6 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 6: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-7">Observability drill block 7</h2>
+<p>Structured grep and panel exercise 7 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 7: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-8">Observability drill block 8</h2>
+<p>Structured grep and panel exercise 8 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 8: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-9">Observability drill block 9</h2>
+<p>Structured grep and panel exercise 9 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 9: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-10">Observability drill block 10</h2>
+<p>Structured grep and panel exercise 10 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 10: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-11">Observability drill block 11</h2>
+<p>Structured grep and panel exercise 11 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 11: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-12">Observability drill block 12</h2>
+<p>Structured grep and panel exercise 12 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 12: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-13">Observability drill block 13</h2>
+<p>Structured grep and panel exercise 13 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 13: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-14">Observability drill block 14</h2>
+<p>Structured grep and panel exercise 14 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 14: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-15">Observability drill block 15</h2>
+<p>Structured grep and panel exercise 15 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 15: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-16">Observability drill block 16</h2>
+<p>Structured grep and panel exercise 16 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 16: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-17">Observability drill block 17</h2>
+<p>Structured grep and panel exercise 17 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 17: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-18">Observability drill block 18</h2>
+<p>Structured grep and panel exercise 18 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 18: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-19">Observability drill block 19</h2>
+<p>Structured grep and panel exercise 19 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 19: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-20">Observability drill block 20</h2>
+<p>Structured grep and panel exercise 20 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 20: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-21">Observability drill block 21</h2>
+<p>Structured grep and panel exercise 21 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 21: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-22">Observability drill block 22</h2>
+<p>Structured grep and panel exercise 22 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 22: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-23">Observability drill block 23</h2>
+<p>Structured grep and panel exercise 23 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 23: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-24">Observability drill block 24</h2>
+<p>Structured grep and panel exercise 24 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 24: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-25">Observability drill block 25</h2>
+<p>Structured grep and panel exercise 25 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 25: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-26">Observability drill block 26</h2>
+<p>Structured grep and panel exercise 26 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 26: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-27">Observability drill block 27</h2>
+<p>Structured grep and panel exercise 27 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 27: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-28">Observability drill block 28</h2>
+<p>Structured grep and panel exercise 28 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 28: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-29">Observability drill block 29</h2>
+<p>Structured grep and panel exercise 29 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 29: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-30">Observability drill block 30</h2>
+<p>Structured grep and panel exercise 30 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 30: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-31">Observability drill block 31</h2>
+<p>Structured grep and panel exercise 31 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 31: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-32">Observability drill block 32</h2>
+<p>Structured grep and panel exercise 32 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 32: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-33">Observability drill block 33</h2>
+<p>Structured grep and panel exercise 33 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 33: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-34">Observability drill block 34</h2>
+<p>Structured grep and panel exercise 34 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 34: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-35">Observability drill block 35</h2>
+<p>Structured grep and panel exercise 35 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 35: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-36">Observability drill block 36</h2>
+<p>Structured grep and panel exercise 36 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 36: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-37">Observability drill block 37</h2>
+<p>Structured grep and panel exercise 37 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 37: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+<h2 id="toc-11-observability-drill-block-38">Observability drill block 38</h2>
+<p>Structured grep and panel exercise 38 for muscle memory.</p>
+<h3>stderr rhythm</h3>
+<p>Session 38: tee run.log for 120 seconds. Count STATUS lines — expect ~24 at 5s cadence. Note entropy and boundary thermo drift when injecting mouse on fabric.</p>
+<p>Correlate THERMO spike with dispatch steps in data_bus mirror conceptually — slot 28 should rise monotonically.</p>
+<h3>panel archive</h3>
+<p>Open NEXUS panel loopback. Archive one gatekeeper verdict jsonl row — USER_OK or SUSPICIOUS. Redact nothing; local-first truth.</p>
+<p>RTX Zero mode ?rtx=1: confirm cache-first refresh does not hide stale threat panel — note behavior for operator journal.</p>
+<h3>cross-product correlation</h3>
+<p>Timestamp sealed time from FieldSocket concept against jsonl row time — Chapter 19 preview. If disagree, flag SQUIDGIE research path.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch11">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>ELLIE categories</td><td>Categorized stderr</td><td><span class="tag impl">Implemented</span></td><td><code>MAIN/VULKAN/CANVAS/THERMO/STATUS</code></td></tr><tr><td>Panel :9477</td><td>Human correlation UI</td><td><span class="tag impl">Implemented</span></td><td><code>NEXUS local panel</code></td></tr><tr><td>Screenshot culture</td><td>Pretty frames as proof</td><td><span class="tag phil">Philosophy</span></td><td><code>Rejected — grep first</code></td></tr><tr><td>Operator journal</td><td>Weekly rhythm</td><td><span class="tag phil">Philosophy</span></td><td><code>Receipts over vibes</code></td></tr></tbody></table>
+<pre class="eq">observability = stderr_categories × panel_correlation × jsonl_archive</pre>
+<pre class="eq">grep -E &#x27;^(MAIN|VULKAN|THERMO)&#x27; run.log | tail -40</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/engine/ELLIE.hpp</code></li><li><code>NEXUS-Shield/panel_server.py</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-11-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Observability is categorized stderr, panel correlation, and operator journal discipline — receipts culture over screenshot culture.</p>
+</div>
+
+    <nav class="chapter-nav bottom"><a class="btn secondary" href="10-spiderweb.html">← Ch 10</a> <a class="btn" href="12-reality-theory.html">Ch 12 →</a></nav>
+  </main>
+  <footer><p>Field Technology v6 · Serious book · We do not hide the rocks.</p></footer>
+  <script src="../js/reader.js" defer></script>
+</body>
+</html>

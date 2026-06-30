@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — Performance</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/performance.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Performance</h1>
+  <p>Measured: Linux x86_64, <code>g16 (Grok16-16.2.0) 16.2.0</code>, gnu++26. Repo: <code>PERFORMANCE.md</code>.</p>
+
+  <h2 id="speed-bench">Speed bench (report v5.0.0)</h2>
+  <p>Suite <code>speed_demo</code> @ <code>1.1.0</code> — compile ms + execution ops/s. Full manual: <a href="speed-bench.html">Speed Bench</a>.</p>
+  <pre><code>SPEED_DEMO_TARGET_SEC=3 ./scripts/grok16-toolchain.sh exec-full-bench
+./scripts/grok16-toolchain.sh exec-compare</code></pre>
+  <table>
+    <tr><th>Runner</th><th>Compile (ms)</th><th>ops/s</th></tr>
+    <tr><td>C++ — g16 belt_2_0</td><td>—</td><td><strong>102,843,184.74</strong></td></tr>
+    <tr><td>C++ — host g++ -O2</td><td>—</td><td><strong>101,093,393.65</strong></td></tr>
+    <tr><td>C — g16 belt_1_0</td><td>—</td><td><strong>99,454,820.63</strong></td></tr>
+    <tr><td>CMake — host g++ -O2</td><td>—</td><td><strong>98,892,364.74</strong></td></tr>
+    <tr><td>C — host gcc -O2</td><td>—</td><td><strong>97,416,875.40</strong></td></tr>
+    <tr><td>C — g16 belt_2_0</td><td>—</td><td><strong>95,729,447.71</strong></td></tr>
+    <tr><td>C++ — g16 belt_1_0</td><td>—</td><td><strong>95,052,367.49</strong></td></tr>
+    <tr><td>C++ — g16 belt_2_0 (post-meld re-exec)</td><td>—</td><td><strong>93,388,093.30</strong></td></tr>
+    <tr><td>C++ — g16 sense belt_2_0</td><td>—</td><td><strong>91,070,985.42</strong></td></tr>
+    <tr><td>Python — host CPython 3</td><td>—</td><td><strong>843,828.62</strong></td></tr>
+    <tr><td>Python — gpy-16 GrokVM</td><td>—</td><td><strong>755,552.29</strong></td></tr>
+  </table>
+
+  <figure class="fig-wide">
+    <img src="assets/triad-chart.svg" alt="Belt triad compile and run comparison" width="920" height="280" loading="lazy" />
+    <figcaption>bench-triad — host gcc vs belt_1_0 vs belt_2_0</figcaption>
+  </figure>
+
+  <h2 id="triad">Belt triad (bench-triad)</h2>
+  <p>Workload: <code>examples/field-nexus-bench</code> — 240 frames, FieldX86 + entropy + wave + NEXUS.</p>
+  <table>
+    <tr><th>Toolchain</th><th>Profile</th><th>compile_ms</th><th>run wall_ms</th><th>binary bytes</th></tr>
+    <tr><td>host <code>g++</code></td><td><code>-O3 -march=native</code></td><td>2078</td><td>4</td><td>27,264</td></tr>
+    <tr><td> <code>g16</code></td><td><code>belt_1_0</code></td><td>1108</td><td>3</td><td>22,712</td></tr>
+    <tr><td> <code>g16</code></td><td><code>belt_2_0</code></td><td>1061</td><td>3</td><td>22,840</td></tr>
+  </table>
+  <p><code>belt_1_0</code> matches host runtime; <code>belt_2_0</code> trades compile time for production single-fabric belt.</p>
+  <pre><code>./scripts/grok16-toolchain.sh bench-triad
+cat data/bench/triad-latest.json</code></pre>
+
+  <figure class="fig-wide">
+    <img src="assets/compare-chart.svg" alt="Field g16 vs host compile comparison" width="920" height="300" loading="lazy" />
+    <figcaption>bench-compare — field g16 vs host gcc/g++</figcaption>
+  </figure>
+
+  <figure class="fig-wide">
+    <img src="assets/bench-all-chart.svg" alt="bench-all profile suite" width="920" height="260" loading="lazy" />
+    <figcaption>bench-all — field-nexus-bench across profiles</figcaption>
+  </figure>
+
+  <h2 id="field-bench">Field-Opt vs baseline</h2>
+  <table>
+    <tr><th>Build</th><th>Flags</th><th>kernel wall_ms</th><th>binary bytes</th></tr>
+    <tr><td>baseline</td><td>-std=gnu++26 -O2</td><td>2.65</td><td>17144</td></tr>
+    <tr><td>field_opt / belt_1_0</td><td>profile flags</td><td>2.11–2.19</td><td>22616</td></tr>
+  </table>
+  <p>Delta: ~19% faster kernel vs -O2 on same source.</p>
+
+  <h2 id="bench-all">Profile suite (bench-all)</h2>
+  <table>
+    <tr><th>Profile</th><th>compile_ms</th><th>run_ms</th><th>bytes</th><th>kernel</th></tr>
+    <tr><td>field_opt</td><td>828–874</td><td>4–5</td><td>22616</td><td>wall_ms ~2.1</td></tr>
+    <tr><td>belt_2_0</td><td>~3708</td><td>~5</td><td>22840</td><td>single fabric</td></tr>
+    <tr><td>ai</td><td>735</td><td>6–7</td><td>18232</td><td>wall_ms ~4.0</td></tr>
+    <tr><td>vulkan_rtx</td><td>864–876</td><td>4–5</td><td>22728</td><td>wall_ms ~2.1</td></tr>
+  </table>
+
+  <h2 id="reproduce">Reproduce</h2>
+  <pre><code>export G16_PREFIX="$(pwd)"
+export G16_BELT_PROFILE=belt_2_0
+./scripts/grok16-toolchain.sh bench-triad
+./scripts/grok16-toolchain.sh field-bench
+./scripts/grok16-toolchain.sh bench-all</code></pre>
+
+  <h2 id="pgo">PGO</h2>
+  <pre><code>./scripts/grok16-toolchain.sh profile
+G16_ENABLE_PGO=1 ./scripts/grok16-toolchain.sh field-bench</code></pre>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

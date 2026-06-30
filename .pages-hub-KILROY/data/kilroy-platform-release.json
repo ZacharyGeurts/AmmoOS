@@ -1,0 +1,41 @@
+{
+  "schema": "kilroy-platform-release/v1",
+  "version": "1.1.0",
+  "codename": "Sanctuary",
+  "tag": "v1.1.0",
+  "abi": "kilroy-field-1.0",
+  "g16_version": "16.2.0",
+  "grok16_pair": "5.1.0",
+  "ammoos_pair": "2.0.0-beta3",
+  "release_model": "source_overlay_plus_platform_bins",
+  "statement": "KILROY ships Field Die overlay source. Each Grok16 platform gets userspace binaries; x86_64 ships full bzImage + Grok boot.",
+  "compiler": "Grok16 g16",
+  "platforms": [
+    {"id": "linux-gnu-x86_64", "os": "linux", "arch": "x86_64", "format": "elf", "kernel_image": true, "userspace": true, "boot_efi": ["BOOTX64.EFI"]},
+    {"id": "linux-gnu-i386", "os": "linux", "arch": "i386", "format": "elf", "kernel_image": false, "userspace": true, "cross_prefix": "i686-linux-gnu-"},
+    {"id": "linux-gnu-aarch64", "os": "linux", "arch": "aarch64", "format": "elf", "kernel_image": false, "userspace": true, "cross_prefix": "aarch64-linux-gnu-"},
+    {"id": "linux-gnu-arm", "os": "linux", "arch": "arm", "format": "elf", "kernel_image": false, "userspace": true, "cross_prefix": "arm-linux-gnueabihf-"},
+    {"id": "linux-gnu-riscv64", "os": "linux", "arch": "riscv64", "format": "elf", "kernel_image": false, "userspace": true, "cross_prefix": "riscv64-linux-gnu-"},
+    {"id": "android-aarch64", "os": "android", "arch": "aarch64", "format": "elf", "kernel_image": false, "userspace": "ndk", "triple": "aarch64-linux-android"},
+    {"id": "android-arm", "os": "android", "arch": "arm", "format": "elf", "kernel_image": false, "userspace": "ndk", "triple": "armv7a-linux-androideabi"},
+    {"id": "android-x86_64", "os": "android", "arch": "x86_64", "format": "elf", "kernel_image": false, "userspace": "ndk", "triple": "x86_64-linux-android"},
+    {"id": "darwin-x86_64", "os": "darwin", "arch": "x86_64", "format": "mach-o", "kernel_image": false, "userspace": "source_bootstrap", "notes": "clang host build"},
+    {"id": "darwin-aarch64", "os": "darwin", "arch": "aarch64", "format": "mach-o", "kernel_image": false, "userspace": "source_bootstrap"},
+    {"id": "ios-aarch64", "os": "ios", "arch": "aarch64", "format": "mach-o", "kernel_image": false, "userspace": "source_bootstrap", "triple": "arm64-apple-ios"},
+    {"id": "win32-x86_64", "os": "windows", "arch": "x86_64", "format": "pe", "kernel_image": false, "userspace": "mingw", "triple": "x86_64-w64-mingw32"},
+    {"id": "win32-aarch64", "os": "windows", "arch": "aarch64", "format": "pe", "kernel_image": false, "userspace": "mingw", "triple": "aarch64-w64-mingw32"},
+    {"id": "bare-elf-x86_64", "os": "none", "arch": "x86_64", "format": "elf", "kernel_image": false, "userspace": true},
+    {"id": "bare-elf-aarch64", "os": "none", "arch": "aarch64", "format": "elf", "kernel_image": false, "userspace": true, "cross_prefix": "aarch64-linux-gnu-"},
+    {"id": "bare-elf-riscv64", "os": "none", "arch": "riscv64", "format": "elf", "kernel_image": false, "userspace": true, "cross_prefix": "riscv64-linux-gnu-"}
+  ],
+  "boot_assets": {
+    "limine": "boot/grok/vendor/limine",
+    "efi": ["BOOTX64.EFI", "BOOTIA32.EFI", "BOOTAA64.EFI", "BOOTRISCV64.EFI", "BOOTLOONGARCH64.EFI"],
+    "memtest": "boot/grok/memtest/memtest86+.efi"
+  },
+  "gates": [
+    "scripts/check-field-stack.sh",
+    "scripts/test-units.sh",
+    "scripts/test-ioctl-smoke.sh"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "g16-chips-compiler-design/v1",
+  "lang": "vba",
+  "driver": "g16-interp",
+  "compiler_lane": "chips_native",
+  "universal_isa": [
+    "x86",
+    "m6502",
+    "m6809",
+    "z80",
+    "coco"
+  ],
+  "chips": {
+    "primary_isa": "x86",
+    "target_chips": [
+      "host_cpu",
+      "chips_hot",
+      "chips_6502",
+      "chips_6507",
+      "chips_2a03",
+      "chips_2c02",
+      "chips_6809",
+      "chips_z80",
+      "chips_coco",
+      "6502",
+      "2C02",
+      "68000"
+    ],
+    "universal": true,
+    "manifest": "Queen/data/chips-g16-manifest.json",
+    "design_note": "CHIPs universal — x86 ISA informs lowering, dispatch tables, and field_opt hot paths."
+  },
+  "frontend": "lib/g16-native-compile.py",
+  "lowering": "lib/g16-lang-lower.py",
+  "native_module": "lib/g16-native-compile.py",
+  "profile": "belt_1_0",
+  "written": true,
+  "updated": "2026-06-29T20:57:03Z"
+}

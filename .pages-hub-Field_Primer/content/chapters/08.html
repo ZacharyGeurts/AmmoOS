@@ -1,0 +1,310 @@
+<p class="eyebrow">Chapter 8 · Die-Resident Universe — Field Die &amp; Data Bus</p>
+
+<div class="objectives">
+<h2>Learning objectives</h2>
+<p>After this chapter you should be able to:</p>
+<ul>
+<li>State why the Field Die is 64 MiB of addressable guest RAM on the GPU, not a userspace DOS emulator cosplay.</li>
+<li>Draw the guest linear map from IVT through VGA at <code>0xB8000</code> to the C mirror at <code>0x01000000</code>.</li>
+<li>Enumerate all <code>data_bus[64]</code> slot families and explain how host and shader stay coherent each dispatch.</li>
+<li>Describe the L0–L9 layer pump, GPU <code>x86.comp</code> execution, and optional <code>FieldX86Emu</code> host assist.</li>
+<li>Read ZMM1024 tile cache hex on the Big Grin HUD without confusing visual chrome for instrumentation.</li>
+</ul>
+</div>
+
+<h2>Introduction — the die-resident universe</h2>
+<p>Chapter 7 named the dispatch spear: <code>vkCmdDispatch</code> on a thin host that seals time, enforces CFL, and binds <code>FieldX86Die</code> at descriptor slot 1. Chapter 8 names <em>what lives inside that SSBO</em>. The Field Die is <strong>64 MiB of addressable reality on the GPU</strong> — guest RAM where RTX-DOS, AmmoOS, and operator-launched programs execute, VGA text renders, FAT layers mount, and telemetry packs into <code>data_bus[64]</code> every tick.</p>
+<p>Reality is 3D in this stack means: bytes have offsets, layers have slot bases, HUD fields have indices. Time is linear means: pump generation increments, dispatch steps accrue in ThermoAccountant, sealed time in FieldSocket does not rewind. Energy can be moved means: fabric coupling heats the story the die tells — thermo mirrors land in bus slots the Big Grin HUD reads.</p>
+<p>This is not DOSBox in a trench coat. DOSBox is a userspace machine with its own timing myths. Field Die is the <span class="tag impl">same SSBO mapped host and GPU</span>, pumped via <code>FieldLayer::pumpAll()</code>, interpreted by <code>x86.comp</code> on the default canvas. The host can assist with <code>FieldX86Emu</code> when <code>ControlHostCpu</code> is set; the product default remains GPU interpretation. Chapter 12’s honesty table will remind you: headers over nostalgia.</p>
+<p>Cross-links: Chapter 2 introduced scale 2 — die bytes beside texels and packets. Chapter 4 placed ThermoAccountant mirrors at <code>data_bus[24–28]</code>. Chapter 9 publishes Tesla bias to slots 31 and 34. Chapter 10 reads fabric averages that were visible on the bus one tick earlier. Chapter 11 teaches grep; this chapter teaches <strong>addresses</strong>.</p>
+
+<figure class="figure"><img src="../assets/images/field-die.jpg" alt="Field die" loading="lazy" /><figcaption>Figure 8.1 — Guest RAM, holographic boundary, fabric channels: one SSBO, two witnesses (HUD and stderr).</figcaption></figure>
+
+<h2>Field Die — what is implemented</h2>
+<ul>
+<li><strong>64 MiB</strong> guest RAM (<code>GUEST_RAM_BYTES</code> / <code>FieldPlatform::GUEST_RAM_BYTES</code>)</li>
+<li>VGA color text at guest <code>0xB8000</code> (80×25 heritage; Big Grin HUD 172×48 in shader compose)</li>
+<li>C hot mirror at <code>0x01000000</code> (<code>HD_MIRROR_BYTE</code> / <code>FieldPlatform::HD_MIRROR_BYTE</code>)</li>
+<li>Boot vector at <code>0x7C00</code>, IVT at 0, BDA at <code>0x400</code></li>
+<li>Same SSBO for host peek and GPU write — not a forked emulator core</li>
+<li><code>FIELD_LAYOUT_VERSION = 5</code> must match host and <code>x86.comp</code> — Chapter 7</li>
+</ul>
+<p>Operators grep <code>GUEST_RAM_BYTES</code> and <code>FieldX86Die</code> in <code>Navigator/engine/</code> to see allocation constants. Version skew on layout version breaks HUD hex before it breaks your nostalgia — layout is physics.</p>
+<div class="callout everyone"><strong>Plain English:</strong> The Field Die is a computer inside your GPU dispatch — a neighborhood with street addresses, not a screenshot of someone else’s neighborhood.</div>
+
+<h2>Guest linear RAM map — addresses operators memorize</h2>
+<p>From <code>FieldLayer::RamMap</code> namespace — offsets within the guest map:</p>
+<table><thead><tr><th>Offset</th><th>Region</th><th>Operator note</th></tr></thead>
+<tbody>
+<tr><td><code>0x00000000</code></td><td>IVT base</td><td>Interrupt vector table — real x86 layout discipline</td></tr>
+<tr><td><code>0x00000400</code></td><td>BDA</td><td>BIOS Data Area — video mode, cursor, drive count</td></tr>
+<tr><td><code>0x00007C00</code></td><td>Boot vector</td><td>MBR / boot sector staging</td></tr>
+<tr><td><code>0x00020000</code></td><td>Disk image base</td><td>A: floppy image staging</td></tr>
+<tr><td><code>0x00090000</code></td><td>DOOM palette</td><td>Game-path palette byte (when launched)</td></tr>
+<tr><td><code>0x000A0000</code></td><td>VGA graphics / DOOM FB</td><td>Planar mode 13h framebuffer region</td></tr>
+<tr><td><code>0x000B8000</code></td><td>VGA text</td><td>Color text buffer — DOS habit</td></tr>
+<tr><td><code>0x01000000</code></td><td>HD mirror</td><td>C: hot mirror — host/guest coherence</td></tr>
+</tbody></table>
+<p>BDA fields matter for layers: <code>BDA_VIDEO_MODE</code> at <code>BDA+0x49</code>, columns at <code>+0x4A</code>, cursor col/row at <code>+0x50/+0x51</code>, drive count at <code>+0x75</code>. VGA layer sync reads these each pump so <code>data_bus</code> VGA slots reflect mode truth.</p>
+<p>When an operator says “I see text at B8000,” they are speaking field literacy — address-first, not “it looks like DOS.” Chapter 12 rewards that habit.</p>
+
+<h2>Execution model — GPU first, host assist optional</h2>
+<ol>
+<li><strong>GPU:</strong> <code>x86.comp</code> interprets guest instructions, composes Big Grin HUD (172×48), applies AmouranthOS chrome from bindings 11–14, reads/writes <code>FieldX86Die</code> SSBO.</li>
+<li><strong>Host assist:</strong> <code>FieldX86Emu</code> when <code>ControlHostCpu</code> (flag 8) in FieldSocket — 8086 path on CPU for debug or hybrid scenarios.</li>
+<li><strong>Launch path:</strong> <code>FieldAmouranthLaunch</code> / <code>FieldAmouranthExec</code> when <code>ControlAmmoExec</code> (1024) — guest programs enter address space with receipts.</li>
+</ol>
+<p>Default <code>./linux.sh run</code> does not require host CPU emulation. ThermoAccountant still adds <code>hostHeat</code> from <code>FieldX86Emu::hostCyclesLastFrame()</code> when assist runs — comparative signal, not billing.</p>
+<p>GPU interpretation is offense at silicon speed: each dispatch may advance guest IP, touch VGA bytes, update FAT tables, pack bus words. The host’s job is pump, seal, guard — not pretend GPU work did not happen.</p>
+
+<h2><code>data_bus[64]</code> — telemetry spine</h2>
+<p>Sixty-four packed words per dispatch. Mirrored host-side in <code>Options::Canvas::DataBus</code> and exposed to shaders through FieldSocket pathways. This is the <strong>telemetry field</strong> Chapter 2 named — not SI units, but operator-grep-able agreement surface.</p>
+<table><thead><tr><th>Slots</th><th>Content</th><th>Pack source</th></tr></thead>
+<tbody>
+<tr><td>[0]</td><td>Pump generation tag</td><td><code>FieldLayer::pumpAll</code> registry</td></tr>
+<tr><td>[1]</td><td>Cycles per frame / pump cadence</td><td>Dispatch counters</td></tr>
+<tr><td>[2–7]</td><td>RAM layer — HD ready, mirror bytes, boot vector, floppy size, guest RAM size, mirror offset</td><td><code>ramPack</code></td></tr>
+<tr><td>[8–11]</td><td>VGA layer — mode, DAC, viewport telemetry</td><td><code>vgaPack</code></td></tr>
+<tr><td>[12–15]</td><td>FAT / AMMOFAT geometry</td><td><code>fatPack</code></td></tr>
+<tr><td>[16–23]</td><td>Analog FCC floats — TimeScale through FieldCoupling</td><td>Host analog guard + FieldSocket</td></tr>
+<tr><td>[24–28]</td><td>ThermoAccountant mirrors — entropy, boundary, maint, income, steps</td><td>Binding 2 each dispatch</td></tr>
+<tr><td>[31]</td><td>Tesla valve coherence word</td><td><code>teslaBias()</code> path</td></tr>
+<tr><td>[32–41]</td><td>Input — keyboard, mouse, joystick slots</td><td><code>FieldInput</code> pack</td></tr>
+<tr><td>[34]</td><td>Tesla bias strength / directional word</td><td>FCC + hardware mirror</td></tr>
+<tr><td>[42–56]</td><td>Viewport + AmouranthOS chrome flags, compositor HUD</td><td><code>FieldDosViewport</code>, AOS pack</td></tr>
+<tr><td>[57–59]</td><td>Audio rack status</td><td>Audio layer pump</td></tr>
+<tr><td>[60–61]</td><td>BIOS / shell boot flags</td><td><code>FieldBios</code> pack</td></tr>
+<tr><td>[62]</td><td>IO hub / joystick ports</td><td><code>FieldDevices</code></td></tr>
+<tr><td>[63]</td><td>Drive ready mask + current drive</td><td><code>FieldDrives</code></td></tr>
+</tbody></table>
+<p>Slot <strong>42</strong> is the AmouranthOS chrome flag word — desktop vs console shell, menu state, overlay bits. Slots <strong>50–51</strong> may carry infinite field layer strip for shader HUD; <strong>54</strong> carries DOS FAT mounted bit per viewport header comments. When wiki and headers disagree on a slot, <span class="tag impl">grep wins</span> — Chapter 12’s first trust rule.</p>
+<div class="callout science"><strong>Do not</strong> treat HUD hex as laboratory instrumentation. <strong>Do</strong> treat bus agreement as dispatch health — host and shader must match.</div>
+
+<h2>Analog FCC floats — slots [16–23]</h2>
+<p>When x86 FieldSocket is active, analog knobs mirror into the bus so guest HUD and host prompts read the same floats:</p>
+<pre class="eq">[16] TimeScale      [17] ThermoAlpha    [18] WaveSpeed      [19] GateFidelity
+[20] EntropyFloor   [21] InjectStrength [22] PropalacticScale [23] FieldCoupling</pre>
+<p>Chapter 3 defined knob effects on fabric; Chapter 9 shows CFL scaling before these reach bindings 8–10. On the die path, FCC floats are double witness — fabric evolves AND bus records what the host admitted past the guard.</p>
+<p>Prompt <code>set AnalogFields.WaveSpeed 1.4</code> changes host state; next dispatch packs slot 18. If THERMO moves but slot 18 does not, you have a pump or layout bug, not “physics feelings.”</p>
+
+<h2>ThermoAccountant mirrors — slots [24–28]</h2>
+<p>Every dispatch copies binding 2 accountant into bus mirrors for HUD and grep:</p>
+<table><thead><tr><th>Slot</th><th>Field</th></tr></thead>
+<tbody>
+<tr><td>[24]</td><td><code>entropyThisFrame</code></td></tr>
+<tr><td>[25]</td><td><code>avgBoundaryThermo</code></td></tr>
+<tr><td>[26]</td><td><code>prevMaintCost</code></td></tr>
+<tr><td>[27]</td><td><code>freeEnergyIncome</code></td></tr>
+<tr><td>[28]</td><td><code>steps</code></td></tr>
+</tbody></table>
+<p><span class="tag meta">Landauer proxy — not GPU package joules.</span> Still mandatory receipts. Zero entropy with moving fabric on die canvas is failure — same rule as Classic canvas Chapter 3 drill.</p>
+
+<h2>Tesla valve bus words — slots 31 and 34</h2>
+<p>Directional bias constants from <code>FieldRtxFieldAbs.hpp</code>:</p>
+<pre class="eq">TESLA_R_FORWARD = 0.18    TESLA_R_REVERSE = 3.2    FIELD_PHI_MILLI = 618</pre>
+<p>Published to <code>data_bus[31]</code> and <code>data_bus[34]</code> via <code>teslaBias()</code> and <code>TeslaBiasStrength</code> FCC path. Chapter 9 explains fluidic diode metaphor; Chapter 10 shows reverse damping on spiderweb edges.</p>
+
+<h2>Input bus — slots [32–41]</h2>
+<p><code>FieldInput</code> packs keyboard, mouse, and joystick state into ten words — offense from operator fingers becomes guest boundary conditions. Probe injection on fabric (Chapter 3) and input slots are cousins: both impose energy and intent on the next tick.</p>
+<p>Mouse coordinates and button masks land in predictable sub-ranges within [32–41] per <code>FieldLayer::BusMap::INPUT_BASE</code>. When chrome hit-testing disagrees with guest input, compare FieldSocket control flags, viewport pack at [42+], and shared layout constants (<code>TASKBAR_H</code>, <code>UI_BOOST</code>) against <code>x86.comp</code>.</p>
+
+<h2>Viewport and AmouranthOS — slots [42–56]</h2>
+<p><code>FieldDosViewport</code> and AmouranthOS pack compositor telemetry — desktop shell, start menu, console overlay, layer strip for shader HUD. Slot 42 is the chrome flag word operators see in research traces. Bindings 11–14 supply textures; bus words supply state. Both must sync on boot — <code>FieldAmouranthOs::boot()</code>, <code>sync_aos_textures()</code>.</p>
+
+<h2>Audio, BIOS, IO, drives — slots [57–63]</h2>
+<table><thead><tr><th>Slots</th><th>Layer</th></tr></thead>
+<tbody>
+<tr><td>[57–59]</td><td>Audio rack status</td></tr>
+<tr><td>[60–61]</td><td>BIOS shell / boot flags</td></tr>
+<tr><td>[62]</td><td>IO hub — joystick / port multiplex</td></tr>
+<tr><td>[63]</td><td>Drive ready mask + current drive</td></tr>
+</tbody></table>
+
+<h2>Field layers L0–L9 — composable DOS subsystems</h2>
+<p>Layers are how DOS becomes legible to shaders without breaking the address map. Each layer registers <code>syncFromGuest</code>, <code>tick</code>, <code>packToDataBus</code> hooks. <code>FieldLayer::pumpAll()</code> increments pump generation at slot [0], walks the registry, keeps guest and bus coherent.</p>
+<p>Ten composable layers: RAM, VGA, FAT, MSCDEX, Audio, IO, BIOS — plus registry infrastructure. Pump order is not arbitrary; audio follows viewport because HUD ear and eye share compose discipline.</p>
+
+<h2>ZMM1024 tile cache — fabric samples in the die tail</h2>
+<p>Tail region in <code>FieldX86Die</code> SSBO holds shader-side fabric sample cache for HUD hex dumps. Tile cache is read-mostly witness for debug overlays (<code>ControlFieldDebugHud</code> flag 2048). It is not a second simulation.</p>
+
+<h2>Not DOSBox — architectural comparison</h2>
+<table><thead><tr><th>Question</th><th>DOSBox habit</th><th>Field Die answer</th></tr></thead>
+<tbody>
+<tr><td>Where is RAM?</td><td>Host heap emulate</td><td>SSBO binding 1, GPU + host map</td></tr>
+<tr><td>Who interprets CPU?</td><td>Host interpreter</td><td><code>x86.comp</code> default; optional <code>FieldX86Emu</code></td></tr>
+<tr><td>Where is time?</td><td>Emulator cycle hacks</td><td><code>TotalTime::seal()</code> + dispatch steps</td></tr>
+<tr><td>Telemetry?</td><td>External tools</td><td><code>data_bus[64]</code> every tick</td></tr>
+<tr><td>Fabric?</td><td>N/A</td><td>Bindings 8–10 coupled</td></tr>
+</tbody></table>
+
+<h2>Walkthrough — one dispatch tick on the die</h2>
+<p>Dispatch N at sealed time T: host seals FieldSocket time, runs CFL guard on FCC destined for slots 16–23, calls <code>FieldLayer::pumpAll()</code> for L0–L9, populates ThermoAccountant into 24–28, writes Tesla 31/34, mirrors hardware from fabric, issues <code>vkCmdDispatch</code> on <code>x86.comp</code>. Guest IP advances; VGA updates; Big Grin composes; STATUS reports entropy ~5s. Operator <code>list AnalogFields</code> matches bus FCC mirrors. Coherence is the goal; grep is the witness.</p>
+<p>Dispatch N+1: slot [0] pump tag changes when layers changed guest; slot [28] steps increment; sealed time never rewinds.</p>
+
+<h2>AmmoOS boot — chrome on the die</h2>
+<p><code>aos_load</code>, <code>FieldAmouranthOs::boot()</code>, texture sync on bindings 11–14, shared hit-test constants with shader. Launchers use <code>FieldAmouranthLaunch</code> / <code>FieldAmouranthExec</code>. Chapter 21 Queen inherits gate doctrine trained early on die chrome.</p>
+
+<h2>Integration — fabric, die, packet field</h2>
+<p>FCC on bus ties die HUD to bindings 8–10. Tile cache peeks fabric without CPU mirror. Spiderweb mirror (Chapter 10) reads same averages. Packet field (Chapter 5) stays NEXUS-local — correlate at panel :9477, not inside SSBO.</p>
+
+<h2>Operator drill — week one die literacy</h2>
+<div class="callout drill"><strong>Drill 8.A — Bus alive</strong></div>
+<pre class="eq">./linux.sh run 2>&1 | tee run.log
+grep -E 'THERMO|pump|FieldLayer' run.log | tail -30</pre>
+<div class="callout drill"><strong>Drill 8.B — Address grep</strong></div>
+<pre class="eq">grep -E 'B8000|GUEST_RAM|HD_MIRROR|FieldX86Die' Navigator/engine/FieldLayer.hpp</pre>
+<div class="callout drill"><strong>Drill 8.C — FCC on die</strong></div>
+<pre class="eq">set AnalogFields.FieldCoupling 0.7
+list AnalogFields</pre>
+
+<h2>Common failures — die literacy</h2>
+<table><thead><tr><th>Symptom</th><th>Likely cause</th><th>First action</th></tr></thead>
+<tbody>
+<tr><td>Black HUD, alive stderr</td><td>Chrome texture sync skipped</td><td>bindings 11–14</td></tr>
+<tr><td>Guest text garbage</td><td>VGA/BDA desync</td><td>BDA <code>0x400+0x49</code></td></tr>
+<tr><td>Input dead</td><td>Hit-test mismatch</td><td>slot [42], layout constants</td></tr>
+<tr><td>Bus zeros, fabric moves</td><td>pumpAll skipped</td><td>dispatch_canvas pump</td></tr>
+</tbody></table>
+
+<h2>RAM layer — slots [2–7] field guide</h2>
+<p>Slot [2] HD ready — C mirror path live. Slot [3] mirror byte count — monotonic during sync. Slot [4] boot vector echo. Slot [5] floppy image size. Slot [6] <code>GUEST_RAM_BYTES</code> witness. Slot [7] HD mirror offset. When guest mounts media but [2] stays zero, grep <code>FieldDos::hdReady</code> and pump order before shaders.</p>
+
+<h2>VGA layer — BDA and mode truth</h2>
+<p>Slots [8–11] pack mode, DAC, viewport from BDA. Text vs graphics transitions must update BDA before pump. Mode 13h touches <code>0xA0000</code>. Cursor at BDA+0x50/+0x51 must match chrome caret.</p>
+
+<h2>Bus ordering — thermo vs layer packs</h2>
+<p>Thermo mirrors [24–28] follow layer pump in <code>dispatch_canvas</code> source order. Grep Pipeline implementation when debugging slot stories — static tables are maps, not timelines.</p>
+
+<h2>KILROY die vocabulary</h2>
+<p>Kernel <code>CONFIG_RTX_FIELD_DIE</code> shares die words with userspace — Chapter 9 FCC, Chapter 21 packaging. Same literacy; different ring enforcement.</p>
+
+<h2>Comparative table — telemetry vs packet field</h2>
+<table><thead><tr><th>Aspect</th><th>data_bus[64]</th><th>Packet field</th></tr></thead>
+<tbody>
+<tr><td>Product</td><td>AMOURANTHRTX</td><td>NEXUS-Shield</td></tr>
+<tr><td>Granularity</td><td>Per dispatch</td><td>Per connection</td></tr>
+<tr><td>Correlate</td><td>stderr THERMO</td><td>Panel :9477</td></tr>
+</tbody></table>
+
+<h2>Chapter summary</h2>
+<p>Field Die is 64 MiB guest RAM on SSBO binding 1. Guest map: IVT → BDA → boot → VGA → HD mirror. GPU <code>x86.comp</code> default; <code>FieldX86Emu</code> optional. <code>data_bus[64]</code> telemetry spine with FCC, thermo, Tesla, input, chrome, audio, BIOS, IO, drives. L0–L9 <code>pumpAll()</code>. ZMM1024 tile cache for fabric hex. Trust addresses and grep before nostalgia.</p>
+<p>Prior: <a href="07-gpu-engine.html">Chapter 7 — GPU Engine</a>. Next: <a href="09-fcc-tesla.html">Chapter 9 — FCC &amp; Tesla</a>.</p>
+
+<h2>Deep dive — <code>FieldLayer.hpp</code> bus map constants</h2>
+<p>The engine names slot bases in <code>FieldLayer::BusMap</code> so operators grep one header instead of memorizing folklore. <code>REGISTRY_TAG = 0</code>, <code>RAM_BASE = 2</code>, <code>VGA_BASE = 8</code>, <code>FAT_BASE = 12</code>, <code>MSCDEX_BASE = 24</code>, <code>INPUT_BASE = 32</code>, <code>VIEW_BASE = 42</code>, <code>AUDIO_BASE = 57</code>, <code>BIOS_BASE = 60</code>, <code>IO_BASE = 62</code>, <code>DRIVES_BASE = 63</code>, <code>BUS_COUNT = 64</code>. Analog FCC and ThermoAccountant mirrors occupy slots defined in dispatch populate code — always reconcile BusMap with Pipeline mirror order when debugging “slot 24 looks wrong.”</p>
+<p>Layer IDs L0 through L9 give composable subsystems identity in the registry table. Each entry is a <code>FieldLayer</code> struct: id, name, syncFromGuest, tick, packToDataBus. This is plugin architecture for DOS semantics — RAM is not hard-coded only in one function; it registers beside VGA and FAT so pumps stay modular as AmmoOS grows.</p>
+
+<h2>Deep dive — FAT layer and AMMOFAT geometry</h2>
+<p>Slots [12–15] expose FAT geometry — cluster size, free space story, mount bits — so shader HUD and host agree whether A: is fiction. Guest software that formats or writes directory tables must see pump updates within dispatches or operators grep stale [12–15] while guest DIR command shows truth. FAT is where retro launch pedagogy meets address literacy: launching shareware is not separate from field dispatch; it is guest code writing regions the RAM and FAT layers must reflect.</p>
+<p>When MSCDEX optical layer participates, redirector state must align with drive mask slot [63]. Mixed retro configs are where week-two operators earn scars — document which launches you actually exercise, not which launches marketing implies.</p>
+
+<h2>Deep dive — Big Grin HUD as monitor</h2>
+<p>Big Grin at 172×48 is a field monitor dressed as grin. With <code>ControlFieldDebugHud</code> (2048), overlay hex exposes bus slices and tile cache peeks. Without debug flag, stderr remains primary witness — Chapter 11. Train grep before training hex eye candy; numerology is what happens when hex precedes THERMO discipline.</p>
+<p>HUD compose shares thermodynamic boundary with HDR output binding 0 — beauty costs maintenance per prevMaintCost slot 26. Die canvas is not thermo-exempt because chrome is pretty.</p>
+
+<h2>Deep dive — host peek discipline</h2>
+<p>Host may map SSBO for debug read. Writes outside pump contracts desync GPU truth. <code>ControlHostCpu</code> path tightens rules: host assist is not license to scribble guest RAM off-pump. Default GPU interpretation keeps host as orchestrator — Chapter 7 thin host, fat GPU.</p>
+<p>CI headless runs must still pump and dispatch — valid signal per Chapter 12. Die bytes move without window; stderr proves life.</p>
+
+<h2>Deep dive — entropy on die canvas</h2>
+<p>ThermoAccountant fields on bus [24–28] copy every dispatch. entropyThisFrame aggregates field work, probes, Tesla terms, optional host x86 heat. avgBoundaryThermo is holographic boundary metaphor with number — label proxy, still read it. freeEnergyIncome includes sealed time — Chapter 7 — plus input activity. steps at [28] monotonic; flat steps with moving VGA is incoherence.</p>
+<p>Chapter 4 taught two entropies — ThermoAccountant vs Shannon oracle. Die operators who only run AMOURANTHRTX still need that separation before opening NEXUS file entropy tools.</p>
+
+<h2>Deep dive — cross-chapter operator week two</h2>
+<p>Week two ties Chapters 7–11: Monday grep dispatch spine and layout version 5. Tuesday map guest RAM and bus table from this chapter. Wednesday CFL and Tesla drills Chapter 9. Thursday list Hardware spiderweb Chapter 10. Friday panel archive one jsonl row Chapter 11. Weekend read Chapter 12 rocks before tweeting screenshots. Field Technology is practiced literacy, not consumed hype.</p>
+
+<h2>Deep dive — Queen and die chrome training</h2>
+<p>Queen browser Chapter 21 holds gates on full web capabilities. Die AmmoOS chrome is smaller surface but same doctrine: capabilities exist, wires earn receipts, loopback truth. Slot 42 flags train operators that UI state is bus-addressable — web gates will also be jsonl-addressable. Learn addresses young.</p>
+
+<h2>Slot-by-slot narrative — words 0 through 15</h2>
+<p><strong>Slot 0</strong> is pump generation — heartbeat of layer registry. If you log slot 0 across one second of STATUS cadence and see flatline while FAT words change, your pump is partial. <strong>Slot 1</strong> carries cycles-per-frame story — compare to FPS in STATUS for sanity. <strong>Slots 2–7</strong> are RAM family: HD ready, mirror bytes, boot vector, floppy size, guest RAM size, mirror offset — each word is a sentence in “does storage exist?” <strong>Slots 8–11</strong> are VGA family: mode from BDA, DAC path, viewport cols/rows habit — “does the guest see what it thinks it sees?” <strong>Slots 12–15</strong> are FAT family: AMMOFAT geometry — “can directory tables be trusted this tick?”</p>
+<p>Operators building custom HUD shaders should read but not invent — if your shader reads slot 9, grep vgaPack to learn bit layout. Inventing bitfields without grep is how forks ship pretty lies.</p>
+
+<h2>Slot-by-slot narrative — words 16 through 41</h2>
+<p><strong>Slots 16–23</strong> are FCC floats — TimeScale, ThermoAlpha, WaveSpeed, GateFidelity, EntropyFloor, InjectStrength, PropalacticScale, FieldCoupling — admitted post-CLF guard Chapter 9. <strong>Slots 24–28</strong> are ThermoAccountant mirrors — entropy, boundary, maintenance, income, steps — Chapter 4 receipts on the bus. <strong>Slot 31</strong> Tesla coherence; <strong>slot 34</strong> Tesla bias strength — directional story with constants 0.18 forward and 3.2 reverse. <strong>Slots 32–41</strong> input family — keyboard scancodes, mouse position and buttons, joystick axes — operator fingers as boundary conditions.</p>
+<p>Changing FieldCoupling in prompt without watching slot 23 and THERMO together is week-one homework unfinished. Changing GateFidelity without watching Flow fabric and spiderweb util is week-two homework unfinished.</p>
+
+<h2>Slot-by-slot narrative — words 42 through 63</h2>
+<p><strong>Slots 42–56</strong> viewport and AmouranthOS compositor region — slot 42 chrome flags are the famous word in June 2026 research traces; higher slots carry layer strip, compositor header, glow/sharpen telemetry per viewport headers. <strong>Slots 57–59</strong> audio rack — ear story beside eye. <strong>Slots 60–61</strong> BIOS boot flags — shell state. <strong>Slot 62</strong> IO hub. <strong>Slot 63</strong> drive mask — which drive letter habit is live. Sixty-four words, one dashboard — telemetry field Chapter 2 named.</p>
+
+<h2>Guest launch case study — DOOM path addresses</h2>
+<p>When operator launches DOOM-class guest images, RamMap regions matter: palette near <code>0x90000</code>, framebuffer at <code>0xA0000</code>, VGA mode via BDA. Dispatch still runs pump, CFL, thermo, Tesla — retro is not escape from field literacy. Watch entropy rise with input slots active and maintenance cost with framebuffer persistence. If guest runs but thermo flat, dispatch path failed — not “old games don’t count.”</p>
+
+<h2>Guest launch case study — RTX-DOS panel</h2>
+<p><code>ControlRtxDos</code> flag 64 enables RTX-DOS panel surface — still inside same SSBO map. Panel is boundary condition on chrome and guest, not separate emulator. Grep control flags in FieldSocket when panel state disagrees with slot 42.</p>
+
+<h2>Field Die SSBO memory layout — binding 1</h2>
+<p>Descriptor binding 1 is not only 64 MiB linear guest — tail holds ZMM1024 tile cache for fabric samples. Total allocation is guest map plus cache tail per headers. Forks that shrink tail without updating shader see HUD hex garbage at fabric peek region — layout version 5 contract again.</p>
+
+<h2>Data bus and ELLIE logging correlation</h2>
+<p>ELLIE does not print all 64 words each frame — that would drown operators. THERMO and STATUS carry aggregates. When debugging bus, use prompt list AnalogFields for FCC, grep THERMO for accountant, enable debug HUD for hex peeks. Chapter 11 observability doctrine: right witness for right question.</p>
+
+<h2>Local-first die ethics</h2>
+<p>Die telemetry stays on machine — no phone-home in pump. Packet field jsonl also local-first Chapter 5. Queen Chapter 21 holds gates without cloud perimeter mythology. Field Die literacy supports sovereign operator posture — your bytes, your bus, your grep.</p>
+
+<h2>Operator journal — week two prompts</h2>
+<ol>
+<li>Draw RAM map from memory; check against Figure 8.1 notes.</li>
+<li>Copy one THERMO line; label entropy, boundary, maintenance fields.</li>
+<li>Change one FCC float; record which bus slot should move.</li>
+<li>Note slot 42 semantics after clicking start menu.</li>
+<li>Correlate dispatch session time with one NEXUS jsonl timestamp.</li>
+<li>Explain to a friend why Field Die is not DOSBox without being rude.</li>
+<li>Grep FIELD_LAYOUT_VERSION in host and shader; record value.</li>
+<li>List three layers from L0–L9 and their pack slot ranges.</li>
+</ol>
+
+<h2>Teaching the die to another operator — long-form</h2>
+<p>When you teach Field Die, start with addresses, not aesthetics. Show <code>./linux.sh run</code> default x86, point at Big Grin, then open <code>FieldLayer.hpp</code> RamMap on disk. Walk one guest offset: B8000 text. Walk one bus slot: 42 chrome. Walk one stderr line: THERMO entropy. Only then swipe to Classic for pretty thermo colors — pedagogy order matters. Newcomers who start on Mandelbulb swipes think engine is raymarch toy; you failed them if you skip die default.</p>
+<p>Second lesson: pump generation slot 0. Increment means layers walked. No increment means pump broken. Third lesson: FIELD_LAYOUT_VERSION 5 — host and x86.comp match. Fourth: data_bus is not magic array; it is contract renewed every dispatch. Fifth: optional FieldX86Emu — assist, not default. Sixth: tile cache tail — fabric peek, not second world. Seventh: correlate with panel jsonl when teaching defense — offense and defense couple at human, not at SSBO.</p>
+<p>Teaching mistakes to avoid: calling it DOSBox; calling HUD hex calorimetry; ignoring CFL because die “is not fabric focus”; claiming packet field inside Vulkan; skipping sealed time when discussing thermo income. Each mistake is Chapter 12 honesty row waiting to happen.</p>
+
+<h2>Revision history posture — v5 die map</h2>
+<p>Field Technology v5 consolidates June 2026 main-branch facts: default x86.comp, 64 MiB guest, 64-word bus, layout version 5, Tesla slots 31/34, AmouranthOS chrome on 11–14 and bus 42. Older marketing that said decorative CANVAS default is wrong — Chapter 12 trust rule three: <code>./linux.sh run</code> default is Field Die. Wiki quick reference may lag; grep and this chapter carry v5 contract.</p>
+
+<h2>Worked example — debugging stale VGA</h2>
+<p>Symptom: guest program prints text, HUD shows wrong mode word at slot 8. Step one: read BDA byte at guest 0x449. Step two: read bus slot 8 after pump. Step three: if mismatch, layer syncFromGuest not running or guest wrote BDA after pump — check dispatch order. Step four: if match but HUD wrong, shader reads wrong packing — layout version skew. Step five: grep vgaPack and FIELD_LAYOUT_VERSION. Do not recompile world before step five.</p>
+
+<h2>Worked example — debugging chrome clicks</h2>
+<p>Symptom: clicks miss buttons. Step one: slot 42 flags — menu open? Step two: TASKBAR_H and UI_BOOST constants match x86.comp? Step three: input slots 32–41 updating on move? Step four: ControlFieldDebugHud for hit regions? Step five: correlate with Chapter 7 RayCanvas layout. Chrome bugs are address bugs until proven otherwise.</p>
+
+<h2>MSCDEX, audio, and IO — peripheral layers as fields</h2>
+<p>Retro computing is not only CPU and VGA — optical drives, audio racks, and IO ports are also addressable stories. MSCDEX layer registers redirector behavior; audio layer packs rack status into slots 57–59 after viewport processing; IO layer concentrates port hub state in slot 62; drives layer compresses ready mask into slot 63. Each peripheral is a field slice: values persist across ticks until pump updates them. Teaching the die as “just VGA” misses half the composable registry.</p>
+<p>When guests access CD-ROM class drivers, MSCDEX sync and tick must run — bus words near MSCDEX base in layer headers should move. Silent bus during active guest CD driver means layer not registered or pump skipped. Grep FieldLayer table registration in engine sources; count layers, do not assume.</p>
+<p>Audio telemetry is not audiophile measurement — it is dashboard state for shader compose and HUD ear icons. Label <span class="tag meta">Metaphor</span> when presenting to outsiders; label <span class="tag impl">Implemented</span> when grep shows pack hooks.</p>
+
+<h2>Control flags cheat sheet — FieldSocket bits</h2>
+<table><thead><tr><th>Flag</th><th>Value</th><th>Effect on die</th></tr></thead>
+<tbody>
+<tr><td>ControlHostCpu</td><td>8</td><td>FieldX86Emu host assist path</td></tr>
+<tr><td>ControlRtxDos</td><td>64</td><td>RTX-DOS panel surface</td></tr>
+<tr><td>ControlAmmoExec</td><td>1024</td><td>Guest execution active</td></tr>
+<tr><td>ControlFieldDebugHud</td><td>2048</td><td>Die monitor overlay hex</td></tr>
+</tbody></table>
+<p>Flags ride FieldSocket push constants Chapter 7 — not in data_bus, but control how die and HUD interpret bus and guest. Debugging requires both grep flags and read bus words.</p>
+
+<h2>Capstone — die sentence</h2>
+<p>One sentence for Chapter 8 exam: <em>The Field Die is sixty-four megabytes of guest address space and sixty-four words of dispatch telemetry on one SSBO binding, pumped by composable layers, interpreted by x86.comp each vkCmdDispatch, witnessed by stderr and honest operators.</em> If you can say it without looking, you are ready for Chapter 9 stability under load.</p>
+<p>Extended capstone checklist: (1) Quote GUEST_RAM_BYTES. (2) Quote B8000 and HD mirror offsets. (3) Name FCC slot range. (4) Name thermo mirror range. (5) Name Tesla slots. (6) Name chrome flag slot. (7) Name default execution path GPU vs host. (8) Name pump function. (9) Name layout version constant. (10) Name three sibling chapters you will read next. Passing ten without notes means die literacy is real; failing three means rerun week one drills before operating Queen or NEXUS perimeter alone.</p>
+<p>Field Die is the product soul AMOURANTHRTX ships June 2026 — everything else in swipe list is curriculum around that soul. Operators who internalize bus and map carry that soul into kernel KILROY path and Queen browser path without relearning vocabulary — same words, stronger rings, honest labels always.</p>
+<p>Final drill before Chapter 9: run default x86 sixty seconds, tee log, grep THERMO and pump, list AnalogFields once, sketch bus table columns on paper from memory, compare paper to this chapter table. Discrepancies are study material, not embarrassment. Field Technology assumes you will run the stack — reading without running is theory without operator reality Chapter 12 warns against.</p>
+<p>Remember sibling links: Chapter 7 gave dispatch; Chapter 8 gave map and bus; Chapter 9 will give CFL and Tesla stability; Chapter 10 hardware mirror; Chapter 11 grep; Chapter 12 rocks. The engineering core 7–12 is one continuous weapon — literacy — not six disconnected blog posts.</p>
+<p>Die literacy closing affirmation: you now own the vocabulary for guest offsets, sixty-four bus slots, layer pumps, GPU x86.comp default, optional host emu, tile cache tail, and chrome slot forty-two. Use it every dispatch you run. When in doubt, grep FieldLayer.hpp, read THERMO stderr, and trust FIELD_LAYOUT_VERSION five before trusting a screenshot.</p>
+<p>We do not hide the rocks: the die is implemented, the bus is implemented, the pump is implemented — and the labels on thermo, Tesla, and chrome are honest about what is metaphor versus what you can grep tonight on your own machine. Proceed to Chapter 9 when bus and map are muscle memory, not merely bookmarked tabs in this textbook. Then go grep.</p>
+
+<h2>Further reading</h2>
+<p>Wiki: <a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/08-Field-Die-And-Data-Bus">08 — Field Die &amp; Data Bus</a>. Headers: <code>FieldLayer.hpp</code>, <code>FieldRtxFieldAbs.hpp</code>, <code>FieldDosViewport.hpp</code>. Prior: <a href="07-gpu-engine.html">Ch 7</a>. Next: <a href="09-fcc-tesla.html">Ch 9</a>. Sibling fabric: <a href="03-thermodynamics.html">Ch 3</a>, <a href="04-entropy.html">Ch 4</a>.</p>
+
+<h2>Study questions</h2>
+<ol>
+<li>Why is Field Die “not DOSBox” in three sentences?</li>
+<li>Quote VGA text and HD mirror guest offsets.</li>
+<li>Name five <code>data_bus</code> slot families.</li>
+<li>What hooks does each FieldLayer register?</li>
+<li>Where do ThermoAccountant mirrors land?</li>
+<li>What constants feed Tesla slots 31 and 34?</li>
+<li>When does <code>FieldX86Emu</code> run?</li>
+<li>What is ZMM1024 tile cache for?</li>
+<li>Which slot carries AmouranthOS chrome flags?</li>
+<li>How does die telemetry relate to Chapter 2’s three scales?</li>
+</ol>

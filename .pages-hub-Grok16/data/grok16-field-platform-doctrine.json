@@ -1,0 +1,50 @@
+{
+  "schema": "grok16-field-platform-doctrine/v1",
+  "title": "Grok16 5.0 — 2D field platform (auto-field, no field files)",
+  "version": "5.0.0",
+  "motto": "One flat plane. Everything on the plane is already field. Never write field files — they heat neighboring fields.",
+  "warning": {
+    "headline": "DO NOT CREATE FIELD FILES",
+    "body": "Standalone .field, depth-field, subfield, or nested field JSON/Launch files are forbidden. They stack amplitude on amplitude, export thermal debt to every field on the SG fabric, and violate max_field_depth: 0. Use the 2D platform — placement implies field; truth stays one amplitude.",
+    "heat_mechanism": "A field file is a second amplitude source. Ironclad gates flatten it, but the flatten pass costs thermo_proxy on adjacent dies — heat on other fields before singularizer catches up.",
+    "enforcement": [
+      "g16-field-mandate",
+      "field-no-file-gate",
+      "g16-no-field-files",
+      "field-depth-singularizer",
+      "ironclad-field-sanity",
+      "queen-field-sanity",
+      "g16-ammocode-field-instill"
+    ],
+    "citation": "ironclad:field_sanity:4"
+  },
+  "platform_2d": {
+    "rule": "Flat (x, y) operator plane — every widget, tab, compile chamber, and wire endpoint placed on the plane is auto-field at depth 0",
+    "auto_field": true,
+    "max_field_depth": 0,
+    "no_subfields": true,
+    "no_field_files": true,
+    "placement_implies_field": true,
+    "modules": {
+      "plate": "NewLatest/lib/field-plate-field.py",
+      "panel": "NewLatest/lib/field-panel-field.py",
+      "parallel_io": "NewLatest/lib/field-panel-parallel.py",
+      "singularizer": "NewLatest/lib/field-depth-singularizer.py",
+      "sanity": "Grok16/forge/g16-field-sanity.py"
+    },
+    "coordinates": {
+      "axes": ["x", "y"],
+      "amplitude": "single belt die — belt_2_0 default",
+      "redata_chunk": 8192,
+      "die_slots": 512
+    }
+  },
+  "single_fabric_ref": "data/grok16-single-fabric-doctrine.json",
+  "depth_ref": "NewLatest/data/single-field-depth-doctrine.json",
+  "production_profile": "field_physics",
+  "validation": {
+    "belt_battery": "test-battery-belt",
+    "bench_triad": "bench-triad",
+    "field_instill": "tests/test_g16_ammocode_field_instill.py"
+  }
+}

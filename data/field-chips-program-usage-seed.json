@@ -1,0 +1,24 @@
+{
+  "schema": "field-chips-program-usage-seed/v1",
+  "programs": {
+    "browser": {
+      "program_id": "browser",
+      "label": "Queen Browser",
+      "chip_facet": "queen_browser",
+      "usage_pct": 12
+    },
+    "kilroy": {
+      "program_id": "kilroy",
+      "label": "KILROY",
+      "chip_facet": "kilroy_kernel",
+      "usage_pct": 18,
+      "kilroy": true
+    },
+    "terminal": {
+      "program_id": "terminal",
+      "label": "Terminal",
+      "chip_facet": "shell",
+      "usage_pct": 8
+    }
+  }
+}

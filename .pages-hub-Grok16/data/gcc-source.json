@@ -1,0 +1,24 @@
+{
+  "product": "Grok16",
+  "schema": "grok16-gcc-source/v1",
+  "field_rewrite": {
+    "strategy": "Clone releases/gcc-15, patch gcc/BASE-VER to 16.0.0, configure with program-transform-name for g16/g++16",
+    "upstream_branch": "releases/gcc-15",
+    "upstream_base_ver": "15.3.1",
+    "field_version": "16.1.1",
+    "pkgversion": "Grok16-16.1.1",
+    "note": "This is the G16 field rewrite — not upstream releases/gcc-16"
+  },
+  "paths": {
+    "grok16_root": "${GROK16_ROOT}",
+    "gcc_src": "${GROK16_GCC_SRC}",
+    "gcc_build": "${GROK16_GCC_BUILD}",
+    "install_prefix": "${G16_PREFIX}",
+    "queen_root": "${GROK16_QUEEN_ROOT}",
+    "config": "data/grok16-config.json"
+  },
+  "patches": [
+    "patches/gcc-base-ver-16.0.0.patch"
+  ],
+  "license": "GPLv3 — GCC Copyright (C) Free Software Foundation, Inc."
+}

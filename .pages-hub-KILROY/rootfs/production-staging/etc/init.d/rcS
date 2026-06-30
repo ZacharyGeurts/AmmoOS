@@ -1,0 +1,18 @@
+#!/bin/sh
+# KILROY Field OS boot
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev 2>/dev/null || /bin/mdev -s
+mount -a
+hostname KILROY-Field
+if [ -r /proc/kilroy_field/status ]; then
+    echo "=== KILROY Field OS ==="
+    cat /proc/kilroy_field/status
+    cat /proc/kilroy_field/boot 2>/dev/null
+    cat /proc/kilroy_field/cache 2>/dev/null
+    cat /proc/kilroy_field/direct 2>/dev/null
+fi
+if [ -c /dev/kilroy_field ]; then
+    echo "ioctl: /dev/kilroy_field (layout v9)"
+fi
+echo "KILROY Field rootfs ready — Linux-compatible"

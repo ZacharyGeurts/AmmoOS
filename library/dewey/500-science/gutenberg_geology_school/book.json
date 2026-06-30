@@ -1,0 +1,15 @@
+{
+  "id": "gutenberg_geology_school",
+  "title": "Text-Book of Geology (Gutenberg)",
+  "author": "Project Gutenberg",
+  "dewey": "500",
+  "publisher": "Project Gutenberg",
+  "license": "Public Domain",
+  "grade_band": "9-12",
+  "subject": "science",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/gutenberg_geology_school/front.png",
+  "cover_asset": "library/assets/covers/gutenberg_geology_school/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

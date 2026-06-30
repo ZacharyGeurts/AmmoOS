@@ -1,0 +1,31 @@
+{
+  "schema": "exploring-the-stack-doctrine/v1",
+  "title": "Exploring the Stack — textbook doctrine",
+  "motto": "AmmoOS desktop · Queen browser · KILROY loopback — one textbook, every component.",
+  "textbook": "Textbook/exploring-the-stack.txt",
+  "manifest": "Textbook/exploring-the-stack-manifest.json",
+  "library": "library/dewey/000-computer-science/exploring_the_stack/book.json",
+  "companion": "Textbook/field-technology-v5.txt",
+  "hostess7_ingest": "Hostess7.sh stack-learn",
+  "chapters": [
+    {"id": "ch00", "title": "How to read this book"},
+    {"id": "ch01", "title": "Stack at a glance"},
+    {"id": "ch02", "title": "Hardware and native layer"},
+    {"id": "ch03", "title": "KILROY — the PC core"},
+    {"id": "ch04", "title": "NEXUS C2 — command deck"},
+    {"id": "ch05", "title": "AmmoOS desktop"},
+    {"id": "ch06", "title": "AMOURANTHRTX display technology"},
+    {"id": "ch07", "title": "Queen Browser — stripped webbrowser"},
+    {"id": "ch08", "title": "Sense stack"},
+    {"id": "ch09", "title": "Build fabric — Grok16, AmmoLang, AmmoCode"},
+    {"id": "ch10", "title": "ZNetwork absorbed lane"},
+    {"id": "ch11", "title": "Boot process walkthrough"},
+    {"id": "ch12", "title": "Health checks and troubleshooting"}
+  ],
+  "stack_model": {
+    "ammoos_role": "fullscreen_classic_start_desktop",
+    "queen_role": "stripped_secured_webbrowser",
+    "siblings": true,
+    "ammoos_inside_queen": false
+  }
+}

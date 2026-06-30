@@ -1,0 +1,10 @@
+{
+  "id": "xbox",
+  "title": "Xbox",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/xbox/xbox.h7c",
+  "cover": "/library/assets/devices/xbox.png",
+  "ready": true
+}

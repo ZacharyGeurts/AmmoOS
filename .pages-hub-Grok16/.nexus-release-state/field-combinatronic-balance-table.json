@@ -1,0 +1,80 @@
+{
+  "schema": "field-combinatronic-balance-table/v1",
+  "history": [
+    {
+      "at": "2026-06-27T17:47:35Z",
+      "reorganized": true,
+      "elapsed_ms": 12.4,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T17:47:35Z",
+      "reorganized": true,
+      "elapsed_ms": 35.78,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T17:47:35Z",
+      "reorganized": true,
+      "elapsed_ms": 58.09,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T17:47:35Z",
+      "reorganized": false,
+      "elapsed_ms": 59.3,
+      "balance": 0.25,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T17:47:35Z",
+      "reorganized": true,
+      "elapsed_ms": 324.99,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T17:47:36Z",
+      "reorganized": true,
+      "elapsed_ms": 67.94,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T17:47:36Z",
+      "reorganized": false,
+      "elapsed_ms": 75.52,
+      "balance": 0.2857,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-27T19:21:46Z",
+      "reorganized": false,
+      "elapsed_ms": 72.94,
+      "balance": 0.375,
+      "balanced": true,
+      "incremental_added": 0
+    },
+    {
+      "at": "2026-06-29T06:33:13Z",
+      "reorganized": true,
+      "elapsed_ms": 121.92,
+      "balance": 0.97,
+      "balanced": true,
+      "incremental_added": 0
+    }
+  ],
+  "updated": "2026-06-29T06:33:13Z",
+  "balanced": true,
+  "balance": 0.97
+}
