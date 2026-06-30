@@ -1,0 +1,33 @@
+# Build trees
+/build/
+/build-cmake/
+*.o
+*.a
+*.so
+*.ko
+
+# Large runtime images (release assets only)
+/build/grok-kilroy.img
+/build/qemu-boot.log
+/build/tmp.*
+
+# Compat substrate clone (fetch via kilroy-stage-compat.sh)
+/../compat/
+/../linux-kernel/
+
+# State
+.nexus-state/
+.nexus-field-drive/
+
+# Python
+__pycache__/
+*.pyc
+
+# Pack output
+/dist/
+
+# Debian fetch artifact
+memtest86+_*.deb
+
+# Vendor limine git internals
+boot/grok/vendor/limine/.git/.github/workflows/

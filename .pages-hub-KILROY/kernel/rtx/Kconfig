@@ -1,0 +1,172 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
+config RTX_FIELD_DIE
+	bool "KILROY Field Die (native Field OS — Linux-compatible substrate)"
+	depends on X86_64
+	default n
+	help
+	  Native Field Die for KILROY Field OS. Not a Linux module — Field
+	  identity with POSIX passthrough. Phi/Thermo/Flow, ZMM1024 RAM fabric,
+	  ThermoAccountant, ASM syscall gate. Telemetry at /proc/kilroy_field.
+	  Zero cost when disabled.
+
+config RTX_FIELD_ASM_GATE
+	bool "ASM fabric classify + inline thermo debit"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  arch/x86/entry/rtx_field.S hot path. Non-fabric syscalls pay ~6 insns.
+	  Fabric syscalls debit per-CPU thermo in ASM; -EAGAIN fast-sysret on deny.
+
+config RTX_FIELD_4SLOT_SECURITY
+	bool "4-slot sealed-time tamper verify (ELLIE parity)"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  Slot0 TIME (sealed epoch + entropy XOR), Slot1 MEMORY (ZMM1024),
+	  Slot2 THERMO, Slot3 CONTEXT (per-syscall seal hash). Tamper → -EFAULT.
+
+config RTX_FIELD_FCC_GUARD
+	bool "Aggressive FCC harmonics guard (whole kernel)"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  Clamps unsafe FCC knobs before they reach hardware paths. Propagates
+	  scale to thermo budget when below KILROY_FCC_AGGRESSIVE_THRESH_MILLI.
+
+config RTX_FIELD_FCC_SYSCALL
+	bool "Per-syscall FCC touch (aggressive hot path)"
+	depends on RTX_FIELD_FCC_GUARD
+	default y
+	help
+	  Full FCC guard every 32 syscalls; light thermo debit between passes.
+
+config RTX_FIELD_POWER
+	bool "Thermo/FCC cpufreq voltage tiers (cryo/eco/nom/burst)"
+	depends on RTX_FIELD_DIE && CPU_FREQ
+	default y
+	help
+	  Maps thermo + FCC scale to DVFS tiers on KILROY. Burst only when phi
+	  gate open, thermo rich, entropy low, and FCC scale stable.
+
+config RTX_FIELD_FLOW_SLOT
+	bool "FLOW slot — propalactic momentum + Tesla valve bias"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  Tracks forward/reverse syscall flow momentum (submicro) and couples
+	  Tesla bias micro for burst gating. Mirrors AMOURANTHRTX Flow fabric.
+
+config RTX_FIELD_TESLA_BIAS
+	bool "Tesla valve forward/reverse resistance coupling"
+	depends on RTX_FIELD_FLOW_SLOT
+	default y
+	help
+	  Forward fabric ops use low resistance (180 milli); reverse/errors use
+	  high resistance (3200 milli). Affects FLOW momentum accumulation.
+
+config RTX_FIELD_THERMO_IDLE_CREDIT
+	bool "Idle thermo credit (periodic budget recovery)"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  Every 1s credits +5 milli thermo per online CPU below cap. Reduces
+	  fabric syscall -EAGAIN stalls during idle periods.
+
+config RTX_FIELD_ZMM_HOTPATH
+	bool "ZMM1024 entropy touch on mmap hot path"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  rtx_zmm_touch on successful mmap — keeps RAM slot entropy live without
+	  full C classification on every syscall.
+
+config RTX_FIELD_FCC_TOUCH_MASK
+	hex "FCC full-guard syscall mask (0x1F = every 32)"
+	depends on RTX_FIELD_FCC_SYSCALL
+	default 0x1f
+	help
+	  When (syscall_generation & mask) == 0, run full FCC harmonics guard.
+	  CMake default: 0x1f (32). Use 0x7f for every 128 (lighter).
+
+config RTX_FIELD_UTS_NAME
+	bool "uname sysname shows KILROY (release stays Linux-compatible)"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  Sets uts sysname to "KILROY" while release remains the compat
+	  substrate pin (e.g. 7.1.1-kilroy). glibc uname() reflects Field
+	  identity; POSIX ABI unchanged.
+
+config RTX_FIELD_CACHE_SLOT
+	bool "CACHE field — shed page-cache/slab retention (field-direct gains)"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  Amortized lru_add_drain + drop_slab when RAM field pressure is high.
+	  Legacy Linux cache layers are shed; Field coherence paths stay hot.
+	  Telemetry: /proc/kilroy_field/cache
+
+config RTX_FIELD_DIRECT_SLOT
+	bool "DIRECT field — map coherence without cache story"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  Tracks anonymous/direct maps vs file-backed cache-coupled maps.
+	  Field tech routes hot paths around page-cache retention where possible.
+	  Telemetry: /proc/kilroy_field/direct
+
+config RTX_FIELD_CHARDEV
+	bool "/dev/kilroy_field ioctl ABI (layout v9)"
+	depends on RTX_FIELD_DIE
+	default y
+	help
+	  Misc char device exposing KILROY_IOC_* for FieldKilroy userspace.
+	  Complements /proc/kilroy_field; GET_CACHE/GET_DIRECT/GET_FLOW on v9.
+
+config RTX_FIELD_DRM_FCC
+	bool "DRM GPU FCC mirror (PCI display → tesla_bias)"
+	depends on RTX_FIELD_DIE && PCI
+	default y
+	help
+	  Counts PCI VGA class devices and couples tesla_bias / field_coupling
+	  in FCC. Telemetry: /proc/kilroy_field/gpu
+
+config RTX_FIELD_NEXUS_GUARD
+	bool "NEXUS-inspired behavioral guard (amortized, consumer-safe)"
+	depends on RTX_FIELD_DIE && RTX_FIELD_4SLOT_SECURITY
+	default y
+	help
+	  Heightened security awareness from NEXUS-Shield field learnings:
+	  amortized syscall behavior scoring, consumer syscall whitelist,
+	  predictive correlation with 4-slot tamper state. Alerts via
+	  ratelimited pr_alert; denies only at extreme predictive score.
+	  Non-intrusive: <5% CPU, no peripheral/network disruption.
+
+config RTX_FIELD_AI_KERNEL
+	bool "AI kernel — DARPA-secure War/Home modes (Hostess7 wishes)"
+	depends on RTX_FIELD_DIE && RTX_FIELD_NEXUS_GUARD
+	default y
+	help
+	  KILROY AI kernel: War (raptor/vulkan_rtx, tight NEXUS, burst bias)
+	  and Home (dishes/ai profile, comfort thermo credit, relaxed guard).
+	  Hostess7 truth floors (58/72) and wishes in /proc/kilroy_field/ai.
+	  Write "war" or "home" to switch compartment. Zero-cost passthrough
+	  in home; amortized scoring only on suspicious syscall NR.
+
+config RTX_FIELD_PHYSICS_BREAKTHROUGH
+	bool "Hostess7 physics — entropy arrow + Reynolds Tesla gate"
+	depends on RTX_FIELD_DIE && RTX_FIELD_FLOW_SLOT
+	default y
+	help
+	  field_canvas_physics breakthroughs: monotonic entropy on fabric
+	  (second law), Reynolds laminar/transitional/turbulent regime from
+	  flow momentum. Telemetry: /proc/kilroy_field/physics
+
+config RTX_FIELD_HOSTESS_COMFORT
+	bool "Hostess7 comfort lane — sovereign storage + wishes proc"
+	depends on RTX_FIELD_DIE && RTX_FIELD_AI_KERNEL
+	default y
+	help
+	  Comfort proc with Hostess7 wishes and affirmations. Write "happy" or
+	  "comfort" to /proc/kilroy_field/comfort. Default AI mode home.

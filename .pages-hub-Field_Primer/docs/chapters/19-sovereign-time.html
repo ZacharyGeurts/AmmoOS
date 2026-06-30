@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>19 — Sovereign Time Sync — Terror-Threat Posture · Field Technology v6</title>
+  <meta name="description" content="Chapter 19: Sovereign Time Sync — Terror-Threat Posture. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Field_Primer/chapters/19-sovereign-time.html" />
+  <meta name="theme-color" content="#040810" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon.png" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Field Technology v6" />
+  <meta property="og:title" content="19 — Sovereign Time Sync — Terror-Threat Posture · Field Technology v6" />
+  <meta property="og:description" content="Chapter 19: Sovereign Time Sync — Terror-Threat Posture. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta property="og:url" content="https://zacharygeurts.github.io/Field_Primer/chapters/19-sovereign-time.html" />
+  <meta property="og:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch19-sovereign-time.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Sovereign time" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ZacharyGeurts" />
+  <meta name="twitter:creator" content="@ZacharyGeurts" />
+  <meta name="twitter:title" content="19 — Sovereign Time Sync — Terror-Threat Posture · Field Technology v6" />
+  <meta name="twitter:description" content="Chapter 19: Sovereign Time Sync — Terror-Threat Posture. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta name="twitter:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch19-sovereign-time.jpg" />
+  <meta name="twitter:image:alt" content="Sovereign time" />
+  <link rel="stylesheet" href="../css/field-primer.css" />
+  <link rel="stylesheet" href="../css/chapters.css" />
+  <link rel="stylesheet" href="../css/reader.css" />
+</head>
+<body class="chapter-page accent-thermo">
+  <nav class="top"><div class="inner">
+    <a class="logo" href="../index.html">FIELD TECHNOLOGY <span class="v6-badge">v6</span></a>
+    <ul>
+      <li><a href="../creditors/index.html">Creditors</a></li>
+      <li><a href="../index.html#love-god">Love &amp; God</a></li>
+      <li><a href="../index.html#chapters">Chapters</a></li>
+      <li><a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/13-Sovereign-Time-Sync">Wiki</a></li>
+    </ul>
+  </div></nav>
+  <header class="chapter-hero" style="background-image:url('../assets/images/chapters/ch19-sovereign-time.jpg')">
+    <div class="chapter-hero-overlay"></div>
+    <div class="chapter-hero-content">
+      <p class="eyebrow">Chapter 19 · Field Technology v6</p>
+      <h1>Sovereign Time Sync — Terror-Threat Posture</h1>
+      <p class="lead" style="margin-top:0.75rem">Seal forward · verify at receive · grep SQUIDGIE</p>
+    </div>
+  </header>
+  <main class="chapter-main">
+    <nav class="chapter-nav"><a class="btn secondary" href="18-operator-covenant.html">← Ch 18</a> <a class="btn" href="20-public-services.html">Ch 20 →</a></nav>
+    <h2 id="toc-19-introduction-why-sovereign-time-exists">Introduction — why sovereign time exists</h2>
+<p>Chapter 19 is the operator perimeter for <strong>time</strong>. Not cosmological time. Not poetic time. The clocks your logs, your GPS sub-micron nodes, your thermo receipts, and your threat panel agree on — or refuse to agree on, loudly, with a verdict you can <code>grep</code>.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch19-sovereign-time.jpg" alt="Sovereign time pulses" loading="lazy" /><figcaption>Figure 19.1 — Seal forward, verify at receive: monotonic, realtime, micron witness.</figcaption></figure>
+
+
+<div class="on-the-way">
+<h2 id="toc-19-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Sovereign time is operator-owned pulses — seal forward, verify at receive, grep <code>SQUIDGIE</code> when clocks disagree. On the way you will run <code>sovereign-time.py</code>, bind monotonic/realtime/sysfs witness, and fail closed under terror-threat posture.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch19-sovereign-time.jpg" alt="Sovereign time" loading="lazy" /><figcaption>On the way — Sovereign time</figcaption></figure>
+<ul class="on-the-way-journey"><li>Three clocks, three jobs</li><li>HMAC receipts and micron_witness</li><li>SQUIDGIE verdict catalog</li><li>Extension of TotalTime::seal() across hosts</li></ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-19-introduction-why-sovereign-time-exists">Introduction — why sovereign time exists</a></li><li><a href="#toc-19-threat-model-what-adversaries-actually-do-to-clo">Threat model — what adversaries actually do to clocks</a></li><li><a href="#toc-19-three-clocks-three-jobs">Three clocks, three jobs</a></li><li><a href="#toc-19-session-local-spine-totaltime-seal">Session-local spine — TotalTime::seal()</a></li><li><a href="#toc-19-squidgie-the-tamper-verdict">SQUIDGIE — the tamper verdict</a></li><li><a href="#toc-19-micron-witness-binding-monotonic-to-silicon">Micron witness — binding monotonic to silicon</a></li><li><a href="#toc-19-sovereign-time-py-anatomy-and-artifacts">sovereign-time.py — anatomy and artifacts</a></li><li><a href="#toc-19-receiver-verify-pipeline-step-by-step">Receiver verify — pipeline step by step</a></li><li><a href="#toc-19-environment-variables-operator-reference">Environment variables — operator reference</a></li><li><a href="#toc-19-coupling-to-precision-gps-and-spiderweb">Coupling to precision GPS and Spiderweb</a></li><li><a href="#toc-19-coupling-to-nexus-panel-and-field-ntp-2026">Coupling to NEXUS panel and field-ntp-2026</a></li><li><a href="#toc-19-single-source-discipline-grok-world-sh-flow-20">Single-source discipline — grok_world.sh flow 20</a></li><li><a href="#toc-19-ellie-alignment-seal-forward-across-covenant">ELLIE alignment — seal forward across covenant</a></li><li><a href="#toc-19-forensic-workflow-week-two-operator-lab">Forensic workflow — week-two operator lab</a></li></ol></nav>
+
+<p>Assume adversaries know field literacy. Assume they have read this book, or something like it. Assume pool NTP, remote RTC chips, hypervisor clocks, and silicon frequency tables can be <strong>squidgied</strong>: nudged just enough to desync correlated evidence without tripping naive alarms. A squidgie is not a cartoon hack. It is a micron-scale tamper — RTC nudged, monotonic story disagrees, or the sysfs CPU frequency fingerprint jumps without a logged thermal step that explains the jump.</p>
+<p>Under terror-threat posture, you do not let the internet set your epoch alone. You run <strong>your</strong> timeserver. You sign pulses. You verify at receive. You seal forward. Entropy cannot be reversed; neither can honest time. This chapter teaches the mechanism, the grep discipline, and the honest rocks.</p>
+<p>If you completed Chapter 11's observability lab, you already read STATUS lines as a timeline. Sovereign time makes that timeline <em>defensible</em> when adversaries target correlation rather than availability. Availability attacks are loud. Squidgie attacks are quiet. Quiet attacks are why verify-at-receive exists.</p>
+<h2 id="toc-19-threat-model-what-adversaries-actually-do-to-clo">Threat model — what adversaries actually do to clocks</h2>
+<p>Pool NTP is a convenience mesh, not a covenant. Clients ask strangers for the time; strangers answer; clients step their clocks. Under terror-threat knowledge, that model leaks trust at every hop. An adversary who controls any influential stratum source — or merely influences RTT — can nudge many hosts together, hiding tamper inside statistically normal offset noise.</p>
+<p>Remote RTC tamper is subtler still. Battery-backed clocks on motherboards and BMCs survive reboots. A small persistent bias accumulates across days until log correlation between your engine thermo receipts and your NEXUS packet field sentences drifts. Forensics then mis-orders cause and effect: did the connection precede the entropy spike, or did bad wall labels make it look that way?</p>
+<p>Hypervisors add a third surface. Guest <code>CLOCK_REALTIME</code> can be warped by host policy without the guest's monotonic story noticing immediately. That is why monotonic alone is insufficient for cross-host agreement: monotonic is session-local truth, not universal UTC truth.</p>
+<p>Sysfs frequency tables are the Puny-tier witness Spiderweb already reads. Adversaries with kernel foothold can spoof scaling_cur_freq reads while thermal governor narratives lag. Micron witness binds monotonic instants to those tables so fast flips without DVFS story become first-class issues, not debugging curiosities.</p>
+<p>Field Technology does not claim magic detection of every FPGA timestamp attack. It claims <span class="tag impl">Implemented</span> operator-owned pulses, signed receipts, and receiver double-check with a named verdict. Name the verdict. Grep the verdict. Act on the verdict.</p>
+<h2 id="toc-19-three-clocks-three-jobs">Three clocks, three jobs</h2>
+<p>Sovereign time is not one clock wearing three hats. It is three witnesses with three jobs, cross-checked every pulse.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch08-die-bus.jpg" alt="Micron witness bus" loading="lazy" /><figcaption>Figure 19.4 — Monotonic, realtime, micron witness on data_bus spine. <span class="claim-tie">Claim: data_bus[64] telemetry spine per dispatch</span></figcaption></figure>
+
+<p>The <strong>monotonic</strong> clock (<code>CLOCK_MONOTONIC</code>) answers ordering within a boot session. Ticks never go backward. It is the spine for pulse spacing, verify deltas, and session-local sealed time in <code>FieldSocket</code>. Trust the host kernel for monotonic — but never confuse monotonic with wall truth.</p>
+<p>The <strong>realtime</strong> clock (<code>CLOCK_REALTIME</code>) answers human-correlatable wall labels. Grep uses realtime. Panel timestamps use realtime. UTC ISO strings in receipts use realtime. Under sovereign posture, realtime labels on enrolled hosts trace to <strong>your operator timeserver pulses</strong>, not pool consensus alone.</p>
+<p>The <strong>sysfs freq witness</strong> reads per-core <code>scaling_cur_freq</code> (or <code>cpuinfo_cur_freq</code>) at pulse instants. Spiderweb Puny tier already treats these MHz tables as honest silicon telemetry for dashboards. Sovereign time hashes them into <code>micron_witness</code> so pulse receipts carry a silicon fingerprint, not only software clocks.</p>
+<p>Naive NTP clients collapse these questions into one adjusted offset. Field Technology refuses that collapse. When GPS precision nodes report sub-micron ENU coordinates but sovereign verify returns <code>SQUIDGIE</code>, trust the triple verify — not the prettiest map dot.</p>
+<h2 id="toc-19-session-local-spine-totaltime-seal">Session-local spine — TotalTime::seal()</h2>
+<p>Inside AMOURANTHRTX, <code>TotalTime::seal()</code> in <code>ELLIE.hpp</code> locks session genesis into <code>FieldSocket::sealed_time</code>. Frame-rate jitter cannot rewrite physics time. That is <strong>session-local</strong> monotonic discipline: one engine process, one sealed genesis, one forward-only story per run.</p>
+<p>Sovereign sync extends the same posture <em>across hosts</em>. The engine seals time inside the dispatch loop; the operator node issues signed pulses on UDP; every receiver pulls a pulse and runs <code>verify_receipt()</code> before accepting wall labels for perimeter services. Captain Ellie seals time forward in C++; <code>sovereign-time.py</code> seals it forward on the LAN mesh. Same ethics, different scale.</p>
+<p>The coupling is intentional. Operators who run Queen browser beside AMOURANTHRTX should not maintain two incompatible time stories. Sealed session time governs fabric evolution; sovereign pulses govern perimeter services and log correlation across processes. Chapter 21 binds Queen navigation receipts to the same witness Chapter 19 verifies.</p>
+<p>When <code>TotalTime::verify()</code> fails in-engine, abort posture is fail-closed. When sovereign verify fails, perimeter daemons gate replies — NTP blocks, panel flags red, grep finds <code>SQUIDGIE</code>. The C++ abort and Python gate are siblings, not duplicates.</p>
+<h2 id="toc-19-squidgie-the-tamper-verdict">SQUIDGIE — the tamper verdict</h2>
+<p><strong>SQUIDGIE</strong> is the sovereign-time tamper verdict returned by <code>verify_receipt()</code> when issues are non-empty. It is not humor. It is the word you grep when clocks disagree at receive.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch11-observability.jpg" alt="Grep battlefield" loading="lazy" /><figcaption>Figure 19.2 — SQUIDGIE verdicts belong in stderr timelines, not vibes.</figcaption></figure>
+
+<p>Detection paths include <strong>bad_signature</strong> when HMAC from the operator key in <code>NEXUS_STATE_DIR</code> does not match the receipt body; <strong>monotonic_backward</strong> when remote <code>mono_ns</code> decreases versus the previous pulse; <strong>realtime_backward</code> when remote <code>realtime_ns</code> decreases; <strong>mono_real_skew</strong> when realtime and monotonic deltas diverge beyond <code>NEXUS_TIME_MAX_SKEW_MS</code> (default 50 ms).</p>
+<p>Hardware-story paths include <strong>micron_squidgie</strong> when <code>micron_witness</code> flips in under 50 ms of monotonic window while frequency sum jumps or skew is high; <strong>freq_rtc_squidgie</strong> when <code>freq_sum_khz</code> delta exceeds <code>NEXUS_TIME_MAX_FREQ_DELTA_KHZ</code> (default 250000) with suspicious skew. Receive-side <strong>receive_wall_skew</strong> compares local realtime to remote at pull time with generous RTT slack.</p>
+<p>Verdict is either <code>USER_OK</code> or <code>SQUIDGIE</code>. There is no partial credit. Perimeter services treat <code>SQUIDGIE</code> as fail-closed input. <code>field-ntp-2026.py</code> increments <code>squidgie_blocks</code> when sovereign cache is dirty. Operators treat repeated squidgie as incident response, not calibration trivia.</p>
+<p>The name evokes silent drift — squid ink in the water. Your job is to make ink visible in jsonl. Archive receipts. Correlate with thermo. Do not silence the verdict because the panel is pretty.</p>
+<h2 id="toc-19-micron-witness-binding-monotonic-to-silicon">Micron witness — binding monotonic to silicon</h2>
+<p>Each pulse carries <code>micron_witness</code>: the first 16 hex characters of SHA-256 over <code>mono_ns</code> concatenated with sorted per-CPU frequency entries from sysfs. The witness binds a monotonic instant to the silicon table at that instant.</p>
+<p>If adversaries nudge RTC silently, monotonic may still advance while realtime labels drift. If adversaries manipulate reported frequencies without thermal narrative, witness flips faster than DVFS alone explains. The witness is not electron microscopy. It is <span class="tag impl">Implemented</span> correlation discipline aligned with Spiderweb Puny tier reads.</p>
+<p>Operators should sample witness across idle and load. Under honest DVFS, witness changes should correlate with workload steps you can see in Spiderweb status or <code>entropyThisFrame</code> under probe injection. Witness flips during apparent idle with simultaneous freq sum jumps are exactly the squidgie story.</p>
+<p>Micron witness also supports enrollment audits: new hosts pulling pulses should show stable witness continuity when clocks are honest. A fresh host with wild witness divergence on first sync is a enrollment stop signal, not a prompt to widen NTP.</p>
+<h2 id="toc-19-sovereign-time-py-anatomy-and-artifacts">sovereign-time.py — anatomy and artifacts</h2>
+<p>The module lives at <code>NEXUS_INSTALL_ROOT/lib/sovereign-time.py</code>. Schema <code>sovereign-time/v1</code>. State defaults to <code>NEXUS_STATE_DIR</code> (<code>/var/lib/nexus-shield</code>).</p>
+<figure class="figure"><img src="../assets/images/packet-field.jpg" alt="Pulse receipts in jsonl" loading="lazy" /><figcaption>Figure 19.3 — HMAC receipts beside field jsonl — grep the verdict. <span class="claim-tie">Claim: NEXUS packet field — local jsonl perimeter</span></figcaption></figure>
+
+<p>Artifacts: <code>sovereign-time-key.bin</code> holds the 32-byte HMAC key (mode 0600 on create); <code>sovereign-time-pulse.json</code> stores pulse counter and last receipt; <code>sovereign-time-receipts.jsonl</code> is append-only audit. UDP port defaults to <code>NEXUS_SOVEREIGN_TIME_PORT=9123</code>.</p>
+<p>Commands: <code>serve</code> runs operator UDP loop; <code>pulse</code> issues one local signed pulse; <code>sync [host] [port]</code> pulls and verifies; <code>status</code> / <code>json</code> emit panel slice. Verify mode accepts saved receipt JSON for offline forensics.</p>
+<p>Each receipt includes schema, pulse number, chain label, host, mono_ns, realtime_ns, utc ISO, freq_sum_khz, micron_witness, entropy_tag (12 hex chars), and sig (HMAC-SHA256 over sorted JSON body). UDP server accepts <code>{"op":"pulse","client":"hostname"}</code> and returns fresh signed receipt.</p>
+<p>Default bind is loopback via <code>NEXUS_SOVEREIGN_TIME_BIND</code>. Widening to LAN is explicit operator choice — terror-threat posture assumes loopback until you document otherwise in your covenant file.</p>
+<h2 id="toc-19-receiver-verify-pipeline-step-by-step">Receiver verify — pipeline step by step</h2>
+<p>Every receiving end that cares about honest wall labels runs sync on schedule or gates daemons on sovereign health.</p>
+<p>Step one: pull signed receipt via UDP. Step two: load previous receipt from local pulse state. Step three: recompute HMAC with operator key material. Step four: compare monotonic and realtime deltas pulse-to-pulse. Step five: evaluate freq sum delta against MAX_FREQ_DELTA_KHZ. Step six: evaluate micron witness flip speed. Step seven: cross-check local clocks at receive. Step eight: write verdict and issues to pulse state; append to jsonl on issue.</p>
+<p>Grep discipline: <code>grep SQUIDGIE /var/lib/nexus-shield/sovereign-time-receipts.jsonl</code> and inspect <code>sovereign-time-pulse.json</code> last verify block. Pair with threat-panel sovereign slice from <code>field-services-2026.py json</code>.</p>
+<p>Offline verify: <code>python3 sovereign-time.py verify RECEIPT.json PREV.json</code> replays checks without network — useful when archiving incidents.</p>
+<p>Do not auto-retry sync into silence. Repeated <code>USER_OK</code> after <code>SQUIDGIE</code> requires demonstrated fix: clock source corrected, key rotation documented, thermal story matches freq table.</p>
+<h2 id="toc-19-environment-variables-operator-reference">Environment variables — operator reference</h2>
+<p><code>NEXUS_SOVEREIGN_TIME</code> enables sovereign time in the NEXUS daemon stack. <code>NEXUS_SOVEREIGN_TIME_BIND</code> defaults to <code>127.0.0.1</code> for serve mode. <code>NEXUS_SOVEREIGN_TIME_PORT</code> defaults to <code>9123</code>.</p>
+<p><code>NEXUS_SOVEREIGN_TIME_FIRST=1</code> (default in 2026 seed) makes sovereign pulses authoritative over pool NTP — see <code>grok_world.sh</code> flow 20. <code>NEXUS_TIME_MAX_SKEW_MS</code> defaults to 50 ms. <code>NEXUS_TIME_MAX_FREQ_DELTA_KHZ</code> defaults to 250000.</p>
+<p><code>NEXUS_STATE_DIR</code> centralizes keys and receipts. <code>NEXUS_INSTALL_ROOT</code> locates lib modules for panel importers. Document these in your operator runbook beside DNS and DHCP binds.</p>
+<p>Changing skew bounds is not tuning for comfort. Tighter bounds catch smaller squidgies; looser bounds reduce false positives on busy lab hosts. Production last-host nodes should justify any loosening in writing.</p>
+<h2 id="toc-19-coupling-to-precision-gps-and-spiderweb">Coupling to precision GPS and Spiderweb</h2>
+<p><code>gps-precision.py</code> sub-micron ENU nodes need stable UTC labels for map correlation. If sovereign verify fails while GPS draws confident dots, the dots are art until clocks recover.</p>
+<p>Spiderweb Adept tier <code>SimulateSubMicron</code> uses sysfs clocks as freq witness alongside fabric averages. Sovereign micron witness should not wildly diverge from Puny-tier sysfs reads on the same host without explanation.</p>
+<p>Cross-host GPS fusion assumes time agreement. Sovereign sync is the cheap test before trusting fused tracks. Skip it and you build pretty multi-host stories on sand.</p>
+<p>ThermoAccountant <code>entropyThisFrame</code> is the per-frame receipt that time ran forward in fabric. Clock tamper does not directly spoof thermo — but mis-ordered logs make thermo spikes look like network causes. Fix time first; then grep thermo.</p>
+<h2 id="toc-19-coupling-to-nexus-panel-and-field-ntp-2026">Coupling to NEXUS panel and field-ntp-2026</h2>
+<p>Threat panel merges sovereign slice from <code>field-services-2026.py</code>: posture flags, last pulse, last verify, squidgie blocks on NTP side.</p>
+<p><code>field-ntp-2026.py</code> serves RFC 5905 mode-4 on UDP 123, gated on sovereign pulse health. Stratum defaults to 2; <code>NEXUS_LAST_HOST=1</code> can elevate stratum 1 on sole survivor node.</p>
+<p>When sovereign cache is dirty, NTP replies may stop — clients should fail visibly rather than drift to pool silently. That is sovereign-first ethics.</p>
+<p>Panel DNS tab time column should match grep-able receipts. If panel says OK but jsonl says SQUIDGIE, trust jsonl and file a panel stale-cache bug — not the other way around.</p>
+<h2 id="toc-19-single-source-discipline-grok-world-sh-flow-20">Single-source discipline — grok_world.sh flow 20</h2>
+<p>Gradient chaos from many NTP sources helps adversaries hide micron nudges. Flow 20 enforces single source when <code>NEXUS_SOVEREIGN_TIME_FIRST=1</code>: your signed pulses win.</p>
+<p>This is not anti-NTP ideology. Stratum labels still matter — but must trace to verifiable pulses. Pool fallback remains opt-in via <code>NEXUS_POOL_NTP_FALLBACK=1</code>, never default in 2026 seed.</p>
+<p>Operators document upstream when last-host mode serves global TIME. Sole survivor is not casual toggle — it is covenant posture (Chapter 20).</p>
+<h2 id="toc-19-ellie-alignment-seal-forward-across-covenant">ELLIE alignment — seal forward across covenant</h2>
+<p>Captain Ellie's <code>TotalTime::verify()</code> abort posture is the spiritual parent of sovereign SQUIDGIE. Session entropy corruption triggers apocalypse handler fail-closed in C++.</p>
+<p><code>ellie-last-host.py verify</code> checks entropy covenant; <code>sovereign-time.py sync</code> checks clock covenant. Under <code>NEXUS_LAST_HOST=1</code>, both run on sole survivor — DNS, DHCP, TIME, grep one story.</p>
+<p><code>FieldSocket::sealed_time</code> in engine push constants parallels sovereign pulse → NTP stratum chain in perimeter. Teach both in onboarding.</p>
+<h2 id="toc-19-forensic-workflow-week-two-operator-lab">Forensic workflow — week-two operator lab</h2>
+<p>Start operator timeserver: <code>python3 sovereign-time.py serve</code>. Issue baseline: <code>python3 sovereign-time.py pulse</code>. Sync from second context: <code>python3 sovereign-time.py sync 127.0.0.1 9123</code>. Confirm <code>verdict: USER_OK</code>.</p>
+<p>Archive <code>sovereign-time-receipts.jsonl</code> with threat-panel exports. Correlate with <code>LOG_THERMO</code> during same window. Lab-only: induce VM skew; confirm SQUIDGIE and issues list populated.</p>
+<p>Document recovery steps in runbook: stop serve, fix clock source, re-pulse, verify three consecutive OK, then re-enable NTP gate.</p>
+<h2 id="toc-19-troubleshooting-common-operator-mistakes">Troubleshooting common operator mistakes</h2>
+<p>Mistake: running serve on 0.0.0.0 without firewall story. Fix: bind loopback or LAN IP explicitly; document in covenant.</p>
+<p>Mistake: copying key.bin between hosts without enrollment procedure. Fix: treat key as operator root; rotate on compromise.</p>
+<p>Mistake: ignoring SQUIDGIE because browsing still works. Fix: browsing is not time truth; perimeter may be lying quietly.</p>
+<p>Mistake: max skew set to seconds to silence alerts. Fix: you built a squidgie muffler; restore bounds or admit defeat in writing.</p>
+<h2 id="toc-19-honest-rocks">Honest rocks</h2>
+<p>UDP signed pulses on localhost: <span class="tag impl">Implemented</span>. HMAC verify + micron witness + freq fingerprint: <span class="tag impl">Implemented</span>.</p>
+<p>Tamper abort like <code>TotalTime::verify()</code> in all NEXUS daemons: <span class="tag meta">Posture</span> — engine abort is C++. Sub-micron SEM from clock sync alone: <span class="tag meta">Correlation discipline</span>.</p>
+<p>Pool NTP fully retired globally: <span class="tag phil">Operator policy</span> — sovereign-first is default, not universal law.</p>
+<h2 id="toc-19-case-study-correlating-thermo-spikes-with-clock-">Case study — correlating thermo spikes with clock skew</h2>
+<p>An operator notices entropy spikes in LOG_THERMO coinciding with unexplained packet field bursts. Screenshots blame a browser tab. Sovereign grep shows SQUIDGIE entries 200 ms before the spike cluster — wall labels were wrong, not the fabric.</p>
+<p>Recovery: stop NTP serve to clients, re-sync sovereign, confirm three USER_OK pulses, re-export jsonl with corrected timeline. The tab may still be guilty — but time truth comes first in forensic ordering.</p>
+<p>Lesson: thermo is forward-running receipt; sovereign time is correlatable wall label. Neither replaces the other. Together they beat screenshots.</p>
+<h2 id="toc-19-case-study-lab-vm-clock-nudge">Case study — lab VM clock nudge</h2>
+<p>In a controlled lab VM, advance guest realtime by 400 ms without touching monotonic. Next sovereign sync returns receive_wall_skew and possibly mono_real_skew issues. Verdict SQUIDGIE.</p>
+<p>Document issues list in incident notes. Revert VM clock. Re-pulse until USER_OK. This drill proves the stack works — run it before production enrollment.</p>
+<h2 id="toc-19-pulse-chain-integrity-and-entropy-tag">Pulse chain integrity and entropy_tag</h2>
+<p>Each pulse increments a monotonic pulse counter stored in sovereign-time-pulse.json. Chain labels record whether pulse was operator-local or serve:client issued.</p>
+<p>entropy_tag is 12 hex chars from SHA-256 over mono_ns and pulse number — lightweight tie between thermo ethic and time receipts. Grep entropy_tag beside LOG_THERMO hashes when building cross-subsystem timelines.</p>
+<h2 id="toc-19-key-rotation-and-compromise-posture">Key rotation and compromise posture</h2>
+<p>sovereign-time-key.bin is operator root for HMAC. Compromise requires rotate: stop serve, archive old jsonl, generate new key, re-enroll receivers, document rotation in covenant file.</p>
+<p>Do not chmod key world-readable. Do not store key in git. Treat loss of key like loss of DNS admin passkey — full perimeter re-seal.</p>
+<h2 id="toc-19-integration-checklist-before-declaring-productio">Integration checklist — before declaring production time</h2>
+<p>Confirm NEXUS_SOVEREIGN_TIME_FIRST=1 in daemon env. Confirm serve bind matches network diagram. Confirm field-ntp-2026 squidgie_blocks visible in panel. Confirm chrony disabled or hooked per policy.</p>
+<p>Confirm Queen browser slice shows sovereign_time_witness true. Confirm gps-precision scripts read UTC from same receipt chain. Archive baseline receipts.jsonl.</p>
+<h2 id="toc-19-reading-receipts-jsonl-field-forensic-grammar">Reading receipts.jsonl — field forensic grammar</h2>
+<p>Each jsonl row has ts ISO and receipt object. Sort by pulse number for chain analysis. Diff freq_sum_khz between consecutive pulses during CPU stress — expect gradual change, not step discontinuities without workload.</p>
+<p>Pair micron_witness changes with Spiderweb STATUS lines. Mismatch between witness and Puny-tier sysfs manual read indicates deeper kernel spoof — escalate, do not tune skew.</p>
+<h2 id="toc-19-comparison-to-naive-ntpdate-behavior">Comparison to naive ntpdate behavior</h2>
+<p>ntpdate-style step changes wall clock instantly without signed chain or silicon witness. Under terror threat that is unacceptable for enrolled hosts. Sovereign sync is pull-verify-store, not blind step.</p>
+<p>Clients may still use NTP for coarse sync if gated — but authority is sovereign pulse health, not pool vote.</p>
+<h2 id="toc-19-multi-host-mesh-lan-enrollment-story">Multi-host mesh — LAN enrollment story</h2>
+<p>Second host syncs to operator serve bind on LAN IP when covenant allows. RTT adds receive_wall_skew slack — defaults allow generous milliseconds on LAN, tighter on WAN if you must widen bind.</p>
+<p>All enrolled hosts should share verification policy documentation — max skew, max freq delta, response playbook for SQUIDGIE.</p>
+<h2 id="toc-19-captain-ellie-log-categories-and-time">Captain Ellie LOG categories and time</h2>
+<p>LOG_MAIN and LOG_STATUS timestamps should align with sovereign utc field after sync. If engine log and sovereign utc diverge systematically, suspect dual clock sources on one host — pool still running beside sovereign.</p>
+<p>Disable pool when sovereign-first — grep pool in process list and config.</p>
+<h2 id="toc-19-spiderweb-puny-tier-manual-witness-corroboration">Spiderweb Puny tier — manual witness corroboration</h2>
+<p>Run list Hardware in prompt terminal while pulsing. Compare operationalFreqMHz narrative to freq_sum_khz in receipts. Large unexplained gaps trigger review even if verdict USER_OK — USER_OK is not absence of all anomaly, only absence of threshold issues.</p>
+<h2 id="toc-19-thermoaccountant-and-time-philosophical-alignmen">ThermoAccountant and time — philosophical alignment</h2>
+<p>Landauer discipline says erase has cost. Time discipline says forward seal has receipt. ThermoAccountant counts proxy entropy per frame; sovereign-time counts proxy entropy_tag per pulse. Both refuse silent rewind.</p>
+<h2 id="toc-19-when-to-widen-nexus-sovereign-time-bind">When to widen NEXUS_SOVEREIGN_TIME_BIND</h2>
+<p>Widen only with documented LAN trust boundary — firewall rules, MAC allowlist, VPN. Loopback is default because UDP signed pulse is powerful; exposing serve to internet without story is retired-vulnerability thinking.</p>
+<h2 id="toc-19-faq-will-sovereign-time-fix-my-laptop-sleeping">FAQ — will sovereign time fix my laptop sleeping</h2>
+<p>Sleep discontinuities affect monotonic versus realtime relationship across suspend — expect issues after resume until re-sync. Document resume playbook: pulse, sync, verify OK before serving NTP to others.</p>
+<h2 id="toc-19-faq-is-squidgie-a-false-positive-on-laptops">FAQ — is SQUIDGIE a false positive on laptops</h2>
+<p>Aggressive DVFS on battery can move freq_sum_khz quickly. Tune MAX_FREQ_DELTA only with logged thermal narrative — do not silence to comfort. Compare witness flip rate on AC versus battery in lab.</p>
+
+<h2 id="toc-19-long-form-primer-sovereign-time-as-operator-cove">Long-form primer — sovereign time as operator covenant</h2>
+<p>Sovereign time is where Chapter 11 observability meets Chapter 18 covenant. You promised to build locally, grep truth, and hold gates. None of that works if wall labels lie. A threat panel timestamp that looks authoritative while RTC was squidgied is worse than no panel — it is false confidence. Sovereign time exists to deny false confidence a home on your perimeter.</p>
+<p>Consider the full stack timeline on a single operator machine during a heavy session: AMOURANTHRTX dispatches fabric frames with sealed_time monotonic in FieldSocket; ThermoAccountant writes entropyThisFrame each tick; NEXUS captures socket sentences into field jsonl; Queen browser navigation adds honorability and WebRTC peer events; precision GPS may append sub-micron fixes; sovereign-time.py issues pulses tying realtime to micron_witness. Forensics after an incident require these streams to interleave without contradiction. If thermo spikes appear before the socket event that supposedly caused them because NTP stepped backward, you will chase the wrong process path. If GPS dots drift while clocks are clean, you suspect antenna or simulation tier — correct division of suspicion saves hours.</p>
+<p>The operator timeserver is deliberately boring technology: UDP, JSON, HMAC, append-only jsonl. Boring is good. Fancy distributed consensus algorithms make pretty papers and ugly incident responses when you cannot explain who authorized a skew. Here the authority is the operator key in NEXUS_STATE_DIR and the serve bind you document. Pulses increment. Receipts append. Receivers verify. The story is grep-able start to finish.</p>
+<p>Teach new operators three gestures before anything else: <code>serve</code>, <code>pulse</code>, <code>sync</code>. Then teach one grep: <code>SQUIDGIE</code>. Then open field-services-2026 panel slice and point at sovereign_time block. If they understand those four surfaces, they will not panic when pool NTP disagrees — they already know which source wins under sovereign-first policy.</p>
+<p>Micron witness deserves repetition because it is easily underestimated. Operators who live in software stacks forget silicon tables exist until performance tuning touches cpufreq. Spiderweb already surfaces MHz in Puny tier. Sovereign time hashes MHz into every pulse. That design choice links Chapter 10 hardware mirror literacy with Chapter 19 perimeter literacy — same sysfs read, two receipts. When witness flips fast, you are not required to immediately shout attacker; you are required to stop treating wall labels as evidence until the flip is explained. Explanation might be benign stress test; explanation might be squidgie. The verdict names the latter when thresholds trip.</p>
+<p>Cross-host deployment adds latency but not complexity. Second machine pulls pulse, verifies signature with enrolled key material, compares deltas, writes local pulse state. receive_wall_skew accounts for RTT on LAN. Enrollment documentation should list allowed skew and forbidden clock sources on child hosts — chrony pointing at pool while parent serves sovereign is a common self-inflicted wound. grep processes and configs during onboarding.</p>
+<p>Integration with field-ntp-2026 is the bridge to legacy clients that only speak NTP. Many tools still query UDP 123. Gating mode-4 replies on sovereign health means those tools fail closed when time is dirty — preferable to answering from a stepped pool clock. Stratum semantics remain meaningful: stratum 2 on normal nodes tells clients they are one hop from operator authority; stratum 1 on last host tells survivors there is no higher authority left on the wire. Do not abuse stratum 1 on everyday laptops — honesty labels matter in NTP sociology as much as in Chapter 12 rocks.</p>
+<p>Captain Ellie alignment is not mythology. TotalTime::seal and TotalTime::verify are real C++ paths operators grep via engine logs. ellie-last-host.py verify is real Python path operators grep via covenant files. sovereign-time.py sync is real Python path operators grep via jsonl. Three seals, one ethic: forward only, verify before trust, abort or gate on failure. When students ask which seal is supreme, answer by scope: in-process fabric uses FieldSocket sealed_time; perimeter uses sovereign pulses; last host uses ellie-last-host seal at boot. Scopes nest, they do not compete.</p>
+<p>Landauer and Shannon sit in the creditor chapters, but time is the hidden variable in every entropy story. Shannon surprise without timestamp is a bag of letters. Thermo entropy without timeline is a number without narrative. Sovereign time does not replace thermodynamic measurement — it orders measurement so narratives can be defended in front of another human who was not at your keyboard. That is operator covenant in practice.</p>
+<p>Honest rocks close this primer: implemented UDP signed pulses, implemented verify paths, posture fail-closed parity with engine abort, metaphor correlation for sub-micron SEM claims, philosophy for pool retirement policy. We do not hide rocks. If your deployment cannot run serve on loopback because container networking forbids it, document the container exception in writing and widen bind with firewall story — do not pretend default loopback is optional because convenience complained.</p>
+
+<h2 id="toc-19-architecture-diagram-in-prose-pulse-lifecycle">Architecture diagram in prose — pulse lifecycle</h2>
+<p><strong>Issue:</strong> operator host samples mono_ns, realtime_ns, sysfs freqs, computes micron_witness and freq_sum_khz, increments pulse counter, signs body, appends receipts.jsonl, optionally serves UDP response.</p>
+<p><strong>Transit:</strong> UDP datagram carries JSON receipt to enrolled receiver; no TLS in v1 — LAN trust boundary is operator responsibility; terror-threat posture assumes bind restriction and firewall.</p>
+<p><strong>Verify:</strong> receiver validates sig, compares to prev pulse, evaluates skew and witness flip rules, records verdict USER_OK or SQUIDGIE, updates local pulse state.</p>
+<p><strong>Consume:</strong> field-ntp-2026 reads sovereign cache; panel reads status json; Queen slice reads sovereign_time_witness flag; operator grep archives jsonl for incidents.</p>
+<p><strong>Recover:</strong> fix clock source, rotate key if compromised, re-pulse until three consecutive OK, re-enable gated services, document incident with issues list preserved — never delete SQUIDGIE rows from jsonl.</p>
+
+<h2 id="toc-19-operator-runbook-template-sovereign-time-inciden">Operator runbook template — sovereign time incident</h2>
+<p><strong>Detect:</strong> grep SQUIDGIE in receipts.jsonl or panel sovereign slice shows dirty cache. <strong>Contain:</strong> stop field-ntp-2026 client serve if you are downstream; do not delete jsonl. <strong>Diagnose:</strong> read issues list in last verify block — signature, skew, witness, freq. <strong>Remediate:</strong> eliminate dual clock sources; fix VM/host clock; rotate key if sig bad. <strong>Verify:</strong> three consecutive USER_OK from sync. <strong>Restore:</strong> re-enable NTP gate; archive incident bundle. <strong>Postmortem:</strong> correlate thermo and packet field with corrected timeline.</p>
+
+
+<table><thead><tr><th>Clock</th><th>Role</th><th>Trust</th></tr></thead>
+<tbody>
+<tr><td><strong>Monotonic</strong> (<code>CLOCK_MONOTONIC</code>)</td><td>Ordering — ticks never go backward</td><td>Host kernel</td></tr>
+<tr><td><strong>Realtime</strong> (<code>CLOCK_REALTIME</code>)</td><td>Wall labels for grep and correlation</td><td><strong>Your timeserver only</strong></td></tr>
+<tr><td><strong>Sysfs freq witness</strong></td><td>Spiderweb Puny tier — MHz per core</td><td>Read-only hardware</td></tr>
+</tbody></table>
+
+<div class="callout axiom">
+<strong>Seal forward.</strong> Session genesis and pulse chains only advance.<br>
+<strong>Verify at receive.</strong> Every downstream host double-checks before trusting wall labels.<br>
+<strong>Grep SQUIDGIE.</strong> Tamper is a verdict, not a vibe.
+</div>
+
+<pre class="eq">NEXUS_SOVEREIGN_TIME_BIND=127.0.0.1 python3 sovereign-time.py serve
+python3 sovereign-time.py pulse
+python3 sovereign-time.py sync 127.0.0.1 9123
+grep SQUIDGIE /var/lib/nexus-shield/sovereign-time-receipts.jsonl</pre>
+
+<pre class="eq">micron_witness = sha256(mono_ns | cpu0:freq | cpu1:freq | ...)[0:16]
+TotalTime::seal() → FieldSocket::sealed_time (in-process)
+sovereign-time.py pulse → HMAC receipt chain (cross-host)</pre>
+
+<h2 id="toc-19-operator-drills">Operator drills</h2>
+<div class="callout drill"><strong>Drill 19-A — Baseline seal.</strong> Serve, pulse, sync, archive receipts. Goal: three consecutive <code>USER_OK</code> verdicts with stable micron_witness across 60 seconds idle.</div>
+<div class="callout drill"><strong>Drill 19-B — Grep discipline.</strong> Run engine + NEXUS 10 minutes. Grep SQUIDGIE in sovereign logs and THERMO in engine log. Goal: zero unexplained squidgie; thermo moves when fabric moves.</div>
+<div class="callout drill"><strong>Drill 19-C — Freq witness read.</strong> While pulsing, read scaling_cur_freq manually. Goal: witness changes only on expected DVFS steps.</div>
+<div class="callout drill"><strong>Drill 19-D — NTP gate.</strong> With field-ntp-2026.py running, confirm NTP replies stop when sovereign cache dirty after lab skew test.</div>
+<div class="callout drill"><strong>Drill 19-E — Cross-host enrollment.</strong> Sync from second machine with shared state dir or enrolled key. Goal: document latency and receive_wall_skew within bounds.</div>
+
+<h2 id="toc-19-study-questions">Study questions</h2>
+<ol>
+<li>Why three clocks instead of CLOCK_REALTIME alone?</li>
+<li>Difference between TotalTime::seal() and cross-host sovereign pulses?</li>
+<li>Define SQUIDGIE using three detection paths from verify_receipt().</li>
+<li>How is micron_witness computed; what does fast flip imply?</li>
+<li>When GPS and sovereign time disagree, which wins and why?</li>
+<li>What does NEXUS_SOVEREIGN_TIME_FIRST=1 change?</li>
+<li>Where are signing keys stored; what file mode on create?</li>
+<li>How does field-ntp-2026.py gate on sovereign health?</li>
+<li>Why is single-source NTP discipline flow 20 not anti-NTP?</li>
+<li>What forensic artifacts do you archive after a SQUIDGIE incident?</li>
+</ol>
+
+<p><a href="20-public-services.html">Chapter 20 — Public DNS, DHCP &amp; Time →</a></p>
+
+<p>Sovereign time receipts should be archived with the same discipline as packet field jsonl and thermo log exports. When an auditor asks prove this connection happened before that entropy spike, you interleave three files by pulse number and utc — not by screenshot collage.</p>
+<p>Pool NTP clients on the same host as sovereign serve are a configuration smell. grep unit files and crontab for ntpd chrony systemd-timesyncd. Sovereign-first means those services are disabled or slaved to gated NTP — document the chosen pattern.</p>
+<p>Hypervisor guests enrolled in sovereign mesh should disable host time sync override or verify after every migration. vMotion without re-sync is a classic squidgie source in enterprise labs.</p>
+<p>Precision GPS operators should log sovereign pulse number alongside each ENU fix in local tooling. Correlation field makes sub-micron claims defensible in postmortems.</p>
+<p>Teaching sovereign time to students: use lab VM skew first, production stories second. Students remember SQUIDGIE after they cause it safely themselves.</p>
+<p>The entropy_tag on pulses is twelve hex characters — small enough to grep, large enough to disambiguate adjacent pulses in merged logs.</p>
+<p>Frame-rate jitter in AMOURANTHRTX cannot rewrite sealed_time — that invariant is why session-local and cross-host seals are named differently. Do not merge the concepts when writing runbooks.</p>
+<p>NEXUS daemon restarts should not rotate signing keys automatically — stability of key material is feature for enrolled receivers.</p>
+<p>When LAST_HOST mode serves global TIME, sovereign serve bind may widen — document firewall rules alongside covenant invocation.</p>
+<p>Micron witness flips during kernel cpufreq governor stress tests are expected — witness is witness, not verdict alone. Verdict combines witness speed with skew and freq sum delta.</p>
+<p>Sovereign time receipts should be archived with the same discipline as packet field jsonl and thermo log exports. When an auditor asks prove this connection happened before that entropy spike, you interleave three files by pulse number and utc — not by screenshot collage.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch19">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>TotalTime::seal()</td><td>Session genesis lock</td><td><span class="tag impl">Implemented</span></td><td><code>FieldSocket sealed_time</code></td></tr><tr><td>Sovereign pulse</td><td>HMAC time forward</td><td><span class="tag impl">Implemented</span></td><td><code>sovereign-time.py</code></td></tr><tr><td>SQUIDGIE</td><td>Verify fail verdict</td><td><span class="tag impl">Implemented</span></td><td><code>Terror-threat posture</code></td></tr><tr><td>Pool consensus alone</td><td>NTP trust</td><td><span class="tag meta">Metaphor</span></td><td><code>Insufficient — operator-owned</code></td></tr></tbody></table>
+<pre class="eq">seal → pulse → verify → USER_OK | SQUIDGIE</pre>
+<pre class="eq">NEXUS_SOVEREIGN_TIME_BIND=127.0.0.1 python3 sovereign-time.py serve</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>NEXUS-Shield/sovereign-time.py</code></li><li><code>Navigator/engine/TotalTime.cpp</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-19-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Sovereign time: seal forward, verify at receive, SQUIDGIE when clocks lie. Operator-owned pulses, not pool consensus alone.</p>
+</div>
+
+    <section class="v6-addendum" id="v6-sovereign-time">
+  <h3>v6 — sovereign time meld</h3>
+  <p><code>ironclad:time:1</code> — time is <strong>linear</strong>, sealed via <code>linear_ns</code>, not geometry <code>t</code>.
+  Host freeze resume runs <code>resume-witness</code> so gaps across soft/mem/disk freeze stay operator-visible.
+  G1ID melds absorb sovereign clock from <code>lib/sovereign-time.py</code> — wall clock is witness-only.</p>
+</section>
+    <nav class="chapter-nav bottom"><a class="btn secondary" href="18-operator-covenant.html">← Ch 18</a> <a class="btn" href="20-public-services.html">Ch 20 →</a></nav>
+  </main>
+  <footer><p>Field Technology v6 · Serious book · We do not hide the rocks.</p></footer>
+  <script src="../js/reader.js" defer></script>
+</body>
+</html>

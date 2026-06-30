@@ -1,0 +1,10 @@
+{
+  "id": "gc",
+  "title": "GameCube",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/gc/gc.h7c",
+  "cover": "/library/assets/devices/gc.png",
+  "ready": true
+}

@@ -1,0 +1,95 @@
+{
+  "schema": "field-sovereign-stack-meld/v1",
+  "title": "Sovereign stack meld — NEXUS C2 · KILROY · AmmoOS · blocks · Queen",
+  "motto": "Fused core first. CHIPS and blocks nested tight. Queen shell last. Plate meld seals — nobody in between.",
+  "gap_policy": {
+    "reject_interlopers": true,
+    "meld_seal": "field-plate-meld-runtime.json",
+    "chain_hash_required": true,
+    "allowed_between_tiers": [],
+    "deny_foreign_bus": true,
+    "deny_unmeld_layers": true
+  },
+  "tiers_bottom_up": [
+    {
+      "order": 0,
+      "id": "hardware",
+      "label": "Hardware witness",
+      "role": "witness_and_wire",
+      "break_policy": "none",
+      "plates": []
+    },
+    {
+      "order": 1,
+      "id": "sovereign_core",
+      "label": "NEXUS C2 · KILROY · AmmoOS",
+      "role": "fused_sovereign_core",
+      "fused": true,
+      "no_gap_after": true,
+      "members": ["nexus_c2", "kilroy", "ammoos"],
+      "plates": ["c2_taskbar", "field_host_desktop", "kernel", "monster_shell"],
+      "modules": [
+        "lib/threat-panel-http.py",
+        "lib/field-host-desktop.py",
+        "lib/field-monster-shell.py",
+        "lib/field-stack-layer.py",
+        "Queen/lib/queen-kilroy.py"
+      ],
+      "surfaces": {
+        "c2": "http://127.0.0.1:9477/field",
+        "command": "http://127.0.0.1:9477/command"
+      },
+      "motto": "One melded core — command deck, KILROY kernel witness, AmmoOS desktop. No third party between."
+    },
+    {
+      "order": 2,
+      "id": "ammoos_blocks",
+      "label": "CHIPS · codecs · field blocks",
+      "role": "nested_blocks",
+      "parent": "sovereign_core",
+      "no_interloper": true,
+      "plates": ["ammoos_blocks", "chips_plate_stack", "chips_core", "ironclad_chips"],
+      "doctrine": "data/field-ammoos-blocks-doctrine.json",
+      "children_first": ["chips", "chips_plate_stack", "codecs", "thermal_manager"],
+      "motto": "CHIP-style framework blocks — thermal-gated, held inside AmmoOS, not siblings."
+    },
+    {
+      "order": 3,
+      "id": "queen_shell",
+      "label": "Queen secure browser",
+      "role": "outer_shell_only",
+      "wraps": ["sovereign_core", "ammoos_blocks"],
+      "display_technology": "queen_canvas",
+      "plates": ["shell_dock"],
+      "port": 9481,
+      "shell": "/world/browser.html",
+      "modules": [
+        "Queen/lib/queen-world.py",
+        "Queen/lib/queen-field-browser.py",
+        "lib/field-queen-browser.py"
+      ],
+      "motto": "Queen launches the browser and displays the fused stack — nothing slips between blocks and shell."
+    }
+  ],
+  "tier_order": ["hardware", "sovereign_core", "ammoos_blocks", "queen_shell"],
+  "interloper_denied": [
+    "host_wm_primary",
+    "foreign_browser_stack",
+    "unmeld_third_party_bus",
+    "sibling_ammoos_outside_queen",
+    "gap_between_core_and_blocks",
+    "gap_between_blocks_and_queen"
+  ],
+  "plate_meld": {
+    "module": "lib/field-plate-meld.py",
+    "orchestrator": "lib/field-plate-meld-orchestrator.py",
+    "fuse_on_boot": true,
+    "read_meld_first": true
+  },
+  "env": {
+    "FIELD_SOVEREIGN_STACK_MELD": "1",
+    "AMMOOS_CORE_FUSED": "1",
+    "QUEEN_SHELL_OUTER_ONLY": "1",
+    "REJECT_STACK_INTERLOPERS": "1"
+  }
+}

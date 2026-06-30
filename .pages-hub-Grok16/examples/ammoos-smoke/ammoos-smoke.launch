@@ -1,0 +1,35 @@
+{
+  "schema": "queen-launch/v1",
+  "title": "ammoos-smoke",
+  "chamber_root": "${GROK16_ROOT}/examples/ammoos-smoke",
+  "entry": "CMakeLists.txt",
+  "runtime": "cmake",
+  "profile": "ammoos",
+  "cwd": ".",
+  "env": {
+    "G16_BELT_PROFILE": "belt_2_0",
+    "G16_AMMOOS_PROFILE": "ammoos"
+  },
+  "chamber": {
+    "mode": "folder_mirror",
+    "include": [
+      "**/*"
+    ],
+    "exclude": [
+      "build",
+      "dist",
+      ".git",
+      "__pycache__"
+    ]
+  },
+  "uncompiled": true,
+  "organized_field": {
+    "schema": "queen-organized-field/v1",
+    "field_depth": 0,
+    "inspect_files": true,
+    "compile": true,
+    "compile_gate": true,
+    "free_meld": true
+  },
+  "notes": "AmmoOS Grok Build smoke — g16 ammoos profile + ironclad doctrine gate"
+}

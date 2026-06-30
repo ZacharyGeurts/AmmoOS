@@ -1,0 +1,10 @@
+{
+  "id": "magnavox_odyssey",
+  "title": "Magnavox Odyssey",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/magnavox_odyssey/magnavox_odyssey.h7c",
+  "cover": "/library/assets/devices/magnavox_odyssey.png",
+  "ready": true
+}

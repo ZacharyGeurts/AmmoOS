@@ -1,0 +1,37 @@
+{
+  "schema": "field-os-keybindings/v1",
+  "title": "AmmoOS OS Keybindings",
+  "motto": "Kernel evdev + Ironclad desktop — CHIP-simple launcher, sovereign keyboard.",
+  "framework": "field-chips-plate",
+  "kernel_module": "lib/field-os-keybindings.py",
+  "desktop_module": "panel/assets/field-os-keybindings.js",
+  "keyboard_sovereign": "lib/field-keyboard-sovereign.py",
+  "ironclad_bus": "panel/assets/ironclad-bus.js",
+  "defaults": {
+    "engage_on_boot": true,
+    "kernel_listen": true,
+    "desktop_capture": true
+  },
+  "bindings": [
+    {"id": "start_menu", "chord": "Meta", "keys": ["Meta"], "action": "toggle_start_menu", "desktop": true, "label": "Start menu"},
+    {"id": "start_menu_classic", "chord": "Control+Escape", "keys": ["Control", "Escape"], "action": "toggle_start_menu", "desktop": true, "label": "Start menu (classic)"},
+    {"id": "show_desktop", "chord": "Meta+d", "keys": ["Meta", "d"], "action": "show_desktop", "desktop": true, "kernel": true, "label": "Show desktop"},
+    {"id": "launch_view", "chord": "Meta+e", "keys": ["Meta", "e"], "action": "launch", "target": "view", "desktop": true, "kernel": true, "label": "View / Files"},
+    {"id": "launch_browser", "chord": "Meta+b", "keys": ["Meta", "b"], "action": "launch", "target": "queen-browser", "desktop": true, "kernel": true, "label": "Queen Browser"},
+    {"id": "launch_terminal", "chord": "Control+Alt+t", "keys": ["Control", "Alt", "t"], "action": "launch", "target": "queen-terminal", "desktop": true, "kernel": true, "label": "Terminal"},
+    {"id": "run_dialog", "chord": "Meta+r", "keys": ["Meta", "r"], "action": "launch", "target": "queen-terminal", "desktop": true, "label": "Run"},
+    {"id": "lock", "chord": "Meta+l", "keys": ["Meta", "l"], "action": "launch", "target": "field-lock", "desktop": true, "kernel": true, "label": "Lock"},
+    {"id": "alt_tab", "chord": "Alt+Tab", "keys": ["Alt", "Tab"], "action": "alt_tab", "desktop": true, "label": "Switch programs"},
+    {"id": "close_window", "chord": "Alt+F4", "keys": ["Alt", "F4"], "action": "close_window", "desktop": true, "label": "Close window"},
+    {"id": "monster_cad", "chord": "Control+Alt+Delete", "keys": ["Control", "Alt", "Delete"], "action": "monster", "desktop": true, "label": "Monster rescue"},
+    {"id": "monster_taskmgr", "chord": "Control+Shift+Escape", "keys": ["Control", "Shift", "Escape"], "action": "monster", "desktop": true, "label": "Monster task manager"},
+    {"id": "kilroy_f9", "chord": "F9", "keys": ["F9"], "action": "kilroy_browser", "kernel": true, "desktop": true, "label": "KILROY / Queen Browser"},
+    {"id": "escape", "chord": "Escape", "keys": ["Escape"], "action": "dismiss", "desktop": true, "label": "Dismiss overlays"}
+  ],
+  "launch_targets": {
+    "view": {"id": "view", "name": "View", "exec": "http://127.0.0.1:9481/world/view.html", "shell": true},
+    "queen-browser": {"id": "queen-browser", "name": "Queen Browser", "exec": "http://127.0.0.1:9481/world/browser.html", "shell": true},
+    "queen-terminal": {"id": "queen-terminal", "name": "Terminal", "exec": "http://127.0.0.1:9481/world/?dock=terminal", "shell": true},
+    "field-lock": {"id": "field-lock", "name": "Lock", "exec": "/field-lock", "shell": true}
+  }
+}

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>4 — Irreversibility &amp; Receipts · Field Technology v6</title>
+  <meta name="description" content="Chapter 4: Irreversibility &amp; Receipts. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Field_Primer/chapters/04-entropy.html" />
+  <meta name="theme-color" content="#040810" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon.png" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Field Technology v6" />
+  <meta property="og:title" content="4 — Irreversibility &amp; Receipts · Field Technology v6" />
+  <meta property="og:description" content="Chapter 4: Irreversibility &amp; Receipts. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta property="og:url" content="https://zacharygeurts.github.io/Field_Primer/chapters/04-entropy.html" />
+  <meta property="og:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/entropy-chapter.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Entropy accounting" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ZacharyGeurts" />
+  <meta name="twitter:creator" content="@ZacharyGeurts" />
+  <meta name="twitter:title" content="4 — Irreversibility &amp; Receipts · Field Technology v6" />
+  <meta name="twitter:description" content="Chapter 4: Irreversibility &amp; Receipts. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta name="twitter:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/entropy-chapter.jpg" />
+  <meta name="twitter:image:alt" content="Entropy accounting" />
+  <link rel="stylesheet" href="../css/field-primer.css" />
+  <link rel="stylesheet" href="../css/chapters.css" />
+  <link rel="stylesheet" href="../css/reader.css" />
+</head>
+<body class="chapter-page accent-thermo">
+  <nav class="top"><div class="inner">
+    <a class="logo" href="../index.html">FIELD TECHNOLOGY <span class="v6-badge">v6</span></a>
+    <ul>
+      <li><a href="../creditors/index.html">Creditors</a></li>
+      <li><a href="../index.html#love-god">Love &amp; God</a></li>
+      <li><a href="../index.html#chapters">Chapters</a></li>
+      <li><a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/04-Entropy-Receipts-And-Oracles">Wiki</a></li>
+    </ul>
+  </div></nav>
+  <header class="chapter-hero" style="background-image:url('../assets/images/entropy-chapter.jpg')">
+    <div class="chapter-hero-overlay"></div>
+    <div class="chapter-hero-content">
+      <p class="eyebrow">Chapter 4 · Field Technology v6</p>
+      <h1>Irreversibility &amp; Receipts</h1>
+      
+    </div>
+  </header>
+  <main class="chapter-main">
+    <nav class="chapter-nav"><a class="btn secondary" href="03-thermodynamics.html">← Ch 3</a> <a class="btn" href="05-packet-field.html">Ch 5 →</a></nav>
+    <div class="objectives">
+<h2 id="toc-04-learning-objectives">Learning objectives</h2>
+<ol>
+<li>Separate ThermoAccountant, entropy floor, and Shannon oracle — same word, different layers.</li>
+<li>Describe ThermoAccountant fields and data_bus mirrors.</li>
+<li>State Landauer bound as theory and proxy entropy as engine rock.</li>
+<li>Operate week-one grep discipline for THERMO lines.</li>
+<li>Explain entropy floor as second-law engineering bias.</li>
+<li>Configure storm thresholds philosophy for NEXUS oracle.</li>
+</ol>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-04-entropy-is-the-receipt-that-time-ran-forward">Entropy is the receipt that time ran forward</a></li><li><a href="#toc-04-thermoaccountant-engine-layer">ThermoAccountant — engine layer</a></li><li><a href="#toc-04-landauer-bound-theory">Landauer bound — theory</a></li><li><a href="#toc-04-entropy-floor-fabric-bias">Entropy floor — fabric bias</a></li><li><a href="#toc-04-shannon-oracle-nexus-layer">Shannon oracle — NEXUS layer</a></li><li><a href="#toc-04-operator-grep-week-one-discipline">Operator grep — week one discipline</a></li><li><a href="#toc-04-storm-thresholds-pastoral-care">Storm thresholds — pastoral care</a></li><li><a href="#toc-04-failure-modes">Failure modes</a></li><li><a href="#toc-04-chapter-summary">Chapter summary</a></li><li><a href="#toc-04-study-questions">Study questions</a></li><li><a href="#toc-04-freeenergyincome-sealed-time-and-input">freeEnergyIncome — sealed time and input</a></li><li><a href="#toc-04-steps-counter-dispatch-generations">steps counter — dispatch generations</a></li><li><a href="#toc-04-maintenance-cost-narrative">Maintenance cost narrative</a></li><li><a href="#toc-04-shannon-calm-alert-storm-duty-cycle">Shannon calm alert storm — duty cycle</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-04-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Entropy is the receipt that time ran forward — and the most abused word in security. On the way you will separate three layers (ThermoAccountant, entropy floor, Shannon oracle), honor Landauer and Shannon in their proper seats, and run grep workbooks that refuse conflation.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/entropy-chapter.jpg" alt="Entropy accounting" loading="lazy" /><figcaption>On the way — Entropy accounting</figcaption></figure>
+<ul class="on-the-way-journey"><li>ThermoAccountant field-by-field guide</li><li>Proxy versus joules — the rock</li><li>NEXUS storm thresholds on files</li><li>Failure catalog for layer violations</li></ul>
+</div>
+
+
+<h2 id="toc-04-entropy-is-the-receipt-that-time-ran-forward">Entropy is the receipt that time ran forward</h2>
+<p>Entropy is the most abused word in security and the most honest word in thermodynamics. This chapter says both meanings out loud and refuses to let one pretend to be the other.</p>
+<p>Time is linear means irreversibility leaves receipts — you cannot ungrep a frame. Energy can be moved means entropy proxy rises when coupling and probes do work. Reality is 3D means receipts land at bindings and bus slots you can address.</p>
+
+<figure class="figure"><img src="../assets/images/entropy-chapter.jpg" alt="Entropy accounting" loading="lazy" /><figcaption>Figure 4.1 — Irreversibility: fabric floor, frame proxy, file randomness. Three layers, one vocabulary, three products.</figcaption></figure>
+
+<h2 id="toc-04-thermoaccountant-engine-layer">ThermoAccountant — engine layer</h2>
+<p><span class="tag impl">Vulkan binding 2.</span> Populated every <code>dispatch_canvas()</code>:</p>
+<figure class="figure"><img src="../assets/images/chapters/ch04-entropy-layers.jpg" alt="Three entropy layers" loading="lazy" /><figcaption>Figure 4.2 — Three layers: GPU proxy, fabric floor, file oracle — same word, different plates.</figcaption></figure>
+
+<pre class="eq">entropyThisFrame   — Landauer proxy + field work + probes
+avgBoundaryThermo  — mean boundary temperature / entropy density
+prevMaintCost      — cost to preserve previous-frame coherence
+freeEnergyIncome   — sealed time + input activity
+steps              — dispatch counter</pre>
+<p>Mirrored to <code>data_bus[24–28]</code> for HUD and grep. THERMO lines in stderr are this structure's shadow. Chapter 7 stresses canvas-agnostic obligation — x86 HUD does not excuse skipping receipts.</p>
+
+<h3>entropyThisFrame — proxy integral</h3>
+<p>Components: field work from coupling, probe dissipation from mouse injection, maintenance cost for previous-frame coherence, host x86 heat when assist runs. <span class="tag meta"><strong>Rock:</strong> Not joules from nvidia-smi.</span> Comparative signal — spot stuck zero, runaway spikes, broken dispatch.</p>
+
+<h3>Boundary and maintenance</h3>
+<p><code>avgBoundaryThermo</code> summarizes boundary channel behavior — where fabric meets presentation. <code>prevMaintCost</code> is the price of memory across ticks — you cannot rewind for free.</p>
+
+<h2 id="toc-04-landauer-bound-theory">Landauer bound — theory</h2>
+<div class="eq">E_min = k_B T ln 2</div>
+<p>Minimum energy to erase one bit at temperature T. Landauer's insight is why irreversibility has a floor in physics — not optional decoration for GPU demos.</p>
+<p>Chapter 13 deep dive honors Landauer without walking back proxy label. Theory inspires vocabulary; stderr shows implementation.</p>
+
+<h2 id="toc-04-entropy-floor-fabric-bias">Entropy floor — fabric bias</h2>
+<p><code>clearFieldImages()</code> seeds thermo with ~0.015 minimum — prevents unphysical reversibility. Second law as engineering: diffusion always injects minimum noise. You cannot undo a frame by wishing.</p>
+<p>Floor is <span class="tag impl">implemented</span> bias, not a claim the GPU measures Kelvin at the junction.</p>
+
+<h2 id="toc-04-shannon-oracle-nexus-layer">Shannon oracle — NEXUS layer</h2>
+<div class="eq">H = −Σ p_i log₂ p_i</div>
+<p>High H on file payloads raises storm polling — defensive signal, not automatic verdict. Packed, encrypted, obfuscated payloads score high. Thresholds calm / alert / storm tune daemon polling like vitals, not sentence.</p>
+<p><span class="tag impl">NEXUS-Shield.</span> Separate from ThermoAccountant — conflating them is vendor-dashboard lie.</p>
+
+<table><thead><tr><th>Layer</th><th>Measures</th><th>Product</th></tr></thead>
+<tbody>
+<tr><td>ThermoAccountant</td><td>Frame entropy proxy</td><td>AMOURANTHRTX</td></tr>
+<tr><td>Entropy floor</td><td>Fabric minimum noise</td><td>AMOURANTHRTX</td></tr>
+<tr><td>Entropy Oracle</td><td>File randomness</td><td>NEXUS-Shield</td></tr>
+</tbody></table>
+<p><strong>Same word. Different layers. Do not conflate.</strong></p>
+
+<h2 id="toc-04-operator-grep-week-one-discipline">Operator grep — week one discipline</h2>
+<pre class="eq">./linux.sh run 2>&1 | tee run.log
+grep -E 'THERMO|entropy|Boundary|prevMaint' run.log</pre>
+<p>If two entropies disagree, do not panic — they measure different layers. Panic is when marketing pretends one number does both jobs.</p>
+
+<h2 id="toc-04-storm-thresholds-pastoral-care">Storm thresholds — pastoral care</h2>
+<p>Shannon oracle changes how hard the perimeter watches — 94/6 posture applied to bytes. High H is nurse call, not auto-KILL. Chapter 14 expands oracle; Chapter 5 expands gatekeeper separation.</p>
+
+<h2 id="toc-04-failure-modes">Failure modes</h2>
+<table><thead><tr><th>Mode</th><th>Symptom</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>Layer conflation</td><td>Zip H compared to entropyThisFrame</td><td>Table above</td></tr>
+<tr><td>Joule fantasy</td><td>Watt billing from proxy</td><td>Ch. 13 rock</td></tr>
+<tr><td>Zero entropy pride</td><td>Fabric moves, entropy 0</td><td>Broken dispatch</td></tr>
+<tr><td>Oracle as judge</td><td>Storm → auto block</td><td>Philosophy: corroborate</td></tr>
+</tbody></table>
+
+<h2 id="toc-04-chapter-summary">Chapter summary</h2>
+<p>Entropy here is three layers — frame proxy, fabric floor, file oracle. Landauer is theory; proxy is metaphor with grep value. Shannon is NEXUS storm gauge. Label before you compare.</p>
+<p>Tributes: <a href="../creditors/landauer.html">Landauer</a> · <a href="../creditors/shannon.html">Shannon</a></p>
+
+<h2 id="toc-04-study-questions">Study questions</h2>
+<ol>
+<li>List ThermoAccountant fields and bus mirrors.</li>
+<li>State Landauer bound and proxy rock in one sentence each.</li>
+<li>Why entropy floor ~0.015?</li>
+<li>When does high Shannon H matter — and what action does it <em>not</em> trigger?</li>
+<li>Run grep drill; classify each line's layer.</li>
+<li>What panic is justified vs not when entropies disagree?</li>
+<li>Cross-link Ch. 13–14 for deep dives.</li>
+</ol>
+<p><a href="chapters/05-packet-field.html">Chapter 5 — Defensive Perimeter →</a></p>
+
+<h2 id="toc-04-freeenergyincome-sealed-time-and-input">freeEnergyIncome — sealed time and input</h2>
+<p><code>freeEnergyIncome</code> tracks sealed time contribution and input activity — income side of thermodynamic story. Not free energy in Gibbs sense without labels — <span class="tag meta">metaphorical income</span> in proxy accounting. Still grep-useful when input quiescent but income high — investigate sealed time path.</p>
+
+<h2 id="toc-04-steps-counter-dispatch-generations">steps counter — dispatch generations</h2>
+<p><code>steps</code> in ThermoAccountant increments with dispatch generations — temporal witness beside entropy magnitudes. Compare sessions by steps vs entropy slope, not single frame worship.</p>
+
+<h2 id="toc-04-maintenance-cost-narrative">Maintenance cost narrative</h2>
+<p><code>prevMaintCost</code> pays coherence with previous frame — memory is not free. Video operators feel this as ghosting removal cost; field operators see it as stderr line. Irreversibility of maintenance is feature, not bug.</p>
+
+<h2 id="toc-04-shannon-calm-alert-storm-duty-cycle">Shannon calm alert storm — duty cycle</h2>
+<p>Daemon polling duty shifts with oracle thresholds — calm conserves attention; storm earns scrutiny. Pastoral care engineering: do not exhaust operator on false positives; do not sleep on encrypted exfil habit.</p>
+
+<h2 id="toc-04-file-entropy-versus-connection-entropy">File entropy versus connection entropy</h2>
+<p>NEXUS may score payload surprise on disk and on wire — still Shannon layer, not ThermoAccountant. Wire habits live in packet field; file habits live in oracle. Cross-correlate; do not merge numbers.</p>
+
+<h2 id="toc-04-chapter-13-landauer-deep-dive-pointer">Chapter 13 Landauer deep dive pointer</h2>
+<p>Chapter 13 restates proxy rock without walking back label. Lab calorimetry future would change label, not delete history. Honesty is versioned truth.</p>
+
+<h2 id="toc-04-chapter-14-shannon-oracle-pointer">Chapter 14 Shannon oracle pointer</h2>
+<p>Chapter 14 expands storm thresholds and separation from GPU. Read after this chapter; do not conflate study questions across layers.</p>
+
+<h2 id="toc-04-entropy-in-kilroy-kernel-parallel">Entropy in KILROY kernel parallel</h2>
+<p>KILROY FCC uses entropy feedback when kernel Field Die active — userspace and kernel share vocabulary, different measurement surfaces. Chapter 9 mentions parallel; Chapter 4 keeps layers separate per product.</p>
+
+<h2 id="toc-04-grep-culture-as-forensic-defense">Grep culture as forensic defense</h2>
+<p>Chapter 11 makes grep weekly habit. Chapter 4 makes entropy grep the week-one sacrament: THERMO, entropy, Boundary, prevMaint. If you cannot grep, you cannot defend fabric receipts.</p>
+
+<h2 id="toc-04-extended-treatment-thermoaccountant-field-by-fie">Extended treatment — ThermoAccountant field-by-field operator guide</h2>
+<p><code>entropyThisFrame</code>: primary proxy integral for frame irreversibility — field work, probes, maintenance, host assist heat when active. Use comparatively session-to-session, not as wattmeter.</p>
+<p><code>avgBoundaryThermo</code>: boundary channel summary — useful when center calm but edges hot; probe leaks and presentation coupling show here first.</p>
+<p><code>prevMaintCost</code>: price of coherence with previous frame — rises when temporal maintenance expensive; honest receipt for invisible work.</p>
+<p><code>freeEnergyIncome</code>: sealed time and input activity income side — metaphorical income in proxy space; investigate when idle yet high.</p>
+<p><code>steps</code>: dispatch generation counter — temporal axis for plotting entropy trends.</p>
+
+<h2 id="toc-04-extended-treatment-shannon-oracle-operational-gu">Extended treatment — Shannon oracle operational guide</h2>
+<p>Compute H on byte histogram of file or payload sample. Low H: English log, repetitive protocol, obvious structure. High H: encrypted, packed, compressed, obfuscated. Storm threshold raises daemon duty — nurse call, not gavel. Pair high H with packet field egress story before KILL.</p>
+
+<h2 id="toc-04-extended-treatment-entropy-floor-and-second-law-">Extended treatment — entropy floor and second law engineering</h2>
+<p>clearFieldImages() seeds ~0.015 minimum thermo — prevents zero-entropy unphysical baseline. Combined with EntropyFloor knob and diffusion injection, fabric refuses perfect reversibility. You cannot wish away last frame.</p>
+
+<h2 id="toc-04-extended-treatment-landauer-and-proxy-honesty-co">Extended treatment — Landauer and proxy honesty contract</h2>
+<p>Landauer: E_min = k_B T ln 2 per erased bit at temperature T. Engine: entropyThisFrame is proxy integral, not calorimetry. Chapter 13 deepens without revoking rock. If future calorimetry aligns proxy, label evolves — honesty is versioned.</p>
+
+<h2 id="toc-04-extended-grep-workbook-ten-sessions">Extended grep workbook — ten sessions</h2>
+<p>Session 1–3: baseline idle, Classic, x86. Session 4–6: inject sweeps. Session 7–8: coupling sweeps. Session 9: NEXUS file H only — no GPU. Session 10: write comparison essay three layers. Workbook is literacy graduation.</p>
+
+<h2 id="toc-04-entropy-layers-classroom-lecture-transcript-styl">Entropy layers — classroom lecture transcript style</h2>
+<p>Instructor: “Same word, three layers.” Student: “ThermoAccountant?” Instructor: “Frame proxy, AMOURANTHRTX, binding 2.” Student: “Entropy floor?” Instructor: “Fabric minimum noise seed, still AMOURANTHRTX, not joules.” Student: “Oracle?” Instructor: “Shannon H on files, NEXUS, storm gauge.” Student: “Can I add them?” Instructor: “Only if you hate honest dashboards.”</p>
+<p>This fake transcript encodes real discipline. Layer violations are the most common entropy failure mode in security teams learning Field stack — one dashboard number pretending to be three witnesses.</p>
+
+<h2 id="toc-04-landauer-classroom-numeric-intuition-without-bil">Landauer classroom — numeric intuition without billing</h2>
+<p>At 300 K, Landauer floor is roughly 2.9×10⁻²¹ joules per bit erased. A gigabit erase would be nanojoules in theory — still not what entropyThisFrame prints. Proxy integral compares frames, not pays utility bills. Keep the theory for humility; keep the label for honesty.</p>
+
+<h2 id="toc-04-entropy-receipt-archaeology-ten-grep-patterns">Entropy receipt archaeology — ten grep patterns</h2>
+<p>Pattern 1: THERMO.*entropy rising — frame work active. Pattern 2: Boundary — edge channel hot. Pattern 3: prevMaint — temporal cost. Pattern 4: steps increment — dispatch alive. Pattern 5: zero entropy with fabric motion — bug. Pattern 6: storm in NEXUS only — Shannon layer. Pattern 7: high H zip plus RX egress — corroborate. Pattern 8: idle entropy spike — maintenance bleed. Pattern 9: coupling change slope shift — expected. Pattern 10: SQUIDGIE time — not entropy but perimeter correlate.</p>
+<p>Archaeology means reading logs as timeline — Time is linear axiom in practice.</p>
+<h2 id="toc-04-proxy-integral-components-named-again-for-memory">Proxy integral components named again for memory</h2>
+<p>Field work from coupling. Probe dissipation from InjectStrength. Maintenance from prevMaintCost. Host assist heat from FieldX86Emu cycles. Sum story in entropyThisFrame — not SI sum.</p>
+<h2 id="toc-04-teaching-entropy-to-security-team-script">Teaching entropy to security team — script</h2>
+<p>Minute 1: three layers table. Minute 2: grep THERMO live. Minute 3: NEXUS file H demo. Minute 4: forbid adding layers. Minute 5: quiz. Repeat weekly.</p>
+
+<h2 id="toc-04-chapter-4-capstone-writing-honest-entropy-senten">Chapter 4 capstone — writing honest entropy sentences</h2>
+<p>Template: On layer L, product P measures M with label T, useful for U, not for V. Example: On ThermoAccountant layer, AMOURANTHRTX measures frame proxy with Metaphor label, useful for comparative dispatch health, not for utility billing. Example: On oracle layer, NEXUS measures Shannon H with Implemented label, useful for storm duty, not for GPU thermo comparison.</p>
+<p>Practice ten sentences aloud. If you stumble, reread layer table.</p>
+<p>Landauer tribute link honors theory without fake joules. Shannon tribute honors information without conflating files with frames. Creditors are not decoration — they are vocabulary police.</p>
+<p>Chapter 5 packet field begins after entropy layers fixed — do not carry layer conflation into defense chapter.</p>
+
+<h2 id="toc-04-thermoaccountant-mirroring-data-bus-slots-in-pra">ThermoAccountant mirroring — data_bus slots in practice</h2>
+<p>Slot 24 mirrors entropyThisFrame — first number operators compare across sessions. Slot 25 mirrors avgBoundaryThermo — watch when injecting probes near window edges. Slot 26 mirrors prevMaintCost — spikes after resolution changes or heavy temporal stability work. Slot 27 mirrors freeEnergyIncome — investigate idle anomalies. Slot 28 mirrors steps — always increases while dispatch runs; if stuck, dispatch stuck.</p>
+<p>Mirror lag should be zero same frame — host packs after accountant populate. If HUD disagrees with stderr, suspect UI read stale bus or wrong slot index in shader HUD code path.</p>
+
+<h2 id="toc-04-entropy-floor-interaction-with-entropyfloor-knob">Entropy floor interaction with EntropyFloor knob</h2>
+<p>Seed in clearFieldImages sets baseline ~0.015. Knob EntropyFloor raises minimum during evolution — two mechanisms cooperating for second-law bias. Neither is laboratory noise measurement — both are engineering guardrails against reversible-universe cosplay.</p>
+
+<h2 id="toc-04-shannon-storm-thresholds-operator-tuning-ethics">Shannon storm thresholds — operator tuning ethics</h2>
+<p>Calm threshold too low wastes attention. Storm threshold too low cries wolf. Alert is middle pasture — tune with local file habits: developer machine sees more high-H builds; grandma laptop sees fewer. No universal constants — local discipline.</p>
+
+<h2 id="toc-04-entropy-chapter-failure-stories-anonymized">Entropy chapter failure stories — anonymized</h2>
+<p>Story 1: Team billed GPU watts from stderr — rock violated, finance embarrassed. Story 2: Team blocked peer on oracle alone — corroboration violated, false positive. Story 3: Team ignored zero entropy with moving fabric — dispatch bug shipped. Learn from stories; grep earlier.</p>
+
+<h2 id="toc-04-irreversibility-and-kill-dossiers-philosophy-bri">Irreversibility and KILL dossiers — philosophy bridge</h2>
+<p>Entropy cannot decrease in closed system — thermodynamics metaphor. KILL dossiers cannot unarchive without operator conscience — security metaphor. Both are linear time disciplines — Chapter 5 meets Chapter 4 at human who decides permanence.</p>
+
+<h2 id="toc-04-chapter-4-extended-entropy-layer-separation-exam">Chapter 4 extended — entropy layer separation exam</h2>
+<p>Exam section A: define ThermoAccountant. Section B: define entropy floor. Section C: define Shannon oracle. Section D: explain why A+B are AMOURANTHRTX and C is NEXUS. Section E: write grep commands for A and C separately. Passing score: no conflation sentences.</p>
+<p>Exam answer key mindset: if student writes oracle measures GPU heat, fail kindly, assign Chapter 4 reread. If student writes proxy is useless because not joules, fail kindly, assign comparative science exercise. If student writes three layers can be summed, fail firmly, assign vendor dashboard horror stories.</p>
+<h2 id="toc-04-landauer-and-shannon-seating-chart">Landauer and Shannon seating chart</h2>
+<p>Landauer sits in physics auditorium — k_B T ln 2. Shannon sits in information auditorium — H bits. ThermoAccountant sits in engine lab — proxy units. Oracle sits in NEXUS closet — file bytes. Seat chart prevents awkward dinner conversation where Landauer tries to date Shannon on first dashboard.</p>
+<h2 id="toc-04-entropy-receipt-retention-policy">Entropy receipt retention policy</h2>
+<p>stderr logs rotate per operator policy — comparative receipts need retention long enough to spot trends. jsonl retention for security — different policy, same linear time. Document retention in operator runbook beside Chapter 11 observability.</p>
+
+<h2 id="toc-04-introduction-entropy-is-the-receipt-that-time-ra">Introduction — entropy is the receipt that time ran forward</h2>
+<p>Chapter 3 taught thermodynamics on the fabric: heat moves, coupling transfers work, CFL guards refuse explosion. Chapter 4 names the <em>receipt</em> — entropy as evidence that the dispatch loop advanced irreversibly. This is not philosophy dressed as stderr. When <code>entropyThisFrame</code> rises while you move the mouse on Classic canvas, or when boundary thermo climbs while guest chrome animates on the die path, the engine is telling you: <strong>time ran forward and the field paid maintenance cost.</strong></p>
+<p>The word <em>entropy</em> appears in three implemented layers that share vocabulary but measure different things. Conflating them is week-two failure — billing joules from proxy integrals, auto-KILLing peers because a zip file surprised Shannon H, or treating fabric minimum noise as NEXUS storm polling. This chapter is the three-layer exam. Pass it before you argue with a physicist or a security engineer.</p>
+<p>Prior: <a href="03-thermodynamics.html">Chapter 3 — Thermodynamics</a> owns fabric heat and coupling. Next: <a href="05-packet-field.html">Chapter 5 — Packet Field</a> owns defensive sentences. Chapter 7 places ThermoAccountant on the dispatch spine every <code>vkCmdDispatch</code>. Chapter 13 credits Landauer; Chapter 14 credits Shannon. Chapter 12 lists every rock.</p>
+
+<div class="objectives"><h2>Learning objectives</h2><ul>
+<li>Enumerate ThermoAccountant fields and their <code>data_bus[24–28]</code> mirrors.</li>
+<li>Pass the three-layer exam: GPU proxy, fabric floor, NEXUS oracle.</li>
+<li>Explain Landauer bound theory versus <code>entropyThisFrame</code> proxy rock.</li>
+<li>Tune entropy oracle calm / alert / storm thresholds without conflating layers.</li>
+<li>Read <code>prevMaintCost</code> as maintenance narrative, not punishment.</li>
+<li>Run the grep workbook and classify failure modes in the catalog below.</li>
+</ul></div>
+
+<figure class="figure"><img src="../assets/images/entropy-chapter.jpg" alt="Three entropy layers" loading="lazy" /><figcaption>Figure 4.1 — Same word, three layers: ThermoAccountant, entropy floor, Shannon oracle. Label before you argue.</figcaption></figure>
+
+<h2 id="toc-04-thermoaccountant-binding-2-deep-dive">ThermoAccountant — binding 2 deep dive</h2>
+<p><code>ThermoAccountant</code> lives at Vulkan descriptor binding <strong>2</strong>. It is populated every <code>Pipeline::dispatch_canvas()</code> — canvas-agnostic, die-default or Classic swipe alike. Chapter 7 stresses this obligation: you do not skip entropy because Big Grin HUD hides the thermo heatmap. The struct is small; the moral weight is large. It is the per-frame ledger that says the GPU field evolution and host orchestration advanced one tick with witnesses.</p>
+<pre class="eq">struct ThermoAccountant {
+    f32 entropyThisFrame;   // Landauer proxy + field work + probes
+    f32 avgBoundaryThermo;  // mean boundary temperature / entropy density
+    f32 prevMaintCost;      // cost to preserve previous-frame coherence
+    f32 freeEnergyIncome;   // sealed time + input activity
+    u32 steps;              // dispatch counter witness
+};</pre>
+<p><span class="tag impl">Implemented.</span> Grep <code>ThermoAccountant</code> in <code>Navigator/engine/</code> and watch <code>ELLIE</code> category <code>THERMO</code> in stderr. The host packs binding 2 and mirrors the same numbers into <code>data_bus[24–28]</code> so guest HUD hex and operator grep agree.</p>
+
+<table><thead><tr><th>Field</th><th>Meaning</th><th><code>data_bus</code></th><th>Operator read</th></tr></thead>
+<tbody>
+<tr><td><code>entropyThisFrame</code></td><td>Proxy integral: field work, probe dissipation, maintenance, optional host x86 heat</td><td>[24]</td><td>Did this tick cost irreversibility?</td></tr>
+<tr><td><code>avgBoundaryThermo</code></td><td>Mean boundary temperature / entropy density at fabric edges</td><td>[25]</td><td>Is the perimeter hot?</td></tr>
+<tr><td><code>prevMaintCost</code></td><td>Coherence price versus previous frame state</td><td>[26]</td><td>Did we pay to remember?</td></tr>
+<tr><td><code>freeEnergyIncome</code></td><td>Sealed time contribution plus input activity potential</td><td>[27]</td><td>Did living-world input feed the ledger?</td></tr>
+<tr><td><code>steps</code></td><td>Monotonic dispatch step counter</td><td>[28]</td><td>Does time advance linearly?</td></tr>
+</tbody></table>
+
+<p><code>entropyThisFrame</code> is not read from <code>nvidia-smi</code>. It is a <span class="tag meta">Metaphor</span> proxy that honors Landauer’s lesson — erasing information has a floor — without pretending the engine measured junction temperature. Chapter 13 goes long on the bound; here you must label the rock on every sentence: <strong>proxy integral, not joules.</strong></p>
+<p>When <code>ControlHostCpu</code> enables <code>FieldX86Emu</code> assist, host-side guest execution can add heat terms to the proxy. Still proxy. Still not a wattmeter. The assist path is offense with receipts; it does not convert stderr into a utility bill.</p>
+<div class="callout everyone"><strong>Plain English:</strong> ThermoAccountant is the cash register tape at the end of each dispatch. It does not measure the wall thermostat in the server room — it measures what the <em>field story</em> claims you spent to move state forward.</div>
+
+<h2 id="toc-04-maintenance-narrative-prevmaintcost-and-coherenc">Maintenance narrative — <code>prevMaintCost</code> and coherence tax</h2>
+<p>Operators fresh from game engines expect frame cost in milliseconds only. Field Technology adds <code>prevMaintCost</code> — the price of staying coherent with the previous frame’s field configuration. High fidelity chrome, rising <code>GateFidelity</code>, aggressive <code>InjectStrength</code>, and large <code>FieldCoupling</code> can raise maintenance even when the scene “looks the same.” This is not punishment. It is honesty: remembering a complex field state costs more than forgetting it.</p>
+<p>Correlate <code>prevMaintCost</code> with Chapter 9’s <code>GateFidelity</code> knob. Cranking fidelity from soft analog gates toward transistor-sharp Flow changes gradient stories and spiderweb voltage factors indirectly. A veteran operator watches maintenance climb when they chase sharp gates without widening CFL headroom — not because the GPU is “slow,” because the field refuses unphysical cheap memory.</p>
+<p>Sealed time enters through <code>freeEnergyIncome</code>. Chapter 7’s <code>TotalTime::seal()</code> writes monotonic session genesis into <code>FieldSocket::sealed_time</code>. ThermoAccountant treats that seal as living-world potential — time itself as input to the ledger. Chapter 19 extends sealing across hosts with sovereign pulses; here, session-local sealing already proves linear physics time. If <code>steps</code> stalls while chrome animates, you have desynchronized reality — grep dispatch before you screenshot.</p>
+
+<h2 id="toc-04-entropy-floor-fabric-second-law-bias">Entropy floor — fabric second-law bias</h2>
+<p>Separate from binding 2, the fabric carries an <strong>entropy floor</strong> seeded at initialization. <code>clearFieldImages()</code> seeds thermo with approximately <strong>0.015</strong> minimum — a second-law bias that refuses unphysical reversibility. Diffusion always injects minimum noise; the universe does not offer free rewind on the grid.</p>
+<p>The FCC knob <code>EntropyFloor</code> in <code>data_bus[20]</code> cooperates with that seed. Operators who set floor to zero expecting “clean” fabric are asking for category error — Chapter 9 names the knob; Chapter 12 labels the rock. The floor is not a Kelvin sensor. It is an engineering guardrail that keeps thermo evolution from pretending history can be erased without cost.</p>
+<p>Cross-link Chapter 15 Maxwell: neighborhood coupling moves energy; the floor ensures moved energy leaves a trace in thermo density. Cross-link Chapter 3: mouse probes inject at boundaries; floor plus probe plus maintenance equals the texture of <code>entropyThisFrame</code> on a living session.</p>
+
+<h2 id="toc-04-shannon-oracle-nexus-layer-storm-tuning">Shannon oracle — NEXUS layer, storm tuning</h2>
+<p>NEXUS-Shield implements a separate <strong>Entropy Oracle</strong> on files and payloads — not fabric texels. Shannon surprise:</p>
+<div class="eq">H = −Σ p_i log₂ p_i</div>
+<p>High <em>H</em> suggests packed, encrypted, or obfuscated bytes. The oracle exposes calm / alert / storm thresholds that tune daemon polling cadence — not automatic KILL. <span class="tag impl">Implemented</span> in NEXUS; <span class="tag meta">Not</span> inside Vulkan <code>x86.comp</code>.</p>
+<p>Storm tuning is operator discipline. Lower thresholds increase sensitivity — useful when you expect plaintext logs, noisy when your archive contains legitimate encrypted backups. Raise thresholds when you accept high-entropy artifacts as normal on your machine. The oracle tells you <em>surprise in symbols</em>; the Connection Gatekeeper tells you <em>corroborated flow meaning</em>. Chapter 5 connects them at the perimeter; do not merge scores into one super-number.</p>
+<div class="callout love"><strong>94/6 pastoral care on bytes:</strong> corroborate before permanent action. One high-H file does not condemn a peer. One THERMO spike does not prove malware. Restraint is coupled evolution with consent — watchlist before block, operator judgment before KILL dossier.</div>
+<p>Chapter 14 owns Shannon deep dive. This chapter seats Landauer and Shannon at the same table with name cards — see below — so you never confuse erasure cost with byte surprise.</p>
+
+<h2 id="toc-04-landauer-and-shannon-seating-same-table-differen">Landauer and Shannon seating — same table, different plates</h2>
+<p>Picture a dinner table with two creditors and three implemented layers. Landauer sits beside ThermoAccountant and entropy floor — stories about irreversibility and minimum cost to forget. Shannon sits beside the NEXUS oracle — stories about surprise in symbol distributions. They share the word entropy. They do not share the same implementation.</p>
+<table><thead><tr><th>Seat</th><th>Theory</th><th>Implemented witness</th><th>Rock</th></tr></thead>
+<tbody>
+<tr><td>Landauer</td><td><div class="eq">E_min = k_B T ln 2</div></td><td><code>entropyThisFrame</code> proxy</td><td><span class="tag meta">Not joules from GPU sensor</span></td></tr>
+<tr><td>Clausius / Boltzmann</td><td>Irreversibility language</td><td>Entropy floor ~0.015 seed</td><td><span class="tag meta">Bias, not calorimetry</span></td></tr>
+<tr><td>Shannon</td><td>Information surprise H</td><td>NEXUS oracle thresholds</td><td><span class="tag impl">Files, not texels</span></td></tr>
+</tbody></table>
+<p><a href="../creditors/landauer.html">Landauer tribute</a> and <a href="../creditors/shannon.html">Shannon tribute</a> humanize the names. When a vendor slide says “entropy-based security,” ask: which seat at the table? If they cannot point to jsonl rows or THERMO lines, label the claim <span class="tag phil">Philosophy</span> until proven.</p>
+
+<h2 id="toc-04-three-layer-exam-pass-before-you-operate">Three-layer exam — pass before you operate</h2>
+<p>The exam is oral and practical. An operator examiner asks five questions; you answer with grep, not vibes.</p>
+<ol>
+<li><strong>Layer ID:</strong> A rising number on Classic canvas during mouse move — which layer? <em>Answer: ThermoAccountant / fabric proxy, binding 2, bus [24]. Not Shannon.</em></li>
+<li><strong>Layer ID:</strong> A downloaded tarball triggers oracle alert — which layer? <em>Answer: NEXUS Entropy Oracle on file bytes. Not avgBoundaryThermo.</em></li>
+<li><strong>Layer ID:</strong> Fresh fabric after <code>clearFieldImages</code> still shows baseline thermo — which layer? <em>Answer: Entropy floor seed ~0.015. Not gatekeeper.</em></li>
+<li><strong>Rock:</strong> Can you invoice a cloud customer using <code>entropyThisFrame</code>? <em>Answer: No — proxy rock, Chapter 12.</em></li>
+<li><strong>Corroboration:</strong> Oracle storm plus SUSPICIOUS flow — automatic KILL? <em>Answer: No — operator reviews, Chapter 5 ethics.</em></li>
+</ol>
+<p>Fail any item: reread this chapter before Chapter 7 dispatch drills. Field literacy is sequential; skipping the exam produces confident wrong sentences in week six.</p>
+
+<h2 id="toc-04-grep-workbook-entropy-receipts-in-practice">Grep workbook — entropy receipts in practice</h2>
+<div class="callout drill"><strong>Workbook 4.A — THERMO spine</strong></div>
+<pre class="eq">./linux.sh run 2>&1 | tee /tmp/ch04-thermo.log
+# Move mouse 90s on default x86; swipe to energy 60s if prompt available
+grep -E 'THERMO|entropy|Boundary|prevMaint|steps' /tmp/ch04-thermo.log | tail -30</pre>
+<p>Expect periodic THERMO lines with <code>entropyThisFrame</code>, boundary thermo, maintenance, steps incrementing. Silence after visible fabric motion means failed path — return to Chapter 7 bindings.</p>
+<div class="callout drill"><strong>Workbook 4.B — Bus mirror</strong></div>
+<pre class="eq">grep -E 'data_bus\[2[4-8]\]|ThermoAccountant' Navigator/engine/ -r
+# In-run: enable debug HUD if available; read hex near thermo slots</pre>
+<div class="callout drill"><strong>Workbook 4.C — Oracle layer (NEXUS)</strong></div>
+<pre class="eq">./nexus.sh   # if installed
+# Place a high-entropy sample in watched path; observe calm/alert/storm cadence
+grep -i 'entropy\|oracle\|storm' /var/lib/nexus-shield/*.log 2>/dev/null | tail -20</pre>
+<p>Workbook 4.C proves layer separation: you can have calm GPU THERMO and alert oracle simultaneously — different products, different questions.</p>
+<div class="callout drill"><strong>Workbook 4.D — Landauer vocabulary check</strong></div>
+<pre class="eq">grep -r 'entropyThisFrame' Navigator/engine/ docs/ content/
+# Every hit should pair proxy language with rock label in v5 text</pre>
+
+<h2 id="toc-04-failure-catalog-entropy-edition">Failure catalog — entropy edition</h2>
+<table><thead><tr><th>Failure mode</th><th>Symptom</th><th>Root cause</th><th>First fix</th></tr></thead>
+<tbody>
+<tr><td>Joule fantasy</td><td>Billing or carbon claims from THERMO lines</td><td>Landauer metaphor read as meter</td><td>Label <span class="tag meta">proxy</span>; read Ch. 13 rock</td></tr>
+<tr><td>Layer conflation</td><td>Auto-block peer on oracle alert alone</td><td>Shannon merged with gatekeeper</td><td>Corroborate per Ch. 5; watchlist first</td></tr>
+<tr><td>Flat entropy</td><td>Chrome moves; THERMO silent</td><td>ThermoAccountant not populated</td><td>Ch. 7 dispatch checklist binding 2</td></tr>
+<tr><td>Zero floor myth</td><td>“Reset” thermo to absolute zero story</td><td>EntropyFloor knob misunderstood</td><td>Reseed via <code>clearFieldImages</code>; read floor bias</td></tr>
+<tr><td>Storm fatigue</td><td>Operator ignores all oracle alerts</td><td>Thresholds too tight for machine habits</td><td>Retune calm/alert/storm; document baseline H</td></tr>
+<tr><td>Maintenance surprise</td><td>prevMaintCost spikes after fidelity crank</td><td>GateFidelity + coupling without CFL headroom</td><td>Ch. 9 harmonics; lower fidelity or resolution</td></tr>
+<tr><td>Steps stall</td><td><code>steps</code> frozen while HUD animates</td><td>Dispatch desync or headless lie</td><td>grep <code>dispatch_canvas</code>; layout version</td></tr>
+<tr><td>Shader as sensor</td><td>Thermo heatmap claimed as room temperature</td><td>Classic canvas pedagogy forgotten</td><td>stderr over screenshot; Ch. 12 rocks</td></tr>
+</tbody></table>
+
+<h2 id="toc-04-cross-links-where-entropy-travels-in-the-stack">Cross-links — where entropy travels in the stack</h2>
+<p>Chapter 7: ThermoAccountant on every dispatch before <code>vkCmdDispatch</code>. Chapter 8: <code>data_bus[24–28]</code> HUD mirrors for Big Grin hex literacy. Chapter 9: <code>EntropyFloor</code> knob and CFL guard interaction. Chapter 10: fabric averages drive hardware mirror — hot thermo eventually speaks in spiderweb util. Chapter 11: weekly grep rhythm includes THERMO tail. Chapter 13: Landauer creditor page. Chapter 14: Shannon oracle theory. Chapter 19: sealed time in <code>freeEnergyIncome</code>. Chapter 21: Queen thermo per WebGL context inherits same proxy discipline.</p>
+<p>Defense in Chapter 5 reads different entropy — file surprise, not fabric proxy. Offense in Chapter 7 writes boundary conditions that raise proxy cost honestly. Hold both without merging.</p>
+
+<h2>Chapter summary</h2>
+<p>Entropy in Field Technology is the receipt that time ran forward. ThermoAccountant at binding 2 records <code>entropyThisFrame</code>, boundary thermo, maintenance cost, free energy income, and dispatch steps — mirrored to <code>data_bus[24–28]</code>. The entropy floor seeds minimum irreversible noise at fabric init. The NEXUS Shannon oracle measures byte surprise with tunable storm thresholds — separate layer, separate product. Landauer and Shannon sit at the same vocabulary table with different plates; label rocks before you argue. Run the grep workbook; pass the three-layer exam; use the failure catalog when stderr disagrees with your narrative.</p>
+<p>Prior: <a href="03-thermodynamics.html">Chapter 3 — Thermodynamics</a>. Next: <a href="05-packet-field.html">Chapter 5 — Packet Field</a> — defense reads sentences you did not write.</p>
+
+<h2 id="toc-04-deep-dive-comparative-entropy-plots-without-si-f">Deep dive — comparative entropy plots without SI fraud</h2>
+<p>Proxy integrals invite comparison: session A versus session B, coupling 0.3 versus 0.9, Classic versus x86 with identical inject protocol. The y-axis is engine-normalized receipt units — not watts, not kelvin, not bits erased at 300 K. Label the axis “proxy” in every chart you show a student.</p>
+<p>Healthy comparative plots show monotonic <code>steps</code> with bounded entropy variance when knobs are stable. Pathological plots show <code>steps</code> rising while entropy flatlines — dispatch desync. Another pathology: entropy spikes without input activity — investigate maintenance cost and fidelity knobs before blaming malware.</p>
+<p>When presenting to non-technical stakeholders, show two curves and one sentence: “More coupling moved more irreversibility in our labeled proxy ledger.” Do not show one THERMO number as “GPU carbon.” That is how rocks get hidden and careers get embarrassed.</p>
+
+<h2 id="toc-04-deep-dive-oracle-case-studies-labeled-exercises">Deep dive — oracle case studies (labeled exercises)</h2>
+<p><strong>Case A — English log:</strong> Low H, calm threshold, USER_OK egress to known port. Lesson: structure is not malice.</p>
+<p><strong>Case B — encrypted payload:</strong> High H, alert threshold, SUSPICIOUS watchlist — not KILL until packet field corroborates process path and direction story.</p>
+<p><strong>Case C — packed game asset:</strong> Medium-high H, storm threshold flicker — tune storm upward after habit baseline recorded; false storm exhaustion is security debt.</p>
+<p><strong>Case D — zip during AMOURANTHRTX session:</strong> Oracle layer speaks; ThermoAccountant layer speaks separately. Write two paragraphs — one for file H, one for <code>entropyThisFrame</code> — before merging narrative.</p>
+<p>Each case trains the three-layer exam in concrete stories. Chapter 5 adds gatekeeper axes; Chapter 4 refuses to let file surprise become automatic physics.</p>
+
+<h2 id="toc-04-deep-dive-maintenance-cost-as-invisible-labor">Deep dive — maintenance cost as invisible labor</h2>
+<p><code>prevMaintCost</code> rises when the engine pays coherence tax — preserving frame-to-frame structure when fidelity, resolution, or coupling demands sharp features. Operators who crank <code>GateFidelity</code> without reading maintenance lines are surprised by “heat” that is not mouse inject — it is temporal labor made visible.</p>
+<p>Pair maintenance grep with Chapter 9 CFL messages. Often maintenance spikes follow aggressive knobs the guard partially saved from NaN — the engine still worked to keep the field legal. Thank the guard with lower knobs, not with disabling THERMO logging.</p>
+
+<h2 id="toc-04-deep-dive-entropy-vocabulary-for-mixed-audiences">Deep dive — entropy vocabulary for mixed audiences</h2>
+<p>When physicists join security engineers in the same room, entropy becomes a battlefield word. Give each audience its sentence before debate starts:</p>
+<ul>
+<li><strong>Physicist sentence:</strong> “Proxy integral honors Landauer metaphor; we do not claim calorimetry.”</li>
+<li><strong>Engineer sentence:</strong> “ThermoAccountant binding 2 populates every dispatch; grep proves it.”</li>
+<li><strong>Security sentence:</strong> “Shannon H on files is NEXUS oracle — storm gauge, not GPU heat.”</li>
+</ul>
+<p>Three sentences, three layers, one meeting saved. Chapter 4 is diplomacy as much as thermodynamics — vocabulary prevents fistfights about fake joules.</p>
+
+<h2>Study questions</h2>
+<ol>
+<li>Quote all five ThermoAccountant fields and bus mirrors.</li>
+<li>Why is <code>entropyThisFrame</code> a proxy, and what theory does it honor?</li>
+<li>What does entropy floor ~0.015 refuse?</li>
+<li>How do calm / alert / storm thresholds differ from gatekeeper verdicts?</li>
+<li>Explain <code>prevMaintCost</code> in plain English.</li>
+<li>Run Workbook 4.A; classify three grep lines by layer.</li>
+<li>Which failure mode matches “invoice from THERMO”?</li>
+<li>Where does sealed time enter the thermo ledger?</li>
+<li>Why is oracle storm not auto-KILL?</li>
+<li>How does Chapter 7 obligate ThermoAccountant on Classic swipe?</li>
+</ol>
+
+<h2 id="toc-04-boltzmann-entropy-spirit-in-fabric-floor">Boltzmann entropy spirit in fabric floor</h2><p>Minimum noise seed prevents zero-entropy unphysical states — engineering bias toward second law. Creditor tribute in behavior not billing.</p>
+
+<h2 id="toc-04-entropy-proxy-units">Entropy proxy units</h2><p>Proxy units are engine-normalized — compare sessions, not SI catalogs. Label on every rock.</p>
+
+<h2 id="toc-04-oracle-file-size-limits">Oracle file size limits</h2><p>Practical oracle limits may cap analyzed bytes — check NEXUS lib for ceilings. Storm on partial sample still pastoral signal if labeled.</p>
+
+<h2 id="toc-04-calm-threshold-operator-tuning">Calm threshold operator tuning</h2><p>Operators may tune calm/alert/storm — discipline not laziness. False storm exhaustion is security failure too.</p>
+
+<h2 id="toc-04-prevmaint-spike-after-resolution-change">prevMaint spike after resolution change</h2><p>Adaptive scale jumps can raise maintenance — expect stderr motion; not automatically attack.</p>
+
+<h2 id="toc-04-entropy-zero-debugging-checklist">Entropy zero debugging checklist</h2><p>Check dispatch issued, binding 2 bound, THERMO category enabled, fabric actually evolving. Zero with motion is bug checklist.</p>
+
+<h2 id="toc-04-landauer-at-room-temperature-numerically">Landauer at room temperature numerically</h2><p>k_B T ln 2 at 300K is ~2.9e-21 J per bit — teaching number, not GPU reading. Theory floor inspires proxy labeling.</p>
+
+<h2 id="toc-04-shannon-on-english-text-versus-ciphertext">Shannon on English text versus ciphertext</h2><p>Low H on logs, high H on encrypted payloads — intuitive oracle behavior. Do not oracle on thermo lines — wrong layer.</p>
+
+<h2 id="toc-04-receipt-timeline-in-jsonl-versus-stderr">Receipt timeline in jsonl versus stderr</h2><p>stderr is frame cadence; jsonl is connection cadence — two timelines, linear both, merged only by operator brain.</p>
+
+<h2 id="toc-04-three-layer-entropy-quiz-yourself">Three-layer entropy quiz yourself</h2><p>Quiz: fabric floor is which layer? Frame proxy is which product? File H is which daemon? If all three answers instant, Chapter 4 succeeded.</p>
+
+<h2 id="toc-04-entropy-in-security-marketing-rant-with-receipts">Entropy in security marketing — rant with receipts</h2><p>Vendors sell entropy dashboards that merge zip randomness with CPU percent with password strength. Field Technology refuses merge — table in this chapter is weapon against vendor gaslight.</p>
+
+<h2 id="toc-04-maintenance-cost-and-video-coherence">Maintenance cost and video coherence</h2><p>prevMaintCost visible when temporal coherence expensive — games call it TAA cost; we call it maintenance receipt. Honest name for silent work.</p>
+
+<h2 id="toc-04-boundary-thermo-and-probe-bleed">Boundary thermo and probe bleed</h2><p>If boundary hot while center cold, suspect probe injection path or boundary shader coupling — debug narrative using avgBoundaryThermo.</p>
+
+<h2 id="toc-04-steps-field-for-long-sessions">steps field for long sessions</h2><p>Multi-hour run: plot steps vs cumulative entropy proxy mentally — slope change marks regime change or leak.</p>
+
+<h2 id="toc-04-oracle-storm-without-auto-block">Oracle storm without auto block</h2><p>Storm increases attention duty — more frequent polling, not automatic KILL. Pair oracle storm with packet field corroboration.</p>
+
+<h2 id="toc-04-landauer-chapter-13-primer">Landauer Chapter 13 primer</h2><p>Chapter 13 derives proxy integral components with engine mapping — read if you teach entropy to skeptics.</p>
+
+<h2 id="toc-04-shannon-chapter-14-primer">Shannon Chapter 14 primer</h2><p>Chapter 14 walks byte histogram to H with threshold tuning — read if you operate NEXUS file intake.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch04">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>ThermoAccountant</td><td>GPU entropy proxy</td><td><span class="tag meta">Metaphor</span></td><td><code>Binding 2 — labeled proxy</code></td></tr><tr><td>Fabric entropy floor</td><td>Seed irreversibility</td><td><span class="tag impl">Implemented</span></td><td><code>Fabric init + evolution</code></td></tr><tr><td>Shannon oracle</td><td>File byte surprise</td><td><span class="tag impl">Implemented</span></td><td><code>NEXUS Entropy Oracle — separate layer</code></td></tr><tr><td>Layer conflation</td><td>One entropy number</td><td><span class="tag phil">Philosophy</span></td><td><code>Forbidden — three plates never summed</code></td></tr></tbody></table>
+<pre class="eq">E_min = k_B T ln 2 (theory)  |  H = −Σ pᵢ log₂ pᵢ (files)  |  entropyThisFrame (proxy)</pre>
+<pre class="eq">grep -r &#x27;entropyThisFrame&#x27; Navigator/engine/</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/engine/ThermoAccountant.hpp</code></li><li><code>NEXUS-Shield/entropy_oracle.py</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-04-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Three entropy layers — GPU proxy, fabric floor, file oracle — share a word, not a measurement. Landauer and Shannon sit at different plates. Grep workbook complete means you will not conflate layers in week six.</p>
+</div>
+
+    <nav class="chapter-nav bottom"><a class="btn secondary" href="03-thermodynamics.html">← Ch 3</a> <a class="btn" href="05-packet-field.html">Ch 5 →</a></nav>
+  </main>
+  <footer><p>Field Technology v6 · Serious book · We do not hide the rocks.</p></footer>
+  <script src="../js/reader.js" defer></script>
+</body>
+</html>

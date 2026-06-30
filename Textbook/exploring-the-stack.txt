@@ -1,0 +1,767 @@
+================================================================================
+  EXPLORING THE STACK
+  A field operator textbook — components, boot order, loopback surfaces
+================================================================================
+
+Edition: 1.0.0-field
+Updated: 2026-06-30
+Install root: NewLatest (NEXUS_INSTALL_ROOT)
+Doctrine hub: STACK-NAV.md · data/field-stack-layer-doctrine.json
+Companion: Textbook/field-technology-v5.txt (AMOURANTHRTX physics spine)
+
+Motto: AmmoOS is the desktop. Queen is the browser. KILROY holds loopback.
+       One field, two sovereign surfaces, zero nested containers.
+
+
+=== Chapter 00 ===
+
+Chapter 0 · How to read this book
+
+Learning objectives
+
+  Name the five visible stack layers bottom-up and what each owns.
+
+  Distinguish cold boot (systemd/KILROY kernel) from warm boot (field stack scripts).
+
+  Open the correct loopback URL for desktop vs browser without swapping them.
+
+  Run three health checks that prove the stack is alive.
+
+  Locate the doctrine JSON for any component you are debugging.
+
+Who this book is for
+
+  Operators bringing up SG/NewLatest on a workstation, QEMU smoke box, or field
+  laptop. Hostess 7 teaches this corpus into brain storage; you read it here in
+  plain text so grep and library shelves work offline.
+
+  If you already read Field Technology v5, treat this book as the map of cities.
+  v5 is the geology under one city (AMOURANTHRTX fabric). Exploring the Stack
+  is the transit diagram — which train stops where, which ticket opens which door.
+
+Honesty labels (same as Field Technology)
+
+  Implemented — file path or API returns JSON today.
+  Wired — script calls module; may need build step first.
+  Doctrine — JSON says so; verify before demo.
+  Retired — historical; do not wire new work here.
+
+Plain English
+
+  The stack is a set of programs that agree on 127.0.0.1 ports and env vars.
+  AmmoOS is your fullscreen classic desktop (Start button, taskbar). Queen is
+  the secured browser you launch from that desktop. They are siblings — Queen
+  does not contain AmmoOS and AmmoOS does not boot inside Queen tabs.
+
+
+=== Chapter 01 ===
+
+Chapter 1 · Stack at a glance
+
+1.1 Layer table (bottom → top)
+
+  Order  Layer           Role                          Loopback / path
+  -----  --------------  ----------------------------  ---------------------------
+    0    Hardware        Witness BIOS, own drivers     (no break policy)
+    1    NEXUS C2        Command, gates, panel HTTP    :9477
+    2    KILROY          PC core, network lane, die    127.0.0.1 authority
+    3    AmmoOS          Fullscreen classic desktop    :9477/field
+    4    CHIPS blocks    Nested silicon inside AmmoOS  queen://chips
+    5    Queen CANVAS    AMOURANTHRTX display tech     CANVAS.comp (not GUI)
+    6    Queen Browser   Stripped web browser          :9481/world/browser.html
+   99    ZNetwork        Absorbed into KILROY lane     lib/znetwork-*.py
+
+  Source: data/field-stack-layer-doctrine.json v1.2.0
+  Navigation: STACK-NAV.md
+
+1.2 The sibling model (current — not legacy)
+
+  RETIRED: "AmmoOS inside Queen Start tab."
+  CURRENT: AmmoOS desktop and Queen browser are sibling surfaces on loopback.
+
+  | Surface        | URL                                      | You use it for        |
+  |----------------|------------------------------------------|------------------------|
+  | AmmoOS desktop | http://127.0.0.1:9477/field              | OS chrome, programs   |
+  | Queen browser  | http://127.0.0.1:9481/world/browser.html | Web, tabs, gates      |
+  | Hostess command| http://127.0.0.1:9477/command            | C2 panels, threats    |
+  | KILROY API     | http://127.0.0.1:9481/api/kilroy         | Kernel posture, QEMU  |
+
+  Doctrine: data/queen-ammoos-sovereignty-doctrine.json (v3)
+  Env: AMMOOS_INSIDE_QUEEN=0 · QUEEN_STANDALONE_BROWSER=1 · QUEEN_BROWSER_STRIPPED=1
+
+1.3 Version line (manifest)
+
+  Component    Version / codename          Root
+  -----------  --------------------------  -------------------------
+  AmmoOS       2.0.0-beta4               NewLatest/
+  KILROY       1.1.0 Sanctuary               NewLatest/KILROY
+  Grok16       5.2.0 (g16 16.2.0)          NewLatest/Grok16
+  Queen        ships in tree + hub         NewLatest/Queen
+  Final_Eye    1.3.0 eye-stoard            NewLatest/Final_Eye
+  AmmoCode     6.0.0 Stack                 NewLatest/AmmoCode
+
+  Source: data/field-stack-manifest.json
+
+
+=== Chapter 02 ===
+
+Chapter 2 · Hardware and native layer
+
+2.1 Hardware guard
+
+  Policy: witness_and_wire — never brick SPI ROM, never harm host NIC manager
+  prematurely, coexist with incumbent desktop until L3 field routing is ready.
+
+  Modules:
+    lib/hardware_wire_registry.py
+    lib/hardware-wire.py
+
+  Doctrine: data/native-layer-doctrine.json
+  Stack ref: field-stack-layer-doctrine.json → hardware_guard
+
+2.2 What hardware layer does NOT do
+
+  It does not replace your GPU driver on day one. It does not flash firmware
+  without operator commit. KILROY grafts userspace defense when live kernel is
+  absent (QEMU smoke, dev laptop).
+
+2.3 Unified device field
+
+  One envelope for drives, RAM, motherboard telemetry, voltage, FCC witness.
+  Module: lib/field-unified-device.py
+  Health: pythong lib/field-unified-device.py json
+
+2.4 F9 sovereign hook
+
+  After login, F9 raises AmmoOS desktop and yields host window-manager shortcuts
+  to field keyboard sovereignty.
+
+  Hotkey doctrine: data/f9-sovereign-hook-doctrine.json
+  Module: lib/field-underlay-hotkey.py · lib/field-keyboard-sovereign.py
+  Boot order on F9: kilroy → ammoos (Queen opens only when you launch it)
+
+
+=== Chapter 03 ===
+
+Chapter 3 · KILROY — the PC core
+
+3.1 Role
+
+  KILROY is 127.0.0.1 on any computer. It is the PC core: syscall truth, network
+  lane, loopback authority, self-defensive tamper slots. ZNetwork is absorbed
+  here — not a separate gap tier.
+
+  Motto: Guest OS loads normally inside a field grant; KILROY defends itself at
+  the Field Die — not via a daemon the guest can kill.
+
+3.2 Self-defense (always on)
+
+  Mechanism                    Where
+  ---------------------------  ------------------------------------------
+  4-slot tamper verify         TIME / MEMORY / THERMO / CONTEXT
+  NEXUS behavioral guard       Syscall boundary amortized check
+  rtx_slots_tamper_action      Abort task on slot corruption
+  Consumer syscall whitelist   Passthrough policy
+  /proc/kilroy_field/security  Live telemetry (when kernel live)
+
+  Doctrine: Hostess7/data/field-stack-doctrine.json → kilroy.self_defensive
+
+3.3 Key paths
+
+  Item              Path
+  ----------------  -------------------------------------------------
+  Core shell        lib/kilroy-core.sh
+  Load OS entry     scripts/impl/kilroy-load-os.sh
+  Queen bridge      Queen/lib/queen-kilroy.py
+  Guest kernel      KILROY/build/bzImage
+  QEMU smoke        KILROY/scripts/grok-boot-qemu.sh
+  Boot map API      /api/kilroy · /api/ammoos-boot
+
+3.4 Cold boot order (kernel path)
+
+  kilroy_kernel → unified_device_field → underlay → guest_os
+
+  NEXUS C2 panel rides inside kilroy_kernel runtime — not a separate network hop.
+
+  systemd units (when installed):
+    nexus-field-early.service  — before display-manager
+    nexus-genius.service       — lib/nexus-daemon.sh
+
+3.5 KILROY network lane (ex-ZNetwork)
+
+  Modules still live under lib/znetwork-*.py but authority is KILROY PC core.
+  Orchestrator: lib/znetwork-orchestrator.py
+  Relayer: lib/znetwork-relayer.py (sole internet in/out when ACTIVE)
+  Shell bridge: lib/znetwork-field.sh
+
+  Env: KILROY_PC_CORE=1 · KILROY_ZNETWORK_ABSORBED=1
+
+
+=== Chapter 04 ===
+
+Chapter 4 · NEXUS C2 — command deck
+
+4.1 Role
+
+  NEXUS C2 is the command panel on :9477 — black / green / pink military chrome,
+  threat ledger, connection gatekeeper, trust strikes. It is fused with KILROY and
+  AmmoOS in the sovereign core meld — not an interloper tier.
+
+  Port: 9477 (NEXUS_THREAT_PANEL_PORT)
+  Surfaces: /field · /command · /grok-lab · /field-ellie/*
+
+4.2 HTTP server
+
+  Module: lib/threat-panel-http.py
+  Static root: panel/
+  State: .nexus-state/threat-panel.json (assembled by scripts/panel-json-assemble.py)
+
+4.3 Defense modules (nexus_defenses slice)
+
+  ID                    Module                         Role
+  --------------------  -----------------------------  -------------------------
+  connection-gatekeeper lib/connection-gatekeeper.py   Egress intent scoring
+  field-queen-browser   lib/field-queen-browser.py     Gate manifest QUEEN_READY
+  trust-strike-engine   lib/trust-strike-engine.py     Wire-point trust strikes
+  field-attack-kit      lib/field-attack-kit.py        Kill / rekill / autokill
+  field-dns             lib/field-dns.py               Truth DNS loopback
+  znetwork-orchestrator lib/znetwork-orchestrator.py   ZNetwork v2 activate
+  sovereign-clock       lib/sovereign-clock.py         Universal UTC for modules
+  field-monster-shell   lib/field-monster-shell.py     Smart hang detection (5s grace)
+
+  Full list: data/field-stack-manifest.json → nexus_defenses
+
+4.4 Monster shell (operator note)
+
+  MONSTER popups appear when AmmoLang tasks stall without output AND process
+  vitals show true idle (grace_sec default 5). Not every slow compile is a hang.
+  Doctrine: data/field-monster-shell-doctrine.json
+
+
+=== Chapter 05 ===
+
+Chapter 5 · AmmoOS desktop — your fullscreen classic OS
+
+5.1 Role
+
+  AmmoOS owns the desktop: classic Start button, taskbar, program windows,
+  six ELLIE diagnostic pages, integrated task manager, Hostess 7 command center.
+
+  This is the PRIMARY operator surface. Boot lands here — not in Queen.
+
+  URL: http://127.0.0.1:9477/field
+  Boot program: nexus-c2-desktop (data/field-host-desktop-doctrine.json)
+
+5.2 Desktop implementation map
+
+  Concern              File
+  -------------------  ----------------------------------------
+  Desktop page         panel/field-desktop.html
+  Start bar + menu     panel/assets/field-startbar.js
+  Desktop loader       panel/assets/field-host-desktop.js
+  Program windows      panel/assets/nexus-field-shell.js
+  Task manager         panel/assets/field-c2-task-manager.js
+  Keybindings          panel/assets/field-os-keybindings.js
+  Backend API          lib/field-host-desktop.py → /api/field-host-desktop
+  Doctrine             data/field-host-desktop-doctrine.json
+  Registry             data/system/field-desktop-registry.json
+
+5.3 Start menu and programs
+
+  Programs launch as integrated windows (programs_as_windows: true).
+  Queen Browser is a Start menu entry — exec http://127.0.0.1:9481/world/browser.html
+  Desktop icons live in Start flyout (desktop_icons_in_start: true).
+
+  Taskbar quick pins: View · Queen Terminal · Queen Browser · Broadcaster
+
+5.4 Display backend — AMOURANTHRTX when available
+
+  Preferred: AMOURANTHRTX CANVAS.comp dispatch
+  Fallback: http_canvas (browser-rendered panel)
+  Posture API: Queen/lib/queen-canvas-renderer.py json
+
+  field-host-desktop build embeds display_backend slice:
+    preferred, available, active, canvas, shader, amouranthrtx_root
+
+  Doctrine: data/field-rtx-display-doctrine.json
+
+5.5 ELLIE diagnostic wall (six pages)
+
+  Network · Truth · Thermal · Firmware · Media · Sovereign
+  Routes: /field-ellie/network … /field-ellie/sovereign
+  Monitor dashboard programmatic thumbnails on desktop policy.
+
+5.6 What AmmoOS is NOT
+
+  Not a tab inside Queen browser (retired embed model).
+  Not the host Firefox/Chrome — no_client_browser: true.
+  Not auto-launching Queen on boot — NEXUS_AUTO_LAUNCH_QUEEN_BROWSER=0.
+
+
+=== Chapter 06 ===
+
+Chapter 6 · AMOURANTHRTX — display technology
+
+6.1 Role
+
+  AMOURANTHRTX is display technology for the field die — not a separate GUI
+  product. CANVAS.comp dispatches the analog fabric; demo shaders live in
+  demos/ only (never OS boot).
+
+  Root: NewLatest/AMOURANTHRTX (or SG/AMOURANTHRTX sibling)
+  Repo: https://github.com/ZacharyGeurts/AMOURANTHRTX
+  License: GPL-3.0-or-commercial
+
+6.2 OS shaders (boot path)
+
+  ID        File                                      Role
+  --------  ----------------------------------------  ---------------------------
+  CANVAS    Navigator/shaders/compute/CANVAS.comp     FieldSocket dispatcher
+  x86       Navigator/shaders/compute/x86.comp        Field Die guest CPU
+  aos_load  Navigator/shaders/compute/aos_load.comp   AmmoOS boot load stage
+  energy    Navigator/shaders/compute/energy.comp     Thermo envelope spine
+
+  Layout version: 5 · bindings 0,1,2,8,9,10,11,12,13,14
+
+6.3 Queen RTX binary (browser engine)
+
+  Build: Queen/scripts/g16-build.sh (cmake QUEEN_BROWSER_BUILD=ON)
+  Output: Queen/build/rtx/bin/Linux/queen-browser
+  Entry: Queen/engine/queen-main.cpp → navigator_main + FieldWebPanel
+
+  When binary exists and QUEEN_SKIP_RTX_BOOT=0, Queen launches native engine.
+  When absent, field-gecko HTTP shell serves browser.html.
+
+6.4 Integration scripts
+
+  scripts/integrate-amouranthrtx.sh — wire AMOURANTHRTX_ROOT, handlers
+  scripts/amouranthrtx-open.sh — double-click .spv / .comp
+  Queen/lib/queen-canvas-renderer.py — posture for stack textbooks
+
+6.5 Relation to Field Technology v5
+
+  v5 Chapter 3+ explains Phi/Thermo/Flow bindings and FieldX86Die 64 MiB guest.
+  This chapter names where that engine sits in the operator stack: below Queen
+  shell, above ZNetwork lane, feeding AmmoOS desktop CANVAS when active.
+
+
+=== Chapter 07 ===
+
+Chapter 7 · Queen Browser — stripped secured webbrowser
+
+7.1 Role
+
+  Queen is the browser lane only: tabs, URL bar, bookmarks, gates, field-gecko
+  or RTX engine. No Start menu. No embedded AmmoOS iframe. Launch from AmmoOS
+  desktop when you need the web.
+
+  URL: http://127.0.0.1:9481/world/browser.html
+  Port: 9481 (QUEEN_WORLD_PORT)
+  Home tab: /world/kilroy-home.html
+
+7.2 Stripped mode (current default)
+
+  data-queen-stripped="1" on browser.html
+  QUEEN_BROWSER_STRIPPED=1 · QUEEN_BOOT_OS=0
+  start_button: bookmarks (not full OS menu)
+  Pinned tabs: New Tab (kilroy-home) + Files (view.html)
+
+  Shell JS: Queen/world/queen-browser-shell.js
+  API: Queen/lib/queen-browser.py → /api/queen-browser
+
+7.3 Engine selection
+
+  Priority 1: Queen/build/rtx/bin/Linux/queen-browser (AMOURANTHRTX)
+  Priority 2: field-gecko bin/queen-browser or queen-field-engine
+  Priority 3: Queen World HTTP daemon (queen-world.py) + browser.html
+
+  Launchers:
+    Queen/scripts/run-queen.sh
+    Queen/field-gecko/bin/launch-field-gecko.sh
+    lib/field-queen-browser-open.py open
+
+  Force HTTP: QUEEN_FORCE_HTTP_SHELL=1
+
+7.4 Queen World HTTP daemon
+
+  Module: Queen/lib/queen-world.py
+  Start: Queen/scripts/start-world.sh --daemon
+  Status: http://127.0.0.1:9481/api/status
+
+7.5 Security wired into browser
+
+  Gate manifest: data/field-queen-gates-seed.json
+  Gate drawer: browser.html + queen-gate.py
+  Media egress lock: queen-media-egress.js
+  Page inspector / shields: queen-page-inspector.js
+  CSP on browser.html — frame-src loopback + https
+
+7.6 Queen programs (browser world, not desktop)
+
+  Queen Code      /world/queen-code.html
+  View / Files    /world/view.html
+  Game Room       /world/queen-game-room.html
+  CHIPS cores     /world/queen-chips-cores.html
+  Terminal dock   /world/?dock=terminal
+  KILROY dock     /world/?dock=kilroy
+
+  These are browser destinations — not replacements for AmmoOS /field desktop.
+
+7.7 Retired Queen surfaces (do not boot here)
+
+  Queen/world/queen-desktop.html — duplicate OS chrome (deprecated primary)
+  queen-start.html full OS menu inside browser (deprecated)
+  browser.html embedding :9477/field as default iframe (removed)
+
+
+=== Chapter 08 ===
+
+Chapter 8 · Sense stack — vision, audio, brain
+
+8.1 Final_Eye (OCR · vision)
+
+  Root: NewLatest/Final_Eye
+  Port: 9479
+  Engine: Final_Eye/zocr.py (tesseract subprocess)
+  Bridge: lib/final-eye-ocr-core.py · lib/final-eye-h7-ocr.py
+  AI connections: lib/final-eye-ai-bridge.py
+  Doctrine: data/final-eye-plate-doctrine.json
+  Hostess7 control: lib/hostess7-ocr-control.py → /api/hostess7/ocr
+
+8.2 Final_Ear (audio)
+
+  Bridge: Queen/lib/queen-earball.py
+  Panel slices: /command#final-ear
+
+8.3 Hostess 7 Forever Watchguard
+
+  Root: NewLatest/Hostess7
+  Brain: read-only witness via lib/field-sense-package-meld.py
+  OCR chambers: 13 training domains (calculator, combat, biology, …)
+  System control: lib/hostess7-system-control.py
+  Weapons defense: lib/hostess7-weapons-defense.py
+
+8.4 Sense package meld
+
+  Module: lib/field-sense-package-meld.py
+  API: /api/sense-package/meld
+  Doctrine: data/field-sense-package-doctrine.json
+  Rule: eye-ear plate seals before analyze; brain corpora preserved read-only
+
+8.5 World_Redata
+
+  Port: 9478
+  Formats: WRDT1 · WRZC1 · ZAC7
+  Role: lossless redata envelopes, in-place snap
+
+
+=== Chapter 09 ===
+
+Chapter 9 · Build fabric — Grok16, AmmoLang, AmmoCode
+
+9.1 Grok16
+
+  Root: NewLatest/Grok16
+  Version: 5.2.0 · g16 profile field_opt
+  Driver: Grok16/python/driver/gpy16_driver.py
+  Build Queen RTX: Queen/scripts/g16-build.sh
+  Integrate: scripts/grok16-integrate.sh · scripts/nexus-g16-recompile.sh
+
+9.2 AmmoLang
+
+  AML lib: library/dewey/000-computer-science/ammolang/
+  Runner: lib/ammolang-run.sh · lib/ammolang-route.sh
+  Kit env: lib/ammolang-kit-env.sh (AML_BUILD=1, Grok16, PythonG)
+  Tasks: build.aml · stack_start.aml · boot_qemu_test.aml · final_eye_build.aml
+
+  Public scripts are thin wrappers → scripts/impl/*.sh bodies.
+
+9.3 AmmoCode
+
+  Port: 9555
+  Role: stack editor, 243 filetypes, G16 run/compile
+  Serve: AmmoCode/server/ammocode-stack-serve.py
+
+9.4 CHIPS blocks (inside AmmoOS)
+
+  Doctrine: data/field-ammoos-blocks-doctrine.json
+  Modules: lib/field-ammoos-blocks.py · lib/field-chips-plate-stack.py
+  CPUs: NES 6502 · Genesis 68000 · SNES scaffold · Game Room theater
+
+  Boot map chips: Queen/data/ammoos-boot-map.json → chips[]
+
+
+=== Chapter 10 ===
+
+Chapter 10 · ZNetwork (absorbed lane)
+
+10.1 Status
+
+  ZNetwork as a separate stack layer is RETIRED. Runtime lives in KILROY
+  network lane via lib/znetwork-*.py and lib/kilroy-core.sh.
+
+  Repo folder NewLatest/ZNetwork remains for history and outside-lab pointers.
+
+10.2 Active modules
+
+  lib/znetwork-orchestrator.py — operator choice, mark-running
+  lib/znetwork-relayer.py — internet pipe relayer
+  lib/znetwork-smart-inside.py — advisory inside lane
+  lib/znetwork-exploit-shield.py — exploit surface shield
+  lib/znetwork-field.sh — shell integration
+
+10.3 Env defaults (field stack start)
+
+  NEXUS_ZNETWORK=1
+  ZNETWORK_RELAYER=1
+  ZNETWORK_MODE=ACTIVE
+  ZNETWORK_INTERNET_PIPE_TARGET=100
+
+10.4 Panel API
+
+  http://127.0.0.1:9477/api/znetwork
+  Desktop startbar tray: ZNetwork icon → /field-ellie/network
+
+
+=== Chapter 11 ===
+
+Chapter 11 · Boot process — complete walkthrough
+
+11.1 Operator paths (pick one)
+
+  Path A — Fast dev (most common on SG workstation)
+    cd NewLatest
+    ./lib/ammolang-run.sh stack_fast
+    OR: bash scripts/impl/ammoos-direct-start.sh
+
+  Path B — Full field stack
+    bash scripts/impl/start-field-stack.sh
+    OR: ./scripts/stack.sh start
+
+  Path C — KILROY load OS (desktop launch attempt)
+    bash scripts/impl/kilroy-load-os.sh
+
+  Path D — QEMU smoke (no desktop UI)
+    ./lib/ammolang-run.sh boot_qemu_test
+
+11.2 ammoos-direct-start.sh sequence (wired)
+
+  1. Export sibling env (AMMOOS_INSIDE_QUEEN=0, QUEEN_STANDALONE_BROWSER=1, …)
+  2. ZNetwork orchestrator mark-running if operator.json missing
+  3. field-dns.sh + nexus_field_services_boot
+  4. panel-json-assemble.py if threat-panel.json missing
+  5. threat-panel-http.py :9477 (panel static root)
+  6. queen-world.py --daemon :9481
+  7. Poll until :9477/field and :9481/api/status return 200
+
+  Logs: .nexus-state/panel-http.log · queen-world.log
+
+11.3 start-field-stack.sh sequence (full)
+
+  1. nexus_init_runtime_paths + security tier (extreme vs consumer)
+  2. kilroy-core.sh board (KILROY PC core markers)
+  3. nexus-vestigial-cleanup.sh
+  4. integrate-znetwork.sh → source znetwork-integrated.env
+  5. znetwork-field.sh startup
+  6. AmmoCode :9555 if down
+  7. Panel + Queen + Final_Eye + defenses (continues below line 155+)
+  8. Hostess7 bridges, sense meld, ironclad seeds per manifest
+
+  Env: NEXUS_BOOT_C2_ONLY=1 boots desktop-first, not Queen auto-launch.
+
+11.4 AmmoOS desktop boot (what the operator sees)
+
+  1. Browser or kiosk opens http://127.0.0.1:9477/field
+  2. field-host-desktop.js loads /api/field-host-desktop
+  3. field-startbar.js renders classic Start + taskbar
+  4. Programs from data/field-host-desktop-doctrine.json field_apps[]
+  5. Display uses AMOURANTHRTX CANVAS if posture ok, else HTTP canvas
+
+  Boot program id: nexus-c2-desktop (not queen-browser)
+
+11.5 Queen browser boot (when operator launches it)
+
+  1. Start menu → Queen Browser OR taskbar quick pin
+  2. field-queen-browser-open.py or field shell opens :9481/world/browser.html
+  3. queen-browser-shell.js initializes stripped chrome
+  4. queen-browser.py serves tab state; home = kilroy-home.html
+  5. If RTX binary ready: launch-field-gecko.sh exec queen-browser RTX
+
+11.6 Queen ASM boot phases (browser world internal)
+
+  From Queen/data/ammoos-boot-map.json — logical order inside Queen world:
+
+  Phase              Order  Module
+  -----------------  -----  ----------------------
+  SEAL               0      queen-secure-space.py
+  SOVEREIGN_CAPSULE  1      queen-sovereign.py
+  FIELD_NET          2      queen-field-net.py
+  GATES              3      queen-gate.py
+  BROWSER            4      queen-browser.py
+  CODE               4.5    queen-code.py
+  HOSTESS            5      queen-hostess-brain.py
+  HORIZON7           6      queen-sovereign.py
+  EYE                7      queen-eyeball.py
+  FORGE              8      queen-forge.py
+  KILROY             9      kernel/rtx/
+  AMOURANTHRTX       10     FieldKilroy/
+  RTX                11     FieldQueenBrowser.cpp
+  AMMOOS_NET         12     AmmoOS/net/*.fld
+
+  These phases wire Queen world services — parallel to but not replacing the
+  AmmoOS desktop boot on :9477.
+
+11.7 QEMU KILROY smoke boot (lab)
+
+  1. boot_qemu_test.aml or scripts/impl/boot-qemu-zpics-test.sh
+  2. ammoos-direct-start for panel+queen HTTP
+  3. curl surfaces :9477/field · :9481/world/*
+  4. grok-boot-qemu.sh with grok-kilroy.img
+  5. Artifacts: SG/zpics/*.png · boot-qemu-receipt.json
+
+  Receipt schema: boot-qemu-zpics-receipt/v1
+
+
+=== Chapter 12 ===
+
+Chapter 12 · Health checks and troubleshooting
+
+12.1 Three-line stack proof
+
+  curl -sf -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9477/field
+  curl -sf -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9481/api/status
+  ss -tlnp | grep -E ':9477|:9481'
+
+  Expect: 200 · 200 · listeners present
+
+12.2 Desktop posture
+
+  pythong lib/field-host-desktop.py build | jq '.shell.boot_program,.shell.display_backend'
+
+12.3 Queen browser posture
+
+  pythong Queen/lib/queen-browser.py json | jq '.stripped,.boot_os,.start_button,.home'
+
+12.4 KILROY + ZNetwork
+
+  curl -sf http://127.0.0.1:9481/api/kilroy | jq '.kilroy_present,.rank'
+  curl -sf http://127.0.0.1:9477/api/znetwork | jq '.ok,.mode'
+
+12.5 AMOURANTHRTX canvas
+
+  pythong Queen/lib/queen-canvas-renderer.py json | jq '.amouranthrtx_present,.ok'
+
+12.6 Common mistakes
+
+  Symptom: Queen shows KILROY home but no desktop
+  Cause: You opened Queen browser expecting OS — open :9477/field instead.
+
+  Symptom: MONSTER popup during stack_start
+  Cause: AmmoLang task stalled (grok_lab_boot chain). Wait or force quit tree.
+
+  Symptom: :9477 connection refused
+  Cause: Legacy NEXUS-Shield on :9477 or panel not started. Run ammoos-direct-start.
+
+  Symptom: Queen and terminal identical screenshots
+  Cause: URL smoke test only — not desktop click-through. Launch Queen from Start.
+
+  Symptom: RTX binary ignored
+  Cause: QUEEN_SKIP_RTX_BOOT=1 default. Build g16-build.sh then unset or auto-detect.
+
+
+=== Appendix A ===
+
+Appendix A · Port and URL reference
+
+  Port   Service              URL
+  -----  -------------------  ------------------------------------------
+  9477   NEXUS C2 / AmmoOS      http://127.0.0.1:9477/field
+  9477   Command center         http://127.0.0.1:9477/command
+  9477   Grok Lab               http://127.0.0.1:9477/grok-lab
+  9478   World_Redata           (service root)
+  9479   Final_Eye              http://127.0.0.1:9479/api/health
+  9481   Queen World            http://127.0.0.1:9481/world/browser.html
+  9481   KILROY API             http://127.0.0.1:9481/api/kilroy
+  9555   AmmoCode               http://127.0.0.1:9555/
+
+
+=== Appendix B ===
+
+Appendix B · Environment variables (boot-critical)
+
+  Variable                    Default (sibling model)   Meaning
+  --------------------------  ----------------------  ---------------------------
+  NEXUS_INSTALL_ROOT          NewLatest path          Install root
+  SG_ROOT                     Parent of NewLatest   SG tree
+  AMMOOS_INSIDE_QUEEN         0                       Sibling model on
+  QUEEN_STANDALONE_BROWSER    1                       Queen not container
+  QUEEN_BROWSER_STRIPPED      1                       No OS chrome in browser
+  QUEEN_BOOT_OS               0                       No full Start in Queen
+  NEXUS_C2_DESKTOP_LAUNCH     0                       Don't open /field as browser shell
+  NEXUS_BOOT_C2_ONLY          1                       Boot desktop-first
+  KILROY_PC_CORE              1                       KILROY authority
+  KILROY_ZNETWORK_ABSORBED    1                       ZNetwork in KILROY lane
+  AMMOOS_DESKTOP_RTX          AMOURANTHRTX            Desktop display tech
+  QUEEN_SKIP_RTX_BOOT         1 (0 if RTX bin)        HTTP vs native engine
+  FINAL_EYE_ROOT              NewLatest/Final_Eye     OCR root
+  AML_BUILD                   1                       AmmoLang kit active
+
+
+=== Appendix C ===
+
+Appendix C · Doctrine index (machine-readable)
+
+  Topic                  Path
+  ---------------------  --------------------------------------------------
+  Stack layers           data/field-stack-layer-doctrine.json
+  Stack manifest         data/field-stack-manifest.json
+  Sovereignty v3         data/queen-ammoos-sovereignty-doctrine.json
+  Host desktop           data/field-host-desktop-doctrine.json
+  Queen browser          Queen/data/queen-field-browser-doctrine.json
+  RTX display            data/field-rtx-display-doctrine.json
+  Boot map phases        Queen/data/ammoos-boot-map.json
+  Field stack (H7)       Hostess7/data/field-stack-doctrine.json
+  Final Eye AI bridge    data/final-eye-ai-connections-doctrine.json
+  F9 hook                data/f9-sovereign-hook-doctrine.json
+  KILROY boot services   data/kilroy-boot-services.json
+  Monster shell          data/field-monster-shell-doctrine.json
+  Navigation hub         STACK-NAV.md
+
+
+=== Appendix D ===
+
+Appendix D · Script entry index
+
+  Script                              Role
+  ----------------------------------  ---------------------------------
+  scripts/impl/ammoos-direct-start.sh Fast panel + Queen daemon
+  scripts/impl/start-field-stack.sh Full defenses + services
+  scripts/impl/kilroy-load-os.sh    KILROY board + desktop launch
+  scripts/impl/boot-qemu-zpics-test.sh QEMU + surface screenshots
+  lib/ammolang-run.sh                 AmmoLang task router
+  Queen/scripts/run-queen.sh          Queen RTX or HTTP launch
+  scripts/kilroy-load-os.sh           Public wrapper → impl
+  scripts/stack.sh                    stack subcommands → AML
+
+
+=== Appendix E ===
+
+Appendix E · Learning path
+
+  Week 1 — Read Ch 1, 5, 7. Boot ammoos-direct-start. Open :9477/field.
+           Launch Queen from Start. Run health checks Ch 12.
+
+  Week 2 — Read Ch 3, 4, 11. Trace boot in .nexus-state logs.
+           Hostess7: ./Hostess7.sh stack-learn
+
+  Week 3 — Read Ch 6, 9. Build queen-browser RTX if AMOURANTHRTX present.
+           Read Field Technology v5 Ch 1-5 for fabric detail.
+
+  Week 4 — Read Ch 8, 10. Wire Final_Eye OCR on zpics test artifacts.
+           Run boot_qemu_test receipt path.
+
+
+================================================================================
+  End · Exploring the Stack v1.0.0-field
+  Hostess 7 shelf: library/dewey/000-computer-science/exploring_the_stack/
+================================================================================

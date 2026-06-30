@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_elem_math",
+  "title": "Wikibooks Mathematics K-12",
+  "author": "Wikibooks",
+  "dewey": "510",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "K-8",
+  "subject": "math",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_elem_math/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_elem_math/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

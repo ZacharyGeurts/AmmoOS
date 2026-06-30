@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 Manual — Field I/O</title>
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/io.html" />
+  <meta name="description" content="Grok16 Field I/O — KILROY kernel proc/ioctl, Final_Eye vision ingress, World_Redata WRDT, zero-cost SDF doctrine." />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light") {
+        t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "light");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand"><strong>Grok16</strong> <span class="nav-version">distro 3.0.0</span><span class="nav-g16">g16 @ 16.2.0</span></div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+            <option value="1.5">XXL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☀</span><span class="seg-text">Light</span>
+          </button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☾</span><span class="seg-text">Dark</span>
+          </button>
+        </div>
+      </div>
+    </div>
+                                                                                                <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Field I/O</h1>
+  <p class="lead">Grok16 compiles the field stack; KILROY holds the die. This page maps <strong>kernel proc/ioctl</strong>, <strong>Final_Eye vision I/O</strong>, and <strong>World_Redata envelopes</strong> — zero-cost on the hot path, SDF read-only for brain imaging doctrine.</p>
+
+  <h2 id="doctrine">Zero-cost doctrine</h2>
+  <table>
+    <tr><th>Layer</th><th>Cost model</th><th>Surface</th></tr>
+    <tr><td>Syscall passthrough</td><td>~6 ns debit</td><td>ASM fabric gate</td></tr>
+    <tr><td>FCC guard</td><td>Amortized (mask 0x7f)</td><td>NEXUS scoring on suspicious NR only</td></tr>
+    <tr><td>SDF proc</td><td>0 hot-path hooks</td><td><code>/proc/kilroy_field/sdf</code> read-only</td></tr>
+    <tr><td>Field compile</td><td>Build-time only</td><td>g16 gnu17 · g++26 field_opt</td></tr>
+  </table>
+  <p>Imaging is not the codec — plates are metaphor. SDF segments live under Hostess7 <code>cache/fieldstorage/brain/sdf/</code> per <a href="https://zacharygeurts.github.io/Final_Eye/">Final_Eye</a> Ch 06–08.</p>
+
+  <h2 id="kilroy-proc">KILROY — /proc/kilroy_field</h2>
+  <pre><code>cat /proc/kilroy_field/status
+cat /proc/kilroy_field/security
+cat /proc/kilroy_field/stack
+cat /proc/kilroy_field/sdf
+cat /proc/kilroy_field/boot</code></pre>
+  <table>
+    <tr><th>Node</th><th>Role</th></tr>
+    <tr><td><code>status</code></td><td>Active die, syscall totals, thermo/FCC snapshot</td></tr>
+    <tr><td><code>security</code></td><td>NEXUS guard scores, Final_Eye seal line, asm_gate</td></tr>
+    <tr><td><code>stack</code></td><td>Field stack #1 — Field_Primer, Final_Eye, World_Redata, Queen</td></tr>
+    <tr><td><code>sdf</code></td><td>SDF schema v1 — lossless redata, 900–1200 word segments, WRDT1 tail-clear</td></tr>
+    <tr><td><code>flow</code> / <code>cache</code> / <code>direct</code></td><td>Four-slot telemetry mirrors ioctl structs</td></tr>
+    <tr><td><code>gpu</code></td><td>DRM FCC mirror when RTX field die enabled</td></tr>
+  </table>
+
+  <h2 id="kilroy-ioctl">KILROY — /dev/kilroy_field ioctl (layout v9)</h2>
+  <p>Header: <code>include/uapi/kilroy/rtx_field.h</code>. Userspace smoke: <code>userspace/kilroy-ioctl-test/</code>.</p>
+  <table>
+    <tr><th>ioctl</th><th>Direction</th><th>Payload</th></tr>
+    <tr><td><code>KILROY_IOC_ACTIVATE</code></td><td>—</td><td>Enable field die</td></tr>
+    <tr><td><code>KILROY_IOC_DEACTIVATE</code></td><td>—</td><td>Disable field die</td></tr>
+    <tr><td><code>KILROY_IOC_GET_ABI</code></td><td>out</td><td><code>char[32]</code> — kilroy-field-1.0</td></tr>
+    <tr><td><code>KILROY_IOC_GET_STATE</code></td><td>out</td><td><code>struct kilroy_field_state</code></td></tr>
+    <tr><td><code>KILROY_IOC_GET_SLOTS</code></td><td>out</td><td>TIME/RAM/THERMO/CONTEXT four-slot block</td></tr>
+    <tr><td><code>KILROY_IOC_GET_FLOW</code></td><td>out</td><td>Momentum / Tesla bias</td></tr>
+    <tr><td><code>KILROY_IOC_GET_CACHE</code></td><td>out</td><td>Cache field slot</td></tr>
+    <tr><td><code>KILROY_IOC_GET_DIRECT</code></td><td>out</td><td>Direct field slot</td></tr>
+    <tr><td><code>KILROY_IOC_GET_GPU</code></td><td>out</td><td>GPU FCC telemetry</td></tr>
+    <tr><td><code>KILROY_IOC_SET_THERMO</code></td><td>in</td><td>Thermo budget write (privileged)</td></tr>
+    <tr><td><code>KILROY_IOC_SET_FCC</code></td><td>in</td><td>FCC guard scale write (privileged)</td></tr>
+  </table>
+
+  <h2 id="final-eye">Final_Eye vision I/O</h2>
+  <p>Compiled with Grok16 <code>field_opt</code> per <a href="https://zacharygeurts.github.io/Final_Eye/chapters/06-grok16-compiler.html">Ch 06 Grok16 Field Compiler</a>.</p>
+  <pre><code>pythong zocr_field_compile.py c        # vision_probe.c — gnu17
+pythong zocr_field_compile.py kernel   # field_dispatch.cpp — gnu++26
+pythong zocr_field_compile.py optimize # field_opt vs field_compute bench
+pythong zocr_security.py seal          # code seal — honesty labels</code></pre>
+  <table>
+    <tr><th>HTTP (Final_Eye / Queen)</th><th>Purpose</th></tr>
+    <tr><td><code>GET /api/field/compile?mode=c</code></td><td>C smoke — vision_probe.c</td></tr>
+    <tr><td><code>GET /api/field/compile?mode=kernel</code></td><td>C++ field_dispatch kernel</td></tr>
+    <tr><td><code>GET /api/field/compile/optimize</code></td><td>Profile bench JSON</td></tr>
+    <tr><td><code>GET /api/grok16</code></td><td>Grok16 version, profiles, dumpversion</td></tr>
+    <tr><td><code>GET /api/kilroy</code> (Queen :9481)</td><td>Field stack rank, ecosystem, proc pointers</td></tr>
+  </table>
+
+  <h2 id="world-redata">World_Redata — WRDT1 envelopes</h2>
+  <pre><code>PYTHONPATH=. pythong -m redata.cli parity
+PYTHONPATH=. pythong -m redata.cli security
+PYTHONPATH=. pythong -m redata.cli mandate</code></pre>
+  <p>WRDT1 lossless envelopes require tail-clear and SHA256 receipts. Built with Grok16 via <code>build-cpp.sh</code> and <code>g16-field-mandate.cmake</code>. SDF segments reference WRDT1 for lossless redata pipeline (Field Primer Ch 02).</p>
+
+  <h2 id="recompile">Field recompile chain</h2>
+  <pre><code>cd SG/KILROY
+./scripts/check-field-stack.sh
+./scripts/gen-field-stack.sh
+./scripts/field-recompile.sh    # substrate → bzImage → Queen seal</code></pre>
+  <p>After every field update: FIELDC <code>.fld</code> targets in <code>field/compiler/</code> → Grok16 guest modules → KILROY kernel rebuild. Benchmark: <code>./scripts/kilroy-benchmark.sh</code> with optional <code>--compare before.json after.json</code>.</p>
+
+  <h2 id="ai-kernel">KILROY AI kernel — War + Home</h2>
+  <p>DARPA-secure AI die: Hostess 7 wishes baked at build time via <code>gen-ai-wishes.sh</code>. Default <strong>home</strong> (dishes comfort); <strong>war</strong> arms raptor/vulkan_rtx compartment.</p>
+  <pre><code>cat /proc/kilroy_field/ai
+echo home > /proc/kilroy_field/ai   # ai profile, +2m/s thermo idle, relaxed NEXUS
+echo war > /proc/kilroy_field/ai    # vulkan_rtx, tight NEXUS, burst when engaged</code></pre>
+  <table>
+    <tr><th>Mode</th><th>Grok16</th><th>NEXUS</th><th>Power</th><th>Final_Eye</th></tr>
+    <tr><td>home</td><td>ai</td><td>alert@50 deny@78 mask 0xff</td><td>eco + thermo bonus</td><td>dishes, person_present</td></tr>
+    <tr><td>war</td><td>vulkan_rtx</td><td>alert@38 deny@62 mask 0x3f</td><td>burst on momentum</td><td>war, engage, patrol</td></tr>
+  </table>
+  <p>Truth floors from Hostess7 neural stack: adapt@58, genius@72. Heaven pass (zero-cost home) / hell rip (war offense) per Final_Eye doctrine.</p>
+
+  <h2 id="security">Security posture</h2>
+  <ul>
+    <li>NEXUS guard — amortized eval mask 0x7f; alert@45 deny@72; consumer syscall whitelist</li>
+    <li>Final_Eye <code>zocr_security.py seal</code> mirrored in <code>/proc/kilroy_field/security</code></li>
+    <li>Grok16 <code>g16_field_mandate</code> — fortify, RELRO, PIE on userspace field binaries</li>
+    <li>SDF proc — read-only 0444; no syscall hooks on imaging path</li>
+  </ul>
+
+  <footer><a href="index.html">Index</a> · <a href="integration.html">Integration</a> · <a href="https://zacharygeurts.github.io/Final_Eye/">Final_Eye</a></footer>
+</body>
+</html>

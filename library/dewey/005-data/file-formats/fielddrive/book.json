@@ -1,0 +1,13 @@
+{
+  "id": "format-fielddrive",
+  "title": "Field Drive",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "sovereign",
+  "extensions": [
+    ".fielddrive"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/fielddrive.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

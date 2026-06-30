@@ -1,0 +1,1581 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" />
+<title>Volume 02 — Engine (Chapters 5–8)</title>
+<link rel="stylesheet" href="../css/field-primer.css" />
+<link rel="stylesheet" href="../css/chapters.css" />
+<link rel="stylesheet" href="../css/print.css" />
+<style>body.print-volume{background:#fff;color:#1a1a1a;}</style>
+</head><body class="print-volume chapter-page">
+<div class="volume-title-page">
+<p style="letter-spacing:0.12em;text-transform:uppercase;color:#8b6914">Field Technology v5</p>
+<h1>Volume 02 — Engine (Chapters 5–8)</h1>
+<p>Zachary Robert Geurts · Field Primer PDF edition</p>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 5</p>
+<h1>Defensive Perimeter — Packet Field</h1>
+<div class="objectives">
+<h2 id="toc-05-learning-objectives">Learning objectives</h2>
+<ol>
+<li>Define packet field as local-first connection sentences in jsonl.</li>
+<li>Apply TX/RX operator contracts and corroboration before KILL.</li>
+<li>Interpret Connection Gatekeeper verdicts and ten-axis scoring.</li>
+<li>Map field memory artifacts to reboot survival.</li>
+<li>Relate port stories to habits, not guilt.</li>
+<li>Align Queen 2026 gates with packet field perimeter.</li>
+</ol>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-05-defensive-perimeter-the-packet-field">Defensive perimeter — the packet field</a></li><li><a href="#toc-05-plain-english-sockets-to-sentences">Plain English — sockets to sentences</a></li><li><a href="#toc-05-tx-rx-operator-perspective">TX / RX — operator perspective</a></li><li><a href="#toc-05-corroboration-and-94-6-posture">Corroboration and 94/6 posture</a></li><li><a href="#toc-05-connection-gatekeeper-nexus">Connection Gatekeeper — NEXUS</a></li><li><a href="#toc-05-field-memory-what-survives-reboot">Field memory — what survives reboot</a></li><li><a href="#toc-05-port-stories-habits-not-guilt">Port stories — habits not guilt</a></li><li><a href="#toc-05-panel-9477-operator-command-center">Panel :9477 — operator command center</a></li><li><a href="#toc-05-queen-alignment-2026">Queen alignment — 2026</a></li><li><a href="#toc-05-operator-drill">Operator drill</a></li><li><a href="#toc-05-failure-modes">Failure modes</a></li><li><a href="#toc-05-chapter-summary">Chapter summary</a></li><li><a href="#toc-05-study-questions">Study questions</a></li><li><a href="#toc-05-honorability-cross-check">Honorability cross-check</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-05-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Defense begins when sockets become <strong>readable sentences</strong> in operator space. On the way you will read TX/RX contracts, gatekeeper verdicts, field memory in jsonl, and Queen alignment — local-first perimeter, not cloud omniscience.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/packet-field.jpg" alt="Packet field" loading="lazy" /><figcaption>On the way — Packet field</figcaption></figure>
+<ul class="on-the-way-journey"><li>Connection Gatekeeper ten-axis scoring</li><li>Watchlist before block; KILL with authorship</li><li>Panel :9477 tour and archive habits</li><li>Defense rhythm: daily, weekly, incident</li></ul>
+</div>
+
+
+<h2 id="toc-05-defensive-perimeter-the-packet-field">Defensive perimeter — the packet field</h2>
+<p>The packet field is how you see what touches you <em>before</em> someone else narrates it for you. Offense and defense couple here: reading the field changes what you dare to run.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch05-packet-perimeter.jpg" alt="Packet field perimeter" loading="lazy" /><figcaption>Figure 5.2 — Local sockets become sentences: TX/RX, gatekeeper, jsonl archive.</figcaption></figure>
+
+<p><span class="tag impl">Implemented in NEXUS-Shield.</span> <span class="tag meta">Not inside AMOURANTHRTX Vulkan — different product boundary.</span> Local sockets, local jsonl, local panel :9477 — not cloud omniscience.</p>
+
+<figure class="figure"><img src="../assets/images/packet-field.jpg" alt="Packet field" loading="lazy" /><figcaption>Figure 5.1 — Local flows as operator-readable positions in time. Not global internet vision.</figcaption></figure>
+
+<h2 id="toc-05-plain-english-sockets-to-sentences">Plain English — sockets to sentences</h2>
+<p>Every connection becomes a <strong>sentence</strong> in machine-readable log:</p>
+<ul>
+<li><code>ss</code> shows sockets</li>
+<li><code>tcpdump</code> shows frames</li>
+<li><strong>Packet field</strong> adds <em>meaning</em>: who, which port, TX vs RX, process path, corroboration</li>
+</ul>
+<div class="callout everyone"><strong>Plain English:</strong> ss is alphabet soup. Packet field is grammar — subject, verb, direction, story.</div>
+
+<h2 id="toc-05-tx-rx-operator-perspective">TX / RX — operator perspective</h2>
+<table><thead><tr><th>Direction</th><th>Contract</th></tr></thead>
+<tbody>
+<tr><td><strong>TX</strong></td><td>You sent bytes — egress you own</td></tr>
+<tr><td><strong>RX</strong></td><td>You received bytes — ingress you must explain</td></tr>
+</tbody></table>
+<p>Direction is field dimension — symmetric flows without TX/RX are unreadable defense.</p>
+
+<h2 id="toc-05-corroboration-and-94-6-posture">Corroboration and 94/6 posture</h2>
+<p>Multiple independent signals before permanent action. <span class="tag phil">94/6 truth filter</span> — watchlist before block; KILL is permanent and archived. One weird packet does not condemn a peer — love as engineering restraint.</p>
+<div class="callout love">Reversible watchlists honor coupled evolution with consent. KILL dossiers survive reboot — forgiveness requires explicit operator review, not vendor cloud amnesty.</div>
+
+<h2 id="toc-05-connection-gatekeeper-nexus">Connection Gatekeeper — NEXUS</h2>
+<p>Ten-axis scoring → verdicts:</p>
+<table><thead><tr><th>Verdict</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>USER_OK</code></td><td>Permitted flow</td></tr>
+<tr><td><code>EPHEMERAL</code></td><td>Short-lived, low risk</td></tr>
+<tr><td><code>SUSPICIOUS</code></td><td>Watchlist — not auto-block</td></tr>
+<tr><td><code>HARM_CANDIDATE</code></td><td>Harm signature; operator review required</td></tr>
+</tbody></table>
+<p>Gatekeeper is <span class="tag impl">implemented</span> — grep lib sources and panel JSON. Not AMOURANTHRTX binding.</p>
+
+<h3>Ten axes — literacy without memorizing every weight</h3>
+<p>Axes include process path trust, port habit deviation, direction balance, payload surprise hooks, honorability cross-checks — full source in NEXUS lib. Operator stance: verdict is summary; jsonl row is receipt; human is judge.</p>
+
+<h2 id="toc-05-field-memory-what-survives-reboot">Field memory — what survives reboot</h2>
+<table><thead><tr><th>Artifact</th><th>Survives reboot?</th></tr></thead>
+<tbody>
+<tr><td><code>field jsonl</code></td><td>Yes — packet history</td></tr>
+<tr><td>KILL dossiers</td><td>Yes — permanent archive</td></tr>
+<tr><td>Panel HTML</td><td>No — window only</td></tr>
+</tbody></table>
+<p>Memory is local-first discipline — your machine remembers so you can correlate across sessions without phone-home.</p>
+
+<h2 id="toc-05-port-stories-habits-not-guilt">Port stories — habits not guilt</h2>
+<p>Ports are <strong>habits</strong>: 443 HTTPS, 53 DNS, 4444 shell-class risk. Registry learns <em>your machine's</em> habits, not textbook lists alone. A port is context for the sentence, not automatic guilt.</p>
+
+<h2 id="toc-05-panel-9477-operator-command-center">Panel :9477 — operator command center</h2>
+<p><code>https://127.0.0.1:9477/</code> — command, packets, threats, signals, DNS, library, system. RTX Zero <code>?rtx=1</code> — Aqua chrome. Correlate with AMOURANTHRTX stderr without merging products.</p>
+
+<h2 id="toc-05-queen-alignment-2026">Queen alignment — 2026</h2>
+<p>Queen browser holds gates — WebRTC through gatekeeper, MP4 in-tree, EME held not omitted. Chapter 21 full doctrine. Packet field is perimeter Queen inherits — navigation → packet field → gatekeeper → honorability → thermo receipt.</p>
+<pre class="eq">Navigation → Packet Field → Gatekeeper → Honorability → Thermo receipt
+                ↑ Truth DNS (no Google shortcut)
+                ↑ Sovereign Time (SQUIDGIE witness)</pre>
+
+<h2 id="toc-05-operator-drill">Operator drill</h2>
+<pre class="eq">./nexus.sh
+# Open panel :9477 — archive one gatekeeper decision
+grep -E 'USER_OK|SUSPICIOUS|HARM' field.jsonl | tail -5</pre>
+
+<h2 id="toc-05-failure-modes">Failure modes</h2>
+<table><thead><tr><th>Mode</th><th>Symptom</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>Cloud fantasy</td><td>Expect global vision</td><td>Local-first scope</td></tr>
+<tr><td>Auto-KILL</td><td>Storm → permanent block</td><td>Corroborate — 94/6</td></tr>
+<tr><td>Product blur</td><td>Gatekeeper in Vulkan</td><td>NEXUS MIT layer</td></tr>
+<tr><td>Port guilt</td><td>443 = evil</td><td>Habits in context</td></tr>
+</tbody></table>
+
+<h2 id="toc-05-chapter-summary">Chapter summary</h2>
+<p>Packet field is local defensive perimeter — sentences in jsonl, gatekeeper verdicts, TX/RX contracts, corroboration before KILL. Queen inherits gates. Not AMOURANTHRTX Vulkan. Chapter 6 RF shell is separate visual layer.</p>
+
+<h2 id="toc-05-study-questions">Study questions</h2>
+<ol>
+<li>What three tools does packet field extend — ss, tcpdump, and what addition?</li>
+<li>Define TX and RX contracts.</li>
+<li>Name four gatekeeper verdicts.</li>
+<li>What survives reboot vs not?</li>
+<li>Why are ports habits not guilt?</li>
+<li>How does Queen bind to packet field without replacing NEXUS?</li>
+<li>Archive one panel row — what fields prove local-first?</li>
+</ol>
+<p><a href="chapters/06-rf-signals.html">Chapter 6 — Signal Shell →</a></p>
+
+<h2 id="toc-05-honorability-cross-check">Honorability cross-check</h2>
+<p>Gatekeeper integrates honorability signals — process reputation, path stability, prior verdict history — before HARM_CANDIDATE escalation. Not single-axis zealotry. Ten axes exist because peers are stories, not single packets.</p>
+
+<h2 id="toc-05-dpi-sample-and-intent-layers">DPI sample and intent layers</h2>
+<p>Deep inspection samples and connection-intent metadata enrich sentences beyond raw ss — still local-first, still operator-owned archives. Samples are corroboration fuel, not cloud upload by default in field posture.</p>
+
+<h2 id="toc-05-threat-panel-json-publish-path">threat-panel.json publish path</h2>
+<p>Panel consumes threat-panel.json — ephemeral HTML view over durable jsonl. Reboot kills panel window, not field memory. Know which artifacts are receipts vs chrome.</p>
+
+<h2 id="toc-05-kill-dossier-permanence">KILL dossier permanence</h2>
+<p>KILL is operator-authorized permanence — archived with context. Reversible until you say otherwise is policy; KILL is the line where reversibility ends. <span class="tag phil">Philosophy with teeth.</span></p>
+
+<h2 id="toc-05-truth-dns-lock-chapter-20-pointer">Truth DNS lock — Chapter 20 pointer</h2>
+<p>Queen and FieldFox inherit Truth DNS — no Google shortcut. Navigation receipts tie to DNS integrity. Packet field without DNS truth is sentence without subject.</p>
+
+<h2 id="toc-05-sovereign-time-at-perimeter-chapter-19-pointer">Sovereign time at perimeter — Chapter 19 pointer</h2>
+<p>Gatekeeper timestamps and correlation use operator-owned time when sovereign mode active. SQUIDGIE verdict fail-closes perimeter services. Time and packets couple at receive.</p>
+
+<h2 id="toc-05-rtx-zero-panel-mode">RTX Zero panel mode</h2>
+<p><code>?rtx=1</code> Aqua chrome, cache-first refresh — observability UX, not second engine. Thermo and packets still separate products.</p>
+
+<h2 id="toc-05-local-jsonl-hygiene">Local jsonl hygiene</h2>
+<p>Rotate and backup <code>field jsonl</code> like any forensic archive. Disk is your memory; encryption at rest is operator choice outside this chapter's scope but inside your conscience.</p>
+
+<h2 id="toc-05-webrtc-peer-as-packet-sentence">WebRTC peer as packet sentence</h2>
+<p>Queen routes WebRTC peers through gatekeeper — each peer a sentence with direction, ports, verdict. Do not disable; receipt. Chapter 21 doctrine planted in Chapter 5 soil.</p>
+
+<h2 id="toc-05-extended-treatment-connection-gatekeeper-axis-ph">Extended treatment — Connection Gatekeeper axis philosophy</h2>
+<p>Ten axes exist because peers are stories, not packets. Process path anchors identity — same port, different binary, different story. Port habit deviation flags novelty without automatic evil. Direction balance catches asymmetric exfil shapes. Payload hints integrate oracle without conflation. Honorability cross-checks reputation time series. Verdict is summary; axes are explainability for operator review.</p>
+
+<h2 id="toc-05-extended-treatment-corroboration-before-kill">Extended treatment — corroboration before KILL</h2>
+<p>94/6 philosophy: generous truth allowance, narrow permanent punishment. Multiple independent signals before KILL dossier — ss snapshot, tcpdump corroboration, oracle storm, operator narrative. Reversible watchlist until KILL — love as engineering.</p>
+
+<h2 id="toc-05-extended-treatment-field-memory-forensics">Extended treatment — field memory forensics</h2>
+<p>field jsonl survives reboot — treat as forensic archive. Rotate, backup, encrypt at rest per operator policy. KILL dossiers permanent — legal and moral weight. Panel HTML ephemeral — do not confuse window with memory.</p>
+
+<h2 id="toc-05-extended-treatment-queen-and-packet-field-2026">Extended treatment — Queen and packet field 2026</h2>
+<p>Queen: WebRTC through gatekeeper, MP4 mandatory in-tree, EME held, Truth DNS, sovereign time witness. Navigation becomes packet sentences with thermo receipts. Wrong: disable WebRTC. Right: gate and archive.</p>
+
+<h2 id="toc-05-extended-treatment-port-habit-registry">Extended treatment — port habit registry</h2>
+<p>Registry learns your machine — 443 may be browser, 4444 may be shell-class risk context. Port is habit marker, not verdict. Combine with process path and direction for sentence grammar.</p>
+
+<h2 id="toc-05-extended-panel-tour-9477">Extended panel tour — :9477</h2>
+<p>Command, packets, threats, signals, DNS, library, system — six faces one perimeter. RTX Zero ?rtx=1 is chrome mode, not second engine. Correlate panel JSON with stderr without product blur.</p>
+
+<h2 id="toc-05-packet-field-narrative-extended-scenario-writing">Packet field narrative — extended scenario writing</h2>
+<p>Scenario A: EPHEMERAL DNS blip — forgive, no KILL. Scenario B: SUSPICIOUS repeated RX to rare port with stable process path — watchlist, tcpdump corroboration. Scenario C: HARM_CANDIDATE with high H file drop same timeline — operator review, not auto block. Scenario D: USER_OK baseline — archive anyway for habit graph. Writing scenarios trains gatekeeper literacy beyond enum names.</p>
+
+<h2 id="toc-05-gatekeeper-verdict-state-machine-in-prose">Gatekeeper verdict state machine in prose</h2>
+<p>Flows enter as candidates. EPHEMERAL exits quickly from attention. USER_OK earns trust with monitoring. SUSPICIOUS enters watchlist — reversible attention debt. HARM_CANDIDATE demands human review — corroboration required. KILL is terminal archive — operator signature on conscience.</p>
+<h2 id="toc-05-jsonl-row-anatomy-lesson">jsonl row anatomy lesson</h2>
+<p>Each row should be readable as: at time T, process P on path PATH, direction D, port habit H, verdict V, because axes A summary. If row lacks PATH or D, sentence incomplete — debug NEXUS intake.</p>
+<h2 id="toc-05-defense-without-cloud-threat-model-paragraph">Defense without cloud — threat model paragraph</h2>
+<p>Adversary on LAN, adversary in browser, adversary in supply chain — packet field sees local manifestation. You still need updates, still need operator judgment, still need Queen gates. You do not need cloud to narrate your sockets.</p>
+
+<h2 id="toc-05-packet-field-capstone-defensive-sentences">Packet field capstone — defensive sentences</h2>
+<p>Template: Flow F from process P direction D port H received verdict V; I will action A because corroboration C. Write five for real rows. Literacy is syntax.</p>
+<p>Queen WebRTC peer sentence: Peer P via WebRTC, gated, verdict V, thermo receipt T — Chapter 21 binds browser to same grammar.</p>
+<p>KILL dossier sentence: After review date D, operator O KILL peer P because reasons R1 R2 independent signals — permanent archive ethics.</p>
+<p>Local-first restated: jsonl on your disk, panel on your loopback, gatekeeper on your processes — not internet panopticon.</p>
+<p>Chapter 6 RF follows — separate RF words from packet words before signals panel correlation.</p>
+
+<h2 id="toc-05-nexus-install-and-state-directories">NEXUS install and state directories</h2>
+<p>NEXUS_INSTALL_ROOT locates lib modules — gatekeeper, sovereign-time, panel assets. NEXUS_STATE_DIR (default /var/lib/nexus-shield) holds jsonl, keys, dossiers. Know paths before incident — literacy includes filesystem map.</p>
+
+<h2 id="toc-05-honorability-reputation-over-time">Honorability — reputation over time</h2>
+<p>Honorability tracks process and path reputation — sudden binary swap on trusted path raises eyebrows without auto-KILL. Combine with oracle and direction for story.</p>
+
+<h2 id="toc-05-webrtc-gate-path-queen-2026-step-list">WebRTC gate path — Queen 2026 step list</h2>
+<p>Navigation requests peer. Packet field records intent. Gatekeeper scores. Honorability cross-checks. Operator panel displays. Thermo per context accrues in Queen build. Verdict archived. No step skipped when built correctly.</p>
+
+<h2 id="toc-05-mp4-mandatory-packet-bytes-perspective">MP4 mandatory — packet bytes perspective</h2>
+<p>Media is packets — demux parses locally in-tree — no missing codec excuse to fetch remote blob blindly. Sovereign parsing is defensive surface — Chapter 21; Chapter 5 names packet bytes include media.</p>
+
+<h2 id="toc-05-threat-panel-json-field-guide">Threat panel JSON — field guide</h2>
+<p>Read threat-panel.json as ephemeral view of durable jsonl — like HTML view of database. Refresh does not replace archive discipline.</p>
+
+<h2 id="toc-05-defense-exercise-red-team-local">Defense exercise — red team local</h2>
+<p>Simulate suspicious RX with netcat locally — verify gatekeeper picks it up, verify you can archive without KILL, verify corroboration checklist. Local red team beats cloud card guessing.</p>
+
+<h2 id="toc-05-chapter-5-extended-defensive-perimeter-day-in-th">Chapter 5 extended — defensive perimeter day in the life</h2>
+<p>Morning: grep jsonl since yesterday, review SUSPICIOUS watchlist, verify sovereign time USER_OK. Afternoon: run AMOURANTHRTX session, correlate THERMO with any flagged flows from morning. Evening: Queen browsing if deployed — verify WebRTC peer through gatekeeper, archive verdict. Night: no cloud dashboard — local perimeter sleeps with jsonl memory intact.</p>
+<p>Day-in-the-life shows defense is rhythm not product install once. Packet field value accumulates with habit graph length — registry learns you.</p>
+<h2 id="toc-05-gatekeeper-appeals-process-operator-humanity">Gatekeeper appeals process — operator humanity</h2>
+<p>Peer falsely SUSPICIOUS? Review axes, check tcpdump corroboration, forgive with note. Peer falsely USER_OK? Escalate watchlist before KILL — 94/6. Appeals are human process — daemon provides evidence not verdict finality.</p>
+<h2 id="toc-05-packet-field-and-compliance-framing">Packet field and compliance framing</h2>
+<p>Local jsonl may support compliance narratives — you own data, you own retention, you own legal questions. Field stack does not phone home — compliance posture starts with local control. Consult counsel; chapter teaches technical honesty not legal advice.</p>
+
+<h2 id="toc-05-introduction-defensive-perimeter-as-readable-sen">Introduction — defensive perimeter as readable sentences</h2>
+<p>Chapters 2 through 4 taught continuous state on silicon: fabric texels, die bytes, thermo receipts. Chapter 5 turns outward — not to the whole internet, but to <strong>your machine’s sockets</strong> rendered as operator-readable sentences. The packet field is the defensive core of NEXUS-Shield: local-first, MIT-licensed, grep-able, archived in <code>field jsonl</code> that survives reboot. It is <span class="tag impl">Implemented</span> in NEXUS. It is <span class="tag meta">not</span> inside AMOURANTHRTX Vulkan — conflating products is week-one failure.</p>
+<p><code>ss</code> shows sockets. <code>tcpdump</code> shows frames. The packet field adds <strong>meaning</strong>: process path, port habit, TX versus RX, corroboration across axes, gatekeeper verdict summary. Defense, in Field Technology, is reading continuous state faster than confusion propagates — then choosing watchlist, block, or KILL with conscience. Chapter 7 takes the spear; this chapter holds the shield.</p>
+<p>Queen browser (Chapter 21) routes WebRTC through the same gatekeeper instead of disabling WebRTC. Sovereign time (Chapter 19) and Truth DNS (Chapter 20) supply sealed clocks and trace-from-root resolution — packet field sentences sit beside those receipts, not above them. Chapter 12 lists rocks; this chapter teaches rhythm.</p>
+
+<div class="objectives"><h2>Learning objectives</h2><ul>
+<li>State the local-first boundary: which flows exist in jsonl and which myths do not.</li>
+<li>Read the Connection Gatekeeper ten-axis table and map axes to verdicts.</li>
+<li>Practice jsonl schema habits: append-only, sealed time columns, rotation ethics.</li>
+<li>Apply KILL dossier ethics — permanent archive, operator authorship, forgiveness path.</li>
+<li>Tour panel <code>https://127.0.0.1:9477/</code> and correlate UI rows with jsonl.</li>
+<li>Trace Queen WebRTC chain from navigation to gatekeeper to thermo receipt.</li>
+</ul></div>
+
+<figure class="figure"><img src="../assets/images/packet-field.jpg" alt="Packet field flows" loading="lazy" /><figcaption>Figure 5.1 — Local flows as positions in operator-readable space. Not cloud omniscience.</figcaption></figure>
+
+<h2 id="toc-05-plain-english-every-connection-becomes-a-sentenc">Plain English — every connection becomes a sentence</h2>
+<div class="callout everyone"><strong>Plain English:</strong> The packet field is a diary your machine writes about who talked to whom, in which direction, on which port, with what habit — so you can read the diary instead of drowning in hex dumps.</div>
+<p>Local-first means loopback truth: panel at :9477 on your host, jsonl under operator-owned paths, no phone-home conscience. The packet field does not see the whole internet. It sees endpoints your OS exposes to the daemon — <span class="tag impl">Implemented</span> scope. Claiming NEXUS “monitors the planet” is vendor fantasy; label it <span class="tag phil">Philosophy</span> until jsonl proves otherwise.</p>
+<p>Direction is a field dimension. <strong>TX</strong> is egress you own — bytes you sent. <strong>RX</strong> is ingress you must explain — bytes you received. Asymmetry matters for corroboration: a peer that only RX-es strange payloads without TX context tells a different story than symmetric chatter.</p>
+
+<h2 id="toc-05-connection-gatekeeper-ten-axis-table">Connection Gatekeeper — ten-axis table</h2>
+<p>Verdicts are summaries; axes are explanations. One weird packet does not condemn a peer — restraint is engineering, not sentiment. The gatekeeper scores up to ten axes and emits a verdict enum.</p>
+<table><thead><tr><th>Axis</th><th>Question asked</th><th>Typical signal</th></tr></thead>
+<tbody>
+<tr><td>Process path</td><td>Which binary owns the socket?</td><td><code>/usr/bin/...</code> vs tmp mount</td></tr>
+<tr><td>Port</td><td>Which habit class?</td><td>443 vs ephemeral vs shell-class</td></tr>
+<tr><td>Direction</td><td>TX, RX, or both?</td><td>Egress-heavy vs listen-only</td></tr>
+<tr><td>Payload shape</td><td>Size cadence entropy?</td><td>Bursts, TLS handshake, plain text</td></tr>
+<tr><td>Habit</td><td>Seen before on this machine?</td><td>Registry learning — below</td></tr>
+<tr><td>Honorability</td><td>Web context honest?</td><td>Queen navigation metadata</td></tr>
+<tr><td>Corroboration</td><td>Independent witnesses agree?</td><td>dns + port + path alignment</td></tr>
+<tr><td>Duration</td><td>Ephemeral flash or long dwell?</td><td>Short-lived vs persistent</td></tr>
+<tr><td>Peer identity</td><td>Loopback vs LAN vs remote?</td><td>127.0.0.1 vs RFC1918 vs global</td></tr>
+<tr><td>Policy</td><td>Operator rules engaged?</td><td>Watchlist, blocklist, sovereign mode</td></tr>
+</tbody></table>
+<table><thead><tr><th>Verdict</th><th>Meaning</th><th>Operator action</th></tr></thead>
+<tbody>
+<tr><td><code>USER_OK</code></td><td>Permitted flow</td><td>Archive trust; continue</td></tr>
+<tr><td><code>EPHEMERAL</code></td><td>Short-lived, low risk</td><td>Log; usually no drama</td></tr>
+<tr><td><code>SUSPICIOUS</code></td><td>Watchlist candidate</td><td>Corroborate; do not auto-KILL</td></tr>
+<tr><td><code>HARM_CANDIDATE</code></td><td>Harm signature pattern</td><td>Review; KILL only after human authorship</td></tr>
+</tbody></table>
+<p><span class="tag impl">Implemented.</span> Grep NEXUS-Shield sources for gatekeeper scoring — not Vulkan bindings. Chapter 4’s Shannon oracle may corroborate payload surprise; it does not replace axis review.</p>
+
+<h2 id="toc-05-field-jsonl-schema-habits-and-archive-discipline"><code>field jsonl</code> — schema habits and archive discipline</h2>
+<p>Jsonl is append-only memory — each line a JSON object, one flow event or verdict witness per row. Habits that keep archives forensically usable:</p>
+<ul>
+<li><strong>One row, one claim.</strong> Do not stuff multiple peers into one line because JSON allows it — grep wants linear time.</li>
+<li><strong>Sealed time column.</strong> Correlate with Chapter 19 sovereign receipts — wall clock lies; sealed session clock does not rewrite.</li>
+<li><strong>Stable keys.</strong> Process path, port, direction, verdict — column names consistent across weeks so week-twelve diff works.</li>
+<li><strong>Rotation with conscience.</strong> Large jsonl is truth; rotate with backup, encrypt at rest per operator policy, never “delete to feel better” without review.</li>
+<li><strong>No retroactive edit.</strong> Time is linear — append correction rows, do not silently rewrite history.</li>
+</ul>
+<pre class="eq">{"ts_sealed":9123456,"dir":"RX","port":443,"path":"/usr/bin/queen-browser",
+ "peer":"127.0.0.1:9477","verdict":"USER_OK","axis_note":"loopback panel"}
+{"ts_sealed":9123489,"dir":"TX","port":4444,"path":"/tmp/.cache/a.out",
+ "peer":"203.0.113.7:4444","verdict":"SUSPICIOUS","axis_note":"shell-class habit"}</pre>
+<p>Example rows are pedagogical — your daemon may pack additional axes. The habit is: <strong>grep-friendly sentences</strong> that survive reboot and court your future self as witness.</p>
+<div class="callout science"><strong>Science posture:</strong> jsonl is not physics. It is forensic narrative. Truth survives grep when keys are honest and timestamps sealed.</div>
+
+<h2 id="toc-05-kill-dossier-ethics-permanent-does-not-mean-casu">KILL dossier ethics — permanent does not mean casual</h2>
+<p>KILL is not a button mood. It creates a <strong>permanent dossier</strong> — archived, surviving reboot, readable years later when you forgot the afternoon’s frustration. Ethics:</p>
+<ol>
+<li><strong>Watchlist before block.</strong> <code>SUSPICIOUS</code> earns observation; KILL earns authorship.</li>
+<li><strong>Corroboration before permanence.</strong> Multiple axes, optionally oracle alert, optionally DNS trace — not one weird packet.</li>
+<li><strong>Human authorship.</strong> Daemons recommend; operators sign. No automated KILL because entropy stormed.</li>
+<li><strong>Forgiveness path.</strong> Local memory enables review — downgrade watchlist, annotate dossier, admit mistake without phone-home.</li>
+<li><strong>No cloud absolution.</strong> Vendor “global ban lists” outsource conscience; NEXUS keeps yours local.</li>
+</ol>
+<div class="callout love"><strong>Love as engineering restraint:</strong> KILL dossiers are gravestones, not confetti. The stack gives you power to remember — use it when you are willing to stand behind the memory.</div>
+<p>Panel HTML at :9477 is ephemeral window chrome — pretty, convenient, not the archive. <code>field jsonl</code> and KILL dossiers are the memory. Screenshot the panel for teaching; trust jsonl for testimony.</p>
+
+<h2 id="toc-05-port-registry-learning-habits-not-textbook-alone">Port registry learning — habits, not textbook alone</h2>
+<p>Ports are habits learned on <strong>your</strong> machine: 443 HTTPS, 53 DNS, 123 NTP, 9123 sovereign pulse, 9477 panel. Shell-class ports (4444, 1337 folklore) raise different axis weight than loopback 9477 health checks. The registry compares today’s flow against your history — not a generic list shipped from a vendor who never saw your lab.</p>
+<p>First week on a fresh install: many flows read <code>EPHEMERAL</code> or lightly <code>SUSPICIOUS</code> because habit axis lacks memory — normal, not failure. Week six: repeated Queen WebRTC peers should stabilize toward <code>USER_OK</code> if honorability and paths stay clean. Sudden habit breakage — trusted port, alien path — is corroboration gold.</p>
+<p>Chapter 20 Truth DNS at <code>127.0.0.1</code> with trace-from-root supplies naming honesty for corroboration. Packet field sentences plus DNS receipts beat either alone.</p>
+
+<h2 id="toc-05-panel-9477-tour-command-packets-threats-signals">Panel :9477 tour — command, packets, threats, signals</h2>
+<p>Open <code>https://127.0.0.1:9477/</code> after <code>./nexus.sh</code> (or your package equivalent). Treat tabs as views on the same archive, not separate products.</p>
+<table><thead><tr><th>Panel area</th><th>What you learn</th><th>Correlate with</th></tr></thead>
+<tbody>
+<tr><td>Command</td><td>Operator actions, daemon control</td><td>stderr, jsonl command rows</td></tr>
+<tr><td>Packets</td><td>Live flow sentences</td><td><code>field jsonl</code> tail</td></tr>
+<tr><td>Threats</td><td>Watchlist and harm candidates</td><td>Gatekeeper axes, not oracle alone</td></tr>
+<tr><td>Signals</td><td>RF/audio orchestration hints</td><td>Chapter 6 Field Antenna JSON</td></tr>
+<tr><td>DNS</td><td>Local resolution truth</td><td>Chapter 20 trace-from-root</td></tr>
+<tr><td>Library</td><td>Reference docs in-tree</td><td>This primer — no CDN conscience</td></tr>
+<tr><td>System</td><td>Service registry, ports</td><td>wiki service table :53 :67 :123 :9123 :9477</td></tr>
+</tbody></table>
+<p>Tour drill: pick one <code>USER_OK</code> row in Packets, one <code>SUSPICIOUS</code> row, grep jsonl for matching keys, note sealed time delta. If UI and jsonl disagree, UI is wrong until reconciled — same rule as HUD hex versus THERMO in Chapter 4.</p>
+
+<h2 id="toc-05-queen-webrtc-chain-gates-held-not-disabled">Queen WebRTC chain — gates held, not disabled</h2>
+<p>Queen posture: <strong>nothing optional, hold all gates, MP4 mandatory in-tree, EME held not omitted.</strong> Wrong security story: disable WebRTC to feel safe. Right story: WebRTC through Connection Gatekeeper with honorability axis and packet field sentences per peer.</p>
+<pre class="eq">Navigation → DNS (Ch.20) → socket open → gatekeeper axes → verdict
+          → field jsonl append → thermo receipt (Ch.7/21) → operator review</pre>
+<p>WebRTC media paths do not bypass NEXUS because Queen is sovereign browser, not a chrome fork with holes poked for convenience. Each peer earns TX/RX diary entries. Thermo context per WebGL surface inherits AMOURANTHRTX proxy discipline when built with <code>QUEEN_BROWSER_BUILD</code> — offense and defense share timestamps without merging scores.</p>
+<p>Chapter 21 is full doctrine. This chapter plants the chain: packet field is not “network chapter only” — it is the perimeter Queen wears.</p>
+
+<h2 id="toc-05-tx-and-rx-contracts-the-gatekeeper-expects-you-t">TX and RX — contracts the gatekeeper expects you to honor</h2>
+<p>Every packet field sentence carries direction because accountability is asymmetric. TX flows are confessions: you originated bytes, chose destination, accepted egress policy. RX flows are interrogations: someone reached your machine — which process listened, which port opened, which habit broke? Operators who journal only RX panic miss half the story; operators who journal only TX forget that defense begins at ingress.</p>
+<p>Corroboration pairs directions. A peer with heavy RX and no TX history may be benign software update noise — or may be exfiltration listening post. A symmetric chat pattern on loopback 9477 differs from symmetric chatter to global RFC1918. The gatekeeper encodes direction on its own axis; your job is to narrate why the direction makes sense in plain language before you escalate verdicts.</p>
+<p>Chapter 2 named packet field as the third scale of state. Direction is not metadata garnish — it is a coordinate. Queen navigation that claims HTTPS honorability while jsonl shows raw shell-class TX is a lie the axes exist to catch.</p>
+
+<h2 id="toc-05-defense-rhythm-daily-weekly-incident">Defense rhythm — daily, weekly, incident</h2>
+<p>Field Technology is practice, not one-time read. Rhythm beats heroics.</p>
+<table><thead><tr><th>Cadence</th><th>Action</th><th>Artifact</th></tr></thead>
+<tbody>
+<tr><td>Daily</td><td>Glance panel Packets while dev session runs</td><td>Mental model of normal</td></tr>
+<tr><td>Weekly</td><td>Archive one gatekeeper decision explicitly</td><td>jsonl trust or watchlist row</td></tr>
+<tr><td>Weekly</td><td>grep THERMO + tail jsonl same session</td><td>Ch. 11 observability marriage</td></tr>
+<tr><td>Incident</td><td>SUSPICIOUS → corroborate axes → decide</td><td>Annotated jsonl, not rage-KILL</td></tr>
+<tr><td>Quarterly</td><td>Rotate jsonl backup; test restore</td><td>Encrypted archive integrity</td></tr>
+</tbody></table>
+<div class="callout drill"><strong>Drill 5.A — Defense baseline</strong></div>
+<pre class="eq">./nexus.sh
+curl -k https://127.0.0.1:9477/ | head -5   # panel alive
+ss -tunap | head -20
+tail -5 /var/lib/nexus-shield/field.jsonl    # path may vary per install</pre>
+<div class="callout drill"><strong>Drill 5.B — Corroboration write</strong></div>
+<pre class="eq"># After SUSPICIOUS row appears:
+grep -F 'SUSPICIOUS' /var/lib/nexus-shield/field.jsonl | tail -3
+# Record process path + port + DNS answer for same peer in operator journal</pre>
+
+<h2 id="toc-05-failure-catalog-packet-field-edition">Failure catalog — packet field edition</h2>
+<table><thead><tr><th>Failure mode</th><th>Symptom</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>Product blur</td><td>grep gatekeeper in AMOURANTHRTX engine</td><td>Separate repos — Ch. 1 table</td></tr>
+<tr><td>Cloud fantasy</td><td>Expect NEXUS to see global internet</td><td>Local-first scope label</td></tr>
+<tr><td>One-packet condemn</td><td>KILL on first weird RX</td><td>94/6 restraint; watchlist</td></tr>
+<tr><td>Panel as archive</td><td>Screenshot only, no jsonl</td><td>Append rows; panel is ephemeral</td></tr>
+<tr><td>Oracle merge</td><td>Shannon storm → auto verdict</td><td>Ch. 4 layer separation</td></tr>
+<tr><td>Habit amnesia</td><td>Fresh install panic at EPHEMERAL</td><td>Let registry learn week one</td></tr>
+<tr><td>Queen hole-poke</td><td>Disable WebRTC “for security”</td><td>Ch. 21 hold gates</td></tr>
+<tr><td>Time fantasy</td><td>jsonl rows without sealed clock</td><td>Ch. 19 sovereign time column</td></tr>
+</tbody></table>
+
+<h2 id="toc-05-ephemeral-versus-permanent-what-defense-remember">Ephemeral versus permanent — what defense remembers</h2>
+<p>Panel HTML refreshes; browser tabs close; screenshots fade from chat logs. <code>field jsonl</code> and KILL dossiers remain — that asymmetry is design. Operators who understand permanence wield KILL sparingly and watchlists generously. Operators who mistake panel cache for archive delete history by reinstalling and wonder why habits reset.</p>
+<p>Backup jsonl before OS upgrades. Encrypt archives at rest if your threat model includes shared disks. Rotate logs with append-only discipline — never rewrite a row to feel better about Tuesday. Chapter 19 sealed time columns make rotated archives comparable across months.</p>
+
+<h2 id="toc-05-cross-links-defense-meets-offense">Cross-links — defense meets offense</h2>
+<p>Chapter 2: three scales — packet field is scale three. Chapter 4: Shannon oracle corroborates, does not replace axes. Chapter 6: Field Antenna JSON panels appear under Signals — correlate, no super-score. Chapter 7: dispatch thermo runs parallel; merge timestamps only. Chapter 11: observability grep rhythm. Chapter 19–20: sovereign time and Truth DNS. Chapter 21: Queen all gates. Chapter 12: honesty rocks on local scope.</p>
+
+<h2>Chapter summary</h2>
+<p>The packet field turns local sockets into sentences in <code>field jsonl</code> — TX/RX, process path, port habits, gatekeeper verdicts from ten axes. Watchlist before block; KILL dossiers permanent with human authorship. Port registry learns your machine. Panel :9477 tours live views; jsonl is memory. Queen WebRTC flows through gatekeeper, not around it. Defense rhythm is daily glance, weekly archive, incident corroboration.</p>
+<p>Prior: <a href="04-entropy.html">Chapter 4 — Entropy</a>. Next: <a href="06-rf-signals.html">Chapter 6 — RF &amp; Signals</a> — three meanings before offense takes the spear in <a href="07-gpu-engine.html">Chapter 7</a>.</p>
+
+<h2 id="toc-05-deep-dive-nexus-daemon-rhythm-and-sampling-ethic">Deep dive — NEXUS daemon rhythm and sampling ethics</h2>
+<p>NEXUS daemons sample sockets on a duty cycle tuned by calm/alert/storm posture from the entropy oracle — nurse watching vitals, not judge passing sentence. High storm duty increases CPU wakeups locally; it does not phone home. Operators on laptops notice battery tradeoffs — honesty includes admitting local defense costs local watts, still not the same as <code>entropyThisFrame</code> proxy.</p>
+<p>Sampling sees process paths when OS APIs allow; containers and sandboxes may obscure paths — gatekeeper axes downgrade confidence, not invent guilt. When path is unknown, verdicts trend EPHEMERAL or SUSPICIOUS rather than USER_OK — restraint again.</p>
+<p>Corroboration means independent witnesses: socket table, payload hints, DNS resolution trace (Chapter 20), sovereign time column (Chapter 19), optional tcpdump slice you attach to incident notes. One witness is never a trial.</p>
+
+<h2 id="toc-05-deep-dive-threat-panel-json-and-live-panel-anato">Deep dive — threat-panel.json and live panel anatomy</h2>
+<p><code>threat-panel.json</code> feeds the :9477 dashboard — ephemeral snapshot refreshed by daemon, not a substitute for jsonl archive. Read it for “what is happening now”; grep jsonl for “what happened across reboots.”</p>
+<table><thead><tr><th>Panel region</th><th>Source</th><th>Persistence</th></tr></thead>
+<tbody>
+<tr><td>Live flows table</td><td>Current gatekeeper scoring</td><td>Panel session</td></tr>
+<tr><td>Watchlist column</td><td>SUSPICIOUS history</td><td>jsonl-backed</td></tr>
+<tr><td>DNS / time widgets</td><td>Ch. 19–20 services</td><td>Config + receipts</td></tr>
+<tr><td>Signals / RF tabs</td><td>Field Antenna JSON</td><td>Correlate only — Ch. 6</td></tr>
+<tr><td>Command tab</td><td>Operator actions</td><td>Permanent actions → jsonl</td></tr>
+</tbody></table>
+<p>Tour the panel once per month even if quiet — familiarity prevents panic formatting during real incidents.</p>
+
+<h2 id="toc-05-deep-dive-incident-narrative-template-half-page">Deep dive — incident narrative template (half page)</h2>
+<p>When a flow surprises you, write before you click KILL:</p>
+<ol>
+<li><strong>Sentence</strong> — one jsonl row quoted: direction, ports, path, verdict.</li>
+<li><strong>Context</strong> — what you were doing (Queen tab, build, game, ssh).</li>
+<li><strong>Corroboration</strong> — second witness (oracle H, DNS trace, tcpdump one-liner).</li>
+<li><strong>Decision</strong> — watch, block, forgive, KILL — with date and operator name.</li>
+<li><strong>Follow-up</strong> — grep THERMO if AMOURANTHRTX ran parallel; note timestamp only.</li>
+</ol>
+<p>This template is how field literacy meets love as restraint — memory without phone-home, permanent actions only with authorship.</p>
+
+<h2 id="toc-05-deep-dive-ten-gatekeeper-axes-in-plain-english">Deep dive — ten gatekeeper axes in plain English</h2>
+<p>Axes are not secret sauce — they are explicit questions the daemon asks before summarizing a verdict. Operators who learn axes forgive peers intelligently and escalate with evidence.</p>
+<table><thead><tr><th>Axis theme</th><th>Question the axis asks</th><th>Typical innocent story</th><th>Typical scrutiny story</th></tr></thead>
+<tbody>
+<tr><td>Process path stability</td><td>Does this binary usually own this socket?</td><td>Same browser binary, same 443 egress</td><td>Unknown helper spawned tunnel</td></tr>
+<tr><td>Port habit</td><td>Is this port normal for your machine?</td><td>443, 53, local 9477</td><td>4444-class first contact</td></tr>
+<tr><td>Direction balance</td><td>TX/RX ratio plausible for app?</td><td>Streaming RX-heavy session</td><td>RX flood with idle TX</td></tr>
+<tr><td>Payload hints</td><td>Do bytes look structured or noisy?</td><td>TLS-shaped chatter</td><td>Opaque bulk without context</td></tr>
+<tr><td>Honorability</td><td>Does navigation context match socket?</td><td>Queen tab origin matches peer</td><td>WebRTC without page context</td></tr>
+<tr><td>Duration class</td><td>EPHEMERAL blip or persistent tunnel?</td><td>DNS UDP millisecond</td><td>Multi-hour reverse shell shape</td></tr>
+<tr><td>Corroboration count</td><td>How many independent signals agree?</td><td>ss + path + calm oracle</td><td>Single weird frame only</td></tr>
+<tr><td>Registry memory</td><td>Has this peer been forgiven before?</td><td>Known dev server</td><td>Repeated SUSPICIOUS after review</td></tr>
+<tr><td>Time alignment</td><td>Does sovereign time column agree?</td><td>USER_OK pulse</td><td>SQUIDGIE during same flow</td></tr>
+<tr><td>Operator override</td><td>Human watchlist or block present?</td><td>Manual USER_OK for lab</td><td>Prior KILL pattern cousin</td></tr>
+</tbody></table>
+<p>Verdict enums compress axis stories — always read axes before arguing with the enum. Chapter 12 rocks table lists conflation failures; this table lists human judgment inputs.</p>
+
+<h2 id="toc-05-deep-dive-building-a-port-habit-registry-over-mo">Deep dive — building a port habit registry over month one</h2>
+<p>Week one registry is naive — textbook ports only. Week four registry is <em>yours</em>: dev servers, game anticheat channels, local mesh sync, Queen WebRTC UDP patterns. The packet field learns without cloud upload because jsonl stays on disk.</p>
+<p>Operators exporting habits between machines should export jsonl archives, not screenshots. Import on new machine seeds registry — forgiveness and suspicion travel with evidence, not with vendor account login.</p>
+<p>Document lab ports in operator runbook: “Port 8765 is my test echo — expect USER_OK when binary path matches.” Future-you will thank present-you when a colleague’s script triggers SUSPICIOUS on that port.</p>
+
+<h2 id="toc-05-deep-dive-jsonl-grep-patterns-for-week-two-defen">Deep dive — jsonl grep patterns for week-two defense</h2>
+<pre class="eq">grep '"verdict":"SUSPICIOUS"' field.jsonl | tail -20
+grep '"direction":"RX"' field.jsonl | grep -v 'USER_OK' | tail -10
+grep '"port":' field.jsonl | sort | uniq -c | sort -rn | head -20</pre>
+<p>First pattern surfaces watchlist candidates. Second finds ingress that did not earn USER_OK — hospitality with scrutiny. Third builds empirical port histogram for <em>your</em> machine — registry ground truth beats textbook port lists alone.</p>
+<p>Pair grep with panel tour weekly. jsonl is memory; panel is pulse. Defense literacy is rhythm — daily pulse glance, weekly grep archive, monthly port histogram update in runbook.</p>
+
+<h2>Study questions</h2>
+<ol>
+<li>Why is packet field local-first, and what myth does that refuse?</li>
+<li>Name four gatekeeper axes and two verdict enums.</li>
+<li>What jsonl habits keep archives grep-friendly?</li>
+<li>When is KILL ethical versus premature?</li>
+<li>Tour :9477 — which tab maps to Field Antenna signals?</li>
+<li>Trace Queen WebRTC chain in five steps.</li>
+<li>Distinguish panel HTML from KILL dossier persistence.</li>
+<li>Run Drill 5.A; record one normal and one notable flow.</li>
+<li>Why is one weird packet insufficient for condemnation?</li>
+<li>How does Chapter 7 thermo relate without merging scores?</li>
+</ol>
+
+<h2 id="toc-05-ss-versus-jsonl-when-to-use-which">ss versus jsonl — when to use which</h2><p>ss is instantaneous snapshot; jsonl is memory arc. Packet field adds meaning to snapshots and archives arcs.</p>
+
+<h2 id="toc-05-tcpdump-corroboration">tcpdump corroboration</h2><p>tcpdump frames corroborate payload stories gatekeeper summarizes — independent signal before KILL.</p>
+
+<h2 id="toc-05-ephemeral-verdict-lifecycle">EPHEMERAL verdict lifecycle</h2><p>Short flows may never need archive depth — EPHEMERAL is kindness to DNS blips, not negligence to tunnels.</p>
+
+<h2 id="toc-05-harm-candidate-review-queue">HARM_CANDIDATE review queue</h2><p>Operator review queue discipline — dashboard shows candidates; human decides block or forgive.</p>
+
+<h2 id="toc-05-panel-library-tab">Panel library tab</h2><p>Library surfaces reference docs locally — perimeter includes knowledge, not cloud PDF phone-home.</p>
+
+<h2 id="toc-05-nexus-install-root-layout">NEXUS_INSTALL_ROOT layout</h2><p>Know install root for lib paths — sovereign-time.py, gatekeeper modules, field jsonl location. Literacy includes filesystem.</p>
+
+<h2 id="toc-05-mit-license-boundary-exercises">MIT license boundary exercises</h2><p>Can you link NEXUS and AMOURANTHRTX in Queen build? Yes with license eyes open. Can you pretend one repo? No.</p>
+
+<h2 id="toc-05-loopback-tls-panel">Loopback TLS panel</h2><p>127.0.0.1 TLS is local trust — not public CA theater. Operator owns cert story.</p>
+
+<h2 id="toc-05-block-versus-watch-operational-slo">Block versus watch operational SLO</h2><p>Watch SLO: hours to review. Block SLO: documented reason in archive. KILL SLO: permanent dossier with context.</p>
+
+<h2 id="toc-05-defense-in-depth-local-edition">Defense in depth — local edition</h2><p>Depth means jsonl memory plus gatekeeper plus operator review plus Queen gates plus Truth DNS — not cloud layers you cannot grep.</p>
+
+<h2 id="toc-05-tx-egress-ownership-narrative">TX egress ownership narrative</h2><p>TX bytes are your speech — own them. Unexpected TX to rare port is confession you must explain or block.</p>
+
+<h2 id="toc-05-rx-ingress-hospitality-narrative">RX ingress hospitality narrative</h2><p>RX is guest at your door — hospitality with verification. RX without process path is anonymous guest — higher scrutiny.</p>
+
+<h2 id="toc-05-watchlist-hygiene">Watchlist hygiene</h2><p>Review SUSPICIOUS weekly — forgive or escalate deliberately. Watchlist rot is security debt.</p>
+
+<h2 id="toc-05-panel-command-tab">Panel command tab</h2><p>Command tab issues local operator actions — receipts should land in jsonl when actions permanent.</p>
+
+<h2 id="toc-05-dns-panel-integration">DNS panel integration</h2><p>DNS view supports Truth Resolver posture — 127.0.0.1 trace discipline Chapter 20. DNS lies poison packet sentences.</p>
+
+<h2 id="toc-05-queen-mp4-mandatory-why-mention-in-packet-chapte">Queen MP4 mandatory — why mention in packet chapter</h2><p>Media bytes are packets — MP4 in-tree means media parsing in sovereign boundary, not codec absent security. Chapter 21; Chapter 5 plants packet-media coupling.</p>
+
+<h2 id="toc-05-exercise-5-c-narrate-one-flow">Exercise 5.C — narrate one flow</h2><p>Pick one jsonl row; write five sentences plain English: who, direction, port habit, verdict, your decision. Literacy is narration.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch05">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Packet field</td><td>Local socket sentences</td><td><span class="tag impl">Implemented</span></td><td><code>field jsonl archive</code></td></tr><tr><td>Gatekeeper</td><td>Ten-axis scoring</td><td><span class="tag impl">Implemented</span></td><td><code>USER_OK / SUSPICIOUS / HARM_CANDIDATE</code></td></tr><tr><td>Watchlist</td><td>Restraint before KILL</td><td><span class="tag impl">Implemented</span></td><td><code>Operator override path</code></td></tr><tr><td>Cloud omniscience</td><td>Internet-wide vision</td><td><span class="tag meta">Metaphor</span></td><td><code>Rejected — local scope only</code></td></tr></tbody></table>
+<pre class="eq">verdict = score(axis₁…axis₁₀) → tier</pre>
+<pre class="eq">./nexus.sh  # panel :9477  |  tail field jsonl</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>NEXUS-Shield/connection_gatekeeper.py</code></li><li><code>NEXUS-Shield/threat-panel.json</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-05-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Packet field turns local sockets into archived sentences — gatekeeper axes, watchlist restraint, jsonl memory. Defense is rhythm. Queen inherits this perimeter. Chapter 6 separates RF before offense in Chapter 7.</p>
+</div>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 6</p>
+<h1>Signal Shell — RF & Weave</h1>
+<div class="objectives">
+<h2 id="toc-06-learning-objectives">Learning objectives</h2>
+<ol>
+<li>Separate three RF meanings in this stack with correct labels.</li>
+<li>Describe planetary weave as visual-only vocabulary.</li>
+<li>Locate Field Antenna Orchestrator outputs in NEXUS.</li>
+<li>State FSPL as teaching reference, not shader computation.</li>
+<li>Relate fieldPhi gate potential to RF metaphor without ionospheric claims.</li>
+<li>Run panel drill for signals-field artifacts.</li>
+</ol>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-06-three-meanings-of-rf-in-this-stack">Three meanings of RF in this stack</a></li><li><a href="#toc-06-planetary-weave-visual-layer">Planetary weave — visual layer</a></li><li><a href="#toc-06-fieldphi-gate-potential-not-literal-radio">fieldPhi — gate potential, not literal radio</a></li><li><a href="#toc-06-field-antenna-orchestrator-nexus">Field Antenna Orchestrator — NEXUS</a></li><li><a href="#toc-06-free-space-path-loss-teaching-reference">Free-space path loss — teaching reference</a></li><li><a href="#toc-06-signals-panel-integration">Signals panel integration</a></li><li><a href="#toc-06-queen-and-webrtc-rf-adjacent-perimeter">Queen and WebRTC — RF-adjacent perimeter</a></li><li><a href="#toc-06-operator-drill">Operator drill</a></li><li><a href="#toc-06-failure-modes">Failure modes</a></li><li><a href="#toc-06-chapter-summary">Chapter summary</a></li><li><a href="#toc-06-study-questions">Study questions</a></li><li><a href="#toc-06-magnetosphere-and-ionosphere-visual-stack-only">Magnetosphere and ionosphere — visual stack only</a></li><li><a href="#toc-06-audio-bands-in-field-antenna">Audio bands in Field Antenna</a></li><li><a href="#toc-06-laser-405-1550-nm-entries">Laser 405–1550 nm entries</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-06-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">RF is three different words wearing one jacket. On the way you will separate planetary weave <span class="tag vis">Visual</span>, Field Antenna <span class="tag impl">Implemented</span>, and Phi potential on binding 8 — plus FSPL on paper, not in shaders.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch06-planetary-weave.jpg" alt="Visual RF shell" loading="lazy" /><figcaption>On the way — Visual RF shell</figcaption></figure>
+<ul class="on-the-way-journey"><li>Planetary weave shell stack</li><li>Field Antenna JSON panels</li><li>Phi versus RF disambiguation workshop</li><li>Handoff discipline before Chapter 7 dispatch</li></ul>
+</div>
+
+
+<h2 id="toc-06-three-meanings-of-rf-in-this-stack">Three meanings of RF in this stack</h2>
+<p>RF is three different weapons in the same word. Separate them or you will argue with a shader about ionospheric physics.</p>
+<table><thead><tr><th>Context</th><th>What RF means</th><th>Label</th></tr></thead>
+<tbody>
+<tr><td><code>planetary_weave.comp</code></td><td>Atmospheric visual shell layer</td><td><span class="tag vis">Visual</span></td></tr>
+<tr><td>NEXUS Field Antenna</td><td>Local RF/audio/wired orchestration</td><td><span class="tag impl">Implemented</span></td></tr>
+<tr><td>Engine <code>fieldPhi</code></td><td>Gate voltage / wave potential</td><td><span class="tag impl">Implemented</span></td></tr>
+</tbody></table>
+<div class="callout science"><strong>Do not</strong> equate GPU Phi with ionospheric propagation without labeling the jump. Chapter 12 rocks table restates this.</div>
+
+<figure class="figure"><img src="../assets/images/chapters/ch06-planetary-weave.jpg" alt="Planetary weave visual shell" loading="lazy" /><figcaption>Figure 6.1 — Visual shell only. Not a spectrum analyzer. Not FSPL in silicon.</figcaption></figure>
+
+<h2 id="toc-06-planetary-weave-visual-layer">Planetary weave — visual layer</h2>
+<p>Earth cross-section shader with concentric shells. RF layer sits in stack metaphor: core → crust → hydro → clouds → troposphere → ionosphere → <strong>RF shell</strong> → magnetosphere.</p>
+<pre class="eq">#define R_RF  (R_EARTH + 1.05)   // Layer L_RF — visual vocabulary</pre>
+<p><span class="tag vis">Visual vocabulary</span> — teaches where signals live in stack metaphor. Does <em>not</em> compute FSPL inside AMOURANTHRTX shaders. Honesty on every rock.</p>
+
+<h3>What weave teaches</h3>
+<p>Pedagogy: operators need a picture of where defense and dispatch stories sit relative to atmosphere and ionosphere. Weave supplies picture, not instrument. When someone claims weave color proves propagation anomaly, return to Chapter 12.</p>
+
+<h2 id="toc-06-fieldphi-gate-potential-not-literal-radio">fieldPhi — gate potential, not literal radio</h2>
+<p>Binding 8 Phi carries wave and gate potential — electrical metaphor coupled to Thermo and Flow. <span class="tag impl">Implemented</span> fabric evolution. <span class="tag meta">Not</span> claim that texels measure RF watts at antenna.</p>
+<p>Chapter 3 coupling; Chapter 15 Maxwell tribute. Phi is RF word only in metaphor sense — label before you speak.</p>
+
+<h2 id="toc-06-field-antenna-orchestrator-nexus">Field Antenna Orchestrator — NEXUS</h2>
+<p>Monitors RF + audio + wired + laser reference bands. Optical/laser entries 405–1550 nm. LIDAR flow ports in registry. GPS field anchors for triangulation metaphor. Outputs:</p>
+<ul>
+<li><code>field-antenna-panel.json</code></li>
+<li><code>field-rf-panel.json</code></li>
+<li><code>signals-field-panel.json</code></li>
+</ul>
+<p><span class="tag impl">Implemented in NEXUS.</span> Local orchestration — correlate with packet field at panel :9477.</p>
+
+<h3>Registry and habits</h3>
+<p>Like port stories in Chapter 5, RF registry learns local device habits — context, not automatic verdict.</p>
+
+<h2 id="toc-06-free-space-path-loss-teaching-reference">Free-space path loss — teaching reference</h2>
+<div class="eq">FSPL ∝ 20·log₁₀(d) + 20·log₁₀(f)</div>
+<p>ITU-R/FCC context in NEXUS docs — <strong>not</strong> computed inside AMOURANTHRTX shaders. Teach path loss beside the label. Planetary weave does not replace FSPL math with colors.</p>
+
+<h2 id="toc-06-signals-panel-integration">Signals panel integration</h2>
+<p>Operator correlates signals-field JSON with packet field jsonl and AMOURANTHRTX THERMO — three scales from Chapter 2. No single dashboard metric collapse.</p>
+
+<h2 id="toc-06-queen-and-webrtc-rf-adjacent-perimeter">Queen and WebRTC — RF-adjacent perimeter</h2>
+<p>WebRTC is not disabled — gated through Connection Gatekeeper. RF words appear in peer stories; verdicts remain NEXUS. Chapter 21 Queen doctrine. MP4 mandatory in-tree; EME held.</p>
+
+<h2 id="toc-06-operator-drill">Operator drill</h2>
+<pre class="eq">./nexus.sh
+curl -sk https://127.0.0.1:9477/signals-field-panel.json | head -c 1500
+# Name which RF meaning each JSON block belongs to</pre>
+
+<h2 id="toc-06-failure-modes">Failure modes</h2>
+<table><thead><tr><th>Mode</th><th>Symptom</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>Weave as instrument</td><td>Ionosphere claims from shader</td><td><span class="tag vis">Visual</span></td></tr>
+<tr><td>Phi as MHz</td><td>Texel equals spectrum</td><td>Metaphor — binding 8</td></tr>
+<tr><td>FSPL in GPU</td><td>Expect FSPL in weave</td><td>NEXUS docs only</td></tr>
+<tr><td>Antenna omniscience</td><td>Global RF vision</td><td>Local orchestration</td></tr>
+</tbody></table>
+
+<h2 id="toc-06-chapter-summary">Chapter summary</h2>
+<p>RF is three meanings — weave visual, NEXUS antenna implemented, Phi potential implemented metaphor. FSPL is teaching reference. Planetary weave is vocabulary art. Chapter 7 offense dispatch next.</p>
+
+<h2 id="toc-06-study-questions">Study questions</h2>
+<ol>
+<li>Fill three-row RF table from memory with labels.</li>
+<li>What does R_RF define — and what does it not compute?</li>
+<li>Name three Field Antenna JSON outputs.</li>
+<li>Why is FSPL not in AMOURANTHRTX shaders?</li>
+<li>How does Phi differ from planetary weave RF shell?</li>
+<li>Run signals panel drill — classify one JSON field.</li>
+<li>Cross-link Queen WebRTC gates — which chapter?</li>
+</ol>
+<p><a href="chapters/07-gpu-engine.html">Chapter 7 — Offensive Dispatch →</a></p>
+
+<h2 id="toc-06-magnetosphere-and-ionosphere-visual-stack-only">Magnetosphere and ionosphere — visual stack only</h2>
+<p>Planetary weave stacks ionosphere then RF shell then magnetosphere as shader radii — pedagogy for where metaphorical signals sit. No claim AMOURANTHRTX models ionospheric scintillation for operations.</p>
+
+<h2 id="toc-06-audio-bands-in-field-antenna">Audio bands in Field Antenna</h2>
+<p>NEXUS orchestrator includes audio alongside RF and wired — local device ecology, not Spotify analytics. Outputs land in signals panels for operator review.</p>
+
+<h2 id="toc-06-laser-405-1550-nm-entries">Laser 405–1550 nm entries</h2>
+<p>Optical/laser registry bands are reference anchors — ITU/FCC teaching context in docs. Label before operational claims.</p>
+
+<h2 id="toc-06-lidar-flow-ports">LIDAR flow ports</h2>
+<p>Registry includes LIDAR flow ports as habit context — correlate with packet field when local processes speak lidar-class ports.</p>
+
+<h2 id="toc-06-gps-field-anchors">GPS field anchors</h2>
+<p>GPS anchors support triangulation metaphor in signals layer — not replacement for survey-grade GNSS without labels. Pair with sovereign time Chapter 19 when sub-micron stories appear.</p>
+
+<h2 id="toc-06-fieldphi-milli-and-gate-stories">fieldPhi milli and gate stories</h2>
+<p><code>FIELD_PHI_MILLI = 618</code> and gate fidelity couple electrical metaphor to readable gates — implementation detail in engine headers. Not literal RF carrier frequency.</p>
+
+<h2 id="toc-06-retrortx-and-planetary-shaders">RetroRTX and planetary shaders</h2>
+<p>Specialty swipes may show planetary or retro visuals — still <span class="tag vis">Visual</span> unless stderr proves otherwise. Do not operationalize shader art.</p>
+
+<h2 id="toc-06-cross-link-chapter-7-offense">Cross-link Chapter 7 offense</h2>
+<p>After RF separation, Chapter 7 dispatch writes fabric and die — offense continues stack. Defense read RF panels; offense writes Phi/Thermo/Flow. Same operator, different verbs.</p>
+
+<h2 id="toc-06-itu-r-fcc-context-in-operator-docs">ITU-R/FCC context in operator docs</h2>
+<p>NEXUS documentation may cite regulatory context for teaching FSPL and band plans — docs are not shaders. Teach beside label; grep implementation separately.</p>
+
+<h2 id="toc-06-extended-treatment-planetary-weave-shader-stack-">Extended treatment — planetary weave shader stack pedagogy</h2>
+<p>Core, crust, hydrosphere, clouds, troposphere, ionosphere, RF shell, magnetosphere — concentric radii in planetary_weave.comp. Each shell teaches where metaphorical signals live in Earth cross-section art. R_RF = R_EARTH + 1.05 defines RF layer radius — constant in shader literature, not ionosonde measurement.</p>
+
+<h2 id="toc-06-extended-treatment-three-rf-meanings-drill-expan">Extended treatment — three RF meanings drill expanded</h2>
+<p>Drill daily until reflex: weave mention → Visual tag. Antenna JSON → Implemented NEXUS. Phi potential → Implemented fabric metaphor not literal MHz. FSPL equation → docs teaching only.</p>
+
+<h2 id="toc-06-extended-treatment-field-antenna-orchestrator-ba">Extended treatment — Field Antenna Orchestrator bands</h2>
+<p>RF, audio, wired, laser 405–1550 nm, LIDAR ports, GPS anchors — local orchestration outputs to field-antenna-panel.json, field-rf-panel.json, signals-field-panel.json. Correlate with packet field; do not merge scores.</p>
+
+<h2 id="toc-06-extended-treatment-fieldphi-gate-potential">Extended treatment — fieldPhi gate potential</h2>
+<p>Binding 8 Phi — wave and gate potential, FIELD_PHI_MILLI 618 in engine vocabulary, GateFidelity coupling. Electrical words are metaphor; implementation is texel evolution. Chapter 15 Maxwell GPU coupling deepens.</p>
+
+<h2 id="toc-06-extended-treatment-fspl-teaching-beside-implemen">Extended treatment — FSPL teaching beside implementation</h2>
+<p>FSPL ∝ 20 log10(d) + 20 log10(f) in ITU-R/FCC teaching context in NEXUS docs — not AMOURANTHRTX shader compute. Teach students beside label; quiz on label not on weave colors.</p>
+
+<h2 id="toc-06-extended-treatment-queen-webrtc-and-rf-vocabular">Extended treatment — Queen WebRTC and RF vocabulary</h2>
+<p>WebRTC peers produce packet sentences and may invoke RF words in UI — gatekeeper still owns verdict. MP4 in-tree; EME held. Chapter 21 completes browser perimeter; Chapter 6 prevents RF word collision errors before dispatch chapter.</p>
+
+<h2 id="toc-06-rf-chapter-examination-preparation">RF chapter — examination preparation</h2>
+<p>Exam question: Define three RF meanings with labels. Exam question: Why is FSPL not in shaders? Exam question: Name three antenna JSON outputs. Exam question: What does R_RF define? Exam question: How does Queen handle WebRTC RF words? Pass by labeling every sentence.</p>
+<p>Planetary weave is art for orientation — like classroom globe — not operational globe. Field Antenna is local instrument panel — like ham shack meters — not ionosonde network. Phi is fabric potential — like voltage metaphor in textbook — not voltmeter on PCIe.</p>
+<p>Chapter 6 completes RF disambiguation before Chapter 7 dispatch — so when Phi moves, you do not claim ionosphere moved.</p>
+
+<h2 id="toc-06-rf-capstone-label-every-sentence-drill">RF capstone — label every sentence drill</h2>
+<p>Sentence: Planetary weave shows ionosphere color. Label: Visual only. Sentence: Antenna panel lists band 915MHz entry. Label: Implemented NEXUS local. Sentence: Phi texel rose 0.3. Label: Implemented fabric metaphor. Sentence: FSPL at 2km 2.4GHz is X dB. Label: Teaching reference in docs. Sentence: Queen WebRTC peer connected. Label: Gatekeeper Implemented Chapter 21.</p>
+<p>Five sentences, five labels, zero category errors — Chapter 6 exam passed.</p>
+<p>Handoff: Chapter 7 dispatch writes Phi; you now know not to radio astronomer with shader screenshot.</p>
+<p>Cross-links: <a href="chapters/07-gpu-engine.html">07-gpu-engine</a>, <a href="chapters/12-reality-theory.html">12-reality-theory</a>, <a href="chapters/15-maxwell-gpu.html">15-maxwell-gpu</a>, <a href="chapters/21-field-browser-queen.html">21-field-browser-queen</a>.</p>
+
+<h2 id="toc-06-planetary-weave-layer-walkthrough-for-instructor">Planetary weave — layer walkthrough for instructors</h2>
+<p>Instructors teaching Chapter 6 should walk layers aloud: core, crust, hydro, clouds, troposphere, ionosphere, RF shell, magnetosphere. Each layer name is vocabulary only. Ask students: which layer is instrumented? Answer: none in AMOURANTHRTX shaders.</p>
+
+<h2 id="toc-06-field-antenna-correlating-with-packet-field">Field Antenna — correlating with packet field</h2>
+<p>When antenna JSON notes band activity and jsonl notes RX to matching port, human correlates — no auto-merge score. Same discipline as thermo plus packet correlation in Chapter 2.</p>
+
+<h2 id="toc-06-phi-wave-versus-rf-carrier-student-confusion-faq">Phi wave versus RF carrier — student confusion FAQ</h2>
+<p>Q: Is Phi 2.4 GHz? A: No — gate potential texel story. Q: Is weave color signal strength? A: No — visual. Q: Is antenna JSON dBm? A: Local orchestration reading — check implementation labels in NEXUS lib.</p>
+
+<h2 id="toc-06-lidar-ports-registry-local-habit-context">LIDAR ports registry — local habit context</h2>
+<p>LIDAR-related ports in registry provide habit context for robotics operators — not autonomous weapon narrative — local machine literacy.</p>
+
+<h2 id="toc-06-gps-anchors-and-sovereign-time">GPS anchors and sovereign time</h2>
+<p>GPS field anchors meet sovereign time Chapter 19 when sub-micron stories appear — triple verify before trusting map dot pretty alone.</p>
+
+<h2 id="toc-06-rf-chapter-hands-on-instructor-checklist">RF chapter hands-on — instructor checklist</h2>
+<p>Show weave screenshot — label Visual. Show antenna JSON — label Implemented. Show Phi heatmap — label fabric. Show FSPL in docs — label teaching. Quiz immediately.</p>
+
+<h2 id="toc-06-chapter-6-extended-rf-disambiguation-workshop-90">Chapter 6 extended — RF disambiguation workshop (90 minutes)</h2>
+<p>Minutes 0-15: three meanings lecture. Minutes 15-30: planetary weave screenshot label Visual. Minutes 30-45: antenna panel JSON label Implemented. Minutes 45-60: Phi heatmap Classic label fabric metaphor. Minutes 60-75: FSPL worksheet from NEXUS docs label teaching. Minutes 75-90: exam five sentences from long_06c. Workshop completes before Chapter 7 dispatch.</p>
+<h2 id="toc-06-signals-and-packets-correlation-without-merge">Signals and packets — correlation without merge</h2>
+<p>signals-field-panel.json may show band activity same hour jsonl shows RX burst — write correlation paragraph, do not multiply scores into super-threat number. Human narrative discipline from Chapter 2 integration returns.</p>
+<h2 id="toc-06-rf-vocabulary-for-queen-operators">RF vocabulary for Queen operators</h2>
+<p>Queen UI may say WebRTC, ICE, codec, RF-adjacent words — gatekeeper still owns verdict. MP4 in-tree demux is packet parsing — Chapter 5 bytes perspective. Chapter 6 ensures RF word in UI does not bypass labels when you grep.</p>
+<h2 id="toc-06-handoff-checklist-to-chapter-7">Handoff checklist to Chapter 7</h2>
+<p>Can you name three RF meanings? Can you quote FSPL is not in shaders? Can you label weave Visual? Yes — open Chapter 7 Offensive Dispatch. No — rerun workshop.</p>
+
+<h2 id="toc-06-introduction-three-meanings-of-rf-before-you-tou">Introduction — three meanings of RF before you touch the spear</h2>
+<p>Operators arrive at Field Technology with one acronym and three incompatible intuitions. <strong>RF</strong> might mean the shader shell in <code>planetary_weave.comp</code>, the NEXUS Field Antenna orchestrator, or the wave potential on binding 8 — <code>fieldPhi</code> — that Maxwell language calls Φ, not megahertz. Chapter 6 separates them with honesty labels before Chapter 7 hands you <code>vkCmdDispatch</code>. Confusion here produces week-six embarrassment: ionosphere arguments from pretty colors, spectrum claims from jsonl panels, or radio astronomy from a Classic canvas screenshot.</p>
+<p>Defense in Chapter 5 taught packet sentences. Entropy in Chapter 4 taught layer separation. This chapter teaches <strong>signal vocabulary</strong> — what is <span class="tag vis">Visual</span>, what is <span class="tag impl">Implemented</span> local orchestration, what is electrical metaphor on the fabric. The workshop protocol at chapter end is a lab you can run in an afternoon; the handoff to Chapter 7 states plainly: offense writes fields on the GPU; RF shaders do not replace dispatch literacy.</p>
+
+<div class="objectives"><h2>Learning objectives</h2><ul>
+<li>Label three RF contexts with correct status tags.</li>
+<li>Sketch planetary weave stack radii from core to magnetosphere.</li>
+<li>Read Field Antenna JSON panel outputs and correlate with packet field.</li>
+<li>Work FSPL teaching worksheet — ITU/FCC context, not shader compute.</li>
+<li>Disambiguate <code>fieldPhi</code> binding 8 from literal radio propagation.</li>
+<li>Execute workshop protocol and articulate handoff to Chapter 7.</li>
+</ul></div>
+
+<figure class="figure"><img src="../assets/images/chapters/ch06-planetary-weave.jpg" alt="Planetary weave cross-section" loading="lazy" /><figcaption>Figure 6.1 — Planetary weave: visual vocabulary. Not a spectrum analyzer.</figcaption></figure>
+
+<h2 id="toc-06-three-meanings-table-label-before-you-speak">Three meanings table — label before you speak</h2>
+<table><thead><tr><th>Context</th><th>What “RF” means</th><th>Label</th><th>Product</th></tr></thead>
+<tbody>
+<tr><td><code>planetary_weave.comp</code></td><td>Atmospheric shell layer in Earth cross-section shader</td><td><span class="tag vis">Visual</span></td><td>AMOURANTHRTX</td></tr>
+<tr><td>NEXUS Field Antenna</td><td>Local RF/audio/wired/laser orchestration + JSON panels</td><td><span class="tag impl">Implemented</span></td><td>NEXUS-Shield</td></tr>
+<tr><td><code>fieldPhi</code> binding 8</td><td>Wave / gate potential — electrical metaphor</td><td><span class="tag impl">Implemented</span> + <span class="tag meta">metaphor</span></td><td>AMOURANTHRTX</td></tr>
+</tbody></table>
+<div class="callout science"><strong>Do not</strong> equate GPU Phi with ionospheric propagation without labeling the jump. Chapter 12 rock: RF planetary shell is <code>planetary_weave.comp</code> visual only.</div>
+<p>Queen WebRTC (Chapter 21) uses real network stacks behind gatekeeper — still not the same as weave shader art. WebRTC peers produce packet field sentences; planetary weave produces pedagogy pixels.</p>
+
+<h2 id="toc-06-planetary-weave-stack-radii-from-core-to-magneto">Planetary weave — stack radii from core to magnetosphere</h2>
+<p><code>planetary_weave.comp</code> draws a concentric Earth cross-section — not a physics simulation of magnetohydrodynamics, a <strong>visual vocabulary</strong> for where signals “live” in the stack metaphor. Radii are shader constants; treat them as labeled shells in operator teaching, not satellite telemetry.</p>
+<pre class="eq">// Pedagogical shell stack (conceptual outer → inner)
+core → crust → hydrosphere → clouds → troposphere
+     → stratosphere → mesosphere → ionosphere
+     → L_RF shell: #define R_RF (R_EARTH + 1.05)
+     → magnetosphere → exosphere breath</pre>
+<p>The <strong>RF shell</strong> sits exterior to ionosphere in the narrative — a colored ring reminding you that propagation stories have a place in the stack without computing path loss in GLSL. <code>R_EARTH</code> anchors scale; <code>R_RF</code> offsets the teachable RF band as art. Swipe to weave canvas in AMOURANTHRTX when you want vocabulary; grep THERMO when you want dispatch truth.</p>
+<p>Cross-link Chapter 15 Maxwell: binding 8 Phi participates in discrete Laplacian coupling on the fabric — neighborhood whispers, not ionospheric whistlers. Cross-link Chapter 9: <code>FIELD_PHI_MILLI = 618</code> and <code>GateFidelity</code> sharpen gates — folklore mnemonic with a number, not a claim the universe prefers φ because the HUD said so.</p>
+<p>Cross-link Chapter 12 honesty table: claiming the weave shader predicts HF skip zones is <span class="tag vis">Visual</span> accident marketed as instrument — refuse.</p>
+
+<h2 id="toc-06-field-antenna-orchestrator-json-panels-that-are-">Field Antenna orchestrator — JSON panels that are real</h2>
+<p>NEXUS Field Antenna is <span class="tag impl">Implemented</span> local orchestration across RF, audio, wired, and optical reference bands. It watches flows and anchors meaningful to <strong>your machine</strong> — not global spectrum survey.</p>
+<ul>
+<li>Optical / laser reference entries: 405–1550 nm teaching bands</li>
+<li>LIDAR flow ports registered beside socket habits</li>
+<li>GPS field anchors for triangulation metaphor — not replacement for survey grade receivers</li>
+<li>Outputs: <code>field-antenna-panel.json</code>, <code>field-rf-panel.json</code>, <code>signals-field-panel.json</code></li>
+</ul>
+<p>Panel :9477 Signals tab (Chapter 5) surfaces these artifacts. Correlate JSON rows with <code>field jsonl</code> sentences — same peer, same sealed time column, different views. <strong>No merged super-score.</strong> Field Antenna does not replace gatekeeper verdicts; packet field does not replace FSPL homework.</p>
+<table><thead><tr><th>JSON artifact</th><th>Typical content</th><th>Correlate with</th></tr></thead>
+<tbody>
+<tr><td><code>field-antenna-panel.json</code></td><td>Antenna path registry, band tags</td><td>Signals tab, local hardware</td></tr>
+<tr><td><code>field-rf-panel.json</code></td><td>RF flow summaries, habit notes</td><td>Packet field port axis</td></tr>
+<tr><td><code>signals-field-panel.json</code></td><td>Cross-domain signal map</td><td>Chapter 5 defense rhythm</td></tr>
+</tbody></table>
+
+<h2 id="toc-06-fspl-teaching-worksheet-path-loss-on-paper-not-i">FSPL teaching worksheet — path loss on paper, not in shaders</h2>
+<p>Free-space path loss (FSPL) belongs in operator notebooks and NEXUS teaching docs — <strong>not</strong> inside AMOURANTHRTX fabric shaders. ITU-R and FCC contexts use:</p>
+<div class="eq">FSPL ∝ 20·log₁₀(d) + 20·log₁₀(f)</div>
+<p>Distance <em>d</em> grows loss with twenty log ten; frequency <em>f</em> does the same. Double distance costs ~6 dB; double frequency costs ~6 dB. The worksheet builds intuition before you touch hardware.</p>
+<div class="callout drill"><strong>Worksheet 6.A — FSPL estimates</strong></div>
+<pre class="eq"># Given: f = 2.4 GHz Wi-Fi, d = 10 m (free space teaching model)
+# FSPL ≈ 20*log10(10) + 20*log10(2.4e9)  [use consistent units in your notebook]
+# Compare: d = 100 m — how many dB added vs 10 m?
+# Label answer: teaching estimate — not measured in planetary_weave.comp</pre>
+<p>Worksheet 6.B: repeat for 915 MHz ISM at 1 km. Worksheet 6.C: explain why attic copper foil does not change shader <code>R_RF</code> constant — visual shell unchanged by real-world sheet metal.</p>
+<p>Chapter 6 honesty: FSPL exercises train judgment for Field Antenna context. They do not authorize claims that Classic canvas color maps predict link margin.</p>
+
+<h2 id="toc-06-phi-versus-rf-disambiguation-clinic">Phi versus RF — disambiguation clinic</h2>
+<p><code>fieldPhi</code> on binding 8 is the analog fabric’s wave and gate potential channel. Shaders read and write Φ per texel; host packs <code>WaveSpeed</code>, <code>GateFidelity</code>, <code>PropalacticScale</code> into FCC floats. This is Maxwell neighborhood on a grid — Chapter 15 — not literal RF carrier tracking.</p>
+<table><thead><tr><th>Question</th><th>Phi / binding 8</th><th>RF / Field Antenna</th><th>Weave shader</th></tr></thead>
+<tbody>
+<tr><td>Measured in MHz?</td><td>No — arbitrary field units</td><td>Band labels for orchestration</td><td>No — art scale</td></tr>
+<tr><td>Where grep?</td><td>THERMO + fabric + FCC slots</td><td>NEXUS JSON + jsonl</td><td>Canvas swipe only</td></tr>
+<tr><td>Honest label</td><td><span class="tag impl">Implemented</span> metaphor</td><td><span class="tag impl">Implemented</span> local</td><td><span class="tag vis">Visual</span></td></tr>
+<tr><td>Couples to Thermo?</td><td>Yes — <code>FieldCoupling</code></td><td>Indirect via machine activity</td><td>No — decor</td></tr>
+</tbody></table>
+<p>Clinic sentence: “Phi gradient steepened, so RF must be jammed” is category error. “Field Antenna noted 2.4 GHz habit breakage on RX, gatekeeper SUSPICIOUS” is legible defense. “Ionosphere glow red on weave” is art critique, not propagation measurement.</p>
+
+<h2 id="toc-06-workshop-protocol-afternoon-lab">Workshop protocol — afternoon lab</h2>
+<ol>
+<li><strong>Label pass (15 min):</strong> List three RF meanings from memory; tag each <span class="tag vis">Visual</span>, <span class="tag impl">Implemented</span>, or <span class="tag meta">metaphor</span>.</li>
+<li><strong>Weave swipe (20 min):</strong> Open AMOURANTHRTX planetary weave canvas; sketch shell stack on paper with <code>R_RF</code> noted; refuse FSPL claims from colors.</li>
+<li><strong>FSPL worksheet (25 min):</strong> Complete 6.A–6.C on paper; photograph page for operator journal — not for vendor slide deck.</li>
+<li><strong>NEXUS panels (30 min):</strong> <code>./nexus.sh</code>; open :9477 Signals; read three JSON artifacts; tail matching <code>field jsonl</code> rows.</li>
+<li><strong>Phi grep (20 min):</strong> <code>./linux.sh run</code>; <code>set AnalogFields.GateFidelity 0.9</code>; grep THERMO + FCC; confirm fabric offense path alive — handoff prep.</li>
+<li><strong>Disambiguation drill (10 min):</strong> Write three sentences — one correct per layer; one deliberate category error; fix the error aloud.</li>
+</ol>
+<div class="callout everyone"><strong>Plain English:</strong> The workshop teaches you to point at the right receipt — jsonl, stderr, or screenshot — before you argue about signals.</div>
+
+<h2 id="toc-06-ionosphere-and-magnetosphere-teachable-shells-no">Ionosphere and magnetosphere — teachable shells, not predictions</h2>
+<p>In the weave narrative, ionosphere and magnetosphere rings sit outside troposphere weather and inside exosphere breath. They exist so instructors can point at a screen and say: “HF stories live in sky vocabulary; your loopback panel lives in operator vocabulary.” The shader does not compute critical frequency, foF2, or K-index. It paints teachable regions.</p>
+<p>When a student asks whether red ionosphere glow means solar storm, answer with labels: <span class="tag vis">Visual</span> pedagogy. Then open :9477 and show jsonl habits — defense receipts. Then run <code>./linux.sh run</code> and grep THERMO — offense receipts. Three layers, three answers, one disciplined operator.</p>
+<p>Chapter 10 spiderweb mirror uses fabric averages, not ionosphere colors. Chapter 6 refuses the shortcut that makes pretty globes feel like NOAA products.</p>
+
+<h2 id="toc-06-queen-webrtc-and-rf-words-in-ui">Queen, WebRTC, and RF words in UI</h2>
+<p>Queen holds WebRTC gates (Chapter 21). RF vocabulary in UI still passes Connection Gatekeeper — honorability axis asks whether navigation context matches socket reality. Field Antenna may tag RF bands; packet field records peers; thermo proxy records dispatch cost on Queen build — parallel witnesses, not one score.</p>
+<p>MP4 mandatory in-tree means media paths are not outsourced to CDN conscience — local archive discipline matches jsonl ethos. EME held, not omitted, because sovereign browser doctrine refuses hole-poking.</p>
+
+<h2 id="toc-06-failure-catalog-rf-edition">Failure catalog — RF edition</h2>
+<table><thead><tr><th>Failure mode</th><th>Symptom</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>Weave as instrument</td><td>HF propagation forecast from shader</td><td><span class="tag vis">Visual</span> rock — Ch. 12</td></tr>
+<tr><td>Phi as MHz</td><td>“Tune binding 8 to 2.4G”</td><td>FCC floats are field knobs, not carrier</td></tr>
+<tr><td>FSPL in GLSL fantasy</td><td>Expect path loss in fabric</td><td>Paper worksheet only</td></tr>
+<tr><td>JSON super-score</td><td>Merge antenna JSON + gatekeeper</td><td>Correlate; separate verdicts</td></tr>
+<tr><td>GPS metaphor as survey</td><td>Sub-centimeter claims from anchors</td><td>Label triangulation metaphor</td></tr>
+<tr><td>Disable WebRTC</td><td>Queen security hole-poke</td><td>Ch. 21 hold gates</td></tr>
+<tr><td>Cloud RF omniscience</td><td>NEXUS sees planet spectrum</td><td>Local-first — Ch. 5</td></tr>
+<tr><td>Skip workshop</td><td>Jump to Ch. 7 without labels</td><td>Run protocol once</td></tr>
+</tbody></table>
+
+<h2 id="toc-06-audio-wired-and-optical-bands-one-orchestrator-m">Audio, wired, and optical bands — one orchestrator, many witnesses</h2>
+<p>Field Antenna does not stop at textbook RF. Local orchestration includes audio device paths, wired interface habits, and optical reference bands from 405 nm through 1550 nm — teaching anchors for laser and LIDAR vocabulary on <strong>your</strong> machine. Each band entry is a labeled witness in JSON, not a claim NEXUS measured photons in your fiber run.</p>
+<p>LIDAR flow ports in the registry sit beside TCP habits: a UDP burst on a registered port may correlate with a signals-field row without merging into gatekeeper verdict math. GPS field anchors supply triangulation metaphor for panel maps — useful pedagogy when teaching children the difference between “where the UI drew a dot” and “where survey equipment proved a coordinate.”</p>
+<p>When Signals tab shows optical entries alongside RF summaries, practice the Chapter 5 rule: correlate timestamps with <code>field jsonl</code>, compare process paths, refuse single-score dashboards. Field Technology trains parallel reading — thermo stderr, packet sentences, antenna JSON — the operator integrates.</p>
+
+<h2 id="toc-06-propagation-vocabulary-without-instrument-fantas">Propagation vocabulary without instrument fantasy</h2>
+<p>Operators need words for sky and wire even when shaders are art. Teach vocabulary honestly:</p>
+<ul>
+<li><strong>Ground wave</strong> — metaphor for local wired habits and loopback flows; grep jsonl, not weave colors.</li>
+<li><strong>Sky wave</strong> — ionosphere story in planetary weave shell; <span class="tag vis">Visual</span> only.</li>
+<li><strong>Free space</strong> — FSPL worksheet domain; paper and calculator, not <code>fieldPhi</code> texels.</li>
+<li><strong>Multipath</strong> — real Wi-Fi frustration; Field Antenna may note band congestion patterns locally without predicting shader palette.</li>
+</ul>
+<p>Chapter 14 Shannon surprise on encrypted payloads sometimes correlates with “noise floor” stories — still not weave red pixels. Keep layers separated as Chapter 4 demands.</p>
+
+<h2 id="toc-06-handoff-to-chapter-7-offense-takes-the-spear">Handoff to Chapter 7 — offense takes the spear</h2>
+<p>You labeled three RF meanings. You correlated Field Antenna JSON with packet field sentences without merging scores. You worked FSPL on paper while refusing shader compute fantasy. You disambiguated Φ on binding 8 from literal radio.</p>
+<p><strong>Chapter 7</strong> is next: thin host, fat GPU, <code>Pipeline::dispatch_canvas()</code> → <code>vkCmdDispatch</code>. Default canvas is <code>x86.comp</code> with Field Die — offense writes guest RAM, fabrics, thermo receipts every tick. Planetary weave taught vocabulary; dispatch teaches sovereignty.</p>
+<pre class="eq">Defense (Ch.5) read jsonl → RF (Ch.6) labeled meanings → Offense (Ch.7) vkCmdDispatch</pre>
+<p>Carry forward: stderr before screenshots, rocks before poetry, grep before argument. ThermoAccountant from Chapter 4 still populates binding 2 on every dispatch — RF clarity does not pause thermo obligation.</p>
+<p>Continue: <a href="07-gpu-engine.html">Chapter 7 — GPU Field Engine</a>. Prior: <a href="05-packet-field.html">Chapter 5 — Packet Field</a>. Rocks: <a href="12-reality-theory.html">Chapter 12</a>. Maxwell creditor: <a href="../creditors/maxwell.html">Maxwell</a>.</p>
+
+<h2>Chapter summary</h2>
+<p>RF in this stack names three different stories: planetary weave visual shell at <code>R_RF</code>, NEXUS Field Antenna local orchestration with JSON panels, and <code>fieldPhi</code> wave potential on binding 8 as implemented electrical metaphor. FSPL works on teaching worksheets — not in fabric shaders. Workshop protocol trains label discipline. Chapter 7 inherits operators who will not confuse ionosphere art with dispatch truth.</p>
+
+<h2 id="toc-06-deep-dive-itu-r-and-fcc-as-teaching-context-not-">Deep dive — ITU-R and FCC as teaching context, not shader constants</h2>
+<p>NEXUS documentation cites ITU-R and FCC framing for path loss, band plans, and operator vocabulary — <span class="tag phil">teaching context</span> beside local jsonl scope. The citations exist so instructors can assign worksheets without pretending AMOURANTHRTX shaders became spectrum regulators.</p>
+<p>When students ask “is this legal on 5 GHz,” answer: consult counsel and national regulators; Field Primer teaches technical honesty and local perimeter, not legal advice. When students ask “does weave red mean illegal transmit,” answer: <span class="tag vis">Visual</span> only — check Field Antenna JSON and jsonl for real local sense layers.</p>
+
+<h2 id="toc-06-deep-dive-spectrum-analyzer-honesty-for-advanced">Deep dive — spectrum analyzer honesty for advanced labs</h2>
+<p>External USB analyzers may join advanced operator labs — hardware outside the stack. If you capture a trace, label it <span class="tag impl">External instrument</span> distinct from planetary weave screenshots and distinct from <code>fieldPhi</code> heatmaps. Three images, three labels, one collage grade in Exercise 6.C.</p>
+<p>Never paste analyzer traces into threat dashboards as auto-verdicts. Correlation paragraph only: “Analyzer peak at time T; jsonl RX burst at T±2s; weave screenshot unrelated.”</p>
+<p>Chapter 11 observability extends grep rhythm to RF labs — archive traces with session IDs like thermo journals.</p>
+
+<h2 id="toc-06-deep-dive-teaching-children-and-newcomers-rf-dis">Deep dive — teaching children and newcomers RF discipline</h2>
+<p>Children learn labels faster than they learn Vulkan. Start with three-card drill: Visual, Implemented, Metaphor. Planetary weave card says Visual. Field Antenna card says Implemented local JSON. Phi card says Implemented fabric metaphor. FSPL worksheet card says Paper math.</p>
+<p>Adults skip cards and skip labels — then argue across layers at dinner. Chapter 6 exists to front-load the argument you would otherwise have at midnight on Discord.</p>
+
+<h2 id="toc-06-deep-dive-planetary-weave-shader-stack-as-litera">Deep dive — planetary weave shader stack as literature</h2>
+<p>Open <code>planetary_weave.comp</code> as literature, not instrumentation. Radii constants name shells — core, crust, hydrosphere, clouds, troposphere, ionosphere, <code>R_RF</code>, magnetosphere — each a pedagogical ring. The RF shell is one radius in a stack metaphor, not a measurement of watts exiting your Wi-Fi antenna.</p>
+<p>Color choices encode mood: warm ionosphere, cool magnetosphere, cloudy troposphere. Mood is not METAR. When instructors assign “read the stack,” students should sketch rings on paper and label each <span class="tag vis">Visual</span> before discussing NEXUS Field Antenna JSON.</p>
+<p>Swiping to weave in AMOURANTHRTX does not pause Field Die default product truth — weave is alternate curriculum on shared Vulkan spine per Chapter 7. Thermo still accrues underneath; THERMO still greps.</p>
+
+<h2 id="toc-06-deep-dive-field-antenna-operator-tour-30-minutes">Deep dive — Field Antenna operator tour (30 minutes)</h2>
+<ol>
+<li>Start NEXUS; open Signals tab at :9477.</li>
+<li>Load <code>field-antenna-panel.json</code> — note schema version in file header if present.</li>
+<li>Compare <code>field-rf-panel.json</code> versus <code>signals-field-panel.json</code> — different slices, same honesty rule: correlate, no super-score.</li>
+<li>Record one audio device entry, one wired entry, one optical reference band entry — three labels, three sentences.</li>
+<li>Open Classic Phi heatmap in AMOURANTHRTX — fourth image in collage; label fabric metaphor.</li>
+<li>Complete FSPL worksheet for hypothetical 2.4 GHz link at 10 m — paper only.</li>
+<li>Write handoff sentence: “Phi is binding 8; weave is Visual; antenna is local JSON.”</li>
+</ol>
+<p>Tour completes Chapter 6 workshop; archive notes beside jsonl, not instead of jsonl.</p>
+
+<h2 id="toc-06-deep-dive-magnetosphere-and-exosphere-as-narrati">Deep dive — magnetosphere and exosphere as narrative bookends</h2>
+<p>Outside RF shell, magnetosphere and exosphere rings teach that signals live inside stories about space — not that shaders predict solar wind pressure. Narrative bookends bracket the RF chapter: inner shells ground newcomers in geography metaphor; outer shells remind that hype expands outward unless labels contract it.</p>
+<p>Chapter 17 God at holographic boundary and Chapter 6 planetary weave both use cosmic vocabulary — different jobs. Chapter 17 sacred long-form; Chapter 6 category discipline. Do not merge them into one cosmology slide without rocks.</p>
+
+<h2 id="toc-06-deep-dive-rf-chapter-closing-ritual-before-dispa">Deep dive — RF chapter closing ritual before dispatch</h2>
+<p>Before opening Chapter 7, run this sixty-second ritual:</p>
+<ol>
+<li>Say aloud: “Weave is Visual.”</li>
+<li>Say aloud: “Antenna JSON is local Implemented.”</li>
+<li>Say aloud: “Phi is fabric metaphor on binding 8.”</li>
+<li>Say aloud: “FSPL is paper, not GLSL.”</li>
+<li>Grep one THERMO line — offense prep reminder.</li>
+<li>Archive one jsonl row if NEXUS running — defense prep reminder.</li>
+</ol>
+<p>Ritual sounds silly until the third week when someone cites ionosphere color as threat intel. Chapter 6 buys you immunity to that meeting.</p>
+
+<h2>Study questions</h2>
+<ol>
+<li>Tag three RF contexts with correct honesty labels.</li>
+<li>Where does <code>R_RF</code> sit in the shell stack narrative?</li>
+<li>Name three Field Antenna JSON outputs and panel tab.</li>
+<li>Write FSPL proportionality; why not in <code>x86.comp</code>?</li>
+<li>Give one Phi vs RF category error and correction.</li>
+<li>Complete workshop protocol step 5; what grep proves offense prep?</li>
+<li>Why no merged super-score between JSON and gatekeeper?</li>
+<li>How does Queen treat WebRTC versus weave shader?</li>
+<li>Which failure mode matches “forecast from weave colors”?</li>
+<li>State handoff sentence from Chapter 6 to Chapter 7.</li>
+</ol>
+
+<h2 id="toc-06-planetary-weave-comp-stack-order">Planetary weave comp stack order</h2><p>Core to magnetosphere ordering teaches concentric thinking — RF shell one radius among many, not the whole story.</p>
+
+<h2 id="toc-06-cloud-layer-versus-troposphere">Cloud layer versus troposphere</h2><p>Visual weather shells are not weather API — no METAR in shader.</p>
+
+<h2 id="toc-06-hydrosphere-metaphor">Hydrosphere metaphor</h2><p>Water shell pedagogy for signal environment metaphor — still visual.</p>
+
+<h2 id="toc-06-crust-and-core-geophysical-art">Crust and core — geophysical art</h2><p>Geophysical art sets mood for RF chapter — separates mood from measurement.</p>
+
+<h2 id="toc-06-antenna-panel-json-schema-stability">Antenna panel JSON schema stability</h2><p>Panel JSON versions may evolve — grep schema version in file when correlating old archives.</p>
+
+<h2 id="toc-06-rf-panel-versus-signals-panel">RF panel versus signals panel</h2><p>field-rf-panel versus signals-field-panel serve different slices — read filenames literally.</p>
+
+<h2 id="toc-06-phi-wave-speed-versus-rf-propagation">Phi wave speed versus RF propagation</h2><p>WaveSpeed knob is fabric stability parameter — not speed of light in ionosphere.</p>
+
+<h2 id="toc-06-maxwell-chapter-15-handoff">Maxwell Chapter 15 handoff</h2><p>After RF separation, Maxwell GPU chapter deepens Phi/Thermo coupling math story — read order 6 then 15.</p>
+
+<h2 id="toc-06-nexus-docs-fspl-examples">NEXUS docs FSPL examples</h2><p>Worked FSPL examples live in docs for teaching — copy to lab notebook, not to shader constants.</p>
+
+<h2 id="toc-06-rf-vocabulary-disambiguation-drill">RF vocabulary disambiguation drill</h2><p>Drill: speaker says RF spike. Ask which RF — weave visual? antenna JSON? Phi potential? Politeness with insistence on label.</p>
+
+<h2 id="toc-06-planetary-weave-shader-constants">Planetary weave shader constants</h2><p>R_RF and stack radii are #define pedagogy — read shader as literature with labels, not instrumentation datasheet.</p>
+
+<h2 id="toc-06-signals-triangulation-metaphor-limits">Signals triangulation metaphor limits</h2><p>GPS anchors in signals field support metaphorical triangulation stories — not survey grade without external proof.</p>
+
+<h2 id="toc-06-audio-rf-wired-laser-one-orchestrator">Audio RF wired laser — one orchestrator</h2><p>Field Antenna Orchestrator unifies spectrum of local sense layers — unify in panel, separate in labels.</p>
+
+<h2 id="toc-06-phi-thermo-rf-word-collision">Phi-Thermo-RF word collision</h2><p>Phi uses electrical words; weave uses RF words; antenna uses RF words — glossary Chapter 22 will disambiguate; Chapter 6 starts fight early.</p>
+
+<h2 id="toc-06-exercise-6-c-label-collage">Exercise 6.C — label collage</h2><p>Screenshot weave, antenna panel, Classic Phi heatmap — paste three honesty labels under each image. Visual collage discipline.</p>
+
+<h2 id="toc-06-handoff-to-gpu-engine-chapter">Handoff to GPU engine chapter</h2><p>Chapter 7 dispatch writes Phi that Chapter 6 refuses to confuse with ionosphere. Read next with RF separation loaded.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch06">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Planetary weave</td><td>RF shell shader art</td><td><span class="tag vis">Visual</span></td><td><code>planetary_weave.comp</code></td></tr><tr><td>Field Antenna</td><td>JSON RF panels</td><td><span class="tag impl">Implemented</span></td><td><code>Field Antenna module</code></td></tr><tr><td>Phi binding 8</td><td>Fabric potential</td><td><span class="tag meta">Metaphor</span></td><td><code>Not spectrum analyzer</code></td></tr><tr><td>FSPL</td><td>Free-space path loss</td><td><span class="tag meta">Metaphor</span></td><td><code>Paper equation — not in shader SI</code></td></tr></tbody></table>
+<pre class="eq">FSPL ∝ 20·log₁₀(d) + 20·log₁₀(f)  |  R_RF shell layer (visual)</pre>
+<pre class="eq">grep -r &#x27;planetary_weave&#x27; Navigator/shaders/</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/shaders/planetary_weave.comp</code></li><li><code>NEXUS-Shield/field_antenna.json</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-06-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Three RF meanings labeled: weave Visual, antenna Implemented, Phi fabric metaphor. FSPL stays on paper. Workshop complete — open Chapter 7 with dispatch literacy loaded.</p>
+</div>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 7</p>
+<h1>Offensive Dispatch — GPU Engine</h1>
+<p class="eyebrow">Chapter 7 · Offensive Dispatch — GPU Field Engine</p>
+
+<div class="objectives">
+<h2 id="toc-07-learning-objectives">Learning objectives</h2>
+<p>After this chapter you should be able to:</p>
+<ul>
+<li>Trace the full dispatch spine from <code>main.cpp</code> through <code>vkCmdDispatch</code> and name what runs on host versus GPU.</li>
+<li>Explain why the default canvas is <code>x86.comp</code> with <code>FieldSocket</code> push constants, not decorative raymarch.</li>
+<li>Enumerate the Vulkan descriptor bindings for the x86 path and state why <code>FIELD_LAYOUT_VERSION = 5</code> is a contract, not decoration.</li>
+<li>Describe how <code>rtx()</code>, sealed time, and analog fabric bindings 8–10 integrate into one offensive write each tick.</li>
+<li>Run week-one grep drills that prove dispatch is alive before you trust screenshots.</li>
+</ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-07-introduction-offense-writes-the-field">Introduction — offense writes the field</a></li><li><a href="#toc-07-thin-host-fat-gpu-architectural-contract">Thin host, fat GPU — architectural contract</a></li><li><a href="#toc-07-the-rtx-singleton-one-vulkan-fabric">The rtx() singleton — one Vulkan fabric</a></li><li><a href="#toc-07-canvas-kinds-x86fields-versus-classic">Canvas kinds — X86Fields versus Classic</a></li><li><a href="#toc-07-pipeline-dispatch-canvas-per-frame-heart">Pipeline::dispatch_canvas() — per-frame heart</a></li><li><a href="#toc-07-vulkan-descriptor-layout-x86-path">Vulkan descriptor layout — x86 path</a></li><li><a href="#toc-07-fieldsocket-push-constants-for-offense">FieldSocket — push constants for offense</a></li><li><a href="#toc-07-sealed-time-linear-physics-time">Sealed time — linear physics time</a></li><li><a href="#toc-07-analog-fabric-on-the-x86-path-bindings-8-10">Analog fabric on the x86 path — bindings 8–10</a></li><li><a href="#toc-07-boot-sequence-what-first-dispatch-establishes">Boot sequence — what first dispatch establishes</a></li><li><a href="#toc-07-queen-and-fieldfox-same-spine-held-gates">Queen and FieldFox — same spine, held gates</a></li><li><a href="#toc-07-cfl-preview-host-refuses-explosion">CFL preview — host refuses explosion</a></li><li><a href="#toc-07-headless-dispatch-and-ci-honesty">Headless dispatch and CI honesty</a></li><li><a href="#toc-07-operator-drill-week-one-dispatch-proof">Operator drill — week one dispatch proof</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-07-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Offense writes the field; defense reads it. On the way you will trace <code>main.cpp</code> through <code>vkCmdDispatch</code>, master the x86 descriptor layout, seal time in FieldSocket, and treat <code>FIELD_LAYOUT_VERSION = 5</code> as a contract, not decoration.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch07-gpu-engine.jpg" alt="GPU dispatch" loading="lazy" /><figcaption>On the way — GPU dispatch</figcaption></figure>
+<ul class="on-the-way-journey"><li>Thin host, fat GPU architecture</li><li>Canvas kinds: X86Fields versus Classic</li><li>dispatch_canvas ritual ordering</li><li>Bindings 8–10 and ThermoAccountant every tick</li></ul>
+</div>
+
+
+<h2 id="toc-07-introduction-offense-writes-the-field">Introduction — offense writes the field</h2>
+<p>Chapters 5 and 6 taught defense: reading the packet field, separating RF meanings, refusing to let someone else narrate your perimeter. Chapter 7 turns the spear around. <strong>Offense, in Field Technology, is imposing boundary conditions on the next tick faster than confusion propagates.</strong> Defense reads continuous state; offense <em>writes</em> it. The write happens on the GPU, every frame, through a single Vulkan dispatch that the thin C++ host orchestrates but does not simulate.</p>
+<p>This is not metaphor dressed as engineering. When you run <code>./linux.sh run</code>, the default path boots the <strong>Field Die</strong> — a 64 MiB guest universe on silicon — and evolves Phi, Thermo, and Flow fabrics through <code>x86.comp</code>. The host opens the window, seals time, enforces CFL guards, packs <code>data_bus[64]</code>, and calls <code>vkCmdDispatch</code>. The GPU runs the world. If you remember one sentence from this chapter, remember this: <strong>the spear is <code>vkCmdDispatch</code>, not a motivational poster.</strong></p>
+<p>Chapter 8 owns the die byte map and bus slots. Chapter 9 owns CFL and Tesla valve constants. Chapter 10 mirrors fabric into <code>hardwareFabric</code>. Chapter 11 teaches you to grep the receipts. Chapter 12 lists every rock. This chapter is the spine that connects them: how dispatch actually happens, what must match between host and shader, and why version skew is desynchronized reality.</p>
+
+<h2 id="toc-07-thin-host-fat-gpu-architectural-contract">Thin host, fat GPU — architectural contract</h2>
+<p>Modern game engines often split work across CPU and GPU in complex ways — physics on CPU, rendering on GPU, animation trees, job systems. AMOURANTHRTX makes a sharper choice for field evolution: <span class="tag impl">the host never runs a CPU-side PDE solver on the analog fabric.</span> Texel evolution is compute-shader work each dispatch. The C++ layer is deliberately thin: device setup, descriptor binding, push constants, harmonics guard, layer pump, and presentation.</p>
+<pre class="eq">main.cpp → navigator_main() → RayCanvas → Pipeline::dispatch_canvas() → vkCmdDispatch</pre>
+<p>Read that chain left to right as a timeline. <code>main.cpp</code> enters the navigator. <code>RayCanvas</code> owns the swapchain-facing canvas and fabric creation. <code>Pipeline::dispatch_canvas()</code> is the per-frame heart: it advances sealed time, runs the CFL guard, pumps field layers, packs telemetry, and issues the compute dispatch. <code>vkCmdDispatch</code> is where offense becomes physical — threads on the GPU write the next state of guest RAM, fabrics, and HDR output.</p>
+<div class="callout everyone"><strong>Plain English:</strong> C++ is the conductor. The orchestra is the GPU. The conductor does not play every instrument; the conductor keeps time and refuses to let the hall catch fire.</div>
+<p>This architecture follows from the axioms named in Chapter 1. <strong>Reality is 3D</strong> means state occupies addressable space — texels, die bytes, bus words. <strong>Time is linear</strong> means each dispatch advances one tick with receipts, not retroactive myth. <strong>Energy can be moved</strong> means coupling between Phi, Thermo, and Flow is how irreversibility travels — and that movement is shader arithmetic, not host loops.</p>
+<p>Operators who come from software emulation backgrounds sometimes ask whether <code>FieldX86Emu</code> contradicts “fat GPU.” It does not. Host assist is an optional path when <code>ControlHostCpu</code> is set in <code>FieldSocket</code> control flags. The default product surface is GPU interpretation via <code>x86.comp</code>. The host assists; it does not replace the dispatch loop. Chapter 8 details the execution model; here we stress the default: GPU-first, host-thin.</p>
+
+<figure class="figure"><img src="../assets/images/chapters/ch07-gpu-engine.jpg" alt="GPU engine dispatch spine" loading="lazy" /><figcaption>Figure 7.1 — Thin host, fat GPU: one dispatch spine writes guest RAM, fabrics, and HDR each tick.</figcaption></figure>
+
+<h2 id="toc-07-the-rtx-singleton-one-vulkan-fabric">The <code>rtx()</code> singleton — one Vulkan fabric</h2>
+<p>Scattered Vulkan devices across a codebase are a maintenance hazard and an honesty hazard — two builds can diverge silently, two queues can fight, two memory budgets can lie. AMOURANTHRTX centralizes the runtime in <code>rtx()</code>: one global accessor to device, queues, memory budget, and <code>hardwareFabric</code>. Queen browser and FieldFox link this same spine when <code>QUEEN_BROWSER_BUILD</code> is defined at compile time.</p>
+<p>Why a singleton for a textbook chapter? Because observability assumes a single witness. When Chapter 11 tells you to <code>list Hardware</code> in the prompt terminal, you are reading fields from the same <code>rtx().hardwareFabric</code> that <code>updateHardwareFromAnalogFields()</code> updated last frame. When Chapter 10 discusses spiderweb edges, those edges live on this fabric. When Chapter 9 publishes Tesla bias to <code>data_bus[31]</code> and <code>data_bus[34]</code>, the values were computed in the dispatch loop that owns this singleton.</p>
+<table><thead><tr><th><code>rtx()</code> responsibility</th><th>Operator-facing artifact</th></tr></thead>
+<tbody>
+<tr><td>Device + queue selection</td><td>Vulkan init logs under <code>ELLIE</code> category <code>VULKAN</code></td></tr>
+<tr><td>VRAM budget tracking</td><td>STATUS block VRAM line (~5 s cadence)</td></tr>
+<tr><td><code>hardwareFabric</code> graph</td><td>Spiderweb util, per-core MHz in prompt <code>list Hardware</code></td></tr>
+<tr><td>Shared with Queen</td><td>In-engine FieldWebPanel thermo context (Chapter 21)</td></tr>
+</tbody></table>
+<p><span class="tag impl">Implemented.</span> You can grep <code>rtx()</code> in <code>Navigator/engine/</code> and follow references. <span class="tag meta">“96% lies device cannot drift session”</span> is security posture narrative — useful for team culture, not a sensor reading. Chapter 12 keeps that distinction visible.</p>
+
+<h2 id="toc-07-canvas-kinds-x86fields-versus-classic">Canvas kinds — X86Fields versus Classic</h2>
+<p>Not every swipe in <code>Options::Canvas::SwipeList</code> is the same product. Two canvas kinds matter for field literacy:</p>
+<table><thead><tr><th>Kind</th><th>Shader</th><th>Push block</th><th>Primary use</th></tr></thead>
+<tbody>
+<tr><td><strong>X86Fields</strong></td><td><code>x86.comp</code></td><td><code>FieldSocket</code></td><td>Field Die + AmmoOS (default)</td></tr>
+<tr><td><strong>Classic</strong></td><td><code>CANVAS.comp</code> (+ swipes)</td><td><code>PushConstants</code></td><td>Thermo + RT demos, pedagogical fabric</td></tr>
+</tbody></table>
+<p>Default <code>./linux.sh run</code> sets swipe index 0 to <code>x86</code> with <code>CanvasUsesX86Die = true</code>. That means your first honest encounter with the engine is the Field Die — Big Grin HUD at 172×48, guest RAM pumped every frame, AmouranthOS chrome on bindings 11–14 — not a decorative raymarch postcard.</p>
+<p>Classic canvas remains vital pedagogy. Chapter 3’s thermodynamics drills — move the mouse, watch <code>entropyThisFrame</code> — often happen on <code>CANVAS.comp</code> where Phi/Thermo/Flow evolution is visually obvious. Swipe to <code>energy</code>, <code>Flowers</code>, <code>RetroRTX</code>, Mandelbulb variants, tributes, and you change shaders without losing the die path infrastructure. The swipe list is hot-swap UX; the default is field sovereignty.</p>
+<div class="callout science"><strong>Category error to avoid:</strong> Treating a Classic thermo demo as proof the Field Die is absent. The die path is the default product surface. Classic is alternate curriculum on the same spine.</div>
+<p>Cross-link: Chapter 2 introduced three scales of state — fabric, die, packet field. X86Fields canvas is where scale 1 and scale 2 converge in one dispatch. Chapter 5’s packet field remains NEXUS-local; it does not live inside this Vulkan loop, but Queen binds them at the operator perimeter (Chapter 21).</p>
+
+<h2 id="toc-07-pipeline-dispatch-canvas-per-frame-heart"><code>Pipeline::dispatch_canvas()</code> — per-frame heart</h2>
+<p>Every frame that matters passes through <code>dispatch_canvas()</code>. Treat it as a ritual with ordered obligations — skip a step and stderr will eventually embarrass you.</p>
+<ol>
+<li><strong>Seal time</strong> — <code>TotalTime::seal()</code> writes monotonic session genesis into <code>FieldSocket::sealed_time</code>. Frame-rate jitter cannot rewrite physics time.</li>
+<li><strong>CFL harmonics guard</strong> — before fabric evolution, compute <code>waveCFL</code> and <code>thermoCFL</code>; scale unsafe parameters. Chapter 9 is the full treatment; here note it runs <em>every</em> dispatch, canvas-agnostic.</li>
+<li><strong>Layer pump</strong> — <code>FieldLayer::pumpAll()</code> walks L0–L9 composable layers (RAM, VGA, FAT, MSCDEX, Audio, IO, BIOS), syncing guest state into <code>data_bus</code> slots. Chapter 8 owns the slot map.</li>
+<li><strong>ThermoAccountant population</strong> — binding 2 buffer receives entropy proxy, boundary thermo, maintenance cost. Mirrored to <code>data_bus[24–28]</code>.</li>
+<li><strong>Analog FCC pack</strong> — when x86 FieldSocket is active, floats land in <code>data_bus[16–23]</code> so guest HUD and host agree on knobs.</li>
+<li><strong>Guest boot / AmmoOS</strong> — on live x86 canvas: <code>FieldAmouranthOs::boot()</code>, <code>sync_aos_textures()</code>, chrome hit-testing constants shared with shader.</li>
+<li><strong>Hardware mirror</strong> — <code>updateHardwareFromAnalogFields()</code> samples fabric averages into <code>hardwareFabric</code>. Chapter 10.</li>
+<li><strong><code>vkCmdDispatch</code></strong> — GPU writes next tick.</li>
+</ol>
+<p>Headless dispatch still runs this loop — valid CI signal per Chapter 12. A screenshot is optional; the dispatch receipt is not.</p>
+<pre class="eq">waveCFL = c·Δt/Δx ≤ 1  ·  thermoCFL = α·Δt/Δx² ≤ 1  ·  then vkCmdDispatch</pre>
+<p>The ordering matters. CFL before dispatch is numerical ethics: the host refuses NaN theology. Layer pump before dispatch is address ethics: the guest universe must be coherent when the shader reads it. ThermoAccountant before dispatch is temporal ethics: irreversibility gets a receipt even when you are staring at AmmoOS chrome instead of a thermo heatmap.</p>
+
+<h2 id="toc-07-vulkan-descriptor-layout-x86-path">Vulkan descriptor layout — x86 path</h2>
+<p>Host and shader must agree on bindings. Version skew is not a gentle bug; it is two realities talking past each other — one texel thinks it is hot, another never received the Thermo write.</p>
+<figure class="figure"><img src="../assets/images/field-die.jpg" alt="Field die and fabrics" loading="lazy" /><figcaption>Figure 7.3 — Bindings 1–2 and 8–14: die, thermo, chrome on one layout version. <span class="claim-tie">Claim: Default ./linux.sh run boots Field Die — x86.comp path</span></figcaption></figure>
+
+<table><thead><tr><th>Binding</th><th>Resource</th><th>Role in dispatch</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>HDR output</td><td>Presentation-facing color buffer</td></tr>
+<tr><td>1</td><td><code>FieldX86Die</code> SSBO</td><td>64 MiB guest RAM + tile cache tail</td></tr>
+<tr><td>2</td><td><code>ThermoAccountant</code></td><td>Per-frame entropy ledger</td></tr>
+<tr><td>8</td><td>Phi fabric</td><td>Wave / gate potential</td></tr>
+<tr><td>9</td><td>Thermo fabric</td><td>Heat + entropy density</td></tr>
+<tr><td>10</td><td>Flow fabric</td><td>Advection / momentum (.gb gradients)</td></tr>
+<tr><td>11–14</td><td>AmouranthOS chrome textures</td><td>Portrait, wallpaper, start icons, RTX font SDF</td></tr>
+</tbody></table>
+<p><code>FIELD_LAYOUT_VERSION = 5</code> is the handshake constant. If host struct layout and <code>x86.comp</code> layout diverge, you do not get a polite warning — you get wrong HUD hex, wrong thermo mirrors, wrong chrome flags in <code>data_bus[42]</code>. Operators packaging forks must bump version in lockstep or accept desync.</p>
+<p>Bindings 8–10 are the analog fabric Chapter 2 named. They are not decorative names for pretty gradients. They are where Maxwell’s neighborhood lives on a grid — discrete Laplacian on Phi, diffusion on Thermo, gradient magnitude mixed with <code>GateFidelity</code> and Tesla relaxation on Flow. Chapter 15 credits Maxwell; Chapter 7 stresses they are bound <em>every</em> x86 dispatch, not only on Classic canvas.</p>
+
+<h2 id="toc-07-fieldsocket-push-constants-for-offense"><code>FieldSocket</code> — push constants for offense</h2>
+<p><code>FieldSocket</code> is the per-dispatch push-constant control block for the x86 path. Where Classic canvas uses <code>PushConstants</code> with a overlapping but not identical layout, FieldSocket carries die-specific flags, sealed time, probe positions, and control bits that guest execution and HUD overlays consume inside <code>x86.comp</code>.</p>
+<p>Notable control flags in <code>Options::Canvas::ControlFlags</code> (operators grep <code>ControlHostCpu</code>, <code>ControlAmmoExec</code>, <code>ControlFieldDebugHud</code>):</p>
+<table><thead><tr><th>Bit / flag</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>ControlHostCpu</code> (8)</td><td>Host 8086 assist path via <code>FieldX86Emu</code></td></tr>
+<tr><td><code>ControlRtxDos</code> (64)</td><td>RTX-DOS panel surface</td></tr>
+<tr><td><code>ControlAmmoExec</code> (1024)</td><td>Guest program execution active</td></tr>
+<tr><td><code>ControlFieldDebugHud</code> (2048)</td><td>Field-die monitor overlay</td></tr>
+</tbody></table>
+<p>Push constants are small and fast — they ride the command buffer without descriptor churn for values that must change every tick. Sealed time in FieldSocket is how session genesis survives frame drops: wall clock may stutter; physics time in the socket does not rewrite backward.</p>
+<p>Chapter 19 extends sealed time across machines with sovereign pulses and <code>SQUIDGIE</code> verdicts. Here, session-local sealing is already offensive discipline — you impose a clock on the field before the GPU writes.</p>
+
+<h2 id="toc-07-sealed-time-linear-physics-time">Sealed time — linear physics time</h2>
+<p><code>TotalTime::seal()</code> in <code>ELLIE.hpp</code> locks session genesis into <code>FieldSocket::sealed_time</code>. This is monotonic discipline: the dispatch loop owns a physics timeline distinct from VSYNC jitter.</p>
+<p>Why operators care: thermo receipts correlate with dispatch order. If frame rate halved but entropy per wall-second looked unchanged, you might suspect physics scaled wrong. Sealed time gives you a stable axis — grep THERMO lines against dispatch steps, not against distracted wall clock alone.</p>
+<div class="callout axiom"><strong>Time is linear (here).</strong> Logs are a timeline. Sealed session clocks do not rewrite physics time. Frame-rate drift cannot turn yesterday’s boundary conditions into today’s myth.</div>
+<p>Free energy income in ThermoAccountant includes sealed time as a living-world potential — Chapter 4 introduced the proxy. The point for offense: you are not merely painting pixels; you are advancing a ledger that assumes time ran forward.</p>
+
+<h2 id="toc-07-analog-fabric-on-the-x86-path-bindings-8-10">Analog fabric on the x86 path — bindings 8–10</h2>
+<p>Even on Field Die canvas, Phi/Thermo/Flow evolve. The guest may look like DOS nostalgia; the fabrics underneath are continuous fields. Control knobs from <code>Options::AnalogFields</code> mirror into <code>data_bus[16–23]</code> when FieldSocket is active:</p>
+<table><thead><tr><th>Slot</th><th>FCC float</th><th>Effect (short)</th></tr></thead>
+<tbody>
+<tr><td>[16]</td><td><code>TimeScale</code></td><td>Global Δt multiplier</td></tr>
+<tr><td>[17]</td><td><code>ThermoAlpha</code></td><td>Thermal diffusivity α</td></tr>
+<tr><td>[18]</td><td><code>WaveSpeed</code></td><td>Phi propagation speed c</td></tr>
+<tr><td>[19]</td><td><code>GateFidelity</code></td><td>0 = soft analog … 1 = sharp gate</td></tr>
+<tr><td>[20]</td><td><code>EntropyFloor</code></td><td>Minimum irreversible noise</td></tr>
+<tr><td>[21]</td><td><code>InjectStrength</code></td><td>Mouse/probe energy injection</td></tr>
+<tr><td>[22]</td><td><code>PropalacticScale</code></td><td>Large-wavelength forcing on Phi</td></tr>
+<tr><td>[23]</td><td><code>FieldCoupling</code></td><td>Thermo ↔ Phi ↔ Flow strength</td></tr>
+</tbody></table>
+<p>Tesla valve bias publishes to slots <strong>31</strong> and <strong>34</strong> — Chapter 9 names constants <code>TESLA_R_FORWARD = 0.18</code>, <code>TESLA_R_REVERSE = 3.2</code>, <code>FIELD_PHI_MILLI = 618</code>. Offense includes directional preference: forward paths ease, reverse paths resist.</p>
+<p>Cross-link Chapter 3: clamps on evolved values (<code>newPhi ∈ [-2, 2]</code>, etc.) are numerical embodiment of “the kitchen cannot invent infinite temperature because the UI got excited.” The host CFL guard and shader clamps are coupled defenses against operator over-enthusiasm.</p>
+
+<h2 id="toc-07-boot-sequence-what-first-dispatch-establishes">Boot sequence — what first dispatch establishes</h2>
+<p>First-run operators see splash and chrome; stderr sees obligations. Typical boot when x86 canvas is live:</p>
+<ol>
+<li><code>aos_load</code> / splash SPIR-V warm-up</li>
+<li><code>FieldAmouranthOs::boot()</code> when die path active</li>
+<li><code>sync_aos_textures()</code> — bindings 11–14 populated</li>
+<li>Guest programs via <code>FieldAmouranthLaunch</code> / <code>FieldAmouranthExec</code> when operator launches</li>
+<li>Chrome hit-testing shares layout constants with <code>x86.comp</code> (<code>TASKBAR_H</code>, <code>UI_BOOST</code>, etc.)</li>
+</ol>
+<p>Boot is offense — you impose initial boundary conditions on empty guest RAM, seed fabrics, seal time. Subsequent dispatches are offense at cadence. Defense, in the network sense, is a different product (NEXUS). Do not conflate them in one dashboard number.</p>
+
+<h2 id="toc-07-queen-and-fieldfox-same-spine-held-gates">Queen and FieldFox — same spine, held gates</h2>
+<p>When <code>QUEEN_BROWSER_BUILD</code> is set, Queen browser links the same <code>rtx()</code> fabric. Navigation → packet field → gatekeeper → thermo receipt is Chapter 21’s doctrine. For this chapter, note: Queen does not replace dispatch; it <em>inherits</em> it. WebGL/WebGPU contexts receive thermo discipline; FieldWebPanel reads the same sealed session.</p>
+<p><span class="tag impl">Implemented when built.</span> <code>queen-browser</code> with <code>--sovereign --queen</code> flags. <span class="tag phil">“Hold all gates”</span> is operator philosophy with implemented gatekeeper wiring — Chapter 12 separates them.</p>
+
+<h2 id="toc-07-cfl-preview-host-refuses-explosion">CFL preview — host refuses explosion</h2>
+<p>Chapter 9 owns CFL deeply. Every operator of dispatch must know it exists on the spine:</p>
+<div class="eq">waveCFL = c·Δt/Δx ≤ 1 · thermoCFL = α·Δt/Δx² ≤ 1</div>
+<p>Before GPU evolution, host scales down unsafe <code>waveSpeed</code>, <code>thermoAlpha</code>, per-step <code>dT</code>, and <code>injectStrength</code>. Hard caps apply (e.g. <code>waveSpeed ∈ [0.01, 2.0]</code>, <code>dT ≤ 0.033</code>). This is the “intelligent management” layer in silicon-gate metaphor — pre-conditioning operator inputs before they reach <code>x86.comp</code> or <code>CANVAS.comp</code>.</p>
+<p>Offense without CFL is vandalism against your own field. You can write arbitrary boundary conditions; the host refuses to let those writes numerically annihilate the fabric.</p>
+
+<h2 id="toc-07-headless-dispatch-and-ci-honesty">Headless dispatch and CI honesty</h2>
+<p>Valid engineering signal does not require a window. Headless dispatch still runs <code>dispatch_canvas()</code>, still populates ThermoAccountant, still advances sealed time. Chapter 12 lists this as a rock: trust headless stderr for CI, not cover art.</p>
+<p>Operators packaging AMOURANTHRTX in pipelines should grep THERMO from headless runs the same way they would on desktop. Zero entropy while fabrics claim evolution is a failed path — physics refusing to lie.</p>
+
+<h2 id="toc-07-operator-drill-week-one-dispatch-proof">Operator drill — week one dispatch proof</h2>
+<div class="callout drill"><strong>Drill 7.A — Dispatch spine alive</strong></div>
+<pre class="eq">./linux.sh run 2>&1 | tee run.log
+# Let run 90 seconds on default x86 canvas
+grep -E 'VULKAN|CANVAS|dispatch|THERMO|STATUS' run.log | tail -40</pre>
+<p>Expect VULKAN init, CANVAS dispatch lines, periodic STATUS with FPS/GPU ms/VRAM, THERMO with entropy and boundary thermo. Absence of THERMO after fabric motion means your path failed — return to bindings and layout version.</p>
+<div class="callout drill"><strong>Drill 7.B — Layout version grep</strong></div>
+<pre class="eq">grep -r 'FIELD_LAYOUT_VERSION' Navigator/engine/ Navigator/shaders/
+# Confirm host and x86.comp agree on version 5</pre>
+<div class="callout drill"><strong>Drill 7.C — Swipe pedagogy</strong></div>
+<pre class="eq"># From prompt terminal inside run:
+set AnalogFields.GateFidelity 0.85
+list AnalogFields
+# Swipe to energy canvas 60s, grep entropyThisFrame in log</pre>
+<p>Drill 7.C connects Chapter 7 spine to Chapter 3 thermo pedagogy without abandoning die default on next launch.</p>
+
+<h2 id="toc-07-common-failures-dispatch-literacy">Common failures — dispatch literacy</h2>
+<table><thead><tr><th>Symptom</th><th>Likely cause</th><th>First grep</th></tr></thead>
+<tbody>
+<tr><td>HUD hex nonsense</td><td><code>FIELD_LAYOUT_VERSION</code> skew</td><td>layout constant in host + shader</td></tr>
+<tr><td>Flat entropy, moving chrome</td><td>ThermoAccountant not populated</td><td><code>THERMO</code> category silent</td></tr>
+<tr><td>Instant NaN colors on Classic</td><td>CFL violated before guard</td><td>waveCFL / thermoCFL in debug</td></tr>
+<tr><td>Guest RAM stale</td><td>Layer pump skipped or SSBO not bound</td><td>binding 1, <code>pumpAll</code></td></tr>
+<tr><td>Spiderweb frozen</td><td>Fabric empty or mirror not called</td><td><code>updateHardwareFromAnalogFields</code></td></tr>
+</tbody></table>
+<p>Dispatch literacy is knowing which layer owns the symptom. The GPU runs the world — but the host can refuse to call it, bind wrong memory, or pack lies into <code>data_bus</code>.</p>
+
+<h2 id="toc-07-chapter-summary">Chapter summary</h2>
+<p>Chapter 7 is the offensive core: thin host, fat GPU, one dispatch spine. Default canvas is <code>x86.comp</code> with <code>FieldSocket</code>, not decorative raymarch. <code>rtx()</code> singleton unifies device, budget, and <code>hardwareFabric</code>. Descriptor bindings 0–2 and 8–14 must match <code>FIELD_LAYOUT_VERSION = 5</code>. Each <code>dispatch_canvas()</code> seals time, enforces CFL, pumps layers, fills ThermoAccountant and <code>data_bus</code>, mirrors hardware, and issues <code>vkCmdDispatch</code>. Sealed time keeps physics linear; analog FCC floats keep host and shader honest about knobs. Queen inherits this spine when built. Trust stderr before screenshots; headless dispatch counts.</p>
+<p>Next: <a href="08-field-die.html">Chapter 8 — Die-Resident Universe</a> owns 64 MiB guest RAM, layer map L0–L9, and the full <code>data_bus[64]</code> slot contract. Prior: <a href="06-rf-signals.html">Chapter 6 — Signal Shell</a> separated RF meanings before offense took the spear.</p>
+
+<h2 id="toc-07-raycanvas-window-fabric-and-presentation"><code>RayCanvas</code> — window, fabric, and presentation</h2>
+<p><code>RayCanvas</code> sits between the navigator shell and <code>Pipeline::dispatch_canvas()</code>. It owns swapchain-facing presentation, adaptive resolution scaling from 320×200 heritage up to 4K+ operator preference, and the call to <code>createAnalogFieldFabric()</code> that instantiates Phi, Thermo, and Flow storage images. Without RayCanvas, you would have a Pipeline with no honest surface to present and no fabric to evolve.</p>
+<p>Adaptive scale is not vanity. It interacts with CFL: Δx changes when resolution changes, which changes admissible Δt and wave speed. The harmonics guard in <code>dispatch_canvas()</code> reads render resolution when computing CFL numbers. Operators who crank resolution without watching stderr may find the host silently scaling FCC floats down — not punishment, protection.</p>
+<p>RayCanvas also participates in chrome layout shared with <code>x86.comp</code>. Taskbar height, UI boost constants, and hit-testing regions must match shader expectations or clicks land in wrong guest coordinates. Offense includes UX boundary conditions: where the operator points is where the field receives probe injection.</p>
+<p>Presentation path: HDR output at binding 0 receives the composed result of die render, fabric contribution, and AmouranthOS chrome. Chapter 17 names the holographic boundary where beauty costs heat; Chapter 7 names the mechanism — HDR is not free, and ThermoAccountant counts maintenance.</p>
+
+<h2 id="toc-07-vram-budget-offense-has-a-memory-perimeter">VRAM budget — offense has a memory perimeter</h2>
+<p><code>rtx()</code> tracks VRAM budget because offense that allocates without witness is how operators lose machines to OOM kills mid-session. STATUS block (~5 s, <code>ELLIE</code> category <code>STATUS</code>) reports VRAM alongside FPS and GPU milliseconds. Chapter 11 teaches the grep rhythm; here note VRAM is part of dispatch health, not a separate concern.</p>
+<p>Field Die SSBO at binding 1 is 64 MiB guest map plus tail tile cache — substantial but fixed. Fabrics scale with resolution. Chrome textures on 11–14 add portrait and wallpaper assets. A long session with many swipes does not duplicate the die SSBO; it rebinds shaders and push layouts. Understanding what scales prevents false panic when STATUS shows VRAM climb after first fabric creation.</p>
+<table><thead><tr><th>Resource</th><th>Typical scale behavior</th></tr></thead>
+<tbody>
+<tr><td><code>FieldX86Die</code> SSBO</td><td>Fixed guest map + ZMM1024 tail</td></tr>
+<tr><td>Phi / Thermo / Flow</td><td>Resolution-dependent texel count</td></tr>
+<tr><td>HDR output</td><td>Follows adaptive canvas scale</td></tr>
+<tr><td>AOS chrome textures</td><td>Asset-sized; synced each boot</td></tr>
+</tbody></table>
+
+<h2 id="toc-07-thermoaccountant-on-every-dispatch-canvas-agnost"><code>ThermoAccountant</code> on every dispatch — canvas-agnostic</h2>
+<p>Binding 2, <code>ThermoAccountant</code>, is populated every <code>dispatch_canvas()</code> regardless of whether you are on x86 or Classic canvas. Chapter 4 introduced the fields; Chapter 7 stresses canvas-agnostic obligation — you do not get to skip entropy receipts because Big Grin HUD hides the thermo heatmap.</p>
+<table><thead><tr><th>Field</th><th>Meaning</th><th><code>data_bus</code> mirror</th></tr></thead>
+<tbody>
+<tr><td><code>entropyThisFrame</code></td><td>Landauer proxy + field work + probes + host x86 heat</td><td>[24]</td></tr>
+<tr><td><code>avgBoundaryThermo</code></td><td>Mean boundary temperature / entropy density</td><td>[25]</td></tr>
+<tr><td><code>prevMaintCost</code></td><td>Coherence with previous frame</td><td>[26]</td></tr>
+<tr><td><code>freeEnergyIncome</code></td><td>Sealed time + input activity</td><td>[27]</td></tr>
+<tr><td><code>steps</code></td><td>Dispatch counter</td><td>[28]</td></tr>
+</tbody></table>
+<p>On x86 path, <code>FieldX86Emu::hostCyclesLastFrame()</code> contributes host heat when ControlHostCpu assist runs. GPU interpretation path still accrues field work from fabric coupling and Tesla entropy terms. <span class="tag meta">Proxy integral — not junction calorimetry.</span> Chapter 12’s honesty table restates the label; dispatch operators still grep THERMO because comparative receipts detect failure.</p>
+
+<h2 id="toc-07-swipe-list-pedagogy-without-losing-the-die">Swipe list — pedagogy without losing the die</h2>
+<p><code>Options::Canvas::SwipeList</code> includes <code>x86</code>, <code>Amouranth</code>, <code>energy</code>, <code>Flowers</code>, <code>Frosted</code>, <code>GreenWaves</code>, <code>RetroRTX</code>, Mandelbulb variants, tributes, and more. Index 0 remains <code>x86</code>. Swiping changes shader and push layout to Classic or specialty demos; infrastructure — <code>rtx()</code>, sealed time, ThermoAccountant, CFL guard — persists.</p>
+<p>Teaching pattern: start new operators on default die to establish address-space thinking (Chapter 8). Move to <code>energy</code> or Classic thermo for visible Phi/Thermo coupling (Chapter 3). Return to die for AmmoOS launch drills. Offense is the same spine; pedagogy changes which binding 0 pixels emphasize.</p>
+<p>Do not document swipes as “modes that turn off field theory.” Field theory is default. Swipes are curriculum chapters rendered as shaders.</p>
+
+<h2 id="toc-07-ellie-logging-during-dispatch"><code>ELLIE</code> logging during dispatch</h2>
+<p><code>ELLIE</code> categories relevant to dispatch: <code>MAIN</code>, <code>VULKAN</code>, <code>CANVAS</code>, <code>THERMO</code>, <code>STATUS</code>, <code>RTXPROBE</code>. Chapter 11 is the observability home; operators on Chapter 7 should still know VULKAN proves device init, CANVAS proves dispatch issued, THERMO proves accountant alive.</p>
+<pre class="eq"># Week-one filter example:
+grep -E '^(MAIN|VULKAN|CANVAS|THERMO|STATUS)' run.log</pre>
+<p>RTXProbe with <code>RTX_PROBES=1</code> adds GPU timestamps and invocation counts — zero cost when off. Use it when dispatch latency spikes without obvious CFL clamp messages.</p>
+
+<h2 id="toc-07-integration-three-scales-in-one-tick">Integration — three scales in one tick</h2>
+<p>Chapter 2 named GPU fabric, Field Die, and packet field. One x86 dispatch touches two inside AMOURANTHRTX:</p>
+<ul>
+<li><strong>Fabric</strong> — bindings 8–10 evolve; hardware mirror reads averages (Chapter 10).</li>
+<li><strong>Die</strong> — binding 1 guest RAM; <code>data_bus</code> telemetry (Chapter 8).</li>
+<li><strong>Packet field</strong> — NEXUS-local; correlated at panel :9477, not inside <code>vkCmdDispatch</code>.</li>
+</ul>
+<p>Offense on GPU does not replace defense on loopback. Queen binds them at operator perimeter (Chapter 21). Field literacy holds all three in mind without collapsing into one misleading dashboard metric.</p>
+
+<h2 id="toc-07-from-pixels-to-packets-operator-stance">From pixels to packets — operator stance</h2>
+<p>Dispatch offense makes local state legible: stderr, <code>data_bus</code>, HDR, prompt terminal. Packet field defense makes network habit legible: jsonl, gatekeeper, panel. The human at :9477 correlates both. Neither product inherits the other’s conscience — Chapter 12 product boundaries table.</p>
+<p>Greatest weapon remains field literacy (Chapter 1): read continuous state, impose boundary conditions, refuse outsourced perimeter narrative. Chapter 7 is where boundary conditions become <code>vkCmdDispatch</code>.</p>
+
+<h2 id="toc-07-prompt-terminal-live-dispatch-controls">Prompt terminal — live dispatch controls</h2>
+<p>The prompt terminal is partial UI with full operator leverage. Implemented today: <code>set</code> and <code>list</code> for <code>AnalogFields.*</code> and <code>Hardware.*</code> namespaces. Example session during run:</p>
+<pre class="eq">set AnalogFields.WaveSpeed 1.4
+set AnalogFields.GateFidelity 0.8
+set AnalogFields.InjectStrength 3.0
+set AnalogFields.FieldCoupling 0.65
+list AnalogFields
+list Hardware
+guide</pre>
+<p>Each <code>set</code> changes knobs the CFL guard may scale before they reach bindings 8–10. Each <code>list</code> reads back host-side state and spiderweb mirrors from <code>rtx().hardwareFabric</code>. Glassmorphism sliders and ImGui ESC menu remain feasibility documentation — Chapter 11 labels them; Chapter 7 operators use prompt until sliders ship.</p>
+<p>Prompt is offense interface: you impose parameters; dispatch imposes physics. If parameters violate CFL, host scales them down and stderr may note clamp — not censorship, numerical ethics per Chapter 9.</p>
+
+<h2 id="toc-07-descriptor-churn-versus-push-constants-performan">Descriptor churn versus push constants — performance posture</h2>
+<p>FieldSocket push constants change every frame — sealed time, probes, control flags — without rebinding descriptor sets for those scalars. Heavy resources (SSBO, fabrics, chrome textures) stay bound across dispatches. This split is deliberate: per-tick offense needs fast small writes; per-session offense amortizes large allocations.</p>
+<p>Operators profiling with <code>RTX_PROBES=1</code> should expect dispatch-bound workloads on fabric-heavy scenes. CPU time in <code>dispatch_canvas()</code> should remain modest — layer pump and CFL are O(layers) and O(1) FCC math, not O(texels). If host CPU dominates, suspect debug logging volume or accidental CPU emulation path with <code>ControlHostCpu</code> left on without intent.</p>
+
+<h2 id="toc-07-security-posture-beside-dispatch-local-first">Security posture beside dispatch — local-first</h2>
+<p>Dispatch does not phone home. Session logs stay local. Sealed time is not DRM — Chapter 12 honesty table. Tamper abort narratives refer to host verify posture and sovereign sync (Chapter 19), not hidden telemetry in <code>vkCmdDispatch</code>.</p>
+<p>NEXUS packet field runs beside AMOURANTHRTX, not inside it. Do not ask the GPU dispatch loop to score sockets; ask the panel to correlate GPU THERMO lines with gatekeeper jsonl. Field literacy is bilingual: stderr and jsonl.</p>
+
+<h2 id="toc-07-creditor-tribute-von-neumann-and-turing">Creditor tribute — von Neumann and Turing</h2>
+<p>Von Neumann gave us the addressable store computer; Turing gave us the machine that reads and writes symbols on a tape. Field Die is both metaphors on one SSBO: addresses in guest RAM, symbols interpreted by <code>x86.comp</code> each tick. Dispatch is the clock that advances the tape. <a href="../creditors/von-neumann.html">von Neumann</a> · <a href="../creditors/turing.html">Turing</a> tribute pages name the creditors; grep names the implementation.</p>
+
+<h2 id="toc-07-study-questions">Study questions</h2>
+<ol>
+<li>Quote the dispatch spine from <code>main.cpp</code> to <code>vkCmdDispatch</code> and state one obligation that runs on host only.</li>
+<li>Why is <code>FIELD_LAYOUT_VERSION = 5</code> described as “desynchronized reality” when mismatched?</li>
+<li>Name three bindings on the x86 path and what each stores.</li>
+<li>What is the difference between <code>FieldSocket</code> and Classic <code>PushConstants</code> for canvas kind?</li>
+<li>Which <code>data_bus</code> slots carry analog FCC floats and which carry ThermoAccountant mirrors?</li>
+<li>What does <code>TotalTime::seal()</code> protect against in per-frame physics?</li>
+<li>When is <code>FieldX86Emu</code> involved, and is it the default execution path?</li>
+<li>Why does CFL run before <code>vkCmdDispatch</code> even on x86 canvas?</li>
+<li>What grep pattern would you use to prove ThermoAccountant is alive in week one?</li>
+<li>How does Queen relate to <code>rtx()</code> without replacing the dispatch loop?</li>
+</ol>
+
+<h2 id="toc-07-further-reading-and-cross-links">Further reading and cross-links</h2>
+<p>Wiki quick reference: <a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/07-GPU-Field-Engine">07 — GPU Field Engine</a>. Headers: <code>Pipeline.hpp</code>, <code>OptionsMenu.hpp</code>, <code>FieldRtxFieldAbs.hpp</code>. Prior chapters: <a href="02-fields-pixels-packets.html">Ch 2</a> three scales, <a href="03-thermodynamics.html">Ch 3</a> fabric channels, <a href="04-entropy.html">Ch 4</a> ThermoAccountant, <a href="05-packet-field.html">Ch 5</a> defensive perimeter, <a href="06-rf-signals.html">Ch 6</a> RF separation. Forward: <a href="08-field-die.html">Ch 8</a> die map, <a href="09-fcc-tesla.html">Ch 9</a> CFL/Tesla, <a href="10-spiderweb.html">Ch 10</a> hardware mirror, <a href="11-observability.html">Ch 11</a> grep discipline, <a href="12-reality-theory.html">Ch 12</a> rocks table.</p>
+<p>When you finish study questions, run Drill 7.A before opening Chapter 8. Die literacy assumes you believe dispatch runs — stderr is the witness.</p>
+
+<h2 id="toc-07-glossary-hooks-chapter-22-preview">Glossary hooks (Chapter 22 preview)</h2>
+<p>Terms introduced here that Chapter 22 defines formally: <strong>FieldSocket</strong> (x86 push block), <strong>sealed time</strong> (monotonic session clock), <strong>dispatch_canvas</strong> (per-frame host ritual), <strong>X86Fields</strong> (default canvas kind), <strong>Classic</strong> (CANVAS.comp pedagogy path). Carry these forward into die literacy — they are not interchangeable with packet-field vocabulary from NEXUS.</p>
+<p><strong>Offensive dispatch</strong> in one line: impose boundary conditions on writable surfaces faster than confusion propagates, with CFL and layout version as host witnesses, <code>vkCmdDispatch</code> as GPU spear, stderr as operator scripture.</p>
+
+<h2 id="toc-07-deep-dive-pipeline-hpp-and-dispatch-contracts">Deep dive — <code>Pipeline.hpp</code> and dispatch contracts</h2>
+<p>The dispatch loop is not scattered across anonymous lambdas. <code>Pipeline::dispatch_canvas()</code> centralizes obligations so grep has a spine. Operators packaging forks should diff this function first when merging upstream AMOURANTHRTX — not the splash assets. Canvas kind selection branches X86Fields versus Classic, but thermo population and CFL guard are shared preludes. That shared prelude is intentional: you cannot opt out of numerical ethics by swiping to a prettier shader.</p>
+<p>Descriptor set layout for x86 path is versioned with <code>FIELD_LAYOUT_VERSION = 5</code>. When upgrading shaders, bump the constant in host and SPIR-V comments together. Mixed trees produce mixed reality — HUD reading slot 42 chrome flags from an old packing order while host writes the new order is a silent desync worse than a crash, because you may trust false hex.</p>
+<p>Push constant size for FieldSocket must match <code>x86.comp</code> layout byte-for-byte. Vulkan validation layers catch some mismatches in debug builds; release builds may simply misread control flags. Always run at least one debug validation session when touching FieldSocket fields.</p>
+
+<h2 id="toc-07-deep-dive-guest-programs-and-launch-hygiene">Deep dive — guest programs and launch hygiene</h2>
+<p><code>FieldAmouranthLaunch</code> and <code>FieldAmouranthExec</code> place guest images into the RAM map respecting boot vector and disk image regions. Operators launching retro binaries should understand they write into the same SSBO the GPU interprets — there is no sandbox fairy. A bad binary can scribble BDA; the layer pump must resync or VGA mode lies on the bus.</p>
+<p>ControlAmmoExec is not “run anything from the internet.” It is operator offense with conscience. Chapter 5 packet field and Chapter 21 Queen gates exist because launch and network are different writable surfaces. Field literacy connects them at the human, not in one automated verdict.</p>
+
+<h2 id="toc-07-deep-dive-thermo-on-die-versus-classic-pedagogy">Deep dive — thermo on die versus classic pedagogy</h2>
+<p>New operators often swipe to Classic because thermo colors are obvious. Veterans stay on die default because product truth lives there. The compromise this book teaches: learn thermo on Classic in week one afternoon, return to die for week two operations. ThermoAccountant does not care which canvas you stared at — it populates every dispatch. Die path simply hides heat behind chrome unless you enable debug HUD or read stderr.</p>
+<p>Boundary thermo on die still moves when coupling increases — grep proves it. If you need visual confirmation, enable field debug overlay or watch STATUS entropy lines. Screenshots of Big Grin without stderr are incomplete testimony.</p>
+
+<h2 id="toc-07-deep-dive-failure-isolation-checklist">Deep dive — failure isolation checklist</h2>
+<p>When dispatch misbehaves, walk this checklist in order: (1) VULKAN init succeeded? (2) FIELD_LAYOUT_VERSION match? (3) CFL clamp messages? (4) pump generation incrementing slot 0? (5) ThermoAccountant steps in slot 28 rising? (6) HDR presented? Skipping order sends you to fix chrome when binding 1 is nil.</p>
+<p>Record baseline grep snippets in your operator journal. Field Technology is a practice, not a one-time read. Week twelve you will compare stderr shape against week one and notice drift before users do.</p>
+
+<h2 id="toc-07-deep-dive-creditor-cfl">Deep dive — creditor CFL</h2>
+<p>CFL condition names Courant, Friedrichs, and Lewy — the men who told the world explicit time steps must respect mesh spacing. Chapter 9 owns the equation; Chapter 7 owns the placement: before <code>vkCmdDispatch</code>. Offense without CFL disrespects their creditor debt. <a href="../creditors/cfl.html">CFL creditor page</a> links history; harmonics guard links implementation.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch07">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Dispatch spine</td><td>vkCmdDispatch each tick</td><td><span class="tag impl">Implemented</span></td><td><code>Pipeline::dispatch_canvas()</code></td></tr><tr><td>Layout contract</td><td>FIELD_LAYOUT_VERSION = 5</td><td><span class="tag impl">Implemented</span></td><td><code>Host/shader struct match</code></td></tr><tr><td>Default canvas</td><td>x86.comp Field Die</td><td><span class="tag impl">Implemented</span></td><td><code>./linux.sh run path</code></td></tr><tr><td>Thin host</td><td>No CPU fabric PDE</td><td><span class="tag impl">Implemented</span></td><td><code>Architectural invariant</code></td></tr></tbody></table>
+<pre class="eq">main → dispatch_canvas() → vkCmdDispatch(groupsX, groupsY, 1)</pre>
+<pre class="eq">grep -n &#x27;dispatch_canvas\|FIELD_LAYOUT_VERSION&#x27; Navigator/engine/Pipeline.cpp</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/engine/main.cpp</code></li><li><code>Navigator/engine/Pipeline.cpp</code></li><li><code>Navigator/shaders/x86.comp</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-07-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Offensive dispatch is <code>vkCmdDispatch</code> with sealed time, CFL, layout version 5, and ThermoAccountant every tick. Thin host, fat GPU. Die literacy in Chapter 8 assumes you believe dispatch runs.</p>
+</div>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 8</p>
+<h1>Die-Resident Universe</h1>
+<p class="eyebrow">Chapter 8 · Die-Resident Universe — Field Die &amp; Data Bus</p>
+
+<div class="objectives">
+<h2 id="toc-08-learning-objectives">Learning objectives</h2>
+<p>After this chapter you should be able to:</p>
+<ul>
+<li>State why the Field Die is 64 MiB of addressable guest RAM on the GPU, not a userspace DOS emulator cosplay.</li>
+<li>Draw the guest linear map from IVT through VGA at <code>0xB8000</code> to the C mirror at <code>0x01000000</code>.</li>
+<li>Enumerate all <code>data_bus[64]</code> slot families and explain how host and shader stay coherent each dispatch.</li>
+<li>Describe the L0–L9 layer pump, GPU <code>x86.comp</code> execution, and optional <code>FieldX86Emu</code> host assist.</li>
+<li>Read ZMM1024 tile cache hex on the Big Grin HUD without confusing visual chrome for instrumentation.</li>
+</ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-08-introduction-the-die-resident-universe">Introduction — the die-resident universe</a></li><li><a href="#toc-08-field-die-what-is-implemented">Field Die — what is implemented</a></li><li><a href="#toc-08-guest-linear-ram-map-addresses-operators-memoriz">Guest linear RAM map — addresses operators memorize</a></li><li><a href="#toc-08-execution-model-gpu-first-host-assist-optional">Execution model — GPU first, host assist optional</a></li><li><a href="#toc-08-data-bus-64-telemetry-spine">data_bus[64] — telemetry spine</a></li><li><a href="#toc-08-analog-fcc-floats-slots-16-23">Analog FCC floats — slots [16–23]</a></li><li><a href="#toc-08-thermoaccountant-mirrors-slots-24-28">ThermoAccountant mirrors — slots [24–28]</a></li><li><a href="#toc-08-tesla-valve-bus-words-slots-31-and-34">Tesla valve bus words — slots 31 and 34</a></li><li><a href="#toc-08-input-bus-slots-32-41">Input bus — slots [32–41]</a></li><li><a href="#toc-08-viewport-and-amouranthos-slots-42-56">Viewport and AmouranthOS — slots [42–56]</a></li><li><a href="#toc-08-audio-bios-io-drives-slots-57-63">Audio, BIOS, IO, drives — slots [57–63]</a></li><li><a href="#toc-08-field-layers-l0-l9-composable-dos-subsystems">Field layers L0–L9 — composable DOS subsystems</a></li><li><a href="#toc-08-zmm1024-tile-cache-fabric-samples-in-the-die-tai">ZMM1024 tile cache — fabric samples in the die tail</a></li><li><a href="#toc-08-not-dosbox-architectural-comparison">Not DOSBox — architectural comparison</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-08-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">The Field Die is a <strong>universe with coordinates</strong> on the GPU — 64 MiB guest RAM, not DOS nostalgia. On the way you will memorize the linear map, read <code>data_bus[64]</code> slots, pump L0–L9 layers, and interpret Big Grin HUD hex without confusing chrome for instrumentation.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/field-die.jpg" alt="Field Die" loading="lazy" /><figcaption>On the way — Field Die</figcaption></figure>
+<ul class="on-the-way-journey"><li>Guest offsets: IVT, BDA, VGA, mirror</li><li>Execution: x86.comp default, host assist optional</li><li>Telemetry spine and pump generation</li><li>ZMM1024 tile cache literacy</li></ul>
+</div>
+
+
+<h2 id="toc-08-introduction-the-die-resident-universe">Introduction — the die-resident universe</h2>
+<p>Chapter 7 named the dispatch spear: <code>vkCmdDispatch</code> on a thin host that seals time, enforces CFL, and binds <code>FieldX86Die</code> at descriptor slot 1. Chapter 8 names <em>what lives inside that SSBO</em>. The Field Die is <strong>64 MiB of addressable reality on the GPU</strong> — guest RAM where RTX-DOS, AmmoOS, and operator-launched programs execute, VGA text renders, FAT layers mount, and telemetry packs into <code>data_bus[64]</code> every tick.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch08-die-bus.jpg" alt="Die and data bus" loading="lazy" /><figcaption>Figure 8.2 — Guest linear map and data_bus telemetry spine. <span class="claim-tie">Claim: data_bus[64] telemetry spine per dispatch</span></figcaption></figure>
+
+<p>Reality is 3D in this stack means: bytes have offsets, layers have slot bases, HUD fields have indices. Time is linear means: pump generation increments, dispatch steps accrue in ThermoAccountant, sealed time in FieldSocket does not rewind. Energy can be moved means: fabric coupling heats the story the die tells — thermo mirrors land in bus slots the Big Grin HUD reads.</p>
+<p>This is not DOSBox in a trench coat. DOSBox is a userspace machine with its own timing myths. Field Die is the <span class="tag impl">same SSBO mapped host and GPU</span>, pumped via <code>FieldLayer::pumpAll()</code>, interpreted by <code>x86.comp</code> on the default canvas. The host can assist with <code>FieldX86Emu</code> when <code>ControlHostCpu</code> is set; the product default remains GPU interpretation. Chapter 12’s honesty table will remind you: headers over nostalgia.</p>
+<p>Cross-links: Chapter 2 introduced scale 2 — die bytes beside texels and packets. Chapter 4 placed ThermoAccountant mirrors at <code>data_bus[24–28]</code>. Chapter 9 publishes Tesla bias to slots 31 and 34. Chapter 10 reads fabric averages that were visible on the bus one tick earlier. Chapter 11 teaches grep; this chapter teaches <strong>addresses</strong>.</p>
+
+<figure class="figure"><img src="../assets/images/field-die.jpg" alt="Field die" loading="lazy" /><figcaption>Figure 8.1 — Guest RAM, holographic boundary, fabric channels: one SSBO, two witnesses (HUD and stderr).</figcaption></figure>
+
+<h2 id="toc-08-field-die-what-is-implemented">Field Die — what is implemented</h2>
+<ul>
+<li><strong>64 MiB</strong> guest RAM (<code>GUEST_RAM_BYTES</code> / <code>FieldPlatform::GUEST_RAM_BYTES</code>)</li>
+<li>VGA color text at guest <code>0xB8000</code> (80×25 heritage; Big Grin HUD 172×48 in shader compose)</li>
+<li>C hot mirror at <code>0x01000000</code> (<code>HD_MIRROR_BYTE</code> / <code>FieldPlatform::HD_MIRROR_BYTE</code>)</li>
+<li>Boot vector at <code>0x7C00</code>, IVT at 0, BDA at <code>0x400</code></li>
+<li>Same SSBO for host peek and GPU write — not a forked emulator core</li>
+<li><code>FIELD_LAYOUT_VERSION = 5</code> must match host and <code>x86.comp</code> — Chapter 7</li>
+</ul>
+<p>Operators grep <code>GUEST_RAM_BYTES</code> and <code>FieldX86Die</code> in <code>Navigator/engine/</code> to see allocation constants. Version skew on layout version breaks HUD hex before it breaks your nostalgia — layout is physics.</p>
+<div class="callout everyone"><strong>Plain English:</strong> The Field Die is a computer inside your GPU dispatch — a neighborhood with street addresses, not a screenshot of someone else’s neighborhood.</div>
+
+<h2 id="toc-08-guest-linear-ram-map-addresses-operators-memoriz">Guest linear RAM map — addresses operators memorize</h2>
+<p>From <code>FieldLayer::RamMap</code> namespace — offsets within the guest map:</p>
+<table><thead><tr><th>Offset</th><th>Region</th><th>Operator note</th></tr></thead>
+<tbody>
+<tr><td><code>0x00000000</code></td><td>IVT base</td><td>Interrupt vector table — real x86 layout discipline</td></tr>
+<tr><td><code>0x00000400</code></td><td>BDA</td><td>BIOS Data Area — video mode, cursor, drive count</td></tr>
+<tr><td><code>0x00007C00</code></td><td>Boot vector</td><td>MBR / boot sector staging</td></tr>
+<tr><td><code>0x00020000</code></td><td>Disk image base</td><td>A: floppy image staging</td></tr>
+<tr><td><code>0x00090000</code></td><td>DOOM palette</td><td>Game-path palette byte (when launched)</td></tr>
+<tr><td><code>0x000A0000</code></td><td>VGA graphics / DOOM FB</td><td>Planar mode 13h framebuffer region</td></tr>
+<tr><td><code>0x000B8000</code></td><td>VGA text</td><td>Color text buffer — DOS habit</td></tr>
+<tr><td><code>0x01000000</code></td><td>HD mirror</td><td>C: hot mirror — host/guest coherence</td></tr>
+</tbody></table>
+<p>BDA fields matter for layers: <code>BDA_VIDEO_MODE</code> at <code>BDA+0x49</code>, columns at <code>+0x4A</code>, cursor col/row at <code>+0x50/+0x51</code>, drive count at <code>+0x75</code>. VGA layer sync reads these each pump so <code>data_bus</code> VGA slots reflect mode truth.</p>
+<p>When an operator says “I see text at B8000,” they are speaking field literacy — address-first, not “it looks like DOS.” Chapter 12 rewards that habit.</p>
+
+<h2 id="toc-08-execution-model-gpu-first-host-assist-optional">Execution model — GPU first, host assist optional</h2>
+<ol>
+<li><strong>GPU:</strong> <code>x86.comp</code> interprets guest instructions, composes Big Grin HUD (172×48), applies AmouranthOS chrome from bindings 11–14, reads/writes <code>FieldX86Die</code> SSBO.</li>
+<li><strong>Host assist:</strong> <code>FieldX86Emu</code> when <code>ControlHostCpu</code> (flag 8) in FieldSocket — 8086 path on CPU for debug or hybrid scenarios.</li>
+<li><strong>Launch path:</strong> <code>FieldAmouranthLaunch</code> / <code>FieldAmouranthExec</code> when <code>ControlAmmoExec</code> (1024) — guest programs enter address space with receipts.</li>
+</ol>
+<p>Default <code>./linux.sh run</code> does not require host CPU emulation. ThermoAccountant still adds <code>hostHeat</code> from <code>FieldX86Emu::hostCyclesLastFrame()</code> when assist runs — comparative signal, not billing.</p>
+<p>GPU interpretation is offense at silicon speed: each dispatch may advance guest IP, touch VGA bytes, update FAT tables, pack bus words. The host’s job is pump, seal, guard — not pretend GPU work did not happen.</p>
+
+<h2 id="toc-08-data-bus-64-telemetry-spine"><code>data_bus[64]</code> — telemetry spine</h2>
+<p>Sixty-four packed words per dispatch. Mirrored host-side in <code>Options::Canvas::DataBus</code> and exposed to shaders through FieldSocket pathways. This is the <strong>telemetry field</strong> Chapter 2 named — not SI units, but operator-grep-able agreement surface.</p>
+<table><thead><tr><th>Slots</th><th>Content</th><th>Pack source</th></tr></thead>
+<tbody>
+<tr><td>[0]</td><td>Pump generation tag</td><td><code>FieldLayer::pumpAll</code> registry</td></tr>
+<tr><td>[1]</td><td>Cycles per frame / pump cadence</td><td>Dispatch counters</td></tr>
+<tr><td>[2–7]</td><td>RAM layer — HD ready, mirror bytes, boot vector, floppy size, guest RAM size, mirror offset</td><td><code>ramPack</code></td></tr>
+<tr><td>[8–11]</td><td>VGA layer — mode, DAC, viewport telemetry</td><td><code>vgaPack</code></td></tr>
+<tr><td>[12–15]</td><td>FAT / AMMOFAT geometry</td><td><code>fatPack</code></td></tr>
+<tr><td>[16–23]</td><td>Analog FCC floats — TimeScale through FieldCoupling</td><td>Host analog guard + FieldSocket</td></tr>
+<tr><td>[24–28]</td><td>ThermoAccountant mirrors — entropy, boundary, maint, income, steps</td><td>Binding 2 each dispatch</td></tr>
+<tr><td>[31]</td><td>Tesla valve coherence word</td><td><code>teslaBias()</code> path</td></tr>
+<tr><td>[32–41]</td><td>Input — keyboard, mouse, joystick slots</td><td><code>FieldInput</code> pack</td></tr>
+<tr><td>[34]</td><td>Tesla bias strength / directional word</td><td>FCC + hardware mirror</td></tr>
+<tr><td>[42–56]</td><td>Viewport + AmouranthOS chrome flags, compositor HUD</td><td><code>FieldDosViewport</code>, AOS pack</td></tr>
+<tr><td>[57–59]</td><td>Audio rack status</td><td>Audio layer pump</td></tr>
+<tr><td>[60–61]</td><td>BIOS / shell boot flags</td><td><code>FieldBios</code> pack</td></tr>
+<tr><td>[62]</td><td>IO hub / joystick ports</td><td><code>FieldDevices</code></td></tr>
+<tr><td>[63]</td><td>Drive ready mask + current drive</td><td><code>FieldDrives</code></td></tr>
+</tbody></table>
+<p>Slot <strong>42</strong> is the AmouranthOS chrome flag word — desktop vs console shell, menu state, overlay bits. Slots <strong>50–51</strong> may carry infinite field layer strip for shader HUD; <strong>54</strong> carries DOS FAT mounted bit per viewport header comments. When wiki and headers disagree on a slot, <span class="tag impl">grep wins</span> — Chapter 12’s first trust rule.</p>
+<div class="callout science"><strong>Do not</strong> treat HUD hex as laboratory instrumentation. <strong>Do</strong> treat bus agreement as dispatch health — host and shader must match.</div>
+
+<h2 id="toc-08-analog-fcc-floats-slots-16-23">Analog FCC floats — slots [16–23]</h2>
+<p>When x86 FieldSocket is active, analog knobs mirror into the bus so guest HUD and host prompts read the same floats:</p>
+<pre class="eq">[16] TimeScale      [17] ThermoAlpha    [18] WaveSpeed      [19] GateFidelity
+[20] EntropyFloor   [21] InjectStrength [22] PropalacticScale [23] FieldCoupling</pre>
+<p>Chapter 3 defined knob effects on fabric; Chapter 9 shows CFL scaling before these reach bindings 8–10. On the die path, FCC floats are double witness — fabric evolves AND bus records what the host admitted past the guard.</p>
+<p>Prompt <code>set AnalogFields.WaveSpeed 1.4</code> changes host state; next dispatch packs slot 18. If THERMO moves but slot 18 does not, you have a pump or layout bug, not “physics feelings.”</p>
+
+<h2 id="toc-08-thermoaccountant-mirrors-slots-24-28">ThermoAccountant mirrors — slots [24–28]</h2>
+<p>Every dispatch copies binding 2 accountant into bus mirrors for HUD and grep:</p>
+<table><thead><tr><th>Slot</th><th>Field</th></tr></thead>
+<tbody>
+<tr><td>[24]</td><td><code>entropyThisFrame</code></td></tr>
+<tr><td>[25]</td><td><code>avgBoundaryThermo</code></td></tr>
+<tr><td>[26]</td><td><code>prevMaintCost</code></td></tr>
+<tr><td>[27]</td><td><code>freeEnergyIncome</code></td></tr>
+<tr><td>[28]</td><td><code>steps</code></td></tr>
+</tbody></table>
+<p><span class="tag meta">Landauer proxy — not GPU package joules.</span> Still mandatory receipts. Zero entropy with moving fabric on die canvas is failure — same rule as Classic canvas Chapter 3 drill.</p>
+
+<h2 id="toc-08-tesla-valve-bus-words-slots-31-and-34">Tesla valve bus words — slots 31 and 34</h2>
+<p>Directional bias constants from <code>FieldRtxFieldAbs.hpp</code>:</p>
+<pre class="eq">TESLA_R_FORWARD = 0.18    TESLA_R_REVERSE = 3.2    FIELD_PHI_MILLI = 618</pre>
+<p>Published to <code>data_bus[31]</code> and <code>data_bus[34]</code> via <code>teslaBias()</code> and <code>TeslaBiasStrength</code> FCC path. Chapter 9 explains fluidic diode metaphor; Chapter 10 shows reverse damping on spiderweb edges.</p>
+
+<h2 id="toc-08-input-bus-slots-32-41">Input bus — slots [32–41]</h2>
+<p><code>FieldInput</code> packs keyboard, mouse, and joystick state into ten words — offense from operator fingers becomes guest boundary conditions. Probe injection on fabric (Chapter 3) and input slots are cousins: both impose energy and intent on the next tick.</p>
+<p>Mouse coordinates and button masks land in predictable sub-ranges within [32–41] per <code>FieldLayer::BusMap::INPUT_BASE</code>. When chrome hit-testing disagrees with guest input, compare FieldSocket control flags, viewport pack at [42+], and shared layout constants (<code>TASKBAR_H</code>, <code>UI_BOOST</code>) against <code>x86.comp</code>.</p>
+
+<h2 id="toc-08-viewport-and-amouranthos-slots-42-56">Viewport and AmouranthOS — slots [42–56]</h2>
+<p><code>FieldDosViewport</code> and AmouranthOS pack compositor telemetry — desktop shell, start menu, console overlay, layer strip for shader HUD. Slot 42 is the chrome flag word operators see in research traces. Bindings 11–14 supply textures; bus words supply state. Both must sync on boot — <code>FieldAmouranthOs::boot()</code>, <code>sync_aos_textures()</code>.</p>
+
+<h2 id="toc-08-audio-bios-io-drives-slots-57-63">Audio, BIOS, IO, drives — slots [57–63]</h2>
+<table><thead><tr><th>Slots</th><th>Layer</th></tr></thead>
+<tbody>
+<tr><td>[57–59]</td><td>Audio rack status</td></tr>
+<tr><td>[60–61]</td><td>BIOS shell / boot flags</td></tr>
+<tr><td>[62]</td><td>IO hub — joystick / port multiplex</td></tr>
+<tr><td>[63]</td><td>Drive ready mask + current drive</td></tr>
+</tbody></table>
+
+<h2 id="toc-08-field-layers-l0-l9-composable-dos-subsystems">Field layers L0–L9 — composable DOS subsystems</h2>
+<p>Layers are how DOS becomes legible to shaders without breaking the address map. Each layer registers <code>syncFromGuest</code>, <code>tick</code>, <code>packToDataBus</code> hooks. <code>FieldLayer::pumpAll()</code> increments pump generation at slot [0], walks the registry, keeps guest and bus coherent.</p>
+<p>Ten composable layers: RAM, VGA, FAT, MSCDEX, Audio, IO, BIOS — plus registry infrastructure. Pump order is not arbitrary; audio follows viewport because HUD ear and eye share compose discipline.</p>
+
+<h2 id="toc-08-zmm1024-tile-cache-fabric-samples-in-the-die-tai">ZMM1024 tile cache — fabric samples in the die tail</h2>
+<p>Tail region in <code>FieldX86Die</code> SSBO holds shader-side fabric sample cache for HUD hex dumps. Tile cache is read-mostly witness for debug overlays (<code>ControlFieldDebugHud</code> flag 2048). It is not a second simulation.</p>
+
+<h2 id="toc-08-not-dosbox-architectural-comparison">Not DOSBox — architectural comparison</h2>
+<table><thead><tr><th>Question</th><th>DOSBox habit</th><th>Field Die answer</th></tr></thead>
+<tbody>
+<tr><td>Where is RAM?</td><td>Host heap emulate</td><td>SSBO binding 1, GPU + host map</td></tr>
+<tr><td>Who interprets CPU?</td><td>Host interpreter</td><td><code>x86.comp</code> default; optional <code>FieldX86Emu</code></td></tr>
+<tr><td>Where is time?</td><td>Emulator cycle hacks</td><td><code>TotalTime::seal()</code> + dispatch steps</td></tr>
+<tr><td>Telemetry?</td><td>External tools</td><td><code>data_bus[64]</code> every tick</td></tr>
+<tr><td>Fabric?</td><td>N/A</td><td>Bindings 8–10 coupled</td></tr>
+</tbody></table>
+
+<h2 id="toc-08-walkthrough-one-dispatch-tick-on-the-die">Walkthrough — one dispatch tick on the die</h2>
+<p>Dispatch N at sealed time T: host seals FieldSocket time, runs CFL guard on FCC destined for slots 16–23, calls <code>FieldLayer::pumpAll()</code> for L0–L9, populates ThermoAccountant into 24–28, writes Tesla 31/34, mirrors hardware from fabric, issues <code>vkCmdDispatch</code> on <code>x86.comp</code>. Guest IP advances; VGA updates; Big Grin composes; STATUS reports entropy ~5s. Operator <code>list AnalogFields</code> matches bus FCC mirrors. Coherence is the goal; grep is the witness.</p>
+<p>Dispatch N+1: slot [0] pump tag changes when layers changed guest; slot [28] steps increment; sealed time never rewinds.</p>
+
+<h2 id="toc-08-ammoos-boot-chrome-on-the-die">AmmoOS boot — chrome on the die</h2>
+<p><code>aos_load</code>, <code>FieldAmouranthOs::boot()</code>, texture sync on bindings 11–14, shared hit-test constants with shader. Launchers use <code>FieldAmouranthLaunch</code> / <code>FieldAmouranthExec</code>. Chapter 21 Queen inherits gate doctrine trained early on die chrome.</p>
+
+<h2 id="toc-08-integration-fabric-die-packet-field">Integration — fabric, die, packet field</h2>
+<p>FCC on bus ties die HUD to bindings 8–10. Tile cache peeks fabric without CPU mirror. Spiderweb mirror (Chapter 10) reads same averages. Packet field (Chapter 5) stays NEXUS-local — correlate at panel :9477, not inside SSBO.</p>
+
+<h2 id="toc-08-operator-drill-week-one-die-literacy">Operator drill — week one die literacy</h2>
+<div class="callout drill"><strong>Drill 8.A — Bus alive</strong></div>
+<pre class="eq">./linux.sh run 2>&1 | tee run.log
+grep -E 'THERMO|pump|FieldLayer' run.log | tail -30</pre>
+<div class="callout drill"><strong>Drill 8.B — Address grep</strong></div>
+<pre class="eq">grep -E 'B8000|GUEST_RAM|HD_MIRROR|FieldX86Die' Navigator/engine/FieldLayer.hpp</pre>
+<div class="callout drill"><strong>Drill 8.C — FCC on die</strong></div>
+<pre class="eq">set AnalogFields.FieldCoupling 0.7
+list AnalogFields</pre>
+
+<h2 id="toc-08-common-failures-die-literacy">Common failures — die literacy</h2>
+<table><thead><tr><th>Symptom</th><th>Likely cause</th><th>First action</th></tr></thead>
+<tbody>
+<tr><td>Black HUD, alive stderr</td><td>Chrome texture sync skipped</td><td>bindings 11–14</td></tr>
+<tr><td>Guest text garbage</td><td>VGA/BDA desync</td><td>BDA <code>0x400+0x49</code></td></tr>
+<tr><td>Input dead</td><td>Hit-test mismatch</td><td>slot [42], layout constants</td></tr>
+<tr><td>Bus zeros, fabric moves</td><td>pumpAll skipped</td><td>dispatch_canvas pump</td></tr>
+</tbody></table>
+
+<h2 id="toc-08-ram-layer-slots-2-7-field-guide">RAM layer — slots [2–7] field guide</h2>
+<p>Slot [2] HD ready — C mirror path live. Slot [3] mirror byte count — monotonic during sync. Slot [4] boot vector echo. Slot [5] floppy image size. Slot [6] <code>GUEST_RAM_BYTES</code> witness. Slot [7] HD mirror offset. When guest mounts media but [2] stays zero, grep <code>FieldDos::hdReady</code> and pump order before shaders.</p>
+
+<h2 id="toc-08-vga-layer-bda-and-mode-truth">VGA layer — BDA and mode truth</h2>
+<p>Slots [8–11] pack mode, DAC, viewport from BDA. Text vs graphics transitions must update BDA before pump. Mode 13h touches <code>0xA0000</code>. Cursor at BDA+0x50/+0x51 must match chrome caret.</p>
+
+<h2 id="toc-08-bus-ordering-thermo-vs-layer-packs">Bus ordering — thermo vs layer packs</h2>
+<p>Thermo mirrors [24–28] follow layer pump in <code>dispatch_canvas</code> source order. Grep Pipeline implementation when debugging slot stories — static tables are maps, not timelines.</p>
+
+<h2 id="toc-08-kilroy-die-vocabulary">KILROY die vocabulary</h2>
+<p>Kernel <code>CONFIG_RTX_FIELD_DIE</code> shares die words with userspace — Chapter 9 FCC, Chapter 21 packaging. Same literacy; different ring enforcement.</p>
+
+<h2 id="toc-08-comparative-table-telemetry-vs-packet-field">Comparative table — telemetry vs packet field</h2>
+<table><thead><tr><th>Aspect</th><th>data_bus[64]</th><th>Packet field</th></tr></thead>
+<tbody>
+<tr><td>Product</td><td>AMOURANTHRTX</td><td>NEXUS-Shield</td></tr>
+<tr><td>Granularity</td><td>Per dispatch</td><td>Per connection</td></tr>
+<tr><td>Correlate</td><td>stderr THERMO</td><td>Panel :9477</td></tr>
+</tbody></table>
+
+<h2 id="toc-08-chapter-summary">Chapter summary</h2>
+<p>Field Die is 64 MiB guest RAM on SSBO binding 1. Guest map: IVT → BDA → boot → VGA → HD mirror. GPU <code>x86.comp</code> default; <code>FieldX86Emu</code> optional. <code>data_bus[64]</code> telemetry spine with FCC, thermo, Tesla, input, chrome, audio, BIOS, IO, drives. L0–L9 <code>pumpAll()</code>. ZMM1024 tile cache for fabric hex. Trust addresses and grep before nostalgia.</p>
+<p>Prior: <a href="07-gpu-engine.html">Chapter 7 — GPU Engine</a>. Next: <a href="09-fcc-tesla.html">Chapter 9 — FCC &amp; Tesla</a>.</p>
+
+<h2 id="toc-08-deep-dive-fieldlayer-hpp-bus-map-constants">Deep dive — <code>FieldLayer.hpp</code> bus map constants</h2>
+<p>The engine names slot bases in <code>FieldLayer::BusMap</code> so operators grep one header instead of memorizing folklore. <code>REGISTRY_TAG = 0</code>, <code>RAM_BASE = 2</code>, <code>VGA_BASE = 8</code>, <code>FAT_BASE = 12</code>, <code>MSCDEX_BASE = 24</code>, <code>INPUT_BASE = 32</code>, <code>VIEW_BASE = 42</code>, <code>AUDIO_BASE = 57</code>, <code>BIOS_BASE = 60</code>, <code>IO_BASE = 62</code>, <code>DRIVES_BASE = 63</code>, <code>BUS_COUNT = 64</code>. Analog FCC and ThermoAccountant mirrors occupy slots defined in dispatch populate code — always reconcile BusMap with Pipeline mirror order when debugging “slot 24 looks wrong.”</p>
+<p>Layer IDs L0 through L9 give composable subsystems identity in the registry table. Each entry is a <code>FieldLayer</code> struct: id, name, syncFromGuest, tick, packToDataBus. This is plugin architecture for DOS semantics — RAM is not hard-coded only in one function; it registers beside VGA and FAT so pumps stay modular as AmmoOS grows.</p>
+
+<h2 id="toc-08-deep-dive-fat-layer-and-ammofat-geometry">Deep dive — FAT layer and AMMOFAT geometry</h2>
+<p>Slots [12–15] expose FAT geometry — cluster size, free space story, mount bits — so shader HUD and host agree whether A: is fiction. Guest software that formats or writes directory tables must see pump updates within dispatches or operators grep stale [12–15] while guest DIR command shows truth. FAT is where retro launch pedagogy meets address literacy: launching shareware is not separate from field dispatch; it is guest code writing regions the RAM and FAT layers must reflect.</p>
+<p>When MSCDEX optical layer participates, redirector state must align with drive mask slot [63]. Mixed retro configs are where week-two operators earn scars — document which launches you actually exercise, not which launches marketing implies.</p>
+
+<h2 id="toc-08-deep-dive-big-grin-hud-as-monitor">Deep dive — Big Grin HUD as monitor</h2>
+<p>Big Grin at 172×48 is a field monitor dressed as grin. With <code>ControlFieldDebugHud</code> (2048), overlay hex exposes bus slices and tile cache peeks. Without debug flag, stderr remains primary witness — Chapter 11. Train grep before training hex eye candy; numerology is what happens when hex precedes THERMO discipline.</p>
+<p>HUD compose shares thermodynamic boundary with HDR output binding 0 — beauty costs maintenance per prevMaintCost slot 26. Die canvas is not thermo-exempt because chrome is pretty.</p>
+
+<h2 id="toc-08-deep-dive-host-peek-discipline">Deep dive — host peek discipline</h2>
+<p>Host may map SSBO for debug read. Writes outside pump contracts desync GPU truth. <code>ControlHostCpu</code> path tightens rules: host assist is not license to scribble guest RAM off-pump. Default GPU interpretation keeps host as orchestrator — Chapter 7 thin host, fat GPU.</p>
+<p>CI headless runs must still pump and dispatch — valid signal per Chapter 12. Die bytes move without window; stderr proves life.</p>
+
+<h2 id="toc-08-deep-dive-entropy-on-die-canvas">Deep dive — entropy on die canvas</h2>
+<p>ThermoAccountant fields on bus [24–28] copy every dispatch. entropyThisFrame aggregates field work, probes, Tesla terms, optional host x86 heat. avgBoundaryThermo is holographic boundary metaphor with number — label proxy, still read it. freeEnergyIncome includes sealed time — Chapter 7 — plus input activity. steps at [28] monotonic; flat steps with moving VGA is incoherence.</p>
+<p>Chapter 4 taught two entropies — ThermoAccountant vs Shannon oracle. Die operators who only run AMOURANTHRTX still need that separation before opening NEXUS file entropy tools.</p>
+
+<h2 id="toc-08-deep-dive-cross-chapter-operator-week-two">Deep dive — cross-chapter operator week two</h2>
+<p>Week two ties Chapters 7–11: Monday grep dispatch spine and layout version 5. Tuesday map guest RAM and bus table from this chapter. Wednesday CFL and Tesla drills Chapter 9. Thursday list Hardware spiderweb Chapter 10. Friday panel archive one jsonl row Chapter 11. Weekend read Chapter 12 rocks before tweeting screenshots. Field Technology is practiced literacy, not consumed hype.</p>
+
+<h2 id="toc-08-deep-dive-queen-and-die-chrome-training">Deep dive — Queen and die chrome training</h2>
+<p>Queen browser Chapter 21 holds gates on full web capabilities. Die AmmoOS chrome is smaller surface but same doctrine: capabilities exist, wires earn receipts, loopback truth. Slot 42 flags train operators that UI state is bus-addressable — web gates will also be jsonl-addressable. Learn addresses young.</p>
+
+<h2 id="toc-08-slot-by-slot-narrative-words-0-through-15">Slot-by-slot narrative — words 0 through 15</h2>
+<p><strong>Slot 0</strong> is pump generation — heartbeat of layer registry. If you log slot 0 across one second of STATUS cadence and see flatline while FAT words change, your pump is partial. <strong>Slot 1</strong> carries cycles-per-frame story — compare to FPS in STATUS for sanity. <strong>Slots 2–7</strong> are RAM family: HD ready, mirror bytes, boot vector, floppy size, guest RAM size, mirror offset — each word is a sentence in “does storage exist?” <strong>Slots 8–11</strong> are VGA family: mode from BDA, DAC path, viewport cols/rows habit — “does the guest see what it thinks it sees?” <strong>Slots 12–15</strong> are FAT family: AMMOFAT geometry — “can directory tables be trusted this tick?”</p>
+<p>Operators building custom HUD shaders should read but not invent — if your shader reads slot 9, grep vgaPack to learn bit layout. Inventing bitfields without grep is how forks ship pretty lies.</p>
+
+<h2 id="toc-08-slot-by-slot-narrative-words-16-through-41">Slot-by-slot narrative — words 16 through 41</h2>
+<p><strong>Slots 16–23</strong> are FCC floats — TimeScale, ThermoAlpha, WaveSpeed, GateFidelity, EntropyFloor, InjectStrength, PropalacticScale, FieldCoupling — admitted post-CLF guard Chapter 9. <strong>Slots 24–28</strong> are ThermoAccountant mirrors — entropy, boundary, maintenance, income, steps — Chapter 4 receipts on the bus. <strong>Slot 31</strong> Tesla coherence; <strong>slot 34</strong> Tesla bias strength — directional story with constants 0.18 forward and 3.2 reverse. <strong>Slots 32–41</strong> input family — keyboard scancodes, mouse position and buttons, joystick axes — operator fingers as boundary conditions.</p>
+<p>Changing FieldCoupling in prompt without watching slot 23 and THERMO together is week-one homework unfinished. Changing GateFidelity without watching Flow fabric and spiderweb util is week-two homework unfinished.</p>
+
+<h2 id="toc-08-slot-by-slot-narrative-words-42-through-63">Slot-by-slot narrative — words 42 through 63</h2>
+<p><strong>Slots 42–56</strong> viewport and AmouranthOS compositor region — slot 42 chrome flags are the famous word in June 2026 research traces; higher slots carry layer strip, compositor header, glow/sharpen telemetry per viewport headers. <strong>Slots 57–59</strong> audio rack — ear story beside eye. <strong>Slots 60–61</strong> BIOS boot flags — shell state. <strong>Slot 62</strong> IO hub. <strong>Slot 63</strong> drive mask — which drive letter habit is live. Sixty-four words, one dashboard — telemetry field Chapter 2 named.</p>
+
+<h2 id="toc-08-guest-launch-case-study-doom-path-addresses">Guest launch case study — DOOM path addresses</h2>
+<p>When operator launches DOOM-class guest images, RamMap regions matter: palette near <code>0x90000</code>, framebuffer at <code>0xA0000</code>, VGA mode via BDA. Dispatch still runs pump, CFL, thermo, Tesla — retro is not escape from field literacy. Watch entropy rise with input slots active and maintenance cost with framebuffer persistence. If guest runs but thermo flat, dispatch path failed — not “old games don’t count.”</p>
+
+<h2 id="toc-08-guest-launch-case-study-rtx-dos-panel">Guest launch case study — RTX-DOS panel</h2>
+<p><code>ControlRtxDos</code> flag 64 enables RTX-DOS panel surface — still inside same SSBO map. Panel is boundary condition on chrome and guest, not separate emulator. Grep control flags in FieldSocket when panel state disagrees with slot 42.</p>
+
+<h2 id="toc-08-field-die-ssbo-memory-layout-binding-1">Field Die SSBO memory layout — binding 1</h2>
+<p>Descriptor binding 1 is not only 64 MiB linear guest — tail holds ZMM1024 tile cache for fabric samples. Total allocation is guest map plus cache tail per headers. Forks that shrink tail without updating shader see HUD hex garbage at fabric peek region — layout version 5 contract again.</p>
+
+<h2 id="toc-08-data-bus-and-ellie-logging-correlation">Data bus and ELLIE logging correlation</h2>
+<p>ELLIE does not print all 64 words each frame — that would drown operators. THERMO and STATUS carry aggregates. When debugging bus, use prompt list AnalogFields for FCC, grep THERMO for accountant, enable debug HUD for hex peeks. Chapter 11 observability doctrine: right witness for right question.</p>
+
+<h2 id="toc-08-local-first-die-ethics">Local-first die ethics</h2>
+<p>Die telemetry stays on machine — no phone-home in pump. Packet field jsonl also local-first Chapter 5. Queen Chapter 21 holds gates without cloud perimeter mythology. Field Die literacy supports sovereign operator posture — your bytes, your bus, your grep.</p>
+
+<h2 id="toc-08-operator-journal-week-two-prompts">Operator journal — week two prompts</h2>
+<ol>
+<li>Draw RAM map from memory; check against Figure 8.1 notes.</li>
+<li>Copy one THERMO line; label entropy, boundary, maintenance fields.</li>
+<li>Change one FCC float; record which bus slot should move.</li>
+<li>Note slot 42 semantics after clicking start menu.</li>
+<li>Correlate dispatch session time with one NEXUS jsonl timestamp.</li>
+<li>Explain to a friend why Field Die is not DOSBox without being rude.</li>
+<li>Grep FIELD_LAYOUT_VERSION in host and shader; record value.</li>
+<li>List three layers from L0–L9 and their pack slot ranges.</li>
+</ol>
+
+<h2 id="toc-08-teaching-the-die-to-another-operator-long-form">Teaching the die to another operator — long-form</h2>
+<p>When you teach Field Die, start with addresses, not aesthetics. Show <code>./linux.sh run</code> default x86, point at Big Grin, then open <code>FieldLayer.hpp</code> RamMap on disk. Walk one guest offset: B8000 text. Walk one bus slot: 42 chrome. Walk one stderr line: THERMO entropy. Only then swipe to Classic for pretty thermo colors — pedagogy order matters. Newcomers who start on Mandelbulb swipes think engine is raymarch toy; you failed them if you skip die default.</p>
+<p>Second lesson: pump generation slot 0. Increment means layers walked. No increment means pump broken. Third lesson: FIELD_LAYOUT_VERSION 5 — host and x86.comp match. Fourth: data_bus is not magic array; it is contract renewed every dispatch. Fifth: optional FieldX86Emu — assist, not default. Sixth: tile cache tail — fabric peek, not second world. Seventh: correlate with panel jsonl when teaching defense — offense and defense couple at human, not at SSBO.</p>
+<p>Teaching mistakes to avoid: calling it DOSBox; calling HUD hex calorimetry; ignoring CFL because die “is not fabric focus”; claiming packet field inside Vulkan; skipping sealed time when discussing thermo income. Each mistake is Chapter 12 honesty row waiting to happen.</p>
+
+<h2 id="toc-08-revision-history-posture-v5-die-map">Revision history posture — v5 die map</h2>
+<p>Field Technology v5 consolidates June 2026 main-branch facts: default x86.comp, 64 MiB guest, 64-word bus, layout version 5, Tesla slots 31/34, AmouranthOS chrome on 11–14 and bus 42. Older marketing that said decorative CANVAS default is wrong — Chapter 12 trust rule three: <code>./linux.sh run</code> default is Field Die. Wiki quick reference may lag; grep and this chapter carry v5 contract.</p>
+
+<h2 id="toc-08-worked-example-debugging-stale-vga">Worked example — debugging stale VGA</h2>
+<p>Symptom: guest program prints text, HUD shows wrong mode word at slot 8. Step one: read BDA byte at guest 0x449. Step two: read bus slot 8 after pump. Step three: if mismatch, layer syncFromGuest not running or guest wrote BDA after pump — check dispatch order. Step four: if match but HUD wrong, shader reads wrong packing — layout version skew. Step five: grep vgaPack and FIELD_LAYOUT_VERSION. Do not recompile world before step five.</p>
+
+<h2 id="toc-08-worked-example-debugging-chrome-clicks">Worked example — debugging chrome clicks</h2>
+<p>Symptom: clicks miss buttons. Step one: slot 42 flags — menu open? Step two: TASKBAR_H and UI_BOOST constants match x86.comp? Step three: input slots 32–41 updating on move? Step four: ControlFieldDebugHud for hit regions? Step five: correlate with Chapter 7 RayCanvas layout. Chrome bugs are address bugs until proven otherwise.</p>
+
+<h2 id="toc-08-mscdex-audio-and-io-peripheral-layers-as-fields">MSCDEX, audio, and IO — peripheral layers as fields</h2>
+<p>Retro computing is not only CPU and VGA — optical drives, audio racks, and IO ports are also addressable stories. MSCDEX layer registers redirector behavior; audio layer packs rack status into slots 57–59 after viewport processing; IO layer concentrates port hub state in slot 62; drives layer compresses ready mask into slot 63. Each peripheral is a field slice: values persist across ticks until pump updates them. Teaching the die as “just VGA” misses half the composable registry.</p>
+<p>When guests access CD-ROM class drivers, MSCDEX sync and tick must run — bus words near MSCDEX base in layer headers should move. Silent bus during active guest CD driver means layer not registered or pump skipped. Grep FieldLayer table registration in engine sources; count layers, do not assume.</p>
+<p>Audio telemetry is not audiophile measurement — it is dashboard state for shader compose and HUD ear icons. Label <span class="tag meta">Metaphor</span> when presenting to outsiders; label <span class="tag impl">Implemented</span> when grep shows pack hooks.</p>
+
+<h2 id="toc-08-control-flags-cheat-sheet-fieldsocket-bits">Control flags cheat sheet — FieldSocket bits</h2>
+<table><thead><tr><th>Flag</th><th>Value</th><th>Effect on die</th></tr></thead>
+<tbody>
+<tr><td>ControlHostCpu</td><td>8</td><td>FieldX86Emu host assist path</td></tr>
+<tr><td>ControlRtxDos</td><td>64</td><td>RTX-DOS panel surface</td></tr>
+<tr><td>ControlAmmoExec</td><td>1024</td><td>Guest execution active</td></tr>
+<tr><td>ControlFieldDebugHud</td><td>2048</td><td>Die monitor overlay hex</td></tr>
+</tbody></table>
+<p>Flags ride FieldSocket push constants Chapter 7 — not in data_bus, but control how die and HUD interpret bus and guest. Debugging requires both grep flags and read bus words.</p>
+
+<h2 id="toc-08-capstone-die-sentence">Capstone — die sentence</h2>
+<p>One sentence for Chapter 8 exam: <em>The Field Die is sixty-four megabytes of guest address space and sixty-four words of dispatch telemetry on one SSBO binding, pumped by composable layers, interpreted by x86.comp each vkCmdDispatch, witnessed by stderr and honest operators.</em> If you can say it without looking, you are ready for Chapter 9 stability under load.</p>
+<p>Extended capstone checklist: (1) Quote GUEST_RAM_BYTES. (2) Quote B8000 and HD mirror offsets. (3) Name FCC slot range. (4) Name thermo mirror range. (5) Name Tesla slots. (6) Name chrome flag slot. (7) Name default execution path GPU vs host. (8) Name pump function. (9) Name layout version constant. (10) Name three sibling chapters you will read next. Passing ten without notes means die literacy is real; failing three means rerun week one drills before operating Queen or NEXUS perimeter alone.</p>
+<p>Field Die is the product soul AMOURANTHRTX ships June 2026 — everything else in swipe list is curriculum around that soul. Operators who internalize bus and map carry that soul into kernel KILROY path and Queen browser path without relearning vocabulary — same words, stronger rings, honest labels always.</p>
+<p>Final drill before Chapter 9: run default x86 sixty seconds, tee log, grep THERMO and pump, list AnalogFields once, sketch bus table columns on paper from memory, compare paper to this chapter table. Discrepancies are study material, not embarrassment. Field Technology assumes you will run the stack — reading without running is theory without operator reality Chapter 12 warns against.</p>
+<p>Remember sibling links: Chapter 7 gave dispatch; Chapter 8 gave map and bus; Chapter 9 will give CFL and Tesla stability; Chapter 10 hardware mirror; Chapter 11 grep; Chapter 12 rocks. The engineering core 7–12 is one continuous weapon — literacy — not six disconnected blog posts.</p>
+<p>Die literacy closing affirmation: you now own the vocabulary for guest offsets, sixty-four bus slots, layer pumps, GPU x86.comp default, optional host emu, tile cache tail, and chrome slot forty-two. Use it every dispatch you run. When in doubt, grep FieldLayer.hpp, read THERMO stderr, and trust FIELD_LAYOUT_VERSION five before trusting a screenshot.</p>
+<p>We do not hide the rocks: the die is implemented, the bus is implemented, the pump is implemented — and the labels on thermo, Tesla, and chrome are honest about what is metaphor versus what you can grep tonight on your own machine. Proceed to Chapter 9 when bus and map are muscle memory, not merely bookmarked tabs in this textbook. Then go grep.</p>
+
+<h2 id="toc-08-further-reading">Further reading</h2>
+<p>Wiki: <a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/08-Field-Die-And-Data-Bus">08 — Field Die &amp; Data Bus</a>. Headers: <code>FieldLayer.hpp</code>, <code>FieldRtxFieldAbs.hpp</code>, <code>FieldDosViewport.hpp</code>. Prior: <a href="07-gpu-engine.html">Ch 7</a>. Next: <a href="09-fcc-tesla.html">Ch 9</a>. Sibling fabric: <a href="03-thermodynamics.html">Ch 3</a>, <a href="04-entropy.html">Ch 4</a>.</p>
+
+<h2 id="toc-08-study-questions">Study questions</h2>
+<ol>
+<li>Why is Field Die “not DOSBox” in three sentences?</li>
+<li>Quote VGA text and HD mirror guest offsets.</li>
+<li>Name five <code>data_bus</code> slot families.</li>
+<li>What hooks does each FieldLayer register?</li>
+<li>Where do ThermoAccountant mirrors land?</li>
+<li>What constants feed Tesla slots 31 and 34?</li>
+<li>When does <code>FieldX86Emu</code> run?</li>
+<li>What is ZMM1024 tile cache for?</li>
+<li>Which slot carries AmouranthOS chrome flags?</li>
+<li>How does die telemetry relate to Chapter 2’s three scales?</li>
+</ol>
+
+
+<div class="evidence-anchor" id="evidence-ch08">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>FieldX86Die</td><td>64 MiB guest map</td><td><span class="tag impl">Implemented</span></td><td><code>SSBO binding 1</code></td></tr><tr><td>VGA field</td><td>0xB8000 text buffer</td><td><span class="tag impl">Implemented</span></td><td><code>Guest subfield</code></td></tr><tr><td>data_bus</td><td>64-word telemetry</td><td><span class="tag impl">Implemented</span></td><td><code>Slots 0–63 per dispatch</code></td></tr><tr><td>Pump L0–L9</td><td>Layer sync</td><td><span class="tag impl">Implemented</span></td><td><code>FieldLayer::pumpAll()</code></td></tr></tbody></table>
+<pre class="eq">guest[offset] ∈ [0, 64MiB)  |  VGA @ 0xB8000  |  C mirror @ 0x01000000</pre>
+<pre class="eq">grep -n &#x27;FieldX86Die\|data_bus&#x27; Navigator/shaders/x86.comp</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/shaders/x86.comp</code></li><li><code>Navigator/engine/FieldLayer.cpp</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-08-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>The die is 64 MiB of addressable guest reality — bus slots, layers, HUD hex. Coordinates, not nostalgia. Chapter 9 adds stability; Chapter 11 adds grep rhythm.</p>
+</div>
+</div>
+</body></html>

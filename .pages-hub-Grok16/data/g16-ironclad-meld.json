@@ -1,0 +1,166 @@
+{
+  "schema": "g16-ironclad-meld/v1",
+  "title": "Ironclad meld — Grok16 field compiler absorbed into capstone truth",
+  "ironclad_ref": "NewLatest/data/ironclad-doctrine.json",
+  "extensions_ref": "NewLatest/data/ironclad-meld-extensions.json",
+  "meld_citation": "ironclad:meld:2",
+  "g16_mandate": "G16_FIELD_SAFETY_MANDATE_v1",
+  "policy": "G16 builds under Ironclad — subsidiary field sanity melds without amending sealed doctrine.",
+  "time_is_linear": {
+    "declaration": "Time is linear.",
+    "citation": "ironclad:time:1",
+    "not_geometry_t": true
+  },
+  "single_fabric": {
+    "declaration": "Single fabric — one belt amplitude, one field depth.",
+    "citation": "ironclad:field_sanity:5",
+    "depth_field_impossible": true,
+    "depth_fields_sealed_and_destroyed": true,
+    "max_field_depth": 0,
+    "g16_belt": "belt_2_0"
+  },
+  "books": [
+    {
+      "id": "time",
+      "title": "Time — Linear sovereign clock (Ironclad extension)",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Time is linear — G16 forge and linker timestamp from sovereign linear_ns only; never rewind, never branch."
+        },
+        {
+          "v": 2,
+          "text": "G1ID meld inputs carry linear_ns and derived_utc — geometry stays 3D; wall clock is witness only."
+        }
+      ]
+    },
+    {
+      "id": "field_sanity",
+      "title": "G16 Field Sanity — integral forge simplify",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Grok16 forge layers meld into Ironclad — one integral pass across driver, compiler, mandate, profiles."
+        },
+        {
+          "v": 2,
+          "text": "classify, strip, dedupe, flatten, cool_sort — never obtuse; never stack hot rebuild paths under thermo heat."
+        },
+        {
+          "v": 3,
+          "text": "g16 unified discerns C, C++, Python — field sanity witnesses each layer before link."
+        },
+        {
+          "v": 4,
+          "text": "G16_FIELD_SAFETY_MANDATE_v1 holds; Ironclad citation required on every field target meld."
+        },
+        {
+          "v": 5,
+          "text": "G16 field linker owns the link pass — discern OS, witness Ironclad, silicon mandate, then bfd/mach-o/pe dispatch."
+        }
+      ]
+    },
+    {
+      "id": "power_sort",
+      "title": "G16 Power Sort — plate meld under field sanity",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Power sort plates into Ironclad — always_best_sort from bench receipts; sections gate Queen, drive index, and compat layers."
+        },
+        {
+          "v": 2,
+          "text": "cool_sort for thermal_layers; never_bench_under_heat — defer radix and heavy workloads when thermo warns."
+        },
+        {
+          "v": 3,
+          "text": "g16-power-sort-plate.json chain-hashes selection and section availability; ironclad:field_sanity:2 witnesses every pass."
+        }
+      ]
+    },
+    {
+      "id": "iron_plate_spot",
+      "title": "Iron Plate Spot — cool meld points without heat",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Plate spot detector finds meld attachment points from cache — thermal gate first, never heavy import under heat."
+        },
+        {
+          "v": 2,
+          "text": "cool_sort ranks spots by thermo_proxy — coolest first; low_power default trades speed for joules."
+        },
+        {
+          "v": 3,
+          "text": "g16-iron-plate-spot-detector.py bridges NewLatest iron-plate-spot-detector into forge ironclad sanity gates."
+        }
+      ]
+    },
+    {
+      "id": "stack_fabric",
+      "title": "G16 Stack Fabric 5.1 — iron/steel plates under sealed meld",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Iron plate and steel plate panels seal with _g16_seal — g1id meld slice on cold identity rows (G15)."
+        },
+        {
+          "v": 2,
+          "text": "stack_fabric witness rides every CHIPS plate stack publish — truth gate floor 58 matches ZNetwork mesh."
+        },
+        {
+          "v": 3,
+          "text": "Thermal WATCH defers power sort plating — cool_sort first; iron/steel reorganize only when thermo_proxy allows."
+        }
+      ]
+    },
+    {
+      "id": "iron_steel_plates",
+      "title": "CHIPS Iron + Steel — plate stack meld under single fabric",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Iron plate organizes chip_paths with composite_bsp THE sort — steel neural plates wire depth-4 across ironclad_chips."
+        },
+        {
+          "v": 2,
+          "text": "Steel family rewrite preserves 974 chip leaves in 138 modules — sovereign_linear_ns the only wire between plates."
+        },
+        {
+          "v": 3,
+          "text": "field-plate-meld.json fuses iron_plate_organize, chips_plate_stack, g16_power_sort after refresh — chain-hash monotonic."
+        }
+      ]
+    },
+    {
+      "id": "spatial_existence",
+      "title": "Spatial Existence — This One / That One on G16",
+      "verses": [
+        {
+          "v": 1,
+          "text": "Grok16 forge absorbs ironclad:spatial_existence — this one is the operator prefix and witnessed silicon here."
+        },
+        {
+          "v": 2,
+          "text": "That one is any uncorroborated target, phantom link input, or ventriloquist sense lane — blocked until correlate_existence passes."
+        },
+        {
+          "v": 3,
+          "text": "g16-spatial-existence.py melds NewLatest ironclad-spatial-existence into every ironclad sanity gate and linker witness."
+        },
+        {
+          "v": 4,
+          "text": "Field sanity simplify and spatial existence run one integral pass — never stack hot paths; never collapse this one into that one."
+        }
+      ]
+    }
+  ],
+  "spatial_existence_ref": "NewLatest/data/ironclad-spatial-existence-doctrine.json",
+  "spatial_existence_bridge": "forge/g16-spatial-existence.py",
+  "field_research_book": {
+    "doctrine": "data/g16-field-research-book.json",
+    "chapter": 1,
+    "slug": "01-preface-ironclad",
+    "site": "https://zacharygeurts.github.io/Field_Research/chapters/01-preface-ironclad.html"
+  }
+}

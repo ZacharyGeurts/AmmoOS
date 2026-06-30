@@ -1,0 +1,115 @@
+{
+  "schema": "field-combinatorics-threat/v1",
+  "updated": "2026-06-29T06:30:08Z",
+  "motto": "Mismatch rejected and recorded — last-good panel held; threat retaliates in full.",
+  "stats": {
+    "rejections": 1,
+    "threat_rejects": 1,
+    "retaliations": 1,
+    "attempt_count": 1
+  },
+  "last": {
+    "reason": "engine_stale_rebuild_required",
+    "caller": "combinatorics_bridge",
+    "retaliate_level": "monitor",
+    "retaliate_action": "record",
+    "retaliate": {
+      "level": "monitor",
+      "action": "record",
+      "attempts": 1
+    }
+  },
+  "runtime": {
+    "last_retaliate_level": "monitor",
+    "last_retaliate_action": "record",
+    "last_retaliate_reason": "engine_stale_rebuild_required",
+    "last_retaliate_at": "2026-06-29T06:30:08Z",
+    "attempt_count": 1,
+    "caller": "combinatorics_bridge",
+    "updated": "2026-06-29T06:30:08Z"
+  },
+  "recent_rejects": [
+    {
+      "ts": "2026-06-27T19:14:27Z",
+      "event": "reject",
+      "action": "fast_cycle",
+      "reason": "engine_sha_stale_run_full_rebuild",
+      "caller": "fast_cycle",
+      "detail": "",
+      "attempt_count": 1,
+      "engine_sha256": "becce96f9767b309c84a05cb64b777aba00797e3f8e0d1c10dba3ea9ab4730c6",
+      "current_engine_sha256": "90b7c2c79ad0e7cbe6a822fa248d822d955071f2eacb3506693d8b821a4fa420",
+      "panel_sha256": "1a7a019253f7ec93fde4bd169a069dfd7b3cfbf2e2dee43c3ff55f304529e754",
+      "verify_ok": false
+    },
+    {
+      "ts": "2026-06-27T19:14:28Z",
+      "event": "reject",
+      "action": "combinatorics_panel",
+      "reason": "engine_stale_rebuild_required",
+      "caller": "combinatorics_bridge",
+      "detail": "",
+      "attempt_count": 1,
+      "engine_sha256": "becce96f9767b309c84a05cb64b777aba00797e3f8e0d1c10dba3ea9ab4730c6",
+      "current_engine_sha256": "90b7c2c79ad0e7cbe6a822fa248d822d955071f2eacb3506693d8b821a4fa420",
+      "panel_sha256": "1a7a019253f7ec93fde4bd169a069dfd7b3cfbf2e2dee43c3ff55f304529e754",
+      "verify_ok": false
+    },
+    {
+      "ts": "2026-06-27T19:16:56Z",
+      "event": "reject",
+      "action": "fast_cycle",
+      "reason": "engine_sha_stale_run_full_rebuild",
+      "caller": "fast_cycle",
+      "detail": "",
+      "attempt_count": 2,
+      "engine_sha256": "becce96f9767b309c84a05cb64b777aba00797e3f8e0d1c10dba3ea9ab4730c6",
+      "current_engine_sha256": "90b7c2c79ad0e7cbe6a822fa248d822d955071f2eacb3506693d8b821a4fa420",
+      "panel_sha256": "1a7a019253f7ec93fde4bd169a069dfd7b3cfbf2e2dee43c3ff55f304529e754",
+      "verify_ok": false
+    },
+    {
+      "ts": "2026-06-27T19:16:56Z",
+      "event": "reject",
+      "action": "combinatorics_panel",
+      "reason": "engine_stale_rebuild_required",
+      "caller": "combinatorics_bridge",
+      "detail": "",
+      "attempt_count": 2,
+      "engine_sha256": "becce96f9767b309c84a05cb64b777aba00797e3f8e0d1c10dba3ea9ab4730c6",
+      "current_engine_sha256": "90b7c2c79ad0e7cbe6a822fa248d822d955071f2eacb3506693d8b821a4fa420",
+      "panel_sha256": "1a7a019253f7ec93fde4bd169a069dfd7b3cfbf2e2dee43c3ff55f304529e754",
+      "verify_ok": false
+    },
+    {
+      "ts": "2026-06-29T06:30:07Z",
+      "event": "reject",
+      "action": "fast_cycle",
+      "reason": "engine_sha_stale_run_full_rebuild",
+      "caller": "fast_cycle",
+      "detail": "",
+      "attempt_count": 1,
+      "engine_sha256": "6d10907b8d80cb10441ac90b2007015c1350029b7e35d7e4176ff9229fbe4572",
+      "current_engine_sha256": "8011bc1af97a6c7e376c5abea425f424a6415a87a2baca82fd4e4dddea451347",
+      "panel_sha256": "72e148a206cdef4e8a702fc71a54aa0fcf1036609249f0beed611a9d511bc288",
+      "verify_ok": false
+    },
+    {
+      "ts": "2026-06-29T06:30:08Z",
+      "event": "reject",
+      "action": "combinatorics_panel",
+      "reason": "engine_stale_rebuild_required",
+      "caller": "combinatorics_bridge",
+      "detail": "",
+      "attempt_count": 1,
+      "engine_sha256": "6d10907b8d80cb10441ac90b2007015c1350029b7e35d7e4176ff9229fbe4572",
+      "current_engine_sha256": "8011bc1af97a6c7e376c5abea425f424a6415a87a2baca82fd4e4dddea451347",
+      "panel_sha256": "72e148a206cdef4e8a702fc71a54aa0fcf1036609249f0beed611a9d511bc288",
+      "verify_ok": false
+    }
+  ],
+  "policy": {
+    "window_sec": 300,
+    "never_break_on_mismatch": true
+  }
+}

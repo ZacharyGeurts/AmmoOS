@@ -1,0 +1,9 @@
+{
+  "last_retaliate_level": "monitor",
+  "last_retaliate_action": "record",
+  "last_retaliate_reason": "engine_sha_stale_run_full_rebuild",
+  "last_retaliate_at": "2026-06-29T06:33:13Z",
+  "attempt_count": 1,
+  "caller": "fast_cycle",
+  "updated": "2026-06-29T06:33:13Z"
+}

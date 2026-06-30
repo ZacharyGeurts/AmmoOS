@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — Getting Started</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/getting-started.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Getting Started</h1>
+  <p>Grok16 <strong>5.2.0</strong> ships a unified <code>g16</code> driver. One binary compiles C and C++; backends live in <code>libexec/grok16/</code>. <code>g++16</code> is a compat symlink.</p>
+
+  <h2>Requirements</h2>
+  <ul>
+    <li>Linux x86_64</li>
+    <li>Host <code>gcc</code>/<code>g++</code>, <code>git</code>, <code>cmake</code>, Python 3 / GPY-16</li>
+    <li>GCC build deps (gmp, mpfr, mpc, flex, bison)</li>
+    <li>~6 GB disk for <code>vendor/</code>, <code>build/</code>, prefix</li>
+  </ul>
+
+  <h2 id="bootstrap">Bootstrap</h2>
+  <pre><code>git clone https://github.com/ZacharyGeurts/Grok16.git
+cd Grok16
+git checkout v5.2.0
+export G16_PREFIX="$(pwd)"
+
+./scripts/grok16-toolchain.sh bootstrap
+./scripts/grok16-toolchain.sh rebuild
+./scripts/grok16-toolchain.sh verify</code></pre>
+
+  <h2 id="rebuild">Rebuild modes</h2>
+  <table>
+    <tr><th>Mode</th><th>Env</th><th>Use when</th></tr>
+    <tr><td>Fast (default)</td><td><code>G16_FAST_REBUILD=1</code></td><td>Day-to-day iteration</td></tr>
+    <tr><td>Full</td><td><code>G16_FULL_REBUILD=1</code></td><td>distclean + 3-stage bootstrap</td></tr>
+    <tr><td>Release</td><td><code>G16_RELEASE_PROFILE=1</code></td><td>Production prefix — LTO + PGO + field_opt</td></tr>
+  </table>
+  <pre><code>./scripts/grok16-toolchain.sh rebuild
+G16_RELEASE_PROFILE=1 ./scripts/grok16-toolchain.sh rebuild</code></pre>
+
+  <h2 id="verify">Verify &amp; gate</h2>
+  <pre><code>./scripts/grok16-toolchain.sh verify
+./scripts/grok16-toolchain.sh test-battery-expert
+./scripts/grok16-toolchain.sh test-battery-release
+./scripts/grok16-toolchain.sh test-battery-belt</code></pre>
+  <p>See <a href="batteries.html">Batteries</a> for tier breakdown.</p>
+
+  <h2 id="bench">Benchmarks</h2>
+  <pre><code>export G16_BELT_PROFILE=belt_2_0
+./scripts/grok16-toolchain.sh bench-triad
+./scripts/grok16-toolchain.sh field-bench
+./scripts/grok16-toolchain.sh bench-all</code></pre>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

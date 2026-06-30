@@ -1,0 +1,2 @@
+RTX-DOS 7.0
+GPU Super DOSBox | Microsoft MS-DOS MIT (v2/v4) -> RTX-DOS 7.0 Modern DOS — 3.x–6.x program compatible

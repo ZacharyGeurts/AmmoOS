@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_poetry",
+  "title": "Wikibooks Poetry",
+  "author": "Wikibooks",
+  "dewey": "800",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "6-12",
+  "subject": "english_ela",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_poetry/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_poetry/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

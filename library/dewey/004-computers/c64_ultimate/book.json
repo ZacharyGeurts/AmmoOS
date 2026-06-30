@@ -1,0 +1,10 @@
+{
+  "id": "c64_ultimate",
+  "title": "Commodore 64 Ultimate",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/c64_ultimate/c64_ultimate.h7c",
+  "cover": "/library/assets/devices/c64_ultimate.png",
+  "ready": true
+}

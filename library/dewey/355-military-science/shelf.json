@@ -1,0 +1,22 @@
+{
+  "schema": "dewey-shelf/v1",
+  "shelf": "355-military-science",
+  "code": "355",
+  "title": "355-military-science",
+  "updated": "2026-06-29T09:43:43Z",
+  "format_primary": "h7c",
+  "book_count": 1,
+  "h7c_count": 0,
+  "books": [
+    {
+      "id": "future_war",
+      "title": "Future War",
+      "author": null,
+      "dewey": null,
+      "format": "h7c",
+      "h7c": "library/dewey/355-military-science/future_war/future_war.h7c",
+      "cover": null,
+      "ready": true
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "g16-compile-combinatronics-doctrine/v1",
+  "title": "Optimal combinatronics at compiled artifact creation",
+  "motto": "Every compiled file is born optimal — fast_cycle rebalance, ideal profile, stamped receipt.",
+  "module": "lib/g16-compile-combinatronics.py",
+  "policy": {
+    "always_at_creation": true,
+    "fast_cycle_before_compile": true,
+    "recombinatorics_ideal_profile": true,
+    "stamp_sidecar": true,
+    "fallback_profile": "belt_2_0",
+    "full_rebalance_env": "G16_COMPILE_COMBINATRONICS_FULL",
+    "disable_env": "G16_OPTIMAL_COMBINATRONICS_AT_COMPILE"
+  },
+  "pipeline": [
+    "fast_cycle",
+    "recombinatorics_cycle",
+    "resolve_ideal_profile",
+    "compile_with_profile",
+    "stamp_combinatronics_receipt",
+    "instill_ammocode_field"
+  ],
+  "ammocode_field": {
+    "doctrine": "data/g16-ammocode-field-doctrine.json",
+    "module": "lib/g16-ammocode-field-instill.py",
+    "no_subfields": true,
+    "defield_if_resting_on_field": true
+  },
+  "receipt": {
+    "schema": "g16-compiled-combinatronics-stamp/v1",
+    "suffix": ".combinatronics.json"
+  },
+  "wired": [
+    "lib/g16-compile-combinatronics.py",
+    "scripts/grok16-ai-compile.py",
+    "scripts/grok16-profile-flags.py",
+    "Queen/lib/queen-launch-singular-field.py",
+    "NewLatest/lib/nexus-g16-recompile.py",
+    "NewLatest/lib/nexus-g16-bridge.py",
+    "NewLatest/Queen/scripts/g16-build.sh",
+    "NewLatest/Queen/lib/forge/tools.py"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "explaining_javascript",
+  "title": "Explaining JavaScript",
+  "author": "Hostess 7",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-FIELD-c35c5030cac3",
+  "format": "h7c",
+  "format_version": 3,
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map",
+    "memory",
+    "compile"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/explaining_javascript/explaining_javascript.h7c",
+  "h7": null,
+  "field_path": "library/dewey/000-computer-science/explaining_javascript/explaining_javascript.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "javascript",
+  "cover": "/world/assets/combinatronic/books/javascript.png",
+  "updated": "2026-06-30T06:47:43Z"
+}

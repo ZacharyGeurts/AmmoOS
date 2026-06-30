@@ -1,0 +1,230 @@
+[
+  {
+    "t": "field platform",
+    "p": "field-platform.html",
+    "g": "5.0",
+    "d": "2D auto-field DO NOT CREATE FIELD FILES heat"
+  },
+  {
+    "t": "znetwork connect",
+    "p": "znetwork-connect.html",
+    "g": "5.0",
+    "d": "field wire egress convert ingress deconvert identity"
+  },
+  {
+    "t": "do not create field files",
+    "p": "field-platform.html",
+    "g": "Warning",
+    "d": "field files heat neighboring fields depth zero"
+  },
+  {
+    "t": "grok16 5.1",
+    "p": "index.html",
+    "g": "Home",
+    "d": "Stack fabric G1-G15 MCP stdio belt_2_0"
+  },
+  {
+    "t": "mcp grok16",
+    "p": "mcp.html",
+    "g": "Agents",
+    "d": "Custom stdio MCP toolchain bench rtx gate"
+  },
+  {
+    "t": "grok16 5.0",
+    "p": "index.html",
+    "g": "Home",
+    "d": "Version one clean start belt_2_0 binary package"
+  },
+  {
+    "t": "speed bench",
+    "p": "speed-bench.html",
+    "g": "5.0",
+    "d": "Versioned compile ms execution ops/s report v5.0.0"
+  },
+  {
+    "t": "exec-full-bench",
+    "p": "speed-bench.html#reproduce",
+    "g": "Bench",
+    "d": "field-exec-full-bench compile and execution"
+  },
+  {
+    "t": "bench-refresh",
+    "p": "release.html#charts",
+    "g": "4.7",
+    "d": "Regenerate triad compare bench-all charts SVG"
+  },
+  {
+    "t": "uncompiled",
+    "p": "uncompiled.html",
+    "g": "4.7",
+    "d": "Python interpreter C C++ chamber compile ahead"
+  },
+  {
+    "t": "cmake linking",
+    "p": "cmake-linking.html",
+    "g": "Build",
+    "d": "grok16-toolchain.cmake g16-ld speed_demo"
+  },
+  {
+    "t": "speed_demo",
+    "p": "speed-bench.html",
+    "g": "Suite",
+    "d": "speed_demo v1.1.0 FieldX86 kernel bench"
+  },
+  {
+    "t": "single fabric",
+    "p": "single-fabric.html",
+    "g": "2.0",
+    "d": "One belt die one field amplitude knowing fixed-size"
+  },
+  {
+    "t": "belt_2_0",
+    "p": "profiles.html#belt-2",
+    "g": "Profile",
+    "d": "2.0 production belt chunked redata 8192"
+  },
+  {
+    "t": "bench-triad",
+    "p": "performance.html#triad",
+    "g": "Bench",
+    "d": "host gcc vs belt_1_0 vs belt_2_0"
+  },
+  {
+    "t": "test-battery-belt",
+    "p": "batteries.html#belt",
+    "g": "Battery",
+    "d": "2.0 belt validation atop release"
+  },
+  {
+    "t": "grok16-integrate",
+    "p": "integration.html#integrate",
+    "g": "Integrate",
+    "d": "Auto-wire Queen WRDT ZOCR belt_2_0"
+  },
+  {
+    "t": "depth fields sealed and destroyed",
+    "p": "safety.html#depth",
+    "g": "Safety",
+    "d": "field_depth sealed and destroyed at gates"
+  },
+  {
+    "t": "ironclad:time:1",
+    "p": "safety.html#time",
+    "g": "Safety",
+    "d": "Sovereign linear time linear_ns only"
+  },
+  {
+    "t": "test-battery-release",
+    "p": "batteries.html#release",
+    "g": "Battery",
+    "d": "Production gate heavy py forever binutils verify"
+  },
+  {
+    "t": "test-battery-expert",
+    "p": "batteries.html#expert",
+    "g": "Battery",
+    "d": "Ironclad linker RTX expert profile"
+  },
+  {
+    "t": "g16-ld",
+    "p": "linker.html",
+    "g": "Linker",
+    "d": "Field linker 18 targets mandate flags"
+  },
+  {
+    "t": "C64",
+    "p": "c64.html",
+    "g": "Pair",
+    "d": "Commodore 64 classic vs Ultimate catalog lanes"
+  },
+  {
+    "t": "C64 classic",
+    "p": "c64-classic.html",
+    "g": "Queen",
+    "d": "retro_c64 breadbin 6510 CHIPS scaffold"
+  },
+  {
+    "t": "C64 Ultimate",
+    "p": "c64-ultimate.html",
+    "g": "Pair",
+    "d": "pair-c64-ultimate FPGA hardware pair"
+  },
+  {
+    "t": "platforms",
+    "p": "platforms.html",
+    "g": "Release",
+    "d": "17-platform bootstrap matrix"
+  },
+  {
+    "t": "GPY-16",
+    "p": "toolkits.html#gpy16",
+    "g": "Toolkit",
+    "d": "Built-in Python GrokVM gpy-16"
+  },
+  {
+    "t": "v4.7.1",
+    "p": "release.html",
+    "g": "Release",
+    "d": "Bench refresh charts gcc-14 legacy isolation chamber"
+  },
+  {
+    "t": "queen theme",
+    "p": "index.html",
+    "g": "UI",
+    "d": "Queen navy gold emerald manual theme"
+  },
+  {
+    "t": "bootstrap",
+    "p": "getting-started.html#bootstrap",
+    "g": "Workflow",
+    "d": "First GCC fetch host build install"
+  },
+  {
+    "t": "g16 unified",
+    "p": "architecture.html#unified-driver",
+    "g": "Driver",
+    "d": "Single g16 C C++ Python discern"
+  },
+  {
+    "t": "field_opt",
+    "p": "profiles.html#field-opt",
+    "g": "Profile",
+    "d": "1.0 primary Field throughput belt_1_0 alias"
+  },
+  {
+    "t": "G16_BELT_PROFILE",
+    "p": "profiles.html#belt",
+    "g": "Env",
+    "d": "Default belt_2_0 single fabric dispatch"
+  },
+  {
+    "t": "G16_RELEASE_PROFILE",
+    "p": "getting-started.html#rebuild",
+    "g": "Env",
+    "d": "LTO PGO production rebuild"
+  },
+  {
+    "t": "gnu++26",
+    "p": "field-primer.html#standard",
+    "g": "C++",
+    "d": "Default C++ standard"
+  },
+  {
+    "t": "field research",
+    "p": "field-research.html",
+    "g": "Book",
+    "d": "Field Research book technology spine"
+  },
+  {
+    "t": "combinatorics",
+    "p": "field-research.html",
+    "g": "Book",
+    "d": "Ch7 combinatorics endpoint compatibility layers"
+  },
+  {
+    "t": "field-research-book",
+    "p": "field-research.html",
+    "g": "Doctrine",
+    "d": "g16-field-research-book.json verify publish"
+  }
+]

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 260" role="img" aria-label="bench-all profile suite">
+  <rect width="920" height="260" fill="#0a0f18" rx="12"/>
+  <text x="24" y="32" fill="#e8c878" font-size="18" font-weight="700">bench-all — field-nexus-bench profiles</text>
+  <text x="24" y="54" fill="#8fb4d9" font-size="12">9 profiles · compile_ms median</text>
+  <rect x="140" y="72" width="600" height="16" fill="#e8c878" rx="3"/>
+  <text x="148" y="84" fill="#060a12" font-size="10" font-weight="600">belt_2_0 · 9962ms compile · 11ms run</text>
+  <rect x="140" y="94" width="459" height="16" fill="#e8c878" rx="3"/>
+  <text x="148" y="106" fill="#060a12" font-size="10" font-weight="600">field_physics · 7636ms compile · 13ms run</text>
+  <rect x="140" y="116" width="445" height="16" fill="#e8c878" rx="3"/>
+  <text x="148" y="128" fill="#060a12" font-size="10" font-weight="600">heavy · 7390ms compile · 14ms run</text>
+  <rect x="140" y="138" width="381" height="16" fill="#e8c878" rx="3"/>
+  <text x="148" y="150" fill="#060a12" font-size="10" font-weight="600">field_opt · 6337ms compile · 7ms run</text>
+  <rect x="140" y="160" width="379" height="16" fill="#e8c878" rx="3"/>
+  <text x="148" y="172" fill="#060a12" font-size="10" font-weight="600">belt_1_0 · 6305ms compile · 6ms run</text>
+  <rect x="140" y="182" width="137" height="16" fill="#e8c878" rx="3"/>
+  <text x="148" y="194" fill="#060a12" font-size="10" font-weight="600">expert · 2275ms compile · 14ms run</text>
+  <rect x="140" y="204" width="52" height="16" fill="#e8c878" rx="3"/>
+  <text x="148" y="216" fill="#060a12" font-size="10" font-weight="600">vulkan_rtx · 876ms compile · 4ms run</text>
+  <rect x="140" y="226" width="44" height="16" fill="#e8c878" rx="3"/>
+  <text x="148" y="238" fill="#060a12" font-size="10" font-weight="600">ai · 735ms compile · 6ms run</text>
+  <rect x="140" y="248" width="39" height="16" fill="#e8c878" rx="3"/>
+  <text x="148" y="260" fill="#060a12" font-size="10" font-weight="600">ai_agent · 662ms compile · 7ms run</text>
+</svg>

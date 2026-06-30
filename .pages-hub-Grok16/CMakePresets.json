@@ -1,0 +1,57 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "field-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/grok16-toolchain.cmake",
+        "CMAKE_PROJECT_INCLUDE": "${sourceDir}/cmake/grok16-field.cmake"
+      },
+      "environment": {
+        "GROK16_ROOT": "${sourceDir}"
+      }
+    },
+    {
+      "name": "field-opt",
+      "inherits": "field-base",
+      "displayName": "Grok16 field_opt",
+      "description": "Field-Opt profile — entropy/oracle, FieldX86 throughput",
+      "cacheVariables": {
+        "GROK16_FIELD_PROFILE": "field_opt"
+      }
+    },
+    {
+      "name": "field-compute",
+      "inherits": "field-base",
+      "displayName": "Grok16 field_compute",
+      "cacheVariables": {
+        "GROK16_FIELD_PROFILE": "field_compute"
+      }
+    },
+    {
+      "name": "queen-rtx",
+      "inherits": "field-base",
+      "displayName": "Queen sovereign RTX (g16)",
+      "description": "AMOURANTHRTX queen-browser — inside deps, no fetch, Ninja + g16",
+      "cacheVariables": {
+        "GROK16_FIELD_PROFILE": "queen_rtx"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "field-opt",
+      "configurePreset": "field-opt"
+    },
+    {
+      "name": "queen-rtx",
+      "configurePreset": "queen-rtx",
+      "targets": ["amouranth_engine"]
+    }
+  ]
+}

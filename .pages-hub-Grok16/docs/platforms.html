@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — Platforms</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/platforms.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Platform bootstrap matrix — 5.2.0</h1>
+  <p>Grok16 ships <strong>source + forge</strong>. Build <code>g16</code> locally on each target (or cross from Linux x86_64). Doctrine: <code>data/grok16-platform-release.json</code>.</p>
+  <p><strong>17 bootstrap platforms</strong> (g16 builds locally or cross). Every GitHub release attaches <code>grok16-{version}-platforms.json</code> and <code>PLATFORMS.md</code>.</p>
+  <h2 id="families">Bootstrap families</h2>
+  <table>
+    <tr><th>Family</th><th>IDs</th></tr>
+    <tr><td>Linux GNU</td><td><code>linux-gnu-x86_64</code>, <code>i386</code>, <code>aarch64</code>, <code>arm</code>, <code>riscv64</code></td></tr>
+    <tr><td>Android NDK</td><td><code>android-aarch64</code>, <code>arm</code>, <code>x86_64</code></td></tr>
+    <tr><td>Apple</td><td><code>darwin-x86_64</code>, <code>darwin-aarch64</code>, <code>ios-aarch64</code></td></tr>
+    <tr><td>Windows</td><td><code>win32-x86_64</code>, <code>win32-aarch64</code></td></tr>
+    <tr><td>Bare ELF</td><td><code>bare-elf-x86_64</code>, <code>aarch64</code>, <code>riscv64</code></td></tr>
+  </table>
+  <h2 id="pairs">Hardware pairs (g16 does not run here)</h2>
+  <p><a href="c64-ultimate.html">Commodore 64 Ultimate</a> — <code>pair-c64-ultimate</code>. Grok16 stays on your host; the new FPGA C64 runs PRG/media. <a href="c64-classic.html">Classic breadbin 6510</a> is Queen CHIPS only — <strong>not</strong> a g16 target.</p>
+  <h2 id="quick">Quick start (Linux x86_64)</h2>
+  <pre><code>tar xzf grok16-5.2.0-src.tar.gz && cd grok16-5.2.0-src
+export G16_PREFIX=$(pwd) G16_PKGVERSION=Grok16-16.2.0
+./scripts/grok16-toolchain.sh bootstrap
+./scripts/grok16-toolchain.sh rebuild
+./scripts/grok16-launch-verify.sh</code></pre>
+  <p>See <a href="linker.html">Linker</a> · <a href="getting-started.html">Getting Started</a> · <a href="release.html">Release</a></p>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

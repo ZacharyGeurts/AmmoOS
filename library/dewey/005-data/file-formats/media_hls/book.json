@@ -1,0 +1,13 @@
+{
+  "id": "format-media_hls",
+  "title": "HLS",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".m3u8"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_hls.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

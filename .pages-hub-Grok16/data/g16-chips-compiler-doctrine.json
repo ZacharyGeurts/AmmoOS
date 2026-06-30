@@ -1,0 +1,66 @@
+{
+  "schema": "g16-chips-compiler-doctrine/v1",
+  "title": "CHIPs universal — compiler design for every G16 language",
+  "motto": "CHIPs is the universal: every ISA teaches lowering, dispatch, and field_opt hot paths.",
+  "chips_manifest": "Queen/data/chips-g16-manifest.json",
+  "isa_lang": {
+    "combinatronics": [
+      "ammolang", "field", "python", "c", "cxx", "javascript", "typescript", "java", "shell", "sql",
+      "verilog", "glsl", "graphql", "economics", "linux", "markdown", "yaml", "json", "toml", "xml"
+    ],
+    "x86": [
+      "c", "cxx", "asm", "pascal", "turbo_pascal", "delphi", "modula2", "fortran", "basic", "qbasic",
+      "quickbasic", "freebasic", "visual_basic", "vba", "ammolang", "field", "python", "javascript",
+      "typescript", "java", "kotlin", "csharp", "rust", "go", "zig", "d", "ada", "objc", "ruby", "php",
+      "perl", "lua", "shell", "haskell", "lisp", "scala", "cobol", "forth", "algol", "dockerfile",
+      "makefile", "cmake", "html", "css", "scss", "powershell", "vbscript", "ini", "log", "diff",
+      "elixir", "erlang", "clojure", "dart", "swift", "wat", "wasm", "plaintext"
+    ],
+    "m6809": ["asm", "basic", "c", "forth", "cobol"],
+    "m6502": ["asm", "basic", "forth", "verilog"],
+    "z80": ["asm", "basic", "forth", "c", "pascal"],
+    "arm": ["c", "cxx", "rust", "go", "swift", "kotlin", "ammolang", "python", "dart"],
+    "riscv": ["c", "cxx", "rust", "go", "zig", "ammolang", "python"],
+    "mips": ["c", "cxx", "java"],
+    "powerpc": ["c", "cxx", "fortran"],
+    "sh4": ["c", "cxx"],
+    "cyrix": ["asm", "c", "cxx", "turbo_pascal", "pascal", "delphi"],
+    "coco": ["basic", "asm", "forth"]
+  },
+  "isa_chip_hints": {
+    "x86": ["host_cpu", "chips_hot"],
+    "m6502": ["chips_6502", "chips_6507", "chips_2a03", "chips_2c02"],
+    "z80": ["chips_z80"],
+    "m6809": ["chips_6809"],
+    "arm": ["chips_arm"],
+    "riscv": ["chips_riscv"],
+    "combinatronics": ["FieldChips", "chips_hot"],
+    "cyrix": ["cyrix_6x86"],
+    "coco": ["chips_coco"]
+  },
+  "driver_lane": {
+    "g16-cc": "native_direct",
+    "g16-cxx": "native_direct",
+    "g16-as": "native_direct",
+    "g16-objc": "native_direct",
+    "g16-rust": "chips_native",
+    "g16-go": "chips_native",
+    "g16-zig": "chips_native",
+    "g16-gfortran": "chips_native",
+    "g16-gdc": "chips_native",
+    "g16-gnat": "chips_native",
+    "g16-fpc": "chips_native",
+    "g16-qbasic": "chips_native",
+    "g16-aml": "combinatronics_native",
+    "gpy-16": "interp_vm",
+    "g16-interp": "chips_lower"
+  },
+  "default_isa": ["x86"],
+  "frontend_modules": {
+    "native_direct": "libexec/grok16/g16-cc",
+    "chips_native": "lib/g16-native-compile.py",
+    "chips_lower": "lib/g16-lang-lower.py",
+    "combinatronics_native": "lib/field-ammolang.py",
+    "interp_vm": "bin/gpy-16"
+  }
+}

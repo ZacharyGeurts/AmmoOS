@@ -1,0 +1,65 @@
+{
+  "schema": "grok16-speed-bench-version/v5",
+  "distro_version": "5.0.0",
+  "distro_tag": "v5.0.0",
+  "g16_pkgversion": "Grok16-16.2.0",
+  "g16_dumpversion_expected": "16.2.0",
+  "bench_suite": "speed_demo",
+  "bench_suite_version": "1.1.0",
+  "report_version": "5.0.0",
+  "compare_axis": "field_execution_ops_per_sec",
+  "compile_axis": "wave_convert_ms",
+  "self_monitor": {
+    "module": "lib/g16_self_monitor.py",
+    "runner": "scripts/g16-run-monitored.sh",
+    "schema": "g16-self-monitor/v1",
+    "version": "1.0.0",
+    "defaults": {
+      "heartbeat_sec": 10,
+      "stall_sec": 90,
+      "timeout_sec": 600
+    }
+  },
+  "kernels": {
+    "speed_demo": {
+      "version": "1.1.0",
+      "description": "FieldX86 loop \u2014 256\u00d716 die, 240 frames/epoch, 512 prog_ops/frame",
+      "sources": [
+        "examples/speed-demo/speed_demo.c",
+        "examples/speed-demo/speed_demo.cpp",
+        "examples/speed-demo/speed_demo.py"
+      ]
+    }
+  },
+  "runners_version": "5.0.0",
+  "bench_schema": "grok16-field-exec-full-bench/v5",
+  "metrics": [
+    "bench_wall_ms",
+    "compile_total_ms",
+    "exec_total_ms",
+    "mean_ops_per_sec",
+    "max_ops_per_sec",
+    "runner_overhead_mean_ms",
+    "rows_dropped",
+    "rows_timeout",
+    "self_monitor"
+  ],
+  "scripts": {
+    "stage": "scripts/field-exec-stage.py",
+    "compare": "scripts/field-exec-compare.py",
+    "full_bench": "scripts/field-exec-full-bench.py",
+    "monitor": "scripts/g16-run-monitored.sh"
+  },
+  "doctrine": "data/field-exec-uncompiled-doctrine.json",
+  "changelog": [
+    "4.7.0: bench-refresh pipeline \u2014 all speed/comparison charts regenerated from live JSON",
+    "4.7.0: bench-charts.py \u2014 triad, compare, bench-all, speed-bench SVG generation",
+    "4.2.0: Self-monitor \u2014 heartbeat + stall/timeout drop-out on bench, test gate, NEXUS tests",
+    "4.2.0: Bench schema v5 \u2014 metrics block, per-runner monitor stamps, runner overhead",
+    "4.0.0: Distro v4.0.0 \u2014 power sort plate + cool combinatorics plating in bench witnesses",
+    "4.0.0: Schema v4 stamp on full bench JSON and markdown reports",
+    "3.2.0: Fresh host bench \u2014 Field Research book panel sync on publish",
+    "3.1.0: Comprehensive bench \u2014 belt_1_0, sense profile, plate meld A/B, bench-all cross-ref",
+    "3.0.0: Full bench \u2014 compile ms + execution ops/s with version stamps"
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schema": "field-subfolder-ammolang-routes/v1",
+  "updated": "2026-06-30",
+  "motto": "Every stack subfolder routes through lib/ammolang-run.sh",
+  "routes": {
+    "Queen": {
+      "task": "forge",
+      "entry_scripts": ["Queen/scripts/run-queen.sh", "Queen/scripts/start-world.sh", "Queen/build-field.sh"]
+    },
+    "Grok16": {
+      "task": "g16_recompile",
+      "entry_scripts": ["Grok16/scripts/grok16-field-build.sh"]
+    },
+    "KILROY": {
+      "task": "kilroy_bzimage",
+      "entry_scripts": ["KILROY/scripts/build-kilroy.sh", "KILROY/scripts/grok-boot-qemu.sh"]
+    },
+    "AMOURANTHRTX": {
+      "task": "amouranthrtx_integrate",
+      "entry_scripts": ["scripts/integrate-amouranthrtx.sh", "scripts/amouranthrtx-open.sh"]
+    },
+    "Final_Eye": {
+      "task": "final_eye_build",
+      "entry_scripts": ["scripts/build_final_eye.sh", "Final_Eye/start.sh"]
+    },
+    "Field_Primer": {
+      "task": "field_primer_site",
+      "entry_scripts": ["Field_Primer/scripts/build-site.sh", "Field_Primer/scripts/build-pdfs.sh"]
+    },
+    "Field_Research": {
+      "task": "field_research_build",
+      "entry_scripts": ["Field_Research/scripts/build-site.sh"]
+    },
+    "Spiderweb": {
+      "task": "spiderweb_run",
+      "entry_scripts": ["Spiderweb/run.sh"]
+    },
+    "ZNetwork": {
+      "task": "integrate-znetwork",
+      "entry_scripts": ["ZNetwork/scripts/znetwork-build-host.sh", "scripts/integrate-znetwork.sh"]
+    },
+    "AmmoCode": {
+      "task": "compiler_stack",
+      "entry_scripts": ["AmmoCode/scripts/build-executable.sh"]
+    },
+    "GrokLab": {
+      "task": "grok_lab_boot",
+      "entry_scripts": ["GrokLab/scripts/grok-lab-boot-desktop.sh"]
+    },
+    "hostess7-training-viewer": {
+      "task": "h7_training_viewer",
+      "entry_scripts": ["hostess7-training-viewer/launch.sh"]
+    },
+    "World_Repack": {
+      "task": "world_repack",
+      "entry_scripts": ["World_Repack/start.sh", "World_Repack/stop.sh"]
+    },
+    "GIMP-Field": {
+      "task": "gimp_field_build",
+      "entry_scripts": ["GIMP-Field/build-field-gimp.sh"]
+    },
+    "OBS-Field": {
+      "task": "obs_field_build",
+      "entry_scripts": ["OBS-Field/build-field-obs.sh"]
+    },
+    "stack": {
+      "task": "stack_update",
+      "entry_scripts": ["scripts/start-field-stack.sh", "scripts/kilroy-load-os.sh", "scripts/stack.sh"]
+    },
+    "tests": {
+      "task": "stack_tests",
+      "entry_scripts": ["tests/run-tests.sh"]
+    }
+  }
+}

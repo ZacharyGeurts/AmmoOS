@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZNetwork vs Old Networks — Field Stack 2.1.0</title>
+  <style>
+    :root { --bg: #0d1117; --fg: #e6edf3; --accent: #7ee787; --muted: #8b949e; --card: #161b22; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--fg); margin: 0; padding: 2rem; line-height: 1.5; }
+    h1, h2 { color: var(--accent); }
+    table { border-collapse: collapse; width: 100%; margin: 1.5rem 0; }
+    th, td { border: 1px solid #30363d; padding: 0.6rem 0.8rem; text-align: left; }
+    th { background: var(--card); }
+    .note { color: var(--muted); font-size: 0.95rem; }
+    pre.mermaid { background: var(--card); padding: 1rem; border-radius: 8px; overflow-x: auto; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>ZNetwork vs Old Networks</h1>
+  <p class="note">Canonical: <code>NewLatest/ZNetwork</code> · ZNetwork 2.1.0 Stack · Grok16 field wire design</p>
+
+  <h2>Architecture</h2>
+  <pre class="mermaid">
+flowchart TB
+  subgraph OLD["Old Networks (pre-Stack / legacy)"]
+    direction TB
+    OA[Apps / Firefox / Chromium]
+    OA --> OS_SOCK[OS socket API per-app TCP/UDP]
+    OS_SOCK --> NM[NetworkManager / Wi-Fi / DHCP client]
+    NM --> RESOLVE[systemd-resolved / resolv.conf]
+    RESOLVE --> WAN1[ISP / WAN]
+    FN[FieldNet FIELDC Queen/AmmoOS *.fld]
+    FN -.->|parallel legacy wire| OS_SOCK
+    UH[underhook / handler stack deprecated]
+    UH -.-> OS_SOCK
+    OLD_NOTE[No sole pipe · no truth gate · discrete app packets]
+  end
+
+  subgraph NEW["ZNetwork 2.1.0 Stack (NewLatest canonical)"]
+    direction TB
+    QB[Queen Browser shell]
+    QB --> LOOP[127.0.0.1 loopback operator = field]
+    LOOP --> NEXUS[NEXUS C2 :9477]
+    LOOP --> AMMO[AmmoOS inside Queen]
+    LOOP --> REL[ZNetwork Relayer sole ingress/egress]
+    REL --> GK[connection-gatekeeper truth floor ≥58]
+    REL --> FDNS[field-dns.py]
+    REL --> FDHCP[field-dhcp.py]
+    FDNS --> LOOP
+    FDHCP --> LOOP
+    REL --> MODE{Mode}
+    MODE --> RO[REVIEW_ONLY default]
+    MODE --> SH[SHADOW lab-gated]
+    MODE --> AC[ACTIVE checklist]
+    REL --> L3[slide-in L3 handoff never_harm_os]
+    L3 --> WAN2[ISP / WAN]
+    FUTURE[Future: field-io-packet envelopes field stream lab_locked]
+    G16[Grok16 egress convert / ingress deconvert]
+    REL --> FUTURE
+    G16 --> FUTURE
+    FUTURE -.-> WAN2
+    NEW_NOTE[100% pipe target · sealed wire points · invite mesh]
+  end
+
+  OLD ~~~ NEW
+  </pre>
+
+  <h2>Side-by-side</h2>
+  <table>
+    <thead>
+      <tr><th>Dimension</th><th>Old Networks</th><th>ZNetwork 2.1.0 Stack</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Canonical tree</td><td>Scattered (SG/ZNetwork, underhook, FieldNet)</td><td><code>NewLatest/ZNetwork</code> only</td></tr>
+      <tr><td>Who owns internet</td><td>Each app + browser</td><td>Relayer → target 100% pipe</td></tr>
+      <tr><td>Operator identity</td><td>Host IP + browser tab</td><td><code>127.0.0.1</code> when pipe live</td></tr>
+      <tr><td>DNS/DHCP</td><td>OS resolver / NM</td><td><code>field-dns</code> + <code>field-dhcp</code> on loopback</td></tr>
+      <tr><td>Security</td><td>OS firewall (maybe)</td><td>Gatekeeper + exploit shield + truth gate ≥58</td></tr>
+      <tr><td>Packets</td><td>Discrete per socket</td><td>Today: relayer passthrough; future: field stream (lab locked)</td></tr>
+      <tr><td>Field wire</td><td>FieldNet <code>.fld</code> parallel</td><td><code>field-io-packet</code> + Grok16 convert/deconvert</td></tr>
+      <tr><td>Modes</td><td>Always on / always OS</td><td>REVIEW_ONLY → SHADOW → ACTIVE</td></tr>
+      <tr><td>Coexistence</td><td>N/A</td><td><code>never_harm_os</code> — NM kept, policy owned inside</td></tr>
+    </tbody>
+  </table>
+
+  <p class="note">See also <a href="../DESIGN.md">DESIGN.md</a> · <a href="https://github.com/ZacharyGeurts/ZNetwork">ZNetwork repo</a></p>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+</body>
+</html>

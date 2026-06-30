@@ -1,0 +1,28 @@
+{
+  "schema": "znetwork-platform-release/v1",
+  "version": "2.1.0",
+  "tag": "v2.1.0",
+  "codename": "Stack",
+  "canonical_root": "NewLatest/ZNetwork",
+  "grok16_pair": "5.0.1",
+  "ammoos_pair": "1.9.9h",
+  "release_model": "source_plus_grok16_platform_bins",
+  "platforms": [
+    {"id": "linux-gnu-x86_64", "os": "linux", "arch": "x86_64", "format": "elf", "build": "cmake native"},
+    {"id": "linux-gnu-i386", "os": "linux", "arch": "i386", "format": "elf", "build": "cmake cross", "cross_prefix": "i686-linux-gnu-"},
+    {"id": "linux-gnu-aarch64", "os": "linux", "arch": "aarch64", "format": "elf", "build": "cmake cross", "cross_prefix": "aarch64-linux-gnu-"},
+    {"id": "linux-gnu-arm", "os": "linux", "arch": "arm", "format": "elf", "build": "cmake cross", "cross_prefix": "arm-linux-gnueabihf-"},
+    {"id": "linux-gnu-riscv64", "os": "linux", "arch": "riscv64", "format": "elf", "build": "cmake cross", "cross_prefix": "riscv64-linux-gnu-"},
+    {"id": "android-aarch64", "os": "android", "arch": "aarch64", "format": "elf", "build": "ndk", "triple": "aarch64-linux-android"},
+    {"id": "android-arm", "os": "android", "arch": "arm", "format": "elf", "build": "ndk"},
+    {"id": "android-x86_64", "os": "android", "arch": "x86_64", "format": "elf", "build": "ndk"},
+    {"id": "darwin-x86_64", "os": "darwin", "arch": "x86_64", "format": "mach-o", "build": "cmake clang host"},
+    {"id": "darwin-aarch64", "os": "darwin", "arch": "aarch64", "format": "mach-o", "build": "cmake clang host"},
+    {"id": "ios-aarch64", "os": "ios", "arch": "aarch64", "format": "mach-o", "build": "source_bootstrap"},
+    {"id": "win32-x86_64", "os": "windows", "arch": "x86_64", "format": "pe", "build": "cmake mingw", "cross_prefix": "x86_64-w64-mingw32-"},
+    {"id": "win32-aarch64", "os": "windows", "arch": "aarch64", "format": "pe", "build": "source_bootstrap"},
+    {"id": "bare-elf-x86_64", "os": "none", "arch": "x86_64", "format": "elf", "build": "cmake native"},
+    {"id": "bare-elf-aarch64", "os": "none", "arch": "aarch64", "format": "elf", "build": "cmake cross"},
+    {"id": "bare-elf-riscv64", "os": "none", "arch": "riscv64", "format": "elf", "build": "cmake cross"}
+  ]
+}

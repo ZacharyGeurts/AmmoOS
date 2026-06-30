@@ -1,0 +1,11 @@
+{
+  "schema": "grok16-kilroy-integrate/v1",
+  "kilroy_root": "/home/default/Desktop/SG/NewLatest/KILROY",
+  "kilroy_version": "1.1.0",
+  "kilroy_abi": "kilroy-field-1.0",
+  "grok16_pair": "5.2.0",
+  "g16_version": "16.2.0",
+  "synced_at": "2026-06-29T23:09:32Z",
+  "kernel_test": "scripts/kilroy-kernel-test.sh",
+  "queen_api": "http://127.0.0.1:9481/api/kilroy"
+}

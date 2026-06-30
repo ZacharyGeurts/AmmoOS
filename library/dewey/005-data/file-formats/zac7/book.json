@@ -1,0 +1,13 @@
+{
+  "id": "format-zac7",
+  "title": "ZAC7 field shard",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "sovereign",
+  "extensions": [
+    ".zac"
+  ],
+  "magic": "5a414337",
+  "cover": "/library/assets/formats/zac7.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

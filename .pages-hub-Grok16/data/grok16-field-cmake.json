@@ -1,0 +1,43 @@
+{
+  "schema": "grok16-field-cmake/v1",
+  "product": "Grok16 Field CMake",
+  "grok16_root": "/home/default/Desktop/SG/NewLatest/Grok16",
+  "entry": {
+    "toolchain": "cmake/grok16-toolchain.cmake",
+    "project_include": "cmake/grok16-field.cmake",
+    "queen_preset": "cmake/grok16-field-queen-rtx.cmake",
+    "chips": "cmake/grok16-chips-field-opt.cmake",
+    "mandate": "cmake/g16-field-mandate.cmake",
+    "ironclad_meld": "data/g16-ironclad-meld.json",
+    "field_sanity_doctrine": "data/g16-field-sanity-doctrine.json",
+    "ironclad_bridge": "forge/g16-ironclad.py",
+    "sanity_operator": "forge/g16-field-sanity.py",
+    "linker_doctrine": "data/g16-linker-doctrine.json",
+    "linker_orchestrator": "forge/g16-linker.py",
+    "linker_mandate": "cmake/g16-linker-mandate.cmake",
+    "presets": "CMakePresets.json",
+    "script": "scripts/field-cmake.sh"
+  },
+  "profiles": [
+    "field_opt",
+    "queen_rtx",
+    "field_compute",
+    "ai",
+    "vulkan_rtx"
+  ],
+  "generator": "Ninja",
+  "status": {
+    "product": "Grok16 Field CMake",
+    "grok16_root": "/home/default/Desktop/SG/NewLatest/Grok16",
+    "toolchain": "/home/default/Desktop/SG/NewLatest/Grok16/cmake/grok16-toolchain.cmake",
+    "field_cmake": "/home/default/Desktop/SG/NewLatest/Grok16/cmake/grok16-field.cmake",
+    "field_cmake_script": "/home/default/Desktop/SG/NewLatest/Grok16/scripts/field-cmake.sh",
+    "ninja": true,
+    "g16_ready": true,
+    "rtx_source": "/home/default/Desktop/SG/NewLatest/AMOURANTHRTX",
+    "rtx_build": "/home/default/Desktop/SG/NewLatest/Queen/build/rtx",
+    "cache_ok": false,
+    "binary": "",
+    "generator": null
+  }
+}

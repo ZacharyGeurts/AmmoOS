@@ -1,0 +1,10 @@
+{
+  "id": "ps4",
+  "title": "PlayStation 4",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/ps4/ps4.h7c",
+  "cover": "/library/assets/devices/ps4.png",
+  "ready": true
+}

@@ -1,0 +1,15 @@
+{
+  "id": "format-media_mp4",
+  "title": "MP4 / ISOBMFF",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".mp4",
+    ".m4v",
+    ".m4a"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_mp4.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

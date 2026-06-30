@@ -1,0 +1,10 @@
+{
+  "id": "virtual_boy",
+  "title": "Virtual Boy",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/virtual_boy/virtual_boy.h7c",
+  "cover": "/library/assets/devices/virtual_boy.png",
+  "ready": true
+}

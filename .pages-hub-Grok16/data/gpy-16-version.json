@@ -1,0 +1,20 @@
+{
+  "gpy16_version": "16.1.1",
+  "pkgversion": "GPY-16.1.1",
+  "product": "GPY-16",
+  "driver": "gpy-16",
+  "builtin": true,
+  "tree": "python/",
+  "pair": "Grok16/g16",
+  "rule": "Built-in Grok16 toolkit — g16 auto-discerns .py/.gpy; no sibling GrokPy bootstrap",
+  "runtime": "grok_vm",
+  "language_version": "3.12",
+  "bytecode_magic": "GPY16",
+  "ai_ready": true,
+  "compat": ["pythong", "grokpy"],
+  "build_with": "Grok16/g16 @ field_opt",
+  "speed_doctrine": "data/gpy-16-speed-doctrine.json",
+  "default_profile": "fastest",
+  "bytecode_cache": ".nexus-state/gpy16-bytecode-cache",
+  "accelerator": "lib/gpy16-chips-accelerate.py"
+}

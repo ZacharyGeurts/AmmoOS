@@ -1,0 +1,10 @@
+{
+  "id": "thinkpad_701c",
+  "title": "ThinkPad 701C",
+  "author": "Field Extensive Library",
+  "dewey": "004.16",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/thinkpad_701c/thinkpad_701c.h7c",
+  "cover": "/library/assets/devices/thinkpad_701c.png",
+  "ready": true
+}

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 400" role="img" aria-label="Uncompiled chamber and compile-ahead flow">
+  <rect width="920" height="400" fill="#060a12" rx="12"/>
+  <text x="24" y="34" fill="#e8c878" font-family="system-ui,sans-serif" font-size="17" font-weight="700">Queen .launch chamber — not compiling vs compile ahead</text>
+  <!-- Python path -->
+  <rect x="24" y="56" width="260" height="120" fill="#0e1520" stroke="#38bdf8" stroke-width="2" rx="10"/>
+  <text x="40" y="82" fill="#38bdf8" font-size="13" font-weight="600">Python entry</text>
+  <text x="40" y="102" fill="#8fb4d9" font-size="11">speed_demo.py</text>
+  <text x="40" y="122" fill="#a8a49c" font-size="11">interpreter · 0ms convert</text>
+  <text x="40" y="148" fill="#f472b6" font-size="12">~0.76M ops/s</text>
+  <path d="M284 116 L340 116" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Chamber -->
+  <rect x="340" y="48" width="240" height="136" fill="#121a28" stroke="#c8a030" stroke-width="2" rx="10"/>
+  <text x="356" y="78" fill="#e8c878" font-size="13" font-weight="600">.launch chamber</text>
+  <text x="356" y="98" fill="#8fb4d9" font-size="11">folder_mirror · trim excess</text>
+  <text x="356" y="118" fill="#8fb4d9" font-size="11">singular field depth 0</text>
+  <text x="356" y="138" fill="#8fb4d9" font-size="11">fingerprint cache</text>
+  <text x="356" y="164" fill="#c8a030" font-size="11">organize → run like a bin</text>
+  <!-- C/C++ path -->
+  <rect x="600" y="56" width="296" height="120" fill="#0e1520" stroke="#c8a030" stroke-width="2" rx="10"/>
+  <text x="616" y="82" fill="#e8c878" font-size="13" font-weight="600">C / C++ sibling</text>
+  <text x="616" y="102" fill="#8fb4d9" font-size="11">compile ahead (wave convert)</text>
+  <text x="616" y="122" fill="#a8a49c" font-size="11">reuse exec-plane or g16 belt</text>
+  <text x="616" y="148" fill="#38bdf8" font-size="12">~88M ops/s after cache</text>
+  <path d="M580 116 L600 116" stroke="#c8a030" stroke-width="2"/>
+  <!-- bottom: cmake + link -->
+  <rect x="24" y="220" width="872" height="156" fill="#0a1018" stroke="#2a3140" rx="10"/>
+  <text x="40" y="248" fill="#e8c878" font-size="13" font-weight="600">CMake + linking (release plane)</text>
+  <text x="40" y="272" fill="#8fb4d9" font-size="11">cmake -S examples/speed-demo -B build · grok16-toolchain.cmake · g16-ld mandate</text>
+  <text x="40" y="294" fill="#8fb4d9" font-size="11">configure + build timed in full-bench · execution ranked separately</text>
+  <text x="40" y="316" fill="#a8a49c" font-size="11">Dev default: Python stays uncompiled · C/C++ chamber handles compile ahead — not at every Run click</text>
+  <text x="40" y="348" fill="#6e6a63" font-size="10">Doctrine: data/field-exec-uncompiled-doctrine.json · Queen/lib/queen-launch-singular-field.py</text>
+  <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#38bdf8"/></marker></defs>
+</svg>

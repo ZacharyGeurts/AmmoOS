@@ -1,0 +1,13 @@
+{
+  "id": "format-gpy16",
+  "title": "G16 PythonG",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "sovereign",
+  "extensions": [
+    ".pyc"
+  ],
+  "magic": "GPY16",
+  "cover": "/library/assets/formats/gpy16.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

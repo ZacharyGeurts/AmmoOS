@@ -1,0 +1,177 @@
+{
+  "schema": "grok16-znetwork-field-wire/v1",
+  "title": "ZNetwork field wire — egress convert, ingress deconvert, field-to-field when both ends field",
+  "version": "5.0.0",
+  "status": "design_review",
+  "motto": "Plain packets on the wire; field amplitude only inside field computers. Two field ends talk as one belt — no nested field stack on the link.",
+  "verdict": {
+    "global_connect": "feasible_in_layers_not_one_big_switch",
+    "security_first": true,
+    "throughput": "wire_speed_when_both_field_ends; HTTP_tunnel_fallback_slow",
+    "identity_without_phone": "sovereign_receipts_plus_invite_tokens_plus_optional_physical_anchor",
+    "fake_accounts": "blocked_by_truth_gate_not_username_registry",
+    "address_theft": "mitigated_by_never_storing_plaintext_directory"
+  },
+  "field_wire": {
+    "egress": {
+      "step": "field_convert_at_exit",
+      "module": "NewLatest/lib/field-io-packet.py",
+      "rule": "Collapse panel truth to one amplitude; serialize only signed field-io packet envelopes on the wire — not raw field JSON files"
+    },
+    "transit": {
+      "step": "field_expansion_down_wire",
+      "encoding": "field-io-packet/v1 + optional packet-field receipts",
+      "max_chunk_bytes": 65536,
+      "plain_wire": "TLS 1.3 minimum when crossing untrusted hops; inner envelope HMAC-sealed"
+    },
+    "ingress": {
+      "step": "field_deconvert_at_entry",
+      "rule": "Verify sovereign-time + package key + gatekeeper IFF before amplitude joins local 2D platform — depth stays 0"
+    },
+    "field_to_field": {
+      "both_ends_field": true,
+      "direct_talk": "When both peers run field computers (Grok16 prefix + ZNetwork SHADOW or ACTIVE), belt envelopes pass without OS stack field-on-field — one amplitude per machine, one envelope per hop",
+      "defield_on_rest": "If peer rests on an existing field surface, defield before attach (AmmoCode doctrine)"
+    }
+  },
+  "operator_directory": {
+    "display": "name + wire_point only",
+    "never_store": ["plaintext_home_address", "raw_ip_directory", "phone_number"],
+    "wire_point": {
+      "format": "opaque_token derived from HMAC(operator_secret, sovereign_time_epoch)",
+      "rotation": "receipt-bound — updates when operator publishes new sovereign receipt",
+      "lookup": "invite-only mesh — no public WAN scan (AmmoCode network doctrine)"
+    },
+    "update_flow": [
+      "operator types display name (public label only)",
+      "operator sets wire_point via local ZNetwork panel — not raw street address in cloud",
+      "sovereign-clock.py seals receipt",
+      "connection-gatekeeper.py scores peer before directory row visible to friends"
+    ]
+  },
+  "anti_fake": {
+    "no_username_registry": true,
+    "truth_gate": {
+      "required": ["ironclad", "field_sanity", "g1id_baselines", "voltage"],
+      "floor": 58,
+      "source": "NewLatest/data/znetwork-doctrine.json"
+    },
+    "friend_path": "manual invite or LAN beacon with MITM pin (AmmoCode security-manage)",
+    "block_threshold": 25,
+    "verdicts_fast": ["HARM_CANDIDATE", "BLOCK_RECOMMENDED"]
+  },
+  "anti_theft": {
+    "no_central_address_book": true,
+    "encrypted_local_lists": "AmmoCode data/network-lists.json — operator machine only",
+    "beacon_pin": "TOFU fingerprint on first tunnel connect",
+    "receipt_ledger": "append-only local jsonl — no PII export"
+  },
+  "without_cellphone": {
+    "options": [
+      "LAN polite beacon (port 9555) on trusted networks",
+      "Invite URL with one-time token (collab room)",
+      "Wire-point rotation via sovereign receipt — sync when both online",
+      "Optional physical anchor: USB sovereign key file (no SMS)"
+    ],
+    "rejected": ["SMS OTP as sole root of trust", "public searchable directory"]
+  },
+  "field_stream_mode": {
+    "title": "Forced field stream — steady state no app packets, FEC only on loss",
+    "status": "lab_locked_not_ready",
+    "motto": "Take over the lane, hold one amplitude stream, speak only when correcting.",
+    "phases": {
+      "handshake": {
+        "packets_allowed": true,
+        "max_round_trips": 4,
+        "contents": ["truth_gate", "belt_sync", "wire_point", "sovereign_receipt"]
+      },
+      "steady": {
+        "application_packets": false,
+        "model": "continuous_field_amplitude_stream",
+        "note": "L2 Ethernet frames may still exist; field layer has no discrete app packets between peers"
+      },
+      "repair": {
+        "packets_allowed": true,
+        "only": ["fec_subframe", "seq_gap_nack", "hmac_resync", "thermal_backoff_mark"]
+      }
+    },
+    "takeover": {
+      "requires_mode": "SHADOW_or_ACTIVE",
+      "znetwork": "exclusive_policy_lane_per_peer",
+      "gatekeeper": "hold_flow_open_token_bucket",
+      "forbidden_in": ["REVIEW_ONLY"]
+    },
+    "error_correction": {
+      "steady_fec": "lightweight_seq_hmac_every_N_symbols",
+      "on_loss": "repair_burst_only_then_resume_stream",
+      "ledger": "field-io-packet-ledger.jsonl event repair|in_reject",
+      "no_retry_storm": "thermal_guard_backoff_ms before re-burst"
+    },
+    "thermal_venting": {
+      "rule": "Spread stream heat across venting dies — never concentrate at NIC endpoints",
+      "cool_sort": "g16-power-sort thermal_layers context",
+      "narrow_hot_pipe": "line_safety narrow_band_width 16",
+      "cold_vent_paths": ["cold_pipe", "ironclad_chips", "field-thermal-guard incremental passes"],
+      "guard": "field-thermal-guard-doctrine incremental_redata_only monolithic_blast_forbidden",
+      "spread": "route high thermo_proxy slabs to venting tier dies before global backoff"
+    }
+  },
+  "znetwork_modes": {
+    "default": "REVIEW_ONLY",
+    "shadow": "read-only taps + receipts; field_stream_mode blocked until lab_locked clears",
+    "active": "blocked until ZNETWORK_REVIEW_APPROVED=1 and checklist approved"
+  },
+  "safety_concerns": [
+    {
+      "id": "field_file_on_wire",
+      "risk": "Shipping nested field JSON heats both ends",
+      "mitigation": "field-io packet envelopes only; max_field_depth 0 at ingress"
+    },
+    {
+      "id": "directory_scrape",
+      "risk": "Central name→address DB is a theft target",
+      "mitigation": "no central DB; wire_points opaque; friends list local"
+    },
+    {
+      "id": "fake_operator",
+      "risk": "Sybil accounts pollute mesh",
+      "mitigation": "truth_gate + gatekeeper hostility score; no anonymous open WAN"
+    },
+    {
+      "id": "thermal_sustained_wire",
+      "risk": "Maxing bandwidth with field_opt stacks compute heat",
+      "mitigation": "field_physics profile on sustained field wire; token-bucket per peer"
+    },
+    {
+      "id": "active_znetwork",
+      "risk": "OS handoff before review",
+      "mitigation": "REVIEW_ONLY default; human checklist for ACTIVE"
+    },
+    {
+      "id": "mitm_on_open_network",
+      "risk": "HTTP tunnel fallback without pin",
+      "mitigation": "beacon_pin + security-manage verify_beacon before tunnel_connect"
+    },
+    {
+      "id": "forced_stream_starvation",
+      "risk": "Exclusive stream blocks other peers / looks like hijack",
+      "mitigation": "per-peer token bucket; SHADOW only until review; operator confirm dialog"
+    },
+    {
+      "id": "fec_retry_heat",
+      "risk": "Lossy link triggers repair storm → thermal spike",
+      "mitigation": "field-thermal-guard backoff_ms; spread repair across venting dies; field_physics profile"
+    },
+    {
+      "id": "fake_continuous_stream",
+      "risk": "Attacker floods stream without truth_gate handshake",
+      "mitigation": "handshake packets mandatory; gatekeeper drops unauthenticated steady bytes"
+    }
+  ],
+  "integration": {
+    "ammocode_mesh": "AmmoCode/data/ammocode-network-doctrine.json",
+    "znetwork": "NewLatest/data/znetwork-doctrine.json",
+    "packet_field": "NewLatest/lib/packet-field.py",
+    "connection_gatekeeper": "NewLatest/lib/connection-gatekeeper.py"
+  }
+}

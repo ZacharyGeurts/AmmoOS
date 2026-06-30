@@ -1,0 +1,10 @@
+{
+  "id": "nes_dig_dug",
+  "title": "Dig Dug",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_dig_dug/nes_dig_dug.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_dig_dug-box.png",
+  "ready": true
+}

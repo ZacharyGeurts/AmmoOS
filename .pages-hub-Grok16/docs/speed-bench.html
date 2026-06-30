@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — Speed Bench</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/speed-bench.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Speed bench — report v5.0.0</h1>
+  <p>Distro <strong>5.0.0</strong> · suite <code>speed_demo</code> @ <code>1.1.0</code> · schema <code>grok16-field-exec-full-bench/v5</code></p>
+
+  <aside class="callout callout-accent">
+    <strong>Version stamps:</strong> Every run writes <code>docs/field-exec-full-bench.json</code> with distro, g16, suite, and report versions. Doctrine: <code>data/grok16-speed-bench-version.json</code>
+  </aside>
+
+  <figure class="fig-wide">
+    <img src="assets/speed-bench-chart.svg" alt="Speed bench bar chart" width="920" height="280" />
+    <figcaption>Execution ops/s by runner — 2026-06-27T19:20:27Z on <code>default-X870-Pro-RS</code></figcaption>
+  </figure>
+
+  <h2 id="winners">Winners</h2>
+  <div class="winner-grid">
+    <div class="winner-card"><strong>Fastest execution</strong><span class="val">102.84M</span><span class="sub">C++ — g16 belt_2_0</span></div>
+    <div class="winner-card"><strong>Fastest compile</strong><span class="val">— ms</span><span class="sub">—</span></div>
+    <div class="winner-card"><strong>Best Python</strong><span class="val">843,829</span><span class="sub">interpreter — no compile</span></div>
+    <div class="winner-card"><strong>Amortized first-run</strong><span class="val">102.84M</span><span class="sub">C++ — g16 belt_2_0</span></div>
+  </div>
+
+  <h2 id="results">Full results (3s window)</h2>
+  <table>
+    <tr><th>Runner</th><th>Compile (ms)</th><th>Exec wall (ms)</th><th>ops/s</th><th>Binary bytes</th></tr>
+    <tr><td>C++ — g16 belt_2_0</td><td>—</td><td>3,071</td><td><strong>102,843,184.74</strong></td><td>22,912</td></tr>
+    <tr><td>C++ — host g++ -O2</td><td>—</td><td>3,083</td><td><strong>101,093,393.65</strong></td><td>21,640</td></tr>
+    <tr><td>C — g16 belt_1_0</td><td>—</td><td>3,006</td><td><strong>99,454,820.63</strong></td><td>16,192</td></tr>
+    <tr><td>CMake — host g++ -O2</td><td>—</td><td>3,014</td><td><strong>98,892,364.74</strong></td><td>21,640</td></tr>
+    <tr><td>C — host gcc -O2</td><td>—</td><td>3,006</td><td><strong>97,416,875.40</strong></td><td>24,568</td></tr>
+    <tr><td>C — g16 belt_2_0</td><td>—</td><td>3,006</td><td><strong>95,729,447.71</strong></td><td>16,248</td></tr>
+    <tr><td>C++ — g16 belt_1_0</td><td>—</td><td>3,040</td><td><strong>95,052,367.49</strong></td><td>22,784</td></tr>
+    <tr><td>C++ — g16 belt_2_0 (post-meld re-exec)</td><td>—</td><td>3,008</td><td><strong>93,388,093.30</strong></td><td>22,912</td></tr>
+    <tr><td>C++ — g16 sense belt_2_0</td><td>—</td><td>3,078</td><td><strong>91,070,985.42</strong></td><td>22,784</td></tr>
+    <tr><td>Python — host CPython 3</td><td>—</td><td>3,110</td><td><strong>843,828.62</strong></td><td>—</td></tr>
+    <tr><td>Python — gpy-16 GrokVM</td><td>—</td><td>3,210</td><td><strong>755,552.29</strong></td><td>—</td></tr>
+  </table>
+
+  <h2 id="plate-meld">Plate meld analysis</h2>
+  <p>Cycle: <code>field-plate-meld.py fuse</code> + <code>g16-compiler-sense-plate.py cycle</code> before compiles. Doctrine: <code>data/grok16-plate-meld-bench-doctrine.json</code></p>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Meld generation</td><td>0</td></tr>
+    <tr><td>Plates fused</td><td>0</td></tr>
+    <tr><td>Compiler sense profile</td><td><code>belt_2_0</code> (unknown)</td></tr>
+    <tr><td>Sense vs belt_2_0 exec ratio</td><td>0.8855</td></tr>
+    <tr><td>Meld helps profile ladder</td><td><strong>no</strong></td></tr>
+  </table>
+  <aside class="callout callout-accent">
+    <strong>Professional verdict:</strong> Plate meld does not block the ELF hot path. On this host, compiler-sense compile was <strong>0 ms</strong> vs static <code>belt_2_0</code>; sense execution ratio <strong>0.8855</strong>. Profile ladder unlocks when meld generation ≥ 0.
+  </aside>
+
+  <h2 id="bench-all">bench-all cross-reference</h2>
+  <p>10 profile runs from <code>data/bench/latest.json</code> (field-nexus-bench). Run: <code>./scripts/grok16-toolchain.sh bench-all</code></p>
+
+  <h2 id="doctrine">Doctrine</h2>
+  <ul>
+    <li><strong>Dev / uncompiled:</strong> Python at interpreter speed (~0.75–0.78M ops/s). C/C++ rely on chamber compile ahead.</li>
+    <li><strong>Plate meld:</strong> Fuses sense plates → compiler-sense profile ladder before wave-convert.</li>
+    <li><strong>Compare axis:</strong> <code>field_execution_ops_per_sec</code> on identical <code>speed_demo</code> kernel.</li>
+  </ul>
+  <p>See <a href="uncompiled.html">Uncompiled execution</a> · <a href="cmake-linking.html">CMake &amp; linking</a></p>
+
+  <h2 id="reproduce">Reproduce (comprehensive)</h2>
+  <pre><code>cd Grok16
+git checkout v5.2.0
+export G16_PREFIX="$(pwd)"
+export GROK16_SG_ROOT=/path/to/SG
+export NEXUS_STATE_DIR=$GROK16_SG_ROOT/NewLatest/state
+G16_PLATE_MELD_CMD=fuse SPEED_DEMO_TARGET_SEC=3 ./scripts/grok16-toolchain.sh exec-comprehensive-bench
+./scripts/grok16-toolchain.sh exec-compare</code></pre>
+  <p>JSON: <a href="https://github.com/ZacharyGeurts/Grok16/blob/main/docs/field-exec-full-bench.json">field-exec-full-bench.json</a> · MD: <a href="https://github.com/ZacharyGeurts/Grok16/blob/main/docs/SPEED-BENCH-REPORT.md">SPEED-BENCH-REPORT.md</a></p>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

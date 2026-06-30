@@ -1,0 +1,10 @@
+{
+  "id": "pc_dos",
+  "title": "PC DOS games",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/pc_dos/pc_dos.h7c",
+  "cover": "/library/assets/devices/pc_dos.png",
+  "ready": true
+}

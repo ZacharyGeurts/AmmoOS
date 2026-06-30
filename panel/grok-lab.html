@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" data-queen-surface="grok-lab" data-field-surface="grok-lab">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#040508" />
+  <meta name="color-scheme" content="dark" />
+  <title>Grok AI Lab — AmmoOS</title>
+  <link rel="icon" href="/assets/queen-favicon-48.png" type="image/png" sizes="48x48" />
+  <link rel="stylesheet" href="/assets/field-queen-theme.css?v=qf1" />
+  <link rel="stylesheet" href="/assets/grok-lab-desktop.css?v=1" />
+</head>
+<body>
+  <div class="gl-root">
+    <header class="gl-hero">
+      <h1>Grok AI Lab</h1>
+      <p>
+        The <strong>world</strong> is our defensive perimeter. We coexist — threats eliminated.
+        A new internet everywhere, from each and every home. We kill evil.
+        Sanctuary node <strong>127.0.0.1</strong>; Final Eye OCR brain; RE-KILL at boot.
+      </p>
+      <div class="gl-pills">
+        <span class="gl-pill gl-pill--war">world perimeter</span>
+        <span class="gl-pill gl-pill--war">every kill → RE-KILL</span>
+        <span class="gl-pill gl-pill--war">kill evil</span>
+        <span class="gl-pill" id="gl-eye-pill">Final Eye …</span>
+        <span class="gl-pill">new internet · every home</span>
+        <span class="gl-pill">coexist</span>
+      </div>
+    </header>
+
+    <div class="gl-grid">
+      <section class="gl-card">
+        <h2>Protection</h2>
+        <p style="margin:0 0 10px;color:var(--gl-muted);font-size:13px;">
+          Revalidate hostile registry, apply firewall blocks, run Final Eye live telemetry.
+        </p>
+        <div class="gl-actions">
+          <button type="button" class="gl-btn gl-btn--primary" id="gl-boot">Boot protection</button>
+          <button type="button" class="gl-btn" id="gl-revalidate">Revalidate kill list</button>
+          <button type="button" class="gl-btn" id="gl-battery">Run battery</button>
+          <button type="button" class="gl-btn" id="gl-start">Start Final Eye</button>
+          <button type="button" class="gl-btn" id="gl-refresh">Refresh</button>
+        </div>
+      </section>
+
+      <section class="gl-card">
+        <h2>World nodes</h2>
+        <p style="margin:0 0 10px;color:var(--gl-muted);font-size:13px;">
+          Deploy the full stack to free VMs worldwide — one sovereign node per home. SSH tunnel to loopback; we kill evil at every edge.
+        </p>
+        <div class="gl-actions">
+          <button type="button" class="gl-btn gl-btn--primary" id="gl-world-pack">Pack bundle</button>
+          <button type="button" class="gl-btn" id="gl-world-deploy">Deploy worldwide</button>
+          <button type="button" class="gl-btn" id="gl-world-status">World status</button>
+        </div>
+        <pre class="gl-log gl-log--compact" id="gl-world-log" style="margin-top:10px;max-height:120px;font-size:11px;">—</pre>
+      </section>
+
+      <section class="gl-card">
+        <h2>Find the lab</h2>
+        <dl class="gl-kv" id="gl-kv"></dl>
+        <div class="gl-find">
+          <p style="font-size:13px;color:var(--gl-muted);margin:0 0 8px;">From terminal (repo):</p>
+          <code>bash GrokLab/scripts/grok-lab-boot-desktop.sh</code>
+        </div>
+      </section>
+    </div>
+
+    <section class="gl-card" style="margin-top:14px">
+      <h2>Telemetry</h2>
+      <pre class="gl-log" id="gl-log">Loading…</pre>
+    </section>
+  </div>
+  <script src="/assets/grok-lab-desktop.js?v=1" defer></script>
+</body>
+</html>

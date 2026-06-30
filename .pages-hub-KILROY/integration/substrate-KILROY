@@ -1,0 +1,10 @@
+KILROY Field OS
+===============
+Linux-compatible · Not Linux
+Canonical source: SG/KILROY
+ABI: kilroy-field-1.0
+Compat substrate pin: linux-7.1.1
+Boot: Grok → cat /proc/kilroy_field/boot
+Field: cat /proc/kilroy_field/status
+Build: SG/KILROY/scripts/build-kilroy.sh
+Compat: SG/compat/linux-7.1.1 (or linux-kernel/ legacy)

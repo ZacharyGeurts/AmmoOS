@@ -1,0 +1,10 @@
+{
+  "id": "atari_7800",
+  "title": "Atari 7800",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/atari_7800/atari_7800.h7c",
+  "cover": "/library/assets/devices/atari_7800.png",
+  "ready": true
+}

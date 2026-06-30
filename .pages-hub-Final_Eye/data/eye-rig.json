@@ -1,0 +1,69 @@
+{
+  "schema": "zocr-eye-rig/v1",
+  "mandate_id": "ZOCR_FIELD_ROBOTICS_MANDATE_v1",
+  "doctrine": "Permit any number of eyes — monocular, stereoscopic, compound arrays",
+  "comfort_doctrine": {
+    "rule": "Queen may deploy as many eyeballs as she wishes — no ceiling on eyes",
+    "stereo_preference": "Stereoscopic preferred for local comfort and safety — especially faces and anyone beside her",
+    "person_present": {
+      "preset": "stereo_human",
+      "eyes_min": 2,
+      "keep_twins": true,
+      "rule": "When a person is in frame or beside Queen — keep two with them. Depth before guesswork."
+    },
+    "media_relaxed": {
+      "preset": "monocular",
+      "contexts": ["picture_browsing", "movie_watching", "gallery", "streaming"],
+      "rule": "Pictures and movies — monocular is fine. Not a big deal for leisure viewing."
+    },
+    "operator_note": "Local comfort means faces and people nearby — not a mandate for every screen."
+  },
+  "default_mode": "monocular",
+  "stereoscopic": {
+    "enabled": false,
+    "baseline_mm": 65,
+    "ipd_mm": 63,
+    "max_disparity_px": 32,
+    "output": ["anaglyph", "side_by_side", "depth_map"]
+  },
+  "eyes": [
+    {
+      "id": "primary",
+      "role": "center",
+      "profile": "human",
+      "offset_x": 0,
+      "enabled": true
+    }
+  ],
+  "presets": {
+    "monocular": {
+      "stereoscopic": {"enabled": false},
+      "eyes": [{"id": "primary", "role": "center", "profile": "human", "offset_x": 0, "enabled": true}]
+    },
+    "stereo_human": {
+      "stereoscopic": {"enabled": true, "baseline_mm": 65, "ipd_mm": 63},
+      "eyes": [
+        {"id": "left", "role": "left", "profile": "human", "offset_x": -8, "enabled": true},
+        {"id": "right", "role": "right", "profile": "human", "offset_x": 8, "enabled": true}
+      ]
+    },
+    "stereo_bird": {
+      "stereoscopic": {"enabled": true, "baseline_mm": 24, "ipd_mm": 22},
+      "eyes": [
+        {"id": "left", "role": "left", "profile": "bird", "offset_x": -6, "enabled": true},
+        {"id": "right", "role": "right", "profile": "bird", "offset_x": 6, "enabled": true}
+      ]
+    },
+    "compound_six": {
+      "stereoscopic": {"enabled": true, "baseline_mm": 40},
+      "eyes": [
+        {"id": "front_left", "role": "left", "profile": "insect", "offset_x": -10, "enabled": true},
+        {"id": "front_right", "role": "right", "profile": "insect", "offset_x": 10, "enabled": true},
+        {"id": "top", "role": "top", "profile": "bird", "offset_x": 0, "enabled": true},
+        {"id": "bottom", "role": "bottom", "profile": "reptile", "offset_x": 0, "enabled": true},
+        {"id": "rear_left", "role": "rear_left", "profile": "mammal_night", "offset_x": -5, "enabled": true},
+        {"id": "rear_right", "role": "rear_right", "profile": "mammal_night", "offset_x": 5, "enabled": true}
+      ]
+    }
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "distro_version": "5.2.0",
+  "upload_version": "5.2.0",
+  "release_track": {
+    "current": "5.2.0",
+    "previous": "5.1.0",
+    "next": "5.3.0",
+    "status": "stable",
+    "released": true,
+    "tag": "v5.2.0",
+    "upload_tag": "v5.2.0",
+    "upload_note": "5.2.0 — C64 Ultimate hardware pair, 17 bootstrap platforms, AmmoLang ship timing",
+    "staging_note": "Promoted to stable 2026-06-27 — tag v5.0.0 ready, upload 4.9 pending final review",
+    "shipped_as": "5.0.0-stable",
+    "validation_tiers": [
+      "expert",
+      "heavy",
+      "release",
+      "belt",
+      "speed_bench",
+      "bench_charts",
+      "bench_refresh",
+      "test_gate"
+    ],
+    "roadmap": "5.0.0 \u2014 compiler symlink replacements, always-optimal belt, full build-essential fabric"
+  },
+  "g16_version": "16.2.0",
+  "pkgversion": "Grok16-5.2.0",
+  "tag": "v5.2.0",
+  "cxx_std_default": "gnu++26",
+  "c_std_default": "gnu17",
+  "driver": "unified",
+  "discern": [
+    "c",
+    "cxx",
+    "python",
+    "asm",
+    "rust",
+    "go",
+    "zig",
+    "fortran",
+    "d",
+    "ada",
+    "objc"
+  ],
+  "forever": true,
+  "belt": {
+    "version": "2.0",
+    "doctrine": "data/grok16-belt-doctrine.json",
+    "default_profile": "belt_2_0",
+    "baseline_profile": "belt_1_0",
+    "bench_triad": "scripts/grok16-bench-triad.sh",
+    "integrate": "scripts/grok16-integrate.sh"
+  },
+  "speed_bench": {
+    "report_version": "5.0.0",
+    "suite": "speed_demo",
+    "suite_version": "1.1.0",
+    "schema": "grok16-field-exec-full-bench/v5",
+    "self_monitor": "lib/g16_self_monitor.py",
+    "doctrine": "data/grok16-speed-bench-version.json",
+    "uncompiled": "data/field-exec-uncompiled-doctrine.json",
+    "scripts": {
+      "full_bench": "scripts/field-exec-full-bench.py",
+      "compare": "scripts/field-exec-compare.py",
+      "stage": "scripts/field-exec-stage.py"
+    },
+    "toolchain_hook": "exec-full-bench"
+  },
+  "power_sort": {
+    "plate": "lib/g16-power-sort-plate.py",
+    "doctrine": "data/g16-power-sort-doctrine.json",
+    "sections_run_cool": true,
+    "meld_citation": "ironclad:meld:2"
+  },
+  "hostess7_pair": {
+    "truth_adapt_floor": 58,
+    "secure_profile": "hostess_secure",
+    "forever_profile": "forever",
+    "mandate": "cmake/g16-field-mandate.cmake"
+  },
+  "gpy16_pair": {
+    "product": "GPY-16",
+    "driver": "gpy-16",
+    "version": "16.2.0",
+    "pkgversion": "GPY-16.2.0",
+    "builtin": true,
+    "tree": "python/",
+    "rule": "Built-in toolkit \u2014 g16 auto-discerns .py/.gpy; GrokVM in-tree; legacy GrokPy fallback last"
+  },
+  "toolkits": "data/grok16-toolkits.json",
+  "single_fabric": {
+    "doctrine": "data/grok16-single-fabric-doctrine.json",
+    "declaration": "Single fabric is the 2.0 technology \u2014 one belt amplitude, one field depth, linear sovereign time",
+    "safety": [
+      "depth_field_impossible",
+      "ironclad_field_sanity",
+      "sovereign_linear_time"
+    ]
+  },
+  "line_safety": {
+    "doctrine": "data/g16-power-sort-doctrine.json",
+    "narrow_band_width": 16,
+    "pipe_policy": "adjacent_narrow_only",
+    "plate_module": "lib/g16-power-sort-plate.py",
+    "consumer": "NewLatest/lib/field-chip-battery.py"
+  },
+  "test_gate": {
+    "script": "scripts/grok16-test-gate.sh",
+    "monitor": "scripts/g16-run-monitored.sh",
+    "modes": [
+      "smoke",
+      "full"
+    ],
+    "default_timeout_sec": 300,
+    "self_monitor": {
+      "module": "lib/g16_self_monitor.py",
+      "heartbeat_sec": 8,
+      "stall_drop": true,
+      "timeout_drop": true
+    }
+  },
+  "launch": {
+    "extension": ".launch",
+    "schema": "queen-launch/v1",
+    "verify": "scripts/grok16-launch-verify.sh",
+    "portable_chamber_root": "${GROK16_ROOT}/examples/<name>"
+  },
+  "platform_release": {
+    "manifest": "data/grok16-platform-release.json",
+    "script": "scripts/grok16-release.sh",
+    "targets": 17,
+    "hardware_pairs": 1,
+    "includes_riscv": true
+  },
+  "field_build": {
+    "manifest": "data/grok16-field-build.json",
+    "script": "scripts/grok16-field-build.sh",
+    "tools": ["g16-cmake", "g16-ninja", "g16-make", "g16-bison", "g16-flex", "g16-autoconf", "g16-automake"]
+  },
+  "build_essential": {
+    "manifest": "data/grok16-build-essential.json",
+    "script": "scripts/grok16-build-essential.sh",
+    "env": "scripts/g16-build-env.sh",
+    "replaces": "ubuntu:build-essential",
+    "vendor": "data/grok16-vendor-build-tools.json"
+  },
+  "compiler_symlinks": {
+    "manifest": "data/grok16-compiler-symlinks.json",
+    "script": "scripts/grok16-compiler-symlinks.sh",
+    "forge": "forge/compiler_symlink_tools.py",
+    "policy": "symlink_replacement_always_optimal"
+  },
+  "stack_fabric": {
+    "version": "1.0.0",
+    "doctrine": "data/g16-stack-fabric-doctrine.json",
+    "module": "lib/g16-stack-fabric.py",
+    "items": ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G12", "G13", "G14", "G15"]
+  },
+  "ammoos_pair": {
+    "version": "2.0.0",
+    "release": "AmmoOS 2.0 Stack",
+    "profile": "ammoos",
+    "integrate_manifest": "data/grok16-ammoos-integrate.json",
+    "review": "docs/AMMOOS-REVIEW-FOR-GROK-BUILD.md"
+  },
+  "notes": "Grok16 5.2.0 \u2014 C64 Ultimate hardware pair (g16 not on classic 6510), 17 bootstrap platforms, AmmoLang ship timing",
+  "mcp": {
+    "schema": "grok16-mcp/v1",
+    "server": "mcp/grok16_mcp_server.py",
+    "doctrine": "data/grok16-mcp.json",
+    "requirements": "requirements-mcp.txt"
+  },
+  "changelog": [
+    "5.2.0: C64 Ultimate hardware pair \u2014 pair-c64-ultimate; g16 does not run on classic MOS 6510 breadbin",
+    "5.2.0: AmmoLang ship route \u2014 grok16_ship.aml, timing ledger last_ms+3s hang guard, g16_self_monitor on RUN ops",
+    "5.2.0: pythong fallback \u2014 Grok16/bin/gpy-16 when GrokPy absent; 17 bootstrap + 1 hardware pair",
+    "5.1.0: stack fabric G1-G15 \u2014 sealed dist, receipt chain, silent bench, profile autoload, znetwork_wire, truth gate, thermal downgrade, ammoos stack release, 243 run, MCP stdio, single-fabric link, SPIR-V-only rtx, g1id meld",
+    "5.1.0: ZNetwork network-comparison.html + DESIGN.md comparison section",
+    "5.0.1: AmmoOS incorporation \u2014 ammoos profile, grok16-integrate.sh wiring, verify-ammoos-surfaces, smoke chamber",
+    "5.0.1: docs/AMMOOS-REVIEW-FOR-GROK-BUILD.md \u2014 Grok Build review input; pairs AmmoOS 1.9.9h",
+    "5.0.1: wiki + GitHub.io sync \u2014 integration, field platform, ZNetwork connect pages",
+    "5.0.0: wiki + GitHub.io rewrite \u2014 v1.0 framing, field platform warning, ZNetwork field wire design, live benchmarks",
+    "5.0.0: binary package \u2014 g16 prefix + AmmoCode executable + ammocode-settings.secure.json preconfigured",
+    "5.0.0: field_physics profile \u2014 belt_2_0 without -ffast-math + thermal guard for entropy/FP invariants",
+    "5.0.0: AmmoCode field instill \u2014 flat field, no subfields, defield when resting on field; binary sidecar + linker witness",
+    "5.0.0: upload_version 4.9.0 \u2014 GitHub assets ship as v4.9.0 while distro_version stays 5.0.0",
+    "5.0.0: stable release \u2014 belt_2_0 sovereign Field compiler, RELEASE-5.0.md, bench-triad + integrate gates green",
+    "5.0.0-staging: compiler symlink installer \u2014 gcc/g++/cc/c++/cpp \u2192 g16/g++16, always-optimal env, integrate hook",
+    "5.0.0-staging: forge compiler_symlink_tools.py + grok16-compiler-symlinks.sh verify/install",
+    "5.0.0-staging: GrokVM hot-loop + speed_demo kernel locals \u2014 gpy-16 ~13.5% faster than host CPython",
+    "4.8.0: build-essential superset \u2014 Ubuntu parity + binutils + autotools + utilities + dpkg wrappers in SG/Grok16",
+    "4.8.0: g16-build-env.sh \u2014 source one env for any codebase (CC/CXX/LD/CFLAGS/includes)",
+    "4.8.0: vendor-build-tools manifest \u2014 fetch/rebuild lane for make/cmake/ninja/bison in-tree",
+    "4.8.0: field-build fabric \u2014 g16-cmake/ninja/make/bison/flex wrappers + compat symlinks + forge integration",
+    "4.8.0: grok16-field-build.sh orchestrator \u2014 install/status/verify/discern + field-cmake delegation",
+    "4.8.0: toolkits.json field_build section \u2014 single build fabric doctrine",
+    "4.7.1: patch \u2014 AmmoOS pairing, bench refresh pipeline, wiki + Pages sync",
+    "4.7.0: bench-refresh \u2014 triad + compare + bench-all + exec-comprehensive + SVG charts + manual rebuild",
+    "4.7.0: bench-charts \u2014 speed-bench, triad, compare, bench-all SVGs from live JSON manifest",
+    "4.7.0: Toolchain stamps \u2014 gcc-14 host, pythong 16.1.0-gpy16 on speed bench reports",
+    "4.7.0: performance.html \u2014 live triad table + embedded comparison chart figures",
+    "4.2.0: Line safety plate \u2014 narrow_band_width 16, pipe_policy adjacent_narrow_only on power sort plate",
+    "4.2.0: CPU library \u2014 271 dies, Queen World UI, combinatorics + chip battery merge",
+    "4.2.0: FFNT Amouranth Bold SDF + secured clipboard font editor",
+    "4.2.0: Clipboard ghost wire \u2014 historic ring, clipboard_master, no visible manager",
+    "4.2.0: Self-monitor \u2014 g16_self_monitor.py heartbeat/stall drop-out on bench + tests",
+    "4.2.0: Speed bench v5 \u2014 metrics block, runner overhead, monitor stamps in JSON report",
+    "4.2.0: grok16-test-gate.sh \u2014 monitored per-step runs, smoke + full modes",
+    "4.0.0: MCP server \u2014 grok16_version, toolchain, rtx_gate, speed_bench, power_sort for Cursor/agents",
+    "4.0.0: Power sort plate \u2014 Ironclad meld, cool_sort thermal layers, sections pass to Queen/compat/drive",
+    "4.0.0: Combinatorics bridge runs_cool \u2014 thermal gate + power sort sections gate exec posture",
+    "4.0.0: Speed bench report v4.0.0 \u2014 distro tag v4.0.0, schema grok16-field-exec-full-bench/v4",
+    "3.0.0: Speed bench v3 \u2014 compile ms + execution ops/s with report/suite/distro version stamps",
+    "3.0.0: speed_demo suite \u2014 C, C++, CMake, Python (host + gpy-16) @ 3s window",
+    "3.0.0: Uncompiled doctrine \u2014 Python interpreter lane; C/C++ chamber compile-ahead",
+    "3.0.0: Queen-themed GitHub Pages manual \u2014 speed-bench, uncompiled, cmake-linking",
+    "3.0.0: exec-full-bench toolchain hook + docs/field-exec-full-bench.json publish",
+    "2.0.0: Single fabric doctrine \u2014 knowing fixed-size; parallel I/O fans in, truth one amplitude",
+    "2.0.0: Belt 2.0 profile \u2014 chunked redata (8192), wave-massive, OpenMP belt lanes, LTO+Hostess",
+    "1.0.0: Stable release \u2014 test-battery-release gate, linker -shared/-pie fix, profile/LTO/PGO hardening"
+  ]
+}

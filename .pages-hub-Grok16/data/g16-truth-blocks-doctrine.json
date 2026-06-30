@@ -1,0 +1,58 @@
+{
+  "schema": "g16-truth-blocks-doctrine/v1",
+  "title": "Truth blocks — bigger code, more blocks, free melding",
+  "motto": "Carve verified truth blocks from iron-plate twins. More blocks, bigger bytes — meld becomes free.",
+  "module": "lib/field_truth_blocks.py",
+  "iron_plate_ref": "data/g16-iron-plate-doctrine.json",
+  "block_tiers": {
+    "kernel": {
+      "min_kernel_markers": 3,
+      "max_bytes": 8192,
+      "label": "verified kernel slice"
+    },
+    "module": {
+      "min_bytes": 2048,
+      "min_lines": 60,
+      "min_kernel_markers": 3,
+      "label": "single-file truth module"
+    },
+    "mega": {
+      "min_bytes": 10000,
+      "min_lines": 120,
+      "min_kernel_markers": 4,
+      "promote_from": "module",
+      "label": "bigger verified module — counts double toward free meld bytes"
+    },
+    "chamber": {
+      "min_total_bytes": 8000,
+      "min_faces": 2,
+      "requires_iron_twin": true,
+      "label": "whole chamber truth block"
+    },
+    "stack": {
+      "min_chambers": 1,
+      "min_total_bytes": 12000,
+      "min_eligible_modules": 1,
+      "label": "field-wide stack — all chambers fused into one bigger truth block"
+    }
+  },
+  "free_meld": {
+    "min_blocks": 2,
+    "min_total_bytes": 12000,
+    "min_chamber_blocks": 1,
+    "mega_byte_multiplier": 2,
+    "compile_gate_off": true,
+    "fuse_cost": "free",
+    "levels": {
+      "locked": "need more verified truth blocks",
+      "warming": "blocks growing — compile gate still on",
+      "ready": "one more block or bytes unlocks free meld",
+      "free": "plate fuse without compile friction; BSP + sense pick up from meld"
+    },
+    "statement": "Bigger truth blocks and more of them → free plate melding without compile friction"
+  },
+  "meld_plate": {
+    "panel": "g16-truth-blocks-panel.json",
+    "plate_key": "truth_blocks"
+  }
+}

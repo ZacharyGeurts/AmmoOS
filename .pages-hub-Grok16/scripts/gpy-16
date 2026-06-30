@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# GPY-16 — Grok16 built-in Python toolkit (GrokVM + g16 auto-discern)
+set -euo pipefail
+GROK16_ROOT="${GROK16_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+G16_PREFIX="${G16_PREFIX:-$GROK16_ROOT}"
+GPY16_ROOT="${GPY16_ROOT:-$GROK16_ROOT/python}"
+SG_ROOT="${SG_ROOT:-${GROK16_SG_ROOT:-$(cd "$GROK16_ROOT/.." && pwd)}}"
+export GROK16_ROOT G16_PREFIX GPY16_ROOT GROKPY_ROOT="$GPY16_ROOT" PYTHONG_ROOT="$GPY16_ROOT" SG_ROOT
+export GROKPY_FIELD=1 GPY16_FIELD=1 PYTHONG_FIELD=1 GPY16_BUILTIN=1
+export PATH="$G16_PREFIX/bin:$G16_PREFIX/libexec/grok16:$GROK16_ROOT/bin:$PATH"
+exec python3 "$GROK16_ROOT/python/driver/gpy16_driver.py" "$@"

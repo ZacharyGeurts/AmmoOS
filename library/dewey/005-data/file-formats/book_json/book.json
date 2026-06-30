@@ -1,0 +1,13 @@
+{
+  "id": "format-book_json",
+  "title": "Dewey Book Card",
+  "dewey": "004",
+  "format": "registry-entry",
+  "family": "library",
+  "extensions": [
+    "book.json"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/book_json.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "exploring_the_stack",
+  "title": "Exploring the Stack",
+  "author": "Hostess 7 · Field Stack",
+  "dewey": "000",
+  "publisher": "Field",
+  "license": "Field stack doctrine",
+  "grade_band": "operator",
+  "subject": "field_stack",
+  "format": "textbook",
+  "journal": "textbook",
+  "text": "Textbook/exploring-the-stack.txt",
+  "manifest": "Textbook/exploring-the-stack-manifest.json",
+  "cover": "/world/assets/combinatronic/books/field.png",
+  "ready": true,
+  "updated": "2026-06-30T00:00:00Z"
+}

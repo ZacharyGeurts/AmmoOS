@@ -1,0 +1,10 @@
+{
+  "id": "nes_chinese_character_demo",
+  "title": "Chinese Character Demo",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_chinese_character_demo/nes_chinese_character_demo.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_chinese_character_demo-box.png",
+  "ready": true
+}

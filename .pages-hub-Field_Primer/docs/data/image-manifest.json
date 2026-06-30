@@ -1,0 +1,201 @@
+{
+  "version": 5,
+  "edition": "Field Technology v5 — Serious Book · Textbook of 2026",
+  "axioms": [
+    "Reality is 3D.",
+    "Time is linear.",
+    "Energy can be moved."
+  ],
+  "base": "assets/images",
+  "raw_github": "https://raw.githubusercontent.com/ZacharyGeurts/Field_Primer/main/assets/images",
+  "figures": {
+    "hero": {
+      "file": "v3/science/textbook-hero.jpg",
+      "alt": "Textbook hero — field grid",
+      "caption": "Field Technology v4 site hero",
+      "chapter": null
+    }
+  },
+  "chapters": {
+    "01": {
+      "slug": "01-preface",
+      "title": "Preface — Us, God, Truth & Math",
+      "subtitle": "Truth · Math · Existence — Zac, Grok, and all of us",
+      "image": "chapters/ch01-illustration-theory.jpg",
+      "alt": "Scalar field heatmap",
+      "accent": "phi",
+      "wiki": "01-Preface-What-Is-A-Field"
+    },
+    "02": {
+      "slug": "02-fields-pixels-packets",
+      "title": "Three Dimensions of State",
+      "image": "fabric-triple.jpg",
+      "alt": "Three field families",
+      "accent": "flow",
+      "wiki": "02-Fields-From-Pixels-To-Packets"
+    },
+    "03": {
+      "slug": "03-thermodynamics",
+      "title": "Moving Energy — Thermodynamics",
+      "image": "v3/science/ch03-energy-transfer.jpg",
+      "alt": "Coupled channels",
+      "accent": "thermo",
+      "wiki": "03-Thermodynamics-In-The-Engine"
+    },
+    "04": {
+      "slug": "04-entropy",
+      "title": "Irreversibility & Receipts",
+      "image": "entropy-chapter.jpg",
+      "alt": "Entropy accounting",
+      "accent": "thermo",
+      "wiki": "04-Entropy-Receipts-And-Oracles"
+    },
+    "05": {
+      "slug": "05-packet-field",
+      "title": "Defensive Perimeter — Packet Field",
+      "image": "packet-field.jpg",
+      "alt": "Packet field",
+      "accent": "phi",
+      "wiki": "05-Packet-Field"
+    },
+    "06": {
+      "slug": "06-rf-signals",
+      "title": "Signal Shell — RF & Weave",
+      "image": "chapters/ch06-planetary-weave.jpg",
+      "alt": "Visual RF shell",
+      "accent": "flow",
+      "wiki": "06-RF-Signals-Planetary-Weave"
+    },
+    "07": {
+      "slug": "07-gpu-engine",
+      "title": "Offensive Dispatch — GPU Engine",
+      "image": "chapters/ch07-gpu-engine.jpg",
+      "alt": "GPU dispatch",
+      "accent": "phi",
+      "wiki": "07-GPU-Field-Engine"
+    },
+    "08": {
+      "slug": "08-field-die",
+      "title": "Die-Resident Universe",
+      "image": "field-die.jpg",
+      "alt": "Field Die",
+      "accent": "flow",
+      "wiki": "08-Field-Die-And-Data-Bus"
+    },
+    "09": {
+      "slug": "09-fcc-tesla",
+      "title": "Stability Under Load — FCC & Tesla",
+      "image": "chapters/ch09-tesla-valve.jpg",
+      "alt": "Tesla valve metaphor",
+      "accent": "thermo",
+      "wiki": "09-FCC-Tesla-Stability"
+    },
+    "10": {
+      "slug": "10-spiderweb",
+      "title": "Hardware Mirror — Spiderweb",
+      "image": "chapters/ch10-spiderweb.jpg",
+      "alt": "Spiderweb graph",
+      "accent": "phi",
+      "wiki": "10-Hardware-Spiderweb"
+    },
+    "11": {
+      "slug": "11-observability",
+      "title": "Reading the Battlefield",
+      "image": "chapters/ch11-observability.jpg",
+      "alt": "Observability stack",
+      "accent": "flow",
+      "wiki": "11-Observability-Operator-Tools"
+    },
+    "12": {
+      "slug": "12-reality-theory",
+      "title": "The Rocks We Do Not Hide",
+      "image": "chapters/ch12-honesty.jpg",
+      "alt": "Honesty mirror",
+      "accent": "thermo",
+      "wiki": "12-Operator-Reality-Vs-Theory"
+    },
+    "13": {
+      "slug": "13-landauer-deep",
+      "title": "Landauer Deep Dive — Thermodynamic Receipts",
+      "image": "chapters/ch13-landauer-plate.jpg",
+      "alt": "Landauer layer",
+      "accent": "thermo",
+      "wiki": "04-Entropy-Receipts-And-Oracles"
+    },
+    "14": {
+      "slug": "14-shannon-oracle",
+      "title": "Shannon Oracle — Storm Thresholds",
+      "image": "chapters/ch14-shannon-storm.jpg",
+      "alt": "Shannon layer",
+      "accent": "flow",
+      "wiki": "04-Entropy-Receipts-And-Oracles"
+    },
+    "15": {
+      "slug": "15-maxwell-gpu",
+      "title": "Maxwell on the GPU — Wave Coupling",
+      "image": "fabric-triple.jpg",
+      "alt": "Maxwell coupling",
+      "accent": "phi",
+      "wiki": "03-Thermodynamics-In-The-Engine"
+    },
+    "16": {
+      "slug": "16-love-coupling",
+      "title": "Love — The Coupling Constant",
+      "image": "v3/science/fabric-schematic.jpg",
+      "alt": "Coupling schematic",
+      "accent": "flow",
+      "wiki": "01-Preface-What-Is-A-Field"
+    },
+    "17": {
+      "slug": "17-god-boundary",
+      "title": "God at the Holographic Boundary",
+      "image": "field-die.jpg",
+      "alt": "Holographic boundary",
+      "accent": "thermo",
+      "wiki": "12-Operator-Reality-Vs-Theory"
+    },
+    "18": {
+      "slug": "18-operator-covenant",
+      "title": "The Operator Covenant — Long Form",
+      "image": "chapters/ch18-covenant-ladder.jpg",
+      "alt": "Covenant",
+      "accent": "phi",
+      "wiki": "12-Operator-Reality-Vs-Theory"
+    },
+    "19": {
+      "slug": "19-sovereign-time",
+      "title": "Sovereign Time Sync — Terror-Threat Posture",
+      "subtitle": "Seal forward · verify at receive · grep SQUIDGIE",
+      "image": "chapters/ch19-sovereign-time.jpg",
+      "alt": "Sovereign time",
+      "accent": "thermo",
+      "wiki": "13-Sovereign-Time-Sync"
+    },
+    "20": {
+      "slug": "20-public-services",
+      "title": "Public DNS, DHCP & Time — 2026",
+      "subtitle": "Truth Resolver · Field DHCP · Sovereign NTP",
+      "image": "chapters/ch20-public-services.jpg",
+      "alt": "Public services",
+      "accent": "flow",
+      "wiki": "14-Public-Services-2026"
+    },
+    "21": {
+      "slug": "21-field-browser-queen",
+      "title": "Field Browser Queen — Hold All Gates",
+      "subtitle": "MP4 mandatory · WebRTC gated · KILROY sovereign field",
+      "image": "chapters/ch21-queen-browser.jpg",
+      "alt": "Queen browser",
+      "accent": "phi",
+      "wiki": "15-Field-Browser-Queen"
+    },
+    "22": {
+      "slug": "22-glossary",
+      "title": "Glossary — Field Technology v5",
+      "image": "chapters/ch22-glossary-map.jpg",
+      "alt": "Glossary",
+      "accent": "flow",
+      "wiki": "Glossary"
+    }
+  }
+}

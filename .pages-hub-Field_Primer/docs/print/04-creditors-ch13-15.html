@@ -1,0 +1,456 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" />
+<title>Volume 04 — Creditor Deep Dives (Chapters 13–15)</title>
+<link rel="stylesheet" href="../css/field-primer.css" />
+<link rel="stylesheet" href="../css/chapters.css" />
+<link rel="stylesheet" href="../css/print.css" />
+<style>body.print-volume{background:#fff;color:#1a1a1a;}</style>
+</head><body class="print-volume chapter-page">
+<div class="volume-title-page">
+<p style="letter-spacing:0.12em;text-transform:uppercase;color:#8b6914">Field Technology v5</p>
+<h1>Volume 04 — Creditor Deep Dives (Chapters 13–15)</h1>
+<p>Zachary Robert Geurts · Field Primer PDF edition</p>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 13</p>
+<h1>Landauer Deep Dive — Thermodynamic Receipts</h1>
+<p class="eyebrow">Chapter 13 · Creditor deep dive · Thermodynamic receipts</p>
+
+<div class="on-the-way">
+<h2 id="toc-13-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Landauer taught the floor on erasing information. On the way you will connect <code>E_min = k_B T ln 2</code> to <code>entropyThisFrame</code> proxy — honoring the creditor without faking wattmeter readings.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch13-landauer-plate.jpg" alt="Landauer layer" loading="lazy" /><figcaption>On the way — Landauer layer</figcaption></figure>
+<ul class="on-the-way-journey"><li>Bit erasure thermodynamic bound</li><li>Proxy integral semantics in-engine</li><li>Comparative science across sessions</li><li>Rock: not joules from stderr</li></ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-13-1-introduction-why-landauer-after-the-rocks-tabl">1. Introduction — why Landauer after the rocks table</a></li><li><a href="#toc-13-2-landauer-x27-s-bound-e-min-k-b-t-ln-2">2. Landauer&#x27;s bound — E_min = k_B T ln 2</a></li><li><a href="#toc-13-3-from-maxwell-x27-s-demon-to-the-operator-keybo">3. From Maxwell&#x27;s demon to the operator keyboard</a></li><li><a href="#toc-13-4-thermoaccountant-structure-binding-2">4. ThermoAccountant structure — binding 2</a></li><li><a href="#toc-13-5-decomposing-entropythisframe">5. Decomposing entropyThisFrame</a></li><li><a href="#toc-13-6-avgboundarythermo-and-edge-discipline">6. avgBoundaryThermo and edge discipline</a></li><li><a href="#toc-13-7-freeenergyincome-and-sealed-time">7. freeEnergyIncome and sealed time</a></li><li><a href="#toc-13-8-entropy-floor-second-law-as-code">8. Entropy floor — second law as code</a></li><li><a href="#toc-13-9-lab-versus-log-the-rock-restated">9. Lab versus log — the rock restated</a></li><li><a href="#toc-13-10-comparative-practice-without-watt-meters">10. Comparative practice without watt meters</a></li><li><a href="#toc-13-11-shannon-oracle-separation">11. Shannon oracle separation</a></li><li><a href="#toc-13-12-historical-weight-1961-in-a-2026-textbook">12. Historical weight — 1961 in a 2026 textbook</a></li><li><a href="#toc-13-operator-drill-13-a-baseline-grep">Operator drill 13.A — baseline grep</a></li><li><a href="#toc-13-operator-drill-13-b-coupling-a-b">Operator drill 13.B — coupling A/B</a></li></ol></nav>
+
+<h2 id="toc-13-1-introduction-why-landauer-after-the-rocks-tabl">1. Introduction — why Landauer after the rocks table</h2>
+<p>Chapter 4 introduced entropy as the receipt that time ran forward. Chapter 12 named the rock that separates poetry from measurement: the value printed as entropyThisFrame inside ThermoAccountant is a proxy integral labeled Metaphor until calorimetry says otherwise. This chapter is the creditor deep dive that explains the theory behind that label without walking it back.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch13-landauer-plate.jpg" alt="Landauer three plates" loading="lazy" /><figcaption>Figure 13.2 — Three plates: GPU proxy, fabric floor, file oracle — never summed. <span class="claim-tie">Claim: Landauer floor as proxy language — not wattmeter</span></figcaption></figure>
+
+<p>Rolf Landauer is not a mascot on our cover art. He is a physicist whose 1961 result linked logical irreversibility to thermodynamic cost. We honor him at ../creditors/landauer.html with portrait and tribute. We honor Clausius and Boltzmann at ../creditors/clausius-boltzmann.html for the entropy concept that precedes bit erasure. Field Technology stands on their math and refuses to pretend their laboratories became our Vulkan bindings.</p>
+<p>By the end of this chapter you should articulate Landauer's bound in symbols and plain English, enumerate what ThermoAccountant integrates each dispatch, and explain why comparative proxy curves help operators even when they are not utility bills from the power company.</p>
+<h2 id="toc-13-2-landauer-x27-s-bound-e-min-k-b-t-ln-2">2. Landauer's bound — E_min = k_B T ln 2</h2>
+<p>Landauer's theorem: any logically irreversible manipulation of information must be accompanied by entropy increase elsewhere. Erasing one bit at temperature T has a minimum energy cost:</p>
+<p>The constant k_B is Boltzmann's constant, approximately 1.380649×10⁻²³ joules per kelvin. The factor ln 2 appears because one bit represents ln 2 nats of uncertainty resolved — the thermodynamic price of forgetting which branch you were on.</p>
+<p>At room temperature near 300 K, E_min is on the order of 2.9×10⁻²¹ joules per bit. Individually negligible. Collectively decisive when DRAM refreshes, caches evict, log files rotate, and framebuffers swap at billions of events per second. The bound is a floor in principle, not a direct readout from stderr in AMOURANTHRTX.</p>
+<p>Charles Bennett's reversible computing program shows that if you never erase, you can approach zero dissipation in the limit. Real machines erase constantly. Your engine erases when it drops history, when it clamps away distinguishable states, when it commits to one frame over another. ThermoAccountant exists because operators should practice thinking irreversibly while grep remains honest.</p>
+<h2 id="toc-13-3-from-maxwell-x27-s-demon-to-the-operator-keybo">3. From Maxwell's demon to the operator keyboard</h2>
+<p>Maxwell imagined a demon sorting fast and slow molecules at a gate. Szilard placed information-bearing memory in the loop. Landauer priced erasing that memory. The paradoxes teach one discipline: information is physical.</p>
+<p>In our stack the demon is not a sprite in CANVAS.comp. The demon is you — choosing injection strength, choosing whether to run maintenance, choosing whether to preserve coherence with the previous frame. Each choice has a thermodynamic story even when the story is logged as proxy, not watts.</p>
+<p>This is why Field Technology treats offense and defense as the same literacy applied to different writable surfaces. Dispatch writes the next tick. Logs record that the tick was not free. Chapter 18 will name your conscience at the keyboard; here we name the accountant beside it.</p>
+<h2 id="toc-13-4-thermoaccountant-structure-binding-2">4. ThermoAccountant structure — binding 2</h2>
+<p>ThermoAccountant is Implemented at Vulkan binding 2. It is populated every dispatch_canvas() and mirrored into data_bus slots 24 through 28 for HUD and grep correlation.</p>
+<p>The struct fields are not decorative names. entropyThisFrame is the per-frame proxy integral discussed throughout this chapter. avgBoundaryThermo averages boundary entropy density — where the fabric meets clamps and eventually where rendering meets the operator's eye. prevMaintCost is the coherence tax paid to remember the previous frame responsibly. freeEnergyIncome couples sealed session time with structured input activity. steps counts dispatches — the heartbeat that proves time ran forward in the engine loop.</p>
+<p>When stderr prints THERMO lines, treat them as shadows of this struct on the host CPU. When fabric moves but these shadows stay flat, suspect broken telemetry before suspecting physics betrayal.</p>
+<h2 id="toc-13-5-decomposing-entropythisframe">5. Decomposing entropyThisFrame</h2>
+<p>Operators should read entropyThisFrame as a sum of interpretable stories rather than a single mystical number:</p>
+<p>Field work accumulates from coupled evolution across Phi, Thermo, and Flow when FieldCoupling is non-zero. Diffusion, wave steps, and cross-channel mixing each contribute. Turning FieldCoupling to zero for pedagogy isolates channels; turning it up reveals Maxwell's neighborhood on a grid.</p>
+<p>Probe dissipation tracks intentional injection — mouse paths, operator probes, InjectStrength deposits. An idle canvas should show low probe cost. Aggressive injection should raise it. If visuals respond but probe cost does not, fix telemetry before writing papers.</p>
+<p>prevMaintCost rises when the engine pays to stay coherent with history — stability is not free. High maintenance with subtle visual change is often legitimate, not automatically a leak bug.</p>
+<p>The Landauer proxy term uses k_B T ln 2 as vocabulary tied to activity scales. It is not a claim that the driver counted bit erasures this frame. Temperature in proxy space may reference boundary thermo or body-temperature seeding — read Chapter 12 before quoting numbers externally.</p>
+<h2 id="toc-13-6-avgboundarythermo-and-edge-discipline">6. avgBoundaryThermo and edge discipline</h2>
+<p>Boundaries are where fields meet constraints. avgBoundaryThermo summarizes entropy density near those edges. Interpreting it requires comparative habit: rising boundary thermo with calm interior may mean energy exits correctly through edges. Violent interior with flat boundary may mean internal clamps absorb what should have exited.</p>
+<p>Do not equate this with GPU junction temperature from nvidia-smi. Package thermals and simulation boundary accounting live in different layers. Both can be true. Conflating them in marketing is how demo culture sells thermodynamic rendering without receipts.</p>
+<p>Chapter 17 will speak sacred language about holographic boundaries. This chapter keeps the engineering account: edges cost stories in logs.</p>
+<h2 id="toc-13-7-freeenergyincome-and-sealed-time">7. freeEnergyIncome and sealed time</h2>
+<p>freeEnergyIncome links sealed session genesis with input activity. TotalTime::seal() in the engine spine locks session start into FieldSocket::sealed_time so frame-rate jitter cannot rewrite physics time. Income metaphors usable drive — not free money, but structured capacity in the fabric budget.</p>
+<p>Chapter 19 extends sealed time across hosts with sovereign sync and SQUIDGIE detection. Here, note the sibling relationship: Landauer receipts and time receipts both refuse retroactive myth. You seal forward. You verify at receive. Thermo steps and monotonic clocks should move together in healthy sessions.</p>
+<h2 id="toc-13-8-entropy-floor-second-law-as-code">8. Entropy floor — second law as code</h2>
+<p>clearFieldImages() seeds thermo with roughly 0.015 minimum to prevent unphysical reversibility. The second law appears as engineering bias: diffusion injects minimum noise. You cannot undo a frame by wishing.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch03-coupled-fabric.jpg" alt="Coupled fabric floor" loading="lazy" /><figcaption>Figure 13.4 — Entropy floor on fabric channel — second law as engineering guard. <span class="claim-tie">Claim: FieldCoupling moves energy between fabric channels</span></figcaption></figure>
+
+<p>Students ask why bias noise instead of pure reversible simulation. Because operators live in dissipative hardware, because panels archive monotonic jsonl, because honesty prefers a labeled floor to silent zero entropy while texels clearly moved.</p>
+<h2 id="toc-13-9-lab-versus-log-the-rock-restated">9. Lab versus log — the rock restated</h2>
+<p>Rock: proxy integrals are comparative receipts, not utility bills.</p>
+<p>If entropy reads zero while fabric texels move, dispatch failed or telemetry broke. Physics refuses to lie for you. If entropy spikes while idle, investigate maintenance bleed, stuck probes, or runaway coupling — still a signal, still not joules from the wall meter.</p>
+<p>Modern GPU calorimetry is hard: fast switching, distributed heat, driver opacity. We do not claim stderr equals junction watts. We claim comparative curves help experts form hypotheses when lab gear arrives — hypothesis, not verdict.</p>
+<h2 id="toc-13-10-comparative-practice-without-watt-meters">10. Comparative practice without watt meters</h2>
+<p>Expert operators compare sessions, not absolutes:</p>
+<p>Did steps increment? If not, dispatch did not run — CI signal even headless. Did injection raise probe dissipation relative to idle? If not, injection path may be broken. Does raising FieldCoupling raise field work? If not, coupling knob path may be disconnected. Does prevMaintCost dominate while visuals freeze? Maintenance may be buying stability. Does avgBoundaryThermo trend with clamp changes? Boundary story may be healthy.</p>
+<p>None of these questions require believing proxies are SI joules. All require believing the engine should tell a consistent story when time runs forward.</p>
+<h2 id="toc-13-11-shannon-oracle-separation">11. Shannon oracle separation</h2>
+<p>Chapter 14 treats Shannon entropy H on files in NEXUS. ThermoAccountant lives in the GPU dispatch loop. Same word entropy, different layers. Vendors fuse them into one dashboard; Field Technology refuses.</p>
+<p>Landauer prices bit erasure thermodynamically. Shannon measures surprise in symbol distributions. Boltzmann links microstates to macro entropy. Keep creditors named and separated. Read ../creditors/shannon.html when file storms rise; read this chapter when frame receipts matter.</p>
+<h2 id="toc-13-12-historical-weight-1961-in-a-2026-textbook">12. Historical weight — 1961 in a 2026 textbook</h2>
+<p>Landauer worked when computers filled rooms. His bound survived vacuum tubes, CMOS, GPUs, and will survive whatever compute substrate follows. As devices approach atomic limits, per-bit thermodynamics becomes engineering constraint rather than philosophy footnote.</p>
+<p>AMOURANTHRTX is not a laboratory Landauer engine. It is operator training: grep irreversibility before someone sells reversible cloud myth. The textbook is serious because it teaches mechanism and labels rocks visible.</p>
+<h2 id="toc-13-operator-drill-13-a-baseline-grep">Operator drill 13.A — baseline grep</h2>
+<pre class="eq">./linux.sh run 2>&1 | tee ch13-run.log
+# Classic canvas: idle 30s, inject 60s
+grep -E 'THERMO|entropy|Boundary|prevMaint|steps' ch13-run.log | tail -60</pre>
+
+<h2 id="toc-13-operator-drill-13-b-coupling-a-b">Operator drill 13.B — coupling A/B</h2>
+<pre class="eq"># Session A: FieldCoupling = 0, 120s
+# Session B: FieldCoupling = 1.0, 120s
+# Compare entropyThisFrame distributions — field work should rise with coupling</pre>
+
+<h2 id="toc-13-operator-drill-13-c-data-bus-mirror">Operator drill 13.C — data_bus mirror</h2>
+<pre class="eq"># Correlate HUD / debug read of data_bus[24-28] with stderr THERMO lines</pre>
+
+<figure class="figure"><img src="../assets/images/entropy-chapter.jpg" alt="Entropy receipts" loading="lazy" /><figcaption>Figure 13.1 — Theory floor, proxy ledger, honest label.</figcaption></figure>
+
+<h2 id="toc-13-study-questions">Study questions</h2>
+<ol>
+<li>State Landauer's bound in symbols and plain English. Why does ln 2 appear?</li>
+<li>Enumerate ThermoAccountant fields and their roles.</li>
+<li>Why must entropyThisFrame stay labeled Metaphor in public writing?</li>
+<li>Fabric moves, entropy zero — what do you check first?</li>
+<li>Explain prevMaintCost as coherence tax.</li>
+<li>How is avgBoundaryThermo different from GPU junction temperature?</li>
+<li>What is the entropy floor defending against?</li>
+<li>Name three comparative uses of proxy curves.</li>
+<li>How do Landauer receipts relate to sealed time?</li>
+<li>Distinguish ThermoAccountant entropy from Shannon file H.</li>
+<li>Read ../creditors/landauer.html — what does the love block claim?</li>
+<li>When would you escalate from proxy grep to laboratory calorimetry?</li>
+</ol>
+<p>Tributes: <a href="../creditors/landauer.html">Rolf Landauer</a> · <a href="../creditors/clausius-boltzmann.html">Clausius &amp; Boltzmann</a> · <a href="../creditors/index.html">All creditors</a></p>
+<p><a href="14-shannon-oracle.html">Chapter 14 — Shannon Oracle →</a></p>
+<h2 id="toc-13-13-bennett-and-reversible-computing-contrast-cas">13. Bennett and reversible computing — contrast case</h2>
+<p>Charles Bennett showed that computation can be logically reversible if you never erase information — trading memory for heat avoidance. AMOURANTHRTX is not a reversible computer. It maintains frame history, pays prevMaintCost, injects entropy floor noise, and commits to one dispatched state per tick.</p>
+<p>Teaching Bennett beside Landauer clarifies what our proxy is not claiming. We are not selling infinite efficiency. We are training operators to see that commits have stories. When you rotate logs, wipe a texture, or reinitialize guest RAM on the Field Die, you are performing erasures in the engineering sense even when no one prints E_min in joules.</p>
+
+<h2 id="toc-13-14-data-bus-forensic-walkthrough">14. data_bus forensic walkthrough</h2>
+<p>Slot 24 mirrors entropyThisFrame for HUD consumers. Slot 25 carries avgBoundaryThermo. Slots 26–28 complete the accountant picture alongside steps mirrored through THERMO stderr channels. When debugging, read headers in Pipeline.hpp and FieldRtxFieldAbs.hpp before trusting a screenshot of the HUD.</p>
+<p>Forensic discipline: capture run.log, capture a fabric screenshot, capture data_bus readout if your debug build exposes it. Three witnesses, one session. If they disagree, telemetry is broken — not physics.</p>
+
+<h2 id="toc-13-15-headless-ci-and-steps-counter">15. Headless CI and steps counter</h2>
+<p>Headless dispatch still increments steps. CI pipelines that only check exit code miss half the story. A passing build with frozen steps is a silent dispatch failure. Landauer discipline in CI means asserting monotonic steps across golden frames.</p>
+<p>Document golden THERMO ranges as comparative bands, not absolute watts. Your lab temperature differs from CI runners; proxy shape should still match within tolerance when shaders match.</p>
+
+<h2 id="toc-13-16-writing-about-thermodynamics-in-papers">16. Writing about thermodynamics in papers</h2>
+<p>When citing Landauer in academic work, cite Landauer 1961 and Bennett reviews from primary literature. When citing AMOURANTHRTX, cite bindings and label proxy integrals Metaphor in figure captions. Mixing citations without labels is how honest engineers get embarrassed in peer review.</p>
+<p>Field Primer exists so your students do not embarrass you: Chapter 12 table is copy-pasteable into lab reports as honesty boilerplate.</p>
+
+<h2 id="toc-13-17-failure-mode-catalog">17. Failure mode catalog</h2>
+<p>Zero entropy with moving texels: dispatch or mirror failure. Idle entropy spike: maintenance bleed or stuck probe. Coupling knob ineffective: FieldCoupling not reaching CANVAS.comp path. Boundary flat with violent interior: clamp fighting solver. Each failure maps to grep verbs before opening gdb.</p>
+
+<h2 id="toc-13-18-bridge-to-shannon-and-maxwell">18. Bridge to Shannon and Maxwell</h2>
+<p>Landauer is the receipt floor. Shannon (Chapter 14) is file surprise. Maxwell (Chapter 15) is spatial coupling that raises field work. The trilogy of creditor chapters 13–15 should be assigned as one two-week module with three grep labs.</p>
+
+
+<div class="creditor-workshop">
+<h2 id="toc-13-creditor-deep-dive-workshop-complete-once">Creditor deep-dive workshop — complete once</h2>
+<p>Chapters 13–15 share one drill set — complete after reading all three creditor chapters.</p>
+<ol>
+<li><strong>Primary source:</strong> Footnote one Landauer, Shannon, or Maxwell paper (not Wikipedia alone).</li>
+<li><strong>Grep proof:</strong> One <code>grep</code> command tying this chapter's equation to an <span class="tag impl">Implemented</span> or <span class="tag meta">Metaphor</span> label from Chapter 12.</li>
+<li><strong>Layer separation:</strong> Write three sentences — GPU proxy, file oracle, theory — never summed into one entropy number.</li>
+<li><strong>Comparative run:</strong> Two matched sessions; plot <code>entropyThisFrame</code> or file H trend — comparative only, no joule billing.</li>
+</ol>
+</div>
+
+<h2 id="toc-13-operator-journal-landauer-and-thermoaccountant">Operator journal — Landauer and ThermoAccountant</h2>
+<p>Maintain a paper or markdown operator journal for Landauer and ThermoAccountant. Each drill entry: date, hardware, driver, git hash, three THERMO or jsonl lines, one surprise, one label (Implemented / Metaphor / Philosophy). Journals become your personal creditor — future you inherits coupled state from past you. Bring the journal to Chapter 18 covenant audit drill 18.A as evidence.</p>
+
+<h2 id="toc-13-reading-companion-landauer-and-thermoaccountant">Reading companion — Landauer and ThermoAccountant</h2>
+<p>This reading companion reinforces Landauer and ThermoAccountant for self-study tracks. Week one: read the chapter straight through with Chapter 12 open. Week two: complete all operator drills on hardware you own. Week three: write a one-page creditor tribute response linking ../creditors/ reading to a grep result from your machine. Week four: teach another human one section using the three-tag labeling exercise. Field Technology v5 measures success in reproduced receipts, not in vibes.</p>
+<p>Cross-links: Chapter 4 entropy receipts, Chapter 5 packet field, Chapter 8 data bus, Chapter 10 Spiderweb mirror, Chapter 11 observability, Chapters 16–18 sacred covenant. Landauer and ThermoAccountant is not an island — it is a creditor lens on the same stack you already run.</p>
+<p>Honesty reminder: AMOURANTHRTX, NEXUS-Shield, Queen, and Field Primer have different licenses. Teaching from this chapter does not automatically license commercial engine use. Point students to product headers and FIELD-TECHNOLOGY-V5.md for edition boundaries.</p>
+
+<h2 id="toc-13-chapter-closing-landauer-and-thermoaccountant">Chapter closing — Landauer and ThermoAccountant</h2>
+<p>Chapter 13 closes the creditor loop on irreversibility. You now hold theory (E_min), structure (ThermoAccountant), practice (grep drills), and honesty (Metaphor label) in one hand. In the other hand, hold ../creditors/landauer.html open long enough to read the love block: tenderness toward bits is not softness — it is refusal to erase another operator's clarity in haste. Carry that into Chapter 14 where a different entropy measures file surprise, not frame heat.</p>
+
+
+
+
+<div class="evidence-anchor" id="evidence-ch13">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Landauer floor</td><td>k_B T ln 2 per bit erased</td><td><span class="tag meta">Metaphor</span></td><td><code>Theory — GPU uses proxy</code></td></tr><tr><td>ThermoAccountant</td><td>Operational receipt</td><td><span class="tag meta">Metaphor</span></td><td><code>entropyThisFrame integral</code></td></tr><tr><td>Comparative sessions</td><td>Δproxy across runs</td><td><span class="tag impl">Implemented</span></td><td><code>Valid grep science</code></td></tr><tr><td>Wattmeter billing</td><td>Package power as Landauer</td><td><span class="tag meta">Metaphor</span></td><td><code>Explicit rock — forbidden</code></td></tr></tbody></table>
+<pre class="eq">E_min = k_B T ln 2  |  ΔS_proxy between sealed sessions</pre>
+<pre class="eq">grep THERMO run.log | awk &#x27;{print $NF}&#x27; | sort -n | tail -5</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>docs/creditors/landauer.html</code></li><li><code>Navigator/engine/ThermoAccountant.hpp</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-13-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Landauer floor honored in proxy language — humility without wattmeter fraud. Comparative receipts across sessions remain valid science.</p>
+</div>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 14</p>
+<h1>Shannon Oracle — Storm Thresholds</h1>
+<p class="eyebrow">Chapter 14 · Creditor deep dive · Shannon Oracle</p>
+
+<div class="on-the-way">
+<h2 id="toc-14-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Shannon measured surprise in symbols. On the way you will compute <code>H = −Σ p_i log₂ p_i</code> on file payloads, tune calm/alert/storm thresholds, and keep the oracle nurse-call separate from gatekeeper gavel.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch14-shannon-storm.jpg" alt="Shannon layer" loading="lazy" /><figcaption>On the way — Shannon layer</figcaption></figure>
+<ul class="on-the-way-journey"><li>Byte histogram to entropy</li><li>Storm polling as daemon duty cycle</li><li>High H on zip — corroborate, not auto-KILL</li><li>Layer separation from GPU thermo</li></ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-14-1-introduction-storm-gauge-not-soul-reader">1. Introduction — storm gauge, not soul reader</a></li><li><a href="#toc-14-2-shannon-entropy-h-p-i-log-p-i">2. Shannon entropy — H = −Σ p_i log₂ p_i</a></li><li><a href="#toc-14-3-storm-thresholds-calm-alert-storm">3. Storm thresholds — calm, alert, storm</a></li><li><a href="#toc-14-4-nexus-layer-where-the-oracle-lives">4. NEXUS layer — where the oracle lives</a></li><li><a href="#toc-14-5-high-h-what-it-does-and-does-not-mean">5. High H — what it does and does not mean</a></li><li><a href="#toc-14-6-low-h-complacency-risk">6. Low H — complacency risk</a></li><li><a href="#toc-14-7-94-6-posture-in-bytes">7. 94/6 posture in bytes</a></li><li><a href="#toc-14-8-separation-from-landauer-and-fabric-entropy">8. Separation from Landauer and fabric entropy</a></li><li><a href="#toc-14-9-operator-corroboration-workflow">9. Operator corroboration workflow</a></li><li><a href="#toc-14-10-false-positives-and-tuning">10. False positives and tuning</a></li><li><a href="#toc-14-11-relation-to-dpi-and-packet-field">11. Relation to DPI and packet field</a></li><li><a href="#toc-14-12-shannon-as-creditor-pedagogy">12. Shannon as creditor pedagogy</a></li><li><a href="#toc-14-operator-drill-14-a-sample-h-on-known-files">Operator drill 14.A — sample H on known files</a></li><li><a href="#toc-14-operator-drill-14-b-corroboration-table">Operator drill 14.B — corroboration table</a></li></ol></nav>
+
+<h2 id="toc-14-1-introduction-storm-gauge-not-soul-reader">1. Introduction — storm gauge, not soul reader</h2>
+<p>Chapter 5 introduced the packet field as defensive perimeter. Chapter 4 separated ThermoAccountant frame entropy from file-layer signals. This chapter is the creditor deep dive for Claude Shannon — the oracle that measures surprise in byte distributions and tunes how hard NEXUS watches without auto-sentencing payloads.</p>
+<p>Shannon is honored at ../creditors/shannon.html. His 1948 theory is not morality software. High H means slow down, corroborate, ask the operator. That is pastoral care encoded as engineering discipline — the 94/6 posture applied to bytes.</p>
+<h2 id="toc-14-2-shannon-entropy-h-p-i-log-p-i">2. Shannon entropy — H = −Σ p_i log₂ p_i</h2>
+<p>For discrete symbols with probabilities p_i, Shannon entropy measures expected surprise in bits per symbol. Uniform random bytes approach 8 bits per byte. English text sits lower. Compressed or encrypted payloads push high.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch14-shannon-storm.jpg" alt="Byte surprise storm gauge" loading="lazy" /><figcaption>Figure 14.2 — File-layer surprise H: storm gauge, not GPU heat. <span class="claim-tie">Claim: Shannon H on files — separate from GPU thermo</span></figcaption></figure>
+
+<p>The formula uses log base 2 because engineers count bits. The negative sign makes positive surprise a positive number — intuitive for thresholds.</p>
+<p>In NEXUS, H is computed on file samples and payload windows. It is Implemented as Entropy Oracle behavior — grep-able, tunable, separate from GPU thermodynamics.</p>
+<h2 id="toc-14-3-storm-thresholds-calm-alert-storm">3. Storm thresholds — calm, alert, storm</h2>
+<p>Daemon polling tiers mirror weather discipline:</p>
+<figure class="figure"><img src="../assets/images/chapters/ch04-entropy-layers.jpg" alt="Layer separation" loading="lazy" /><figcaption>Figure 14.4 — Shannon storm gauge never summed with GPU thermo layers.</figcaption></figure>
+
+<p>Calm: baseline cadence when H stays in expected bands for known file types. Alert: increased sampling when H rises above calm ceiling — packed executables, encrypted archives, obfuscated droppers. Storm: aggressive corroboration — more context, more operator attention, still not automatic kill.</p>
+<p>Storm is a gauge needle, not a gavel. Field Technology refuses products that treat entropy spikes as verdict without human or multi-signal corroboration.</p>
+<h2 id="toc-14-4-nexus-layer-where-the-oracle-lives">4. NEXUS layer — where the oracle lives</h2>
+<p>ThermoAccountant lives in AMOURANTHRTX dispatch_canvas(). Shannon oracle lives in NEXUS-Shield file analysis and related daemon loops. Different products, different bindings, different grep patterns.</p>
+<p>Conflating them is how vendors sell one dashboard that lies about both thermodynamics and file surprise. Chapter 12's honesty table exists to stop that fusion.</p>
+<h2 id="toc-14-5-high-h-what-it-does-and-does-not-mean">5. High H — what it does and does not mean</h2>
+<p>High H may indicate encryption, compression, packing, or genuinely random payloads. It may also appear in benign encrypted backups you created. It does not prove malice. It proves surprise relative to model expectations.</p>
+<p>Operators learn to pair H with process path, port habit, gatekeeper history, and sealed time context. Single-metric theology is vendor candy.</p>
+<h2 id="toc-14-6-low-h-complacency-risk">6. Low H — complacency risk</h2>
+<p>Low H is not automatic safety. Polyglot files, structured malware with repetitive shells, and staged droppers can present deceptive distributions early. Calm thresholds should not anesthetize.</p>
+<p>Defense is field literacy across packet sentences, file oracle, and fabric observability — not one green LED.</p>
+<h2 id="toc-14-7-94-6-posture-in-bytes">7. 94/6 posture in bytes</h2>
+<p>Field Technology's 94/6 discipline: most traffic should pass calm observation; the long tail of surprise earns disproportionate attention without choking the perimeter. Shannon thresholds implement that tail detection.</p>
+<p>This is operational mercy: do not DDoS your own machine with paranoia polling on every calm byte.</p>
+<h2 id="toc-14-8-separation-from-landauer-and-fabric-entropy">8. Separation from Landauer and fabric entropy</h2>
+<p>Landauer bounds erasure thermodynamically in theory. ThermoAccountant proxies frame irreversibility on GPU. Shannon measures symbol surprise in files. Entropy floor biases fabric noise. Four related words, four layers. Name them separately in reports.</p>
+<h2 id="toc-14-9-operator-corroboration-workflow">9. Operator corroboration workflow</h2>
+<p>When oracle enters alert or storm:</p>
+<p>Pause auto-actions. Pull process path and parent chain. Check packet field jsonl for recent socket habits. Compare sealed time receipts if sync enabled. Ask whether file is expected (backup job, dev build). Escalate with labels: Implemented signal, not Philosophy verdict.</p>
+<p>Chapter 18 covenant: daemons assist; you inherit conscience.</p>
+<h2 id="toc-14-10-false-positives-and-tuning">10. False positives and tuning</h2>
+<p>Thresholds are tuned discipline, not cosmic constants. Operators document baseline H for their own build artifacts, backup tools, and game engines. Custom calm bands prevent alert fatigue.</p>
+<p>Alert fatigue is an attack surface — when everything storms, nothing storms.</p>
+<h2 id="toc-14-11-relation-to-dpi-and-packet-field">11. Relation to DPI and packet field</h2>
+<p>Deep packet inspection samples flows; file oracle samples artifacts. Spiderweb and packet field (Chapter 5) give network-position context; Shannon gives byte-surprise context. Correlation is strength; fusion into one lying score is weakness.</p>
+<h2 id="toc-14-12-shannon-as-creditor-pedagogy">12. Shannon as creditor pedagogy</h2>
+<p>Read ../creditors/shannon.html tribute. Communication is care made serial, the love block says. Quantifying surprise is how care scales without pretending to read souls.</p>
+<p>Teach newcomers Shannon before they touch storm knobs. Teach Chapter 12 before they quote H to management.</p>
+<h2 id="toc-14-operator-drill-14-a-sample-h-on-known-files">Operator drill 14.A — sample H on known files</h2>
+<pre class="eq"># Calm baseline: plain text README
+# Alert sample: gzip -9 packed binary
+# Storm sample: encrypted archive you control
+# Record H bands and daemon tier shifts in field jsonl</pre>
+
+<h2 id="toc-14-operator-drill-14-b-corroboration-table">Operator drill 14.B — corroboration table</h2>
+<pre class="eq"># For one alert event, fill: path, H, process, port habit, operator verdict
+# No verdict without two independent signals</pre>
+
+<h2 id="toc-14-operator-drill-14-c-separation-grep">Operator drill 14.C — separation grep</h2>
+<pre class="eq">grep -E 'THERMO|entropy' amouranth-run.log   # GPU layer
+grep -E 'H=|oracle|storm' nexus-field.jsonl  # NEXUS layer</pre>
+
+<figure class="figure"><img src="../assets/images/packet-field.jpg" alt="Packet field" loading="lazy" /><figcaption>Figure 14.1 — Shannon storm gauge on file layer, separate from GPU thermo.</figcaption></figure>
+
+<h2 id="toc-14-study-questions">Study questions</h2>
+<ol>
+<li>Write Shannon H in symbols and explain log base 2.</li>
+<li>Define calm, alert, storm as operational tiers.</li>
+<li>Why is high H not automatic malice?</li>
+<li>Where does Shannon oracle live vs ThermoAccountant?</li>
+<li>What is 94/6 posture applied to bytes?</li>
+<li>Name three corroboration signals besides H.</li>
+<li>How does alert fatigue become an attack surface?</li>
+<li>Why must vendors not fuse thermo and file dashboards?</li>
+<li>Read ../creditors/shannon.html — love block meaning?</li>
+<li>When should storm tier not trigger auto-kill?</li>
+<li>How do packet field and file oracle complement each other?</li>
+<li>Document a false positive you tuned away.</li>
+</ol>
+<p>Tribute: <a href="../creditors/shannon.html">Claude Shannon</a> · <a href="../creditors/index.html">All creditors</a></p>
+<p><a href="15-maxwell-gpu.html">Chapter 15 — Maxwell on the GPU →</a></p>
+<h2 id="toc-14-13-byte-distributions-worked-intuition">13. Byte distributions — worked intuition</h2>
+<p>ASCII text peaks on printable bytes. UTF-8 text shows multibyte structure but remains far from uniform. gzip and zlib lift high bytes. AES ciphertext approaches flat histograms. Operators build intuition by histogramming their own artifacts before touching production storm knobs.</p>
+
+<h2 id="toc-14-14-entropy-oracle-implementation-posture">14. Entropy Oracle implementation posture</h2>
+<p>NEXUS implements file-layer analysis as Implemented behavior — thresholds in config, jsonl rows on events, panel visibility at :9477. The oracle does not replace packet field gatekeeper; it corroborates. Implementation claims require grep in lib sources, not wiki quotes alone.</p>
+
+<h2 id="toc-14-15-storm-tier-tuning-worksheet">15. Storm tier tuning worksheet</h2>
+<p>Document calm ceiling for: plain source trees, release tarballs, your own encrypted backups, game asset packs. When a new build class appears, update calm bands before alert fatigue trains you to ignore storms. Worksheet belongs in operator runbooks beside firewall rules.</p>
+
+<h2 id="toc-14-16-adversarial-surprise-without-malice">16. Adversarial surprise without malice</h2>
+<p>Packers raise H. Legitimate packers used by your own release pipeline also raise H. The oracle asks you to slow down, not to moralize bytes. Correlation with signature age, publisher habit, and sealed time context separates pipeline noise from novel noise.</p>
+
+<h2 id="toc-14-17-jsonl-as-storm-archive">17. jsonl as storm archive</h2>
+<p>Each alert should leave a row: timestamp, path, H estimate, tier, process context, operator note field empty until filled. Future you is a neighbor (Chapter 16). Couple with care through complete rows.</p>
+
+<h2 id="toc-14-18-shannon-in-threat-models">18. Shannon in threat models</h2>
+<p>Threat models that only list CVEs miss distribution surprises. Add H bands to tabletop exercises: what happens when calm misclassifies encrypted exfil shaped like your backups? Answer: corroboration, not auto-kill — covenant Clause IV and VI together.</p>
+
+
+<div class="creditor-workshop">
+<h2 id="toc-14-creditor-deep-dive-workshop-complete-once">Creditor deep-dive workshop — complete once</h2>
+<p>Chapters 13–15 share one drill set — complete after reading all three creditor chapters.</p>
+<ol>
+<li><strong>Primary source:</strong> Footnote one Landauer, Shannon, or Maxwell paper (not Wikipedia alone).</li>
+<li><strong>Grep proof:</strong> One <code>grep</code> command tying this chapter's equation to an <span class="tag impl">Implemented</span> or <span class="tag meta">Metaphor</span> label from Chapter 12.</li>
+<li><strong>Layer separation:</strong> Write three sentences — GPU proxy, file oracle, theory — never summed into one entropy number.</li>
+<li><strong>Comparative run:</strong> Two matched sessions; plot <code>entropyThisFrame</code> or file H trend — comparative only, no joule billing.</li>
+</ol>
+</div>
+
+<h2 id="toc-14-operator-journal-shannon-oracle-and-storm-thresh">Operator journal — Shannon oracle and storm thresholds</h2>
+<p>Maintain a paper or markdown operator journal for Shannon oracle and storm thresholds. Each drill entry: date, hardware, driver, git hash, three THERMO or jsonl lines, one surprise, one label (Implemented / Metaphor / Philosophy). Journals become your personal creditor — future you inherits coupled state from past you. Bring the journal to Chapter 18 covenant audit drill 18.A as evidence.</p>
+
+<h2 id="toc-14-reading-companion-shannon-oracle-and-storm-thres">Reading companion — Shannon oracle and storm thresholds</h2>
+<p>This reading companion reinforces Shannon oracle and storm thresholds for self-study tracks. Week one: read the chapter straight through with Chapter 12 open. Week two: complete all operator drills on hardware you own. Week three: write a one-page creditor tribute response linking ../creditors/ reading to a grep result from your machine. Week four: teach another human one section using the three-tag labeling exercise. Field Technology v5 measures success in reproduced receipts, not in vibes.</p>
+<p>Cross-links: Chapter 4 entropy receipts, Chapter 5 packet field, Chapter 8 data bus, Chapter 10 Spiderweb mirror, Chapter 11 observability, Chapters 16–18 sacred covenant. Shannon oracle and storm thresholds is not an island — it is a creditor lens on the same stack you already run.</p>
+<p>Honesty reminder: AMOURANTHRTX, NEXUS-Shield, Queen, and Field Primer have different licenses. Teaching from this chapter does not automatically license commercial engine use. Point students to product headers and FIELD-TECHNOLOGY-V5.md for edition boundaries.</p>
+
+<h2 id="toc-14-chapter-closing-shannon-oracle-and-storm-thresho">Chapter closing — Shannon oracle and storm thresholds</h2>
+<p>Chapter 14 completes the oracle story: H is a storm gauge, tiers are pastoral engineering, corroboration is covenant habit. You are not learning to fear bytes. You are learning to slow down when surprise spikes — the same discipline you bring to THERMO spikes without confusing layers. Shannon's creditor page reminds us communication is care made serial. Serialize care into jsonl rows with timestamps and operator notes, not into auto-kill theater.</p>
+
+
+
+
+<div class="evidence-anchor" id="evidence-ch14">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Shannon H</td><td>File byte surprise</td><td><span class="tag impl">Implemented</span></td><td><code>NEXUS Entropy Oracle</code></td></tr><tr><td>Storm thresholds</td><td>Alert tiers on H</td><td><span class="tag impl">Implemented</span></td><td><code>Configurable gates</code></td></tr><tr><td>Fabric texel H</td><td>Shader spectrum</td><td><span class="tag meta">Metaphor</span></td><td><code>Category error if merged</code></td></tr><tr><td>Gatekeeper merge</td><td>Verdict from H alone</td><td><span class="tag meta">Metaphor</span></td><td><code>Forbidden — separate plates</code></td></tr></tbody></table>
+<pre class="eq">H = −Σ pᵢ log₂ pᵢ  on file byte distribution</pre>
+<pre class="eq">grep -r &#x27;entropy_oracle\|storm&#x27; NEXUS-Shield/</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>NEXUS-Shield/entropy_oracle.py</code></li><li><code>docs/creditors/shannon.html</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-14-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Shannon surprise on files — storm gauge tuned, never merged with GPU thermo or gatekeeper auto-sentence.</p>
+</div>
+</div>
+<div class="chapter-break">
+<p class="chapter-num">Chapter 15</p>
+<h1>Maxwell on the GPU — Wave Coupling</h1>
+<p class="eyebrow">Chapter 15 · Creditor deep dive · Maxwell GPU</p>
+
+<div class="on-the-way">
+<h2 id="toc-15-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Maxwell's neighborhood lives on a grid in Vulkan bindings. On the way you will read discrete Laplacian on Phi, diffusion on Thermo, gradient-driven Flow, and <code>FieldCoupling</code> as implemented coupling — not analytical PDE on the host CPU.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/fabric-triple.jpg" alt="Maxwell coupling" loading="lazy" /><figcaption>On the way — Maxwell coupling</figcaption></figure>
+<ul class="on-the-way-journey"><li>Neighborhood whispers between texels</li><li>Electrical metaphor beside thermal diffusion</li><li>GPU evolution versus host PDE refusal</li><li>Creditor debt in shader arithmetic</li></ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-15-1-introduction-neighbors-on-a-grid">1. Introduction — neighbors on a grid</a></li><li><a href="#toc-15-2-maxwell-x27-s-locality-what-we-implement">2. Maxwell&#x27;s locality — what we implement</a></li><li><a href="#toc-15-3-discrete-laplacian-on-phi">3. Discrete Laplacian on Phi</a></li><li><a href="#toc-15-4-fieldcoupling-knob-honest-pedagogy">4. FieldCoupling knob — honest pedagogy</a></li><li><a href="#toc-15-5-phi-to-thermo-electrical-metaphor-on-fabric">5. Phi to Thermo — electrical metaphor on fabric</a></li><li><a href="#toc-15-6-thermo-to-flow-heat-moves-momentum-stories">6. Thermo to Flow — heat moves momentum stories</a></li><li><a href="#toc-15-7-flow-gradients-and-gatefidelity">7. Flow gradients and GateFidelity</a></li><li><a href="#toc-15-8-hardwarefabric-mirror-chapter-10-bridge">8. hardwareFabric mirror — Chapter 10 bridge</a></li><li><a href="#toc-15-9-cfl-and-maxwell-stability">9. CFL and Maxwell stability</a></li><li><a href="#toc-15-10-what-we-do-not-claim">10. What we do not claim</a></li><li><a href="#toc-15-11-maxwell-and-landauer-offense-meets-receipts">11. Maxwell and Landauer — offense meets receipts</a></li><li><a href="#toc-15-12-creditor-tribute-practice">12. Creditor tribute practice</a></li><li><a href="#toc-15-operator-drill-15-a-coupling-sweep">Operator drill 15.A — coupling sweep</a></li><li><a href="#toc-15-operator-drill-15-b-cfl-edge">Operator drill 15.B — CFL edge</a></li></ol></nav>
+
+<h2 id="toc-15-1-introduction-neighbors-on-a-grid">1. Introduction — neighbors on a grid</h2>
+<p>James Clerk Maxwell taught the world to write laws for neighbors in space — fields coupled locally, waves propagating from cell to cell. GPU texels are neighbors. Phi whispers to Thermo on the adjacent cell. That is his legacy expressed through Vulkan bindings 8, 9, and 10.</p>
+<p>Maxwell is honored at ../creditors/maxwell.html. This chapter is not a claim that your RTX card solves cosmological electromagnetism. It is a claim that local coupling on a grid is how stable fabric evolves — the same insight Maxwell formalized, implemented as shader arithmetic in CANVAS.comp.</p>
+<h2 id="toc-15-2-maxwell-x27-s-locality-what-we-implement">2. Maxwell's locality — what we implement</h2>
+<p>Continuous Maxwell equations relate E and B fields with curl and divergence constraints. On a GPU we implement discrete analogs: Laplacian stencils on Phi, gradient magnitudes feeding Flow, thermal diffusion on Thermo, cross-terms when FieldCoupling is enabled.</p>
+<figure class="figure"><img src="../assets/images/v3/science/fabric-schematic.jpg" alt="Neighborhood coupling" loading="lazy" /><figcaption>Figure 15.2 — Discrete neighborhood on a grid — creditor debt in bindings 8–10.</figcaption></figure>
+
+<p>Locality means each texel update consults a neighborhood — typically four or eight adjacent cells — not the entire universe. This matches GPU memory bandwidth reality and numerical stability practice.</p>
+<h2 id="toc-15-3-discrete-laplacian-on-phi">3. Discrete Laplacian on Phi</h2>
+<p>Wave step on Phi uses a discrete Laplacian — sum of neighbors minus center, scaled by grid spacing. Intuitively: if neighbors average higher, you rise; if lower, you fall. Propagation emerges.</p>
+<p>WaveSpeed and propalacticScale tune how aggressively Phi moves. CFL guards (Chapter 9) cap Δt so the wave does not outrun the mesh — Maxwell's neighborhood refuses NaN theology.</p>
+<h2 id="toc-15-4-fieldcoupling-knob-honest-pedagogy">4. FieldCoupling knob — honest pedagogy</h2>
+<p>FieldCoupling is the dial that makes the textbook honest. At zero, channels evolve independently — useful for teaching. At full strength, Phi heats Thermo, Thermo biases Flow, Flow sharpens gates through GateFidelity.</p>
+<p>Coupling is where the axiom energy can be moved becomes visible in stderr. Raise coupling and watch field work in ThermoAccountant — comparative receipt, not watt meter.</p>
+<h2 id="toc-15-5-phi-to-thermo-electrical-metaphor-on-fabric">5. Phi to Thermo — electrical metaphor on fabric</h2>
+<p>Electrical activity heats the die in metaphor and in coupled equations. High Phi gradients deposit into Thermo channels when coupling is on. This is storytelling faithful to engineering intuition: switching costs heat.</p>
+<p>Label remains: shader thermo is simulation accounting, not junction sensor.</p>
+<h2 id="toc-15-6-thermo-to-flow-heat-moves-momentum-stories">6. Thermo to Flow — heat moves momentum stories</h2>
+<p>Thermal diffusion on Thermo uses ThermoAlpha. Heated regions influence Flow gradients — advective narrative mixed with GateFidelity and Tesla relaxation (Chapter 9). Heat does not merely sit; it reshapes how activity flows on the fabric.</p>
+<h2 id="toc-15-7-flow-gradients-and-gatefidelity">7. Flow gradients and GateFidelity</h2>
+<p>Flow stores gradient magnitudes. GateFidelity slides between soft analog behavior and sharp gating. Maxwell locality plus gate shaping is how offense dispatch stays visually coherent under load.</p>
+<h2 id="toc-15-8-hardwarefabric-mirror-chapter-10-bridge">8. hardwareFabric mirror — Chapter 10 bridge</h2>
+<p>Fabric averages feed hardwareFabric in Spiderweb observability. Maxwell coupling on GPU becomes node colors and edge weights on the operator mirror. Local physics becomes global legibility without faking instrumentation.</p>
+<h2 id="toc-15-9-cfl-and-maxwell-stability">9. CFL and Maxwell stability</h2>
+<p>waveCFL = c·Δt/Δx ≤ 1 and thermoCFL = α·Δt/Δx² ≤ 1 guard the mesh. Violation means neighbors talk faster than the grid can honestly relay — numerical instability dressed as energy.</p>
+<p>Host scales parameters down before dispatch. This is care for operators who grep after long sessions.</p>
+<h2 id="toc-15-10-what-we-do-not-claim">10. What we do not claim</h2>
+<p>We do not claim GPU fabric replaces antenna simulation for FCC compliance (Chapter 6 visual is labeled Visual). We do not claim Laplacian Phi equals full Maxwell TE/TM modes in waveguides. We claim local coupling discipline for operator education and engine stability.</p>
+<h2 id="toc-15-11-maxwell-and-landauer-offense-meets-receipts">11. Maxwell and Landauer — offense meets receipts</h2>
+<p>Maxwell coupling moves energy between channels. Landauer accounting records that movement had irreversibility stories. Read Chapter 13 for proxy decomposition. Coupling raises field work; maintenance remembers frames.</p>
+<h2 id="toc-15-12-creditor-tribute-practice">12. Creditor tribute practice</h2>
+<p>Visit ../creditors/maxwell.html. Portrait plus love block: fields are how existence touches neighbors. Teach students to grep coupling before they screenshot beauty.</p>
+<h2 id="toc-15-operator-drill-15-a-coupling-sweep">Operator drill 15.A — coupling sweep</h2>
+<pre class="eq">./linux.sh run
+# FieldCoupling 0.0 → 0.5 → 1.0 in three 90s segments
+# Log Phi/Thermo/Flow variance and THERMO field work</pre>
+
+<h2 id="toc-15-operator-drill-15-b-cfl-edge">Operator drill 15.B — CFL edge</h2>
+<pre class="eq"># Deliberately raise WaveSpeed until host scales Δt down
+# Observe stderr CFL messages — locality requires honest Δt</pre>
+
+<h2 id="toc-15-operator-drill-15-c-spiderweb-mirror">Operator drill 15.C — Spiderweb mirror</h2>
+<pre class="eq"># Open observability panel — correlate hardwareFabric with coupling knob</pre>
+
+<figure class="figure"><img src="../assets/images/fabric-triple.jpg" alt="Fabric triple" loading="lazy" /><figcaption>Figure 15.1 — Phi, Thermo, Flow: Maxwell locality on a grid.</figcaption></figure>
+
+<h2 id="toc-15-study-questions">Study questions</h2>
+<ol>
+<li>What does locality mean for GPU texel updates?</li>
+<li>Describe discrete Laplacian intuition on Phi.</li>
+<li>What does FieldCoupling teach at zero vs full?</li>
+<li>How does Phi couple to Thermo in this stack?</li>
+<li>Role of GateFidelity in Flow?</li>
+<li>State wave and thermo CFL inequalities.</li>
+<li>What claims do we explicitly not make?</li>
+<li>How does hardwareFabric mirror local coupling?</li>
+<li>Link Maxwell coupling to Landauer field work.</li>
+<li>Read ../creditors/maxwell.html tribute.</li>
+<li>Why is CANVAS.comp neighborhood-sized?</li>
+<li>When should host scale Δt down?</li>
+</ol>
+<p>Tribute: <a href="../creditors/maxwell.html">James Clerk Maxwell</a> · <a href="../creditors/index.html">All creditors</a></p>
+<p><a href="16-love-coupling.html">Chapter 16 — Love Coupling →</a></p>
+<h2 id="toc-15-13-stencil-geometry-and-neighbor-counts">13. Stencil geometry and neighbor counts</h2>
+<p>Four-neighbor stencils teach Laplacian intuition on square grids. Eight-neighbor variants smooth diagonals. CANVAS.comp choices affect anisotropy — document which stencil your build uses when comparing screenshots across versions. Locality is not universal without version control.</p>
+
+<h2 id="toc-15-14-binding-map-offense-recap">14. Binding map offense recap</h2>
+<p>Binding 8 Phi, 9 Thermo, 10 Flow — offense dispatch writes all three when fabric evolves. Host opens window and enforces CFL; GPU writes next tick. Maxwell locality is how next tick depends on neighborhood, not on cloud API.</p>
+
+<h2 id="toc-15-15-decoupled-pedagogy-sessions">15. Decoupled pedagogy sessions</h2>
+<p>First week: FieldCoupling 0, isolate Phi wave rings. Second week: enable Thermo diffusion alone. Third week: full coupling. Pedagogy mirrors how Maxwell's unification was taught historically — electricity before full field synthesis.</p>
+
+<h2 id="toc-15-16-tesla-valve-metaphor-boundary">16. Tesla valve metaphor boundary</h2>
+<p>Chapter 9 Tesla relaxation on Flow is Metaphor for one-way flow stories. Do not tell FCC auditors that GPU Tesla knobs certify RF hardware. Maxwell chapter owns wave coupling; Tesla chapter owns stability metaphor — keep creditors in their lanes.</p>
+
+<h2 id="toc-15-17-hardwarefabric-adept-tier">17. hardwareFabric Adept tier</h2>
+<p>Spiderweb Adept uses sysfs clocks as frequency witness; hardwareFabric uses fabric averages. Maxwell coupling on GPU becomes graph edge heat. Observability chapter 10 is the lab companion for this chapter's coupling drills.</p>
+
+<h2 id="toc-15-18-gpu-is-not-a-cosmology-solver">18. GPU is not a cosmology solver</h2>
+<p>Repeat the rock: discrete Laplacian Phi is engine stability and education, not replacement for full-wave EM solvers. Maxwell creditor honored; hubris denied. Chapter 12 honesty row for RF planetary shell applies: Visual, not instrumentation.</p>
+
+
+<div class="creditor-workshop">
+<h2 id="toc-15-creditor-deep-dive-workshop-complete-once">Creditor deep-dive workshop — complete once</h2>
+<p>Chapters 13–15 share one drill set — complete after reading all three creditor chapters.</p>
+<ol>
+<li><strong>Primary source:</strong> Footnote one Landauer, Shannon, or Maxwell paper (not Wikipedia alone).</li>
+<li><strong>Grep proof:</strong> One <code>grep</code> command tying this chapter's equation to an <span class="tag impl">Implemented</span> or <span class="tag meta">Metaphor</span> label from Chapter 12.</li>
+<li><strong>Layer separation:</strong> Write three sentences — GPU proxy, file oracle, theory — never summed into one entropy number.</li>
+<li><strong>Comparative run:</strong> Two matched sessions; plot <code>entropyThisFrame</code> or file H trend — comparative only, no joule billing.</li>
+</ol>
+</div>
+
+<h2 id="toc-15-operator-journal-maxwell-locality-on-gpu">Operator journal — Maxwell locality on GPU</h2>
+<p>Maintain a paper or markdown operator journal for Maxwell locality on GPU. Each drill entry: date, hardware, driver, git hash, three THERMO or jsonl lines, one surprise, one label (Implemented / Metaphor / Philosophy). Journals become your personal creditor — future you inherits coupled state from past you. Bring the journal to Chapter 18 covenant audit drill 18.A as evidence.</p>
+
+<h2 id="toc-15-reading-companion-maxwell-locality-on-gpu">Reading companion — Maxwell locality on GPU</h2>
+<p>This reading companion reinforces Maxwell locality on GPU for self-study tracks. Week one: read the chapter straight through with Chapter 12 open. Week two: complete all operator drills on hardware you own. Week three: write a one-page creditor tribute response linking ../creditors/ reading to a grep result from your machine. Week four: teach another human one section using the three-tag labeling exercise. Field Technology v5 measures success in reproduced receipts, not in vibes.</p>
+<p>Cross-links: Chapter 4 entropy receipts, Chapter 5 packet field, Chapter 8 data bus, Chapter 10 Spiderweb mirror, Chapter 11 observability, Chapters 16–18 sacred covenant. Maxwell locality on GPU is not an island — it is a creditor lens on the same stack you already run.</p>
+<p>Honesty reminder: AMOURANTHRTX, NEXUS-Shield, Queen, and Field Primer have different licenses. Teaching from this chapter does not automatically license commercial engine use. Point students to product headers and FIELD-TECHNOLOGY-V5.md for edition boundaries.</p>
+
+<h2 id="toc-15-chapter-closing-maxwell-locality-on-gpu">Chapter closing — Maxwell locality on GPU</h2>
+<p>Chapter 15 grounds Maxwell in stencil arithmetic you can grep. Locality is the moral of the GPU fabric: neighbors affect neighbors, CFL caps dishonest Δt, FieldCoupling makes energy movement visible. When you teach this chapter, run the coupling sweep before the Spiderweb mirror drill — legs before wings. Maxwell's tribute says fields are how existence touches neighbors; your keyboard touch on WaveSpeed touches the next operator's stderr. Couple with care.</p>
+
+
+
+
+<div class="evidence-anchor" id="evidence-ch15">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Maxwell coupling</td><td>Neighbor texel exchange</td><td><span class="tag impl">Implemented</span></td><td><code>Discrete stencil on fabric</code></td></tr><tr><td>Wave equation</td><td>Phi evolution</td><td><span class="tag impl">Implemented</span></td><td><code>CANVAS.comp / fabric shaders</code></td></tr><tr><td>Continuous Maxwell</td><td>Full EM PDE on GPU</td><td><span class="tag meta">Metaphor</span></td><td><code>Electrical metaphor only</code></td></tr><tr><td>Binding proof</td><td>Implementation anchor</td><td><span class="tag impl">Implemented</span></td><td><code>Bindings 8–10 evolution</code></td></tr></tbody></table>
+<pre class="eq">∂²Φ/∂t² ∝ ∇²Φ (discrete)  |  neighbor coupling each dispatch</pre>
+<pre class="eq">grep -n &#x27;Laplacian\|WaveSpeed&#x27; Navigator/shaders/CANVAS.comp</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/shaders/CANVAS.comp</code></li><li><code>docs/creditors/maxwell.html</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-15-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Maxwell neighborhood on GPU grid — coupling implemented in shader arithmetic; creditor cited with binding proof.</p>
+</div>
+</div>
+</body></html>

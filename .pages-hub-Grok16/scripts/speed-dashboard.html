@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grok16 Speed Comparison</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --void: #020403;
+      --panel: #0a120e;
+      --border: #1a3d2e;
+      --emerald: #22c55e;
+      --emerald-soft: #3ecf8e;
+      --rose: #f472b6;
+      --text: #e8f2ea;
+      --dim: #7a9a88;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: radial-gradient(ellipse 120% 80% at 70% -10%, rgba(244,114,182,.12), transparent 55%),
+                  radial-gradient(ellipse 90% 60% at 0% 100%, rgba(34,197,94,.1), transparent 50%),
+                  var(--void);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,18,14,.92);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    h1 { margin: 0; font-size: 1.35rem; letter-spacing: .04em; }
+    h1 span { color: var(--emerald-soft); }
+    .meta { color: var(--dim); font-size: .85rem; }
+    .badge {
+      display: inline-block;
+      padding: .2rem .55rem;
+      border-radius: 6px;
+      font-size: .75rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .badge.live { border-color: var(--emerald); color: var(--emerald-soft); }
+    .badge.done { border-color: var(--rose); color: var(--rose); }
+    main { padding: 1.25rem 1.5rem 2rem; max-width: 1280px; margin: 0 auto; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.35);
+    }
+    .card h2 { margin: 0 0 .75rem; font-size: .95rem; color: var(--emerald-soft); font-weight: 700; }
+    .chart-wrap { position: relative; height: 280px; }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    th, td { padding: .55rem .45rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--dim); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; }
+    tr:hover td { background: rgba(62,207,142,.06); }
+    .num { font-variant-numeric: tabular-nums; text-align: right; }
+    .winner { color: var(--emerald-soft); font-weight: 700; }
+    .host { color: #94a3b8; }
+    .g16 { color: var(--emerald-soft); }
+    .progress-bar {
+      height: 8px;
+      background: #0f1a14;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: .35rem;
+    }
+    .progress-bar > i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--emerald), var(--rose));
+      width: 0%;
+      transition: width .3s ease;
+    }
+    #hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat {
+      flex: 1 1 140px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .85rem 1rem;
+    }
+    .stat .label { font-size: .72rem; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; }
+    .stat .value { font-size: 1.45rem; font-weight: 800; margin-top: .2rem; color: var(--emerald-soft); }
+    footer { text-align: center; color: var(--dim); font-size: .78rem; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Grok16 <span>Field Execution</span></h1>
+      <div class="meta">Single-plane binary throughput — wave-converted, Ironclad instant · ranked on ops/sec only</div>
+    </div>
+    <div>
+      <span class="badge" id="phase-badge">idle</span>
+      <span class="meta" id="updated">—</span>
+    </div>
+  </header>
+  <main>
+    <div id="hero-stats"></div>
+    <div class="grid">
+      <div class="card">
+        <h2>Throughput (ops/sec)</h2>
+        <div class="chart-wrap"><canvas id="chart-ops"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Speedup vs host g++ -O2 (binary only)</h2>
+        <div class="chart-wrap"><canvas id="chart-speedup"></canvas></div>
+      </div>
+    </div>
+    <p class="meta" style="margin:0 0 1rem;line-height:1.6">
+      <strong>Wave conversion</strong> — source converges to the single fabric plane (not a timed “compilation” race).
+      <strong>Ironclad</strong> receipts are instant at integrate; truth is already on the plane before execution.
+      Charts rank <em>field execution layer</em> only — how fast the converged binary runs the FieldX86 kernel.
+    </p>
+    <div class="card">
+      <h2>Live progress</h2>
+      <div id="live-progress"></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <h2>Full results</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Toolchain</th>
+            <th>Group</th>
+            <th>Plane</th>
+            <th class="num">Exec ms</th>
+            <th class="num">Ops/sec</th>
+            <th class="num">Speedup</th>
+            <th class="num">Binary B</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+  </main>
+  <footer>Grok16 2.0 · belt triad + field_opt + ai · zero is not real (field floor 1e-7)</footer>
+  <script>
+    const charts = {};
+    const palette = (id, fallback) => {
+      const c = document.querySelector(`[data-id="${id}"]`);
+      return c?.dataset?.color || fallback;
+    };
+
+    function fmt(n, digits = 2) {
+      if (n == null || !isFinite(n) || n === 0) return '1e-7';
+      if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return (n/1e3).toFixed(2) + 'K';
+      return Number(n).toLocaleString(undefined, { maximumFractionDigits: digits });
+    }
+
+    function makeChart(id, label, labels, data, colors) {
+      const ctx = document.getElementById(id).getContext('2d');
+      if (charts[id]) charts[id].destroy();
+      charts[id] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data,
+            backgroundColor: colors.map(c => c + 'cc'),
+            borderColor: colors,
+            borderWidth: 1,
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#7a9a88', maxRotation: 45, minRotation: 25, font: { size: 10 } }, grid: { color: '#1a3d2e44' } },
+            y: { ticks: { color: '#7a9a88' }, grid: { color: '#1a3d2e44' } }
+          }
+        }
+      });
+    }
+
+    function render(doc) {
+      const phase = doc.phase || 'idle';
+      const badge = document.getElementById('phase-badge');
+      badge.textContent = phase;
+      badge.className = 'badge ' + (phase === 'complete' ? 'done' : 'live');
+      document.getElementById('updated').textContent = doc.updated || '—';
+
+      const order = doc.order || [];
+      const cases = doc.cases || {};
+      const summary = doc.summary || {};
+      const rankings = summary.rankings || [];
+
+      // Live progress
+      const prog = document.getElementById('live-progress');
+      prog.innerHTML = order.map(id => {
+        const c = cases[id] || {};
+        const pct = c.pct || 0;
+        const st = c.status || 'pending';
+        return `<div style="margin-bottom:.65rem" data-id="${id}" data-color="${c.color||'#3ecf8e'}">
+          <div style="display:flex;justify-content:space-between;font-size:.82rem">
+            <span class="${c.group==='host'?'host':'g16'}">${c.label||id}</span>
+            <span style="color:#7a9a88">${st}${(st==='executing'||st==='running')?` ${c.elapsed_sec||0}/${doc.target_sec||60}s`:''}${st==='converged'?' · ironclad instant':''}</span>
+          </div>
+          <div class="progress-bar"><i style="width:${(st==='done'||st==='converged')?100:pct}%"></i></div>
+        </div>`;
+      }).join('');
+
+      const labels = rankings.map(r => r.id.replace(/^g16_/, 'g16·').replace(/^host_/, 'host·'));
+      const colors = rankings.map(r => r.color || '#3ecf8e');
+      const ops = rankings.map(r => r.ops_per_sec);
+      const speedup = rankings.map(r => r.speedup_vs_baseline);
+
+      if (rankings.length) {
+        makeChart('chart-ops', 'ops/sec', labels, ops, colors);
+        makeChart('chart-speedup', 'speedup', labels, speedup, colors);
+      }
+
+      const hero = document.getElementById('hero-stats');
+      if (summary.best_ops_per_sec) {
+        hero.innerHTML = `
+          <div class="stat"><div class="label">Best overall</div><div class="value">${fmt(summary.best_ops_per_sec)}</div><div class="meta">${summary.best_label||''}</div></div>
+          <div class="stat"><div class="label">Best G16</div><div class="value">${fmt(summary.best_g16_ops_per_sec)}</div><div class="meta">${summary.best_g16_id||''} · ${fmt(summary.best_g16_speedup)}x</div></div>
+          <div class="stat"><div class="label">Baseline</div><div class="value">${fmt(summary.baseline_ops_per_sec)}</div><div class="meta">${summary.baseline_id||'host_gcc_o2'}</div></div>
+          <div class="stat"><div class="label">Target / case</div><div class="value">${doc.target_sec||60}s</div><div class="meta">${rankings.length} binaries tested</div></div>`;
+      } else {
+        hero.innerHTML = `<div class="stat"><div class="label">Status</div><div class="value" style="font-size:1rem">${phase}</div><div class="meta">Waiting for benchmark…</div></div>`;
+      }
+
+      const tbody = document.getElementById('results-body');
+      tbody.innerHTML = rankings.map((r, i) => `<tr>
+        <td class="${r.id.startsWith('host')?'host':'g16'} ${i===0?'winner':''}">${r.label}</td>
+        <td>${r.id.startsWith('host')?'host':'g16'}</td>
+        <td>instant</td>
+        <td class="num">${fmt(r.field_execution_ms || r.wall_ms,0)}</td>
+        <td class="num winner">${fmt(r.ops_per_sec)}</td>
+        <td class="num">${fmt(r.speedup_vs_baseline)}x</td>
+        <td class="num">${(r.binary_bytes||0).toLocaleString()}</td>
+      </tr>`).join('');
+    }
+
+    async function poll() {
+      try {
+        const res = await fetch('/api/live?' + Date.now());
+        if (res.ok) render(await res.json());
+      } catch (_) {}
+    }
+    poll();
+    setInterval(poll, 800);
+  </script>
+</body>
+</html>

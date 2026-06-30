@@ -1,0 +1,10 @@
+{
+  "id": "commodore_amiga_500",
+  "title": "Commodore Amiga 500",
+  "author": "Field Extensive Library",
+  "dewey": "004.167",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/commodore_amiga_500/commodore_amiga_500.h7c",
+  "cover": "/library/assets/devices/commodore_amiga_500.png",
+  "ready": true
+}

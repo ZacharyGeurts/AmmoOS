@@ -1,0 +1,12 @@
+// FieldPrimer.fld — Field Technology v5 doctrine slice for KILROY guest
+// Source: github.com/ZacharyGeurts/Field_Primer
+
+module FieldPrimer {
+  import FieldStackCore;
+
+  const DOCTRINE = "Fields from pixels to packets — Field Die owns the die";
+  const REDATA_RULE = "Lossless always · imaging is not the codec · truth before plates";
+
+  fn field_die_slots() -> int { return 8; }
+  fn data_bus_width() -> int { return 64; }
+}

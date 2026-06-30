@@ -1,0 +1,16 @@
+# AmmoOS push-only — resume after pack (gh release + Pages + hubs + wiki)
+@profile fastest
+@verbose clean
+@motto "AmmoOS push lane — progress every 60s"
+
+seq ·
+  say "AmmoOS push-only — pack assumed done"
+  post "PUSH START — gh release + Pages hubs + wiki"
+  self upgrade
+  fast path:gpy fastest
+  github check repo:ZacharyGeurts/AmmoOS
+  run script:ammoos-push-only timeout:7200 stall:3600
+  post "Pages + redirect hubs"
+  run script:publish-stack-pages timeout:1800
+  run script:publish-ammoos-wiki timeout:300
+  post "PUSH COMPLETE — v2.0.0-beta4"

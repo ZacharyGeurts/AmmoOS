@@ -1,0 +1,36 @@
+{
+  "schema": "field-textbook-manifest/v1",
+  "id": "exploring_the_stack",
+  "title": "Exploring the Stack",
+  "subtitle": "Components, boot order, loopback surfaces",
+  "edition": "1.0.0-field",
+  "format": "textbook",
+  "text_path": "Textbook/exploring-the-stack.txt",
+  "author": "Hostess 7 · Field Stack",
+  "dewey": "000",
+  "shelf": "library/dewey/000-computer-science",
+  "updated": "2026-06-30",
+  "chapters": 13,
+  "appendices": 5,
+  "companion": "Textbook/field-technology-v5.txt",
+  "doctrines": [
+    "data/field-stack-layer-doctrine.json",
+    "data/field-stack-manifest.json",
+    "data/queen-ammoos-sovereignty-doctrine.json",
+    "data/field-host-desktop-doctrine.json",
+    "Queen/data/ammoos-boot-map.json",
+    "STACK-NAV.md"
+  ],
+  "boot_scripts": [
+    "scripts/impl/ammoos-direct-start.sh",
+    "scripts/impl/start-field-stack.sh",
+    "scripts/impl/kilroy-load-os.sh",
+    "scripts/impl/boot-qemu-zpics-test.sh"
+  ],
+  "surfaces": {
+    "ammoos_desktop": "http://127.0.0.1:9477/field",
+    "queen_browser": "http://127.0.0.1:9481/world/browser.html",
+    "command": "http://127.0.0.1:9477/command",
+    "kilroy_api": "http://127.0.0.1:9481/api/kilroy"
+  }
+}

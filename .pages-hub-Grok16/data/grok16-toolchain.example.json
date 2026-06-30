@@ -1,0 +1,22 @@
+{
+  "product": "Grok16",
+  "schema": "grok16-toolchain/v1",
+  "g16_version": "16.0.0",
+  "prefix": "${GROK16_PREFIX}",
+  "engine_real": true,
+  "selfhosted": false,
+  "dumpversion": "16.0.0",
+  "version": "g++16 (Grok16-16.0.0) 16.0.0",
+  "paths": {
+    "g16": "${GROK16_PREFIX}/bin/g16",
+    "g++16": "${GROK16_PREFIX}/bin/g++16",
+    "cmake": "${GROK16_ROOT}/cmake/grok16-toolchain.cmake",
+    "version_file": "${GROK16_PREFIX}/VERSION",
+    "selfhost_stamp": "${GROK16_PREFIX}/SELFHOST.json"
+  },
+  "usage": {
+    "status": "./scripts/grok16-toolchain.sh status",
+    "rebuild": "./scripts/grok16-toolchain.sh rebuild",
+    "paths": "./scripts/grok16-toolchain.sh paths"
+  }
+}

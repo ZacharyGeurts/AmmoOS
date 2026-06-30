@@ -1,0 +1,81 @@
+{
+  "schema": "grok16-vendor-build-tools/v1",
+  "policy": {
+    "location": "vendor/",
+    "build_with": "g16",
+    "install_prefix": "${G16_PREFIX}",
+    "legacy_fallback_last": true
+  },
+  "packages": {
+    "make": {
+      "vendor_dir": "vendor/make",
+      "repo": "https://git.savannah.gnu.org/git/make.git",
+      "branch": "master",
+      "field_binary": "g16-make",
+      "rebuild": "forge:vendor_make_rebuild"
+    },
+    "cmake": {
+      "vendor_dir": "vendor/cmake",
+      "repo": "https://gitlab.kitware.com/cmake/cmake.git",
+      "branch": "master",
+      "field_binary": "g16-cmake",
+      "rebuild": "forge:vendor_cmake_rebuild"
+    },
+    "ninja": {
+      "vendor_dir": "vendor/ninja",
+      "repo": "https://github.com/ninja-build/ninja.git",
+      "branch": "master",
+      "field_binary": "g16-ninja",
+      "rebuild": "forge:vendor_ninja_rebuild"
+    },
+    "bison": {
+      "vendor_dir": "vendor/bison",
+      "repo": "https://git.savannah.gnu.org/git/bison.git",
+      "branch": "master",
+      "field_binary": "g16-bison",
+      "rebuild": "forge:vendor_bison_rebuild"
+    },
+    "flex": {
+      "vendor_dir": "vendor/flex",
+      "repo": "https://github.com/westes/flex.git",
+      "branch": "master",
+      "field_binary": "g16-flex",
+      "rebuild": "forge:vendor_flex_rebuild"
+    },
+    "autoconf": {
+      "vendor_dir": "vendor/autoconf",
+      "repo": "https://git.savannah.gnu.org/git/autoconf.git",
+      "branch": "master",
+      "field_binary": "g16-autoconf",
+      "rebuild": "forge:vendor_autoconf_rebuild"
+    },
+    "automake": {
+      "vendor_dir": "vendor/automake",
+      "repo": "https://git.savannah.gnu.org/git/automake.git",
+      "branch": "master",
+      "field_binary": "g16-automake",
+      "rebuild": "forge:vendor_automake_rebuild"
+    },
+    "libtool": {
+      "vendor_dir": "vendor/libtool",
+      "repo": "https://git.savannah.gnu.org/git/libtool.git",
+      "branch": "master",
+      "field_binary": "g16-libtoolize",
+      "rebuild": "forge:vendor_libtool_rebuild"
+    },
+    "m4": {
+      "vendor_dir": "vendor/m4",
+      "repo": "https://git.savannah.gnu.org/git/m4.git",
+      "branch": "master",
+      "field_binary": "g16-m4",
+      "rebuild": "forge:vendor_m4_rebuild"
+    },
+    "patch": {
+      "vendor_dir": "vendor/patch",
+      "repo": "https://git.savannah.gnu.org/git/patch.git",
+      "branch": "master",
+      "field_binary": "g16-patch",
+      "rebuild": "forge:vendor_patch_rebuild"
+    }
+  }
+}

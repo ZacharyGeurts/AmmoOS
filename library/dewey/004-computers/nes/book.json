@@ -1,0 +1,10 @@
+{
+  "id": "nes",
+  "title": "Nintendo Entertainment System",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/nes/nes.h7c",
+  "cover": "/library/assets/devices/nes.png",
+  "ready": true
+}

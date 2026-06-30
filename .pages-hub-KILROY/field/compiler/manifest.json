@@ -1,0 +1,15 @@
+{
+  "schema": "kilroy-fieldc/v1",
+  "compiler": "FIELDC",
+  "version": "4.0.2026",
+  "primary": "Grok16 g16 gnu++26 field_opt",
+  "runtime_engine": "AMOURANTHRTX/Navigator/engine/FieldFieldCc.hpp",
+  "bridge": "Final_Eye/zocr_field_compiler.py",
+  "rule": "Compile .fld after field-stack mandate updates; rebuild bzImage via field-recompile.sh",
+  "targets": [
+    {"fld": "FieldStackCore.fld", "role": "Ecosystem stack proc + IFF tags"},
+    {"fld": "FieldPrimer.fld", "role": "Field Technology doctrine hooks"},
+    {"fld": "FinalEye.fld", "role": "Vision offense + stoard witness slice"},
+    {"fld": "WorldRedata.fld", "role": "WRDT1 tail-clear envelope in guest"}
+  ]
+}

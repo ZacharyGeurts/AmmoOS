@@ -1,0 +1,31 @@
+{
+  "schema": "g16-chips-compiler-design/v1",
+  "lang": "graphql",
+  "driver": "g16-interp",
+  "compiler_lane": "chips_lower",
+  "universal_isa": [
+    "combinatronics"
+  ],
+  "chips": {
+    "primary_isa": "combinatronics",
+    "target_chips": [
+      "FieldChips",
+      "chips_hot",
+      "6502",
+      "2C02",
+      "68000",
+      "Z80",
+      "YM2612",
+      "SN76489"
+    ],
+    "universal": true,
+    "manifest": "Queen/data/chips-g16-manifest.json",
+    "design_note": "CHIPs universal — combinatronics ISA informs lowering, dispatch tables, and field_opt hot paths."
+  },
+  "frontend": "lib/g16-lang-lower.py",
+  "lowering": "lib/g16-lang-lower.py",
+  "native_module": null,
+  "profile": "belt_1_0",
+  "written": true,
+  "updated": "2026-06-29T20:57:03Z"
+}

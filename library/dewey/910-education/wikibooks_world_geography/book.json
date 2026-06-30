@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_world_geography",
+  "title": "Wikibooks World Regional Geography",
+  "author": "Wikibooks",
+  "dewey": "910",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "6-12",
+  "subject": "geography",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_world_geography/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_world_geography/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

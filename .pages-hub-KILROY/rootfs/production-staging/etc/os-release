@@ -1,0 +1,10 @@
+NAME="KILROY"
+PRETTY_NAME="KILROY Field OS"
+ID=kilroy
+ID_LIKE=linux
+VERSION="1.0.0 Taco"
+VERSION_ID="1.0.0"
+VARIANT="Field"
+VARIANT_ID=field
+KILROY_ABI=kilroy-field-1.0
+KILROY_COMPAT=linux-7.1.1

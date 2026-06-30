@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Full native field live build — latest g16 + ZOCR hangup watch (~10s).
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SG="$(cd "${ROOT}/../.." && pwd)"
+export SG_ROOT="${SG_ROOT:-${SG}}"
+export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${ROOT}}"
+export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${ROOT}/.nexus-state}"
+export QUEEN_ROOT="${ROOT}"
+export GROK16_ROOT="${GROK16_ROOT:-${SG}/Grok16}"
+export ZOCR_ROOT="${ZOCR_ROOT:-${SG}/ZOCR}"
+export FINAL_EYE_ROOT="${FINAL_EYE_ROOT:-${SG}/Final_Eye}"
+export FINAL_EAR_ROOT="${FINAL_EAR_ROOT:-${SG}/Final_Ear}"
+export QUEEN_WATCH_INTERVAL="${QUEEN_WATCH_INTERVAL:-10}"
+export QUEEN_WATCH_OCR="${QUEEN_WATCH_OCR:-1}"
+export QUEEN_FULL_FIELD="${QUEEN_FULL_FIELD:-1}"
+export G16_RELEASE_PROFILE="${G16_RELEASE_PROFILE:-1}"
+export G16_FIELD_SPEED="${G16_FIELD_SPEED:-1}"
+export QUEEN_WORLD_PORT="${QUEEN_WORLD_PORT:-9481}"
+export PATH="${SG}/GrokPy/bin:${SG}/PythonG/bin:${ROOT}/bin:${PATH}"
+
+LOG="${ROOT}/.queen-forge.log"
+echo "Queen live native field build"
+echo "  log: ${LOG}"
+echo "  g16: ${GROK16_ROOT}"
+echo "  ZOCR: ${ZOCR_ROOT}"
+echo "  Final_Eye: ${FINAL_EYE_ROOT}"
+echo "  Final_Ear: ${FINAL_EAR_ROOT} (tri-sense hangup poll every ${QUEEN_WATCH_INTERVAL}s)"
+echo "  full field: ${QUEEN_FULL_FIELD}"
+
+exec pythong "${ROOT}/lib/queen-forge.py" run live_build_field 2>&1 | tee -a "${LOG}"

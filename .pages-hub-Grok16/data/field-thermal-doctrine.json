@@ -1,0 +1,38 @@
+{
+  "schema": "grok16-field-thermal-doctrine/v1",
+  "title": "Grok16 ↔ NEXUS thermal bridge — hotspot guarding on every g16 build",
+  "motto": "Quality job 1: Landauer budget, incremental redata, observable certainty.",
+  "nexus_root": "NewLatest",
+  "bridge_script": "scripts/nexus-thermal-bridge.sh",
+  "cmake_profile": "cmake/grok16-thermal-guard.cmake",
+  "policy_env": "field-thermal-guard-policy.env",
+  "defaults": {
+    "max_joules_per_second": 45.0,
+    "joules_per_field_op": 1.2e-9,
+    "max_global_redata_chunk": 8192,
+    "hotspot_delta_c": 4,
+    "backoff_ms": 5
+  },
+  "metrics": {
+    "replaces_old_estimate": "857x_peak_risk_unguarded",
+    "burst_derating_ratio_4k_uhd": 1013.0,
+    "headroom_multiplier_at_budget": 852.0,
+    "budget_ops_per_second": 37500000000,
+    "certainty_score": 0.94,
+    "safe_global_redata_certainty_pct": 94.0
+  },
+  "engine_headers": [
+    "AMOURANTHRTX/Navigator/engine/FieldThermalGuard.hpp",
+    "AMOURANTHRTX/Navigator/engine/FieldWave.hpp",
+    "AMOURANTHRTX/Navigator/engine/FieldFabric.hpp",
+    "AMOURANTHRTX/Navigator/engine/FieldGlobalRedata.hpp",
+    "AMOURANTHRTX/Navigator/engine/FieldNexusThermalPolicy.hpp"
+  ],
+  "runtime_modules": [
+    "lib/field-thermal-guard.py",
+    "lib/field-global-redata.py",
+    "lib/thermal-governor.py",
+    "lib/field-switch-safety.py",
+    "lib/connection-gatekeeper.py"
+  ]
+}

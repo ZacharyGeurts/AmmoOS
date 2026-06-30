@@ -1,0 +1,25 @@
+{
+  "id": "exploring_apl",
+  "title": "Exploring APL",
+  "author": "Grok16 Field",
+  "dewey": "000",
+  "dewey_label": "Computer science, information & general works",
+  "ein": "H7C-EXPLORE-5e8681321bbe",
+  "format": "h7c",
+  "format_version": 3,
+  "book_kind": "exploring",
+  "embedded_figures": [
+    "cover",
+    "syntax",
+    "op_map",
+    "memory",
+    "compile"
+  ],
+  "manual_reader": "/field-lang-manuals",
+  "h7c": "library/dewey/000-computer-science/exploring_apl/exploring_apl.h7c",
+  "field_path": "library/dewey/000-computer-science/exploring_apl/exploring_apl.h7c",
+  "github_shelf": "000-computer-science",
+  "combinatronic_lang": "apl",
+  "cover": "/world/assets/combinatronic/books/apl.png",
+  "updated": "2026-06-29T13:18:04Z"
+}

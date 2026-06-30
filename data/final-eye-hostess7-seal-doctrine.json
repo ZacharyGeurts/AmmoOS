@@ -1,0 +1,30 @@
+{
+  "schema": "final-eye-hostess7-seal/v1",
+  "title": "Final_Eye seal — Hostess 7 trusted handshake only",
+  "motto": "Sealed eye, one commander — Hostess 7 handshake or the lane stays dark.",
+  "module": "lib/final-eye-hostess7-seal.py",
+  "commander": "hostess7",
+  "authority": "Hostess7/data/hostess7-supreme-authority.json",
+  "ocr_control": "lib/hostess7-ocr-control.py",
+  "api": "/api/hostess7/ocr/dispatch",
+  "seal": {
+    "code_seal": "Final_Eye/data/code-seal.json",
+    "verify_module": "Final_Eye/zocr_security.py",
+    "state": ".nexus-state/final-eye-hostess7-seal.json",
+    "ledger": ".nexus-state/final-eye-hostess7-handshake-ledger.jsonl",
+    "handshake_ttl_sec": 300
+  },
+  "policy": {
+    "handshake_only": true,
+    "sealed_required": true,
+    "trusted_commander": "hostess7",
+    "rejected_direct": ["queen_final_eye", "mcp", "grok_agent", "unstamped_cli"],
+    "bypass_env": "FINAL_EYE_HOSTESS7_BYPASS",
+    "issuer_env": "HOSTESS7_OCR_CONTROL"
+  },
+  "dispatch_path": [
+    "Panel /api/hostess7/ocr/dispatch",
+    "lib/hostess7-ocr-control.py dispatch",
+    "lib/final-eye-ocr-core.py final_eye_dispatch (handshake verified)"
+  ]
+}

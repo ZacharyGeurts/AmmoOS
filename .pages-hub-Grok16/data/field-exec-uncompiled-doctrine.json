@@ -1,0 +1,115 @@
+{
+  "schema": "grok16-field-exec-uncompiled/v1",
+  "title": "Uncompiled vs compiled — normal dev, release-day wave convert",
+  "statement": "Uncompiled runners execute at native interpreter speed during development. No artificial slowdown. Wave conversion to the single plane is a release-day step via Compile mode.",
+  "dev_default": "interpreted_normal",
+  "launch_format": {
+    "extension": ".launch",
+    "schema": "queen-launch/v1",
+    "mode": "organized_field",
+    "default_on": "code_folders",
+    "action": "inspect_and_run_without_compile",
+    "module": "Queen/lib/queen-launch-chamber.py",
+    "statement": ".launch is an organized field — inspect files, trim excess, run interpreter or BSP reuse; never compile on launch."
+  },
+  "organized_field": {
+    "schema": "queen-organized-field/v1",
+    "field_depth": 0,
+    "inspect_files": true,
+    "compile": false,
+    "trim_excess": true,
+    "runner_policy": {
+      "python": "interpreter_bsp",
+      "native": "bsp_reuse",
+      "cmake": "staged_binary",
+      "shell": "interpreter"
+    },
+    "python_interpreter": {
+      "module": "lib/field_python_interpreter.py",
+      "case_ids": ["python_gpy", "python_host"],
+      "statement": "Python BSP — staged GrokVM driver from exec-plane, same parity as native BSP reuse"
+    }
+  },
+  "singular_field_plane": {
+    "schema": "queen-singular-field/v1",
+    "field_depth": 0,
+    "auto_convert": true,
+    "trim_excess": true,
+    "prefer_native_sibling": true,
+    "compile": "release_only",
+    "module": "Queen/lib/queen-launch-singular-field.py",
+    "statement": "Compile mode / QUEEN_LAUNCH_SINGULAR_FIELD=1 — wave-convert to plane when BSP miss."
+  },
+  "release_default": "wave_convert_single_plane",
+  "compare_axis": "field_execution_ops_per_sec",
+  "combinatorics": {
+    "schema": "g16-field-combinatorics/v1",
+    "doctrine": "data/g16-field-combinatorics-doctrine.json",
+    "module": "lib/field_combinatorics.py",
+    "statement": "Hold all field combinatorics — speed cap and headroom for commonly used patterns beyond current defaults"
+  },
+  "truth_blocks": {
+    "schema": "g16-truth-blocks/v1",
+    "doctrine": "data/g16-truth-blocks-doctrine.json",
+    "module": "lib/field_truth_blocks.py",
+    "free_meld": "bigger truth blocks and more of them → fuse without compile gate",
+    "tiers": ["kernel", "module", "mega", "chamber", "stack"]
+  },
+  "iron_plate": {
+    "schema": "g16-iron-plate/v1",
+    "doctrine": "data/g16-iron-plate-doctrine.json",
+    "module": "lib/field_iron_plate.py",
+    "triad": ["assembly", "entropy", "field"],
+    "statement": "Identical C/C++ kernels convert to Python on the iron plate — dev runs the field face; exec reuses native BSP. Always breaks down to assembly, entropy, field."
+  },
+  "release_compile": {
+    "trigger": "Compile mode — Queen Files right-click on compileable sources",
+    "toolchain": "g16 belt_2_0",
+    "not_timed_in_compare": true,
+    "combinatronics": {
+      "schema": "g16-compile-combinatronics/v1",
+      "module": "lib/g16-compile-combinatronics.py",
+      "doctrine": "data/g16-compile-combinatronics-doctrine.json",
+    "sealed_output": "data/g16-sealed-output-doctrine.json",
+      "always_at_creation": true,
+      "gate": "compile_gate",
+      "stamp": "stamp_compiled_artifact",
+      "ideal_profile_from": "g16-ideal-compile.json",
+      "statement": "Release compile runs optimal combinatronics before wave-convert; plane.json carries stamped receipt."
+    }
+  },
+  "python_speedups": {
+    "schema": "grok16-python-speedups/v1",
+    "pythong_profile": "field_opt",
+    "env": {
+      "PYTHONG_FIELD": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "GROKPY_FIELD": "1",
+      "GPY16_FIELD": "1"
+    },
+    "drivers": ["gpy-16", "pythong", "python3"],
+    "interpreter_bsp": "lib/field_python_interpreter.py",
+    "statement": "Python runs interpreter lane — no compile on launch; GrokVM + field_opt profile active"
+  },
+  "optimization_backlog": [
+    {
+      "id": "gpy_vm_hot",
+      "lane": "python_gpy",
+      "target": "GrokVM hot loop",
+      "status": "active",
+      "note": "gpy-16 field_native + PYTHONDONTWRITEBYTECODE + interpreter BSP wired"
+    },
+    {
+      "id": "pythong_wave",
+      "lane": "python_host",
+      "target": "pythong → g16 wave convert on release Compile mode",
+      "status": "release_day"
+    },
+    {
+      "id": "cmake_g16_link",
+      "lane": "cmake",
+      "target": "g16-ld C++ stdlib meld for belt_2 CMake plane",
+      "status": "blocked"
+    }
+  ]
+}

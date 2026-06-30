@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>7 — Offensive Dispatch — GPU Engine · Field Technology v6</title>
+  <meta name="description" content="Chapter 7: Offensive Dispatch — GPU Engine. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Field_Primer/chapters/07-gpu-engine.html" />
+  <meta name="theme-color" content="#040810" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon.png" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Field Technology v6" />
+  <meta property="og:title" content="7 — Offensive Dispatch — GPU Engine · Field Technology v6" />
+  <meta property="og:description" content="Chapter 7: Offensive Dispatch — GPU Engine. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta property="og:url" content="https://zacharygeurts.github.io/Field_Primer/chapters/07-gpu-engine.html" />
+  <meta property="og:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch07-gpu-engine.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GPU dispatch" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ZacharyGeurts" />
+  <meta name="twitter:creator" content="@ZacharyGeurts" />
+  <meta name="twitter:title" content="7 — Offensive Dispatch — GPU Engine · Field Technology v6" />
+  <meta name="twitter:description" content="Chapter 7: Offensive Dispatch — GPU Engine. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta name="twitter:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch07-gpu-engine.jpg" />
+  <meta name="twitter:image:alt" content="GPU dispatch" />
+  <link rel="stylesheet" href="../css/field-primer.css" />
+  <link rel="stylesheet" href="../css/chapters.css" />
+  <link rel="stylesheet" href="../css/reader.css" />
+</head>
+<body class="chapter-page accent-phi">
+  <nav class="top"><div class="inner">
+    <a class="logo" href="../index.html">FIELD TECHNOLOGY <span class="v6-badge">v6</span></a>
+    <ul>
+      <li><a href="../creditors/index.html">Creditors</a></li>
+      <li><a href="../index.html#love-god">Love &amp; God</a></li>
+      <li><a href="../index.html#chapters">Chapters</a></li>
+      <li><a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/07-GPU-Field-Engine">Wiki</a></li>
+    </ul>
+  </div></nav>
+  <header class="chapter-hero" style="background-image:url('../assets/images/chapters/ch07-gpu-engine.jpg')">
+    <div class="chapter-hero-overlay"></div>
+    <div class="chapter-hero-content">
+      <p class="eyebrow">Chapter 7 · Field Technology v6</p>
+      <h1>Offensive Dispatch — GPU Engine</h1>
+      
+    </div>
+  </header>
+  <main class="chapter-main">
+    <nav class="chapter-nav"><a class="btn secondary" href="06-rf-signals.html">← Ch 6</a> <a class="btn" href="08-field-die.html">Ch 8 →</a></nav>
+    <p class="eyebrow">Chapter 7 · Offensive Dispatch — GPU Field Engine</p>
+
+<div class="objectives">
+<h2 id="toc-07-learning-objectives">Learning objectives</h2>
+<p>After this chapter you should be able to:</p>
+<ul>
+<li>Trace the full dispatch spine from <code>main.cpp</code> through <code>vkCmdDispatch</code> and name what runs on host versus GPU.</li>
+<li>Explain why the default canvas is <code>x86.comp</code> with <code>FieldSocket</code> push constants, not decorative raymarch.</li>
+<li>Enumerate the Vulkan descriptor bindings for the x86 path and state why <code>FIELD_LAYOUT_VERSION = 5</code> is a contract, not decoration.</li>
+<li>Describe how <code>rtx()</code>, sealed time, and analog fabric bindings 8–10 integrate into one offensive write each tick.</li>
+<li>Run week-one grep drills that prove dispatch is alive before you trust screenshots.</li>
+</ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-07-introduction-offense-writes-the-field">Introduction — offense writes the field</a></li><li><a href="#toc-07-thin-host-fat-gpu-architectural-contract">Thin host, fat GPU — architectural contract</a></li><li><a href="#toc-07-the-rtx-singleton-one-vulkan-fabric">The rtx() singleton — one Vulkan fabric</a></li><li><a href="#toc-07-canvas-kinds-x86fields-versus-classic">Canvas kinds — X86Fields versus Classic</a></li><li><a href="#toc-07-pipeline-dispatch-canvas-per-frame-heart">Pipeline::dispatch_canvas() — per-frame heart</a></li><li><a href="#toc-07-vulkan-descriptor-layout-x86-path">Vulkan descriptor layout — x86 path</a></li><li><a href="#toc-07-fieldsocket-push-constants-for-offense">FieldSocket — push constants for offense</a></li><li><a href="#toc-07-sealed-time-linear-physics-time">Sealed time — linear physics time</a></li><li><a href="#toc-07-analog-fabric-on-the-x86-path-bindings-8-10">Analog fabric on the x86 path — bindings 8–10</a></li><li><a href="#toc-07-boot-sequence-what-first-dispatch-establishes">Boot sequence — what first dispatch establishes</a></li><li><a href="#toc-07-queen-and-fieldfox-same-spine-held-gates">Queen and FieldFox — same spine, held gates</a></li><li><a href="#toc-07-cfl-preview-host-refuses-explosion">CFL preview — host refuses explosion</a></li><li><a href="#toc-07-headless-dispatch-and-ci-honesty">Headless dispatch and CI honesty</a></li><li><a href="#toc-07-operator-drill-week-one-dispatch-proof">Operator drill — week one dispatch proof</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-07-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Offense writes the field; defense reads it. On the way you will trace <code>main.cpp</code> through <code>vkCmdDispatch</code>, master the x86 descriptor layout, seal time in FieldSocket, and treat <code>FIELD_LAYOUT_VERSION = 5</code> as a contract, not decoration.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch07-gpu-engine.jpg" alt="GPU dispatch" loading="lazy" /><figcaption>On the way — GPU dispatch</figcaption></figure>
+<ul class="on-the-way-journey"><li>Thin host, fat GPU architecture</li><li>Canvas kinds: X86Fields versus Classic</li><li>dispatch_canvas ritual ordering</li><li>Bindings 8–10 and ThermoAccountant every tick</li></ul>
+</div>
+
+
+<h2 id="toc-07-introduction-offense-writes-the-field">Introduction — offense writes the field</h2>
+<p>Chapters 5 and 6 taught defense: reading the packet field, separating RF meanings, refusing to let someone else narrate your perimeter. Chapter 7 turns the spear around. <strong>Offense, in Field Technology, is imposing boundary conditions on the next tick faster than confusion propagates.</strong> Defense reads continuous state; offense <em>writes</em> it. The write happens on the GPU, every frame, through a single Vulkan dispatch that the thin C++ host orchestrates but does not simulate.</p>
+<p>This is not metaphor dressed as engineering. When you run <code>./linux.sh run</code>, the default path boots the <strong>Field Die</strong> — a 64 MiB guest universe on silicon — and evolves Phi, Thermo, and Flow fabrics through <code>x86.comp</code>. The host opens the window, seals time, enforces CFL guards, packs <code>data_bus[64]</code>, and calls <code>vkCmdDispatch</code>. The GPU runs the world. If you remember one sentence from this chapter, remember this: <strong>the spear is <code>vkCmdDispatch</code>, not a motivational poster.</strong></p>
+<p>Chapter 8 owns the die byte map and bus slots. Chapter 9 owns CFL and Tesla valve constants. Chapter 10 mirrors fabric into <code>hardwareFabric</code>. Chapter 11 teaches you to grep the receipts. Chapter 12 lists every rock. This chapter is the spine that connects them: how dispatch actually happens, what must match between host and shader, and why version skew is desynchronized reality.</p>
+
+<h2 id="toc-07-thin-host-fat-gpu-architectural-contract">Thin host, fat GPU — architectural contract</h2>
+<p>Modern game engines often split work across CPU and GPU in complex ways — physics on CPU, rendering on GPU, animation trees, job systems. AMOURANTHRTX makes a sharper choice for field evolution: <span class="tag impl">the host never runs a CPU-side PDE solver on the analog fabric.</span> Texel evolution is compute-shader work each dispatch. The C++ layer is deliberately thin: device setup, descriptor binding, push constants, harmonics guard, layer pump, and presentation.</p>
+<pre class="eq">main.cpp → navigator_main() → RayCanvas → Pipeline::dispatch_canvas() → vkCmdDispatch</pre>
+<p>Read that chain left to right as a timeline. <code>main.cpp</code> enters the navigator. <code>RayCanvas</code> owns the swapchain-facing canvas and fabric creation. <code>Pipeline::dispatch_canvas()</code> is the per-frame heart: it advances sealed time, runs the CFL guard, pumps field layers, packs telemetry, and issues the compute dispatch. <code>vkCmdDispatch</code> is where offense becomes physical — threads on the GPU write the next state of guest RAM, fabrics, and HDR output.</p>
+<div class="callout everyone"><strong>Plain English:</strong> C++ is the conductor. The orchestra is the GPU. The conductor does not play every instrument; the conductor keeps time and refuses to let the hall catch fire.</div>
+<p>This architecture follows from the axioms named in Chapter 1. <strong>Reality is 3D</strong> means state occupies addressable space — texels, die bytes, bus words. <strong>Time is linear</strong> means each dispatch advances one tick with receipts, not retroactive myth. <strong>Energy can be moved</strong> means coupling between Phi, Thermo, and Flow is how irreversibility travels — and that movement is shader arithmetic, not host loops.</p>
+<p>Operators who come from software emulation backgrounds sometimes ask whether <code>FieldX86Emu</code> contradicts “fat GPU.” It does not. Host assist is an optional path when <code>ControlHostCpu</code> is set in <code>FieldSocket</code> control flags. The default product surface is GPU interpretation via <code>x86.comp</code>. The host assists; it does not replace the dispatch loop. Chapter 8 details the execution model; here we stress the default: GPU-first, host-thin.</p>
+
+<figure class="figure"><img src="../assets/images/chapters/ch07-gpu-engine.jpg" alt="GPU engine dispatch spine" loading="lazy" /><figcaption>Figure 7.1 — Thin host, fat GPU: one dispatch spine writes guest RAM, fabrics, and HDR each tick.</figcaption></figure>
+
+<h2 id="toc-07-the-rtx-singleton-one-vulkan-fabric">The <code>rtx()</code> singleton — one Vulkan fabric</h2>
+<p>Scattered Vulkan devices across a codebase are a maintenance hazard and an honesty hazard — two builds can diverge silently, two queues can fight, two memory budgets can lie. AMOURANTHRTX centralizes the runtime in <code>rtx()</code>: one global accessor to device, queues, memory budget, and <code>hardwareFabric</code>. Queen browser and FieldFox link this same spine when <code>QUEEN_BROWSER_BUILD</code> is defined at compile time.</p>
+<p>Why a singleton for a textbook chapter? Because observability assumes a single witness. When Chapter 11 tells you to <code>list Hardware</code> in the prompt terminal, you are reading fields from the same <code>rtx().hardwareFabric</code> that <code>updateHardwareFromAnalogFields()</code> updated last frame. When Chapter 10 discusses spiderweb edges, those edges live on this fabric. When Chapter 9 publishes Tesla bias to <code>data_bus[31]</code> and <code>data_bus[34]</code>, the values were computed in the dispatch loop that owns this singleton.</p>
+<table><thead><tr><th><code>rtx()</code> responsibility</th><th>Operator-facing artifact</th></tr></thead>
+<tbody>
+<tr><td>Device + queue selection</td><td>Vulkan init logs under <code>ELLIE</code> category <code>VULKAN</code></td></tr>
+<tr><td>VRAM budget tracking</td><td>STATUS block VRAM line (~5 s cadence)</td></tr>
+<tr><td><code>hardwareFabric</code> graph</td><td>Spiderweb util, per-core MHz in prompt <code>list Hardware</code></td></tr>
+<tr><td>Shared with Queen</td><td>In-engine FieldWebPanel thermo context (Chapter 21)</td></tr>
+</tbody></table>
+<p><span class="tag impl">Implemented.</span> You can grep <code>rtx()</code> in <code>Navigator/engine/</code> and follow references. <span class="tag meta">“96% lies device cannot drift session”</span> is security posture narrative — useful for team culture, not a sensor reading. Chapter 12 keeps that distinction visible.</p>
+
+<h2 id="toc-07-canvas-kinds-x86fields-versus-classic">Canvas kinds — X86Fields versus Classic</h2>
+<p>Not every swipe in <code>Options::Canvas::SwipeList</code> is the same product. Two canvas kinds matter for field literacy:</p>
+<table><thead><tr><th>Kind</th><th>Shader</th><th>Push block</th><th>Primary use</th></tr></thead>
+<tbody>
+<tr><td><strong>X86Fields</strong></td><td><code>x86.comp</code></td><td><code>FieldSocket</code></td><td>Field Die + AmmoOS (default)</td></tr>
+<tr><td><strong>Classic</strong></td><td><code>CANVAS.comp</code> (+ swipes)</td><td><code>PushConstants</code></td><td>Thermo + RT demos, pedagogical fabric</td></tr>
+</tbody></table>
+<p>Default <code>./linux.sh run</code> sets swipe index 0 to <code>x86</code> with <code>CanvasUsesX86Die = true</code>. That means your first honest encounter with the engine is the Field Die — Big Grin HUD at 172×48, guest RAM pumped every frame, AmouranthOS chrome on bindings 11–14 — not a decorative raymarch postcard.</p>
+<p>Classic canvas remains vital pedagogy. Chapter 3’s thermodynamics drills — move the mouse, watch <code>entropyThisFrame</code> — often happen on <code>CANVAS.comp</code> where Phi/Thermo/Flow evolution is visually obvious. Swipe to <code>energy</code>, <code>Flowers</code>, <code>RetroRTX</code>, Mandelbulb variants, tributes, and you change shaders without losing the die path infrastructure. The swipe list is hot-swap UX; the default is field sovereignty.</p>
+<div class="callout science"><strong>Category error to avoid:</strong> Treating a Classic thermo demo as proof the Field Die is absent. The die path is the default product surface. Classic is alternate curriculum on the same spine.</div>
+<p>Cross-link: Chapter 2 introduced three scales of state — fabric, die, packet field. X86Fields canvas is where scale 1 and scale 2 converge in one dispatch. Chapter 5’s packet field remains NEXUS-local; it does not live inside this Vulkan loop, but Queen binds them at the operator perimeter (Chapter 21).</p>
+
+<h2 id="toc-07-pipeline-dispatch-canvas-per-frame-heart"><code>Pipeline::dispatch_canvas()</code> — per-frame heart</h2>
+<p>Every frame that matters passes through <code>dispatch_canvas()</code>. Treat it as a ritual with ordered obligations — skip a step and stderr will eventually embarrass you.</p>
+<ol>
+<li><strong>Seal time</strong> — <code>TotalTime::seal()</code> writes monotonic session genesis into <code>FieldSocket::sealed_time</code>. Frame-rate jitter cannot rewrite physics time.</li>
+<li><strong>CFL harmonics guard</strong> — before fabric evolution, compute <code>waveCFL</code> and <code>thermoCFL</code>; scale unsafe parameters. Chapter 9 is the full treatment; here note it runs <em>every</em> dispatch, canvas-agnostic.</li>
+<li><strong>Layer pump</strong> — <code>FieldLayer::pumpAll()</code> walks L0–L9 composable layers (RAM, VGA, FAT, MSCDEX, Audio, IO, BIOS), syncing guest state into <code>data_bus</code> slots. Chapter 8 owns the slot map.</li>
+<li><strong>ThermoAccountant population</strong> — binding 2 buffer receives entropy proxy, boundary thermo, maintenance cost. Mirrored to <code>data_bus[24–28]</code>.</li>
+<li><strong>Analog FCC pack</strong> — when x86 FieldSocket is active, floats land in <code>data_bus[16–23]</code> so guest HUD and host agree on knobs.</li>
+<li><strong>Guest boot / AmmoOS</strong> — on live x86 canvas: <code>FieldAmouranthOs::boot()</code>, <code>sync_aos_textures()</code>, chrome hit-testing constants shared with shader.</li>
+<li><strong>Hardware mirror</strong> — <code>updateHardwareFromAnalogFields()</code> samples fabric averages into <code>hardwareFabric</code>. Chapter 10.</li>
+<li><strong><code>vkCmdDispatch</code></strong> — GPU writes next tick.</li>
+</ol>
+<p>Headless dispatch still runs this loop — valid CI signal per Chapter 12. A screenshot is optional; the dispatch receipt is not.</p>
+<pre class="eq">waveCFL = c·Δt/Δx ≤ 1  ·  thermoCFL = α·Δt/Δx² ≤ 1  ·  then vkCmdDispatch</pre>
+<p>The ordering matters. CFL before dispatch is numerical ethics: the host refuses NaN theology. Layer pump before dispatch is address ethics: the guest universe must be coherent when the shader reads it. ThermoAccountant before dispatch is temporal ethics: irreversibility gets a receipt even when you are staring at AmmoOS chrome instead of a thermo heatmap.</p>
+
+<h2 id="toc-07-vulkan-descriptor-layout-x86-path">Vulkan descriptor layout — x86 path</h2>
+<p>Host and shader must agree on bindings. Version skew is not a gentle bug; it is two realities talking past each other — one texel thinks it is hot, another never received the Thermo write.</p>
+<figure class="figure"><img src="../assets/images/field-die.jpg" alt="Field die and fabrics" loading="lazy" /><figcaption>Figure 7.3 — Bindings 1–2 and 8–14: die, thermo, chrome on one layout version. <span class="claim-tie">Claim: Default ./linux.sh run boots Field Die — x86.comp path</span></figcaption></figure>
+
+<table><thead><tr><th>Binding</th><th>Resource</th><th>Role in dispatch</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>HDR output</td><td>Presentation-facing color buffer</td></tr>
+<tr><td>1</td><td><code>FieldX86Die</code> SSBO</td><td>64 MiB guest RAM + tile cache tail</td></tr>
+<tr><td>2</td><td><code>ThermoAccountant</code></td><td>Per-frame entropy ledger</td></tr>
+<tr><td>8</td><td>Phi fabric</td><td>Wave / gate potential</td></tr>
+<tr><td>9</td><td>Thermo fabric</td><td>Heat + entropy density</td></tr>
+<tr><td>10</td><td>Flow fabric</td><td>Advection / momentum (.gb gradients)</td></tr>
+<tr><td>11–14</td><td>AmouranthOS chrome textures</td><td>Portrait, wallpaper, start icons, RTX font SDF</td></tr>
+</tbody></table>
+<p><code>FIELD_LAYOUT_VERSION = 5</code> is the handshake constant. If host struct layout and <code>x86.comp</code> layout diverge, you do not get a polite warning — you get wrong HUD hex, wrong thermo mirrors, wrong chrome flags in <code>data_bus[42]</code>. Operators packaging forks must bump version in lockstep or accept desync.</p>
+<p>Bindings 8–10 are the analog fabric Chapter 2 named. They are not decorative names for pretty gradients. They are where Maxwell’s neighborhood lives on a grid — discrete Laplacian on Phi, diffusion on Thermo, gradient magnitude mixed with <code>GateFidelity</code> and Tesla relaxation on Flow. Chapter 15 credits Maxwell; Chapter 7 stresses they are bound <em>every</em> x86 dispatch, not only on Classic canvas.</p>
+
+<h2 id="toc-07-fieldsocket-push-constants-for-offense"><code>FieldSocket</code> — push constants for offense</h2>
+<p><code>FieldSocket</code> is the per-dispatch push-constant control block for the x86 path. Where Classic canvas uses <code>PushConstants</code> with a overlapping but not identical layout, FieldSocket carries die-specific flags, sealed time, probe positions, and control bits that guest execution and HUD overlays consume inside <code>x86.comp</code>.</p>
+<p>Notable control flags in <code>Options::Canvas::ControlFlags</code> (operators grep <code>ControlHostCpu</code>, <code>ControlAmmoExec</code>, <code>ControlFieldDebugHud</code>):</p>
+<table><thead><tr><th>Bit / flag</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>ControlHostCpu</code> (8)</td><td>Host 8086 assist path via <code>FieldX86Emu</code></td></tr>
+<tr><td><code>ControlRtxDos</code> (64)</td><td>RTX-DOS panel surface</td></tr>
+<tr><td><code>ControlAmmoExec</code> (1024)</td><td>Guest program execution active</td></tr>
+<tr><td><code>ControlFieldDebugHud</code> (2048)</td><td>Field-die monitor overlay</td></tr>
+</tbody></table>
+<p>Push constants are small and fast — they ride the command buffer without descriptor churn for values that must change every tick. Sealed time in FieldSocket is how session genesis survives frame drops: wall clock may stutter; physics time in the socket does not rewrite backward.</p>
+<p>Chapter 19 extends sealed time across machines with sovereign pulses and <code>SQUIDGIE</code> verdicts. Here, session-local sealing is already offensive discipline — you impose a clock on the field before the GPU writes.</p>
+
+<h2 id="toc-07-sealed-time-linear-physics-time">Sealed time — linear physics time</h2>
+<p><code>TotalTime::seal()</code> in <code>ELLIE.hpp</code> locks session genesis into <code>FieldSocket::sealed_time</code>. This is monotonic discipline: the dispatch loop owns a physics timeline distinct from VSYNC jitter.</p>
+<p>Why operators care: thermo receipts correlate with dispatch order. If frame rate halved but entropy per wall-second looked unchanged, you might suspect physics scaled wrong. Sealed time gives you a stable axis — grep THERMO lines against dispatch steps, not against distracted wall clock alone.</p>
+<div class="callout axiom"><strong>Time is linear (here).</strong> Logs are a timeline. Sealed session clocks do not rewrite physics time. Frame-rate drift cannot turn yesterday’s boundary conditions into today’s myth.</div>
+<p>Free energy income in ThermoAccountant includes sealed time as a living-world potential — Chapter 4 introduced the proxy. The point for offense: you are not merely painting pixels; you are advancing a ledger that assumes time ran forward.</p>
+
+<h2 id="toc-07-analog-fabric-on-the-x86-path-bindings-8-10">Analog fabric on the x86 path — bindings 8–10</h2>
+<p>Even on Field Die canvas, Phi/Thermo/Flow evolve. The guest may look like DOS nostalgia; the fabrics underneath are continuous fields. Control knobs from <code>Options::AnalogFields</code> mirror into <code>data_bus[16–23]</code> when FieldSocket is active:</p>
+<table><thead><tr><th>Slot</th><th>FCC float</th><th>Effect (short)</th></tr></thead>
+<tbody>
+<tr><td>[16]</td><td><code>TimeScale</code></td><td>Global Δt multiplier</td></tr>
+<tr><td>[17]</td><td><code>ThermoAlpha</code></td><td>Thermal diffusivity α</td></tr>
+<tr><td>[18]</td><td><code>WaveSpeed</code></td><td>Phi propagation speed c</td></tr>
+<tr><td>[19]</td><td><code>GateFidelity</code></td><td>0 = soft analog … 1 = sharp gate</td></tr>
+<tr><td>[20]</td><td><code>EntropyFloor</code></td><td>Minimum irreversible noise</td></tr>
+<tr><td>[21]</td><td><code>InjectStrength</code></td><td>Mouse/probe energy injection</td></tr>
+<tr><td>[22]</td><td><code>PropalacticScale</code></td><td>Large-wavelength forcing on Phi</td></tr>
+<tr><td>[23]</td><td><code>FieldCoupling</code></td><td>Thermo ↔ Phi ↔ Flow strength</td></tr>
+</tbody></table>
+<p>Tesla valve bias publishes to slots <strong>31</strong> and <strong>34</strong> — Chapter 9 names constants <code>TESLA_R_FORWARD = 0.18</code>, <code>TESLA_R_REVERSE = 3.2</code>, <code>FIELD_PHI_MILLI = 618</code>. Offense includes directional preference: forward paths ease, reverse paths resist.</p>
+<p>Cross-link Chapter 3: clamps on evolved values (<code>newPhi ∈ [-2, 2]</code>, etc.) are numerical embodiment of “the kitchen cannot invent infinite temperature because the UI got excited.” The host CFL guard and shader clamps are coupled defenses against operator over-enthusiasm.</p>
+
+<h2 id="toc-07-boot-sequence-what-first-dispatch-establishes">Boot sequence — what first dispatch establishes</h2>
+<p>First-run operators see splash and chrome; stderr sees obligations. Typical boot when x86 canvas is live:</p>
+<ol>
+<li><code>aos_load</code> / splash SPIR-V warm-up</li>
+<li><code>FieldAmouranthOs::boot()</code> when die path active</li>
+<li><code>sync_aos_textures()</code> — bindings 11–14 populated</li>
+<li>Guest programs via <code>FieldAmouranthLaunch</code> / <code>FieldAmouranthExec</code> when operator launches</li>
+<li>Chrome hit-testing shares layout constants with <code>x86.comp</code> (<code>TASKBAR_H</code>, <code>UI_BOOST</code>, etc.)</li>
+</ol>
+<p>Boot is offense — you impose initial boundary conditions on empty guest RAM, seed fabrics, seal time. Subsequent dispatches are offense at cadence. Defense, in the network sense, is a different product (NEXUS). Do not conflate them in one dashboard number.</p>
+
+<h2 id="toc-07-queen-and-fieldfox-same-spine-held-gates">Queen and FieldFox — same spine, held gates</h2>
+<p>When <code>QUEEN_BROWSER_BUILD</code> is set, Queen browser links the same <code>rtx()</code> fabric. Navigation → packet field → gatekeeper → thermo receipt is Chapter 21’s doctrine. For this chapter, note: Queen does not replace dispatch; it <em>inherits</em> it. WebGL/WebGPU contexts receive thermo discipline; FieldWebPanel reads the same sealed session.</p>
+<p><span class="tag impl">Implemented when built.</span> <code>queen-browser</code> with <code>--sovereign --queen</code> flags. <span class="tag phil">“Hold all gates”</span> is operator philosophy with implemented gatekeeper wiring — Chapter 12 separates them.</p>
+
+<h2 id="toc-07-cfl-preview-host-refuses-explosion">CFL preview — host refuses explosion</h2>
+<p>Chapter 9 owns CFL deeply. Every operator of dispatch must know it exists on the spine:</p>
+<div class="eq">waveCFL = c·Δt/Δx ≤ 1 · thermoCFL = α·Δt/Δx² ≤ 1</div>
+<p>Before GPU evolution, host scales down unsafe <code>waveSpeed</code>, <code>thermoAlpha</code>, per-step <code>dT</code>, and <code>injectStrength</code>. Hard caps apply (e.g. <code>waveSpeed ∈ [0.01, 2.0]</code>, <code>dT ≤ 0.033</code>). This is the “intelligent management” layer in silicon-gate metaphor — pre-conditioning operator inputs before they reach <code>x86.comp</code> or <code>CANVAS.comp</code>.</p>
+<p>Offense without CFL is vandalism against your own field. You can write arbitrary boundary conditions; the host refuses to let those writes numerically annihilate the fabric.</p>
+
+<h2 id="toc-07-headless-dispatch-and-ci-honesty">Headless dispatch and CI honesty</h2>
+<p>Valid engineering signal does not require a window. Headless dispatch still runs <code>dispatch_canvas()</code>, still populates ThermoAccountant, still advances sealed time. Chapter 12 lists this as a rock: trust headless stderr for CI, not cover art.</p>
+<p>Operators packaging AMOURANTHRTX in pipelines should grep THERMO from headless runs the same way they would on desktop. Zero entropy while fabrics claim evolution is a failed path — physics refusing to lie.</p>
+
+<h2 id="toc-07-operator-drill-week-one-dispatch-proof">Operator drill — week one dispatch proof</h2>
+<div class="callout drill"><strong>Drill 7.A — Dispatch spine alive</strong></div>
+<pre class="eq">./linux.sh run 2>&1 | tee run.log
+# Let run 90 seconds on default x86 canvas
+grep -E 'VULKAN|CANVAS|dispatch|THERMO|STATUS' run.log | tail -40</pre>
+<p>Expect VULKAN init, CANVAS dispatch lines, periodic STATUS with FPS/GPU ms/VRAM, THERMO with entropy and boundary thermo. Absence of THERMO after fabric motion means your path failed — return to bindings and layout version.</p>
+<div class="callout drill"><strong>Drill 7.B — Layout version grep</strong></div>
+<pre class="eq">grep -r 'FIELD_LAYOUT_VERSION' Navigator/engine/ Navigator/shaders/
+# Confirm host and x86.comp agree on version 5</pre>
+<div class="callout drill"><strong>Drill 7.C — Swipe pedagogy</strong></div>
+<pre class="eq"># From prompt terminal inside run:
+set AnalogFields.GateFidelity 0.85
+list AnalogFields
+# Swipe to energy canvas 60s, grep entropyThisFrame in log</pre>
+<p>Drill 7.C connects Chapter 7 spine to Chapter 3 thermo pedagogy without abandoning die default on next launch.</p>
+
+<h2 id="toc-07-common-failures-dispatch-literacy">Common failures — dispatch literacy</h2>
+<table><thead><tr><th>Symptom</th><th>Likely cause</th><th>First grep</th></tr></thead>
+<tbody>
+<tr><td>HUD hex nonsense</td><td><code>FIELD_LAYOUT_VERSION</code> skew</td><td>layout constant in host + shader</td></tr>
+<tr><td>Flat entropy, moving chrome</td><td>ThermoAccountant not populated</td><td><code>THERMO</code> category silent</td></tr>
+<tr><td>Instant NaN colors on Classic</td><td>CFL violated before guard</td><td>waveCFL / thermoCFL in debug</td></tr>
+<tr><td>Guest RAM stale</td><td>Layer pump skipped or SSBO not bound</td><td>binding 1, <code>pumpAll</code></td></tr>
+<tr><td>Spiderweb frozen</td><td>Fabric empty or mirror not called</td><td><code>updateHardwareFromAnalogFields</code></td></tr>
+</tbody></table>
+<p>Dispatch literacy is knowing which layer owns the symptom. The GPU runs the world — but the host can refuse to call it, bind wrong memory, or pack lies into <code>data_bus</code>.</p>
+
+<h2 id="toc-07-chapter-summary">Chapter summary</h2>
+<p>Chapter 7 is the offensive core: thin host, fat GPU, one dispatch spine. Default canvas is <code>x86.comp</code> with <code>FieldSocket</code>, not decorative raymarch. <code>rtx()</code> singleton unifies device, budget, and <code>hardwareFabric</code>. Descriptor bindings 0–2 and 8–14 must match <code>FIELD_LAYOUT_VERSION = 5</code>. Each <code>dispatch_canvas()</code> seals time, enforces CFL, pumps layers, fills ThermoAccountant and <code>data_bus</code>, mirrors hardware, and issues <code>vkCmdDispatch</code>. Sealed time keeps physics linear; analog FCC floats keep host and shader honest about knobs. Queen inherits this spine when built. Trust stderr before screenshots; headless dispatch counts.</p>
+<p>Next: <a href="08-field-die.html">Chapter 8 — Die-Resident Universe</a> owns 64 MiB guest RAM, layer map L0–L9, and the full <code>data_bus[64]</code> slot contract. Prior: <a href="06-rf-signals.html">Chapter 6 — Signal Shell</a> separated RF meanings before offense took the spear.</p>
+
+<h2 id="toc-07-raycanvas-window-fabric-and-presentation"><code>RayCanvas</code> — window, fabric, and presentation</h2>
+<p><code>RayCanvas</code> sits between the navigator shell and <code>Pipeline::dispatch_canvas()</code>. It owns swapchain-facing presentation, adaptive resolution scaling from 320×200 heritage up to 4K+ operator preference, and the call to <code>createAnalogFieldFabric()</code> that instantiates Phi, Thermo, and Flow storage images. Without RayCanvas, you would have a Pipeline with no honest surface to present and no fabric to evolve.</p>
+<p>Adaptive scale is not vanity. It interacts with CFL: Δx changes when resolution changes, which changes admissible Δt and wave speed. The harmonics guard in <code>dispatch_canvas()</code> reads render resolution when computing CFL numbers. Operators who crank resolution without watching stderr may find the host silently scaling FCC floats down — not punishment, protection.</p>
+<p>RayCanvas also participates in chrome layout shared with <code>x86.comp</code>. Taskbar height, UI boost constants, and hit-testing regions must match shader expectations or clicks land in wrong guest coordinates. Offense includes UX boundary conditions: where the operator points is where the field receives probe injection.</p>
+<p>Presentation path: HDR output at binding 0 receives the composed result of die render, fabric contribution, and AmouranthOS chrome. Chapter 17 names the holographic boundary where beauty costs heat; Chapter 7 names the mechanism — HDR is not free, and ThermoAccountant counts maintenance.</p>
+
+<h2 id="toc-07-vram-budget-offense-has-a-memory-perimeter">VRAM budget — offense has a memory perimeter</h2>
+<p><code>rtx()</code> tracks VRAM budget because offense that allocates without witness is how operators lose machines to OOM kills mid-session. STATUS block (~5 s, <code>ELLIE</code> category <code>STATUS</code>) reports VRAM alongside FPS and GPU milliseconds. Chapter 11 teaches the grep rhythm; here note VRAM is part of dispatch health, not a separate concern.</p>
+<p>Field Die SSBO at binding 1 is 64 MiB guest map plus tail tile cache — substantial but fixed. Fabrics scale with resolution. Chrome textures on 11–14 add portrait and wallpaper assets. A long session with many swipes does not duplicate the die SSBO; it rebinds shaders and push layouts. Understanding what scales prevents false panic when STATUS shows VRAM climb after first fabric creation.</p>
+<table><thead><tr><th>Resource</th><th>Typical scale behavior</th></tr></thead>
+<tbody>
+<tr><td><code>FieldX86Die</code> SSBO</td><td>Fixed guest map + ZMM1024 tail</td></tr>
+<tr><td>Phi / Thermo / Flow</td><td>Resolution-dependent texel count</td></tr>
+<tr><td>HDR output</td><td>Follows adaptive canvas scale</td></tr>
+<tr><td>AOS chrome textures</td><td>Asset-sized; synced each boot</td></tr>
+</tbody></table>
+
+<h2 id="toc-07-thermoaccountant-on-every-dispatch-canvas-agnost"><code>ThermoAccountant</code> on every dispatch — canvas-agnostic</h2>
+<p>Binding 2, <code>ThermoAccountant</code>, is populated every <code>dispatch_canvas()</code> regardless of whether you are on x86 or Classic canvas. Chapter 4 introduced the fields; Chapter 7 stresses canvas-agnostic obligation — you do not get to skip entropy receipts because Big Grin HUD hides the thermo heatmap.</p>
+<table><thead><tr><th>Field</th><th>Meaning</th><th><code>data_bus</code> mirror</th></tr></thead>
+<tbody>
+<tr><td><code>entropyThisFrame</code></td><td>Landauer proxy + field work + probes + host x86 heat</td><td>[24]</td></tr>
+<tr><td><code>avgBoundaryThermo</code></td><td>Mean boundary temperature / entropy density</td><td>[25]</td></tr>
+<tr><td><code>prevMaintCost</code></td><td>Coherence with previous frame</td><td>[26]</td></tr>
+<tr><td><code>freeEnergyIncome</code></td><td>Sealed time + input activity</td><td>[27]</td></tr>
+<tr><td><code>steps</code></td><td>Dispatch counter</td><td>[28]</td></tr>
+</tbody></table>
+<p>On x86 path, <code>FieldX86Emu::hostCyclesLastFrame()</code> contributes host heat when ControlHostCpu assist runs. GPU interpretation path still accrues field work from fabric coupling and Tesla entropy terms. <span class="tag meta">Proxy integral — not junction calorimetry.</span> Chapter 12’s honesty table restates the label; dispatch operators still grep THERMO because comparative receipts detect failure.</p>
+
+<h2 id="toc-07-swipe-list-pedagogy-without-losing-the-die">Swipe list — pedagogy without losing the die</h2>
+<p><code>Options::Canvas::SwipeList</code> includes <code>x86</code>, <code>Amouranth</code>, <code>energy</code>, <code>Flowers</code>, <code>Frosted</code>, <code>GreenWaves</code>, <code>RetroRTX</code>, Mandelbulb variants, tributes, and more. Index 0 remains <code>x86</code>. Swiping changes shader and push layout to Classic or specialty demos; infrastructure — <code>rtx()</code>, sealed time, ThermoAccountant, CFL guard — persists.</p>
+<p>Teaching pattern: start new operators on default die to establish address-space thinking (Chapter 8). Move to <code>energy</code> or Classic thermo for visible Phi/Thermo coupling (Chapter 3). Return to die for AmmoOS launch drills. Offense is the same spine; pedagogy changes which binding 0 pixels emphasize.</p>
+<p>Do not document swipes as “modes that turn off field theory.” Field theory is default. Swipes are curriculum chapters rendered as shaders.</p>
+
+<h2 id="toc-07-ellie-logging-during-dispatch"><code>ELLIE</code> logging during dispatch</h2>
+<p><code>ELLIE</code> categories relevant to dispatch: <code>MAIN</code>, <code>VULKAN</code>, <code>CANVAS</code>, <code>THERMO</code>, <code>STATUS</code>, <code>RTXPROBE</code>. Chapter 11 is the observability home; operators on Chapter 7 should still know VULKAN proves device init, CANVAS proves dispatch issued, THERMO proves accountant alive.</p>
+<pre class="eq"># Week-one filter example:
+grep -E '^(MAIN|VULKAN|CANVAS|THERMO|STATUS)' run.log</pre>
+<p>RTXProbe with <code>RTX_PROBES=1</code> adds GPU timestamps and invocation counts — zero cost when off. Use it when dispatch latency spikes without obvious CFL clamp messages.</p>
+
+<h2 id="toc-07-integration-three-scales-in-one-tick">Integration — three scales in one tick</h2>
+<p>Chapter 2 named GPU fabric, Field Die, and packet field. One x86 dispatch touches two inside AMOURANTHRTX:</p>
+<ul>
+<li><strong>Fabric</strong> — bindings 8–10 evolve; hardware mirror reads averages (Chapter 10).</li>
+<li><strong>Die</strong> — binding 1 guest RAM; <code>data_bus</code> telemetry (Chapter 8).</li>
+<li><strong>Packet field</strong> — NEXUS-local; correlated at panel :9477, not inside <code>vkCmdDispatch</code>.</li>
+</ul>
+<p>Offense on GPU does not replace defense on loopback. Queen binds them at operator perimeter (Chapter 21). Field literacy holds all three in mind without collapsing into one misleading dashboard metric.</p>
+
+<h2 id="toc-07-from-pixels-to-packets-operator-stance">From pixels to packets — operator stance</h2>
+<p>Dispatch offense makes local state legible: stderr, <code>data_bus</code>, HDR, prompt terminal. Packet field defense makes network habit legible: jsonl, gatekeeper, panel. The human at :9477 correlates both. Neither product inherits the other’s conscience — Chapter 12 product boundaries table.</p>
+<p>Greatest weapon remains field literacy (Chapter 1): read continuous state, impose boundary conditions, refuse outsourced perimeter narrative. Chapter 7 is where boundary conditions become <code>vkCmdDispatch</code>.</p>
+
+<h2 id="toc-07-prompt-terminal-live-dispatch-controls">Prompt terminal — live dispatch controls</h2>
+<p>The prompt terminal is partial UI with full operator leverage. Implemented today: <code>set</code> and <code>list</code> for <code>AnalogFields.*</code> and <code>Hardware.*</code> namespaces. Example session during run:</p>
+<pre class="eq">set AnalogFields.WaveSpeed 1.4
+set AnalogFields.GateFidelity 0.8
+set AnalogFields.InjectStrength 3.0
+set AnalogFields.FieldCoupling 0.65
+list AnalogFields
+list Hardware
+guide</pre>
+<p>Each <code>set</code> changes knobs the CFL guard may scale before they reach bindings 8–10. Each <code>list</code> reads back host-side state and spiderweb mirrors from <code>rtx().hardwareFabric</code>. Glassmorphism sliders and ImGui ESC menu remain feasibility documentation — Chapter 11 labels them; Chapter 7 operators use prompt until sliders ship.</p>
+<p>Prompt is offense interface: you impose parameters; dispatch imposes physics. If parameters violate CFL, host scales them down and stderr may note clamp — not censorship, numerical ethics per Chapter 9.</p>
+
+<h2 id="toc-07-descriptor-churn-versus-push-constants-performan">Descriptor churn versus push constants — performance posture</h2>
+<p>FieldSocket push constants change every frame — sealed time, probes, control flags — without rebinding descriptor sets for those scalars. Heavy resources (SSBO, fabrics, chrome textures) stay bound across dispatches. This split is deliberate: per-tick offense needs fast small writes; per-session offense amortizes large allocations.</p>
+<p>Operators profiling with <code>RTX_PROBES=1</code> should expect dispatch-bound workloads on fabric-heavy scenes. CPU time in <code>dispatch_canvas()</code> should remain modest — layer pump and CFL are O(layers) and O(1) FCC math, not O(texels). If host CPU dominates, suspect debug logging volume or accidental CPU emulation path with <code>ControlHostCpu</code> left on without intent.</p>
+
+<h2 id="toc-07-security-posture-beside-dispatch-local-first">Security posture beside dispatch — local-first</h2>
+<p>Dispatch does not phone home. Session logs stay local. Sealed time is not DRM — Chapter 12 honesty table. Tamper abort narratives refer to host verify posture and sovereign sync (Chapter 19), not hidden telemetry in <code>vkCmdDispatch</code>.</p>
+<p>NEXUS packet field runs beside AMOURANTHRTX, not inside it. Do not ask the GPU dispatch loop to score sockets; ask the panel to correlate GPU THERMO lines with gatekeeper jsonl. Field literacy is bilingual: stderr and jsonl.</p>
+
+<h2 id="toc-07-creditor-tribute-von-neumann-and-turing">Creditor tribute — von Neumann and Turing</h2>
+<p>Von Neumann gave us the addressable store computer; Turing gave us the machine that reads and writes symbols on a tape. Field Die is both metaphors on one SSBO: addresses in guest RAM, symbols interpreted by <code>x86.comp</code> each tick. Dispatch is the clock that advances the tape. <a href="../creditors/von-neumann.html">von Neumann</a> · <a href="../creditors/turing.html">Turing</a> tribute pages name the creditors; grep names the implementation.</p>
+
+<h2 id="toc-07-study-questions">Study questions</h2>
+<ol>
+<li>Quote the dispatch spine from <code>main.cpp</code> to <code>vkCmdDispatch</code> and state one obligation that runs on host only.</li>
+<li>Why is <code>FIELD_LAYOUT_VERSION = 5</code> described as “desynchronized reality” when mismatched?</li>
+<li>Name three bindings on the x86 path and what each stores.</li>
+<li>What is the difference between <code>FieldSocket</code> and Classic <code>PushConstants</code> for canvas kind?</li>
+<li>Which <code>data_bus</code> slots carry analog FCC floats and which carry ThermoAccountant mirrors?</li>
+<li>What does <code>TotalTime::seal()</code> protect against in per-frame physics?</li>
+<li>When is <code>FieldX86Emu</code> involved, and is it the default execution path?</li>
+<li>Why does CFL run before <code>vkCmdDispatch</code> even on x86 canvas?</li>
+<li>What grep pattern would you use to prove ThermoAccountant is alive in week one?</li>
+<li>How does Queen relate to <code>rtx()</code> without replacing the dispatch loop?</li>
+</ol>
+
+<h2 id="toc-07-further-reading-and-cross-links">Further reading and cross-links</h2>
+<p>Wiki quick reference: <a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/07-GPU-Field-Engine">07 — GPU Field Engine</a>. Headers: <code>Pipeline.hpp</code>, <code>OptionsMenu.hpp</code>, <code>FieldRtxFieldAbs.hpp</code>. Prior chapters: <a href="02-fields-pixels-packets.html">Ch 2</a> three scales, <a href="03-thermodynamics.html">Ch 3</a> fabric channels, <a href="04-entropy.html">Ch 4</a> ThermoAccountant, <a href="05-packet-field.html">Ch 5</a> defensive perimeter, <a href="06-rf-signals.html">Ch 6</a> RF separation. Forward: <a href="08-field-die.html">Ch 8</a> die map, <a href="09-fcc-tesla.html">Ch 9</a> CFL/Tesla, <a href="10-spiderweb.html">Ch 10</a> hardware mirror, <a href="11-observability.html">Ch 11</a> grep discipline, <a href="12-reality-theory.html">Ch 12</a> rocks table.</p>
+<p>When you finish study questions, run Drill 7.A before opening Chapter 8. Die literacy assumes you believe dispatch runs — stderr is the witness.</p>
+
+<h2 id="toc-07-glossary-hooks-chapter-22-preview">Glossary hooks (Chapter 22 preview)</h2>
+<p>Terms introduced here that Chapter 22 defines formally: <strong>FieldSocket</strong> (x86 push block), <strong>sealed time</strong> (monotonic session clock), <strong>dispatch_canvas</strong> (per-frame host ritual), <strong>X86Fields</strong> (default canvas kind), <strong>Classic</strong> (CANVAS.comp pedagogy path). Carry these forward into die literacy — they are not interchangeable with packet-field vocabulary from NEXUS.</p>
+<p><strong>Offensive dispatch</strong> in one line: impose boundary conditions on writable surfaces faster than confusion propagates, with CFL and layout version as host witnesses, <code>vkCmdDispatch</code> as GPU spear, stderr as operator scripture.</p>
+
+<h2 id="toc-07-deep-dive-pipeline-hpp-and-dispatch-contracts">Deep dive — <code>Pipeline.hpp</code> and dispatch contracts</h2>
+<p>The dispatch loop is not scattered across anonymous lambdas. <code>Pipeline::dispatch_canvas()</code> centralizes obligations so grep has a spine. Operators packaging forks should diff this function first when merging upstream AMOURANTHRTX — not the splash assets. Canvas kind selection branches X86Fields versus Classic, but thermo population and CFL guard are shared preludes. That shared prelude is intentional: you cannot opt out of numerical ethics by swiping to a prettier shader.</p>
+<p>Descriptor set layout for x86 path is versioned with <code>FIELD_LAYOUT_VERSION = 5</code>. When upgrading shaders, bump the constant in host and SPIR-V comments together. Mixed trees produce mixed reality — HUD reading slot 42 chrome flags from an old packing order while host writes the new order is a silent desync worse than a crash, because you may trust false hex.</p>
+<p>Push constant size for FieldSocket must match <code>x86.comp</code> layout byte-for-byte. Vulkan validation layers catch some mismatches in debug builds; release builds may simply misread control flags. Always run at least one debug validation session when touching FieldSocket fields.</p>
+
+<h2 id="toc-07-deep-dive-guest-programs-and-launch-hygiene">Deep dive — guest programs and launch hygiene</h2>
+<p><code>FieldAmouranthLaunch</code> and <code>FieldAmouranthExec</code> place guest images into the RAM map respecting boot vector and disk image regions. Operators launching retro binaries should understand they write into the same SSBO the GPU interprets — there is no sandbox fairy. A bad binary can scribble BDA; the layer pump must resync or VGA mode lies on the bus.</p>
+<p>ControlAmmoExec is not “run anything from the internet.” It is operator offense with conscience. Chapter 5 packet field and Chapter 21 Queen gates exist because launch and network are different writable surfaces. Field literacy connects them at the human, not in one automated verdict.</p>
+
+<h2 id="toc-07-deep-dive-thermo-on-die-versus-classic-pedagogy">Deep dive — thermo on die versus classic pedagogy</h2>
+<p>New operators often swipe to Classic because thermo colors are obvious. Veterans stay on die default because product truth lives there. The compromise this book teaches: learn thermo on Classic in week one afternoon, return to die for week two operations. ThermoAccountant does not care which canvas you stared at — it populates every dispatch. Die path simply hides heat behind chrome unless you enable debug HUD or read stderr.</p>
+<p>Boundary thermo on die still moves when coupling increases — grep proves it. If you need visual confirmation, enable field debug overlay or watch STATUS entropy lines. Screenshots of Big Grin without stderr are incomplete testimony.</p>
+
+<h2 id="toc-07-deep-dive-failure-isolation-checklist">Deep dive — failure isolation checklist</h2>
+<p>When dispatch misbehaves, walk this checklist in order: (1) VULKAN init succeeded? (2) FIELD_LAYOUT_VERSION match? (3) CFL clamp messages? (4) pump generation incrementing slot 0? (5) ThermoAccountant steps in slot 28 rising? (6) HDR presented? Skipping order sends you to fix chrome when binding 1 is nil.</p>
+<p>Record baseline grep snippets in your operator journal. Field Technology is a practice, not a one-time read. Week twelve you will compare stderr shape against week one and notice drift before users do.</p>
+
+<h2 id="toc-07-deep-dive-creditor-cfl">Deep dive — creditor CFL</h2>
+<p>CFL condition names Courant, Friedrichs, and Lewy — the men who told the world explicit time steps must respect mesh spacing. Chapter 9 owns the equation; Chapter 7 owns the placement: before <code>vkCmdDispatch</code>. Offense without CFL disrespects their creditor debt. <a href="../creditors/cfl.html">CFL creditor page</a> links history; harmonics guard links implementation.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch07">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Dispatch spine</td><td>vkCmdDispatch each tick</td><td><span class="tag impl">Implemented</span></td><td><code>Pipeline::dispatch_canvas()</code></td></tr><tr><td>Layout contract</td><td>FIELD_LAYOUT_VERSION = 5</td><td><span class="tag impl">Implemented</span></td><td><code>Host/shader struct match</code></td></tr><tr><td>Default canvas</td><td>x86.comp Field Die</td><td><span class="tag impl">Implemented</span></td><td><code>./linux.sh run path</code></td></tr><tr><td>Thin host</td><td>No CPU fabric PDE</td><td><span class="tag impl">Implemented</span></td><td><code>Architectural invariant</code></td></tr></tbody></table>
+<pre class="eq">main → dispatch_canvas() → vkCmdDispatch(groupsX, groupsY, 1)</pre>
+<pre class="eq">grep -n &#x27;dispatch_canvas\|FIELD_LAYOUT_VERSION&#x27; Navigator/engine/Pipeline.cpp</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/engine/main.cpp</code></li><li><code>Navigator/engine/Pipeline.cpp</code></li><li><code>Navigator/shaders/x86.comp</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-07-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Offensive dispatch is <code>vkCmdDispatch</code> with sealed time, CFL, layout version 5, and ThermoAccountant every tick. Thin host, fat GPU. Die literacy in Chapter 8 assumes you believe dispatch runs.</p>
+</div>
+
+    <nav class="chapter-nav bottom"><a class="btn secondary" href="06-rf-signals.html">← Ch 6</a> <a class="btn" href="08-field-die.html">Ch 8 →</a></nav>
+  </main>
+  <footer><p>Field Technology v6 · Serious book · We do not hide the rocks.</p></footer>
+  <script src="../js/reader.js" defer></script>
+</body>
+</html>

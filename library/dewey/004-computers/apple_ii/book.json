@@ -1,0 +1,10 @@
+{
+  "id": "apple_ii",
+  "title": "Apple II",
+  "author": "Field Extensive Library",
+  "dewey": "004.165",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/apple_ii/apple_ii.h7c",
+  "cover": "/library/assets/devices/apple_ii.png",
+  "ready": true
+}

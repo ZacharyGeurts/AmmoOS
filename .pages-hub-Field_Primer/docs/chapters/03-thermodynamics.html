@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>3 — Moving Energy — Thermodynamics · Field Technology v6</title>
+  <meta name="description" content="Chapter 3: Moving Energy — Thermodynamics. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Field_Primer/chapters/03-thermodynamics.html" />
+  <meta name="theme-color" content="#040810" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon.png" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Field Technology v6" />
+  <meta property="og:title" content="3 — Moving Energy — Thermodynamics · Field Technology v6" />
+  <meta property="og:description" content="Chapter 3: Moving Energy — Thermodynamics. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta property="og:url" content="https://zacharygeurts.github.io/Field_Primer/chapters/03-thermodynamics.html" />
+  <meta property="og:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/v3/science/ch03-energy-transfer.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Coupled channels" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ZacharyGeurts" />
+  <meta name="twitter:creator" content="@ZacharyGeurts" />
+  <meta name="twitter:title" content="3 — Moving Energy — Thermodynamics · Field Technology v6" />
+  <meta name="twitter:description" content="Chapter 3: Moving Energy — Thermodynamics. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta name="twitter:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/v3/science/ch03-energy-transfer.jpg" />
+  <meta name="twitter:image:alt" content="Coupled channels" />
+  <link rel="stylesheet" href="../css/field-primer.css" />
+  <link rel="stylesheet" href="../css/chapters.css" />
+  <link rel="stylesheet" href="../css/reader.css" />
+</head>
+<body class="chapter-page accent-thermo">
+  <nav class="top"><div class="inner">
+    <a class="logo" href="../index.html">FIELD TECHNOLOGY <span class="v6-badge">v6</span></a>
+    <ul>
+      <li><a href="../creditors/index.html">Creditors</a></li>
+      <li><a href="../index.html#love-god">Love &amp; God</a></li>
+      <li><a href="../index.html#chapters">Chapters</a></li>
+      <li><a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/03-Thermodynamics-In-The-Engine">Wiki</a></li>
+    </ul>
+  </div></nav>
+  <header class="chapter-hero" style="background-image:url('../assets/images/v3/science/ch03-energy-transfer.jpg')">
+    <div class="chapter-hero-overlay"></div>
+    <div class="chapter-hero-content">
+      <p class="eyebrow">Chapter 3 · Field Technology v6</p>
+      <h1>Moving Energy — Thermodynamics</h1>
+      
+    </div>
+  </header>
+  <main class="chapter-main">
+    <nav class="chapter-nav"><a class="btn secondary" href="02-fields-pixels-packets.html">← Ch 2</a> <a class="btn" href="04-entropy.html">Ch 4 →</a></nav>
+    <div class="objectives">
+<h2 id="toc-03-learning-objectives">Learning objectives</h2>
+<ol>
+<li>Explain why thermodynamics appears in a Vulkan renderer as accounting, not calorimetry.</li>
+<li>Name Phi, Thermo, Flow roles and bindings 8–10.</li>
+<li>Describe per-texel evolution in CANVAS.comp and stability clamps.</li>
+<li>Operate AnalogFields knobs and predict CFL guard behavior.</li>
+<li>Relate Energy can be moved to FieldCoupling cross-channel exchange.</li>
+<li>Run mouse-inject drill and grep THERMO receipts.</li>
+</ol>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-03-why-thermodynamics-in-a-renderer">Why thermodynamics in a renderer?</a></li><li><a href="#toc-03-the-three-fabric-channels">The three fabric channels</a></li><li><a href="#toc-03-per-texel-evolution-canvas-comp-ritual">Per-texel evolution — CANVAS.comp ritual</a></li><li><a href="#toc-03-control-knobs-options-analogfields">Control knobs — Options::AnalogFields</a></li><li><a href="#toc-03-time-is-linear-dispatch-and-sealed-time">Time is linear — dispatch and sealed time</a></li><li><a href="#toc-03-cfl-guard-host-refuses-nan-theology">CFL guard — host refuses NaN theology</a></li><li><a href="#toc-03-energy-accounting-versus-measurement">Energy accounting versus measurement</a></li><li><a href="#toc-03-coupling-narrative-worked-example">Coupling narrative — worked example</a></li><li><a href="#toc-03-operator-drill">Operator drill</a></li><li><a href="#toc-03-failure-modes">Failure modes</a></li><li><a href="#toc-03-chapter-summary">Chapter summary</a></li><li><a href="#toc-03-study-questions">Study questions</a></li><li><a href="#toc-03-maxwell-neighborhood-on-a-grid-chapter-15-previe">Maxwell neighborhood on a grid — Chapter 15 preview</a></li><li><a href="#toc-03-tesla-relaxation-in-flow-channel">Tesla relaxation in Flow channel</a></li></ol></nav>
+
+<div class="on-the-way">
+<h2 id="toc-03-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Thermodynamics here is <strong>honest bookkeeping</strong> — not a calorimeter on the GPU package. On the way you will move energy through Phi, Thermo, and Flow; operate AnalogFields knobs; respect CFL guards; and grep receipts that prove irreversibility without billing joules from proxy integrals.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/v3/science/ch03-energy-transfer.jpg" alt="Coupled channels" loading="lazy" /><figcaption>On the way — Coupled channels</figcaption></figure>
+<ul class="on-the-way-journey"><li>Three fabric channels and cross-coupling</li><li>Per-texel evolution and stability clamps</li><li>Sealed time and linear dispatch</li><li>Mouse-inject lab and THERMO discipline</li></ul>
+</div>
+
+
+<h2 id="toc-03-why-thermodynamics-in-a-renderer">Why thermodynamics in a renderer?</h2>
+<p>Every frame <strong>destroys information</strong> — noise injection, probes, diffusion steps, maintenance preserving coherence with the previous frame. The engine tracks that cost the way a power meter tracks joules: as <strong>accounting</strong>, not as a laboratory calorimeter taped to the GPU package.</p>
+<p><strong>Energy can be moved.</strong> Chapter 3 is thermodynamics as honest bookkeeping — tracking where irreversibility goes, labeling proxy integrals before newcomers confuse them with billing data.</p>
+<p>Rendering textbooks rarely discuss entropy. Security textbooks rarely discuss diffusion. Field Technology discusses both because the same fabric stores Phi beauty and Thermo cost — holographic boundary from Chapter 1 and Chapter 17.</p>
+
+<figure class="figure inline-wide"><img src="../assets/images/v3/science/ch03-energy-transfer.jpg" alt="Coupled channels" loading="lazy" /><figcaption>Figure 3.1 — Coupled Phi, Thermo, Flow; energy moves every dispatch.</figcaption></figure>
+
+<h2 id="toc-03-the-three-fabric-channels">The three fabric channels</h2>
+<p>Created in <code>RayCanvas::createAnalogFieldFabric()</code>, bound at Vulkan slots <strong>8</strong>, <strong>9</strong>, <strong>10</strong>:</p>
+<figure class="figure"><img src="../assets/images/chapters/ch03-coupled-fabric.jpg" alt="Coupled Phi Thermo Flow" loading="lazy" /><figcaption>Figure 3.2 — Cross-coupling: energy moves between channels when FieldCoupling rises. <span class="claim-tie">Claim: FieldCoupling moves energy between fabric channels</span></figcaption></figure>
+
+<table><thead><tr><th>Fabric</th><th>Role</th><th>Binding</th></tr></thead>
+<tbody>
+<tr><td><strong>Phi (Φ)</strong></td><td>Wave / gate potential</td><td>8 — <code>fieldPhi</code></td></tr>
+<tr><td><strong>Thermo</strong></td><td>Heat + entropy density</td><td>9 — <code>fieldThermo</code></td></tr>
+<tr><td><strong>Flow</strong></td><td>Advection / momentum</td><td>10 — <code>fieldFlow</code> (.gb = gradients)</td></tr>
+</tbody></table>
+<p><strong>Cross-coupling:</strong> <code>FieldCoupling</code> links all three — electrical activity heats the die; heat affects flow; flow sharpens or softens gates through <code>GateFidelity</code>. Maxwell's neighborhood on a grid — Chapter 15 tribute.</p>
+
+<h3>Phi evolution — wave step</h3>
+<p>Discrete Laplacian + <code>WaveSpeed</code> + <code>propalacticScale</code> forcing. <span class="tag impl">CANVAS.comp</span> <span class="tag meta">Propalactic is cosmic-scale knob name — metaphor for large-wavelength forcing.</span></p>
+
+<h3>Thermo evolution — diffusion</h3>
+<p><code>ThermoAlpha</code> diffusivity, entropy floor, coupling to Phi. Seeded minimum in <code>clearFieldImages()</code> ~0.015 — second-law bias against unphysical reversibility.</p>
+
+<h3>Flow evolution — advection story</h3>
+<p>Gradient magnitude mixed with <code>GateFidelity</code> + Tesla relaxation. Directional bias in data_bus — Chapter 9.</p>
+
+<h2 id="toc-03-per-texel-evolution-canvas-comp-ritual">Per-texel evolution — CANVAS.comp ritual</h2>
+<ol>
+<li><strong>Phi</strong> — discrete Laplacian wave step + WaveSpeed + propalacticScale forcing</li>
+<li><strong>Thermo</strong> — diffusion with ThermoAlpha, entropy floor, coupling to Phi</li>
+<li><strong>Flow</strong> — gradient magnitude mixed with GateFidelity + Tesla relaxation</li>
+</ol>
+<pre class="eq">newPhi ∈ [-2.0, 2.0] · newThermo ∈ [0.0, 1.5] · newFlow ∈ [0.0, 1.0]</pre>
+<p>Clamps are numerical ethics — the kitchen cannot invent infinite temperature because the UI got excited.</p>
+
+<h2 id="toc-03-control-knobs-options-analogfields">Control knobs — Options::AnalogFields</h2>
+<table><thead><tr><th>Knob</th><th>Effect</th></tr></thead>
+<tbody>
+<tr><td><code>TimeScale</code></td><td>Global Δt multiplier</td></tr>
+<tr><td><code>ThermoAlpha</code></td><td>Thermal diffusivity α</td></tr>
+<tr><td><code>WaveSpeed</code></td><td>Phi propagation speed c</td></tr>
+<tr><td><code>GateFidelity</code></td><td>0 = soft analog … 1 = sharp gate</td></tr>
+<tr><td><code>EntropyFloor</code></td><td>Minimum irreversible noise</td></tr>
+<tr><td><code>InjectStrength</code></td><td>Mouse/probe energy injection</td></tr>
+<tr><td><code>PropalacticScale</code></td><td>Large-wavelength forcing on Phi</td></tr>
+<tr><td><code>FieldCoupling</code></td><td>Thermo ↔ Phi ↔ Flow coupling strength</td></tr>
+</tbody></table>
+<p>Prompt terminal <code>set AnalogFields.*</code> — Chapter 7 and 11. CFL may scale your ambition down before dispatch.</p>
+
+<h2 id="toc-03-time-is-linear-dispatch-and-sealed-time">Time is linear — dispatch and sealed time</h2>
+<p><span class="tag impl"><code>dispatch_canvas()</code> advances one tick at a time.</span> <code>TotalTime::seal()</code> locks session genesis into <code>FieldSocket::sealed_time</code>. Frame-rate jitter cannot rewrite physics time. Energy accounting is per-frame, not retroactive myth. Chapter 19 extends posture across hosts.</p>
+
+<h2 id="toc-03-cfl-guard-host-refuses-nan-theology">CFL guard — host refuses NaN theology</h2>
+<pre class="eq">waveCFL = c·Δt/Δx ≤ 1 · thermoCFL = α·Δt/Δx² ≤ 1</pre>
+<p>Before fabric evolution, host computes CFL. If violated, parameters scale down. Hard caps on <code>waveSpeed</code> and per-step <code>dT</code>. <span class="tag meta">Body-temperature seeding is simulation flavor — labeled, not hidden.</span></p>
+<figure class="figure"><img src="../assets/images/v3/science/ch03-energy-transfer.jpg" alt="Energy transfer" loading="lazy" /><figcaption>Figure 3.3 — CFL guard before dispatch: numerical ethics, not censorship.</figcaption></figure>
+
+<div class="callout everyone"><strong>Plain English:</strong> The engine refuses diffusion so hot the simulation explodes. Care for the operator who must grep logs after a long session.</div>
+
+<h2 id="toc-03-energy-accounting-versus-measurement">Energy accounting versus measurement</h2>
+<p>ThermoAccountant binding 2 — preview Chapter 4. <span class="tag meta">Proxy integral, not joules.</span> Comparative receipts detect runaway dispatch, stuck entropy, broken coupling. Lab calorimetry is not replaced — honesty is.</p>
+
+<h2 id="toc-03-coupling-narrative-worked-example">Coupling narrative — worked example</h2>
+<p>Raise <code>FieldCoupling</code> and <code>InjectStrength</code>; move mouse on Classic canvas. Expect Phi ripples, Thermo rise, Flow structure change, stderr THERMO motion, spiderweb throttle hints — Chapter 10. If fabric moves and entropy stays zero, dispatch failed.</p>
+
+<h2 id="toc-03-operator-drill">Operator drill</h2>
+<pre class="eq">./linux.sh run
+# Swipe to energy or Classic if needed; move mouse 60s
+grep -E 'THERMO|entropy|Boundary' run.log</pre>
+<p>Boundary thermo and entropy proxy should move. If not, physics refuses to lie — fix dispatch path.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch07-gpu-engine.jpg" alt="Dispatch spine" loading="lazy" /><figcaption>Figure 3.4 — Thermo on every dispatch — die default still greps THERMO. <span class="claim-tie">Claim: Thin host → vkCmdDispatch — offensive write each tick</span></figcaption></figure>
+
+
+<h2 id="toc-03-failure-modes">Failure modes</h2>
+<table><thead><tr><th>Mode</th><th>Symptom</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>Joule fantasy</td><td>Billing from stderr thermo</td><td>Label proxy — Ch. 4</td></tr>
+<tr><td>CFL ignore</td><td>NaN fabric, crash</td><td>Host guard — Ch. 9</td></tr>
+<tr><td>Decoupled teaching</td><td>FieldCoupling 0 forever</td><td>Couple for full story</td></tr>
+<tr><td>Canvas confusion</td><td>Thermo drill on x86 HUD only</td><td>Swipe Classic for visible fabric</td></tr>
+</tbody></table>
+
+<h2 id="toc-03-chapter-summary">Chapter summary</h2>
+<p>Thermodynamics here is irreversibility accounting on Phi/Thermo/Flow — bindings 8–10, coupled by FieldCoupling, evolved in CANVAS.comp, guarded by CFL, receipted in ThermoAccountant. Energy can be moved between channels; measurement stays honestly proxy. Chapter 4 names entropy layers.</p>
+<p>Tribute: <a href="../creditors/clausius-boltzmann.html">Clausius &amp; Boltzmann</a></p>
+
+<h2 id="toc-03-study-questions">Study questions</h2>
+<ol>
+<li>Why thermodynamics in a renderer — one paragraph.</li>
+<li>Write CFL inequalities and explain host action when violated.</li>
+<li>Map each AnalogFields knob to effect.</li>
+<li>What clamps bound newPhi, newThermo, newFlow?</li>
+<li>Run mouse drill — paste one THERMO line and interpret.</li>
+<li>How does FieldCoupling express Energy can be moved?</li>
+<li>Why is body-temperature seeding labeled meta?</li>
+<li>Cross-link chapters for entropy floor and Tesla bias.</li>
+</ol>
+<p><a href="chapters/04-entropy.html">Chapter 4 — Irreversibility &amp; Receipts →</a></p>
+
+<h2 id="toc-03-maxwell-neighborhood-on-a-grid-chapter-15-previe">Maxwell neighborhood on a grid — Chapter 15 preview</h2>
+<p>Phi couples to Thermo across texels — electrical metaphor heats; heat biases flow; flow sharpens gates. This is Maxwell's lesson in discrete form: local neighbors exchange influence. Not a claim the GPU solves cosmos EM — <span class="tag impl">local coupling implemented</span>, <span class="tag meta">cosmos not claimed</span>.</p>
+
+<h2 id="toc-03-tesla-relaxation-in-flow-channel">Tesla relaxation in Flow channel</h2>
+<p>Directional bias appears in Flow evolution and in <code>data_bus[31,34]</code> — forward ease, reverse resist. Chapter 9 full Tesla valve treatment. Thermodynamics chapter names it as directional thermodynamic story in fabric.</p>
+
+<h2 id="toc-03-injectstrength-and-probe-ethics">InjectStrength and probe ethics</h2>
+<p>Mouse injection is intentional offense — energy inserted by operator. Probes accrue dissipation in ThermoAccountant. Ethics: you caused the heat story; grep owns it. Do not inject then blame daemon.</p>
+
+<h2 id="toc-03-entropyfloor-knob-versus-fabric-seed">EntropyFloor knob versus fabric seed</h2>
+<p><code>EntropyFloor</code> knob and <code>clearFieldImages()</code> seed cooperate — minimum irreversible noise. Second law as engineering bias. You cannot run reversible universe in silicon demo; you can label noise honestly.</p>
+
+<h2 id="toc-03-classic-versus-x86-thermo-visibility">Classic versus x86 thermo visibility</h2>
+<p>Classic canvas shows thermo heatmaps obviously; x86 Big Grin HUD hides heatmap behind OS chrome. ThermoAccountant still runs — canvas-agnostic. Drill on Classic if eyes need color; trust stderr on x86 default.</p>
+
+<h2 id="toc-03-headless-dispatch-thermo">Headless dispatch thermo</h2>
+<p>CI headless paths still dispatch — valid THERMO signal per Chapter 12. Screenshots optional; entropy receipt not optional.</p>
+
+<h2 id="toc-03-analog-fcc-in-data-bus">Analog FCC in data_bus</h2>
+<p>When FieldSocket active, floats land in <code>data_bus[16–23]</code> — TimeScale, ThermoAlpha, WaveSpeed, GateFidelity, EntropyFloor, InjectStrength, PropalacticScale, FieldCoupling. Host and shader agree on knobs; disagreement is bug, not interpretation.</p>
+
+<h2 id="toc-03-energy-comp-and-specialty-swipes">Energy.comp and specialty swipes</h2>
+<p>Swipe to <code>energy</code> emphasizes coupled channels pedagogically. Knobs still map to same AnalogFields namespace. Pedagogy changes emphasis, not truth surface.</p>
+
+<h2 id="toc-03-thermodynamics-and-landauer-handoff-to-chapter-4">Thermodynamics and Landauer — handoff to Chapter 4</h2>
+<p>Every destroy-information event trends toward receipt in <code>entropyThisFrame</code>. Landauer bound is theory floor; proxy is comparative integral. Chapter 4 splits layers; Chapter 3 ensures you feel motion before algebra of receipts.</p>
+
+<h2 id="toc-03-extended-treatment-cross-coupling-mathematics-in">Extended treatment — cross-coupling mathematics in plain English</h2>
+<p>FieldCoupling is the dial that makes thermodynamics felt across channels. When coupling is zero, Phi, Thermo, and Flow may still evolve independently — pedagogically useful to isolate channels. When coupling rises, electrical metaphor in Phi warms Thermo; warmed Thermo biases Flow; Flow sharpens or softens gates through GateFidelity. This is the engine’s story of energy can be moved — not a claim of calorimetric accuracy, but a claim of coupled dynamics you can grep.</p>
+<p>Discrete Laplacian on Phi measures neighborhood average difference — cells hotter than neighbors cool toward neighbors in wave step intuition; Thermo diffusion similarly redistributes heat. Flow reads gradients — where change is steep, flow magnitude responds. Tesla relaxation adds directional bias — forward ease, reverse resistance — published also to data_bus for HUD and Chapter 9 stability narrative.</p>
+<p>Operators should run coupling sweep experiments: coupling 0.0, 0.3, 0.6, 0.9 with moderate InjectStrength, same mouse pattern, same duration — compare THERMO slopes. Comparative science without SI units — the receipt is slope change, not absolute joule.</p>
+
+<h2 id="toc-03-extended-treatment-cfl-and-operator-trust">Extended treatment — CFL and operator trust</h2>
+<p>CFL violations do not always explode immediately — sometimes they degrade into slow NaN rot. Host guard scales waveSpeed and dt before dispatch when violation detected. Trust the guard — fighting it with manual max knobs is how sessions end in grep embarrassment. waveCFL and thermoCFL inequalities appear in Chapter 9 with Tesla parallel; Chapter 3 installs intuition: guard is care, not censorship.</p>
+<p>Hard caps waveSpeed ∈ [0.01, 2.0] and dT ≤ 0.033 bound operator enthusiasm even when prompt allows higher. Caps are product safety for long sessions, not insult to expert users.</p>
+
+<h2 id="toc-03-extended-treatment-analogfields-as-fcc-floats">Extended treatment — AnalogFields as FCC floats</h2>
+<p>Analog field control constants pack into data_bus[16–23] on x86 path — TimeScale, ThermoAlpha, WaveSpeed, GateFidelity, EntropyFloor, InjectStrength, PropalacticScale, FieldCoupling. Host and shader agree on these floats each dispatch. If list AnalogFields disagrees with shader behavior, suspect layout version skew or stale push path — desynchronized reality per Chapter 7.</p>
+
+<h2 id="toc-03-extended-treatment-thermodynamics-and-dispatch-c">Extended treatment — thermodynamics and dispatch canvas ritual</h2>
+<p>dispatch_canvas() order matters: seal time, CFL guard, layer pump, ThermoAccountant population, analog FCC pack, guest boot paths, hardware mirror, vkCmdDispatch. Thermodynamics is not a side shader — accountant is populated every dispatch regardless of canvas kind. x86 Big Grin may hide heatmap; stderr THERMO still speaks.</p>
+
+<h2 id="toc-03-extended-lab-60-minute-thermo-session-protocol">Extended lab — 60-minute thermo session protocol</h2>
+<p>Minute 0–10: baseline grep THERMO. Minute 10–20: InjectStrength up, mouse pattern A. Minute 20–30: FieldCoupling up, same pattern. Minute 30–40: GateFidelity sweep. Minute 40–50: WaveSpeed test with CFL awareness. Minute 50–60: restore defaults, archive grep tail. Write six sentences what moved — lab report discipline.</p>
+
+<h2 id="toc-03-chapter-3-lecture-heat-as-information-destructio">Chapter 3 lecture — heat as information destruction narrative</h2>
+<p>Every shader step that collapses uncertainty — sharpening gates, mixing channels, injecting noise — participates in information destruction story thermodynamics names heat. The engine does not measure heat with a thermometer on the GPU package. It accounts for irreversibility in proxy space because operators still need to know the kitchen warmed when burners ran.</p>
+<p>Phi wave step spreads curvature — information about local potential redistributes — Thermo diffusion spreads heat density — Flow carries gradients — coupling exchanges stories. None of this replaces laboratory physics; all of it replaces silent demos that pretend evolution is free.</p>
+<p>Mouse injection via InjectStrength is deliberate information insertion — you increased state complexity locally; coupling diffuses that complexity; accountant records cost. Ethics: you did it; grep owns it.</p>
+<p>Classic canvas thermo visibility is training wheels. x86 default hides heatmap under OS chrome — training wheels off, stderr mandatory. Competent operators grep on default product, not only on pedagogy swipe.</p>
+<p>Headless CI dispatch still produces THERMO — proof dispatch alive without window. Screenshot culture dies here; receipt culture begins.</p>
+<p>Energy.comp swipe is coupled channel laboratory — run one hour with FieldCoupling 0.7 and journal slopes — graduate exercise before Chapter 4 entropy algebra.</p>
+<p>Tesla relaxation in Flow links thermodynamics chapter to stability chapter — forward ease, reverse drag — energy can be moved directionally in metaphor space.</p>
+<p>Body-temperature seeding is labeled meta — not BIOS sensor — repeat until newcomers stop citing seed as hardware truth.</p>
+<p>AnalogFields TimeScale is global tempo — not wall clock override — sealed time still linear in session genesis.</p>
+<p>CFL wave and diffusion inequalities are Courant-Friedrichs-Lewy legacy — host enforces before dispatch — numerical ethics, not optional.</p>
+<p>Chapter 3 summary sentence: thermodynamics here is honest bookkeeping of irreversibility in Phi/Thermo/Flow with proxy receipts and CFL guards — read Chapter 4 for entropy layer separation.</p>
+
+<h2 id="toc-03-thermodynamics-glossary-in-chapter">Thermodynamics glossary in chapter</h2>
+<p>ThermoAlpha: diffusivity alpha. WaveSpeed: c in wave CFL. GateFidelity: soft vs sharp gates. EntropyFloor: minimum noise. InjectStrength: probe power. PropalacticScale: large Phi forcing. FieldCoupling: cross channel. TimeScale: global dt multiplier.</p>
+<p>Every term is knob in headers and often in prompt — literacy is spelling plus effect.</p>
+
+<h2 id="toc-03-chapter-3-extended-thermodynamic-storyboard-fram">Chapter 3 extended — thermodynamic storyboard frame by frame</h2>
+<p>Frame N begins with Phi field carrying potential from frame N-1 plus forcing. Thermo field carries heat density seeded above entropy floor. Flow field carries gradients from prior advection. Host sealed time advances; CFL guard approves dt. Shader runs Phi Laplacian step — neighbors exchange potential information — Thermo diffuses — Flow relaxes with Tesla bias — coupling terms exchange energy stories between channels. ThermoAccountant integrates proxy entropy from work done. Host mirrors to data_bus and stderr. Frame N+1 begins — linear time, no rewind.</p>
+<p>Storyboard discipline trains operators to narrate dispatch without mysticism. Each frame is receipt. Long sessions are novels of receipts — grep tail is last paragraph, not whole book.</p>
+<p>Knobs alter storyboard: high FieldCoupling makes chapters bleed together — Phi motion immediately warms Thermo; low coupling isolates chapters for pedagogy. High InjectStrength makes mouse protagonist; high GateFidelity makes gates snap digital; low fidelity keeps analog softness. PropalacticScale adds large wavelength weather on Phi — cosmic naming, local effect.</p>
+<p>Thermodynamics laboratory ethics: always note starting knob state in lab journal; always restore defaults after session; always label proxy when sharing screenshots externally. Science reputation is honesty reputation.</p>
+<h2 id="toc-03-coupling-to-chapter-4-entropy-layers-preview">Coupling to Chapter 4 entropy layers preview</h2>
+<p>Frame proxy entropy rises when storyboard work rises — Chapter 4 names layers. Fabric floor ensures Thermo never pretends zero — Chapter 4 second law. File oracle unrelated to frame storyboard unless you conflate — Chapter 4 forbids. Chapter 3 moves energy; Chapter 4 records irreversibility receipts. Read order sacred.</p>
+
+<h2 id="toc-03-introduction-thermodynamics-as-accounting-not-ca">Introduction — thermodynamics as accounting, not calorimetry</h2>
+<p>Every frame destroys information — diffusion, probes, maintenance, optional host assist. AMOURANTHRTX tracks that cost as <strong>accounting</strong> with honest labels, not as a laboratory calorimeter pretending to be <code>nvidia-smi</code>. Chapter 3 teaches <em>Energy can be moved</em> on the analog fabric: Phi whispers to Thermo through coupling; Flow carries gradients; CFL guards refuse numerical arson. This is Maxwell’s neighborhood on a grid — Chapter 15 goes long; here you learn to move knobs and read receipts.</p>
+<p>Prior: <a href="02-fields-pixels-packets.html">Chapter 2 — Three Scales</a>. Next: <a href="04-entropy.html">Chapter 4 — Entropy Receipts</a>. Dispatch placement: <a href="07-gpu-engine.html">Chapter 7</a>. CFL deep dive: <a href="09-fcc-tesla.html">Chapter 9</a>. Creditor: <a href="../creditors/clausius.html">Clausius</a>.</p>
+
+<div class="objectives"><h2>Learning objectives</h2><ul>
+<li>Explain CFL inequalities as mesh-speed ethics, not bureaucracy.</li>
+<li>Apply <code>WaveSpeed</code> caps and read clamp stderr.</li>
+<li>Interpret <code>avgBoundaryThermo</code> and mouse inject boundary stories.</li>
+<li>Separate host x86 heat from GPU fabric proxy in ThermoAccountant.</li>
+<li>Run coupling sweep lab on Classic and compare die-default stderr.</li>
+<li>Articulate Clausius spirit beside entropy floor without joule fraud.</li>
+<li>Contrast thermo pedagogy on <code>Flowers</code>/<code>GreenWaves</code> versus x86 HUD.</li>
+</ul></div>
+
+<figure class="figure inline-wide"><img src="../assets/images/v3/science/ch03-energy-transfer.jpg" alt="Coupled channels" loading="lazy" /><figcaption>Figure 3.1 — Coupled Phi, Thermo, Flow: energy moves; receipts accumulate.</figcaption></figure>
+
+<h2 id="toc-03-fabric-channels-bindings-8-9-10">Fabric channels — bindings 8, 9, 10</h2>
+<table><thead><tr><th>Fabric</th><th>Binding</th><th>Evolution sketch</th></tr></thead>
+<tbody>
+<tr><td>Phi</td><td>8 <code>fieldPhi</code></td><td>Laplacian wave + <code>WaveSpeed</code> + <code>PropalacticScale</code></td></tr>
+<tr><td>Thermo</td><td>9 <code>fieldThermo</code></td><td>Diffusion <code>ThermoAlpha</code> + floor + coupling</td></tr>
+<tr><td>Flow</td><td>10 <code>fieldFlow</code></td><td>Gradients + <code>GateFidelity</code> + Tesla relaxation</td></tr>
+</tbody></table>
+<pre class="eq">newPhi ∈ [-2.0, 2.0] · newThermo ∈ [0.0, 1.5] · newFlow ∈ [0.0, 1.0]</pre>
+<p>Clamps are numerical embodiment of kitchen realism — the shader refuses infinite temperature because the UI got excited. Host CFL guard and shader clamps are coupled defenses (Chapter 9).</p>
+
+<h2 id="toc-03-cfl-derivation-intuition-why-explicit-schemes-de">CFL derivation intuition — why explicit schemes demand humility</h2>
+<p>Explicit time stepping updates each texel from neighbor information that arrived at time t. If information travels farther than one cell per step — wave speed × Δt &gt; Δx — the scheme invents neighbors that have not spoken yet. That is NaN theology. Courant, Friedrichs, and Lewy named the inequality operators inherit as <strong>CFL condition</strong>.</p>
+<p>Wave channel intuition: disturbance crosses grid at speed c. One step advances Δt. Distance traveled c·Δt must not exceed cell spacing Δx — else dependency graph lies.</p>
+<div class="eq">waveCFL = c·Δt/Δx ≤ 1</div>
+<p>Thermo channel intuition: diffusion spreads heat wider each step — parabolic scaling. Distance grows like √(α·Δt), leading to:</p>
+<div class="eq">thermoCFL = α·Δt/Δx² ≤ 1</div>
+<p>Chapter 9 owns constants; Chapter 7 owns placement — CFL runs <em>before</em> <code>vkCmdDispatch</code> every frame. Intuition operators need: <strong>finer mesh (smaller Δx) tightens allowed Δt or forces lower c and α.</strong> Adaptive resolution (Chapter 2) therefore interacts with thermo headroom — not vanity scaling.</p>
+<div class="callout axiom"><strong>Time is linear.</strong> CFL does not rewrite past frames — it refuses unsafe next frames.</div>
+<div class="callout science"><strong>Science posture:</strong> CFL is real numerical analysis. Host harmonics guard is <span class="tag impl">Implemented</span> enforcement — grep clamp messages.</div>
+
+<h2 id="toc-03-wavespeed-caps-offense-within-mesh-ethics">WaveSpeed caps — offense within mesh ethics</h2>
+<p><code>Options::AnalogFields::WaveSpeed</code> maps to FCC slot <code>data_bus[18]</code> on x86 path. Host enforces hard caps (e.g. <code>waveSpeed ∈ [0.01, 2.0]</code>, <code>dT ≤ 0.033</code>) before fabric sees operator enthusiasm. Caps are not punishment — they preserve fabric existence for next tick.</p>
+<table><thead><tr><th>Knob</th><th>Risk when cranked</th><th>Guard response</th></tr></thead>
+<tbody>
+<tr><td><code>WaveSpeed</code></td><td>waveCFL &gt; 1</td><td>Scale c or Δt down; stderr note</td></tr>
+<tr><td><code>ThermoAlpha</code></td><td>thermoCFL &gt; 1</td><td>Scale α or Δt down</td></tr>
+<tr><td><code>InjectStrength</code></td><td>Boundary spikes + NaN colors</td><td>Scale inject; clamp in shader</td></tr>
+<tr><td><code>TimeScale</code></td><td>Effective Δt inflation</td><td>CFL recomputed on scaled dt</td></tr>
+</tbody></table>
+<div class="callout drill"><strong>Drill 3.A — WaveSpeed clamp witness</strong></div>
+<pre class="eq">set AnalogFields.WaveSpeed 2.5
+set AnalogFields.TimeScale 2.0
+list AnalogFields
+grep -i 'CFL\|clamp\|wave' run.log | tail -15</pre>
+<p>Expect host to pull effective wave speed below operator request — list readback shows scaled truth. Screenshot of pretty waves without this grep is incomplete testimony.</p>
+
+<h2 id="toc-03-boundary-thermo-perimeter-heat-is-not-background">Boundary thermo — perimeter heat is not background mood</h2>
+<p><code>avgBoundaryThermo</code> in ThermoAccountant (binding 2, mirror <code>data_bus[25]</code>) summarizes mean boundary temperature / entropy density — where fabric meets edges and probes inject. Mouse movement is boundary offense: <code>InjectStrength</code> writes energy at probe positions carried through <code>FieldSocket</code> push constants.</p>
+<p>Rising boundary thermo with flat interior averages tells a story: perimeter work without bulk equilibration — common in high inject sessions. Flat boundary with rising interior suggests diffusion catching up — different narrative, same grep discipline.</p>
+<p>Chapter 4 names full ThermoAccountant fields; Chapter 3 teaches you to <strong>move mouse and expect boundary line to speak</strong> in THERMO stderr. Die-default x86 hides heatmap — boundary thermo still moves if coupling alive; enable debug HUD or trust log.</p>
+
+<h2 id="toc-03-host-x86-heat-versus-gpu-fabric-heat-two-witness">Host x86 heat versus GPU fabric heat — two witnesses, one proxy ledger</h2>
+<p>Default execution path is GPU interpretation via <code>x86.comp</code> — fat GPU, thin host. Optional <code>ControlHostCpu</code> enables <code>FieldX86Emu</code> assist; host cycles last frame can add terms to <code>entropyThisFrame</code> through <code>FieldX86Emu::hostCyclesLastFrame()</code>. Both paths remain <span class="tag meta">proxy</span> — not junction calorimetry.</p>
+<table><thead><tr><th>Source</th><th>When active</th><th>Witness</th></tr></thead>
+<tbody>
+<tr><td>GPU fabric work</td><td>Every dispatch</td><td>THERMO + coupling terms</td></tr>
+<tr><td>Probe inject</td><td>Mouse / FieldSocket probe</td><td>Boundary thermo rise</td></tr>
+<tr><td>Host x86 assist</td><td><code>ControlHostCpu</code> set</td><td>Extra proxy contribution in entropy</td></tr>
+<tr><td>Maintenance</td><td>High fidelity sessions</td><td><code>prevMaintCost</code> — Chapter 4</td></tr>
+</tbody></table>
+<div class="callout everyone"><strong>Plain English:</strong> GPU runs the kitchen; host assist is a visiting chef — both leave dishes, neither brings a wattmeter.</div>
+<p>Category error: claiming <code>nvidia-smi</code> power draw equals <code>entropyThisFrame</code>. Category error: disabling GPU path to “save thermo” while claiming field evolution — offense requires dispatch.</p>
+
+<h2 id="toc-03-flowers-and-greenwaves-classic-swipes-for-thermo">Flowers and GreenWaves — Classic swipes for thermo pedagogy</h2>
+<p><code>Flowers</code> and <code>GreenWaves</code> swipes emphasize organic flow and interference patterns on Classic canvas — curriculum shaders where thermo and Phi coupling is <em>visible</em> in ways Big Grin chrome suppresses. Week-one pattern: afternoon on Flowers with inject lab; return to die default for week-two operations.</p>
+<table><thead><tr><th>Swipe</th><th>Visual emphasis</th><th>Lab use</th></tr></thead>
+<tbody>
+<tr><td><code>Flowers</code></td><td>Organic advection patterns</td><td>Flow + coupling narrative</td></tr>
+<tr><td><code>GreenWaves</code></td><td>Interference, propagation</td><td>WaveSpeed + Phi forcing</td></tr>
+<tr><td><code>energy</code></td><td>Heat map obvious</td><td>FieldCoupling sweeps — Ch. 2 lab</td></tr>
+<tr><td><code>x86</code> default</td><td>Chrome forward</td><td>stderr + debug HUD thermo</td></tr>
+</tbody></table>
+<p>ThermoAccountant populates every swipe — canvas-agnostic obligation from Chapter 7. Flowers beauty does not excuse skipping THERMO grep.</p>
+
+<h2 id="toc-03-coupling-sweep-laboratory-structured-knob-narrat">Coupling sweep laboratory — structured knob narrative</h2>
+<div class="callout drill"><strong>Lab 3.B — coupling sweep (Classic recommended)</strong></div>
+<pre class="eq"># Swipe Flowers or energy; baseline 120s log segment
+set AnalogFields.FieldCoupling 0.1
+set AnalogFields.GateFidelity 0.3
+set AnalogFields.EntropyFloor 0.01
+# Record THERMO tail; then sweep:
+set AnalogFields.FieldCoupling 0.9
+set AnalogFields.GateFidelity 0.85
+set AnalogFields.InjectStrength 4.0
+grep -E 'THERMO|entropy|Boundary|prevMaint' run.log | tail -30</pre>
+<p>Journal template per sweep row:</p>
+<table><thead><tr><th>Step</th><th>FieldCoupling</th><th>GateFidelity</th><th>entropyThisFrame</th><th>avgBoundaryThermo</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>Baseline</td><td>0.1</td><td>0.3</td><td>(grep)</td><td>(grep)</td><td>Low bleed between channels</td></tr>
+<tr><td>Aggressive</td><td>0.9</td><td>0.85</td><td>(grep)</td><td>(grep)</td><td>Expect higher proxy + maintenance</td></tr>
+</tbody></table>
+<p>Restore defaults after lab — operator ethics. Chapter 4 exam afterward: which layer is ThermoAccountant versus oracle — do not conflate sweep results with Shannon H on zip files.</p>
+
+<h2 id="toc-03-rtxprobe-optional-dispatch-timing-witness">RTXProbe — optional dispatch timing witness</h2>
+<p><code>RTXPROBE</code> ELLIE category activates with <code>RTX_PROBES=1</code> — GPU timestamps and invocation counts with zero cost when off (Chapter 7). Use when coupling sweeps cause latency spikes without obvious CFL clamp lines — distinguishes dispatch-bound fabric work from logging volume or accidental host CPU path.</p>
+<pre class="eq">RTX_PROBES=1 ./linux.sh run 2>&1 | tee /tmp/probe-thermo.log
+grep -E 'RTXPROBE|THERMO|CFL' /tmp/probe-thermo.log | tail -25</pre>
+<p>RTXProbe does not measure joules — it measures time discipline. Pair with STATUS block GPU ms line for week-three health narrative.</p>
+
+<h2 id="toc-03-maintenance-cost-coherence-tax-each-frame">Maintenance cost — coherence tax each frame</h2>
+<p><code>prevMaintCost</code> (Chapter 4 preview) rises when field state becomes expensive to remember — high <code>GateFidelity</code>, aggressive coupling, resolution jumps. Chapter 3 connects maintenance to thermo pedagogy: Flowers session at fidelity 0.9 should show higher maintenance than baseline 0.3 — not moral judgment, coherence accounting.</p>
+<p>Maintenance is why “same looking” frames can cost different entropy — prior frame complexity matters. Clausius spirit: nature taxes irreversibility; engine taxes coherence.</p>
+
+<h2 id="toc-03-clausius-spirit-irreversibility-named-not-faked">Clausius spirit — irreversibility named, not faked</h2>
+<p>Rudolf Clausius gave operators language: entropy of universe tends upward; heat flows with direction. Field Technology honors spirit via entropy floor seed ~0.015 at <code>clearFieldImages()</code> and minimum noise in diffusion — fabric refuses pretend reversibility.</p>
+<div class="callout god"><strong>Irreversibility is not shame.</strong> It is the price of time running forward. Clausius named the direction; ThermoAccountant prints the receipt.</div>
+<p><a href="../creditors/clausius.html">Clausius tribute</a> humanizes creditor; <code>EntropyFloor</code> knob and floor seed humanize implementation. <span class="tag meta">Metaphor</span> on proxy — spirit without calorimeter fraud. Chapter 13 Landauer adds erasure floor vocabulary; Chapter 3 adds heat movement vocabulary — same table, different plates (Chapter 4 seating).</p>
+
+<h2 id="toc-03-thermo-on-die-versus-classic-same-accountant-dif">Thermo on die versus Classic — same accountant, different costume</h2>
+<p>Die-default <code>x86.comp</code> evolves bindings 8–10 every dispatch — thermo exists under AmmoOS chrome whether you see heatmap or not. Classic <code>CANVAS.comp</code> swipes exist because human eyes learn coupling faster with color. Product truth on die; pedagogy truth on Classic — compromise this book teaches.</p>
+<table><thead><tr><th>Aspect</th><th>Die default x86</th><th>Classic Flowers/GreenWaves</th></tr></thead>
+<tbody>
+<tr><td>ThermoAccountant</td><td>Populated every dispatch</td><td>Same — canvas-agnostic</td></tr>
+<tr><td>Visual thermo</td><td>Hidden behind chrome</td><td>Obvious heatmap</td></tr>
+<tr><td>Debug path</td><td><code>ControlFieldDebugHud</code></td><td>Swipe itself</td></tr>
+<tr><td>Honest testimony</td><td>stderr THERMO + bus hex</td><td>stderr + screenshot</td></tr>
+<tr><td>Category error</td><td>“No thermo on die”</td><td>“Thermo only on Classic”</td></tr>
+</tbody></table>
+<div class="callout drill"><strong>Drill 3.C — die vs Classic same session</strong></div>
+<pre class="eq"># Segment A: x86 default 90s mouse move — grep THERMO
+# Segment B: swipe GreenWaves 90s same knobs — grep THERMO
+# Compare entropyThisFrame distributions — both must be non-silent</pre>
+<p>Silence on either segment is failed path — binding 2 or dispatch broken, not “die has no physics.”</p>
+
+<h2 id="toc-03-analogfields-knobs-fcc-mirror-quick-reference">AnalogFields knobs — FCC mirror quick reference</h2>
+<table><thead><tr><th>Knob</th><th>Bus slot</th><th>Chapter 3 focus</th></tr></thead>
+<tbody>
+<tr><td><code>TimeScale</code></td><td>[16]</td><td>Effective Δt — CFL interaction</td></tr>
+<tr><td><code>ThermoAlpha</code></td><td>[17]</td><td>Diffusion rate — thermoCFL</td></tr>
+<tr><td><code>WaveSpeed</code></td><td>[18]</td><td>Wave propagation — waveCFL</td></tr>
+<tr><td><code>GateFidelity</code></td><td>[19]</td><td>Analog vs sharp gates — maintenance</td></tr>
+<tr><td><code>EntropyFloor</code></td><td>[20]</td><td>Minimum irreversible noise</td></tr>
+<tr><td><code>InjectStrength</code></td><td>[21]</td><td>Probe boundary offense</td></tr>
+<tr><td><code>PropalacticScale</code></td><td>[22]</td><td>Large-scale Phi forcing</td></tr>
+<tr><td><code>FieldCoupling</code></td><td>[23]</td><td>Phi ↔ Thermo ↔ Flow bleed</td></tr>
+</tbody></table>
+<p>Prompt <code>set AnalogFields.*</code> changes host state; CFL guard may scale before GPU sees values — numerical ethics, not censorship.</p>
+
+<h2 id="toc-03-maxwell-neighborhood-preview-coupling-before-cha">Maxwell neighborhood preview — coupling before Chapter 15</h2>
+<p>James Clerk Maxwell taught that fields talk to neighbors — electrical potential and heat exchange stories are coupled, not isolated channels on a grid. AMOURANTHRTX implements neighborhood whispers as discrete Laplacian on Phi, diffusion on Thermo, gradient-driven Flow with <code>FieldCoupling</code> mixing strengths. This is <span class="tag impl">Implemented</span> shader arithmetic on bindings 8–10 — not a claim the engine solved Maxwell’s equations in full analytical glory.</p>
+<p>Preview intuition for coupling lab: when Phi develops sharp spatial features, Thermo at neighboring texels warms when coupling is high — energy can be moved, axiom three. When coupling is low, channels evolve as parallel homework problems — useful pedagogy, incomplete product story. Chapter 15 creditor page goes historical; Chapter 3 demands you <em>see</em> the consequence in THERMO grep when coupling sweeps.</p>
+<p>Do not quote Maxwell to justify ionosphere colors from planetary weave — that is Chapter 6 <span class="tag vis">Visual</span> category error. Quote Maxwell when discrete Laplacian and coupling knobs have stderr witnesses.</p>
+
+<h2 id="toc-03-sealed-time-on-fabric-linear-physics-before-sove">Sealed time on fabric — linear physics before sovereign sync</h2>
+<p><code>TotalTime::seal()</code> writes monotonic session genesis into <code>FieldSocket::sealed_time</code> before fabric evolves. Thermodynamics without sealed time would let frame-rate jitter rewrite effective Δt stories retroactively — logs would lie. Chapter 3 connects seal to thermo receipts: <code>freeEnergyIncome</code> (Chapter 4) treats sealed time as living-world potential feeding the ledger.</p>
+<p>Operators comparing week-one to week-six sessions should compare THERMO against rising <code>steps</code> counter and sealed genesis, not wall clock alone. Chapter 19 sovereign pulses extend the discipline across hosts; session seal is prerequisite intuition — local physics clock before planetary sync narrative.</p>
+
+<h2 id="toc-03-failure-catalog-thermodynamics-edition">Failure catalog — thermodynamics edition</h2>
+<table><thead><tr><th>Failure mode</th><th>Symptom</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>Joule fantasy</td><td>Bill from THERMO lines</td><td><span class="tag meta">Proxy rock</span> — Ch. 4</td></tr>
+<tr><td>CFL ignorance</td><td>NaN colors instant</td><td>Read clamp grep; Ch. 9</td></tr>
+<tr><td>Die thermo denial</td><td>“Heat only on Classic”</td><td>Drill 3.C; debug HUD</td></tr>
+<tr><td>Oracle merge</td><td>Zip H tied to boundary thermo</td><td>Layer exam — Ch. 4</td></tr>
+<tr><td>nvidia-smi equivalence</td><td>GPU power = entropyThisFrame</td><td>Host vs GPU table above</td></tr>
+<tr><td>Zero floor myth</td><td>EntropyFloor 0 “for clean run”</td><td>Clausius spirit; reseed</td></tr>
+<tr><td>Screenshot-only lab</td><td>Flowers pretty, THERMO silent</td><td>Binding 2 checklist — Ch. 7</td></tr>
+</tbody></table>
+
+<h2>Chapter summary</h2>
+<p>Chapter 3 teaches thermodynamics as honest accounting on Phi/Thermo/Flow bindings 8–10. CFL wave and thermo inequalities express mesh-speed ethics; WaveSpeed caps enforce them before dispatch. Boundary thermo narrates probe offense; host x86 heat adds optional proxy terms separate from GPU fabric work. Coupling sweep lab on Flowers/GreenWaves/energy swipes produces grep journals; die-default path shares ThermoAccountant with hidden heatmaps — stderr remains scripture. Clausius spirit lives in entropy floor and irreversibility language without joule fraud. RTXProbe optional timing complements THERMO receipts.</p>
+<p>Next: <a href="04-entropy.html">Chapter 4 — Entropy</a>. Dispatch: <a href="07-gpu-engine.html">Chapter 7</a>. CFL constants: <a href="09-fcc-tesla.html">Chapter 9</a>. Maxwell: <a href="../creditors/maxwell.html">Maxwell</a>.</p>
+
+<h2 id="toc-03-deep-dive-thermodynamics-travels-through-field-l">Deep dive — thermodynamics travels through field layers</h2>
+<p>Guest RAM, VGA, FAT, and audio layers (Chapter 8) pump telemetry into <code>data_bus</code> before fabric evolves. Thermodynamics on the fabric is not isolated from die activity — guest execution raises host pump work, layer sync costs, and optional <code>FieldX86Emu</code> assist heat. Literate operators correlate rising <code>entropyThisFrame</code> with rising pump generation in slot 0 without claiming a single causal line — correlation is human narrative; receipts are grep lines.</p>
+<p>When AmmoOS chrome animates on binding 11–14 textures, presentation work still rides the same dispatch loop that populates ThermoAccountant. Chrome is not “outside thermo.” If chrome moves and THERMO is flat, suspect dispatch failure or logging category filters — not “OS mode is free.”</p>
+<p>Field layers L0–L9 exist so DOS-shaped universes remain addressable to shaders. Each layer pump is a host obligation in <code>dispatch_canvas()</code> — thermodynamics begins on the host timeline before <code>vkCmdDispatch</code> writes GPU texels. Skip pump literacy and you will misread thermo spikes as fabric bugs when they are guest sync stories.</p>
+
+<h2 id="toc-03-deep-dive-prompt-terminal-analogfields-as-live-f">Deep dive — prompt terminal AnalogFields as live FCC</h2>
+<p>The in-engine prompt exposes <code>set AnalogFields.TimeScale</code>, <code>ThermoAlpha</code>, <code>WaveSpeed</code>, and siblings — the same namespace mirrored to <code>data_bus[16–23]</code> on the x86 path. Treat prompt changes as offensive writes to boundary conditions: you are not “adjusting graphics,” you are changing the next tick’s PDE parameters subject to CFL guard.</p>
+<table><thead><tr><th>Prompt command</th><th>Immediate effect</th><th>Grep witness</th></tr></thead>
+<tbody>
+<tr><td><code>set AnalogFields.FieldCoupling 0.8</code></td><td>Cross-channel bleed rises</td><td>THERMO slope vs prior session</td></tr>
+<tr><td><code>set AnalogFields.InjectStrength 1.2</code></td><td>Mouse probe heats boundary</td><td><code>avgBoundaryThermo</code> lines</td></tr>
+<tr><td><code>set AnalogFields.GateFidelity 0.95</code></td><td>Sharper gates, higher maintenance</td><td><code>prevMaintCost</code> — Ch. 4</td></tr>
+<tr><td><code>set AnalogFields.WaveSpeed 1.8</code></td><td>CFL may clamp before dispatch</td><td>harmonics guard stderr</td></tr>
+</tbody></table>
+<p>Document knob state in lab journals. Future-you comparing week-six grep to week-one without knob notes will invent myths about “mysterious drift.”</p>
+
+<h2 id="toc-03-deep-dive-week-two-thermo-journal-template">Deep dive — week-two thermo journal template</h2>
+<p>Operators who graduate Chapter 3 keep a running thermo journal — not for publication, for comparative honesty:</p>
+<ol>
+<li><strong>Session ID</strong> — date, canvas kind (Classic / x86 / energy), swipe name.</li>
+<li><strong>Knob baseline</strong> — list AnalogFields values before drill.</li>
+<li><strong>CFL events</strong> — note any clamp messages; they explain “why my knob did not stick.”</li>
+<li><strong>THERMO tail</strong> — paste last ten THERMO lines; circle <code>entropyThisFrame</code> and <code>avgBoundaryThermo</code>.</li>
+<li><strong>One sentence</strong> — what moved and what did not; no joule claims.</li>
+</ol>
+<p>After four sessions, plot <code>steps</code> versus cumulative proxy entropy trend in a spreadsheet if you must — comparative slopes only. Chapter 4 owns formal entropy layers; Chapter 3 owns the habit of writing receipts down before arguments start.</p>
+
+<h2>Study questions</h2>
+<ol>
+<li>State wave and thermo CFL inequalities and intuition for each.</li>
+<li>What happens when WaveSpeed 2.5 is requested?</li>
+<li>Define avgBoundaryThermo and how mouse inject affects it.</li>
+<li>When does host x86 heat enter the proxy ledger?</li>
+<li>Run Lab 3.B; record two sweep rows with grep numbers.</li>
+<li>Why do Flowers and GreenWaves exist if die evolves thermo?</li>
+<li>What does RTX_PROBE env var enable?</li>
+<li>Explain Clausius spirit versus entropy floor implementation.</li>
+<li>Complete Drill 3.C; did both segments emit THERMO?</li>
+<li>Which failure mode matches nvidia-smi equivalence?</li>
+</ol>
+
+<h2 id="toc-03-cfl-derivation-intuition">CFL derivation intuition</h2><p>Wave CFL: information cannot cross more than one cell per step for explicit wave stability. Diffusion CFL: parabolic scaling with dx². Host enforces before dispatch — numerical ethics from Courant-Friedrichs-Lewy creditors.</p>
+
+<h2 id="toc-03-wavespeed-cap-0-01-2-0">WaveSpeed cap [0.01, 2.0]</h2><p>Hard caps prevent operator knob enthusiasm from outrunning guard — even when prompt allows high ambition, host may clamp.</p>
+
+<h2 id="toc-03-dt-cap-0-033">dT cap 0.033</h2><p>Per-step dt ceiling keeps fabric inside stable envelope — ties to frame timing without rewriting sealed time.</p>
+
+<h2 id="toc-03-body-temperature-seeding-labeled-meta">Body-temperature seeding labeled meta</h2><p>Normalized simulation flavor for thermo seed — not BIOS reading. Chapter 12 rock; repeated here because newcomers confuse seed with sensor.</p>
+
+<h2 id="toc-03-greenwaves-and-flowers-swipes">GreenWaves and Flowers swipes</h2><p>Specialty canvases demonstrate Flow and Phi aesthetics — coupling knobs still apply. Beauty is not free; check THERMO after pretty swipe.</p>
+
+<h2 id="toc-03-rtxprobe-during-thermo-drill">RTXProbe during thermo drill</h2><p>RTX_PROBES=1 adds GPU timestamps when thermo spikes — distinguish dispatch cost from host logging flood.</p>
+
+<h2 id="toc-03-boundary-thermo-interpretation">Boundary thermo interpretation</h2><p>avgBoundaryThermo summarizes edge behavior — where fabric meets presentation boundary. Useful when center calm but boundary hot — probe leak or HDR coupling story.</p>
+
+<h2 id="toc-03-host-x86-heat-in-accountant">Host x86 heat in accountant</h2><p>When ControlHostCpu assist runs, host cycles contribute — still proxy, still grep. Know your execution path when interpreting entropy.</p>
+
+<h2 id="toc-03-thermodynamics-lab-exercise-coupling-sweep">Thermodynamics lab exercise — coupling sweep</h2><p>Sweep FieldCoupling 0→0.9 in steps, log entropy slope per setting. Comparative receipt science without joule claims.</p>
+
+<h2 id="toc-03-clausius-inequality-spirit">Clausius inequality spirit</h2><p>Entropy of isolated system tends non-decrease — fabric floor and maintenance cost echo spirit in silicon story. Not claiming GPU proves Clausius — honoring creditor.</p>
+
+<h2 id="toc-03-thermodynamic-metaphor-versus-si-units-extended-">Thermodynamic metaphor versus SI units — extended rock</h2><p>Every knob name evokes physics — ThermoAlpha, WaveSpeed, EntropyFloor. Evocation is pedagogy; SI claim is fraud unless measured. Chapter 12 table is legal contract; Chapter 3 is physics classroom with honest labels.</p>
+
+<h2 id="toc-03-mouse-probe-as-intentional-boundary-condition">Mouse probe as intentional boundary condition</h2><p>InjectStrength translates pointer motion into fabric forcing — offense operator practice. Coupled with FieldCoupling, mouse becomes local weather god with stderr receipts.</p>
+
+<h2 id="toc-03-diffusion-intuition-on-2d-grid">Diffusion intuition on 2D grid</h2><p>Heat spreads to neighbors proportional to ThermoAlpha — discrete diffusion on grid. CFL limits step size so spread remains stable. Visualize on Classic; trust math on x86.</p>
+
+<h2 id="toc-03-wave-step-intuition-on-2d-grid">Wave step intuition on 2D grid</h2><p>Phi Laplacian measures how Phi differs from neighborhood average — waves propagate curvature. WaveSpeed scales propagation; CFL limits it.</p>
+
+<h2 id="toc-03-gatefidelity-analog-to-digital-story">GateFidelity analog-to-digital story</h2><p>Low fidelity softens gates — analog computing metaphor. High fidelity sharpens — approaching digital gates. Thermo and Flow feel fidelity in coupling.</p>
+
+<h2 id="toc-03-propalacticscale-cosmic-forcing">PropalacticScale cosmic forcing</h2><p>Large-wavelength forcing on Phi — named cosmic knob with metaphor label. Useful for visible large patterns in pedagogy swipes.</p>
+
+<h2 id="toc-03-timescale-global-dt">TimeScale global dt</h2><p>TimeScale multiplies effective dt in guard and evolution — global tempo knob. Sealed time still linear; TimeScale is physics rate not wall clock rewrite.</p>
+
+<h2 id="toc-03-thermo-chapter-creditor-bridge">Thermo chapter creditor bridge</h2><p>Clausius and Boltzmann gave language for irreversibility; Landauer gave floor for erasure; engine gives proxy receipts. Read Chapter 4 next with labels loaded.</p>
+
+<h2 id="toc-03-exercise-3-b-parameter-journal">Exercise 3.B — parameter journal</h2><p>Keep lab journal: knob change, THERMO line before/after, qualitative fabric difference. Science without joule lies.</p>
+
+
+
+<div class="evidence-anchor" id="evidence-ch03">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Cross-coupling</td><td>Energy moves between channels</td><td><span class="tag impl">Implemented</span></td><td><code>FieldCoupling in fabric evolution</code></td></tr><tr><td>CFL wave guard</td><td>c·Δt/Δx ≤ 1</td><td><span class="tag impl">Implemented</span></td><td><code>Host harmonics before dispatch</code></td></tr><tr><td>Thermo proxy</td><td>entropyThisFrame</td><td><span class="tag meta">Metaphor</span></td><td><code>Proxy — not package joules</code></td></tr><tr><td>Sealed time</td><td>Linear session clock</td><td><span class="tag impl">Implemented</span></td><td><code>TotalTime::seal() each frame</code></td></tr></tbody></table>
+<pre class="eq">c·Δt/Δx ≤ 1  |  α·Δt/Δx² ≤ 1  |  Ṡ_proxy ≈ fieldWork + probeDiss + prevMaint</pre>
+<pre class="eq">./linux.sh run 2&gt;&amp;1 | grep -E &#x27;THERMO|CFL|harmonics&#x27;</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>Navigator/engine/Pipeline.cpp</code></li><li><code>Navigator/shaders/CANVAS.comp</code></li><li><code>Navigator/engine/AnalogFields.hpp</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-03-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Thermodynamics in this stack is proxy accounting on coupled fabric channels — CFL ethics, sealed time, honest clamps. You can move energy in shaders; you cannot bill joules from THERMO without a rock. Chapter 4 names the receipts.</p>
+</div>
+
+    <nav class="chapter-nav bottom"><a class="btn secondary" href="02-fields-pixels-packets.html">← Ch 2</a> <a class="btn" href="04-entropy.html">Ch 4 →</a></nav>
+  </main>
+  <footer><p>Field Technology v6 · Serious book · We do not hide the rocks.</p></footer>
+  <script src="../js/reader.js" defer></script>
+</body>
+</html>

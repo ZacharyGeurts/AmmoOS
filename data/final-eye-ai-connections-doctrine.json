@@ -1,0 +1,70 @@
+{
+  "schema": "final-eye-ai-connections/v1",
+  "title": "Final_Eye AI connections — Grok build, AmmoLang, agents, OCR vocabulary",
+  "motto": "One eye, every wire — auto-detect the host; speak tesseract, pytesseract, and plain OCR.",
+  "module": "lib/final-eye-ai-bridge.py",
+  "core_bridge": "lib/final-eye-ocr-core.py",
+  "cli_bridge": "lib/final-eye-h7-ocr.py",
+  "plate_doctrine": "data/final-eye-plate-doctrine.json",
+  "auto_wire": {
+    "on_import": true,
+    "env_keys": [
+      "NEXUS_INSTALL_ROOT",
+      "SG_ROOT",
+      "FINAL_EYE_ROOT",
+      "QUEEN_ROOT",
+      "HOSTESS7_ROOT",
+      "GROK16_ROOT",
+      "AML_LIB",
+      "FINAL_EYE_PORT",
+      "AML_BUILD",
+      "GROK_BUILD"
+    ]
+  },
+  "trusted_commander": "hostess7",
+  "handshake_only": true,
+  "seal_doctrine": "data/final-eye-hostess7-seal-doctrine.json",
+  "detectors": [
+    {"id": "grok_build", "signals": ["GROK_BUILD", "QUEEN_GROK_BUILD_SECURE", "KILROY/", "Grok16/python/driver"]},
+    {"id": "ammolang", "signals": ["AML_BUILD", "library/dewey/000-computer-science/ammolang"]},
+    {"id": "grok_agent", "signals": ["GROK_AGENT", "GROK_SESSION", "CURSOR_AGENT", "COMPOSER_AGENT", "XAI_AGENT"]},
+    {"id": "mcp", "signals": ["MCP_SERVER", "MCP_TOOL"]},
+    {"id": "queen", "bridge": "Queen/lib/queen_final_eye.py"},
+    {"id": "hostess7", "bridge": "lib/hostess7-ocr-control.py"},
+    {"id": "tesseract", "binary": "tesseract"}
+  ],
+  "pytesseract_map": {
+    "image_to_string": "ocr",
+    "image_to_hocr": "hocr",
+    "image_to_pdf": "pdf",
+    "image_to_boxes": "boxes",
+    "image_to_data": "tsv",
+    "image_to_osd": "osd",
+    "image_to_alto_xml": "hocr"
+  },
+  "tesseract_cli": {
+    "pattern": "tesseract IMAGE OUTPUT [options]",
+    "output_formats": ["stdout", "txt", "hocr", "pdf", "tsv", "box", "osd", "alto"],
+    "options": ["--psm", "--oem", "-l", "--lang", "-c tessedit_char_whitelist="]
+  },
+  "cli_examples": [
+    "lib/final-eye-h7-ocr.py posture",
+    "lib/final-eye-h7-ocr.py connect",
+    "lib/final-eye-h7-ocr.py vocabulary",
+    "lib/final-eye-h7-ocr.py ocr SG/zpics/01-ammoos-field.png",
+    "lib/final-eye-h7-ocr.py ocr IMAGE.png --psm 6 --plain",
+    "lib/final-eye-h7-ocr.py tesseract IMAGE.png stdout --psm 6",
+    "lib/final-eye-h7-ocr.py image_to_string IMAGE.png",
+    "lib/final-eye-h7-ocr.py hocr IMAGE.png",
+    "lib/final-eye-h7-ocr.py dispatch '{\"action\":\"ocr\",\"path\":\"IMAGE.png\"}'"
+  ],
+  "api_dispatch": {
+    "gate": "/api/hostess7/ocr/dispatch",
+    "body_keys": ["action", "subaction", "command", "path", "image", "format", "psm", "lang", "plain"]
+  },
+  "grok_build": {
+    "boot_test": "library/dewey/000-computer-science/ammolang/boot_qemu_test.aml",
+    "ocr_sink": "SG/zpics",
+    "receipt": "boot-qemu-receipt.json"
+  }
+}

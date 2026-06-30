@@ -1,0 +1,14 @@
+{
+  "id": "format-media_aiff",
+  "title": "AIFF",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".aiff",
+    ".aif"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_aiff.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

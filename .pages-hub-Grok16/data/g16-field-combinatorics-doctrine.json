@@ -1,0 +1,159 @@
+{
+  "schema": "g16-field-combinatorics-doctrine/v1",
+  "title": "Field combinatorics — hold all limits, find speed cap, optimize common usage",
+  "motto": "Every box-of-dots and box-of-boxes facet is indexed — speed cap and headroom beyond current defaults.",
+  "module": "lib/field_combinatorics.py",
+  "panel": "g16-field-combinatorics-panel.json",
+  "field_research_book": {
+    "chapter": 7,
+    "slug": "07-field-combinatorics",
+    "site": "https://zacharygeurts.github.io/Field_Research/chapters/07-field-combinatorics.html"
+  },
+  "compare_axis": "field_execution_ops_per_sec",
+  "facets": {
+    "spatial_lattice": {
+      "cells_per_axis": 8,
+      "dots_per_box": 512,
+      "scale_nets": 4,
+      "total_lattice_dots": 2048,
+      "max_field_depth": 0,
+      "doctrine": "NewLatest/data/field-spatial-doctrine.json"
+    },
+    "fieldx86_die": {
+      "wave_bands": 16,
+      "frames_per_epoch": 240,
+      "prog_ops_per_frame": 512,
+      "phi": 0.6180339887,
+      "profiles": {
+        "belt_1_0": {"die_slots": 256, "redata_chunk": 512, "belt_chunk": 1},
+        "belt_2_0": {"die_slots": 512, "redata_chunk": 8192, "belt_chunk": 64, "data_bus_slots": 64}
+      },
+      "doctrine": "data/grok16-belt-doctrine.json"
+    },
+    "truth_blocks": {
+      "tiers": ["kernel", "module", "mega", "chamber", "stack"],
+      "doctrine": "data/g16-truth-blocks-doctrine.json"
+    },
+    "launch": {
+      "modes": ["organized_field", "singular_field", "compile"],
+      "doctrine": "data/field-exec-uncompiled-doctrine.json"
+    },
+    "ironclad_chips": {
+      "module": "NewLatest/lib/field-ironclad-chips-combinatorics.py",
+      "panel": "field-ironclad-chips-combinatorics-panel.json",
+      "seed": "NewLatest/data/field-chip-battery-seed.json",
+      "doctrine": "NewLatest/data/field-ironclad-chips-combinatorics-doctrine.json",
+      "sources": ["seed", "mame", "chips_manifest", "queen_game_room", "isa_data"],
+      "vendors": ["Cyrix", "Tandy", "MAME", "CHIPS", "Motorola", "Intel", "AMD"],
+      "code_path_prediction": {
+        "hard_percent": true,
+        "narrow_band_width": 16,
+        "seed": "NewLatest/data/field-chip-path-predict-seed.json",
+        "power_sort_context": "chip_paths"
+      }
+    },
+    "g16_universal": {
+      "module": "NewLatest/lib/field-g16-universal-combinatronic.py",
+      "rebalance": "NewLatest/lib/g16-combinatronic-rebalance.py",
+      "panel": "field-g16-universal-combinatronic-panel.json",
+      "doctrine": "NewLatest/data/field-g16-universal-combinatronic-doctrine.json",
+      "sub_facets": ["ironclad_chips", "program_combinatronic", "sense_universal"],
+      "condense_group": "g16_universal",
+      "motto": "G16 does everything — every chip, every language, one combinatronic."
+    },
+    "program_combinatronic": {
+      "module": "NewLatest/lib/field-program-combinatronic.py",
+      "panel": "field-program-combinatronic-panel.json",
+      "seed": "NewLatest/data/field-program-combinatronic-seed.json",
+      "doctrine": "NewLatest/data/field-program-combinatronic-doctrine.json",
+      "canonical_facet": "single_combinatronic",
+      "boil_target_pct": 100,
+      "sources": ["seed", "grok16_languages", "queen_code_languages", "heuristic"],
+      "retro_classic": ["basic", "qbasic", "pascal", "turbo_pascal"],
+      "combinatorics_native": ["ammolang", "field"],
+      "motto": "Every programming command in every language — AmmoLang sequences universal g16 combinatronic rebalance."
+    },
+    "sense_universal": {
+      "module": "NewLatest/lib/field-sense-package-meld.py",
+      "panel": "field-sense-package-panel.json",
+      "eye_ear_plate": "eye-ear-plate.json",
+      "universal_protector": "universal-protector-panel.json",
+      "doctrine": "NewLatest/data/field-sense-package-doctrine.json",
+      "condense_group": "universal_lock",
+      "members": ["final_eye", "final_ear", "zocr", "mouth_neural", "eye_ear_plate", "universal_protector"],
+      "lock_gate": "universal_protector.equipment_holds_gate",
+      "motto": "Eye · Ear · ZOCR · Mouth — locked everywhere through combinatorics universal condense."
+    }
+  },
+  "speed_cap": {
+    "counted_op": "epochs × frames × prog_ops (speed_demo metric)",
+    "work_units_per_epoch": "frames × (prog_ops + wave_bands + 2 × die_slots)",
+    "baseline_source": "docs/field-exec-full-bench.json",
+    "optimize_for": "commonly_used patterns with measured headroom vs native ceiling"
+  },
+  "engine_lock": {
+    "algorithm": "sha256",
+    "state_file": "field-combinatorics-engine-lock.json",
+    "panel_field": "combinatorics_lock",
+    "auto_detect": true,
+    "locked": true,
+    "additions_policy": "whole_engine_rebuild_only",
+    "rebuild_cmd": "field_combinatorics.py rebuild",
+    "verify_cmd": "field_combinatorics.py verify"
+  },
+  "operator_guard": {
+    "schema": "g16-combinatorics-operator-guard/v1",
+    "never_update_on_running_operator": true,
+    "idle_threshold_sec": 90,
+    "meld_lock_max_age_sec": 300,
+    "override_env": "G16_COMBO_OPERATOR_OVERRIDE",
+    "motto": "Never mutate combinatorics while Operator is running — defer until idle."
+  },
+  "reject_retaliate": {
+    "schema": "g16-combinatorics-reject-retaliate/v1",
+    "never_break_on_mismatch": true,
+    "use_last_good_panel": true,
+    "reject_ledger": "field-combinatorics-reject-ledger.jsonl",
+    "threat_panel": "field-combinatorics-threat-panel.json",
+    "last_good_panel": "field-combinatorics-last-good-panel.json",
+    "threat_ledger": "threat-ledger.jsonl",
+    "window_sec": 300,
+    "tiers": [
+      {"min_attempts": 1, "level": "monitor", "action": "record"},
+      {"min_attempts": 3, "level": "block_refresh", "action": "deny_publish"},
+      {"min_attempts": 6, "level": "diagnostic", "action": "engage_diagnostic"},
+      {"min_attempts": 11, "level": "host_attacks", "action": "register_tamper"},
+      {"min_attempts": 21, "level": "lethal", "action": "merciless_cycle"}
+    ],
+    "motto": "Mismatch never breaks meld — reject, record, hold last-good panel, retaliate in full."
+  },
+  "common_usage_ids": [
+    "dev_organized_python",
+    "dev_organized_iron_exec",
+    "singular_native_bsp",
+    "cxx_field_opt_belt_1",
+    "cxx_belt_2",
+    "spatial_lattice_tick"
+  ],
+  "compiled_creation": {
+    "schema": "g16-compile-combinatronics/v1",
+    "module": "lib/g16-compile-combinatronics.py",
+    "doctrine": "data/g16-compile-combinatronics-doctrine.json",
+    "always_at_creation": true,
+    "pipeline": ["fast_cycle", "resolve_ideal_profile", "compile_with_profile", "stamp_combinatronics_receipt", "instill_ammocode_field"],
+    "ammocode_field": {
+      "doctrine": "data/g16-ammocode-field-doctrine.json",
+      "module": "lib/g16-ammocode-field-instill.py",
+      "no_subfields": true,
+      "defield_if_resting_on_field": true
+    },
+    "receipt_suffix": ".combinatronics.json",
+    "wired": [
+      "scripts/grok16-ai-compile.py",
+      "scripts/grok16-profile-flags.py",
+      "scripts/grok16-toolchain.sh",
+      "Queen/lib/queen-launch-singular-field.py"
+    ],
+    "motto": "Every compiled file is born optimal — combinatronics gate before compile, stamped receipt after."
+  }
+}

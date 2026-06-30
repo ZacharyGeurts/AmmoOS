@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 — Architecture</title>
+  <meta name="description" content="Grok16 5.2.0 programmer manual — unified g16 @ 16.2.0, batteries, linker, profiles." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Grok16/architecture.html" />
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light" && t !== "queen") t = "queen";
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "queen");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand">
+        <strong>Grok16</strong>
+        <span class="nav-version">distro 5.2.0</span>
+        <span class="nav-g16">g16 @ 16.2.0</span>
+      </div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-queen" data-theme="queen" aria-pressed="false">Queen</button>
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">Light</button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Architecture</h1>
+  <figure class="fig-wide">
+    <img src="assets/g16-arch-visual.png" alt="Grok16 layer architecture" width="960" height="540" loading="lazy" />
+  </figure>
+
+  <h2 id="forge-flow">Forge pipeline</h2>
+  <pre><code>forge/grok16-forge.py run gcc_fetch
+forge/grok16-forge.py run gcc_configure   # host gcc
+forge/grok16-forge.py run gcc_build
+forge/grok16-forge.py run gcc_rebuild     # self-host with g16</code></pre>
+
+  <h2 id="unified-driver">Unified driver</h2>
+  <table>
+    <tr><th>Artifact</th><th>Path</th><th>Role</th></tr>
+    <tr><td><code>g16</code></td><td><code>bin/g16</code></td><td>Discern C/C++/Python/ASM + delegate</td></tr>
+    <tr><td><code>g16-cc</code></td><td><code>libexec/grok16/g16-cc</code></td><td>C backend (gnu17)</td></tr>
+    <tr><td><code>g16-cxx</code></td><td><code>libexec/grok16/g16-cxx</code></td><td>C++ backend (gnu++26)</td></tr>
+    <tr><td><code>g16-ld</code></td><td><code>bin/g16-ld</code></td><td>Field linker wrapper → <code>forge/g16-linker.py</code></td></tr>
+  </table>
+
+  <h2 id="directories">Directory layout</h2>
+  <table>
+    <tr><th>Path</th><th>Contents</th></tr>
+    <tr><td><code>vendor/gcc</code></td><td>Upstream gcc-15, BASE-VER 16.2.0</td></tr>
+    <tr><td><code>build/gcc</code></td><td>Object files, stage builds</td></tr>
+    <tr><td><code>bin/</code></td><td>Installed tools (gitignored until bootstrap)</td></tr>
+    <tr><td><code>forge/</code></td><td>Python forge — fetch, build, linker, ironclad</td></tr>
+    <tr><td><code>data/</code></td><td>Profiles, doctrines, manifests, bench JSON</td></tr>
+  </table>
+
+  <h2 id="selfhost">Self-host stamp</h2>
+  <p>Successful rebuild writes <code>SELFHOST.json</code> at repo root with compiler version and timestamp.</p>
+  <footer>
+    <a href="index.html">Home</a> ·
+    <a href="release.html">Release 5.2.0</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16">GitHub</a> ·
+    <a href="https://github.com/ZacharyGeurts/Grok16/wiki">Wiki</a>
+    <p class="footer-meta">Grok16 5.2.0 · g16 @ 16.2.0 · GPLv3</p>
+  </footer>
+</body>
+</html>

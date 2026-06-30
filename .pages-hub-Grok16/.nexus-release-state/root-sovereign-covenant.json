@@ -1,0 +1,17 @@
+{
+  "schema": "root-sovereign/v1",
+  "sealed": true,
+  "sealed_at": "2026-06-27T17:47:31Z",
+  "reason": "auto_bind",
+  "operator": {
+    "username": "default",
+    "uid": 1000,
+    "gid": 1000,
+    "home": "/home/default"
+  },
+  "machine": "fbb284c71c1dd6b2",
+  "session_secret": "36400034cc399cf228006a19084dedfa949c53f6a641e3c73eca0e64784394e1",
+  "verdict": "USER_OK",
+  "kill_policy": "prejudice",
+  "motto": "Root is sovereign — unauthorized root terminated with prejudice"
+}

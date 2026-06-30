@@ -1,0 +1,56 @@
+{
+  "schema": "grok16-single-fabric-doctrine/v1",
+  "title": "Grok16 2.0 — Single fabric knowing",
+  "motto": "One belt die. One field amplitude. One linear time. Knowing is fixed-size — not nested fields.",
+  "declaration": "Single fabric is the 2.0 technology: parallel I/O may fan in, but truth collapses to one amplitude on one belt.",
+  "ironclad_citation": "ironclad:field_sanity:5",
+  "belt_ref": "data/grok16-belt-doctrine.json",
+  "nexus_safety_ref": "NewLatest/data/single-field-depth-doctrine.json",
+  "single_fabric": {
+    "rule": "Chunked redata belt + single-location reads — no monolithic blast, no field-on-field stack",
+    "belt_2_0": {
+      "profile": "belt_2_0",
+      "redata_chunk": 8192,
+      "wave_massive": true,
+      "single_location_reads": true,
+      "die_slots": 512
+    },
+    "knowing": "Fixed-size belt dispatch — operator truth is one fabric amplitude, not nested depth layers"
+  },
+  "field_platform_ref": "data/grok16-field-platform-doctrine.json",
+  "warning": "DO NOT CREATE FIELD FILES — they heat neighboring fields; use 2D auto-field platform",
+  "safety": {
+    "no_field_files": true,
+    "field_platform_2d": true,
+    "depth_field_impossible": true,
+    "depth_fields_sealed_and_destroyed": true,
+    "creation_forbidden": true,
+    "max_field_depth": 0,
+    "time_is_linear": true,
+    "time_citation": "ironclad:time:1",
+    "ironclad_meld": "data/g16-ironclad-meld.json",
+    "field_sanity": "integral one_pass_simplify — classify, strip, dedupe, flatten, cool_sort",
+    "gates": [
+      "g16-field-mandate",
+      "g16-ironclad-sanity",
+      "field-depth-singularizer",
+      "queen-field-sanity",
+      "sovereign-linear-time"
+    ]
+  },
+  "field_research_book": {
+    "doctrine": "data/g16-field-research-book.json",
+    "module": "lib/field-research-book.py",
+    "site": "https://zacharygeurts.github.io/Field_Research",
+    "chapters": [4, 5, 6, 7, 13]
+  },
+  "integration": {
+    "script": "scripts/grok16-integrate.sh",
+    "consumers": ["NewLatest/Queen", "World_Redata", "ZOCR", "PythonG", "Final_Ear", "Field_Research"]
+  },
+  "validation": {
+    "belt_battery": "test-battery-belt",
+    "bench_triad": "bench-triad",
+    "release_chain": ["test-battery-release", "test-battery-belt"]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "kilroy-version/v1",
+  "product": "KILROY",
+  "version": "1.1.0",
+  "tag": "v1.1.0",
+  "codename": "Sanctuary",
+  "abi": "kilroy-field-1.0",
+  "layout": 9,
+  "substrate": "linux-7.1.1",
+  "localversion": "-kilroy",
+  "release_model": "source_overlay_plus_platform_bins",
+  "statement": "Field OS kernel — Linux-compatible, not Linux. Field 1 canonical at 127.0.0.1; not Field 1 → hostile → brought to Field 1.",
+  "stack_pairing": {
+    "grok16": "5.1.0",
+    "ammoos": "2.0.0-beta3",
+    "ammoos_release": "Grok Expert Review",
+    "queen": "standalone secured browser — :9481",
+    "znetwork": "absorbed into KILROY PC core network lane",
+    "ammoos_desktop": "AMOURANTHRTX — http://127.0.0.1:9477/field",
+    "stack_layers": "hardware → nexus_c2 → kilroy → ammoos → queen",
+    "load_os": "scripts/kilroy-load-os.sh",
+    "field_one": "canonical — depth zero"
+  },
+  "compiler": {
+    "primary": "Grok16 g16 @ 16.2.0",
+    "profile": "field_physics",
+    "belt": "belt_2_0",
+    "fieldc": "FIELDC v4.0.2026 — .fld guest modules"
+  },
+  "surfaces": {
+    "proc": "/proc/kilroy_field",
+    "chardev": "/dev/kilroy_field",
+    "underlay": "http://127.0.0.1:9477/underlay-f9?sector=kilroy",
+    "tristate": "scripts/tristate-virtual-kilroy-field.sh",
+    "queen_api": "http://127.0.0.1:9481/api/kilroy",
+    "pages_terminal": "https://zacharygeurts.github.io/KILROY/"
+  },
+  "native_programs": [
+    "userspace/kilroy-status/kilroy-status.c",
+    "userspace/kilroy-ioctl-test/kilroy-ioctl-test.c",
+    "scripts/build-kilroy.sh",
+    "scripts/grok-mkimage.sh",
+    "scripts/qemu-boot-kilroy.sh"
+  ],
+  "release_gates": [
+    "scripts/check-field-stack.sh",
+    "scripts/test-units.sh",
+    "scripts/test-ioctl-smoke.sh",
+    "Grok16/scripts/grok16-verify-ammoos.sh"
+  ]
+}

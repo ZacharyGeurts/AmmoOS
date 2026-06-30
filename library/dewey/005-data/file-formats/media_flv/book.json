@@ -1,0 +1,14 @@
+{
+  "id": "format-media_flv",
+  "title": "Flash Video",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".flv",
+    ".f4v"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_flv.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

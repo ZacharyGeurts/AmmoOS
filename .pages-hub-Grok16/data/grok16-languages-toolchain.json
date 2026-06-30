@@ -1,0 +1,1892 @@
+{
+  "product": "Grok16-languages",
+  "updated": "2026-06-29T13:52:10.934436+00:00",
+  "languages_total": 79,
+  "languages_ready": 79,
+  "memory_safe": [
+    "rust",
+    "go",
+    "zig",
+    "ada",
+    "swift",
+    "kotlin",
+    "python"
+  ],
+  "languages": {
+    "c": {
+      "extensions": [
+        ".c",
+        ".h"
+      ],
+      "driver": "g16-cc",
+      "backend": "libexec/grok16/g16-cc",
+      "std": "gnu17",
+      "memory": "manual",
+      "belt": "belt_2_0",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "combinatronics",
+        "x86",
+        "m6809",
+        "z80",
+        "arm",
+        "riscv",
+        "mips",
+        "powerpc",
+        "sh4",
+        "cyrix"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "native_direct",
+      "chips_primary_isa": "combinatronics",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/libexec/grok16/g16-cc",
+      "ready": true,
+      "discern": "c"
+    },
+    "cxx": {
+      "extensions": [
+        ".cpp",
+        ".cxx",
+        ".cc",
+        ".C",
+        ".hpp",
+        ".hh",
+        ".ixx"
+      ],
+      "driver": "g16-cxx",
+      "backend": "libexec/grok16/g16-cxx",
+      "std": "gnu++26",
+      "memory": "manual+RAII",
+      "belt": "belt_2_0",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "combinatronics",
+        "x86",
+        "arm",
+        "riscv",
+        "mips",
+        "powerpc",
+        "sh4",
+        "cyrix"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "native_direct",
+      "chips_primary_isa": "combinatronics",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/libexec/grok16/g16-cxx",
+      "ready": true,
+      "discern": "cxx"
+    },
+    "python": {
+      "extensions": [
+        ".py",
+        ".gpy"
+      ],
+      "driver": "gpy-16",
+      "tree": "python/",
+      "pair": "GPY-16",
+      "builtin": true,
+      "memory": "gc",
+      "secure": "truth_floor_58",
+      "belt": "ai_agent",
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "python",
+      "universal_isa": [
+        "combinatronics",
+        "x86",
+        "arm",
+        "riscv"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "interp_vm",
+      "chips_primary_isa": "combinatronics",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/gpy-16",
+      "ready": true,
+      "discern": "python"
+    },
+    "asm": {
+      "extensions": [
+        ".s",
+        ".S",
+        ".asm"
+      ],
+      "driver": "g16-as",
+      "memory": "manual",
+      "belt": "field_opt",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "x86",
+        "m6809",
+        "m6502",
+        "z80",
+        "cyrix",
+        "coco"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "native_direct",
+      "chips_primary_isa": "x86",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-as",
+      "ready": true,
+      "discern": "asm"
+    },
+    "fortran": {
+      "extensions": [
+        ".f",
+        ".f90",
+        ".f95",
+        ".f03",
+        ".for"
+      ],
+      "driver": "g16-gfortran",
+      "memory": "manual",
+      "belt": "belt_2_0",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "x86",
+        "powerpc"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-gfortran",
+      "ready": true,
+      "discern": "fortran"
+    },
+    "rust": {
+      "extensions": [
+        ".rs"
+      ],
+      "driver": "g16-rust",
+      "memory": "ownership",
+      "secure_flags": "-D warnings -C overflow-checks=on",
+      "belt": "memory_safe",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "x86",
+        "arm",
+        "riscv"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-rust",
+      "ready": true,
+      "discern": "rust"
+    },
+    "go": {
+      "extensions": [
+        ".go"
+      ],
+      "driver": "g16-go",
+      "memory": "gc",
+      "belt": "memory_safe",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "x86",
+        "arm",
+        "riscv"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-go",
+      "ready": true,
+      "discern": "go"
+    },
+    "zig": {
+      "extensions": [
+        ".zig"
+      ],
+      "driver": "g16-zig",
+      "memory": "manual+comptime",
+      "belt": "memory_safe",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "x86",
+        "riscv"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-zig",
+      "ready": true,
+      "discern": "zig"
+    },
+    "d": {
+      "extensions": [
+        ".d"
+      ],
+      "driver": "g16-gdc",
+      "memory": "gc_optional",
+      "belt": "belt_2_0",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-gdc",
+      "ready": true,
+      "discern": "d"
+    },
+    "objc": {
+      "extensions": [
+        ".m",
+        ".mm"
+      ],
+      "driver": "g16-objc",
+      "memory": "arc",
+      "belt": "belt_2_0",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "native_direct",
+      "chips_primary_isa": "x86",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-objc",
+      "ready": true,
+      "discern": "matlab"
+    },
+    "ada": {
+      "extensions": [
+        ".adb",
+        ".ads"
+      ],
+      "driver": "g16-gnat",
+      "memory": "manual",
+      "secure": "spark_subset",
+      "belt": "memory_safe",
+      "uncompiled": false,
+      "launch_packaging": true,
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "combinatronic": true,
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-gnat",
+      "ready": true,
+      "discern": "ada"
+    },
+    "basic": {
+      "extensions": [
+        ".bas",
+        ".inc"
+      ],
+      "driver": "g16-qbasic",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86",
+        "m6502",
+        "m6809",
+        "z80",
+        "coco"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "basic",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-qbasic",
+      "ready": true,
+      "discern": "basic"
+    },
+    "qbasic": {
+      "extends": "basic",
+      "extensions": [
+        ".qb",
+        ".qbs"
+      ],
+      "driver": "g16-qbasic",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "qbasic",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-qbasic",
+      "ready": true,
+      "discern": "qbasic"
+    },
+    "pascal": {
+      "extensions": [
+        ".pas",
+        ".pp"
+      ],
+      "driver": "g16-fpc",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "pascal",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-fpc",
+      "ready": true,
+      "discern": "pascal"
+    },
+    "turbo_pascal": {
+      "extends": "pascal",
+      "extensions": [
+        ".tp",
+        ".tpu"
+      ],
+      "driver": "g16-fpc",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_2_0",
+      "dialect": "turbo",
+      "universal_isa": [
+        "x86",
+        "cyrix"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "turbo_pascal",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-fpc",
+      "ready": true,
+      "discern": "turbo_pascal"
+    },
+    "ammolang": {
+      "extensions": [
+        ".aml"
+      ],
+      "driver": "g16-aml",
+      "memory": "gc",
+      "combinatronic": true,
+      "belt": "belt_2_0",
+      "product": "AmmoOS",
+      "runtime": "ammolang",
+      "universal_isa": [
+        "x86",
+        "arm",
+        "riscv",
+        "combinatronics"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "compiler_written": true,
+      "compiler_lane": "combinatronics_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-aml",
+      "ready": true,
+      "discern": "ammolang"
+    },
+    "quickbasic": {
+      "extends": "qbasic",
+      "extensions": [
+        ".qb",
+        ".qbi",
+        ".qbs"
+      ],
+      "driver": "g16-qbasic",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "qbasic",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-qbasic",
+      "ready": true,
+      "discern": "qbasic"
+    },
+    "freebasic": {
+      "extends": "quickbasic",
+      "extensions": [
+        ".bi",
+        ".fb",
+        ".fbi",
+        ".qb",
+        ".qbi",
+        ".qbs"
+      ],
+      "driver": "g16-fpc",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "qbasic",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-fpc",
+      "ready": true,
+      "discern": "freebasic"
+    },
+    "delphi": {
+      "extensions": [
+        ".dfm",
+        ".dpr",
+        ".pas",
+        ".pp"
+      ],
+      "driver": "g16-fpc",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "pascal",
+      "extends": "pascal",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-fpc",
+      "ready": true,
+      "discern": "delphi"
+    },
+    "modula2": {
+      "extensions": [
+        ".mod",
+        ".pas",
+        ".pp"
+      ],
+      "driver": "g16-fpc",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "pascal",
+      "extends": "pascal",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-fpc",
+      "ready": true,
+      "discern": "modula2"
+    },
+    "visual_basic": {
+      "extensions": [
+        ".bas",
+        ".inc",
+        ".vb",
+        ".vbs"
+      ],
+      "driver": "g16-interp",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86",
+        "m6502",
+        "m6809",
+        "z80",
+        "coco"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "basic",
+      "extends": "basic",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "basic"
+    },
+    "vba": {
+      "extensions": [
+        ".bas",
+        ".inc",
+        ".vb",
+        ".vba",
+        ".vbs"
+      ],
+      "driver": "g16-interp",
+      "memory": "manual",
+      "combinatronic": true,
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86",
+        "m6502",
+        "m6809",
+        "z80",
+        "coco"
+      ],
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "basic",
+      "extends": "visual_basic",
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "basic"
+    },
+    "javascript": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "javascript",
+      "extensions": [
+        ".js",
+        ".mjs",
+        ".cjs",
+        ".jsx"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "combinatronics",
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "javascript"
+    },
+    "typescript": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "typescript",
+      "extensions": [
+        ".cjs",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".ts",
+        ".tsx"
+      ],
+      "belt": "belt_2_0",
+      "extends": "javascript",
+      "universal_isa": [
+        "combinatronics",
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "javascript"
+    },
+    "java": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "java",
+      "extensions": [
+        ".java",
+        ".kt",
+        ".kts"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "combinatronics",
+        "x86",
+        "mips"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "java"
+    },
+    "sql": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "sql",
+      "extensions": [
+        ".sql"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "sql"
+    },
+    "shell": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "shell",
+      "extensions": [
+        ".sh",
+        ".bash",
+        ".zsh",
+        ".ps1"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "combinatronics",
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "shell"
+    },
+    "haskell": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "haskell",
+      "extensions": [
+        ".hs",
+        ".lhs"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "haskell"
+    },
+    "lisp": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "lisp",
+      "extensions": [
+        ".lisp",
+        ".lsp",
+        ".cl"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "lisp"
+    },
+    "ruby": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "ruby",
+      "extensions": [
+        ".rb"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "ruby"
+    },
+    "php": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "php",
+      "extensions": [
+        ".php"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "php"
+    },
+    "lua": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "lua",
+      "extensions": [
+        ".lua"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "lua"
+    },
+    "csharp": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "csharp",
+      "extensions": [
+        ".cs"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "csharp"
+    },
+    "swift": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "swift",
+      "extensions": [
+        ".swift"
+      ],
+      "belt": "memory_safe",
+      "universal_isa": [
+        "x86",
+        "arm"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "swift"
+    },
+    "kotlin": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "kotlin",
+      "extensions": [
+        ".java",
+        ".kt",
+        ".kts"
+      ],
+      "belt": "memory_safe",
+      "extends": "java",
+      "universal_isa": [
+        "combinatronics",
+        "x86",
+        "mips"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "java"
+    },
+    "cobol": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "cobol",
+      "extensions": [
+        ".cob",
+        ".cbl"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86",
+        "m6809"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "cobol"
+    },
+    "prolog": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "prolog",
+      "extensions": [
+        ".pl",
+        ".pro"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "perl"
+    },
+    "verilog": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "verilog",
+      "extensions": [
+        ".v",
+        ".sv"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "combinatronics",
+        "m6502"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "verilog"
+    },
+    "elixir": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "elixir",
+      "extensions": [
+        ".ex",
+        ".exs"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "elixir"
+    },
+    "erlang": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "erlang",
+      "extensions": [
+        ".erl",
+        ".hrl"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "erlang"
+    },
+    "scala": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "scala",
+      "extensions": [
+        ".scala",
+        ".sc"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "scala"
+    },
+    "perl": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "perl",
+      "extensions": [
+        ".pl",
+        ".pm"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "perl"
+    },
+    "r": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "r",
+      "extensions": [
+        ".r",
+        ".R"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "r"
+    },
+    "julia": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "julia",
+      "extensions": [
+        ".jl"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "julia"
+    },
+    "ocaml": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "ocaml",
+      "extensions": [
+        ".ml",
+        ".mli"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "ocaml"
+    },
+    "clojure": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "clojure",
+      "extensions": [
+        ".clj",
+        ".cljs",
+        ".cljc"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "clojure"
+    },
+    "matlab": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "matlab",
+      "extensions": [
+        ".m"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "matlab"
+    },
+    "nim": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "nim",
+      "extensions": [
+        ".nim"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "nim"
+    },
+    "dart": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "dart",
+      "extensions": [
+        ".dart"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86",
+        "arm"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "dart"
+    },
+    "field": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "field",
+      "extensions": [
+        ".fld"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "combinatronics",
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "combinatronics_native",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "field"
+    },
+    "smalltalk": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "smalltalk",
+      "extensions": [
+        ".st"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "smalltalk"
+    },
+    "forth": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "forth",
+      "extensions": [
+        ".fs",
+        ".fth"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86",
+        "m6809",
+        "m6502",
+        "z80",
+        "coco"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "forth"
+    },
+    "apl": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "apl",
+      "extensions": [
+        ".apl"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "apl"
+    },
+    "algol": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "algol",
+      "extensions": [
+        ".alg"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "algol"
+    },
+    "snobol": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "snobol",
+      "extensions": [
+        ".sno"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "snobol"
+    },
+    "yaml": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "yaml",
+      "extensions": [
+        ".yaml",
+        ".yml"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "json": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "json",
+      "extensions": [
+        ".json",
+        ".jsonc"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "html": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "html",
+      "extensions": [
+        ".html",
+        ".htm"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "css": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "css",
+      "extensions": [
+        ".css"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "markdown": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "markdown",
+      "extensions": [
+        ".md",
+        ".markdown"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "toml": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "toml",
+      "extensions": [
+        ".toml"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "xml": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "xml",
+      "extensions": [
+        ".xml"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "dockerfile": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "dockerfile",
+      "extensions": [],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "makefile": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "makefile",
+      "extensions": [],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "cmake": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "cmake",
+      "extensions": [
+        ".cmake"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "glsl": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "glsl",
+      "extensions": [
+        ".glsl",
+        ".frag",
+        ".vert"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "graphql": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "graphql",
+      "extensions": [
+        ".graphql",
+        ".gql"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "ini": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "ini",
+      "extensions": [
+        ".ini",
+        ".cfg"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "log": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "log",
+      "extensions": [
+        ".log"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "diff": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "diff",
+      "extensions": [
+        ".diff",
+        ".patch"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "plaintext": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "plaintext",
+      "extensions": [
+        ".txt"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "wasm": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "wasm",
+      "extensions": [
+        ".wasm"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "wat": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "wat",
+      "extensions": [
+        ".wat"
+      ],
+      "belt": "belt_2_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "scss": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "scss",
+      "extensions": [
+        ".scss"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "powershell": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "powershell",
+      "extensions": [
+        ".ps1",
+        ".psm1"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "shell"
+    },
+    "vbscript": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "vbscript",
+      "extensions": [
+        ".vbs"
+      ],
+      "belt": "belt_1_0",
+      "universal_isa": [
+        "x86"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "visual_basic"
+    },
+    "cobol_copy": {
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "cobol_copy",
+      "extensions": [
+        ".cbl",
+        ".cob",
+        ".cpy"
+      ],
+      "belt": "belt_1_0",
+      "extends": "cobol",
+      "universal_isa": [
+        "x86",
+        "m6809"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_native",
+      "chips_primary_isa": "x86",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "cobol"
+    },
+    "economics": {
+      "extensions": [
+        ".economics"
+      ],
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "economics",
+      "belt": "belt_1_0",
+      "inferred": true,
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    },
+    "linux": {
+      "extensions": [
+        ".linux"
+      ],
+      "driver": "g16-interp",
+      "memory": "gc",
+      "combinatronic": true,
+      "uncompiled": true,
+      "launch_packaging": true,
+      "runtime": "linux",
+      "belt": "belt_1_0",
+      "inferred": true,
+      "universal_isa": [
+        "combinatronics"
+      ],
+      "compiler_written": true,
+      "compiler_lane": "chips_lower",
+      "chips_primary_isa": "combinatronics",
+      "path": "/home/default/Desktop/SG/NewLatest/Grok16/bin/g16-interp",
+      "ready": true,
+      "discern": "c"
+    }
+  },
+  "discern_probe": {
+    "c": "c",
+    "cxx": "cxx",
+    "python": "python",
+    "asm": "asm",
+    "rust": "rust",
+    "go": "go",
+    "fortran": "fortran",
+    "basic": "basic",
+    "qbasic": "qbasic",
+    "pascal": "pascal",
+    "turbo_pascal": "turbo_pascal",
+    "ammolang": "ammolang",
+    "javascript": "javascript",
+    "typescript": "typescript",
+    "java": "java",
+    "ruby": "ruby",
+    "shell": "shell",
+    "haskell": "haskell",
+    "kotlin": "kotlin",
+    "swift": "swift",
+    "field": "field"
+  },
+  "hostess7": {
+    "truth_adapt_floor": 58,
+    "mandate_cmake": "cmake/g16-field-mandate.cmake",
+    "secure_profile": "hostess_secure",
+    "forever_profile": "forever",
+    "probe_cmd": "Hostess7.sh queen-grok16-probe"
+  },
+  "hostess_satisfied": true,
+  "hostess_gate": {
+    "schema": "grok16-hostess-gate/v1",
+    "truth_adapt_floor": 58,
+    "score": 21,
+    "max": 21,
+    "checks": {
+      "g16": true,
+      "g16_as": true,
+      "g16_ld": true,
+      "g16_objdump": true,
+      "gpy16": true,
+      "gpy16_field_native": true,
+      "field_native_doctrine": true,
+      "mandate_cmake": true,
+      "ironclad_meld": true,
+      "field_sanity_doctrine": true,
+      "ironclad_bridge": true,
+      "sanity_operator": true,
+      "linker_doctrine": true,
+      "linker_orchestrator": true,
+      "languages_json": true,
+      "profiles_json": true,
+      "hostess_stack": true,
+      "truth_floor": true,
+      "hostess_secure_profile": true,
+      "forever_profile": true,
+      "core_languages": true
+    },
+    "satisfied": true
+  }
+}

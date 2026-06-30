@@ -1,0 +1,14 @@
+{
+  "id": "format-plate_json",
+  "title": "Field Plate",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "geometry",
+  "extensions": [
+    ".plate.json",
+    "-plate.json"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/plate_json.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

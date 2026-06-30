@@ -1,0 +1,86 @@
+{
+  "schema": "field-combinatronic-balance-panel/v1",
+  "updated": "2026-06-29T06:33:13Z",
+  "balanced": true,
+  "balance": 0.97,
+  "balance_target": 0.97,
+  "corpus_hash": "9f6f70a7f68cc0286d3fb6c0d4f1df9d0c824bee4224f6583b338d27b22469f4",
+  "domains": {
+    "chips": {
+      "count": 0,
+      "ids_hash": "empty"
+    },
+    "programs": {
+      "count": 2382,
+      "ids_hash": "23dadc9a9c8749d2"
+    },
+    "program_langs": {
+      "count": 72,
+      "ids_hash": "b5f57ed0d5ee22d8"
+    },
+    "files": {
+      "count": 0,
+      "ids_hash": "empty"
+    },
+    "library_devices": {
+      "count": 21,
+      "ids_hash": "1c6b94a1d27229a3"
+    },
+    "library_games": {
+      "count": 30,
+      "ids_hash": "99c3915e70866684"
+    },
+    "library_greats": {
+      "count": 20,
+      "ids_hash": "eb702c105dc594c8"
+    },
+    "cpu": {
+      "count": 0,
+      "ids_hash": "empty"
+    },
+    "universal": {
+      "count": 2795,
+      "ids_hash": "3fbf2f5467b79718"
+    },
+    "matrix": {
+      "count": 0,
+      "ids_hash": "empty"
+    },
+    "growth": {
+      "count": 0,
+      "ids_hash": "empty"
+    },
+    "sequence": {
+      "count": 0,
+      "ids_hash": "empty"
+    },
+    "spider": {
+      "count": 0,
+      "ids_hash": "empty"
+    },
+    "visuals": {
+      "count": 4317
+    },
+    "h7c": {
+      "count": 0
+    },
+    "library_registry": {
+      "count": 0,
+      "ids_hash": "empty"
+    },
+    "steel_plates": {
+      "count": 0,
+      "ids_hash": "empty"
+    }
+  },
+  "cycles": 9,
+  "reorganize_count": 6,
+  "fast_path_count": 3,
+  "new_item_events": 0,
+  "last_elapsed_ms": 121.92,
+  "last_reorganized": true,
+  "self_adjusting": true,
+  "reorganize_only_on_new": true,
+  "optimized_combinatronic": true,
+  "statement": "field_combinatronic_balance_hold"
+}

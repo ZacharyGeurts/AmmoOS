@@ -1,0 +1,14 @@
+{
+  "id": "format-media_aac",
+  "title": "AAC in ADTS/MP4",
+  "dewey": null,
+  "format": "registry-entry",
+  "family": "media",
+  "extensions": [
+    ".aac",
+    ".adts"
+  ],
+  "magic": null,
+  "cover": "/library/assets/formats/media_aac.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

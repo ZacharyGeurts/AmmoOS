@@ -1,0 +1,10 @@
+{
+  "id": "wii_u",
+  "title": "Wii U",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/wii_u/wii_u.h7c",
+  "cover": "/library/assets/devices/wii_u.png",
+  "ready": true
+}

@@ -1,0 +1,73 @@
+# AmmoLang v1 — generated universal sequence
+# product: AmmoOS · motto: no gaps, only combinatorics
+@width 16
+@grow generations:8
+
+seq ·
+  grow scan
+  width 16
+  surface collapse depth:4
+  gap fill facet:program
+  gap fill facet:data
+  gap fill facet:visual
+  gap fill facet:queen_surface
+  gap fill facet:shell
+  gap fill facet:h7_manual
+  gap fill facet:combinatronics
+  gap fill facet:native
+  gap fill facet:plate
+  gap fill canonical:exec
+  gap fill canonical:assign
+  gap fill canonical:call
+  leaf gap:facet:program  # gap fill
+  leaf gap:facet:data  # gap fill
+  leaf gap:facet:visual  # gap fill
+  leaf gap:facet:queen_surface  # gap fill
+  leaf gap:facet:shell  # gap fill
+  leaf gap:facet:h7_manual  # gap fill
+  leaf gap:canonical:alloc  # gap fill
+  leaf gap:canonical:asm  # gap fill
+  leaf gap:canonical:assign  # gap fill
+  leaf gap:canonical:async  # gap fill
+  leaf gap:canonical:branch  # gap fill
+  leaf gap:canonical:break  # gap fill
+  leaf gap:canonical:call  # gap fill
+  leaf gap:canonical:cast  # gap fill
+  leaf gap:canonical:catch  # gap fill
+  leaf gap:canonical:compare  # gap fill
+  leaf gap:canonical:continue  # gap fill
+  leaf gap:canonical:declare  # gap fill
+  leaf gap:canonical:exec  # gap fill
+  leaf gap:canonical:export  # gap fill
+  leaf gap:canonical:free  # gap fill
+  leaf gap:canonical:import  # gap fill
+  leaf gap:canonical:index  # gap fill
+  leaf gap:canonical:io  # gap fill
+  leaf gap:canonical:lambda  # gap fill
+  leaf gap:canonical:load  # gap fill
+  leaf gap:canonical:logic  # gap fill
+  leaf gap:canonical:loop  # gap fill
+  leaf gap:canonical:match  # gap fill
+  leaf gap:canonical:math  # gap fill
+  leaf gap:canonical:meta  # gap fill
+  leaf gap:canonical:module  # gap fill
+  leaf gap:canonical:query  # gap fill
+  leaf gap:canonical:return  # gap fill
+  leaf gap:canonical:store  # gap fill
+  leaf gap:canonical:string  # gap fill
+  leaf gap:canonical:struct  # gap fill
+  leaf gap:canonical:sync  # gap fill
+  leaf gap:canonical:throw  # gap fill
+  leaf gap:canonical:type  # gap fill
+  leaf gap:canonical:unsafe  # gap fill
+  leaf gap:canonical:yield  # gap fill
+  leaf gap:facet:combinatronics  # gap fill
+  leaf gap:source:chips  # gap fill
+  leaf gap:source:g16  # gap fill
+  leaf gap:source:growth  # gap fill
+  leaf gap:source:program  # gap fill
+  leaf gap:source:spider  # gap fill
+  wire ironclad outward
+  exec canonical:exec
+
+# sequence_length=50 gap_fills=50 gapless=True

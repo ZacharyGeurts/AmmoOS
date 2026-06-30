@@ -1,0 +1,33 @@
+{
+  "schema": "grok16-mcp/v1",
+  "distro_version": "5.1.0",
+  "tag": "v5.1.0",
+  "server": "mcp/grok16_mcp_server.py",
+  "transport": "stdio",
+  "sdk": "mcp>=1.28",
+  "tools": [
+    "grok16_version",
+    "grok16_toolchain",
+    "grok16_rtx_gate",
+    "grok16_speed_bench",
+    "grok16_power_sort",
+    "grok16_forge_status"
+  ],
+  "toolchain_allowlist": [
+    "status",
+    "verify",
+    "paths",
+    "integrate",
+    "exec-bsp-bench",
+    "test-battery-belt",
+    "test-battery-release"
+  ],
+  "cursor_example": "mcp/cursor-mcp.json.example",
+  "docs": "mcp/README.md",
+  "wiki": "wiki/MCP.md",
+  "ammoos_github_mcp": {
+    "note": "AmmoOS publish uses NewLatest private GitHub MCP — not this server",
+    "doctrine": "NewLatest/data/ammoos-mcp-layer.json",
+    "stdio": "NewLatest/scripts/github-mcp-stdio.sh"
+  }
+}

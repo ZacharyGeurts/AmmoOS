@@ -1,0 +1,25 @@
+{
+  "schema": "znetwork-version/v1",
+  "product": "ZNetwork",
+  "version": "2.1.0",
+  "tag": "v2.1.0",
+  "codename": "Stack",
+  "status": "ACTIVE",
+  "canonical_root": "NewLatest/ZNetwork",
+  "release_model": "source_plus_grok16_platform_bins",
+  "statement": "Smart relayer — sole internet in/out for the field stack. Lives inside NewLatest only.",
+  "stack_pairing": {
+    "ammoos": "1.9.9h",
+    "grok16": "5.0.1",
+    "kilroy": "1.0.0-taco",
+    "stack_layers": "hardware → nexus_c2 → znetwork → queen → ammoos"
+  },
+  "grok16_field_wire": "Grok16/data/grok16-znetwork-field-wire-doctrine.json",
+  "modes": ["REVIEW_ONLY", "SHADOW", "ACTIVE"],
+  "default_mode": "ACTIVE",
+  "gates": [
+    "scripts/znetwork-test-battery.sh",
+    "scripts/znetwork-lab-gate.sh",
+    "scripts/znetwork-review-gate.sh"
+  ]
+}

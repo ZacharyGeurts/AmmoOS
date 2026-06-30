@@ -1,0 +1,137 @@
+{
+  "schema": "grok16-binutils-toolchain/v1",
+  "updated": "2026-06-27T16:02:21.306725+00:00",
+  "product": "Grok16-binutils",
+  "field_version": "16.1.1",
+  "binutils_version": "2.44",
+  "branch": "binutils-2_44-branch",
+  "repo": "https://sourceware.org/git/binutils-gdb.git",
+  "src": "/home/default/Desktop/SG/Grok16/vendor/binutils",
+  "src_ready": true,
+  "build_dir": "/home/default/Desktop/SG/Grok16/build/binutils",
+  "prefix": "/home/default/Desktop/SG/Grok16",
+  "ready": true,
+  "tools_ready": 12,
+  "tools_total": 14,
+  "tools": {
+    "as": {
+      "field": "g16-as",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-as",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/as"
+    },
+    "ld": {
+      "field": "g16-ld",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-ld",
+      "ready": false,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/ld"
+    },
+    "objdump": {
+      "field": "g16-objdump",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-objdump",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/objdump"
+    },
+    "objcopy": {
+      "field": "g16-objcopy",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-objcopy",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/objcopy"
+    },
+    "strip": {
+      "field": "g16-strip",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-strip",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/strip"
+    },
+    "readelf": {
+      "field": "g16-readelf",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-readelf",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/readelf"
+    },
+    "nm": {
+      "field": "g16-nm",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-nm",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/nm"
+    },
+    "ar": {
+      "field": "g16-ar",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-ar",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/ar"
+    },
+    "ranlib": {
+      "field": "g16-ranlib",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-ranlib",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/ranlib"
+    },
+    "addr2line": {
+      "field": "g16-addr2line",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-addr2line",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/addr2line"
+    },
+    "c++filt": {
+      "field": "g16-c++filt",
+      "path": "",
+      "ready": false,
+      "compat": ""
+    },
+    "elfedit": {
+      "field": "g16-elfedit",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-elfedit",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/elfedit"
+    },
+    "strings": {
+      "field": "g16-strings",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-strings",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/strings"
+    },
+    "size": {
+      "field": "g16-size",
+      "path": "/home/default/Desktop/SG/Grok16/bin/g16-size",
+      "ready": true,
+      "compat": "/home/default/Desktop/SG/Grok16/bin/size"
+    }
+  },
+  "assembler": "/home/default/Desktop/SG/Grok16/bin/g16-as",
+  "linker": "/home/default/Desktop/SG/Grok16/bin/g16-ld",
+  "disassembler": "/home/default/Desktop/SG/Grok16/bin/g16-objdump",
+  "tools_map": {
+    "as": "g16-as",
+    "ld": "g16-ld",
+    "objdump": "g16-objdump",
+    "objcopy": "g16-objcopy",
+    "strip": "g16-strip",
+    "readelf": "g16-readelf",
+    "nm": "g16-nm",
+    "ar": "g16-ar",
+    "ranlib": "g16-ranlib",
+    "addr2line": "g16-addr2line",
+    "c++filt": "g16-c++filt",
+    "elfedit": "g16-elfedit",
+    "strings": "g16-strings",
+    "size": "g16-size"
+  },
+  "compat_symlinks": [
+    "as",
+    "ld",
+    "objdump",
+    "objcopy",
+    "strip",
+    "readelf",
+    "nm",
+    "ar",
+    "ranlib",
+    "addr2line",
+    "c++filt",
+    "elfedit",
+    "strings",
+    "size"
+  ]
+}

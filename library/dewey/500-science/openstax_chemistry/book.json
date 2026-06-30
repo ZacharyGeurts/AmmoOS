@@ -1,0 +1,15 @@
+{
+  "id": "openstax_chemistry",
+  "title": "OpenStax Chemistry 2e",
+  "author": "OpenStax",
+  "dewey": "500",
+  "publisher": "OpenStax",
+  "license": "CC BY 4.0",
+  "grade_band": "10-12",
+  "subject": "science",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/openstax_chemistry/front.png",
+  "cover_asset": "library/assets/covers/openstax_chemistry/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 Manual — {title}</title>
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light") {
+        t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "light");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v8"></script>
+  <script src="manual-search.js?v8"></script>
+  <script src="manual-layout.js?v8"></script>
+  <link rel="stylesheet" href="manual.css?v8" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand"><strong>Grok16</strong> <span class="nav-version">distro 1.0.0</span> <span class="nav-g16">g16 @ 16.1.1</span></div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+            <option value="1.5">XXL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☀</span><span class="seg-text">Light</span>
+          </button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☾</span><span class="seg-text">Dark</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="release.html">Release 1.0</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Master Coder — C++</h1>
+  <p>Every C++ command and flag for Grok16 @ 16.1.1. Use <code>g16</code> (or <code>g++16</code> symlink) — auto-detects C++ and runs <code>g16-cxx</code>.</p>
+  <h2>C++ commands &amp; driver</h2>
+  <table class="idx idx-rich">
+    <tr><th>#</th><th>Item</th><th>Short</th><th>Detail</th></tr>
+    <tr><td class="idx-num">1</td><td><a href="reference.html#unified-g16">g16</a></td><td class="tip">Unified driver (C++)</td><td class="idx-detail">Same bin/g16 as C. Auto-selects g16-cxx for .cpp/.cxx/.cc, -std=gnu++26, -x c++, -lstdc++, or argv[0] g++16 symlink. One command for the whole toolchain.</td></tr>
+    <tr><td class="idx-num">2</td><td><a href="reference.html#unified-g16">g++16</a></td><td class="tip">Compat symlink</td><td class="idx-detail">Symlink to g16. Preserves legacy scripts and muscle memory. Detection uses basename g++16 → C++ mode immediately.</td></tr>
+    <tr><td class="idx-num">3</td><td><a href="architecture.html#unified-driver">g16-cxx</a></td><td class="tip">C++ backend</td><td class="idx-detail">Relocated GCC g++ driver. Handles libstdc++, crtbegin/crtend, template parsing, gnu++26. Unified g16 execv() here in C++ mode.</td></tr>
+    <tr><td class="idx-num">4</td><td><a href="field-primer.html#standard">g16 -std=gnu++26</a></td><td class="tip">Default C++ standard</td><td class="idx-detail">G16_CXX_STD=gnu++26. World_Redata field_g16.hh requires __cplusplus >= 202400. Pass explicitly when mixing with older TUs.</td></tr>
+    <tr><td class="idx-num">5</td><td><a href="getting-started.html#verify">verify (C++ leg)</a></td><td class="tip">C++ smoke</td><td class="idx-detail">verify.cpp compiled with g16 -std=gnu++26. Checks __cplusplus >= 202400. Optional CMake minimal-cmake-project links via same g16 binary.</td></tr>
+    <tr><td class="idx-num">6</td><td><a href="profiles.html#flags-cxx">PROFILE cxx</a></td><td class="tip">C++ compile flags</td><td class="idx-detail">Full profile: -std=gnu++26 -O3 -march=native, entropy/Field macros, vectorize, fast-math per profile.</td></tr>
+    <tr><td class="idx-num">7</td><td><a href="profiles.html#flags-link">PROFILE link</a></td><td class="tip">C++ link flags</td><td class="idx-detail">LTO thin/full from grok16_lto probe, OpenMP for field_compute. Normalized by grok16-profile-flags.py.</td></tr>
+    <tr><td class="idx-num">8</td><td><a href="profiles.html#flags-source">PROFILE source</a></td><td class="tip">Bench source path</td><td class="idx-detail">Returns examples/*/bench .cpp for the profile. Used by _bench_run_one and PGO training.</td></tr>
+    <tr><td class="idx-num">9</td><td><a href="profiles.html#flags-defs">PROFILE defs</a></td><td class="tip">-D macros only</td><td class="idx-detail">Profile definition flags without optimization bundle — useful for CMake INTERFACE targets.</td></tr>
+    <tr><td class="idx-num">10</td><td><a href="performance.html#pgo">PROFILE cxx_pgo_gen</a></td><td class="tip">PGO generate</td><td class="idx-detail">-fprofile-generate to data/pgo/. Run via grok16-toolchain.sh profile.</td></tr>
+    <tr><td class="idx-num">11</td><td><a href="performance.html#pgo">PROFILE cxx_pgo_use</a></td><td class="tip">PGO use</td><td class="idx-detail">-fprofile-use after training. Enable G16_ENABLE_PGO=1 on field-bench for ~few-% win.</td></tr>
+    <tr><td class="idx-num">12</td><td><a href="profiles.html#field-opt">field_opt</a></td><td class="tip">Primary profile</td><td class="idx-detail">FieldX86 + entropy + NEXUS. Bench: field-nexus-bench ~2.1ms kernel vs -O2 2.65ms (~19%).</td></tr>
+    <tr><td class="idx-num">13</td><td><a href="profiles.html#ai">ai</a></td><td class="tip">Matrix profile</td><td class="idx-detail">NEXUS matrix scoring. Bench wall_ms ~4.0. -flto=thin link.</td></tr>
+    <tr><td class="idx-num">14</td><td><a href="profiles.html#field-compute">field_compute</a></td><td class="tip">CANVAS profile</td><td class="idx-detail">OpenMP SIMD dispatch kernels. field-canvas-kernel bench.</td></tr>
+    <tr><td class="idx-num">15</td><td><a href="profiles.html#vulkan-rtx">vulkan_rtx</a></td><td class="tip">RTX SIMD profile</td><td class="idx-detail">AVX2/FMA CPU prep. Shares field-nexus-bench source.</td></tr>
+    <tr><td class="idx-num">16</td><td><a href="performance.html#field-bench">field-bench</a></td><td class="tip">Primary benchmark</td><td class="idx-detail">G16_FIELD_SPEED=1 → field_opt. Writes data/bench/latest_*.json.</td></tr>
+    <tr><td class="idx-num">17</td><td><a href="performance.html#bench-all">bench-all</a></td><td class="tip">All profiles</td><td class="idx-detail">Runs field_opt, ai, field_compute, vulkan_rtx sequentially.</td></tr>
+    <tr><td class="idx-num">18</td><td><a href="profiles.html#mandate">g16_field_mandate</a></td><td class="tip">CMake security</td><td class="idx-detail">fortify, stack protector, RELRO, PIE on field targets. Required for World_Redata L2.</td></tr>
+    <tr><td class="idx-num">19</td><td><a href="reference.html#env-force-cxx">G16_FORCE_CXX=1</a></td><td class="tip">Force C++ backend</td><td class="idx-detail">Skip detection — always g16-cxx. Useful when linking C++ objects with ambiguous argv.</td></tr>
+    <tr><td class="idx-num">20</td><td><a href="integration.html#gates">redata.cli parity</a></td><td class="tip">Parity gate</td><td class="idx-detail">Python ↔ C++ WRDT bytes. Requires real g16 @ 16.1.1 dumpversion in manifest.</td></tr>
+  </table>  <footer><a href="index.html">Index</a> · <a href="master-coder.html">Master Coder</a></footer>
+</body>
+</html>

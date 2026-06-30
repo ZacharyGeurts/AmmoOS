@@ -1,0 +1,58 @@
+{
+  "schema": "kilroy-grok16-bridge/v1",
+  "title": "KILROY ↔ Grok16 field compiler bridge",
+  "motto": "Legacy kernel ABI holds — Grok16 recompiles userspace and FIELDC after every field update.",
+  "grok16_pair": "5.2.0",
+  "g16_version": "16.2.0",
+  "compiler_profile": "field_physics",
+  "belt_profile": "belt_2_0",
+  "legacy_gates": [
+    "scripts/test-units.sh",
+    "scripts/test-security.sh",
+    "scripts/test-ioctl-smoke.sh",
+    "scripts/test-boot-handoff.sh",
+    "scripts/check-field-stack.sh",
+    "scripts/kilroy-kernel-test.sh"
+  ],
+  "enhanced_gates": [
+    "scripts/test-grok16-kilroy-userspace.sh",
+    "Grok16/scripts/grok16-test-gate.sh smoke-kernel",
+    "Grok16/scripts/grok16-verify-ammoos.sh",
+    "scripts/test-build.sh",
+    "scripts/bench-nocache-field.sh",
+    "scripts/test-grok-boot.sh"
+  ],
+  "enhanced_features_pending": [
+    {
+      "id": "g16-kernel-lto",
+      "status": "planned",
+      "note": "PGO/LTO bzImage via grok16-field-build"
+    },
+    {
+      "id": "qemu-ci-matrix",
+      "status": "planned",
+      "note": "per-platform boot capture in CI"
+    },
+    {
+      "id": "proc-live-fuzz",
+      "status": "planned",
+      "note": "/proc/kilroy_field ioctl fuzz under Hostess7"
+    }
+  ],
+  "surfaces": {
+    "kernel_test": "scripts/kilroy-kernel-test.sh",
+    "sync": "scripts/kilroy-grok16-sync.sh",
+    "queen_api": "http://127.0.0.1:9481/api/kilroy",
+    "underlay": "http://127.0.0.1:9477/underlay-f9?sector=kilroy"
+  },
+  "grok16_root": "/home/default/Desktop/SG/NewLatest/Grok16",
+  "synced_at": "2026-06-29T23:09:32Z",
+  "kernel_test_env": {
+    "AML_BUILD": "0",
+    "AML_INLINE": "1",
+    "KILROY_KERNEL_TEST": "1",
+    "KILROY_AI_MODE": "war",
+    "CC": "/usr/bin/gcc",
+    "HOSTCC": "/usr/bin/gcc"
+  }
+}

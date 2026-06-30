@@ -1,0 +1,28 @@
+# Grok mandatory security — KILROY Field OS
+# Major: fix in BIOS before production boot (use strict entry, not waived).
+# Minor: fix soon — Grok warns; waived boot is explicit opt-in only.
+
+[major]
+secure_boot          = UEFI Secure Boot enabled; Grok/BOOTX64.EFI signed when SB on
+tpm2                 = TPM 2.0 present and active (measured boot path)
+iommu                = Intel VT-d / AMD IOMMU enabled (DMA protection)
+nx_bit               = Execute Disable (NX/XD) enabled — no execute on data pages
+firmware_password    = Supervisor/firmware setup password set (platform policy)
+boot_order_internal  = Internal NVMe/SATA before USB/PXE in boot order
+csm_disabled         = CSM/Legacy boot off on UEFI systems (pure UEFI path)
+
+[minor]
+fast_boot_off        = Fast Boot / Ultra Fast Boot disabled for reliable Grok handoff
+usb_boot_late        = USB boot after fixed disks unless you need live USB
+network_stack_boot   = UEFI network stack off unless PXE required
+bluetooth_boot       = Bluetooth boot off in firmware
+virtualization_on    = SVM/VT-x on if you run VMs (KILROY compat); off on bare metal if not needed
+tpm_clear_aware      = TPM cleared only with owner intent — document recovery key
+
+[waived_policy]
+# User must pick "Boot waived (insecure)" entry — never silent bypass.
+# Host audit: ./scripts/grok-firmware-audit.sh before grok-install.sh
+
+[in_place_edit]
+editor_validation    = mandatory — invalid grok.conf rejected in editor
+hash_mismatch_panic  = mandatory — tampered on-disk config panics at boot

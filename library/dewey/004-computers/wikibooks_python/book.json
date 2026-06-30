@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_python",
+  "title": "Wikibooks Python Programming",
+  "author": "Wikibooks",
+  "dewey": "004",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "9-12",
+  "subject": "computer_science",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_python/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_python/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

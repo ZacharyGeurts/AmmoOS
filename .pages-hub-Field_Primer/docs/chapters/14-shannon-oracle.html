@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>14 — Shannon Oracle — Storm Thresholds · Field Technology v6</title>
+  <meta name="description" content="Chapter 14: Shannon Oracle — Storm Thresholds. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/Field_Primer/chapters/14-shannon-oracle.html" />
+  <meta name="theme-color" content="#040810" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon.png" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Field Technology v6" />
+  <meta property="og:title" content="14 — Shannon Oracle — Storm Thresholds · Field Technology v6" />
+  <meta property="og:description" content="Chapter 14: Shannon Oracle — Storm Thresholds. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta property="og:url" content="https://zacharygeurts.github.io/Field_Primer/chapters/14-shannon-oracle.html" />
+  <meta property="og:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch14-shannon-storm.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Shannon layer" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ZacharyGeurts" />
+  <meta name="twitter:creator" content="@ZacharyGeurts" />
+  <meta name="twitter:title" content="14 — Shannon Oracle — Storm Thresholds · Field Technology v6" />
+  <meta name="twitter:description" content="Chapter 14: Shannon Oracle — Storm Thresholds. Field Technology v6 — operator textbook with fullscreen reader, pinch zoom, and honesty labels." />
+  <meta name="twitter:image" content="https://zacharygeurts.github.io/Field_Primer/assets/images/chapters/ch14-shannon-storm.jpg" />
+  <meta name="twitter:image:alt" content="Shannon layer" />
+  <link rel="stylesheet" href="../css/field-primer.css" />
+  <link rel="stylesheet" href="../css/chapters.css" />
+  <link rel="stylesheet" href="../css/reader.css" />
+</head>
+<body class="chapter-page accent-flow">
+  <nav class="top"><div class="inner">
+    <a class="logo" href="../index.html">FIELD TECHNOLOGY <span class="v6-badge">v6</span></a>
+    <ul>
+      <li><a href="../creditors/index.html">Creditors</a></li>
+      <li><a href="../index.html#love-god">Love &amp; God</a></li>
+      <li><a href="../index.html#chapters">Chapters</a></li>
+      <li><a href="https://github.com/ZacharyGeurts/Field_Primer/wiki/04-Entropy-Receipts-And-Oracles">Wiki</a></li>
+    </ul>
+  </div></nav>
+  <header class="chapter-hero" style="background-image:url('../assets/images/chapters/ch14-shannon-storm.jpg')">
+    <div class="chapter-hero-overlay"></div>
+    <div class="chapter-hero-content">
+      <p class="eyebrow">Chapter 14 · Field Technology v6</p>
+      <h1>Shannon Oracle — Storm Thresholds</h1>
+      
+    </div>
+  </header>
+  <main class="chapter-main">
+    <nav class="chapter-nav"><a class="btn secondary" href="13-landauer-deep.html">← Ch 13</a> <a class="btn" href="15-maxwell-gpu.html">Ch 15 →</a></nav>
+    <p class="eyebrow">Chapter 14 · Creditor deep dive · Shannon Oracle</p>
+
+<div class="on-the-way">
+<h2 id="toc-14-on-the-way-what-you-will-learn">On the way — what you will learn</h2>
+<p class="on-the-way-lead">Shannon measured surprise in symbols. On the way you will compute <code>H = −Σ p_i log₂ p_i</code> on file payloads, tune calm/alert/storm thresholds, and keep the oracle nurse-call separate from gatekeeper gavel.</p>
+<figure class="on-the-way-figure"><img src="../assets/images/chapters/ch14-shannon-storm.jpg" alt="Shannon layer" loading="lazy" /><figcaption>On the way — Shannon layer</figcaption></figure>
+<ul class="on-the-way-journey"><li>Byte histogram to entropy</li><li>Storm polling as daemon duty cycle</li><li>High H on zip — corroborate, not auto-KILL</li><li>Layer separation from GPU thermo</li></ul>
+</div>
+<nav class="chapter-toc" aria-label="In this chapter"><h2>In this chapter</h2><ol><li><a href="#toc-14-1-introduction-storm-gauge-not-soul-reader">1. Introduction — storm gauge, not soul reader</a></li><li><a href="#toc-14-2-shannon-entropy-h-p-i-log-p-i">2. Shannon entropy — H = −Σ p_i log₂ p_i</a></li><li><a href="#toc-14-3-storm-thresholds-calm-alert-storm">3. Storm thresholds — calm, alert, storm</a></li><li><a href="#toc-14-4-nexus-layer-where-the-oracle-lives">4. NEXUS layer — where the oracle lives</a></li><li><a href="#toc-14-5-high-h-what-it-does-and-does-not-mean">5. High H — what it does and does not mean</a></li><li><a href="#toc-14-6-low-h-complacency-risk">6. Low H — complacency risk</a></li><li><a href="#toc-14-7-94-6-posture-in-bytes">7. 94/6 posture in bytes</a></li><li><a href="#toc-14-8-separation-from-landauer-and-fabric-entropy">8. Separation from Landauer and fabric entropy</a></li><li><a href="#toc-14-9-operator-corroboration-workflow">9. Operator corroboration workflow</a></li><li><a href="#toc-14-10-false-positives-and-tuning">10. False positives and tuning</a></li><li><a href="#toc-14-11-relation-to-dpi-and-packet-field">11. Relation to DPI and packet field</a></li><li><a href="#toc-14-12-shannon-as-creditor-pedagogy">12. Shannon as creditor pedagogy</a></li><li><a href="#toc-14-operator-drill-14-a-sample-h-on-known-files">Operator drill 14.A — sample H on known files</a></li><li><a href="#toc-14-operator-drill-14-b-corroboration-table">Operator drill 14.B — corroboration table</a></li></ol></nav>
+
+<h2 id="toc-14-1-introduction-storm-gauge-not-soul-reader">1. Introduction — storm gauge, not soul reader</h2>
+<p>Chapter 5 introduced the packet field as defensive perimeter. Chapter 4 separated ThermoAccountant frame entropy from file-layer signals. This chapter is the creditor deep dive for Claude Shannon — the oracle that measures surprise in byte distributions and tunes how hard NEXUS watches without auto-sentencing payloads.</p>
+<p>Shannon is honored at ../creditors/shannon.html. His 1948 theory is not morality software. High H means slow down, corroborate, ask the operator. That is pastoral care encoded as engineering discipline — the 94/6 posture applied to bytes.</p>
+<h2 id="toc-14-2-shannon-entropy-h-p-i-log-p-i">2. Shannon entropy — H = −Σ p_i log₂ p_i</h2>
+<p>For discrete symbols with probabilities p_i, Shannon entropy measures expected surprise in bits per symbol. Uniform random bytes approach 8 bits per byte. English text sits lower. Compressed or encrypted payloads push high.</p>
+<figure class="figure"><img src="../assets/images/chapters/ch14-shannon-storm.jpg" alt="Byte surprise storm gauge" loading="lazy" /><figcaption>Figure 14.2 — File-layer surprise H: storm gauge, not GPU heat. <span class="claim-tie">Claim: Shannon H on files — separate from GPU thermo</span></figcaption></figure>
+
+<p>The formula uses log base 2 because engineers count bits. The negative sign makes positive surprise a positive number — intuitive for thresholds.</p>
+<p>In NEXUS, H is computed on file samples and payload windows. It is Implemented as Entropy Oracle behavior — grep-able, tunable, separate from GPU thermodynamics.</p>
+<h2 id="toc-14-3-storm-thresholds-calm-alert-storm">3. Storm thresholds — calm, alert, storm</h2>
+<p>Daemon polling tiers mirror weather discipline:</p>
+<figure class="figure"><img src="../assets/images/chapters/ch04-entropy-layers.jpg" alt="Layer separation" loading="lazy" /><figcaption>Figure 14.4 — Shannon storm gauge never summed with GPU thermo layers.</figcaption></figure>
+
+<p>Calm: baseline cadence when H stays in expected bands for known file types. Alert: increased sampling when H rises above calm ceiling — packed executables, encrypted archives, obfuscated droppers. Storm: aggressive corroboration — more context, more operator attention, still not automatic kill.</p>
+<p>Storm is a gauge needle, not a gavel. Field Technology refuses products that treat entropy spikes as verdict without human or multi-signal corroboration.</p>
+<h2 id="toc-14-4-nexus-layer-where-the-oracle-lives">4. NEXUS layer — where the oracle lives</h2>
+<p>ThermoAccountant lives in AMOURANTHRTX dispatch_canvas(). Shannon oracle lives in NEXUS-Shield file analysis and related daemon loops. Different products, different bindings, different grep patterns.</p>
+<p>Conflating them is how vendors sell one dashboard that lies about both thermodynamics and file surprise. Chapter 12's honesty table exists to stop that fusion.</p>
+<h2 id="toc-14-5-high-h-what-it-does-and-does-not-mean">5. High H — what it does and does not mean</h2>
+<p>High H may indicate encryption, compression, packing, or genuinely random payloads. It may also appear in benign encrypted backups you created. It does not prove malice. It proves surprise relative to model expectations.</p>
+<p>Operators learn to pair H with process path, port habit, gatekeeper history, and sealed time context. Single-metric theology is vendor candy.</p>
+<h2 id="toc-14-6-low-h-complacency-risk">6. Low H — complacency risk</h2>
+<p>Low H is not automatic safety. Polyglot files, structured malware with repetitive shells, and staged droppers can present deceptive distributions early. Calm thresholds should not anesthetize.</p>
+<p>Defense is field literacy across packet sentences, file oracle, and fabric observability — not one green LED.</p>
+<h2 id="toc-14-7-94-6-posture-in-bytes">7. 94/6 posture in bytes</h2>
+<p>Field Technology's 94/6 discipline: most traffic should pass calm observation; the long tail of surprise earns disproportionate attention without choking the perimeter. Shannon thresholds implement that tail detection.</p>
+<p>This is operational mercy: do not DDoS your own machine with paranoia polling on every calm byte.</p>
+<h2 id="toc-14-8-separation-from-landauer-and-fabric-entropy">8. Separation from Landauer and fabric entropy</h2>
+<p>Landauer bounds erasure thermodynamically in theory. ThermoAccountant proxies frame irreversibility on GPU. Shannon measures symbol surprise in files. Entropy floor biases fabric noise. Four related words, four layers. Name them separately in reports.</p>
+<h2 id="toc-14-9-operator-corroboration-workflow">9. Operator corroboration workflow</h2>
+<p>When oracle enters alert or storm:</p>
+<p>Pause auto-actions. Pull process path and parent chain. Check packet field jsonl for recent socket habits. Compare sealed time receipts if sync enabled. Ask whether file is expected (backup job, dev build). Escalate with labels: Implemented signal, not Philosophy verdict.</p>
+<p>Chapter 18 covenant: daemons assist; you inherit conscience.</p>
+<h2 id="toc-14-10-false-positives-and-tuning">10. False positives and tuning</h2>
+<p>Thresholds are tuned discipline, not cosmic constants. Operators document baseline H for their own build artifacts, backup tools, and game engines. Custom calm bands prevent alert fatigue.</p>
+<p>Alert fatigue is an attack surface — when everything storms, nothing storms.</p>
+<h2 id="toc-14-11-relation-to-dpi-and-packet-field">11. Relation to DPI and packet field</h2>
+<p>Deep packet inspection samples flows; file oracle samples artifacts. Spiderweb and packet field (Chapter 5) give network-position context; Shannon gives byte-surprise context. Correlation is strength; fusion into one lying score is weakness.</p>
+<h2 id="toc-14-12-shannon-as-creditor-pedagogy">12. Shannon as creditor pedagogy</h2>
+<p>Read ../creditors/shannon.html tribute. Communication is care made serial, the love block says. Quantifying surprise is how care scales without pretending to read souls.</p>
+<p>Teach newcomers Shannon before they touch storm knobs. Teach Chapter 12 before they quote H to management.</p>
+<h2 id="toc-14-operator-drill-14-a-sample-h-on-known-files">Operator drill 14.A — sample H on known files</h2>
+<pre class="eq"># Calm baseline: plain text README
+# Alert sample: gzip -9 packed binary
+# Storm sample: encrypted archive you control
+# Record H bands and daemon tier shifts in field jsonl</pre>
+
+<h2 id="toc-14-operator-drill-14-b-corroboration-table">Operator drill 14.B — corroboration table</h2>
+<pre class="eq"># For one alert event, fill: path, H, process, port habit, operator verdict
+# No verdict without two independent signals</pre>
+
+<h2 id="toc-14-operator-drill-14-c-separation-grep">Operator drill 14.C — separation grep</h2>
+<pre class="eq">grep -E 'THERMO|entropy' amouranth-run.log   # GPU layer
+grep -E 'H=|oracle|storm' nexus-field.jsonl  # NEXUS layer</pre>
+
+<figure class="figure"><img src="../assets/images/packet-field.jpg" alt="Packet field" loading="lazy" /><figcaption>Figure 14.1 — Shannon storm gauge on file layer, separate from GPU thermo.</figcaption></figure>
+
+<h2 id="toc-14-study-questions">Study questions</h2>
+<ol>
+<li>Write Shannon H in symbols and explain log base 2.</li>
+<li>Define calm, alert, storm as operational tiers.</li>
+<li>Why is high H not automatic malice?</li>
+<li>Where does Shannon oracle live vs ThermoAccountant?</li>
+<li>What is 94/6 posture applied to bytes?</li>
+<li>Name three corroboration signals besides H.</li>
+<li>How does alert fatigue become an attack surface?</li>
+<li>Why must vendors not fuse thermo and file dashboards?</li>
+<li>Read ../creditors/shannon.html — love block meaning?</li>
+<li>When should storm tier not trigger auto-kill?</li>
+<li>How do packet field and file oracle complement each other?</li>
+<li>Document a false positive you tuned away.</li>
+</ol>
+<p>Tribute: <a href="../creditors/shannon.html">Claude Shannon</a> · <a href="../creditors/index.html">All creditors</a></p>
+<p><a href="15-maxwell-gpu.html">Chapter 15 — Maxwell on the GPU →</a></p>
+<h2 id="toc-14-13-byte-distributions-worked-intuition">13. Byte distributions — worked intuition</h2>
+<p>ASCII text peaks on printable bytes. UTF-8 text shows multibyte structure but remains far from uniform. gzip and zlib lift high bytes. AES ciphertext approaches flat histograms. Operators build intuition by histogramming their own artifacts before touching production storm knobs.</p>
+
+<h2 id="toc-14-14-entropy-oracle-implementation-posture">14. Entropy Oracle implementation posture</h2>
+<p>NEXUS implements file-layer analysis as Implemented behavior — thresholds in config, jsonl rows on events, panel visibility at :9477. The oracle does not replace packet field gatekeeper; it corroborates. Implementation claims require grep in lib sources, not wiki quotes alone.</p>
+
+<h2 id="toc-14-15-storm-tier-tuning-worksheet">15. Storm tier tuning worksheet</h2>
+<p>Document calm ceiling for: plain source trees, release tarballs, your own encrypted backups, game asset packs. When a new build class appears, update calm bands before alert fatigue trains you to ignore storms. Worksheet belongs in operator runbooks beside firewall rules.</p>
+
+<h2 id="toc-14-16-adversarial-surprise-without-malice">16. Adversarial surprise without malice</h2>
+<p>Packers raise H. Legitimate packers used by your own release pipeline also raise H. The oracle asks you to slow down, not to moralize bytes. Correlation with signature age, publisher habit, and sealed time context separates pipeline noise from novel noise.</p>
+
+<h2 id="toc-14-17-jsonl-as-storm-archive">17. jsonl as storm archive</h2>
+<p>Each alert should leave a row: timestamp, path, H estimate, tier, process context, operator note field empty until filled. Future you is a neighbor (Chapter 16). Couple with care through complete rows.</p>
+
+<h2 id="toc-14-18-shannon-in-threat-models">18. Shannon in threat models</h2>
+<p>Threat models that only list CVEs miss distribution surprises. Add H bands to tabletop exercises: what happens when calm misclassifies encrypted exfil shaped like your backups? Answer: corroboration, not auto-kill — covenant Clause IV and VI together.</p>
+
+
+<div class="creditor-workshop">
+<h2 id="toc-14-creditor-deep-dive-workshop-complete-once">Creditor deep-dive workshop — complete once</h2>
+<p>Chapters 13–15 share one drill set — complete after reading all three creditor chapters.</p>
+<ol>
+<li><strong>Primary source:</strong> Footnote one Landauer, Shannon, or Maxwell paper (not Wikipedia alone).</li>
+<li><strong>Grep proof:</strong> One <code>grep</code> command tying this chapter's equation to an <span class="tag impl">Implemented</span> or <span class="tag meta">Metaphor</span> label from Chapter 12.</li>
+<li><strong>Layer separation:</strong> Write three sentences — GPU proxy, file oracle, theory — never summed into one entropy number.</li>
+<li><strong>Comparative run:</strong> Two matched sessions; plot <code>entropyThisFrame</code> or file H trend — comparative only, no joule billing.</li>
+</ol>
+</div>
+
+<h2 id="toc-14-operator-journal-shannon-oracle-and-storm-thresh">Operator journal — Shannon oracle and storm thresholds</h2>
+<p>Maintain a paper or markdown operator journal for Shannon oracle and storm thresholds. Each drill entry: date, hardware, driver, git hash, three THERMO or jsonl lines, one surprise, one label (Implemented / Metaphor / Philosophy). Journals become your personal creditor — future you inherits coupled state from past you. Bring the journal to Chapter 18 covenant audit drill 18.A as evidence.</p>
+
+<h2 id="toc-14-reading-companion-shannon-oracle-and-storm-thres">Reading companion — Shannon oracle and storm thresholds</h2>
+<p>This reading companion reinforces Shannon oracle and storm thresholds for self-study tracks. Week one: read the chapter straight through with Chapter 12 open. Week two: complete all operator drills on hardware you own. Week three: write a one-page creditor tribute response linking ../creditors/ reading to a grep result from your machine. Week four: teach another human one section using the three-tag labeling exercise. Field Technology v5 measures success in reproduced receipts, not in vibes.</p>
+<p>Cross-links: Chapter 4 entropy receipts, Chapter 5 packet field, Chapter 8 data bus, Chapter 10 Spiderweb mirror, Chapter 11 observability, Chapters 16–18 sacred covenant. Shannon oracle and storm thresholds is not an island — it is a creditor lens on the same stack you already run.</p>
+<p>Honesty reminder: AMOURANTHRTX, NEXUS-Shield, Queen, and Field Primer have different licenses. Teaching from this chapter does not automatically license commercial engine use. Point students to product headers and FIELD-TECHNOLOGY-V5.md for edition boundaries.</p>
+
+<h2 id="toc-14-chapter-closing-shannon-oracle-and-storm-thresho">Chapter closing — Shannon oracle and storm thresholds</h2>
+<p>Chapter 14 completes the oracle story: H is a storm gauge, tiers are pastoral engineering, corroboration is covenant habit. You are not learning to fear bytes. You are learning to slow down when surprise spikes — the same discipline you bring to THERMO spikes without confusing layers. Shannon's creditor page reminds us communication is care made serial. Serialize care into jsonl rows with timestamps and operator notes, not into auto-kill theater.</p>
+
+
+
+
+<div class="evidence-anchor" id="evidence-ch14">
+<h2>Evidence anchor — grep and sources</h2>
+<p>Major claims in this chapter anchored for reproducibility. <span class="tag impl">Implemented</span> = grep today; <span class="tag meta">Metaphor</span> = intuition; <span class="tag phil">Philosophy</span> = discipline.</p>
+<table><thead><tr><th>Claim</th><th>Statement</th><th>Label</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>Shannon H</td><td>File byte surprise</td><td><span class="tag impl">Implemented</span></td><td><code>NEXUS Entropy Oracle</code></td></tr><tr><td>Storm thresholds</td><td>Alert tiers on H</td><td><span class="tag impl">Implemented</span></td><td><code>Configurable gates</code></td></tr><tr><td>Fabric texel H</td><td>Shader spectrum</td><td><span class="tag meta">Metaphor</span></td><td><code>Category error if merged</code></td></tr><tr><td>Gatekeeper merge</td><td>Verdict from H alone</td><td><span class="tag meta">Metaphor</span></td><td><code>Forbidden — separate plates</code></td></tr></tbody></table>
+<pre class="eq">H = −Σ pᵢ log₂ pᵢ  on file byte distribution</pre>
+<pre class="eq">grep -r &#x27;entropy_oracle\|storm&#x27; NEXUS-Shield/</pre>
+<h3>Source paths</h3>
+<ul class="source-anchors"><li><code>NEXUS-Shield/entropy_oracle.py</code></li><li><code>docs/creditors/shannon.html</code></li></ul>
+</div>
+
+<div class="chapter-summary-box">
+<h2 id="toc-14-chapter-summary-before-you-turn-the-page">Chapter summary — before you turn the page</h2>
+<p>Shannon surprise on files — storm gauge tuned, never merged with GPU thermo or gatekeeper auto-sentence.</p>
+</div>
+
+    <nav class="chapter-nav bottom"><a class="btn secondary" href="13-landauer-deep.html">← Ch 13</a> <a class="btn" href="15-maxwell-gpu.html">Ch 15 →</a></nav>
+  </main>
+  <footer><p>Field Technology v6 · Serious book · We do not hide the rocks.</p></footer>
+  <script src="../js/reader.js" defer></script>
+</body>
+</html>

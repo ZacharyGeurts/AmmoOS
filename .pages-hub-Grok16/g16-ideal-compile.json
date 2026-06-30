@@ -1,0 +1,63 @@
+{
+  "schema": "g16-recombinatorics-cycle/v1",
+  "ok": true,
+  "candidates_scored": 6,
+  "candidates": [
+    {
+      "profile": "belt_1_0",
+      "ops_per_sec": 84873248.15,
+      "binary_bytes": 22784,
+      "composite_score": 61.121323,
+      "belt_match": false,
+      "bsp_bonus": null
+    },
+    {
+      "profile": "belt_2_0",
+      "ops_per_sec": 73905275.09,
+      "binary_bytes": 22912,
+      "composite_score": 59.611229,
+      "belt_match": true,
+      "bsp_bonus": null
+    },
+    {
+      "profile": "field_opt",
+      "ops_per_sec": 67976456.75,
+      "binary_bytes": 22712,
+      "composite_score": 48.955673,
+      "belt_match": false,
+      "bsp_bonus": null
+    },
+    {
+      "profile": "expert",
+      "ops_per_sec": null,
+      "binary_bytes": 21200,
+      "composite_score": 0.013525,
+      "belt_match": false,
+      "bsp_bonus": null
+    },
+    {
+      "profile": "forever",
+      "ops_per_sec": null,
+      "binary_bytes": 22000,
+      "composite_score": 0.013033,
+      "belt_match": false,
+      "bsp_bonus": null
+    },
+    {
+      "profile": "heavy",
+      "ops_per_sec": null,
+      "binary_bytes": 22840,
+      "composite_score": 0.012553,
+      "belt_match": false,
+      "bsp_bonus": null
+    }
+  ],
+  "ideal_profile": "belt_1_0",
+  "ideal_belt": "belt_2_0",
+  "terminal_pattern": null,
+  "terminal_runner": null,
+  "reason": "recombinatorics_speed_size_belt_1_0",
+  "data_release": false,
+  "local_bench_only": true,
+  "statement": "Plate-tested meld — best speed/size composite from local bench; never released."
+}

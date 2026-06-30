@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 280" role="img" aria-label="CMake and g16 linking pipeline">
+  <rect width="920" height="280" fill="#060a12" rx="12"/>
+  <text x="24" y="32" fill="#e8c878" font-family="system-ui,sans-serif" font-size="16" font-weight="700">CMake → g16 → g16-ld — speed_demo plane</text>
+  <g font-family="system-ui,sans-serif" font-size="12">
+    <rect x="24" y="52" width="130" height="56" fill="#121a28" stroke="#38bdf8" rx="8"/><text x="36" y="76" fill="#38bdf8">CMakeLists</text><text x="36" y="94" fill="#8fb4d9">grok16_speed_demo</text>
+    <text x="168" y="84" fill="#c8a030">configure</text>
+    <rect x="220" y="52" width="120" height="56" fill="#121a28" stroke="#c4b5fd" rx="8"/><text x="232" y="84" fill="#c4b5fd">cmake build</text>
+    <text x="356" y="84" fill="#c8a030">g16 compile</text>
+    <rect x="400" y="52" width="120" height="56" fill="#121a28" stroke="#3ecf8e" rx="8"/><text x="412" y="76" fill="#3ecf8e">.o / TU</text><text x="412" y="94" fill="#8fb4d9">belt_2_0</text>
+    <text x="536" y="84" fill="#c8a030">g16-ld</text>
+    <rect x="580" y="52" width="140" height="56" fill="#121a28" stroke="#e8c878" rx="8"/><text x="592" y="84" fill="#e8c878">plane binary</text>
+    <text x="736" y="84" fill="#c8a030">exec 3s</text>
+    <rect x="780" y="52" width="116" height="56" fill="#1a2540" stroke="#38bdf8" rx="8"/><text x="792" y="84" fill="#38bdf8">ops/s</text>
+  </g>
+  <rect x="24" y="130" width="872" height="130" fill="#0e1520" stroke="#2a3140" rx="8"/>
+  <text x="40" y="158" fill="#8fb4d9" font-size="11">Host plane: CMAKE_CXX_COMPILER=host g++ · GROK16_HOST_PLANE=ON</text>
+  <text x="40" y="178" fill="#8fb4d9" font-size="11">G16 plane: CMAKE_TOOLCHAIN_FILE=cmake/grok16-toolchain.cmake · DGROK16_PROFILE=belt_2_0</text>
+  <text x="40" y="198" fill="#8fb4d9" font-size="11">Link mandate: cmake/g16-linker-mandate.cmake · g16-field-mandate.cmake on field targets</text>
+  <text x="40" y="218" fill="#a8a49c" font-size="11">Full bench records configure_ms + build_ms for CMake · single-invoke ms for C/C++</text>
+  <text x="40" y="244" fill="#6e6a63" font-size="10">./scripts/grok16-toolchain.sh exec-full-bench · field-exec-stage.py · field-exec-compare.py</text>
+</svg>

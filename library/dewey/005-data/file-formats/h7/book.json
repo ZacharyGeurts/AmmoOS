@@ -1,0 +1,13 @@
+{
+  "id": "format-h7",
+  "title": "Hostess 7 Book",
+  "dewey": "005.74",
+  "format": "registry-entry",
+  "family": "library",
+  "extensions": [
+    ".h7"
+  ],
+  "magic": "H7\\x07\\x01",
+  "cover": "/library/assets/formats/h7.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

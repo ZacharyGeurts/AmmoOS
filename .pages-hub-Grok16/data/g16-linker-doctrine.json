@@ -1,0 +1,64 @@
+{
+  "schema": "g16-linker-doctrine/v2",
+  "title": "G16 Field Linker — every point to the silicon",
+  "motto": "macOS, Android, ARM, x86 — discern OS/arch, witness Ironclad, dispatch to the right linker backend.",
+  "meld_citation": "ironclad:meld:2",
+  "g16_mandate": "G16_FIELD_SAFETY_MANDATE_v1",
+  "policy": "G16 linker dispatches per OS+arch; RTX build profiles gate on RTX GPU separately.",
+  "env": {
+    "target": "G16_LINK_TARGET",
+    "android_ndk": "ANDROID_NDK_ROOT",
+    "macho_ld": "G16_MACHO_LD",
+    "pe_ld": "G16_PE_LD",
+    "cross_prefix": "G16_CROSS_PREFIX"
+  },
+  "silicon": {
+    "rule": "every_point_to_silicon",
+    "page_sizes": {
+      "x86_64": 4096,
+      "i386": 4096,
+      "aarch64": 16384,
+      "arm": 4096,
+      "armv7": 4096,
+      "riscv64": 4096,
+      "arm64": 16384
+    },
+    "mandate_elf": ["RELRO", "BIND_NOW", "NX_STACK", "PIE", "NOEXEC_STACK"],
+    "mandate_macho": ["PIE", "dead_strip", "no_compact_unwind"],
+    "mandate_android": ["RELRO", "BIND_NOW", "PIE", "noexecstack"]
+  },
+  "targets": [
+    {"id": "linux-gnu-x86_64", "os": "linux", "abi": "gnu", "arch": "x86_64", "format": "elf", "backend": "bfd", "emulation": "elf_x86_64", "page_size": 4096, "active": true},
+    {"id": "linux-gnu-i386", "os": "linux", "abi": "gnu", "arch": "i386", "format": "elf", "backend": "bfd", "emulation": "elf_i386", "page_size": 4096, "active": true},
+    {"id": "linux-gnu-aarch64", "os": "linux", "abi": "gnu", "arch": "aarch64", "format": "elf", "backend": "bfd", "emulation": "aarch64linux", "page_size": 16384, "active": true},
+    {"id": "linux-gnu-arm", "os": "linux", "abi": "gnu", "arch": "arm", "format": "elf", "backend": "bfd", "emulation": "armelf_linux_eabi", "page_size": 4096, "active": true},
+    {"id": "linux-gnu-armv7", "os": "linux", "abi": "gnueabihf", "arch": "arm", "format": "elf", "backend": "bfd", "emulation": "armelf_linux_eabi", "page_size": 4096, "active": true},
+    {"id": "linux-gnu-riscv64", "os": "linux", "abi": "gnu", "arch": "riscv64", "format": "elf", "backend": "bfd", "emulation": "elf64lriscv", "page_size": 4096, "active": true},
+    {"id": "android-aarch64", "os": "android", "abi": "bionic", "arch": "aarch64", "format": "elf", "backend": "android-ndk", "triple": "aarch64-linux-android", "api": 33, "page_size": 16384, "active": true},
+    {"id": "android-arm", "os": "android", "abi": "bionic", "arch": "arm", "format": "elf", "backend": "android-ndk", "triple": "armv7a-linux-androideabi", "api": 33, "page_size": 4096, "active": true},
+    {"id": "android-x86_64", "os": "android", "abi": "bionic", "arch": "x86_64", "format": "elf", "backend": "android-ndk", "triple": "x86_64-linux-android", "api": 33, "page_size": 4096, "active": true},
+    {"id": "darwin-x86_64", "os": "darwin", "abi": "macho", "arch": "x86_64", "format": "mach-o", "backend": "mach-o", "triple": "x86_64-apple-macos", "page_size": 4096, "active": true},
+    {"id": "darwin-aarch64", "os": "darwin", "abi": "macho", "arch": "aarch64", "format": "mach-o", "backend": "mach-o", "triple": "arm64-apple-macos", "page_size": 16384, "active": true},
+    {"id": "ios-aarch64", "os": "ios", "abi": "macho", "arch": "aarch64", "format": "mach-o", "backend": "mach-o", "triple": "arm64-apple-ios", "page_size": 16384, "active": true},
+    {"id": "win32-x86_64", "os": "windows", "abi": "msvc", "arch": "x86_64", "format": "pe", "backend": "pe", "triple": "x86_64-pc-windows-msvc", "page_size": 4096, "active": true},
+    {"id": "win32-aarch64", "os": "windows", "abi": "msvc", "arch": "aarch64", "format": "pe", "backend": "pe", "triple": "aarch64-pc-windows-msvc", "page_size": 4096, "active": true},
+    {"id": "bare-elf-x86_64", "os": "none", "abi": "elf", "arch": "x86_64", "format": "elf", "backend": "bfd", "emulation": "elf_x86_64", "page_size": 4096, "active": true},
+    {"id": "bare-elf-aarch64", "os": "none", "abi": "elf", "arch": "aarch64", "format": "elf", "backend": "bfd", "emulation": "aarch64linux", "page_size": 16384, "active": true},
+    {"id": "bare-elf-riscv64", "os": "none", "abi": "elf", "arch": "riscv64", "format": "elf", "backend": "bfd", "emulation": "elf64lriscv", "page_size": 4096, "active": true}
+  ],
+  "hardware_pairs": [
+    {
+      "id": "pair-c64-ultimate",
+      "label": "Commodore 64 Ultimate (C64U / C64CU)",
+      "g16_linker": false,
+      "note": "g16 does not link for classic MOS 6510 — pair documents C64 Ultimate FPGA hardware + retro_c64 chip battery"
+    }
+  ],
+  "pass": ["discern", "ironclad_witness", "field_sanity", "silicon_mandate", "backend_resolve", "backend_dispatch", "receipt"],
+  "layers": [
+    {"id": "linker_driver", "path": "forge/g16-linker.py", "role": "field linker orchestrator", "internal": true},
+    {"id": "linker_forge", "path": "forge/linker_tools.py", "role": "install wrapper + manifest", "internal": true},
+    {"id": "rtx_gate", "path": "forge/rtx_gate.py", "role": "RTX profile hardware gate", "internal": true},
+    {"id": "bfd_backend", "path": "libexec/grok16/g16-ld-bfd", "role": "ELF bfd backend", "internal": true}
+  ]
+}

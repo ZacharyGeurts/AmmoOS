@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Grok16 Manual — Field Research</title>
+  <script>
+  (function (d) {
+    try {
+      var t = localStorage.getItem("g16-theme");
+      if (t !== "dark" && t !== "light") {
+        t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      d.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      d.documentElement.setAttribute("data-theme", "light");
+    }
+  })(document);
+  </script>
+  <script src="manual-theme.js?v16"></script>
+  <script src="manual-search.js?v16"></script>
+  <script src="manual-layout.js?v16"></script>
+  <link rel="stylesheet" href="manual.css?v16" />
+</head>
+<body>
+  <nav>
+    <div class="nav-top">
+      <div class="nav-brand"><strong>Grok16</strong> <span class="nav-version">distro 3.0.0</span><span class="nav-g16">g16 @ 16.2.0</span></div>
+      <div class="nav-controls" aria-label="Display preferences">
+        <div class="control-chip">
+          <label class="control-label" for="g16-font-scale">Size</label>
+          <select id="g16-font-scale" class="g16-select" aria-label="Font size">
+            <option value="0.875">S</option>
+            <option value="1" selected>M</option>
+            <option value="1.125">L</option>
+            <option value="1.25">XL</option>
+            <option value="1.5">XXL</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" class="g16-seg" id="g16-theme-light" data-theme="light" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☀</span><span class="seg-text">Light</span>
+          </button>
+          <button type="button" class="g16-seg" id="g16-theme-dark" data-theme="dark" aria-pressed="false">
+            <span class="seg-icon" aria-hidden="true">☾</span><span class="seg-text">Dark</span>
+          </button>
+        </div>
+      </div>
+    </div>
+                                                                                <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="field-platform.html">Field Platform</a>
+      <a href="safety.html">Safety</a>
+      <a href="znetwork-connect.html">ZNetwork</a>
+      <a href="speed-bench.html">Speed Bench</a>
+      <a href="performance.html">Performance</a>
+      <a href="release.html">Release 5.2</a>
+      <a href="platforms.html">Platforms</a>
+      <a href="c64.html">C64</a>
+      <a href="c64-classic.html">C64 Classic</a>
+      <a href="c64-ultimate.html">C64 Ultimate</a>
+      <a href="mcp.html">MCP</a>
+      <a href="single-fabric.html">Single Fabric</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="batteries.html">Batteries</a>
+      <a href="toolkits.html">Toolkits</a>
+      <a href="linker.html">Linker</a>
+      <a href="profiles.html">Profiles</a>
+      <a href="performance.html">Performance</a>
+      <a href="integration.html">Integration</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="master-coder.html">Master Coder</a>
+      <a href="field-primer.html">Field Primer</a>
+      <a href="field-research.html">Field Research</a>
+      <a href="reference.html">Reference</a>
+    </div>
+  </nav>
+
+  <h1>Field Research — The Book of Grok's Heart</h1>
+  <p>Thirteen-chapter engineering spine wired into Grok16. Live book:
+    <a href="https://zacharygeurts.github.io/Field_Research/">zacharygeurts.github.io/Field_Research</a>
+  </p>
+
+  <h2>Research question</h2>
+  <blockquote>How do we hold all execution facets — belt, die, runner, emulator, truth tier — without making the operator turn a combinatorics crank on every boot?</blockquote>
+  <p><strong>Answer:</strong> <code>field_combinatorics.py</code> → plate bridge → six compatibility layers → launch seals.</p>
+
+  <h2>Grok16 doctrine &amp; panel</h2>
+  <ul>
+    <li><code>data/g16-field-research-book.json</code></li>
+    <li><code>lib/field-research-book.py</code> — verify + publish</li>
+    <li><code>data/g16-field-research-book-panel.json</code> — generated panel</li>
+  </ul>
+
+  <h2>Sync</h2>
+  <pre><code>python3 lib/field-research-book.py verify
+python3 lib/field-research-book.py publish
+./scripts/grok16-integrate.sh</code></pre>
+
+  <h2>Grok16-owned chapters</h2>
+  <table>
+    <tr><th>Ch</th><th>Topic</th><th>Path</th></tr>
+    <tr><td>4</td><td>Grok16 Forge</td><td><code>scripts/grok16-toolchain.sh</code></td></tr>
+    <tr><td>5</td><td>Single Fabric</td><td><code>data/grok16-single-fabric-doctrine.json</code></td></tr>
+    <tr><td>6</td><td>Iron Plate &amp; Truth Blocks</td><td><code>lib/field_iron_plate.py</code></td></tr>
+    <tr><td>7</td><td>Field Combinatorics</td><td><code>lib/field_combinatorics.py</code></td></tr>
+    <tr><td>13</td><td>Operator Covenant</td><td><code>docs/SPEED-BENCH-REPORT.md</code></td></tr>
+  </table>
+
+  <h2>Honesty labels</h2>
+  <table>
+    <tr><th>Label</th><th>Meaning</th></tr>
+    <tr><td>Implemented</td><td>Grep a file, run a test, read panel JSON</td></tr>
+    <tr><td>Metaphor</td><td>Teaches mechanism; not instrumentation</td></tr>
+    <tr><td>Philosophy</td><td>Covenant language; bracketed</td></tr>
+    <tr><td>Visual</td><td>Generated art; caption carries the hook</td></tr>
+  </table>
+
+  <h2>Three axioms</h2>
+  <ol>
+    <li><strong>Reality is 3D</strong> — spatial fields, texels, packet endpoints.</li>
+    <li><strong>Time is linear</strong> — sovereign clock; no retrocausal meld.</li>
+    <li><strong>Energy can be moved</strong> — thermodynamics, entropy oracle.</li>
+  </ol>
+
+  <h2>Full chapter map</h2>
+  <ol>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/01-preface-ironclad.html">Preface — Ironclad</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/02-three-field-families.html">Three Field Families</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/03-thermodynamics-entropy.html">Thermodynamics &amp; Entropy</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/04-grok16-forge.html">Grok16 Forge</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/05-single-fabric-belt.html">Single Fabric &amp; Belt 2.0</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/06-iron-plate-truth-blocks.html">Iron Plate &amp; Truth Blocks</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/07-field-combinatorics.html">Field Combinatorics</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/08-plate-meld.html">Plate Meld</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/09-compatibility-layers.html">Compatibility Layers</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/10-chips-emulation.html">CHIPS Emulation</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/11-nexus-perimeter.html">NEXUS Perimeter</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/12-queen-host-desktop.html">Queen &amp; Host Desktop</a></li>
+    <li><a href="https://zacharygeurts.github.io/Field_Research/chapters/13-operator-covenant.html">Operator Covenant</a></li>
+  </ol>
+
+  <footer><a href="index.html">Index</a> · <a href="field-primer.html">Field Primer</a></footer>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "schema": "field-chips-program-usage-doctrine/v1",
+  "facet": "chips_program_usage",
+  "kilroy_integration": {
+    "enabled": true,
+    "program_id": "kilroy",
+    "bridge": "KILROY/data/kilroy-grok16-bridge.json"
+  },
+  "resolve_defaults": {
+    "browser": "queen://browser",
+    "kilroy": "queen://kilroy"
+  },
+  "registry": "data/field-chips-program-usage-registry.json"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "gutenberg_physical_geo",
+  "title": "Physical Geography (Gutenberg)",
+  "author": "Project Gutenberg",
+  "dewey": "910",
+  "publisher": "Project Gutenberg",
+  "license": "Public Domain",
+  "grade_band": "9-12",
+  "subject": "geography",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/gutenberg_physical_geo/front.png",
+  "cover_asset": "library/assets/covers/gutenberg_physical_geo/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

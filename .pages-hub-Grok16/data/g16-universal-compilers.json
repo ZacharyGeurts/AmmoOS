@@ -1,0 +1,29 @@
+{
+  "schema": "g16-universal-compilers/v1",
+  "title": "Every compiler ever — Grok16 universal dispatch",
+  "motto": "Grok16 compiles everything — lower to C/C++, link with bin/g16, no third-party toolchains",
+  "module": "lib/g16-universal-compiler.py",
+  "lower": "lib/g16-lang-lower.py",
+  "security": "lib/g16-code-security.py",
+  "browser_tab": {
+    "ammocode_root": "../AmmoCode",
+    "tab_page": "tab.html",
+    "api": "/api/ammocode",
+    "default_port": 9555
+  },
+  "categories": {
+    "compiled": ["c", "cxx", "java", "kotlin", "scala", "rust", "go", "zig", "d", "fortran", "ada", "objc", "csharp", "swift", "pascal", "delphi", "cobol", "nim", "haskell", "ocaml", "asm"],
+    "scripted": ["python", "javascript", "typescript", "shell", "perl", "ruby", "php", "lua", "r", "julia", "elixir", "erlang", "clojure", "groovy", "tcl", "awk", "vbscript", "vba", "powershell"],
+    "web": ["html", "css", "scss", "less", "svg", "wasm", "wat", "graphql", "vue", "svelte"],
+    "data": ["json", "jsonc", "yaml", "toml", "xml", "ini", "csv", "tsv", "protobuf", "avro"],
+    "config": ["dockerfile", "makefile", "cmake", "nginx", "apache", "systemd", "cron"],
+    "legacy": ["basic", "qbasic", "turbo_pascal", "fortran", "algol", "snobol", "forth", "apl", "ammolang", "field"]
+  },
+  "compilers": {
+    "g16": {"langs": ["*"], "driver": "bin/g16", "compile": true, "lower": "g16-lang-lower.py", "host_toolchain": false},
+    "gpy16": {"langs": ["python"], "driver": "bin/gpy-16", "interpret": true, "builtin": true, "compile_fallback": "g16"},
+    "g16_java": {"langs": ["java", "kotlin"], "driver": "lib/g16-java-compile.py", "compile": true, "chamber": true, "lower": "java→cxx", "engine": "bin/g16"},
+    "g16_lang_lower": {"langs": ["*"], "driver": "lib/g16-lang-lower.py", "compile": true, "chamber": true, "engine": "bin/g16"}
+  },
+  "discern_fallback": "data/g16-universal-extensions.json"
+}

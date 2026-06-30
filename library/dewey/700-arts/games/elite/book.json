@@ -1,0 +1,10 @@
+{
+  "id": "elite",
+  "title": "Elite",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/elite/elite.h7c",
+  "cover": null,
+  "ready": true
+}

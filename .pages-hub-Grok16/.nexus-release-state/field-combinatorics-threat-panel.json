@@ -1,0 +1,63 @@
+{
+  "schema": "field-combinatorics-threat/v1",
+  "updated": "2026-06-29T06:33:13Z",
+  "motto": "Mismatch rejected and recorded — last-good panel held; threat retaliates in full.",
+  "stats": {
+    "rejections": 1,
+    "threat_rejects": 1,
+    "retaliations": 1,
+    "attempt_count": 1
+  },
+  "last": {
+    "reason": "engine_sha_stale_run_full_rebuild",
+    "caller": "fast_cycle",
+    "retaliate_level": "monitor",
+    "retaliate_action": "record",
+    "retaliate": {
+      "level": "monitor",
+      "action": "record",
+      "attempts": 1
+    }
+  },
+  "runtime": {
+    "last_retaliate_level": "monitor",
+    "last_retaliate_action": "record",
+    "last_retaliate_reason": "engine_sha_stale_run_full_rebuild",
+    "last_retaliate_at": "2026-06-29T06:33:13Z",
+    "attempt_count": 1,
+    "caller": "fast_cycle",
+    "updated": "2026-06-29T06:33:13Z"
+  },
+  "recent_rejects": [
+    {
+      "ts": "2026-06-27T19:21:46Z",
+      "event": "reject",
+      "action": "fast_cycle",
+      "reason": "engine_sha_stale_run_full_rebuild",
+      "caller": "fast_cycle",
+      "detail": "",
+      "attempt_count": 1,
+      "engine_sha256": "7269ea315396cde32844988e06def3a0e236da2731c886bb90132bbdafd8e884",
+      "current_engine_sha256": "5f9cee3906bded8b83c5d90c730328ad6be95ed18d4f59570ae2193163dc124d",
+      "panel_sha256": "c89d7ba92fb89fd0e6ff1991a77d540c357ff1210a216b6eecd5a4ac22087749",
+      "verify_ok": false
+    },
+    {
+      "ts": "2026-06-29T06:33:13Z",
+      "event": "reject",
+      "action": "fast_cycle",
+      "reason": "engine_sha_stale_run_full_rebuild",
+      "caller": "fast_cycle",
+      "detail": "",
+      "attempt_count": 1,
+      "engine_sha256": "7269ea315396cde32844988e06def3a0e236da2731c886bb90132bbdafd8e884",
+      "current_engine_sha256": "8011bc1af97a6c7e376c5abea425f424a6415a87a2baca82fd4e4dddea451347",
+      "panel_sha256": "c89d7ba92fb89fd0e6ff1991a77d540c357ff1210a216b6eecd5a4ac22087749",
+      "verify_ok": false
+    }
+  ],
+  "policy": {
+    "window_sec": 300,
+    "never_break_on_mismatch": true
+  }
+}

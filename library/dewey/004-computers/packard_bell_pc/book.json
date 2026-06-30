@@ -1,0 +1,10 @@
+{
+  "id": "packard_bell_pc",
+  "title": "Packard Bell PC",
+  "author": "Field Extensive Library",
+  "dewey": "004.16",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/packard_bell_pc/packard_bell_pc.h7c",
+  "cover": "/library/assets/devices/packard_bell_pc.png",
+  "ready": true
+}

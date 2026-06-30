@@ -1,0 +1,38 @@
+{
+  "schema": "field-ammolang-agent-doctrine/v2",
+  "title": "Agent entry — AmmoLang only · kit Grok16",
+  "motto": "All field tasks start through lib/ammolang-run.sh — included AmmoLang library + Grok16 + PythonG.",
+  "policy": {
+    "entry_only": "lib/ammolang-run.sh",
+    "route_wrapper": "lib/ammolang-route.sh",
+    "operator_wrapper": "scripts/aml.sh",
+    "stack_router": "scripts/stack.sh",
+    "impl_dir": "scripts/impl",
+    "aml_library": "library/dewey/000-computer-science/ammolang",
+    "kit_grok16": "Grok16",
+    "kit_python": "PythonG/bin/pythong",
+    "progress_sec": 60,
+    "progress_panel": ".nexus-state/ammolang-release-progress.json",
+    "build_log": ".nexus-state/field-ammolang-build.log",
+    "never_bypass": "Do not set AML_BUILD=0 for production. Public scripts are thin wrappers; implementation lives in scripts/impl/ and runs only from AmmoLang run script:impl/…"
+  },
+  "default_env": {
+    "AML_BUILD": "1",
+    "AML_FAST": "1",
+    "AML_PROGRESS": "1",
+    "AML_PROGRESS_MIN": "60",
+    "AML_GITHUB_TRANSPORT": "mcp_secure",
+    "GPY16_PROFILE": "fastest",
+    "GROKPY_PROFILE": "fastest"
+  },
+  "master_tasks": {
+    "build": "Full kit build — wire · gates · stack · boot · QEMU · zpics",
+    "stack_update": "Tests · mint · GitHub publish",
+    "stack_fast": "Panel + Queen up",
+    "boot_qemu_test": "Boot order · surfaces · Final Eye OCR · QEMU"
+  },
+  "watch": [
+    "tail -f .nexus-state/field-ammolang-build.log",
+    "watch -n30 cat .nexus-state/ammolang-release-progress.json"
+  ]
+}

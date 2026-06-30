@@ -1,0 +1,39 @@
+{
+  "schema": "grok16-binary-package/v1",
+  "title": "Grok16 binary package — g16 prefix + AmmoCode + default settings",
+  "motto": "One tarball: all of g16, AmmoCode executable, preconfigured secured settings",
+  "distro_version": "5.0.0",
+  "script": "scripts/grok16-binary-package.sh",
+  "settings_builder": "scripts/grok16-build-ammocode-settings.py",
+  "ammocode_root": "../AmmoCode",
+  "output": {
+    "dir": "dist",
+    "name_pattern": "grok16-{version}-linux-x86_64.tar.gz",
+    "manifest_pattern": "grok16-{version}-linux-x86_64-manifest.json"
+  },
+  "contents": {
+    "g16_prefix": ["bin", "libexec", "lib", "lib64", "include", "share", "x86_64-pc-linux-gnu"],
+    "metadata": ["VERSION", "SELFHOST.json"],
+    "cmake": "cmake/",
+    "scripts": ["scripts/grok16-toolchain.sh", "scripts/grok16-config.sh", "scripts/g16-build-env.sh"],
+    "ammocode": {
+      "executable": "share/ammocode/ammocode",
+      "settings": "share/ammocode/ammocode-settings.secure.json",
+      "package_key": "share/ammocode/ammocode-settings.package.key",
+      "manifest": "share/ammocode/ammocode-settings.manifest.json"
+    }
+  },
+  "default_settings": {
+    "source": "../AmmoCode/data/ammocode-settings-package-defaults.json",
+    "schema": "../AmmoCode/data/ammocode-settings-schema.json",
+    "profile": "belt_2_0",
+    "memory_vault": true,
+    "bundled_grok16": true
+  },
+  "usage": [
+    "tar xzf grok16-5.0.0-linux-x86_64.tar.gz",
+    "cd grok16-5.0.0-linux-x86_64",
+    "source grok16-env.sh",
+    "./share/ammocode/ammocode"
+  ]
+}

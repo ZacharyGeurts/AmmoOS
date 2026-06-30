@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" data-field-surface="storage">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#040806" />
+  <meta name="color-scheme" content="dark" />
+  <title>Storage</title>
+  <link rel="icon" href="/assets/queen-favicon-48.png" type="image/png" sizes="48x48" />
+  <link rel="stylesheet" href="/assets/field-queen-theme.css?v=qf1" />
+  <link rel="stylesheet" href="/assets/field-storage.css?v=1" />
+</head>
+<body>
+  <div class="st-root">
+    <header class="st-head">
+      <div>
+        <h1>Storage</h1>
+        <p class="st-sub" id="st-motto">AmmoOS disk manager — partitions, mount, format</p>
+      </div>
+      <div class="st-head-actions">
+        <button type="button" class="st-btn" id="st-refresh">Refresh</button>
+      </div>
+    </header>
+
+    <div class="st-layout">
+      <aside class="st-aside" aria-label="Disk list">
+        <h2>Disks</h2>
+        <ul class="st-disk-list" id="st-disk-list"></ul>
+      </aside>
+
+      <main class="st-main">
+        <section class="st-detail" id="st-detail" hidden>
+          <div class="st-detail-head">
+            <h2 id="st-detail-title">Device</h2>
+            <span class="st-pill" id="st-detail-pill"></span>
+          </div>
+          <div class="st-meta" id="st-detail-meta"></div>
+          <div class="st-bar-wrap" id="st-usage-bar" hidden>
+            <div class="st-bar"><div class="st-bar-fill" id="st-bar-fill"></div></div>
+            <span class="st-bar-label" id="st-bar-label"></span>
+          </div>
+          <div class="st-partitions">
+            <h3>Partitions</h3>
+            <table class="st-table" id="st-part-table">
+              <thead>
+                <tr>
+                  <th>Device</th>
+                  <th>Size</th>
+                  <th>Type</th>
+                  <th>Mount</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="st-part-body"></tbody>
+            </table>
+          </div>
+          <div class="st-actions" id="st-disk-actions" hidden>
+            <h3>Partition disk</h3>
+            <label>Table <select id="st-table-type"><option value="gpt">GPT</option><option value="msdos">MBR</option></select></label>
+            <label>Layout <input type="text" id="st-part-layout" value="50%,50%" placeholder="50%,50% or 100GiB" /></label>
+            <button type="button" class="st-btn danger" id="st-partition">Apply partition plan</button>
+          </div>
+        </section>
+        <p class="st-empty" id="st-empty">Select a disk to manage partitions and mounts.</p>
+      </main>
+    </div>
+
+    <footer class="st-foot" id="st-status">Loading…</footer>
+  </div>
+  <script src="/assets/field-storage.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+KILROY Field OS 1.1.0
+codename=Sanctuary
+abi=kilroy-field-1.0
+layout=9
+substrate=linux-7.1.1
+localversion=-kilroy
+identity=Field
+compatible=Linux-POSIX
+grok16_pair=5.1.0
+ammoos_pair=2.0.0-beta3
+field_one=canonical
+loopback_authority=127.0.0.1

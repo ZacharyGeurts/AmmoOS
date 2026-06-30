@@ -1,0 +1,13 @@
+/* Queen Browser — chrome rebrand */
+#navigator-toolbox {
+  border-top: 2px solid #1a4d32 !important;
+}
+.titlebar-text {
+  font-size: 0 !important;
+}
+.titlebar-text::after {
+  content: "Queen Browser";
+  font-size: 11px;
+  color: #3ecf8e;
+  letter-spacing: 0.08em;
+}

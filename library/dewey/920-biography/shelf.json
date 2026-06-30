@@ -1,0 +1,22 @@
+{
+  "schema": "dewey-shelf/v1",
+  "shelf": "920-biography",
+  "code": "920",
+  "title": "920-biography",
+  "updated": "2026-06-29T09:43:43Z",
+  "format_primary": "h7c",
+  "book_count": 1,
+  "h7c_count": 0,
+  "books": [
+    {
+      "id": "rosa_parks",
+      "title": "Rosa Parks: A True Biography",
+      "author": "Hostess 7 Library",
+      "dewey": "920.92",
+      "format": "h7/7",
+      "h7c": null,
+      "cover": null,
+      "ready": false
+    }
+  ]
+}

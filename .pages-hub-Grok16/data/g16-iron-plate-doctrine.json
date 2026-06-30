@@ -1,0 +1,55 @@
+{
+  "schema": "g16-iron-plate-doctrine/v1",
+  "title": "Iron plate — identical C/C++ twins on Python field face",
+  "motto": "What we can convert identically lands on the plate. It always breaks down to assembly, entropy, and field.",
+  "module": "lib/field_iron_plate.py",
+  "triad": {
+    "assembly": {
+      "layer": 0,
+      "statement": "Bottom — FieldX86 insn belt, native wave-convert, or gpy hot path",
+      "lanes": ["cxx", "c", "cmake", "asm"]
+    },
+    "entropy": {
+      "layer": 1,
+      "statement": "Thermo fold — entropy_fold, phi blend, irreversible mix",
+      "symbols": ["entropy_fold", "wave_phase", "wave_phase_decouple", "nexus_score"]
+    },
+    "field": {
+      "layer": 2,
+      "statement": "Top — depth-0 program, die slots, epoch loop on singular plane",
+      "symbols": ["fieldx86", "FieldInsn", "run_epoch", "K_DIE", "K_WAVE", "K_PROG"]
+    }
+  },
+  "twin_policy": {
+    "identical_kernel_required": true,
+    "python_face_dev_default": true,
+    "native_face_exec_default": "bsp_reuse",
+    "plate": "iron"
+  },
+  "truth_blocks": {
+    "schema": "g16-truth-blocks/v1",
+    "doctrine": "data/g16-truth-blocks-doctrine.json",
+    "module": "lib/field_truth_blocks.py",
+    "statement": "Bigger verified blocks carved from iron twins — more blocks unlock free plate melding"
+  },
+  "spot_detector": {
+    "schema": "iron-plate-spot/v1",
+    "nexus_module": "NewLatest/lib/iron-plate-spot-detector.py",
+    "g16_module": "lib/g16-iron-plate-spot-detector.py",
+    "doctrine": "NewLatest/data/iron-plate-spot-doctrine.json",
+    "meld_citation": "ironclad:meld:2",
+    "policy": "cache-first thermal gate cool_sort — slower OK when joules drop"
+  },
+  "registered_twins": [
+    {
+      "stem": "speed_demo",
+      "chamber": "examples/speed-demo",
+      "faces": {
+        "python": "speed_demo.py",
+        "cxx": "speed_demo.cpp",
+        "c": "speed_demo.c"
+      },
+      "kernel": ["entropy_fold", "wave_phase", "nexus_score", "fieldx86", "run_epoch"]
+    }
+  ]
+}

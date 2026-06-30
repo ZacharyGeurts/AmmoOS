@@ -1,0 +1,10 @@
+{
+  "id": "sun_sparcstation",
+  "title": "Sun SPARCstation",
+  "author": "Field Extensive Library",
+  "dewey": "004.16",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/sun_sparcstation/sun_sparcstation.h7c",
+  "cover": "/library/assets/devices/sun_sparcstation.png",
+  "ready": true
+}

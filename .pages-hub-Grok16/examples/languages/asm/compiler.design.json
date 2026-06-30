@@ -1,0 +1,40 @@
+{
+  "schema": "g16-chips-compiler-design/v1",
+  "lang": "asm",
+  "driver": "g16-as",
+  "compiler_lane": "native_direct",
+  "universal_isa": [
+    "x86",
+    "m6809",
+    "m6502",
+    "z80",
+    "cyrix",
+    "coco"
+  ],
+  "chips": {
+    "primary_isa": "x86",
+    "target_chips": [
+      "host_cpu",
+      "chips_hot",
+      "chips_6809",
+      "chips_6502",
+      "chips_6507",
+      "chips_2a03",
+      "chips_2c02",
+      "chips_z80",
+      "cyrix_6x86",
+      "chips_coco",
+      "6502",
+      "2C02"
+    ],
+    "universal": true,
+    "manifest": "Queen/data/chips-g16-manifest.json",
+    "design_note": "CHIPs universal — x86 ISA informs lowering, dispatch tables, and field_opt hot paths."
+  },
+  "frontend": "libexec/grok16/g16-cc",
+  "lowering": null,
+  "native_module": null,
+  "profile": "field_opt",
+  "written": true,
+  "updated": "2026-06-29T20:57:03Z"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "wikibooks_us_history",
+  "title": "Wikibooks US History",
+  "author": "Wikibooks",
+  "dewey": "900",
+  "publisher": "Wikibooks",
+  "license": "CC BY-SA",
+  "grade_band": "6-12",
+  "subject": "history",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/wikibooks_us_history/front.png",
+  "cover_asset": "library/assets/covers/wikibooks_us_history/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

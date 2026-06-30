@@ -1,0 +1,10 @@
+{
+  "id": "nes_joystick_demo",
+  "title": "Joystick Demo",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_joystick_demo/nes_joystick_demo.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_joystick_demo-box.png",
+  "ready": true
+}

@@ -1,0 +1,10 @@
+{
+  "id": "amiga",
+  "title": "Amiga",
+  "author": "Field Extensive Library",
+  "dewey": "004.678",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/amiga/amiga.h7c",
+  "cover": "/library/assets/devices/amiga.png",
+  "ready": true
+}

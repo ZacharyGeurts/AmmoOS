@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 200" role="img" aria-label="Grok16 battery validation tiers">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#151a23"/>
+      <stop offset="100%" stop-color="#0e1117"/>
+    </linearGradient>
+    <style>
+      .box { fill:#1a2130; stroke:#3a4558; stroke-width:2; rx:8 }
+      .gate { fill:#243044; stroke:#5fa8bc; stroke-width:2; rx:8 }
+      .arr { stroke:#5fa8bc; stroke-width:2; fill:none; marker-end:url(#m) }
+      .t { font:600 13px ui-monospace,Consolas,monospace; fill:#e6e4df }
+      .s { font:11px ui-monospace,Consolas,monospace; fill:#a8a49c }
+      .h { font:700 15px system-ui,sans-serif; fill:#5fa8bc }
+    </style>
+    <marker id="m" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#5fa8bc"/>
+    </marker>
+  </defs>
+  <rect width="920" height="200" fill="url(#bg)" rx="10"/>
+  <text x="24" y="32" class="h">test-battery-release — 1.0 gate</text>
+  <rect class="box" x="24" y="52" width="130" height="72"/>
+  <text x="40" y="78" class="t">smoke</text>
+  <text x="40" y="98" class="s">test-battery</text>
+  <text x="40" y="114" class="s">discern · verify</text>
+  <rect class="box" x="178" y="52" width="130" height="72"/>
+  <text x="194" y="78" class="t">expert</text>
+  <text x="194" y="98" class="s">ironclad · linker</text>
+  <text x="194" y="114" class="s">RTX gate · profile</text>
+  <rect class="box" x="332" y="52" width="130" height="72"/>
+  <text x="348" y="78" class="t">heavy</text>
+  <text x="348" y="98" class="s">LTO · PGO · bench</text>
+  <text x="348" y="114" class="s">profile=heavy</text>
+  <rect class="gate" x="486" y="44" width="410" height="88"/>
+  <text x="502" y="72" class="t">release bundle</text>
+  <text x="502" y="92" class="s">py-battery · forever-battery · binutils-battery</text>
+  <text x="502" y="108" class="s">verify (linker smoke required)</text>
+  <text x="502" y="124" class="s">G16_RELEASE_PROFILE=1</text>
+  <path class="arr" d="M154 88 H178"/>
+  <path class="arr" d="M308 88 H332"/>
+  <path class="arr" d="M462 88 H486"/>
+  <text x="24" y="168" class="s">./scripts/grok16-toolchain.sh test-battery-release</text>
+</svg>

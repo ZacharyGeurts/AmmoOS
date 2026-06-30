@@ -1,0 +1,15 @@
+{
+  "id": "openstax_cs",
+  "title": "OpenStax Introduction to Computer Science",
+  "author": "OpenStax",
+  "dewey": "004",
+  "publisher": "OpenStax",
+  "license": "CC BY 4.0",
+  "grade_band": "9-12",
+  "subject": "computer_science",
+  "format": "textbook",
+  "journal": "textbook",
+  "cover": "/library/assets/covers/openstax_cs/front.png",
+  "cover_asset": "library/assets/covers/openstax_cs/front.png",
+  "updated": "2026-06-30T03:39:49Z"
+}

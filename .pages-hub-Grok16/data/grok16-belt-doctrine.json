@@ -1,0 +1,31 @@
+{
+  "schema": "grok16-belt-doctrine/v1",
+  "title": "Grok16 belt — single fabric knowing, single-location reads",
+  "motto": "One belt die — single fabric. Chunked redata. Wave-massive dispatch without monolithic blast or nested fields.",
+  "single_fabric_ref": "data/grok16-single-fabric-doctrine.json",
+  "belt_1_0": {
+    "profile": "belt_1_0",
+    "alias": "field_opt",
+    "die_slots": 256,
+    "redata_chunk": 512,
+    "rule": "1.0 baseline — Field-Opt throughput, no belt chunk scheduler"
+  },
+  "belt_2_0": {
+    "profile": "belt_2_0",
+    "die_mib": 64,
+    "data_bus_slots": 64,
+    "redata_chunk": 8192,
+    "wave_massive": true,
+    "single_location_reads": true,
+    "rule": "2.0 belt — single fabric: chunked dispatch, OpenMP lanes, LTO+PGO-ready, Hostess gates, depth fields sealed and destroyed at consumers"
+  },
+  "validation": {
+    "battery_belt": "test-battery-belt",
+    "bench_triad": "bench-triad",
+    "compare": ["host_gcc", "belt_1_0", "belt_2_0"]
+  },
+  "integration": {
+    "script": "scripts/grok16-integrate.sh",
+    "consumers": ["NewLatest/Queen", "World_Redata", "ZOCR", "PythonG"]
+  }
+}

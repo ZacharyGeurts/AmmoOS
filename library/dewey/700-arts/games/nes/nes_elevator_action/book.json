@@ -1,0 +1,10 @@
+{
+  "id": "nes_elevator_action",
+  "title": "Elevator Action",
+  "author": "Field Extensive Library",
+  "dewey": "794.8",
+  "format": "h7c",
+  "h7c": "library/dewey/700-arts/games/nes/nes_elevator_action/nes_elevator_action.h7c",
+  "cover": "/library/assets/cartridges/nes/nes_elevator_action-box.png",
+  "ready": true
+}

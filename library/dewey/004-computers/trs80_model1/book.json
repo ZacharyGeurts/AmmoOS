@@ -1,0 +1,10 @@
+{
+  "id": "trs80_model1",
+  "title": "TRS-80 Model I",
+  "author": "Field Extensive Library",
+  "dewey": "004.167",
+  "format": "h7c",
+  "h7c": "library/dewey/004-computers/trs80_model1/trs80_model1.h7c",
+  "cover": "/library/assets/devices/trs80_model1.png",
+  "ready": true
+}
