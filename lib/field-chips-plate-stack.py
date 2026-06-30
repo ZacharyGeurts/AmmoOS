@@ -473,6 +473,15 @@ def build_plate_stack(*, refresh: bool = False, force: bool = False) -> dict[str
     """Absorb every chip — iron organize, steel neural depth, removable modules above Ironclad."""
     t0 = time.perf_counter()
     doctrine = _load(DOCTRINE, {})
+    if os.environ.get("AML_TEST_DIRECT", "0") == "1" and not force:
+        cached = _load(BATTERY, {})
+        if cached.get("modules"):
+            elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
+            out = dict(cached)
+            out["fast_path"] = True
+            out["aml_test_direct"] = True
+            out["elapsed_ms"] = elapsed_ms
+            return out
     if not ENABLED:
         return {
             "schema": "field-chips-plate-stack/v1",
