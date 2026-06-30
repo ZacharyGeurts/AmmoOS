@@ -3,7 +3,7 @@
   "owner": "ZacharyGeurts",
   "title": "Favorites",
   "subtitle": "16 public repos \u2014 page-first pins, release SHA manifest.",
-  "generated": "2026-06-30T09:53:32Z",
+  "generated": "2026-06-30T14:23:50Z",
   "unlimited": false,
   "pin_count": 16,
   "native_pin_max": 6,
@@ -272,12 +272,12 @@
       "wiki": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/wiki",
       "releases": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/releases",
       "issues": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/issues",
-      "latest_tag": "v2.0.0-beta3.1",
+      "latest_tag": "v2.0.0-beta4",
       "latest_release": {
-        "tag": "v2.0.0-beta3.1",
-        "name": "OBS-FieldVoiceFilter \u00b7 AmmoOS 2.0.0-beta3.1",
-        "published": "2026-06-29T16:15:35Z",
-        "url": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/releases/tag/v2.0.0-beta3.1",
+        "tag": "v2.0.0-beta4",
+        "name": "OBS-FieldVoiceFilter \u00b7 AmmoOS 2.0.0-beta4",
+        "published": "2026-06-30T13:59:40Z",
+        "url": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/releases/tag/v2.0.0-beta4",
         "assets": []
       }
     },
