@@ -3,7 +3,7 @@
   "owner": "ZacharyGeurts",
   "title": "Favorites",
   "subtitle": "16 public repos \u2014 page-first pins, release SHA manifest.",
-  "generated": "2026-06-30T02:39:35Z",
+  "generated": "2026-06-30T09:53:32Z",
   "unlimited": false,
   "pin_count": 16,
   "native_pin_max": 6,
@@ -24,16 +24,16 @@
       "latest_tag": "v2.0.0-beta4",
       "latest_release": {
         "tag": "v2.0.0-beta4",
-        "name": "AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:13:59Z",
+        "name": "AmmoOS 2.0.0-beta4 WATCHGUARD",
+        "published": "2026-06-30T09:22:09Z",
         "url": "https://github.com/ZacharyGeurts/AmmoOS/releases/tag/v2.0.0-beta4",
         "assets": [
           {
             "name": "ammoos-2.0.0-beta4-installers.tar.gz",
-            "size": 115936,
-            "size_human": "113.2 KiB",
-            "digest": "661bb01525c3d3af6331249b5bdc6c6fdc14a213956d38fef09eedb07d62ff15",
-            "sha256": "661bb01525c3d3af6331249b5bdc6c6fdc14a213956d38fef09eedb07d62ff15",
+            "size": 115578,
+            "size_human": "112.9 KiB",
+            "digest": "b07a5923a1145683b7e24700679a554a0c44dddb12150b30a1253cb14b26427d",
+            "sha256": "b07a5923a1145683b7e24700679a554a0c44dddb12150b30a1253cb14b26427d",
             "download_count": 0,
             "url": "https://github.com/ZacharyGeurts/AmmoOS/releases/download/v2.0.0-beta4/ammoos-2.0.0-beta4-installers.tar.gz",
             "content_type": "application/x-gtar"
@@ -42,28 +42,28 @@
             "name": "ammoos-2.0.0-beta4-platforms.json",
             "size": 3509,
             "size_human": "3.4 KiB",
-            "digest": "651becff48cdb1aae3a0116238fddda8fe15d20faad8abe125a5dcb6959c33d2",
-            "sha256": "651becff48cdb1aae3a0116238fddda8fe15d20faad8abe125a5dcb6959c33d2",
+            "digest": "4ccd19b911e0d5c8378a992e1a01ee17502e17dcf3615a826b406f9097d6c6be",
+            "sha256": "4ccd19b911e0d5c8378a992e1a01ee17502e17dcf3615a826b406f9097d6c6be",
             "download_count": 0,
             "url": "https://github.com/ZacharyGeurts/AmmoOS/releases/download/v2.0.0-beta4/ammoos-2.0.0-beta4-platforms.json",
             "content_type": "application/json"
           },
           {
             "name": "ammoos-2.0.0-beta4-PLATFORMS.md",
-            "size": 1248,
+            "size": 1246,
             "size_human": "1.2 KiB",
-            "digest": "9501b977f9851aa17d54b0db12fbff10166b36ff0921ef22aebb62a8484f882e",
-            "sha256": "9501b977f9851aa17d54b0db12fbff10166b36ff0921ef22aebb62a8484f882e",
+            "digest": "2f67f35b4917c6e6f24ea75db004b51a901ec95a7d297a35fda700bf6a774448",
+            "sha256": "2f67f35b4917c6e6f24ea75db004b51a901ec95a7d297a35fda700bf6a774448",
             "download_count": 0,
             "url": "https://github.com/ZacharyGeurts/AmmoOS/releases/download/v2.0.0-beta4/ammoos-2.0.0-beta4-PLATFORMS.md",
             "content_type": "text/markdown; charset=utf-8"
           },
           {
             "name": "ammoos-2.0.0-beta4-windows-x86_64.zip",
-            "size": 7539,
+            "size": 7602,
             "size_human": "7.4 KiB",
-            "digest": "95433780da368b1c47c147740e3cf11783b57902650bb6e999c4c48fa793f4f1",
-            "sha256": "95433780da368b1c47c147740e3cf11783b57902650bb6e999c4c48fa793f4f1",
+            "digest": "b8c41493d0539c729c8d3bd3255341d0162a2d53b0e3f70a7e7232b0060f77c8",
+            "sha256": "b8c41493d0539c729c8d3bd3255341d0162a2d53b0e3f70a7e7232b0060f77c8",
             "download_count": 0,
             "url": "https://github.com/ZacharyGeurts/AmmoOS/releases/download/v2.0.0-beta4/ammoos-2.0.0-beta4-windows-x86_64.zip",
             "content_type": "application/zip"
@@ -87,7 +87,7 @@
       "latest_release": {
         "tag": "v2.0.0-beta4",
         "name": "Grok16 \u00b7 AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:15:28Z",
+        "published": "2026-06-30T07:37:43Z",
         "url": "https://github.com/ZacharyGeurts/Grok16/releases/tag/v2.0.0-beta4",
         "assets": []
       }
@@ -104,204 +104,13 @@
       "wiki": "https://github.com/ZacharyGeurts/KILROY/wiki",
       "releases": "https://github.com/ZacharyGeurts/KILROY/releases",
       "issues": "https://github.com/ZacharyGeurts/KILROY/issues",
-      "latest_tag": "v1.1.0",
+      "latest_tag": "v2.0.0-beta4",
       "latest_release": {
-        "tag": "v1.1.0",
-        "name": "KILROY 1.1.0 \u2014 Sanctuary",
-        "published": "2026-06-30T02:32:54Z",
-        "url": "https://github.com/ZacharyGeurts/KILROY/releases/tag/v1.1.0",
-        "assets": [
-          {
-            "name": "kilroy-1.1.0-android-aarch64.tar.gz",
-            "size": 2423,
-            "size_human": "2.4 KiB",
-            "digest": "a0ca331b23eec60b902f5285cf1c322e7aa56e46d420c1ba167af74c81fd8769",
-            "sha256": "a0ca331b23eec60b902f5285cf1c322e7aa56e46d420c1ba167af74c81fd8769",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-android-aarch64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-android-arm.tar.gz",
-            "size": 2420,
-            "size_human": "2.4 KiB",
-            "digest": "533b88b72842c0d2c0b4c2d497463ea0b12c019e9dc1fdfe0ae126b4a50bc81b",
-            "sha256": "533b88b72842c0d2c0b4c2d497463ea0b12c019e9dc1fdfe0ae126b4a50bc81b",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-android-arm.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-android-x86_64.tar.gz",
-            "size": 2421,
-            "size_human": "2.4 KiB",
-            "digest": "4820d68d563d09234d8dd0139f19e54e6dc19c08245abd2ff78464eef04e63ba",
-            "sha256": "4820d68d563d09234d8dd0139f19e54e6dc19c08245abd2ff78464eef04e63ba",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-android-x86_64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-bare-elf-aarch64.tar.gz",
-            "size": 1020866,
-            "size_human": "996.9 KiB",
-            "digest": "06e630f09cf3802150b9c15a8f4d7e3b21ef106a7a570b7b662a32cffc65f25d",
-            "sha256": "06e630f09cf3802150b9c15a8f4d7e3b21ef106a7a570b7b662a32cffc65f25d",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-bare-elf-aarch64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-bare-elf-riscv64.tar.gz",
-            "size": 1026251,
-            "size_human": "1002.2 KiB",
-            "digest": "6d9d918567d9a1035d4c021001d72eb8ee5bf4df5aa4cf37ec3d498b05b3073e",
-            "sha256": "6d9d918567d9a1035d4c021001d72eb8ee5bf4df5aa4cf37ec3d498b05b3073e",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-bare-elf-riscv64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-bare-elf-x86_64.tar.gz",
-            "size": 867568,
-            "size_human": "847.2 KiB",
-            "digest": "fb7b6c7aa0057570abbbe7a2df470c7886fd9929e36db62cdaa080b8fcba9fec",
-            "sha256": "fb7b6c7aa0057570abbbe7a2df470c7886fd9929e36db62cdaa080b8fcba9fec",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-bare-elf-x86_64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-darwin-aarch64.tar.gz",
-            "size": 2425,
-            "size_human": "2.4 KiB",
-            "digest": "177edef627a30c8cca182e4df8a57adc5ef3c54bd957b19be41aee5a91cba6d6",
-            "sha256": "177edef627a30c8cca182e4df8a57adc5ef3c54bd957b19be41aee5a91cba6d6",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-darwin-aarch64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-darwin-x86_64.tar.gz",
-            "size": 2419,
-            "size_human": "2.4 KiB",
-            "digest": "25e2d3cd4808d68d3cb23fc984b0fe5de3f2ad1d81bd33c989da820fabfb739a",
-            "sha256": "25e2d3cd4808d68d3cb23fc984b0fe5de3f2ad1d81bd33c989da820fabfb739a",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-darwin-x86_64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-ios-aarch64.tar.gz",
-            "size": 2420,
-            "size_human": "2.4 KiB",
-            "digest": "61a8f1648b1c2eeaf7d0f154d4926437c5d436443230e8455686e031375b5644",
-            "sha256": "61a8f1648b1c2eeaf7d0f154d4926437c5d436443230e8455686e031375b5644",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-ios-aarch64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-linux-gnu-aarch64.tar.gz",
-            "size": 1020858,
-            "size_human": "996.9 KiB",
-            "digest": "36772302e28455c31eab40a91cad1a5568f8c804b66ad1c614f8fff6291e11f7",
-            "sha256": "36772302e28455c31eab40a91cad1a5568f8c804b66ad1c614f8fff6291e11f7",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-linux-gnu-aarch64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-linux-gnu-arm.tar.gz",
-            "size": 909750,
-            "size_human": "888.4 KiB",
-            "digest": "4bb763792c3553512ba025c07d70a8ba9944737558406a94a9022547cfbf4e5c",
-            "sha256": "4bb763792c3553512ba025c07d70a8ba9944737558406a94a9022547cfbf4e5c",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-linux-gnu-arm.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-linux-gnu-i386.tar.gz",
-            "size": 656766,
-            "size_human": "641.4 KiB",
-            "digest": "765da5940c8fd9509858c6a65d0d6851e10e6167fce2ca2fc0ffb011294b4048",
-            "sha256": "765da5940c8fd9509858c6a65d0d6851e10e6167fce2ca2fc0ffb011294b4048",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-linux-gnu-i386.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-linux-gnu-riscv64.tar.gz",
-            "size": 1026258,
-            "size_human": "1002.2 KiB",
-            "digest": "ea7224be1964795d36572b19a9390b57466a5f0c8124a146ac7982b6b40f1927",
-            "sha256": "ea7224be1964795d36572b19a9390b57466a5f0c8124a146ac7982b6b40f1927",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-linux-gnu-riscv64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-linux-gnu-x86_64.tar.gz",
-            "size": 16139979,
-            "size_human": "15.39 MiB",
-            "digest": "f1b9168be8fb387b6d119c6de1c705de45beb7871f9f74f0a8ef7d1643ba1f04",
-            "sha256": "f1b9168be8fb387b6d119c6de1c705de45beb7871f9f74f0a8ef7d1643ba1f04",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-linux-gnu-x86_64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-PLATFORMS.md",
-            "size": 994,
-            "size_human": "994 B",
-            "digest": "1688b5985740dca2ccfbd953899fedd56e6a0e2bc3705e050c1dcab7160bf6a3",
-            "sha256": "1688b5985740dca2ccfbd953899fedd56e6a0e2bc3705e050c1dcab7160bf6a3",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-PLATFORMS.md",
-            "content_type": "text/markdown; charset=utf-8"
-          },
-          {
-            "name": "kilroy-1.1.0-src.tar.gz",
-            "size": 18537530,
-            "size_human": "17.68 MiB",
-            "digest": "5197b31662e265b8fbfa7b74e45755960250e9cc239f753c9a7565faa19dc39b",
-            "sha256": "5197b31662e265b8fbfa7b74e45755960250e9cc239f753c9a7565faa19dc39b",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-src.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-win32-aarch64.tar.gz",
-            "size": 444412,
-            "size_human": "434.0 KiB",
-            "digest": "5ef05d5f142ebd6fd42c931b64deec2c21a06939b48e1775a23098cc6a989998",
-            "sha256": "5ef05d5f142ebd6fd42c931b64deec2c21a06939b48e1775a23098cc6a989998",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-win32-aarch64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-1.1.0-win32-x86_64.tar.gz",
-            "size": 103586,
-            "size_human": "101.2 KiB",
-            "digest": "2316ddb381e0ec53fdc1faaed8523e014ce44fc8af0c755bc490b81c350bfe55",
-            "sha256": "2316ddb381e0ec53fdc1faaed8523e014ce44fc8af0c755bc490b81c350bfe55",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-1.1.0-win32-x86_64.tar.gz",
-            "content_type": "application/x-gtar"
-          },
-          {
-            "name": "kilroy-platform-release.json",
-            "size": 3312,
-            "size_human": "3.2 KiB",
-            "digest": "50c6c1271dab5c9ad7125132fb64b99cdaf2e6be2ea82a6157151438fe914995",
-            "sha256": "50c6c1271dab5c9ad7125132fb64b99cdaf2e6be2ea82a6157151438fe914995",
-            "download_count": 0,
-            "url": "https://github.com/ZacharyGeurts/KILROY/releases/download/v1.1.0/kilroy-platform-release.json",
-            "content_type": "application/json"
-          }
-        ]
+        "tag": "v2.0.0-beta4",
+        "name": "KILROY \u00b7 AmmoOS 2.0.0-beta4",
+        "published": "2026-06-30T07:37:44Z",
+        "url": "https://github.com/ZacharyGeurts/KILROY/releases/tag/v2.0.0-beta4",
+        "assets": []
       }
     },
     {
@@ -320,7 +129,7 @@
       "latest_release": {
         "tag": "v2.0.0-beta4",
         "name": "ZNetwork \u00b7 AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:15:41Z",
+        "published": "2026-06-30T07:37:52Z",
         "url": "https://github.com/ZacharyGeurts/ZNetwork/releases/tag/v2.0.0-beta4",
         "assets": []
       }
@@ -341,7 +150,7 @@
       "latest_release": {
         "tag": "v2.0.0-beta4",
         "name": "AmmoCode \u00b7 AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:15:15Z",
+        "published": "2026-06-30T07:37:31Z",
         "url": "https://github.com/ZacharyGeurts/AmmoCode/releases/tag/v2.0.0-beta4",
         "assets": []
       }
@@ -362,7 +171,7 @@
       "latest_release": {
         "tag": "v2.0.0-beta4",
         "name": "Field_Primer \u00b7 AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:15:17Z",
+        "published": "2026-06-30T07:37:33Z",
         "url": "https://github.com/ZacharyGeurts/Field_Primer/releases/tag/v2.0.0-beta4",
         "assets": []
       }
@@ -383,7 +192,7 @@
       "latest_release": {
         "tag": "v2.0.0-beta4",
         "name": "Field_Research \u00b7 AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:15:19Z",
+        "published": "2026-06-30T07:37:35Z",
         "url": "https://github.com/ZacharyGeurts/Field_Research/releases/tag/v2.0.0-beta4",
         "assets": []
       }
@@ -404,7 +213,7 @@
       "latest_release": {
         "tag": "v2.0.0-beta4",
         "name": "Final_Eye \u00b7 AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:15:23Z",
+        "published": "2026-06-30T07:37:39Z",
         "url": "https://github.com/ZacharyGeurts/Final_Eye/releases/tag/v2.0.0-beta4",
         "assets": []
       }
@@ -425,7 +234,7 @@
       "latest_release": {
         "tag": "v2.0.0-beta4",
         "name": "World_Redata \u00b7 AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:15:39Z",
+        "published": "2026-06-30T07:37:50Z",
         "url": "https://github.com/ZacharyGeurts/World_Redata/releases/tag/v2.0.0-beta4",
         "assets": []
       }
@@ -446,7 +255,7 @@
       "latest_release": {
         "tag": "v2.0.0-beta4",
         "name": "AMOURANTHRTX \u00b7 AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:15:13Z",
+        "published": "2026-06-30T07:37:29Z",
         "url": "https://github.com/ZacharyGeurts/AMOURANTHRTX/releases/tag/v2.0.0-beta4",
         "assets": []
       }
@@ -463,12 +272,12 @@
       "wiki": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/wiki",
       "releases": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/releases",
       "issues": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/issues",
-      "latest_tag": "v2.0.0-beta4",
+      "latest_tag": "v2.0.0-beta3.1",
       "latest_release": {
-        "tag": "v2.0.0-beta4",
-        "name": "OBS-FieldVoiceFilter \u00b7 AmmoOS 2.0.0-beta4",
+        "tag": "v2.0.0-beta3.1",
+        "name": "OBS-FieldVoiceFilter \u00b7 AmmoOS 2.0.0-beta3.1",
         "published": "2026-06-29T16:15:35Z",
-        "url": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/releases/tag/v2.0.0-beta4",
+        "url": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter/releases/tag/v2.0.0-beta3.1",
         "assets": []
       }
     },
@@ -488,7 +297,7 @@
       "latest_release": {
         "tag": "v2.0.0-beta4",
         "name": "Kill-Grok-Orphans \u00b7 AmmoOS 2.0.0-beta4",
-        "published": "2026-06-29T16:15:33Z",
+        "published": "2026-06-30T07:37:46Z",
         "url": "https://github.com/ZacharyGeurts/Kill-Grok-Orphans/releases/tag/v2.0.0-beta4",
         "assets": []
       }
