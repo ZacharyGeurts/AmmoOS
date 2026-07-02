@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-07-02T77770",
+  "test": "weebsite-h7-field-packet",
+  "size_mb": 18.4,
+  "h7_compression": 5.68,
+  "field_packet_throughput_mb_s": 11.78,
+  "thermal_headroom_pct": 78,
+  "total_elapsed_ms": 494.0,
+  "gain_vs_old": 3.9,
+  "notes": "Heat issues pulled to system. Entropy thermally distributed. Live on github.io"
+}
