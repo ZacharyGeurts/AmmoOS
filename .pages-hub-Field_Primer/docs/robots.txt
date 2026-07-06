@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://zacharygeurts.github.io/Field_Primer/

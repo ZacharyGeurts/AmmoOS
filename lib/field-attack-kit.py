@@ -22,8 +22,12 @@ AUTO_REKILL_LOG = STATE / "auto-rekill-log.json"
 REVALIDATE_LOG = STATE / "kill-list-revalidate.json"
 BOOT_REKILL_LOG = STATE / "boot-rekill.json"
 KILL_REKILL_REGISTRY = STATE / "kill-rekill-registry.json"
+REKILL_DOCTRINE = INSTALL / "data" / "field-rekill-permanent-doctrine.json"
 AUTO_REKILL_COOLDOWN_SEC = 3600
 AUTO_REKILL_MAX_IPS = int(os.environ.get("NEXUS_AUTO_REKILL_MAX_IPS", "64"))
+REKILL_PERMANENT = os.environ.get("NEXUS_REKILL_PERMANENT", "1").strip().lower() not in (
+    "0", "no", "off", "false",
+)
 _INFRA_DNS = frozenset({
     "8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1", "9.9.9.9", "149.112.112.112",
 })
@@ -443,6 +447,7 @@ def kill_target(
         rekill_doc = every_kill_rekill(
             ip, vector, severity, f"every_kill_rekill:{reason}", dossier=dossier, source=str(dossier.get("source") or "attack-kit")
         )
+    immediate_law = _load_json(INSTALL / "data" / "kill-immediate-law.json", {}).get("law", "immediate_is_best")
     why = {
         "why_killed_plain": dossier.get("why_killed_plain"),
         "why_killed_short": dossier.get("why_killed_short"),
@@ -466,6 +471,10 @@ def kill_target(
         "threat_trigger_plain": dossier.get("threat_trigger_plain") if ok else None,
         "rekill": rekill_doc if ok else {},
         "every_kill_rekill": bool(rekill_doc.get("rekill")) if ok else False,
+        "immediate": ok,
+        "immediate_is_best": ok,
+        "kill_law": immediate_law,
+        "no_queue": True,
     }
 
 
@@ -675,6 +684,50 @@ def crush_hot(heat_min: float = 0.7) -> dict[str, Any]:
     }
 
 
+def permanent_rekill_enforce(max_ips: int | None = None) -> dict[str, Any]:
+    """Re-apply forever firewall + hostile record for every permanent RE-KILL registry entry."""
+    if not _rekill_permanent_enabled():
+        return {"ok": True, "skipped": True, "reason": "rekill_permanent_disabled"}
+    limit = max_ips if max_ips is not None else AUTO_REKILL_MAX_IPS
+    reg = _load_kill_rekill_registry()
+    enforced: list[str] = []
+    skipped: list[str] = []
+    nokill = _nokill_ips()
+    for ent in list((reg.get("entries") or {}).values())[:limit]:
+        if not isinstance(ent, dict):
+            continue
+        ip = str(ent.get("ip") or "").strip()
+        if not ip or ip in nokill or _kill_ip_invalid(ip):
+            if ip:
+                skipped.append(ip)
+            continue
+        vector = str(ent.get("vector") or "HOSTILE")
+        severity = str(ent.get("severity") or "high")
+        reason = f"permanent_rekill_enforce:{ent.get('reason') or 'registry'}"
+        dossier = {
+            "permanent": True,
+            "forever": True,
+            "rekill": True,
+            "rekill_is_permanent": True,
+            "no_hostiles_live": True,
+            "action": "PERMANENT_REKILL",
+        }
+        if _run_registry_rekill(ip, vector, severity, reason, dossier):
+            register_kill_for_rekill(ip, vector, severity, reason, source=str(ent.get("source") or "permanent_enforce"))
+            enforced.append(ip)
+        else:
+            skipped.append(ip)
+    return {
+        "ok": True,
+        "permanent_rekill": True,
+        "rekill_is_permanent": True,
+        "enforced": enforced,
+        "enforced_count": len(enforced),
+        "skipped": len(skipped),
+        "motto": "RE-KILL is permanent — no hostiles live on our internet.",
+    }
+
+
 def forever_kill_enforce(max_ips: int | None = None) -> dict[str, Any]:
     """Re-apply forever kill + hardware destroy for archived HARDWARE_DESTROY registry entries."""
     if max_ips is None:
@@ -786,18 +839,54 @@ def check_online(ip: str) -> dict[str, Any]:
     return doc
 
 
+def _rekill_permanent_enabled() -> bool:
+    return REKILL_PERMANENT
+
+
+def _normalize_rekill_entry(ent: dict[str, Any]) -> dict[str, Any]:
+    row = dict(ent)
+    if _rekill_permanent_enabled():
+        row["permanent"] = True
+        row["forever"] = True
+        row["rekill_is_permanent"] = True
+        row.setdefault("no_hostiles_live", True)
+    return row
+
+
+def _permanent_registry_ips() -> set[str]:
+    reg = _load_kill_rekill_registry()
+    ips: set[str] = set()
+    for ent in (reg.get("entries") or {}).values():
+        if not isinstance(ent, dict):
+            continue
+        ip = str(ent.get("ip") or "").strip()
+        if ip and (ent.get("permanent") or ent.get("every_kill_rekill") or _rekill_permanent_enabled()):
+            ips.add(ip)
+    return ips
+
+
 def _load_kill_rekill_registry() -> dict[str, Any]:
     doc = _load_json(KILL_REKILL_REGISTRY, {})
     if not doc:
         doc = {
             "schema": "kill-rekill-registry/v1",
-            "rule": "every_kill_gets_rekill",
+            "rule": "rekill_is_permanent",
+            "rekill_is_permanent": True,
+            "motto": "We are the internet — defense and weapon. Secure. No hostiles live.",
             "updated": _now(),
             "entries": {},
         }
+    if _rekill_permanent_enabled():
+        doc["rekill_is_permanent"] = True
+        doc.setdefault("rule", "rekill_is_permanent")
     entries = doc.get("entries")
     if not isinstance(entries, dict):
         doc["entries"] = {}
+    else:
+        doc["entries"] = {
+            ip: _normalize_rekill_entry(ent) if isinstance(ent, dict) else ent
+            for ip, ent in entries.items()
+        }
     return doc
 
 
@@ -817,7 +906,7 @@ def register_kill_for_rekill(
     entries: dict[str, Any] = reg.setdefault("entries", {})
     prev = entries.get(ip) if isinstance(entries.get(ip), dict) else {}
     count = int(prev.get("rekill_count") or 0) + 1
-    entries[ip] = {
+    entries[ip] = _normalize_rekill_entry({
         "ip": ip,
         "vector": vector,
         "severity": severity,
@@ -828,7 +917,7 @@ def register_kill_for_rekill(
         "rekill_count": count,
         "boot_rekill": True,
         "every_kill_rekill": True,
-    }
+    })
     reg["entries"] = entries
     reg["count"] = len(entries)
     reg["updated"] = _now()
@@ -853,7 +942,11 @@ def _run_registry_rekill(
     dossier = dict(dossier or {})
     dossier.setdefault("rekill", True)
     dossier.setdefault("every_kill_rekill", True)
-    dossier.setdefault("action", "REKILL")
+    dossier.setdefault("permanent", True)
+    dossier.setdefault("forever", True)
+    dossier.setdefault("rekill_is_permanent", True)
+    dossier.setdefault("no_hostiles_live", True)
+    dossier.setdefault("action", "PERMANENT_REKILL" if _rekill_permanent_enabled() else "REKILL")
     dossier_path = STATE / "attack-kit-dossier.tmp"
     dossier_path.write_text(json.dumps(dossier, ensure_ascii=False) + "\n", encoding="utf-8")
     env = os.environ.copy()
@@ -1152,9 +1245,11 @@ def boot_rekill(*, force: bool = True) -> dict[str, Any]:
         rekill = {"ok": False, "error": "rekill_all_registered_timeout", "registry_applied": registry}
     if os.environ.get("NEXUS_BOOT_REKILL_ONLINE", "1") == "1":
         try:
-            forever = forever_kill_enforce(max_ips=min(4, boot_max))
+            forever = permanent_rekill_enforce(max_ips=boot_max)
+            hw = forever_kill_enforce(max_ips=boot_max)
+            forever["hardware_destroy"] = hw
         except (subprocess.TimeoutExpired, OSError):
-            forever = {"ok": False, "error": "forever_kill_timeout"}
+            forever = {"ok": False, "error": "permanent_rekill_timeout"}
         try:
             online_extra = auto_rekill_validated(max_ips=boot_max)
             rekill["online_extra"] = online_extra
@@ -1185,6 +1280,8 @@ def boot_rekill(*, force: bool = True) -> dict[str, Any]:
 
 
 def _auto_rekill_cooldown_active(ip: str, seconds: int = AUTO_REKILL_COOLDOWN_SEC) -> bool:
+    if _rekill_permanent_enabled() and ip in _permanent_registry_ips():
+        return False
     if os.environ.get("NEXUS_BOOT_REKILL", "").strip().lower() in ("1", "true", "yes"):
         return False
     log = _load_json(AUTO_REKILL_LOG, {"entries": {}})
@@ -1316,11 +1413,15 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
     strike_gate = gate_strike(ip, point, mode="rekill", monitor=point.get("monitor") if isinstance(point.get("monitor"), dict) else None)
     hardware_destroy = bool(strike_gate.get("hardware_destroy") or strike_gate.get("strike_certain"))
     dossier.update({
-        "action": "HARDWARE_DESTROY" if hardware_destroy else "REKILL",
+        "action": "HARDWARE_DESTROY" if hardware_destroy else ("PERMANENT_REKILL" if _rekill_permanent_enabled() else "REKILL"),
         "hardware_destroy": hardware_destroy,
         "certainty": 1.0 if hardware_destroy else strike_gate.get("certainty"),
         "strike_mode": "destroy" if hardware_destroy else "rekill",
         "rekill": True,
+        "permanent": True,
+        "forever": True,
+        "rekill_is_permanent": _rekill_permanent_enabled(),
+        "no_hostiles_live": True,
         "rekill_ts": _now(),
         "online_check": online_doc,
         "identity_validation": online_doc.get("validation"),
@@ -1343,10 +1444,13 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
         ),
     )
     ok = _run_rekill(ip, vector, severity, reason, dossier)
+    if ok:
+        register_kill_for_rekill(ip, vector, severity, reason, source="rekill_target")
     return {
         "ok": ok,
         "ip": ip,
         "rekill": ok,
+        "permanent": ok and _rekill_permanent_enabled(),
         "killed": ok,
         "hardware_destroy": hardware_destroy and ok,
         "same_host": True,
@@ -1360,14 +1464,174 @@ def rekill_target(ip: str, vector: str = "HOSTILE", severity: str = "high") -> d
     }
 
 
+def qemu_bot_rekill() -> dict[str, Any]:
+    """RE-KILL orphan QEMU bot probes — secure transfer lane hygiene before publish."""
+    patterns = (
+        "qemu-world-pipeline",
+        "world-node-c2-kilroy-war-deploy",
+        "qemu-world-launch-one",
+        "qemu-system-x86_64.*-snapshot",
+    )
+    rekilled: list[str] = []
+    for pat in patterns:
+        try:
+            proc = subprocess.run(
+                ["pkill", "-f", pat],
+                capture_output=True,
+                text=True,
+                timeout=8,
+                check=False,
+            )
+            if proc.returncode == 0:
+                rekilled.append(pat)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    cool = INSTALL / "GrokLab" / "deploy" / "qemu-world-cool.sh"
+    cooled: dict[str, Any] = {}
+    if cool.is_file():
+        try:
+            proc = subprocess.run(
+                ["bash", str(cool), "suspend-idle"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if (proc.stdout or "").strip().startswith("{"):
+                cooled = json.loads(proc.stdout)
+            else:
+                cooled = {"ok": proc.returncode == 0}
+        except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
+            cooled = {"ok": False}
+    doc = {
+        "ok": True,
+        "schema": "qemu-bot-rekill/v1",
+        "rekilled_patterns": rekilled,
+        "qemu_cool": cooled,
+        "rekilled_count": len(rekilled),
+    }
+    try:
+        (STATE / "qemu-bot-rekill.json").write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+    return doc
+
+
+def purge_rekill_trash(*, write: bool = True, clear_host_trash: bool = True) -> dict[str, Any]:
+    """Drop invalid/orphan kill-rekill registry rows and host-map trash — keep validated hostile only."""
+    reval = revalidate_kill_list(write=write)
+    validated_ips = {r.get("ip", "").strip() for r in _read_hostile_rows() if r.get("ip")}
+    nokill = _nokill_ips()
+    reg = _load_kill_rekill_registry()
+    entries: dict[str, Any] = dict(reg.get("entries") or {})
+    removed: list[dict[str, Any]] = []
+    kept: dict[str, Any] = {}
+
+    for ip, ent in list(entries.items()):
+        if not isinstance(ent, dict):
+            removed.append({"ip": ip, "reason": "malformed_entry"})
+            continue
+        ip = str(ent.get("ip") or ip).strip()
+        invalid = _kill_ip_invalid(ip)
+        if invalid:
+            removed.append({"ip": ip, "reason": invalid})
+            continue
+        if ip in nokill:
+            removed.append({"ip": ip, "reason": "nokill_exempt"})
+            continue
+        refuse, fg_reason = refuse_kill(ip)
+        if refuse:
+            removed.append({"ip": ip, "reason": fg_reason or "friendly_guard"})
+            continue
+        if ip in _INFRA_DNS:
+            removed.append({"ip": ip, "reason": "infra_dns_trash"})
+            continue
+        ent = _normalize_rekill_entry(ent)
+        if ent.get("permanent") or ent.get("every_kill_rekill"):
+            kept[ip] = ent
+            continue
+        if validated_ips and ip not in validated_ips:
+            removed.append({"ip": ip, "reason": "orphan_not_in_hostile_registry"})
+            continue
+        kept[ip] = ent
+
+    host_trash_cleared = 0
+    host_trash_path = STATE / "host-map-trash.json"
+    if clear_host_trash and write:
+        try:
+            if host_trash_path.is_file():
+                doc = _load_json(host_trash_path, {"ids": []})
+                host_trash_cleared = len(doc.get("ids") or [])
+            host_trash_path.write_text(
+                json.dumps({"ids": [], "updated": _now(), "purged": True}, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+        except OSError:
+            pass
+
+    auto_pruned = 0
+    if write:
+        log_doc = _load_json(AUTO_REKILL_LOG, {"entries": {}})
+        entries_log = log_doc.get("entries")
+        if isinstance(entries_log, dict):
+            cutoff = time.time() - AUTO_REKILL_COOLDOWN_SEC * 48
+            permanent_ips = _permanent_registry_ips()
+            pruned: dict[str, Any] = {}
+            for ip, row in entries_log.items():
+                if ip in permanent_ips:
+                    pruned[ip] = row
+                    continue
+                if isinstance(row, dict) and float(row.get("ts") or 0) >= cutoff:
+                    pruned[ip] = row
+                else:
+                    auto_pruned += 1
+            log_doc["entries"] = pruned
+            log_doc["updated"] = _now()
+            try:
+                AUTO_REKILL_LOG.write_text(json.dumps(log_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            except OSError:
+                pass
+
+    if write:
+        reg["entries"] = kept
+        reg["count"] = len(kept)
+        reg["updated"] = _now()
+        reg["purged_at"] = _now()
+        try:
+            KILL_REKILL_REGISTRY.write_text(json.dumps(reg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        except OSError:
+            pass
+
+    return {
+        "ok": True,
+        "schema": "kill-rekill-purge/v1",
+        "updated": _now(),
+        "removed_count": len(removed),
+        "kept_count": len(kept),
+        "validated_hostile_count": len(validated_ips),
+        "host_trash_cleared": host_trash_cleared,
+        "auto_rekill_pruned": auto_pruned,
+        "removed": removed[:96],
+        "kept_ips": sorted(kept.keys())[:96],
+        "revalidate": {
+            "validated_count": reval.get("validated_count"),
+            "removed_count": reval.get("removed_count"),
+        },
+    }
+
+
 def main() -> int:
     if len(sys.argv) < 2:
         print(
-            "usage: field-attack-kit.py [revalidate-kill-list|boot-rekill|autokill-certain|autokill-needs-die|forever-kill-enforce|forever-disable|crush-hot|auto-rekill|kill|disable|nokill|check-online|rekill <ip> ...]",
+            "usage: field-attack-kit.py [revalidate-kill-list|purge-rekill-trash|boot-rekill|autokill-certain|autokill-needs-die|forever-kill-enforce|forever-disable|crush-hot|auto-rekill|qemu-bot-rekill|kill|disable|nokill|check-online|rekill <ip> ...]",
             file=sys.stderr,
         )
         return 1
     cmd = sys.argv[1]
+    if cmd in ("purge-rekill-trash", "purge-trash", "kill-rekill-trash"):
+        json.dump(purge_rekill_trash(), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
     if cmd in ("revalidate-kill-list", "revalidate"):
         json.dump(revalidate_kill_list(), sys.stdout, indent=2)
         sys.stdout.write("\n")
@@ -1383,6 +1647,10 @@ def main() -> int:
     if cmd in ("rekill-all-registered", "rekill-all"):
         max_ips = int(sys.argv[2]) if len(sys.argv) > 2 else AUTO_REKILL_MAX_IPS
         json.dump(rekill_all_registered(max_ips=max_ips), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+    if cmd == "qemu-bot-rekill":
+        json.dump(qemu_bot_rekill(), sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0
     if cmd == "register-rekill" and len(sys.argv) >= 3:
@@ -1424,6 +1692,11 @@ def main() -> int:
         return 0
     if cmd == "forever-kill-enforce":
         json.dump(forever_kill_enforce(), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+    if cmd in ("permanent-rekill-enforce", "permanent-rekill"):
+        max_ips = int(sys.argv[2]) if len(sys.argv) > 2 else AUTO_REKILL_MAX_IPS
+        json.dump(permanent_rekill_enforce(max_ips=max_ips), sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0
     if cmd == "crush-hot":

@@ -2,11 +2,11 @@
   "schema": "dewey-shelf/v1",
   "shelf": "900-history",
   "code": "900",
-  "title": "History & geography",
-  "updated": "2026-06-29T09:43:43Z",
+  "title": "900-history",
+  "updated": "2026-06-30T20:45:27Z",
   "format_primary": "h7c",
-  "book_count": 6,
-  "h7c_count": 0,
+  "book_count": 7,
+  "h7c_count": 1,
   "books": [
     {
       "id": "openstax_us_history",
@@ -67,6 +67,19 @@
       "h7c": null,
       "cover": "/library/assets/covers/wikibooks_world_history/front.png",
       "ready": false
+    },
+    {
+      "id": "exploring_history",
+      "title": "Exploring History",
+      "author": "AmmoOS Field Library",
+      "dewey": "900",
+      "format": "h7c",
+      "h7c": "library/dewey/900-history/exploring_history/exploring_history.h7c",
+      "pdf": "library/dewey/900-history/Hostess7_Exploring_History_Textbook.pdf",
+      "manifest": "library/dewey/900-history/exploring_history/book-manifest.json",
+      "cover": "/world/assets/combinatronic/books/exploring_history.png",
+      "book_kind": "exploring",
+      "ready": true
     }
   ]
 }

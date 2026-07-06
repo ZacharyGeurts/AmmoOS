@@ -1,7 +1,7 @@
 {
   "schema": "ammoos-boot/v1",
-  "title": "Field Boot Map — AmmoOS desktop · Queen browser",
-  "motto": "AmmoOS is the desktop. Queen is the browser. KILROY holds loopback — one field, two sovereign surfaces.",
+  "title": "Queen Boot Aperture — AmmoOS Everything OS",
+  "motto": "Queen is the browser and the boot space. One aperture into Hostess 7, chips, CPUs, FieldNet, and the full sovereign stack.",
   "doctrine": "ASM phases: SEAL → BROWSER → WORLD → LIVE. No operator setup. Page load seals Grok16 + RTX secure memory.",
   "phases": [
     {"id": "SEAL", "order": 0, "role": "Grok16 + RTX secure space", "target": "/api/queen-boot", "module": "queen-secure-space.py"},

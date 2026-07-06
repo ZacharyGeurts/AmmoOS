@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:lib/nexus-await.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # Event-driven waits — no sleep(1); all waits capped at NEXUS_AWAIT_MAX_SEC (default 5).
 
@@ -34,9 +52,14 @@ nexus_await_seconds() {
   if [[ "$sec" -eq 0 ]]; then
     return 0
   fi
+  # Recursive inotify on .nexus-state burns CPU during deploy/learn — prefer sleep.
+  if [[ "${NEXUS_AWAIT_SIMPLE:-0}" == "1" || "${NEXUS_COOL_OPERATION:-0}" == "1" || "$sec" -ge 3 ]]; then
+    sleep "$sec"
+    return 0
+  fi
   if command -v inotifywait >/dev/null 2>&1; then
-    inotifywait -r -t "$sec" -e modify,create,delete,move,close_write,open "$watch" \
-      >/dev/null 2>&1 || true
+    inotifywait -t "$sec" -e modify,close_write "$watch" \
+      >/dev/null 2>&1 || sleep "$sec"
     return 0
   fi
   read -r -t "$sec" _ </dev/null || true

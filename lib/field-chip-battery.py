@@ -89,7 +89,15 @@ def main() -> int:
         return 0
     if cmd in ("paths", "predict", "path-predict"):
         battery = build_chip_battery()
-        print(json.dumps(battery.get("code_path_prediction") or {}, ensure_ascii=False, indent=2))
+        pred = battery.get("code_path_prediction") or {}
+        if not pred or pred.get("total_pct") is None:
+            panel = publish_panel(write_battery=False).get("panel") or {}
+            pred = panel.get("code_path_prediction") or pred
+        if not pred or pred.get("total_pct") is None:
+            chips = list(battery.get("chips") or [])
+            if chips:
+                pred = predict_code_paths(chips)
+        print(json.dumps(pred or {}, ensure_ascii=False, indent=2))
         return 0
     if cmd in ("combinatronic", "combinatronics", "chips-combinatronic"):
         refresh = "--refresh" in sys.argv[2:]

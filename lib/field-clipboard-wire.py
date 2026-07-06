@@ -1,10 +1,14 @@
-#!/usr/bin/env pythong
+#!/usr/bin/env python3
 """NEXUS Field Clipboard Wire — hardware-secured copy/paste, all chords, all editor souls."""
 from __future__ import annotations
 
+import base64
 import glob
+import hashlib
 import json
+import mimetypes
 import os
+import re
 import struct
 import subprocess
 import sys
@@ -17,6 +21,33 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hardware_wire_registry import WIRE_ALLOWED
 from proc_threat_match import proc_hits_any
 
+try:
+    from field_programming_filetypes import clipboard_mimes, media_discern, media_status, mime_for_path
+except ImportError:
+    import importlib.util
+
+    _ft_path = Path(__file__).resolve().parent / "field-programming-filetypes.py"
+    _ft_spec = importlib.util.spec_from_file_location("field_programming_filetypes", _ft_path)
+    _ft_mod = importlib.util.module_from_spec(_ft_spec) if _ft_spec and _ft_spec.loader else None
+    if _ft_mod and _ft_spec and _ft_spec.loader:
+        _ft_spec.loader.exec_module(_ft_mod)
+        clipboard_mimes = _ft_mod.clipboard_mimes
+        media_discern = _ft_mod.media_discern
+        media_status = _ft_mod.media_status
+        mime_for_path = _ft_mod.mime_for_path
+    else:
+        def clipboard_mimes() -> list[str]:
+            return []
+
+        def media_discern(path: str = "", *, mime: str = "") -> dict[str, Any]:
+            return {"ok": False}
+
+        def media_status() -> dict[str, Any]:
+            return {"ok": False}
+
+        def mime_for_path(path: str, *, clipboard: bool = True) -> str:
+            return mimetypes.guess_type(path)[0] or "application/octet-stream"
+
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 SG_ROOT = Path(os.environ.get("GROK16_SG_ROOT", os.environ.get("SG_ROOT", INSTALL.parent.parent)))
@@ -24,7 +55,10 @@ DOCTRINE = INSTALL / "data" / "field-clipboard-doctrine.json"
 PANEL_JSON = STATE / "field-clipboard-wire.json"
 SCHEME_JSON = STATE / "field-clipboard-scheme.json"
 HISTORY_JSON = STATE / "field-clipboard-history.json"
+MEDIA_DIR = STATE / "field-clipboard-media"
+MEDIA_INDEX = STATE / "field-clipboard-media-index.json"
 ALERTS = STATE / "field-clipboard-alerts.jsonl"
+_DATA_URL_RE = re.compile(r"^data:([^;,]+)?(?:;base64)?,(.*)$", re.DOTALL)
 
 EV_KEY = 0x01
 KEY_MAP = {
@@ -149,30 +183,286 @@ def _save_history(doc: dict[str, Any]) -> None:
     _save(HISTORY_JSON, doc)
 
 
-def _push_history(text: str, *, action: str = "copy") -> dict[str, Any]:
+def _media_max_bytes() -> int:
+    return int(_policy().get("media_max_bytes") or 67_108_864)
+
+
+def _media_ring_max() -> int:
+    return int(_policy().get("media_ring_max") or 12)
+
+
+def _allowed_mimes() -> set[str]:
+    raw = list(_policy().get("media_mimes") or [])
+    try:
+        raw.extend(clipboard_mimes())
+    except Exception:
+        pass
+    return {str(x).lower() for x in raw if x}
+
+
+def _kind_from_mime(mime: str) -> str:
+    m = mime.lower()
+    if m.startswith("image/"):
+        return "image"
+    if m.startswith("video/"):
+        return "video"
+    if m.startswith("audio/"):
+        return "audio"
+    return "file"
+
+
+def _parse_data_url(data_url: str) -> tuple[str, bytes]:
+    m = _DATA_URL_RE.match(str(data_url or "").strip())
+    if not m:
+        raise ValueError("bad_data_url")
+    mime = (m.group(1) or "application/octet-stream").split(";")[0].strip().lower()
+    payload = m.group(2) or ""
+    if ";base64" in str(data_url).lower():
+        return mime, base64.b64decode(payload)
+    from urllib.parse import unquote_to_bytes
+
+    return mime, unquote_to_bytes(payload)
+
+
+def _load_media_index() -> dict[str, Any]:
+    doc = _load(MEDIA_INDEX, {})
+    if doc.get("schema") != "field-clipboard-media/v1":
+        return {"schema": "field-clipboard-media/v1", "active_id": None, "entries": []}
+    return doc
+
+
+def _save_media_index(doc: dict[str, Any]) -> None:
+    doc["schema"] = "field-clipboard-media/v1"
+    doc["updated"] = _now()
+    _save(MEDIA_INDEX, doc)
+
+
+def _media_path(media_id: str) -> Path:
+    safe = re.sub(r"[^a-zA-Z0-9_-]", "", str(media_id))[:64]
+    return MEDIA_DIR / f"{safe}.bin"
+
+
+def _media_preview_b64(data: bytes, mime: str) -> str | None:
+    if not mime.startswith("image/"):
+        return None
+    if len(data) > 2_000_000:
+        return None
+    return base64.b64encode(data).decode("ascii")
+
+
+def _push_history_entry(
+    *,
+    action: str = "copy",
+    kind: str = "text",
+    preview: str = "",
+    length: int = 0,
+    media_id: str | None = None,
+    mime: str | None = None,
+) -> dict[str, Any]:
     if not _policy().get("historic_ring", True):
         return {"ok": False, "skipped": "historic_ring_disabled"}
-    if not text or not str(text).strip():
-        return {"ok": False, "skipped": "empty"}
     doc = _load_history()
     entries: list[dict[str, Any]] = list(doc.get("entries") or [])
-    preview = str(text)[: _historic_preview_len()]
     entry = {
         "ts": _now(),
         "action": action,
-        "preview": preview,
-        "length": len(str(text)),
+        "kind": kind,
+        "preview": preview[: _historic_preview_len()],
+        "length": length,
         "secured": True,
     }
-    if entries and entries[0].get("preview") == preview and entries[0].get("length") == entry["length"]:
+    if media_id:
+        entry["media_id"] = media_id
+    if mime:
+        entry["mime"] = mime
+    if entries and entries[0].get("kind") == kind and entries[0].get("media_id") == media_id and entries[0].get("preview") == entry["preview"]:
         return {"ok": True, "deduped": True, "count": len(entries)}
     entries.insert(0, entry)
     entries = entries[: _historic_max()]
     doc["entries"] = entries
     doc["cursor"] = 0
     _save_history(doc)
+    return {"ok": True, "count": len(entries)}
+
+
+def _push_history(text: str, *, action: str = "copy") -> dict[str, Any]:
+    if not text or not str(text).strip():
+        return {"ok": False, "skipped": "empty"}
+    ring = _push_history_entry(action=action, kind="text", preview=str(text), length=len(str(text)))
     vault = _run_sclip("copy", str(text))
-    return {"ok": True, "count": len(entries), "vault": vault.get("ok", False)}
+    ring["vault"] = vault.get("ok", False)
+    return ring
+
+
+def copy_media_bytes(data: bytes, mime: str, *, name: str = "", action: str = "copy_media") -> dict[str, Any]:
+    if not _policy().get("media_vault", True):
+        return {"ok": False, "error": "media_vault_disabled"}
+    mime = (mime or "application/octet-stream").split(";")[0].strip().lower()
+    allowed = _allowed_mimes()
+    if name:
+        hinted = mime_for_path(name, clipboard=True)
+        if hinted and hinted != "application/octet-stream":
+            mime = hinted
+    if allowed and mime not in allowed and not any(
+        mime.startswith(p) for p in ("image/", "video/", "audio/", "application/")
+    ):
+        guess = mimetypes.guess_type(name or "file.bin")[0]
+        if guess:
+            mime = guess.lower()
+    meta = media_discern(name or f"blob.{mime.split('/')[-1]}", mime=mime)
+    if len(data) > _media_max_bytes():
+        return {"ok": False, "error": "media_too_large", "max_bytes": _media_max_bytes(), "size": len(data)}
+    MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+    digest = hashlib.sha256(data).hexdigest()[:16]
+    media_id = digest
+    path = _media_path(media_id)
+    path.write_bytes(data)
+    kind = _kind_from_mime(mime)
+    preview = name or f"{kind}:{mime}"
+    preview_b64 = _media_preview_b64(data, mime)
+    idx = _load_media_index()
+    entries = [e for e in list(idx.get("entries") or []) if e.get("id") != media_id]
+    entries.insert(
+        0,
+        {
+            "id": media_id,
+            "mime": mime,
+            "kind": kind,
+            "size": len(data),
+            "name": name or "",
+            "format": meta.get("format") if meta.get("ok") else None,
+            "format_label": meta.get("label") if meta.get("ok") else None,
+            "family": meta.get("family") if meta.get("ok") else None,
+            "variants": meta.get("variants") if meta.get("ok") else [],
+            "preview": (meta.get("label") or preview)[: _historic_preview_len()],
+            "preview_b64": preview_b64,
+            "ts": _now(),
+        },
+    )
+    entries = entries[: _media_ring_max()]
+    idx["entries"] = entries
+    idx["active_id"] = media_id
+    _save_media_index(idx)
+    hist = _push_history_entry(
+        action=action,
+        kind=kind,
+        preview=preview,
+        length=len(data),
+        media_id=media_id,
+        mime=mime,
+    )
+    return {
+        "ok": True,
+        "action": action,
+        "media_id": media_id,
+        "mime": mime,
+        "kind": kind,
+        "size": len(data),
+        "media_url": f"/api/field-clipboard/media?id={media_id}",
+        "preview_b64": preview_b64,
+        "format": meta.get("format") if meta.get("ok") else None,
+        "format_label": meta.get("label") if meta.get("ok") else None,
+        "family": meta.get("family") if meta.get("ok") else None,
+        "variants": meta.get("variants") if meta.get("ok") else [],
+        "historic": hist,
+        "count": len(entries),
+    }
+
+
+def copy_media_body(body: dict[str, Any]) -> dict[str, Any]:
+    mime = str(body.get("mime") or "").strip().lower()
+    name = str(body.get("name") or body.get("filename") or "").strip()
+    data: bytes | None = None
+    if body.get("media_b64"):
+        try:
+            data = base64.b64decode(str(body.get("media_b64")))
+        except (ValueError, TypeError):
+            return {"ok": False, "error": "bad_media_b64"}
+    elif body.get("data_url"):
+        try:
+            mime, data = _parse_data_url(str(body.get("data_url")))
+        except (ValueError, TypeError):
+            return {"ok": False, "error": "bad_data_url"}
+    if not data:
+        return {"ok": False, "error": "missing_media"}
+    if not mime:
+        mime = str(body.get("mime") or "application/octet-stream")
+    return copy_media_bytes(data, mime, name=name, action=str(body.get("action") or "copy_media"))
+
+
+def paste_media(*, media_id: str | None = None, index: int = 0) -> dict[str, Any]:
+    idx = _load_media_index()
+    entries = list(idx.get("entries") or [])
+    if not entries:
+        return {"ok": False, "error": "media_empty"}
+    target_id = media_id
+    if not target_id:
+        active = idx.get("active_id")
+        if active:
+            target_id = str(active)
+        else:
+            i = max(0, min(int(index), len(entries) - 1))
+            target_id = str(entries[i].get("id") or "")
+    row = next((e for e in entries if e.get("id") == target_id), None)
+    if not row:
+        return {"ok": False, "error": "media_not_found", "media_id": target_id}
+    path = _media_path(str(target_id))
+    if not path.is_file():
+        return {"ok": False, "error": "media_file_missing", "media_id": target_id}
+    data = path.read_bytes()
+    mime = str(row.get("mime") or "application/octet-stream")
+    idx["active_id"] = target_id
+    idx["cursor"] = next((i for i, e in enumerate(entries) if e.get("id") == target_id), 0)
+    _save_media_index(idx)
+    b64 = base64.b64encode(data).decode("ascii")
+    return {
+        "ok": True,
+        "media_id": target_id,
+        "mime": mime,
+        "kind": row.get("kind") or _kind_from_mime(mime),
+        "size": len(data),
+        "name": row.get("name") or "",
+        "media_b64": b64,
+        "data_url": f"data:{mime};base64,{b64}",
+        "media_url": f"/api/field-clipboard/media?id={target_id}",
+        "preview_b64": row.get("preview_b64"),
+    }
+
+
+def media_history(*, limit: int = 12) -> dict[str, Any]:
+    idx = _load_media_index()
+    entries = list(idx.get("entries") or [])[:limit]
+    return {
+        "ok": True,
+        "schema": "field-clipboard-media/v1",
+        "active_id": idx.get("active_id"),
+        "count": len(entries),
+        "entries": [
+            {k: v for k, v in e.items() if k != "preview_b64" or len(str(v or "")) < 120_000}
+            for e in entries
+        ],
+    }
+
+
+def serve_media(media_id: str) -> tuple[int, bytes, str]:
+    path = _media_path(media_id)
+    if not path.is_file():
+        return 404, b"", "text/plain"
+    idx = _load_media_index()
+    row = next((e for e in (idx.get("entries") or []) if e.get("id") == media_id), None)
+    mime = str((row or {}).get("mime") or mimetypes.guess_type(path.name)[0] or "application/octet-stream")
+    return 200, path.read_bytes(), mime
+
+
+def media_clear() -> dict[str, Any]:
+    idx = _load_media_index()
+    for row in list(idx.get("entries") or []):
+        try:
+            _media_path(str(row.get("id") or "")).unlink(missing_ok=True)
+        except OSError:
+            pass
+    _save_media_index({"schema": "field-clipboard-media/v1", "active_id": None, "entries": []})
+    return {"ok": True, "cleared": True}
 
 
 def historic_list(*, limit: int = 32) -> dict[str, Any]:
@@ -199,14 +489,71 @@ def historic_paste(index: int = 0) -> dict[str, Any]:
     return _run_sclip("paste")
 
 
+def _scheme_state() -> dict[str, Any]:
+    doc = _load(SCHEME_JSON, {})
+    if not isinstance(doc, dict):
+        return {}
+    return doc
+
+
 def _active_scheme() -> str:
     env = os.environ.get("NEXUS_CLIPBOARD_SCHEME", "").strip()
     if env:
         return env
-    saved = _load(SCHEME_JSON, {})
+    saved = _scheme_state()
     if saved.get("scheme"):
         return str(saved["scheme"])
     return str((_doctrine().get("policy") or {}).get("default_scheme") or "standard")
+
+
+def _scheme_history() -> list[str]:
+    hist = _scheme_state().get("history") or []
+    return [str(x) for x in hist if x]
+
+
+def _push_scheme_history(scheme: str) -> list[str]:
+    max_hist = int(_policy().get("scheme_history_max") or 12)
+    hist = [h for h in _scheme_history() if h != scheme]
+    hist.insert(0, scheme)
+    hist = hist[:max_hist]
+    doc = _scheme_state()
+    doc["scheme"] = scheme
+    doc["history"] = hist
+    doc["updated"] = _now()
+    _save(SCHEME_JSON, doc)
+    return hist
+
+
+def list_schemes() -> dict[str, Any]:
+    doctrine = _doctrine()
+    schemes = doctrine.get("schemes") or {}
+    order = list(_policy().get("flyout_schemes") or [])
+    if not order:
+        order = [k for k in schemes.keys() if k != "all"] + (["all"] if "all" in schemes else [])
+    items: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for sid in order:
+        if sid in schemes and sid not in seen:
+            seen.add(sid)
+            row = schemes[sid] or {}
+            items.append({"id": sid, "label": str(row.get("label") or sid)})
+    for sid, row in schemes.items():
+        if sid not in seen:
+            items.append({"id": sid, "label": str((row or {}).get("label") or sid)})
+    active = _active_scheme()
+    labels = {x["id"]: x["label"] for x in items}
+    history = _scheme_history()
+    return {
+        "ok": True,
+        "schema": "field-clipboard-schemes/v1",
+        "active": active,
+        "active_label": labels.get(active, active),
+        "history": history,
+        "history_labels": [labels.get(h, h) for h in history],
+        "schemes": items,
+        "flyout_chord": str(_policy().get("flyout_chord") or "Control+Alt+Space"),
+        "sovereign_on_boot": bool(_policy().get("sovereign_on_boot", True)),
+    }
 
 
 def _parse_chord(chord: str) -> dict[str, Any]:
@@ -353,6 +700,12 @@ def enforce(*, kill: bool | None = None) -> dict[str, Any]:
         "ghost_visible": bool(_policy().get("ghost_visible", False)),
         "historic_ring": bool(_policy().get("historic_ring", True)),
         "historic_count": len((_load_history().get("entries") or [])),
+        "media_vault": bool(_policy().get("media_vault", True)),
+        "media_count": len((_load_media_index().get("entries") or [])),
+        "media_active_id": _load_media_index().get("active_id"),
+        "scheme_history": _scheme_history(),
+        "flyout_chord": str(_policy().get("flyout_chord") or "Control+Alt+Space"),
+        "sovereign_on_boot": bool(_policy().get("sovereign_on_boot", True)),
     }
     _save(PANEL_JSON, doc)
     return doc
@@ -362,6 +715,10 @@ def panel_json() -> dict[str, Any]:
     if PANEL_JSON.is_file():
         doc = _load(PANEL_JSON, {})
         if doc.get("schema") == "field-clipboard-wire/v1":
+            midx = _load_media_index()
+            doc["media_vault"] = bool(_policy().get("media_vault", True))
+            doc["media_count"] = len(midx.get("entries") or [])
+            doc["media_active_id"] = midx.get("active_id")
             return doc
     return enforce(kill=False)
 
@@ -370,8 +727,16 @@ def set_scheme(scheme: str) -> dict[str, Any]:
     schemes = (_doctrine().get("schemes") or {})
     if scheme not in schemes:
         return {"ok": False, "error": "unknown_scheme", "scheme": scheme, "known": sorted(schemes.keys())}
-    _save(SCHEME_JSON, {"scheme": scheme, "updated": _now()})
-    return {"ok": True, "scheme": scheme, "bindings": len(_resolve_scheme_bindings(scheme))}
+    history = _push_scheme_history(scheme)
+    panel = enforce(kill=False)
+    return {
+        "ok": True,
+        "scheme": scheme,
+        "scheme_history": history,
+        "bindings": len(_resolve_scheme_bindings(scheme)),
+        "binding_count": panel.get("binding_count"),
+        "label": str((schemes.get(scheme) or {}).get("label") or scheme),
+    }
 
 
 def action(name: str, text: str | None = None, *, history_index: int | None = None) -> dict[str, Any]:
@@ -406,7 +771,49 @@ def action(name: str, text: str | None = None, *, history_index: int | None = No
         return historic_list()
     if name in ("history_paste", "historic_paste", "paste_history"):
         return historic_paste(history_index if history_index is not None else 0)
+    if name in ("copy_media", "media_copy"):
+        return {"ok": False, "error": "use_dispatch_for_media"}
+    if name in ("paste_media", "media_paste"):
+        return paste_media(index=history_index if history_index is not None else 0)
+    if name in ("media_history", "media_list"):
+        return media_history()
+    if name == "media_clear":
+        return media_clear()
     return {"ok": False, "error": "unknown_action", "action": name}
+
+
+def handle_dispatch(body: dict[str, Any]) -> dict[str, Any]:
+    act = str(body.get("action") or "").strip().lower()
+    if act in ("copy_media", "media_copy"):
+        return copy_media_body(body)
+    if act in ("paste_media", "media_paste"):
+        media_id = str(body.get("media_id") or "").strip() or None
+        index = int(body.get("index") or body.get("history_index") or 0)
+        return paste_media(media_id=media_id, index=index)
+    if act in ("media_history", "media_list"):
+        return media_history(limit=int(body.get("limit") or 12))
+    if act == "media_clear":
+        return media_clear()
+    if act in ("schemes", "list_schemes"):
+        return list_schemes()
+    if act == "enforce":
+        return enforce(kill=False)
+    if act in ("history", "historic"):
+        return historic_list(limit=int(body.get("limit") or 32))
+    if act in ("history_paste", "historic_paste", "paste_history"):
+        return historic_paste(int(body.get("index") or body.get("history_index") or 0))
+    if body.get("scheme"):
+        return set_scheme(str(body.get("scheme")))
+    if act in ("panel", "json", "status"):
+        return panel_json()
+    if act in ("media_index", "media_filetypes", "filetypes"):
+        return media_status()
+    if act:
+        text = body.get("text")
+        if text is not None:
+            return action(act, str(text), history_index=body.get("history_index"))
+        return action(act, None, history_index=body.get("history_index"))
+    return panel_json()
 
 
 def _mod_names_from_mask(mask: int) -> set[str]:
@@ -568,11 +975,42 @@ def main() -> int:
         idx = int(sys.argv[2]) if len(sys.argv) > 2 and str(sys.argv[2]).lstrip("-").isdigit() else 0
         print(json.dumps(historic_paste(idx), ensure_ascii=False))
         return 0
+    if cmd == "schemes":
+        print(json.dumps(list_schemes(), ensure_ascii=False))
+        return 0
+    if cmd == "dispatch":
+        try:
+            body = json.loads(sys.stdin.read() or "{}")
+        except json.JSONDecodeError:
+            print(json.dumps({"ok": False, "error": "bad_json"}, ensure_ascii=False))
+            return 1
+        print(json.dumps(handle_dispatch(body if isinstance(body, dict) else {}), ensure_ascii=False))
+        return 0
+    if cmd == "serve-media":
+        media_id = sys.argv[2] if len(sys.argv) > 2 else ""
+        code, data, mime = serve_media(media_id)
+        print(json.dumps({"ok": code == 200, "code": code, "mime": mime, "size": len(data)}, ensure_ascii=False))
+        if code == 200:
+            sys.stdout.buffer.write(data)
+        return 0 if code == 200 else 1
+    if cmd == "media":
+        sub = (sys.argv[2] if len(sys.argv) > 2 else "history").strip().lower()
+        if sub in ("history", "list"):
+            print(json.dumps(media_history(), ensure_ascii=False))
+        elif sub == "paste":
+            mid = sys.argv[3] if len(sys.argv) > 3 else None
+            print(json.dumps(paste_media(media_id=mid), ensure_ascii=False))
+        elif sub == "clear":
+            print(json.dumps(media_clear(), ensure_ascii=False))
+        else:
+            print(json.dumps({"error": "usage: field-clipboard-wire.py media [history|paste|clear]"}, ensure_ascii=False))
+            return 1
+        return 0
     if cmd == "listen":
         once = "--once" in sys.argv[2:]
         return _evdev_listen(once=once)
     print(json.dumps({
-        "error": "usage: field-clipboard-wire.py [json|enforce|scan|scheme|bindings|action|listen]",
+        "error": "usage: field-clipboard-wire.py [json|enforce|scan|scheme|schemes|bindings|action|listen]",
     }, ensure_ascii=False))
     return 1
 

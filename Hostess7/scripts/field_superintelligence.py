@@ -112,6 +112,9 @@ from field_brain_chemistry import (  # noqa: E402
 from field_chemistry_corpus import ensure_corpus as ensure_chemistry_corpus  # noqa: E402
 from field_chemistry_corpus import search_chemistry, synthesize_chemistry_paragraphs  # noqa: E402
 STORAGE = ROOT / "cache" / "fieldstorage"
+if os.environ.get("HOSTESS7_GITHUB_BRAIN", "0") in ("1", "true", "yes"):
+    STORAGE = ROOT / "cache" / "github-brain" / "fieldstorage"
+    STORAGE.mkdir(parents=True, exist_ok=True)
 BRAIN = STORAGE / "brain"
 SI = BRAIN / "superintel"
 THOUGHTS = BRAIN / "thoughts.jsonl"
@@ -127,7 +130,7 @@ PROTOCOL_V33 = SI / "protocol_v33.json"
 TURNOVER_LOG = SI / "turnover.jsonl"
 PROTOCOL_DOC = ROOT / "docs" / "HOSTESS7_V33.md"
 FIELD_PERSIST = STORAGE / "field_wave.persist"
-TEAM_DEV = os.environ.get("TEAM_DRIVE_DEV", "/dev/nvme2n1")
+TEAM_DEV = os.environ.get("TEAM_DRIVE_DEV", "/dev/nvme1n1")
 CODENAME = "AMOURANTHRTX"
 VOICE = "Field is THE thing."
 OWNER = "ZacharyGeurts"
@@ -612,6 +615,7 @@ INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
         "personality", "daughter of grok", "amouranth", "review queue", "people registry",
     )),
     ("english", (
+        "exploring speaking", "speaking book", "hieroglyph", "hieroglyphics", "iso 639",
         "lexicon", "dictionary", "phonetic", "phonetics", "pronunciation", "pronounce", "arpabet",
         "spellcheck", "orthography", "syllable", "etymology", "morphology", "english word",
         "cmudict", "word list", "vocabulary", "grapheme", "phoneme",

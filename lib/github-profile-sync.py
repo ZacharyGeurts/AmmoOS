@@ -21,16 +21,21 @@ PROFILE_README = ROOT / "profile" / "README.md"
 PROFILE_DOCS = ROOT / "profile" / "docs"
 RELEASES_CSS = PROFILE_DOCS / "releases.css"
 
-# Pin board order (16 public repos)
+# Pin board order — Hostess 7 leads sovereign stack
 PIN_ORDER = [
-    "AmmoOS", "Grok16", "KILROY", "ZNetwork",
-    "AmmoCode", "Field_Primer", "Field_Research", "Final_Eye",
+    "Hostess7", "H7updater", "AmmoOS", "Grok16",
+    "KILROY", "ZNetwork", "AmmoCode", "Field_Primer",
+    "Field_Research", "Final_Eye", "Final_Ear", "Final_Mouth",
     "World_Redata", "AMOURANTHRTX", "OBS-FieldVoiceFilter", "Kill-Grok-Orphans",
     "memes", "retrotool", "Poop", "ZacharyGeurts",
 ]
 
 TAGS = {
+    "Hostess7": "main project · brain",
+    "H7updater": "official updates · Layer 0",
     "AmmoOS": "field OS",
+    "Final_Ear": "sense · audio",
+    "Final_Mouth": "sense · speech",
     "Grok16": "G16 compiler",
     "KILROY": "Field boot",
     "ZNetwork": "smart relayer",
@@ -49,12 +54,23 @@ TAGS = {
 }
 
 BADGE_VERSIONS = {
-    "AmmoOS": "2.0.0-beta4",
+    "AmmoOS": "2.0.0-beta6",
     "Grok16": "5.2.0",
     "KILROY": "1.1.0 Sanctuary",
     "ZNetwork": "absorbed-in-KILROY",
     "AmmoCode": "6.0.0-Stack",
 }
+
+# GitHub repo name → on-disk tree under SG (AmmoOS ships from NewLatest).
+REPO_LOCAL_ROOT: dict[str, str] = {
+    "AmmoOS": "NewLatest",
+    "Hostess7": "NewLatest",
+    "H7updater": "NewLatest/H7updater",
+}
+
+
+def repo_local_dir(repo: str) -> Path:
+    return SG / REPO_LOCAL_ROOT.get(repo, repo)
 
 
 def gh_json(path: str) -> Any:
@@ -472,9 +488,10 @@ def profile_hub_html(metas: list[dict[str, Any]]) -> str:
   <p class="meta">Field operator hub — pins link to Pages first. Icons: 📄 Pages · 📖 Wiki · 🏷 Releases · 💻 Repo · 🐛 Issues</p>
   <nav>
     <a href="https://github.com/{OWNER}/{OWNER}">Profile README</a>
+    <a href="{PAGES_BASE}/Hostess7/">Hostess 7</a>
+    <a href="{PAGES_BASE}/H7updater/">H7 Updater</a>
     <a href="{PAGES_BASE}/AmmoOS/">AmmoOS</a>
-    <a href="{PAGES_BASE}/Grok16/">Grok16</a>
-    <a href="{PAGES_BASE}/Field_Primer/">Field Primer</a>
+    <a href="stack.html">Stack hub</a>
   </nav>
   <div class="grid">
     {"".join(cards)}
@@ -514,14 +531,14 @@ def fetch_all_releases(repo: str, limit: int = 5) -> list[dict[str, Any]]:
 
 def write_repo_index(repo: str, meta: dict[str, Any]) -> Path | None:
     """Minimal docs hub when repo has releases but no index.html yet."""
-    local = SG / repo / "docs"
+    local = repo_local_dir(repo) / "docs"
     idx = local / "index.html"
     if idx.is_file():
         return None
     if not meta.get("latest_release"):
         return None
-    pages = meta.get("pages_url") or f"{PAGES_BASE}/{repo}/"
     tag = meta.get("latest_tag") or ""
+    local.mkdir(parents=True, exist_ok=True)
     idx.write_text(
         f"""<!DOCTYPE html>
 <html lang="en">
@@ -549,10 +566,10 @@ def write_repo_index(repo: str, meta: dict[str, Any]) -> Path | None:
 
 
 def write_repo_releases(repo: str, meta: dict[str, Any]) -> Path | None:
-    local = SG / repo / "docs"
+    local = repo_local_dir(repo) / "docs"
     if not local.is_dir():
         local.mkdir(parents=True, exist_ok=True)
-    if not meta.get("latest_release") and not (SG / repo).is_dir():
+    if not meta.get("latest_release") and not repo_local_dir(repo).is_dir():
         return None
     all_rels = fetch_all_releases(repo, limit=8) if meta.get("latest_release") else []
     css_path = local / "releases.css"
@@ -596,10 +613,10 @@ def main() -> int:
             if p:
                 print(f"  releases → {p}")
 
-    # Mirror profile README to AmmoOS profile path
-    ammo_profile = SG / "AmmoOS" / "profile" / "README.md"
-    if ammo_profile.parent.is_dir():
-        ammo_profile.write_text(PROFILE_README.read_text(encoding="utf-8"), encoding="utf-8")
+    # Mirror profile README to AmmoOS (NewLatest) profile path
+    ammo_profile = repo_local_dir("AmmoOS") / "profile" / "README.md"
+    ammo_profile.parent.mkdir(parents=True, exist_ok=True)
+    ammo_profile.write_text(PROFILE_README.read_text(encoding="utf-8"), encoding="utf-8")
 
     return 0
 

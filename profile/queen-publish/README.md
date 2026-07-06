@@ -3,7 +3,7 @@
 # Queen Browser
 
 ![Queen](https://img.shields.io/badge/Queen-Browser-3ecf8e?style=for-the-badge)
-![AmmoOS](https://img.shields.io/badge/pairs-AmmoOS_2.0.0--beta3-22c55e?style=for-the-badge)
+![AmmoOS](https://img.shields.io/badge/pairs-AmmoOS_2.0.0--beta4-22c55e?style=for-the-badge)
 
 **Secured browser shell — AmmoOS field OS lives inside the Start tab.**
 

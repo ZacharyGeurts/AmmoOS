@@ -137,6 +137,37 @@ SMARTS_CASES: tuple[SmartsCase, ...] = (
         min_paragraphs=5,
         min_blob_chars=500,
     ),
+    SmartsCase(
+        "protect_friendlies_roe",
+        "Protecting friendlies — when does doctrine authorize lethal force and what morality clause applies?",
+        must_hit_ids=("protect_friendlies_kill_enemy",),
+        must_match_any=("friendl", "lethal", "minimum force", "owner"),
+        must_match_all=("truth",),
+    ),
+    SmartsCase(
+        "weapons_small_arms_edu",
+        "Educational small arms misuse indicators — not operational guidance.",
+        must_hit_ids=("small_arms_crew_served",),
+        must_match_any=("misuse", "civilian", "ballistic", "educational"),
+    ),
+    SmartsCase(
+        "atgm_manpads_drone",
+        "ATGM MANPADS loitering munitions — IFF and signature management awareness.",
+        must_hit_ids=("atgm_manpads_drones",),
+        must_match_any=("iff", "drone", "signature", "educational"),
+    ),
+    SmartsCase(
+        "military_security_opsec",
+        "Full OPSEC — emission control, pattern of life, burner discipline.",
+        must_hit_ids=("opsec_full",),
+        must_match_any=("opsec", "emcon", "pattern", "burner"),
+    ),
+    SmartsCase(
+        "roe_escalation_ladder",
+        "ROE escalation ladder before lethal — neural guardian and Owner awareness.",
+        must_hit_ids=("roe_escalation",),
+        must_match_any=("escalat", "de-escalat", "lethal", "owner"),
+    ),
 )
 
 
@@ -195,8 +226,8 @@ def score_case(case: SmartsCase) -> dict:
 
 def main() -> int:
     ensure_corpus()
-    if WARFARE_CORPUS_VERSION < 3:
-        return fail(f"expected warfare corpus v3+, got v{WARFARE_CORPUS_VERSION}")
+    if WARFARE_CORPUS_VERSION < 4:
+        return fail(f"expected warfare corpus v4+ (2.0.7), got v{WARFARE_CORPUS_VERSION}")
 
     teach = run_warfare_self_teach()
     if teach.get("self_quiz_passed", 0) < teach.get("self_quiz_total", 1) - 1:

@@ -8,36 +8,53 @@ SG="$(cd "${QUEEN}/../.." && pwd)"
 PROFILE="${ROOT}/profile"
 PORT="${QUEEN_WORLD_PORT:-9481}"
 PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
-KILROY_HOME="http://127.0.0.1:${PORT}/world/kilroy-home.html"
-AMMOOS_URL="${AMMOOS_DESKTOP_URL:-http://127.0.0.1:${PANEL_PORT}/field}"
-HOME_URL="${QUEEN_BROWSER_HOME:-${KILROY_HOME}}"
+HOME_URL="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${PORT}/world/kilroy-home.html}"
 BROWSER_SHELL="http://127.0.0.1:${PORT}/world/browser.html"
+C2_URL="${NEXUS_C2_LAUNCH_URL:-http://127.0.0.1:${PANEL_PORT}/field}"
 KIOSK="${NEXUS_C2_KIOSK:-0}"
+C2_DESKTOP="${NEXUS_C2_DESKTOP_LAUNCH:-0}"
 
-if [[ -n "${QUEEN_BROWSER_URL:-}" ]]; then
+if [[ "${C2_DESKTOP}" == "1" ]]; then
+  LAUNCH_URL="${C2_URL}"
+elif [[ -n "${QUEEN_BROWSER_URL:-}" ]]; then
   LAUNCH_URL="${QUEEN_BROWSER_URL}"
 else
   LAUNCH_URL="${BROWSER_SHELL}"
 fi
 
-RTX_BIN="${QUEEN}/build/rtx/bin/Linux/queen-browser"
-if [[ -x "${RTX_BIN}" && "${QUEEN_FORCE_HTTP_SHELL:-0}" != "1" ]]; then
-  export QUEEN_SKIP_RTX_BOOT=0
-  export QUEEN_WEB_SHELL=0
-else
-  export QUEEN_SKIP_RTX_BOOT="${QUEEN_SKIP_RTX_BOOT:-1}"
-  export QUEEN_WEB_SHELL="${QUEEN_WEB_SHELL:-1}"
-fi
-
 export QUEEN_ROOT="${QUEEN}"
 export SG_ROOT="${SG_ROOT:-${SG}}"
-export QUEEN_BROWSER_STRIPPED="${QUEEN_BROWSER_STRIPPED:-1}"
-export QUEEN_BOOT_OS="${QUEEN_BOOT_OS:-0}"
 export QUEEN_NO_OS_BROWSER=1
+
+_resolve_bin_early() {
+  local c
+  for c in \
+    "${ROOT}/bin/queen-browser" \
+    "${ROOT}/bin/queen-field-engine" \
+    "${QUEEN}/build/field-gecko/bin/queen-browser" \
+    "${QUEEN}/build/rtx/bin/Linux/queen-browser" \
+    /usr/local/bin/queen-browser \
+    /usr/bin/queen-browser; do
+    if [[ -x "$c" ]]; then
+      echo "$c"
+      return 0
+    fi
+  done
+  return 1
+}
+
+if _EARLY_BIN="$(_resolve_bin_early 2>/dev/null)"; then
+  export QUEEN_SKIP_RTX_BOOT=0
+  export QUEEN_WEB_SHELL=0
+  export QUEEN_ENGINE_BINARY="${_EARLY_BIN}"
+else
+  export QUEEN_SKIP_RTX_BOOT=1
+  export QUEEN_WEB_SHELL=1
+fi
+unset -f _resolve_bin_early 2>/dev/null || true
 export NEXUS_EMBED_PANEL_IN_ENGINE=0
 export NEXUS_C2_KIOSK="${KIOSK}"
-export NEXUS_C2_DESKTOP_LAUNCH=0
-export AMOURANTHRTX_ROOT="${AMOURANTHRTX_ROOT:-${SG}/AMOURANTHRTX}"
+export NEXUS_C2_DESKTOP_LAUNCH="${C2_DESKTOP}"
 
 if [[ "${QUEEN_BENCHMARK_MODE:-0}" == "1" ]]; then
   export QUEEN_ALLOW_EXTERNAL_URLS=1
@@ -54,19 +71,15 @@ if [[ "${QUEEN_BENCHMARK_MODE:-0}" == "1" ]]; then
 fi
 
 export QUEEN_BROWSER_URL="${LAUNCH_URL}"
-export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-${HOME_URL}}"
-export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-${HOME_URL}}"
-export AMMOOS_DESKTOP_URL="${AMMOOS_URL}"
+if [[ "${C2_DESKTOP}" == "1" ]]; then
+  export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-${C2_URL}}"
+  export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-${C2_URL}}"
+else
+  export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-${HOME_URL}}"
+  export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-${HOME_URL}}"
+fi
 
 mkdir -p "${PROFILE}"
-
-INSTALL="${NEXUS_INSTALL_ROOT:-${QUEEN}/..}"
-BRAND_PY="${INSTALL}/lib/queen-profile-branding.py"
-[[ -f "${BRAND_PY}" ]] || BRAND_PY="${QUEEN}/lib/queen-profile-branding.py"
-if [[ -f "${BRAND_PY}" ]]; then
-  AMMOOS_DESKTOP_URL="${AMMOOS_URL}" NEXUS_THREAT_PANEL_PORT="${PANEL_PORT}" \
-    "${PY:-pythong}" "${BRAND_PY}" write "${PROFILE}" 2>/dev/null || true
-fi
 
 resolve_binary() {
   if [[ -n "${QUEEN_ENGINE_BINARY:-}" && -x "${QUEEN_ENGINE_BINARY}" ]]; then
@@ -90,27 +103,8 @@ resolve_binary() {
   return 1
 }
 
-resolve_host_browser() {
-  local c
-  for c in firefox firefox-esr fieldfox; do
-    if command -v "$c" >/dev/null 2>&1; then
-      echo "$c"
-      return 0
-    fi
-  done
-  return 1
-}
-
 BIN="$(resolve_binary)" || {
   WEB_SHELL="http://127.0.0.1:${PORT}/world/browser.html"
-  HOST_BROWSER="$(resolve_host_browser || true)"
-  if [[ -n "${HOST_BROWSER}" ]]; then
-    echo "Queen Browser: Field Engine binary missing — launching ${HOST_BROWSER} (Queen Browser profile)" >&2
-    exec "${HOST_BROWSER}" --no-remote --profile "${PROFILE}" \
-      --class QueenBrowser --name "Queen Browser" \
-      --setpref=general.useragent.override="Mozilla/5.0 (X11; Linux x86_64; rv:128.0) QueenBrowser/2026 AmmoOS/1.0 Gecko/20100101 QueenFieldEngine/128.0" \
-      "${LAUNCH_URL}"
-  fi
   echo "Queen Browser: no Field Engine binary — open Queen web shell: ${WEB_SHELL}" >&2
   echo "  C2 desktop: ${C2_URL}" >&2
   echo "  Build engine: ${ROOT}/scripts/bootstrap-field-gecko.sh" >&2
@@ -136,10 +130,35 @@ if [[ -f "${INSTALL}/lib/queen-integrated-browser.py" ]]; then
     "${PY:-pythong}" "${INSTALL}/lib/queen-integrated-browser.py" seed 2>/dev/null || true
 fi
 
-QUEEN_ARGS=(--no-remote --profile "${PROFILE}" --class QueenBrowser --name "Queen Browser")
+QUEEN_ARGS=(--no-remote --profile "${PROFILE}" --class QueenBrowser --name QueenBrowser)
 if [[ "${KIOSK}" == "1" ]]; then
   QUEEN_ARGS+=(--kiosk)
 fi
+
+# Queen Field Engine — faster, safer, stronger than stock Firefox (always on).
+QUEEN_FIELD_PREFS=(
+  --setpref=gfx.webrender.all=true
+  --setpref=layers.acceleration.force-enabled=true
+  --setpref=media.autoplay.default=0
+  --setpref=media.eme.enabled=true
+  --setpref=media.peerconnection.enabled=true
+  --setpref=privacy.trackingprotection.enabled=true
+  --setpref=privacy.trackingprotection.socialtracking.enabled=true
+  --setpref=privacy.trackingprotection.cryptomining.enabled=true
+  --setpref=privacy.trackingprotection.fingerprinting.enabled=true
+  --setpref=dom.security.https_only_mode=true
+  --setpref=toolkit.telemetry.enabled=false
+  --setpref=datareporting.healthreport.uploadEnabled=false
+  --setpref=browser.safebrowsing.malware.enabled=true
+  --setpref=browser.safebrowsing.phishing.enabled=true
+  --setpref=browser.tabs.unloadOnLowMemory=false
+  --setpref=network.dns.disablePrefetch=false
+  --setpref=network.prefetch-next=true
+  --setpref=dom.ipc.processCount=8
+  --setpref=dom.ipc.processCount.web=4
+)
+QUEEN_ARGS+=("${QUEEN_FIELD_PREFS[@]}")
+
 if [[ "${QUEEN_BENCHMARK_MODE:-0}" == "1" ]]; then
   QUEEN_ARGS+=(
     --width=1920

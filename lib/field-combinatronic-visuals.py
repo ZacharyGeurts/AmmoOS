@@ -119,11 +119,26 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -527,6 +542,35 @@ def _resolve_row_path(row: dict[str, Any]) -> Path:
     return INSTALL / row["path"]
 
 
+def _classify_visual_storage(path: Path) -> dict[str, Any]:
+    """Native PNG vs in-place H7s/H7 — magic + properties reveal true format."""
+    vis = _import_mod("field_h7_visual", "field-h7-visual-adopt.py")
+    if vis and hasattr(vis, "classify_visual_asset"):
+        return vis.classify_visual_asset(path)
+    if not path.is_file():
+        return {"storage": "missing"}
+    try:
+        data = path.read_bytes()
+    except OSError:
+        return {"storage": "unreadable"}
+    if len(data) >= 4:
+        magic = data[:4]
+        if magic == b"H7S\x01":
+            return {"storage": "disguised_hostess7", "true_format": "h7s/1"}
+        if magic == b"H7\x07\x01":
+            return {"storage": "disguised_hostess7", "true_format": "h7/7"}
+        if magic == b"H7E\x01":
+            return {"storage": "disguised_hostess7", "true_format": "h7e/1"}
+    h7 = _h7_module()
+    if h7 and hasattr(h7, "classify_hostess7_blob"):
+        cls = h7.classify_hostess7_blob(data)
+        if cls.get("is_container"):
+            return {"storage": "disguised_hostess7", "true_format": cls.get("format")}
+    if data.startswith(PNG_MAGIC):
+        return {"storage": "native_png", "true_format": "native"}
+    return {"storage": "unknown"}
+
+
 def _verify_png(path: Path, *, min_bytes: int = 3000) -> dict[str, Any]:
     if not path.is_file():
         return {"ok": False, "status": "missing"}
@@ -534,11 +578,33 @@ def _verify_png(path: Path, *, min_bytes: int = 3000) -> dict[str, Any]:
         data = path.read_bytes()
     except OSError as exc:
         return {"ok": False, "status": "unreadable", "error": str(exc)}
+    if len(data) < 64:
+        return {"ok": False, "status": "truncated", "bytes": len(data)}
+    storage = _classify_visual_storage(path)
+    if storage.get("storage") == "disguised_hostess7":
+        fmt = storage.get("true_format") or "hostess7"
+        return {
+            "ok": True,
+            "status": "ok",
+            "storage": "disguised_hostess7",
+            "true_format": fmt,
+            "bytes": len(data),
+            "sha256": hashlib.sha256(data).hexdigest(),
+            "face_format_id": storage.get("face_format_id"),
+            "properties_only": True,
+        }
     if len(data) < min_bytes:
         return {"ok": False, "status": "truncated", "bytes": len(data)}
     if not data.startswith(PNG_MAGIC):
-        return {"ok": False, "status": "bad_magic", "bytes": len(data)}
-    return {"ok": True, "status": "ok", "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+        return {"ok": False, "status": "bad_magic", "bytes": len(data), "magic_hex": data[:4].hex()}
+    return {
+        "ok": True,
+        "status": "ok",
+        "storage": "native_png",
+        "true_format": "native",
+        "bytes": len(data),
+        "sha256": hashlib.sha256(data).hexdigest(),
+    }
 
 
 def _h7c_module():
@@ -618,7 +684,9 @@ def _verify_json(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {"ok": False, "status": "missing"}
     try:
-        doc = json.loads(path.read_text(encoding="utf-8"))
+        doc = _load(path, default=None)
+        if not isinstance(doc, dict):
+            return {"ok": False, "status": "corrupt", "error": "unreadable"}
     except (OSError, json.JSONDecodeError) as exc:
         return {"ok": False, "status": "corrupt", "error": str(exc)}
     return {"ok": True, "status": "ok", "bytes": path.stat().st_size, "sha256": _sha256_file(path), "schema": doc.get("schema")}
@@ -2424,6 +2492,21 @@ def main() -> int:
         return 0
     if cmd == "panel":
         print(json.dumps(visuals_panel(), ensure_ascii=False, indent=2))
+        return 0
+    if cmd in ("h7-audit", "h7_audit", "storage-audit"):
+        vis = _import_mod("field_h7_visual", "field-h7-visual-adopt.py")
+        if not vis:
+            print(json.dumps({"ok": False, "error": "field-h7-visual-adopt missing"}, indent=2))
+            return 1
+        print(json.dumps(vis.audit_visuals(), ensure_ascii=False, indent=2))
+        return 0
+    if cmd in ("h7-adopt", "h7_adopt", "storage-adopt"):
+        apply = "--apply" in sys.argv
+        vis = _import_mod("field_h7_visual", "field-h7-visual-adopt.py")
+        if not vis:
+            print(json.dumps({"ok": False, "error": "field-h7-visual-adopt missing"}, indent=2))
+            return 1
+        print(json.dumps(vis.adopt_all_visuals(apply=apply), ensure_ascii=False, indent=2))
         return 0
     if cmd == "enrich-catalog":
         print(json.dumps(enrich_chip_catalog(), ensure_ascii=False, indent=2))

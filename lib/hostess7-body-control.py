@@ -31,11 +31,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -143,6 +158,13 @@ def full_status() -> dict[str, Any]:
             bio_st = biology.build_panel(write=False)
         except Exception:
             pass
+    motion_secured = _core("motion_secured_status", "humanoid-motion-secured.py")
+    motion_secured_st = {}
+    if motion_secured and hasattr(motion_secured, "build_panel"):
+        try:
+            motion_secured_st = motion_secured.build_panel(write=False)
+        except Exception:
+            pass
 
     return {
         "schema": "hostess7-body-control-status/v1",
@@ -156,22 +178,104 @@ def full_status() -> dict[str, Any]:
         "sense": sense_st,
         "mouth_neural": mouth_st,
         "biology": bio_st,
+        "motion_secured": motion_secured_st,
+        "protected_by": "self",
         "component_seal": _component_seal_slice(),
         "owns_desktop_and_browser": True,
         "doctrine": str(DOCTRINE.relative_to(INSTALL)) if DOCTRINE.is_file() else None,
     }
 
 
+def _advisory_body_slice() -> dict[str, Any]:
+    py = _LIB / "hostess7-advisory-body.py"
+    if not py.is_file():
+        return {"present": False}
+    spec = importlib.util.spec_from_file_location("body_advisory", py)
+    if not spec or not spec.loader:
+        return {"present": False}
+    try:
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "build_panel"):
+            row = mod.build_panel(write=False)
+            return {
+                "present": True,
+                "body_lock": (row.get("body_lock") or {}).get("enabled"),
+                "sole_ingress": "advisory_channel",
+                "advisement_count": row.get("advisement_count"),
+                "TARGET_semantics": row.get("TARGET_semantics") or "KILL",
+            }
+    except Exception as exc:
+        return {"present": False, "error": str(exc)}
+    return {"present": False}
+
+
+def _advisory_gate(action: str, body: dict[str, Any]) -> dict[str, Any] | None:
+    """Advisory channel only reaches body — returns block dict or None if allowed."""
+    py = _LIB / "hostess7-advisory-body.py"
+    if not py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("body_advisory_gate", py)
+    if not spec or not spec.loader:
+        return None
+    try:
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if not hasattr(mod, "body_lock_check"):
+            return None
+        gate = mod.body_lock_check(action, body)
+        if gate.get("allowed"):
+            if gate.get("permit") and isinstance(gate["permit"], dict):
+                body["body_permit"] = gate["permit"].get("id")
+            return None
+        return {
+            "ok": False,
+            "error": gate.get("reason") or "body_locked_advisory_only",
+            "body_lock": True,
+            "channel": "advisory",
+            "gate": gate,
+        }
+    except Exception as exc:
+        return {"ok": False, "error": "advisory_gate_failed", "detail": str(exc), "body_lock": True}
+
+
+def _self_maintenance_slice() -> dict[str, Any]:
+    py = _LIB / "hostess7-self-maintenance.py"
+    if not py.is_file():
+        return {"present": False}
+    spec = importlib.util.spec_from_file_location("body_self_maint", py)
+    if not spec or not spec.loader:
+        return {"present": False}
+    try:
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "message_to_hostess7"):
+            return {"present": True, **mod.message_to_hostess7()}
+        if hasattr(mod, "self_maintenance_posture"):
+            return {"present": True, **mod.self_maintenance_posture()}
+    except Exception as exc:
+        return {"present": False, "error": str(exc)}
+    return {"present": False}
+
+
 def build_panel(*, write: bool = True) -> dict[str, Any]:
     status = full_status()
+    self_maint = _self_maintenance_slice()
     doc = {
         "schema": "hostess7-body-control-panel/v1",
         "updated": _now(),
         "motto": _load(DOCTRINE, {}).get("motto"),
         "commander": "Hostess 7 · sovereign body",
+        "priority": 1,
+        "self_maintenance_priority": 1,
         "authorized": True,
         "sovereign": True,
         "status": status,
+        "self_maintenance": self_maint,
+        "advisory_body": _advisory_body_slice(),
+        "body_lock": True,
+        "advisory_channel_only": True,
+        "message_to_hostess7": self_maint.get("message") or self_maint.get("counsel"),
         "systems": _load(DOCTRINE, {}).get("systems") or [],
         "api": _load(DOCTRINE, {}).get("api"),
     }
@@ -186,6 +290,18 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
     if action in ("status", "json", "panel"):
         return {"ok": True, **build_panel(write=action == "panel")}
 
+    if action in ("advisory", "advisory_body", "targets"):
+        mod_name = "hostess7-advisory-body.py" if action != "targets" else "hostess7-targets.py"
+        adv = _core("advisory_dispatch", mod_name)
+        if adv and hasattr(adv, "dispatch"):
+            payload = dict(body)
+            if action == "targets":
+                payload.setdefault("action", str(body.get("subaction") or "status"))
+            else:
+                payload.setdefault("action", str(body.get("subaction") or "status"))
+            return adv.dispatch(payload)
+        return {"ok": False, "error": "advisory_module_missing"}
+
     if action in ("sense", "eye", "ear", "mouth", "wire", "hearing", "vision", "speak"):
         sense = _core("sense_dispatch", "hostess7-sense-core.py")
         if sense and hasattr(sense, "sense_dispatch"):
@@ -197,6 +313,19 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         if mouth and hasattr(mouth, "dispatch"):
             return mouth.dispatch(body)
         return {"ok": False, "error": "mouth_neural_missing"}
+
+    _BODY_MOTOR = (
+        "body", "motor", "proprioception", "bend", "touch_toes", "reach", "reset", "brain", "kinematics",
+        "hands", "hand", "grip", "finger", "wrist", "train_hands",
+        "attachment", "attachments", "mount", "unmount", "inspect", "learn", "wield", "register_attachment",
+        "motion", "train_motion", "load_skill", "cycle",
+        "training_room", "train_room", "combat_drill", "try_body", "needs", "earth_mandate",
+        "plate_meld", "meld", "sense_meld",
+    )
+    if action in _BODY_MOTOR or action.startswith("hand_"):
+        blocked = _advisory_gate(action, body)
+        if blocked:
+            return blocked
 
     if action in ("body", "motor", "proprioception", "bend", "touch_toes", "reach", "reset", "brain", "kinematics"):
         body_core = _core("body_dispatch", "hostess7-body-core.py")

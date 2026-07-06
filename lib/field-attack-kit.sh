@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:lib/field-attack-kit.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # NEXUS Field Attack Kit — permanent hostile-host disable + field drive memory.
 # Intelligence is a bullet: identify, record, crush. Survives reboot via field storage.
@@ -263,7 +281,7 @@ sys.exit(1)
       declare -f nexus_hardware_destroy_target >/dev/null 2>&1 && nexus_hardware_destroy_target "$ip" "$dossier" || true
     fi
   fi
-  nexus_log "ALERT" "field-attack-kit" "TARGET_REKILLED ip=${ip} vector=${vector} reason=${reason}"
+  nexus_log "ALERT" "field-attack-kit" "TARGET_REKILLED_PERMANENT ip=${ip} vector=${vector} reason=${reason}"
   return 0
 }
 
@@ -452,13 +470,24 @@ nexus_field_attack_rekill_cycle() {
     printf '%s' "$now" >"$stamp" 2>/dev/null || true
   fi
   nexus_field_attack_auto_rekill >/dev/null 2>&1 || true
+  nexus_field_attack_permanent_rekill_enforce >/dev/null 2>&1 || true
   nexus_field_attack_forever_kill_enforce >/dev/null 2>&1 || true
+}
+
+nexus_field_attack_permanent_rekill_enforce() {
+  [[ "${NEXUS_REKILL_PERMANENT:-1}" == "1" ]] || return 0
+  local py script
+  py="$(nexus_field_attack_resolve_python)"
+  script="${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.py"
+  [[ -f "$script" ]] || return 0
+  "$py" "$script" permanent-rekill-enforce 2>/dev/null || true
 }
 
 nexus_field_attack_autokill() {
   [[ "$(nexus_settings_get NEXUS_ATTACK_KIT_AUTO_CRUSH 2>/dev/null || echo "${NEXUS_ATTACK_KIT_AUTO_CRUSH:-1}")" == "1" ]] || return 0
   nexus_field_attack_autokill_needs_die >/dev/null 2>&1 || nexus_field_attack_autokill_certain >/dev/null 2>&1 || true
   nexus_field_attack_auto_rekill >/dev/null 2>&1 || true
+  nexus_field_attack_permanent_rekill_enforce >/dev/null 2>&1 || true
   nexus_field_attack_forever_kill_enforce >/dev/null 2>&1 || true
 }
 

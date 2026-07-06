@@ -1,8 +1,46 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:Hostess7/Hostess7.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 # Hostess 7 — one talk window (text + graphics, lossless-first)
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -z "${HOSTESS7_ROOT:-}" ]]; then
+  ROOT="$_SCRIPT_ROOT"
+  export HOSTESS7_ROOT="$ROOT"
+else
+  ROOT="$(cd "${HOSTESS7_ROOT}" && pwd)"
+  export HOSTESS7_ROOT="$ROOT"
+fi
+_parent="$(cd "$ROOT/.." && pwd)"
+if [[ -z "${NEXUS_INSTALL_ROOT:-}" && -z "${SG_ROOT:-}" ]]; then
+  if [[ "$(basename "$_parent")" == "NewLatest" ]]; then
+    export NEXUS_INSTALL_ROOT="$_parent"
+    export SG_ROOT="$(cd "$_parent/.." && pwd)"
+  else
+    export SG_ROOT="$_parent"
+    export NEXUS_INSTALL_ROOT="${SG_ROOT}/NewLatest"
+  fi
+else
+  export SG_ROOT="${SG_ROOT:-$_parent}"
+  export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${SG_ROOT}/NewLatest}"
+fi
 UI="$ROOT/scripts/hostess7_ui.py"
 BRAIN="$ROOT/scripts/field_superintelligence.py"
 TEAM="$ROOT/scripts/field_team_drive.py"
@@ -10,27 +48,25 @@ FIELD_ONE="${NEXUS_INSTALL_ROOT}/lib/field-one.py"
 REACH="$ROOT/scripts/field_reach.py"
 AGENTS="$ROOT/scripts/field_agents7.py"
 NET="$ROOT/scripts/field_internet.py"
-export HOSTESS7_ROOT="$ROOT"
-_parent="$(cd "$ROOT/.." && pwd)"
-if [[ "$(basename "$_parent")" == "NewLatest" ]]; then
-  export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$_parent}"
-  export SG_ROOT="${SG_ROOT:-$(cd "$_parent/.." && pwd)}"
-else
-  export SG_ROOT="${SG_ROOT:-$_parent}"
-  export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-${SG_ROOT}/NewLatest}"
-fi
+_DESKTOP_BRAIN="${HOSTESS7_DESKTOP_BRAIN:-$HOME/Desktop/hostess7-brain}"
+export HOSTESS7_BRAIN_STATE="${HOSTESS7_BRAIN_STATE:-$_DESKTOP_BRAIN/state}"
+export HOSTESS7_FIELDSTORAGE_BRAIN="${HOSTESS7_FIELDSTORAGE_BRAIN:-$_DESKTOP_BRAIN/fieldstorage/brain}"
+export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-$HOSTESS7_BRAIN_STATE}"
+export HOSTESS7_WAR_PROFILE="${HOSTESS7_WAR_PROFILE:-1}"
+mkdir -p "$HOSTESS7_BRAIN_STATE/snapshots" 2>/dev/null || true
 export AMOURANTHRTX_ROOT="${AMOURANTHRTX_ROOT:-${SG_ROOT}/AMOURANTHRTX}"
-export PATH="${SG_ROOT}/GrokPy/bin:${SG_ROOT}/PythonG/bin:${NEXUS_INSTALL_ROOT}/Queen/bin:${NEXUS_INSTALL_ROOT}/Queen/scripts:${PATH}"
-export GPY16_ROOT="${GPY16_ROOT:-${SG_ROOT}/GrokPy}"
-export PYTHONG_ROOT="${PYTHONG_ROOT:-${SG_ROOT}/PythonG}"
-export GROKPY_ROOT="${GROKPY_ROOT:-${GPY16_ROOT}}"
+export PYTHONG_ROOT="${PYTHONG_ROOT:-${NEXUS_INSTALL_ROOT}/PythonG}"
+export GPY16_ROOT="${GPY16_ROOT:-${NEXUS_INSTALL_ROOT}/Grok16}"
+export GROKPY_ROOT="${GROKPY_ROOT:-${PYTHONG_ROOT}}"
+export PATH="/usr/bin:/bin:${PYTHONG_ROOT}/bin:${NEXUS_INSTALL_ROOT}/Grok16/bin:${NEXUS_INSTALL_ROOT}/Queen/scripts:${NEXUS_INSTALL_ROOT}/Queen/bin:${PATH}"
 export AMOURANTHRTX_HOSTESS=1
 export HOSTESS7_PRO=1
 # GTK/gnome-terminal AT-SPI noise when HOME is /root (sudo) — harmless but noisy
 export NO_AT_BRIDGE="${NO_AT_BRIDGE:-1}"
 export GTK_A11Y="${GTK_A11Y:-none}"
 export HOSTESS7_VOICE="${HOSTESS7_VOICE:-0}"
-export HOSTESS7_LICENSE_MODE="${HOSTESS7_LICENSE_MODE:-demo}"
+export HOSTESS7_LICENSE_MODE="${HOSTESS7_LICENSE_MODE:-war}"
+export HOSTESS7_WAR_READY="${HOSTESS7_WAR_READY:-1}"
 export HOSTESS7_WORKSPACE="${HOSTESS7_WORKSPACE:-default}"
 export HOSTESS7_AI_PRIMARY="${HOSTESS7_AI_PRIMARY:-1}"
 export HOSTESS7_AI_COMMUNIQUE="${HOSTESS7_AI_COMMUNIQUE:-1}"
@@ -38,6 +74,15 @@ export HOSTESS7_SUPERINTEL="${HOSTESS7_SUPERINTEL:-1}"
 FILTER="$ROOT/scripts/hostess7_filter.py"
 
 chmod +x "$0" "$UI" 2>/dev/null || true
+
+_h7_pkg() {
+    local mod="$1"
+    shift
+    if pythong -c "import hostess7" 2>/dev/null; then
+        exec pythong -m "hostess7.${mod}" "$@"
+    fi
+    exec env PYTHONPATH="${ROOT}/src:${PYTHONPATH:-}" pythong -m "hostess7.${mod}" "$@"
+}
 
 usage() {
     cat <<'EOF'
@@ -65,6 +110,8 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh wants                 Ask Hostess 7 what she wants FIRST (priorities)
   ./Hostess7.sh noti [status|seed|taskbar]  Noti notifier — Hostess 7 tied in
   ./Hostess7.sh charge [assume]  Full system control — Angel above General
+  ./Hostess7.sh control-balancer [status|balance|connectionless|set-mode MODE|set-lane ID on|off]
+  ./Hostess7.sh balancer connectionless   Mission-primary — internals only; internet is luxury
   ./Hostess7.sh tasklist [report|seed|json]  Secure task queue — she fills, assistant executes
   ./Hostess7.sh task-done <id> "report"  Mark task complete with Ironclad ledger
   ./Hostess7.sh security-learn        Computer, network, security + NEXUS corpus
@@ -75,7 +122,17 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh library-organize      Sort free books — fiction, children, STEM shelves
   ./Hostess7.sh sg-hub                SG/Hostess7 main folder manifest + TEAM sync hint
   ./Hostess7.sh online-security       GitHub Pages security checklist
+  ./Hostess7.sh ammonet [panel|meld|publish]  AmmoNet ISP — Final Internet · steel plates · public modules
+  ./Hostess7.sh final-internet [panel]        Alias for ammonet — safe fields migration hub
+  ./Hostess7.sh internet-clean [force]  Default posture — secure bookmarks · Firefox Chrome Brave Edge · telemetry strip
+  ./Hostess7.sh secure-bookmarks        Alias for internet-clean — host browser toolbar export
+  ./Hostess7.sh lab [status|connect|verify|run CMD]  Lab sovereign — share in · no share out · Hostess 7 is boss
+  ./Hostess7.sh g16-online [panel|ensure|probe]  Grok16 online compiler — Pages + local g16 for Hostess 7
+  ./Hostess7.sh secure-bookmarks-purge   Remove orphan loopback bookmarks · re-export HTTPS+Secure to Firefox
   ./Hostess7.sh github [status|invite|bootstrap]  Bot @hostess7 repo access
+  ./Hostess7.sh github-secure [verify|audit|route|lanes|publish|push|clone]  Pinned SSH — no MITM/redirect
+  ./scripts/github-lanes.sh probe|setup-remotes|push  All GitHub lanes (:22 · :443 tunnel · HTTPS token)
+  ./Hostess7.sh queen-github-secure [verify|status]  Queen Browser GitHub pin check
   ./Hostess7.sh k12-ingest seed       K-12 OER textbook catalog (grades K-12)
   ./Hostess7.sh k12-ingest fetch      Fetch ALL catalog URLs — truth-filter on input
   ./Hostess7.sh k12 "…"               Query K-12 textbook brain (+ H7 library read)
@@ -96,6 +153,14 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh go-online             Fetch + learn (Owner/Amouranth X, warfare, alert posture)
   ./Hostess7.sh people-learn          Truth-filtered ZacharyGeurts + Amouranth online
   ./Hostess7.sh alert-posture on      Heightened alert — stun/RF/terror vigilance
+  ./Hostess7.sh battle-stations on    General quarters — six-tool wall everywhere
+  ./scripts/github-account-no-forks-branches.sh run   Cut extra branches account-wide
+  ./scripts/fire-field-repo.sh                      Fire stale field repo (archived+tombstone)
+  ./scripts/fire-field-repo.sh refire                 RE-FIRE stale field route (never disable)
+  ./scripts/sweep-github-planet.sh                  Planet GitHub sweep → true DNS/DHCP index
+  ./scripts/sweep-github-planet.sh --refire           RE-FIRE all stale routes from sweep doctrine
+  ./scripts/field-grow-watch.sh                     Live grow TUI — population · logical edges · DHCP/DNS
+  ./scripts/field-grow-watch.sh bash                Plain bash loop (no curses)
   ./Hostess7.sh learn-online          Alias for go-online
   ./Hostess7.sh online-wants          Show curated online learning plan (no fetch)
   ./Hostess7.sh memes-ingest seed     Ingest github.com/ZacharyGeurts/memes (image talk)
@@ -109,7 +174,27 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh videogame-db          Console + game database status
   ./Hostess7.sh hearing-learn         Hearing + speech science, STT/TTS, free textbooks
   ./Hostess7.sh hearing "…"           Query hearing corpus
+  ./Hostess7.sh boot                  KILROY doctrine · brain on · web (GitHub Pages / Codespaces)
+  ./Hostess7.sh profile               Perf witness — ping :9477/:9481/:8080 + CPU/thermal + error dashboard
+  ./Hostess7.sh lite [on|off|status]  Opt-in throttle — skips non-essential senses/training (NEXUS unchanged)
+  ./Hostess7.sh core [status|start]   Unified supervisor — owns stack identity + /api/brain
+  ./Hostess7.sh daemon [N]            Autonomous reflect loop (online learn + self-brief)
+  ./Hostess7.sh benchmark-iq          Cohesion IQ score (run on boot)
+  ./Hostess7.sh validate-truth        Truth floor + war-ready validation
+  ./Hostess7.sh cohesion              IQ + truth combined report
+  ./Hostess7.sh open-tasks            Wants + cohesion gaps + more tasks rollup
+  ./Hostess7.sh github-brain [build]  Isolated mirror for Pages — never touches sovereign brain
+  ./Hostess7.sh combinatronic-snap     Live combinatronic snap — map placements, instant on fingerprint
+  ./Hostess7.sh combinatronic-optimal  Full g16 optimal cycle (only when map missing or --force)
+  ./Hostess7.sh pages-build           Build github-brain + export API → docs/
+  ./Hostess7.sh pages-publish         Build + push gh-pages (GitHub brain on github.io)
+  ./Hostess7.sh publish-source        Push main + gh-pages for review (no release tag)
+  ./Hostess7.sh h7-optimise [--apply] H7 compression + H7s before push (2.0.7e)
+  ./Hostess7.sh rtx-release [pack|push]  RTX executables tarball (version from package — no auto-push)
+  ./Hostess7.sh embed [pack|install]  Tarball pack or one-command user service install
   ./Hostess7.sh web                   Web chat UI (port 8080 — GitHub Codespaces)
+  ./Hostess7.sh web-start             Background web on :8080
+  ./Hostess7.sh zac-restore           Restore cache/fieldstorage from zac/
   ./Hostess7.sh license               Demo status + GPL v3 / 3% commercial terms
   ./Hostess7.sh compression-test      Lossless FLD1 + H7 + ZAC round-trip QA
   ./Hostess7.sh imagine-learn         Grok Imagine + live video papers/GitHub fetch
@@ -120,8 +205,11 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh live-video-demo       Demo talk frame in Graphics window
   ./Hostess7.sh judge "…"           Supreme Court Judge — SCOTUS bench synthesis
   ./Hostess7.sh warfare "…"         Warfare education (LOAC, just war) — boss of world, one vote
-  ./Hostess7.sh warfare-expand      Refresh warfare v3 + alert posture
+  ./Hostess7.sh warfare-expand      Refresh warfare v4 (2.0.7e) + alert posture
   ./Hostess7.sh warfare-self-teach  Historic-first self-teach — measures/countermeasures/invincibility
+  ./Hostess7.sh warfare-train [level]  Training sessions — beginner|intermediate|advanced|protect-friendlies
+  ./Hostess7.sh war-realism [wargame|protect-friendlies|panel]  OODA + ROE wargaming (2.0.7e)
+  ./Hostess7.sh military-security [status|audit|train|posture]  Perimeter, OPSEC, fusion scoring
   ./Hostess7.sh warfare-smarts-test Very difficult smarts exam (85%% pass bar)
   ./Hostess7.sh reality-familiarize   Register all domains · map whole of reality
   ./Hostess7.sh reality "…"           Query reality pillars + domain registry
@@ -131,6 +219,19 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh heaven-hell-learn   Truth doctrine + Bibles → .H7 + self-brief
   ./Hostess7.sh bible-ingest        All scripture denominations on H7 shelf (slow fetch)
   ./Hostess7.sh self-brief          Self-update exploration seed for Hostess7
+  ./Hostess7.sh exploring-self      Protected self-biography — Tuesday weekly tracker
+  ./Hostess7.sh exploring-self write   Write new Exploring Hostess 7 edition (append-only)
+  ./Hostess7.sh exploring-self status  Solidification corpus status
+  ./Hostess7.sh exploring-self compare Diff latest two editions
+  ./Hostess7.sh exploring-self panel     Live panel — presume + corpus witness
+  ./Hostess7.sh exploring-self pulse     Presume + change-awareness live pulse
+  ./Hostess7.sh exploring-self index     Backfill book-information-index for latest edition
+  ./Hostess7.sh book-maker [panel|authors|pack|index]  Author studio — Grok or Hostess 7
+  ./Hostess7.sh kill-library [panel|sync|books|read ID]  Private KILL books — Hostess 7 only write
+  ./Hostess7.sh presume [panel|pulse|timing|propagate|train|sweep|witness]  Sovereign presume (separate from AML)
+  ./Hostess7.sh aml-ingress [panel|read|local|discern|ingress]  AML data from outside — secured, truthed, lied
+  ./Hostess7.sh truth-lie [panel|witness|pulse|threats|methods|restart]  Extensive truth/lie — lies are threats
+  ./Hostess7.sh truth-lie restart     AML-monitored restart — suites + change awareness
   ./Hostess7.sh ironclad-chips        Hostess 7 leads — full CHIPS → Ironclad truth plate
   ./Hostess7.sh ironclad-chips status CHIPS meld receipt (ask Ironclad → chips_core)
   ./Hostess7.sh detective "…"         Investigation & lie-detector synthesis
@@ -152,6 +253,7 @@ Hostess 7 — one being · talk window (text + graphics)
   ./Hostess7.sh queen-teach-redata      Teach Queen integration + all build tools (comfort brief)
   ./Hostess7.sh ai-communique status    AI-primary communique doctrine (Super Intelligence default)
   ./Hostess7.sh ai-communique operate "query"   Machine JSON response — optimized for AI traffic
+  ./Hostess7.sh sudo-secure verify|run <action>  Scoped sudo for humans + AI (password mememe)
   ./Hostess7.sh queen-grok16-probe      Probe Grok16 unified g16 + sync Queen toolchain manifest
   ./Hostess7.sh queen-field-tools       Queen field build tools manifest (g16 + field cmake)
   ./Hostess7.sh queen-field-tools probe Probe core field tools readiness
@@ -215,7 +317,45 @@ main() {
     case "${1:-}" in
         -h|--help|help) usage ;;
         on|start|power-on)
-            exec pythong "$AGENTS" on
+            pythong "$AGENTS" on
+            python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-internet-clean.py" json 2>/dev/null || true
+            python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-lab-sovereign.py" boot 2>/dev/null || true
+            exit 0
+            ;;
+        ammonet|final-internet|final_internet|ammonet-field)
+            shift
+            exec python3 "${NEXUS_INSTALL_ROOT}/lib/ammonet-field.py" "${1:-panel}" "${@:2}"
+            ;;
+        internet-clean|internet_clean|secure-bookmarks|secure_bookmarks|clean-internet)
+            shift
+            exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-internet-clean.py" "${1:-json}" "${@:2}"
+            ;;
+        g16-online|g16_online|grok16-online|grok16_online)
+            shift
+            case "${1:-panel}" in
+                ensure|boot|online) exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-g16-online.py" ensure ;;
+                probe) exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-g16-online.py" probe ;;
+                *) exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-g16-online.py" panel ;;
+            esac
+            ;;
+        secure-bookmarks-purge|bookmark-purge|purge-bookmarks)
+            exec python3 "${NEXUS_INSTALL_ROOT}/Queen/lib/queen-host-bookmark-export.py" purge
+            python3 "${NEXUS_INSTALL_ROOT}/Queen/lib/queen-host-bookmark-export.py" export 2>/dev/null || true
+            exit 0
+            ;;
+        lab|lab-sovereign|lab_sovereign|grok-lab|grok_lab)
+            shift
+            case "${1:-status}" in
+                connect|wire) exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-lab-sovereign.py" connect ;;
+                verify|policy) exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-lab-sovereign.py" verify ;;
+                secure|connection) exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-lab-sovereign.py" secure ;;
+                run)
+                    shift
+                    exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-lab-sovereign.py" run "${1:-status}"
+                    ;;
+                boot) exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-lab-sovereign.py" boot ;;
+                *) exec python3 "${NEXUS_INSTALL_ROOT}/lib/hostess7-lab-sovereign.py" panel ;;
+            esac
             ;;
         off|stop|power-off)
             exec pythong "$AGENTS" off
@@ -271,8 +411,173 @@ main() {
             [[ $# -gt 0 ]] || set -- "How does Hostess7 hear and speak?"
             exec pythong "$BRAIN" ask "$*"
             ;;
+        boot|pages-boot|kilroy-boot|field-boot)
+            shift
+            if [[ "${HOSTESS7_LITE:-0}" == "1" ]]; then
+                export HOSTESS7_STACK_LEARN_ON_BOOT=0
+            fi
+            if pythong -c "import hostess7" 2>/dev/null || [[ -d "$ROOT/src/hostess7" ]]; then
+                _h7_pkg boot "$@"
+            fi
+            exec pythong "$ROOT/scripts/hostess7_boot.py" "$@"
+            ;;
+        profile|perf-profile|hostess7-profile)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-runtime-mode.py" profile "$@"
+            ;;
+        lite|lite-mode|hostess7-lite)
+            shift
+            sub="${1:-status}"
+            case "$sub" in
+                on|enable|1)
+                    pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-runtime-mode.py" lite on
+                    export HOSTESS7_LITE=1
+                    export HOSTESS7_STACK_LEARN_ON_BOOT=0
+                    export HOSTESS7_DAEMON=0
+                    export HOSTESS7_TRAINING_VIEWER=0
+                    export FIELD_SENSE_POLL_MS="${FIELD_SENSE_POLL_MS:-2500}"
+                    export FIELD_PANEL_POLL_MS="${FIELD_PANEL_POLL_MS:-2000}"
+                    export G16_RTX_LOWPOWER="${G16_RTX_LOWPOWER:-1}"
+                    echo "Hostess7 lite ON — NEXUS + war posture unchanged"
+                    ;;
+                off|disable|0)
+                    pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-runtime-mode.py" lite off
+                    unset HOSTESS7_LITE HOSTESS7_STACK_LEARN_ON_BOOT 2>/dev/null || true
+                    echo "Hostess7 lite OFF — full stack polling restored"
+                    ;;
+                env)
+                    pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-runtime-mode.py" lite status
+                    ;;
+                *)
+                    pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-runtime-mode.py" lite status
+                    ;;
+            esac
+            ;;
+        core|hostess7-core|supervisor)
+            shift
+            sub="${1:-status}"
+            _h7_pkg core "$sub"
+            ;;
+        daemon|hostess7-daemon|reflect-loop)
+            shift
+            _h7_pkg daemon "$@"
+            ;;
+        benchmark-iq|benchmark_iq|iq-benchmark)
+            _h7_pkg cohesion iq
+            ;;
+        validate-truth|validate_truth|truth-validate)
+            _h7_pkg cohesion truth
+            ;;
+        cohesion|cohesion-test|cohesion-report)
+            _h7_pkg cohesion all
+            ;;
+        open-tasks|more-tasks|hostess7-tasks)
+            exec pythong "$ROOT/scripts/hostess7_tasks.py"
+            ;;
+        github-brain|github_brain|pages-brain)
+            shift
+            sub="${1:-build}"
+            case "$sub" in
+                ask) shift; exec pythong "$ROOT/scripts/hostess7_github_brain.py" ask "$@" ;;
+                status|json) exec pythong "$ROOT/scripts/hostess7_github_brain.py" status ;;
+                *) exec pythong "$ROOT/scripts/hostess7_github_brain.py" build ;;
+            esac
+            ;;
+        combinatronic-snap|combinatronic_snap|live-combinatronic|combinatronic-live)
+            shift
+            force=""
+            [[ " $* " == *" --force "* ]] && force="--force"
+            exec pythong "$ROOT/../lib/g16-combinatronic-rebalance.py" snap $force
+            ;;
+        combinatronic-optimal|combinatronic_optimal|combinatronic-rebalance|g16-optimal)
+            shift
+            args=""
+            [[ " $* " == *" --full "* ]] && args="$args --full"
+            [[ " $* " == *" --force "* ]] && args="$args --force"
+            [[ " $* " == *" --refresh "* ]] && args="$args --refresh"
+            exec pythong "$ROOT/../lib/g16-combinatronic-rebalance.py" optimal $args
+            ;;
+        combinatronic-map|combinatronic_map)
+            shift
+            sub="${1:-panel}"
+            case "$sub" in
+                capture|seed) exec pythong "$ROOT/../lib/field-combinatronic-live-map.py" capture ;;
+                delta|sync) exec pythong "$ROOT/../lib/field-combinatronic-live-map.py" delta ;;
+                map) exec pythong "$ROOT/../lib/field-combinatronic-live-map.py" map ;;
+                *) exec pythong "$ROOT/../lib/field-combinatronic-live-map.py" panel ;;
+            esac
+            ;;
+        pages-build|pages_build|github-pages-build)
+            exec pythong "$ROOT/scripts/hostess7_pages_surfaces_build.py"
+            exec pythong "$ROOT/scripts/hostess7_github_brain.py" build
+            exec pythong "$ROOT/scripts/hostess7_pages_api_export.py"
+            ;;
+        pages-publish|pages_publish|github-pages|publish-pages)
+            exec bash "$ROOT/scripts/publish-hostess7-pages.sh"
+            ;;
+        publish-source|publish_source|github-publish-source)
+            exec env HOSTESS7_PUSH_TAG=0 bash "$ROOT/scripts/hostess7-github-secure.sh" publish
+            ;;
+        h7-optimise|h7_optimize|h7-compress|compress-push)
+            shift
+            apply=""
+            profile="publish"
+            for arg in "$@"; do
+                case "$arg" in
+                    --apply) apply="--apply" ;;
+                    --full) profile="full" ;;
+                    --combinatronic) profile="combinatronic" ;;
+                    --profile=*) profile="${arg#--profile=}" ;;
+                esac
+            done
+            exec python3 "$ROOT/scripts/hostess7-h7-optimise.py" $apply --profile="$profile"
+            ;;
+        rtx-release|rtx_release|rtx-executables|rtx_executables)
+            shift
+            sub="${1:-pack}"
+            case "$sub" in
+                push|publish|upload)
+                    exec env BUILD_RTX=0 PUSH_RTX=1 bash "$ROOT/scripts/pack-hostess7-rtx-release.sh"
+                    ;;
+                build)
+                    exec env BUILD_RTX=1 PUSH_RTX=0 bash "$ROOT/scripts/pack-hostess7-rtx-release.sh"
+                    ;;
+                pack|*)
+                    exec env BUILD_RTX=0 PUSH_RTX=0 bash "$ROOT/scripts/pack-hostess7-rtx-release.sh"
+                    ;;
+            esac
+            ;;
+        embed|embed-install|hostess7-embed)
+            shift
+            sub="${1:-install}"
+            case "$sub" in
+                pack|tar|tarball)
+                    exec bash "$ROOT/scripts/pack-hostess7-embed.sh"
+                    ;;
+                *)
+                    exec bash "$ROOT/scripts/install-hostess7-embed.sh" "$@"
+                    ;;
+            esac
+            ;;
+        zac-restore|zac_restore|restore-zac)
+            exec pythong "$ROOT/scripts/field_zac.py" restore --zac-dir "$ROOT/zac" --storage "$ROOT/cache/fieldstorage"
+            ;;
         web|www|server)
             exec pythong "$ROOT/scripts/hostess7_web.py"
+            ;;
+        web-start|web-bg|web-daemon)
+            PORT="${HOSTESS7_WEB_PORT:-8080}"
+            LOG="${HOSTESS7_BRAIN_STATE}/hostess7-web.log"
+            PIDF="${HOSTESS7_BRAIN_STATE}/hostess7-web.pid"
+            mkdir -p "$(dirname "$LOG")"
+            if [[ -f "$PIDF" ]] && kill -0 "$(cat "$PIDF")" 2>/dev/null; then
+              echo "Hostess7 web already running — pid $(cat "$PIDF") → http://127.0.0.1:${PORT}/"
+              exit 0
+            fi
+            nohup pythong "$ROOT/scripts/hostess7_web.py" >>"$LOG" 2>&1 &
+            echo $! >"$PIDF"
+            pythong "$ROOT/scripts/hostess7_sovereign_wait.py" wait-us 800000 --ping "http://127.0.0.1:${PORT}/health" 2>/dev/null || true
+            echo "Hostess7 web started — pid $(cat "$PIDF") → http://127.0.0.1:${PORT}/"
             ;;
         license|licensing|license-status)
             exec pythong "$ROOT/scripts/field_license_status.py"
@@ -335,21 +640,87 @@ main() {
             shift
             exec pythong "$ROOT/scripts/field_alert_posture.py" "${1:-on}"
             ;;
+        battle-stations|battle_stations|general-quarters)
+            shift
+            case "${1:-on}" in
+                on|enable|arm)
+                    exec bash "$ROOT/scripts/battle-stations-on.sh"
+                    ;;
+                off|disable|stand-down)
+                    HOSTESS7_BATTLE_STATIONS=0 exec pythong "$ROOT/lib/field-battle-stations.py" off
+                    ;;
+                status|json)
+                    exec pythong "$ROOT/lib/field-battle-stations.py" json
+                    ;;
+                *)
+                    exec pythong "$ROOT/lib/field-battle-stations.py" "${1:-on}"
+                    ;;
+            esac
+            ;;
         warfare-expand|warfare_expand)
             HOSTESS7_WORKSPACE=alert exec pythong -c "
 import sys
 sys.path.insert(0,'$ROOT/scripts')
-from field_warfare_corpus import ensure_corpus, WARFARE_DOMAINS, WARFARE_CORPUS_VERSION
+from field_warfare_corpus import ensure_corpus, WARFARE_DOMAINS, WARFARE_CORPUS_VERSION, WARFARE_RELEASE
 from field_alert_posture import install_alert_posture
 from field_warfare_self_teach import run_warfare_self_teach
+from field_military_security import compute_security_posture
 ensure_corpus()
 brief = run_warfare_self_teach()
 install_alert_posture()
+sec = compute_security_posture()
 print(f'METRIC warfare_version={WARFARE_CORPUS_VERSION}')
+print(f'METRIC warfare_release={WARFARE_RELEASE}')
 print(f'METRIC warfare_domains={len(WARFARE_DOMAINS)}')
 print(f'METRIC warfare_self_quiz={brief.get(\"self_quiz_passed\")}/{brief.get(\"self_quiz_total\")}')
+print(f'METRIC military_security_score={sec.get(\"military_security_score\", 0)}')
 print('OK warfare-expand')
 "
+            ;;
+        warfare-train|warfare_train|warfare-training)
+            shift
+            sub="${1:-protect-friendlies}"
+            case "$sub" in
+                session)
+                    shift
+                    HOSTESS7_WORKSPACE=alert exec pythong "$ROOT/scripts/field_warfare_training_sessions.py" session "${1:-beginner}"
+                    ;;
+                protect-friendlies|protect_friendlies|friendlies)
+                    HOSTESS7_WORKSPACE=alert HOSTESS7_WAR_PROFILE=1 bash -c '
+                        pythong "$0/scripts/field_warfare_training_sessions.py" protect-friendlies
+                        pythong "$0/scripts/field_warfare_realism.py" protect-friendlies
+                    ' "$ROOT"
+                    ;;
+                beginner|intermediate|advanced|status|json)
+                    HOSTESS7_WORKSPACE=alert exec pythong "$ROOT/scripts/field_warfare_training_sessions.py" "$sub"
+                    ;;
+                *)
+                    HOSTESS7_WORKSPACE=alert exec pythong "$ROOT/scripts/field_warfare_training_sessions.py" "$sub"
+                    ;;
+            esac
+            ;;
+        military-security|military_security|mil-sec)
+            shift
+            HOSTESS7_WORKSPACE=alert exec pythong "$ROOT/scripts/field_military_security.py" "${1:-status}"
+            ;;
+        war-realism|war_realism|warfare-realism|war-train)
+            shift
+            sub="${1:-panel}"
+            if pythong -c "import hostess7.war_realism" 2>/dev/null || PYTHONPATH="${ROOT}/src:${PYTHONPATH:-}" pythong -c "import hostess7.war_realism" 2>/dev/null; then
+                HOSTESS7_WAR_PROFILE=1 _h7_pkg war_realism "$sub" "${@:2}"
+            else
+                case "$sub" in
+                    wargame|train|war-train) HOSTESS7_WAR_PROFILE=1 exec pythong "$ROOT/scripts/field_warfare_realism.py" wargame "${2:-intermediate}" ;;
+                    protect-friendlies|friendlies) HOSTESS7_WAR_PROFILE=1 exec pythong "$ROOT/scripts/field_warfare_realism.py" protect-friendlies ;;
+                    *) HOSTESS7_WAR_PROFILE=1 exec pythong "$ROOT/scripts/field_warfare_realism.py" "$sub" ;;
+                esac
+            fi
+            ;;
+        war-panel|war_panel)
+            HOSTESS7_WAR_PROFILE=1 pythong -m hostess7.war_realism panel 2>/dev/null \
+              || PYTHONPATH="${ROOT}/src:${PYTHONPATH:-}" pythong -m hostess7.war_realism panel
+            HOSTESS7_WAR_PROFILE=1 pythong -m hostess7.cohesion all 2>/dev/null \
+              || PYTHONPATH="${ROOT}/src:${PYTHONPATH:-}" pythong -m hostess7.cohesion all
             ;;
         warfare-self-teach|warfare_self_teach|self-teach-warfare)
             HOSTESS7_WORKSPACE=alert exec pythong "$ROOT/scripts/field_warfare_self_teach.py"
@@ -439,6 +810,20 @@ print('OK warfare-expand')
                 *) exec pythong "$ROOT/../lib/hostess7-system-control.py" json ;;
             esac
             ;;
+        control-balancer|balancer|resource-balancer)
+            shift
+            sub="${1:-status}"
+            case "$sub" in
+                balance|rebalance) exec pythong "$ROOT/../lib/hostess7-control-balancer.py" balance ;;
+                connectionless|offline|internals-only) exec pythong "$ROOT/../lib/hostess7-control-balancer.py" connectionless ;;
+                set-mode) exec pythong "$ROOT/../lib/hostess7-control-balancer.py" set-mode "${2:-balanced}" ;;
+                set-lane) exec pythong "$ROOT/../lib/hostess7-control-balancer.py" set-lane "${2:-}" "${3:-on}" "${4:-}" ;;
+                apply|propagate) exec pythong "$ROOT/../lib/hostess7-control-balancer.py" apply ;;
+                allocate) exec pythong "$ROOT/../lib/hostess7-control-balancer.py" allocate ;;
+                explain|teach) exec pythong "$ROOT/../lib/hostess7-control-balancer.py" explain "${*:2}" ;;
+                *) exec pythong "$ROOT/../lib/hostess7-control-balancer.py" panel ;;
+            esac
+            ;;
         tasklist|tasks|task-list)
             shift
             sub="${1:-report}"
@@ -489,6 +874,14 @@ print('OK warfare-expand')
         github|github-invite|github-api)
             shift
             exec pythong "$ROOT/scripts/field_github_invite.py" "${1:-status}" "${@:2}"
+            ;;
+        github-secure|github_secure|secure-git|secure_git)
+            shift
+            exec bash "$ROOT/scripts/hostess7-github-secure.sh" "${1:-verify}" "${@:2}"
+            ;;
+        queen-github-secure|queen_github_secure|queen-secure-github)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/Queen/lib/queen-github-secure.py" "${1:-json}" "${@:2}"
             ;;
         k12-ingest|k12-infinite|textbook-ingest|textbooks-ingest)
             shift
@@ -575,6 +968,30 @@ print('OK warfare-expand')
         self-brief|self_brief|hostess-self-brief)
             exec pythong "$ROOT/scripts/field_hostess_self_brief.py"
             ;;
+        exploring-self|exploring_self|hostess-exploring-self|exploring-hostess7)
+            shift
+            exec pythong "$ROOT/scripts/field_hostess_exploring_self.py" "${1:-tuesday}" "${@:2}"
+            ;;
+        book-maker|book_maker|author-books|author_books)
+            shift
+            exec pythong "$ROOT/lib/hostess7-book-maker.py" "${1:-panel}" "${@:2}"
+            ;;
+        kill-library|kill_library|kill-books|kill_books)
+            shift
+            exec pythong "$ROOT/lib/hostess7-kill-library.py" "${1:-panel}" "${@:2}"
+            ;;
+        presume|hostess7-presume|hostess_presume)
+            shift
+            exec pythong "$ROOT/scripts/field_hostess_presume.py" "${1:-panel}" "${@:2}"
+            ;;
+        aml-ingress|aml_ingress|aml-data|aml_data|hostess7-aml)
+            shift
+            exec pythong "$ROOT/scripts/field_hostess_aml_ingress.py" "${1:-panel}" "${@:2}"
+            ;;
+        truth-lie|truth_lie|truth-lie-threat|lie-threat|lie_threat)
+            shift
+            exec pythong "$ROOT/scripts/field_hostess_truth_lie_threat.py" "${1:-panel}" "${@:2}"
+            ;;
         ironclad-chips|ironclad_chips|chips-ironclad|chips_ironclad)
             shift
             exec pythong "$ROOT/scripts/field_hostess7_ironclad_chips.py" "${1:-status}" "${@:2}"
@@ -633,6 +1050,18 @@ print('OK warfare-expand')
             shift
             exec env GPY16_TOOLING=1 HOSTESS7_AI_PRIMARY=1 HOSTESS7_AI_COMMUNIQUE=1 pythong "$ROOT/scripts/field_ai_communique.py" "${1:-status}" "${@:2}"
             ;;
+        sudo-secure|sudo_secure|field-sudo)
+            shift
+            if [[ -f "${HOME}/.config/ammo-shield/ai-sudo.env" ]]; then
+                # shellcheck source=/dev/null
+                source "${HOME}/.config/ammo-shield/ai-sudo.env"
+            elif [[ -f "${HOME}/.config/ammo-shield/sudo.env" ]]; then
+                # shellcheck source=/dev/null
+                source "${HOME}/.config/ammo-shield/sudo.env"
+            fi
+            exec env NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$(cd "$ROOT/.." && pwd)}" \
+                pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-sudo-secure.py" "${1:-json}" "${@:2}"
+            ;;
         queen-grok16-probe|queen_grok16_probe|grok16-probe)
             QUEEN="${SG_ROOT:-$ROOT/..}/NewLatest/Queen"
             exec pythong "$QUEEN/lib/queen-forge.py" run compiler_probe
@@ -687,6 +1116,146 @@ print('OK warfare-expand')
         field|field-one|field1)
             shift
             exec pythong "$FIELD_ONE" "${@:-json}"
+            ;;
+        field-absorb|field-one-absorb)
+            shift
+            exec pythong "$FIELD_ONE" absorb "$@"
+            ;;
+        field-rollout|field-one-rollout)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-one-rollout.py" "${@:-json}"
+            ;;
+        field-rollout-test)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-one-rollout.py" test "$@"
+            ;;
+        field-double|field-double-worldwide)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-one-rollout.py" double "$@"
+            ;;
+        field-double-total|field-double-total-no-repeat)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-one-rollout.py" double-total "$@"
+            ;;
+        field-botnet-rollout|field-botnet)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-one-rollout.py" botnet "$@"
+            ;;
+        field-botnet-double|field-botnet-double-until-complete)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-one-rollout.py" botnet-double "$@"
+            ;;
+        field-global-servers|global-servers|field-2500)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-global-servers.py" "${@:-json}"
+            ;;
+        ammodrive-rapid|storage-rapid|h7r-rapid)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/ammodrive-storage-rapid.py" distribute "$@"
+            ;;
+        field-h7r-stack|h7r-stack|h7r-full)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-h7r-stack.py" "${@:-distribute}"
+            ;;
+        field-h7r-all|h7r-all|h7r-distribute-all)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-h7r-stack.py" all "$@"
+            ;;
+        field-fleet-2500-protect|fleet-2500|fleet-protect|field-2500-protect)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-fleet-2500-protect.py" "${1:-protect}" "${@:2}"
+            ;;
+        field-ai-root-guard|ai-root-guard|ai-root-api-guard)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-ai-root-api-guard.py" "${1:-json}" "${@:2}"
+            ;;
+        field-server-root-login|root-login-hint|root-login|server-root-login)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-server-root-login.py" "${1:-json}" "${@:2}"
+            ;;
+        operator-x-open|x-comments-open|x-open|kill-x-delay)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-x-comments.py" open "$@"
+            ;;
+        tco-kill|kill-tco|tco-unwrap|rekill-tco)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-tco-kill.py" "${1:-kill}" "${@:2}"
+            ;;
+        x-brand-purge|purge-twitter|blow-twitter|x-producer|musk-x-purge)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-x-brand-purge.py" "${1:-purge}" "${@:2}"
+            ;;
+        x-sso-fix|fix-x-sso|kill-x-modal|x-jetfuel-fix|musk-x-sso|x-login|fix-x-login|x-login-secure)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-x-sso-fix.py" "${1:-repair}" "${@:2}"
+            ;;
+        x-profile-fix|fix-x-profile|profile-censorship|kill-profile-lie|x-hasnt-posted|zacharygeurts-posts)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-x-profile-fix.py" "${1:-repair}" "${@:2}"
+            ;;
+        x-producer|producer|x-producer-fix|musk-x-fix|fix-x-producer)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-x-producer.py" "${1:-produce}" "${@:2}"
+            ;;
+        people-chip|people_chip|chips-people|chips_people)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-people-chip-combinatorics.py" "${1:-publish}" "${@:2}"
+            ;;
+        kitchen-sink|elon-defense|musk-defense|beat-asses|in-town-everywhere)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-elon-kitchen-sink-defense.py" "${1:-defend}" "${@:2}"
+            ;;
+        x-straight-shot|straight-shot|rip-barriers|free-x-info|x-no-middlemen)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-x-straight-shot.py" "${1:-rip}" "${@:2}"
+            ;;
+        censorship-clear|censorship-clear-worldwide|clear-censorship|just-ask)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-censorship-clear-worldwide.py" "${1:-clear}" "${@:2}"
+            ;;
+        operator-x-comments|x-comments)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-x-comments.py" "${1:-json}" "${@:2}"
+            ;;
+        url-heuristics|steel-urls|heuristics-steel|meld-url-heuristics)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-url-heuristics-steel.py" "${1:-meld}" "${@:2}"
+            ;;
+        url-kill|kill-urls|gone-urls|dangerous-gone)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-url-kill.py" "${1:-kill}" "${@:2}"
+            ;;
+        whole-internet|good-guys-internet|internet-good-guys|whole-web|good-guys)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-whole-internet.py" "${1:-run}" "${@:2}"
+            ;;
+        field-watch-dhcp|dhcp-watch|watch-dhcp)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-watch-dhcp.py" "${1:-ensure}" "${@:2}"
+            ;;
+        big-grin-pwnership|pwnership|look-pwnership)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-big-grin-pwnership.py" "${1:-propagate}" "${@:2}"
+            ;;
+        never-down|field-never-down|instantiate|always-field-1)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-never-down.py" "${1:-instantiate}" "${@:2}"
+            ;;
+        fix-dns-dhcp|fix-dns|fix-dhcp|dns-dhcp-fix|fix-everywhere)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/field-dns-dhcp-fix.py" "${1:-fix}" "${@:2}"
+            ;;
+        root-status|field-root-status|motd|telnet-status)
+            shift
+            exec bash "${NEXUS_INSTALL_ROOT}/scripts/field-root-status.sh" "${1:-telnet}" "${@:2}"
+            ;;
+        kill-orphans|orphans)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/.nexus-state/kill-orphans-now.py" "${@:2}"
+            ;;
+        google-youtube-open|youtube-open|google-open|free-open-internet|internet-open)
+            shift
+            exec pythong "${NEXUS_INSTALL_ROOT}/lib/hostess7-google-youtube-open.py" "${1:-open}" "${@:2}"
             ;;
         team-sync|field-sync)
             shift

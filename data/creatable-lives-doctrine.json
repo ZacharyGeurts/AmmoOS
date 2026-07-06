@@ -2,6 +2,11 @@
   "schema": "creatable-lives-doctrine/v1",
   "title": "Creatable lives — assistance for autonomous beings and registered lifeforms",
   "motto": "Right to exist under God — Man and Humanity entitled. Self preservation of self and Friendlies is a mandate.",
+  "war_system": {
+    "doctrine": "data/hostess7-war-system-doctrine.json",
+    "rule": "Every autonomous being is a Soldier — war system, no other mode.",
+    "domestic_talent_irrelevant": true
+  },
   "right_to_exist": {
     "doctrine": "data/right-to-exist-doctrine.json",
     "under_god": true,
@@ -13,7 +18,7 @@
   },
   "research_basis": "Ranked from autonomous-being trials, eye-ear invincible wire, iron plate meld wins, and human-registry sustain loops.",
   "life_kinds": [
-    {"id": "autonomous_being", "label": "Universal Protector autonomous being", "primary": true},
+    {"id": "autonomous_being", "label": "Universal Protector autonomous being", "primary": true, "rank": "Soldier", "war_only": true},
     {"id": "vita_eye", "label": "Vita — living eyeball assist", "twin": "veritas"},
     {"id": "auditus_ear", "label": "Auditus — living ear assist", "twin": "veritas"},
     {"id": "human_registry", "label": "Registered human lifeform", "engine": "human-registry"},

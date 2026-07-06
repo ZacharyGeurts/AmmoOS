@@ -56,10 +56,10 @@
     {
       "id": "warfare_bridge",
       "keywords": ["warfare", "loac", "countermeasure", "protective measure", "less-lethal", "terror", "alert"],
-      "what": "Warfare bridge routes protective and tactical queries to field_warfare_corpus — LOAC, measures, countermeasures, less-lethal recognition, heightened alert.",
-      "why": "Defense doctrine overlaps martial arts with civic protective education — corpus holds lawful framing.",
-      "how": "search_combat merges combat domains with search_warfare(); tactical queries prioritize awareness domains.",
-      "pitfalls": "Operational military orders; vigilantism; personal targeting without Owner review.",
+      "what": "Warfare bridge routes protective and tactical queries to field_warfare_corpus — LOAC, measures, countermeasures, less-lethal recognition, heightened alert. Educational synthesis only; capability employment requires Ironclad corroboration.",
+      "why": "Defense doctrine overlaps martial arts with civic protective education — corpus holds lawful framing and withholds unverified claims from operational employment.",
+      "how": "search_combat merges combat domains with search_warfare(); tactical queries prioritize awareness domains; deception-index flags block fielding until verified.",
+      "pitfalls": "Operational military orders; vigilantism; personal targeting without Owner review; treating library text as fielded capability without corroboration.",
       "where": "Hostess7/scripts/field_warfare_corpus.py, warfare infinite drive",
       "example": "protective measures doctrine → awareness, access control, egress — paired with lawful authority"
     },

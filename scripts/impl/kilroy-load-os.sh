@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/impl/kilroy-load-os.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 
 # KILROY load OS — board PC core (ZNetwork absorbed), start field stack, launch AmmoOS desktop.
@@ -10,6 +28,9 @@ export NEXUS_INSTALL_ROOT="${ROOT}"
 export SG_ROOT="${SG}"
 export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${ROOT}/.nexus-state}"
 export NEXUS_FIELD_STANDALONE=1
+
+# shellcheck source=/dev/null
+source "${ROOT}/lib/nexus-aml-exec.sh"
 
 # Stack rewrite env — KILROY owns network; AmmoOS desktop; Queen standalone
 export KILROY_PC_CORE=1
@@ -33,8 +54,8 @@ echo "  Install: ${ROOT}"
 echo ""
 
 # Wire siblings (KILROY, AMOURANTHRTX, Grok16, …)
-if [[ -x "${ROOT}/scripts/impl/wire-stack.sh" ]]; then
-  AML_IMPL=1 bash "${ROOT}/scripts/impl/wire-stack.sh" 2>/dev/null | tail -5 || true
+if [[ -f "${ROOT}/scripts/wire-stack.sh" ]]; then
+  nexus_aml_exec "script:scripts/wire-stack.sh" 2>/dev/null | tail -5 || true
 fi
 
 # KILROY PC core — network lane + loopback + C2 markers
@@ -46,8 +67,8 @@ if [[ -f "${ROOT}/lib/kilroy-core.sh" ]]; then
 fi
 
 # AMOURANTHRTX desktop handlers (SPIR-V, .comp, engine path)
-if [[ -x "${ROOT}/scripts/integrate-amouranthrtx.sh" ]]; then
-  bash "${ROOT}/scripts/integrate-amouranthrtx.sh" 2>/dev/null | tail -3 || true
+if [[ -f "${ROOT}/scripts/integrate-amouranthrtx.sh" ]]; then
+  nexus_aml_exec "script:scripts/integrate-amouranthrtx.sh" 2>/dev/null | tail -3 || true
 fi
 
 # Start panel + Queen + defenses (skip full nexus boot hang when fast)
@@ -55,14 +76,14 @@ if curl -sf "http://127.0.0.1:${PANEL_PORT}/field" >/dev/null 2>&1 \
   && curl -sf "http://127.0.0.1:${QUEEN_PORT}/api/status" >/dev/null 2>&1; then
   echo "  Stack already live (panel :${PANEL_PORT}, queen :${QUEEN_PORT})"
 else
-  if [[ "${KILROY_LOAD_FAST:-0}" == "1" ]] && [[ -x "${ROOT}/scripts/impl/ammoos-direct-start.sh" ]]; then
-    AML_IMPL=1 bash "${ROOT}/scripts/impl/ammoos-direct-start.sh"
+  if [[ "${KILROY_LOAD_FAST:-0}" == "1" ]] && [[ -f "${ROOT}/scripts/impl/ammoos-direct-start.sh" ]]; then
+    nexus_aml_exec "script:scripts/impl/ammoos-direct-start.sh"
   else
-    AML_IMPL=1 bash "${ROOT}/scripts/impl/start-field-stack.sh" 2>&1 | tail -20 || true
+    nexus_aml_exec "script:scripts/start-field-stack.sh" 2>&1 | tail -20 || true
   fi
 fi
 
-# Launch AmmoOS desktop (AMOURANTHRTX-backed /field kiosk)
+# Launch AmmoOS desktop (AMOURANTHRTX-backed /field command deck)
 OPEN_PY="${ROOT}/lib/field-queen-browser-open.py"
 if [[ -f "$OPEN_PY" ]]; then
   echo ""

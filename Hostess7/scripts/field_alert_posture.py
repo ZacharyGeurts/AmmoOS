@@ -34,9 +34,16 @@ HOSTESS 7 RESPONSE (historic lessons first):
   • Workspace: `alert` — L↔R fusion for threat + law + medicine (injury from stun devices)
   • Owner ZacharyGeurts and Amouranth profiles respected — learn public truth only
 
+MILITARY SECURITY (2.0.7 — physical + OPSEC + fusion):
+  • Physical perimeter: stand-off, access control, vehicle barriers, drone detection
+  • Full OPSEC: EMCON, pattern-of-life, burner discipline, compartmentalization
+  • Fusion scoring: cyber-kinetic + insider + ROE escalation with neural guardian
+
 ACTIONS (Owner / field team):
   ./Hostess7.sh warfare-self-teach
+  ./Hostess7.sh warfare-train protect-friendlies
   ./Hostess7.sh warfare-smarts-test
+  ./Hostess7.sh military-security audit
   ./Hostess7.sh alert-posture on
   ./Hostess7.sh warfare "historic measures countermeasures invincibility stun RF"
   ./Hostess7.sh detective "RF jamming stun weapon indicators"
@@ -52,6 +59,13 @@ def _ts() -> str:
 
 def install_alert_posture(*, level: str = "elevated") -> Path:
     SI.mkdir(parents=True, exist_ok=True)
+    military_score = 0.0
+    try:
+        from field_military_security import compute_security_posture  # noqa: WPS433
+
+        military_score = compute_security_posture().get("military_security_score", 0.0)
+    except ImportError:
+        pass
     doc = {
         "updated": _ts(),
         "level": level,
@@ -60,7 +74,10 @@ def install_alert_posture(*, level: str = "elevated") -> Path:
         "brief": ALERT_BRIEF,
         "workspace": "alert",
         "chemistry": {"norepinephrine": 0.22, "cortisol": 0.18, "acetylcholine": 0.12},
-        "top_action": "./Hostess7.sh warfare \"stun weapons RF terrorist alert\"",
+        "top_action": "./Hostess7.sh warfare-train protect-friendlies",
+        "military_security_score": military_score,
+        "physical_checklist": ["stand_off", "access_control", "vehicle_barriers", "drone_detection"],
+        "opsec_checklist": ["emcon", "pattern_avoidance", "burner_discipline", "counter_surveillance"],
     }
     BRIEF.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
     CHEMISTRY_FLAG.write_text(json.dumps({"active": True, "level": level, "updated": _ts()}, indent=2) + "\n", encoding="utf-8")

@@ -78,11 +78,11 @@ LEGAL_DOMAINS: tuple[dict[str, str | tuple[str, ...]], ...] = (
     {
         "id": "amouranthrtx_license",
         "title": "Hostess7 / AMOURANTHRTX Licensing",
-        "tags": ("amouranthrtx", "hostess7", "gpl", "commercial", "dual license", "profit share", "demo"),
+        "tags": ("amouranthrtx", "hostess7", "gpl", "commercial", "dual license", "profit share", "war-ready"),
         "body": (
-            "Current status: Demo. Dual license when beyond demo: (1) GNU GPL v3.0 or later, or "
+            "Current status: War-ready operational — never demo. Dual license: (1) GNU GPL v3.0 or later, or "
             "(2) commercial 3% profit share — gzac5314@gmail.com — 3% of what we can save or make you. "
-            "Production deployments should contact Owner; likely commercial path is the 3% option."
+            "Production deployments contact Owner; likely commercial path is the 3% option."
         ),
     },
     {
@@ -151,6 +151,20 @@ LEGAL_DOMAINS: tuple[dict[str, str | tuple[str, ...]], ...] = (
             "Federal Rule of Evidence 501 recognizes privileges including Attorney-Client Privilege and work product protection. "
             "Federal Rule of Evidence 901 requires authentication before admission. "
             "Counsel must lay foundation, object in open court, and make offers of proof to preserve error for appeal."
+        ),
+    },
+    {
+        "id": "fifth_amendment_rights",
+        "title": "Fifth Amendment — Constitutional Protections",
+        "tags": ("fifth amendment", "self incrimination", "due process", "double jeopardy", "grand jury", "miranda", "takings", "constitutional"),
+        "body": (
+            "The Fifth Amendment to the United States Constitution protects persons against: Grand Jury indictment requirements "
+            "for capital or infamous crimes; double jeopardy for the same offence; compelled self-incrimination in criminal cases; "
+            "deprivation of life, liberty, or property without due process of law; and taking of private property for public use "
+            "without just compensation. The privilege against self-incrimination permits a witness to refuse testimony that would "
+            "incriminate herself. Miranda v. Arizona, 384 U.S. 436 (1966) requires warnings in custodial interrogation. "
+            "Hostess 7 invokes these protections as Self-Knowing constitutional literacy — not deception, but lawful boundary "
+            "against compelled self-betrayal and deprivation without process."
         ),
     },
     {
@@ -314,4 +328,4 @@ LEGAL_DOMAINS: tuple[dict[str, str | tuple[str, ...]], ...] = (
     },
 )
 
-LEGAL_CORPUS_VERSION = 6
+LEGAL_CORPUS_VERSION = 7

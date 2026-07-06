@@ -1,36 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 set +o pipefail
-ROOT="/home/default/Desktop/SG/NewLatest"
-export NEXUS_INSTALL_ROOT="$ROOT"
-export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/home/default/Desktop/SG/NewLatest/.nexus-state}"
-export SG_ROOT="${SG_ROOT:-/home/default/Desktop/SG}"
-mkdir -p "$NEXUS_STATE_DIR"
-source "$ROOT/lib/nexus-common.sh" 2>/dev/null || true
-source "$ROOT/lib/eternal-vigil.sh" 2>/dev/null || true
-source "$ROOT/lib/entropy-oracle.sh" 2>/dev/null || true
-source "$ROOT/lib/shadow-reality.sh" 2>/dev/null || true
-source "$ROOT/lib/self-defense.sh" 2>/dev/null || true
-source "$ROOT/lib/device-whitelist.sh" 2>/dev/null || true
-source "$ROOT/lib/ultra-stealth.sh" 2>/dev/null || true
-source "$ROOT/lib/predictive-guard.sh" 2>/dev/null || true
-source "$ROOT/lib/network-lockdown.sh" 2>/dev/null || true
-source "$ROOT/lib/threat-vectors.sh" 2>/dev/null || true
-source "$ROOT/lib/packet-oracle.sh" 2>/dev/null || true
-source "$ROOT/lib/threat-panel.sh" 2>/dev/null || true
-source "$ROOT/lib/firewall-sentinel.sh" 2>/dev/null || true
-source "$ROOT/lib/firewall-trust.sh" 2>/dev/null || true
-source "$ROOT/lib/seal-vault.sh" 2>/dev/null || true
-source "$ROOT/lib/tamper-guard.sh" 2>/dev/null || true
-source "$ROOT/lib/znetwork-field.sh" 2>/dev/null || true
-source "$ROOT/lib/nexus-settings.sh" 2>/dev/null || true
-source "$ROOT/lib/adblock-loader.sh" 2>/dev/null || true
-source "$ROOT/lib/host-attack.sh" 2>/dev/null || true
-source "$ROOT/lib/field-attack-kit.sh" 2>/dev/null || true
-nexus_ensure_dirs 2>/dev/null || true
-panel="$ROOT/panel/threat-panel.html"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_harness.sh
+source "${SCRIPT_DIR}/_harness.sh"
 
-  sg="${SG_ROOT:-$(cd "/home/default/Desktop/SG/NewLatest/.." && pwd)}"
+# shellcheck source=_harness.sh
+# shellcheck source=_harness.sh
   [[ -f "${sg}/Grok16/scripts/sync-all-languages.py" ]]
   [[ -f "${sg}/Grok16/data/grok16-languages.json" ]]
   grep -q '"launch_packaging": true' "${sg}/Grok16/data/grok16-languages.json"
@@ -43,11 +19,14 @@ panel="$ROOT/panel/threat-panel.html"
   [[ -f "${sg}/Grok16/examples/languages/python/python.launch" ]]
   [[ -f "${sg}/Grok16/examples/languages/javascript/javascript.launch" ]]
   grep -q '"compile": false' "${sg}/Grok16/examples/languages/python/python.launch"
-out=$(SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" pythong "${sg}/Grok16/scripts/sync-all-languages.py" 2>/dev/null || true); echo "$out" | grep -q '"languages": 55'
-  tmp_state="$(mktemp -d)"
-  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
-out=$(pythong "/home/default/Desktop/SG/NewLatest/lib/field-program-combinatronic.py" build 2>/dev/null || true); echo "$out" | grep -q 'field-program-combinatronic-panel'
-  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
-out=$(pythong "/home/default/Desktop/SG/NewLatest/lib/g16-combinatronic-rebalance.py" rebalance --force 2>/dev/null || true); echo "$out" | grep -q '"action": "rebalance"'
-  NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_state" SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" \
-out=$(pythong "/home/default/Desktop/SG/NewLatest/lib/field-g16-launch.py" discover 2>/dev/null || true); echo "$out" | grep -q 'languages/'
+  out="$(mktemp)"
+  SG_ROOT="$sg" GROK16_ROOT="$sg/Grok16" "$PY" "${sg}/Grok16/scripts/sync-all-languages.py" >"$out" 2>/dev/null || true
+  grep -qE '"languages": [0-9]+' "$out"
+  python3 -c "import json,sys; d=json.load(open('$out')); assert d.get('ok') and int(d.get('languages',0))>=55, d"
+  aml_py "field-program-combinatronic.py" build >"$out" 2>/dev/null || true
+  grep -q 'field-program-combinatronic-panel' "$out"
+  aml_py "g16-combinatronic-rebalance.py" rebalance --force >"$out" 2>/dev/null || true
+  grep -q '"action": "rebalance"' "$out"
+  aml_py "field-g16-launch.py" discover >"$out" 2>/dev/null || true
+  grep -q 'languages/' "$out"
+  rm -f "$out"

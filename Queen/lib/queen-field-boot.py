@@ -128,31 +128,28 @@ def sdf_verify_redata_optional() -> dict[str, Any]:
         return {"ok": False, "error": "verify_timeout"}
 
 
-def team_sync_optional() -> dict[str, Any]:
-    """Field 1 sync — fieldstorage → TEAM NVMe."""
-    field_one = INSTALL / "lib" / "field-one.py"
-    if not field_one.is_file():
-        field_one = HOSTESS.parent / "lib" / "field-one.py"
-    if not field_one.is_file():
-        return {"ok": True, "skipped": True, "reason": "no_field_one"}
-    _log("field_one sync start")
+def zac_restore_optional() -> dict[str, Any]:
+    zac = HOSTESS / "scripts" / "field_zac.py"
+    zac_dir = HOSTESS / "zac"
+    if not zac.is_file() or not zac_dir.is_dir():
+        return {"ok": True, "skipped": True, "reason": "no_hostess_zac"}
+    _log("zac_restore start")
     try:
         proc = subprocess.run(
-            [sys.executable, str(field_one), "sync"],
+            [sys.executable, str(zac), "restore", "--from", str(zac_dir)],
             cwd=str(HOSTESS),
             capture_output=True,
             text=True,
             timeout=600,
-            env={**os.environ, "HOSTESS7_ROOT": str(HOSTESS), "NEXUS_INSTALL_ROOT": str(INSTALL)},
         )
-        _log(f"field_one sync rc={proc.returncode}")
+        _log(f"zac_restore rc={proc.returncode}")
         return {
             "ok": proc.returncode == 0,
             "returncode": proc.returncode,
             "tail": ((proc.stdout or "") + (proc.stderr or ""))[-2000:],
         }
     except subprocess.TimeoutExpired:
-        return {"ok": False, "error": "field_one_sync_timeout"}
+        return {"ok": False, "error": "zac_timeout"}
 
 
 def rebuild_core() -> dict[str, Any]:
@@ -236,7 +233,7 @@ def boot_status() -> dict[str, Any]:
         "boot_sequence": mandate.get("boot_sequence") or [],
         "can_rebuild": (QUEEN / "lib" / "queen-forge.py").is_file() and (QUEEN / "lib" / "queen-build.py").is_file(),
         "forge": "lib/queen-forge.py",
-        "can_field_one_sync": (INSTALL / "lib" / "field-one.py").is_file(),
+        "can_zac_restore": (HOSTESS / "scripts" / "field_zac.py").is_file(),
         "hostess_brain": _hostess_brain_summary(),
     }
 
@@ -270,8 +267,8 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         return rebuild_core()
     if action in ("reboot", "restart"):
         return reboot_queen(detach=body.get("detach", True) is not False)
-    if action in ("team-sync", "team_sync", "zac-restore", "zac_restore"):
-        return team_sync_optional()
+    if action in ("zac-restore", "zac_restore"):
+        return zac_restore_optional()
     if action in ("hostess-teach", "hostess_teach", "queen-teach-redata"):
         return hostess_teach_redata_optional()
     if action in ("sdf-verify-redata", "sdf_verify_redata", "verify-redata"):
@@ -282,7 +279,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         steps = []
         for name, fn in (
             ("grok_login", lambda: grok_login_status()),
-            ("team_sync", team_sync_optional),
+            ("zac_restore", zac_restore_optional),
             ("hostess_teach_redata", hostess_teach_redata_optional),
             ("sdf_verify_redata", sdf_verify_redata_optional),
             ("rebuild", rebuild_core),
@@ -295,7 +292,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
                     steps.append({"step": "login_required", "ok": False})
                     return {"ok": False, "steps": steps, "status": boot_status()}
                 continue
-            if name == "team_sync" and body.get("skip_team_sync"):
+            if name == "zac_restore" and body.get("skip_zac"):
                 steps.append({"step": name, "skipped": True})
                 continue
             if name in ("hostess_teach_redata", "sdf_verify_redata") and body.get("skip_hostess"):

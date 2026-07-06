@@ -11,14 +11,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
-STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
+STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
 SG = Path(os.environ.get("SG_ROOT", str(INSTALL.parent.parent)))
-QUEEN = Path(os.environ.get("QUEEN_ROOT", SG / "NewLatest" / "Queen"))
+QUEEN = Path(os.environ.get("QUEEN_ROOT", INSTALL / "Queen"))
+FINAL_MOUTH = Path(os.environ.get("FINAL_MOUTH_ROOT", INSTALL / "Final_Mouth"))
 DOCTRINE = INSTALL / "data" / "hostess7-mouth-neural-doctrine.json"
 PANEL = STATE / "hostess7-mouth-neural-panel.json"
 LEDGER = STATE / "hostess7-mouth-neural-ledger.jsonl"
-MOUTH_NEURAL = SG / "Final_Mouth" / "zocr_neural_assist.py"
+MOUTH_NEURAL = FINAL_MOUTH / "zocr_neural_assist.py"
 MOUTHBALL = QUEEN / "lib" / "queen-mouthball.py"
 
 ENABLED = os.environ.get("NEXUS_HOSTESS7_MOUTH_NEURAL", "1") == "1"
@@ -41,11 +42,49 @@ _SOVEREIGN_CLOCK_MOD = None
 
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
+
+
+def _ai_only_gate(body: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    """Final Mouth is AI/brain-sync only — block human operator egress."""
+    if os.environ.get("HOSTESS7_MOUTH_AI_ONLY", "1").strip().lower() in ("0", "false", "no", "off"):
+        return None
+    if body and body.get("_hostess7_brain_sync"):
+        return None
+    doc = _load(DOCTRINE, {})
+    block = _load(INSTALL / "data" / "field-final-mouth-block-doctrine.json", {})
+    if not (doc.get("ai_only") or doc.get("human_egress_blocked") or block.get("ai_only")):
+        return None
+    mode = str((body or {}).get("mode") or "").strip().lower()
+    audience = str((body or {}).get("audience") or "").strip().lower()
+    if mode in ("operator", "human", "dishes", "speaking") or audience == "human":
+        return {
+            "ok": False,
+            "error": "final_mouth_ai_only",
+            "human_use": False,
+            "brain_sync": "hostess7_brain",
+            "hint": "Final Mouth dispatches via Hostess7 brain intelligence sync only",
+        }
+    return None
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -69,10 +108,11 @@ def _env() -> dict[str, str]:
     env["NEXUS_STATE_DIR"] = str(STATE)
     env["SG_ROOT"] = str(SG)
     env["QUEEN_ROOT"] = str(QUEEN)
-    env["FINAL_MOUTH_ROOT"] = str(SG / "Final_Mouth")
+    env["FINAL_MOUTH_ROOT"] = str(FINAL_MOUTH)
+    env["QUEEN_ROOT"] = str(QUEEN)
     py = [
         str(QUEEN / "lib"),
-        str(SG / "Final_Mouth"),
+        str(FINAL_MOUTH),
     ]
     if env.get("PYTHONPATH"):
         py.append(env["PYTHONPATH"])
@@ -106,7 +146,7 @@ def _run_mouth_neural(body: dict[str, Any], *, timeout: int = 60) -> dict[str, A
             text=True,
             timeout=timeout,
             env=_env(),
-            cwd=str(SG / "Final_Mouth"),
+            cwd=str(FINAL_MOUTH),
         )
         return json.loads(proc.stdout or "{}")
     except (subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
@@ -134,15 +174,27 @@ def _run_mouthball(body: dict[str, Any], *, timeout: int = 90) -> dict[str, Any]
         return {"ok": False, "error": str(exc)}
 
 
-def speak_field_neural(text: str, *, mode: str = "operator") -> dict[str, Any]:
+def speak_field_neural(
+    text: str,
+    *,
+    mode: str = "operator",
+    audience: str | None = None,
+) -> dict[str, Any]:
     """Thought → voice hemisphere → optional TTS."""
+    gate = _ai_only_gate({"mode": mode, "audience": audience})
+    if gate:
+        return gate
     if not ENABLED:
         return {"ok": False, "error": "disabled"}
+    aud = audience or ("human" if mode in ("speaking", "operator", "dishes") else None)
     prep = _run_mouth_neural({"action": "prepare", "thought": text, "mode": mode})
     if not prep.get("ok"):
         return prep
     utterance = str(prep.get("utterance") or text)
-    spoken = _run_mouthball({"action": "speak", "text": utterance, "mode": mode})
+    speak_body: dict[str, Any] = {"action": "speak", "text": utterance, "mode": mode}
+    if aud:
+        speak_body["audience"] = aud
+    spoken = _run_mouthball(speak_body)
     voice = {}
     vpath = INSTALL / "lib" / "hostess7-voice.py"
     if vpath.is_file():
@@ -173,14 +225,61 @@ def speak_field_neural(text: str, *, mode: str = "operator") -> dict[str, Any]:
     return out
 
 
-def run_mouth_training() -> dict[str, Any]:
+def _speaking_training_mod() -> Any | None:
+    script = INSTALL / "lib" / "hostess7-speaking-training.py"
+    if not script.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("h7_speaking_train", script)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _run_speaking_training(
+    *,
+    iso6393: str = "eng",
+    audience: str = "human",
+) -> dict[str, Any]:
+    mod = _speaking_training_mod()
+    if mod and hasattr(mod, "run_speaking_training"):
+        return mod.run_speaking_training(iso6393=iso6393, audience=audience)
+    return {"ok": False, "error": "speaking_training_missing"}
+
+
+def _run_mouth_training_body(
+    *,
+    iso6393: str = "eng",
+    audience: str = "human",
+) -> dict[str, Any]:
     doc = _load(DOCTRINE, {})
-    lessons = (doc.get("training") or {}).get("lessons") or []
+    training = doc.get("training") or {}
+    lessons = training.get("lessons") or []
+    speaking_track = training.get("speaking_track") or {}
     steps: list[dict[str, Any]] = []
     passed = 0
+    sp_mod = _speaking_training_mod()
     for lid in lessons:
-        result = _run_mouth_neural({"action": "train", "lesson": lid})
-        ok = bool(result.get("ok"))
+        if str(lid).startswith("speaking_"):
+            lesson_key = str(lid).replace("speaking_", "", 1)
+            if sp_mod and hasattr(sp_mod, "run_lesson"):
+                result = sp_mod.run_lesson(lesson_key, iso6393=iso6393, audience=audience)
+            else:
+                result = _run_mouthball({
+                    "action": "speaking_train",
+                    "lesson": lesson_key,
+                    "code": iso6393,
+                    "audience": audience,
+                })
+            ok = bool(result.get("ok"))
+            _run_mouth_neural({"action": "train", "lesson": lid, "thought": str(result.get("lemma") or "")})
+        else:
+            result = _run_mouth_neural({"action": "train", "lesson": lid})
+            ok = bool(result.get("ok"))
         if ok:
             passed += 1
         steps.append({
@@ -188,12 +287,17 @@ def run_mouth_training() -> dict[str, Any]:
             "label": (result.get("lesson") or {}).get("label") or lid,
             "ok": ok,
             "alignment": (result.get("prepare") or {}).get("thought_voice_alignment"),
+            "track": "speaking" if str(lid).startswith("speaking_") else "mouth_neural",
         })
+    speaking_panel = _run_speaking_training(
+        iso6393=iso6393 or speaking_track.get("default_code", "eng"),
+        audience=audience or speaking_track.get("default_audience", "human"),
+    )
     verify = _run_mouthball({"action": "verify"})
     neural = _run_mouth_neural({"action": "status"})
     total = len(lessons) or 1
     rate = passed / total
-    threshold = float((doc.get("training") or {}).get("pass_threshold") or 0.75)
+    threshold = float(training.get("pass_threshold") or 0.75)
     complete = rate >= threshold and verify.get("ok")
     panel = {
         "schema": "hostess7-mouth-neural-panel/v1",
@@ -209,12 +313,73 @@ def run_mouth_training() -> dict[str, Any]:
         "steps": steps,
         "neural": neural,
         "verify": verify,
+        "speaking_training": speaking_panel,
+        "fcc_acoustic_safe": bool(speaking_panel.get("fcc_acoustic") or speaking_panel.get("complete")),
+        "spoken_word_first": True,
+        "default_audience": audience,
+        "iso6393": iso6393,
         "hemispheres": doc.get("hemispheres"),
         "callosum": doc.get("callosum"),
     }
     _save(PANEL, panel)
-    _append_ledger({"ts": _now(), "event": "mouth_train", "passed": passed, "total": total})
+    _append_ledger({
+        "ts": _now(),
+        "event": "mouth_train",
+        "passed": passed,
+        "total": total,
+        "speaking_complete": speaking_panel.get("complete"),
+    })
+    ca = INSTALL / "lib" / "hostess7-change-awareness.py"
+    if ca.is_file():
+        try:
+            spec = importlib.util.spec_from_file_location("h7_ca_mouth", ca)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "witness_change"):
+                    mod.witness_change(
+                        source="mouth_neural",
+                        label="mouth_training",
+                        detail=f"level={panel.get('level')} passed={passed}/{total}",
+                        meta={"complete": complete, "fcc_acoustic_safe": panel.get("fcc_acoustic_safe")},
+                    )
+        except Exception:
+            pass
     return {"ok": complete, **panel}
+
+
+def run_mouth_training(
+    *,
+    iso6393: str = "eng",
+    audience: str = "human",
+) -> dict[str, Any]:
+    aid = f"mouth_training_{iso6393}"
+    pg = INSTALL / "lib" / "hostess7-presume.py"
+    if pg.is_file():
+        try:
+            spec = importlib.util.spec_from_file_location("h7_presume_mouth", pg)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "guard_action"):
+                    guarded = mod.guard_action(
+                        aid,
+                        _run_mouth_training_body,
+                        iso6393=iso6393,
+                        audience=audience,
+                        label=aid,
+                    )
+                    result = guarded.get("result") or {}
+                    if isinstance(result, dict):
+                        result["presume_guard"] = {
+                            "action_id": aid,
+                            "uninterruptable": guarded.get("uninterruptable"),
+                            "elapsed_us": guarded.get("elapsed_us"),
+                        }
+                        return result
+        except Exception:
+            pass
+    return _run_mouth_training_body(iso6393=iso6393, audience=audience)
 
 
 def _ironclad_goldmine() -> dict[str, Any]:
@@ -241,6 +406,7 @@ def _ironclad_goldmine() -> dict[str, Any]:
 
 def build_panel(*, write: bool = True) -> dict[str, Any]:
     doc = _load(DOCTRINE, {})
+    block_doc = _load(INSTALL / "data" / "field-final-mouth-block-doctrine.json", {})
     cached = _load(PANEL, {})
     neural = _run_mouth_neural({"action": "status"})
     goldmine = _ironclad_goldmine()
@@ -252,6 +418,9 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "schema": "hostess7-mouth-neural-panel/v1",
         "updated": _now(),
         "enabled": ENABLED,
+        "ai_only": bool(doc.get("ai_only") or block_doc.get("ai_only")),
+        "human_use": False,
+        "brain_sync": doc.get("brain_sync") or block_doc.get("brain_sync"),
         "motto": doc.get("motto"),
         "hemispheres": doc.get("hemispheres"),
         "callosum": doc.get("callosum"),
@@ -305,10 +474,26 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
     action = str(body.get("action") or "status").strip().lower().replace("-", "_")
     if action in ("status", "json", "panel"):
         return {"ok": True, **build_panel(write=action == "panel")}
+    if action in ("speak", "field_speak", "train", "mouth_train", "run_training", "speaking_train", "speaking_training"):
+        gate = _ai_only_gate(body)
+        if gate:
+            return gate
     if action in ("speak", "field_speak"):
-        return speak_field_neural(str(body.get("text") or body.get("thought") or ""), mode=str(body.get("mode") or "operator"))
+        return speak_field_neural(
+            str(body.get("text") or body.get("thought") or ""),
+            mode=str(body.get("mode") or "operator"),
+            audience=body.get("audience"),
+        )
     if action in ("train", "mouth_train", "run_training"):
-        return run_mouth_training()
+        return run_mouth_training(
+            iso6393=str(body.get("code") or body.get("iso6393") or "eng"),
+            audience=str(body.get("audience") or "human"),
+        )
+    if action in ("speaking_train", "speaking_training"):
+        return _run_speaking_training(
+            iso6393=str(body.get("code") or body.get("iso6393") or "eng"),
+            audience=str(body.get("audience") or "human"),
+        )
     if action == "prepare":
         return _run_mouth_neural({"action": "prepare", "thought": body.get("text"), "mode": body.get("mode")})
     if action == "explain":

@@ -103,14 +103,14 @@ def _resolve_queen_scheme(url: str) -> str:
         "rtx": "/world/queen-chips-cores.html",
         "amouranthrtx": "/world/queen-chips-cores.html",
         "engine": "/world/queen-chips-cores.html",
-        "gameroom": "/world/queen-game-room.html",
-        "game-room": "/world/queen-game-room.html",
+        "gameroom": "/queen-game-room.html",
+        "game-room": "/queen-game-room.html",
         "chips": "/world/queen-chips-cores.html",
         "cores": "/world/queen-chips-cores.html",
-        "cinema": "/world/queen-game-room.html",
-        "terminal": "/world/?dock=terminal",
-        "gnu-terminal": "/world/?dock=terminal",
-        "shell": "/world/?dock=terminal",
+        "cinema": "/queen-game-room.html",
+        "terminal": "/world/queen-gnu-terminal-embed.html",
+        "gnu-terminal": "/world/queen-gnu-terminal-embed.html",
+        "shell": "/world/queen-gnu-terminal-embed.html",
         "start": f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
         "programs": f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
         "nexus": f"http://127.0.0.1:{int(os.environ.get('NEXUS_THREAT_PANEL_PORT', '9477'))}/field",
@@ -222,9 +222,25 @@ def _nested_field_meta(url: str, *, layer_depth: int | None = None) -> dict[str,
     }
 
 
+def _github_secure_mod() -> Any | None:
+    script = QUEEN / "lib" / "queen-github-secure.py"
+    if not script.is_file():
+        return None
+    try:
+        return _mod("queen_github_secure", "queen-github-secure.py", QUEEN)
+    except Exception:
+        return None
+
+
 def classify_url(url: str) -> dict[str, Any]:
     """Classify contact — presume hostile; never presume correct contact without positive ID."""
     u = (url or "").strip()
+    gh = _github_secure_mod()
+    if gh and hasattr(gh, "classify_github_url"):
+        overlay = gh.classify_github_url(u, allow_external=not internal_only())
+        if overlay:
+            nested = _nested_field_meta(u)
+            return {**overlay, **nested}
     nested = _nested_field_meta(u)
     if not u or u == "about:blank":
         return {
@@ -340,6 +356,13 @@ def _secure_channel_slice() -> dict[str, Any]:
         return {"error": str(exc), "lane": "SecureChannel", "hydrate": "/api/secure-channel"}
 
 
+def _github_secure_slice() -> dict[str, Any]:
+    try:
+        return _mod("queen_github_secure", "queen-github-secure.py", QUEEN).panel_json()
+    except Exception as exc:
+        return {"error": str(exc), "lane": "GitHubSecure", "hydrate": "/api/github-secure"}
+
+
 def field_net_status() -> dict[str, Any]:
     m = load_mandate()
     sec = _queen_security()
@@ -358,6 +381,7 @@ def field_net_status() -> dict[str, Any]:
         "packet_field": _packet_slice(),
         "external_wire": _external_wire_slice(),
         "secure_channel": _secure_channel_slice(),
+        "github_secure": _github_secure_slice(),
         "field_compiler": _compiler_slice(),
         "queen_security": sec,
         "routes_secured": seal_ok is not False,

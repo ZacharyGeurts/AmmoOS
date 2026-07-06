@@ -4,7 +4,7 @@
   "motto": "Compile and link under g16 — macOS, Android, ARM, x86; RTX only when RTX silicon is present.",
   "grok16_ref": "NewLatest/Grok16",
   "distro_pairing": "5.1.0",
-  "ammoos_pairing": "2.0.0-beta4",
+  "ammoos_pairing": "2.0.0-beta5",
   "compile": {
     "driver": "g16",
     "cxx_std": "gnu++26",

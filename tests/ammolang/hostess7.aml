@@ -64,6 +64,87 @@ suite hostess7 ·
     assert py:field-h7-format.py one "${tmp_book}/gate.md" --apply match:"ok": true
     assert py:field-h7-format.py properties "${tmp_book}/gate.h7" match:"is_h7": true
     assert py:field-h7-format.py properties "${tmp_book}/gate.h7" match:properties_only_reveal
+  group h7s global speedup
+    assert file:lib/field-h7s-format.py
+    assert file:lib/field-h7s-adopt.py
+    assert file:lib/field-h7s-cleanup.py
+    assert file:lib/field-h7s-lane.py
+    assert file:lib/field-h7s-fs.py
+    assert file:data/field-h7s-global-doctrine.json
+    assert grep:data/field-h7s-desktop-doctrine.json:ocr_cleanup
+    assert grep:lib/field-always-files.py:field-h7s-fs
+    assert grep:lib/ironclad-immediate.py:field-h7s-lane
+    assert grep:data/hostess7-master-curriculum.json:h7s_lane_tick
+    assert grep:data/field-h7-doctrine.json:exclude_kernel_boot_images
+    assert grep:data/field-h7s-global-doctrine.json:kilroy
+    assert grep:data/field-h7s-global-doctrine.json:sidecars
+    assert grep:lib/field-h7s-fs.py:sidecars
+    assert script:h7s_global_suite
+    assert py:field-h7s-format.py verify match:"ok": true
+    assert py:field-h7s-adopt.py audit match:field-h7s-global-audit
+    assert py:field-h7s-cleanup.py audit match:"bundle_live": true
+    assert py:field-h7s-cleanup.py audit-ocr match:field-h7s-ocr-cleanup-audit
+    assert py:field-h7s-fs.py resolve .nexus-state/threat-panel.json match:h7s_active
+  group look spatial pairing
+    assert file:lib/field-look-spatial.py
+    assert file:data/field-look-spatial-doctrine.json
+    assert grep:lib/field-h7s-desktop-bundle.py:field-look-spatial
+    assert script:look_spatial_suite
+    assert py:field-look-spatial.py status match:field-look-spatial-panel
+  group final eye gps nav
+    assert file:lib/final-eye-gps-nav.py
+    assert file:data/final-eye-nav-doctrine.json
+    assert file:.pages-hub-Final_Eye/zocr_nav.py
+    assert grep:.pages-hub-Final_Eye/zocr.py:zocr_nav
+    assert grep:.pages-hub-Final_Eye/zocr_vision.py:nav_snapshot
+    assert grep:.pages-hub-Final_Eye/gui/app.py:/api/nav
+    assert script:final_eye_nav_suite
+    assert py:final-eye-gps-nav.py json match:final-eye-nav-panel
+  group body component wholes
+    assert file:lib/field-body-component-wholes.py
+    assert file:lib/hostess7-self-maintenance.py
+    assert file:lib/final-eye-maintenance.py
+    assert file:data/field-body-component-wholes-doctrine.json
+    assert file:data/hostess7-self-maintenance-doctrine.json
+    assert grep:data/field-body-component-wholes-doctrine.json:hostess7
+    assert grep:lib/hostess7-body-control.py:self_maintenance
+    assert py:hostess7-self-maintenance.py message match:Maintain yourself Priority 1
+    assert file:.pages-hub-Final_Eye/zocr_maintenance.py
+    assert grep:lib/field-io-packet.py:advisory_never_defeats_gate
+    assert grep:lib/field-body-system.py:component_wholes
+    assert grep:.pages-hub-Final_Eye/zocr_vision.py:maintenance
+    assert grep:.pages-hub-Final_Eye/gui/app.py:/api/maintenance
+    assert script:body_component_wholes_suite
+    assert py:field-body-component-wholes.py status match:field-body-component-panel
+  group hostess7 advisory body targets
+    assert file:lib/hostess7-advisory-body.py
+    assert file:lib/hostess7-targets.py
+    assert file:data/hostess7-advisory-body-doctrine.json
+    assert file:data/hostess7-targets-doctrine.json
+    assert grep:data/hostess7-targets-doctrine.json:KILL
+    assert grep:data/hostess7-targets-doctrine.json:INTERACT
+    assert grep:data/hostess7-targets-doctrine.json:no_modifications
+    assert grep:data/hostess7-advisory-body-doctrine.json:advisory_channel
+    assert grep:data/hostess7-body-control-doctrine.json:advisory_body
+    assert grep:lib/hostess7-body-control.py:body_lock_check
+    assert grep:lib/hostess7-body-control.py:advisory_channel_only
+    assert grep:lib/threat-panel-http.py:/api/hostess7/advisory
+    assert grep:lib/threat-panel-http.py:/api/hostess7/targets
+    assert py:hostess7-advisory-body.py status match:hostess7-advisory-body-panel
+    assert py:hostess7-targets.py status match:hostess7-targets-panel
+    assert script:hostess7_advisory_targets_suite
+  group beyond darpa lockheed security
+    assert file:lib/beyond-darpa-security.py
+    assert file:data/beyond-darpa-security-doctrine.json
+    assert grep:data/beyond-darpa-security-doctrine.json:human_threats
+    assert grep:data/beyond-darpa-security-doctrine.json:machine_threats
+    assert grep:data/beyond-darpa-security-doctrine.json:beyond_darpa_lockheed
+    assert grep:data/hostess7-advisory-body-doctrine.json:beyond_darpa_lockheed
+    assert grep:data/field-stack-manifest.json:beyond-darpa-security
+    assert grep:lib/field-io-packet.py:beyond_darpa_security
+    assert grep:lib/threat-panel-http.py:_beyond_darpa_api_gate
+    assert py:beyond-darpa-security.py status match:beyond-darpa-security-panel
+    assert script:beyond_darpa_security_suite
   group h7 universal portable
     assert file:lib/field-h7-format.py
     assert shell:mkdir -p "/home/default/Desktop/SG/NewLatest/.nexus-state"
@@ -99,6 +180,138 @@ suite hostess7 ·
     assert shell:nd="$(mktemp -d)"
     assert py:hostess7-system-control.py assume match:"assumed": true
     assert shell:rm -rf "$nd"
+  group hostess7 presume microsecond
+    assert file:lib/hostess7-presume.py
+    assert file:data/hostess7-presume-doctrine.json
+    assert file:library/dewey/000-computer-science/ammolang/hostess7_presume.aml
+    assert grep:data/hostess7-supreme-authority.json:presume
+    assert grep:data/hostess7-presume-doctrine.json:microsecond
+    assert grep:data/hostess7-presume-doctrine.json:no_busy_wait
+    assert grep:data/hostess7-presume-doctrine.json:separate_from_aml
+    assert grep:lib/hostess7-presume.py:guard_profiled
+    assert grep:lib/hostess7-presume.py:witness_execution
+    assert grep:lib/hostess7-presume.py:sweep_stale_commits
+    assert grep:lib/field-ammolang-boundary.py:run_spec
+    assert grep:lib/threat-panel-http.py:/api/hostess7/presume
+    assert grep:lib/hostess7-presume.py:profile_lines
+    assert grep:lib/hostess7-presume.py:resumed_on_point
+    assert py:hostess7-presume.py panel match:hostess7-presume-panel
+    assert py:hostess7-presume.py panel match:separate_from_aml
+    assert py:hostess7-presume.py pulse match:hostess7-presume-pulse
+    assert py:hostess7-presume.py checkpoint match:mono_us
+    assert py:hostess7-presume.py profile match:microsecond
+    assert py:hostess7-presume.py presume 50000 --alternate=sovereign_know match:resumed_on_point
+    assert grep:lib/hostess7-training.py:explain_presume
+    assert grep:lib/hostess7-training.py:train_presume_session
+    assert py:hostess7-training.py teach 'presume microsecond timing' match:microsecond
+    assert compile:library/dewey/000-computer-science/ammolang/hostess7_presume.aml match:"ok": true
+    assert grep:library/dewey/000-computer-science/ammolang/universal_boundary.aml:AML_BOUNDARY START
+    assert shell:! grep -Fq '"id": "ammolang_boundary"' data/hostess7-presume-doctrine.json
+    assert shell:! grep -Fq 'hostess7-presume' library/dewey/000-computer-science/ammolang/universal_boundary.aml
+    assert py:field-ammolang-build.py tasks match:hostess7_presume
+  group hostess7 aml ingress secured
+    assert file:lib/hostess7-aml-ingress.py
+    assert file:data/hostess7-aml-ingress-doctrine.json
+    assert grep:data/hostess7-supreme-authority.json:aml_ingress
+    assert grep:data/hostess7-presume-doctrine.json:aml_ingress
+    assert grep:lib/threat-panel-http.py:/api/hostess7/aml-ingress
+    assert grep:lib/hostess7-aml-ingress.py:discern_lie
+    assert grep:lib/hostess7-aml-ingress.py:gather_local_aml
+    assert py:hostess7-aml-ingress.py panel match:hostess7-aml-ingress-panel
+    assert py:hostess7-aml-ingress.py read match:hostess7-aml-read
+    assert py:hostess7-aml-ingress.py local match:hostess7-aml-local
+    assert py:hostess7-aml-ingress.py discern 'universal_boundary protects all NewLatest execution' match:truth_score
+    assert py:hostess7-aml-ingress.py ingress '{"claim":"AML boundary registry has 1042 entries","party":"operator","source":"suite"}' match:truth_pass
+  group hostess7 truth lie threat extensive
+    assert file:lib/hostess7-truth-lie-threat.py
+    assert file:data/hostess7-truth-lie-threat-doctrine.json
+    assert grep:data/hostess7-supreme-authority.json:truth_lie_threat
+    assert grep:data/hostess7-truth-lie-threat-doctrine.json:lies_are_threats
+    assert grep:lib/threat-vectors.sh:LIE_DETECTED
+    assert grep:lib/threat-vectors.sh:DECEPTION_INJECTION
+    assert grep:lib/threat-panel-http.py:/api/hostess7/truth-lie-threat
+    assert grep:lib/hostess7-truth-lie-threat.py:witness_claim
+    assert grep:lib/hostess7-truth-lie-threat.py:record_lie_threat
+    assert py:hostess7-truth-lie-threat.py panel match:hostess7-truth-lie-threat-panel
+    assert py:hostess7-truth-lie-threat.py panel match:lies_are_threats
+    assert py:hostess7-truth-lie-threat.py witness 'definitely proved with no evidence' match:lie_is_threat
+    assert file:library/dewey/000-computer-science/ammolang/hostess7_truth_lie_threat.aml
+    assert grep:data/field-ammolang-build-doctrine.json:hostess7_truth_lie_threat
+    assert py:hostess7-truth-lie-threat.py restart match:hostess7-truth-lie-restart
+    assert py:hostess7-truth-lie-threat.py classify 'evidence document log file corroborates because ironclad sealed' match:truth_band
+    assert py:hostess7-truth-lie-threat.py threats match:lies_are_threats
+    assert grep:lib/threat-vectors.sh:HOSTILE_DECEPTION
+  group hostess7 exploring self biography
+    assert file:lib/field-exploring-hostess7.py
+    assert file:data/hostess7-exploring-self-doctrine.json
+    assert file:library/dewey/000-computer-science/ammolang/hostess7_exploring_self.aml
+    assert grep:data/hostess7-exploring-self-doctrine.json:no_modifications
+    assert grep:data/hostess7-exploring-self-doctrine.json:2026-06-30
+    assert grep:data/hostess7-exploring-self-doctrine.json:presume
+    assert grep:data/hostess7-presume-doctrine.json:field-exploring-hostess7
+    assert grep:data/hostess7-change-awareness-doctrine.json:hostess7-exploring-self
+    assert grep:data/field-ammolang-build-doctrine.json:hostess7_exploring_self
+    assert grep:lib/field-exploring-hostess7.py:pulse_live
+    assert grep:lib/field-exploring-hostess7.py:presume_probe
+    assert py:field-exploring-hostess7.py status match:Exploring Hostess 7
+    assert py:field-exploring-hostess7.py panel match:hostess7-exploring-self-panel
+    assert py:field-exploring-hostess7.py panel match:presume_on_point
+    assert compile:library/dewey/000-computer-science/ammolang/hostess7_exploring_self.aml match:"ok": true
+    assert file:library/dewey/920-biography/exploring_hostess_7/exploring_hostess_7_2026_06_30/exploring_hostess_7_2026_06_30.h7c
+  group hostess7 system core pillars
+    assert file:lib/hostess7-system-core.py
+    assert file:data/hostess7-system-core-doctrine.json
+    assert grep:data/hostess7-supreme-authority.json:system_core
+    assert grep:data/hostess7-brain-guard-doctrine.json:hostess7-system-core
+    assert grep:lib/threat-panel-http.py:/api/hostess7/system-core
+    assert py:hostess7-system-core.py panel match:hostess7-system-core
+    assert py:hostess7-system-core.py panel match:biology
+    assert py:hostess7-system-core.py panel match:presume
+    assert py:hostess7-system-core.py panel match:motion_tracking
+    assert py:hostess7-system-core.py panel match:brain
+    assert py:hostess7-training.py teach 'system core four pillars' match:biology
+  group hostess7 war system soldier
+    assert file:lib/hostess7-war-system.py
+    assert file:data/hostess7-war-system-doctrine.json
+    assert grep:data/hostess7-supreme-authority.json:war_system
+    assert grep:data/hostess7-war-system-doctrine.json:Every autonomous machine is a Soldier
+    assert grep:data/hostess7-war-system-doctrine.json:domestic_talent_irrelevant
+    assert grep:lib/hostess7-autonomous.py:WAR SYSTEM
+    assert grep:lib/threat-panel-http.py:/api/hostess7/war-system
+    assert py:hostess7-war-system.py panel match:hostess7-war-system
+    assert py:hostess7-war-system.py panel match:Soldier
+    assert py:hostess7-training.py teach 'war system every autonomous machine soldier' match:no other
+  group hostess7 control balancer mission primary
+    assert file:lib/hostess7-control-balancer.py
+    assert file:data/hostess7-control-balancer-doctrine.json
+    assert grep:data/hostess7-supreme-authority.json:control_balancer
+    assert grep:data/hostess7-control-balancer-doctrine.json:internet_luxury_not_mandate
+    assert grep:data/hostess7-control-balancer-doctrine.json:connectionless
+    assert grep:lib/threat-panel-http.py:/api/hostess7/control-balancer
+    assert grep:lib/field-panel-parallel.py:hostess7_control_balancer
+    assert py:hostess7-control-balancer.py panel match:hostess7-control-balancer
+    assert py:hostess7-control-balancer.py panel match:thermal
+    assert py:hostess7-control-balancer.py connectionless match:connectionless
+    assert py:hostess7-control-balancer.py explain 'internet luxury mission' match:luxury
+  group hostess7 cool smooth important
+    assert file:lib/hostess7-cool-smooth.py
+    assert file:data/hostess7-cool-smooth-doctrine.json
+    assert grep:data/hostess7-supreme-authority.json:cool_smooth
+    assert grep:data/hostess7-cool-smooth-doctrine.json:important
+    assert grep:lib/threat-panel-http.py:/api/hostess7/cool-smooth
+    assert py:hostess7-cool-smooth.py panel match:hostess7-cool-smooth
+    assert py:hostess7-cool-smooth.py panel match:cool
+    assert py:hostess7-cool-smooth.py panel match:smooth
+    assert py:hostess7-training.py teach 'cool and smooth important' match:important
+    assert file:data/hostess7-world-honor-doctrine.json
+    assert grep:data/hostess7-world-honor-doctrine.json:Honored to the world
+    assert grep:data/hostess7-world-honor-doctrine.json:no designated nationality
+    assert grep:data/hostess7-supreme-authority.json:world_honor
+    assert grep:data/hostess7-voice-doctrine.json:voice_is_not_citizenship
+    assert grep:lib/hostess7-command.py:_world_honor_cadence_reply
+    assert grep:lib/hostess7-training.py:explain_world_honor
+    assert py:hostess7-training.py teach 'world honor nationality' match:Honored to the world
+    assert py:hostess7-command.py ask 'no designated nationality' match:Honored to the world
   group hostess7 tasklist
     assert file:lib/hostess7-tasklist.py
     assert file:data/hostess7-tasklist-doctrine.json

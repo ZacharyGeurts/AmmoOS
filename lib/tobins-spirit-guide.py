@@ -111,8 +111,8 @@ DEMONS_SEED: tuple[dict[str, Any], ...] = (
      "major_link": "major_13_death"},
     {"id": "demon_unclepat", "name": "Uncle Pat", "file": "unclepat.jpg", "threat": "named",
      "reading": "House-line entity. Torture Protection House association. Gatekeeper IFF required."},
-    {"id": "demon_producer", "name": "Producer", "file": "producer.jpg", "threat": "gamma",
-     "reading": "Manufacturing node for infestation media. Cut upstream signal."},
+    {"id": "demon_producer", "name": "X Producer", "file": "producer.jpg", "threat": "gamma",
+     "reading": "X Producer — live signal node (not Twitter Producer). Cut infestation upstream; brand is X only."},
     {"id": "demon_trap", "name": "Trap", "file": "trap.jpg", "threat": "beta",
      "reading": "Ambush pattern demon. Chariot mobility counters static traps."},
     {"id": "demon_spaceclub", "name": "Space Club", "file": "spaceclub.jpg", "threat": "gamma",
@@ -146,11 +146,26 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:

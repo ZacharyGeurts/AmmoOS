@@ -1,11 +1,36 @@
 {
   "schema": "ammoos-pages-hub/v1",
   "title": "Stack Pages hub — component gh-pages link to AmmoOS canonical manual",
-  "motto": "One manual in AmmoOS — sibling repos publish redirect stubs only.",
+  "motto": "Runtime repos ship real UIs on gh-pages; other siblings publish redirect stubs to AmmoOS manual.",
+  "runtime_repos": ["AmmoCode", "Hostess7", "KILROY", "command"],
   "canonical_base": "https://zacharygeurts.github.io/AmmoOS/",
+  "canonical_repo": "https://github.com/ZacharyGeurts/AmmoOS",
+  "release_tag": "v3.0.7-beta5",
   "stack_hub_page": "stack-hub.html",
   "owner": "ZacharyGeurts",
   "repos": {
+    "Hostess7": {
+      "github": "https://github.com/ZacharyGeurts/Hostess7",
+      "pages_mode": "runtime",
+      "pages_url": "https://zacharygeurts.github.io/Hostess7/",
+      "ammoos_page": "architecture.html",
+      "title": "Hostess 7",
+      "blurb": "Full stack on GitHub Pages — Queen + AmmoOS · Archival Warehouse · MSPaint · v3.0.7-beta5"
+    },
+    "command": {
+      "github": "https://github.com/ZacharyGeurts/command",
+      "pages_mode": "runtime",
+      "pages_url": "https://zacharygeurts.github.io/command/",
+      "ammoos_page": "architecture.html",
+      "title": "NEXUS C2 Basement",
+      "blurb": "Secure basement layer — black · emerald · rose · real command deck for everyone"
+    },
+    "H7updater": {
+      "github": "https://github.com/ZacharyGeurts/H7updater",
+      "ammoos_page": "stack-hub.html",
+      "title": "H7 Updater",
+      "blurb": "Layer 0 update catalog — sovereign stack manifest + personal OAuth lane"
+    },
     "AmmoOS": {
       "github": "https://github.com/ZacharyGeurts/AmmoOS",
       "ammoos_page": "index.html",
@@ -26,9 +51,11 @@
     },
     "KILROY": {
       "github": "https://github.com/ZacharyGeurts/KILROY",
+      "pages_mode": "runtime",
+      "pages_url": "https://zacharygeurts.github.io/KILROY/",
       "ammoos_page": "architecture.html",
       "title": "KILROY",
-      "blurb": "Field boot kernel — stack architecture in AmmoOS manual"
+      "blurb": "Online test environment — browser GUI + source tree from GitHub"
     },
     "ZNetwork": {
       "github": "https://github.com/ZacharyGeurts/ZNetwork",
@@ -62,9 +89,11 @@
     },
     "AmmoCode": {
       "github": "https://github.com/ZacharyGeurts/AmmoCode",
+      "pages_mode": "runtime",
+      "pages_url": "https://zacharygeurts.github.io/AmmoCode/",
       "ammoos_page": "combinatronic.html",
       "title": "AmmoCode",
-      "blurb": "Compiler GUI — combinatronic manual in AmmoOS"
+      "blurb": "Code editor running on GitHub Pages — g16 on loopback after clone"
     },
     "Field_Primer": {
       "github": "https://github.com/ZacharyGeurts/Field_Primer",
@@ -84,11 +113,37 @@
       "title": "AMOURANTHRTX",
       "blurb": "Field Die display — architecture in AmmoOS manual"
     },
+    "AIA": {
+      "github": "https://github.com/ZacharyGeurts/AIA",
+      "pages_mode": "runtime",
+      "pages_url": "https://zacharygeurts.github.io/AIA/",
+      "hostess7_mirror_api": "https://zacharygeurts.github.io/Hostess7/api/field-aia-accelerator.json",
+      "ammoos_page": "combinatronic.html",
+      "title": "AIA — AI Accelerator",
+      "blurb": "FIELD_QUBES build cache · G16/CHIPS accelerator bundle — staged by Hostess 7 for GitHub upload"
+    },
     "World_Redata": {
       "github": "https://github.com/ZacharyGeurts/World_Redata",
       "ammoos_page": "architecture.html",
       "title": "World Redata",
       "blurb": "WRDT1 envelopes — architecture in AmmoOS manual"
+    },
+    "OBS-FieldVoiceFilter": {
+      "github": "https://github.com/ZacharyGeurts/OBS-FieldVoiceFilter",
+      "ammoos_page": "launch-surfaces.html",
+      "title": "OBS Field Voice Filter",
+      "blurb": "OBS plugin — launch surfaces in AmmoOS manual; code in AmmoOS tree"
+    },
+    "GNUEOLTerminal": {
+      "url": "https://zacharygeurts.github.io/GNUEOLTerminal/",
+      "github": "https://zacharygeurts.github.io/GNUEOLTerminal/",
+      "git_repo": "https://github.com/ZacharyGeurts/GNUEOLTerminal",
+      "pages_mode": "runtime",
+      "pages_url": "https://zacharygeurts.github.io/GNUEOLTerminal/",
+      "pages_mirror": "https://zacharygeurts.github.io/Hostess7/gnueol-terminal/",
+      "ammoos_page": "queen-browser.html",
+      "title": "GNU EOL Terminal",
+      "blurb": "Last terminal the world needs — Field Tech textbook + full GNU technical wiki · RTX panels · 3.0.7-beta5"
     }
   }
 }

@@ -42,6 +42,21 @@ def _field_net():
     return mod.field_net_json()
 
 
+def _github_secure_slice() -> dict[str, Any]:
+    script = QUEEN / "lib" / "queen-github-secure.py"
+    if not script.is_file():
+        return {}
+    try:
+        spec = importlib.util.spec_from_file_location("queen_github_secure_browser", script)
+        if not spec or not spec.loader:
+            return {}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.panel_json()
+    except Exception:
+        return {}
+
+
 def _world_base() -> str:
     port = os.environ.get("QUEEN_WORLD_PORT", "9481")
     return f"http://127.0.0.1:{port}"
@@ -70,10 +85,9 @@ def _queen_field_home() -> str:
 
 
 def _desktop_page() -> str:
-    panel_port = int(os.environ.get("NEXUS_THREAT_PANEL_PORT", "9477"))
     return os.environ.get(
         "QUEEN_BROWSER_DESKTOP",
-        f"http://127.0.0.1:{panel_port}/field",
+        f"{_world_base()}/world/queen-desktop.html",
     )
 
 
@@ -81,10 +95,16 @@ def _sovereign_start_url() -> str:
     return _kilroy_home()
 
 
+def _ammoos_desktop_url() -> str:
+    return _nexus_field_url()
+
+
 def _start_page() -> str:
     override = os.environ.get("QUEEN_BROWSER_START", "").strip()
     if override:
         return override
+    if _panel_alive():
+        return _ammoos_desktop_url()
     return _kilroy_home()
 
 
@@ -93,8 +113,6 @@ _RETROGRADE_FRAGMENTS = (
     "/world/index.html",
     "queen-field-home.html",
     "queen-desktop.html",
-    "/field",
-    "9477/field",
 )
 
 
@@ -125,6 +143,8 @@ def _default_home() -> str:
     override = os.environ.get("QUEEN_BROWSER_HOME", "").strip()
     if override:
         return override
+    if _panel_alive():
+        return _ammoos_desktop_url()
     return _kilroy_home()
 
 
@@ -504,7 +524,7 @@ BOOKMARKS = [
     {"id": "eyeball", "title": "Final_Eye", "url": f"{_world_base()}/world/queen-hostess7-hub.html#eye"},
     {"id": "chips", "title": "CHIPS", "url": f"{_world_base()}/world/queen-chips-cores.html"},
     {"id": "cores", "title": "Cores", "url": f"{_world_base()}/world/queen-chips-cores.html"},
-    {"id": "gameroom", "title": "Game Room", "url": f"{_world_base()}/world/queen-game-room.html"},
+    {"id": "gameroom", "title": "Game Room", "url": f"{_world_base()}/queen-game-room.html"},
 ]
 
 
@@ -679,28 +699,8 @@ def _boot_hook_posture() -> dict[str, Any]:
         return {}
 
 
-def _stripped_browser() -> bool:
-    flag = os.environ.get("QUEEN_BROWSER_STRIPPED", os.environ.get("QUEEN_STANDALONE_BROWSER", "1"))
-    return str(flag).strip().lower() not in ("0", "false", "no", "off")
-
-
 def default_state() -> dict[str, Any]:
-    if _stripped_browser():
-        home = _new_tab(_start_page(), pinned=True, role="home", title="New Tab")
-        _apply_compat(home, home["url"], {"compat_mode": "modern"})
-        files = _new_tab(_files_page(), pinned=True, role="files", title="Files")
-        _apply_compat(files, files["url"], {"compat_mode": "modern"})
-        return {
-            "schema": "queen-browser/v1",
-            "updated": _now(),
-            "home": DEFAULT_HOME,
-            "start_tab": home["id"],
-            "files_tab": files["id"],
-            "active_tab": home["id"],
-            "tabs": [home, files],
-            "stripped": True,
-        }
-    start = _new_tab(_start_page(), pinned=True, role="desktop", title="KILROY")
+    start = _new_tab(_start_page(), pinned=True, role="desktop", title="AmmoOS")
     _apply_compat(start, start["url"], {"compat_mode": "modern"})
     files = _new_tab(_files_page(), pinned=True, role="files", title="Files")
     _apply_compat(files, files["url"], {"compat_mode": "modern"})
@@ -730,10 +730,11 @@ def _migrate_themed_ship(doc: dict[str, Any]) -> bool:
             tab["title"] = "Desktop"
             changed = True
             role = "desktop"
-        if _is_retrograde_url(url) or (role == "desktop" and url != _start_page()):
-            tab["url"] = _start_page() if role == "desktop" else _upgrade_retrograde_url(url, role=role)
+        desktop_url = _start_page()
+        if _is_retrograde_url(url) or (role == "desktop" and url != desktop_url):
+            tab["url"] = desktop_url if role == "desktop" else _upgrade_retrograde_url(url, role=role)
             if role == "desktop":
-                tab["title"] = "KILROY"
+                tab["title"] = "AmmoOS"
             hist = tab.get("history") or []
             tab["history"] = [_upgrade_retrograde_url(str(h), role=role) for h in hist]
             if role == "desktop" and tab["history"]:
@@ -1057,11 +1058,10 @@ def browser_status() -> dict[str, Any]:
     panel = _panel_slice()
     active = _find_tab(doc, doc.get("active_tab", ""))
     boot_hook = _boot_hook_posture()
-    boot_os = bool(boot_hook.get("boot_os")) and not _stripped_browser()
+    boot_os = bool(boot_hook.get("boot_os"))
     return {
         "schema": "queen-browser/v1",
         "updated": _now(),
-        "stripped": _stripped_browser(),
         "home": doc.get("home") or DEFAULT_HOME,
         "active_tab": doc.get("active_tab"),
         "tabs": [
@@ -1081,7 +1081,7 @@ def browser_status() -> dict[str, Any]:
         ],
         "desktop_url": _desktop_page(),
         "boot_os": boot_os,
-        "start_button": "bookmarks" if _stripped_browser() else ("full" if boot_os else "split_pill"),
+        "start_button": "full" if boot_os else "split_pill",
         "boot_hook": {
             "boarded": boot_hook.get("boarded"),
             "front_hook": boot_hook.get("front_hook"),
@@ -1147,6 +1147,8 @@ def browser_status() -> dict[str, Any]:
             "credential_vault": True,
             "bookmark_import": True,
             "primary_browser": True,
+            "github_secure_connect": True,
+            "anti_mitm_github": True,
         },
         "nexus_jump": _nexus_jump_status(),
         "zero_cost_security": _zero_cost_security(),
@@ -1179,6 +1181,7 @@ def browser_status() -> dict[str, Any]:
         },
         "web_compat": _compat_module().compat_status() if _compat_module() else {},
         "field_net": _field_net(),
+        "github_secure": _github_secure_slice(),
         "gates": panel.get("gates") or {},
         "codecs": panel.get("codecs") or {},
         "posture": panel.get("posture") or {},

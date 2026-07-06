@@ -91,13 +91,14 @@ def _sdf_stats() -> dict[str, Any]:
 
 
 def _textbook_status() -> dict[str, Any]:
-    plain = TEXTBOOK / "field-technology-v5.txt"
+    zac = TEXTBOOK / "field-technology-v5.zac"
+    build = TEXTBOOK / "build-field-technology-zac.py"
     summary = _load_json(TEXTBOOK / "build-summary.json")
     sizes = _load_json(TEXTBOOK / "size-comparison.json")
     return {
-        "text_present": plain.is_file(),
-        "text_bytes": plain.stat().st_size if plain.is_file() else 0,
-        "field_compaction": "lib/field-one.py",
+        "zac_present": zac.is_file(),
+        "zac_bytes": zac.stat().st_size if zac.is_file() else 0,
+        "build_script": str(build) if build.is_file() else None,
         "verify_ok": summary.get("verify_ok"),
         "segments": summary.get("staging", {}).get("segments"),
         "truth_accepted": summary.get("staging", {}).get("truth_accepted"),
@@ -306,15 +307,21 @@ def zocr_smoke() -> dict[str, Any]:
     return doc
 
 
-def verify_textbook_field() -> dict[str, Any]:
-    """Field Technology lives in Field_Primer + Textbook plain text — compaction is Field-owned."""
-    plain = TEXTBOOK / "field-technology-v5.txt"
-    if not plain.is_file():
-        return {"ok": False, "error": "textbook_plain_missing"}
+def verify_textbook_zac() -> dict[str, Any]:
+    build = TEXTBOOK / "build-field-technology-zac.py"
+    if not build.is_file():
+        return {"ok": False, "error": "textbook_build_missing"}
+    proc = subprocess.run(
+        [sys.executable, str(build), "--verify-only"],
+        cwd=str(TEXTBOOK),
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
     return {
-        "ok": True,
-        "text_bytes": plain.stat().st_size,
-        "doctrine": "Everything on Field 1 — lib/field-one.py for sync, compact, restore",
+        "ok": proc.returncode == 0,
+        "returncode": proc.returncode,
+        "tail": (proc.stdout or "")[-2000:],
     }
 
 
@@ -327,7 +334,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
     if action in ("verify-redata", "verify_redata", "sdf-verify-redata"):
         return verify_redata()
     if action in ("verify-textbook", "verify_textbook", "zac-verify-textbook"):
-        return verify_textbook_field()
+        return verify_textbook_zac()
     if action in ("ingest-textbook", "ingest_textbook", "textbook-ingest"):
         return ingest_textbook_brain()
     if action in ("zocr", "zocr-smoke", "browser-smoke", "ocr-smoke"):

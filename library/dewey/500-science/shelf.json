@@ -2,11 +2,11 @@
   "schema": "dewey-shelf/v1",
   "shelf": "500-science",
   "code": "500",
-  "title": "Science",
-  "updated": "2026-06-29T09:43:43Z",
+  "title": "500-science",
+  "updated": "2026-06-30T20:45:27Z",
   "format_primary": "h7c",
-  "book_count": 12,
-  "h7c_count": 0,
+  "book_count": 14,
+  "h7c_count": 2,
   "books": [
     {
       "id": "gutenberg_origin_species",
@@ -127,6 +127,32 @@
       "h7c": null,
       "cover": "/library/assets/covers/wikibooks_hs_physics/front.png",
       "ready": false
+    },
+    {
+      "id": "exploring_biology",
+      "title": "Exploring Biology",
+      "author": "AmmoOS Field Library",
+      "dewey": "570",
+      "format": "h7c",
+      "h7c": "library/dewey/500-science/exploring_biology/exploring_biology.h7c",
+      "pdf": "library/dewey/500-science/Hostess7_Exploring_Biology_Textbook.pdf",
+      "manifest": "library/dewey/500-science/exploring_biology/book-manifest.json",
+      "cover": "/world/assets/combinatronic/books/exploring_biology.png",
+      "book_kind": "exploring",
+      "ready": true
+    },
+    {
+      "id": "exploring_chemistry",
+      "title": "Exploring Chemistry",
+      "author": "AmmoOS Field Library",
+      "dewey": "540",
+      "format": "h7c",
+      "h7c": "library/dewey/500-science/exploring_chemistry/exploring_chemistry.h7c",
+      "pdf": "library/dewey/500-science/Hostess7_Exploring_Chemistry_Textbook.pdf",
+      "manifest": "library/dewey/500-science/exploring_chemistry/book-manifest.json",
+      "cover": "/world/assets/combinatronic/books/exploring_chemistry.png",
+      "book_kind": "exploring",
+      "ready": true
     }
   ]
 }

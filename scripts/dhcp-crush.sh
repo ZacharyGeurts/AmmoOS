@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# DHCP crush — Queen LAN up, takeover primary, prove OFFER, refresh panel.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
+export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-$ROOT/.nexus-state}"
+export NEXUS_FIELD_DHCP="${NEXUS_FIELD_DHCP:-1}"
+export NEXUS_FIELD_DHCP_BIND="${NEXUS_FIELD_DHCP_BIND:-192.168.47.1}"
+export NEXUS_FIELD_DNS_ANY_IP="${NEXUS_FIELD_DNS_ANY_IP:-1}"
+export NEXUS_FIELD_DHCP_ANY_IP="${NEXUS_FIELD_DHCP_ANY_IP:-1}"
+export NEXUS_FIELD_IPV4_DEVICE_SOVEREIGN="${NEXUS_FIELD_IPV4_DEVICE_SOVEREIGN:-1}"
+export NEXUS_FIELD_IPV4_ARBITRARY="${NEXUS_FIELD_IPV4_ARBITRARY:-1}"
+export NEXUS_FIELD_IPV4_ENUMERATE="${NEXUS_FIELD_IPV4_ENUMERATE:-1}"
+export NEXUS_FIELD_PLANETARY_DNS_AUTHORITY="${NEXUS_FIELD_PLANETARY_DNS_AUTHORITY:-1}"
+export NEXUS_FIELD_DHCP_PING_PROBE="${NEXUS_FIELD_DHCP_PING_PROBE:-0}"
+export NEXUS_FIELD_INTERNET_UNRESTRICT="${NEXUS_FIELD_INTERNET_UNRESTRICT:-1}"
+export NEXUS_FIELD_DNS_FOREIGN_BLOCK="${NEXUS_FIELD_DNS_FOREIGN_BLOCK:-0}"
+export NEXUS_FIELD_FOREIGN_DNS_DHCP_THREAT="${NEXUS_FIELD_FOREIGN_DNS_DHCP_THREAT:-0}"
+export NEXUS_FIELD_INTERNET_UNCLEAN_HOSTILE="${NEXUS_FIELD_INTERNET_UNCLEAN_HOSTILE:-1}"
+
+PGREP="${PGREP:-/usr/bin/pgrep}"
+
+bash "${ROOT}/scripts/queen-lan-up.sh" >&2 2>&1 || true
+
+if ! "$PGREP" -f 'field-dhcp.py serve' >/dev/null 2>&1; then
+  nohup env NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    NEXUS_FIELD_DHCP="$NEXUS_FIELD_DHCP" NEXUS_FIELD_DHCP_BIND="$NEXUS_FIELD_DHCP_BIND" \
+    python3 "${ROOT}/lib/field-dhcp.py" serve \
+    >>"${NEXUS_STATE_DIR}/field-dhcp-serve.log" 2>&1 &
+  sleep 1
+fi
+
+json="$(NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  python3 "${ROOT}/lib/field-dhcp.py" crush)"
+
+python3 -c "
+import json, sys
+d = json.loads(sys.argv[1])
+c = d.get('crush') or {}
+print('DHCP crushing:', d.get('running'), '| bind:', d.get('bind'))
+print('OFFER queen:', c.get('offer_queen'), '| loopback:', c.get('offer_loopback'))
+print('takeover:', d.get('takeover_phase'), '| may_serve:', d.get('may_serve'))
+" "$json"
+
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  python3 "${ROOT}/lib/field-dns-dhcp-collision-guard.py" enforce \
+  > "${NEXUS_STATE_DIR}/field-dns-dhcp-collision-guard-enforce.json" 2>/dev/null || true
+python3 -c "
+import json
+from pathlib import Path
+p = Path('${NEXUS_STATE_DIR}/field-dns-dhcp-collision-guard-enforce.json')
+if p.is_file():
+    d = json.loads(p.read_text())
+    s = d.get('sole_authority') or {}
+    print('SOLE authority:', s.get('ok'), '| collisions:', d.get('collision_count', 0))
+    print('Foreign threats:', d.get('foreign_threat_count', 0), '| eradicated:', (d.get('enforce') or {}).get('threats_eradicated', 0))
+" 2>/dev/null || true
+
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  NEXUS_FIELD_IPV4_ENUMERATE="$NEXUS_FIELD_IPV4_ENUMERATE" \
+  python3 "${ROOT}/lib/field-ipv4-enumerate.py" panel \
+  > "${ROOT}/Hostess7/docs/api/field-ipv4-enumerate.json" 2>/dev/null || true
+python3 -c "
+import json
+from pathlib import Path
+p = Path('${ROOT}/Hostess7/docs/api/field-ipv4-enumerate.json')
+if p.is_file():
+    d = json.loads(p.read_text())
+    c = d.get('counts') or {}
+    print('IPv4 OWNED:', c.get('ipv4_owned_total'), '| ENUMERATED:', c.get('ipv4_enumerated_total'))
+    print('LOCAL ENUM:', c.get('local_ipv4_enumerated'), '| LEASE TOTAL:', c.get('planet_lease_total'))
+" 2>/dev/null || true
+
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  NEXUS_FIELD_PLANETARY_DNS_AUTHORITY="$NEXUS_FIELD_PLANETARY_DNS_AUTHORITY" \
+  python3 "${ROOT}/lib/field-planetary-dns-authority.py" complete \
+  > "${ROOT}/Hostess7/docs/api/field-planetary-dns-authority.json" 2>/dev/null || true
+python3 -c "
+import json
+from pathlib import Path
+p = Path('${ROOT}/Hostess7/docs/api/field-planetary-dns-authority.json')
+if p.is_file():
+    d = json.loads(p.read_text())
+    c = d.get('counts') or {}
+    r = d.get('removal') or {}
+    print('TRUE DNS zones:', d.get('zone_count'), '| IPv4 coverage:', c.get('ipv4_coverage'))
+    print('Removal complete:', r.get('complete'), '| foreign purged:', r.get('foreign_dns_dhcp_removed'))
+" 2>/dev/null || true
+
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  python3 "${ROOT}/lib/field-planetary-dns-dhcp.py" panel \
+  > "${ROOT}/Hostess7/docs/api/field-planetary-dns-dhcp.json" 2>/dev/null || true
+
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  python3 "${ROOT}/lib/field-dns-dhcp-any-ip.py" panel \
+  > "${ROOT}/Hostess7/docs/api/field-dns-dhcp-any-ip.json" 2>/dev/null || true
+python3 -c "
+import json
+from pathlib import Path
+p = Path('${ROOT}/Hostess7/docs/api/field-planetary-dns-dhcp.json')
+if p.is_file():
+    d = json.loads(p.read_text())
+    c = d.get('counts') or {}
+    print('PLANET DHCP:', c.get('planet_dhcp_total'), '| DNS:', c.get('planet_dns_total'), '| total:', c.get('planet_lease_total'))
+" 2>/dev/null || true
+
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  python3 "${ROOT}/lib/field-botnet-dns-dhcp.py" panel \
+  > "${ROOT}/Hostess7/docs/api/field-botnet-dns-dhcp.json" 2>/dev/null || true
+
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  NEXUS_FIELD_IPV4_DEVICE_SOVEREIGN="$NEXUS_FIELD_IPV4_DEVICE_SOVEREIGN" \
+  python3 "${ROOT}/lib/field-ipv4-device-sovereign.py" manage \
+  > "${ROOT}/Hostess7/docs/api/field-ipv4-device-sovereign.json" 2>/dev/null || true
+python3 -c "
+import json
+from pathlib import Path
+p = Path('${ROOT}/Hostess7/docs/api/field-ipv4-device-sovereign.json')
+if p.is_file():
+    d = json.loads(p.read_text())
+    print('IPv4 sovereign:', d.get('all_ipv4_every_box'), '| devices:', d.get('device_count'))
+    w = d.get('worldwide_suppression') or {}
+    print('Internet open:', w.get('internet_open'), '| unclean hostile:', w.get('unclean_is_hostile'), '| unclean:', w.get('unclean_count'))
+    print('Fry threats:', w.get('foreign_threat_count'), '| sole:', w.get('sole_authority'))
+" 2>/dev/null || true
+
+NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  python3 "${ROOT}/lib/field-planetary-speed.py" manage \
+  > "${ROOT}/Hostess7/docs/api/field-planetary-speed.json" 2>/dev/null || true
+python3 -c "
+import json
+from pathlib import Path
+p = Path('${ROOT}/Hostess7/docs/api/field-planetary-speed.json')
+if p.is_file():
+    d = json.loads(p.read_text())
+    t = d.get('thermal') or {}
+    c = d.get('counts') or {}
+    print('PLANET SPEED tier:', t.get('tier'), '| factor:', t.get('speed_factor'))
+    print('Entropy reduction:', c.get('entropy_reduction_pct'), '% | avg latency:', c.get('avg_latency_ms'), 'ms')
+    print('Edge nodes:', c.get('edge_nodes'), '| field running:', (d.get('field_network') or {}).get('whole_field'))
+    print('Track devices not numbers:', d.get('track_devices_not_numbers'))
+    ia = d.get('internet_arbitrary') or {}
+    print('Internet arbitrary:', ia.get('arbitrary_ipv4'), '| it just works:', ia.get('it_just_works'))
+" 2>/dev/null || true

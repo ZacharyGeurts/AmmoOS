@@ -3,13 +3,13 @@
 [![AmmoOS](https://img.shields.io/badge/pairs-AmmoOS_2.0.0--beta3-22c55e)](https://github.com/ZacharyGeurts/AmmoOS)
 [![Hub](https://img.shields.io/badge/hub-zacharygeurts.github.io/Queen-3ecf8e)](https://zacharygeurts.github.io/Queen/)
 
-**Standalone secured browser — paired with AmmoOS desktop, not a container for it.**
+**Secured browser shell — AmmoOS lives inside the Start tab.**
 
 Stack: [STACK-NAV](https://github.com/ZacharyGeurts/AmmoOS/blob/main/STACK-NAV.md) · [Queen hub repo](https://github.com/ZacharyGeurts/Queen) · [Profile stack](https://zacharygeurts.github.io/ZacharyGeurts/stack.html)
 
 <p align="center"><img src="../panel/assets/ammoos-field.png" alt="Queen taskbar icon" width="96" height="96" /></p>
 
-Queen is the browser lane — full web surface, every egress gated, codecs in-tree. **AmmoOS** (`:9477/field`) owns the desktop; Queen (`:9481`) settles for being the best browser it can be.
+Sovereign browser stack for **AmmoOS**: full web surface, every egress gated, codecs in-tree.
 
 ## Vendor clones
 

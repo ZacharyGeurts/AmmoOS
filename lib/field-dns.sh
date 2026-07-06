@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:lib/field-dns.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # NEXUS Field DNS — truth resolver publish, multipoint local capture, resolv override.
 
@@ -42,6 +60,26 @@ nexus_field_dns_publish() {
   [[ -f "$sync" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     pythong "$sync" mirror >/dev/null 2>&1 && \
     pythong "$sync" json >/dev/null 2>&1 || true
+  local drift="${NEXUS_INSTALL_ROOT}/lib/field-dns-drift-threat.py"
+  [[ -f "$drift" ]] && NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    pythong "$drift" panel >/dev/null 2>&1 || true
+}
+
+nexus_field_dns_clean_tables() {
+  [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
+  local py="${NEXUS_INSTALL_ROOT}/lib/field-dns-table-clean.py"
+  [[ -f "$py" ]] || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    pythong "$py" clean >/dev/null 2>&1 || true
+}
+
+nexus_field_dns_clear_tables() {
+  [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
+  [[ "${I_KNOW_DNS_CLEAR:-}" == "1" ]] || return 2
+  local py="${NEXUS_INSTALL_ROOT}/lib/field-dns-table-clean.py"
+  [[ -f "$py" ]] || return 0
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    pythong "$py" clear --i-know >/dev/null 2>&1 || true
 }
 
 nexus_dns_internet_pull_loop() {
@@ -84,6 +122,11 @@ nexus_field_dns_takeover_cycle() {
   if [[ "$phase" == "primary" ]]; then
     declare -f nexus_field_dns_enforce_resolv >/dev/null 2>&1 && nexus_field_dns_enforce_resolv || true
     declare -f nexus_field_dns_local_capture >/dev/null 2>&1 && nexus_field_dns_local_capture || true
+    if [[ "${NEXUS_FIELD_INTERNET_UNRESTRICT:-1}" == "1" ]]; then
+      declare -f nexus_field_internet_unrestrict >/dev/null 2>&1 && nexus_field_internet_unrestrict || true
+    else
+      declare -f nexus_field_foreign_dns_dhcp_threat_block >/dev/null 2>&1 && nexus_field_foreign_dns_dhcp_threat_block || true
+    fi
   fi
 }
 
@@ -146,34 +189,54 @@ nexus_field_dns_foreign_ips() {
   printf '%s\n' '{"ipv4":["8.8.8.8","8.8.4.4","1.1.1.1","1.0.0.1","9.9.9.9","71.10.216.1","71.10.216.2"],"ipv6":["2001:4860:4860::8888","2001:4860:4860::8844","2606:4700:4700::1111","2606:4700:4700::1001","2620:fe::fe","2620:fe::9"]}'
 }
 
+nexus_field_internet_unrestrict() {
+  [[ "${NEXUS_FIELD_INTERNET_UNRESTRICT:-1}" == "1" ]] || return 0
+  command -v nft >/dev/null 2>&1 || return 0
+  local table="${NEXUS_FIREWALL_TABLE:-nexus}"
+  local py="${NEXUS_INSTALL_ROOT}/lib/field-internet-unrestrict.py"
+  if [[ -f "$py" ]]; then
+    NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      pythong "$py" remove-nft >/dev/null 2>&1 || true
+  fi
+  nexus_log "INFO" "field-dns" "internet unrestricted — foreign resolver/DHCP blocks removed"
+}
+
 nexus_field_dns_local_capture() {
   [[ "${NEXUS_FIELD_DNS_LOCAL_CAPTURE:-1}" == "1" ]] || return 0
   command -v nft >/dev/null 2>&1 || return 0
   local port="${NEXUS_FIELD_DNS_PORT:-53}"
   local table="${NEXUS_FIREWALL_TABLE:-nexus}"
-  if nft list chain inet "$table" output 2>/dev/null | grep -q 'nexus-dns-local'; then
+  if [[ "${NEXUS_FIELD_INTERNET_UNRESTRICT:-1}" == "1" ]]; then
+    nexus_field_internet_unrestrict
+  fi
+  if [[ "${NEXUS_FIELD_DNS_FOREIGN_BLOCK:-0}" != "1" ]]; then
+    :
+  elif nft list chain inet "$table" output 2>/dev/null | grep -q 'nexus-dns-local'; then
+    return 0
+  else
+    local foreign_json foreign4 foreign6
+    foreign_json="$(nexus_field_dns_foreign_ips)"
+    foreign4="$(printf '%s' "$foreign_json" | pythong -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv4") or []))' 2>/dev/null || true)"
+    foreign6="$(printf '%s' "$foreign_json" | pythong -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv6") or []))' 2>/dev/null || true)"
+    foreign4="${foreign4:-8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1, 9.9.9.9, 71.10.216.1, 71.10.216.2}"
+    if [[ -n "$foreign4" ]]; then
+      nft add rule inet "$table" output \
+        ip daddr "{ ${foreign4} }" udp dport "${port}" drop comment "nexus-dns-local" 2>/dev/null || true
+      nft add rule inet "$table" output \
+        ip daddr "{ ${foreign4} }" tcp dport "${port}" drop comment "nexus-dns-local" 2>/dev/null || true
+    fi
+    if [[ -n "$foreign6" ]]; then
+      nft add rule inet "$table" output \
+        ip6 daddr "{ ${foreign6} }" udp dport "${port}" drop comment "nexus-dns-local-v6" 2>/dev/null || true
+      nft add rule inet "$table" output \
+        ip6 daddr "{ ${foreign6} }" tcp dport "${port}" drop comment "nexus-dns-local-v6" 2>/dev/null || true
+    fi
+    nft add rule inet "$table" output \
+      udp dport 853 drop comment "nexus-dns-local-dot" 2>/dev/null || true
+  fi
+  if nft list chain inet "$table" input 2>/dev/null | grep -q 'nexus-dns-ddos-in'; then
     return 0
   fi
-  # Block egress DNS to foreign resolvers — never add untrusted (RFC 9520)
-  local foreign_json foreign4 foreign6
-  foreign_json="$(nexus_field_dns_foreign_ips)"
-  foreign4="$(printf '%s' "$foreign_json" | pythong -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv4") or []))' 2>/dev/null || true)"
-  foreign6="$(printf '%s' "$foreign_json" | pythong -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv6") or []))' 2>/dev/null || true)"
-  foreign4="${foreign4:-8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1, 9.9.9.9, 71.10.216.1, 71.10.216.2}"
-  if [[ -n "$foreign4" ]]; then
-    nft add rule inet "$table" output \
-      ip daddr "{ ${foreign4} }" udp dport "${port}" drop comment "nexus-dns-local" 2>/dev/null || true
-    nft add rule inet "$table" output \
-      ip daddr "{ ${foreign4} }" tcp dport "${port}" drop comment "nexus-dns-local" 2>/dev/null || true
-  fi
-  if [[ -n "$foreign6" ]]; then
-    nft add rule inet "$table" output \
-      ip6 daddr "{ ${foreign6} }" udp dport "${port}" drop comment "nexus-dns-local-v6" 2>/dev/null || true
-    nft add rule inet "$table" output \
-      ip6 daddr "{ ${foreign6} }" tcp dport "${port}" drop comment "nexus-dns-local-v6" 2>/dev/null || true
-  fi
-  nft add rule inet "$table" output \
-    udp dport 853 drop comment "nexus-dns-local-dot" 2>/dev/null || true
   # DDoS immunity — rate-limit DNS ingress to loopback resolver (IPv4 + IPv6)
   nft add rule inet "$table" input \
     ip daddr 127.0.0.1 udp dport "${port}" limit rate 120/second burst 60 packets accept comment "nexus-dns-ddos-in" 2>/dev/null || true
@@ -183,7 +246,36 @@ nexus_field_dns_local_capture() {
     ip6 daddr ::1 udp dport "${port}" limit rate 120/second burst 60 packets accept comment "nexus-dns-ddos-in6" 2>/dev/null || true
   nft add rule inet "$table" input \
     ip6 daddr ::1 udp dport "${port}" drop comment "nexus-dns-ddos-drop6" 2>/dev/null || true
-  nexus_log "INFO" "field-dns" "local DNS capture — foreign resolver egress blocked (IPv4+IPv6) · DDoS rate limit active"
+  if [[ "${NEXUS_FIELD_DNS_FOREIGN_BLOCK:-0}" == "1" ]]; then
+    nexus_log "INFO" "field-dns" "local DNS capture — foreign resolver egress blocked (IPv4+IPv6) · DDoS rate limit active"
+  else
+    nexus_log "INFO" "field-dns" "local DNS capture — internet open · DDoS rate limit active · no foreign block"
+  fi
+}
+
+nexus_field_foreign_dns_dhcp_threat_block() {
+  [[ "${NEXUS_FIELD_INTERNET_UNRESTRICT:-1}" == "1" ]] && return 0
+  [[ "${NEXUS_FIELD_FOREIGN_DNS_DHCP_THREAT:-0}" == "1" ]] || return 0
+  command -v nft >/dev/null 2>&1 || return 0
+  local table="${NEXUS_FIREWALL_TABLE:-nexus}"
+  local queen="${NEXUS_QUEEN_LAN_DNS:-192.168.47.1}"
+  if ! nft list chain inet "$table" input 2>/dev/null | grep -q 'nexus-foreign-dhcp-threat'; then
+    nft add rule inet "$table" input \
+      udp sport 67 ip saddr != "{ ${queen}, 127.0.0.1 }" drop comment "nexus-foreign-dhcp-threat" 2>/dev/null || true
+  fi
+  if ! nft list chain inet "$table" input 2>/dev/null | grep -q 'nexus-foreign-dns-offer-threat'; then
+    local foreign_json foreign4
+    foreign_json="$(nexus_field_dns_foreign_ips)"
+    foreign4="$(printf '%s' "$foreign_json" | pythong -c 'import json,sys; d=json.load(sys.stdin); print(", ".join(d.get("ipv4") or []))' 2>/dev/null || true)"
+    foreign4="${foreign4:-8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1, 9.9.9.9}"
+    if [[ -n "$foreign4" ]]; then
+      nft add rule inet "$table" input \
+        ip saddr "{ ${foreign4} }" udp sport 53 drop comment "nexus-foreign-dns-offer-threat" 2>/dev/null || true
+      nft add rule inet "$table" input \
+        ip saddr "{ ${foreign4} }" tcp sport 53 drop comment "nexus-foreign-dns-offer-threat-tcp" 2>/dev/null || true
+    fi
+  fi
+  nexus_log "INFO" "field-dns" "foreign DNS/DHCP server attempts — nft threat drop active"
 }
 
 nexus_field_dhcp_serve_loop() {
@@ -227,8 +319,19 @@ nexus_field_local_connect_loop() {
   done
 }
 
+nexus_field_legacy_connect_primary() {
+  [[ "${NEXUS_LEGACY_OPEN_SECURED:-1}" == "1" ]] || return 0
+  local py="${NEXUS_INSTALL_ROOT}/lib/field-legacy-connect.py"
+  [[ -f "$py" ]] || return 0
+  export NEXUS_LEGACY_OPEN_SECURED=1
+  export NEXUS_FIELD_DNS_LEGACY_COMPAT=1
+  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+    pythong "$py" ensure-primary >/dev/null 2>&1 || true
+}
+
 nexus_field_services_boot() {
   [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] || return 0
+  declare -f nexus_field_legacy_connect_primary >/dev/null 2>&1 && nexus_field_legacy_connect_primary || true
   declare -f nexus_field_dns_publish >/dev/null 2>&1 && nexus_field_dns_publish || true
   if ! pgrep -f 'field-dns.py serve' >/dev/null 2>&1; then
     nohup env NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
@@ -246,6 +349,11 @@ nexus_field_services_boot() {
       >>"${NEXUS_STATE_DIR}/field-local-connect.log" 2>&1 &
   fi
   declare -f nexus_field_local_connect >/dev/null 2>&1 && nexus_field_local_connect || true
+  if [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-hdmi-audio-boot.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NEXUS_INSTALL_ROOT}/lib/field-hdmi-audio-boot.sh"
+    declare -f nexus_field_hdmi_audio_boot >/dev/null 2>&1 && nexus_field_hdmi_audio_boot || true
+  fi
 }
 
 nexus_field_dns_enforce_cycle() {

@@ -31,11 +31,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save_atomic(path: Path, doc: dict[str, Any]) -> None:
@@ -355,6 +370,17 @@ def resolve(
     ai = _ai_policy(str(type_row.get("type_id") or "default"), destroyed=destroyed)
     knows = _knows_list(catalog=catalog_row or None, index=index_row or None, overlay=overlay_row or None, type_row=type_row)
 
+    h7s_fs: dict[str, Any] = {}
+    if exists and p.is_file() and os.environ.get("NEXUS_H7S_FS", "1") == "1":
+        fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+        if fs_py.is_file():
+            try:
+                fs_mod = _import_py(fs_py, "field_always_files_h7s_fs")
+                if fs_mod and hasattr(fs_mod, "vfs_resolve"):
+                    h7s_fs = fs_mod.vfs_resolve(p)
+            except Exception:
+                h7s_fs = {}
+
     row: dict[str, Any] = {
         "schema": SCHEMA_FILE,
         "path": str(p),
@@ -363,6 +389,7 @@ def resolve(
         "name": p.name,
         "ext": ext,
         "exists": exists,
+        "h7s": h7s_fs or None,
         "kind": "dir" if exists and p.is_dir() else "file" if exists else "ghost" if catalog_only else "missing",
         "size": size,
         "mtime_ns": mtime_ns,

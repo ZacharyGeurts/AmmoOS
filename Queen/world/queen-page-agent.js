@@ -26,17 +26,6 @@
     pageUrl: location.href,
   };
 
-  function isAmmoOSDesktop() {
-    if (document.documentElement?.dataset?.ammoosDesktop === "1") return true;
-    if (document.body?.dataset?.ammoosDesktop === "1") return true;
-    if (document.getElementById("hd-desktop")) return true;
-    try {
-      const path = location.pathname || "";
-      if (path === "/field" || path.endsWith("/field")) return true;
-    } catch (_) {}
-    return false;
-  }
-
   function esc(s) {
     return String(s || "")
       .replace(/&/g, "&amp;")
@@ -195,9 +184,195 @@
     scanRandomAdSlots();
   }
 
+  function isXHost() {
+    const h = state.host || "";
+    return h === "x.com" || h.endsWith(".x.com") || h === "twitter.com" || h.endsWith(".twitter.com");
+  }
+
+  function isXJetfuelSurface(el) {
+    if (!el || el.nodeType !== 1) return false;
+    return !!el.closest?.(
+      '[data-testid="mask"], [role="dialog"][aria-modal="true"], .jetfuel-style-root, .jf-element',
+    );
+  }
+
+  function xJetfuelSsoLooksEmpty(dialog) {
+    if (!dialog) return false;
+    const root = dialog.querySelector(".jetfuel-style-root, .jf-element");
+    if (!root) return false;
+    const interactive = dialog.querySelector(
+      "button, iframe, input, textarea, select, form, a[href], [data-testid]",
+    );
+    if (interactive) return false;
+    const text = (root.innerText || "").replace(/\s+/g, "").trim();
+    return text.length < 8;
+  }
+
+  function isXLoginSurface() {
+    const path = (location.pathname || "").toLowerCase();
+    return (
+      /\/onboarding\/web\/sso/i.test(path) ||
+      /\/i\/jf\/onboarding/i.test(path) ||
+      /\/i\/onboarding/i.test(path) ||
+      /\/i\/flow\/login/i.test(path) ||
+      (/onboarding/i.test(path) && /mode=sso|provider=google/i.test(location.search))
+    );
+  }
+
+  function xLoginFormVisible() {
+    const body = document.body?.innerText || "";
+    return /continue with (google|apple|phone)|email or username|sign up/i.test(body);
+  }
+
+  function killXLoginOverlay(el) {
+    if (!el?.parentNode) return;
+    el.setAttribute("data-x-overlay-killed", "1");
+    el.style.setProperty("display", "none", "important");
+    el.style.setProperty("pointer-events", "none", "important");
+    el.style.setProperty("opacity", "0", "important");
+    try { el.remove(); } catch (_) {}
+  }
+
+  function repairXJetfuelSsoModal() {
+    if (!isXHost() || !isXLoginSurface()) return false;
+    let killed = 0;
+    document.querySelectorAll('[data-testid="mask"]').forEach((m) => {
+      killXLoginOverlay(m);
+      killed++;
+    });
+    document.querySelectorAll('[role="dialog"][aria-modal="true"]').forEach((dlg) => {
+      const hasLogin = dlg.querySelector("button, input, iframe, form, a[href]");
+      const empty = (dlg.innerText || "").replace(/\s+/g, "").length < 12 && !hasLogin;
+      const jetfuel = dlg.querySelector(".jetfuel-style-root, .jf-element");
+      if (empty || (jetfuel && !hasLogin) || (xLoginFormVisible() && !dlg.querySelector("button"))) {
+        killXLoginOverlay(dlg);
+        killed++;
+      }
+    });
+    const vw = window.innerWidth || 800;
+    const vh = window.innerHeight || 600;
+    document.querySelectorAll("div").forEach((el) => {
+      if (el.getAttribute("data-x-overlay-killed")) return;
+      const st = getComputedStyle(el);
+      if (st.position !== "fixed" && st.position !== "absolute") return;
+      const r = el.getBoundingClientRect();
+      if (r.width < vw * 0.35 || r.height < vh * 0.35) return;
+      const dark = /rgba?\(\s*0\s*,\s*0\s*,\s*0|rgb\(\s*0\s*,\s*0\s*,\s*0/i.test(st.backgroundColor || "");
+      const noInteract = !el.querySelector("button, input, iframe, a[href], form");
+      if (dark && noInteract && (el.classList.contains("jf-element") || el.querySelector(".jf-element"))) {
+        killXLoginOverlay(el);
+        killed++;
+      }
+    });
+    if (killed > 0) {
+      document.documentElement.setAttribute("data-x-login-killed", "1");
+      document.body?.style.setProperty("overflow", "auto", "important");
+      document.body?.style.setProperty("pointer-events", "auto", "important");
+      notifyParent({ type: "queen:x-login", action: "overlay_killed", count: killed });
+    }
+    document.querySelectorAll('iframe[src*="accounts.google"], iframe[src*="googleapis"]').forEach((f) => {
+      f.style.setProperty("display", "block", "important");
+      f.style.setProperty("visibility", "visible", "important");
+      f.style.setProperty("pointer-events", "auto", "important");
+    });
+    if (xLoginFormVisible()) return killed > 0;
+    const broken = /\/onboarding\/web\/sso|\/i\/jf\/onboarding\/web\/sso/i.test(location.pathname);
+    if (broken && !sessionStorage.getItem("queen:x-login-fallback")) {
+      sessionStorage.setItem("queen:x-login-fallback", "1");
+      location.replace("/i/flow/login");
+      return true;
+    }
+    return killed > 0;
+  }
+
+  function isXOperatorProfile() {
+    return /^\/ZacharyGeurts\/?$/i.test(location.pathname || "");
+  }
+
+  const X_PRODUCER_API = [
+    "https://zacharygeurts.github.io/Hostess7/api/hostess7-x-profile-fix.json",
+    "http://127.0.0.1:9477/api/hostess7-x-profile-fix",
+  ];
+  let xProducerCache = null;
+
+  async function fetchXProducerFeed() {
+    if (xProducerCache) return xProducerCache;
+    for (const url of X_PRODUCER_API) {
+      try {
+        const r = await fetch(url, { cache: "no-store", credentials: "omit" });
+        if (!r.ok) continue;
+        xProducerCache = await r.json();
+        return xProducerCache;
+      } catch (_) {
+        /* next lane */
+      }
+    }
+    return null;
+  }
+
+  function repairXProfileCensorship() {
+    if (!isXHost() || !isXOperatorProfile()) return false;
+    const body = document.body?.innerText || "";
+    if (!/hasn.t posted/i.test(body) && !document.getElementById("h7-x-producer-feed")) return false;
+    document.querySelectorAll("h1,h2,h3,div,span").forEach((el) => {
+      if (el.id?.startsWith("h7-x-producer")) return;
+      const t = (el.innerText || "").trim();
+      if (/hasn.t posted/i.test(t) && t.length < 80) {
+        const box = el.closest("section,article,div[data-testid]") || el;
+        box.style.setProperty("display", "none", "important");
+      }
+    });
+    if (!document.getElementById("h7-x-producer-banner")) {
+      const el = document.createElement("div");
+      el.id = "h7-x-producer-banner";
+      el.setAttribute("role", "alert");
+      el.style.cssText =
+        "position:fixed;top:0;left:0;right:0;z-index:2147483647;background:linear-gradient(90deg,#000,#14532d);" +
+        "color:#fff;padding:10px 16px;font:600 13px/1.4 system-ui,sans-serif;border-bottom:2px solid #1d9bf0;";
+      el.innerHTML =
+        '<span style="color:#1d9bf0">𝕏 Producer</span> Timeline restored — ' +
+        '<a href="https://zacharygeurts.github.io/Hostess7/x-producer/" style="color:#7dd3fc">Open Producer →</a>';
+      document.documentElement.appendChild(el);
+    }
+    document.documentElement.setAttribute("data-x-producer", "1");
+    fetchXProducerFeed().then((doc) => {
+      if (!doc?.posts?.length) return;
+      const target =
+        document.querySelector('[data-testid="primaryColumn"]') ||
+        document.querySelector("main") ||
+        document.body;
+      if (!target) return;
+      let box = document.getElementById("h7-x-producer-feed");
+      if (!box) {
+        box = document.createElement("section");
+        box.id = "h7-x-producer-feed";
+        box.style.cssText = "margin:56px 16px 24px;color:#e7e9ea;font-family:system-ui,sans-serif;";
+        target.insertBefore(box, target.firstChild);
+      }
+      const posts = doc.posts.slice(0, 25);
+      box.innerHTML =
+        `<div style="border:1px solid #2f3336;border-radius:16px;background:#000;overflow:hidden">` +
+        `<div style="padding:12px 16px;border-bottom:1px solid #2f3336;font-weight:700;color:#1d9bf0">` +
+        `Producer restore (${posts.length} posts)</div>` +
+        posts
+          .map(
+            (p) =>
+              `<article style="padding:12px 16px;border-bottom:1px solid #2f3336">` +
+              `<div style="font-weight:700">BIG GRIN <span style="color:#71767b">@ZacharyGeurts</span></div>` +
+              `<div style="margin:8px 0;white-space:pre-wrap">${(p.text || "").replace(/</g, "&lt;")}</div>` +
+              `<a href="${p.url}" style="color:#1d9bf0" target="_blank" rel="noopener">View →</a></article>`,
+          )
+          .join("") +
+        `</div>`;
+      notifyParent({ type: "queen:x-producer", action: "feed_injected", count: posts.length });
+    });
+    return true;
+  }
+
   function scanRandomAdSlots() {
     document.querySelectorAll("div, aside, section, ins").forEach((el) => {
       if (el.getAttribute("data-queen-shielded")) return;
+      if (isXHost() && isXJetfuelSurface(el)) return;
       const rect = el.getBoundingClientRect();
       if (rect.width < 40 || rect.height < 40) return;
       const classes = [...el.classList];
@@ -399,6 +574,14 @@
       .qpa-highlight{outline:2px solid #f472b6!important;outline-offset:2px!important;}
       .qpa-picker *{cursor:crosshair!important;}
       .qpa-picker .qpa-hover{outline:2px dashed #22c55e!important;outline-offset:1px!important;}
+      html[data-x-login-killed="1"] [data-testid="mask"],
+      html[data-x-login-killed="1"] [role="dialog"][aria-modal="true"]:not(:has(button,input,iframe)),
+      html[data-x-login-killed="1"] [data-x-overlay-killed="1"],
+      html[data-x-login-killed="1"] .jetfuel-style-root:empty {
+        display:none!important;pointer-events:none!important;opacity:0!important;visibility:hidden!important;
+      }
+      html[data-x-login-killed="1"] body{overflow:auto!important;pointer-events:auto!important;}
+      iframe[src*="accounts.google"],iframe[src*="googleapis"]{display:block!important;visibility:visible!important;pointer-events:auto!important;}
     `;
     document.documentElement.appendChild(st);
   }
@@ -426,7 +609,6 @@
     document.addEventListener(
       "contextmenu",
       (e) => {
-        if (isAmmoOSDesktop()) return;
         if (state.picker) {
           e.preventDefault();
           return;
@@ -477,9 +659,19 @@
     window.addEventListener("message", onMessage);
     const obs = new MutationObserver(() => {
       applyRulesLocal();
+      if (isXHost()) {
+        repairXJetfuelSsoModal();
+        repairXProfileCensorship();
+      }
     });
     obs.observe(document.documentElement, { childList: true, subtree: true });
     loadShields();
+    if (isXHost()) {
+      repairXJetfuelSsoModal();
+      repairXProfileCensorship();
+      window.setInterval(repairXJetfuelSsoModal, 1200);
+      window.setInterval(repairXProfileCensorship, 1200);
+    }
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);

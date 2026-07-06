@@ -28,6 +28,10 @@ H7_INBOX = HOSTESS7_ROOT / "cache" / "fieldstorage" / "brain" / "superintel" / "
 IDLE_THRESHOLD_S = int(os.environ.get("NEXUS_H7_IDLE_THRESHOLD", "90"))
 IDLE_INTERVAL_S = int(os.environ.get("NEXUS_H7_IDLE_INTERVAL", "180"))
 
+
+def _cool_operation() -> bool:
+    return os.environ.get("NEXUS_COOL_OPERATION", "0").strip().lower() in ("1", "true", "yes")
+
 CURIOUSITY_TOPICS: tuple[str, ...] = (
     "WARTIME curiosity · Horizon: truth-filter one cyber-defense briefing for Detective lane.",
     "WARTIME curiosity · Economist: one macro or markets paper — corroborate before adapt.",
@@ -147,6 +151,20 @@ def is_operator_idle() -> bool:
 
 def _pick_curiosity_topic(cycle_n: int) -> str:
     st = _load_json(IDLE_STATE, {})
+    last = st.get("last_topic")
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7curiosity", INSTALL / "lib" / "hostess7-curiosity-corpus.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "pick_curiosity"):
+                pick = mod.pick_curiosity(avoid_recent=last)
+                if pick.get("ok") and pick.get("curiosity_prompt"):
+                    return str(pick["curiosity_prompt"])
+    except Exception:
+        pass
     topics = list(CURIOUSITY_TOPICS)
     try:
         import importlib.util
@@ -161,7 +179,6 @@ def _pick_curiosity_topic(cycle_n: int) -> str:
                 topics.insert(0, f"WARTIME curiosity · Corpus gap {missing[0]}: online learn truth-filter for Horizon.")
     except Exception:
         pass
-    last = st.get("last_topic")
     idx = cycle_n % len(topics)
     topic = topics[idx]
     if topic == last and len(topics) > 1:
@@ -232,6 +249,13 @@ def _explore_internet(topic: str) -> dict[str, Any]:
 
 def run_idle_cycle(*, force: bool = False) -> dict[str, Any]:
     """One idle growth cycle — curiosity internet explore when Operator quiet."""
+    if _cool_operation():
+        return {
+            "ok": True,
+            "skipped": True,
+            "reason": "cool_operation",
+            "posture": "cool",
+        }
     wartime = wartime_room_doc()
     st = _load_json(IDLE_STATE, {"cycle_count": 0})
     cycle_n = int(st.get("cycle_count", 0))
@@ -271,7 +295,7 @@ def run_idle_cycle(*, force: bool = False) -> dict[str, Any]:
             gmod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(gmod)
             excerpt = explore.get("excerpt") or topic
-            gmod.record_learning(
+            learn = gmod.record_learning(
                 "idle_curiosity",
                 f"WARTIME idle explore: {topic[:400]}\n{excerpt[:2000]}",
                 source="idle_grow",
@@ -279,6 +303,16 @@ def run_idle_cycle(*, force: bool = False) -> dict[str, Any]:
             )
             gmod.update_comprehension()
             growth_note = "comprehension_updated"
+            if learn.get("ok") or learn.get("adapt_allowed"):
+                try:
+                    cspec = importlib.util.spec_from_file_location("h7curiosity", INSTALL / "lib" / "hostess7-curiosity-corpus.py")
+                    if cspec and cspec.loader:
+                        cmod = importlib.util.module_from_spec(cspec)
+                        cspec.loader.exec_module(cmod)
+                        if hasattr(cmod, "scan"):
+                            cmod.scan(write=True)
+                except Exception:
+                    pass
     except Exception:
         pass
 
@@ -423,6 +457,9 @@ def daemon_loop() -> int:
     IDLE_PID.write_text(str(os.getpid()), encoding="utf-8")
     tick = 0
     while True:
+        if _cool_operation():
+            time.sleep(max(300, IDLE_INTERVAL_S * 4))
+            continue
         try:
             run_idle_cycle(force=(tick == 0))
             tick += 1

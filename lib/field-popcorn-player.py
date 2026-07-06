@@ -8,6 +8,7 @@ import json
 import mimetypes
 import os
 import re
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -36,11 +37,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save_atomic(path: Path, doc: dict[str, Any]) -> None:
@@ -414,9 +430,70 @@ def thumb_read(media_id: str, mode: str) -> bytes | None:
         return None
 
 
+def _probe_duration_sec(path: Path) -> float | None:
+    try:
+        out = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                str(path),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=12,
+            check=False,
+        )
+        if out.returncode == 0 and out.stdout.strip():
+            val = float(out.stdout.strip())
+            return val if val > 0 else None
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        pass
+    return None
+
+
+def _rating_stable(meta: dict[str, Any], *, media_id: str) -> dict[str, Any]:
+    """Shared stable — best pause moment stamped on viewing/custom thumbnail."""
+    custom = meta.get("custom") or {}
+    viewing = meta.get("viewing") or {}
+    stable_sec: float | None = None
+    source: str | None = None
+    if thumb_exists(media_id, "custom") and custom.get("time_sec") is not None:
+        stable_sec = float(custom["time_sec"])
+        source = "custom"
+    elif viewing.get("time_sec") is not None:
+        stable_sec = float(viewing["time_sec"])
+        source = "viewing"
+    duration = meta.get("duration_sec")
+    try:
+        duration = float(duration) if duration is not None else None
+    except (TypeError, ValueError):
+        duration = None
+    pct = None
+    if stable_sec is not None and duration and duration > 0:
+        pct = round(min(100.0, max(0.0, (stable_sec / duration) * 100.0)), 3)
+    return {
+        "time_sec": stable_sec,
+        "source": source,
+        "duration_sec": duration,
+        "pct": pct,
+    }
+
+
 def media_meta(media_id: str) -> dict[str, Any]:
     items = _media_states()
     meta = dict(items.get(media_id) or {})
+    item = resolve_media(media_id)
+    if item and item.get("kind") in ("video", "audio") and not meta.get("duration_sec"):
+        dur = _probe_duration_sec(Path(str(item["path"])))
+        if dur:
+            meta["duration_sec"] = round(dur, 3)
+            items[media_id] = meta
+            _save_media_states(items)
     mode = meta.get("thumb_mode") or "viewing"
     if mode == "custom" and not thumb_exists(media_id, "custom"):
         mode = "viewing" if thumb_exists(media_id, "viewing") else "viewing"
@@ -429,9 +506,11 @@ def media_meta(media_id: str) -> dict[str, Any]:
         "thumb_mode": meta.get("thumb_mode") or "viewing",
         "active_thumb": active,
         "aspect_ratio": meta.get("aspect_ratio"),
+        "duration_sec": meta.get("duration_sec"),
         "resume_sec": float(meta.get("resume_sec") or 0),
         "viewing": meta.get("viewing") or {},
         "custom": meta.get("custom") or {},
+        "rating_stable": _rating_stable(meta, media_id=media_id),
         "has_viewing": thumb_exists(media_id, "viewing"),
         "has_custom": thumb_exists(media_id, "custom"),
         "thumb_url": f"/api/field-popcorn/thumb?id={media_id}&mode={active}" if active else None,
@@ -458,6 +537,7 @@ def save_thumb(
     *,
     aspect_ratio: float | None = None,
     time_sec: float | None = None,
+    duration_sec: float | None = None,
     title: str | None = None,
 ) -> dict[str, Any]:
     if mode not in ("viewing", "custom"):
@@ -480,6 +560,14 @@ def save_thumb(
     meta[mode] = {k: v for k, v in slot.items() if v is not None}
     if aspect_ratio:
         meta["aspect_ratio"] = aspect_ratio
+    if duration_sec is not None and float(duration_sec) > 0:
+        meta["duration_sec"] = round(float(duration_sec), 3)
+    elif not meta.get("duration_sec"):
+        item = resolve_media(media_id)
+        if item and item.get("kind") in ("video", "audio"):
+            dur = _probe_duration_sec(Path(str(item["path"])))
+            if dur:
+                meta["duration_sec"] = round(dur, 3)
     if mode == "custom":
         meta["thumb_mode"] = "custom"
     items[media_id] = meta
@@ -500,11 +588,13 @@ def set_thumb_mode(media_id: str, mode: str) -> dict[str, Any]:
     return {"ok": True, "meta": media_meta(media_id)}
 
 
-def save_position(media_id: str, position_sec: float) -> dict[str, Any]:
+def save_position(media_id: str, position_sec: float, *, duration_sec: float | None = None) -> dict[str, Any]:
     items = _media_states()
     meta = dict(items.get(media_id) or {})
     meta["resume_sec"] = max(0.0, float(position_sec))
     meta["resume_updated"] = _now()
+    if duration_sec is not None and float(duration_sec) > 0:
+        meta["duration_sec"] = round(float(duration_sec), 3)
     items[media_id] = meta
     _save_media_states(items)
     return {"ok": True, "resume_sec": meta["resume_sec"], "meta": media_meta(media_id)}
@@ -655,6 +745,7 @@ def main() -> int:
                 str(payload.get("data_url") or ""),
                 aspect_ratio=payload.get("aspect_ratio"),
                 time_sec=payload.get("time_sec"),
+                duration_sec=payload.get("duration_sec"),
                 title=payload.get("title"),
             ),
             ensure_ascii=False,
@@ -678,7 +769,11 @@ def main() -> int:
         except json.JSONDecodeError:
             payload = {}
         print(json.dumps(
-            save_position(str(payload.get("media_id") or ""), float(payload.get("position_sec") or 0)),
+            save_position(
+                str(payload.get("media_id") or ""),
+                float(payload.get("position_sec") or 0),
+                duration_sec=payload.get("duration_sec"),
+            ),
             ensure_ascii=False,
             indent=2,
         ))

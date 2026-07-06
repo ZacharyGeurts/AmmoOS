@@ -1,6 +1,6 @@
 {
   "schema": "grok16-build-essential-toolchain/v1",
-  "updated": "2026-06-30T03:29:55.775353+00:00",
+  "updated": "2026-06-29T14:48:34.413554+00:00",
   "product": "Grok16-build-essential",
   "replaces": "ubuntu:build-essential",
   "field_version": "16.2.0",
@@ -58,8 +58,8 @@
           "enabled": true,
           "version": "16.1.1-fast1",
           "memory_entries": 0,
-          "disk_entries": 2,
-          "cache_dir": "/home/default/Desktop/SG/NewLatest/.nexus-field-drive/nexus-field/state/gpy16-bytecode-cache"
+          "disk_entries": 0,
+          "cache_dir": "/home/default/Desktop/SG/NewLatest/.nexus-state/gpy16-bytecode-cache"
         },
         "fast_mode": true,
         "profile": "fastest",

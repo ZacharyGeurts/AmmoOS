@@ -42,11 +42,26 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -307,6 +322,28 @@ def collect_entries() -> list[dict[str, Any]]:
             "description": "Auto-detected books — call numbers, keywords placed, sort & search.",
             "page_count": cc.get("card_count"),
             "ironclad_citation": "ironclad:catalog:1",
+        })
+    speaking_shelf = DEWEY_ROOT / "400-education"
+    speaking_count = len(list(speaking_shelf.glob("exploring_speaking_*/book.json")))
+    if speaking_count:
+        entries.append({
+            "id": "exploring-speaking-shelf",
+            "title": "Exploring Speaking — every language ever",
+            "author": "AmmoOS Field Library",
+            "category": "foreign_language",
+            "dewey": "400",
+            "format": "h7c",
+            "ready": True,
+            "source": "field-exploring-speaking",
+            "collection": "exploring_speaking",
+            "description": (
+                f"One book per language — Exploring Speaking X · phonetics, dictionary, "
+                f"thesaurus, hieroglyphics · {speaking_count} on shelf (target 7743)."
+            ),
+            "book_count": speaking_count,
+            "ironclad_citation": "ironclad:knowledge:2",
+            "truth_gate": "lib/h7-library-truth.py",
+            "hostess7_doctrine": "data/hostess7-library-doctrine.json",
         })
     tobin_book = DEWEY_ROOT / "133-parapsychology" / "tobins-spirit-guide" / "book.json"
     if tobin_book.is_file():

@@ -1,6 +1,7 @@
+
 #!/bin/bash
 # NEXUS Field OS — ./nexus.sh does it all: boot, panel, underlay, ZNetwork, Queen, Grok16.
-set -euo pipefail
+
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 # Canonical field tree — NewLatest only (Queen, blocks, 2.0.0 gates).
@@ -13,12 +14,30 @@ export ZNETWORK_RELAYER="${ZNETWORK_RELAYER:-1}"
 export ZNETWORK_UNDERHOOK=0
 export ZNETWORK_INTERNET_PIPE_TARGET="${ZNETWORK_INTERNET_PIPE_TARGET:-100}"
 export ZNETWORK_MODE="${ZNETWORK_MODE:-ACTIVE}"
-export QUEEN_BROWSER_ONLY="${QUEEN_BROWSER_ONLY:-1}"
+export QUEEN_BROWSER_ONLY="${QUEEN_BROWSER_ONLY:-0}"
 export QUEEN_NO_OS_BROWSER="${QUEEN_NO_OS_BROWSER:-1}"
+export NEXUS_BOOT_C2_ONLY="${NEXUS_BOOT_C2_ONLY:-1}"
+export NEXUS_C2_DESKTOP_LAUNCH="${NEXUS_C2_DESKTOP_LAUNCH:-1}"
+export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT:-9477}/field}"
+export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-$QUEEN_BROWSER_HOME}"
 export NEXUS_FIELD_BROWSER_QUEEN="${NEXUS_FIELD_BROWSER_QUEEN:-1}"
 export NEXUS_FIELD_DNS="${NEXUS_FIELD_DNS:-1}"
 export NEXUS_FIELD_DHCP="${NEXUS_FIELD_DHCP:-1}"
 export NEXUS_FIELD_LOCAL_DNS_CONNECT="${NEXUS_FIELD_LOCAL_DNS_CONNECT:-1}"
+export NEXUS_WAR_MACHINE="${NEXUS_WAR_MACHINE:-1}"
+export NEXUS_C2_WAR_POSTURE="${NEXUS_C2_WAR_POSTURE:-1}"
+export NEXUS_C2_KIOSK="${NEXUS_C2_KIOSK:-0}"
+export NEXUS_EVERY_KILL_REKILL="${NEXUS_EVERY_KILL_REKILL:-1}"
+export NEXUS_BOOT_REKILL="${NEXUS_BOOT_REKILL:-1}"
+export NEXUS_FIELD_ATTACK_KIT="${NEXUS_FIELD_ATTACK_KIT:-1}"
+export NEXUS_FIELD_AUTO_REKILL="${NEXUS_FIELD_AUTO_REKILL:-1}"
+export NEXUS_ATTACK_KIT_AUTO_CRUSH="${NEXUS_ATTACK_KIT_AUTO_CRUSH:-1}"
+export NEXUS_KILL_DETECT="${NEXUS_KILL_DETECT:-1}"
+export SG_ROOT_KILL_PREJUDICE="${SG_ROOT_KILL_PREJUDICE:-1}"
+export SG_ROOT_SOVEREIGN_KILL="${SG_ROOT_SOVEREIGN_KILL:-1}"
+export SG_ROOT_SOVEREIGN_GUARD="${SG_ROOT_SOVEREIGN_GUARD:-1}"
+export KILROY_WAR_POSTURE="${KILROY_WAR_POSTURE:-1}"
+export FIELD_STACK_LAYER="${FIELD_STACK_LAYER:-hardware,nexus_c2,kilroy,ammoos,queen}"
 
 # shellcheck source=/dev/null
 source "${ROOT}/lib/nexus-common.sh"
@@ -122,6 +141,16 @@ nexus_field_standalone_ensure_panel() {
     || nexus_panel_wait_ready "${url%/field}/" 5; then
     served="$(nexus_panel_served_version 2>/dev/null || true)"
     nexus_log "INFO" "nexus.sh" "PANEL_READY url=${url} version=${served:-unknown}"
+    if command -v curl >/dev/null 2>&1; then
+      curl -sf -X POST "${url%/field}/api/hostess7/internet-clean" \
+        -H "Content-Type: application/json" -d '{}' >/dev/null 2>&1 \
+        || curl -sf -X POST "http://127.0.0.1:${port}/api/hostess7/internet-clean" \
+        -H "Content-Type: application/json" -d '{}' >/dev/null 2>&1 || true
+      curl -sf -X POST "${url%/field}/api/hostess7/lab/connect" \
+        -H "Content-Type: application/json" -d '{}' >/dev/null 2>&1 \
+        || curl -sf -X POST "http://127.0.0.1:${port}/api/hostess7/lab/connect" \
+        -H "Content-Type: application/json" -d '{}' >/dev/null 2>&1 || true
+    fi
     return 0
   fi
 
@@ -204,6 +233,8 @@ Usage:
   ./nexus.sh --tab <view>    Open a panel tab in the browser (e.g. command, library)
   ./nexus.sh --shutdown      Stop panel, tray, and watchdog immediately (--stop)
   ./nexus.sh --restart       Stop and start panel immediately (--restart-immediate)
+  ./nexus.sh --health        Stack health — ports, AML tasks, manifest (see ./status.sh)
+  ./nexus.sh --verify        Alias for ./bin/nexus verify (manifest integrity)
 
 Tab views (for --tab):
   command, us, field-broadcaster, field-obs, packets, threats, intel, final-eye, final-ear, final-mouth, signals, dns, outside, library, training, system
@@ -228,6 +259,12 @@ case "${1:-}" in
   -h|--help|help)
     nexus_usage
     exit 0
+    ;;
+  --health|--status)
+    exec bash "${ROOT}/status.sh" "${2:-}"
+    ;;
+  --verify)
+    exec "${ROOT}/bin/nexus" verify
     ;;
   --clean|--cleanup)
     nexus_field_os_build_clean
@@ -267,7 +304,6 @@ case "${1:-}" in
       URL="$(nexus_panel_url)"
       echo "Panel restarted: ${URL}"
       echo "Version: $(nexus_panel_served_version 2>/dev/null || nexus_panel_desired_version 2>/dev/null || echo unknown)"
-      nexus_field_os_underlay_witness 2>/dev/null || true
       if [[ "${NEXUS_FIELD_LAUNCH_BROWSER:-1}" == "1" ]] && declare -f nexus_boot_c2_desktop >/dev/null 2>&1; then
         nexus_boot_c2_desktop && echo "NEXUS C2 desktop relaunched" \
           || echo "WARN: NEXUS C2 desktop launch incomplete — ./nexus.sh" >&2
@@ -389,7 +425,7 @@ if [[ "${1:-}" == "--tab" && -n "${2:-}" ]]; then
 fi
 
 if nexus_boot_c2_desktop; then
-  echo "AmmoOS fullscreen desktop at ${URL} — Queen Browser launches from desktop"
+  echo "NEXUS C2 war machine — command deck at ${URL}"
   nexus_panel_tray_install_autostart 2>/dev/null || true
   nexus_panel_tray_ensure_once 2>/dev/null || true
   exit 0

@@ -79,11 +79,26 @@ def _grok16_root() -> Path:
         return (_INSTALL.parent / "Grok16").resolve()
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -271,6 +286,37 @@ def bind_chamber_ocr(
 
         total_added = 0
         source_stats: dict[str, Any] = {}
+
+        bundle_py = _INSTALL / "lib" / "field-h7s-desktop-bundle.py"
+        if bundle_py.is_file():
+            try:
+                spec = importlib.util.spec_from_file_location("field_h7s_desktop_ocr_feed", bundle_py)
+                if spec and spec.loader:
+                    bmod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(bmod)
+                    if hasattr(bmod, "ingest_ocr_feed"):
+                        bundle_rows = bmod.ingest_ocr_feed(limit=max_files)
+                        bundle_added = 0
+                        for row in bundle_rows:
+                            text = str(row.get("text") or "").strip()
+                            if not text:
+                                continue
+                            bundle_added += _ingest_text_blob(
+                                text,
+                                source_id="desktop_h7s",
+                                path=str(row.get("source") or "field-desktop.h7s"),
+                                corpus=corpus,
+                                ocr_doc=ocr_doc,
+                            )
+                        if bundle_added:
+                            total_added += bundle_added
+                            source_stats["desktop_h7s"] = {
+                                "kind": "h7s_slice",
+                                "rows": len(bundle_rows),
+                                "added": bundle_added,
+                            }
+            except Exception:
+                pass
 
         for spec in ocr_doc.get("feed_sources") or []:
             sid = str(spec.get("id") or "unknown")

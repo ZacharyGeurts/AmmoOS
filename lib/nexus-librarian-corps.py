@@ -124,6 +124,21 @@ def pick_librarian(
                 return lib
         return libs[0] if libs else {}
 
+    if event in (
+        "lie_catalog",
+        "lie_scan",
+        "lies_index",
+        "biggest_lies",
+        "deception_index",
+        "truth_questionable",
+        "search_lies",
+        "corrections_ledger",
+        "reinform",
+    ) or role == "lie_librarian":
+        for lib in libs:
+            if lib.get("role") == "lie_librarian":
+                return lib
+
     if event == "war_ascertain":
         for lib in libs:
             if lib.get("role") == "dewey_humanities":

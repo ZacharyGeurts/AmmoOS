@@ -10,8 +10,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
-STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
+_LIB = Path(__file__).resolve().parent
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(_LIB.parent)))
+STATE = Path(os.environ.get("NEXUS_STATE_DIR", str(INSTALL / ".nexus-state")))
 DOCTRINE = INSTALL / "data" / "humanoid-motion-doctrine.json"
 RUNTIME = STATE / "humanoid-motion-runtime.json"
 PANEL = STATE / "humanoid-motion-panel.json"
@@ -44,11 +45,26 @@ _SOVEREIGN_CLOCK_MOD = None
 
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -470,6 +486,23 @@ def body_motion_amplitudes() -> list[dict[str, Any]]:
     return out
 
 
+def _secured_mod() -> Any | None:
+    import importlib.util
+
+    py = INSTALL / "lib" / "humanoid-motion-secured.py"
+    if not py.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("humanoid_motion_secured", py)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
 def build_panel(*, write: bool = True) -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     rt = _runtime()
@@ -534,6 +567,12 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
     opps = arena_opponents(doctrine=doctrine)
     doc["opponents"] = opps
     doc["opponent_count"] = len(opps)
+    secured = _secured_mod()
+    if secured and hasattr(secured, "merge_into_motion_panel"):
+        try:
+            doc = secured.merge_into_motion_panel(doc)
+        except Exception:
+            pass
     if write:
         _save(PANEL, doc)
         rt_out = {**rt, "schema": "humanoid-motion-runtime/v1", "body_motion": doc["body_motion"]}

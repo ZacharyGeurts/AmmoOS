@@ -80,11 +80,26 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -204,6 +219,7 @@ def _keyword_placement(row: dict[str, Any]) -> tuple[list[str], dict[str, list[s
         ("description", "description"), ("motto", "description"),
         ("study_note", "description"), ("ironclad_citation", "auto"),
         ("combinatorics_facet", "auto"), ("publisher", "auto"),
+        ("book_kind", "collection"),
     ):
         val = row.get(field)
         if val:
@@ -212,6 +228,12 @@ def _keyword_placement(row: dict[str, Any]) -> tuple[list[str], dict[str, list[s
 
     for kw in row.get("keywords") or row.get("topics") or row.get("tags") or []:
         add(str(kw), "auto")
+    if row.get("personhood") is True:
+        add("personhood", "auto")
+    if row.get("combat") is True:
+        add("combat", "auto")
+    if row.get("speaking") is True:
+        add("speaking", "auto")
 
     emperor = row.get("emperor")
     if isinstance(emperor, dict):
@@ -305,6 +327,31 @@ def _card_from_book(
     }
     card["search_blob"] = _search_blob(card)
     return card
+
+
+def _detect_from_dewey_index(bib: dict[str, dict[str, Any]], seen: set[str]) -> list[dict[str, Any]]:
+    """Ingest tagged entries from field-dewey-index — shelf.json books without book.json."""
+    idx_mod = _import_mod("dewey_idx", "field-dewey-index.py")
+    if not idx_mod or not hasattr(idx_mod, "load_index"):
+        return []
+    try:
+        doc = idx_mod.load_index()
+    except Exception:
+        return []
+    cards: list[dict[str, Any]] = []
+    seq = 0
+    for ent in doc.get("books") or []:
+        bid = str(ent.get("id") or "")
+        if not bid or bid in seen:
+            continue
+        seen.add(bid)
+        seq += 1
+        merged = _merge_bibliography(dict(ent), bib)
+        merged.setdefault("keywords", ent.get("tags") or ent.get("keywords") or [])
+        merged.setdefault("tags", ent.get("tags") or [])
+        merged.setdefault("topics", ent.get("tags") or [])
+        cards.append(_card_from_book(merged, detected_by="dewey_index", seq=seq))
+    return cards
 
 
 def _detect_dewey_books(bib: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
@@ -437,6 +484,8 @@ def _build_keywords_index(cards: list[dict[str, Any]]) -> dict[str, Any]:
 def detect_cards(*, sync_keywords: bool = False) -> list[dict[str, Any]]:
     bib = _load_bibliography()
     cards = _detect_dewey_books(bib)
+    seen = {c["id"] for c in cards}
+    cards.extend(_detect_from_dewey_index(bib, seen))
     cards = _detect_registry_books(cards, bib)
     if sync_keywords:
         _sync_keywords_to_books(cards)
@@ -724,6 +773,12 @@ def build_dewey_catalog_shelf(cat: dict[str, Any]) -> dict[str, Any]:
 
 
 def publish_catalog(*, refresh: bool = True, sync_keywords: bool = False) -> dict[str, Any]:
+    idx = _import_mod("dewey_idx_pub", "field-dewey-index.py")
+    if idx and hasattr(idx, "build_index"):
+        try:
+            idx.build_index(write=True)
+        except Exception:
+            pass
     cat = build_catalog(sync_keywords=sync_keywords)
     _save(CATALOG, cat)
     dewey = build_dewey_catalog_shelf(cat)

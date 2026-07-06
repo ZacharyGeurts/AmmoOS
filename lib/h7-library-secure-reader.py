@@ -163,6 +163,33 @@ def issue_session(book_id: str, *, book_meta: dict[str, Any] | None = None) -> d
         meta["title"] = book_id
     dewey = str(meta.get("dewey") or "")
     librarian = _pick_librarian(book_id, dewey)
+    lie_librarian: dict[str, Any] = {}
+    all_lies: dict[str, Any] = {}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "h7_lie_librarian_reader",
+            INSTALL / "lib" / "h7-lie-librarian.py",
+        )
+        if spec and spec.loader:
+            ll = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(ll)
+            if hasattr(ll, "persona"):
+                lie_librarian = ll.persona()
+            if hasattr(ll, "knows_book"):
+                know = ll.knows_book(book_id, audience="both")
+                all_lies = {
+                    "lie_count": know.get("lie_count", 0),
+                    "lies": know.get("lies") or [],
+                    "index": know.get("index"),
+                    "for_humans": know.get("for_humans"),
+                    "for_super_intelligence": know.get("for_super_intelligence"),
+                    "dual_audience": know.get("dual_audience"),
+                }
+                if know.get("lie_count"):
+                    librarian = lie_librarian or librarian
+    except Exception:
+        pass
     token = secrets.token_urlsafe(24)
     exp = int(time.time()) + SESSION_TTL_SEC
     sig = _sign(token, book_id, exp)
@@ -193,6 +220,21 @@ def issue_session(book_id: str, *, book_meta: dict[str, Any] | None = None) -> d
     (READER_DIR / "sessions").mkdir(parents=True, exist_ok=True)
     _save_json(_session_path(token), session)
     rec = _load_reader_record(book_id)
+    page_chars = int(os.environ.get("NEXUS_H7_PAGE_CHARS", "3200"))
+    reinform_panel: dict[str, Any] = {}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "h7_reinform_reader",
+            INSTALL / "lib" / "h7-library-reinform.py",
+        )
+        if spec and spec.loader:
+            rmod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(rmod)
+            if hasattr(rmod, "panel_json"):
+                reinform_panel = rmod.panel_json(book_id)
+    except Exception:
+        pass
     return {
         "ok": True,
         "session": {
@@ -202,7 +244,16 @@ def issue_session(book_id: str, *, book_meta: dict[str, Any] | None = None) -> d
             "signature": sig,
             "librarian": librarian,
             "book": meta,
-            "features": session["features"],
+            "features": session["features"] + ["canonical_pages", "lies_index", "corrections_ledger"],
+            "page_chars": page_chars,
+            "pagination": reinform_panel.get("pagination") or {},
+            "page_count": reinform_panel.get("page_count"),
+            "lies_index": reinform_panel.get("lies_index"),
+            "all_lies": all_lies,
+            "lie_librarian": lie_librarian,
+            "corrections": reinform_panel.get("corrections") or [],
+            "overlap_refs": reinform_panel.get("overlap_refs") or [],
+            "appendix_page": reinform_panel.get("appendix_page"),
             "progress": rec.get("progress") or {},
             "bookmarks": rec.get("bookmarks") or [],
             "layout": rec.get("layout") or {},

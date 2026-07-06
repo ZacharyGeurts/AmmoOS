@@ -1,3 +1,0 @@
-field PADTEST
-print "Run PADTEST for Xbox360 live view"
-return 0

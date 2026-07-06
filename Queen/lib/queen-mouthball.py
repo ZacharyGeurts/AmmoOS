@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -14,9 +15,10 @@ from queen_final_mouth import final_mouth_env, final_mouth_root, import_final_mo
 
 QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", SG / "NewLatest"))
 _LIB = Path(__file__).resolve().parent
 FINAL_MOUTH = final_mouth_root()
-HOSTESS = Path(__import__("os").environ.get("HOSTESS7_ROOT", SG / "Hostess7"))
+HOSTESS = Path(os.environ.get("HOSTESS7_ROOT", SG / "Hostess7"))
 
 
 def _now() -> str:
@@ -54,6 +56,30 @@ def _mouth_neural_status() -> dict[str, Any]:
         return {"available": False, "tail": (proc.stdout or "")[-800:]}
 
 
+def _presume_receipt() -> dict[str, Any]:
+    script = INSTALL / "lib" / "hostess7-presume.py"
+    if not script.is_file():
+        return {"wired": False}
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "propagate"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(INSTALL),
+        )
+        doc = json.loads(proc.stdout or "{}")
+        return {
+            "wired": True,
+            "propagated": doc.get("propagated"),
+            "uninterruptable": True,
+            "not_go_away": doc.get("not_go_away"),
+            "targets_present": doc.get("targets_present"),
+        }
+    except (json.JSONDecodeError, subprocess.TimeoutExpired):
+        return {"wired": False}
+
+
 def mouthball_status() -> dict[str, Any]:
     _import_mouth()
     from zocr_mouth import final_mouth_status, mouth_status, vocal_spectrum_doctrine
@@ -74,6 +100,7 @@ def mouthball_status() -> dict[str, Any]:
         "fusion_api": "/api/queen-mouthball",
         "ear_api": "/api/queen-earball",
         "eye_api": "/api/queen-eyeball",
+        "presume": _presume_receipt(),
     }
 
 
@@ -129,7 +156,58 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             mode=body.get("mode"),
             voice=body.get("voice"),
             engine=body.get("engine"),
+            audience=body.get("audience"),
         )
+
+    if action in ("generate_frequency", "frequency", "tone"):
+        _import_mouth()
+        from zocr_mouth import generate_frequency
+        return generate_frequency(
+            float(body.get("hz") or body.get("frequency") or 440),
+            audience=body.get("audience"),
+            duration_ms=int(body.get("duration_ms") or 50),
+        )
+
+    if action in ("fcc_clamp", "fcc_acoustic", "spectrum_clamp"):
+        _import_mouth()
+        from zocr_mouth import analyze_vocal_spectrum, clamp_spectrum_fcc_safe, load_doctrine
+        profile_id = body.get("profile") or body.get("vocal_profile")
+        spec = analyze_vocal_spectrum(profile_id=profile_id)
+        bins = (spec.get("bins") or spec.get("spectrum_bins") or [])
+        if not bins:
+            prof = (load_doctrine().get("profiles") or {}).get(profile_id or "human_spoken_word", {})
+            from zocr_mouth import _synthetic_formant_bins
+            bins = _synthetic_formant_bins(prof)
+        return clamp_spectrum_fcc_safe(bins, audience=body.get("audience"))
+
+    if action in ("speaking_train", "speaking_training", "train_speaking"):
+        script = INSTALL / "lib" / "hostess7-speaking-training.py"
+        if not script.is_file():
+            script = SG / "NewLatest" / "lib" / "hostess7-speaking-training.py"
+        if not script.is_file():
+            return {"ok": False, "error": "speaking_training_missing"}
+        env = os.environ.copy()
+        env["NEXUS_INSTALL_ROOT"] = str(INSTALL if (INSTALL / "lib").is_dir() else SG / "NewLatest")
+        env["SG_ROOT"] = str(SG)
+        env["QUEEN_ROOT"] = str(QUEEN)
+        env["FINAL_MOUTH_ROOT"] = str(FINAL_MOUTH)
+        py = [str(QUEEN / "lib"), str(FINAL_MOUTH)]
+        if env.get("PYTHONPATH"):
+            py.append(env["PYTHONPATH"])
+        env["PYTHONPATH"] = os.pathsep.join(py)
+        lesson = body.get("lesson") or body.get("lesson_id")
+        cmd = [sys.executable, str(script)]
+        if lesson:
+            cmd.extend(["lesson", "--lesson", str(lesson)])
+        else:
+            cmd.append("train")
+        cmd.extend(["--code", str(body.get("code") or body.get("iso6393") or "eng")])
+        cmd.extend(["--audience", str(body.get("audience") or "human")])
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120, env=env, cwd=str(env["NEXUS_INSTALL_ROOT"]))
+        try:
+            return json.loads(proc.stdout or "{}")
+        except json.JSONDecodeError:
+            return {"ok": False, "error": "speaking_train_failed", "tail": (proc.stdout or proc.stderr or "")[-800:]}
 
     if action in ("voice_fix", "fix_voice", "calibrate"):
         _import_mouth()
@@ -236,6 +314,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             "status", "arm", "verify", "spectrum", "speak", "voice_fix",
             "fusion", "doctrine", "vocal_spectrum",
             "mouth_neural", "prepare_utterance", "mouth_train", "mouth_neural_encourage",
+            "generate_frequency", "fcc_clamp", "speaking_train",
         ],
     }
 

@@ -36,6 +36,18 @@
       "id": "issue_reader",
       "summary": "Librarian issues secure full-page reader — local session token, bookmarks, layout, progress restore.",
       "steps": ["POST /api/library/reader/issue", "H7Reader.openSecure with session", "bookmarks + themes + line height", "progress saved on page change"]
+    },
+    {
+      "id": "lie_librarian",
+      "summary": "Lie Librarian — Ironclad Deception Index. Foundation for Autonomous Warfare: every LIKELY_FALSE claim per book, operational assessments.",
+      "steps": [
+        "scan_book_lies via h7-lie-librarian.py",
+        "store all_lies_index + lies_index on book.json",
+        "classify LIKELY_FALSE / UNVERIFIED — verify before fielding",
+        "build_catalog at STATE/h7-lie-librarian-catalog.json",
+        "route lies_index / truth_questionable events to vera_lies",
+        "GET /api/library/lie-librarian?book= / search= / build=1"
+      ]
     }
   ]
 }

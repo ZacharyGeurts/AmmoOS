@@ -1,9 +1,29 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/impl/restart-field-stack.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # Restart NewLatest field stack (panel + Queen + Final_Eye).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SG="$(cd "${ROOT}/.." && pwd)"
+# shellcheck source=/dev/null
+source "${ROOT}/lib/nexus-aml-exec.sh"
 QUEEN="${QUEEN_ROOT:-${ROOT}/Queen}"
 PANEL_PORT="${NEXUS_THREAT_PANEL_PORT:-9477}"
 WORLD_PORT="${QUEEN_WORLD_PORT:-9481}"
@@ -41,7 +61,7 @@ sleep 0.6
 
 echo "=== Starting integrated stack (fast: panel + Queen) ==="
 echo "  Full stack: bash ${ROOT}/scripts/stack.sh start"
-AML_IMPL=1 bash "${ROOT}/scripts/impl/ammoos-direct-start.sh"
+nexus_aml_exec "script:scripts/impl/ammoos-direct-start.sh"
 
 if ! curl -sf "http://127.0.0.1:${EYE_PORT}/api/health" >/dev/null 2>&1; then
   echo "=== Starting Final_Eye :${EYE_PORT} ==="
@@ -52,7 +72,7 @@ if ! curl -sf "http://127.0.0.1:${EYE_PORT}/api/health" >/dev/null 2>&1; then
 fi
 
 if [[ "${NEXUS_FIELD_LAUNCH_BROWSER}" == "1" ]]; then
-  echo "NEXUS C2 desktop — fullscreen kiosk at /field"
+  echo "NEXUS C2 war machine — command deck at /field"
 fi
 
 echo ""

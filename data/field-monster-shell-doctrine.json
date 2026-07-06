@@ -1,39 +1,27 @@
 {
-  "id": "field-monster-shell",
-  "version": "1.0.0",
-  "name": "Monster",
-  "role": "Secure task shell — invisible launch wrapper, hang dialogs, full kill on quit",
-  "invisible": true,
-  "never_crash": true,
-  "ui": "native_popup",
-  "launch_wrapper": "lib/field-monster-launch.sh",
-  "shell": "lib/field-monster-shell.py",
-  "popup": "lib/field-monster-popup.py",
-  "hang_dialog_js": "panel/assets/field-monster-hang-dialog.js",
-  "cad_popup_js": "panel/assets/field-monster-cad-popup.js",
-  "cad_chord": "Ctrl+Alt+Del",
-  "cad_action": "monster_native_popup",
-  "api_routes": {
-    "hang_pending": "/api/field-monster-shell/hang-pending",
-    "hang_respond": "/api/field-monster-shell/hang-respond",
-    "dispatch": "/api/field-monster-shell/dispatch",
-    "nuke": "/api/field-monster-shell/nuke"
-  },
+  "schema": "field-monster-shell-doctrine/v1",
+  "title": "Monster secure shell — stall & hang policy",
+  "motto": "Prompt only when the whole process tree is truly idle — compilers and pack jobs get patience.",
   "defaults": {
-    "grace_sec": 5,
-    "stall_sec": 90,
+    "grace_sec": 8,
+    "stall_sec": 180,
     "timeout_sec": 7200,
     "poll_ms": 500,
     "smart_vitals": true,
     "prompt_only_when_idle": true,
-    "vitals_quiet_sec": 5,
-    "max_prompts_per_session": 2
+    "vitals_quiet_sec": 15,
+    "max_prompts_per_session": 2,
+    "native_hang_popup": false,
+    "desktop_hang_wait_sec": 300,
+    "hang_queue_ttl_sec": 900,
+    "watch_log_throttle_sec": 90,
+    "watch_log_phases": ["prompt", "busy"],
+    "re_prompt_cooldown_sec": 120
   },
-  "hang_policy": "Wait grace_sec after output stops, then read /proc vitals (CPU, IO, state). Resource activity counts as progress — popup only when truly idle and operator action may be needed.",
-  "kill_chain": ["SIGTERM", "SIGKILL", "pkill_tree"],
-  "wired_launchers": [
-    "lib/ammolang-run.sh",
-    "lib/field-ammolang-build.py",
-    "lib/field-ammolang-test.py"
-  ]
+  "slow_markers": [
+    "gcc", "g16", "cc1", "lto", "ld", "ninja", "cmake", "make", "qemu",
+    "pack-ammoos", "rsync", "tar", "integrate", "compile", "chips",
+    "wire-stack", "field-ammolang", "grok16", "python3", "pythong"
+  ],
+  "slow_stall_floor_sec": 300
 }

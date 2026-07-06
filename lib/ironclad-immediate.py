@@ -36,11 +36,26 @@ _SOVEREIGN_CLOCK_MOD = None
 
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -269,6 +284,18 @@ def publish_immediate(*, write: bool = True) -> dict[str, Any]:
                             cc_mod.maybe_condense_after_ironclad(refresh=False)
                 except Exception:
                     pass
+        lane_py = INSTALL / "lib" / "field-h7s-lane.py"
+        if lane_py.is_file() and os.environ.get("NEXUS_H7S_LANE", "1") == "1":
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("field_h7s_lane_ic", lane_py)
+                if spec and spec.loader:
+                    lane = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(lane)
+                    if hasattr(lane, "ironclad_lane"):
+                        lane.ironclad_lane(pack_desktop=bool(doc.get("ironclad_sealed")))
+            except Exception:
+                pass
     return doc
 
 

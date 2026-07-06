@@ -46,11 +46,26 @@ _MOD_CACHE: dict[str, Any] = {}
 _SOVEREIGN_CLOCK_MOD = None
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _now() -> str:
@@ -213,6 +228,20 @@ def truth_gate() -> dict[str, Any]:
     pass_ok = bool(
         iron.get("ok") and sanity.get("ok") and baselines.get("ok") and voltage.get("ok")
     )
+    advisory: dict[str, Any] = {"advisory_only": True, "skipped": True}
+    wholes = _mod(INSTALL / "lib" / "field-body-component-wholes.py", "fio_wholes_advisory")
+    if wholes and hasattr(wholes, "advisory_for_truth_gate"):
+        try:
+            advisory = wholes.advisory_for_truth_gate(skip_refresh=True)
+        except Exception as exc:
+            advisory = {"advisory_only": True, "error": str(exc)}
+    beyond_darpa: dict[str, Any] = {"advisory_only": True, "skipped": True}
+    bds = _mod(INSTALL / "lib" / "beyond-darpa-security.py", "fio_beyond_darpa_advisory")
+    if bds and hasattr(bds, "advisory_for_truth_gate"):
+        try:
+            beyond_darpa = bds.advisory_for_truth_gate(skip_refresh=True)
+        except Exception as exc:
+            beyond_darpa = {"advisory_only": True, "error": str(exc)}
     return {
         "schema": "field-io-truth-gate/v1",
         "pass_ok": pass_ok,
@@ -221,6 +250,9 @@ def truth_gate() -> dict[str, Any]:
         "field_sanity": sanity,
         "g1id_baselines": baselines,
         "voltage_regulation": voltage,
+        "advisory": advisory,
+        "beyond_darpa_security": beyond_darpa,
+        "advisory_never_defeats_gate": True,
         "file_write_forbidden": True,
         "output_stream_only": True,
         "await_output_forbidden": True,

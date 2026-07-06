@@ -18,6 +18,8 @@
   "auto_detect": {
     "sources": [
       "library/dewey/**/book.json",
+      "library/dewey/**/shelf.json",
+      "field-dewey-index",
       "field-library-registry",
       "field-dewey-library",
       "h7-library-librarian"

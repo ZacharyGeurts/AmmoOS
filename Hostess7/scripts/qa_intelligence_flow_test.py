@@ -58,13 +58,12 @@ def main() -> int:
         return fail("flow synthesis too thin")
 
     st = index_stats()
-    total = st.get("total") or st.get("entries") or 0
-    if total < 25:
-        return fail(f"tools index too small: {total}")
+    if st["total"] < 25:
+        return fail(f"tools index too small: {st['total']}")
 
-    tools = search_tools("self-update field reach qa", limit=6)
+    tools = search_tools("self-update zac reach qa", limit=6)
     tool_ids = {t.get("id") for t in tools}
-    if not tool_ids & {"self_update", "field_one", "reach", "qa_turing"}:
+    if not tool_ids & {"self_update", "zac", "reach", "qa_turing"}:
         return fail(f"tools search miss: {tool_ids}")
 
     q = "teach me the entire flow of intelligence up to super intelligence"
@@ -86,7 +85,7 @@ def main() -> int:
 
     print("OK intelligence_flow doctrine + tools docs + intent")
     print(f"METRIC flow_layers={len(FLOW_LAYERS)}")
-    print(f"METRIC tools_docs_entries={total}")
+    print(f"METRIC tools_docs_entries={st['total']}")
     print("METRIC qa_intelligence_flow=1")
     return 0
 

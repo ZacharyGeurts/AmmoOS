@@ -1,16 +1,56 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/publish-ammoos-hub-pages.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 # Publish thin Pages stubs for stack repos — link to AmmoOS code + manual.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VER="${AMMOOS_VERSION:-2.0.0-beta4}"
+VER="${AMMOOS_VERSION:-2.0.0-beta5}"
 STAGE="${ROOT}/.pages-hub-staging"
 HUB_PY="${ROOT}/lib/page_ammoos_hub.py"
+HUB_DOC="${ROOT}/data/ammoos-pages-hub.json"
 OWNER="${GITHUB_PAGES_OWNER:-ZacharyGeurts}"
+RUNTIME_REPOS="AmmoCode Hostess7 KILROY"
 
 log() { printf '[hub-pages] %s\n' "$*"; }
 
+# Thin redirect stubs are FIRED — runtime repos only; no terrorist fake hubs.
+if [[ "${NEXUS_HUB_STUBS_ENABLE:-0}" != "1" ]]; then
+  log "STUBS DISABLED — redirect hubs FIRED (set NEXUS_HUB_STUBS_ENABLE=1 to override)"
+  exit 0
+fi
+
 [[ -f "$HUB_PY" ]] || { echo "missing page_ammoos_hub.py" >&2; exit 1; }
+
+is_runtime_repo() {
+  local name="$1"
+  for r in $RUNTIME_REPOS; do
+    [[ "$r" == "$name" ]] && return 0
+  done
+  python3 - <<PY "$name" "$HUB_DOC" 2>/dev/null || return 1
+import json, sys
+name, path = sys.argv[1], sys.argv[2]
+doc = json.load(open(path))
+entry = (doc.get("repos") or {}).get(name) or {}
+sys.exit(0 if entry.get("pages_mode") == "runtime" else 1)
+PY
+}
 
 if [[ -f "${ROOT}/docs/build-ammoos-manual.py" ]]; then
   python3 "${ROOT}/docs/build-ammoos-manual.py"
@@ -31,6 +71,10 @@ pages_source() {
 
 publish_one() {
   local name="$1" manual_url="$2"
+  if is_runtime_repo "$name"; then
+    log "skip ${name} (runtime Pages — use dedicated publish script)"
+    return 0
+  fi
   local remote="https://github.com/${OWNER}/${name}.git"
   local repo_dir="${ROOT}/.pages-hub-${name}"
   local branch path rel_path

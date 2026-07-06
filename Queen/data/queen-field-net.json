@@ -69,11 +69,24 @@
       "compile_with": "Grok16 field_opt"
     }
   ],
+  "trusted_connects": {
+    "github": {
+      "module": "queen-github-secure.py",
+      "doctrine": "Hostess7/data/github-known-hosts.json",
+      "owner": "ZacharyGeurts",
+      "dns_pin": true,
+      "ssh_pin": true,
+      "anti_hook": true,
+      "browser": "Queen"
+    }
+  },
   "nexus_bindings": {
     "packet_field": "packet-field.py",
     "connection_gatekeeper": "connection-gatekeeper.py",
     "truth_dns": "field-dns.py",
-    "browser_awareness": "browser-awareness.py"
+    "browser_awareness": "browser-awareness.py",
+    "github_secure": "queen-github-secure.py",
+    "hostess7_secure_git": "Hostess7/scripts/hostess7_secure_git.py"
   },
   "phases": {
     "now": "Python loopback + packet-field observe — internal routes only in browser",

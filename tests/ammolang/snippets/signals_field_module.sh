@@ -1,53 +1,28 @@
 #!/bin/bash
 set -euo pipefail
 set +o pipefail
-ROOT="/home/default/Desktop/SG/NewLatest"
-export NEXUS_INSTALL_ROOT="$ROOT"
-export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/home/default/Desktop/SG/NewLatest/.nexus-state}"
-export SG_ROOT="${SG_ROOT:-/home/default/Desktop/SG}"
-mkdir -p "$NEXUS_STATE_DIR"
-source "$ROOT/lib/nexus-common.sh" 2>/dev/null || true
-source "$ROOT/lib/eternal-vigil.sh" 2>/dev/null || true
-source "$ROOT/lib/entropy-oracle.sh" 2>/dev/null || true
-source "$ROOT/lib/shadow-reality.sh" 2>/dev/null || true
-source "$ROOT/lib/self-defense.sh" 2>/dev/null || true
-source "$ROOT/lib/device-whitelist.sh" 2>/dev/null || true
-source "$ROOT/lib/ultra-stealth.sh" 2>/dev/null || true
-source "$ROOT/lib/predictive-guard.sh" 2>/dev/null || true
-source "$ROOT/lib/network-lockdown.sh" 2>/dev/null || true
-source "$ROOT/lib/threat-vectors.sh" 2>/dev/null || true
-source "$ROOT/lib/packet-oracle.sh" 2>/dev/null || true
-source "$ROOT/lib/threat-panel.sh" 2>/dev/null || true
-source "$ROOT/lib/firewall-sentinel.sh" 2>/dev/null || true
-source "$ROOT/lib/firewall-trust.sh" 2>/dev/null || true
-source "$ROOT/lib/seal-vault.sh" 2>/dev/null || true
-source "$ROOT/lib/tamper-guard.sh" 2>/dev/null || true
-source "$ROOT/lib/znetwork-field.sh" 2>/dev/null || true
-source "$ROOT/lib/nexus-settings.sh" 2>/dev/null || true
-source "$ROOT/lib/adblock-loader.sh" 2>/dev/null || true
-source "$ROOT/lib/host-attack.sh" 2>/dev/null || true
-source "$ROOT/lib/field-attack-kit.sh" 2>/dev/null || true
-nexus_ensure_dirs 2>/dev/null || true
-panel="$ROOT/panel/threat-panel.html"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_harness.sh
+source "${SCRIPT_DIR}/_harness.sh"
 
-  [[ -f "/home/default/Desktop/SG/NewLatest/lib/signals-field.py" ]]
-  [[ -f "/home/default/Desktop/SG/NewLatest/lib/fcc-signal-lookup.py" ]]
-  grep -q 'signals_field' "/home/default/Desktop/SG/NewLatest/lib/threat-panel.sh"
-  grep -q '/api/signals-field' "/home/default/Desktop/SG/NewLatest/lib/threat-panel-http.py"
-  grep -q 'view-signals' "/home/default/Desktop/SG/NewLatest/panel/threat-panel.html"
-  grep -q 'frequency_registry' "/home/default/Desktop/SG/NewLatest/lib/signals-field.py"
-  grep -q '_build_frequency_registry' "/home/default/Desktop/SG/NewLatest/lib/field-rf-sentinel.py"
-  grep -q 'signals-freq-registry' "/home/default/Desktop/SG/NewLatest/panel/threat-panel.html"
-  grep -q 'drawRipplingFieldSheet' "/home/default/Desktop/SG/NewLatest/panel/assets/signals-field.js"
+# shellcheck source=_harness.sh
+# shellcheck source=_harness.sh
+  [[ -f "${ROOT}/lib/signals-field.py" ]]
+  [[ -f "${ROOT}/lib/fcc-signal-lookup.py" ]]
+  grep -q 'signals_field' "${ROOT}/lib/threat-panel.sh"
+  grep -q '/api/signals-field' "${ROOT}/lib/threat-panel-http.py"
+  grep -q 'view-signals' "${ROOT}/panel/threat-panel.html"
+  grep -q 'frequency_registry' "${ROOT}/lib/signals-field.py"
+  grep -q '_build_frequency_registry' "${ROOT}/lib/field-rf-sentinel.py"
+  grep -q 'signals-freq-registry' "${ROOT}/panel/threat-panel.html"
+  grep -q 'drawRipplingFieldSheet' "${ROOT}/panel/assets/signals-field.js"
+out=$("$PY" "${ROOT}/lib/signals-field.py" json 2>/dev/null || true); grep -q 'signals-field/v1'
+out=$("$PY" "${ROOT}/lib/signals-field.py" json 2>/dev/null || true); grep -q 'frequency_registry'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-out=$(pythong "/home/default/Desktop/SG/NewLatest/lib/signals-field.py" json 2>/dev/null || true); echo "$out" | grep -q 'signals-field/v1'
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-out=$(pythong "/home/default/Desktop/SG/NewLatest/lib/signals-field.py" json 2>/dev/null || true); echo "$out" | grep -q 'frequency_registry'
-  NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    pythong -c "
+    "$PY" -c "
 import importlib.util, os, json
 from pathlib import Path
-ROOT = Path('/home/default/Desktop/SG/NewLatest')
+ROOT = Path('${ROOT}')
 spec = importlib.util.spec_from_file_location('rf', ROOT / 'lib' / 'field-rf-sentinel.py')
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)

@@ -13,7 +13,6 @@
   const state = {
     settings: null,
     hostPolicy: null,
-    hostData: null,
     windows: [],
     activeId: null,
     altOpen: false,
@@ -26,62 +25,6 @@
   function desktopIconsEnabled() {
     if (state.hostPolicy?.desktop_icons_in_start) return false;
     return state.settings?.show_desktop_icons !== false;
-  }
-
-  function desktopSurfacePrograms(data) {
-    if (data?.policy?.desktop_icons_in_start || state.hostPolicy?.desktop_icons_in_start) return [];
-    const fromApi = Array.isArray(data?.desktop_icons) ? data.desktop_icons : [];
-    if (fromApi.length) return fromApi;
-    const programs = data?.programs || [];
-    return programs.filter(function (p) {
-      if (p.ghost || p.clipboard_ghost) return false;
-      if (p.launcher_visible === false) return false;
-      if (p.id === "nexus-c2-desktop" || p.id === "queen-browser") return false;
-      if (p.display_tech && !p.pinned) return false;
-      return !!(p.pinned || p.desktop);
-    });
-  }
-
-  function desktopIconMarkup(app, size) {
-    const QIE = global.QueenIconEngine;
-    const px = size || 40;
-    if (QIE?.programIconHtml) {
-      return QIE.programIconHtml(app, px, { small: false, base: QIE.PANEL_ICONS });
-    }
-    const src = app.icon_url || QUEEN_ICON;
-    return '<img src="' + esc(src) + '" alt="" width="' + px + '" height="' + px + '" />';
-  }
-
-  function renderDesktopIcons(data) {
-    const grid = document.getElementById("hd-icons");
-    if (!grid) return;
-    const list = desktopSurfacePrograms(data || state.hostData);
-    const show = desktopIconsEnabled() && list.length > 0;
-    grid.classList.toggle("hidden", !show);
-    grid.innerHTML = "";
-    if (!show) return;
-    const sorted = list.slice().sort(function (a, b) {
-      if (state.settings?.sort_desktop === "name") {
-        return String(a.name || "").localeCompare(String(b.name || ""));
-      }
-      return 0;
-    });
-    sorted.forEach(function (app) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "hd-icon";
-      btn.dataset.id = app.id || "";
-      btn.innerHTML = desktopIconMarkup(app, 40) + "<span>" + esc(app.name || "") + "</span>";
-      btn.addEventListener("click", function () {
-        launch(app);
-      });
-      btn.addEventListener("contextmenu", function (ev) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-        openDesktopContext(ev.clientX, ev.clientY, app);
-      }, true);
-      grid.appendChild(btn);
-    });
   }
 
   function esc(s) {
@@ -100,13 +43,35 @@
     return document.getElementById(id);
   }
 
-  const QUEEN_BROWSER = "http://127.0.0.1:9481/world/browser.html";
-  const PANEL_ORIGIN = "http://127.0.0.1:9477";
+  function pagesRuntime() {
+    return document.body?.dataset?.pagesRuntime === "1" || !!global.HOSTESS7_PAGES_BASE;
+  }
+
+  function panelOrigin() {
+    if (pagesRuntime()) return global.HOSTESS7_PAGES_BASE || "/Hostess7";
+    return "http://127.0.0.1:9477";
+  }
+
+  function queenBrowserUrl() {
+    if (pagesRuntime()) {
+      const base = global.HOSTESS7_PAGES_BASE || "/Hostess7";
+      return base + "/queen/browser.html";
+    }
+    return "http://127.0.0.1:9481/world/browser.html";
+  }
+
+  function pageResolve(path) {
+    if (global.H7Page) return global.H7Page(path);
+    if (pagesRuntime()) return (global.HOSTESS7_PAGES_BASE || "/Hostess7") + path;
+    return path;
+  }
 
   function isPanelLoopback(url) {
-    if (!url || url.startsWith("/")) return true;
+    if (!url) return false;
+    if (url.startsWith("/")) return true;
     try {
-      const p = new URL(url, PANEL_ORIGIN);
+      const p = new URL(url, panelOrigin());
+      if (pagesRuntime()) return p.origin === location.origin;
       return (p.hostname === "127.0.0.1" || p.hostname === "localhost") && p.port === "9477";
     } catch {
       return false;
@@ -115,7 +80,10 @@
 
   function isQueenLoopback(url) {
     try {
-      const p = new URL(url, QUEEN_BROWSER);
+      const p = new URL(url, queenBrowserUrl());
+      if (pagesRuntime()) {
+        return p.origin === location.origin && p.pathname.includes("/queen/");
+      }
       return (p.hostname === "127.0.0.1" || p.hostname === "localhost") && p.port === "9481";
     } catch {
       return false;
@@ -125,24 +93,43 @@
   function queenShellUrl(exec) {
     if (!exec || !isQueenLoopback(exec)) return exec;
     try {
-      const p = new URL(exec, QUEEN_BROWSER);
-      if (p.pathname.startsWith("/browse/view") || p.pathname === "/browse/view") return QUEEN_BROWSER;
+      const p = new URL(exec, queenBrowserUrl());
+      const browser = queenBrowserUrl();
+      if (p.pathname.startsWith("/browse/view") || p.pathname === "/browse/view") return browser;
+      if (pagesRuntime() && p.pathname.includes("/queen/") && !p.pathname.endsWith("/browser.html")) return exec;
       if (p.pathname.startsWith("/world/") && !p.pathname.endsWith("/browser.html")) return exec;
-      if (p.pathname.endsWith("/browser.html")) return QUEEN_BROWSER;
+      if (p.pathname.endsWith("/browser.html")) return browser;
     } catch (_) {}
     return exec;
   }
 
+  function ammoosCommandUrl(exec, app) {
+    const raw = String(exec || "").trim();
+    if (!raw.startsWith("/command")) return raw;
+    if (raw.includes("embed=1")) return raw;
+    const hash = raw.includes("#") ? raw.split("#").slice(1).join("#") : "";
+    const view = app?.view || hash;
+    return "/command?embed=1" + (view ? "#" + view : hash ? "#" + hash : "");
+  }
+
   function resolveUrl(app) {
     const exec = String(app?.exec || app?.url || "").trim();
-    if (!exec) return "/field";
-    if (app?.queenNavigate) return QUEEN_BROWSER;
-    if (exec.startsWith("/")) return exec;
-    if (app?.view) return "/command?embed=1#" + app.view;
+    if (!exec) return pageResolve("/field");
+    if (app?.queenNavigate) return queenBrowserUrl();
+    if (exec.startsWith("/")) return pageResolve(ammoosCommandUrl(exec, app));
+    if (app?.view) return pageResolve("/command?embed=1#" + app.view);
     if (/^https?:\/\//i.test(exec)) {
+      if (pagesRuntime()) {
+        try {
+          const p = new URL(exec);
+          if (p.origin === location.origin) return exec;
+        } catch (_) {}
+        if (isPanelLoopback(exec) || isQueenLoopback(exec)) return queenShellUrl(exec);
+        return queenBrowserUrl() + "?launch=" + encodeURIComponent(exec);
+      }
       if (isPanelLoopback(exec)) return exec;
       if (isQueenLoopback(exec)) return queenShellUrl(exec);
-      return QUEEN_BROWSER;
+      return queenBrowserUrl();
     }
     return exec;
   }
@@ -212,6 +199,9 @@
       const t = themeAliases[state.settings.theme_override] || state.settings.theme_override;
       document.documentElement.dataset.osTheme = t;
     }
+    if (state.settings.wallpaper && global.FieldHostDesktop?.applyWallpaper) {
+      global.FieldHostDesktop.applyWallpaper(state.settings.wallpaper);
+    }
   }
 
   async function loadSettings() {
@@ -252,16 +242,28 @@
         ]
           .filter(Boolean)
           .join(" ");
+        const chrome = win.userlandLayer === 0 ? chromeBarHtml(win) : "";
+        const winCls = chrome ? " nfs-win--panel" : win.userlandLayer === 1 ? " nfs-win--queen" : "";
+        const excl = win.exclusiveInput || (win.sovereignLayer || 0) >= 3 ? " nfs-win--sovereign-exclusive" : "";
         return (
           '<div class="' +
           cls +
+          winCls +
+          excl +
           '" id="' +
           esc(win.id) +
           '" data-win-id="' +
           esc(win.id) +
+          '" data-layer="' +
+          String(win.userlandLayer || 0) +
+          '" data-sovereign-layer="' +
+          String(win.sovereignLayer != null ? win.sovereignLayer : win.userlandLayer || 0) +
+          '" data-full-input="' +
+          (win.exclusiveInput ? "1" : "0") +
           '" style="z-index:' +
           win.z +
           '">' +
+          chrome +
           '<iframe src="' +
           esc(win.url) +
           '" title="' +
@@ -270,6 +272,17 @@
         );
       })
       .join("");
+    root.querySelectorAll(".nfs-chrome-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        const winEl = btn.closest(".nfs-win");
+        const id = winEl?.dataset?.winId;
+        if (!id) return;
+        if (btn.dataset.act === "min") minimizeWindow(id);
+        else if (btn.dataset.act === "close") closeWindow(id);
+      });
+    });
+    if (global.FieldShellContext?.wireAllFrames) global.FieldShellContext.wireAllFrames();
   }
 
   function syncTaskbar() {
@@ -299,6 +312,12 @@
     state.zTop += 1;
     win.z = state.zTop;
     state.activeId = win.id;
+    if (win.sovereignLayer >= 3 || win.exclusiveInput) {
+      global.FieldLayerInputIsolation?.applyExclusiveChrome?.(document.getElementById(win.id), win.sovereignLayer);
+      global.FieldScreenLayers?.launchSurface &&
+        document.documentElement.dataset &&
+        (document.documentElement.dataset.fieldLayer = String(win.sovereignLayer));
+    }
     renderWindows();
     syncTaskbar();
     global.FieldStartbar?.trackRunning?.({
@@ -344,13 +363,104 @@
       w.minimized = true;
     });
     state.activeId = null;
+    global.FieldScreenLayers?.markInsideOs?.(false);
     renderWindows();
     syncTaskbar();
+  }
+
+  function launchPanelThumbnail(app, opts) {
+    opts = opts || {};
+    if (!app) return null;
+    const url = opts.url || resolveUrl(app);
+    const mon = document.getElementById("hd-monitor");
+    if (mon && global.FieldMonitorDashboard && global.FieldMonitorDashboard.addPanel) {
+      global.FieldMonitorDashboard.addPanel(mon, {
+        id: app.id || appKey(app),
+        title: app.name || "Panel",
+        url: url,
+        chromeless: app.chromeless !== false,
+        panel_thumbnail: true,
+      });
+      toast((app.name || "Program") + " — panel thumbnail");
+      return { id: app.id, mode: "panel_thumbnail", url: url };
+    }
+    const plain = Object.assign({}, app);
+    delete plain.panel_thumbnail;
+    delete plain.panel_only;
+    return launch(plain, Object.assign({}, opts, { newWindow: true, _skipThumbnail: true }));
+  }
+
+  const OS_LAYER_ZERO_IDS = new Set([
+    "field-broadcaster",
+    "ammonet-isp",
+    "ammonet",
+    "final-internet",
+    "ammoos-ammonet-display",
+    "gnu-eol-terminal",
+    "ammoos-terminal",
+  ]);
+
+  function isOsLayerZero(app, url) {
+    if (!app) return false;
+    if (app.os_layer === 0 || app.userland_layer === 0) return true;
+    if (OS_LAYER_ZERO_IDS.has(app.id || "")) return true;
+    const exec = String(app.exec || app.url || url || "");
+    if (/field-broadcaster|\/ammonet|final-internet|gnu-terminal|queen-gnu-terminal/i.test(exec)) return true;
+    if (app.shell !== false && (app.shell || app.panel_surface) && isPanelLoopback(exec)) return true;
+    return false;
+  }
+
+  function nextUserlandLayer() {
+    const used = new Set();
+    state.windows.forEach(function (w) {
+      if ((w.userlandLayer || 0) >= 2) used.add(w.userlandLayer);
+    });
+    let z = global.FieldScreenLayers?.USERLAND_MIN || 2;
+    while (used.has(z)) z += 1;
+    return z;
+  }
+
+  function resolveUserlandLayer(app, url, queenWin) {
+    if (queenWin) return 1;
+    if (isOsLayerZero(app, url)) return 0;
+    return nextUserlandLayer();
+  }
+
+  function chromeTheme() {
+    return document.documentElement.dataset.osTheme || document.documentElement.dataset.ammoosTheme || "ammoos";
+  }
+
+  function chromeBarHtml(win) {
+    if (win.userlandLayer !== 0) return "";
+    const theme = chromeTheme();
+    return (
+      '<header class="nfs-chrome nfs-chrome--l0" data-theme="' +
+      esc(theme) +
+      '">' +
+      '<img class="nfs-chrome-icon" src="' +
+      esc(win.icon_url || QUEEN_ICON) +
+      '" alt="" width="18" height="18" />' +
+      '<span class="nfs-chrome-title">' +
+      esc(win.name) +
+      "</span>" +
+      '<span class="nfs-chrome-layer">L0</span>' +
+      '<span class="nfs-chrome-spacer"></span>' +
+      '<button type="button" class="nfs-chrome-btn nfs-chrome-min" data-act="min" aria-label="Minimize">—</button>' +
+      '<button type="button" class="nfs-chrome-btn nfs-chrome-close" data-act="close" aria-label="Close">×</button>' +
+      "</header>"
+    );
   }
 
   function launch(app, opts) {
     opts = opts || {};
     if (!app) return null;
+    if (global.FieldQueenNav?.isStandaloneQueenApp?.(app)) {
+      global.FieldQueenNav.openStandalone(app, opts);
+      return null;
+    }
+    if (!opts._skipThumbnail && (app.panel_thumbnail || app.panel_only)) {
+      return launchPanelThumbnail(app, opts);
+    }
     const url = opts.url || resolveUrl(app);
     const key = appKey(app);
     const existing = findWindow(key);
@@ -369,6 +479,15 @@
     }
     state.zTop += 1;
     const id = "nfs-win-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const queenWin =
+      app.id === "queen-browser" || (url && String(url).includes("/browser.html"));
+    const layer = resolveUserlandLayer(app, url, queenWin);
+    const sovereignLayer =
+      app.sovereignLayer != null
+        ? app.sovereignLayer
+        : app.os_layer != null
+          ? app.os_layer
+          : layer;
     const win = {
       id: id,
       key: key,
@@ -379,14 +498,21 @@
       minimized: false,
       z: state.zTop,
       queenNavigate: app.queenNavigate || null,
+      userlandLayer: layer,
+      sovereignLayer: sovereignLayer,
+      exclusiveInput: !!(app.exclusive_input || sovereignLayer >= 3),
+      allowFullscreen: app.allow_fullscreen !== false,
     };
     state.windows.push(win);
     state.activeId = id;
+    if (queenWin) global.FieldScreenLayers?.focusQueenBrowser?.();
+    else if (layer === 0) global.FieldScreenLayers?.markInsideOs?.(true);
+    else global.FieldScreenLayers?.markInsideOs?.(false);
     renderWindows();
     syncTaskbar();
     global.FieldStartbar?.trackRunning?.(app);
     const navTarget = app.queenNavigate || (/^https?:\/\//i.test(app.exec || "") && !isPanelLoopback(app.exec) && !isQueenLoopback(app.exec) ? app.exec : null);
-    if (navTarget && url === QUEEN_BROWSER) queueQueenNavigate(id, navTarget);
+    if (navTarget && url === queenBrowserUrl()) queueQueenNavigate(id, navTarget);
     return win;
   }
 
@@ -591,41 +717,6 @@
       });
   }
 
-  function isDesktopContextTarget(target) {
-    if (!target || !target.closest) return false;
-    if (target.closest(".hd-icon")) return false;
-    if (target.closest(".fsb-root") || target.closest(".fsb-menu")) return false;
-    if (target.closest(".nfs-win.active") || target.closest(".nfs-alt-overlay.open")) return false;
-    if (target.closest(".nfs-desktop-ctx")) return false;
-    return !!(target.closest("#hd-desktop") || target.id === "hd-desktop");
-  }
-
-  function bindDesktopContextMenu() {
-    if (global.__nfsDesktopCtxBound) return;
-    global.__nfsDesktopCtxBound = true;
-    document.addEventListener(
-      "contextmenu",
-      function (ev) {
-        if (isYieldedToHost()) return;
-        if (!isDesktopContextTarget(ev.target)) return;
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-        openDesktopContext(ev.clientX, ev.clientY, null);
-      },
-      true,
-    );
-    document.addEventListener(
-      "click",
-      function (ev) {
-        const ctx = $("nfs-desktop-ctx");
-        if (!ctx?.classList.contains("open")) return;
-        if (ev.target.closest(".nfs-desktop-ctx")) return;
-        ctx.classList.remove("open");
-      },
-      true,
-    );
-  }
-
   function openDesktopContext(x, y, app) {
     const ctx = $("nfs-desktop-ctx");
     if (!ctx) return;
@@ -634,20 +725,28 @@
       ctx.innerHTML =
         '<button type="button" data-dact="open">Open</button>' +
         '<button type="button" data-dact="pin">Pin to taskbar</button>' +
-        '<button type="button" data-dact="props">Properties</button>';
+        '<button type="button" data-dact="props">Properties</button>' +
+        "<hr />" +
+        '<button type="button" data-dact="clipboard-flyout">Clipboard scheme</button>' +
+        '<button type="button" data-dact="dos40-modules">Load DOS 4.0 module…</button>';
     } else {
-      ctx.innerHTML =
+      let deskHtml =
         '<button type="button" data-dact="refresh">Refresh</button>' +
         '<button type="button" data-dact="sort">Sort icons by name</button>' +
         (state.hostPolicy?.desktop_icons_in_start
           ? ""
           : '<button type="button" data-dact="icons">Toggle desktop icons</button>') +
         "<hr />" +
+        '<button type="button" data-dact="clipboard-flyout">Clipboard scheme (Ctrl+Alt+Space)</button>' +
+        '<button type="button" data-dact="clipboard-paste">Paste from vault</button>' +
+        '<button type="button" data-dact="dos40-modules">Load DOS 4.0 module…</button>' +
+        "<hr />" +
         '<button type="button" data-dact="display">Display settings</button>' +
         '<button type="button" data-dact="personalize">Personalize</button>' +
         '<button type="button" data-dact="control">Control Panel</button>' +
         "<hr />" +
         '<button type="button" data-dact="desktop">Show desktop</button>';
+      ctx.innerHTML = deskHtml;
     }
     ctx.style.left = Math.min(x, innerWidth - 220) + "px";
     ctx.style.top = Math.min(y, innerHeight - 280) + "px";
@@ -666,10 +765,14 @@
           global.FieldHostDesktop?.refresh?.();
         });
       } else if (act === "icons") {
-        saveSettings({ show_desktop_icons: !(state.settings?.show_desktop_icons !== false) }).then(function () {
-          renderDesktopIcons(state.hostData);
-        });
-      } else if (act === "display") openDisplaySettings();
+        saveSettings({ show_desktop_icons: !(state.settings?.show_desktop_icons !== false) });
+        document.getElementById("hd-icons")?.classList.toggle("hidden", state.settings?.show_desktop_icons === false);
+      } else if (act === "clipboard-flyout") global.NexusClipboardWire?.toggleFlyout?.({ clientX: x, clientY: y });
+      else if (act === "clipboard-paste") {
+        global.NexusClipboardWire?.pasteMedia?.();
+        toast("Paste from clipboard vault");
+      } else if (act === "dos40-modules") global.FieldDos40Menu?.openModulePicker?.(x, y);
+      else if (act === "display") openDisplaySettings();
       else if (act === "personalize") launch({ id: "control-panel", name: "Control Panel", exec: "/control-panel?tab=personalize" });
       else if (act === "control") launch({ id: "control-panel", name: "Control Panel", exec: "/control-panel" });
       else if (act === "desktop") showDesktop();
@@ -725,12 +828,12 @@
       return;
     }
     if (action === "monster") {
-      global.FieldMonsterCadPopup?.open?.() || global.FieldMonsterHangDialog?.poll?.();
+      global.FieldMonsterMonitor?.open?.();
       return;
     }
     if (action === "freeze-soft" || action === "freeze-mem" || action === "freeze_mem") {
       toast("Security hold — we no longer freeze the guest OS. Use Return to host OS.");
-      global.FieldMonsterCadPopup?.open?.();
+      global.FieldMonsterMonitor?.open?.();
       return;
     }
     if (action === "sign-out") {
@@ -825,6 +928,7 @@
   function onMessage(ev) {
     const msg = ev.data;
     if (!msg || typeof msg !== "object") return;
+    if (global.FieldShellContext?.onIframeMessage?.(ev, function () { return state.windows; })) return;
     if (msg.type === "nexus:launch") {
       if (msg.url) {
         launch({ id: msg.id || "program", name: msg.name || "Program", exec: msg.url }, { newWindow: !!msg.newWindow });
@@ -853,7 +957,6 @@
   }
 
   function mountShell(data) {
-    state.hostData = data || null;
     state.hostPolicy = data?.policy || null;
     state.browserDisplay = data?.shell?.browser_display || {};
     const allPrograms = data?.programs_all || data?.programs || [];
@@ -889,10 +992,13 @@
       });
     }
 
-    bindDesktopContextMenu();
-
     const desktop = document.getElementById("hd-desktop");
     if (desktop) {
+      desktop.addEventListener("contextmenu", function (ev) {
+        if (ev.target.closest(".hd-icon") || ev.target.closest(".fsb-root") || ev.target.closest(".fsb-menu")) return;
+        ev.preventDefault();
+        openDesktopContext(ev.clientX, ev.clientY, null);
+      });
       desktop.addEventListener("click", function (ev) {
         if (ev.target.closest(".hd-icon") || ev.target.closest(".fsb-root") || ev.target.closest(".fsb-menu")) return;
         if (state.windows.some(function (w) {
@@ -935,9 +1041,7 @@
     enterFullscreenDesktop();
     bindFullscreenRetry();
     restoreYieldFromStorage();
-    renderDesktopIcons(data);
     loadSettings().then(function () {
-      renderDesktopIcons(data);
       bootDesktop(data);
     });
   }
@@ -975,6 +1079,23 @@
     return false;
   }
 
+  function bootLaunchFromQuery(data) {
+    try {
+      const params = new URLSearchParams(global.location?.search || "");
+      const launchId = (params.get("launch") || params.get("program") || "").trim();
+      if (!launchId) return;
+      const prog =
+        (data?.programs || []).find(function (p) {
+          return p.id === launchId;
+        }) || state.programsById[launchId];
+      if (prog) {
+        setTimeout(function () {
+          launch(prog);
+        }, 180);
+      }
+    } catch (_) {}
+  }
+
   function bootDesktop(data) {
     const boot = String(data?.shell?.boot_program ?? data?.policy?.boot_program ?? "").trim();
     const launchAtDesktop =
@@ -1002,18 +1123,30 @@
       enterFullscreenDesktop();
       bindFullscreenRetry();
     }
+    bootLaunchFromQuery(data);
   }
 
   global.NexusFieldShell = {
     mount: mountShell,
-    renderDesktopIcons: renderDesktopIcons,
     launch: launch,
     launchView: launchView,
+    listWindows: function () {
+      return state.windows.slice();
+    },
     focus: focusWindow,
+    focusWindow: focusWindow,
     minimize: minimizeWindow,
+    minimizeWindow: minimizeWindow,
     close: closeWindow,
+    closeWindow: closeWindow,
     toggle: toggleWindow,
     showDesktop: showDesktop,
+    getWindow: function (id) {
+      return state.windows.find(function (w) { return w.id === id; });
+    },
+    getActiveWindow: function () {
+      return state.windows.find(function (w) { return w.id === state.activeId; }) || null;
+    },
     openStartProperties: openStartProperties,
     openDisplaySettings: openDisplaySettings,
     openDesktopContext: openDesktopContext,

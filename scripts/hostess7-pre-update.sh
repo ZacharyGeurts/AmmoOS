@@ -1,8 +1,29 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/hostess7-pre-update.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 # Hostess7 pre-update — brain diagnostics + tasklist queue before stack GitHub push.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+for _arg in "$@"; do
+  [[ "$_arg" == "--fast" ]] && export HOSTESS7_PRE_FAST=1
+done
 export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
 export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-${ROOT}/.nexus-state}"
 export HOSTESS7_ROOT="${HOSTESS7_ROOT:-${ROOT}/Hostess7}"
@@ -94,18 +115,23 @@ step "nexus-genius" bash -c "
 step "library organize" run_py lib-organize "${ROOT}/lib/h7-library-bridge.py" organize
 step "library build" run_py lib-build "${ROOT}/lib/h7-library-bridge.py" build
 
-step "training floor" run_py floor "${ROOT}/lib/hostess7-training-floor.py" complete_floor_training
-step "training room" run_py room "${ROOT}/lib/hostess7-training-room.py" complete_all
-
-step "hand train" bash -c "
-  echo '{\"action\":\"train\",\"ticks\":48}' | '$PY' '${ROOT}/lib/hostess7-hand-core.py' dispatch
-"
-step "attachment stylus" bash -c "
-  echo '{\"action\":\"learn\",\"id\":\"precision_stylus\",\"ticks\":32}' | '$PY' '${ROOT}/lib/hostess7-attachment-core.py' dispatch
-"
-step "attachment gripper" bash -c "
-  echo '{\"action\":\"learn\",\"id\":\"parallel_gripper\",\"ticks\":32}' | '$PY' '${ROOT}/lib/hostess7-attachment-core.py' dispatch
-"
+if [[ "${HOSTESS7_PRE_FAST:-0}" == "1" ]]; then
+  step "training floor" run_py floor "${ROOT}/lib/hostess7-training-floor.py" json
+  step "training room" run_py room "${ROOT}/lib/hostess7-training-room.py" needs
+  log "FAST — skip hand/attachment heavy train"
+else
+  step "training floor" run_py floor "${ROOT}/lib/hostess7-training-floor.py" complete
+  step "training room" run_py room "${ROOT}/lib/hostess7-training-room.py" complete_all
+  step "hand train" bash -c "
+    echo '{\"action\":\"train\",\"ticks\":48}' | '$PY' '${ROOT}/lib/hostess7-hand-core.py' dispatch
+  "
+  step "attachment stylus" bash -c "
+    echo '{\"action\":\"learn\",\"id\":\"precision_stylus\",\"ticks\":32}' | '$PY' '${ROOT}/lib/hostess7-attachment-core.py' dispatch
+  "
+  step "attachment gripper" bash -c "
+    echo '{\"action\":\"learn\",\"id\":\"parallel_gripper\",\"ticks\":32}' | '$PY' '${ROOT}/lib/hostess7-attachment-core.py' dispatch
+  "
+fi
 
 complete_open_tasks "Hostess7 pre-update — Ironclad sealed · tasks executed"
 

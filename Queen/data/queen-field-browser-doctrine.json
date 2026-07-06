@@ -1,15 +1,13 @@
 {
   "schema": "queen-field-browser/v1",
   "name": "Queen",
-  "motto": "Queen — the browser lane. AmmoOS owns the desktop on AMOURANTHRTX; Queen settles for loopback sovereignty and the best browser stack we can build.",
+  "motto": "Queen standalone browser — KILROY PC core · AmmoOS desktop on AMOURANTHRTX · 127.0.0.1; hardware no-break.",
   "stack_layers": "data/field-stack-layer-doctrine.json",
   "sovereignty": {
     "product": "AmmoOS",
     "container": null,
     "ammoos_inside_queen": false,
     "queen_standalone_browser": true,
-    "queen_stripped_webbrowser": true,
-    "engine_rtx_first": true,
     "kilroy_znetwork_absorbed": true,
     "loopback_authority": "127.0.0.1",
     "underlying_system": true,

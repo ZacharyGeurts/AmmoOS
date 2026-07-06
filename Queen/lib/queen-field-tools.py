@@ -100,7 +100,8 @@ FIELD_TOOL_CATALOG: tuple[dict[str, str], ...] = (
      "role": "field/sovereign publish", "hostess_cmd": "pythong Queen/lib/queen-forge.py run field"},
     {"id": "hostess_teach", "track": "hostess", "label": "Teach Hostess Queen redata + build tools",
      "role": "Comfort brief + BUILD_TOOLS sync", "hostess_cmd": "./Hostess7.sh queen-teach-redata"},
-
+    {"id": "textbook_zac", "track": "hostess", "label": "Field Technology ZAC monolith",
+     "role": "22 chapters → brain", "hostess_cmd": "pythong Queen/lib/queen-forge.py run textbook_zac"},
     {"id": "forge_watch", "track": "operator", "label": "Forge log watch (ZOCR + senses)",
      "role": "Catch build hangups", "hostess_cmd": "pythong Queen/lib/queen-forge.py run forge_watch"},
 )

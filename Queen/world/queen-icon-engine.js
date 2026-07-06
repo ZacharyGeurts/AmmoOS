@@ -155,32 +155,17 @@
     const hit = lookupEntry(batteryId);
     if (hit?.icon_url) return hit.icon_url;
     const sz = size || 32;
-    const stem = String(batteryId).replace(/^(file-|queen-prog-)/, (m) => (m === "file-" ? "file-" : "prog-"));
-    if (stem.startsWith("file-")) {
-      return `${WORLD_ICONS}${stem}-${sz}.png`;
-    }
-    return panelAssetUrl(`queen-prog-${stem.replace(/^prog-/, "")}`, sz);
-  }
-
-  function panelAssetUrl(ref, size) {
-    const pid = String(ref || "").replace(/^queen-prog-/, "");
-    const sz = size || 32;
-    return `${PANEL_ICONS}queen-prog-${pid}.png`;
+    return `${WORLD_ICONS}${String(batteryId).replace(/^(file-|queen-prog-)/, (m) => (m === "file-" ? "file-" : "prog-"))}-${sz}.png`;
   }
 
   function programIconUrl(app, size, base) {
+    if (app?.icon_url && !app.icon_url.includes("field-host-desktop")) return app.icon_url;
     const ref = normalizeRef(app);
+    const hit = lookupEntry(ref);
+    if (hit?.icon_url) return hit.icon_url;
     const pid = ref.replace("queen-prog-", "");
     const sz = size || 32;
-    if (base === PANEL_ICONS || global.location?.pathname === "/field" || global.location?.pathname === "/") {
-      if (app?.icon_url?.startsWith("/assets/")) return app.icon_url;
-      return panelAssetUrl(ref, sz);
-    }
-    if (app?.icon_url?.startsWith("/assets/") || app?.icon_url?.startsWith("/world/")) {
-      return app.icon_url;
-    }
-    const hit = lookupEntry(ref);
-    if (hit?.icon_url && !String(hit.icon_url).includes("field-host-desktop")) return hit.icon_url;
+    if (base === PANEL_ICONS) return `${PANEL_ICONS}queen-prog-${pid}.png`;
     return libraryIconUrl(ref, sz);
   }
 

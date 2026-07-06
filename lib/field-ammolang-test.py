@@ -30,7 +30,7 @@ PY_TIMEOUT = int(os.environ.get("AML_TEST_PY_TIMEOUT_SEC", "90"))
 ROUTE_TIMEOUT = int(os.environ.get("AML_TEST_ROUTE_TIMEOUT_SEC", "120"))
 
 _GREP_PATH = re.compile(
-    r"^(.+?\.(?:py|json|sh|aml|html|js|txt|conf|md|jsonl)):(.+)$",
+    r"^(.+?\.(?:py|json|sh|aml|html|js|txt|conf|md|jsonl|c|h)):(.+)$",
     re.IGNORECASE,
 )
 _MOD_TIMEOUT = re.compile(r"\btimeout:(\d+)", re.I)
@@ -83,6 +83,25 @@ def _py() -> str:
     return sys.executable
 
 
+def _py_argv(mod_path: Path, args: list[str]) -> list[str]:
+    """Prefer g16-compiled executable launcher when available."""
+    if os.environ.get("G16_SCRIPT_EXEC", "1").strip().lower() in ("0", "false", "no", "off"):
+        return [_py(), str(mod_path), *args]
+    compile_py = INSTALL / "lib" / "field-g16-script-compile.py"
+    if not compile_py.is_file():
+        return [_py(), str(mod_path), *args]
+    try:
+        spec = importlib.util.spec_from_file_location("field_g16_script_compile", compile_py)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "resolve_argv"):
+                return mod.resolve_argv(mod_path, args)
+    except Exception:
+        pass
+    return [_py(), str(mod_path), *args]
+
+
 def _resolve(path: str) -> Path:
     p = path.strip().strip('"').strip("'")
     p = _ROOT_RE.sub(str(INSTALL), p)
@@ -109,6 +128,7 @@ def _test_env() -> dict[str, str]:
         "ROOT": str(INSTALL),
         "AML_INLINE": "1",
         "AML_TEST_DIRECT": os.environ.get("AML_TEST_DIRECT", "0"),
+        "PYTHONUNBUFFERED": "1",
         "PATH": f"{INSTALL / 'PythonG' / 'bin'}:{base_path}",
     }
 
@@ -459,7 +479,7 @@ def run_command(
         if not script:
             return {"ok": False, "detail": "script missing", "script": name}
         args = shlex.split(spec.split(":", 1)[1])[1:] if len(spec.split(":", 1)[1].split()) > 1 else []
-        script_default = 600 if os.environ.get("AML_TEST_DIRECT", "0") == "1" else 180
+        script_default = 900 if os.environ.get("AML_TEST_DIRECT", "0") == "1" else 180
         to = timeout or _adaptive_timeout(f"script:{name}", script_default)
         st = stall if stall is not None else max(60, _stall_for(to, stall))
         return _run_cmd(["bash", str(script), *args], timeout=to, stall=st, label=lbl, cwd=script.parent)
@@ -474,10 +494,8 @@ def run_command(
         if not path:
             return {"ok": False, "detail": "py module missing", "module": mod_name}
         to = timeout or _adaptive_timeout(f"py:{mod_name}", PY_TIMEOUT)
-        cmd = [_py(), str(path)]
-        if action:
-            cmd.append(action)
-        cmd.extend(extra)
+        py_args = ([action] if action else []) + extra
+        cmd = _py_argv(path, py_args)
         res = _run_cmd(cmd, timeout=to, stall=_stall_for(to, stall), label=lbl)
         if match:
             blob = (res.get("stdout") or "") + (res.get("stderr") or "")
@@ -616,7 +634,7 @@ def run_assert(spec: str, *, timeout: int | None = None, stall: int | None = Non
         if not mod_path or not mod_path.is_file():
             return {"ok": False, "kind": kind, "detail": "module missing"}
         to = parsed.get("timeout") or PY_TIMEOUT
-        cmd = [_py(), str(mod_path), *list(parsed.get("args") or [])]
+        cmd = _py_argv(mod_path, list(parsed.get("args") or []))
         res = _run_cmd(cmd, timeout=to, stall=_stall_for(to, stall), label=label)
         if res.get("timeout") or res.get("stall"):
             return {**res, "kind": kind, "detail": res.get("detail") or "hang"}

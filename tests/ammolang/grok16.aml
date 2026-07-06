@@ -13,7 +13,8 @@ suite grok16 ·
     assert grep:lib/threat-panel-http.py:/field-launch-explorer
     assert grep:data/field-host-desktop-doctrine.json:field-launch-explorer
     assert grep:panel/assets/field-launch-explorer.js:le-ctx
-    assert grep:lib/field-g16-launch.py:run_chamber\|run_launch
+    assert grep:lib/field-g16-launch.py:run_launch
+    assert grep:lib/field-g16-launch.py:run_chamber
     assert py:field-g16-launch.py json match:field-g16-launch/v1
   group grok16 field research book
     assert script:grok16_field_research_book
@@ -31,6 +32,12 @@ suite grok16 ·
     assert script:grok16_all_languages
   group g16 compile combinatronics
     assert script:g16_compile_combinatronics
+  group g16 script compile executables
+    assert file:lib/field-g16-script-compile.py
+    assert file:data/field-g16-script-compile-doctrine.json
+    assert grep:lib/nexus-g16-recompile.py:recompile_lib_scripts
+    assert grep:lib/field-ammolang-test.py:resolve_argv
+    assert script:g16_script_compile
   group nexus g16 integrate
     assert script:nexus_g16_integrate
   group kilroy kernel grok16 regression
@@ -55,4 +62,4 @@ suite grok16 ·
     assert grep:KILROY/data/kilroy-perimeter-war-doctrine.json:hostile_inside_network
     assert grep:KILROY/kernel/rtx/kilroy_ai_wishes.h:KILROY_AI_KERNEL_UNLOCKED
     assert shell:chmod +x "/home/default/Desktop/SG/NewLatest/KILROY/scripts/kilroy-kernel-test.sh" "/home/default/Desktop/SG/NewLatest/KILROY/scripts/kilroy-grok16-sync.sh" "/home/default/Desktop/SG/NewLatest/KILROY/scripts/kilroy-toolchain.sh" "/home/default/Desktop/SG/NewLatest/KILROY/scripts/test-grok16-kilroy-userspace.sh" 2>/dev/null || true
-    assert shell:KILROY_ENHANCED=0 FULL_BUILD=0 GROK_FULL_BUILD=0 AML_BUILD=0 AML_INLINE=1 KILROY_KERNEL_TEST=1 KILROY_AI_MODE=war SG_ROOT="${SG_ROOT:-$(cd "/home/default/Desktop/SG/NewLatest/.." && pwd)}" NEXUS_INSTALL_ROOT="/home/default/Desktop/SG/NewLatest" GROK16_ROOT="${SG_ROOT:-$(cd "/home/default/Desktop/SG/NewLatest/.." && pwd)}/Grok16" CC=/usr/bin/gcc HOSTCC=/usr/bin/gcc PATH="/usr/bin:/bin:${PATH}" bash "/home/default/Desktop/SG/NewLatest/KILROY/scripts/kilroy-kernel-test.sh"
+    assert shell:KILROY_ENHANCED=0 FULL_BUILD=0 GROK_FULL_BUILD=0 AML_BUILD=0 AML_INLINE=1 AML_TEST_DIRECT=1 KILROY_KERNEL_TEST=1 KILROY_AI_MODE=war SG_ROOT="${SG_ROOT:-$(cd "/home/default/Desktop/SG/NewLatest/.." && pwd)}" NEXUS_INSTALL_ROOT="/home/default/Desktop/SG/NewLatest" GROK16_ROOT="${SG_ROOT:-$(cd "/home/default/Desktop/SG/NewLatest/.." && pwd)}/Grok16" CC=/usr/bin/gcc HOSTCC=/usr/bin/gcc PATH="/usr/bin:/bin:${PATH}" bash "/home/default/Desktop/SG/NewLatest/KILROY/scripts/kilroy-kernel-test.sh"

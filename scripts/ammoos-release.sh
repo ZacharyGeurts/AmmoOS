@@ -1,10 +1,31 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/ammoos-release.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 # AmmoOS beta release — pipeline, pack, publish to github.com/ZacharyGeurts/AmmoOS
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=/dev/null
+[[ -f "${ROOT}/lib/nexus-common.sh" ]] && source "${ROOT}/lib/nexus-common.sh"
+nexus_release_host_path 2>/dev/null || export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 SG_ROOT="${SG_ROOT:-$(cd "${ROOT}/.." && pwd)}"
-AMMOOS_VERSION="${AMMOOS_VERSION:-2.0.0-beta4}"
+AMMOOS_VERSION="${AMMOOS_VERSION:-2.0.0-beta5}"
 TAG="v${AMMOOS_VERSION}"
 PUSH=0
 
@@ -37,7 +58,7 @@ fi
 need_pack=1
 min_src_bytes=$((500 * 1024 * 1024))
 if [[ "${SKIP_PACK:-0}" == "1" ]]; then
-  src_arc="${ROOT}/dist/ammoos-${AMMOOS_VERSION}-source.tar.gz"
+  src_arc="${ROOT}/dist/ammoos-${AMMOOS_VERSION}-source.h7e"
   inst_arc="${ROOT}/dist/ammoos-${AMMOOS_VERSION}-installers.tar.gz"
   src_ok=0
   if [[ -f "$src_arc" ]]; then
@@ -73,47 +94,112 @@ rsync -a --delete \
   --exclude='cache' \
   --exclude='state' \
   --exclude='.github' \
+  --exclude='linux-kernel' \
+  --exclude='linux-kernel/**' \
+  --exclude='_archive' \
+  --exclude='_archive/**' \
+  --exclude='.pages-hub-*' \
+  --exclude='.pages-*-publish' \
+  --exclude='.pages-*-publish/**' \
+  --exclude='.wiki-*-publish' \
+  --exclude='.wiki-*-publish/**' \
+  --exclude='.senses-publish-*' \
+  --exclude='.senses-publish-*/**' \
+  --exclude='.hostess7-github-clone' \
+  --exclude='.hostess7-github-clone/**' \
+  --exclude='.gnueol-terminal-github-clone' \
+  --exclude='.gnueol-terminal-github-clone/**' \
+  --exclude='Hostess7/cache' \
+  --exclude='Hostess7/cache/**' \
+  --exclude='Hostess7/.pages-build-state' \
+  --exclude='Hostess7/.pages-build-state/**' \
+  --exclude='Hostess7/.pages-*-publish' \
+  --exclude='Hostess7/.pages-*-publish/**' \
+  --exclude='Queen/cache' \
+  --exclude='Queen/cache/**' \
+  --exclude='data/combinatronic-visuals' \
+  --exclude='data/combinatronic-visuals/**' \
+  --exclude='panel/profile-*' \
+  --exclude='Grok16/vendor' \
+  --exclude='Grok16/vendor/**' \
+  --exclude='KILROY/build' \
+  --exclude='KILROY/build/**' \
+  --exclude='.venv*' \
+  --exclude='**/.venv*' \
   "${DIST}/ammoos-${AMMOOS_VERSION}/" "$EXPORT/"
 
-cd "$EXPORT"
-if [[ ! -d .git ]]; then
-  git init -b main
-  git config user.email "gzac5314@users.noreply.github.com"
-  git config user.name "ZacharyGeurts"
-fi
-
-git add -A
-git commit -m "AmmoOS ${AMMOOS_VERSION} beta — combinatronic field OS" || true
+log "prune export blobs >95MB (GitHub limit)"
+while IFS= read -r -d '' blob; do
+  log "  drop ${blob#"$EXPORT"/}"
+  rm -f "$blob"
+done < <(find "$EXPORT" -type f -size +95M -print0 2>/dev/null || true)
 
 if [[ "$PUSH" -eq 0 ]]; then
-  log "export ready at ${EXPORT} (pass --push to publish)"
+  log "export staged at ${EXPORT} (pass --push for git publish + gh release)"
   exit 0
 fi
 
-REMOTE="https://github.com/ZacharyGeurts/AmmoOS.git"
-if ! gh repo view ZacharyGeurts/AmmoOS >/dev/null 2>&1; then
-  log "create GitHub repo AmmoOS"
-  gh repo create AmmoOS --public --description "AmmoOS beta — field OS from SG/NewLatest. Browser + native launch surfaces." \
-    --homepage "https://zacharygeurts.github.io/AmmoOS/"
+AMMOOS_REMOTE="${AMMOOS_GITHUB_REMOTE:-https://github.com/ZacharyGeurts/AmmoOS.git}"
+AMMOOS_CLONE="${ROOT}/.ammoos-github-clone"
+log "git publish — fresh AmmoOS main from cache-cut export (drop stale clone)"
+rm -rf "$AMMOOS_CLONE"
+if gh repo clone ZacharyGeurts/AmmoOS "$AMMOOS_CLONE" -- --depth=1; then
+  rsync -a --delete --exclude='.git' "${EXPORT}/" "${AMMOOS_CLONE}/"
+  cd "$AMMOOS_CLONE"
+  git config user.email "${GIT_USER_EMAIL:-gzac5314@users.noreply.github.com}"
+  git config user.name "${GIT_USER_NAME:-ZacharyGeurts}"
+  git add -A
+  git commit -m "AmmoOS ${AMMOOS_VERSION} — CLASSIC_START (cache-cut export)" || true
+  git push origin main 2>/dev/null || git push -u origin main --force
+  cd "$ROOT"
+  log "AmmoOS main → ${AMMOOS_REMOTE} ($(du -sh "$EXPORT" | awk '{print $1}') export)"
+else
+  log "WARN AmmoOS clone failed — gh release/pages only"
 fi
 
-git remote remove origin 2>/dev/null || true
-git remote add origin "$REMOTE"
-git push -u origin main --force
+log "seal built executables"
+bash "${ROOT}/scripts/seal-built-executables.sh" || log "WARN executable seal partial"
 
+log "git publish — commit + push origin from ${ROOT}"
+GIT_PUBLISH_MSG="AmmoOS ${AMMOOS_VERSION} beta — combinatronic field OS" \
+  bash "${ROOT}/scripts/git-publish.sh" --siblings \
+  || log "WARN git publish partial"
+
+cd "$ROOT"
 git tag -a "$TAG" -m "AmmoOS ${AMMOOS_VERSION}" 2>/dev/null || git tag -f "$TAG" -m "AmmoOS ${AMMOOS_VERSION}"
-git push origin "$TAG" --force
+git push origin "$TAG" 2>/dev/null || log "WARN tag push skipped"
+
+REMOTE="https://github.com/ZacharyGeurts/AmmoOS.git"
 
 NOTES="${ROOT}/RELEASE-${AMMOOS_VERSION}.md"
 assets=()
+max_asset_bytes=$((2 * 1024 * 1024 * 1024))
 for a in \
-  "${DIST}/ammoos-${AMMOOS_VERSION}-source.tar.gz" \
+  "${DIST}/ammoos-${AMMOOS_VERSION}-source.h7e" \
   "${DIST}/ammoos-${AMMOOS_VERSION}-installers.tar.gz" \
   "${DIST}/ammoos-${AMMOOS_VERSION}-windows-x86_64.zip" \
   "${DIST}/ammoos-${AMMOOS_VERSION}-platforms.json" \
   "${DIST}/ammoos-${AMMOOS_VERSION}-PLATFORMS.md"; do
-  [[ -f "$a" ]] && assets+=("$a")
+  [[ -f "$a" ]] || continue
+  sz=$(stat -c%s "$a" 2>/dev/null || echo 0)
+  if [[ "$sz" -gt "$max_asset_bytes" ]]; then
+    log "skip release asset $(basename "$a") (${sz} bytes > 2GiB GitHub limit)"
+    continue
+  fi
+  assets+=("$a")
 done
+VSYNC_VER="$(python3 -c "import json;from pathlib import Path;p=Path('${ROOT}/data/field-vsync-locker-version.json');print(json.loads(p.read_text()).get('version',''))" 2>/dev/null || true)"
+if [[ -n "$VSYNC_VER" ]]; then
+  for a in "${DIST}/vsync-locker-${VSYNC_VER}"-*.{tar.gz,zip,json}; do
+    [[ -f "$a" ]] || continue
+    sz=$(stat -c%s "$a" 2>/dev/null || echo 0)
+    if [[ "$sz" -gt "$max_asset_bytes" ]]; then
+      log "skip release asset $(basename "$a") (${sz} bytes > 2GiB GitHub limit)"
+      continue
+    fi
+    assets+=("$a")
+  done
+fi
 
 if gh release view "$TAG" >/dev/null 2>&1; then
   gh release edit "$TAG" --title "AmmoOS ${AMMOOS_VERSION}" --notes-file "$NOTES"

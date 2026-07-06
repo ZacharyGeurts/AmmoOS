@@ -24,6 +24,10 @@ from urllib.request import Request, urlopen
 
 QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(QUEEN.parent)))
+_LIB_DIR = INSTALL / "lib"
+if str(_LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(_LIB_DIR))
 from sg_paths import grok16_root
 _LIB = Path(__file__).resolve().parent
 WORLD = QUEEN / "world"
@@ -750,6 +754,10 @@ def _field_net_status() -> dict[str, Any]:
     return _run_json(_LIB / "queen-field-net.py", "json", timeout=45)
 
 
+def _github_secure_status() -> dict[str, Any]:
+    return _run_json(_LIB / "queen-github-secure.py", "json", timeout=45)
+
+
 def dispatch_field_net(body: dict[str, Any]) -> dict[str, Any]:
     return _run_json(_LIB / "queen-field-net.py", "dispatch", body=body, timeout=30)
 
@@ -1432,6 +1440,10 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/field-performance-flyout":
             self._send_json(200, _perf_flyout_sample())
             return
+        if path == "/api/field-error-dashboard":
+            script = _nexus_lib_script("field-error-dashboard.py")
+            self._send_json(200, _run_json(script, "json", timeout=20))
+            return
         if path == "/api/queen-build":
             self._send_json(200, _build_status())
             return
@@ -1527,6 +1539,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/api/field-net", "/api/queen-field-net"):
             self._send_json(200, _field_net_status())
+            return
+        if path in ("/api/github-secure", "/api/queen-github-secure", "/api/secure-git"):
+            self._send_json(200, _github_secure_status())
             return
         if path in ("/api/field-sanity", "/api/queen-field-sanity"):
             self._send_json(200, _field_sanity_status())
@@ -1729,6 +1744,20 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/api/sap", "/api/sweet-anita", "/api/game-room/sap"):
             self._send_json(200, _sap_status())
             return
+        if path in ("/api/game-room/verify", "/api/gameroom/verify"):
+            qs = parse_qs(urlparse(self.path).query)
+            capture = (qs.get("capture") or ["0"])[0] in ("1", "true", "yes")
+            witness = (qs.get("final_eye") or qs.get("witness") or ["0"])[0] in ("1", "true", "yes")
+            systems = [s for s in (qs.get("systems") or [""])[0].split(",") if s.strip()]
+            body = {
+                "action": "verify",
+                "capture": capture,
+                "final_eye": witness,
+            }
+            if systems:
+                body["systems"] = systems
+            self._send_json(200, dispatch_game_room(body))
+            return
         if path in ("/api/game-room/fb", "/api/gameroom/fb"):
             self._send_json(200, _game_room_fb())
             return
@@ -1783,6 +1812,24 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("X-Queen-Proxy", "1")
             self.end_headers()
             self.wfile.write(data)
+            return
+        if path in ("/queen-game-room", "/queen-game-room/", "/queen-game-room.html"):
+            p = WORLD / "queen-game-room.html"
+            if p.is_file():
+                self._send_bytes(p.read_bytes(), mime="text/html; charset=utf-8")
+                return
+        if path.startswith("/queen-game-room/"):
+            rel = path[len("/queen-game-room/") :]
+            fp = _safe_path(WORLD, rel)
+            if fp and fp.is_file():
+                mime = mimetypes.guess_type(str(fp))[0] or "application/octet-stream"
+                self._send_bytes(fp.read_bytes(), mime=mime)
+                return
+        if path in ("/world/queen-game-room.html", "/world/queen-game-room"):
+            self.send_response(HTTPStatus.MOVED_PERMANENTLY)
+            self.send_header("Location", "/queen-game-room.html")
+            self._apply_security_headers()
+            self.end_headers()
             return
         if path == "/world" or path == "/world/":
             p = WORLD / "browser.html"

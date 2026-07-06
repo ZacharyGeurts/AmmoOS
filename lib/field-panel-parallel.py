@@ -33,6 +33,16 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "hostess7_command": ("hostess7-command.py", ["panel"]),
     "hostess7_system_control": ("hostess7-system-control.py", ["json"]),
     "hostess7_tasklist": ("hostess7-tasklist.py", ["json"]),
+    "hostess7_missions": ("hostess7-missions.py", ["panel"]),
+    "hostess7_ingress_egress_gate": ("hostess7-ingress-egress-gate.py", ["panel"]),
+    "hostess7_control_balancer": ("hostess7-control-balancer.py", ["panel"]),
+    "hostess7_positional_awareness": ("hostess7-positional-awareness.py", ["panel"]),
+    "hostess7_brain_training": ("hostess7-brain-training-chamber.py", ["panel"]),
+    "hostess7_fifth_amendment": ("hostess7-fifth-amendment.py", ["panel"]),
+    "hostess7_curiosity_corpus": ("hostess7-curiosity-corpus.py", ["panel"]),
+    "hostess7_human_comfort": ("hostess7-human-comfort-training.py", ["panel"]),
+    "hostess7_exploring_rape": ("hostess7-exploring-rape-training.py", ["panel"]),
+    "field_h7b_brain": ("field-h7b-brain-storage.py", ["panel"]),
     "hostess7_operator": ("hostess7-operator.py", ["json"]),
     "hostess7_virtual_workspace": ("hostess7-virtual-workspace.py", ["json"]),
     "hostess7_noti": ("hostess7-noti.py", ["json"]),
@@ -64,6 +74,7 @@ FIELD_SLICES: dict[str, tuple[str, list[str]]] = {
     "field_broadcaster": ("field-broadcaster.py", ["json"]),
     "field_obs": ("field-obs.py", ["json"]),
     "field_gpu": ("field-gpu-control.py", ["json"]),
+    "field_vsync_locker": ("field-vsync-locker.py", ["json"]),
     "c2_taskbar": ("field-c2-taskbar-plate.py", ["json"]),
     "field_shell_dock": ("field-shell-dock.py", ["json"]),
     "field_popcorn": ("field-popcorn-player.py", ["json"]),
@@ -242,7 +253,30 @@ def _run_slice(
         return key, None
 
 
+def _h7s_lane() -> Any | None:
+    if os.environ.get("NEXUS_H7S_LANE", "1") != "1":
+        return None
+    try:
+        import importlib.util
+        lane_py = INSTALL / "lib" / "field-h7s-lane.py"
+        if not lane_py.is_file():
+            return None
+        spec = importlib.util.spec_from_file_location("field_h7s_lane_panel", lane_py)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
 def _load_panel() -> dict[str, Any]:
+    lane = _h7s_lane()
+    if lane and hasattr(lane, "load_json"):
+        doc = lane.load_json(PANEL_JSON, default=None)
+        if isinstance(doc, dict):
+            return doc
     try:
         return json.loads(PANEL_JSON.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -362,6 +396,9 @@ def publish_parallel(*, max_workers: int | None = None) -> dict[str, Any]:
     doc["field_slices_updated"] = updated
     doc["field_slices_failed"] = failed
     _save_panel(doc)
+    lane = _h7s_lane()
+    if lane and hasattr(lane, "after_json_publish"):
+        lane.after_json_publish(PANEL_JSON)
     return {
         "ok": True,
         "updated": updated,

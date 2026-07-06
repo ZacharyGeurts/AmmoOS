@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:genius_shield.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # NEXUS-Shield default installer — pure genius heuristics, ultra-stealth, non-intrusive.
 set -euo pipefail
@@ -282,6 +300,11 @@ source "${NEXUS_INSTALL_ROOT}/lib/host-attack.sh" 2>/dev/null || true
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
 nexus_field_attack_install_autokill || true
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-war-hardening.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/field-war-hardening.sh"
+  nexus_field_war_harden || true
+}
 
 # First-install boot impl — wire stack, migrate, meld; marks first-boot.complete
 export NEXUS_BOOT_FORCE_FIRST=1

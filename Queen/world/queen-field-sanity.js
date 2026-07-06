@@ -261,6 +261,9 @@
       });
       const doc = await r.json();
       const c = doc.classification || doc;
+      if (c.verdict === "BLOCK_MITM") {
+        return { ok: false, classification: c, reason: c.reason || "github_mitm_blocked" };
+      }
       if (c.verdict === "BLOCK_EXTERNAL") return { ok: false, classification: c };
       const fielded = (global.QueenFieldEngine?.depth?.() ?? 0) > 0;
       if (fielded && !c.internal) return { ok: false, classification: c, reason: "fielded_simplify_hold" };

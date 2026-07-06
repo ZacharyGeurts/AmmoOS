@@ -3,8 +3,6 @@
   "title": "AmmoOS Body System — one embodiment for all of us",
   "motto": "Hostess 7 wears the body. Ironclad correlates the lanes. Operator counsels when uncertain. Truth before permanency.",
   "commander": "hostess7",
-  "component_seal": "data/hostess7-component-seal-doctrine.json",
-  "owns_desktop_and_browser": true,
   "module": "lib/field-body-system.py",
   "ui": "/field-body-system",
   "api": "/api/field-body-system",
@@ -69,9 +67,15 @@
       "id": "motor_embodiment",
       "label": "Motor & embodiment",
       "role": "Spine · hands · attachments · training floor · combat",
-      "modules": ["lib/hostess7-training-chamber.py", "lib/humanoid-motion-training.py", "lib/hostess7-hand-core.py"]
+      "modules": ["lib/hostess7-training-chamber.py", "lib/humanoid-motion-training.py", "lib/hostess7-hand-core.py", "lib/hostess7-brain-training-chamber.py"]
     }
   ],
+  "brain_training_campus": {
+    "doctrine": "data/hostess7-brain-training-doctrine.json",
+    "module": "lib/hostess7-brain-training-chamber.py",
+    "api": "/api/hostess7/brain-training",
+    "body_zone": "Anatomy books + training chamber + humanoid motion"
+  },
   "sense_lanes": {
     "eye": {
       "driver": "Final_Eye",

@@ -10,9 +10,6 @@
   "output_format": "h7/7",
   "canonical_bridge": "lib/final-eye-ocr-core.py",
   "cli_bridge": "lib/final-eye-h7-ocr.py",
-  "ai_connections": "data/final-eye-ai-connections-doctrine.json",
-  "final_eye_seal": "data/final-eye-hostess7-seal-doctrine.json",
-  "handshake_module": "lib/final-eye-hostess7-seal.py",
   "h7_module": "lib/field-h7-format.py",
   "plate_meld": {
     "doctrine": "data/eye-ear-plate-doctrine.json",

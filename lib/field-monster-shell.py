@@ -28,11 +28,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -86,14 +101,36 @@ def _cfg_bool(key: str, env_key: str, *, fallback: bool = True) -> bool:
     return fallback
 
 
-GRACE_SEC = _cfg_float("grace_sec", "MONSTER_GRACE_SEC", 5.0)
-DEFAULT_STALL = _cfg_float("stall_sec", "MONSTER_STALL_SEC", 90.0)
+def _doctrine_doc() -> dict[str, Any]:
+    doc = _load(DOCTRINE, {})
+    return doc if isinstance(doc, dict) else {}
+
+
+GRACE_SEC = _cfg_float("grace_sec", "MONSTER_GRACE_SEC", 8.0)
+DEFAULT_STALL = _cfg_float("stall_sec", "MONSTER_STALL_SEC", 180.0)
 DEFAULT_TIMEOUT = _cfg_float("timeout_sec", "MONSTER_TIMEOUT_SEC", 7200.0)
 POLL_MS = _cfg_float("poll_ms", "MONSTER_POLL_MS", 500.0)
 SMART_VITALS = _cfg_bool("smart_vitals", "MONSTER_SMART_VITALS", fallback=True)
 PROMPT_ONLY_IDLE = _cfg_bool("prompt_only_when_idle", "MONSTER_PROMPT_ONLY_IDLE", fallback=True)
-VITALS_QUIET_SEC = _cfg_float("vitals_quiet_sec", "MONSTER_VITALS_QUIET_SEC", 5.0)
+VITALS_QUIET_SEC = _cfg_float("vitals_quiet_sec", "MONSTER_VITALS_QUIET_SEC", 15.0)
 MAX_PROMPTS = int(_cfg_float("max_prompts_per_session", "MONSTER_MAX_PROMPTS", 2.0))
+DESKTOP_HANG_WAIT_SEC = _cfg_float("desktop_hang_wait_sec", "MONSTER_DESKTOP_HANG_WAIT_SEC", 300.0)
+HANG_QUEUE_TTL_SEC = _cfg_float("hang_queue_ttl_sec", "MONSTER_HANG_QUEUE_TTL_SEC", 900.0)
+WATCH_LOG_THROTTLE_SEC = _cfg_float("watch_log_throttle_sec", "MONSTER_WATCH_LOG_THROTTLE_SEC", 90.0)
+RE_PROMPT_COOLDOWN_SEC = _cfg_float("re_prompt_cooldown_sec", "MONSTER_RE_PROMPT_COOLDOWN_SEC", 120.0)
+_WATCH_LOG_PHASES = frozenset(
+    str(x).lower()
+    for x in (_doctrine_doc().get("defaults") or {}).get("watch_log_phases") or ["prompt", "busy"]
+)
+_SLOW_MARKERS = tuple(
+    str(x).lower()
+    for x in (_doctrine_doc().get("slow_markers") or [
+        "gcc", "g16", "cc1", "lto", "ld", "ninja", "cmake", "make", "qemu",
+        "pack-ammoos", "rsync", "tar", "integrate", "compile", "chips",
+        "wire-stack", "field-ammolang", "grok16", "python3", "pythong",
+    ])
+)
+_SLOW_STALL_FLOOR = _cfg_float("slow_stall_floor_sec", "MONSTER_SLOW_STALL_FLOOR_SEC", 300.0)
 
 
 def _import_popup() -> Any:
@@ -202,22 +239,98 @@ def _normalize_pending(doc: dict[str, Any]) -> list[dict[str, Any]]:
     return []
 
 
+def _pid_alive(pid: int) -> bool:
+    try:
+        pid_i = int(pid)
+    except (TypeError, ValueError):
+        return False
+    if pid_i <= 1:
+        return False
+    return Path(f"/proc/{pid_i}").is_dir()
+
+
+def _hang_row_age_sec(row: dict[str, Any]) -> float:
+    ts = str(row.get("queued") or row.get("updated") or "").strip()
+    if not ts:
+        return 0.0
+    try:
+        dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        return max(0.0, (datetime.now(timezone.utc) - dt).total_seconds())
+    except ValueError:
+        return 0.0
+
+
+def _prune_hang_queue(*, write: bool = True) -> list[dict[str, Any]]:
+    """Drop stale hang rows — dead pid, expired TTL, or acknowledged wait."""
+    doc = _load(HANG_QUEUE, {})
+    pending = _normalize_pending(doc)
+    if not pending:
+        return []
+    kept: list[dict[str, Any]] = []
+    pruned: list[str] = []
+    for row in pending:
+        pid = int(row.get("pid") or 0)
+        age = _hang_row_age_sec(row)
+        if pid and not _pid_alive(pid):
+            pruned.append(f"{row.get('id')}:dead_pid")
+            continue
+        if age > HANG_QUEUE_TTL_SEC:
+            pruned.append(f"{row.get('id')}:ttl")
+            continue
+        if row.get("acknowledged"):
+            pruned.append(f"{row.get('id')}:acked")
+            continue
+        kept.append(row)
+    if pruned and write:
+        if kept:
+            doc["pending"] = kept
+            doc["updated"] = _now()
+            _save(HANG_QUEUE, doc)
+        else:
+            try:
+                HANG_QUEUE.unlink(missing_ok=True)
+            except OSError:
+                pass
+        _log({"op": "hang_prune", "pruned": pruned[:8], "kept": len(kept)})
+    return kept
+
+
+def _clear_hang_queue_entry(session_id: str) -> None:
+    doc = _load(HANG_QUEUE, {})
+    pending = _normalize_pending(doc)
+    kept = [p for p in pending if p.get("id") != session_id]
+    if len(kept) == len(pending):
+        return
+    if kept:
+        doc["pending"] = kept
+        doc["updated"] = _now()
+        _save(HANG_QUEUE, doc)
+    else:
+        try:
+            HANG_QUEUE.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
 def _queue_hang_for_desktop(session_id: str, label: str, detail: str, pid: int, *, stall_sec: float) -> None:
-    doc = {
-        "schema": "monster-hang-queue/v1",
-        "updated": _now(),
-        "pending": [
-            {
-                "id": session_id,
-                "label": label,
-                "detail": detail,
-                "pid": pid,
-                "stall_sec": int(stall_sec),
-                "choices": ["wait", "quit"],
-            }
-        ],
+    _prune_hang_queue(write=True)
+    now = _now()
+    row = {
+        "id": session_id,
+        "label": label,
+        "detail": detail,
+        "pid": pid,
+        "stall_sec": int(stall_sec),
+        "queued": now,
+        "updated": now,
+        "pid_alive": _pid_alive(pid),
+        "phase": "prompt",
+        "choices": ["wait", "quit"],
     }
-    _save(HANG_QUEUE, doc)
+    doc = _load(HANG_QUEUE, {})
+    pending = [p for p in _normalize_pending(doc) if p.get("id") != session_id]
+    pending.append(row)
+    _save(HANG_QUEUE, {"schema": "monster-hang-queue/v1", "updated": now, "pending": pending})
     try:
         HANG_RESPONSE.unlink(missing_ok=True)
     except OSError:
@@ -229,7 +342,10 @@ def _read_hang_response(session_id: str, *, timeout_sec: float = 300.0) -> str:
     while time.time() < deadline:
         doc = _load(HANG_RESPONSE, {})
         if doc.get("id") == session_id and doc.get("choice"):
-            return str(doc["choice"])
+            choice = str(doc["choice"])
+            if choice in ("wait", "dismiss"):
+                _clear_hang_queue_entry(session_id)
+            return choice
         if os.environ.get("MONSTER_USE_DESKTOP_HANG", "1") == "0":
             break
         time.sleep(0.4)
@@ -288,6 +404,52 @@ def _child_pids(ppid: int) -> list[int]:
     return out
 
 
+def _proc_tree_pids(root_pid: int, *, limit: int = 64) -> list[int]:
+    """BFS descendants — gcc/cc1/lto hide work below the launcher."""
+    if root_pid <= 1:
+        return []
+    seen: set[int] = {root_pid}
+    queue = [root_pid]
+    ordered = [root_pid]
+    while queue and len(ordered) < limit:
+        cur = queue.pop(0)
+        for child in _child_pids(cur):
+            if child in seen or child <= 1:
+                continue
+            seen.add(child)
+            ordered.append(child)
+            queue.append(child)
+    return ordered
+
+
+def _pids_in_pgid(pgid: int, *, limit: int = 48) -> list[int]:
+    if pgid <= 1:
+        return []
+    out: list[int] = []
+    try:
+        for entry in Path("/proc").iterdir():
+            if not entry.name.isdigit() or len(out) >= limit:
+                continue
+            try:
+                if os.getpgid(int(entry.name)) == pgid:
+                    out.append(int(entry.name))
+            except (OSError, ProcessLookupError):
+                continue
+    except OSError:
+        pass
+    return out
+
+
+def _effective_stall(label: str, cmd: list[str], base: float, prompt_count: int) -> float:
+    blob = f"{label} {' '.join(cmd)}".lower()
+    stall = float(base)
+    if any(marker in blob for marker in _SLOW_MARKERS):
+        stall = max(stall, _SLOW_STALL_FLOOR)
+    if prompt_count > 0:
+        stall *= 1.5 ** prompt_count
+    return min(stall, DEFAULT_TIMEOUT)
+
+
 def _sample_vitals(pid: int, prev: dict[str, Any] | None) -> dict[str, Any]:
     """CPU, IO, and scheduler state — busy work without stdout still counts as progress."""
     stat = _proc_stat(pid)
@@ -317,27 +479,60 @@ def _sample_vitals(pid: int, prev: dict[str, Any] | None) -> dict[str, Any]:
         if rb > int(prev.get("read_bytes", 0)) or wb > int(prev.get("write_bytes", 0)):
             row["busy"] = True
             reasons.append("io:active")
-    for child in _child_pids(pid)[:12]:
-        cstat = _proc_stat(child)
-        if cstat and cstat["state"] in ("R", "D"):
-            row["busy"] = True
-            reasons.append(f"child:{child}:{cstat['state']}")
-            break
     row["reason"] = ",".join(reasons[:4])
     return row
 
 
-def _vitals_idle_for(pid: int, prev: dict[str, Any] | None, idle_since: float | None) -> tuple[bool, dict[str, Any], float | None]:
-    """True when process has been resource-idle for vitals_quiet_sec."""
-    cur = _sample_vitals(pid, prev)
+def _sample_tree_vitals(
+    root_pid: int,
+    prev_map: dict[int, dict[str, Any]] | None,
+) -> dict[str, Any]:
+    """Aggregate vitals across process tree + process group — silence ≠ stall."""
+    pids = _proc_tree_pids(root_pid)
+    try:
+        pgid = os.getpgid(root_pid)
+        for pid in _pids_in_pgid(pgid):
+            if pid not in pids:
+                pids.append(pid)
+    except OSError:
+        pass
+    pmap = prev_map or {}
+    cur_map: dict[int, dict[str, Any]] = {}
+    busy = False
+    reasons: list[str] = []
+    alive = False
+    for pid in pids[:64]:
+        snap = _sample_vitals(pid, pmap.get(pid))
+        cur_map[pid] = snap
+        if snap.get("alive"):
+            alive = True
+        if snap.get("busy"):
+            busy = True
+            reasons.append(f"{pid}:{snap.get('reason', '')}")
+    return {
+        "alive": alive,
+        "busy": busy,
+        "reason": ",".join(reasons[:6]),
+        "map": cur_map,
+        "pids": pids[:64],
+    }
+
+
+def _vitals_idle_for_tree(
+    pid: int,
+    prev_map: dict[int, dict[str, Any]] | None,
+    idle_since: float | None,
+) -> tuple[bool, dict[int, dict[str, Any]], float | None]:
+    """True when the whole process tree has been resource-idle for vitals_quiet_sec."""
+    cur = _sample_tree_vitals(pid, prev_map)
     now = time.time()
     if cur.get("busy"):
-        return False, cur, None
+        return False, cur.get("map") or {}, None
     if idle_since is None:
-        return False, cur, now
+        return False, cur.get("map") or {}, now
     if (now - idle_since) >= VITALS_QUIET_SEC:
-        return True, cur, idle_since
-    return False, cur, idle_since
+        return True, cur.get("map") or {}, idle_since
+    return False, cur.get("map") or {}, idle_since
 
 
 def _should_prompt_hang(
@@ -345,37 +540,36 @@ def _should_prompt_hang(
     output_gap: float,
     stall: float,
     pid: int,
-    vitals_prev: dict[str, Any] | None,
+    vitals_prev_map: dict[int, dict[str, Any]] | None,
     vitals_idle_since: float | None,
     prompt_count: int,
-) -> tuple[bool, dict[str, Any], float | None, str]:
+) -> tuple[bool, dict[int, dict[str, Any]], float | None, str]:
     """
     Grace after output stops, then vitals-aware stall.
-    Popup only when idle long enough and operator action may help.
+    Popup only when the whole tree is idle long enough.
     """
     if output_gap < GRACE_SEC:
-        return False, vitals_prev or {}, vitals_idle_since, "grace"
+        return False, vitals_prev_map or {}, vitals_idle_since, "grace"
 
-    cur = _sample_vitals(pid, vitals_prev)
+    cur = _sample_tree_vitals(pid, vitals_prev_map)
     if SMART_VITALS and cur.get("busy"):
-        return False, cur, None, f"busy:{cur.get('reason', '')}"
+        return False, cur.get("map") or {}, None, f"busy:{cur.get('reason', '')}"
 
-    idle_ok, cur, idle_since = _vitals_idle_for(pid, vitals_prev, vitals_idle_since)
-    new_prev = cur
+    idle_ok, new_map, idle_since = _vitals_idle_for_tree(pid, vitals_prev_map, vitals_idle_since)
 
     if not idle_ok:
-        return False, new_prev, idle_since, "vitals_warming"
+        return False, new_map, idle_since, "vitals_warming"
 
     if output_gap < stall:
-        return False, new_prev, idle_since, "under_stall"
+        return False, new_map, idle_since, "under_stall"
 
     if PROMPT_ONLY_IDLE and not idle_ok:
-        return False, new_prev, idle_since, "not_idle"
+        return False, new_map, idle_since, "not_idle"
 
     if prompt_count >= MAX_PROMPTS:
-        return False, new_prev, idle_since, "max_prompts"
+        return False, new_map, idle_since, "max_prompts"
 
-    return True, new_prev, idle_since, "prompt"
+    return True, new_map, idle_since, "prompt"
 
 
 def _active_hang_labels() -> set[str]:
@@ -390,16 +584,29 @@ def _active_hang_labels() -> set[str]:
     return labels
 
 
+def _native_hang_enabled() -> bool:
+    env = os.environ.get("MONSTER_NATIVE_HANG", "").strip().lower()
+    if env in ("1", "true", "yes", "on"):
+        return True
+    if env in ("0", "false", "no", "off"):
+        return False
+    return bool(_doctrine_doc().get("defaults", {}).get("native_hang_popup", False))
+
+
 def _resolve_hang(session_id: str, label: str, detail: str, pid: int, *, stall_sec: float) -> str:
-    """wait | quit — desktop queue first, then native popup."""
+    """wait | quit — desktop queue first; native zenity only when explicitly enabled."""
     use_desktop = os.environ.get("MONSTER_USE_DESKTOP_HANG", "1") != "0"
     if use_desktop:
         existing = _active_hang_labels()
         if label not in existing:
             _queue_hang_for_desktop(session_id, label, detail, pid, stall_sec=stall_sec)
-        picked = _read_hang_response(session_id, timeout_sec=8.0)
+        picked = _read_hang_response(session_id, timeout_sec=DESKTOP_HANG_WAIT_SEC)
         if picked in ("wait", "quit", "dismiss"):
             return "wait" if picked == "dismiss" else picked
+        return "wait"
+
+    if not _native_hang_enabled():
+        return "wait"
 
     popup = _import_popup()
     if popup and hasattr(popup, "hang_prompt"):
@@ -408,6 +615,32 @@ def _resolve_hang(session_id: str, label: str, detail: str, pid: int, *, stall_s
         except Exception:
             pass
     return "wait"
+
+
+def _maybe_wrap_ammolang(cmd: list[str], label: str) -> list[str]:
+    """Layer above KILROY → AmmoLang boundary before Monster guarded exec."""
+    if os.environ.get("MONSTER_SKIP_AML", "").strip() in ("1", "true", "yes"):
+        return cmd
+    if os.environ.get("AML_BOUNDARY_ACTIVE", "").strip() in ("1", "true", "yes"):
+        return cmd
+    policy_py = INSTALL / "lib" / "field-monster-layer-policy.py"
+    if not policy_py.is_file() or not cmd:
+        return cmd
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("monster_layer_policy", policy_py)
+        if not spec or not spec.loader:
+            return cmd
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "needs_ammolang") and mod.needs_ammolang(label=label, cmd=cmd):
+            if hasattr(mod, "ammolang_wrap"):
+                wrapped = mod.ammolang_wrap(label, cmd)
+                _log({"op": "ammolang_wrap", "label": label, "from": cmd[:3], "to": wrapped[:4]})
+                return wrapped
+    except Exception:
+        pass
+    return cmd
 
 
 def run_guarded(
@@ -423,6 +656,7 @@ def run_guarded(
     """Launch through Monster — stall prompts, full kill on quit. Never raises."""
     session_id = uuid.uuid4().hex[:12]
     lbl = (label or (cmd[-1] if cmd else "program"))[:120]
+    cmd = _maybe_wrap_ammolang(list(cmd), lbl)
     to = float(timeout or DEFAULT_TIMEOUT)
     stall = float(stall_sec or DEFAULT_STALL)
     env = {**os.environ, **(env or {})}
@@ -493,10 +727,12 @@ def run_guarded(
     t_out.start()
     t_err.start()
 
-    vitals_prev: dict[str, Any] | None = None
+    vitals_prev_map: dict[int, dict[str, Any]] | None = None
     vitals_idle_since: float | None = None
     prompt_count = 0
     last_watch_phase = ""
+    last_watch_log_at = 0.0
+    last_prompt_at = 0.0
     while proc.poll() is None:
         now = time.time()
         if now > deadline:
@@ -504,34 +740,40 @@ def run_guarded(
             quit_requested = True
             break
         output_gap = now - last_progress
+        stall_now = _effective_stall(lbl, cmd, stall, prompt_count)
 
         # Resource activity without stdout — treat as progress (compile, QEMU, etc.)
         if SMART_VITALS and output_gap >= GRACE_SEC:
-            snap = _sample_vitals(pid, vitals_prev)
-            vitals_prev = snap
+            snap = _sample_tree_vitals(pid, vitals_prev_map)
+            vitals_prev_map = snap.get("map") or {}
             if snap.get("busy"):
                 last_progress = now
                 vitals_idle_since = None
                 output_gap = 0.0
 
-        should_prompt, vitals_prev, vitals_idle_since, phase = _should_prompt_hang(
+        should_prompt, vitals_prev_map, vitals_idle_since, phase = _should_prompt_hang(
             output_gap=output_gap,
-            stall=stall,
+            stall=stall_now,
             pid=pid,
-            vitals_prev=vitals_prev,
+            vitals_prev_map=vitals_prev_map,
             vitals_idle_since=vitals_idle_since,
             prompt_count=prompt_count,
         )
+        if should_prompt and prompt_count > 0 and (now - last_prompt_at) < RE_PROMPT_COOLDOWN_SEC:
+            should_prompt = False
+            phase = "cooldown"
         if should_prompt:
-            vit = vitals_prev or {}
+            tree = _sample_tree_vitals(pid, vitals_prev_map)
+            vitals_prev_map = tree.get("map") or vitals_prev_map
             detail = (
-                f"No output for {int(output_gap)}s (grace {int(GRACE_SEC)}s · stall {int(stall)}s).\n"
-                f"Process idle — state {vit.get('state', '?')}; vitals quiet {int(VITALS_QUIET_SEC)}s+."
+                f"No output for {int(output_gap)}s (grace {int(GRACE_SEC)}s · stall {int(stall_now)}s).\n"
+                f"Process tree idle — vitals quiet {int(VITALS_QUIET_SEC)}s+; pids {len(tree.get('pids') or [])}."
             )
             if stderr_chunks:
                 detail += "\n" + "".join(stderr_chunks[-3:])[:200]
             choice = _resolve_hang(session_id, lbl, detail, pid, stall_sec=stall)
             prompt_count += 1
+            last_prompt_at = now
             _log({
                 "op": "hang_prompt",
                 "session_id": session_id,
@@ -539,7 +781,7 @@ def run_guarded(
                 "gap": output_gap,
                 "phase": phase,
                 "prompt_count": prompt_count,
-                "vitals": {k: vit.get(k) for k in ("state", "busy", "reason")},
+                "vitals": {"busy": tree.get("busy"), "reason": tree.get("reason")},
             })
             if choice == "quit":
                 quit_requested = True
@@ -547,8 +789,13 @@ def run_guarded(
                 break
             last_progress = time.time()
             vitals_idle_since = None
-        elif phase != last_watch_phase and phase in ("busy", "vitals_warming", "grace", "under_stall"):
+        elif (
+            phase in _WATCH_LOG_PHASES
+            and phase != last_watch_phase
+            and (now - last_watch_log_at) >= WATCH_LOG_THROTTLE_SEC
+        ):
             last_watch_phase = phase
+            last_watch_log_at = now
             _log({"op": "hang_watch", "session_id": session_id, "phase": phase, "gap": int(output_gap)})
         time.sleep(POLL_MS / 1000.0)
 
@@ -604,14 +851,17 @@ def run_guarded(
 def handle_api(body: dict[str, Any]) -> dict[str, Any]:
     action = str(body.get("action") or "").lower().replace("-", "_")
     if action in ("hang_pending", "hang-pending"):
+        pending = _prune_hang_queue(write=True)
         doc = _load(HANG_QUEUE, {})
-        return {"ok": True, "pending": _normalize_pending(doc), "updated": doc.get("updated")}
+        return {"ok": True, "pending": pending, "updated": doc.get("updated"), "pruned": True}
     if action == "hang_respond":
         sid = str(body.get("id") or "")
         choice = str(body.get("choice") or "wait")
         if choice not in ("wait", "quit", "dismiss"):
             choice = "wait"
         _save(HANG_RESPONSE, {"id": sid, "choice": choice, "updated": _now()})
+        if choice in ("wait", "dismiss"):
+            _clear_hang_queue_entry(sid)
         return {"ok": True, "id": sid, "choice": choice}
     if action == "nuke":
         return nuke_process_tree(int(body.get("pid") or 0), label=str(body.get("label") or ""))
@@ -632,8 +882,9 @@ def main() -> int:
         return 0
 
     if cmd in ("hang-pending", "hang_pending"):
+        pending = _prune_hang_queue(write=True)
         doc = _load(HANG_QUEUE, {})
-        print(json.dumps({"ok": True, "pending": _normalize_pending(doc), "updated": doc.get("updated")}, ensure_ascii=False))
+        print(json.dumps({"ok": True, "pending": pending, "updated": doc.get("updated")}, ensure_ascii=False))
         return 0
 
     if cmd == "dispatch":

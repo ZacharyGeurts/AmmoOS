@@ -1,37 +1,51 @@
 {
   "schema": "field-os-keybindings/v1",
-  "title": "AmmoOS OS Keybindings",
-  "motto": "Kernel evdev + Ironclad desktop — CHIP-simple launcher, sovereign keyboard.",
-  "framework": "field-chips-plate",
-  "kernel_module": "lib/field-os-keybindings.py",
-  "desktop_module": "panel/assets/field-os-keybindings.js",
-  "keyboard_sovereign": "lib/field-keyboard-sovereign.py",
-  "ironclad_bus": "panel/assets/ironclad-bus.js",
-  "defaults": {
-    "engage_on_boot": true,
-    "kernel_listen": true,
-    "desktop_capture": true
+  "title": "AmmoOS OS keybindings",
+  "motto": "F12 Hostess 7 · F11 layer 3+ cycle · stack descends F10–F1 · layer 3+ owns all input",
+  "policy": {
+    "kernel_listener": true,
+    "desktop_capture": true,
+    "ironclad_sort": true,
+    "fkey_layers": "field-screen-layers.js",
+    "layer_3_input_exclusive": true,
+    "layer_3_min": 3,
+    "escape_fkey": "F12"
+  },
+  "stack_fkeys": {
+    "F12": {"z": "infinity", "id": "hostess7", "label": "Hostess 7"},
+    "F11": {"z": 3, "id": "layer3_cycle", "label": "Layer 3+", "cycle": true},
+    "F10": {"z": 2, "id": "znetwork", "label": "ZNetwork"},
+    "F9": {"z": 1, "id": "ammonet", "label": "AmmoNet"},
+    "F8": {"z": 0.5, "id": "presume_path", "label": "Presume path"},
+    "F7": {"z": 0, "id": "hardware", "label": "Hardware · EOL"},
+    "F6": {"z": -1, "id": "field_one", "label": "Field One"},
+    "F5": {"z": -2, "id": "botnet", "label": "Botnet · DNS"},
+    "F4": {"z": -3, "id": "nexus_c2", "label": "NEXUS C2"},
+    "F3": {"z": 0, "id": "iron_plate", "label": "Iron plate"},
+    "F2": {"z": 0.5, "id": "presume_direct", "label": "Presume direct"},
+    "F1": {"z": 0, "id": "ironclad_chips", "label": "Ironclad CHIPS"}
   },
   "bindings": [
-    {"id": "start_menu", "chord": "Meta", "keys": ["Meta"], "action": "toggle_start_menu", "desktop": true, "label": "Start menu"},
-    {"id": "start_menu_classic", "chord": "Control+Escape", "keys": ["Control", "Escape"], "action": "toggle_start_menu", "desktop": true, "label": "Start menu (classic)"},
-    {"id": "show_desktop", "chord": "Meta+d", "keys": ["Meta", "d"], "action": "show_desktop", "desktop": true, "kernel": true, "label": "Show desktop"},
-    {"id": "launch_view", "chord": "Meta+e", "keys": ["Meta", "e"], "action": "launch", "target": "view", "desktop": true, "kernel": true, "label": "View / Files"},
-    {"id": "launch_browser", "chord": "Meta+b", "keys": ["Meta", "b"], "action": "launch", "target": "queen-browser", "desktop": true, "kernel": true, "label": "Queen Browser"},
-    {"id": "launch_terminal", "chord": "Control+Alt+t", "keys": ["Control", "Alt", "t"], "action": "launch", "target": "queen-terminal", "desktop": true, "kernel": true, "label": "Terminal"},
-    {"id": "run_dialog", "chord": "Meta+r", "keys": ["Meta", "r"], "action": "launch", "target": "queen-terminal", "desktop": true, "label": "Run"},
-    {"id": "lock", "chord": "Meta+l", "keys": ["Meta", "l"], "action": "launch", "target": "field-lock", "desktop": true, "kernel": true, "label": "Lock"},
-    {"id": "alt_tab", "chord": "Alt+Tab", "keys": ["Alt", "Tab"], "action": "alt_tab", "desktop": true, "label": "Switch programs"},
-    {"id": "close_window", "chord": "Alt+F4", "keys": ["Alt", "F4"], "action": "close_window", "desktop": true, "label": "Close window"},
-    {"id": "monster_cad", "chord": "Control+Alt+Delete", "keys": ["Control", "Alt", "Delete"], "action": "monster", "desktop": true, "label": "Monster rescue"},
-    {"id": "monster_taskmgr", "chord": "Control+Shift+Escape", "keys": ["Control", "Shift", "Escape"], "action": "monster", "desktop": true, "label": "Monster task manager"},
-    {"id": "kilroy_f9", "chord": "F9", "keys": ["F9"], "action": "kilroy_browser", "kernel": true, "desktop": true, "label": "KILROY / Queen Browser"},
-    {"id": "escape", "chord": "Escape", "keys": ["Escape"], "action": "dismiss", "desktop": true, "label": "Dismiss overlays"}
+    {"id": "f12_hostess7", "keys": ["F12"], "action": "launch", "target": "hostess7", "layer": "infinity", "desktop": true},
+    {"id": "f11_layer3_cycle", "keys": ["F11"], "action": "cycle_layer3_plus", "layer": 3, "desktop": true},
+    {"id": "f10_znetwork", "keys": ["F10"], "action": "launch", "target": "znetwork", "layer": 2, "desktop": true},
+    {"id": "f9_ammonet", "keys": ["F9"], "action": "launch", "target": "ammonet", "layer": 1, "desktop": true},
+    {"id": "f8_presume_path", "keys": ["F8"], "action": "launch", "target": "chips-presume-path", "layer": 0.5, "desktop": true},
+    {"id": "f7_eol_code", "keys": ["F7"], "action": "launch", "target": "eol-code", "layer": 0, "desktop": true},
+    {"id": "f6_field_one", "keys": ["F6"], "action": "desktop", "target": "field-one", "layer": -1, "desktop": true},
+    {"id": "f5_botnet", "keys": ["F5"], "action": "launch", "target": "kilroy-dns", "layer": -2, "desktop": true},
+    {"id": "f4_nexus_c2", "keys": ["F4"], "action": "launch", "target": "nexus-c2", "layer": -3, "desktop": true},
+    {"id": "ctrl_alt_t", "keys": ["Control", "Alt", "t"], "action": "launch", "target": "gnu-eol-terminal", "desktop": true},
+    {"id": "ctrl_alt_b", "keys": ["Control", "Alt", "b"], "action": "launch", "target": "field-broadcaster", "desktop": true}
   ],
   "launch_targets": {
-    "view": {"id": "view", "name": "View", "exec": "http://127.0.0.1:9481/world/view.html", "shell": true},
-    "queen-browser": {"id": "queen-browser", "name": "Queen Browser", "exec": "http://127.0.0.1:9481/world/browser.html", "shell": true},
-    "queen-terminal": {"id": "queen-terminal", "name": "Terminal", "exec": "http://127.0.0.1:9481/world/?dock=terminal", "shell": true},
-    "field-lock": {"id": "field-lock", "name": "Lock", "exec": "/field-lock", "shell": true}
+    "hostess7": {"id": "hostess7", "exec": "http://127.0.0.1:9477/brain.html", "label": "Hostess 7"},
+    "eol-code": {"id": "eol-code", "exec": "http://127.0.0.1:9477/eol-code", "label": "EOL Code"},
+    "chips-presume-path": {"id": "chips-presume-path", "exec": "http://127.0.0.1:9477/api/chips/presume-path", "label": "Presume path"},
+    "nexus-c2": {"id": "nexus-c2", "exec": "http://127.0.0.1:9481/world/queen-nexus-c2.html", "label": "NEXUS C2"},
+    "kilroy-dns": {"id": "field-botnet-dns-dhcp", "exec": "http://127.0.0.1:9477/command?embed=1#dns", "label": "Botnet · DNS · DHCP"},
+    "controller-setup": {"id": "controller-setup", "exec": "/queen-game-room.html#arcade", "label": "Arcade controller setup"},
+    "gnu-eol-terminal": {"id": "gnu-eol-terminal", "exec": "http://127.0.0.1:9477/field-gnu-terminal-embed.html", "label": "GNU EOL Terminal", "aliases": ["queen-terminal"]},
+    "field-broadcaster": {"id": "field-broadcaster", "exec": "http://127.0.0.1:9477/field-broadcaster", "label": "Broadcaster"}
   }
 }

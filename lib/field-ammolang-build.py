@@ -33,18 +33,37 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    try:
+        tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        tmp.replace(path)
+    except OSError:
+        path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        tmp.unlink(missing_ok=True)
 
 
 def _rel_install(path: Path) -> str:
@@ -593,13 +612,149 @@ def _exec_chips(ctx: BuildContext, spec: str) -> dict[str, Any]:
     return ctx.result(False, f"chips spec must be ensure — got {spec}")
 
 
+_PY_FAST_ACTIONS = frozenset({
+    "panel", "pulse", "json", "status", "witness", "read", "local", "discern",
+    "threats", "classify", "restart", "checkpoint", "profile", "presume", "scan",
+    "resolve", "run", "tasks", "ingress", "methods", "message",
+})
+_PY_HEAVY_ACTIONS = frozenset({
+    "audit", "reinform-all", "all", "build", "ready", "verify", "library_prep",
+    "restore_h7c", "combinatronic_restore", "verify_hand", "reinform", "generate", "train",
+})
+
+
+def _resolve_py_path(name: str) -> Path | None:
+    stem = name.replace("-", "_") if "/" in name else name
+    for base in (INSTALL / "lib", QUEEN / "lib", GROK16 / "lib"):
+        for cand in (f"{name}.py", f"{stem}.py"):
+            p = base / cand
+            if p.is_file():
+                return p
+    return None
+
+
+def _invoke_py_direct(
+    module: str,
+    action: str = "",
+    extra_args: list[str] | None = None,
+    *,
+    env_extra: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Import module and call main() — no subprocess (panel/pulse/status lane)."""
+    import io
+    from contextlib import redirect_stderr, redirect_stdout
+
+    path = _resolve_py_path(module)
+    if not path:
+        return {"ok": False, "error": "module_missing", "module": module}
+    key = f"pyinv:{path}"
+    if key not in _HOT:
+        spec = importlib.util.spec_from_file_location(f"inv_{module.replace('-', '_')}", path)
+        if not spec or not spec.loader:
+            return {"ok": False, "error": "import_spec", "module": module}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _HOT[key] = mod
+    mod = _HOT[key]
+    extra_args = list(extra_args or [])
+    old_argv = sys.argv[:]
+    saved_env: dict[str, str | None] = {}
+    buf_out = io.StringIO()
+    buf_err = io.StringIO()
+    rc = 1
+    try:
+        if env_extra:
+            for k, v in env_extra.items():
+                saved_env[k] = os.environ.get(k)
+                os.environ[k] = v
+        os.environ.setdefault("NEXUS_INSTALL_ROOT", str(INSTALL))
+        os.environ.setdefault("NEXUS_STATE_DIR", str(STATE))
+        sys.argv = [str(path), action, *extra_args] if action else [str(path), *extra_args]
+        with redirect_stdout(buf_out), redirect_stderr(buf_err):
+            if hasattr(mod, "main"):
+                rc = mod.main()
+            else:
+                return {"ok": False, "error": "no_main", "module": module}
+    except SystemExit as exc:
+        rc = exc.code if isinstance(exc.code, int) else (0 if not exc.code else 1)
+    except Exception as exc:
+        return {
+            "ok": False,
+            "error": str(exc)[:200],
+            "module": module,
+            "stdout": buf_out.getvalue(),
+            "stderr": buf_err.getvalue(),
+            "direct": True,
+        }
+    finally:
+        sys.argv = old_argv
+        for k, v in saved_env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    if not isinstance(rc, int):
+        rc = 0 if rc else 1
+    stdout = buf_out.getvalue()
+    stderr = buf_err.getvalue()
+    row: dict[str, Any] = {
+        "ok": rc == 0,
+        "rc": rc,
+        "stdout": stdout,
+        "stderr": stderr,
+        "direct": True,
+        "module": module,
+        "action": action,
+    }
+    guard_py = INSTALL / "lib" / "field-json-guard.py"
+    if guard_py.is_file():
+        try:
+            gspec = importlib.util.spec_from_file_location("_jg_aml_invoke", guard_py)
+            if gspec and gspec.loader:
+                jg = importlib.util.module_from_spec(gspec)
+                gspec.loader.exec_module(jg)
+                if hasattr(jg, "parse_stdout_json"):
+                    parsed = jg.parse_stdout_json(stdout)
+                    if isinstance(parsed, dict) and parsed.get("schema"):
+                        row["parsed"] = parsed
+                        if "ok" in parsed:
+                            row["ok"] = bool(parsed.get("ok"))
+        except Exception:
+            pass
+    return row
+
+
+def _exec_assert(ctx: BuildContext, spec: str) -> dict[str, Any]:
+    test_mod = _import_mod("aml_test", "field-ammolang-test.py")
+    if not test_mod or not hasattr(test_mod, "run_assert"):
+        return ctx.result(False, "ammolang assert engine missing")
+    row = test_mod.run_assert(spec, name=spec[:60])
+    ok = bool(row.get("ok"))
+    detail = row.get("detail") or ("PASS" if ok else "FAIL")
+    ctx.result(ok, f"assert → {detail}")
+    return {"ok": ok, "spec": spec, "row": row}
+
+
 def _exec_invoke(ctx: BuildContext, spec: str) -> dict[str, Any]:
-    module = action = ""
+    module = action = py_mod = ""
+    extra_args: list[str] = []
     for part in spec.split():
         if part.startswith("module:"):
             module = part.split(":", 1)[1]
+        elif part.startswith("py:"):
+            py_mod = part.split(":", 1)[1]
         elif part.startswith("action:"):
             action = part.split(":", 1)[1]
+        elif part.startswith("arg:"):
+            extra_args.append(part.split(":", 1)[1])
+        elif part.startswith("args:"):
+            extra_args.extend(part.split(":", 1)[1].split())
+    if py_mod:
+        row = _invoke_py_direct(py_mod, action, extra_args)
+        ok = bool(row.get("ok"))
+        ctx.result(ok, f"invoke py:{py_mod} {action or ''} → {'PASS' if ok else 'FAIL'}")
+        return row
+    module = module or ""
     mod_map = {
         "harness": ("harness", "g16-compiler-test-harness.py", "main"),
         "chips": ("grok16:chips", "g16-chips-compiler-design.py", "main"),
@@ -654,11 +809,14 @@ def _run_subprocess(
         "QUEEN_ROOT": str(QUEEN),
         "AML_INLINE": "1",
         "AML_BUILD": os.environ.get("AML_BUILD", "1"),
+        "AML_BOUNDARY_ACTIVE": "1",
     }
     path_prefix = ":".join(
         p for p in (
-            str(GROK16 / "bin"),
+            "/usr/bin",
+            "/bin",
             str(INSTALL / "PythonG" / "bin"),
+            str(GROK16 / "bin"),
             os.environ.get("PATH", ""),
         ) if p
     )
@@ -672,12 +830,13 @@ def _run_subprocess(
 
     monster = _import_monster() if use_monitor and os.environ.get("MONSTER_SHELL", "1") != "0" else None
     if monster and hasattr(monster, "run_guarded"):
-        if any(tok in key_spec for tok in ("ammoos-push-only", "ammoos-release", "pack-ammoos", "publish-stack", "publish-ammoos")):
+        if any(tok in key_spec for tok in ("git-publish", "ammoos-release", "pack-ammoos", "publish-stack", "publish-ammoos", "seal-built-executables")):
+            run_env["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
             stall = ctx.op_stall or 3600
         elif any(tok in key_spec for tok in ("grok16-test-gate", "grok16-launch-verify", "grok16-release", "grok16-integrate")):
             stall = ctx.op_stall or _gate_run_stall(timeout)
         else:
-            stall = ctx.op_stall or min(90, max(30, timeout // 2))
+            stall = ctx.op_stall or min(180, max(60, timeout // 2))
         row = monster.run_guarded(
             cmd,
             label=short,
@@ -698,12 +857,13 @@ def _run_subprocess(
 
     monitor = _import_grok16("monitor", "g16_self_monitor.py") if use_monitor else None
     if monitor and hasattr(monitor, "run_monitored"):
-        if any(tok in key_spec for tok in ("ammoos-push-only", "ammoos-release", "pack-ammoos", "publish-stack", "publish-ammoos")):
+        if any(tok in key_spec for tok in ("git-publish", "ammoos-release", "pack-ammoos", "publish-stack", "publish-ammoos", "seal-built-executables")):
+            run_env["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
             stall = ctx.op_stall or 3600
         elif any(tok in key_spec for tok in ("grok16-test-gate", "grok16-launch-verify", "grok16-release", "grok16-integrate")):
             stall = ctx.op_stall or _gate_run_stall(timeout)
         else:
-            stall = ctx.op_stall or min(90, max(30, timeout // 2))
+            stall = ctx.op_stall or min(180, max(60, timeout // 2))
         res = monitor.run_monitored(
             cmd,
             label=short,
@@ -924,7 +1084,7 @@ def _gate_run_timeout(spec: str, *, doctrine: dict[str, Any] | None = None) -> i
 
 
 def _gate_run_stall(timeout: int) -> int:
-    return min(300, max(120, timeout // 2))
+    return min(600, max(180, timeout // 2))
 
 
 def _exec_run(ctx: BuildContext, spec: str) -> dict[str, Any]:
@@ -962,12 +1122,16 @@ def _exec_run(ctx: BuildContext, spec: str) -> dict[str, Any]:
             return _run_subprocess(ctx, cmd, cwd=script.parent, label=script.name)
         return ctx.result(False, f"script {script_name} missing")
     if py_mod:
-        candidates = [
-            INSTALL / "lib" / f"{py_mod}.py",
-            QUEEN / "lib" / f"{py_mod}.py",
-            GROK16 / "lib" / f"{py_mod}.py",
-        ]
-        path = next((p for p in candidates if p.is_file()), None)
+        use_direct = (
+            py_action in _PY_FAST_ACTIONS
+            or (not py_action and not extra_args)
+        ) and py_action not in _PY_HEAVY_ACTIONS
+        if use_direct and os.environ.get("AML_INVOKE_PY", "1") != "0":
+            row = _invoke_py_direct(py_mod, py_action, extra_args)
+            ok = bool(row.get("ok"))
+            ctx.result(ok, f"{py_mod} {py_action or 'main'}… → {'PASS' if ok else 'FAIL'}")
+            return row
+        path = _resolve_py_path(py_mod)
         if not path:
             return ctx.result(False, f"py module {py_mod} missing")
         py = os.environ.get("NEXUS_PYTHONG", sys.executable)
@@ -1009,19 +1173,82 @@ def resolve_task(name: str) -> str | None:
     return None
 
 
-def run_task(name: str, *, live: bool = True, verbose: bool = True) -> dict[str, Any]:
-    route = resolve_task(name)
-    if not route:
-        return {
-            "ok": False,
-            "error": "unknown_task",
-            "task": name,
-            "tasks": sorted((_load(DOCTRINE, {}).get("task_registry") or {}).keys()),
-        }
-    doc = run_named_script(route, live=live, verbose=verbose)
-    doc["task"] = name
-    doc["route"] = route
-    return doc
+def _boundary_mod() -> Any | None:
+    path = INSTALL / "lib" / "field-ammolang-boundary.py"
+    if not path.is_file():
+        return None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("field_ammolang_boundary", path)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def run_through_boundary(
+    target: str,
+    *,
+    extra_args: list[str] | None = None,
+    live: bool = True,
+    verbose: bool = True,
+) -> dict[str, Any]:
+    """Universal protective boundary — hang guard · freeze assist · anything."""
+    import json as _json
+    os.environ["AML_BOUNDARY_TARGET"] = target
+    os.environ["AML_BOUNDARY_ARGS_JSON"] = _json.dumps(extra_args or [])
+    boundary_path = resolve_script_route("universal_boundary")
+    if boundary_path and live:
+        doc = execute_build_script(boundary_path, live=True, verbose=verbose)
+        doc["task"] = target
+        doc["route"] = "universal_boundary"
+        doc["via"] = "boundary_aml"
+        doc["boundary"] = True
+        return doc
+    mod = _boundary_mod()
+    if mod and hasattr(mod, "execute_boundary"):
+        rep = mod.execute_boundary(target, extra_args or [], live=live)
+        rep["task"] = target
+        rep["route"] = "universal_boundary"
+        rep["via"] = "boundary_direct"
+        rep["boundary"] = True
+        return rep
+    return {"ok": False, "error": "boundary_module_missing", "task": target}
+
+
+def run_task(
+    name: str,
+    *,
+    live: bool = True,
+    verbose: bool = True,
+    extra_args: list[str] | None = None,
+) -> dict[str, Any]:
+    extra_args = list(extra_args or [])
+    explicit = name in ("exec", "boundary", "any", "run")
+    target = name
+    if explicit and extra_args:
+        target = extra_args[0]
+        extra_args = extra_args[1:]
+    route = resolve_task(name) if not explicit else None
+    if route:
+        path = resolve_script_route(route)
+        if path:
+            doc = run_named_script(route, live=live, verbose=verbose)
+            doc["task"] = name
+            doc["route"] = route
+            doc["via"] = "named_route"
+            return doc
+    if os.environ.get("AML_BUILD", "1") == "0":
+        mod = _boundary_mod()
+        if mod and hasattr(mod, "execute_boundary"):
+            rep = mod.execute_boundary(target, extra_args, live=live)
+            rep["via"] = "boundary_bypass_aml_file"
+            rep["task"] = target
+            return rep
+    return run_through_boundary(target, extra_args=extra_args, live=live, verbose=verbose)
 
 
 def _exec_post(ctx: BuildContext, spec: str) -> dict[str, Any]:
@@ -1067,6 +1294,7 @@ def _dispatch_op(ctx: BuildContext, op: str, spec: str) -> dict[str, Any]:
 
 _BUILD_DISPATCH: dict[str, Callable[[BuildContext, str], dict[str, Any]]] = {
     "SAY": lambda ctx, spec: (ctx.say(spec.strip('"').strip("'")), {"ok": True})[1],
+    "ASSERT": _exec_assert,
     "FORGE": _exec_forge,
     "TEST": _exec_test,
     "FAST": _exec_fast,
@@ -1093,14 +1321,21 @@ _BUILD_DISPATCH: dict[str, Callable[[BuildContext, str], dict[str, Any]]] = {
 def _walk_steps(ctx: BuildContext, steps: list[dict[str, Any]], *, live: bool) -> list[dict[str, Any]]:
     trace: list[dict[str, Any]] = []
     for node in steps:
+        if live and not ctx.ok:
+            break
         op = str(node.get("op") or "")
-        if op in ("SEQ", "PAR"):
+        if op in ("SEQ", "PAR", "GROUP", "SUITE"):
             children = node.get("children") or []
+            suite_name = str(node.get("name") or "")
+            if suite_name and op == "SUITE" and live:
+                ctx.say(f"suite {suite_name}", kind="step")
+            elif suite_name and op == "GROUP" and live:
+                ctx.say(f"group {suite_name}", kind="step")
             if op == "PAR" and live:
                 results = [_walk_steps(ctx, [c], live=live) for c in children]
-                trace.append({"op": op, "parallel": len(children), "results": results})
+                trace.append({"op": op, "name": suite_name, "parallel": len(children), "results": results})
             else:
-                trace.append({"op": op, "results": _walk_steps(ctx, children, live=live)})
+                trace.append({"op": op, "name": suite_name, "results": _walk_steps(ctx, children, live=live)})
             continue
         if op == "COMBINATOR":
             name = str(node.get("name") or "")
@@ -1111,6 +1346,8 @@ def _walk_steps(ctx: BuildContext, steps: list[dict[str, Any]], *, live: bool) -
         spec = str(node.get("spec") or node.get("target") or node.get("command") or "")
         if op in _BUILD_DISPATCH and live:
             trace.append({"op": op, "spec": spec, "result": _dispatch_op(ctx, op, spec)})
+        elif op == "ASSERT":
+            trace.append({"op": op, "spec": spec, "result": _dispatch_op(ctx, op, spec) if live else {"dry_run": True}})
         else:
             trace.append({"op": op, "spec": spec, "dry_run": not live})
     return trace
@@ -1265,18 +1502,24 @@ def main() -> int:
         print(json.dumps(doc, ensure_ascii=False, indent=2))
         return 0 if doc.get("ok") else 1
     if cmd == "task":
-        name = sys.argv[2] if len(sys.argv) > 2 else "all"
-        doc = run_task(name, live="--dry" not in sys.argv)
+        argv = [a for a in sys.argv[2:] if a != "--dry"]
+        name = argv[0] if argv else "all"
+        extra = argv[1:] if len(argv) > 1 else []
+        doc = run_task(name, live="--dry" not in sys.argv, extra_args=extra)
         print(json.dumps(doc, ensure_ascii=False, indent=2))
         return 0 if doc.get("ok") else 1
     if cmd == "tasks":
         reg = _load(DOCTRINE, {}).get("task_registry") or {}
         routes = _load(DOCTRINE, {}).get("script_routes") or {}
+        boundary = _boundary_mod()
+        reg_scan = boundary.scan_registry(refresh=False) if boundary and hasattr(boundary, "scan_registry") else {}
         print(json.dumps({
             "schema": "ammolang-task-registry/v1",
             "tasks": reg,
             "routes": sorted(routes.keys()),
-            "motto": "All tasks run through AmmoLang — hang guard · freeze assist",
+            "boundary_entries": reg_scan.get("entry_count", 0),
+            "motto": "All tasks run through AmmoLang — universal boundary · hang guard · freeze assist",
+            "usage": "./lib/ammolang-run.sh TASK [args] · ./lib/ammolang-run.sh exec TARGET [args]",
         }, ensure_ascii=False, indent=2))
         return 0
     if cmd == "assist":

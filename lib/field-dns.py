@@ -12,6 +12,7 @@ import fcntl
 import json
 import os
 import re
+import signal
 import socket
 import struct
 import subprocess
@@ -39,24 +40,54 @@ CACHE_TTL = int(os.environ.get("NEXUS_FIELD_DNS_CACHE_TTL", "300"))
 IPV4 = os.environ.get("NEXUS_FIELD_DNS_IPV4", "127.0.0.1")
 IPV6 = os.environ.get("NEXUS_FIELD_DNS_IPV6", "::1")
 PORT = int(os.environ.get("NEXUS_FIELD_DNS_PORT", "53"))
+
+
+def _internet_unrestricted() -> bool:
+    return os.environ.get("NEXUS_FIELD_INTERNET_UNRESTRICT", "1").strip().lower() not in ("0", "false", "no", "off")
 QUERY_LOG = STATE / "field-dns-queries.jsonl"
 QUERY_LOG_MAX = 5000
 RECENT_PANEL_LIMIT = 200
 DNS_LOCK = STATE / "field-dns.lock"
 _SERVE_LOCK_HANDLE = None
+_active_listeners: list[str] = []
+_listener_lock = threading.Lock()
 _threat_events: list[dict[str, Any]] = []
 _poison_anomalies = 0
 _dnssec = {"enabled": True, "validations": 0, "failures": 0, "stub": True}
 
 
+def _any_ip_mod() -> Any:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "field_dns_dhcp_any_ip", INSTALL / "lib" / "field-dns-dhcp-any-ip.py",
+    )
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _bind_hosts_v4() -> list[str]:
-    # 127.0.0.53 is systemd-resolved — binding there conflicts; redirect via resolv instead.
+    try:
+        mod = _any_ip_mod()
+        if mod and hasattr(mod, "dns_bind_hosts_v4"):
+            return list(mod.dns_bind_hosts_v4())
+    except Exception:
+        pass
     raw = os.environ.get("NEXUS_FIELD_DNS_BINDS_IPV4", "127.0.0.1")
     hosts = [h.strip() for h in raw.split(",") if h.strip()]
     return hosts or [IPV4]
 
 
 def _bind_hosts_v6() -> list[str]:
+    try:
+        mod = _any_ip_mod()
+        if mod and hasattr(mod, "dns_bind_hosts_v6"):
+            return list(mod.dns_bind_hosts_v6())
+    except Exception:
+        pass
     raw = os.environ.get("NEXUS_FIELD_DNS_BINDS_IPV6", IPV6)
     hosts = [h.strip() for h in raw.split(",") if h.strip()]
     return hosts or [IPV6]
@@ -126,9 +157,24 @@ def _load_blocklist() -> set[str]:
     return blocked
 
 
+def _is_github_always_allowed(qname: str) -> bool:
+    name = qname.lower().rstrip(".")
+    if not name:
+        return False
+    for suffix in (
+        "github.com", "github.io", "githubusercontent.com", "githubassets.com",
+        "api.github.com", "raw.githubusercontent.com", "codeload.github.com",
+    ):
+        if name == suffix or name.endswith("." + suffix):
+            return True
+    return False
+
+
 def _is_blocked(qname: str, blocked: set[str]) -> bool:
     name = qname.lower().rstrip(".")
     if not name:
+        return False
+    if _is_github_always_allowed(name):
         return False
     if name in blocked:
         return True
@@ -204,6 +250,17 @@ def _pack_rdata(qtype: int, value: str) -> bytes | None:
         except OSError:
             return None
     return None
+
+
+def _legacy_compat_enabled() -> bool:
+    return os.environ.get("NEXUS_FIELD_DNS_LEGACY_COMPAT", "").strip().lower() in ("1", "yes", "on")
+
+
+def _legacy_max_udp() -> int:
+    try:
+        return int(os.environ.get("NEXUS_FIELD_DNS_LEGACY_MAX_UDP", "512") or "512")
+    except ValueError:
+        return 512
 
 
 def _build_response(
@@ -494,8 +551,23 @@ def _handle_query(data: bytes, blocked: set[str], client: str = "") -> bytes | N
         return _build_response(txn_id, qname, qtype, qclass, [], rcode=3)
     if not answers:
         _stats["errors"] += 1
-        return _build_response(txn_id, qname, qtype, qclass, [], rcode=2)
-    return _build_response(txn_id, qname, qtype, qclass, answers)
+        resp = _build_response(txn_id, qname, qtype, qclass, [], rcode=2)
+    else:
+        legacy_answers = answers[:4] if _legacy_compat_enabled() and qtype == 1 else answers
+        resp = _build_response(txn_id, qname, qtype, qclass, legacy_answers)
+    if _legacy_compat_enabled() and len(resp) > _legacy_max_udp():
+        resp = resp[:_legacy_max_udp()]
+        if len(resp) >= 3:
+            resp = resp[:2] + bytes([resp[2] | 0x02]) + resp[3:]
+    return resp
+
+
+def _log_bind_error(host: str, exc: OSError) -> None:
+    try:
+        with (STATE / "field-dns-bind-errors.log").open("a", encoding="utf-8") as fh:
+            fh.write(f"{_now()} {host}#{PORT} {exc}\n")
+    except OSError:
+        pass
 
 
 def _udp_loop(family: int, host: str) -> None:
@@ -506,13 +578,34 @@ def _udp_loop(family: int, host: str) -> None:
             sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
         except OSError:
             pass
-    sock.bind((host, PORT))
+    try:
+        sock.bind((host, PORT))
+    except OSError as exc:
+        _log_bind_error(host, exc)
+        return
+    label = f"{host}#{PORT}" if family == socket.AF_INET else f"[{host}]#{PORT}"
+    with _listener_lock:
+        _active_listeners.append(label)
     blocked = _load_blocklist()
     last_reload = time.time()
+    clear_signal = STATE / "field-dns-clear.signal"
+    last_clear_stamp = ""
     while True:
         if time.time() - last_reload > 120:
             blocked = _load_blocklist()
             last_reload = time.time()
+        if clear_signal.is_file():
+            try:
+                stamp = clear_signal.read_text(encoding="utf-8").strip()
+            except OSError:
+                stamp = ""
+            if stamp and stamp != last_clear_stamp:
+                with _cache_lock:
+                    _cache.clear()
+                _stats["cache_hits"] = 0
+                _stats["cache_misses"] = 0
+                last_clear_stamp = stamp
+                _publish({"cache_cleared": stamp, "destructive": True})
         try:
             data, addr = sock.recvfrom(4096)
         except OSError:
@@ -553,7 +646,8 @@ def _publish(extra: dict[str, Any] | None = None) -> None:
         "priority": 1,
         "self_hosted": True,
         "truthful": True,
-        "foreign_resolvers_stopped": True,
+        "foreign_resolvers_stopped": not _internet_unrestricted(),
+        "internet_open": _internet_unrestricted(),
         "ipv4": {"host": IPV4, "port": PORT},
         "ipv6": {"host": IPV6, "port": PORT},
         "listeners": [f"{IPV4}#{PORT}", f"[{IPV6}]#{PORT}"],
@@ -595,6 +689,53 @@ def _release_serve_lock() -> None:
         _SERVE_LOCK_HANDLE = None
 
 
+def _dns_probe_local() -> bool:
+    qname = os.environ.get("NEXUS_DNS_TAKEOVER_HEALTH_QNAME", "example.com")
+    txn = struct.pack("!H", int(time.time()) & 0xFFFF)
+    header = txn + struct.pack("!HHHHH", 0x0100, 1, 0, 0, 0)
+    out = bytearray()
+    for label in qname.rstrip(".").split("."):
+        raw = label.encode("ascii")[:63]
+        out.append(len(raw))
+        out.extend(raw)
+    out.append(0)
+    packet = header + bytes(out) + struct.pack("!HH", 1, 1)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(2.0)
+    try:
+        sock.sendto(packet, (IPV4, PORT))
+        data, _ = sock.recvfrom(4096)
+        return len(data) >= 12
+    except OSError:
+        return False
+    finally:
+        sock.close()
+
+
+def _terminate_stale_dns_pid(pid: int) -> None:
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.kill(pid, sig)
+            time.sleep(0.25)
+            return
+        except PermissionError:
+            try:
+                subprocess.run(
+                    ["sudo", "-n", "kill", "-9", str(pid)],
+                    capture_output=True,
+                    timeout=5,
+                    check=False,
+                )
+                time.sleep(0.25)
+                return
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+        except ProcessLookupError:
+            return
+        except OSError:
+            pass
+
+
 def _acquire_serve_lock() -> bool:
     """Single resolver instance — duplicate binds cause silent query loss."""
     global _SERVE_LOCK_HANDLE
@@ -603,7 +744,10 @@ def _acquire_serve_lock() -> bool:
         try:
             old = int(PID_FILE.read_text(encoding="utf-8").strip().split()[0])
             os.kill(old, 0)
-            return False
+            if _dns_probe_local():
+                return False
+            _terminate_stale_dns_pid(old)
+            PID_FILE.unlink(missing_ok=True)
         except (OSError, ValueError):
             PID_FILE.unlink(missing_ok=True)
     try:
@@ -621,33 +765,65 @@ def _acquire_serve_lock() -> bool:
 
 
 def serve() -> int:
+    try:
+        sg = importlib.util.spec_from_file_location(
+            "field_pid_spawn_guard",
+            INSTALL / "lib" / "field-pid-spawn-guard.py",
+        )
+        if sg and sg.loader:
+            mod = importlib.util.module_from_spec(sg)
+            sg.loader.exec_module(mod)
+            mod.authorize_spawn_or_exit(service="dns", action="serve")
+    except SystemExit:
+        raise
+    except Exception:
+        pass
     if not _acquire_serve_lock():
         await_seconds(5, STATE)
         return 0
     _stats["started_at"] = _now()
-    listeners: list[str] = []
+    _active_listeners.clear()
     threads: list[threading.Thread] = []
     for host in _bind_hosts_v4():
-        listeners.append(f"{host}#{PORT}")
         threads.append(threading.Thread(target=_udp_loop, args=(socket.AF_INET, host), daemon=True))
     for host in _bind_hosts_v6():
-        listeners.append(f"[{host}]#{PORT}")
         threads.append(threading.Thread(target=_udp_loop, args=(socket.AF_INET6, host), daemon=True))
+    for t in threads:
+        t.start()
+    time.sleep(0.75)
+    with _listener_lock:
+        listeners = list(_active_listeners)
+    if not listeners:
+        fallback_v4 = [IPV4] if IPV4 not in _bind_hosts_v4() else []
+        fallback_v6 = [IPV6] if IPV6 not in _bind_hosts_v6() else []
+        for host in fallback_v4:
+            threads.append(threading.Thread(target=_udp_loop, args=(socket.AF_INET, host), daemon=True))
+        for host in fallback_v6:
+            threads.append(threading.Thread(target=_udp_loop, args=(socket.AF_INET6, host), daemon=True))
+        for t in threads[len(threads) - len(fallback_v4) - len(fallback_v6):]:
+            t.start()
+        time.sleep(0.75)
+        with _listener_lock:
+            listeners = list(_active_listeners)
+    if not listeners:
+        _publish({"running": False, "pid": os.getpid(), "listeners": [], "bind_error": True})
+        _release_serve_lock()
+        return 1
     try:
         _multipoint_mod().build_identity(running=True)
     except Exception:
         pass
     _publish({"running": True, "pid": os.getpid(), "listeners": listeners})
     PID_FILE.write_text(f"{os.getpid()}\n", encoding="utf-8")
-    for t in threads:
-        t.start()
     while True:
         await_seconds(5, STATE)
+        with _listener_lock:
+            listeners = list(_active_listeners)
         try:
-            _multipoint_mod().build_identity(running=True)
+            _multipoint_mod().build_identity(running=bool(listeners))
         except Exception:
             pass
-        _publish({"running": True, "pid": os.getpid(), "listeners": listeners})
+        _publish({"running": bool(listeners), "pid": os.getpid(), "listeners": listeners})
 
 
 def status() -> dict[str, Any]:
@@ -1094,7 +1270,7 @@ def build_panel() -> dict[str, Any]:
     doc: dict[str, Any] = {
         "schema": "field-dns/v2",
         "updated": _now(),
-        "title": "NEXUS Truth DNS & DHCP",
+        "title": "NEXUS Truth DNS — every DNS lease on the planet",
         "running": bool(srv.get("running")),
         "self_hosted": True,
         "truthful": True,
@@ -1120,7 +1296,8 @@ def build_panel() -> dict[str, Any]:
         "threats": threats,
         "blocklist_domains": srv.get("blocklist_domains", len(_load_blocklist())),
         "cache_entries": srv.get("cache_entries", len(_cache)),
-        "foreign_resolvers_stopped": True,
+        "foreign_resolvers_stopped": not _internet_unrestricted(),
+        "internet_open": _internet_unrestricted(),
         "planetary": planetary,
         "rfc_matrix": planetary.get("rfc_matrix") or [],
         "legal_framework": planetary.get("legal_framework") or [],
@@ -1171,11 +1348,35 @@ def build_panel() -> dict[str, Any]:
         },
         "dhcp_leases_detailed": dhcp.get("leases_detailed") or [],
         "dhcp_events": dhcp.get("lease_history_events") or [],
+        "planetary_authority": {
+            "scope": "planet",
+            "we_are_every_lease": True,
+            "api": "/api/field-planetary-dns-dhcp",
+        },
+        "any_ip": _any_ip_panel_slice(),
     }
     tmp = PANEL_CACHE.with_suffix(".tmp")
     tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     tmp.replace(PANEL_CACHE)
     return doc
+
+
+def _any_ip_panel_slice() -> dict[str, Any]:
+    try:
+        mod = _any_ip_mod()
+        if mod and hasattr(mod, "build_panel"):
+            panel = mod.build_panel(write=False)
+            return {
+                "ok": bool(panel.get("any_ip")),
+                "answer_any_ip": bool(panel.get("answer_any_ip")),
+                "dns_binds_v4": (panel.get("dns") or {}).get("binds_v4"),
+                "dns_binds_v6": (panel.get("dns") or {}).get("binds_v6"),
+                "answer_point_count": panel.get("answer_point_count", 0),
+                "api": "/api/field-dns-dhcp-any-ip",
+            }
+    except Exception:
+        pass
+    return {"api": "/api/field-dns-dhcp-any-ip", "partial": True}
 
 
 def _panel_json_stub() -> dict[str, Any]:
@@ -1220,7 +1421,31 @@ def main() -> int:
     if cmd == "status":
         print(json.dumps(status(), ensure_ascii=False))
         return 0
-    print("usage: field-dns.py [serve|build|json|status]", file=sys.stderr)
+    if cmd in ("clean", "clean-tables"):
+        clean_py = INSTALL / "lib" / "field-dns-table-clean.py"
+        if clean_py.is_file():
+            proc = subprocess.run(
+                [sys.executable, str(clean_py), "clean"],
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+                check=False,
+            )
+            return proc.returncode
+        print(json.dumps({"ok": True, "mode": "clean", "note": "no table-clean module"}, ensure_ascii=False))
+        return 0
+    if cmd in ("clear-tables", "flush-cache"):
+        clean_py = INSTALL / "lib" / "field-dns-table-clean.py"
+        if clean_py.is_file():
+            extra = ["clear"]
+            if os.environ.get("I_KNOW_DNS_CLEAR", "").strip().lower() in ("1", "yes", "on"):
+                extra.append("--i-know")
+            proc = subprocess.run(
+                [sys.executable, str(clean_py), *extra],
+                env={**os.environ, "NEXUS_INSTALL_ROOT": str(INSTALL), "NEXUS_STATE_DIR": str(STATE)},
+                check=False,
+            )
+            return proc.returncode
+        return 1
+    print("usage: field-dns.py [serve|build|json|status|clean-tables|clear-tables]", file=sys.stderr)
     return 1
 
 

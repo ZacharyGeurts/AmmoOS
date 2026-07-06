@@ -1,0 +1,46 @@
+{
+  "schema": "final-mouth-fcc-acoustic/v1",
+  "title": "Final Mouth — AI-only acoustic; brain-synced",
+  "motto": "Not for human use — AI communique only; internal synthesis; brain keeps mouth smart",
+  "rule": "Glottis models internally; human air egress blocked; RF stays on permitted FCC spectrum.",
+  "synthesis_range_hz": [20, 20000],
+  "rf_ref": "data/fcc-permitted-frequencies.json",
+  "rf_rule": "Wireless voice relay uses field-rf-sentinel permitted bands only — never illegal carrier.",
+  "ai_only": true,
+  "human_egress_blocked": true,
+  "default_audience": "ai_internal",
+  "spoken_word_first": false,
+  "brain_sync": {
+    "module": "lib/hostess7-mouth-neural.py",
+    "min_alignment": 0.92,
+    "intelligence_refresh_sec": 30
+  },
+  "audiences": {
+    "ai_internal": {
+      "label": "AI internal communique",
+      "priority": 1,
+      "human_audible": false,
+      "brain_sync": true,
+      "fundamental_hz": [0, 0],
+      "intelligibility_hz": [0, 0],
+      "max_spl_db": 0,
+      "teach": "Neural wire to Hostess7 brain — no air egress to humans."
+    },
+    "human": {
+      "label": "Human spoken word",
+      "priority": 99,
+      "blocked": true,
+      "fundamental_hz": [85, 255],
+      "intelligibility_hz": [300, 3400],
+      "max_spl_db": 0,
+      "teach": "BLOCKED — Final Mouth not for human use."
+    }
+  },
+  "clamp_policy": {
+    "below_intelligibility": "reject",
+    "above_intelligibility": "reject",
+    "outside_synthesis": "reject",
+    "rf_unpermitted": "block_transmit",
+    "human_egress": "block"
+  }
+}

@@ -1,16 +1,13 @@
-# AmmoOS push-only — resume after pack (gh release + Pages + hubs + wiki)
+# AmmoOS git publish — normal git commit + push (replaces push-only lane)
 @profile fastest
 @verbose clean
-@motto "AmmoOS push lane — progress every 60s"
+@motto "AmmoOS git publish — origin main"
 
 seq ·
-  say "AmmoOS push-only — pack assumed done"
-  post "PUSH START — gh release + Pages hubs + wiki"
+  say "AmmoOS git publish — commit + push from live tree"
+  post "GIT_PUBLISH START"
   self upgrade
   fast path:gpy fastest
-  github check repo:ZacharyGeurts/AmmoOS
-  run script:ammoos-push-only timeout:7200 stall:3600
-  post "Pages + redirect hubs"
-  run script:publish-stack-pages timeout:1800
-  run script:publish-ammoos-wiki timeout:300
-  post "PUSH COMPLETE — v2.0.0-beta4"
+  run script:seal-built-executables timeout:300 stall:120
+  run script:git-publish arg:--siblings timeout:1800 stall:900
+  post "GIT_PUBLISH COMPLETE"

@@ -21,7 +21,12 @@
     "compat_layers": {"gate": true, "consumer": "field_compatibility_layers"},
     "panel": {"gate": true, "manifest_api": "/api/locational-sitrep"}
   },
-  "receipt_order": ["operator_location", "postal_address", "gps_lat_lon", "bearing_deg", "lattice_cell", "linear_ns"],
+  "receipt_order": ["operator_location", "postal_address", "gps_lat_lon", "bearing_deg", "movement", "movement_mode", "lattice_cell", "linear_ns"],
+  "positional_awareness": {
+    "doctrine": "data/hostess7-positional-awareness-doctrine.json",
+    "module": "lib/hostess7-positional-awareness.py",
+    "rule": "Location and heading always known; movement and mode always known; objects P1 until familiar."
+  },
   "module": "lib/field-locational-sitrep-plate.py",
   "panel": "field-locational-sitrep-plate.json"
 }

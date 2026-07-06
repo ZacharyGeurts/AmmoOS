@@ -14,6 +14,7 @@ from typing import Any
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
 INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parent.parent))
 POLICY_PATH = INSTALL / "data" / "lethal-enforcement-policy.json"
+KILL_LAW_PATH = INSTALL / "data" / "kill-immediate-law.json"
 TOOLKIT_SEED = INSTALL / "data" / "field-toolkit-seed.json"
 
 _CODE_RE = re.compile(r"^KC-[A-Z]{2}-[a-z0-9_]{1,48}$")
@@ -46,9 +47,9 @@ _OPERATOR_CODES: list[dict[str, Any]] = [
     },
     {
         "code": "KC-OP-rekill",
-        "label": "RE-KILL returner",
+        "label": "RE-KILL permanent",
         "tier": "lethal",
-        "plain": "Same hostile host returned — identity markers matched archived dossier.",
+        "plain": "Permanent RE-KILL — same hostile returned, forever firewall both ways, dossier archived. No hostiles live.",
         "api": "/api/attack-kit/rekill",
         "body_template": {"severity": "critical"},
         "requires_ip": True,
@@ -89,11 +90,21 @@ _OPERATOR_CODES: list[dict[str, Any]] = [
         "code": "KC-OP-laser",
         "label": "Laser corridor slice",
         "tier": "lethal",
-        "plain": "Undodgeable corridor — sever wire, block both directions, strike at certainty.",
+        "plain": "Undodgeable 6″ cube corridor — 6-pass sever raster, block both directions, strike at certainty.",
         "api": "/api/field-toolkit/laser-corridor",
         "body_template": {"vector": "LASER_CORRIDOR", "severity": "critical"},
         "requires_ip": True,
         "rank": 90,
+    },
+    {
+        "code": "KC-OP-slice_dice",
+        "label": "Slice & Dice · 6″ cube",
+        "tier": "lethal",
+        "plain": "6″ undodgeable laser cube + d20≤6 double kill pass — bigger volume, harder dodge.",
+        "api": "/api/field-toolkit/slice-and-dice",
+        "body_template": {"vector": "SLICE_AND_DICE", "severity": "critical"},
+        "requires_ip": True,
+        "rank": 92,
     },
     {
         "code": "KC-OP-crush_hot",
@@ -244,6 +255,7 @@ def _disablement_codes() -> list[dict[str, Any]]:
             "hell_rip": "/api/field-toolkit/hell-rip",
             "field_die": "/api/field-toolkit/field-die",
             "laser_corridor": "/api/field-toolkit/laser-corridor",
+            "slice_and_dice": "/api/field-toolkit/slice-and-dice",
             "forever_kill": "/api/attack-kit/kill",
         }
         if pid in api_map:
@@ -268,13 +280,85 @@ def _all_codes() -> list[dict[str, Any]]:
     return sorted(by_code.values(), key=lambda c: (-int(c.get("rank") or 0), c.get("code", "")))
 
 
+def kill_law() -> dict[str, Any]:
+    doc = _load_json(KILL_LAW_PATH, {})
+    if not doc:
+        return {"schema": "kill-immediate-law/v1", "law": "immediate_is_best", "motto": "When KILL is to occur, immediate is best."}
+    return doc
+
+
+def _witness_kill(event: str, *, ip: str = "", detail: str = "", meta: dict[str, Any] | None = None) -> None:
+    ca = INSTALL / "lib" / "hostess7-change-awareness.py"
+    if not ca.is_file():
+        return
+    try:
+        spec = importlib.util.spec_from_file_location("h7_ca_kill", ca)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "witness_change"):
+                mod.witness_change(
+                    source="kill_immediate_law",
+                    label=event,
+                    detail=detail or ip,
+                    meta={"ip": ip, "law": "immediate_is_best", **(meta or {})},
+                    notify=True,
+                )
+    except Exception:
+        pass
+
+
+def execute_kill_immediate(
+    ip: str,
+    *,
+    vector: str = "HOSTILE",
+    severity: str = "high",
+    reason: str = "kill_immediate_law",
+    code: str = "KC-OP-kill",
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """The Law: when KILL is to occur, immediate is best — no queue, no deferral."""
+    ip = _sanitize_ip(ip)
+    if not ip:
+        return {"ok": False, "error": "missing_ip", "law": "immediate_is_best"}
+    law = kill_law()
+    try:
+        fg = _import_mod("friendly_guard", "friendly-guard.py")
+        refuse, fg_reason = fg.refuse_kill(ip, monitor=(extra or {}).get("monitor") if isinstance((extra or {}).get("monitor"), dict) else None)
+        if refuse:
+            return {"ok": False, "friendly_refused": True, "reason": fg_reason, "ip": ip, "law": law.get("law"), "immediate": False}
+    except Exception:
+        pass
+    fa = _import_mod("field_attack", "field-attack-kit.py")
+    t0 = datetime.now(timezone.utc)
+    result = fa.kill_target(ip, vector, severity, reason, extra=extra)
+    elapsed_ms = round((datetime.now(timezone.utc) - t0).total_seconds() * 1000, 2)
+    ok = bool(result.get("killed") or result.get("ok"))
+    out = {
+        **result,
+        "ok": ok,
+        "code": code,
+        "law": law.get("law", "immediate_is_best"),
+        "immediate": ok,
+        "immediate_is_best": True,
+        "elapsed_ms": elapsed_ms,
+        "motto": law.get("motto"),
+        "no_queue": True,
+    }
+    if ok:
+        _witness_kill("KILL_immediate", ip=ip, detail=reason, meta={"code": code, "elapsed_ms": elapsed_ms})
+    return out
+
+
 def build_catalog() -> dict[str, Any]:
     codes = _all_codes()
     policy = _load_json(POLICY_PATH, {})
+    law = kill_law()
     return {
         "schema": "nexus-kill-codes/v1",
         "updated": _now(),
-        "motto": "Above military grade — every kill code named, ranked, and friendly-guard gated.",
+        "motto": "Above military grade — every kill code named, ranked, friendly-guard gated. When KILL is to occur, immediate is best.",
+        "kill_law": law,
         "merciless": bool(policy.get("merciless")),
         "status": policy.get("status", "lethal"),
         "count": len(codes),
@@ -335,6 +419,8 @@ def recommend_for_alert(alert: dict[str, Any] | None) -> list[dict[str, Any]]:
     if source == "hazard" or cat == "rf":
         add("KC-RM-cease")
         add("KC-DM-laser_corridor")
+        add("KC-DM-slice_and_dice")
+        add("KC-OP-slice_dice")
     if source == "gatekeeper" and ip:
         add("KC-OP-kill", detail=f"Gatekeeper target {ip}")
 
@@ -357,6 +443,23 @@ def execute_code(code: str, body: dict[str, Any] | None = None) -> dict[str, Any
     spec = _code_index().get(code)
     if not spec:
         return {"ok": False, "error": "unknown_kill_code", "code": code}
+
+    law = kill_law()
+    tier = str(spec.get("tier") or "")
+    ip_early = _sanitize_ip(body.get("ip") or body.get("target_ip") or spec.get("suggested_ip"))
+    if ip_early and tier == "lethal" and code.startswith("KC-OP-") and code not in ("KC-OP-nokill", "KC-OP-crush_hot", "KC-OP-lethal_cycle", "KC-OP-human_threat", "KC-OP-regional"):
+        immediate = execute_kill_immediate(
+            ip_early,
+            vector=str(body.get("vector") or "HOSTILE"),
+            severity=str(body.get("severity") or "high"),
+            reason=str(body.get("reason") or spec.get("plain") or "kill_code_immediate")[:120],
+            code=code,
+            extra=body if isinstance(body, dict) else None,
+        )
+        if immediate.get("ok") or immediate.get("friendly_refused") or immediate.get("strike_refused"):
+            return immediate
+        if immediate.get("nokill_refused"):
+            return immediate
 
     ip = _sanitize_ip(body.get("ip") or body.get("target_ip") or spec.get("suggested_ip"))
     if spec.get("requires_ip") and not ip:
@@ -392,6 +495,9 @@ def execute_code(code: str, body: dict[str, Any] | None = None) -> dict[str, Any
     if api == "/api/field-toolkit/laser-corridor":
         ft = _import_mod("field_toolkit", "field-toolkit-db.py")
         return {**ft.laser_corridor(ip, str(payload.get("vector") or "LASER_CORRIDOR"), str(payload.get("severity") or "critical")), "code": code}
+    if api == "/api/field-toolkit/slice-and-dice":
+        ft = _import_mod("field_toolkit", "field-toolkit-db.py")
+        return {**ft.slice_and_dice(ip, str(payload.get("vector") or "SLICE_AND_DICE"), str(payload.get("severity") or "critical")), "code": code}
     if api == "/api/field-toolkit/hell-rip":
         ft = _import_mod("field_toolkit", "field-toolkit-db.py")
         return {**ft.hell_rip(), "code": code}
@@ -402,11 +508,17 @@ def execute_code(code: str, body: dict[str, Any] | None = None) -> dict[str, Any
         le = _import_mod("lethal_enforcement", "lethal-enforcement.py")
         return {**le.merciless_cycle(dry_run=bool(payload.get("dry_run"))), "code": code}
     if api in ("/api/attack-kit/kill", "/api/attack-kit/rekill", "/api/attack-kit/nokill"):
+        if api == "/api/attack-kit/kill":
+            return execute_kill_immediate(
+                ip,
+                vector=str(payload.get("vector") or "HOSTILE"),
+                severity=str(payload.get("severity") or "high"),
+                reason=str(payload.get("reason") or "kill_code"),
+                code=code,
+                extra=payload,
+            )
         fa = _import_mod("field_attack", "field-attack-kit.py")
-        cmd = "kill" if "kill" in api and "nokill" not in api and "rekill" not in api else "rekill" if "rekill" in api else "nokill"
-        if cmd == "kill":
-            return {**fa.kill_target(ip, str(payload.get("vector") or "HOSTILE"), str(payload.get("severity") or "high"), str(payload.get("reason") or "kill_code")), "code": code}
-        if cmd == "rekill":
+        if "rekill" in api:
             return {**fa.rekill_target(ip, str(payload.get("vector") or "HOSTILE"), str(payload.get("severity") or "high")), "code": code}
         return {**fa.nokill_target(ip, str(payload.get("vector") or "HOSTILE"), str(payload.get("severity") or "high"), str(payload.get("reason") or "operator_nokill")), "code": code}
     if api == "/api/attack-kit/crush-hot":
@@ -420,7 +532,9 @@ def execute_code(code: str, body: dict[str, Any] | None = None) -> dict[str, Any
         ft = _import_mod("field_toolkit", "field-toolkit-db.py")
         return {**ft.execute_disablement({"mode": spec.get("mode") or spec["disablement"], **payload}), "code": code}
 
-    return {"ok": False, "error": "code_not_executable", "code": code, "jump": spec.get("jump")}
+    out = {"ok": False, "error": "code_not_executable", "code": code, "jump": spec.get("jump")}
+    out["law"] = law.get("law", "immediate_is_best")
+    return out
 
 
 def actions_from_codes(codes: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -454,6 +568,9 @@ def main(argv: list[str] | None = None) -> int:
     if args[0] == "recommend" and len(args) > 1:
         alert = json.loads(args[1])
         print(json.dumps({"codes": recommend_for_alert(alert)}, ensure_ascii=False, indent=2))
+        return 0
+    if args[0] in ("law", "immediate"):
+        print(json.dumps(kill_law(), ensure_ascii=False, indent=2))
         return 0
     if args[0] == "execute" and len(args) > 1:
         if args[1].startswith("KC-") and len(args) > 2:

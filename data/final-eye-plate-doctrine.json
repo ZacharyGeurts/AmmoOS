@@ -3,7 +3,7 @@
   "title": "Final_Eye — OCR · AI Eyeball · plate-melded vision",
   "motto": "One eye on the plate — trained OCR, assistive eyeball, offense mesh; ZOCR retired.",
   "product": "Final_Eye",
-  "version": "1.5.1",
+  "version": "1.3.0",
   "codename": "eye-stoard",
   "canonical_root": "NewLatest/Final_Eye",
   "env": "FINAL_EYE_ROOT",
@@ -31,13 +31,6 @@
     "neural_assist": "Final_Eye/zocr_neural_assist.py",
     "pattern_registry": "Final_Eye/data/zocr-pattern-registry.json",
     "hostess7_doctrine": "Hostess7/data/final-eye-12-doctrine.json"
-  },
-  "ai_connections": {
-    "doctrine": "data/final-eye-ai-connections-doctrine.json",
-    "module": "lib/final-eye-ai-bridge.py",
-    "auto_wire": true,
-    "vocabulary": ["tesseract", "pytesseract", "ocr", "image_to_string", "hocr", "pdf", "tsv"],
-    "detectors": ["grok_build", "ammolang", "grok_agent", "mcp", "queen", "hostess7"]
   },
   "ocr": {
     "engine": "Final_Eye/zocr.py",
@@ -75,20 +68,10 @@
     "operations": ["enemy", "heaven", "hell", "disarmament", "weaponize", "verify"],
     "teach_lessons": ["enemy", "operations", "disarmament", "authority", "comfort"]
   },
-  "hostess7_seal": {
-    "required": true,
-    "handshake_only": true,
-    "doctrine": "data/final-eye-hostess7-seal-doctrine.json",
-    "module": "lib/final-eye-hostess7-seal.py",
-    "commander": "hostess7",
-    "api": "/api/hostess7/ocr/dispatch",
-    "rejected_direct": ["queen", "mcp", "grok_agent", "unstamped_cli"]
-  },
   "security": {
     "ironclad_ref": "data/ironclad-doctrine.json",
     "code_seal": "Final_Eye/data/code-seal.json",
     "trust_mesh": true,
-    "handshake_commander": "hostess7",
     "scene_guard_ref": "OBS-FieldVoiceFilter/data/field-scene-guard-doctrine.json",
     "reject_patterns": [
       "banded_signal", "coded_signal", "grid_jam", "moire_weave", "hostile_waveform",

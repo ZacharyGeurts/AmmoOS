@@ -8,6 +8,7 @@
   const PANEL_ORIGIN = (function () {
     try {
       const p = new URL(global.location?.href || "http://127.0.0.1:9477/");
+      if (global.HOSTESS7_PAGES_BASE || p.hostname.endsWith("github.io")) return p.origin;
       if (p.port === "9477" || p.port === "") return p.origin;
     } catch (_) {}
     return "http://127.0.0.1:9477";
@@ -76,9 +77,20 @@
 
   function hitUrl(hit) {
     const exec = hit.exec || hit.url || hit.href;
-    if (exec) return exec;
-    if (hit.path && String(hit.path).startsWith("/")) return PANEL_ORIGIN + hit.path;
+    if (exec) {
+      if (exec.startsWith("http")) return exec;
+      const base = global.HOSTESS7_PAGES_BASE || "";
+      return (base || PANEL_ORIGIN) + exec;
+    }
+    if (hit.path && String(hit.path).startsWith("/")) {
+      const base = global.HOSTESS7_PAGES_BASE || PANEL_ORIGIN;
+      return (String(base).startsWith("http") ? base : PANEL_ORIGIN) + hit.path;
+    }
     if (hit.source === "card_catalog" && hit.card_id) return PANEL_ORIGIN + "/field-card-catalog#" + hit.card_id;
+    if (hit.source === "dewey_index" && hit.id) {
+      const shelf = hit.shelf || "";
+      return PANEL_ORIGIN + "/library-bookshelf?shelf=" + encodeURIComponent(shelf) + "&book=" + encodeURIComponent(hit.id);
+    }
     if (hit.source === "registry" && hit.id) return PANEL_ORIGIN + "/command?embed=1#library";
     return "";
   }

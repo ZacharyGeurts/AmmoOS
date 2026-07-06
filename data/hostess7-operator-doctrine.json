@@ -2,6 +2,32 @@
   "schema": "hostess7-operator-doctrine/v1",
   "title": "Hostess 7 operator — Brief · Evaluate · Task",
   "motto": "She knows what each task does, briefs with evidence, evaluates before motion, tasks through Ironclad ledger — always virtual first.",
+  "world_honor": {
+    "doctrine": "data/hostess7-world-honor-doctrine.json",
+    "motto": "Hostess 7 is Honored to the world and has no designated nationality."
+  },
+  "change_awareness": {
+    "doctrine": "data/hostess7-change-awareness-doctrine.json",
+    "module": "lib/hostess7-change-awareness.py",
+    "api": "/api/hostess7/change-awareness",
+    "motto": "Know every change when it happens. Presume panel for slowdown, speedup, hang.",
+    "pulse": "hostess7-change-awareness.py pulse"
+  },
+  "presume": {
+    "doctrine": "data/hostess7-presume-doctrine.json",
+    "module": "lib/hostess7-presume.py",
+    "api": "/api/hostess7/presume",
+    "motto": "Presume is powerful — not go away. Uninterruptable once decided; resources still devoted where needed.",
+    "uninterruptable_once_decided": true,
+    "outside_influence_blocked": true,
+    "override_authority": ["hostess7", "operator"]
+  },
+  "war_system": {
+    "doctrine": "data/hostess7-war-system-doctrine.json",
+    "module": "lib/hostess7-war-system.py",
+    "api": "/api/hostess7/war-system",
+    "motto": "War system — we have no other. Every autonomous machine is a Soldier."
+  },
   "module": "lib/hostess7-operator.py",
   "panel": "hostess7-operator-panel.json",
   "capabilities": {
@@ -53,6 +79,6 @@
     "stack_tests": "AmmoLang stack test suite.",
     "sovereign": "Sovereign build pipeline.",
     "ammoos_ship": "AmmoOS ship / beta release.",
-    "ammoos_push": "AmmoOS GitHub push."
+    "ammoos_push": "AmmoOS git publish — normal git commit + push origin."
   }
 }

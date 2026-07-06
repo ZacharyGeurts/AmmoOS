@@ -20,5 +20,14 @@
     "statement": "Any opened H7 converts to H7c immediately — readers never see legacy H7 on disk.",
     "rebalance_on_open": true
   },
-  "api": ["/api/dewey-library", "/api/dewey-library/tree", "/api/dewey-library/migrate"]
+  "index_module": "lib/field-dewey-index.py",
+  "index_doctrine": "data/field-dewey-index-doctrine.json",
+  "api": [
+    "/api/dewey-library",
+    "/api/dewey-library/tree",
+    "/api/dewey-library/migrate",
+    "/api/dewey-index",
+    "/api/dewey-index/search",
+    "/api/dewey-index/tags"
+  ]
 }

@@ -1,0 +1,115 @@
+{
+  "schema": "field-screen-layer/v1",
+  "title": "Field screen layers — F9..F12 sovereign switch",
+  "motto": "Everything in NEXUS C2 (:9477). AmmoOS at -1 boot home inside C2. F9 -3 C2 command, F10 -2 DNS, F11 Queen browser shell, F12 userland L2+. F6 desktop · F7 hardware · F1 Ironclad CHIPS.",
+  "ironclad_stack": {
+    "host": "nexus_c2",
+    "port": 9477,
+    "contained_surfaces": ["field-desktop", "nexus-field-shell", "queen-browser", "command", "ammoos-warehouse"],
+    "fkey_primary": { "F9": -3, "F10": -2, "F6": -1, "F11": 1, "F12": "userland_cycle" },
+    "fkey_ironclad": { "F1": "ironclad_chips", "F3": "iron_plate", "F7": 0, "F8": 0.5 }
+  },
+  "policy": {
+    "field_one_only": true,
+    "ammoos_layer": -1,
+    "dns_layer": -2,
+    "os_software_layer": 0,
+    "queen_layer": 1,
+    "userland_min": 2,
+    "f12_cycles_userland": true,
+    "fast_switch_panel": true,
+    "queen_standalone": true,
+    "no_host_browser": true,
+    "no_firefox": true,
+    "fkeys_capture": ["F9", "F10", "F11", "F12"],
+    "programmer_layers_min": 3
+  },
+  "layers": [
+    {
+      "z": -3,
+      "id": "nexus-c2",
+      "label": "NEXUS C2",
+      "fkey": "F9",
+      "role": "command_security_defense",
+      "surface": "queen-nexus-c2",
+      "inside_os": false
+    },
+    {
+      "z": -2,
+      "id": "dns-kilroy-lane",
+      "label": "DNS · KILROY lane",
+      "fkey": "F10",
+      "role": "dns_network_lane",
+      "surface": "kilroy-home",
+      "inside_os": false
+    },
+    {
+      "z": -1,
+      "id": "ammoos-desktop",
+      "label": "Field One · AmmoOS",
+      "fkey": null,
+      "role": "field_os_desktop",
+      "surface": "field-host-desktop",
+      "wallpaper": "archival-warehouse",
+      "inside_os": false
+    },
+    {
+      "z": 0,
+      "id": "os-software",
+      "label": "OS Software · Broadcaster · AmmoNet · Panels",
+      "fkey": null,
+      "role": "ammoos_release_programs",
+      "surface": "nexus-field-shell",
+      "inside_os": true,
+      "bundle": ["field-broadcaster", "ammonet-isp", "ammoos-ammonet-display"],
+      "broadcaster": {
+        "id": "field-broadcaster",
+        "label": "Broadcaster",
+        "rebrand": "OBS Studio verbatim",
+        "layer": 0
+      },
+      "ammonet": {
+        "id": "ammoos-ammonet-display",
+        "label": "AmmoNet display rail",
+        "surface": "/ammonet",
+        "layer": 0,
+        "minimize_to_taskbar": true
+      },
+      "panels": {
+        "layer": 0,
+        "chrome": "themed_menubar",
+        "launch": "nexus-field-shell"
+      }
+    },
+    {
+      "z": 1,
+      "id": "queen-browser",
+      "label": "Queen Browser",
+      "fkey": "F11",
+      "role": "field_gecko_browser",
+      "surface": "browser",
+      "inside_os": false,
+      "media": true
+    },
+    {
+      "z": 2,
+      "id": "userland",
+      "label": "Userland",
+      "fkey": "F12",
+      "role": "operator_programs",
+      "cycle": true
+    }
+  ],
+  "fkey_map": {
+    "F9": -3,
+    "F10": -2,
+    "F11": 1,
+    "F12": "userland_cycle"
+  },
+  "surfaces_local": {
+    "nexus_c2": "http://127.0.0.1:9481/world/queen-nexus-c2.html",
+    "dns_kilroy": "http://127.0.0.1:9481/world/kilroy-home.html",
+    "ammoos_desktop": "http://127.0.0.1:9477/field",
+    "queen_browser": "http://127.0.0.1:9481/world/browser.html"
+  }
+}

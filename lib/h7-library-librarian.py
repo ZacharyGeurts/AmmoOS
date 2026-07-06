@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
 HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
 HOSTESS7_TEAM_FIELD = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
 SEED = INSTALL / "data" / "book-bibliography-seed.json"
@@ -818,6 +818,26 @@ def get_cover_bytes(book_id: str, side: str = "front", *, fmt: str = "png") -> t
     return src.read_bytes(), ctype
 
 
+def search_dewey_index(query: str, *, limit: int = 24, **filters: Any) -> list[dict[str, Any]]:
+    """Search Dewey index librarian — tags, facets, keywords."""
+    idx = None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("dewey_idx", INSTALL / "lib" / "field-dewey-index.py")
+        if spec and spec.loader:
+            idx = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(idx)
+    except Exception:
+        pass
+    if idx and hasattr(idx, "search_index"):
+        try:
+            rep = idx.search_index(query, limit=limit, **filters)
+            return rep.get("hits") or []
+        except Exception:
+            pass
+    return []
+
+
 def search_bibliography(query: str, *, limit: int = 24) -> list[dict[str, Any]]:
     toks = [t for t in re.split(r"\W+", query.lower()) if len(t) > 1]
     if not toks:
@@ -840,7 +860,19 @@ def search_bibliography(query: str, *, limit: int = 24) -> list[dict[str, Any]]:
         if score > 0:
             scored.append((score, row))
     scored.sort(key=lambda x: (-x[0], x[1].get("title", "")))
-    return [{**r, "score": s} for s, r in scored[:limit]]
+    bib_hits = [{**r, "score": s, "source": "bibliography"} for s, r in scored[:limit]]
+    dewey_hits = search_dewey_index(query, limit=limit)
+    if not dewey_hits:
+        return bib_hits
+    seen = {str(h.get("id") or "") for h in bib_hits}
+    merged = list(bib_hits)
+    for row in dewey_hits:
+        bid = str(row.get("id") or "")
+        if bid and bid not in seen:
+            seen.add(bid)
+            merged.append({**row, "source": "dewey_index"})
+    merged.sort(key=lambda x: (-int(x.get("score") or 0), str(x.get("title", ""))))
+    return merged[:limit]
 
 
 def main() -> int:

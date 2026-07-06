@@ -11,7 +11,9 @@
     "branch": "main",
     "version_file": "data/ammoos-version.json",
     "install_script": "install-all.sh",
-    "release_tarball": "ammoos-{version}-source.tar.gz",
+    "release_archive": "ammoos-{version}-source.h7e",
+    "release_format": "h7e/1",
+    "release_tarball": "ammoos-{version}-source.h7e",
     "installers_tarball": "ammoos-{version}-installers.tar.gz"
   },
   "stack_repos": [
@@ -96,5 +98,13 @@
     "api_base": "/api/ammoos-update",
     "poll_ms": 2500,
     "check_cache_ttl_sec": 3600
+  },
+  "h7updater": {
+    "repo": "ZacharyGeurts/H7updater",
+    "manifest": "https://raw.githubusercontent.com/ZacharyGeurts/H7updater/main/data/h7updater-stack-index.json",
+    "oauth_doctrine": "https://raw.githubusercontent.com/ZacharyGeurts/H7updater/main/data/h7updater-oauth-doctrine.json",
+    "pages": "https://zacharygeurts.github.io/H7updater/",
+    "warehouse_surface": "/ammoos-warehouse",
+    "sovereign_owner": "ZacharyGeurts"
   }
 }

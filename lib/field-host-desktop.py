@@ -28,6 +28,10 @@ ICON_CACHE = STATE / "field-host-desktop-icons"
 DESKTOP_SKIP = frozenset({"Hidden", "NoDisplay", "DBusActivatable"})
 ICON_EXTS = (".png", ".svg", ".xpm", ".jpg", ".jpeg", ".webp")
 HOST_BROWSER_MARKERS = (
+    "queen-browser",
+    "queen-field-engine",
+    "queenbrowser",
+    "legacy_gecko",
     "firefox",
     "mozilla",
     "org.mozilla",
@@ -84,6 +88,13 @@ _THEME_ALIASES = {
     "macos": "ammo-rose",
     "cinnamon": "ammo-field",
     "xfce": "ammo-field",
+    "ammoos": "ammoos",
+    "ammoos-lead": "ammoos",
+    "nexus_c2": "ammoos",
+    "nexus-military-v8": "ammoos",
+    "dusty-night": "dusty-night",
+    "dusty_night": "dusty-night",
+    "dusty-midnight": "dusty-night",
 }
 
 
@@ -263,13 +274,48 @@ def _skip_host_app(app: dict[str, Any]) -> bool:
     return any(marker in hay for marker in HOST_BROWSER_MARKERS)
 
 
+def _h7s_desktop_bundle_status() -> dict[str, Any]:
+    bundle_py = INSTALL / "lib" / "field-h7s-desktop-bundle.py"
+    if not bundle_py.is_file():
+        return {"ok": False, "live": False}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("field_h7s_desktop_host", bundle_py)
+        if not spec or not spec.loader:
+            return {"ok": False, "live": False}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "bundle_status"):
+            return mod.bundle_status()
+    except Exception:
+        pass
+    return {"ok": False, "live": False}
+
+
 def _safe_icon_path(token: str) -> Path | None:
-    """Resolve cached icon token — no arbitrary filesystem reads."""
+    """Resolve cached icon token — H7s bundle materializes into icon cache."""
     if not token or ".." in token or "/" in token or "\\" in token:
         return None
     cand = ICON_CACHE / token
     if cand.is_file():
         return cand.resolve()
+    bundle_py = INSTALL / "lib" / "field-h7s-desktop-bundle.py"
+    if bundle_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("field_h7s_desktop_cache", bundle_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_icon"):
+                    hit = mod.read_icon(token)
+                    if hit:
+                        data, _ = hit
+                        ICON_CACHE.mkdir(parents=True, exist_ok=True)
+                        cand.write_bytes(data)
+                        return cand.resolve()
+        except Exception:
+            pass
     return None
 
 
@@ -310,7 +356,31 @@ def _scan_linux_apps() -> list[dict[str, Any]]:
 
 
 def _policy() -> dict[str, Any]:
-    return _load(DOCTRINE, {}).get("policy") or {}
+    return _desktop_policy()
+
+
+def _desktop_policy() -> dict[str, Any]:
+    """Canonical desktop policy — battle-stations cannot re-enable fake six-tool wall."""
+    out = dict(_load(DOCTRINE, {}).get("policy") or {})
+    out["six_tool_wall"] = False
+    out["six_tool_wall_on_boot"] = False
+    try:
+        bs_py = INSTALL / "lib" / "field-battle-stations.py"
+        if bs_py.is_file():
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location("field_battle_stations", bs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "merge_policy"):
+                    merged = mod.merge_policy(out)
+                    merged["six_tool_wall"] = False
+                    merged["six_tool_wall_on_boot"] = False
+                    return merged
+    except Exception:
+        pass
+    return out
 
 
 def _linux_de() -> str | None:
@@ -452,6 +522,62 @@ def _queen_icon_ref(icon_name: str) -> str:
     return f"queen-prog-{name}"
 
 
+def _github_favorites_apps() -> list[dict[str, Any]]:
+    doctrine = _load(DOCTRINE, {})
+    policy = doctrine.get("policy") or {}
+    if not policy.get("github_favorites_in_start", True):
+        return []
+    rel = str(doctrine.get("github_favorites_manifest") or "docs/github-favorites.json")
+    fav_path = INSTALL / rel if not rel.startswith("/") else Path(rel)
+    if not fav_path.is_file():
+        fav_path = SG / "docs" / "github-favorites.json"
+    doc = _load(fav_path, {})
+    out: list[dict[str, Any]] = []
+    for row in doc.get("favorites") or []:
+        if not isinstance(row, dict):
+            continue
+        repo = str(row.get("repo") or row.get("name") or "").strip()
+        if not repo:
+            continue
+        pages = str(row.get("pages") or row.get("pin_url") or row.get("url") or "").strip()
+        out.append({
+            "id": f"github-{repo.lower().replace(' ', '-')}",
+            "name": str(row.get("name") or repo),
+            "exec": pages or str(row.get("url") or ""),
+            "icon": "queen-prog-ammocode" if repo.lower() == "ammocode" else "queen-prog-github",
+            "category": "GitHub · Our Software",
+            "source": "github_favorites",
+            "start_menu": True,
+            "os_layer": 0,
+            "shell": True,
+            "pinned": bool(row.get("star")),
+            "hint": str(row.get("tag") or "GitHub · Pages"),
+            "github": str(row.get("url") or ""),
+            "wiki": str(row.get("wiki") or ""),
+        })
+    return out
+
+
+def _enrich_desktop_folders(apps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    doctrine = _load(DOCTRINE, {})
+    folders = doctrine.get("desktop_folders") or {}
+    by_id = {str(a.get("id")): a for a in apps if a.get("id")}
+    out: list[dict[str, Any]] = []
+    for app in apps:
+        row = dict(app)
+        folder_id = str(row.get("folder_id") or row.get("id") or "")
+        spec = folders.get(folder_id) if row.get("kind") == "desktop_folder" else None
+        if spec and isinstance(spec, dict):
+            child_ids = list(spec.get("children") or [])
+            row["folder_children"] = [
+                dict(by_id[cid]) for cid in child_ids if cid in by_id
+            ]
+            row.setdefault("name", spec.get("name") or row.get("name"))
+            row.setdefault("icon", spec.get("icon") or row.get("icon"))
+        out.append(row)
+    return out
+
+
 def _field_apps() -> list[dict[str, Any]]:
     doctrine = _load(DOCTRINE, {})
     policy = doctrine.get("policy") or {}
@@ -484,7 +610,8 @@ def _field_apps() -> list[dict[str, Any]]:
         else:
             app["icon_url"] = _panel_icon_url(icon_name)
         out.append(app)
-    return out
+    out.extend(_github_favorites_apps())
+    return _enrich_desktop_folders(out)
 
 
 def _running_programs() -> list[dict[str, Any]]:
@@ -492,11 +619,11 @@ def _running_programs() -> list[dict[str, Any]]:
         "nexus-genius": "NEXUS Daemon",
         "threat-panel-http": "AmmoOS Panel",
         "queen-world": "Queen World",
-        "firefox": "Queen Browser",
-        "fieldfox": "Queen Browser",
         "queen-browser": "Queen Browser",
-        "chromium": "Queen Browser",
-        "google-chrome": "Queen Browser",
+        "queen-field-engine": "Queen Browser",
+        "legacy_gecko": "Queen Browser (legacy engine)",
+        "chromium": "Queen Browser (blocked — use Queen)",
+        "google-chrome": "Queen Browser (blocked — use Queen)",
         "code": "AmmoCode",
         "obs": "Field Broadcaster",
     }
@@ -614,6 +741,25 @@ def _iron_plate_organize(
 
 def _desktop_surface_icons(launcher_apps: list[dict[str, Any]]) -> list[dict[str, Any]]:
     registry = _desktop_registry()
+    doctrine = _load(DOCTRINE, {})
+    policy = _policy()
+    show_desktop = policy.get("show_desktop_icons") is not False
+    skip_ids = {"nexus-c2-desktop"}
+    if not show_desktop:
+        skip_ids.add("queen-browser")
+    by_id = {str(a.get("id")): a for a in launcher_apps if a.get("id")}
+    icon_ids = doctrine.get("desktop_icon_ids") or policy.get("desktop_icon_ids")
+    if icon_ids:
+        out: list[dict[str, Any]] = []
+        for app_id in icon_ids:
+            app = by_id.get(str(app_id))
+            if not app or app.get("ghost") or app.get("clipboard_ghost"):
+                continue
+            if app_id in skip_ids or app.get("launcher_visible") is False:
+                continue
+            out.append(app)
+        if out:
+            return out
     mode = (
         (registry.get("surfaces") or {}).get("desktop") or {}
     ).get("icons_from") or "pinned_programs"
@@ -622,7 +768,7 @@ def _desktop_surface_icons(launcher_apps: list[dict[str, Any]]) -> list[dict[str
             a
             for a in launcher_apps
             if a.get("pinned") and not a.get("ghost") and not a.get("clipboard_ghost")
-            and a.get("id") not in ("nexus-c2-desktop", "queen-browser")
+            and a.get("id") not in skip_ids
             and a.get("launcher_visible") is not False
         ]
     return [a for a in launcher_apps if a.get("desktop")]
@@ -686,6 +832,36 @@ def _tray_icons(apps: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
+_STACK_CAT_PREFIXES = ("NEXUS", "AmmoOS", "GitHub")
+
+
+def _is_stack_category(cat: str) -> bool:
+    return any(str(cat).startswith(p) for p in _STACK_CAT_PREFIXES)
+
+
+def _desktop_menu_folders(apps: list[dict[str, Any]], doctrine: dict[str, Any]) -> list[dict[str, Any]]:
+    """Classic Start folder trees — Hostess7 desktop folders + category groups."""
+    folders = doctrine.get("desktop_folders") or {}
+    by_id = {str(a.get("id")): a for a in apps if a.get("id")}
+    out: list[dict[str, Any]] = []
+    for fid, spec in folders.items():
+        if not isinstance(spec, dict):
+            continue
+        child_ids = list(spec.get("children") or [])
+        children = [dict(by_id[cid]) for cid in child_ids if cid in by_id]
+        if not children:
+            continue
+        out.append({
+            "id": str(fid),
+            "name": str(spec.get("name") or fid),
+            "icon": spec.get("icon") or "queen-prog-files",
+            "kind": "folder",
+            "category": "AmmoOS · Folders",
+            "children": children,
+        })
+    return out
+
+
 def _menu_nexus_c2_tree(apps: list[dict[str, Any]]) -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     order = _category_order()
@@ -700,23 +876,26 @@ def _menu_nexus_c2_tree(apps: list[dict[str, Any]]) -> dict[str, Any]:
     for c in sorted(categories.keys()):
         if c not in ordered_cats:
             ordered_cats.append(c)
-    field_cats = {k: v for k, v in categories.items() if k.startswith("NEXUS")}
+    field_cats = {k: v for k, v in categories.items() if _is_stack_category(k)}
     host_cats = {k: v for k, v in categories.items() if k.startswith("Host")}
     pinned = [a for a in visible if a.get("pinned")]
     layout = str(doctrine.get("policy", {}).get("menu_layout") or "nexus_c2_flyout")
-    use_flyout = layout in ("nexus_c2_flyout", "flyout") or not doctrine.get("policy", {}).get("start_menu_folders", False)
+    folders_on = bool(doctrine.get("policy", {}).get("start_menu_folders", True))
+    use_flyout = layout in ("nexus_c2_flyout", "flyout") and not folders_on
     return {
         "style": "nexus_c2",
         "layout": "flyout" if use_flyout else "tree_sidebar",
         "categories": field_cats,
         "host_categories": host_cats,
         "category_order": ordered_cats,
+        "desktop_folders": _desktop_menu_folders(visible, doctrine),
         "pinned": pinned,
         "programs": visible,
         "power": _power_actions(),
         "search": True,
         "tree": not use_flyout,
         "flyout": use_flyout,
+        "folders": folders_on,
         "nexus_c2_priority": bool(doctrine.get("policy", {}).get("nexus_c2_priority", True)),
         "boot_os": _boot_os(),
         "window_mode": _window_mode(),
@@ -847,7 +1026,8 @@ def build_panel() -> dict[str, Any]:
         app["category"] = f"Host · {cat}"
     merged: dict[str, dict[str, Any]] = {}
     for app in field_apps:
-        merged[app["name"].lower()] = app
+        key = str(app.get("id") or app["name"].lower())
+        merged[key] = app
     for app in host_apps:
         key = f"host:{app['name'].lower()}"
         merged[key] = app
@@ -901,8 +1081,10 @@ def build_panel() -> dict[str, Any]:
         },
         "desktop_icons": [] if icons_in_start else _desktop_surface_icons(launcher_apps),
         "system_registry": _desktop_registry(),
+        "desktop_h7s": _h7s_desktop_bundle_status(),
         "iron_plate_organize": bool(organized),
         "product": _load(DOCTRINE, {}).get("product") or "AmmoOS",
+        "version": _load(DOCTRINE, {}).get("version") or "2.0.0",
         "shell": {
             "boot_os": boot_os,
             "window_mode": window_mode,
@@ -922,13 +1104,15 @@ def build_panel() -> dict[str, Any]:
             "settings_api": "/api/field-shell-settings",
             "settings": _shell_settings(),
         },
-        "policy": _load(DOCTRINE, {}).get("policy") or {},
+        "policy": _desktop_policy(),
         "routes": {
-            "command": "/command",
+            "field": "/field",
+            "command": "/command?embed=1",
             "underlay": "/underlay-f9",
             "tristate": "/tristate-installer",
+            "legacy_panel": "dissolved",
         },
-        "posture": "AmmoOS C2 — desktop icons, integrated task manager, Start flyout",
+        "posture": "AmmoOS 2.0 — desktop icons, taskbar, field programs; Queen from icon",
         "field_identity": _znetwork_loopback_identity(),
     }
     _save_atomic(PANEL_FILE, doc)
@@ -944,6 +1128,12 @@ def _needs_rescan() -> bool:
     if BOOT_MARKER.is_file():
         try:
             if BOOT_MARKER.stat().st_mtime > STAMP.stat().st_mtime:
+                return True
+        except OSError:
+            return True
+    if DOCTRINE.is_file() and STAMP.is_file():
+        try:
+            if DOCTRINE.stat().st_mtime > STAMP.stat().st_mtime:
                 return True
         except OSError:
             return True

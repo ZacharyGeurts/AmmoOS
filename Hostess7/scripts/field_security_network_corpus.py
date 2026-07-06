@@ -50,7 +50,7 @@ SECURITY_DOMAINS: tuple[dict[str, str | tuple[str, ...]], ...] = (
             "TLS 1.2+ provides confidentiality and integrity on the wire. Handshake: cipher suite, cert chain, "
             "key exchange, finished verify. Self-signed certs OK for localhost panels (NEXUS threat panel 9477). "
             "Production: Let's Encrypt or org CA, HSTS, no mixed content. "
-            "Hostess7 GitHub Pages: HTTPS by default; demo UI must not embed secrets or call insecure APIs."
+            "Hostess7 GitHub Pages: HTTPS by default; war-ready boot UI must not embed secrets or call insecure APIs."
         ),
     },
     {
@@ -82,7 +82,7 @@ SECURITY_DOMAINS: tuple[dict[str, str | tuple[str, ...]], ...] = (
         "body": (
             "OWASP Top 10: broken access control, cryptographic failures, injection, insecure design, "
             "misconfiguration, vulnerable components, auth failures, integrity failures, logging, SSRF. "
-            "Sanitize all user input in web UIs (GitHub Pages demo). Pin dependencies; verify checksums on ingest. "
+            "Sanitize all user input in web UIs (GitHub Pages mirror). Pin dependencies; verify checksums on ingest. "
             "NEXUS self-defense: signed MANIFEST.sha256, refuse tampered module loads."
         ),
     },
@@ -126,9 +126,10 @@ SECURITY_DOMAINS: tuple[dict[str, str | tuple[str, ...]], ...] = (
     {
         "id": "online_security",
         "title": "Secure online operation (GitHub Pages + Codespaces)",
-        "tags": ("github", "pages", "codespaces", "csp", "sanitize", "demo", "secrets"),
+        "tags": ("github", "pages", "codespaces", "csp", "sanitize", "war-ready", "secrets"),
         "body": (
-            "GitHub Pages: static demo only — no API keys, no sudo, no raw shell from browser. "
+            "GitHub Pages: static mirror — boot ./Hostess7.sh boot for war-ready brain on loopback. "
+            "No API keys, no sudo, no raw shell from browser. "
             "Content-Security-Policy, X-Frame-Options, sanitize chat input, HTTPS-only fetch. "
             "Full brain: Codespaces or local with fieldstorage on TEAM drive. Internet gate: HOSTESS7_INTERNET=1 with truth filter. "
             "Never commit secrets; use environment variables in Codespaces secrets."

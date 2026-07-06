@@ -257,13 +257,47 @@ def auto_convert_plane(
     t0 = time.perf_counter()
 
     if kind == "python":
+        if allow_compile or compile_mode_enabled():
+            nexus = _grok16_root().parent / "NewLatest"
+            if not (nexus / "lib" / "field-g16-script-compile.py").is_file():
+                nexus = Path(os.environ.get("NEXUS_INSTALL_ROOT", nexus))
+            compile_py = nexus / "lib" / "field-g16-script-compile.py"
+            if compile_py.is_file():
+                try:
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location("field_g16_script_compile", compile_py)
+                    if spec and spec.loader:
+                        sc = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(sc)
+                        if hasattr(sc, "compile_script"):
+                            rep = sc.compile_script(
+                                source,
+                                force=os.environ.get("G16_FORCE_COMPILE", "").strip().lower() in ("1", "true", "yes", "on"),
+                            )
+                            if rep.get("ok") and rep.get("binary"):
+                                out_bin = Path(str(rep["binary"]))
+                                if out_bin.is_file():
+                                    convert_ms = round((time.perf_counter() - t0) * 1000, 2)
+                                    return {
+                                        "ok": True,
+                                        "plane_kind": "binary",
+                                        "runner": str(out_bin),
+                                        "runtime": "g16_script_launcher",
+                                        "toolchain": "g16_script_compile",
+                                        "binary_bytes": out_bin.stat().st_size,
+                                        "convert_ms": convert_ms,
+                                        "source": str(source),
+                                        "compile_report": rep,
+                                    }
+                except Exception:
+                    pass
         return {
             "ok": True,
             "plane_kind": "interpreter",
             "runner": str(source),
             "runtime": "python",
             "convert_ms": 0,
-            "message": "Python stays on interpreter until gpy hot path",
+            "message": "Python on gpy interpreter; enable Compile mode for g16 executable launcher",
         }
 
     if kind in ("cxx", "c"):

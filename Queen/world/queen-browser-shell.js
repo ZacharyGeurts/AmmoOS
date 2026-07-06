@@ -30,29 +30,10 @@
       .replace(/"/g, "&quot;");
   }
 
-  function isStrippedBrowser() {
-    return document.body?.dataset?.queenStripped === "1";
-  }
-
   function startUrl() {
-    if (isStrippedBrowser()) {
-      const home =
-        document.body?.dataset?.queenHome ||
-        document.body?.dataset?.queenStart ||
-        `${location.origin}/world/kilroy-home.html`;
-      if (home.startsWith("/")) return `${location.origin}${home}`;
-      return home;
-    }
-    const raw =
-      document.body?.dataset?.queenAmmoos ||
-      document.body?.dataset?.queenStart ||
-      `http://127.0.0.1:${panelPort()}/field`;
+    const raw = document.body?.dataset?.queenStart || "/world/queen-new-tab.html";
     if (raw.startsWith("/")) return `${location.origin}${raw}`;
     return raw;
-  }
-
-  function queenBrowserUrl() {
-    return `${location.origin}/world/browser.html`;
   }
 
   function panelPort() {
@@ -96,16 +77,10 @@
   }
 
   function openCadRescue() {
-    const rescueUrl = isStrippedBrowser()
-      ? `${panelBase()}/field`
-      : `${panelBase()}/field`;
-    globalThis.QueenOS?.browser?.newTab?.(rescueUrl);
+    const fieldUrl = `${panelBase()}/field`;
+    globalThis.QueenOS?.browser?.newTab?.(fieldUrl);
     const status = $("qb-status");
-    if (status) {
-      status.textContent = isStrippedBrowser()
-        ? "Ctrl+Alt+Del · open AmmoOS desktop in new tab"
-        : "Ctrl+Alt+Del · ZNetwork keyboard hook · AmmoOS rescue";
-    }
+    if (status) status.textContent = "Ctrl+Alt+Del · ZNetwork keyboard hook · AmmoOS rescue";
   }
 
   const SHELL_ACTIONS = new Set([
@@ -314,7 +289,6 @@
     injectPageAgent(entry.frame);
     delete entry.frame.dataset.discardedSrc;
     setActivePane(tabId);
-    setDesktopEmbedMode(isNexusC2FieldUrl(url));
     document.dispatchEvent(new CustomEvent("queen-navigate", { detail: { tabId, url } }));
     const pill = document.getElementById("qb-compat-pill");
     if (pill && tab) {
@@ -547,13 +521,6 @@
   }
 
   function applyStartButtonMode(browserDoc) {
-    if (isStrippedBrowser()) {
-      document.body.dataset.queenBootOs = "0";
-      document.body.dataset.queenStartButton = "bookmarks";
-      $("qb-start-pill")?.setAttribute("hidden", "");
-      $("qb-start-menu")?.setAttribute("hidden", "");
-      return;
-    }
     const bootOs = !!(browserDoc?.boot_os || document.body?.dataset?.queenBootOs === "1");
     const mode = bootOs ? "full" : "classic";
     const pill = $("qb-start-pill");
@@ -574,11 +541,28 @@
     }
   }
 
-  function onShellMessage(ev) {
-    if (ev.origin !== location.origin && !isLoopbackOrigin(ev.origin)) return;
+  function onAmmoOsMessage(ev) {
     const data = ev.data;
-    if (!data || typeof data !== "object" || data.type !== "queen:shell") return;
+    if (!data || typeof data !== "object") return;
+    if (data.type === "nexus:history") {
+      if (data.dir === "back") $("qb-back")?.click();
+      else if (data.dir === "forward") $("qb-forward")?.click();
+      return;
+    }
+    if (data.type !== "queen:shell") return;
     const action = data.action;
+    if (action === "reload") {
+      $("qb-reload")?.click();
+      return;
+    }
+    if (action === "inspector") {
+      $("qpi-inspect-btn")?.click();
+      return;
+    }
+    if (action === "new_tab" && !data.url) {
+      globalThis.QueenOS?.browser?.newTab?.(startUrl());
+      return;
+    }
     if (!SHELL_ACTIONS.has(action)) return;
     if (action === "attach_tab") {
       attachTab(data.tab_id);
@@ -599,9 +583,16 @@
       forwardOpenWindow(data.item || { url, name: data.title || data.name || "Program", icon: data.icon });
     }
     if (action === "dock" && data.dock) {
-      const dockUrl = url || `${location.origin}/world/?dock=${encodeURIComponent(data.dock)}`;
-      globalThis.QueenOS?.world?.setDockTab?.(data.dock);
-      globalThis.QueenOS?.browser?.navigate?.(`/world/?dock=${encodeURIComponent(data.dock)}`);
+      const d = data.dock;
+      if (d === "terminal") {
+        const embed = `${location.origin}/world/queen-gnu-terminal-embed.html`;
+        globalThis.QueenOS?.browser?.navigate?.(embed);
+        globalThis.QueenOS?.browser?.newTab?.(embed);
+        return;
+      }
+      const dockUrl = url || `${location.origin}/world/?dock=${encodeURIComponent(d)}`;
+      globalThis.QueenOS?.world?.setDockTab?.(d);
+      globalThis.QueenOS?.browser?.navigate?.(`/world/?dock=${encodeURIComponent(d)}`);
       if (!globalThis.QueenOS?.world?.setDockTab) {
         globalThis.QueenOS?.browser?.newTab?.(dockUrl);
       }
@@ -641,9 +632,96 @@
     } catch (_) {}
   }
 
-  function wireSecurity() {
-    window.addEventListener("message", onShellMessage);
-    window.addEventListener("message", onDesktopMessage);
+  function ensureShellCtx() {
+    let el = document.getElementById("qb-shell-ctx");
+    if (el) return el;
+    el = document.createElement("div");
+    el.id = "qb-shell-ctx";
+    el.className = "qb-shell-ctx";
+    el.setAttribute("role", "menu");
+    el.setAttribute("aria-label", "Queen browser menu");
+    document.body.appendChild(el);
+    document.addEventListener("click", () => el.classList.remove("open"), true);
+    return el;
+  }
+
+  function openShellContext(x, y, meta) {
+    const menu = ensureShellCtx();
+    const items = [
+      { id: "back", label: "Back" },
+      { id: "forward", label: "Forward" },
+      { id: "reload", label: "Reload" },
+      { id: "new-tab", label: "New tab" },
+      { sep: true },
+      { id: "inspector", label: "Page inspector" },
+      { id: "bookmarks", label: "Bookmarks hub" },
+      { id: "gates", label: "Gate manifest" },
+      { sep: true },
+      { id: "desktop", label: "Show AmmoOS desktop" },
+    ];
+    if (meta?.href) {
+      items.splice(4, 0, { id: "open-link", label: "Open link in new tab" });
+    }
+    menu.innerHTML = items
+      .map((it) => {
+        if (it.sep) return "<hr />";
+        return `<button type="button" data-qctx="${esc(it.id)}">${esc(it.label)}</button>`;
+      })
+      .join("");
+    menu.style.left = `${Math.min(x, innerWidth - 220)}px`;
+    menu.style.top = `${Math.min(y, innerHeight - 300)}px`;
+    menu.classList.add("open");
+    menu.onclick = (ev) => {
+      const btn = ev.target.closest("[data-qctx]");
+      if (!btn) return;
+      ev.stopPropagation();
+      menu.classList.remove("open");
+      const act = btn.dataset.qctx;
+      if (act === "back") $("qb-back")?.click();
+      else if (act === "forward") $("qb-forward")?.click();
+      else if (act === "reload") $("qb-reload")?.click();
+      else if (act === "new-tab") globalThis.QueenOS?.browser?.newTab?.(startUrl());
+      else if (act === "inspector") $("qpi-inspect-btn")?.click();
+      else if (act === "bookmarks") $("qb-bookmarks-flyout-btn")?.click();
+      else if (act === "gates") $("qb-gates")?.click();
+      else if (act === "open-link" && meta?.href) globalThis.QueenOS?.browser?.newTab?.(meta.href);
+      else if (act === "desktop") {
+        try {
+          parent.postMessage({ type: "nexus:minimize" }, "*");
+        } catch (_) {}
+        globalThis.QueenOS?.browser?.navigate?.(`${panelBase()}/field`);
+      }
+    };
+  }
+
+  function wireShellContext() {
+    document.addEventListener(
+      "contextmenu",
+      (e) => {
+        if (e.target.closest(".qb-viewport, .qb-frame, iframe")) return;
+        if (e.target.closest(".qb-shell-ctx, .qpa-context-menu, .qb-bookmarks-flyout")) return;
+        if (!e.target.closest(".qb-chrome, .qb-row, .qb-tabs, .qb-bookmarks, .qb-humans-ai, .qb-gate-strip, .qb-brand-strip")) {
+          if (!e.target.closest("body")) return;
+          if (e.target.closest(".qb-viewport")) return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        const link = e.target.closest?.("a[href]");
+        openShellContext(e.clientX, e.clientY, { href: link?.href || "", zone: "chrome" });
+      },
+      true,
+    );
+  }
+
+  function onShellMessage(ev) {
+    if (ev.origin !== location.origin && !isLoopbackOrigin(ev.origin)) return;
+    onAmmoOsMessage(ev);
+    const data = ev.data;
+    if (!data || typeof data !== "object" || data.type !== "queen:shell") return;
+    const action = data.action;
+    if (["reload", "inspector"].includes(action)) return;
+    if (action === "new_tab" && !data.url) return;
+    if (!SHELL_ACTIONS.has(action)) return;
     document.addEventListener("securitypolicyviolation", (e) => {
       const status = $("qb-status");
       if (status) status.textContent = `CSP blocked: ${e.blockedURI || e.violatedDirective}`;
@@ -678,9 +756,11 @@
         toggleViewportFullscreen();
         return;
       }
-      if (e.key === "F11") {
+      if (["F9", "F10", "F11", "F12"].includes(e.key) && global.FieldScreenLayers?.switchTo) {
         e.preventDefault();
-        toggleViewportFullscreen();
+        e.stopPropagation();
+        const layer = global.FieldScreenLayers.FKEY_TO_LAYER[e.key];
+        if (layer != null) global.FieldScreenLayers.switchTo(layer);
         return;
       }
       if (e.key === "F5") {
@@ -695,10 +775,6 @@
   }
 
   function wireStartButton() {
-    if (isStrippedBrowser()) {
-      applyStartButtonMode({});
-      return;
-    }
     $("qb-start")?.addEventListener("click", () => {
       activateStart();
       toggleStartMenu(true, "classic");
@@ -740,51 +816,39 @@
     });
   }
 
-  function isNexusC2FieldUrl(url) {
-    if (!url) return false;
-    try {
-      const u = new URL(url, location.origin);
-      const path = (u.pathname || "/").replace(/\/$/, "") || "/";
-      const host = (u.hostname || "").toLowerCase();
-      return path === "/field" && (host === "127.0.0.1" || host === "localhost");
-    } catch {
-      return /\/field(?:[#?]|$)/i.test(String(url));
-    }
-  }
-
-  function setDesktopEmbedMode(enabled) {
-    const on = !!enabled;
-    document.body.classList.toggle("qw-desktop-embed", on);
-    for (const id of ["qb-chrome", "qb-chrome-restore", "qm-threat-bar"]) {
-      const el = $(id);
-      if (!el) continue;
-      if (on) el.setAttribute("hidden", "");
-      else el.removeAttribute("hidden");
-    }
-    const plate = $("qb-field-plate");
-    if (plate) plate.setAttribute("aria-hidden", on ? "true" : "false");
-  }
-
   function applyDesktopEmbedMode() {
     const params = new URLSearchParams(location.search);
-    if (
-      params.get("desktop_embed") === "1" ||
-      params.get("c2") === "1" ||
-      document.body?.dataset?.queenC2Boot === "1"
-    ) {
-      setDesktopEmbedMode(true);
-    }
+    if (params.get("desktop_embed") !== "1") return;
+    document.body.classList.add("qw-desktop-embed");
+    $("qb-chrome")?.setAttribute("hidden", "");
+    $("qb-chrome-restore")?.setAttribute("hidden", "");
+    $("qm-threat-bar")?.setAttribute("hidden", "");
+    const plate = $("qb-field-plate");
+    if (plate) plate.setAttribute("aria-hidden", "true");
   }
 
   function applyShellMode() {
     document.body.classList.add("qw-browser-shell");
-    if (isStrippedBrowser()) document.body.classList.add("qw-stripped");
     applyDesktopEmbedMode();
     const strip = document.createElement("span");
     strip.className = "qb-security-strip";
     strip.id = "qb-security-strip";
     strip.textContent = "KILROY · ZNetwork hooks · Queen Browser shell";
     $("qb-gate-strip")?.prepend(strip);
+    fetch("/api/github-secure", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => {
+        const ok = j.verify?.ok;
+        const badge = document.createElement("span");
+        badge.className = "qb-security-strip qb-github-secure";
+        badge.id = "qb-github-secure";
+        badge.textContent = ok
+          ? `GitHub pinned · ${j.verify?.route || "direct"}`
+          : "GitHub secure connect HOLD";
+        badge.title = j.policy || "Queen pinned GitHub — no MITM";
+        $("qb-gate-strip")?.prepend(badge);
+      })
+      .catch(() => {});
   }
 
   function onDesktopMessage(ev) {
@@ -884,6 +948,7 @@
     ensureViewport();
     bindTabChrome();
     wireSecurity();
+    wireShellContext();
     wireKeyboard();
     wireZNetworkHooks();
     wireStartButton();
@@ -904,5 +969,6 @@
     toggleViewportFullscreen,
     cycleTabs,
     decorateTabsRender,
+    openShellContext,
   };
 })();

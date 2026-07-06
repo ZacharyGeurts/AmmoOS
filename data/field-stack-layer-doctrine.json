@@ -1,10 +1,21 @@
 {
-  "schema": "field-stack-layer/v1",
-  "title": "Field stack layers — sovereign core · blocks · Queen shell",
-  "version": "1.2.0",
-  "motto": "NEXUS C2 · KILROY · AmmoOS fused tight. CHIPS blocks nested. Queen shell outer. Plate meld seals — nobody in between.",
-  "statement": "Sovereign core (C2+KILROY+AmmoOS) melds first; CHIPS and child blocks stack inside; Queen browser is the outer shell only. ZNetwork absorbed in KILROY lane — not a gap tier.",
-  "sovereign_stack_meld": "data/field-sovereign-stack-meld-doctrine.json",
+  "schema": "field-stack-layer/v2",
+  "title": "Field stack — KILROY PC core · AmmoOS desktop · Queen standalone browser",
+  "version": "2.0.0",
+  "motto": "Hardware untouched. KILROY boots the field (ZNetwork absorbed). AmmoOS loads on AMOURANTHRTX desktop. Queen is its own browser.",
+  "statement": "KILROY is the PC core — DNS lane at -2, loopback, defense. AmmoOS anchors at -1. Layer 0 ships Broadcaster (OBS rebranded), AmmoNet display rail, and panel programs with themed chrome. Queen Browser is its own browser space (layer 1 shell window). Layer 2+ is userland. No stock Firefox branding.",
+  "screen_layers": {
+    "doctrine": "data/field-screen-layer-doctrine.json",
+    "fkey_map": { "F9": -3, "F10": -2, "F11": 1, "F12": "userland_cycle" },
+    "layers": {
+      "-3": { "id": "nexus-c2", "label": "NEXUS C2", "fkey": "F9" },
+      "-2": { "id": "dns-kilroy-lane", "label": "DNS · KILROY lane", "fkey": "F10" },
+      "-1": { "id": "ammoos-desktop", "label": "Field One · AmmoOS", "fkey": null },
+      "0": { "id": "os-software", "label": "Broadcaster · AmmoNet · Panels", "inside_os": true, "bundle": ["field-broadcaster", "ammonet-isp", "ammoos-ammonet-display"] },
+      "1": { "id": "queen-browser", "label": "Queen Browser", "fkey": "F11", "media": true },
+      "2+": { "id": "userland", "label": "Userland", "fkey": "F12", "cycle": true }
+    }
+  },
   "hardware_guard": {
     "no_breaks": true,
     "flash_spi_rom": false,
@@ -14,6 +25,11 @@
     "never_mask_native_until_l3_ready": true,
     "doctrine": "data/native-layer-doctrine.json",
     "motto": "Witness BIOS, own field drivers in software — never brick hardware or kill host NIC manager prematurely"
+  },
+  "deprecated_layers": {
+    "znetwork": "Absorbed into KILROY network lane (lib/kilroy-core.sh) — not a separate boot layer",
+    "queen_canvas": "AMOURANTHRTX display technology — owned by AmmoOS desktop, not a Queen sub-layer",
+    "ammoos_inside_queen": "Retired v1 model — AmmoOS and Queen are sibling surfaces"
   },
   "layers_bottom_up": [
     {
@@ -28,108 +44,89 @@
       "order": 1,
       "id": "nexus_c2",
       "label": "NEXUS C2",
-      "role": "sovereign_core_member",
-      "tier": "sovereign_core",
-      "fused_with": ["kilroy", "ammoos"],
+      "role": "command_security_defense",
       "port": 9477,
-      "surfaces": {"field": "/field", "command": "/command"},
+      "surfaces": {
+        "field": "/field",
+        "command": "/command"
+      },
       "modules": [
         "lib/threat-panel-http.py",
         "lib/connection-gatekeeper.py",
         "lib/field-queen-browser.py",
         "lib/trust-strike-engine.py",
-        "lib/field-monster-shell.py"
+        "Queen/lib/queen-nexus-c2.py"
       ],
-      "motto": "Command deck — fused with KILROY and AmmoOS, not a gap tier"
+      "motto": "Command deck, gates, trust strike, panel API — absorbed into KILROY PC core at runtime"
     },
     {
       "order": 2,
       "id": "kilroy",
-      "label": "KILROY",
-      "role": "sovereign_core_member",
-      "tier": "sovereign_core",
-      "fused_with": ["nexus_c2", "ammoos"],
-      "absorbs": ["znetwork"],
-      "modules": ["Queen/lib/queen-kilroy.py", "lib/field-stack-layer.py"],
-      "motto": "PC core kernel witness — ZNetwork lane absorbed, no interloper network stack"
+      "label": "KILROY PC core",
+      "role": "pc_core_syscall_network_defense",
+      "module": "lib/kilroy-core.sh",
+      "proc": "/proc/kilroy_field",
+      "absorbs": ["znetwork", "nexus_c2_monitoring", "loopback_authority"],
+      "network_lane": {
+        "implementation": "lib/znetwork-field.sh",
+        "marker": "kilroy-net-lane.json",
+        "znetwork_absorbed": true
+      },
+      "motto": "Boots the machine, owns network lane (ex-ZNetwork), loopback 127.0.0.1, defensive perimeter"
     },
     {
       "order": 3,
       "id": "ammoos",
       "label": "AmmoOS",
-      "role": "sovereign_core_member",
-      "tier": "sovereign_core",
-      "fused_with": ["nexus_c2", "kilroy"],
+      "role": "field_os_desktop",
+      "parent": null,
+      "not_inside_queen": true,
       "loopback": "127.0.0.1",
+      "desktop_technology": "AMOURANTHRTX",
       "surfaces": {
         "host_desktop": "http://127.0.0.1:9477/field",
-        "view": "http://127.0.0.1:9481/world/view.html"
+        "view": "http://127.0.0.1:9481/world/view.html",
+        "f9_boot": "lib/field-queen-browser-open.py desktop"
       },
-      "motto": "Field OS desktop — melded to C2 and KILROY before blocks and Queen shell"
+      "modules": [
+        "lib/field-queen-browser-open.py",
+        "lib/field-rtx-canvas-block.py",
+        "AMOURANTHRTX/Navigator/shaders/compute/aos_load.comp",
+        "data/field-rtx-display-doctrine.json"
+      ],
+      "motto": "Field OS desktop — taskbar, programs, AMOURANTHRTX CANVAS backend; load via kilroy-load-os.sh or F9"
     },
     {
       "order": 4,
-      "id": "ammoos_blocks",
-      "label": "CHIPS · blocks",
-      "role": "nested_blocks",
-      "parent": "ammoos",
-      "tier": "ammoos_blocks",
-      "doctrine": "data/field-ammoos-blocks-doctrine.json",
-      "modules": [
-        "lib/field-ammoos-blocks.py",
-        "lib/field-chips-plate-stack.py",
-        "lib/field-chips-core.py"
-      ],
-      "motto": "CHIP framework children — held inside AmmoOS, thermal-gated, no foreign block between core and Queen"
-    },
-    {
-      "order": 5,
-      "id": "queen_canvas",
-      "label": "Queen CANVAS",
-      "role": "display_technology_inside_shell",
-      "tier": "queen_shell",
-      "is_gui": false,
-      "technology": "AMOURANTHRTX",
-      "modules": ["Queen/lib/queen-canvas-renderer.py"],
-      "motto": "RTX display tech inside Queen shell — not a gap layer"
-    },
-    {
-      "order": 6,
       "id": "queen",
       "label": "Queen Browser",
-      "role": "outer_shell_only",
-      "tier": "queen_shell",
+      "role": "standalone_secure_browser",
       "port": 9481,
       "shell": "/world/browser.html",
-      "wraps": ["sovereign_core", "ammoos_blocks"],
+      "contains": [],
+      "sibling_of": "ammoos",
       "security_wired": [
         "data/field-queen-gates-seed.json",
         "lib/field-queen-browser.py",
-        "Queen/world/queen-browser-shell.js"
+        "Queen/world/queen-browser-shell.js",
+        "Queen/lib/queen-browser-import.py",
+        "lib/connection-gatekeeper.py"
       ],
-      "motto": "Outer secure browser — launches web surfaces; nothing between blocks and this shell"
-    },
-    {
-      "order": 99,
-      "id": "znetwork",
-      "label": "ZNetwork",
-      "role": "absorbed_in_kilroy",
-      "hidden_tier": true,
-      "internet_pipe_percent_target": 100,
-      "modules": [
-        "lib/znetwork-relayer.py",
-        "lib/znetwork-orchestrator.py",
-        "lib/znetwork-smart-inside.py"
-      ],
-      "doctrine": "data/znetwork-doctrine.json",
-      "motto": "Internet pipe inside KILROY lane — not inserted between AmmoOS and Queen"
+      "motto": "Standalone rewritten browser — tabs, gates, GNU terminal; launched from desktop, not embedding AmmoOS"
     }
   ],
+  "boot_order": ["nexus_c2", "kilroy", "ammoos_desktop", "queen_on_demand"],
+  "surfaces": {
+    "ammoos_desktop": "http://127.0.0.1:9477/field",
+    "queen_browser": "http://127.0.0.1:9481/world/browser.html",
+    "kilroy_api": "http://127.0.0.1:9481/api/kilroy",
+    "load_os": "./scripts/kilroy-load-os.sh"
+  },
   "defense_chain": [
     "hardware_wire",
+    "kilroy_core",
+    "kilroy_network_lane",
     "nexus_c2_gates",
-    "znetwork_relayer",
-    "znetwork_exploit_shield",
     "connection_gatekeeper",
     "queen_gates",
     "queen_import_resecure",
@@ -137,15 +134,16 @@
     "field_dhcp"
   ],
   "env": {
-    "FIELD_STACK_LAYER": "nexus_c2,kilroy,ammoos,ammoos_blocks,queen",
-    "FIELD_SOVEREIGN_STACK_MELD": "1",
-    "AMMOOS_CORE_FUSED": "1",
-    "QUEEN_SHELL_OUTER_ONLY": "1",
+    "FIELD_STACK_LAYER": "hardware,nexus_c2,kilroy,ammoos,queen",
+    "KILROY_PC_CORE": "1",
+    "KILROY_ZNETWORK_ABSORBED": "1",
+    "AMMOOS_INSIDE_QUEEN": "0",
+    "QUEEN_STANDALONE_BROWSER": "1",
+    "AMMOOS_DESKTOP_RTX": "AMOURANTHRTX",
     "QUEEN_CANVAS_SHADER": "CANVAS",
     "AMOURANTHRTX_DEMO": "0",
-    "AMMOOS_INSIDE_QUEEN": "0",
     "QUEEN_DEFENDS_WITH_NEXUS": "1",
-    "QUEEN_DEFENDS_WITH_ZNETWORK": "1",
+    "QUEEN_DEFENDS_WITH_KILROY": "1",
     "HARDWARE_NO_BREAK": "1"
   }
 }

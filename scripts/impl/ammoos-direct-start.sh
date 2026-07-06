@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/impl/ammoos-direct-start.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 # Direct-start AmmoOS panel + Queen (bypasses nexus boot-impl hang).
 set -euo pipefail
@@ -24,15 +42,29 @@ export QUEEN_BROWSER_ONLY="${QUEEN_BROWSER_ONLY:-1}"
 export QUEEN_BROWSER_STRIPPED="${QUEEN_BROWSER_STRIPPED:-1}"
 export QUEEN_BOOT_OS="${QUEEN_BOOT_OS:-0}"
 export NEXUS_C2_DESKTOP_LAUNCH="${NEXUS_C2_DESKTOP_LAUNCH:-0}"
-export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:9481/world/kilroy-home.html}"
+export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:9477/field}"
 export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-$QUEEN_BROWSER_HOME}"
 export QUEEN_NO_OS_BROWSER="${QUEEN_NO_OS_BROWSER:-1}"
 export NEXUS_FIELD_BROWSER_QUEEN="${NEXUS_FIELD_BROWSER_QUEEN:-1}"
 export NEXUS_FIELD_DNS="${NEXUS_FIELD_DNS:-1}"
 export NEXUS_FIELD_DHCP="${NEXUS_FIELD_DHCP:-1}"
 export NEXUS_FIELD_LOCAL_DNS_CONNECT="${NEXUS_FIELD_LOCAL_DNS_CONNECT:-1}"
+export NEXUS_WAR_MACHINE="${NEXUS_WAR_MACHINE:-1}"
+export NEXUS_C2_WAR_POSTURE="${NEXUS_C2_WAR_POSTURE:-1}"
+export NEXUS_C2_KIOSK="${NEXUS_C2_KIOSK:-0}"
+export NEXUS_EVERY_KILL_REKILL="${NEXUS_EVERY_KILL_REKILL:-1}"
+export NEXUS_BOOT_REKILL="${NEXUS_BOOT_REKILL:-1}"
+export NEXUS_FIELD_ATTACK_KIT="${NEXUS_FIELD_ATTACK_KIT:-1}"
+export NEXUS_FIELD_AUTO_REKILL="${NEXUS_FIELD_AUTO_REKILL:-1}"
+export NEXUS_ATTACK_KIT_AUTO_CRUSH="${NEXUS_ATTACK_KIT_AUTO_CRUSH:-1}"
+export NEXUS_KILL_DETECT="${NEXUS_KILL_DETECT:-1}"
+export SG_ROOT_KILL_PREJUDICE="${SG_ROOT_KILL_PREJUDICE:-1}"
+export SG_ROOT_SOVEREIGN_KILL="${SG_ROOT_SOVEREIGN_KILL:-1}"
+export SG_ROOT_SOVEREIGN_GUARD="${SG_ROOT_SOVEREIGN_GUARD:-1}"
 export DISPLAY="${DISPLAY:-:0}"
 mkdir -p "$NEXUS_STATE_DIR" "$TDIR"
+# shellcheck source=/dev/null
+[[ -f "${ROOT}/lib/field-war-hardening.sh" ]] && AML_BUILD=0 source "${ROOT}/lib/field-war-hardening.sh" && nexus_field_war_harden || true
 PY=$(command -v pythong || command -v python3)
 if [[ ! -f "$NEXUS_STATE_DIR/znetwork-operator.json" ]] || ! grep -q '"choice"[[:space:]]*:[[:space:]]*"yes"' "$NEXUS_STATE_DIR/znetwork-operator.json" 2>/dev/null; then
   NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
@@ -55,24 +87,37 @@ if [[ ! -f "$NEXUS_STATE_DIR/threat-panel.json" ]]; then
     "$PY" "$ROOT/scripts/panel-json-assemble.py" >/dev/null 2>&1 || true
 fi
 if ! pgrep -f 'threat-panel-http.py.*9477' >/dev/null 2>&1; then
-  nohup env NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
+  nohup env PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}" \
+    NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" NEXUS_STATE_DIR="$NEXUS_STATE_DIR" \
     SG_ROOT="$SG_ROOT" TDIR="$TDIR" \
     "$GROKPY" "$ROOT/lib/threat-panel-http.py" 9477 \
     "$ROOT/panel" "$NEXUS_STATE_DIR/threat-panel.json" \
     >>"$NEXUS_STATE_DIR/panel-http.log" 2>&1 &
 fi
 if ! pgrep -f 'Queen/lib/queen-world.py' >/dev/null 2>&1; then
-  nohup env SG_ROOT="$SG_ROOT" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+  nohup env PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}" \
+    SG_ROOT="$SG_ROOT" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
     NEXUS_STATE_DIR="$NEXUS_STATE_DIR" TDIR="$TDIR" \
     "$GROKPY" "$ROOT/Queen/lib/queen-world.py" --daemon \
     >>"$NEXUS_STATE_DIR/queen-world.log" 2>&1 &
 fi
-p=000 q=000
+TRAIN_PORT="${H7_TRAINING_VIEWER_PORT:-9488}"
+TRAIN_URL="http://127.0.0.1:${TRAIN_PORT}/"
+if ! curl -sf --connect-timeout 1 --max-time 2 "${TRAIN_URL}api/health" >/dev/null 2>&1; then
+  TRAIN_LAUNCH="${ROOT}/hostess7-training-viewer/launch.sh"
+  if [[ -x "$TRAIN_LAUNCH" ]]; then
+    H7_TRAINING_VIEWER_PORT="$TRAIN_PORT" NEXUS_INSTALL_ROOT="$NEXUS_INSTALL_ROOT" \
+      NEXUS_STATE_DIR="$NEXUS_STATE_DIR" SG_ROOT="$SG_ROOT" \
+      bash "$TRAIN_LAUNCH" url >/dev/null 2>&1 || true
+  fi
+fi
+p=000 q=000 tv=000
 for _ in $(seq 1 40); do
   p=$(curl -sf -o /dev/null -w '%{http_code}' --connect-timeout 1 http://127.0.0.1:9477/field 2>/dev/null || echo 000)
   q=$(curl -sf -o /dev/null -w '%{http_code}' --connect-timeout 1 http://127.0.0.1:9481/api/status 2>/dev/null || echo 000)
+  tv=$(curl -sf -o /dev/null -w '%{http_code}' --connect-timeout 1 "${TRAIN_URL}api/health" 2>/dev/null || echo 000)
   [[ "$p" == "200" && "$q" == "200" ]] && break
   sleep 0.25
 done
-echo "panel=$p queen=$q TDIR=$TDIR"
-ss -tlnp 2>/dev/null | grep -E ':9477|:9481' || true
+echo "panel=$p queen=$q training=$tv TDIR=$TDIR"
+ss -tlnp 2>/dev/null | grep -E ':9477|:9481|:9488' || true

@@ -454,7 +454,7 @@ def analyze_truth(
         f"sealed={ic.get('ironclad_sealed')} "
         f"truth%={ic.get('truth_percent', 0)}"
     )
-    return {
+    out = {
         "claim_preview": claim[:200],
         "truth_score": score,
         "deception_risk": risk,
@@ -471,6 +471,20 @@ def analyze_truth(
             f"Corroborate: grep + QA + infinite index + Ironclad witness."
         ),
     }
+    try:
+        install = Path(os.environ.get("NEXUS_INSTALL_ROOT", str(Path(__file__).resolve().parents[2])))
+        hist_py = install / "lib" / "hostess7-historic-truth-corpus.py"
+        if hist_py.is_file():
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("h7_hist_dc", hist_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "apply_to_truth_analysis"):
+                    out = mod.apply_to_truth_analysis(out, claim, source="detective_corpus")
+    except Exception:
+        pass
+    return out
 
 
 def synthesize_detective_paragraphs(query: str) -> list[str]:

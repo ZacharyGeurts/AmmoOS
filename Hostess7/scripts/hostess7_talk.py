@@ -33,7 +33,10 @@ HELP_TEXT = """Hostess 7 — one talk window (text + graphics)
   /english-train          Install extensive English training brief
   /thesaurus <word>       Synonyms and antonyms with register
   /code-ingest [seed|bulk|status]
-  /field [sync|compact|restore|json]   Field 1 — everything on one field
+  /zac-pack      Pack field drive → zac/*.zac shards (GitHub infinite brain)
+  /zac-restore   Restore cache/fieldstorage from zac/
+  /zac-verify    Verify storage matches zac manifest
+  /zac-list      List zac archive contents
   /reach         OS tools + SG/AMOURANTHRTX reach map
   /internet      Internet gate + connectivity
   /fetch <url>   Truth-filtered URL fetch
@@ -56,7 +59,7 @@ HELP_TEXT = """Hostess 7 — one talk window (text + graphics)
   /sdf-teach         Queen brain imaging — SDF storage doctrine (Hostess 7)
   /sdf-segment file  Fold 900–1200w beats → lossless redata + human SDF
   /sdf-verify-redata Truth filter + lossless segment + human plate verify
-  /queen-teach-redata  Teach Queen + build tools (Field Primer, comfort)
+  /queen-teach-redata  Teach Queen + build tools (ZAC, Field Primer, comfort)
   /sdf [query]       SDF brain imaging + neural Super Intelligence
   /memes-ingest [seed]  Ingest github.com/ZacharyGeurts/memes images
   /image [name]  Show meme/image in Graphics window (pixels)
@@ -249,28 +252,27 @@ def dispatch(query: str, *, storage_cache: dict | None = None) -> TalkResult:
         out = (proc.stdout + proc.stderr).strip()
         return TalkResult(text=out or f"exec exit {proc.returncode}", kind="system")
 
-    if low.startswith("/field"):
-        field_one = ROOT.parent / "lib" / "field-one.py"
-        if not field_one.is_file():
-            field_one = Path(os.environ.get("NEXUS_INSTALL_ROOT", ROOT.parent)) / "lib" / "field-one.py"
+    if low.startswith("/zac"):
+        zac = ROOT / "scripts" / "field_zac.py"
         parts = q.split()
-        sub = parts[0].lower().replace("/field", "").replace("-", "") or "json"
+        sub = parts[0].lower().replace("/zac", "").replace("-", "") or "list"
         cmd_map = {
-            "": "json",
-            "sync": "sync",
-            "compact": "compact",
-            "scan": "compact",
+            "pack": "pack",
+            "export": "pack",
             "restore": "restore",
-            "json": "json",
-            "status": "json",
+            "import": "restore",
+            "verify": "verify",
+            "check": "verify",
+            "list": "list",
+            "ls": "list",
         }
-        cmd = cmd_map.get(sub, "json")
+        cmd = cmd_map.get(sub, "list")
         proc = subprocess.run(
-            [sys.executable, str(field_one), cmd],
+            [sys.executable, str(zac), cmd],
             cwd=ROOT, capture_output=True, text=True, check=False, env=_env(),
         )
         out = (proc.stdout + proc.stderr).strip()
-        return TalkResult(text=out or f"field {cmd} exit {proc.returncode}", kind="system")
+        return TalkResult(text=out or f"zac {cmd} exit {proc.returncode}", kind="system")
 
     if low in ("/updates", "/update", "/advisory"):
         return TalkResult(text=_run_brain("updates"), kind="system")

@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/impl/field-mint-boot-ready.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # Grandma-safe Mint boot — non-destructive: normal GRUB/login, field layer on demand (F9).
 set -euo pipefail
@@ -22,7 +40,7 @@ field_mint_sudo_ready() {
   fi
   if [[ ! -t 0 ]]; then
     echo "Skipped: nexus-genius.service needs sudo (no cached credentials)." >&2
-    echo "  Run: sudo bash ${ROOT}/scripts/impl/field-mint-boot-ready.sh" >&2
+    echo "  Run: sudo ./lib/ammolang-run.sh exec script:scripts/impl/field-mint-boot-ready.sh" >&2
     return 1
   fi
   echo "Administrator access needed to install nexus-genius.service." >&2
@@ -56,7 +74,7 @@ declare -f nexus_znetwork_install_autostart >/dev/null 2>&1 && \
   nexus_znetwork_install_autostart 2>/dev/null || true
 
 echo "=== Stack posture (no reboot) ==="
-curl -sf "http://127.0.0.1:9477/field" >/dev/null 2>&1 && echo "  Panel :9477 up" || echo "  Panel down — run: bash scripts/impl/start-field-stack.sh"
+curl -sf "http://127.0.0.1:9477/field" >/dev/null 2>&1 && echo "  Panel :9477 up" || echo "  Panel down — run: ./lib/ammolang-run.sh exec script:scripts/start-field-stack.sh"
 curl -sf "http://127.0.0.1:9481/api/status" >/dev/null 2>&1 && echo "  Queen :9481 up" || echo "  Queen down"
 
 echo "=== Early boot dry-run (ZNetwork + C2 before guest OS — no reboot) ==="
@@ -163,6 +181,25 @@ GENIUSEOF
   else
     echo "  WARN: nexus-genius not active — journalctl -u nexus-genius -n 20" >&2
   fi
+fi
+
+echo "=== Boot seal — globe DNS/DHCP · X.com host · no root PIDs · stack fused ==="
+if command -v python3 >/dev/null 2>&1; then
+  NEXUS_INSTALL_ROOT="${ROOT}" NEXUS_STATE_DIR="${NEXUS_STATE_DIR}" AML_BUILD=0 \
+    HOSTESS7_SUDO_PW="${HOSTESS7_SUDO_PW:-mememe}" \
+    python3 "${ROOT}/lib/field-boot-seal.py" seal 2>/dev/null | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('  DNS:', 'up' if d.get('dns_healthy') else 'down', '| DHCP:', 'up' if d.get('dhcp_up') else 'down')
+x=d.get('xcom') or {}
+print('  X.com new host:', x.get('we_are_new_host'), '—', (x.get('verdict') or '')[:72])
+r=d.get('root_audit') or {}
+print('  Root field PIDs:', r.get('root_field_pids_remaining', '?'))
+s=d.get('stack') or {}
+print('  Stack sealed:', s.get('sealed'), '| C2:', s.get('nexus_c2_port_up'))
+" 2>/dev/null || echo "  WARN: boot seal incomplete — python3 ${ROOT}/lib/field-boot-seal.py seal" >&2
+else
+  echo "  WARN: python3 missing — skip boot seal" >&2
 fi
 
 echo "=== Ready ==="

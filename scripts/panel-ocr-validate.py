@@ -72,10 +72,15 @@ def _ocr_image(path: Path) -> str:
 
 
 def _screenshot_panel(out: Path, url: str) -> bool:
+    queen = INSTALL / "Queen"
     for cmd in (
-        ["firefox", "--headless", "--screenshot", str(out), url],
-        ["firefox", "-headless", "-screenshot", str(out), url],
+        [str(queen / "build" / "rtx" / "bin" / "Linux" / "queen-browser"), "--headless", "--screenshot", str(out), url],
+        [str(queen / "build" / "field-gecko" / "bin" / "queen-browser"), "--headless", "--screenshot", str(out), url],
+        ["queen-browser", "--headless", "--screenshot", str(out), url],
+        ["queen-field-engine", "--headless", "--screenshot", str(out), url],
     ):
+        if not cmd[0] or ("/" in cmd[0] and not Path(cmd[0]).is_file()):
+            continue
         try:
             subprocess.run(cmd, capture_output=True, timeout=45, check=False)
             if out.is_file() and out.stat().st_size > 1000:
@@ -206,6 +211,8 @@ def main() -> int:
         print("THERMAL SKIP: queen-thermal-manager.html not in NewLatest/Queen/world")
 
     for label, html_rel, block_py, needles in (
+        ("EYE", "Queen/world/queen-final-eye-manager.html", "field-final-eye-block.py",
+         ("Final Eye", "NEXUS C2", "Vita", "Veritas")),
         ("EAR", "Queen/world/queen-final-ear-manager.html", "field-final-ear-block.py",
          ("Final Ear", "NEXUS C2", "Auditus", "Veritas")),
         ("MOUTH", "Queen/world/queen-final-mouth-manager.html", "field-final-mouth-block.py",

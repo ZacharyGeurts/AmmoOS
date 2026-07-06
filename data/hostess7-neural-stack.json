@@ -33,6 +33,7 @@
       "label": "Truth gate field (self-test before adapt)",
       "nets": [
         {"id": "ironclad_extrapolation", "engine": "ironclad-plate", "weight": 1.0, "role": "100% truth confidence on extrapolation to any intelligence neural when realized"},
+        {"id": "library_truth_gate", "engine": "h7-library-truth", "weight": 0.55, "role": "Exploring Speaking + Dewey H7c read — sentence truth filter lands on Ironclad"},
         {"id": "detective_truth", "engine": "analyze_truth", "weight": 0.45},
         {"id": "field_evidence", "engine": "nexus_field_snapshot", "weight": 0.20},
         {"id": "corpus_echo", "engine": "corpus_keyword_corroboration", "weight": 0.15},

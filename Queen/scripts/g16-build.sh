@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:Queen/scripts/g16-build.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 # Queen RTX build — g16 + Ninja only (no cmake --build).
 set -euo pipefail
@@ -8,7 +26,7 @@ export QUEEN_ROOT="${ROOT}"
 export NEXUS_INSTALL_ROOT="${NEXUS_INSTALL_ROOT:-$ROOT}"
 export GROK16_ROOT="${GROK16_ROOT:-${NEXUS_INSTALL_ROOT:-$SG/NewLatest}/Grok16}"
 export G16_PREFIX="${G16_PREFIX:-$GROK16_ROOT}"
-export GROK16_CMAKE_SOURCE="${GROK16_CMAKE_SOURCE:-$SG/AMOURANTHRTX}"
+export GROK16_CMAKE_SOURCE="${GROK16_CMAKE_SOURCE:-$SG/NewLatest/.pages-hub-AMOURANTHRTX}"
 export GROK16_CMAKE_BUILD="${GROK16_CMAKE_BUILD:-$ROOT/build/rtx}"
 export GROK16_CMAKE_TARGET="${GROK16_CMAKE_TARGET:-amouranth_engine}"
 export GROK16_FIELD_PROFILE="${GROK16_FIELD_PROFILE:-queen_rtx}"

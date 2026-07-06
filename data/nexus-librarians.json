@@ -75,6 +75,26 @@
       "dewey_ranges": [],
       "specialty": "NEXUS file catalog, incremental update manifest, install-tree roles",
       "learns": ["nexus_file_catalog", "catalog_build", "incremental_diff", "dispense_file"]
+    },
+    {
+      "id": "vera_lies",
+      "name": "Lie Librarian — Ironclad Deception Index",
+      "role": "lie_librarian",
+      "dewey_ranges": ["000-999"],
+      "specialty": "Autonomous Warfare corpus gate — every LIKELY_FALSE claim per book, page-numbered, operational",
+      "learns": [
+        "lie_catalog",
+        "lie_scan",
+        "lies_index",
+        "deception_index",
+        "truth_questionable",
+        "corrections_ledger",
+        "reinform",
+        "search_lies",
+        "issue_reader"
+      ],
+      "module": "lib/h7-lie-librarian.py",
+      "doctrine": "data/h7-lie-librarian-doctrine.json"
     }
   ]
 }

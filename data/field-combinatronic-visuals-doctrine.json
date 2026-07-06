@@ -52,9 +52,19 @@
       "repair": "restore from git — all generated assets rebuild from this module"
     }
   },
+  "storage": {
+    "target_format": "h7s/1",
+    "module": "lib/field-h7-visual-adopt.py",
+    "in_place_disguise": true,
+    "extension_preserved": ".png",
+    "never_double_wrap": true,
+    "classify_magic": ["H7S\\x01", "H7\\x07\\x01"],
+    "statement": "Hot-read visuals adopt to H7s in-place — same .png URL; skip files already disguised H7/H7s."
+  },
   "patterns": {
     "chip_png": {
       "kind": "generated_png",
+      "storage_lane": "h7s/1",
       "path": "data/combinatronic-visuals/chips/{chip_id}.png",
       "url": "/world/assets/combinatronic/chips/{chip_id}.png",
       "id_key": "chip_id",
@@ -178,6 +188,8 @@
     "commands": {
       "inventory": "field-combinatronic-visuals.py inventory",
       "verify": "field-combinatronic-visuals.py verify",
+      "h7_audit": "field-combinatronic-visuals.py h7-audit",
+      "h7_adopt": "field-combinatronic-visuals.py h7-adopt --apply",
       "repair_all": "field-combinatronic-visuals.py repair",
       "repair_one_chip": "field-combinatronic-visuals.py chip <chip_id>",
       "ironclad_chip": "field-combinatronic-visuals.py ironclad-chip <chip_id>",

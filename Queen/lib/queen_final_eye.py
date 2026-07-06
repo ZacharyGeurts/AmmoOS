@@ -79,65 +79,6 @@ def final_eye_version() -> dict[str, Any]:
     return product_info()
 
 
-def _hostess7_vision(body: dict[str, Any], *, timeout: int = 120) -> dict[str, Any]:
-    """Final_Eye vision — look, watch, observe, smoke via Hostess 7 handshake only."""
-    action = str(body.get("action") or "look").strip().lower()
-    sub_map = {
-        "look": "look",
-        "poll": "look",
-        "vision-poll": "look",
-        "watch": "look",
-        "vision": "look",
-        "observe": "observe",
-        "robotics": "observe",
-        "smoke": "smoke",
-        "browser-smoke": "smoke",
-        "browser_smoke": "smoke",
-        "queen-smoke": "smoke",
-        "final-eye-smoke": "smoke",
-        "forge-watch": "look",
-        "forge_watch": "look",
-        "hangup-watch": "look",
-    }
-    sub = sub_map.get(action, action)
-    h7_body: dict[str, Any] = {"action": "final_eye", "subaction": sub}
-    for key in ("prefer", "label", "mode"):
-        if body.get(key) is not None:
-            h7_body[key] = body[key]
-    return _hostess7_ocr(h7_body, timeout=timeout)
-
-
-def _hostess7_ocr(body: dict[str, Any], *, timeout: int = 120) -> dict[str, Any]:
-    """Final_Eye OCR — Hostess 7 sealed handshake lane only."""
-    h7 = QUEEN.parent / "lib" / "hostess7-ocr-control.py"
-    if not h7.is_file():
-        return {
-            "ok": False,
-            "error": "hostess7_handshake_required",
-            "hint": "Dispatch via lib/hostess7-ocr-control.py",
-            "api": "/api/hostess7/ocr/dispatch",
-            "product": "Final_Eye",
-        }
-    proc = subprocess.run(
-        [sys.executable, str(h7), "dispatch"],
-        input=json.dumps(body, ensure_ascii=False),
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        env={**final_eye_env(queen=QUEEN), "HOSTESS7_OCR_CONTROL": "1"},
-        cwd=str(QUEEN.parent),
-    )
-    try:
-        doc = json.loads(proc.stdout or "{}")
-    except json.JSONDecodeError:
-        doc = {"ok": False, "tail": (proc.stdout or "")[-2000:]}
-    doc["returncode"] = proc.returncode
-    doc["product"] = "Final_Eye"
-    doc["commander"] = "hostess7"
-    doc["handshake_only"] = True
-    return doc
-
-
 def _run(script: Path, *args: str, timeout: int = 120) -> dict[str, Any]:
     root = final_eye_root()
     if not script.is_file():
@@ -173,16 +114,20 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         return _run(eye_py, "status")
     if action in ("live", "live-status", "live_status"):
         return _run(eye_py, "live")
-    if action in (
-        "look", "poll", "vision-poll", "watch", "forge-watch", "forge_watch", "hangup-watch",
-        "observe", "robotics",
-        "smoke", "browser-smoke", "browser_smoke", "queen-smoke", "final-eye-smoke",
-    ):
-        return _hostess7_vision(body)
+    if action in ("look", "poll", "vision-poll", "watch"):
+        if forge_watch.is_file():
+            return _run(forge_watch, "once", "queen_final_eye_watch")
+        return _run(eye_watch, "look")
+    if action in ("forge-watch", "forge_watch", "hangup-watch"):
+        return _run(forge_watch if forge_watch.is_file() else eye_watch, "once", "queen_forge_watch")
+    if action in ("observe", "robotics"):
+        return _run(eye_watch, "observe")
     if action == "capabilities":
         return _run(eye_watch, "capabilities")
+    if action in ("smoke", "browser-smoke", "browser_smoke", "queen-smoke", "final-eye-smoke"):
+        return _run(smoke)
     if action == "ocr" and body.get("image"):
-        return _hostess7_ocr({"action": "ocr_image", "path": str(body["image"])})
+        return _run(eye_py, "ocr", str(body["image"]))
     if action in ("eyeball", "eyeball-status", "final-eye"):
         return _run(eyeball, "json")
     if action in ("eyeball-arm", "arm-dishes"):
@@ -230,16 +175,16 @@ def main() -> int:
     eye_watch = root / "zocr_watch.py"
     smoke = root / "queen_browser_smoke.py"
     if cmd in ("smoke", "browser-smoke", "final-eye-smoke"):
-        print(json.dumps(_hostess7_vision({"action": "smoke"}), ensure_ascii=False))
+        print(json.dumps(_run(smoke), ensure_ascii=False))
         return 0
     if cmd in ("live", "live-status"):
         print(json.dumps(_run(eye_py, "live"), ensure_ascii=False))
         return 0
     if cmd in ("look", "poll", "watch", "vision"):
-        print(json.dumps(_hostess7_vision({"action": "look"}), ensure_ascii=False))
+        print(json.dumps(_run(eye_watch, "look"), ensure_ascii=False))
         return 0
     if cmd in ("observe", "robotics"):
-        print(json.dumps(_hostess7_vision({"action": "observe"}), ensure_ascii=False))
+        print(json.dumps(_run(eye_watch, "observe"), ensure_ascii=False))
         return 0
     print(json.dumps(_run(eye_py, "status"), ensure_ascii=False))
     return 0

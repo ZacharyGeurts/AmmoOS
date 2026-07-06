@@ -5,6 +5,11 @@
   "status": "lethal",
   "merciless": true,
   "shoot_to_kill": true,
+  "kill_law": {
+    "rule": "immediate_is_best",
+    "doctrine": "data/kill-immediate-law.json",
+    "motto": "When KILL is to occur, immediate is best — no queue after gates pass."
+  },
   "no_friendly_fire": true,
   "heaven_hell_gate": true,
   "hostess7_corroborate": true,

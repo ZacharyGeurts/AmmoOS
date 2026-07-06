@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/impl/boot-simulate.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 # Boot simulation — preempt conditions before KILROY reboot.
 set -euo pipefail
@@ -169,7 +187,9 @@ panel_code="$(curl -sf -o /dev/null -w '%{http_code}' --connect-timeout 2 http:/
 queen_code="$(curl -sf -o /dev/null -w '%{http_code}' --connect-timeout 2 http://127.0.0.1:9481/api/status 2>/dev/null || echo 000)"
 if [[ "$panel_code" == "200" ]]; then pass "panel :9477"; else
   fail "panel :9477 down ($panel_code)"
-  AML_IMPL=1 bash "$NL/scripts/impl/ammoos-direct-start.sh" >/dev/null 2>&1 && fix "started panel+queen via ammoos-direct-start" || true
+  # shellcheck source=/dev/null
+  source "$NL/lib/nexus-aml-exec.sh"
+  nexus_aml_exec script:scripts/impl/ammoos-direct-start.sh >/dev/null 2>&1 && fix "started panel+queen via ammoos-direct-start" || true
 fi
 if [[ "$queen_code" == "200" ]]; then pass "queen :9481"; else fail "queen :9481 down ($queen_code)"; fi
 

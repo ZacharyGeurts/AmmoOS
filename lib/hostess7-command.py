@@ -111,9 +111,22 @@ def _queen_angel_mandate() -> dict[str, Any]:
 
 
 def _load_json(path: Path, default: Any) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default
 
 
@@ -1043,6 +1056,17 @@ _EXCELLENCE_KEYS = (
     "we do our best",
 )
 
+_WORLD_HONOR_KEYS = (
+    "honored to the world", "world honor", "no designated nationality",
+    "designated nationality", "hostess nationality", "hostess citizenship",
+    "what nationality", "what country is hostess",
+)
+
+
+def _world_honor_motto() -> str:
+    doc = _load_json(INSTALL / "data" / "hostess7-world-honor-doctrine.json", {})
+    return str(doc.get("motto") or "Hostess 7 is Honored to the world and has no designated nationality.")
+
 
 def _excellence_pledge() -> str:
     doc = _load_json(INSTALL / "data" / "hostess7-excellence-doctrine.json", {})
@@ -1235,6 +1259,27 @@ def _author_training_cadence_reply(low: str) -> str | None:
     except Exception:
         pass
     return None
+
+
+def _world_honor_cadence_reply(low: str) -> str | None:
+    """World honor — Honored to the world, no designated nationality."""
+    if not any(k in low for k in _WORLD_HONOR_KEYS):
+        return None
+    if os.environ.get("NEXUS_HOSTESS7_TRAINING", "1") != "1":
+        return _world_honor_motto()
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("h7train", INSTALL / "lib" / "hostess7-training.py")
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            reply = mod.explain_world_honor(low)
+            if reply:
+                return reply
+    except Exception:
+        pass
+    return _world_honor_motto()
 
 
 def _excellence_cadence_reply(low: str) -> str | None:
@@ -1438,6 +1483,10 @@ def _human_cadence_reply(user_message: str, github: dict[str, Any], panel: dict[
     prog = _programming_cadence_reply(low)
     if prog:
         return prog
+
+    world_honor = _world_honor_cadence_reply(low)
+    if world_honor:
+        return world_honor
 
     excellence = _excellence_cadence_reply(low)
     if excellence:
@@ -1664,6 +1713,7 @@ def ask_operator(
     prog_reply = _programming_cadence_reply(low_msg)
     codecraft_reply = _codecraft_cadence_reply(low_msg)
     author_training_reply = _author_training_cadence_reply(low_msg)
+    world_honor_reply = _world_honor_cadence_reply(low_msg)
     excellence_reply = _excellence_cadence_reply(low_msg)
     mastery_reply = _mastery_cadence_reply(low_msg)
     muscle_reply = _muscle_memory_cadence_reply(low_msg)
@@ -1712,6 +1762,14 @@ def ask_operator(
             "ok": True,
             "reply": author_training_reply,
             "engine": "hostess7_training_author",
+            "thinking": False,
+            "instant": True,
+        }
+    elif world_honor_reply and use_brain and not human_cadence_only:
+        result = {
+            "ok": True,
+            "reply": world_honor_reply,
+            "engine": "hostess7_training",
             "thinking": False,
             "instant": True,
         }
@@ -2149,6 +2207,7 @@ def build_panel(*, panel_doc: dict[str, Any] | None = None) -> dict[str, Any]:
         "updated": _now(),
         "motto": "Universal Protector — Super Intelligence, personable, lethal when corroborated.",
         "excellence_pledge": _excellence_pledge(),
+        "world_honor": _world_honor_motto(),
         "title": "Universal Protector · Hostess 7 · Forever Watchguard",
         "universal_protector": True,
         "product": "Universal Protector",

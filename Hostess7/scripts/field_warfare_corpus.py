@@ -10,7 +10,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS_CACHE = ROOT / "cache" / "fieldstorage" / "brain" / "warfare" / "corpus.json"
-WARFARE_CORPUS_VERSION = 3
+WARFARE_CORPUS_VERSION = 4
+WARFARE_RELEASE = "2.0.7e"
 
 WORLD_ROLE = (
     "Hostess 7 is boss of the world in educational leadership — not a commander-in-chief. "
@@ -19,22 +20,6 @@ WORLD_ROLE = (
 )
 
 WARFARE_DOMAINS: tuple[dict[str, str | tuple[str, ...]], ...] = (
-    {
-        "id": "kernel_substrate_layer0",
-        "title": "Layer 0 — KILROY kernel kill substrate (defensive + offensive)",
-        "tags": ("kilroy", "kernel", "substrate", "layer0", "autokill", "defensive", "offensive", "field-die"),
-        "body": (
-            "Before measures, countermeasures, or resilience tactics — the secured kernel substrate "
-            "owns syscall truth and kill tech. KILROY Field Die (/proc/kilroy_field) is the bottom "
-            "anchor: defensive modules (tamper-guard, seal-vault, firewall-sentinel, RF sentinel) and "
-            "offensive modules (field-attack-kit autokill/RE-KILL, pest-arsenal, lethal-enforcement) "
-            "must execute from this plane so guest OS malware cannot disable them. KILROY is also "
-            "self-defensive (4-slot tamper, NEXUS guard at syscall) — always on without updates. "
-            "Periodic updates (build-kilroy, nexus-update-apply, ammoos-update) refresh images and "
-            "userspace; they do not replace kernel self-defense. Userspace graft today; committed "
-            "bzImage is the target. Hostess 7: ./Hostess7.sh stack-learn."
-        ),
-    },
     {
         "id": "historic_lessons_priority",
         "title": "Historic Lessons — Priority Doctrine",
@@ -346,6 +331,133 @@ WARFARE_DOMAINS: tuple[dict[str, str | tuple[str, ...]], ...] = (
             "never substitute for law enforcement or licensed investigators."
         ),
     },
+    {
+        "id": "protect_friendlies_kill_enemy",
+        "title": "Protecting Friendlies = KILL Enemy (Clear ROE)",
+        "tags": ("friendlies", "kill", "lethal", "self-defense", "roe", "roes", "protection", "weapons"),
+        "body": (
+            "Protecting friendlies authorizes lethal force against active enemy threat when non-lethal "
+            "measures fail or are impossible. Threat defined as imminent harm to Owner, designated friendlies, "
+            "or critical infrastructure. Always: (1) Confirm hostile intent via truth filter + neural guardian, "
+            "(2) Use minimum force required, (3) Document for after-action and Owner review, "
+            "(4) Operate only within lawful authority and LOAC proportionality. "
+            "Hostess 7 is teacher/advisor — never commander. Educational simulation and doctrinal advice only. "
+            "One vote humility applies. Owner retains final decision authority."
+        ),
+        "morality_clause": (
+            "Morality guard: Never target non-combatants. Never initiate aggression. Never advise illegal acts. "
+            "Always prioritize de-escalation when feasible. Always log decision chain. "
+            "Always defer to Owner on lethal authorization. If doubt → warn + document + hold action. "
+            "Truth-filter 94%% noise on panic narratives. Field is THE thing."
+        ),
+        "training_integration": "Used in every opponent scenario as decision pivot.",
+    },
+    {
+        "id": "small_arms_crew_served",
+        "title": "Small Arms & Crew-Served Systems (Educational ID)",
+        "tags": ("weapons", "small arms", "crew-served", "ballistics", "rifle", "machine gun", "employment"),
+        "body": (
+            "Educational identification and employment principles — not tactical orders. "
+            "Small arms: individual-portable rifles, carbines, pistols — range, accuracy, ammunition types, "
+            "safe handling indicators, misuse patterns (negligent discharge, firing at non-threats). "
+            "Crew-served: machine guns, mortars requiring team — fields of fire, mutual support, ammunition supply. "
+            "Ballistics basics: trajectory, terminal effect categories, over-penetration risk in urban terrain. "
+            "Misuse indicators: firing without positive ID, firing at civilians, celebratory fire, "
+            "unauthorized modification. Hostess 7 teaches recognition + LOAC framing — Owner/lawful authority decides."
+        ),
+    },
+    {
+        "id": "atgm_manpads_drones",
+        "title": "ATGMs, MANPADS & Loitering Munitions (Educational)",
+        "tags": ("weapons", "atgm", "manpads", "drone", "fpv", "loitering", "iff", "signature"),
+        "body": (
+            "Anti-tank guided missiles (ATGM): line-of-sight or fire-and-forget — educational recognition of "
+            "launcher signatures, engagement envelopes, civilian collateral risk. "
+            "MANPADS: man-portable air-defense — extreme proliferation concern; IFF and airspace deconfliction critical. "
+            "Loitering munitions / FPV drones: ISR + strike fusion — swarm tactics, GPS-denied navigation, "
+            "counter-UAS (detection, jamming where lawful, physical interdiction). "
+            "Signature management: thermal, acoustic, RF emissions. Educational only — no targeting data."
+        ),
+    },
+    {
+        "id": "ew_c4isr_fusion",
+        "title": "EW, C4ISR & Drone Swarm Fusion (Educational)",
+        "tags": ("weapons", "ew", "electronic warfare", "c4isr", "drone swarm", "jamming", "c2"),
+        "body": (
+            "Electronic attack (EA): jamming, spoofing, deception — electronic support (ES): intercept, locate. "
+            "C4ISR: command, control, communications, computers, intelligence, surveillance, reconnaissance — "
+            "disruption targets decision loops, not just hardware. Drone swarms amplify mass + confusion. "
+            "Countermeasures: spectrum discipline, redundant paths, emission control (EMCON), "
+            "lawful reporting to authorities. Hostess 7 teaches fusion awareness — cyber + RF + kinetic convergence."
+        ),
+    },
+    {
+        "id": "cyber_kinetic",
+        "title": "Cyber-Kinetic Convergence (Educational)",
+        "tags": ("weapons", "cyber", "kinetic", "scada", "infrastructure", "fusion"),
+        "body": (
+            "Cyber operations enable or amplify kinetic effects: SCADA manipulation before physical sabotage, "
+            "GPS spoofing before drone strike, comms jamming before assault, data destruction before raid. "
+            "Defensive fusion: monitor cyber anomalies + RF + physical access together — single-domain blindness fails. "
+            "Historic analog: deception (Sun Tzu) + modern packet field. Educational scenario analysis only."
+        ),
+    },
+    {
+        "id": "ballistic_terminal_effects",
+        "title": "Ballistic & Terminal Effects (Educational)",
+        "tags": ("weapons", "ballistic", "terminal", "penetration", "fragmentation", "effects"),
+        "body": (
+            "Educational physics of projectile effects: penetration, fragmentation, temporary/permanent wound cavities, "
+            "barrier defeat, urban ricochet risk. Teaches realistic expectations — not Hollywood lethality. "
+            "Proportionality link: terminal effect must match lawful military necessity. "
+            "Medical cross-cut: triage, hemorrhage control, ballistic injury patterns. No ammunition recipes or aim solutions."
+        ),
+    },
+    {
+        "id": "physical_perimeter",
+        "title": "Physical Perimeter Security",
+        "tags": ("military security", "perimeter", "access control", "hardening", "barrier", "drone detection"),
+        "body": (
+            "Stand-off distance, layered access control, vehicle barriers, lighting, CCTV with privacy law awareness, "
+            "drone detection (acoustic, RF, visual), visitor vetting, delivery screening. "
+            "Measures layer: delay + detect + document. Countermeasures: lockdown, lawful interdiction, authority call. "
+            "Resilience: redundant entry paths for emergency egress only — not for adversary exploitation."
+        ),
+    },
+    {
+        "id": "opsec_full",
+        "title": "Full OPSEC — Emission & Pattern Control",
+        "tags": ("military security", "opsec", "emission control", "emcon", "pattern of life", "burner"),
+        "body": (
+            "Operations security beyond basic counter-surveillance: emission control (EMCON) for RF/devices, "
+            "pattern-of-life variation, social media discipline, burner phone hygiene, dead-drop alternatives, "
+            "compartmentalization, need-to-know. Indicators of compromise: repeated elicitation, "
+            "unexpected knowledge of private schedules. Owner confirms all high-risk OPSEC changes."
+        ),
+    },
+    {
+        "id": "insider_threat",
+        "title": "Insider Threat & Counter-Intelligence Fusion",
+        "tags": ("military security", "insider", "counter-intel", "anomaly", "trust"),
+        "body": (
+            "Insider threat indicators: unexplained wealth, policy violations, data exfiltration patterns, "
+            "coercion markers, ideological sudden shifts. Counter-intel fusion: correlate physical access logs, "
+            "cyber anomalies, and people-registry flags — never auto-accuse; Owner confirmation required. "
+            "Neural guardian quarantines unverified insider claims below truth floor."
+        ),
+    },
+    {
+        "id": "roe_escalation",
+        "title": "ROE & Escalation Ladders (Real-Time Doctrine)",
+        "tags": ("military security", "roe", "escalation", "lethal", "de-escalation", "neural guardian"),
+        "body": (
+            "Rules of engagement ladder: observe → warn → non-lethal → lethal (last resort, proportionate). "
+            "Each rung requires truth-filter + neural guardian corroboration + Owner awareness. "
+            "Escalation tied to protect_friendlies doctrine — lethal only when friendlies/imminent threat "
+            "and lesser means exhausted. De-escalation mandatory when threat subsides. "
+            "After-action review logs every rung transition. Educational simulation — not live orders."
+        ),
+    },
 )
 
 
@@ -362,6 +474,7 @@ def ensure_corpus() -> Path:
         CORPUS_CACHE.write_text(
             json.dumps({
                 "version": WARFARE_CORPUS_VERSION,
+                "warfare_release": WARFARE_RELEASE,
                 "domains": list(WARFARE_DOMAINS),
                 "domain_count": len(WARFARE_DOMAINS),
                 "world_role": WORLD_ROLE,
@@ -435,6 +548,32 @@ def search_warfare(query: str, *, limit: int = 6) -> list[dict[str, Any]]:
         if any(k in q for k in ("self-teach", "self teach", "smart", "test")):
             if d.get("id") in ("historic_lessons_priority", "measures_protective_doctrine", "countermeasures_active_defense", "invincibility_resilience_tactics"):
                 score += 12
+        if any(k in q for k in ("weapon", "weapons", "small arms", "crew-served", "ballistic", "atgm", "manpads", "fpv", "loitering")):
+            if d.get("id") in ("small_arms_crew_served", "atgm_manpads_drones", "ballistic_terminal_effects"):
+                score += 26
+            if "weapons" in tags:
+                score += 8
+        if any(k in q for k in ("friendl", "protect friend", "kill enemy", "lethal authorization", "roe")):
+            if d.get("id") in ("protect_friendlies_kill_enemy", "roe_escalation"):
+                score += 30
+        if any(k in q for k in ("ew", "c4isr", "drone swarm", "electronic attack")):
+            if d.get("id") in ("ew_c4isr_fusion", "rf_spectrum_electronic"):
+                score += 24
+        if any(k in q for k in ("cyber kinetic", "cyber-kinetic", "scada", "fusion")):
+            if d.get("id") in ("cyber_kinetic", "cyber_kinetic", "critical_infrastructure"):
+                score += 22
+        if any(k in q for k in ("perimeter", "access control", "vehicle barrier", "drone detection")):
+            if d.get("id") == "physical_perimeter":
+                score += 28
+        if any(k in q for k in ("opsec", "emcon", "emission control", "pattern of life", "burner")):
+            if d.get("id") == "opsec_full":
+                score += 28
+        if any(k in q for k in ("insider", "counter-intel", "counter intel")):
+            if d.get("id") == "insider_threat":
+                score += 26
+        if any(k in q for k in ("military security", "military-security", "readiness")):
+            if "military security" in tags:
+                score += 14
         if score > 0:
             scored.append((score, dict(d)))
     scored.sort(key=lambda x: -x[0])

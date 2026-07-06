@@ -114,8 +114,28 @@ def eradicate_threat(
 
 
 def is_permanently_blocked(client_key: str) -> bool:
+    env = os.environ.get("NEXUS_FIELD_DHCP_SOFT_INGRESS", os.environ.get("NEXUS_FIELD_COLLISION_SOFT_INGRESS", ""))
+    if env.strip().lower() in ("1", "true", "yes", "on"):
+        return False
     blocks = _permanent_blocks().get("blocks") or []
     return any(b.get("client") == client_key and not b.get("undone") for b in blocks)
+
+
+def clear_soft_blocks() -> dict[str, Any]:
+    """Rescue ingress — lift permanent blocks so DHCP/DNS flows (soft ingress path)."""
+    blocks = _permanent_blocks()
+    cleared = 0
+    for b in blocks.get("blocks") or []:
+        if not b.get("undone"):
+            b["undone"] = True
+            b["cleared_at"] = _now()
+            b["cleared_by"] = "rescue-ingress"
+            cleared += 1
+    blocks["updated"] = _now()
+    blocks["soft_cleared"] = cleared
+    _save_json(PERM_BLOCK, blocks)
+    _rate.clear()
+    return {"ok": True, "cleared": cleared}
 
 
 def _invoke_autosanitize(vector: str, target: str, detail: str) -> None:
@@ -163,6 +183,8 @@ def build_panel() -> dict[str, Any]:
         "policy": {
             "listen_before_reject": True,
             "dhcp_dns_only": True,
+            "only_our_dns_dhcp": True,
+            "foreign_server_is_threat": True,
             "no_lateral_movement": True,
             "max_qps_per_client": MAX_QPS_PER_CLIENT,
             "max_packet_bytes": MAX_PACKET_BYTES,

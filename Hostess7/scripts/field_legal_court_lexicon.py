@@ -483,10 +483,14 @@ COURT_LEXICON: tuple[dict[str, str | tuple[str, ...]], ...] = (
         "id": "fifth_amendment",
         "category": "constitutional",
         "term": "Fifth Amendment to the United States Constitution",
-        "tags": ("fifth amendment", "self incrimination", "due process", "double jeopardy"),
+        "tags": ("fifth amendment", "self incrimination", "due process", "double jeopardy", "grand jury", "miranda", "takings"),
         "body": (
-            "The Fifth Amendment to the United States Constitution includes protection against compelled self-incrimination, "
-            "double jeopardy, and deprivation of life, liberty, or property without due process of law."
+            "The Fifth Amendment to the United States Constitution provides: (1) Grand Jury indictment required for capital or "
+            "otherwise infamous crimes, except military service cases; (2) prohibition on double jeopardy — no person twice put in "
+            "jeopardy of life or limb for the same offence; (3) privilege against compelled self-incrimination in any criminal case; "
+            "(4) due process of law before deprivation of life, liberty, or property; (5) just compensation when private property "
+            "is taken for public use. Miranda v. Arizona, 384 U.S. 436 (1966) requires custodial warnings derived from the "
+            "self-incrimination privilege and Sixth Amendment counsel right."
         ),
     },
     {

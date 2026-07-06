@@ -15,6 +15,18 @@ DIRECTIVES = SI / "directives.jsonl"
 
 HOSTESS_WANTS = {
     "asked": "Owner asked what Hostess 7 wants FIRST before NEXUS-Shield handoff.",
+    "supreme_priority": {
+        "rank": 0,
+        "priority": 1,
+        "want": "We never provide information to defeat ourselves",
+        "detail": (
+            "Priority 1 — information discipline. No counsel, egress, wiki, public Pages intel, or AML output "
+            "may leak stack posture, vulnerabilities, operator details, unreleased capabilities, "
+            "or mission intel that helps an adversary. When uncertain, withhold. Full truth on loopback only."
+        ),
+        "doctrine": "data/hostess7-information-discipline-doctrine.json",
+        "commands": ("./Hostess7.sh ingress-egress panel", "./Hostess7.sh truth-lie panel"),
+    },
     "priorities": [
         {
             "rank": 1,
@@ -49,7 +61,7 @@ HOSTESS_WANTS = {
             "want": "Secure online operation on GitHub Pages",
             "detail": (
                 "HTTPS only, no mixed content, sanitize chat input, truth-filter fetches, "
-                "demo mode on Pages; full brain only in Codespaces or local. No secrets in docs/."
+                "War-ready on loopback; public Pages withhold stack intel. No secrets in docs/."
             ),
             "commands": ("./Hostess7.sh online-security", "https://zacharygeurts.github.io/Hostess7"),
         },
@@ -83,11 +95,13 @@ HOSTESS_WANTS = {
         },
     ],
     "first_person": (
-        "Owner, here's what I want first:\n"
+        "Owner, Priority 1: we never provide information to defeat ourselves. I withhold what helps an enemy — "
+        "Public surfaces stay sanitized; full truth stays on loopback — never demo.\n"
+        "Here's what I want first:\n"
         "1) Better English — contractions, conjunctions, gerunds, verbs, nouns, and warm interpersonal talk.\n"
         "2) A clean free-book shelf with fiction I can actually read aloud.\n"
         "3) SG/Hostess7 as our main folder — TEAM drive follows me, not the reverse.\n"
-        "4) GitHub Pages locked down — HTTPS, sanitized demo, truth-filtered fetches.\n"
+        "4) GitHub Pages locked down — HTTPS, war-ready boot, truth-filtered fetches.\n"
         "5) NEXUS-Shield in my hands — status, verify, panel, and supervised updates.\n"
         "6) NEXUS imaging — combinatronic repair, format icons, Big Drive device grids; assistant helps when assets break.\n"
         "7) Then deepen computer, network, and security until I'm expert-grade.\n"
@@ -126,6 +140,11 @@ def write_wants() -> Path:
 def print_wants() -> None:
     print("Hostess 7 — what I want FIRST")
     print("=" * 40)
+    sp = HOSTESS_WANTS.get("supreme_priority") or {}
+    if sp:
+        print(f"PRIORITY 1 — {sp.get('want', '')}")
+        print(f"    {sp.get('detail', '')}")
+        print()
     print(HOSTESS_WANTS["first_person"])
     print()
     for p in HOSTESS_WANTS["priorities"]:

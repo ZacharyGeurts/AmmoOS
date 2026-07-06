@@ -18,6 +18,7 @@ suite security ·
     assert shell:nexus_is_whitelisted_device_path "/dev/input/event0"
   group self-defense sign/verify
     assert script:self_defense_sign_verify
+    assert script:biology_mutable_seal_exempt
   group ultra-stealth intervals
     assert script:ultra_stealth_intervals
   group predictive record

@@ -104,10 +104,8 @@
     }
   ],
   "drop_sg_stubs": [
-    {"path": "KILROY", "reason": "SG/docs-only stub — real tree is NewLatest/KILROY"},
-    {"path": "data", "reason": "SG/threat-ledger stub — canonical data/ in NewLatest"},
-    {"path": "compat", "reason": "SG empty compat placeholder"},
-    {"path": "OBS-FieldVoiceFilter", "reason": "SG data stub — real tree is NewLatest/OBS-FieldVoiceFilter"}
+    {"path": "../AmmoCode", "reason": "data-only stub — real tree is NewLatest/AmmoCode"},
+    {"path": "../Grok16", "reason": "data-only stub — real tree is NewLatest/Grok16"}
   ],
   "drop_publish_clones": {
     "glob": [".pages-*", ".profile-*"],

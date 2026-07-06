@@ -199,7 +199,11 @@ def _installer_assets(version: str, tag_name: str, release: dict[str, Any] | Non
     tag = tag_name if tag_name.startswith("v") else f"v{ver}"
     doctrine = load_doctrine()
     primary = doctrine.get("primary_repo") or {}
-    source_name = str(primary.get("release_tarball") or "ammoos-{version}-source.tar.gz").format(version=ver)
+    source_name = str(
+        primary.get("release_archive")
+        or primary.get("release_tarball")
+        or "ammoos-{version}-source.h7e"
+    ).format(version=ver)
     inst_name = str(primary.get("installers_tarball") or "ammoos-{version}-installers.tar.gz").format(version=ver)
     base = f"https://github.com/{repo}/releases/download/{tag}"
     source_url = f"{base}/{source_name}"

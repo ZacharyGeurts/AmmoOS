@@ -49,6 +49,7 @@
     {"id": "growth_pulse", "nexus": "hostess7-growth.py", "nexus_args": ["pulse"], "interval_cycles": 5},
     {"id": "neural_suite", "nexus": "hostess7-neural.py", "nexus_args": ["suite"], "interval_cycles": 7},
     {"id": "training_assess", "nexus": "hostess7-training.py", "nexus_args": ["assess"], "interval_cycles": 11},
-    {"id": "updates_advisory", "script": "field_hostess_updates.py", "args": [], "interval_cycles": 4}
+    {"id": "updates_advisory", "script": "field_hostess_updates.py", "args": [], "interval_cycles": 4},
+    {"id": "h7s_lane_tick", "nexus": "field-h7s-lane.py", "nexus_args": ["hostess7"], "interval_cycles": 13}
   ]
 }

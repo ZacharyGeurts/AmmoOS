@@ -6,6 +6,13 @@
   "builder": "lib/hostess7-anatomy-book.py",
   "dense_source": "data/hostess7-human-anatomy-dense.json",
   "disclaimer": "Educational anatomy only — not medical advice, diagnosis, or treatment.",
+  "combat_anatomy_exploring": {
+    "doctrine": "data/exploring-combat-anatomy-doctrine.json",
+    "module": "lib/field-exploring-combat-anatomy.py",
+    "shelf": "library/dewey/611-human-anatomy",
+    "motto": "Exploring the Hand and every combat-relevant area — mechanical + biological depth for personhood.",
+    "paired_combat": ["exploring_hand_to_hand_combat", "exploring_weaponized_combat"]
+  },
   "books": [
     {"id": "terminology", "title": "Anatomical terminology", "region": "foundation", "section": "terminology"},
     {"id": "histology", "title": "Histology — four primary tissues", "region": "foundation", "section": "histology"},

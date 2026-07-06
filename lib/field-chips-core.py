@@ -37,6 +37,12 @@ def _now() -> str:
 
 
 def _load(path: Path, default: Any = None) -> Any:
+    if os.environ.get("NEXUS_H7S_LANE", "1") == "1":
+        lane = _import_py(INSTALL / "lib" / "field-h7s-lane.py", "field_h7s_lane_chips")
+        if lane and hasattr(lane, "load_json"):
+            doc = lane.load_json(path, default=None)
+            if doc is not None:
+                return doc
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -276,7 +282,7 @@ def condense_into_core(
             "families": len(families),
             "indexed_chips": indexed,
             "compression_ratio": round(len(chips) / max(1, len(core_modules)), 2),
-            "resolution_lossless": indexed >= len(chips),
+            "resolution_lossless": indexed >= len(chips) or bool(chip_doc.get("h7s_reconstructed")),
             "by_kind": chip_counts.get("by_kind") or {},
             "by_family": families,
         },
@@ -335,6 +341,11 @@ def publish_panel(*, refresh: bool = False, write_core: bool = True) -> dict[str
     _save(PANEL, panel)
     if write_core:
         _save(CORE, core)
+        if os.environ.get("NEXUS_H7S_LANE", "1") == "1":
+            lane = _import_py(INSTALL / "lib" / "field-h7s-lane.py", "field_h7s_lane_publish")
+            if lane and hasattr(lane, "after_json_publish"):
+                lane.after_json_publish(CORE)
+                lane.after_json_publish(IRONCLAD_CHIPS)
     return {"ok": core.get("ok", True), "panel": panel, "core": core}
 
 

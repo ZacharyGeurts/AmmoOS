@@ -207,17 +207,11 @@ def _write_snippet(fname: str, body: list[str]) -> str:
         "#!/bin/bash",
         "set -euo pipefail",
         "set +o pipefail",
-        f'ROOT="{ROOT}"',
-        'export NEXUS_INSTALL_ROOT="$ROOT"',
-        f'export NEXUS_STATE_DIR="${{NEXUS_STATE_DIR:-{state_default}}}"',
-        f'export SG_ROOT="${{SG_ROOT:-{sg_default}}}"',
-        'mkdir -p "$NEXUS_STATE_DIR"',
+        'SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
+        "# shellcheck source=_harness.sh",
+        'source "${SCRIPT_DIR}/_harness.sh"',
+        "",
     ]
-    for lib in _NEXUS_LIBS:
-        lines.append(f'source "$ROOT/lib/{lib}" 2>/dev/null || true')
-    lines.append('nexus_ensure_dirs 2>/dev/null || true')
-    lines.append(f'panel="$ROOT/panel/threat-panel.html"')
-    lines.append("")
     for raw in body:
         if raw.strip().startswith("#"):
             continue

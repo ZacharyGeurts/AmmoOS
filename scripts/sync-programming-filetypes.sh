@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/sync-programming-filetypes.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 # Sync canonical programming filetypes DB → Grok16, AmmoCode, .nexus-state.
 set -euo pipefail
@@ -5,6 +23,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SG="$(cd "${ROOT}/.." && pwd)"
 CANON="${ROOT}/data/field-programming-filetypes.json"
+MEDIA="${ROOT}/data/field-media-filetypes.json"
 
 [[ -f "$CANON" ]] || { echo "missing $CANON" >&2; exit 1; }
 
@@ -19,6 +38,19 @@ for t in "${targets[@]}"; do
   cp "$CANON" "$t"
   echo "sync → $t"
 done
+
+if [[ -f "$MEDIA" ]]; then
+  media_targets=(
+    "${ROOT}/Grok16/data/field-media-filetypes.json"
+    "${ROOT}/AmmoCode/data/field-media-filetypes.json"
+    "${ROOT}/.nexus-state/field-media-filetypes.json"
+  )
+  for t in "${media_targets[@]}"; do
+    mkdir -p "$(dirname "$t")"
+    cp "$MEDIA" "$t"
+    echo "sync media → $t"
+  done
+fi
 
 # Refresh g16-universal-extensions from canonical extensions block
 python3 - <<PY

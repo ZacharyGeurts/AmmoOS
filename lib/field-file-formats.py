@@ -26,11 +26,26 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -154,6 +169,18 @@ def _library_formats() -> list[dict[str, Any]]:
         _norm_row(fid="h7b_fly", label="H7B Fly Book", family="library", extensions=[".h7"], magic="H7B\\x02",
                   mime="application/vnd.hostess7.h7b+fly", compression="fld1+zlib-1", lossless=True, ironclad=True,
                   description="H7B with fly codec layer.", source="field_h7_book"),
+        _norm_row(fid="h7b_brain", label="H7B Brain Storage", family="brain", extensions=[".h7b"], magic="H7B\\x03",
+                  mime="application/vnd.hostess7.h7b+brain", compression="pattern_dict+fld1+zlib-9", lossless=True,
+                  ironclad=True, description="H7B/3 — Hostess 7 brain pattern condenser; ≤20MB GitHub sections.",
+                  source="field-h7b-brain-storage"),
+        _norm_row(fid="h7s", label="Hostess 7 Speedup", family="library", extensions=[".h7s"], magic="H7S\\x01",
+                  mime="application/vnd.hostess7.h7s", compression="structural_slice+chips_redense", lossless=True,
+                  ironclad=True, sovereign=True, dewey="005.74",
+                  description="H7s — universal speedup format; any file; native face disguise; execute without decompress.",
+                  source="field-h7s-format",
+                  extra={"format": "h7s/1", "execute_without_decompress": True, "speedup_lane": True,
+                         "properties_only_reveal": True, "disguise_identical": True, "identifies_as_source": True,
+                         "presumes_field_underneath": False, "requires_grok16": False, "creates_field_file": False}),
         _norm_row(fid="h7c", label="Hostess 7 Condenser", family="library", extensions=[".h7c"], magic="H7C\\x02",
                   mime="application/vnd.hostess7.h7c", compression="combinatronic+zlib+optimizer", lossless=True, ironclad=True,
                   sovereign=True, dewey="005.74", description="H7c — Hostess 7 Condenser; lossless combinatronic condenser with small optimizer autoplate, spider-wire, recondense until balance.", source="field-h7c-compression",

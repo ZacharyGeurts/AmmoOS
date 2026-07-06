@@ -23,11 +23,26 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -595,11 +610,22 @@ def read_h7c_text(book_id: str) -> tuple[str, dict[str, Any], dict[str, Any]]:
     return text, header, stats
 
 
+def _rebuild_dewey_index() -> dict[str, Any]:
+    idx = _import_mod("dewey_idx", "field-dewey-index.py")
+    if idx and hasattr(idx, "build_index"):
+        try:
+            return idx.build_index(write=True)
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)[:160]}
+    return {"ok": False, "error": "dewey_index_missing"}
+
+
 def publish_panel(*, migrate: bool = False) -> dict[str, Any]:
     if migrate:
         migrate_h7_to_h7c(remove_h7=True)
     tree = build_dewey_tree()
     _save(TREE_JSON, tree)
+    index = _rebuild_dewey_index()
     panel = {
         "schema": "field-dewey-library-panel/v1",
         "updated": tree["updated"],
@@ -609,7 +635,9 @@ def publish_panel(*, migrate: bool = False) -> dict[str, Any]:
         "sample_shelves": (tree.get("shelves") or [])[:8],
     }
     _save(PANEL, panel)
-    return {"ok": True, "panel": panel, "tree_path": str(TREE_JSON)}
+    if index.get("counts"):
+        panel["dewey_index"] = index.get("counts")
+    return {"ok": True, "panel": panel, "tree_path": str(TREE_JSON), "dewey_index": index.get("counts")}
 
 
 def panel() -> dict[str, Any]:

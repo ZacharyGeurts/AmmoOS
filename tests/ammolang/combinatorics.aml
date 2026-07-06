@@ -27,7 +27,7 @@ suite combinatorics ·
     assert grep:lib/threat-panel-http.py:/api/combinatronics/growth
     assert grep:Queen/lib/queen-world.py:/api/combinatronics/growth
     assert grep:Queen/world/queen-chips-cores.html:qcc-growth
-    assert shell:NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$(mktemp -d)" pythong "/home/default/Desktop/SG/NewLatest/lib/field-combinatronics-growth.py" grow | grep -q 'field-combinatronics-growth'
+    assert shell:tmp_g="$(mktemp -d)" && NEXUS_INSTALL_ROOT="$ROOT" NEXUS_STATE_DIR="$tmp_g" python3 "$ROOT/lib/field-combinatronics-growth.py" grow 2>/dev/null | grep -q 'field-combinatronics-growth'
   group plate dimensions consolidation
     assert file:lib/field-plate-dimensions.py
     assert file:data/field-plate-dimensions-doctrine.json

@@ -1,0 +1,56 @@
+{
+  "schema": "field-botnet-legal-ports/v1",
+  "title": "Botnet legal port auto-allow — IANA-registered civilian egress for everyone",
+  "boss": "hostess7",
+  "motto": "Real legal ports pass automatically through the field botnet — stalker lop only for confirmed malware sockets",
+  "for_everyone": {
+    "auto_allow_legal": true,
+    "civilian_passthrough": true,
+    "botnet_member_boost": true,
+    "dns_dhcp_witness": true
+  },
+  "port_classes": {
+    "well_known": {"range": [1, 1023], "note": "IANA well-known ports"},
+    "registered": {"range": [1024, 49151], "note": "IANA registered user ports"},
+    "dynamic": {"range": [49152, 65535], "note": "IANA dynamic/private ephemeral"}
+  },
+  "stalker_lop": {
+    "ports": [
+      4444, 5555, 1337, 31337, 6666, 6667, 9001, 9050, 1080, 3128,
+      4443, 6006, 6606, 8808
+    ],
+    "note": "Malware/C2/tor/proxy stalker ports — never auto-allow"
+  },
+  "context_ports": {
+    "ports": [8080, 8443, 3004, 3005, 8000, 8888, 5000, 5173, 4173],
+    "note": "Legal dev/app servers — allow for consumer+botnet; score only for untrusted daemons"
+  },
+  "github_service_ports": {
+    "ports": [22, 443, 9418],
+    "note": "GitHub git/https/ssh — auto-allow for everyone through botnet civilian passthrough"
+  },
+  "steam_bridge_ports": {
+    "layer": 3,
+    "ports": [27015, 27016, 27017, 27018, 27019, 27020, 27036, 27037, 27060, 443, 80],
+    "note": "Layer 3 Steam Bridge — game traffic + HTTPS through botnet for civilians"
+  },
+  "dreamcast_retro_ports": {
+    "ports": [7648, 9300, 9420, 9421, 9422, 9423, 9424, 9425, 9426, 9427, 9428, 9429, 9430],
+    "note": "Sega Dreamcast online / retro tunnel — legacy open + secured civilian passthrough"
+  },
+  "h7t_truth": {
+    "module": "lib/field-h7t-truth.py",
+    "doctrine": "data/field-h7t-truth-doctrine.json",
+    "api": "/api/field-h7t-truth",
+    "rule": "Not sovereign safe-stack → truth-rated → H7t shell → 100× chamber benefits; real deal untouched"
+  },
+  "botnet": {
+    "registry_api": "/api/field-botnet-registry",
+    "dns_dhcp_api": "/api/field-botnet-dns-dhcp",
+    "permit_rank": "USER_OK",
+    "witness_module": "lib/field-botnet-legal-ports.py"
+  },
+  "gatekeeper_wire": "lib/connection-gatekeeper.py",
+  "layer": -2,
+  "ships_with": ["field-botnet-dns-dhcp", "connection-gatekeeper", "packet-permission"]
+}

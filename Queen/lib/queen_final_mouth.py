@@ -15,10 +15,15 @@ def final_mouth_root() -> Path:
         p = Path(env)
         if p.is_dir():
             return p
-    for candidate in (SG / "Final_Mouth", SG / "final_mouth"):
+    for candidate in (
+        SG / "NewLatest" / "Final_Mouth",
+        SG / "Final_Mouth",
+        SG / "final_mouth",
+        QUEEN.parent / "Final_Mouth",
+    ):
         if (candidate / "VERSION").is_file() or (candidate / "zocr_product.py").is_file():
             return candidate
-    return SG / "Final_Mouth"
+    return QUEEN.parent / "Final_Mouth"
 
 
 def final_mouth_env(*, queen: Path | None = None) -> dict[str, str]:

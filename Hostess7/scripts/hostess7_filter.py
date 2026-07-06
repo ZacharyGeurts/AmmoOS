@@ -10,7 +10,7 @@ SKIP_LINE = re.compile(
     r"Owner: |HEAD: |Verdict: |Arc: |Question: |Hostess 7 — collegiate|"
     r"Commands: |· P1 file:|P1: |=== Hostess|Agents: \d+/\d+ OK|"
     r"--- Fused verdict|Query: |Economist \(|War-Chief \(|Technologist \(|"
-    r"World Expert|department research|FLD1 |Field )",
+    r"World Expert|department research|FLD1 |ZAC7 )",
     re.I,
 )
 DROP_TAIL = re.compile(

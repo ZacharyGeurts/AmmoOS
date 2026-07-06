@@ -19,7 +19,17 @@ def _clamp(seconds: float) -> float:
 
 
 def await_seconds(seconds: float, watch_dir: Path | None = None) -> None:
+    import time
+
     sec = _clamp(seconds)
+    if sec <= 0:
+        return
+    cool = os.environ.get("NEXUS_COOL_OPERATION", "0").strip().lower() in ("1", "true", "yes")
+    simple = os.environ.get("NEXUS_AWAIT_SIMPLE", "0").strip().lower() in ("1", "true", "yes")
+    # Recursive inotify on state dirs burns CPU during deploy — prefer sleep in cool mode.
+    if cool or simple or sec >= 3:
+        time.sleep(sec)
+        return
     watch = watch_dir if watch_dir and watch_dir.is_dir() else STATE
     if not watch.is_dir():
         watch = Path("/tmp")
@@ -27,11 +37,10 @@ def await_seconds(seconds: float, watch_dir: Path | None = None) -> None:
         subprocess.run(
             [
                 "inotifywait",
-                "-r",
                 "-t",
                 str(int(sec)),
                 "-e",
-                "modify,create,delete,move,close_write",
+                "modify,close_write",
                 str(watch),
             ],
             stdout=subprocess.DEVNULL,

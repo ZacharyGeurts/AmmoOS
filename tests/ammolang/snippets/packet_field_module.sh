@@ -1,50 +1,27 @@
 #!/bin/bash
 set -euo pipefail
 set +o pipefail
-ROOT="/home/default/Desktop/SG/NewLatest"
-export NEXUS_INSTALL_ROOT="$ROOT"
-export NEXUS_STATE_DIR="${NEXUS_STATE_DIR:-/home/default/Desktop/SG/NewLatest/.nexus-state}"
-export SG_ROOT="${SG_ROOT:-/home/default/Desktop/SG}"
-mkdir -p "$NEXUS_STATE_DIR"
-source "$ROOT/lib/nexus-common.sh" 2>/dev/null || true
-source "$ROOT/lib/eternal-vigil.sh" 2>/dev/null || true
-source "$ROOT/lib/entropy-oracle.sh" 2>/dev/null || true
-source "$ROOT/lib/shadow-reality.sh" 2>/dev/null || true
-source "$ROOT/lib/self-defense.sh" 2>/dev/null || true
-source "$ROOT/lib/device-whitelist.sh" 2>/dev/null || true
-source "$ROOT/lib/ultra-stealth.sh" 2>/dev/null || true
-source "$ROOT/lib/predictive-guard.sh" 2>/dev/null || true
-source "$ROOT/lib/network-lockdown.sh" 2>/dev/null || true
-source "$ROOT/lib/threat-vectors.sh" 2>/dev/null || true
-source "$ROOT/lib/packet-oracle.sh" 2>/dev/null || true
-source "$ROOT/lib/threat-panel.sh" 2>/dev/null || true
-source "$ROOT/lib/firewall-sentinel.sh" 2>/dev/null || true
-source "$ROOT/lib/firewall-trust.sh" 2>/dev/null || true
-source "$ROOT/lib/seal-vault.sh" 2>/dev/null || true
-source "$ROOT/lib/tamper-guard.sh" 2>/dev/null || true
-source "$ROOT/lib/znetwork-field.sh" 2>/dev/null || true
-source "$ROOT/lib/nexus-settings.sh" 2>/dev/null || true
-source "$ROOT/lib/adblock-loader.sh" 2>/dev/null || true
-source "$ROOT/lib/host-attack.sh" 2>/dev/null || true
-source "$ROOT/lib/field-attack-kit.sh" 2>/dev/null || true
-nexus_ensure_dirs 2>/dev/null || true
-panel="$ROOT/panel/threat-panel.html"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_harness.sh
+source "${SCRIPT_DIR}/_harness.sh"
 
-  [[ -f "/home/default/Desktop/SG/NewLatest/lib/packet-field.py" ]]
-  grep -q 'nexus_packet_field_capture' "/home/default/Desktop/SG/NewLatest/lib/packet-oracle.sh"
-  grep -q 'packet_field' "/home/default/Desktop/SG/NewLatest/lib/threat-panel.sh"
-  grep -q 'renderPacketField' "/home/default/Desktop/SG/NewLatest/panel/threat-panel.html"
-  grep -q 'packet-field-wrap' "/home/default/Desktop/SG/NewLatest/panel/threat-panel.html"
+# shellcheck source=_harness.sh
+# shellcheck source=_harness.sh
+  [[ -f "${ROOT}/lib/packet-field.py" ]]
+  grep -q 'nexus_packet_field_capture' "${ROOT}/lib/packet-oracle.sh"
+  grep -q 'packet_field' "${ROOT}/lib/threat-panel.sh"
+  grep -q 'renderPacketField' "${ROOT}/panel/threat-panel.html"
+  grep -q 'packet-field-wrap' "${ROOT}/panel/threat-panel.html"
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    pythong "/home/default/Desktop/SG/NewLatest/lib/packet-field.py" parse-line \
+    aml_py "packet-field.py" parse-line \
     "1748012345.123456 IP 127.0.0.1.54321 > 104.18.29.234.443: Flags [P.], seq 1, ack 1, win 512, length 100" \
     | grep -q '"direction": "TX"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    pythong "/home/default/Desktop/SG/NewLatest/lib/packet-field.py" parse-line \
+    aml_py "packet-field.py" parse-line \
     "1748012345.123456 IP 104.18.29.234.443 > 127.0.0.1.54321: Flags [P.], seq 1, ack 1, win 512, length 200" \
     | grep -q '"direction": "RX"'
   NEXUS_STATE_DIR="$NEXUS_STATE_DIR" NEXUS_INSTALL_ROOT="$ROOT" \
-    pythong - <<'PY'
+    "$PY" - <<'PY'
 import importlib.util
 from pathlib import Path
 root = Path(__import__("os").environ["NEXUS_INSTALL_ROOT"])

@@ -1,6 +1,19 @@
 {
   "schema": "field-device-registry/v1",
   "title": "Field device registry — local authority + peer displays",
+  "motto": "DHCP leases are real people — fakes cleared on rescue ingress; DNS/DHCP through.",
+  "policy": {
+    "never_exceed_existence": false,
+    "ai_evict_stale": false,
+    "dhcp_lease_is_real": true,
+    "never_evict_dhcp_sourced": true,
+    "stale_after_seconds": 86400,
+    "lan_stale_after_seconds": 7200,
+    "min_corroboration_sources": 0,
+    "existence_floor": 1,
+    "field_one_sink": true,
+    "outside_network_absorbed": true
+  },
   "devices": [
     {
       "id": "local",

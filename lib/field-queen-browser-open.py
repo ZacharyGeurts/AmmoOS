@@ -336,31 +336,46 @@ def _launch_ammoos_desktop(env: dict[str, str]) -> dict[str, Any]:
     else:
         profile.mkdir(parents=True, exist_ok=True)
 
+    queen = _resolve_queen_root()
+    launcher = queen / "field-gecko" / "bin" / "launch-field-gecko.sh"
     launch_env = {
         **env,
         "DISPLAY": env.get("DISPLAY", ":0"),
-        "MOZ_DISABLE_SAFE_MODE_KEY": "1",
+        "NEXUS_C2_DESKTOP_LAUNCH": "1",
+        "NEXUS_C2_KIOSK": "1",
+        "NEXUS_C2_LAUNCH_URL": url,
+        "QUEEN_NO_OS_BROWSER": "1",
+        "QUEEN_BROWSER_URL": url,
+        "QUEEN_BROWSER_START": url,
+        "QUEEN_BROWSER_HOME": url,
+        "QUEEN_ROOT": str(queen),
     }
-    for browser in ("firefox", "firefox-esr", "fieldfox"):
-        bin_path = shutil.which(browser)
-        if not bin_path:
-            continue
+    if launcher.is_file():
         try:
             proc = subprocess.Popen(
-                [
-                    bin_path,
-                    "--no-remote",
-                    "--profile",
-                    str(profile),
-                    "--class",
-                    "AmmoOSDesktop",
-                    "--name",
-                    "AmmoOS",
-                    "--setpref=general.useragent.override=Mozilla/5.0 (X11; Linux x86_64; rv:128.0) QueenBrowser/2026 AmmoOS/1.0 Gecko/20100101 QueenFieldEngine/128.0",
-                    "--kiosk",
-                    url,
-                ],
+                ["bash", str(launcher)],
                 env=launch_env,
+                cwd=str(queen),
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            return {
+                "ok": True,
+                "url": url,
+                "engine": "queen-field-gecko",
+                "mode": "fullscreen_kiosk",
+                "pid": proc.pid,
+                "profile": str(profile),
+            }
+        except OSError as exc:
+            return {"ok": False, "error": str(exc), "url": url, "engine": "queen-field-gecko"}
+    open_py = INSTALL / "lib" / "field-queen-browser-open.py"
+    if open_py.is_file():
+        try:
+            proc = subprocess.Popen(
+                [sys.executable, str(open_py), "open"],
+                env={**launch_env, "QUEEN_BROWSER_START": url, "QUEEN_BROWSER_HOME": url},
                 cwd=str(INSTALL),
                 start_new_session=True,
                 stdout=subprocess.DEVNULL,
@@ -369,14 +384,13 @@ def _launch_ammoos_desktop(env: dict[str, str]) -> dict[str, Any]:
             return {
                 "ok": True,
                 "url": url,
-                "engine": browser,
+                "engine": "queen-web-shell",
                 "mode": "fullscreen_kiosk",
                 "pid": proc.pid,
-                "profile": str(profile),
             }
         except OSError as exc:
-            return {"ok": False, "error": str(exc), "url": url, "engine": browser}
-    return {"ok": True, "url": url, "engine": "api_only", "hint": "open /field manually"}
+            return {"ok": False, "error": str(exc), "url": url, "engine": "queen-web-shell"}
+    return {"ok": True, "url": url, "engine": "api_only", "hint": "open /field in Queen Browser manually"}
 
 
 def _kilroy_stack_env() -> dict[str, str]:
@@ -556,7 +570,8 @@ def main() -> int:
         out = launch_ammoos_desktop()
     elif cmd == "open":
         route = sys.argv[2] if len(sys.argv) > 2 else ""
-        out = open_sovereign_browser(route=route)
+        focus = os.environ.get("QUEEN_BROWSER_FOCUS_URL", "").strip()
+        out = open_sovereign_browser(route=route, focus_url=focus)
     else:
         print(json.dumps({
             "error": "usage",

@@ -19,7 +19,7 @@ seq ·
   assist hang
 
   say "Phase 0 · wire stack siblings"
-  run route:wire_stack timeout:120 stall:30
+  run script:wire-stack timeout:120 stall:30
 
   say "Phase 1 · Grok16 gates"
   run route:grok16_gates timeout:900 stall:300

@@ -119,12 +119,41 @@ def _jump_slice(url: str) -> dict[str, Any]:
         return {}
 
 
+def _github_secure_slice(url: str) -> dict[str, Any]:
+    script = QUEEN / "lib" / "queen-github-secure.py"
+    if not script.is_file():
+        return {}
+    try:
+        mod = _load_module("queen_github_secure_gate", script)
+        if not hasattr(mod, "is_github_url") or not mod.is_github_url(url):
+            return {}
+        return mod.classify_github_url(url) or {}
+    except Exception:
+        return {}
+
+
 def gate_nav(url: str) -> dict[str, Any]:
+    gh: dict[str, Any] = _github_secure_slice(url)
     bench = _benchmark_mod()
     if bench is not None and hasattr(bench, "fast_gate_nav"):
         fast = bench.fast_gate_nav(url)
         if fast:
+            if gh:
+                fast["secure_connect"] = gh.get("secure_connect")
+                fast["github_pinned"] = gh.get("github_pinned")
             return fast
+    if gh.get("verdict") in ("BLOCK_MITM", "BLOCK_EXTERNAL"):
+        return {
+            "url": url,
+            "host": _host(url),
+            "queen_verdict": "GITHUB_SECURE_BLOCKED",
+            "permit": False,
+            "iff": gh.get("iff", "HOSTILE"),
+            "reason": gh.get("reason"),
+            "hint": gh.get("hint"),
+            "secure_connect": gh.get("secure_connect"),
+            "github_pinned": gh.get("github_pinned"),
+        }
 
     jump = _jump_slice(url)
     if jump and jump.get("permit") is False:
@@ -159,6 +188,9 @@ def gate_nav(url: str) -> dict[str, Any]:
     honor = next((row for row in active if (row.get("host") or "").lower() == host), None)
     verdict = panel.get("queen_verdict") or "UNKNOWN"
     held = gates.get("all_held", False)
+    permit = verdict in ("QUEEN_READY", "QUEEN_OFF") or held
+    if gh.get("verdict") in ("ALLOW_SECURE_GITHUB", "ALLOW_PINNED_GITHUB"):
+        permit = True
     return {
         "url": url,
         "host": host,
@@ -168,9 +200,11 @@ def gate_nav(url: str) -> dict[str, Any]:
         "gates_total": gates.get("total"),
         "sovereign": sovereign.get("sovereign", True),
         "honor": honor,
-        "permit": verdict in ("QUEEN_READY", "QUEEN_OFF") or held,
+        "permit": permit,
         "receipt": f"nav:{host or 'local'}@{_now()}",
-        "egress": egress,
+        "egress": egress if not gh else {**egress, **gh},
+        "secure_connect": gh.get("secure_connect") if gh else None,
+        "github_pinned": gh.get("github_pinned") if gh else None,
         "nexus_jump": {
             "verdict": jump.get("verdict"),
             "iff": jump.get("iff"),

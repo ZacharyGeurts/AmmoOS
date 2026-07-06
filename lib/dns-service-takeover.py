@@ -25,6 +25,14 @@ READY_CHECKS = int(os.environ.get("NEXUS_DNS_TAKEOVER_READY_CHECKS", "2"))
 HEALTH_QUERY = os.environ.get("NEXUS_DNS_TAKEOVER_HEALTH_QNAME", "example.com")
 
 PHASES = ("observing", "ready", "primary")
+LEGACY_DOCTRINE = INSTALL / "data" / "field-legacy-connect-doctrine.json"
+
+
+def _legacy_open_secured() -> bool:
+    if os.environ.get("NEXUS_LEGACY_OPEN_SECURED", "").strip().lower() in ("1", "yes", "on"):
+        return True
+    doc = _load_json(LEGACY_DOCTRINE, {})
+    return bool((doc.get("policy") or {}).get("legacy_open_secured", False))
 
 
 def _now() -> str:
@@ -140,26 +148,32 @@ def _read_resolv() -> dict[str, Any]:
 
 def _nexus_dns_running() -> bool:
     pid_file = STATE / "field-dns.pid"
-    if not pid_file.is_file():
-        return False
-    try:
-        pid = int(pid_file.read_text(encoding="utf-8").strip().split()[0])
-        os.kill(pid, 0)
-        return True
-    except (OSError, ValueError):
-        return False
+    if pid_file.is_file():
+        try:
+            pid = int(pid_file.read_text(encoding="utf-8").strip().split()[0])
+            os.kill(pid, 0)
+            return True
+        except PermissionError:
+            ok, _ = _dns_query(HEALTH_HOST, HEALTH_QUERY)
+            return ok
+        except (OSError, ValueError):
+            pass
+    ok, _ = _dns_query(HEALTH_HOST, HEALTH_QUERY)
+    return ok
 
 
 def _nexus_dhcp_running() -> bool:
     pid_file = STATE / "field-dhcp.pid"
-    if not pid_file.is_file():
-        return False
-    try:
-        pid = int(pid_file.read_text(encoding="utf-8").strip().split()[0])
-        os.kill(pid, 0)
-        return True
-    except (OSError, ValueError):
-        return False
+    if pid_file.is_file():
+        try:
+            pid = int(pid_file.read_text(encoding="utf-8").strip().split()[0])
+            os.kill(pid, 0)
+            return True
+        except PermissionError:
+            return _port_in_use(DHCP_PORT, "udp")
+        except (OSError, ValueError):
+            pass
+    return _port_in_use(DHCP_PORT, "udp")
 
 
 def _encode_name(name: str) -> bytes:
@@ -212,7 +226,13 @@ def detect_incumbents() -> dict[str, Any]:
     dhcp_busy = _port_in_use(DHCP_PORT, "udp")
     resolved = _systemd_resolved_active()
     resolv = _read_resolv()
-    foreign_ns = [n for n in resolv.get("nameservers") or [] if n not in ("127.0.0.1", "::1", "127.0.0.53")]
+    trusted_ns = frozenset({"127.0.0.1", "::1", "127.0.0.53"})
+    foreign_ns = [n for n in resolv.get("nameservers") or [] if n not in trusted_ns]
+    nexus_dns = _nexus_dns_running()
+    nexus_dhcp = _nexus_dhcp_running()
+    # Foreign resolvers in resolv.conf are enforcement targets — not incumbents that block takeover.
+    port_held_by_foreign = dns_busy and not nexus_dns
+    stub_without_truth = resolved and not nexus_dns
     return {
         "dns_port_busy": dns_busy,
         "dhcp_port_busy": dhcp_busy,
@@ -221,10 +241,12 @@ def detect_incumbents() -> dict[str, Any]:
         "systemd_resolved": resolved,
         "resolv": resolv,
         "foreign_nameservers": foreign_ns,
-        "incumbent_dns": dns_busy or resolved or bool(foreign_ns),
-        "incumbent_dhcp": dhcp_busy,
-        "nexus_dns_running": _nexus_dns_running(),
-        "nexus_dhcp_running": _nexus_dhcp_running(),
+        "foreign_ipv4_resolvers": [n for n in foreign_ns if ":" not in n],
+        "incumbent_dns": port_held_by_foreign or stub_without_truth,
+        "incumbent_dhcp": dhcp_busy and not nexus_dhcp,
+        "nexus_dns_running": nexus_dns,
+        "nexus_dhcp_running": nexus_dhcp,
+        "ipv4_truth_only": not foreign_ns or nexus_dns,
     }
 
 
@@ -244,11 +266,11 @@ def _advance_phase(
     if phase == "ready":
         if not health.get("healthy"):
             return "observing"
+        if streak >= READY_CHECKS and health.get("healthy") and inc.get("nexus_dns_running"):
+            return "primary"
         if streak >= READY_CHECKS:
-            vacant = not inc.get("incumbent_dhcp") and (
-                not inc.get("incumbent_dns") or inc.get("nexus_dns_running")
-            )
-            if vacant or streak >= READY_CHECKS + 1:
+            vacant = not inc.get("incumbent_dns")
+            if vacant or inc.get("nexus_dns_running"):
                 return "primary"
         return "ready"
 
@@ -268,9 +290,26 @@ def evaluate_takeover(*, persist: bool = True) -> dict[str, Any]:
     streak = prev_streak + 1 if health.get("healthy") else 0
     phase = _advance_phase(str(prev.get("phase") or "observing"), streak, health, inc)
 
+    foreign_ns = list(inc.get("foreign_nameservers") or [])
     can_enforce_resolv = phase == "primary"
-    can_serve_dhcp = phase == "primary" and not inc.get("incumbent_dhcp")
+    can_serve_dhcp = phase == "primary" and (
+        inc.get("nexus_dhcp_running") or not inc.get("incumbent_dhcp") or _legacy_open_secured()
+    )
     can_capture_egress = phase == "primary"
+    can_remove_foreign = phase == "primary" and bool(foreign_ns)
+    delay_threat = bool(
+        health.get("healthy")
+        and inc.get("nexus_dns_running")
+        and foreign_ns
+        and phase != "primary"
+        and streak >= READY_CHECKS
+    )
+    if delay_threat and phase == "ready":
+        phase = "primary"
+        can_enforce_resolv = True
+        can_remove_foreign = bool(foreign_ns)
+        can_serve_dhcp = inc.get("nexus_dhcp_running") or not inc.get("incumbent_dhcp") or _legacy_open_secured()
+        can_capture_egress = True
 
     doc: dict[str, Any] = {
         "schema": "dns-takeover/v1",
@@ -282,7 +321,10 @@ def evaluate_takeover(*, persist: bool = True) -> dict[str, Any]:
             "never_interrupt_on_arrival": True,
             "listen_before_reject": True,
             "dhcp_dns_only": True,
+            "only_our_dns_dhcp": True,
+            "foreign_server_is_threat": True,
             "no_lateral_movement": True,
+            "legacy_open_secured": _legacy_open_secured(),
         },
         "health": health,
         "incumbents": inc,
@@ -291,6 +333,23 @@ def evaluate_takeover(*, persist: bool = True) -> dict[str, Any]:
             "serve_dhcp": can_serve_dhcp,
             "local_capture": can_capture_egress,
             "break_resolv_symlink": can_enforce_resolv,
+            "remove_foreign_resolvers": can_remove_foreign,
+            "ipv4_truth_only": phase == "primary" and not foreign_ns,
+        },
+        "foreign_enforcement": {
+            "foreign_nameservers": foreign_ns,
+            "foreign_ipv4_resolvers": inc.get("foreign_ipv4_resolvers") or [],
+            "remove_on_primary": can_remove_foreign,
+            "seamless_transition": True,
+            "no_internet_break": True,
+            "motto": "Truth DNS primary — foreign resolvers removed, not middleman",
+        },
+        "delay_as_threat": {
+            "active": delay_threat,
+            "vector": "DELAY_AS_THREAT" if delay_threat else None,
+            "signal": "foreign_resolver_while_truth_healthy" if delay_threat else None,
+            "countermeasure": "promote_primary_remove_foreign" if delay_threat else None,
+            "truth_clean": not delay_threat or phase == "primary",
         },
         "hostess7": {
             "inside": {
@@ -303,6 +362,21 @@ def evaluate_takeover(*, persist: bool = True) -> dict[str, Any]:
                 "dhcp": "disabled on WAN",
                 "movement": "none",
             },
+        },
+        "sole_authority": {
+            "dns": phase == "primary" and bool(inc.get("nexus_dns_running")) and not inc.get("incumbent_dns"),
+            "dhcp": phase == "primary" and bool(inc.get("nexus_dhcp_running")) and not inc.get("incumbent_dhcp"),
+            "truth": phase == "primary" and not foreign_ns,
+            "accuracy": phase == "primary",
+            "ok": (
+                phase == "primary"
+                and bool(inc.get("nexus_dns_running"))
+                and bool(inc.get("nexus_dhcp_running"))
+                and not inc.get("incumbent_dns")
+                and not inc.get("incumbent_dhcp")
+                and not foreign_ns
+            ),
+            "motto": "Sole authority of truth and accuracy — no collisions, no foreign resolvers",
         },
         "phase_history": (prev.get("phase_history") or [])[-12:],
     }

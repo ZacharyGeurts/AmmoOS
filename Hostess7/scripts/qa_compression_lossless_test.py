@@ -1,5 +1,5 @@
 #!/usr/bin/env pythong
-"""QA: unified lossless round-trip — FLD1, H7B, library shelf."""
+"""QA: unified lossless round-trip — FLD1, H7B, ZAC7, library shelf."""
 from __future__ import annotations
 
 import json
@@ -14,6 +14,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from field_fly_codec import fly_pack, fly_unpack  # noqa: E402
 from field_h7_book import pack_h7, unpack_h7, write_h7, read_h7_file  # noqa: E402
 from field_library import TEXTBOOKS_DIR, build_library  # noqa: E402
+from field_zac import pack_storage, restore_storage, verify_storage, STORAGE  # noqa: E402
+
 STORAGE = ROOT / "cache" / "fieldstorage"
 
 
@@ -71,11 +73,52 @@ def test_library_h7_on_disk() -> str | None:
     return None
 
 
+def test_zac_roundtrip() -> str | None:
+    with tempfile.TemporaryDirectory() as tmp:
+        mini = Path(tmp) / "fieldstorage"
+        (mini / "brain" / "hearing").mkdir(parents=True)
+        (mini / "textbooks").mkdir(parents=True)
+        payload = json.dumps({"lossless": True, "hearing": "roundtrip", "n": 42})
+        marker = mini / "brain" / "hearing" / "lossless_probe.json"
+        marker.write_text(payload, encoding="utf-8")
+        sample_h7 = STORAGE / "textbooks" / "gutenberg_alice.h7"
+        if sample_h7.is_file():
+            shutil.copy(sample_h7, mini / "textbooks" / "gutenberg_alice.h7")
+
+        zac_dir = Path(tmp) / "zac"
+        report = pack_storage(storage=mini, out_dir=zac_dir, max_shard_bytes=2 * 1024 * 1024)
+        if report.get("total_files", 0) < 1:
+            return "zac pack empty"
+
+        marker.unlink(missing_ok=True)
+        restore_storage(zac_dir=zac_dir, storage=mini, verify=True)
+        verify = verify_storage(zac_dir=zac_dir, storage=mini)
+        if not verify.get("ok"):
+            return (
+                f"zac verify failed missing={len(verify.get('missing', []))} "
+                f"mismatch={len(verify.get('mismatches', []))}"
+            )
+        if not marker.is_file():
+            return "probe file missing after zac restore"
+        if marker.read_text(encoding="utf-8") != payload:
+            return "probe bytes differ after zac round-trip"
+        if sample_h7.is_file():
+            restored = mini / "textbooks" / "gutenberg_alice.h7"
+            if not restored.is_file():
+                return "sample .h7 missing after zac restore"
+            orig_text = read_h7_file(sample_h7).get("text", "")
+            back_text = read_h7_file(restored).get("text", "")
+            if orig_text != back_text:
+                return "sample .h7 text differ after zac round-trip (lossy)"
+    return None
+
+
 def main() -> int:
     for name, fn in (
         ("fld1", test_fld1),
         ("h7", test_h7),
         ("library", test_library_h7_on_disk),
+        ("zac", test_zac_roundtrip),
     ):
         err = fn()
         if err:

@@ -12,7 +12,10 @@
     "ironclad_grounding_required": true,
     "human_integration_forbidden": true,
     "write_requires_token": false,
-    "destructive_blocked": true
+    "destructive_blocked": true,
+    "beyond_darpa_tier": "beyond_darpa_lockheed",
+    "beyond_darpa_module": "lib/beyond-darpa-security.py",
+    "human_and_machine_threats_fail_closed": true
   },
   "sort_contexts": {
     "registry_index": {
@@ -117,6 +120,7 @@
     "lib/ironclad-h7-access.py",
     "lib/ironclad-search-index.py",
     "lib/h7-library-bridge.py",
-    "lib/field-dewey-library.py"
+    "lib/field-dewey-library.py",
+    "lib/beyond-darpa-security.py"
   ]
 }

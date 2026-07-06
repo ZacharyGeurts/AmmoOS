@@ -3,10 +3,10 @@
   "shelf": "910-education",
   "code": "910",
   "title": "910-education",
-  "updated": "2026-06-29T09:43:43Z",
+  "updated": "2026-06-30T20:45:27Z",
   "format_primary": "h7c",
-  "book_count": 2,
-  "h7c_count": 0,
+  "book_count": 3,
+  "h7c_count": 1,
   "books": [
     {
       "id": "gutenberg_physical_geo",
@@ -27,6 +27,19 @@
       "h7c": null,
       "cover": "/library/assets/covers/wikibooks_world_geography/front.png",
       "ready": false
+    },
+    {
+      "id": "exploring_geography",
+      "title": "Exploring Geography",
+      "author": "AmmoOS Field Library",
+      "dewey": "910",
+      "format": "h7c",
+      "h7c": "library/dewey/910-education/exploring_geography/exploring_geography.h7c",
+      "pdf": "library/dewey/910-education/Hostess7_Exploring_Geography_Textbook.pdf",
+      "manifest": "library/dewey/910-education/exploring_geography/book-manifest.json",
+      "cover": "/world/assets/combinatronic/books/exploring_geography.png",
+      "book_kind": "exploring",
+      "ready": true
     }
   ]
 }

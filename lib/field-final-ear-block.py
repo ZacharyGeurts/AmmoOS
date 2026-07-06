@@ -37,11 +37,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -78,6 +93,29 @@ def _ironclad_slice() -> dict[str, Any]:
     return cached
 
 
+def _full_ironclad_cert(*, held: bool) -> dict[str, Any]:
+    cert_py = INSTALL / "lib" / "field-ironclad-component-cert.py"
+    mod = _import_py(cert_py, "icc_final_ear")
+    if mod and hasattr(mod, "full_cert"):
+        return mod.full_cert(
+            component_id=FACET,
+            citation=IRONCLAD_CITE,
+            layers=["ironclad", "final_ear", "queen_earball", "hostess7_bridge", "secure_kill"],
+            held=held,
+            facet=FACET,
+        )
+    iron = _ironclad_slice()
+    sealed = bool(iron.get("ironclad_sealed") or iron.get("realized"))
+    return {
+        "schema": "ironclad-component-cert/v1",
+        "component_id": FACET,
+        "citation": IRONCLAD_CITE,
+        "full_cert": sealed and held,
+        "ironclad_sealed": sealed,
+        "verdict": "GREEN" if sealed and held else "WATCH",
+    }
+
+
 def _final_eye_ocr_html(html_path: Path, needles: list[str]) -> dict[str, Any]:
     eye = SG / "Final_Eye" / "zocr.py"
     text = ""
@@ -85,17 +123,18 @@ def _final_eye_ocr_html(html_path: Path, needles: list[str]) -> dict[str, Any]:
         text = html_path.read_text(encoding="utf-8", errors="replace")
     hits = [n for n in needles if n.lower() in text.lower()]
     ocr_mod = _import_py(eye, "zocr_feb")
-    tesseract_ok = bool(ocr_mod and getattr(ocr_mod, "tesseract_available", lambda: False)())
+    military_ok = bool(ocr_mod and getattr(ocr_mod, "tesseract_available", lambda: False)())
     return {
         "schema": "field-final-ear-ocr/v1",
-        "engine": "Final_Eye/zocr.py",
+        "engine": "Hostess7/MilitaryEOL",
         "html_path": str(html_path),
         "html_exists": html_path.is_file(),
         "needles": needles,
         "hits": hits,
         "hit_count": len(hits),
         "ok": html_path.is_file() and len(hits) >= max(3, len(needles) - 1),
-        "tesseract_available": tesseract_ok,
+        "military_eol": military_ok,
+        "tesseract_available": military_ok,
     }
 
 
@@ -155,9 +194,20 @@ def _resolve_html(html_rel: str) -> Path:
     return html_path
 
 
+def _secure_kill_posture() -> dict[str, Any]:
+    mod = _import_py(INSTALL / "lib" / "field-sense-secure-kill.py", "fssk_feb")
+    if mod and hasattr(mod, "secure_kill_posture"):
+        try:
+            return mod.secure_kill_posture(INSTALL, SG)
+        except Exception:
+            pass
+    return {"schema": "field-sense-secure-kill/v1", "ok": False, "kill_policy": "observe"}
+
+
 def build_block(*, refresh: bool = False) -> dict[str, Any]:
     doctrine = _load(DOCTRINE, {})
     ironclad = _ironclad_slice()
+    secure_kill = _secure_kill_posture()
     sealed = bool(ironclad.get("ironclad_sealed") or ironclad.get("realized"))
     guard = _guard_posture()
     earball = _earball_posture()
@@ -190,11 +240,13 @@ def build_block(*, refresh: bool = False) -> dict[str, Any]:
         and ocr.get("ok")
         and earball_ok
         and root_ok
+        and secure_kill.get("ok")
     )
     ok = held and sense_safe
 
     return {
         "schema": "field-final-ear-block/v1",
+        "boss": doctrine.get("boss", "hostess7"),
         "updated": _now(),
         "ok": ok,
         "held": held,
@@ -225,11 +277,15 @@ def build_block(*, refresh: bool = False) -> dict[str, Any]:
             "certainty_score": guard.get("certainty_score"),
         },
         "ocr": ocr,
+        "secure_kill": secure_kill,
+        "ironclad_cert": _full_ironclad_cert(held=held),
         "ironclad_chain": {
             "citation": IRONCLAD_CITE,
             "sealed": sealed,
+            "full_cert": sealed and held,
+            "connected_throughout": sealed and held,
             "truth_percent": 100.0 if sealed and ok else 95.0 if ok else 80.0,
-            "layers": ["ironclad", "final_ear", "queen_earball", "hostess7_bridge", "final_eye_ocr"],
+            "layers": ["ironclad", "final_ear", "queen_earball", "hostess7_bridge", "secure_kill", "final_eye_ocr"],
         },
         "posture": (
             f"Final Ear block — {product.get('name', 'The Final Ear')} · "

@@ -29,10 +29,41 @@ route="${1:-tasks}"
 shift || true
 extra=("$@")
 
+# Universal boundary — pass target + args to protective AML shell
+if [[ -n "$route" && "$route" != "tasks" && "$route" != "list" && "$route" != "assist" ]]; then
+  export AML_BOUNDARY_TARGET="${route}"
+  if [[ ${#extra[@]} -gt 0 ]]; then
+    export AML_BOUNDARY_ARGS_JSON="$(printf '%s\n' "${extra[@]}" | python3 -c 'import json,sys; print(json.dumps([l.rstrip("\n") for l in sys.stdin]))' 2>/dev/null || echo '[]')"
+  else
+    export AML_BOUNDARY_ARGS_JSON="${AML_BOUNDARY_ARGS_JSON:-[]}"
+  fi
+  if [[ "$route" == "exec" || "$route" == "boundary" || "$route" == "any" || "$route" == "run" ]]; then
+    [[ ${#extra[@]} -gt 0 ]] && export AML_BOUNDARY_TARGET="${extra[0]}"
+    if [[ ${#extra[@]} -gt 1 ]]; then
+      export AML_BOUNDARY_ARGS_JSON="$(printf '%s\n' "${extra[@]:1}" | python3 -c 'import json,sys; print(json.dumps([l.rstrip("\n") for l in sys.stdin]))' 2>/dev/null || echo '[]')"
+    else
+      export AML_BOUNDARY_ARGS_JSON="[]"
+    fi
+  fi
+fi
+
 PY="$(ammolang_run_py)"
 BUILD="${ROOT}/lib/field-ammolang-build.py"
 MONSTER="${ROOT}/lib/field-monster-launch.sh"
 [[ -f "$BUILD" ]] || { echo "ammolang-run: missing field-ammolang-build.py" >&2; exit 1; }
+
+# Beta 4 operator hold — blocks full release + library prep until cleared
+if [[ "$route" == "beta4_release" || "$route" == "beta4_library_prep" ]]; then
+  if [[ "${BETA4_FORCE_RELEASE:-}" != "1" ]]; then
+    _HOLD_RC=0
+    _HOLD_JSON="$("$PY" "$ROOT/lib/field-beta4-ready.py" hold_status 2>/dev/null)" || _HOLD_RC=$?
+    if [[ "$_HOLD_RC" -eq 2 ]]; then
+      echo "ammolang-run: Beta 4 HELD ($route) — python3 lib/field-beta4-ready.py resume" >&2
+      echo "$_HOLD_JSON" >&2
+      exit 2
+    fi
+  fi
+fi
 
 monster_exec() {
   local label="$1"
@@ -43,12 +74,13 @@ monster_exec() {
   exec "$@"
 }
 
+# Introspection routes — direct build.py (no monster/boundary; CI expects task-registry JSON)
 if [[ "$route" == "tasks" || "$route" == "list" ]]; then
-  monster_exec "ammolang:tasks" "$PY" "$BUILD" tasks
+  exec "$PY" "$BUILD" tasks
 fi
 
 if [[ "$route" == "assist" ]]; then
-  monster_exec "ammolang:assist" "$PY" "$BUILD" assist "${extra[@]:-all}"
+  exec "$PY" "$BUILD" assist "${extra[@]:-all}"
 fi
 
 dry=()
@@ -56,4 +88,4 @@ dry=()
 
 export PYTHONUNBUFFERED=1
 
-monster_exec "ammolang:${route}" "$PY" "$BUILD" task "$route" "${dry[@]}"
+monster_exec "ammolang:${route}" "$PY" "$BUILD" task "$route" "${extra[@]}" "${dry[@]}"

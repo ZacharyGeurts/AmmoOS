@@ -1,5 +1,0 @@
-bin/kgo
-src/*.o
-dist/
-__pycache__/
-*.pyc

@@ -1,0 +1,23 @@
+{
+  "schema": "field-internet-unrestrict/v1",
+  "title": "Sole internet — ZNetwork pipe open; sole DHCP/DNS authority enforced",
+  "boss": "hostess7",
+  "motto": "ZNetwork is the sole internet in/out. Users browse freely — only our Truth DNS + Field DHCP answer leases.",
+  "policy": {
+    "internet_open": false,
+    "sole_internet_pipe": true,
+    "unclean_is_hostile": true,
+    "foreign_resolver_block": true,
+    "foreign_dns_dhcp_threat_block": true,
+    "foreign_server_is_threat": true,
+    "eradicate_on_attempt": true,
+    "suppress_foreign_dns_dhcp_worldwide": true,
+    "remove_nft_restrictions": false,
+    "it_just_works": true,
+    "preserve_lease_connections": true,
+    "quarantine_not_kill": true
+  },
+  "module": "lib/field-internet-unrestrict.py",
+  "api": "/api/field-internet-unrestrict",
+  "ironclad_cite": "ironclad:internet-unrestrict:2"
+}

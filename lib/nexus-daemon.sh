@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:lib/nexus-daemon.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # NEXUS genius-layer daemon — event-driven, ultra-stealth, self-verified.
 set -euo pipefail
@@ -55,6 +73,11 @@ nexus_firewall_trust_sync_from_memory
 source "${NEXUS_INSTALL_ROOT}/lib/field-attack-kit.sh"
 nexus_field_attack_sync_from_memory
 nexus_field_attack_apply_registry
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/field-war-hardening.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/field-war-hardening.sh"
+  nexus_field_war_harden || true
+}
 # shellcheck source=/dev/null
 source "${NEXUS_INSTALL_ROOT}/lib/threat-vectors.sh"
 # shellcheck source=/dev/null
@@ -161,6 +184,7 @@ start_module() {
 }
 [[ "${SG_ROOT_SOVEREIGN_GUARD:-1}" == "1" ]] && start_module root-sovereign bash "${NEXUS_INSTALL_ROOT}/lib/root-sovereign-guard.sh"
 [[ "${SG_FIELD_VIRUS_GUARD:-1}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/field-virus-guard.sh" ]] && start_module field-virus bash "${NEXUS_INSTALL_ROOT}/lib/field-virus-guard.sh"
+[[ "${NEXUS_VSYNC_LOCKER_GUARD:-1}" == "1" && -f "${NEXUS_INSTALL_ROOT}/lib/field-vsync-locker-guard.sh" ]] && start_module vsync-locker bash "${NEXUS_INSTALL_ROOT}/lib/field-vsync-locker-guard.sh"
 [[ "${NEXUS_PACKET_ORACLE:-1}" == "1" ]] && start_module packet nexus_packet_loop
 [[ "${NEXUS_FIELD_DNS:-1}" == "1" ]] && start_module field-dns nexus_field_dns_serve_loop
 [[ "${NEXUS_FIELD_DHCP:-1}" == "1" ]] && start_module field-dhcp nexus_field_dhcp_serve_loop

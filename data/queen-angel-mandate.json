@@ -33,6 +33,12 @@
   "neural_doctrine": "Series of series nets — perception, truth gates, fusion, mandate, adapt. 94% noise rejected.",
   "master_doctrine": "Master Operator — truth-gated self-run of Hostess7 and NEXUS under Queen.",
   "wartime_room_doctrine": "Queen Room ALWAYS WARTIME — idle is reconnaissance, not rest.",
+  "war_system": {
+    "doctrine": "data/hostess7-war-system-doctrine.json",
+    "motto": "War system — we have no other. Every autonomous machine is a Soldier.",
+    "war_only": true,
+    "domestic_talent_irrelevant": true
+  },
   "iff_doctrine": {
     "civilian": "CIVILIAN — authorized egress under perpetual watch",
     "unknown": "UNKNOWN — hold for positive identification",

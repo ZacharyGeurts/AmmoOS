@@ -21,5 +21,34 @@
   "github_shelf": "000-computer-science",
   "combinatronic_lang": "delphi",
   "cover": "/world/assets/combinatronic/books/delphi.png",
-  "updated": "2026-06-30T06:44:01Z"
+  "updated": "2026-06-30T06:44:01Z",
+  "lies_index": {
+    "ok": true,
+    "schema": "h7-biggest-lies-index/v1",
+    "book_id": "explaining_delphi",
+    "title": "Explaining Delphi",
+    "updated": "2026-06-30T22:47:41Z",
+    "page_chars": 3200,
+    "page_count": 2,
+    "entries": [
+      {
+        "rank": 1,
+        "page": 1,
+        "sentence_index": 0,
+        "sentence_on_page": 1,
+        "truth_score": 29.0,
+        "lie_score": 71.0,
+        "verdict": "questionable",
+        "flags": [],
+        "excerpt": "# Explaining Delphi\n\n![Cover — Explaining Delphi](h7fig:cover)\n\n**Grok15 condensed manual** — shared sections live in `explaining_core`; this file is the\nnon-redundant **delta** for `delphi` only.\n\n- **Language id:** `de",
+        "readout": "LIKELY FALSE — do not field as operational fact. Corroborate before capability employment or field action."
+      }
+    ],
+    "entry_count": 1,
+    "scanned_sentences": 1
+  },
+  "reinform_updated": "2026-06-30T22:47:41Z",
+  "revision": 0,
+  "text_sha256": "4014adf6f69711b47b774e7f855906459e77fc8271e2dc47bcb410a4dfa6fe49",
+  "overlap_refs": []
 }

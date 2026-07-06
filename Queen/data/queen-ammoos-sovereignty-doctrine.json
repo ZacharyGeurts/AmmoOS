@@ -1,7 +1,7 @@
 {
   "schema": "queen-ammoos-sovereignty/v3",
   "title": "Field stack — KILROY PC core · AmmoOS desktop · Queen standalone browser",
-  "motto": "AmmoOS is the fullscreen classic Start desktop. Queen is the stripped web browser — field engine + AMOURANTHRTX when the machine has it.",
+  "motto": "KILROY boots the field (ZNetwork absorbed). AmmoOS desktop on AMOURANTHRTX. Queen is its own secured browser on 127.0.0.1.",
   "product": "AmmoOS",
   "container": null,
   "ammoos_inside_queen": false,
@@ -66,8 +66,7 @@
     "doctrine": "Queen/data/queen-field-browser-doctrine.json",
     "gates": "data/field-queen-gates-seed.json",
     "user_guide": "/world/queen-browser-guide.html",
-    "stripped": true,
-    "role": "Stripped secured web browser — tabs, nav, gates; launches from AmmoOS Start menu"
+    "role": "Standalone secured browser — GNU terminal, tabs, gates; not an AmmoOS container"
   },
   "local_services": {
     "truth_dns": "lib/field-dns.py",

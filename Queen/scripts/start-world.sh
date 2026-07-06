@@ -1,5 +1,4 @@
-#!/bin/bash
-# AmmoLang subfolder route — AML_BUILD=1 (default)
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
 _aml_find_root() {
   local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   while [[ "$d" != "/" ]]; do
@@ -8,14 +7,16 @@ _aml_find_root() {
   done
   return 1
 }
-if [[ "${AML_BUILD:-1}" != "0" ]]; then
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
   _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
   if [[ -n "$_AML_ROOT" ]]; then
-    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" forge "$@"
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:Queen/scripts/start-world.sh" "$@"
   fi
 fi
 unset -f _aml_find_root 2>/dev/null || true
 
+#!/bin/bash
 # Queen World — sovereign browser space on one RTX card (loopback only).
 set -euo pipefail
 

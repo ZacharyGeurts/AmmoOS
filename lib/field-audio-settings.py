@@ -22,6 +22,11 @@ PANEL_PATH = STATE_DIR / "field-audio-settings-panel.json"
 
 DEFAULT_SETTINGS = {
     "advanced": False,
+    "quality": "high",
+    "format_profile": "surround_8ch",
+    "soundcard_id": "host-live",
+    "subwoofer": True,
+    "dolby_emu": True,
     "default_sink": "",
     "default_source": "",
     "sink_volume": 1.0,
@@ -65,6 +70,14 @@ def _save_settings(data: dict[str, Any]) -> dict[str, Any]:
 
 def _dac_mod() -> Any | None:
     return fcc.mod("fa_settings_dac", "field-audio-dac-chamber.py")
+
+
+def _vintage_mod() -> Any | None:
+    return fcc.mod("fa_vintage_audio", "field-vintage-audio-composite.py")
+
+
+def _hdmi_mod() -> Any | None:
+    return fcc.mod("fa_hdmi_audio", "field-hdmi-audio-driver.py")
 
 
 def _advanced_block(settings: dict[str, Any], backend: dict[str, Any]) -> dict[str, Any]:
@@ -129,13 +142,50 @@ def snapshot(advanced: bool | None = None) -> dict[str, Any]:
     }
     if settings.get("advanced"):
         payload["advanced"] = _advanced_block(settings, backend)
+    sc_mod = fcc.mod("fa_soundcards", "field-soundcards-catalog.py")
+    payload["soundcards"] = sc_mod.catalog() if sc_mod and hasattr(sc_mod, "catalog") else {}
+    vac = _vintage_mod()
+    if vac:
+        try:
+            active = vac.active_card() if hasattr(vac, "active_card") else {}
+            cat = vac.catalog() if hasattr(vac, "catalog") else {}
+            groups = vac.cards_by_vendor() if hasattr(vac, "cards_by_vendor") else []
+            tune_path = ""
+            if hasattr(vac, "ensure_test_tune"):
+                tune_path = str(vac.ensure_test_tune())
+            payload["vintage"] = {
+                "active": active,
+                "groups": groups,
+                "card_count": cat.get("card_count", 0),
+                "default_sink": cat.get("default_sink"),
+                "playback": cat.get("playback"),
+                "gstreamer": cat.get("gstreamer_available"),
+                "ffmpeg": cat.get("ffmpeg_available"),
+                "test_tune_path": tune_path,
+                "api": "/api/field-vintage-audio",
+            }
+            card_id = settings.get("soundcard_id") or active.get("card_id")
+            if card_id and hasattr(vac, "card_by_id"):
+                payload["active_soundcard"] = vac.card_by_id(str(card_id))
+        except Exception as exc:
+            payload["vintage"] = {"ok": False, "error": str(exc)[:120]}
+    hdmi = _hdmi_mod()
+    if hdmi and hasattr(hdmi, "probe"):
+        try:
+            payload["hdmi"] = hdmi.probe()
+        except Exception:
+            payload["hdmi"] = {"ok": False}
     if dac:
         probe = dac.dac_probe() if hasattr(dac, "dac_probe") else {}
+        profiles = dac.format_profiles() if hasattr(dac, "format_profiles") else []
+        if not profiles:
+            profiles = fcc.load(INSTALL / "data" / "field-audio-dac-doctrine.json", {}).get("format_profiles") or []
         payload["dac_chamber"] = {
             "ui": "/field-audio-dac",
             "api": "/api/field-audio-dac",
-            "format_profiles": (fcc.load(INSTALL / "data" / "field-audio-dac-doctrine.json", {}).get("format_profiles") or []),
+            "format_profiles": profiles,
             "active_profile": probe.get("active_profile") or {},
+            "soundcards": payload.get("soundcards"),
         }
     return payload
 
@@ -175,8 +225,73 @@ def _filter_audio_patch(patch: dict[str, Any]) -> dict[str, Any]:
     return dict(patch or {})
 
 
+def test_tune(*, card_id: str = "") -> dict[str, Any]:
+    vac = _vintage_mod()
+    if not vac or not hasattr(vac, "test_tune"):
+        return {"ok": False, "error": "vintage_composite_missing"}
+    cid = card_id or _load_settings().get("soundcard_id") or "nvidia-hdmi-pro"
+    result = vac.test_tune(card_id=str(cid))
+    settings = _load_settings()
+    settings["soundcard_id"] = str(cid)
+    _save_settings(settings)
+    card = vac.card_by_id(str(cid)) if hasattr(vac, "card_by_id") else None
+    ok = bool(result.get("ok"))
+    return {
+        "ok": ok,
+        "action": "test_tune",
+        "test_result": result,
+        "settings": settings,
+        "soundcard_id": cid,
+        "active_soundcard": card,
+        "default_sink": result.get("sink") or fcc.default_device("sink"),
+        "message": (
+            f"Test tune — {result.get('card_name') or cid}"
+            if ok
+            else f"Test failed — {result.get('error') or 'playback_error'}"
+        ),
+        "error": None if ok else (result.get("error") or "test_tune_failed"),
+        "refresh_recommended": True,
+    }
+
+
+def bind_hdmi() -> dict[str, Any]:
+    hdmi = _hdmi_mod()
+    if not hdmi or not hasattr(hdmi, "bind"):
+        return {"ok": False, "error": "hdmi_driver_missing"}
+    result = hdmi.bind(force=True)
+    out = snapshot()
+    out["hdmi_bind"] = result
+    out["ok"] = bool(result.get("ok"))
+    return out
+
+
+def dispatch_settings(body: dict[str, Any]) -> dict[str, Any]:
+    action = str(body.get("action") or "apply").strip().lower().replace("-", "_")
+    if action in ("test_tune", "test_card", "play_test", "tune"):
+        return test_tune(card_id=str(body.get("card_id") or body.get("soundcard_id") or ""))
+    if action in ("select_card", "select_soundcard"):
+        cid = str(body.get("card_id") or body.get("soundcard_id") or "")
+        vac = _vintage_mod()
+        if vac and cid and hasattr(vac, "select_card"):
+            vac.select_card(cid)
+        return apply_settings({"soundcard_id": cid} if cid else {})
+    if action in ("bind_hdmi", "hdmi_bind", "hdmi"):
+        return bind_hdmi()
+    if action == "refresh":
+        return snapshot()
+    clean = {k: v for k, v in body.items() if k != "action"}
+    return apply_settings(clean)
+
+
 def apply_settings(patch: dict[str, Any]) -> dict[str, Any]:
     patch = _filter_audio_patch(patch or {})
+    if patch.get("soundcard_id"):
+        vac = _vintage_mod()
+        if vac and hasattr(vac, "select_card"):
+            try:
+                vac.select_card(str(patch["soundcard_id"]))
+            except Exception:
+                pass
     dac = _dac_mod()
     if dac and hasattr(dac, "apply_routing"):
         dac_patch: dict[str, Any] = {}
@@ -184,6 +299,12 @@ def apply_settings(patch: dict[str, Any]) -> dict[str, Any]:
             dac_patch["output_device"] = patch["default_sink"]
         if patch.get("default_source"):
             dac_patch["input_device"] = patch["default_source"]
+        if patch.get("format_profile"):
+            dac_patch["format_profile"] = patch["format_profile"]
+        if patch.get("soundcard_id"):
+            dac_patch["soundcard_id"] = patch["soundcard_id"]
+        if patch.get("quality"):
+            dac_patch["quality"] = patch["quality"]
         if patch.get("sink_volume") is not None:
             dac_patch["output_gain_db"] = 20.0 * math.log10(max(0.01, float(patch["sink_volume"])))
         if patch.get("source_volume") is not None:
@@ -226,7 +347,13 @@ def main() -> int:
         print("Usage: field-audio-settings.py [json|apply JSON]")
         return 0
     cmd = args[0]
-    if cmd in ("json", "status", "posture"):
+    if cmd in ("json", "status"):
+        advanced = None
+        if len(args) > 1 and args[1] in ("0", "1", "true", "false"):
+            advanced = args[1] in ("1", "true")
+        print(json.dumps(snapshot(advanced=advanced), indent=2))
+        return 0
+    if cmd == "posture":
         advanced = None
         if len(args) > 1 and args[1] in ("0", "1", "true", "false"):
             advanced = args[1] in ("1", "true")
@@ -238,7 +365,14 @@ def main() -> int:
         except json.JSONDecodeError as exc:
             print(json.dumps({"ok": False, "error": str(exc)}))
             return 1
-        print(json.dumps(apply_settings(patch), indent=2))
+        print(json.dumps(dispatch_settings(patch), indent=2))
+        return 0
+    if cmd in ("test_tune", "tune"):
+        cid = args[1] if len(args) > 1 else ""
+        print(json.dumps(test_tune(card_id=cid), indent=2))
+        return 0
+    if cmd == "bind_hdmi":
+        print(json.dumps(bind_hdmi(), indent=2))
         return 0
     print(json.dumps({"ok": False, "error": f"unknown command: {cmd}"}))
     return 1

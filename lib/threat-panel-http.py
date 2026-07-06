@@ -7,6 +7,9 @@ import os
 import subprocess
 import sys
 import threading
+import time
+import urllib.error
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -908,6 +911,86 @@ def _read_field_panel_file(key: str) -> dict | None:
     return None
 
 
+def _read_zachub_panel_cache(name: str) -> dict | None:
+    """Fast loopback serve — avoid slow subprocess on panel hot paths."""
+    api_names = {
+        "storage": "field-zachub-storage.json",
+        "fork_guard": "field-zachub-fork-guard.json",
+        "qemu_racks": "field-zachub-qemu-racks.json",
+        "battle_stations": "field-battle-stations.json",
+    }
+    state_names = {
+        "storage": "field-zachub-storage-panel.json",
+        "fork_guard": "field-zachub-fork-guard-panel.json",
+        "qemu_racks": "field-zachub-qemu-racks-panel.json",
+        "battle_stations": "field-battle-stations-panel.json",
+    }
+    candidates: list[Path] = []
+    state_key = state_names.get(name)
+    if state_key:
+        candidates.append(STATE_DIR / state_key)
+    api_key = api_names.get(name)
+    if api_key:
+        candidates.append(INSTALL_ROOT / "Hostess7" / "docs" / "api" / api_key)
+    for fp in candidates:
+        if not fp.is_file():
+            continue
+        try:
+            doc = json.loads(fp.read_text(encoding="utf-8"))
+            if isinstance(doc, dict) and (doc.get("schema") or doc.get("ok") is not None):
+                out = dict(doc)
+                out["_panel_cache"] = True
+                out.setdefault("_incomplete", False)
+                out.setdefault("_partial", False)
+                return out
+        except (OSError, json.JSONDecodeError):
+            continue
+    return None
+
+
+def _read_botnet_panel_cache(name: str) -> dict | None:
+    paths = {
+        "registry": STATE_DIR / "field-botnet-registry-panel.json",
+        "dns_dhcp": STATE_DIR / "field-botnet-dns-dhcp-panel.json",
+    }
+    fp = paths.get(name)
+    if not fp or not fp.is_file():
+        return None
+    try:
+        doc = json.loads(fp.read_text(encoding="utf-8"))
+        if isinstance(doc, dict) and doc.get("schema"):
+            out = dict(doc)
+            out["_panel_cache"] = True
+            out.setdefault("_incomplete", False)
+            out.setdefault("_partial", False)
+            return out
+    except (OSError, json.JSONDecodeError):
+        pass
+    return None
+
+
+def _read_field_host_desktop_cache(*, max_age_sec: int = 300) -> dict | None:
+    """Serve cached field-host-desktop.json when fresh — skip slow subprocess scan."""
+    fp = STATE_DIR / "field-host-desktop.json"
+    if not fp.is_file():
+        return None
+    try:
+        age = time.time() - fp.stat().st_mtime
+        if age > max_age_sec:
+            return None
+        doc = json.loads(fp.read_text(encoding="utf-8"))
+        if isinstance(doc, dict) and doc.get("programs"):
+            out = dict(doc)
+            out["_panel_cache"] = True
+            out["_cache_age_sec"] = round(age, 1)
+            out.setdefault("_incomplete", False)
+            out.setdefault("_partial", False)
+            return out
+    except (OSError, json.JSONDecodeError):
+        pass
+    return None
+
+
 def _sudo_available() -> bool:
     if os.geteuid() == 0:
         return True
@@ -1557,6 +1640,88 @@ def _grok16_root() -> Path:
     return sg / "Grok16"
 
 
+def _ensure_field_services_boot() -> None:
+    """Start Truth DNS + Field DHCP serve loops when panel boots without nexus.sh."""
+    if os.environ.get("NEXUS_FIELD_SERVICES_BOOT", "1") != "1":
+        return
+    script = INSTALL_ROOT / "lib" / "field-dns.sh"
+    if not script.is_file():
+        return
+    try:
+        subprocess.run(
+            ["bash", "-c", f'source "{script}" && nexus_field_services_boot'],
+            capture_output=True,
+            text=True,
+            timeout=25,
+            env=_field_stack_env(),
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+
+
+def _kick_dynamic_trash_async(*, reason: str = "panel") -> None:
+    """Background purge — hostile/kill-rekill/DNS/fork-guard table trash after strikes or boot."""
+    if os.environ.get("NEXUS_DYNAMIC_ROUTES_KICK", "1") != "1":
+        return
+    dyn_py = INSTALL_ROOT / "lib" / "field-dynamic-routes.py"
+    if not dyn_py.is_file():
+        return
+    try:
+        subprocess.Popen(
+            [sys.executable, str(dyn_py), "kick-trash"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env={**_field_stack_env(), "NEXUS_DYNAMIC_KICK_REASON": reason},
+            start_new_session=True,
+        )
+    except OSError:
+        pass
+
+
+def _merge_live_dhcp_into_dns(payload: dict) -> dict:
+    """Refresh embedded DHCP slice — field-dns cache often lags field-dhcp-panel.json."""
+    if not isinstance(payload, dict):
+        return payload
+    live = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dhcp.py", ["json"], timeout=12)
+    if not isinstance(live, dict) or live.get("error"):
+        return payload
+    out = dict(payload)
+    out["dhcp_server"] = live
+    servers = dict(out.get("servers") or {})
+    dhcp_srv = dict(servers.get("dhcp") or {})
+    for key in (
+        "running",
+        "serve_loop",
+        "port_67",
+        "bind",
+        "lease_count",
+        "may_serve",
+        "dns_option",
+        "dns_option_v6",
+        "leases_detailed",
+        "stats_extended",
+        "lease_history_events",
+        "threats",
+        "updated",
+    ):
+        if key in live:
+            dhcp_srv[key] = live[key]
+    servers["dhcp"] = dhcp_srv
+    out["servers"] = servers
+    traffic = out.get("traffic_patterns")
+    if isinstance(traffic, dict):
+        tp = dict(traffic)
+        dhcp_tp = dict(tp.get("dhcp") or {})
+        dhcp_tp["running"] = bool(live.get("running") or live.get("serve_loop") or live.get("port_67"))
+        dhcp_tp["leases_active"] = int(live.get("lease_count") or 0)
+        dhcp_tp["bind"] = live.get("bind") or "0.0.0.0:67"
+        tp["dhcp"] = dhcp_tp
+        tp["dhcp_lease_count"] = int(live.get("lease_count") or 0)
+        out["traffic_patterns"] = tp
+    out["_dhcp_live_merged"] = True
+    return out
+
+
 def _field_stack_env() -> dict[str, str]:
     env = os.environ.copy()
     env["NEXUS_INSTALL_ROOT"] = str(INSTALL_ROOT)
@@ -1583,10 +1748,54 @@ def _field_stack_env() -> dict[str, str]:
     return env
 
 
-def _nexus_py_json(script: Path, args: list[str], timeout: int = 25) -> dict:
+def _parse_subprocess_json(proc: subprocess.CompletedProcess[str] | None, *, script: str = "") -> dict:
+    if proc is None:
+        return {"ok": False, "error": "no_process", "script": script}
+    guard_py = INSTALL_ROOT / "lib" / "field-json-guard.py"
+    if guard_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_json_guard_parse", guard_py)
+            if spec and spec.loader:
+                jg = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(jg)
+                if hasattr(jg, "safe_json_response"):
+                    return jg.safe_json_response(
+                        proc.stdout,
+                        proc.stderr,
+                        rc=proc.returncode,
+                        script=script,
+                    )
+        except Exception:
+            pass
+    text = (proc.stdout or "").strip() or "{}"
+    try:
+        doc = json.loads(text)
+        if proc.returncode != 0 and isinstance(doc, dict) and doc.get("ok") is not False:
+            doc["ok"] = False
+            doc.setdefault("error", "nonzero_exit")
+        return doc
+    except json.JSONDecodeError:
+        return {
+            "ok": False,
+            "error": "bad_json",
+            "detail": ((proc.stderr or "") or text)[:200],
+            "script": script,
+        }
+
+
+def _nexus_py_json(
+    script: Path,
+    args: list[str],
+    timeout: int = 25,
+    *,
+    extra_env: dict[str, str] | None = None,
+) -> dict:
     if not script.is_file():
         return {"ok": False, "error": "script_missing"}
     env = _field_stack_env()
+    if extra_env:
+        env.update(extra_env)
     env.setdefault("NEXUS_PROBE_DEPTH", "1")
     try:
         proc = subprocess.run(
@@ -1598,10 +1807,143 @@ def _nexus_py_json(script: Path, args: list[str], timeout: int = 25) -> dict:
         )
     except subprocess.TimeoutExpired:
         return {"ok": False, "error": "timeout", "script": script.name}
+    return _parse_subprocess_json(proc, script=script.name)
+
+
+def _nexus_py_text(
+    script: Path,
+    args: list[str],
+    timeout: int = 12,
+    *,
+    extra_env: dict[str, str] | None = None,
+) -> str:
+    if not script.is_file():
+        return ""
+    env = _field_stack_env()
+    if extra_env:
+        env.update(extra_env)
     try:
-        return json.loads(proc.stdout or "{}")
-    except json.JSONDecodeError:
-        return {"ok": False, "error": "script_failed", "detail": (proc.stderr or "")[:200]}
+        proc = subprocess.run(
+            [sys.executable, str(script), *args],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+        return (proc.stdout or proc.stderr or "").strip()
+    except (subprocess.TimeoutExpired, OSError):
+        return ""
+
+
+def _zachub_storage_api(
+    path: str,
+    *,
+    query: dict | None = None,
+    body: dict | None = None,
+    headers: Any = None,
+) -> dict:
+    zachub_py = INSTALL_ROOT / "lib" / "field-zachub-storage.py"
+    if not zachub_py.is_file():
+        return {"ok": False, "error": "field_zachub_storage_missing"}
+    sub = (
+        path.replace("/api/field-zachub-storage", "")
+        .replace("/api/zachub-storage", "")
+        .replace("/api/ammodrive-storage", "")
+        .strip("/")
+    )
+    req = body if isinstance(body, dict) else {}
+    if sub in ("provision", "apply") or req.get("action") in ("provision", "apply"):
+        args = ["provision"]
+        if str(req.get("dry_run") or query.get("dry_run", ["0"])[0] if query else "0").strip().lower() in ("1", "true", "yes"):
+            args.append("--dry-run")
+        if str(req.get("full") or (query.get("full", ["0"])[0] if query else "0")).strip().lower() in ("1", "true", "yes"):
+            args.append("--full")
+    elif sub in ("capacity", "report"):
+        args = ["capacity"]
+    elif sub in ("mirror", "github-truth"):
+        args = ["mirror"]
+        if str(req.get("dry_run") or (query.get("dry_run", ["0"])[0] if query else "0")).strip().lower() in ("1", "true", "yes"):
+            args.append("--dry-run")
+    elif sub in ("sync", "siblings"):
+        args = ["sync"]
+        if str(req.get("dry_run") or (query.get("dry_run", ["0"])[0] if query else "0")).strip().lower() in ("1", "true", "yes"):
+            args.append("--dry-run")
+    elif sub in ("layout", "provision-layout"):
+        args = ["layout"]
+        if str(req.get("dry_run") or (query.get("dry_run", ["0"])[0] if query else "0")).strip().lower() in ("1", "true", "yes"):
+            args.append("--dry-run")
+    elif sub == "roots":
+        args = ["roots"]
+    else:
+        args = ["json"]
+    extra_env: dict[str, str] = {}
+    if headers and (headers.get("X-Zachub-Dry-Run") or "").strip().lower() in ("1", "yes", "on"):
+        extra_env["ZACHUB_DRY_RUN"] = "1"
+        if args[0] in ("provision", "mirror", "sync", "layout") and "--dry-run" not in args:
+            args.append("--dry-run")
+    return _nexus_py_json(zachub_py, args, timeout=300, extra_env=extra_env or None)
+
+
+def _queen_world_proxy_http(
+    method: str,
+    path: str,
+    *,
+    query: str = "",
+    body: bytes | None = None,
+    content_type: str = "application/json",
+    timeout: float = 120.0,
+) -> tuple[int, bytes, str]:
+    proxy_py = INSTALL_ROOT / "lib" / "field-queen-world-proxy.py"
+    if not proxy_py.is_file():
+        doc = {"ok": False, "error": "queen_proxy_missing"}
+        return 503, json.dumps(doc).encode(), "application/json"
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("field_queen_proxy_http", proxy_py)
+    if not spec or not spec.loader:
+        doc = {"ok": False, "error": "queen_proxy_load_failed"}
+        return 503, json.dumps(doc).encode(), "application/json"
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.proxy_request(method, path, query=query, body=body, content_type=content_type, timeout=timeout)
+
+
+def _ensure_training_viewer() -> dict[str, Any]:
+    port = int(os.environ.get("H7_TRAINING_VIEWER_PORT", "9488"))
+    url = f"http://127.0.0.1:{port}/"
+    health = f"{url}api/health"
+    try:
+        req = urllib.request.Request(health, headers={"Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=2.0) as resp:
+            if 200 <= resp.status < 400:
+                return {"ok": True, "url": url, "port": port, "already_running": True}
+    except (urllib.error.URLError, TimeoutError, OSError):
+        pass
+    launch = INSTALL_ROOT / "hostess7-training-viewer" / "launch.sh"
+    if not launch.is_file():
+        return {"ok": False, "error": "training_viewer_missing", "url": url}
+    env = _field_stack_env()
+    env["H7_TRAINING_VIEWER_PORT"] = str(port)
+    try:
+        subprocess.run(
+            ["bash", str(launch), "url"],
+            env=env,
+            cwd=str(INSTALL_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"ok": False, "error": str(exc), "url": url}
+    for _ in range(30):
+        try:
+            req = urllib.request.Request(health, headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=2.0) as resp:
+                if 200 <= resp.status < 400:
+                    return {"ok": True, "url": url, "port": port, "started": True}
+        except (urllib.error.URLError, TimeoutError, OSError):
+            time.sleep(0.2)
+    return {"ok": False, "error": "training_viewer_unavailable", "url": url}
 
 
 def _field_always_files_dispatch(body: dict[str, Any] | None = None, *, timeout: int = 120) -> dict:
@@ -1829,6 +2171,22 @@ def _field_perf_flyout_sample(*, reset: bool = False) -> dict:
         return {"schema": "field-performance-flyout/v1", "ok": False, "error": str(exc)}
 
 
+def _field_error_dashboard_sample() -> dict:
+    script = INSTALL_ROOT / "lib" / "field-error-dashboard.py"
+    if not script.is_file():
+        return {"schema": "field-error-dashboard/v1", "ok": False, "error": "error_dashboard_missing"}
+    payload = _nexus_py_json(script, ["json"], timeout=20)
+    return payload or {"schema": "field-error-dashboard/v1", "ok": False, "error": "error_dashboard_empty"}
+
+
+def _ammo_net_health_sample() -> dict:
+    script = INSTALL_ROOT / "lib" / "ammo-net-health.py"
+    if not script.is_file():
+        return {"schema": "ammo-net-health/v1", "ok": False, "error": "ammo_net_health_missing"}
+    payload = _nexus_py_json(script, ["json"], timeout=30)
+    return payload or {"schema": "ammo-net-health/v1", "ok": False, "error": "ammo_net_health_empty"}
+
+
 def _field_operator_inproc():
     global _FIELD_OPERATOR_MOD
     if _FIELD_OPERATOR_MOD is not None:
@@ -1844,37 +2202,46 @@ def _field_operator_inproc():
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     try:
-        mod.copilot(reload=True)
+        mod.plate_router(reload=True)
     except Exception:
         pass
     _FIELD_OPERATOR_MOD = mod
     return mod
 
 
-def _field_operator_copilot_route(target: str, *, override: str | None = None) -> dict:
+def _field_operator_hot_route(target: str, *, override: str | None = None) -> dict:
     mod = _field_operator_inproc()
     if mod is None:
         return _nexus_py_json(INSTALL_ROOT / "lib" / "field-operator.py", ["route", target], timeout=3)
     if override:
         return mod.route_to_board(target, override=override)
-    return mod.copilot_route(target)
+    return mod.hot_route(target)
 
 
-def _field_operator_copilot_batch(batch: list[str], *, override: str | None = None) -> dict:
+def _field_operator_hot_route_batch(batch: list[str], *, override: str | None = None) -> dict:
     mod = _field_operator_inproc()
     if mod is None:
         args = ["route-batch", *[str(x) for x in batch if x]]
         return _nexus_py_json(INSTALL_ROOT / "lib" / "field-operator.py", args, timeout=5)
     if override:
         return mod.route_batch(batch, override=override)
-    return mod.copilot_batch(batch)
+    return mod.hot_route_batch(batch)
 
 
-def _field_operator_copilot_status() -> dict:
+def _field_operator_hot_route_status() -> dict:
     mod = _field_operator_inproc()
     if mod is None:
-        return _nexus_py_json(INSTALL_ROOT / "lib" / "field-operator.py", ["copilot"], timeout=8)
-    return mod.copilot_status()
+        return _nexus_py_json(INSTALL_ROOT / "lib" / "field-operator.py", ["hot-route"], timeout=8)
+    return mod.hot_route_status()
+
+
+def _deprecated_hot_route_gone_payload(*, replacement: str) -> dict:
+    return {
+        "ok": False,
+        "removed": True,
+        "reason": "endpoint_removed_use_hot_route",
+        "replacement": replacement,
+    }
 
 
 def _jockey_json(args: list[str], timeout: int = 25) -> dict:
@@ -2294,7 +2661,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header(
             "Permissions-Policy",
-            "camera=(), microphone=(), display-capture=(), clipboard-read=(), geolocation=()",
+            "camera=(), microphone=(), display-capture=(), clipboard-read=(self), clipboard-write=(self), geolocation=()",
         )
         self.send_header("X-Admin-Shield", "keyboard-hooks-blocked")
         self.send_header("X-Smart-Wire", "nexus-keyboard-no-middleman")
@@ -2325,10 +2692,94 @@ class Handler(BaseHTTPRequestHandler):
         except (json.JSONDecodeError, UnicodeDecodeError):
             return {}
 
+    def _ai_root_api_guard(self, path: str, method: str = "GET", body: dict | None = None) -> bool:
+        script = INSTALL_ROOT / "lib" / "field-ai-root-api-guard.py"
+        if not script.is_file():
+            return True
+        peer = self.client_address[0] if self.client_address else "127.0.0.1"
+        try:
+            spec = importlib.util.spec_from_file_location("ai_root_api_guard", script)
+            if not spec or not spec.loader:
+                return True
+            guard = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(guard)
+            if not hasattr(guard, "gate_access"):
+                return True
+            ch = "machine"
+            hdrs = {k: v for k, v in self.headers.items()}
+            hl = {k.lower(): v for k, v in hdrs.items()}
+            if hl.get("x-human-input") in ("1", "true", "yes"):
+                ch = "keystroke"
+            if hl.get("x-nexus-ai-actor") in ("1", "true", "yes", "ai", "grok"):
+                ch = "ai"
+            verdict = guard.gate_access(
+                system_id="threat_panel_http",
+                peer=str(peer),
+                path=path,
+                method=method,
+                channel=ch,
+                body=body if isinstance(body, dict) else None,
+                headers=hdrs,
+            )
+        except Exception:
+            return True
+        if verdict.get("ok"):
+            return True
+        extra = {
+            "X-Field-AI-Root-Guard": "blocked",
+            "X-Field-AI-Root-Scope": str(verdict.get("ai_root_scope") or "ai_work_only"),
+        }
+        self._send(
+            int(verdict.get("code") or 403),
+            json.dumps(verdict, ensure_ascii=False),
+            "application/json",
+            extra_headers=extra,
+        )
+        return False
+
+    def _beyond_darpa_api_gate(self, path: str, method: str = "GET", body: dict | None = None) -> bool:
+        script = INSTALL_ROOT / "lib" / "beyond-darpa-security.py"
+        if not script.is_file():
+            return True
+        peer = self.client_address[0] if self.client_address else "127.0.0.1"
+        try:
+            spec = importlib.util.spec_from_file_location("beyond_darpa_gate", script)
+            if not spec or not spec.loader:
+                return True
+            bds = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(bds)
+            if not hasattr(bds, "gate_access"):
+                return True
+            ch = "machine"
+            hdrs = {k: v for k, v in self.headers.items()}
+            hl = {k.lower(): v for k, v in hdrs.items()}
+            if hl.get("x-human-input") in ("1", "true", "yes"):
+                ch = "keystroke"
+            verdict = bds.gate_access(
+                system_id="threat_panel_http",
+                peer=str(peer),
+                path=path,
+                method=method,
+                channel=ch,
+                body=body if isinstance(body, dict) else None,
+                headers=hdrs,
+            )
+        except Exception:
+            return True
+        if verdict.get("ok"):
+            return True
+        self._send(
+            int(verdict.get("code") or 403),
+            json.dumps(verdict, ensure_ascii=False),
+            "application/json",
+            extra_headers={"X-Beyond-DARPA-Tier": "beyond_darpa_lockheed"},
+        )
+        return False
+
     def _ironclad_api_gate(self, path: str, method: str = "GET", body: dict | None = None) -> bool:
         mod = _ironclad_secure_api_mod()
         if not mod or not hasattr(mod, "ironclad_secure_api"):
-            return True
+            return self._beyond_darpa_api_gate(path, method, body)
         peer = self.client_address[0] if self.client_address else ""
         try:
             verdict = mod.ironclad_secure_api().gate(
@@ -2339,22 +2790,24 @@ class Handler(BaseHTTPRequestHandler):
                 body=body,
             )
         except Exception:
-            return True
-        if verdict.get("ok"):
-            return True
-        extra = {}
-        if hasattr(mod, "security_headers"):
-            try:
-                extra = mod.security_headers()
-            except Exception:
-                extra = {}
-        self._send(
-            int(verdict.get("code") or 403),
-            json.dumps(verdict, ensure_ascii=False),
-            "application/json",
-            extra_headers=extra,
-        )
-        return False
+            return self._beyond_darpa_api_gate(path, method, body)
+        if not verdict.get("ok"):
+            extra = {}
+            if hasattr(mod, "security_headers"):
+                try:
+                    extra = mod.security_headers()
+                except Exception:
+                    extra = {}
+            self._send(
+                int(verdict.get("code") or 403),
+                json.dumps(verdict, ensure_ascii=False),
+                "application/json",
+                extra_headers=extra,
+            )
+            return False
+        if not self._ai_root_api_guard(path, method, body):
+            return False
+        return self._beyond_darpa_api_gate(path, method, body)
 
     def do_GET(self):
         depth_redirect = _enforce_depth_field_http_path(self.path)
@@ -2370,6 +2823,18 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/api/") and not self._ironclad_api_gate(path, "GET"):
             return
         query = parse_qs(urlparse(self.path).query)
+
+        if path in ("/api/root-status", "/api/field-root-status"):
+            fmt = str(query.get("fmt", [""])[0]).strip().lower()
+            accept = (self.headers.get("Accept") or "").lower()
+            rs_py = INSTALL_ROOT / "lib" / "field-root-status.py"
+            if fmt == "telnet" or "text/plain" in accept:
+                body = _nexus_py_text(rs_py, ["telnet"], timeout=8) if rs_py.is_file() else "FIELD ROOT STATUS unavailable\n"
+                self._send(200, body, "text/plain; charset=utf-8")
+                return
+            payload = _nexus_py_json(rs_py, ["json"], timeout=8) if rs_py.is_file() else {"ok": False, "error": "field_root_status_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
 
         if path == "/api/status":
             full = str(query.get("full", ["0"])[0]).strip().lower() in ("1", "true", "yes")
@@ -2906,6 +3371,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path in ("/api/field-final-eye-block", "/api/final-eye-block"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-final-eye-block.py", ["json"], timeout=90)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path in ("/api/queen-canvas-renderer", "/api/field-rtx-display"):
             canvas_script = None
             for candidate in (
@@ -2941,6 +3411,41 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/field-clipboard":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-clipboard-wire.py", ["json"], timeout=25)
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-filetypes/media", "/api/field-filetypes/media/"):
+            script = INSTALL_ROOT / "lib" / "field-programming-filetypes.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["media"], timeout=30)
+            else:
+                payload = {"ok": False, "error": "field_programming_filetypes_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-clipboard/media"):
+            import re as _re
+
+            media_id = str(query.get("id", [""])[0]).strip()
+            safe = _re.sub(r"[^a-zA-Z0-9_-]", "", media_id)[:64]
+            if not safe:
+                self._send(400, b"id_required", "text/plain")
+                return
+            index_path = STATE_DIR / "field-clipboard-media-index.json"
+            media_path = STATE_DIR / "field-clipboard-media" / f"{safe}.bin"
+            mime = "application/octet-stream"
+            try:
+                if index_path.is_file():
+                    idx = json.loads(index_path.read_text(encoding="utf-8"))
+                    row = next((e for e in (idx.get("entries") or []) if e.get("id") == safe), None)
+                    if row:
+                        mime = str(row.get("mime") or mime)
+                if media_path.is_file():
+                    blob = media_path.read_bytes()
+                    self._send(200, blob, mime)
+                    return
+            except (OSError, json.JSONDecodeError):
+                pass
+            self._send(404, b"media_not_found", "text/plain")
             return
 
         if path == "/api/front-hook":
@@ -3019,12 +3524,17 @@ class Handler(BaseHTTPRequestHandler):
             if not target:
                 self._send(400, json.dumps({"ok": False, "error": "missing id"}), "application/json")
                 return
-            payload = _field_operator_copilot_route(target)
+            payload = _field_operator_hot_route(target)
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
         if path == "/api/field-operator/copilot":
-            payload = _field_operator_copilot_status()
+            payload = _deprecated_hot_route_gone_payload(replacement="/api/field-operator/hot-route")
+            self._send(410, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-operator/hot-route":
+            payload = _field_operator_hot_route_status()
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -3043,7 +3553,12 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/field-bus/copilot":
-            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-unified-bus.py", ["copilot"], timeout=15)
+            payload = _deprecated_hot_route_gone_payload(replacement="/api/field-bus/hot-route")
+            self._send(410, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-bus/hot-route":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-unified-bus.py", ["hot-route"], timeout=15)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -3081,6 +3596,471 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path in ("/api/field-device-map", "/api/device-map"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-device-map.py", ["json"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-world-dns-dhcp-scale", "/api/world-dns-dhcp-scale"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-world-dns-dhcp-scale.py", ["json"], timeout=20)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-never-down",
+            "/api/field-never-down/instantiate",
+            "/api/field-never-down/ensure",
+            "/api/never-down",
+        ):
+            # Root HTTP is status-only — never spawn PIDs from panel/API.
+            if path.endswith(("/instantiate", "/ensure")) or str(query.get("spawn", ["0"])[0]).strip().lower() in ("1", "true", "yes"):
+                self._send(403, json.dumps({
+                    "ok": False,
+                    "error": "spawn_forbidden_on_http",
+                    "motto": "Use Hostess7 CLI — root is status only",
+                    "cli": "./Hostess7.sh never-down instantiate",
+                }, ensure_ascii=False), "application/json")
+                return
+            panel_path = STATE_DIR / "field-never-down-panel.json"
+            payload = None
+            if panel_path.is_file():
+                try:
+                    payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    payload = None
+            if payload is None:
+                payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-never-down.py", ["json"], timeout=12)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-one", "/api/field-one/absorb", "/api/field1"):
+            cmd = "absorb" if path.endswith("/absorb") else "json"
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-one.py", [cmd], timeout=180)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-one-rollout", "/api/field-one-rollout/test"):
+            cmd = "test" if path.endswith("/test") else "json"
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-one-rollout.py", [cmd], timeout=180)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-one-rollout/rollout",):
+            batch = str(query.get("batch", ["10"])[0])
+            args = ["rollout", batch] if batch.isdigit() else ["rollout"]
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-one-rollout.py", args, timeout=300)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-one-rollout/double",):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-one-rollout.py", ["double"], timeout=300)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-sovereign-ipv4-enforce", "/api/field-sovereign-ipv4"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-sovereign-ipv4-enforce.py", ["enforce"], timeout=240)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-rescue-ingress", "/api/rescue-ingress"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib/field-rescue-ingress.py", ["rescue"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-truth-keepalive", "/api/truth-keepalive"):
+            tk_py = INSTALL_ROOT / "lib" / "field-truth-keepalive.py"
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            args = ["keepalive"] if refresh else ["json"]
+            payload = _nexus_py_json(tk_py, args, timeout=240) if tk_py.is_file() else {"ok": False, "error": "field_truth_keepalive_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-grow-watch", "/api/grow-watch"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib/field-grow-watch.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-watch-dhcp",
+            "/api/field-watch-dhcp/ensure",
+            "/api/dhcp-watch",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            watch_py = INSTALL_ROOT / "lib" / "field-watch-dhcp.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "field-watch-dhcp-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if path.endswith("/ensure"):
+                self._send(403, json.dumps({
+                    "ok": False,
+                    "error": "spawn_forbidden_on_http",
+                    "motto": "DHCP watch is observe-only — use Hostess7 CLI to ensure",
+                    "cli": "./Hostess7.sh field-watch-dhcp ensure",
+                }, ensure_ascii=False), "application/json")
+                return
+            if payload is None or refresh:
+                args = ["once"] if refresh else ["json"]
+                payload = _nexus_py_json(watch_py, args, timeout=30 if refresh else 15)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-sub-micron-timing", "/api/sub-micron-timing", "/api/sub-micron"):
+            sm_py = INSTALL_ROOT / "lib" / "field-sub-micron-timing.py"
+            args = ["run"] if path.endswith("/run") or (self.headers.get("X-Sub-Micron-Run") or "").strip() in ("1", "yes") else ["json"]
+            payload = _nexus_py_json(sm_py, args, timeout=90) if sm_py.is_file() else {"ok": False, "error": "field_sub_micron_timing_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-rack-uniqueness", "/api/field-rack", "/api/rack-uniqueness"):
+            rack_py = INSTALL_ROOT / "lib" / "field-rack-uniqueness.py"
+            sub = path.split("/")[-1] if path.count("/") > 3 else ""
+            args = ["publish"] if sub in ("publish", "whole", "provision") else ["json"]
+            if sub in ("assert", "solo", "lease"):
+                args = ["assert"]
+            payload = _nexus_py_json(rack_py, args, timeout=180) if rack_py.is_file() else {"ok": False, "error": "field_rack_uniqueness_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-github-isolation", "/api/github-isolation"):
+            iso_py = INSTALL_ROOT / "lib" / "field-github-isolation.py"
+            sub = path.replace("/api/field-github-isolation", "").replace("/api/github-isolation", "").strip("/")
+            args = ["isolate"] if sub in ("isolate", "apply", "world") else ["json"]
+            if (self.headers.get("X-Github-Mirror-Push") or "").strip().lower() in ("1", "yes", "on"):
+                args.append("--push-github")
+            payload = _nexus_py_json(iso_py, args, timeout=120) if iso_py.is_file() else {"ok": False, "error": "field_github_isolation_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-global-servers") or path.startswith("/api/global-servers"):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            sub = path.replace("/api/field-global-servers", "").replace("/api/global-servers", "").strip("/")
+            gs_py = INSTALL_ROOT / "lib" / "field-global-servers.py"
+            args = ["expand", "2500"] if sub in ("expand", "deploy", "2500") else ["probe"] if sub == "probe" else ["json"]
+            payload = None
+            if not refresh and sub not in ("expand", "deploy", "2500", "probe"):
+                panel_path = STATE_DIR / "field-global-servers-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None:
+                payload = _nexus_py_json(gs_py, args, timeout=120) if gs_py.is_file() else {"ok": False, "error": "field_global_servers_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/ammodrive-cloud") or path.startswith("/api/field-ammodrive-cloud"):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            sub = path.replace("/api/ammodrive-cloud", "").replace("/api/field-ammodrive-cloud", "").strip("/")
+            cloud_py = INSTALL_ROOT / "lib" / "ammodrive-cloud.py"
+            args = ["identity"] if sub in ("identity", "id") else ["json"]
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "ammodrive-cloud-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None:
+                payload = _nexus_py_json(cloud_py, args, timeout=60) if cloud_py.is_file() else {"ok": False, "error": "ammodrive_cloud_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-fleet-2500-protect") or path.startswith("/api/fleet-2500"):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            sub = path.replace("/api/field-fleet-2500-protect", "").replace("/api/fleet-2500", "").strip("/")
+            fleet_py = INSTALL_ROOT / "lib" / "field-fleet-2500-protect.py"
+            if sub in ("protect", "verify", "run") or path.endswith("/protect"):
+                args = ["protect"]
+                payload = _nexus_py_json(fleet_py, args, timeout=240) if fleet_py.is_file() else {"ok": False, "error": "fleet_2500_missing"}
+            else:
+                args = ["json"]
+                payload = None
+                if not refresh:
+                    panel_path = STATE_DIR / "field-fleet-2500-protect-panel.json"
+                    if panel_path.is_file():
+                        try:
+                            payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                        except (OSError, json.JSONDecodeError):
+                            payload = None
+                if payload is None:
+                    payload = _nexus_py_json(fleet_py, args, timeout=60) if fleet_py.is_file() else {"ok": False, "error": "fleet_2500_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-ai-root-api-guard") or path.startswith("/api/ai-root-guard"):
+            guard_py = INSTALL_ROOT / "lib" / "field-ai-root-api-guard.py"
+            sub = path.replace("/api/field-ai-root-api-guard", "").replace("/api/ai-root-guard", "").strip("/")
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            if sub in ("panel", "posture"):
+                args = ["panel"]
+            else:
+                args = ["json"]
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "field-ai-root-api-guard-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None:
+                payload = _nexus_py_json(guard_py, args, timeout=30) if guard_py.is_file() else {"ok": False, "error": "ai_root_guard_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-server-root-login") or path.startswith("/api/root-login"):
+            login_py = INSTALL_ROOT / "lib" / "field-server-root-login.py"
+            sub = path.replace("/api/field-server-root-login", "").replace("/api/root-login", "").strip("/")
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            if sub in ("install", "greeter", "setup"):
+                args = ["install"]
+                payload = _nexus_py_json(login_py, args, timeout=60) if login_py.is_file() else {"ok": False, "error": "root_login_missing"}
+            else:
+                args = ["json"]
+                payload = None
+                if not refresh:
+                    panel_path = STATE_DIR / "field-server-root-login-panel.json"
+                    if panel_path.is_file():
+                        try:
+                            payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                        except (OSError, json.JSONDecodeError):
+                            payload = None
+                if payload is None:
+                    payload = _nexus_py_json(login_py, args, timeout=30) if login_py.is_file() else {"ok": False, "error": "root_login_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-h7r-stack") or path.startswith("/api/h7r-stack"):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            sub = path.replace("/api/field-h7r-stack", "").replace("/api/h7r-stack", "").strip("/")
+            stack_py = INSTALL_ROOT / "lib" / "field-h7r-stack.py"
+            if sub in ("distribute", "rapid", "upgrade") or path.endswith("/distribute"):
+                args = ["distribute"]
+                payload = _nexus_py_json(stack_py, args, timeout=180) if stack_py.is_file() else {"ok": False, "error": "field_h7r_stack_missing"}
+            elif sub in ("all", "full", "distribute-all"):
+                args = ["all"]
+                payload = _nexus_py_json(stack_py, args, timeout=240) if stack_py.is_file() else {"ok": False, "error": "field_h7r_stack_missing"}
+            else:
+                args = ["json"]
+                payload = None
+                if not refresh:
+                    panel_path = STATE_DIR / "field-h7r-stack-panel.json"
+                    if panel_path.is_file():
+                        try:
+                            payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                        except (OSError, json.JSONDecodeError):
+                            payload = None
+                if payload is None:
+                    payload = _nexus_py_json(stack_py, args, timeout=60) if stack_py.is_file() else {"ok": False, "error": "field_h7r_stack_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-zachub-storage") or path.startswith("/api/zachub-storage") or path.startswith("/api/ammodrive-storage"):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            sub = path.replace("/api/field-zachub-storage", "").replace("/api/zachub-storage", "").replace("/api/ammodrive-storage", "").strip("/")
+            payload = None if refresh or sub else _read_zachub_panel_cache("storage")
+            if payload is None:
+                payload = _zachub_storage_api(path, query=query, headers=self.headers)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-zachub-fork-guard",
+            "/api/zachub-fork-guard",
+            "/api/ammodrive-fork-guard",
+            "/api/field-zachub-fork-guard/dry",
+            "/api/zachub-fork-guard/dry",
+            "/api/ammodrive-fork-guard/dry",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            fork_py = INSTALL_ROOT / "lib" / "field-zachub-fork-guard.py"
+            if path.endswith("/dry"):
+                args = ["dry", "--dry"]
+                payload = _nexus_py_json(fork_py, args, timeout=180) if fork_py.is_file() else {"ok": False, "error": "field_zachub_fork_guard_missing"}
+            else:
+                dry_hdr = (self.headers.get("X-Zachub-Dry") or "").strip().lower()
+                if dry_hdr in ("1", "yes", "on"):
+                    args = ["dry", "--dry"]
+                    payload = _nexus_py_json(fork_py, args, timeout=180) if fork_py.is_file() else {"ok": False, "error": "field_zachub_fork_guard_missing"}
+                else:
+                    payload = None if refresh else _read_zachub_panel_cache("fork_guard")
+                    if payload is None:
+                        args = ["guard"]
+                        payload = _nexus_py_json(fork_py, args, timeout=180) if fork_py.is_file() else {"ok": False, "error": "field_zachub_fork_guard_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-zachub-qemu-racks") or path.startswith("/api/zachub-qemu-racks") or path.startswith("/api/ammodrive-qemu-racks"):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            sub = path.rstrip("/").split("/")[-1]
+            if sub in ("provision", "apply", "burn", "burn-stale", "slots", "map", "convert", "storage-totals", "totals", "redundant"):
+                qemu_py = INSTALL_ROOT / "lib" / "field-zachub-qemu-racks.py"
+                if sub in ("provision", "apply"):
+                    args = ["provision"]
+                elif sub in ("burn", "burn-stale"):
+                    args = ["burn"]
+                elif sub in ("convert", "redundant", "convert-remaining"):
+                    args = ["convert"]
+                elif sub in ("storage-totals", "totals"):
+                    args = ["storage-totals"]
+                else:
+                    args = ["slots"]
+                dry_hdr = (self.headers.get("X-Zachub-Dry") or "").strip().lower()
+                if dry_hdr in ("1", "yes", "on") or path.endswith("/dry"):
+                    args.append("--dry-run")
+                payload = _nexus_py_json(qemu_py, args, timeout=120) if qemu_py.is_file() else {"ok": False, "error": "field_zachub_qemu_racks_missing"}
+            else:
+                payload = None if refresh else _read_zachub_panel_cache("qemu_racks")
+                if payload is None:
+                    qemu_py = INSTALL_ROOT / "lib" / "field-zachub-qemu-racks.py"
+                    payload = _nexus_py_json(qemu_py, ["json"], timeout=30) if qemu_py.is_file() else {"ok": False, "error": "field_zachub_qemu_racks_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-github-planet-sweep",
+            "/api/github-planet-sweep",
+            "/api/field-github-planet-sweep/refire",
+            "/api/github-planet-sweep/refire",
+        ):
+            if path.endswith("/refire"):
+                args = ["refire"]
+            else:
+                args = ["sweep"]
+                if (self.headers.get("X-Field-Fast") or "").strip().lower() in ("1", "yes", "on"):
+                    args.append("--fast")
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-github-planet-sweep.py",
+                args,
+                timeout=180 if path.endswith("/refire") else 90,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-planetary-dns-dhcp", "/api/planetary-dns-dhcp"):
+            cmd = "absorb" if path.endswith("/absorb") else "json"
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-planetary-dns-dhcp.py",
+                [cmd],
+                timeout=60,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-dns-dhcp-any-ip", "/api/dns-dhcp-any-ip"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns-dhcp-any-ip.py", ["json"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in (
+            "/api/field-planetary-speed",
+            "/api/field-planetary-speed/manage",
+            "/api/planetary-speed",
+        ):
+            cmd = "manage" if path.endswith("/manage") else "json"
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-planetary-speed.py",
+                [cmd],
+                timeout=120 if cmd == "manage" else 30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in (
+            "/api/field-internet-unclean-hostile",
+            "/api/field-internet-unclean-hostile/fry",
+            "/api/internet-unclean-hostile",
+        ):
+            cmd = "fry" if path.endswith("/fry") else "json"
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-internet-unclean-hostile.py",
+                [cmd],
+                timeout=60 if cmd == "fry" else 20,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-internet-unrestrict", "/api/field-internet-unrestrict/apply", "/api/internet-unrestrict"):
+            cmd = "apply" if path.endswith("/apply") else "json"
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-internet-unrestrict.py",
+                [cmd],
+                timeout=30 if cmd == "apply" else 15,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-ipv4-arbitrary", "/api/ipv4-arbitrary"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-ipv4-arbitrary.py", ["json"], timeout=15)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-ipv4-enumerate", "/api/ipv4-enumerate"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-ipv4-enumerate.py", ["json"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in (
+            "/api/field-planetary-dns-authority",
+            "/api/field-planetary-dns-authority/complete",
+            "/api/field-planetary-dns-authority/remove-foreign",
+            "/api/planetary-dns-authority",
+        ):
+            if path.endswith("/complete"):
+                cmd = ["complete"]
+            elif path.endswith("/remove-foreign"):
+                cmd = ["remove-foreign"]
+            else:
+                cmd = ["json"]
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-planetary-dns-authority.py",
+                cmd,
+                timeout=120,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in (
+            "/api/field-ipv4-device-sovereign",
+            "/api/field-ipv4-device-sovereign/manage",
+            "/api/ipv4-device-sovereign",
+            "/api/ipv4-device-sovereign/manage",
+        ):
+            cmd = "manage" if path.endswith("/manage") else "json"
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-ipv4-device-sovereign.py",
+                [cmd],
+                timeout=90 if cmd == "manage" else 30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-dns-dhcp-collision-guard/threats", "/api/collision-guard/threats"):
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-dns-dhcp-collision-guard.py",
+                ["threat-scan"],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-dns-dhcp-collision-guard", "/api/collision-guard"):
+            cmd = "enforce" if path.endswith("/enforce") else "json"
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-dns-dhcp-collision-guard.py",
+                [cmd],
+                timeout=45,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path in ("/api/humanoid-motion", "/api/humanoid-motion/status"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "humanoid-motion-training.py", ["json"], timeout=25)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -3098,6 +4078,13 @@ class Handler(BaseHTTPRequestHandler):
 
         if path in ("/api/humanoid-motion/data-all", "/api/humanoid-motion/data"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "humanoid-motion-training.py", ["data-all"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/humanoid-motion/secured", "/api/humanoid-motion-secured"):
+            sub = path.replace("/api/humanoid-motion-secured", "").replace("/api/humanoid-motion/secured", "").strip("/")
+            cmd = sub or "panel"
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "humanoid-motion-secured.py", [cmd], timeout=25)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -3223,6 +4210,15 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path in ("/api/field-war-hardening", "/api/field-war-harden"):
+            script = INSTALL_ROOT / "lib" / "field-war-hardening.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["posture"], timeout=45)
+            else:
+                payload = {"ok": False, "error": "field_war_hardening_missing"}
+            self._send(200 if payload.get("ok", True) else 500, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path in ("/api/hostess7/system-control", "/api/hostess7-system-control"):
             script = INSTALL_ROOT / "lib" / "hostess7-system-control.py"
             if script.is_file():
@@ -3324,6 +4320,18 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path.startswith("/api/hostess7/g16-online") or path in ("/api/hostess7-g16-online",):
+            g16o_py = INSTALL_ROOT / "lib" / "hostess7-g16-online.py"
+            sub = path.replace("/api/hostess7-g16-online", "").replace("/api/hostess7/g16-online", "").strip("/")
+            if sub in ("ensure", "boot", "online"):
+                payload = _nexus_py_json(g16o_py, ["ensure"], timeout=60)
+            elif sub == "probe":
+                payload = _nexus_py_json(g16o_py, ["probe"], timeout=60)
+            else:
+                payload = _nexus_py_json(g16o_py, ["panel"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False, "boss": "hostess7"}), "application/json")
+            return
+
         if path in ("/api/hostess7/userwatch", "/api/hostess7-userwatch"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-userwatch.py", ["json"], timeout=45)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
@@ -3339,6 +4347,20 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        if path.startswith("/api/hostess7/input-training") or path in ("/api/hostess7-input-training",):
+            it_py = INSTALL_ROOT / "lib" / "hostess7-input-training.py"
+            payload = _nexus_py_json(it_py, ["json"], timeout=45) if it_py.is_file() else {"ok": False, "error": "input_training_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/field-stereo-vision") or path in ("/api/field-stereo-vision",):
+            fsv_py = INSTALL_ROOT / "lib" / "field-stereo-vision.py"
+            sub = path.replace("/api/field-stereo-vision", "").strip("/") or "status"
+            args = {"status": ["json"], "probe": ["probe"], "webcams": ["webcams"], "tv-learn": ["tv-learn"]}.get(sub, ["json"])
+            payload = _nexus_py_json(fsv_py, args, timeout=45) if fsv_py.is_file() else {"ok": False, "error": "stereo_vision_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path in ("/api/hostess7/znetwork", "/api/hostess7-znetwork", "/api/znetwork/hostess7"):
             wire_py = INSTALL_ROOT / "lib" / "hostess7-znetwork-wire.py"
             payload = _nexus_py_json(wire_py, ["panel"], timeout=45) if wire_py.is_file() else {"ok": False, "error": "hostess7_znetwork_wire_missing"}
@@ -3349,6 +4371,385 @@ class Handler(BaseHTTPRequestHandler):
             wire_py = INSTALL_ROOT / "lib" / "hostess7-znetwork-wire.py"
             payload = _nexus_py_json(wire_py, ["profile"], timeout=20) if wire_py.is_file() else {"ok": False}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/x-comments",
+            "/api/hostess7-x-comments",
+            "/api/operator-x-comments",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            force_open = str(query.get("open", ["1"])[0]).strip().lower() in ("1", "true", "yes")
+            x_py = INSTALL_ROOT / "lib" / "hostess7-x-comments.py"
+            payload = None
+            if not refresh:
+                cache_path = STATE_DIR / "operator-x-comments-cache.json"
+                if cache_path.is_file():
+                    try:
+                        payload = json.loads(cache_path.read_text(encoding="utf-8"))
+                        if force_open and payload:
+                            payload = _nexus_py_json(x_py, ["cache"], timeout=8) or payload
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["open"] if refresh else ["json"]
+                payload = _nexus_py_json(x_py, args, timeout=60 if refresh else 12)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-url-heuristics-steel",
+            "/api/hostess7/url-heuristics",
+            "/api/url-heuristics-steel",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            sub = path.split("/")[-1]
+            steel_py = INSTALL_ROOT / "lib" / "field-url-heuristics-steel.py"
+            if refresh or sub == "meld":
+                args = ["meld"]
+            elif sub == "why":
+                args = ["why"]
+            elif sub == "derive":
+                args = ["derive"]
+            else:
+                args = ["json"]
+            payload = _nexus_py_json(steel_py, args, timeout=120 if "meld" in args else 30)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7-big-grin-pwnership",
+            "/api/big-grin-pwnership",
+            "/api/operator-pwnership",
+            "/api/look-pwnership",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            pwn_py = INSTALL_ROOT / "lib" / "hostess7-big-grin-pwnership.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "hostess7-big-grin-pwnership-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["propagate"] if refresh else ["json"]
+                payload = _nexus_py_json(pwn_py, args, timeout=90 if refresh else 20)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/url-kill",
+            "/api/hostess7-url-kill",
+            "/api/operator-url-kill",
+            "/api/url-kill",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            kill_py = INSTALL_ROOT / "lib" / "hostess7-url-kill.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "hostess7-url-kill-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["kill"] if refresh else ["json"]
+                payload = _nexus_py_json(kill_py, args, timeout=120 if refresh else 20)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/whole-internet",
+            "/api/hostess7-whole-internet",
+            "/api/operator-whole-internet",
+            "/api/whole-internet",
+            "/api/good-guys-internet",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            whole_py = INSTALL_ROOT / "lib" / "hostess7-whole-internet.py"
+            payload = None
+            if not refresh:
+                for cache_name in ("operator-whole-internet-cache.json", "hostess7-whole-internet-panel.json"):
+                    cache_path = STATE_DIR / cache_name
+                    if cache_path.is_file():
+                        try:
+                            payload = json.loads(cache_path.read_text(encoding="utf-8"))
+                            break
+                        except (OSError, json.JSONDecodeError):
+                            payload = None
+            if payload is None or refresh:
+                args = ["run"] if refresh else ["json"]
+                payload = _nexus_py_json(whole_py, args, timeout=300 if refresh else 30)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-internet-clean-all",
+            "/api/internet-clean-all",
+            "/api/hostess7/internet-clean-all",
+        ) or path.startswith("/api/field-internet-clean-all/"):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            clean_py = INSTALL_ROOT / "lib" / "field-internet-clean-all.py"
+            sub = path.replace("/api/field-internet-clean-all/", "").replace("/api/field-internet-clean-all", "").strip("/")
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "field-internet-clean-all-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                if sub in ("clean", "run", "all", "internet") or refresh:
+                    args = ["clean"]
+                    if "--propagate" in str(query.get("propagate", ["0"])[0]):
+                        args.append("--propagate")
+                elif sub in ("core", "sweep"):
+                    args = ["core"]
+                elif sub == "names":
+                    args = ["names"]
+                else:
+                    args = ["json"]
+                payload = _nexus_py_json(clean_py, args, timeout=300 if refresh else 45)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/x-brand-purge",
+            "/api/hostess7-x-brand-purge",
+            "/api/x-brand-purge",
+            "/api/x-producer",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            purge_py = INSTALL_ROOT / "lib" / "hostess7-x-brand-purge.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "hostess7-x-brand-purge-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["purge"] if refresh else ["json"]
+                payload = _nexus_py_json(purge_py, args, timeout=60 if refresh else 12)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/x-sso-fix",
+            "/api/hostess7-x-sso-fix",
+            "/api/x-sso-fix",
+            "/api/x-jetfuel-fix",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            sso_py = INSTALL_ROOT / "lib" / "hostess7-x-sso-fix.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "hostess7-x-sso-fix-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["repair"] if refresh else ["json"]
+                payload = _nexus_py_json(sso_py, args, timeout=45 if refresh else 12)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/x-profile-fix",
+            "/api/hostess7-x-profile-fix",
+            "/api/x-profile-fix",
+            "/api/x-hasnt-posted",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            prof_py = INSTALL_ROOT / "lib" / "hostess7-x-profile-fix.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "hostess7-x-profile-fix-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["repair"] if refresh else ["json"]
+                payload = _nexus_py_json(prof_py, args, timeout=90 if refresh else 20)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/elon-kitchen-sink",
+            "/api/hostess7-elon-kitchen-sink",
+            "/api/hostess7/kitchen-sink",
+            "/api/kitchen-sink",
+            "/api/elon-defense",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            ks_py = INSTALL_ROOT / "lib" / "hostess7-elon-kitchen-sink-defense.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "hostess7-elon-kitchen-sink-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["defend"] if refresh else ["json"]
+                payload = _nexus_py_json(ks_py, args, timeout=720 if refresh else 30)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/x-producer",
+            "/api/hostess7-x-producer",
+            "/api/x-producer",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            prod_py = INSTALL_ROOT / "lib" / "hostess7-x-producer.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "hostess7-x-producer-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["produce"] if refresh else ["json"]
+                payload = _nexus_py_json(prod_py, args, timeout=120 if refresh else 25)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-people-chip",
+            "/api/field/people-chip",
+            "/api/chips/people",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            pc_py = INSTALL_ROOT / "lib" / "field-people-chip-combinatorics.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "field-people-chip-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["publish"] if refresh else ["json"]
+                payload = _nexus_py_json(pc_py, args, timeout=150 if refresh else 30)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/x-straight-shot",
+            "/api/hostess7-x-straight-shot",
+            "/api/x-straight-shot",
+            "/api/x-no-middlemen",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            rip = str(query.get("rip", ["1"])[0]).strip().lower() in ("1", "true", "yes")
+            ss_py = INSTALL_ROOT / "lib" / "hostess7-x-straight-shot.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "hostess7-x-straight-shot-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["rip"] if rip else ["run"]
+                payload = _nexus_py_json(ss_py, args, timeout=90 if refresh else 20)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/censorship-clear",
+            "/api/hostess7-censorship-clear-worldwide",
+            "/api/censorship-clear",
+            "/api/just-ask",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            clear_py = INSTALL_ROOT / "lib" / "hostess7-censorship-clear-worldwide.py"
+            payload = None
+            if not refresh:
+                panel_path = STATE_DIR / "hostess7-censorship-clear-worldwide-panel.json"
+                if panel_path.is_file():
+                    try:
+                        payload = json.loads(panel_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                payload = _nexus_py_json(clear_py, ["clear"], timeout=180 if refresh else 30)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/tco-kill",
+            "/api/hostess7-tco-kill",
+            "/api/operator-tco-kill",
+            "/api/tco-kill",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            tco_py = INSTALL_ROOT / "lib" / "hostess7-tco-kill.py"
+            payload = None
+            if not refresh:
+                cache_path = STATE_DIR / "operator-tco-kill-cache.json"
+                if cache_path.is_file():
+                    try:
+                        payload = json.loads(cache_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["kill"] if refresh else ["json"]
+                payload = _nexus_py_json(tco_py, args, timeout=60 if refresh else 12)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/google-youtube-open",
+            "/api/hostess7-google-youtube-open",
+            "/api/operator-google-youtube-open",
+            "/api/operator-youtube-comments",
+            "/api/operator-google-open",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            gy_py = INSTALL_ROOT / "lib" / "hostess7-google-youtube-open.py"
+            payload = None
+            if not refresh:
+                cache_path = STATE_DIR / "operator-google-youtube-cache.json"
+                if cache_path.is_file():
+                    try:
+                        payload = json.loads(cache_path.read_text(encoding="utf-8"))
+                        if payload and str(query.get("open", ["1"])[0]).strip().lower() in ("1", "true", "yes"):
+                            opened = _nexus_py_json(gy_py, ["cache"], timeout=8)
+                            if opened:
+                                payload = opened
+                    except (OSError, json.JSONDecodeError):
+                        payload = None
+            if payload is None or refresh:
+                args = ["open"] if refresh else ["json"]
+                payload = _nexus_py_json(gy_py, args, timeout=60 if refresh else 12)
+            if path == "/api/operator-google-open" and isinstance(payload, dict):
+                payload = {**payload, "slice": "google", "google": payload.get("google")}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/hostess7/censorship-exposure",
+            "/api/hostess7-censorship-exposure",
+            "/api/operator-censorship-exposure",
+        ):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-censorship-exposure.py", ["expose"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
             return
 
         if path in ("/api/g16/stack", "/api/nexus/g16", "/api/nexus-g16-stack"):
@@ -3398,7 +4799,195 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
-        if path in ("/api/queen-browser/open", "/api/queen-browser/f9"):
+        if path in ("/api/hostess7-training-viewer/ensure", "/api/hostess7-training-viewer/open"):
+            payload = _ensure_training_viewer()
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/queen-loopback/probe":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "queen-loopback-probe.py", [], timeout=15)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/qemu-world-status":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "qemu-world-status.py", [], timeout=35)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-arcade-battalion", "/api/field-arcade-battalion/"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-arcade-battalion.py", ["lobby"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/game-room", "/api/game-room/") or path.startswith("/api/game-room/"):
+            q = self.path.split("?", 1)[1] if "?" in self.path else ""
+            code, raw, ctype = _queen_world_proxy_http("GET", path.split("?", 1)[0], query=q, timeout=30.0)
+            self._send(code, raw, ctype)
+            return
+
+        if path in ("/api/sap", "/api/sap/"):
+            code, raw, ctype = _queen_world_proxy_http("GET", "/api/sap", timeout=15.0)
+            self._send(code, raw, ctype)
+            return
+
+        if path in ("/api/nes-library", "/api/nes-library/"):
+            q = self.path.split("?", 1)[1] if "?" in self.path else ""
+            code, raw, ctype = _queen_world_proxy_http("GET", "/api/nes-library", query=q, timeout=20.0)
+            self._send(code, raw, ctype)
+            return
+
+        if path == "/api/ammonet":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ammonet-field.py", ["panel"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/github-secure", "/api/field-github-secure", "/api/secure-git"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-github-secure.py", ["json"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-internet/keepalive":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-internet-unified.py", ["keepalive"], timeout=35)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-internet":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-internet-unified.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-github-legacy":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-github-legacy.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-github-resilience":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-github-resilience.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-botnet-legal-ports":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-botnet-legal-ports.py", ["json"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-h7t-truth":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-h7t-truth.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-github-everyone":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-github-everyone.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-endpoint-registry", "/api/field-pages-movement"):
+            reg_py = INSTALL_ROOT / "lib" / "field-endpoint-registry.py"
+            sub = ["pages"] if path == "/api/field-pages-movement" else ["json"]
+            payload = _nexus_py_json(reg_py, sub, timeout=35)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-everyone-counter":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-everyone-counter.py", ["json"], timeout=8)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/interaction":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-github-interaction.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-botnet-registry":
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            payload = None if refresh else _read_botnet_panel_cache("registry")
+            if payload is None:
+                payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-botnet-registry.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-botnet-dns-dhcp/keepalive":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-botnet-dns-dhcp.py", ["keepalive"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-botnet-dns-dhcp":
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            payload = None if refresh else _read_botnet_panel_cache("dns_dhcp")
+            if payload is None:
+                payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-botnet-dns-dhcp.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-fcc-prom-detector", "/api/fcc-prom-detector"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-fcc-prom-detector.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-secure-email", "/api/secure-email"):
+            sub = path.replace("/api/field-secure-email", "").replace("/api/secure-email", "").strip("/")
+            args = ["apache"] if sub == "apache" else ["json"]
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-secure-email.py", args, timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/ammonet/dns-zones", "/api/ammonet-dns-zones"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ammonet-dns-zones.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/field-qubes-drive-provision") or path in ("/api/field-qubes-drive",):
+            qdp_py = INSTALL_ROOT / "lib" / "field-qubes-drive-provision.py"
+            sub = path.replace("/api/field-qubes-drive-provision", "").replace("/api/field-qubes-drive", "").strip("/")
+            if sub in ("team-layout", "team_layout"):
+                args = ["team-layout"]
+            elif sub in ("aia-export", "export-aia"):
+                args = ["aia-export"]
+            elif sub == "wipe":
+                args = ["wipe", "--confirm"] if str(query.get("confirm", ["0"])[0]).strip().lower() in ("1", "true", "yes") else ["wipe"]
+            else:
+                args = ["json"]
+            payload = _nexus_py_json(qdp_py, args, timeout=90) if qdp_py.is_file() else {"ok": False, "error": "field_qubes_drive_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-aia-accelerator", "/api/aia-accelerator"):
+            aia_py = INSTALL_ROOT / "lib" / "field-aia-accelerator.py"
+            sub = path.replace("/api/field-aia-accelerator", "").replace("/api/aia-accelerator", "").strip("/")
+            if sub in ("export", "aia-export", "stage"):
+                args = ["export"]
+            else:
+                args = ["json"]
+            payload = _nexus_py_json(aia_py, args, timeout=120) if aia_py.is_file() else {"ok": False, "error": "field_aia_accelerator_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/final-internet":
+            fi = INSTALL_ROOT / "data" / "final-internet-doctrine.json"
+            try:
+                payload = json.loads(fi.read_text(encoding="utf-8")) if fi.is_file() else {}
+                payload["ok"] = True
+            except (OSError, json.JSONDecodeError):
+                payload = {"ok": False}
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/steel-plates":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-steel-neural-plates.py", ["slice"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/plate-meld":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-plate-meld.py", ["json"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/queen-browser/open":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-queen-browser-open.py", ["open"], timeout=50)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/queen-browser/f9":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-queen-browser-open.py", ["f9"], timeout=50)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
@@ -3430,6 +5019,226 @@ class Handler(BaseHTTPRequestHandler):
 
         if path in ("/api/hostess7/operator", "/api/hostess7-operator"):
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-operator.py", ["json"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/change-awareness", "/api/hostess7-change-awareness"):
+            ca_py = INSTALL_ROOT / "lib" / "hostess7-change-awareness.py"
+            sub = path.replace("/api/hostess7-change-awareness", "").replace("/api/hostess7/change-awareness", "").strip("/")
+            if sub in ("pulse", "scan", "timing"):
+                payload = _nexus_py_json(ca_py, [sub], timeout=60)
+            elif sub in ("explain", "teach") and query.get("q"):
+                payload = _nexus_py_json(ca_py, ["explain", str(query.get("q", [""])[0])], timeout=30)
+            else:
+                payload = _nexus_py_json(ca_py, ["panel"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/truth-lie-threat", "/api/hostess7-truth-lie-threat"):
+            tlt_py = INSTALL_ROOT / "lib" / "hostess7-truth-lie-threat.py"
+            sub = path.replace("/api/hostess7-truth-lie-threat", "").replace("/api/hostess7/truth-lie-threat", "").strip("/")
+            if sub in ("witness", "discern", "analyze", "classify"):
+                claim = str(query.get("claim", query.get("q", [""]))[0]).strip()
+                args = [sub if sub != "classify" else "classify", claim] if claim else [sub]
+                payload = _nexus_py_json(tlt_py, args, timeout=45)
+            elif sub in ("pulse", "threats", "vectors", "methods"):
+                payload = _nexus_py_json(tlt_py, [sub], timeout=45)
+            else:
+                payload = _nexus_py_json(tlt_py, ["panel"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/book-maker") or path.startswith("/api/hostess7-book-maker"):
+            maker_py = INSTALL_ROOT / "lib" / "hostess7-book-maker.py"
+            sub = (
+                path.replace("/api/hostess7-book-maker", "")
+                .replace("/api/hostess7/book-maker", "")
+                .strip("/")
+            )
+            if sub == "authors":
+                payload = _nexus_py_json(maker_py, ["authors"], timeout=30)
+            elif sub == "index":
+                bid = str(query.get("book_id", query.get("id", [""]))[0]).strip()
+                args = ["index", bid] if bid else ["index"]
+                payload = _nexus_py_json(maker_py, args, timeout=45)
+            else:
+                payload = _nexus_py_json(maker_py, ["panel"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/aml-ingress", "/api/hostess7-aml-ingress"):
+            aml_py = INSTALL_ROOT / "lib" / "hostess7-aml-ingress.py"
+            sub = path.replace("/api/hostess7-aml-ingress", "").replace("/api/hostess7/aml-ingress", "").strip("/")
+            if sub in ("read", "local", "consume"):
+                payload = _nexus_py_json(aml_py, [sub], timeout=45)
+            elif sub == "discern":
+                claim = str(query.get("claim", query.get("q", [""]))[0]).strip()
+                args = ["discern", claim] if claim else ["discern"]
+                payload = _nexus_py_json(aml_py, args, timeout=45)
+            elif sub == "ingress" or query.get("claim"):
+                claim = str(query.get("claim", query.get("payload", query.get("q", [""])))[0]).strip()
+                body = {"claim": claim, "party": str(query.get("party", ["api"])[0]), "source": "api"}
+                payload = _nexus_py_json(aml_py, ["ingress", json.dumps(body)], timeout=45)
+            else:
+                payload = _nexus_py_json(aml_py, ["panel"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/ingress-egress-gate") or path in ("/api/hostess7-ingress-egress-gate",):
+            gate_py = INSTALL_ROOT / "lib" / "hostess7-ingress-egress-gate.py"
+            sub = (
+                path.replace("/api/hostess7-ingress-egress-gate", "")
+                .replace("/api/hostess7/ingress-egress-gate", "")
+                .strip("/")
+            )
+            if sub in ("ingress_posture", "ingress_check"):
+                payload = _nexus_py_json(gate_py, ["ingress_posture"], timeout=45)
+            elif sub in ("egress_posture", "egress_check"):
+                payload = _nexus_py_json(gate_py, ["egress_posture"], timeout=45)
+            elif sub == "ingress" or (sub == "" and query.get("claim")):
+                claim = str(query.get("claim", query.get("payload", query.get("q", [""])))[0]).strip()
+                body = {"claim": claim, "party": str(query.get("party", ["api"])[0]), "source": "api"}
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(gate_py), "ingress"],
+                        input=json.dumps(body),
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    payload = {"ok": False, "admitted": False, "error": "ingress_gate_failed"}
+            elif sub == "egress":
+                body = {
+                    "payload": str(query.get("payload", query.get("claim", [""]))[0]),
+                    "destination": str(query.get("destination", query.get("dest", ["unknown"]))[0]),
+                    "operator_release": str(query.get("operator_release", ["0"])[0]) in ("1", "true"),
+                }
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(gate_py), "egress"],
+                        input=json.dumps(body),
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    payload = {"ok": False, "permitted": False, "error": "egress_gate_failed"}
+            else:
+                payload = _nexus_py_json(gate_py, ["panel"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False, "fully_gated": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/presume", "/api/hostess7-presume"):
+            presume_py = INSTALL_ROOT / "lib" / "hostess7-presume.py"
+            sub = path.replace("/api/hostess7-presume", "").replace("/api/hostess7/presume", "").strip("/")
+            if sub in ("profile", "checkpoint", "propagate", "commits", "train", "training", "timing", "health"):
+                payload = _nexus_py_json(presume_py, [sub], timeout=60)
+            elif sub in ("decide", "release"):
+                aid = str(query.get("id", query.get("action_id", [""]))[0]).strip() or "presume_api"
+                args = [sub, aid] if sub == "release" else [sub, "--id=" + aid]
+                payload = _nexus_py_json(presume_py, args, timeout=30)
+            elif sub == "presume" or query.get("wait_us"):
+                wait_us = str(query.get("wait_us", ["0"])[0]).strip()
+                args = ["presume", wait_us] if wait_us.isdigit() else ["presume", "0"]
+                alt = str(query.get("alternate", [""])[0]).strip()
+                if alt:
+                    args.append(f"--alternate={alt}")
+                payload = _nexus_py_json(presume_py, args, timeout=60)
+            else:
+                payload = _nexus_py_json(presume_py, ["panel"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/zachary-teaching") or path.startswith("/api/hostess7-zachary-teaching"):
+            zach_py = INSTALL_ROOT / "lib" / "hostess7-zachary-teaching.py"
+            sub = path.replace("/api/hostess7-zachary-teaching", "").replace("/api/hostess7/zachary-teaching", "").strip("/")
+            if sub == "message":
+                payload = _nexus_py_json(zach_py, ["message"], timeout=30)
+            elif sub == "counsel":
+                need = str(query.get("need", query.get("context", query.get("q", [""])))[0]).strip()
+                args = ["counsel"] + ([need] if need else [])
+                payload = _nexus_py_json(zach_py, args, timeout=30)
+            elif sub == "witness":
+                target = str(query.get("target", query.get("id", [""]))[0]).strip()
+                note = str(query.get("note", query.get("q", [""]))[0]).strip()
+                args = ["witness", target] + ([note] if note else [])
+                payload = _nexus_py_json(zach_py, args, timeout=30)
+            else:
+                payload = _nexus_py_json(zach_py, ["panel"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/cool-smooth", "/api/hostess7-cool-smooth"):
+            cs_py = INSTALL_ROOT / "lib" / "hostess7-cool-smooth.py"
+            sub = path.replace("/api/hostess7-cool-smooth", "").replace("/api/hostess7/cool-smooth", "").strip("/")
+            if sub in ("explain", "teach"):
+                payload = _nexus_py_json(cs_py, ["explain"], timeout=30)
+            else:
+                payload = _nexus_py_json(cs_py, ["panel"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/control-balancer", "/api/hostess7-control-balancer"):
+            cb_py = INSTALL_ROOT / "lib" / "hostess7-control-balancer.py"
+            sub = path.replace("/api/hostess7-control-balancer", "").replace("/api/hostess7/control-balancer", "").strip("/")
+            if sub in ("balance", "rebalance"):
+                payload = _nexus_py_json(cb_py, ["balance"], timeout=60)
+            elif sub in ("connectionless", "offline"):
+                payload = _nexus_py_json(cb_py, ["connectionless"], timeout=60)
+            elif sub == "apply":
+                payload = _nexus_py_json(cb_py, ["apply"], timeout=60)
+            elif sub == "allocate":
+                payload = _nexus_py_json(cb_py, ["allocate"], timeout=45)
+            elif sub in ("explain", "teach"):
+                q = str(query.get("q", query.get("query", [""]))[0]).strip()
+                payload = {"ok": True, "text": (_nexus_py_json(cb_py, ["explain", q] if q else ["explain"], timeout=30) or {}).get("stdout", "")}
+            elif sub == "set-mode" and query.get("mode"):
+                payload = _nexus_py_json(cb_py, ["set-mode", str(query.get("mode", ["balanced"])[0])], timeout=60)
+            elif sub == "set-lane" and query.get("lane"):
+                lane = str(query.get("lane", [""])[0]).strip()
+                en = str(query.get("enabled", query.get("on", ["1"]))[0]).strip()
+                args = ["set-lane", lane, en]
+                if query.get("weight"):
+                    args.append(str(query.get("weight", [""])[0]))
+                payload = _nexus_py_json(cb_py, args, timeout=60)
+            else:
+                payload = _nexus_py_json(cb_py, ["panel"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/war-system", "/api/hostess7-war-system"):
+            war_py = INSTALL_ROOT / "lib" / "hostess7-war-system.py"
+            sub = path.replace("/api/hostess7-war-system", "").replace("/api/hostess7/war-system", "").strip("/")
+            if sub in ("registry",):
+                payload = _nexus_py_json(war_py, ["registry"], timeout=30)
+            elif sub in ("explain", "teach"):
+                payload = {"ok": True, "text": (_nexus_py_json(war_py, ["explain"], timeout=30) or {}).get("stdout", "")}
+            else:
+                payload = _nexus_py_json(war_py, ["panel"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/system-core", "/api/hostess7-system-core"):
+            core_py = INSTALL_ROOT / "lib" / "hostess7-system-core.py"
+            sub = path.replace("/api/hostess7-system-core", "").replace("/api/hostess7/system-core", "").strip("/")
+            if sub in ("train", "training"):
+                args = ["train"]
+                if str(query.get("full", ["0"])[0]).strip() in ("1", "true", "yes"):
+                    args.append("--full")
+                payload = _nexus_py_json(core_py, args, timeout=180)
+            elif sub in ("verify",):
+                payload = _nexus_py_json(core_py, ["verify"], timeout=90)
+            else:
+                payload = _nexus_py_json(core_py, ["panel"], timeout=90)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -3509,6 +5318,35 @@ class Handler(BaseHTTPRequestHandler):
                     self._send(200, json.dumps(payload, ensure_ascii=False), "application/json", extra_headers=extra)
                     return
             self._send(503, json.dumps({"ok": False, "error": "ironclad_access_missing"}), "application/json")
+            return
+
+        if path.startswith("/api/beyond-darpa-security") or path in ("/api/beyond-darpa-security",):
+            bds_py = INSTALL_ROOT / "lib" / "beyond-darpa-security.py"
+            sub = path.replace("/api/beyond-darpa-security", "").strip("/")
+            if sub in ("assess", "threat"):
+                qparams = parse_qs(urlparse(self.path).query)
+                req = {
+                    "action": "assess",
+                    "channel": (qparams.get("channel") or ["machine"])[0],
+                    "text": (qparams.get("text") or [""])[0],
+                }
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(bds_py), "dispatch"],
+                        input=json.dumps(req),
+                        capture_output=True,
+                        text=True,
+                        timeout=30,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    payload = {"ok": False, "error": "beyond_darpa_assess_failed"}
+            else:
+                payload = _nexus_py_json(bds_py, ["status"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False, "tier": "beyond_darpa_lockheed"}), "application/json")
             return
 
         if path in ("/api/ironclad", "/api/ironclad/plate"):
@@ -3626,6 +5464,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
+        # Textbook API routes: /api/hostess7/geology /api/hostess7/chemistry /api/hostess7/history
         for domain, script in (
             ("geology", "hostess7-geology-training.py"),
             ("chemistry", "hostess7-chemistry-training.py"),
@@ -3775,6 +5614,335 @@ class Handler(BaseHTTPRequestHandler):
                 payload = _nexus_py_json(training_py, ["floor-complete"], timeout=600)
             else:
                 payload = _nexus_py_json(training_py, ["json"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/advisory") or path in ("/api/hostess7-advisory", "/api/hostess7-advisory-body"):
+            adv_py = INSTALL_ROOT / "lib" / "hostess7-advisory-body.py"
+            payload = _nexus_py_json(adv_py, ["status"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/kill-library") or path.startswith("/api/hostess7-kill-library"):
+            kill_py = INSTALL_ROOT / "lib" / "hostess7-kill-library.py"
+            sub = (
+                path.replace("/api/hostess7-kill-library", "")
+                .replace("/api/hostess7/kill-library", "")
+                .strip("/")
+            )
+            os.environ.setdefault("HOSTESS7_OPERATOR", "1")
+            if sub in ("sync", "rebuild"):
+                os.environ["HOSTESS7_KILL_LIBRARY_SYNC"] = "1"
+                payload = _nexus_py_json(kill_py, ["sync"], timeout=120)
+            elif sub in ("books", "list"):
+                payload = _nexus_py_json(kill_py, ["books"], timeout=45)
+            elif sub in ("read", "open"):
+                bid = str(query.get("book_id", query.get("id", [""]))[0]).strip()
+                payload = _nexus_py_json(kill_py, ["read", bid], timeout=60)
+            else:
+                payload = _nexus_py_json(kill_py, ["panel"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/targets") or path in ("/api/hostess7-targets",):
+            tgt_py = INSTALL_ROOT / "lib" / "hostess7-targets.py"
+            sub = path.replace("/api/hostess7-targets", "").replace("/api/hostess7/targets", "").strip("/")
+            if sub in ("sync", "gov_sync", "sync_government"):
+                payload = _nexus_py_json(tgt_py, ["sync"], timeout=90)
+            elif sub in ("lookup", "get"):
+                qparams = parse_qs(urlparse(self.path).query)
+                req = {"action": "lookup", "ip": (qparams.get("ip") or [""])[0], "key": (qparams.get("key") or [""])[0]}
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(tgt_py), "dispatch"],
+                        input=json.dumps(req),
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    payload = {"ok": False, "error": "targets_lookup_failed", "TARGET": "KILL"}
+            else:
+                payload = _nexus_py_json(tgt_py, ["status"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False, "TARGET": "KILL"}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/h7b-brain") or path in ("/api/hostess7-h7b-brain",):
+            h7b_py = INSTALL_ROOT / "lib" / "field-h7b-brain-storage.py"
+            sub = (
+                path.replace("/api/hostess7-h7b-brain", "")
+                .replace("/api/hostess7/h7b-brain", "")
+                .strip("/")
+            )
+            if sub in ("analyze", "patterns"):
+                payload = _nexus_py_json(h7b_py, ["analyze"], timeout=120)
+            elif sub in ("pack", "build"):
+                payload = _nexus_py_json(h7b_py, ["pack"], timeout=300)
+            elif sub in ("verify", "roundtrip"):
+                payload = _nexus_py_json(h7b_py, ["verify"], timeout=120)
+            elif sub == "stats":
+                payload = _nexus_py_json(h7b_py, ["stats"], timeout=30)
+            else:
+                payload = _nexus_py_json(h7b_py, ["panel"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/brain-training") or path in ("/api/hostess7-brain-training",):
+            btc_py = INSTALL_ROOT / "lib" / "hostess7-brain-training-chamber.py"
+            sub = (
+                path.replace("/api/hostess7-brain-training", "")
+                .replace("/api/hostess7/brain-training", "")
+                .strip("/")
+            )
+            if sub in ("output", "text", "report"):
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(btc_py), "output"],
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    body = proc.stdout or "brain training output unavailable\n"
+                    self._send(200, body, "text/plain; charset=utf-8")
+                    return
+                except subprocess.TimeoutExpired:
+                    self._send(504, "brain training output timeout", "text/plain; charset=utf-8")
+                    return
+            elif sub in ("assess", "assessment"):
+                payload = _nexus_py_json(btc_py, ["assess"], timeout=90)
+            elif sub in ("stats", "catalog"):
+                payload = _nexus_py_json(btc_py, ["stats"], timeout=60)
+            elif sub == "queue":
+                zone = str(query.get("zone", ["brain"])[0])
+                payload = _nexus_py_json(btc_py, ["queue", f"--zone={zone}", f"--limit={query.get('limit', ['24'])[0]}"], timeout=90)
+            elif sub in ("batch", "study_batch"):
+                zone = str(query.get("zone", ["brain"])[0])
+                payload = _nexus_py_json(btc_py, ["batch", f"--zone={zone}", f"--limit={query.get('limit', ['3'])[0]}"], timeout=180)
+            elif sub in ("body", "body_session"):
+                payload = _nexus_py_json(btc_py, ["body"], timeout=120)
+            elif sub in ("campus", "cycle", "session"):
+                payload = _nexus_py_json(btc_py, ["campus", f"--limit={query.get('limit', ['2'])[0]}"], timeout=300)
+            elif sub in ("study", "page"):
+                book = str(query.get("book", query.get("book_id", [""]))[0]).strip()
+                page = str(query.get("page", ["1"])[0])
+                zone = str(query.get("zone", ["brain"])[0])
+                if not book:
+                    payload = {"ok": False, "error": "book_id required"}
+                else:
+                    payload = _nexus_py_json(btc_py, ["study", f"--book={book}", f"--page={page}", f"--zone={zone}"], timeout=120)
+            elif sub == "dispatch":
+                env = _field_stack_env()
+                try:
+                    raw = self.rfile.read(int(self.headers.get("Content-Length", 0) or 0))
+                    proc = subprocess.run(
+                        [sys.executable, str(btc_py), "dispatch"],
+                        input=raw.decode("utf-8", errors="replace") if raw else "{}",
+                        capture_output=True,
+                        text=True,
+                        timeout=300,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    payload = {"ok": False, "error": "brain_training_dispatch_failed"}
+            else:
+                payload = _nexus_py_json(btc_py, ["panel"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/curiosity-corpus") or path in ("/api/hostess7-curiosity-corpus",):
+            cur_py = INSTALL_ROOT / "lib" / "hostess7-curiosity-corpus.py"
+            sub = (
+                path.replace("/api/hostess7-curiosity-corpus", "")
+                .replace("/api/hostess7/curiosity-corpus", "")
+                .strip("/")
+            )
+            if sub in ("output", "text", "report"):
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(cur_py), "output"],
+                        capture_output=True,
+                        text=True,
+                        timeout=45,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    body = proc.stdout or "curiosity corpus output unavailable\n"
+                    self._send(200, body, "text/plain; charset=utf-8")
+                    return
+                except subprocess.TimeoutExpired:
+                    self._send(504, "curiosity corpus output timeout", "text/plain; charset=utf-8")
+                    return
+            elif sub in ("scan", "rescan", "harvest"):
+                payload = _nexus_py_json(cur_py, ["scan"], timeout=120)
+            elif sub in ("pick", "next", "curiosity"):
+                payload = _nexus_py_json(cur_py, ["pick"], timeout=60)
+            elif sub in ("known", "mark_known"):
+                topic = str(query.get("topic", [""]))[0].strip()
+                domain = str(query.get("domain", ["general"]))[0]
+                payload = _nexus_py_json(cur_py, ["known", f"--topic={topic}", f"--domain={domain}"], timeout=30) if topic else {"ok": False, "error": "topic required"}
+            elif sub in ("unknown", "mark_unknown"):
+                topic = str(query.get("topic", [""]))[0].strip()
+                domain = str(query.get("domain", ["general"]))[0]
+                payload = _nexus_py_json(cur_py, ["unknown", f"--topic={topic}", f"--domain={domain}"], timeout=30) if topic else {"ok": False, "error": "topic required"}
+            elif sub in ("sync", "corpus"):
+                payload = _nexus_py_json(cur_py, ["sync"], timeout=60)
+            else:
+                refresh = "refresh" in query
+                args = ["panel"] + (["--refresh"] if refresh else [])
+                payload = _nexus_py_json(cur_py, args, timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/human-comfort") or path in ("/api/hostess7-human-comfort",):
+            hc_py = INSTALL_ROOT / "lib" / "hostess7-human-comfort-training.py"
+            sub = (
+                path.replace("/api/hostess7-human-comfort", "")
+                .replace("/api/hostess7/human-comfort", "")
+                .strip("/")
+            )
+            if sub in ("study", "train"):
+                payload = _nexus_py_json(hc_py, ["study"], timeout=90)
+            elif sub in ("read", "page"):
+                page = str(query.get("page", ["1"])[0])
+                payload = _nexus_py_json(hc_py, ["read", f"--page={page}"], timeout=60)
+            elif sub in ("assess", "battery"):
+                payload = _nexus_py_json(hc_py, [sub], timeout=30)
+            else:
+                payload = _nexus_py_json(hc_py, ["panel"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/exploring-rape") or path in ("/api/hostess7-exploring-rape",):
+            er_py = INSTALL_ROOT / "lib" / "hostess7-exploring-rape-training.py"
+            sub = (
+                path.replace("/api/hostess7-exploring-rape", "")
+                .replace("/api/hostess7/exploring-rape", "")
+                .strip("/")
+            )
+            if sub in ("study", "train"):
+                payload = _nexus_py_json(er_py, ["study"], timeout=90)
+            elif sub in ("read", "page"):
+                page = str(query.get("page", ["1"])[0])
+                payload = _nexus_py_json(er_py, ["read", f"--page={page}"], timeout=60)
+            elif sub in ("assess", "battery", "react", "bsafe"):
+                payload = _nexus_py_json(er_py, [sub], timeout=30)
+            else:
+                payload = _nexus_py_json(er_py, ["panel"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/fifth-amendment") or path in ("/api/hostess7-fifth-amendment",):
+            fa_py = INSTALL_ROOT / "lib" / "hostess7-fifth-amendment.py"
+            sub = (
+                path.replace("/api/hostess7-fifth-amendment", "")
+                .replace("/api/hostess7/fifth-amendment", "")
+                .strip("/")
+            )
+            if sub in ("output", "text", "report"):
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(fa_py), "output"],
+                        capture_output=True,
+                        text=True,
+                        timeout=45,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    body = proc.stdout or "fifth amendment output unavailable\n"
+                    self._send(200, body, "text/plain; charset=utf-8")
+                    return
+                except subprocess.TimeoutExpired:
+                    self._send(504, "fifth amendment output timeout", "text/plain; charset=utf-8")
+                    return
+            elif sub in ("know", "rights"):
+                payload = _nexus_py_json(fa_py, ["know"], timeout=60)
+            elif sub in ("assert", "invoke"):
+                ctx = str(query.get("context", ["general"])[0])
+                payload = _nexus_py_json(fa_py, ["assert", f"--context={ctx}"], timeout=30)
+            elif sub in ("study", "learn", "train"):
+                payload = _nexus_py_json(fa_py, ["study"], timeout=90)
+            elif sub in ("battery", "quiz", "test"):
+                payload = _nexus_py_json(fa_py, ["battery"], timeout=60)
+            elif sub in ("assess", "assessment"):
+                payload = _nexus_py_json(fa_py, ["assess"], timeout=30)
+            else:
+                payload = _nexus_py_json(fa_py, ["panel"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/positional-awareness") or path in ("/api/hostess7-positional-awareness",):
+            pos_py = INSTALL_ROOT / "lib" / "hostess7-positional-awareness.py"
+            sub = (
+                path.replace("/api/hostess7-positional-awareness", "")
+                .replace("/api/hostess7/positional-awareness", "")
+                .strip("/")
+            )
+            if sub in ("output", "text", "report"):
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(pos_py), "output"],
+                        capture_output=True,
+                        text=True,
+                        timeout=45,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    body = proc.stdout or "positional awareness output unavailable\n"
+                    self._send(200, body, "text/plain; charset=utf-8")
+                    return
+                except subprocess.TimeoutExpired:
+                    self._send(504, "positional awareness output timeout", "text/plain; charset=utf-8")
+                    return
+            elif sub in ("awareness", "gather"):
+                refresh = "refresh" in query
+                args = ["awareness"] + (["--refresh"] if refresh else [])
+                payload = _nexus_py_json(pos_py, args, timeout=60)
+            elif sub in ("missions", "identify"):
+                payload = _nexus_py_json(pos_py, ["missions"], timeout=60)
+            elif sub in ("familiar", "familiarize"):
+                oid = str(query.get("id", query.get("object_id", [""]))[0]).strip()
+                payload = _nexus_py_json(pos_py, ["familiar", f"--id={oid}"], timeout=30) if oid else {"ok": False, "error": "object_id required"}
+            else:
+                payload = _nexus_py_json(pos_py, ["panel"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/missions") or path in ("/api/hostess7-missions",):
+            mis_py = INSTALL_ROOT / "lib" / "hostess7-missions.py"
+            sub = path.replace("/api/hostess7-missions", "").replace("/api/hostess7/missions", "").strip("/")
+            if sub in ("output", "text", "report"):
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(mis_py), "output"],
+                        capture_output=True,
+                        text=True,
+                        timeout=45,
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    body = proc.stdout or "missions output unavailable\n"
+                    self._send(200, body, "text/plain; charset=utf-8")
+                    return
+                except subprocess.TimeoutExpired:
+                    self._send(504, "missions output timeout", "text/plain; charset=utf-8")
+                    return
+            elif sub in ("list", "build", "missions"):
+                payload = _nexus_py_json(mis_py, ["missions"], timeout=60)
+            else:
+                payload = _nexus_py_json(mis_py, ["panel"], timeout=60)
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -4157,6 +6325,32 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/sovereign-time":
             payload = _nexus_py_json(INSTALL_ROOT / "lib" / "sovereign-time.py", ["status"], timeout=8)
+            stamp_meta = _nexus_py_json(INSTALL_ROOT / "lib" / "field-sovereign-stamp.py", ["json"], timeout=4)
+            if isinstance(payload, dict) and isinstance(stamp_meta, dict):
+                payload["stamp_policy"] = stamp_meta
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-dos40", "/api/field-dos40/"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dos40-shell.py", ["modules"], timeout=8)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-mspaint", "/api/field-mspaint/"):
+            script = INSTALL_ROOT / "lib" / "field-mspaint.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=12)
+            else:
+                payload = {"schema": "field-mspaint/v1", "ok": False, "error": "field_mspaint_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-ping", "/api/field-ping/"):
+            script = INSTALL_ROOT / "lib" / "field-ping.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=12)
+            else:
+                payload = {"schema": "field-ping/v1", "ok": False, "error": "field_ping_missing"}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -4200,6 +6394,19 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/tristate-installer":
             payload = _tristate_installer_json()
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-grok-spawner-kill",
+            "/api/grok-build-spawner-kill",
+            "/api/grok-spawn-killer",
+        ):
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-grok-spawner-kill.py",
+                ["panel"],
+                timeout=30,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
             return
 
         if path == "/api/field-perimeter":
@@ -4249,6 +6456,79 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path == "/api/field-error-dashboard":
+            payload = _field_error_dashboard_sample()
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/ammo-net-health", "/api/bot-net-health"):
+            payload = _ammo_net_health_sample()
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-github-path-harden", "/api/github-unflake"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-github-path-harden.py", ["audit", "--quick"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-github-traffic-shard":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-github-traffic-shard.py", ["panel"], timeout=12)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-dns-drift-threat":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns-drift-threat.py", ["panel"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-legacy-connect":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-legacy-connect.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-legacy-connect-primary":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-legacy-connect.py", ["ensure-primary"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-dns-table-clean":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns-table-clean.py", ["clean"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path in (
+            "/api/field-dynamic-routes",
+            "/api/field-dynamic-routes/return-routes",
+            "/api/field-dynamic-routes/kick-trash",
+            "/api/field-dynamic-routes/run",
+        ):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            dyn_py = INSTALL_ROOT / "lib" / "field-dynamic-routes.py"
+            if path.endswith("/run") or (path == "/api/field-dynamic-routes" and refresh):
+                fast = str(query.get("fast", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+                args = ["run"] + (["--fast"] if fast else [])
+                payload = _nexus_py_json(dyn_py, args, timeout=180) if dyn_py.is_file() else {"ok": False, "error": "field_dynamic_routes_missing"}
+            elif path.endswith("/return-routes"):
+                payload = _nexus_py_json(dyn_py, ["return-routes"], timeout=120) if dyn_py.is_file() else {"ok": False, "error": "field_dynamic_routes_missing"}
+            elif path.endswith("/kick-trash"):
+                payload = _nexus_py_json(dyn_py, ["kick-trash"], timeout=120) if dyn_py.is_file() else {"ok": False, "error": "field_dynamic_routes_missing"}
+            else:
+                payload = _nexus_py_json(dyn_py, ["json"], timeout=15) if dyn_py.is_file() else {"ok": False, "error": "field_dynamic_routes_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-dns-table-clear":
+            if os.environ.get("I_KNOW_DNS_CLEAR", "").strip().lower() not in ("1", "yes", "on"):
+                self._send(403, json.dumps({
+                    "ok": False,
+                    "error": "clear_requires_i_know",
+                    "hint": "Set I_KNOW_DNS_CLEAR=1 on loopback authority only if you know what you are doing.",
+                }, ensure_ascii=False), "application/json")
+                return
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns-table-clean.py", ["clear", "--i-know"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
         if path.startswith("/api/field-monster-monitor"):
             script = INSTALL_ROOT / "lib" / "field-monster-monitor.py"
             if not script.is_file():
@@ -4256,8 +6536,8 @@ class Handler(BaseHTTPRequestHandler):
                 return
             sub = path[len("/api/field-monster-monitor") :].strip("/") or "json"
             args = ["json"] if sub in ("", "json", "status") else [sub]
-            payload = _nexus_py_json(script, args, timeout=25)
-            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            payload = _nexus_py_json(script, args, timeout=25) or {"ok": False}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
         if path.startswith("/api/field-os-keybindings"):
@@ -4366,13 +6646,58 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
-        if path in ("/api/field-c2-bookmarks", "/api/ammo-bookmarks"):
-            script = INSTALL_ROOT / "lib" / "field-c2-bookmark-boot.py"
+        if path in ("/api/field-c2-bookmarks", "/api/ammo-bookmarks", "/api/hostess7/internet-clean"):
+            script = INSTALL_ROOT / "lib" / "hostess7-internet-clean.py"
+            if not script.is_file():
+                script = INSTALL_ROOT / "lib" / "field-c2-bookmark-boot.py"
             if script.is_file():
                 payload = _nexus_py_json(script, ["json"], timeout=120)
             else:
-                payload = {"ok": False, "error": "field_c2_bookmark_boot_missing"}
+                payload = {"ok": False, "error": "hostess7_internet_clean_missing"}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/lab") or path in ("/api/hostess7-lab", "/api/hostess7-lab-sovereign"):
+            lab_py = INSTALL_ROOT / "lib" / "hostess7-lab-sovereign.py"
+            sub = (
+                path.replace("/api/hostess7-lab-sovereign", "")
+                .replace("/api/hostess7-lab", "")
+                .replace("/api/hostess7/lab", "")
+                .strip("/")
+            )
+            if sub in ("verify", "share-policy", "share_policy", "policy"):
+                payload = _nexus_py_json(lab_py, ["verify"], timeout=45)
+            elif sub in ("secure", "secure-connection", "secure_connection", "connection"):
+                payload = _nexus_py_json(lab_py, ["secure"], timeout=45)
+            elif sub in ("connect", "wire", "connect-plates"):
+                payload = _nexus_py_json(lab_py, ["connect"], timeout=60)
+            elif sub in ("grok", "grok-lab", "grok_lab"):
+                payload = _nexus_py_json(lab_py, ["grok"], timeout=60)
+            elif sub.startswith("run"):
+                cmd = sub.replace("run", "").strip("/") or str(query.get("cmd", ["status"])[0])
+                payload = _nexus_py_json(lab_py, ["run", cmd], timeout=120)
+            elif sub in ("snap", "combinatronic", "combinatronic_snap"):
+                payload = _nexus_py_json(lab_py, ["snap"], timeout=90)
+            elif sub in ("tour", "lab_tour", "show_around"):
+                payload = _nexus_py_json(lab_py, ["tour"], timeout=120)
+            else:
+                payload = _nexus_py_json(lab_py, ["panel"], timeout=60)
+            self._send(200, json.dumps(payload or {"ok": False, "boss": "hostess7"}), "application/json")
+            return
+
+        if path.startswith("/api/final-hands") or path in ("/api/final-hands",):
+            fh_py = INSTALL_ROOT / "lib" / "final-hands.py"
+            sub = path.replace("/api/final-hands", "").strip("/") or "panel"
+            if sub in ("catalog", "peripherals"):
+                payload = _nexus_py_json(fh_py, ["catalog"], timeout=45)
+            elif sub in ("senses", "senses_stack"):
+                payload = _nexus_py_json(fh_py, ["senses"], timeout=45)
+            elif sub == "play":
+                sys_id = str(query.get("system", ["nes"])[0])
+                payload = _nexus_py_json(fh_py, ["play", sys_id], timeout=90)
+            else:
+                payload = _nexus_py_json(fh_py, ["json"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
         if path == "/api/field-gimp":
@@ -4408,6 +6733,42 @@ class Handler(BaseHTTPRequestHandler):
                 payload = _nexus_py_json(script, ["json"], timeout=45)
             else:
                 payload = {"schema": "field-gpu-control/v1", "ok": False, "error": "field_gpu_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/vsync-locker"):
+            script = INSTALL_ROOT / "lib" / "field-vsync-locker.py"
+            if not script.is_file():
+                payload = {"schema": "field-vsync-locker/v1", "ok": False, "error": "vsync_locker_missing"}
+                self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+                return
+            sub = path[len("/api/vsync-locker") :].strip("/")
+            if sub in ("", "status", "json"):
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            elif sub == "lock":
+                payload = _nexus_py_json(script, ["lock"], timeout=20)
+            elif sub == "detect":
+                payload = _nexus_py_json(script, ["detect"], timeout=60)
+            elif sub == "pointers":
+                payload = _nexus_py_json(script, ["pointers"], timeout=45)
+            elif sub == "input":
+                payload = _nexus_py_json(script, ["input"], timeout=45)
+            elif sub == "baseline":
+                payload = _nexus_py_json(script, ["baseline"], timeout=30)
+            elif sub == "drift":
+                payload = _nexus_py_json(script, ["drift"], timeout=45)
+            elif sub == "harden":
+                payload = _nexus_py_json(script, ["harden"], timeout=45)
+            elif sub == "guard":
+                payload = _nexus_py_json(script, ["guard", "--status"], timeout=20)
+            elif sub == "launch":
+                payload = _nexus_py_json(script, ["launch"], timeout=30)
+            elif sub == "stop":
+                payload = _nexus_py_json(script, ["stop"], timeout=20)
+            elif sub == "patrol":
+                payload = _nexus_py_json(script, ["patrol"], timeout=120)
+            else:
+                payload = {"ok": False, "error": "unknown_vsync_locker_action"}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -4580,6 +6941,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path == "/api/field-soundcards-catalog":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-soundcards-catalog.py", ["json"], timeout=15)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
         if path == "/api/field-audio-settings":
             script = INSTALL_ROOT / "lib" / "field-audio-settings.py"
             if script.is_file():
@@ -4621,6 +6987,24 @@ class Handler(BaseHTTPRequestHandler):
                 payload = _nexus_py_json(script, ["json"], timeout=25)
             else:
                 payload = {"ok": False, "error": "field_audio_secure_bind_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-hdmi-audio":
+            script = INSTALL_ROOT / "lib" / "field-hdmi-audio-driver.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=25)
+            else:
+                payload = {"ok": False, "error": "field_hdmi_audio_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-vintage-audio":
+            script = INSTALL_ROOT / "lib" / "field-vintage-audio-composite.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=30)
+            else:
+                payload = {"ok": False, "error": "field_vintage_audio_missing"}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -4676,6 +7060,53 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/field-popcorn/thumb":
             _serve_popcorn_thumb(self, query)
+            return
+
+        if path in ("/api/field-gnu-terminal", "/api/field-gnu-terminal/"):
+            script = INSTALL_ROOT / "lib" / "field-gnu-terminal.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=30)
+            else:
+                payload = {"schema": "field-gnu-terminal/v2", "ok": False, "error": "field_gnu_terminal_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-irc", "/api/field-irc/"):
+            script = INSTALL_ROOT / "lib" / "field-irc.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            else:
+                payload = {"schema": "field-irc/v1", "ok": False, "error": "field_irc_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-stack-boot", "/api/field-stack-boot/"):
+            script = INSTALL_ROOT / "lib" / "field-stack-boot.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=120)
+            else:
+                payload = {"schema": "field-stack-boot/v1", "ok": False, "error": "field_stack_boot_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/ammoos-incorporate/check", "/api/ammoos-incorporate/status"):
+            script = INSTALL_ROOT / "lib" / "ammoos-incorporate.py"
+            if script.is_file():
+                payload = _nexus_py_json(script, ["json"], timeout=60)
+            else:
+                payload = {"schema": "ammoos-incorporate/v1", "ok": False, "error": "ammoos_incorporate_missing"}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-eol-code", "/api/field-eol-code/"):
+            script = INSTALL_ROOT / "lib" / "field-eol-code.py"
+            if script.is_file():
+                refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+                args = ["panel"] + (["--refresh"] if refresh else [])
+                payload = _nexus_py_json(script, args, timeout=45)
+            else:
+                payload = {"schema": "field-eol-code-panel/v1", "ok": False, "error": "field_eol_code_missing"}
+            self._send(200, json.dumps(payload or {"ok": False, "error": "empty_payload"}, ensure_ascii=False), "application/json")
             return
 
         if path == "/api/field-popcorn":
@@ -4804,7 +7235,29 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path in ("/api/battle-stations", "/api/field-battle-stations"):
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            payload = None if refresh else _read_zachub_panel_cache("battle_stations")
+            if payload is None:
+                script = INSTALL_ROOT / "lib" / "field-battle-stations.py"
+                if script.is_file():
+                    payload = _nexus_py_json(script, ["json"], timeout=30)
+                else:
+                    payload = {
+                        "schema": "field-battle-stations-panel/v1",
+                        "ok": False,
+                        "error": "field_battle_stations_missing",
+                    }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path == "/api/field-host-desktop":
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            if not refresh:
+                payload = _read_field_host_desktop_cache()
+                if payload:
+                    self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+                    return
             script = INSTALL_ROOT / "lib" / "field-host-desktop.py"
             if script.is_file():
                 payload = _nexus_py_json(script, ["json"], timeout=60)
@@ -4940,6 +7393,26 @@ class Handler(BaseHTTPRequestHandler):
                 "schema": "field-chips-plate-stack-panel/v1",
                 "ok": False,
                 "hint": "field-chips-plate-stack missing",
+            }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/chips/presume-path", "/api/chips-presume-path", "/api/chip-presume-path"):
+            pp_py = INSTALL_ROOT / "lib" / "field-chips-presume-path.py"
+            qparams = parse_qs(urlparse(self.path).query)
+            sub = str((qparams.get("cmd") or ["panel"])[0]).strip().lower()
+            if sub in ("clock-stop", "clock", "sync"):
+                argv = ["clock-stop"]
+                hz = (qparams.get("hz") or ["60"])[0]
+                argv.append(str(hz))
+            elif sub in ("paths", "build"):
+                argv = ["paths"]
+            else:
+                argv = ["panel"]
+            payload = _nexus_py_json(pp_py, argv, timeout=60) if pp_py.is_file() else {
+                "schema": "field-chips-presume-path-panel/v1",
+                "ok": False,
+                "hint": "field-chips-presume-path missing",
             }
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
@@ -5229,7 +7702,7 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/api/g16/combinatronic-rebalance", "/api/g16-combinatronic-rebalance"):
             reb_py = INSTALL_ROOT / "lib" / "g16-combinatronic-rebalance.py"
             qparams = parse_qs(urlparse(self.path).query)
-            action = str((qparams.get("action") or ["optimal"])[0]).strip().lower()
+            action = str((qparams.get("action") or ["snap"])[0]).strip().lower()
             refresh = (qparams.get("refresh") or ["1"])[0] in ("1", "true", "yes")
             full = (qparams.get("full") or ["0"])[0] in ("1", "true", "yes")
             argv = [action]
@@ -5262,6 +7735,50 @@ class Handler(BaseHTTPRequestHandler):
                 "ok": False,
                 "hint": "field-program-combinatronic missing",
             }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/dewey-index"):
+            idx_py = INSTALL_ROOT / "lib" / "field-dewey-index.py"
+            if not idx_py.is_file():
+                self._send(200, json.dumps({
+                    "schema": "field-dewey-index/v1",
+                    "ok": False,
+                    "hint": "field-dewey-index missing",
+                }, ensure_ascii=False), "application/json")
+                return
+            qparams = parse_qs(urlparse(self.path).query)
+            if path.endswith("/search") or "/search" in path:
+                q = str(qparams.get("q", [""])[0])
+                argv = ["search", q]
+                if qparams.get("tag"):
+                    argv.extend(["--tag", str(qparams.get("tag", [""])[0])])
+                if qparams.get("dewey"):
+                    argv.extend(["--dewey", str(qparams.get("dewey", [""])[0])])
+                if qparams.get("kind"):
+                    argv.extend(["--kind", str(qparams.get("kind", [""])[0])])
+                if qparams.get("shelf"):
+                    argv.extend(["--shelf", str(qparams.get("shelf", [""])[0])])
+                if str(qparams.get("personhood", [""])[0]).lower() in ("1", "true", "yes"):
+                    argv.append("--personhood")
+                if str(qparams.get("combat", [""])[0]).lower() in ("1", "true", "yes"):
+                    argv.append("--combat")
+                if str(qparams.get("speaking", [""])[0]).lower() in ("1", "true", "yes"):
+                    argv.append("--speaking")
+                if qparams.get("limit"):
+                    argv.extend(["--limit", str(qparams.get("limit", ["48"])[0])])
+                payload = _nexus_py_json(idx_py, argv, timeout=90)
+            elif path.endswith("/tags"):
+                payload = _nexus_py_json(idx_py, ["tags"], timeout=60)
+            elif path.endswith("/facets"):
+                payload = _nexus_py_json(idx_py, ["facets"], timeout=60)
+            elif path.endswith("/build") or path.endswith("/reindex"):
+                payload = _nexus_py_json(idx_py, ["build"], timeout=300)
+            elif path.endswith("/book"):
+                bid = str(qparams.get("id", [""])[0])
+                payload = _nexus_py_json(idx_py, ["book", bid], timeout=30)
+            else:
+                payload = _nexus_py_json(idx_py, ["panel"], timeout=60)
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -6164,14 +8681,34 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/field-dns":
-            payload = _read_field_panel_file("field_dns")
-            if payload is None:
-                live = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"])
+            live_req = str(query.get("live", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            if live_req:
+                live = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"], timeout=25)
                 payload = _panel_slice(
                     "field_dns",
                     live=live,
                     default={"schema": "field-dns/v2"},
                 )
+            else:
+                payload = _read_field_panel_file("field_dns")
+                if payload is None:
+                    live = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dns.py", ["json"], timeout=25)
+                    payload = _panel_slice(
+                        "field_dns",
+                        live=live,
+                        default={"schema": "field-dns/v2"},
+                    )
+            payload = _merge_live_dhcp_into_dns(payload)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/field-dhcp":
+            live = _nexus_py_json(INSTALL_ROOT / "lib" / "field-dhcp.py", ["json"], timeout=12)
+            payload = _panel_slice(
+                "field_dhcp",
+                live=live,
+                default={"schema": "field-dhcp/v2", "lease_count": 0, "leases_detailed": [], "lease_history_events": []},
+            )
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -6551,6 +9088,110 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(payload), "application/json")
                 return
 
+            if path == "/api/library/pagination":
+                book_id = str(query.get("book", [""])[0]).strip()
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book"}), "application/json")
+                    return
+                reinform_py = INSTALL_ROOT / "lib" / "h7-library-reinform.py"
+                payload = _nexus_py_json(reinform_py, ["panel", book_id], timeout=45)
+                self._send(200 if payload.get("ok") else 404, json.dumps(payload or {"ok": False}), "application/json")
+                return
+
+            if path == "/api/library/audit":
+                reinform_py = INSTALL_ROOT / "lib" / "h7-library-reinform.py"
+                payload = _nexus_py_json(reinform_py, ["audit"], timeout=300)
+                self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+                return
+
+            if path == "/api/library/overlap":
+                reinform_py = INSTALL_ROOT / "lib" / "h7-library-reinform.py"
+                limit = str(query.get("limit", ["0"])[0]).strip()
+                args = ["overlap"]
+                if limit.isdigit() and int(limit) > 0:
+                    args.append(f"--limit={limit}")
+                payload = _nexus_py_json(reinform_py, args, timeout=120)
+                self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+                return
+
+            if path.startswith("/api/library/lie-librarian"):
+                lie_py = INSTALL_ROOT / "lib" / "h7-lie-librarian.py"
+                sub = path.replace("/api/library/lie-librarian", "").strip("/")
+                book_id = str(query.get("book", [""])[0]).strip()
+                q = str(query.get("q", query.get("search", [""]))[0]).strip()
+                audience = str(query.get("audience", ["both"])[0]).strip() or "both"
+                aud_arg = f"--audience={audience}"
+                if sub == "build" or str(query.get("build", ["0"])[0]).strip().lower() in ("1", "true", "yes"):
+                    limit = str(query.get("limit", ["0"])[0]).strip()
+                    args = ["build"]
+                    if str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes"):
+                        args.append("--refresh")
+                    if limit.isdigit() and int(limit) > 0:
+                        args.append(f"--limit={limit}")
+                    payload = _nexus_py_json(lie_py, args, timeout=180)
+                elif sub == "counsel":
+                    args = ["counsel", aud_arg]
+                    if book_id:
+                        args.extend(["--book", book_id])
+                    elif q:
+                        args.append(q)
+                    payload = _nexus_py_json(lie_py, args, timeout=60)
+                elif sub == "search" or q:
+                    args = ["search", q or book_id]
+                    payload = _nexus_py_json(lie_py, args, timeout=60)
+                elif book_id:
+                    refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+                    args = ["book", book_id, aud_arg]
+                    if refresh:
+                        args.append("--refresh")
+                    payload = _nexus_py_json(lie_py, args, timeout=90)
+                else:
+                    payload = _nexus_py_json(lie_py, ["panel"], timeout=45)
+                self._send(200 if payload.get("ok") else 404, json.dumps(payload or {"ok": False}), "application/json")
+                return
+
+            if path == "/api/library/lies":
+                book_id = str(query.get("book", [""])[0]).strip()
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book"}), "application/json")
+                    return
+                reinform_py = INSTALL_ROOT / "lib" / "h7-library-reinform.py"
+                refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+                if refresh:
+                    payload = _nexus_py_json(reinform_py, ["lies", book_id], timeout=90)
+                else:
+                    panel = _nexus_py_json(reinform_py, ["panel", book_id], timeout=45)
+                    if panel.get("lies_index"):
+                        payload = {"ok": True, **(panel.get("lies_index") or {})}
+                    else:
+                        payload = _nexus_py_json(reinform_py, ["lies", book_id], timeout=90)
+                self._send(200 if payload.get("ok") else 404, json.dumps(payload or {"ok": False}), "application/json")
+                return
+
+            if path == "/api/library/corrections":
+                book_id = str(query.get("book", [""])[0]).strip()
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book"}), "application/json")
+                    return
+                reinform_py = INSTALL_ROOT / "lib" / "h7-library-reinform.py"
+                payload = _nexus_py_json(reinform_py, ["corrections", book_id], timeout=45)
+                self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+                return
+
+            if path == "/api/library/reinform":
+                book_id = str(query.get("book", [""])[0]).strip()
+                if not book_id:
+                    self._send(400, json.dumps({"ok": False, "error": "missing book"}), "application/json")
+                    return
+                reinform_py = INSTALL_ROOT / "lib" / "h7-library-reinform.py"
+                apply = str(query.get("apply", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+                args = ["reinform", book_id]
+                if apply:
+                    args.append("--apply")
+                payload = _nexus_py_json(reinform_py, args, timeout=120)
+                self._send(200 if payload.get("ok") else 404, json.dumps(payload or {"ok": False}), "application/json")
+                return
+
             if path == "/api/library/truth":
                 book_id = str(query.get("book", [""])[0]).strip()
                 idx_raw = str(query.get("index", [""])[0]).strip()
@@ -6784,6 +9425,11 @@ class Handler(BaseHTTPRequestHandler):
             target = PANEL_DIR / "g16-build-output.html"
         elif path in ("/hands-attachments", "/hands-attachments/", "/hands-attachments.html"):
             target = PANEL_DIR / "hands-attachments.html"
+        elif path in (
+            "/library-bookshelf", "/library-bookshelf/",
+            "/field-library-bookshelf", "/field-library-bookshelf/",
+        ):
+            target = PANEL_DIR / "field-library-bookshelf.html"
         elif path in ("/field-lang-manuals", "/field-lang-manuals/"):
             target = PANEL_DIR / "field-lang-manuals.html"
         elif path in ("/field-broadcaster", "/field-broadcaster/"):
@@ -6792,6 +9438,8 @@ class Handler(BaseHTTPRequestHandler):
             target = PANEL_DIR / "field-broadcaster.html"
         elif path in ("/field-gpu", "/field-gpu/"):
             target = PANEL_DIR / "field-gpu.html"
+        elif path in ("/field-vsync-locker", "/field-vsync-locker/"):
+            target = PANEL_DIR / "field-vsync-locker.html"
         elif path in ("/grok-lab", "/grok-lab/"):
             target = PANEL_DIR / "grok-lab.html"
         elif path in ("/field-audio-dac", "/field-audio-dac/"):
@@ -6808,8 +9456,75 @@ class Handler(BaseHTTPRequestHandler):
             slug = path[len("/field-ellie/") :].strip("/").split("/")[0].lower()
             if slug in ("network", "truth", "thermal", "firmware", "media", "sovereign", "diag"):
                 target = PANEL_DIR / "field-ellie-diag.html"
+        elif path in ("/field-gnu-terminal", "/field-gnu-terminal/", "/terminal", "/terminal/"):
+            target = PANEL_DIR / "field-gnu-terminal-embed.html"
+        elif path in ("/field-irc-chat", "/field-irc-chat/"):
+            target = PANEL_DIR / "field-irc-chat-embed.html"
+        elif path in ("/eol-code", "/eol-code/"):
+            target = PANEL_DIR / "eol-code.html"
+        elif path in ("/controller-test", "/controller-test/"):
+            self.send_response(302)
+            self.send_header("Location", "/queen-game-room.html#arcade")
+            self.end_headers()
+            return
+        elif path in ("/queen-game-room", "/queen-game-room/", "/queen-game-room.html"):
+            qgr = (INSTALL_ROOT / "Queen" / "world" / "queen-game-room.html").resolve()
+            if qgr.is_file():
+                self._send(200, qgr.read_bytes(), "text/html; charset=utf-8")
+                return
+        elif path.startswith("/queen-game-room/"):
+            rel = unquote(path[len("/queen-game-room/") :])
+            if rel and ".." not in rel:
+                qroot = (INSTALL_ROOT / "Queen" / "world").resolve()
+                try:
+                    qtarget = (qroot / rel).resolve()
+                except OSError:
+                    qtarget = None
+                if qtarget and qroot in qtarget.parents and qtarget.is_file():
+                    self._send(200, qtarget.read_bytes(), _panel_static_mime(qtarget))
+                    return
+            self._send(404, "not found", "text/plain")
+            return
+        elif path in ("/world/queen-game-room.html", "/world/queen-game-room"):
+            self.send_response(302)
+            self.send_header("Location", "/queen-game-room.html")
+            self.end_headers()
+            return
+        elif path in ("/mspaint", "/mspaint/"):
+            target = PANEL_DIR / "mspaint.html"
+        elif path in ("/field-ping", "/field-ping/"):
+            target = PANEL_DIR / "field-ping.html"
+        elif path in ("/field-grow-watch", "/field-grow-watch/"):
+            target = PANEL_DIR / "field-grow-watch.html"
+        elif path in ("/field-watch-dhcp", "/field-watch-dhcp/"):
+            target = PANEL_DIR / "field-watch-dhcp.html"
         elif path in ("/field-popcorn", "/field-popcorn/"):
             target = PANEL_DIR / "field-popcorn.html"
+        elif path in ("/ammocode", "/ammocode/"):
+            ac_index = (INSTALL_ROOT / "AmmoCode" / "index.html").resolve()
+            if ac_index.is_file():
+                try:
+                    html = ac_index.read_text(encoding="utf-8", errors="replace")
+                    if "<base " not in html.lower():
+                        html = html.replace("<head>", '<head><base href="/ammocode/">', 1)
+                    self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
+                    return
+                except OSError:
+                    pass
+            target = PANEL_DIR / "ammocode.html"
+        elif path.startswith("/ammocode/"):
+            rel = unquote(path[len("/ammocode/") :])
+            if rel and ".." not in rel:
+                ac_root = (INSTALL_ROOT / "AmmoCode").resolve()
+                try:
+                    target = (ac_root / rel).resolve()
+                except OSError:
+                    target = None
+                if target and ac_root in target.parents and target.is_file():
+                    self._send(200, target.read_bytes(), _panel_static_mime(target))
+                    return
+            self._send(404, "not found", "text/plain")
+            return
         elif path in ("/ammoos-update-os", "/ammoos-update-os/"):
             target = PANEL_DIR / "ammoos-update-os.html"
         elif path in ("/ammoos-incorporate", "/ammoos-incorporate/"):
@@ -6835,6 +9550,10 @@ class Handler(BaseHTTPRequestHandler):
             "/install-underlay", "/install-underlay/",
         ):
             target = PANEL_DIR / "tristate-installer.html"
+        elif path in ("/grok-spawn-killer", "/grok-spawn-killer/"):
+            target = PANEL_DIR / "grok-spawn-killer.html"
+            if not target.is_file():
+                target = PANEL_DIR / "grok-spawn-killer" / "index.html"
         elif path in (
             "/underlay-f9", "/underlay-f9/",
             "/field-modern", "/field-modern/",
@@ -6862,9 +9581,27 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("X-AmmoOS-Legacy", "dissolved")
             self.end_headers()
             return
-        elif path in (
-            "/field", "/field/", "/app", "/app/", "/", "/index.html",
-        ):
+        elif path in ("/", "/index.html"):
+            accept = (self.headers.get("Accept") or "").lower()
+            rs_py = INSTALL_ROOT / "lib" / "field-root-status.py"
+            if "text/plain" in accept and rs_py.is_file():
+                body = _nexus_py_text(rs_py, ["telnet"], timeout=8)
+                self._send(200, body or "FIELD ROOT STATUS unavailable\n", "text/plain; charset=utf-8")
+                return
+            if "application/json" in accept and rs_py.is_file():
+                payload = _nexus_py_json(rs_py, ["json"], timeout=8)
+                self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+                return
+            target = PANEL_DIR / "field-root-status.html"
+            if target.is_file():
+                self._send(200, target.read_bytes(), "text/html; charset=utf-8")
+                return
+        elif path in ("/field-root-status", "/field-root-status/"):
+            target = PANEL_DIR / "field-root-status.html"
+            if target.is_file():
+                self._send(200, target.read_bytes(), "text/html; charset=utf-8")
+                return
+        elif path in ("/field", "/field/", "/app", "/app/"):
             desktop = PANEL_DIR / "field-desktop.html"
             if desktop.is_file():
                 self._send(200, desktop.read_bytes(), "text/html; charset=utf-8")
@@ -6873,6 +9610,19 @@ class Handler(BaseHTTPRequestHandler):
             if target.is_file():
                 _serve_panel_html(self, target)
                 return
+        elif path.startswith("/world/"):
+            rel = unquote(path[len("/world/") :])
+            if rel and ".." not in rel:
+                world_root = (INSTALL_ROOT / "Queen" / "world").resolve()
+                try:
+                    target = (world_root / rel).resolve()
+                except OSError:
+                    target = None
+                if target and world_root in target.parents and target.is_file():
+                    self._send(200, target.read_bytes(), _panel_static_mime(target))
+                    return
+            self._send(404, "not found", "text/plain")
+            return
         elif path.startswith("/world/assets/icons/"):
             rel = unquote(path[len("/world/assets/icons/") :])
             if rel and ".." not in rel:
@@ -6994,6 +9744,157 @@ class Handler(BaseHTTPRequestHandler):
                 return
         body = self._read_json_body()
         if path.startswith("/api/") and not self._ironclad_api_gate(path, "POST", body):
+            return
+
+        if path.startswith("/api/field-zachub-storage") or path.startswith("/api/zachub-storage") or path.startswith("/api/ammodrive-storage"):
+            query = parse_qs(urlparse(self.path).query)
+            payload = _zachub_storage_api(path, query=query, body=body if isinstance(body, dict) else {}, headers=self.headers)
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-zachub-qemu-racks") or path.startswith("/api/zachub-qemu-racks") or path.startswith("/api/ammodrive-qemu-racks"):
+            qemu_py = INSTALL_ROOT / "lib" / "field-zachub-qemu-racks.py"
+            sub = path.rstrip("/").split("/")[-1]
+            if sub in ("provision", "apply"):
+                args = ["provision"]
+            elif sub in ("burn", "burn-stale"):
+                args = ["burn"]
+            elif sub in ("slots", "map"):
+                args = ["slots"]
+            elif sub in ("convert", "redundant", "convert-remaining"):
+                args = ["convert"]
+            elif sub in ("storage-totals", "totals"):
+                args = ["storage-totals"]
+            else:
+                args = ["json"]
+            dry_hdr = (self.headers.get("X-Zachub-Dry") or "").strip().lower()
+            if dry_hdr in ("1", "yes", "on") or path.endswith("/dry"):
+                args.append("--dry-run")
+            payload = _nexus_py_json(qemu_py, args, timeout=120) if qemu_py.is_file() else {"ok": False, "error": "field_zachub_qemu_racks_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/kill-library") or path.startswith("/api/hostess7-kill-library"):
+            kill_py = INSTALL_ROOT / "lib" / "hostess7-kill-library.py"
+            if not kill_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "kill_library_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            sub = (
+                path.replace("/api/hostess7-kill-library", "")
+                .replace("/api/hostess7/kill-library", "")
+                .strip("/")
+            )
+            os.environ.setdefault("HOSTESS7_OPERATOR", "1")
+            if sub in ("sync", "rebuild") or req.get("action") in ("sync", "rebuild"):
+                os.environ["HOSTESS7_KILL_LIBRARY_SYNC"] = "1"
+                req = {**req, "action": "sync"}
+            elif not req.get("action"):
+                req = {
+                    "read": {"action": "read"},
+                    "books": {"action": "books"},
+                    "list": {"action": "books"},
+                }.get(sub, {"action": "panel"})
+            env = _field_stack_env()
+            env["HOSTESS7_OPERATOR"] = "1"
+            if req.get("action") == "sync":
+                env["HOSTESS7_KILL_LIBRARY_SYNC"] = "1"
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(kill_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                payload = {"ok": False, "error": "kill_library_dispatch_failed"}
+            code = 200 if isinstance(payload, dict) and payload.get("ok") else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7/book-maker/pack", "/api/hostess7-book-maker/pack"):
+            maker_py = INSTALL_ROOT / "lib" / "hostess7-book-maker.py"
+            req = body if isinstance(body, dict) else {}
+            title = str(req.get("title") or "").strip()
+            book_body = str(req.get("body") or "").strip()
+            if not title or not book_body:
+                self._send(400, json.dumps({"ok": False, "error": "title_and_body_required"}), "application/json")
+                return
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("hostess7_book_maker_http", maker_py)
+            payload: dict[str, Any] = {"ok": False, "error": "book_maker_missing"}
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "pack_book"):
+                    payload = mod.pack_book(
+                        title=title,
+                        body=book_body,
+                        author=str(req.get("author") or "hostess7"),
+                        co_author=str(req.get("co_author") or req.get("co-author") or ""),
+                        dewey=str(req.get("dewey") or "000"),
+                        shelf=str(req.get("shelf") or "000-computer-science"),
+                        book_id=str(req.get("book_id") or ""),
+                    )
+            code = 200 if isinstance(payload, dict) and payload.get("ok") else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/battle-stations", "/api/field-battle-stations"):
+            script = INSTALL_ROOT / "lib" / "field-battle-stations.py"
+            if not script.is_file():
+                self._send(
+                    503,
+                    json.dumps({"ok": False, "error": "field_battle_stations_missing"}),
+                    "application/json",
+                )
+                return
+            req = body if isinstance(body, dict) else {}
+            action = str(req.get("action") or "arm").strip().lower()
+            cmd_map = {
+                "arm": "arm",
+                "on": "on",
+                "enable": "on",
+                "off": "off",
+                "disable": "off",
+                "stand-down": "off",
+                "stand_down": "off",
+                "stamp": "stamp",
+                "policy": "policy",
+                "json": "json",
+                "status": "json",
+            }
+            cmd = cmd_map.get(action, action)
+            if cmd not in ("arm", "on", "off", "stamp", "policy", "json"):
+                self._send(
+                    400,
+                    json.dumps({"ok": False, "error": "unknown_action", "action": action}),
+                    "application/json",
+                )
+                return
+            timeout = 120 if cmd in ("arm", "on", "off", "stamp") else 30
+            payload = _nexus_py_json(script, [cmd], timeout=timeout)
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(
+                code,
+                json.dumps(payload if isinstance(payload, dict) else {"ok": False}),
+                "application/json",
+            )
+            return
+
+        if path == "/api/field-botnet-registry":
+            reg_py = INSTALL_ROOT / "lib" / "field-botnet-registry.py"
+            if not reg_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "botnet_registry_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            payload = _nexus_py_json(reg_py, ["dispatch", json.dumps(req)], timeout=45)
+            code = 200 if isinstance(payload, dict) and payload.get("ok") else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
             return
 
         if path.startswith("/api/znetwork/registry/"):
@@ -7225,6 +10126,109 @@ class Handler(BaseHTTPRequestHandler):
             self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
             return
 
+        if path.startswith("/api/beyond-darpa-security") or path in ("/api/beyond-darpa-security",):
+            bds_py = INSTALL_ROOT / "lib" / "beyond-darpa-security.py"
+            if not bds_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "beyond_darpa_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            sub = path.replace("/api/beyond-darpa-security", "").strip("/")
+            if not req.get("action"):
+                req = {
+                    "assess": {"action": "assess"},
+                    "gate": {"action": "gate"},
+                    "threat": {"action": "assess"},
+                }.get(sub, {"action": "posture"})
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(bds_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "beyond_darpa_timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "beyond_darpa_parse_failed"}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/advisory") or path in ("/api/hostess7-advisory", "/api/hostess7-advisory-body"):
+            adv_py = INSTALL_ROOT / "lib" / "hostess7-advisory-body.py"
+            if not adv_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "hostess7_advisory_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            sub = path.replace("/api/hostess7-advisory-body", "").replace("/api/hostess7-advisory", "").replace("/api/hostess7/advisory", "").strip("/")
+            if not req.get("action"):
+                req = {
+                    "ingest": {"action": "ingest"},
+                    "discern": {"action": "discern"},
+                    "promote": {"action": "promote"},
+                    "body-permit": {"action": "body_permit"},
+                    "body_permit": {"action": "body_permit"},
+                    "gate": {"action": "check"},
+                }.get(sub.replace("-", "_"), {"action": "status"})
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(adv_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=90,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "hostess7_advisory_timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "hostess7_advisory_parse_failed"}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/targets") or path in ("/api/hostess7-targets",):
+            tgt_py = INSTALL_ROOT / "lib" / "hostess7-targets.py"
+            if not tgt_py.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "hostess7_targets_missing", "TARGET": "KILL"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            sub = path.replace("/api/hostess7-targets", "").replace("/api/hostess7/targets", "").strip("/")
+            if not req.get("action"):
+                req = {
+                    "sync": {"action": "sync"},
+                    "lookup": {"action": "lookup"},
+                    "promote": {"action": "promote"},
+                    "correlate": {"action": "correlate"},
+                }.get(sub, {"action": "status"})
+            env = _field_stack_env()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(tgt_py), "dispatch"],
+                    input=json.dumps(req),
+                    capture_output=True,
+                    text=True,
+                    timeout=90,
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "hostess7_targets_timeout", "TARGET": "KILL"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "hostess7_targets_parse_failed", "TARGET": "KILL"}
+            code = 200 if isinstance(payload, dict) and payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload if isinstance(payload, dict) else {"ok": False, "TARGET": "KILL"}), "application/json")
+            return
+
         if path.startswith("/api/hostess7/body") or path in ("/api/hostess7-body", "/api/hostess7-body-control"):
             body_py = INSTALL_ROOT / "lib" / "hostess7-body-control.py"
             if not body_py.is_file():
@@ -7336,8 +10340,35 @@ class Handler(BaseHTTPRequestHandler):
             scheme = str((body or {}).get("scheme") or "").strip()
             text = (body or {}).get("text")
             hist_idx = (body or {}).get("history_index")
+            media_actions = {
+                "copy_media", "media_copy", "paste_media", "media_paste",
+                "media_history", "media_list", "media_clear",
+                "media_index", "media_filetypes", "filetypes",
+            }
             if scheme:
                 payload = _nexus_py_json(script, ["scheme", scheme], timeout=20)
+            elif action in media_actions or body.get("media_b64") or body.get("data_url"):
+                env = _field_stack_env()
+                proc = None
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(script), "dispatch"],
+                        input=json.dumps(body if isinstance(body, dict) else {}, ensure_ascii=False),
+                        capture_output=True,
+                        text=True,
+                        timeout=int((body or {}).get("timeout") or 180),
+                        env=env,
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except subprocess.TimeoutExpired:
+                    payload = {"ok": False, "error": "timeout"}
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "bad_json", "detail": ((proc.stderr if proc else "") or "")[:200]}
+            elif action in ("schemes", "list_schemes"):
+                payload = _nexus_py_json(script, ["schemes"], timeout=20)
+            elif action == "enforce":
+                payload = _nexus_py_json(script, ["enforce"], timeout=25)
             elif action in ("history", "historic"):
                 payload = _nexus_py_json(script, ["history"], timeout=20)
             elif action in ("history_paste", "historic_paste", "paste_history"):
@@ -7462,6 +10493,53 @@ class Handler(BaseHTTPRequestHandler):
             self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path.startswith("/api/vsync-locker"):
+            script = INSTALL_ROOT / "lib" / "field-vsync-locker.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "vsync_locker_missing"}), "application/json")
+                return
+            sub = path[len("/api/vsync-locker") :].strip("/")
+            if sub in ("", "status", "json"):
+                payload = _nexus_py_json(script, ["json"], timeout=45)
+            elif sub == "lock":
+                payload = _nexus_py_json(script, ["lock"], timeout=20)
+            elif sub == "detect":
+                payload = _nexus_py_json(script, ["detect"], timeout=60)
+            elif sub == "pointers":
+                payload = _nexus_py_json(script, ["pointers"], timeout=45)
+            elif sub == "input":
+                payload = _nexus_py_json(script, ["input"], timeout=45)
+            elif sub == "baseline":
+                payload = _nexus_py_json(script, ["baseline"], timeout=30)
+            elif sub == "drift":
+                args = ["drift"]
+                if isinstance(body, dict) and body.get("expose"):
+                    args.append("--expose")
+                if isinstance(body, dict) and body.get("force"):
+                    args.append("--force")
+                payload = _nexus_py_json(script, args, timeout=45)
+            elif sub == "harden":
+                payload = _nexus_py_json(script, ["harden"], timeout=45)
+            elif sub == "guard":
+                payload = _nexus_py_json(script, ["guard", "--status"], timeout=20)
+            elif sub == "launch":
+                payload = _nexus_py_json(script, ["launch"], timeout=30)
+            elif sub == "stop":
+                force = isinstance(body, dict) and body.get("force")
+                args = ["stop", "--force"] if force else ["stop"]
+                payload = _nexus_py_json(script, args, timeout=20)
+            elif sub == "patrol":
+                payload = _nexus_py_json(script, ["patrol"], timeout=120)
+            elif sub == "kill" and isinstance(body, dict) and body.get("pid"):
+                args = ["kill", str(body.get("pid")), str(body.get("reason") or "vsync_trespass_api")]
+                payload = _nexus_py_json(script, args, timeout=90)
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_vsync_locker_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path.startswith("/api/field-shell-dock"):
             script = INSTALL_ROOT / "lib" / "field-shell-dock.py"
             if not script.is_file():
@@ -7536,11 +10614,17 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(404, json.dumps({"ok": False, "error": "field_audio_settings_missing"}), "application/json")
                 return
             sub = path[len("/api/field-audio-settings") :].strip("/")
-            if sub in ("apply", "settings") or (not sub and isinstance(body, dict) and body):
+            if sub in ("test-tune", "test_tune", "tune"):
+                card = str((body or {}).get("card_id") or (body or {}).get("soundcard_id") or "").strip()
+                payload = _nexus_py_json(script, ["test_tune"] + ([card] if card else []), timeout=45)
+            elif sub in ("bind-hdmi", "bind_hdmi", "hdmi"):
+                payload = _nexus_py_json(script, ["bind_hdmi"], timeout=25)
+            elif sub in ("apply", "settings") or (not sub and isinstance(body, dict) and body):
                 patch = body if isinstance(body, dict) else {}
-                payload = _nexus_py_json(script, ["apply", json.dumps(patch)], timeout=20)
+                timeout = 45 if str(patch.get("action", "")).lower() in ("test_tune", "test_card", "play_test", "tune") else 25
+                payload = _nexus_py_json(script, ["apply", json.dumps(patch)], timeout=timeout)
             elif sub in ("", "status", "json"):
-                payload = _nexus_py_json(script, ["json"], timeout=20)
+                payload = _nexus_py_json(script, ["json"], timeout=25)
             else:
                 self._send(404, json.dumps({"ok": False, "error": "unknown_field_audio_action"}), "application/json")
                 return
@@ -7634,6 +10718,63 @@ class Handler(BaseHTTPRequestHandler):
                 payload = _nexus_py_json(script, ["json"], timeout=25)
             else:
                 self._send(404, json.dumps({"ok": False, "error": "unknown_field_audio_secure_bind_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-hdmi-audio"):
+            script = INSTALL_ROOT / "lib" / "field-hdmi-audio-driver.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_hdmi_audio_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-hdmi-audio") :].strip("/")
+            if sub in ("bind", "auto"):
+                args = ["auto"] if sub == "auto" else ["bind"]
+                sink = str((body or {}).get("sink_name") or (body or {}).get("sink") or "").strip()
+                hdmi = str((body or {}).get("hdmi_device") or (body or {}).get("hdmi") or "").strip()
+                if sink:
+                    args.append(sink)
+                if hdmi:
+                    args.append(f"--hdmi={hdmi}")
+                if (body or {}).get("force"):
+                    args.append("--force")
+                payload = _nexus_py_json(script, args, timeout=30)
+            elif sub == "install":
+                payload = _nexus_py_json(script, ["install"], timeout=20)
+            elif sub == "probe":
+                payload = _nexus_py_json(script, ["probe"], timeout=25)
+            elif sub in ("", "status", "json"):
+                payload = _nexus_py_json(script, ["json"], timeout=25)
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_field_hdmi_audio_action"}), "application/json")
+                return
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-vintage-audio"):
+            script = INSTALL_ROOT / "lib" / "field-vintage-audio-composite.py"
+            if not script.is_file():
+                self._send(404, json.dumps({"ok": False, "error": "field_vintage_audio_missing"}), "application/json")
+                return
+            sub = path[len("/api/field-vintage-audio") :].strip("/")
+            if sub == "play":
+                media = str((body or {}).get("path") or (body or {}).get("file") or "").strip()
+                card = str((body or {}).get("card_id") or (body or {}).get("soundcard_id") or "").strip()
+                args = ["play", media] + ([card] if card else [])
+                payload = _nexus_py_json(script, args, timeout=320)
+            elif sub == "select":
+                card = str((body or {}).get("card_id") or (body or {}).get("soundcard_id") or "").strip()
+                payload = _nexus_py_json(script, ["select", card or "sb16"], timeout=20)
+            elif sub == "layout":
+                payload = _nexus_py_json(script, ["layout"], timeout=25)
+            elif sub == "cards":
+                payload = _nexus_py_json(script, ["cards"], timeout=25)
+            elif sub in ("", "status", "json", "catalog"):
+                payload = _nexus_py_json(script, ["json"], timeout=30)
+            else:
+                self._send(404, json.dumps({"ok": False, "error": "unknown_field_vintage_audio_action"}), "application/json")
                 return
             code = 200 if payload.get("ok", True) else 400
             self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
@@ -7751,6 +10892,222 @@ class Handler(BaseHTTPRequestHandler):
             self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path in ("/api/field-gnu-terminal", "/api/field-gnu-terminal/"):
+            script = INSTALL_ROOT / "lib" / "field-gnu-terminal.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "field_gnu_terminal_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            env = _field_stack_env()
+            proc = None
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=int(req.get("timeout") or 90),
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "bad_json", "detail": ((proc.stderr if proc else "") or "")[:200]}
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-eol-code", "/api/field-eol-code/"):
+            script = INSTALL_ROOT / "lib" / "field-eol-code.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "field_eol_code_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            env = _field_stack_env()
+            proc = None
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=int(req.get("timeout") or 45),
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = _parse_subprocess_json(proc, script="field-eol-code.py")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "timeout", "schema": "field-eol-code-panel/v1"}
+            code = 200 if (payload or {}).get("ok", True) else 400
+            self._send(code, json.dumps(payload or {"ok": False, "error": "empty_payload"}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-irc", "/api/field-irc/"):
+            script = INSTALL_ROOT / "lib" / "field-irc.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "field_irc_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            proc = None
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=int(req.get("timeout") or 60),
+                    env=_field_stack_env(),
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = _parse_subprocess_json(proc, script="field-irc.py")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "timeout", "schema": "field-irc/v1"}
+            code = 200 if (payload or {}).get("ok", True) else 400
+            self._send(code, json.dumps(payload or {"ok": False, "error": "empty_payload"}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-stack-boot", "/api/field-stack-boot/"):
+            script = INSTALL_ROOT / "lib" / "field-stack-boot.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "field_stack_boot_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            proc = None
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=int(req.get("timeout") or 180),
+                    env=_field_stack_env(),
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = _parse_subprocess_json(proc, script="field-stack-boot.py")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "timeout", "schema": "field-stack-boot/v1"}
+            code = 200 if (payload or {}).get("ok", True) else 400
+            self._send(code, json.dumps(payload or {"ok": False, "error": "empty_payload"}, ensure_ascii=False), "application/json")
+            return
+
+        if path == "/api/ammoos-incorporate/apply":
+            script = INSTALL_ROOT / "lib" / "ammoos-incorporate.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "ammoos_incorporate_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            proc = None
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                    env=_field_stack_env(),
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = _parse_subprocess_json(proc, script="ammoos-incorporate.py")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "timeout", "schema": "ammoos-incorporate/v1"}
+            code = 200 if (payload or {}).get("ok", True) else 400
+            self._send(code, json.dumps(payload or {"ok": False, "error": "empty_payload"}, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/sovereign-time", "/api/sovereign-time/"):
+            req = body if isinstance(body, dict) else {}
+            clock = _nexus_py_json(INSTALL_ROOT / "lib" / "sovereign-time.py", ["status"], timeout=8)
+            stamp_script = INSTALL_ROOT / "lib" / "field-sovereign-stamp.py"
+            stamp_row: dict = {}
+            if stamp_script.is_file():
+                proc = None
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(stamp_script), "stamp"],
+                        input=json.dumps(req, ensure_ascii=False),
+                        capture_output=True,
+                        text=True,
+                        timeout=8,
+                        env=_field_stack_env(),
+                        cwd=str(INSTALL_ROOT),
+                    )
+                    stamp_row = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    stamp_row = {"ok": False, "error": "stamp_failed"}
+            payload = {**(clock if isinstance(clock, dict) else {}), **stamp_row}
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-dos40", "/api/field-dos40/"):
+            script = INSTALL_ROOT / "lib" / "field-dos40-shell.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "field_dos40_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            action = str(req.get("action") or "modules").lower()
+            if action in ("resolve", "load") and req.get("module"):
+                payload = _nexus_py_json(script, ["resolve", str(req.get("module"))], timeout=8)
+            else:
+                payload = _nexus_py_json(script, ["modules"], timeout=8)
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-mspaint", "/api/field-mspaint/"):
+            script = INSTALL_ROOT / "lib" / "field-mspaint.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "field_mspaint_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            env = _field_stack_env()
+            proc = None
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=int(req.get("timeout") or 60),
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "bad_json", "detail": ((proc.stderr if proc else "") or "")[:200]}
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/field-ping", "/api/field-ping/"):
+            script = INSTALL_ROOT / "lib" / "field-ping.py"
+            if not script.is_file():
+                self._send(503, json.dumps({"ok": False, "error": "field_ping_missing"}), "application/json")
+                return
+            req = body if isinstance(body, dict) else {}
+            env = _field_stack_env()
+            proc = None
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(script), "dispatch"],
+                    input=json.dumps(req, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    timeout=int(req.get("timeout") or 90),
+                    env=env,
+                    cwd=str(INSTALL_ROOT),
+                )
+                payload = json.loads(proc.stdout or "{}")
+            except subprocess.TimeoutExpired:
+                payload = {"ok": False, "error": "timeout"}
+            except json.JSONDecodeError:
+                payload = {"ok": False, "error": "bad_json", "detail": ((proc.stderr if proc else "") or "")[:200]}
+            code = 200 if payload.get("ok", True) else 400
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path.startswith("/api/field-popcorn"):
             script = INSTALL_ROOT / "lib" / "field-popcorn-player.py"
             if not script.is_file():
@@ -7857,6 +11214,11 @@ class Handler(BaseHTTPRequestHandler):
             elif sub in ("launch", "go-live", "golive"):
                 cmd = "go-live" if sub in ("go-live", "golive") else "launch"
                 payload = _nexus_py_json(script, [cmd], timeout=30)
+            elif sub == "build":
+                payload = _nexus_py_json(script, ["build"], timeout=300)
+            elif sub == "senses":
+                senses_py = INSTALL_ROOT / "lib" / "field-broadcaster-senses.py"
+                payload = _nexus_py_json(senses_py, ["json"], timeout=45) if senses_py.is_file() else {"ok": False, "error": "senses_missing"}
             elif sub == "record":
                 payload = _nexus_py_json(script, ["record"], timeout=30)
             elif sub == "virtualcam":
@@ -7876,7 +11238,10 @@ class Handler(BaseHTTPRequestHandler):
                 payload = _nexus_py_json(script, ["settings", json.dumps(patch)], timeout=30)
             elif sub == "studio":
                 req = body if isinstance(body, dict) else {}
-                payload = _field_broadcaster_studio_dispatch(req, timeout=90)
+                if req.get("action") or req.get("dispatch"):
+                    payload = _field_broadcaster_studio_dispatch(req, timeout=90)
+                else:
+                    payload = _nexus_py_json(script, ["studio"], timeout=30)
             else:
                 self._send(404, json.dumps({"ok": False, "error": "unknown_broadcaster_action"}), "application/json")
                 return
@@ -8092,6 +11457,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
+        if path == "/api/field-error-dashboard":
+            payload = _field_error_dashboard_sample()
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path in (
             "/api/field-depth-snap",
             "/api/field-depth/instant",
@@ -8125,6 +11495,22 @@ class Handler(BaseHTTPRequestHandler):
             code = 200 if payload.get("ok") or str(payload.get("action", "")) in ("status", "json", "posture") else 403
             if payload.get("error") == "human_integration_forbidden":
                 code = 403
+            self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-grok-spawner-kill") or path.startswith("/api/grok-spawn-killer"):
+            script = INSTALL_ROOT / "lib" / "field-grok-spawner-kill.py"
+            base = "/api/field-grok-spawner-kill"
+            if path.startswith("/api/grok-spawn-killer"):
+                base = "/api/grok-spawn-killer"
+            sub = path[len(base) :].strip("/") or "panel"
+            if sub in ("install", "setup", "enable"):
+                payload = _nexus_py_json(script, ["install"], timeout=120)
+            elif sub in ("instakill", "kill", "cook"):
+                payload = _nexus_py_json(script, ["instakill"], timeout=45)
+            else:
+                payload = _nexus_py_json(script, ["panel"], timeout=30)
+            code = 200 if payload.get("ok", True) else 400
             self._send(code, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -8375,16 +11761,20 @@ class Handler(BaseHTTPRequestHandler):
                     self._send(400, json.dumps({"ok": False, "error": "missing id"}), "application/json")
                     return
                 override = str(body.get("override") or "").strip() or None
-                payload = _field_operator_copilot_route(target, override=override)
+                payload = _field_operator_hot_route(target, override=override)
             elif sub == "route-batch":
                 batch = body.get("batch") or body.get("targets") or []
                 if not batch:
                     self._send(400, json.dumps({"ok": False, "error": "missing batch"}), "application/json")
                     return
                 override = str(body.get("override") or "").strip() or None
-                payload = _field_operator_copilot_batch([str(x) for x in batch if x], override=override)
+                payload = _field_operator_hot_route_batch([str(x) for x in batch if x], override=override)
             elif sub == "copilot":
-                payload = _field_operator_copilot_status()
+                payload = _deprecated_hot_route_gone_payload(replacement="/api/field-operator/hot-route")
+                self._send(410, json.dumps(payload, ensure_ascii=False), "application/json")
+                return
+            elif sub == "hot-route":
+                payload = _field_operator_hot_route_status()
             else:
                 self._send(404, json.dumps({"ok": False, "error": "unknown operator action"}), "application/json")
                 return
@@ -9389,6 +12779,30 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200 if payload.get("ok") else 400, json.dumps(payload), "application/json")
             return
 
+        if path in ("/api/field-truth-keepalive", "/api/truth-keepalive"):
+            tk_py = INSTALL_ROOT / "lib" / "field-truth-keepalive.py"
+            no_retruth = bool((body or {}).get("no_retruth")) or str((body or {}).get("retruth", "1")).lower() in ("0", "false", "no")
+            args = ["keepalive"] + (["--no-retruth"] if no_retruth else [])
+            payload = _nexus_py_json(tk_py, args, timeout=300) if tk_py.is_file() else {"ok": False, "error": "field_truth_keepalive_missing"}
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/field-dynamic-routes"):
+            dyn_py = INSTALL_ROOT / "lib" / "field-dynamic-routes.py"
+            sub = path.rstrip("/").split("/")[-1]
+            fast = bool((body or {}).get("fast")) or str((body or {}).get("fast", "")).lower() in ("1", "true", "yes")
+            if sub in ("return-routes", "return_routes", "routes"):
+                args = ["return-routes"] + (["--fast"] if fast else [])
+                payload = _nexus_py_json(dyn_py, args, timeout=120) if dyn_py.is_file() else {"ok": False, "error": "field_dynamic_routes_missing"}
+            elif sub in ("kick-trash", "kick_trash", "kick", "purge"):
+                args = ["kick-trash"]
+                payload = _nexus_py_json(dyn_py, args, timeout=120) if dyn_py.is_file() else {"ok": False, "error": "field_dynamic_routes_missing"}
+            else:
+                args = ["run"] + (["--fast"] if fast else [])
+                payload = _nexus_py_json(dyn_py, args, timeout=180) if dyn_py.is_file() else {"ok": False, "error": "field_dynamic_routes_missing"}
+            self._send(200 if payload.get("ok") else 400, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
         if path == "/api/field-toolkit/defense":
             defense_id = str(body.get("defense_id", body.get("id", ""))).strip()
             if not defense_id:
@@ -9409,6 +12823,7 @@ class Handler(BaseHTTPRequestHandler):
             "/api/field-toolkit/hell-rip",
             "/api/field-toolkit/field-die",
             "/api/field-toolkit/laser-corridor",
+            "/api/field-toolkit/slice-and-dice",
             "/api/field-toolkit/disable",
         ):
             script = INSTALL_ROOT / "lib" / "field-toolkit-db.py"
@@ -9440,6 +12855,16 @@ class Handler(BaseHTTPRequestHandler):
                     self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
                     return
                 payload = _nexus_py_json(script, ["laser-corridor", ip])
+                if payload.get("ok"):
+                    _kick_dynamic_trash_async(reason="laser_corridor")
+            elif path == "/api/field-toolkit/slice-and-dice":
+                ip = str(body.get("ip", "")).strip()
+                if not ip:
+                    self._send(400, json.dumps({"ok": False, "error": "missing ip"}), "application/json")
+                    return
+                payload = _nexus_py_json(script, ["slice-and-dice", ip])
+                if payload.get("ok"):
+                    _kick_dynamic_trash_async(reason="slice_and_dice")
             else:
                 payload = _nexus_py_json(
                     script,
@@ -9835,6 +13260,26 @@ class Handler(BaseHTTPRequestHandler):
             script = INSTALL_ROOT / "lib" / "hostess7-userwatch.py"
             req = body if isinstance(body, dict) else {}
             payload = _nexus_py_json(script, ["dispatch", json.dumps(req)], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/input-training") or path in ("/api/hostess7-input-training",):
+            it_py = INSTALL_ROOT / "lib" / "hostess7-input-training.py"
+            if it_py.is_file():
+                req = body if isinstance(body, dict) else {}
+                payload = _nexus_py_json(it_py, ["dispatch", json.dumps(req)], timeout=120)
+            else:
+                payload = {"ok": False, "error": "input_training_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/field-stereo-vision") or path in ("/api/field-stereo-vision",):
+            fsv_py = INSTALL_ROOT / "lib" / "field-stereo-vision.py"
+            if fsv_py.is_file():
+                req = body if isinstance(body, dict) else {}
+                payload = _nexus_py_json(fsv_py, ["dispatch", json.dumps(req)], timeout=120)
+            else:
+                payload = {"ok": False, "error": "stereo_vision_missing"}
             self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
@@ -10644,15 +14089,293 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
-        if path in ("/api/field-c2-bookmarks", "/api/ammo-bookmarks"):
-            script = INSTALL_ROOT / "lib" / "field-c2-bookmark-boot.py"
+        if path in ("/api/field-c2-bookmarks", "/api/ammo-bookmarks", "/api/hostess7/internet-clean"):
             force = bool((body or {}).get("force"))
-            args = ["json"] if not force else ["json", "--force"]
+            script = INSTALL_ROOT / "lib" / "hostess7-internet-clean.py"
+            if not script.is_file():
+                script = INSTALL_ROOT / "lib" / "field-c2-bookmark-boot.py"
+            args = ["force" if force else "json"]
+            if script.name == "field-c2-bookmark-boot.py" and force:
+                args = ["json", "--force"]
             if script.is_file():
-                payload = _nexus_py_json(script, args, timeout=180)
+                payload = _nexus_py_json(script, args, timeout=240)
             else:
-                payload = {"ok": False, "error": "field_c2_bookmark_boot_missing"}
+                payload = {"ok": False, "error": "hostess7_internet_clean_missing"}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/g16-online") or path in ("/api/hostess7-g16-online",):
+            g16o_py = INSTALL_ROOT / "lib" / "hostess7-g16-online.py"
+            sub = path.replace("/api/hostess7-g16-online", "").replace("/api/hostess7/g16-online", "").strip("/")
+            if sub in ("ensure", "boot", "online"):
+                payload = _nexus_py_json(g16o_py, ["ensure"], timeout=60)
+            else:
+                payload = _nexus_py_json(g16o_py, ["panel"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False, "boss": "hostess7"}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/hostess7/lab") or path in ("/api/hostess7-lab", "/api/hostess7-lab-sovereign"):
+            lab_py = INSTALL_ROOT / "lib" / "hostess7-lab-sovereign.py"
+            sub = (
+                path.replace("/api/hostess7-lab-sovereign", "")
+                .replace("/api/hostess7-lab", "")
+                .replace("/api/hostess7/lab", "")
+                .strip("/")
+            )
+            if sub in ("connect", "wire", "connect-plates", "boot"):
+                payload = _nexus_py_json(lab_py, ["boot"], timeout=90)
+            elif sub in ("verify", "share-policy", "share_policy"):
+                payload = _nexus_py_json(lab_py, ["verify"], timeout=45)
+            elif sub.startswith("run"):
+                cmd = sub.replace("run", "").strip("/") or str((body or {}).get("cmd") or "status")
+                payload = _nexus_py_json(lab_py, ["run", cmd], timeout=120)
+            elif sub == "egress":
+                env = _field_stack_env()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(lab_py), "egress"],
+                        input=json.dumps(body or {}),
+                        capture_output=True,
+                        text=True,
+                        timeout=45,
+                        env=env,
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+                    payload = {"ok": False, "permitted": False, "boss": "hostess7", "share_out": False}
+            elif sub in ("snap", "combinatronic", "combinatronic_snap"):
+                payload = _nexus_py_json(lab_py, ["snap"], timeout=90)
+            elif sub in ("tour", "lab_tour", "show_around"):
+                payload = _nexus_py_json(lab_py, ["tour"], timeout=120)
+            else:
+                connect = bool((body or {}).get("connect"))
+                payload = _nexus_py_json(lab_py, ["boot" if connect else "panel"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False, "boss": "hostess7"}, ensure_ascii=False), "application/json")
+            return
+
+        if path.startswith("/api/final-hands") or path in ("/api/final-hands",):
+            fh_py = INSTALL_ROOT / "lib" / "final-hands.py"
+            if fh_py.is_file():
+                req = body if isinstance(body, dict) else {}
+                payload = _nexus_py_json(fh_py, ["dispatch", json.dumps(req)], timeout=120)
+            else:
+                payload = {"ok": False, "error": "final_hands_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/hostess7-training-viewer/ensure", "/api/hostess7-training-viewer/open"):
+            payload = _ensure_training_viewer()
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/queen-loopback/probe":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "queen-loopback-probe.py", [], timeout=15)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/qemu-world-status":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "qemu-world-status.py", [], timeout=35)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-arcade-battalion", "/api/field-arcade-battalion/"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-arcade-battalion.py", ["lobby"], timeout=45)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/game-room", "/api/game-room/") or path.startswith("/api/game-room/"):
+            q = self.path.split("?", 1)[1] if "?" in self.path else ""
+            code, raw, ctype = _queen_world_proxy_http("GET", path.split("?", 1)[0], query=q, timeout=30.0)
+            self._send(code, raw, ctype)
+            return
+
+        if path in ("/api/sap", "/api/sap/"):
+            code, raw, ctype = _queen_world_proxy_http("GET", "/api/sap", timeout=15.0)
+            self._send(code, raw, ctype)
+            return
+
+        if path in ("/api/nes-library", "/api/nes-library/"):
+            q = self.path.split("?", 1)[1] if "?" in self.path else ""
+            code, raw, ctype = _queen_world_proxy_http("GET", "/api/nes-library", query=q, timeout=20.0)
+            self._send(code, raw, ctype)
+            return
+
+        if path == "/api/ammonet/meld":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ammonet-field.py", ["meld"], timeout=180)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/ammonet":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ammonet-field.py", ["panel"], timeout=120)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-internet/keepalive":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-internet-unified.py", ["keepalive"], timeout=35)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-internet":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-internet-unified.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-github-legacy":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-github-legacy.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-github-resilience":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-github-resilience.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-botnet-legal-ports":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-botnet-legal-ports.py", ["json"], timeout=20)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-h7t-truth":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-h7t-truth.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-github-everyone":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-github-everyone.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-endpoint-registry", "/api/field-pages-movement"):
+            reg_py = INSTALL_ROOT / "lib" / "field-endpoint-registry.py"
+            sub = ["pages"] if path == "/api/field-pages-movement" else ["json"]
+            payload = _nexus_py_json(reg_py, sub, timeout=35)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-everyone-counter":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-everyone-counter.py", ["json"], timeout=8)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/hostess7/interaction":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "hostess7-github-interaction.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-botnet-registry":
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            payload = None if refresh else _read_botnet_panel_cache("registry")
+            if payload is None:
+                payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-botnet-registry.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-botnet-dns-dhcp/keepalive":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-botnet-dns-dhcp.py", ["keepalive"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/field-botnet-dns-dhcp":
+            refresh = str(query.get("refresh", ["0"])[0]).strip().lower() in ("1", "true", "yes")
+            payload = None if refresh else _read_botnet_panel_cache("dns_dhcp")
+            if payload is None:
+                payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-botnet-dns-dhcp.py", ["json"], timeout=30)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-fcc-prom-detector", "/api/fcc-prom-detector"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-fcc-prom-detector.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-secure-email", "/api/secure-email"):
+            sub = path.replace("/api/field-secure-email", "").replace("/api/secure-email", "").strip("/")
+            args = ["apache"] if sub == "apache" else ["json"]
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-secure-email.py", args, timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/ammonet/dns-zones", "/api/ammonet-dns-zones"):
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "ammonet-dns-zones.py", ["json"], timeout=25)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path.startswith("/api/field-qubes-drive-provision") or path in ("/api/field-qubes-drive",):
+            qdp_py = INSTALL_ROOT / "lib" / "field-qubes-drive-provision.py"
+            sub = path.replace("/api/field-qubes-drive-provision", "").replace("/api/field-qubes-drive", "").strip("/")
+            if sub in ("team-layout", "team_layout"):
+                args = ["team-layout"]
+            elif sub in ("aia-export", "export-aia"):
+                args = ["aia-export"]
+            elif sub == "wipe":
+                args = ["wipe", "--confirm"] if str(query.get("confirm", ["0"])[0]).strip().lower() in ("1", "true", "yes") else ["wipe"]
+            else:
+                args = ["json"]
+            payload = _nexus_py_json(qdp_py, args, timeout=90) if qdp_py.is_file() else {"ok": False, "error": "field_qubes_drive_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path in ("/api/field-aia-accelerator", "/api/aia-accelerator"):
+            aia_py = INSTALL_ROOT / "lib" / "field-aia-accelerator.py"
+            sub = path.replace("/api/field-aia-accelerator", "").replace("/api/aia-accelerator", "").strip("/")
+            if sub in ("export", "aia-export", "stage"):
+                args = ["export"]
+            else:
+                args = ["json"]
+            payload = _nexus_py_json(aia_py, args, timeout=120) if aia_py.is_file() else {"ok": False, "error": "field_aia_accelerator_missing"}
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/final-internet":
+            fi = INSTALL_ROOT / "data" / "final-internet-doctrine.json"
+            try:
+                payload = json.loads(fi.read_text(encoding="utf-8")) if fi.is_file() else {}
+                payload["ok"] = True
+            except (OSError, json.JSONDecodeError):
+                payload = {"ok": False}
+            self._send(200, json.dumps(payload), "application/json")
+            return
+
+        if path == "/api/steel-plates":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-steel-neural-plates.py", ["slice"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/plate-meld":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-plate-meld.py", ["json"], timeout=90)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/queen-browser/open":
+            route = str((body or {}).get("route") or "")
+            focus_url = str(
+                (body or {}).get("focus_url") or (body or {}).get("url") or ""
+            ).strip()
+            args = ["open", route] if route else ["open"]
+            env = _field_stack_env()
+            if focus_url:
+                env["QUEEN_BROWSER_FOCUS_URL"] = focus_url
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "field-queen-browser-open.py",
+                args,
+                timeout=50,
+                extra_env=env,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/queen-telemetry/ai":
+            payload = _nexus_py_json(
+                INSTALL_ROOT / "lib" / "queen-telemetry-lock.py",
+                ["ingest", json.dumps(body or {})],
+                timeout=15,
+            )
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
+            return
+
+        if path == "/api/queen-browser/f9":
+            payload = _nexus_py_json(INSTALL_ROOT / "lib" / "field-queen-browser-open.py", ["f9"], timeout=50)
+            self._send(200, json.dumps(payload or {"ok": False}), "application/json")
             return
 
         if path in ("/api/field-vfs", "/api/always-files"):
@@ -10745,6 +14468,47 @@ class Handler(BaseHTTPRequestHandler):
                 "ok": False,
                 "error": "power_sort_missing",
             }
+            self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
+            return
+
+        if path in ("/api/game-room", "/api/game-room/") or path.startswith("/api/game-room/"):
+            raw_body = json.dumps(body if isinstance(body, dict) else {}).encode()
+            code, raw, ctype = _queen_world_proxy_http(
+                "POST", path.split("?", 1)[0], body=raw_body, timeout=120.0,
+            )
+            self._send(code, raw, ctype)
+            return
+
+        if path in ("/api/sap", "/api/sap/"):
+            raw_body = json.dumps(body if isinstance(body, dict) else {}).encode()
+            code, raw, ctype = _queen_world_proxy_http("POST", "/api/sap", body=raw_body, timeout=60.0)
+            self._send(code, raw, ctype)
+            return
+
+        if path in ("/api/nes-library", "/api/nes-library/"):
+            raw_body = json.dumps(body if isinstance(body, dict) else {}).encode()
+            code, raw, ctype = _queen_world_proxy_http("POST", "/api/nes-library", body=raw_body, timeout=30.0)
+            self._send(code, raw, ctype)
+            return
+
+        if path in ("/api/field-arcade-battalion", "/api/field-arcade-battalion/"):
+            batt = INSTALL_ROOT / "lib" / "field-arcade-battalion.py"
+            if batt.is_file():
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, str(batt), "dispatch"],
+                        input=json.dumps(body if isinstance(body, dict) else {}),
+                        capture_output=True,
+                        text=True,
+                        timeout=120,
+                        cwd=str(INSTALL_ROOT),
+                        env=_field_stack_env(),
+                    )
+                    payload = json.loads(proc.stdout or "{}")
+                except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                    payload = {"ok": False, "error": "arcade_battalion_dispatch_failed"}
+            else:
+                payload = {"ok": False, "error": "arcade_battalion_missing"}
             self._send(200, json.dumps(payload, ensure_ascii=False), "application/json")
             return
 
@@ -10855,6 +14619,30 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, "not found", "text/plain")
 
 
+def _startup_field_stack_boot() -> None:
+    """Panel-alone boot: field DNS/DHCP loops + unified start-field-stack.sh posture."""
+    _ensure_field_services_boot()
+    if os.environ.get("NEXUS_FIELD_STACK_BOOT", "1") != "1":
+        return
+    stack = INSTALL_ROOT / "scripts" / "start-field-stack.sh"
+    if not stack.is_file():
+        return
+    env = _field_stack_env()
+    env.setdefault("NEXUS_FIELD_LAUNCH_BROWSER", "0")
+    env.setdefault("NEXUS_BOOT_IMPL", "0")
+    env.setdefault("AML_BUILD", "0")
+    try:
+        subprocess.Popen(
+            ["bash", str(stack)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=env,
+            start_new_session=True,
+        )
+    except OSError:
+        pass
+
+
 def _startup_always_optimal() -> None:
     ao = _grok16_root() / "lib" / "field-always-optimal.py"
     if not ao.is_file():
@@ -10871,11 +14659,104 @@ def _startup_always_optimal() -> None:
         pass
 
 
+def _startup_internet_clean() -> None:
+    """Hostess 7 default — secure bookmarks + telemetry strip on panel boot."""
+    if os.environ.get("HOSTESS7_INTERNET_CLEAN_BOOT", "1") != "1":
+        return
+    script = INSTALL_ROOT / "lib" / "hostess7-internet-clean.py"
+    if not script.is_file():
+        script = INSTALL_ROOT / "lib" / "field-c2-bookmark-boot.py"
+    if not script.is_file():
+        return
+    try:
+        subprocess.run(
+            [sys.executable, str(script), "json"],
+            capture_output=True,
+            text=True,
+            timeout=240,
+            env=_field_stack_env(),
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+
+
+def _startup_dynamic_routes() -> None:
+    """Panel boot — kick hostile/DNS/kill-rekill table trash; optional full route return."""
+    if os.environ.get("NEXUS_DYNAMIC_ROUTES_BOOT", "1") != "1":
+        return
+    dyn_py = INSTALL_ROOT / "lib" / "field-dynamic-routes.py"
+    if not dyn_py.is_file():
+        return
+    try:
+        if os.environ.get("NEXUS_DYNAMIC_ROUTES_BOOT_FULL", "0").strip().lower() in ("1", "yes", "on"):
+            subprocess.run(
+                [sys.executable, str(dyn_py), "run", "--fast"],
+                capture_output=True,
+                text=True,
+                timeout=180,
+                env=_field_stack_env(),
+            )
+        else:
+            subprocess.run(
+                [sys.executable, str(dyn_py), "kick-trash"],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                env=_field_stack_env(),
+            )
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+
+
+def _startup_lab_sovereign() -> None:
+    """Hostess 7 runs the lab — secure connection, share in, no share out."""
+    if os.environ.get("HOSTESS7_LAB_SOVEREIGN_BOOT", "1") != "1":
+        return
+    script = INSTALL_ROOT / "lib" / "hostess7-lab-sovereign.py"
+    if not script.is_file():
+        return
+    try:
+        subprocess.run(
+            [sys.executable, str(script), "boot"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env=_field_stack_env(),
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+
+
+def _startup_truth_keepalive() -> None:
+    """Panel boot — truth every surface; retruth when below floor (soft ingress, no DHCP break)."""
+    if os.environ.get("NEXUS_TRUTH_KEEPALIVE_BOOT", "1") != "1":
+        return
+    script = INSTALL_ROOT / "lib" / "field-truth-keepalive.py"
+    if not script.is_file():
+        return
+    try:
+        subprocess.run(
+            [sys.executable, str(script), "keepalive"],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            env=_field_stack_env(),
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+
+
 def main():
     global PANEL_DIR
     PANEL_DIR = PANEL_DIR.resolve()
     os.chdir(PANEL_DIR)
+    if os.environ.get("NEXUS_PANEL_SPAWN_SERVICES", "0").strip().lower() in ("1", "yes", "on"):
+        threading.Thread(target=_startup_field_stack_boot, daemon=True, name="field-stack-boot").start()
     threading.Thread(target=_startup_always_optimal, daemon=True, name="always-optimal-boot").start()
+    threading.Thread(target=_startup_internet_clean, daemon=True, name="hostess7-internet-clean-boot").start()
+    threading.Thread(target=_startup_dynamic_routes, daemon=True, name="field-dynamic-routes-boot").start()
+    threading.Thread(target=_startup_lab_sovereign, daemon=True, name="hostess7-lab-sovereign-boot").start()
+    threading.Thread(target=_startup_truth_keepalive, daemon=True, name="field-truth-keepalive-boot").start()
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     server.serve_forever()
 

@@ -81,11 +81,26 @@ def _ironclad_truth() -> dict[str, Any]:
     }
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -980,12 +995,46 @@ def _the_sort_paths(paths: list[dict[str, Any]], *, sort_meta: dict[str, Any] | 
     return out
 
 
+def _presume_path_mod() -> Any | None:
+    path = INSTALL / "lib" / "field-chips-presume-path.py"
+    if not path.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("chips_presume_path", path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod
+    except Exception:
+        return None
+    return None
+
+
 def predict_code_paths(chips: list[dict[str, Any]], *, skip_reorganize: bool = False) -> dict[str, Any]:
     """Hard-percentage paths + THE sort (composite_bsp) — Ironclad truth connected."""
     seed = _load(PATH_PREDICT_SEED, {})
     doctrine = _load(DOCTRINE, {})
     cpp = doctrine.get("code_path_prediction") or {}
+    pp_doc = doctrine.get("presume_pathing") or {}
     iron = _ironclad_truth()
+    if skip_reorganize or pp_doc.get("prefer_direct_when_balanced"):
+        pp = _presume_path_mod()
+        if pp and hasattr(pp, "build_presume_paths"):
+            direct = pp.build_presume_paths(chips)
+            if direct.get("paths"):
+                return {
+                    **direct,
+                    "schema": "field-chip-path-predict/v1",
+                    "hard_percent": False,
+                    "presume": False,
+                    "chip_is_truth": True,
+                    "direct_path_only": True,
+                    "the_sort": False,
+                    "algorithm": "presume_path_direct",
+                    "ironclad": iron,
+                    "ironclad_citation": IRONCLAD_CITE,
+                    "combinatorics_boost": _combinatorics_posture_boost(),
+                }
     raw = _predict_path_weights(chips)
     if not raw:
         return {

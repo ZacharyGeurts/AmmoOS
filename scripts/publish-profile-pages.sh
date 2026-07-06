@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/publish-profile-pages.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/usr/bin/env bash
 # Publish profile/docs → ZacharyGeurts repo /docs (GitHub Pages from main).
 set -euo pipefail
@@ -18,10 +36,11 @@ fi
 git -C "$CLONE" pull --ff-only origin main 2>/dev/null || true
 mkdir -p "${CLONE}/docs"
 rsync -a --delete "${SRC}/" "${CLONE}/docs/"
+[[ -f "${ROOT}/profile/README.md" ]] && cp "${ROOT}/profile/README.md" "${CLONE}/README.md"
 cd "$CLONE"
-git add docs/
+git add docs/ README.md 2>/dev/null || git add docs/
 git diff --cached --quiet && { echo "Profile pages up to date"; exit 0; }
 git -c user.email="gzac5314@users.noreply.github.com" -c user.name="ZacharyGeurts" \
-  commit -m "pages: profile stack v${VER}"
+  commit -m "profile: Hostess7 3.0.7-beta5 hub · God Bless · stack v${VER}"
 git push origin main
 echo "Profile: https://zacharygeurts.github.io/ZacharyGeurts/"

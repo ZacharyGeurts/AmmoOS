@@ -10,9 +10,26 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1])).resolve()
 STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
-SG = Path(os.environ.get("SG_ROOT", INSTALL.parent.parent))
+
+
+def _resolve_sg_root() -> Path:
+    """SG layout: parent of NewLatest, or NewLatest itself when SG_ROOT=NEXUS_INSTALL_ROOT."""
+    raw = os.environ.get("SG_ROOT", "").strip()
+    if raw:
+        p = Path(raw).expanduser().resolve()
+        if (p / "NewLatest").is_dir():
+            return p
+        if (p / "lib" / "nexus-common.sh").is_file() or p.name == "NewLatest":
+            return p.parent if (p.parent / "NewLatest").exists() else p
+        return p
+    if INSTALL.name == "NewLatest":
+        return INSTALL.parent
+    return INSTALL.parent.parent
+
+
+SG = _resolve_sg_root()
 from sg_paths import grok16_root
 
 GROK16 = grok16_root()
@@ -29,11 +46,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -57,7 +89,11 @@ def doctrine() -> dict[str, Any]:
 
 def sg_grok16_ready(*, require_grok16: bool = True) -> dict[str, Any]:
     """Sovereign formats and gates require SG_ROOT + Grok16 tree."""
-    sg_ok = SG.is_dir() and (SG / "NewLatest").is_dir()
+    field_install = (SG / "NewLatest").resolve() if (SG / "NewLatest").is_dir() else INSTALL
+    sg_ok = SG.is_dir() and (
+        (SG / "NewLatest").is_dir()
+        or (field_install / "lib" / "nexus-common.sh").is_file()
+    )
     g16_ok = GROK16.is_dir() and (GROK16 / "forge" / "g16-field-sanity.py").is_file()
     ok = sg_ok and (g16_ok or not require_grok16)
     return {

@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:lib/installer.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # NEXUS Field installer — Linux / macOS / Windows portable + system paths.
 set -euo pipefail
@@ -276,6 +294,10 @@ nexus_install_portable() {
   zn="$(nexus_install_znetwork_src "$root" 2>/dev/null || true)"
   nexus_install_build_znetwork "$sg" || true
   [[ -n "$zn" ]] && nexus_install_ship_znetwork "$root" "$zn" || true
+  if [[ -x "${root}/lib/field-vsync-locker-bootstrap.sh" ]]; then
+    NEXUS_INSTALL_ROOT="$root" NEXUS_STATE_DIR="${root}/.nexus-state" \
+      bash "${root}/lib/field-vsync-locker-bootstrap.sh" 2>/dev/null || true
+  fi
   case "$(nexus_install_detect_os)" in
     linux) nexus_install_linux_desktop "$root" "${USER:-}" "user" ;;
     macos) nexus_install_macos_app "$root" ;;

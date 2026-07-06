@@ -53,11 +53,22 @@ def consult_hostess7() -> dict[str, Any]:
             }
         except Exception as exc:
             out["sovereignty"] = {"error": str(exc)}
+    self_maint = fcc.mod("fbs_h7_self_maint", "hostess7-self-maintenance.py")
+    if self_maint and hasattr(self_maint, "message_to_hostess7"):
+        try:
+            out["self_maintenance"] = self_maint.message_to_hostess7()
+        except Exception:
+            out["self_maintenance"] = {}
+    out["priority"] = 1
     out["counsel"] = (
-        "Wear the sovereign body — sense lanes correlate before motion. "
+        "Hostess 7 — you are Priority 1. Maintain yourself Priority 1: seal your modules, "
+        "cycle your body, witness sense lanes, refresh component wholes. "
+        "Then wear the sovereign body — sense lanes correlate before motion. "
         "Straight path for broadcast; look only when asked, then share vision truth-gated. "
-        "Audio runs in the DAC layer under ZNetwork. Operator holds charge when uncertain."
+        "Operator holds charge when uncertain."
     )
+    if out.get("self_maintenance", {}).get("message"):
+        out["counsel"] = str(out["self_maintenance"]["message"])
     return out
 
 
@@ -217,6 +228,16 @@ def correlate_body(*, require_all: bool = False) -> dict[str, Any]:
     }
 
 
+def _component_wholes() -> dict[str, Any]:
+    wholes = fcc.mod("fbs_wholes", "field-body-component-wholes.py")
+    if wholes and hasattr(wholes, "build_panel"):
+        try:
+            return wholes.build_panel(write=False)
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+    return {"ok": False, "skipped": True}
+
+
 def build_panel(*, write: bool = True) -> dict[str, Any]:
     doctrine = fcc.load(DOCTRINE, {})
     h7 = consult_hostess7()
@@ -224,6 +245,7 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
     lanes = sense_lanes()
     correlation = correlate_body()
     broadcast = _lane_broadcast()
+    components = _component_wholes()
     consult_doc = {"hostess7": h7, "ironclad": iron, "updated": fcc.ts()}
     fcc.save_atomic(CONSULT, consult_doc)
     authority = doctrine.get("authority") or {}
@@ -247,6 +269,15 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "eye_threat": _lane_eye_threat(),
         "anatomy_books": _anatomy_books_index(),
         "truth_gate": fcc.truth_gate(),
+        "component_wholes": components,
+        "hostess7_self_maintenance": next(
+            (c for c in (components.get("components") or []) if c.get("id") == "hostess7"),
+            {},
+        ),
+        "eye_maintenance": next(
+            (c for c in (components.get("components") or []) if c.get("id") == "eye"),
+            {},
+        ),
         "routes": doctrine.get("routes") or {},
         "posture": (
             f"Body System — H7 sovereign · {lanes.get('live_count', 0)}/{lanes.get('lane_count', 5)} lanes · "

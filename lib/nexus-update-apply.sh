@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:lib/nexus-update-apply.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # NEXUS update apply — release installer tarball (default) or git tree fallback.
 # Holds github-update.lock, downloads release, install-all.sh, restart.
@@ -183,7 +201,32 @@ _download_release() {
 _extract_release() {
   local archive="$1" dest="$2"
   mkdir -p "$dest"
-  tar -xzf "$archive" -C "$dest"
+  case "$archive" in
+    *.h7e|*.h7)
+      local unpack_py="${NEXUS_INSTALL_ROOT}/lib/field-h7-format.py"
+      local unpack_sh="${NEXUS_INSTALL_ROOT}/scripts/field-h7e-extract.sh"
+      [[ -x "$unpack_sh" ]] || unpack_sh="${NEXUS_INSTALL_ROOT}/scripts/ammoos-unpack-source.sh"
+      if [[ -x "$unpack_sh" ]]; then
+        bash "$unpack_sh" "$archive" "$dest"
+        return $?
+      fi
+      if [[ -f "$unpack_py" ]]; then
+        python3 "$unpack_py" extract "$archive" "$dest" >/dev/null
+        return 0
+      fi
+      _log "H7e/H7 release archive requires field-h7-format.py or field-h7e-extract.sh"
+      return 1
+      ;;
+    *.tar.gz|*.tgz)
+      tar -xzf "$archive" -C "$dest"
+      ;;
+    *.tar)
+      tar -xf "$archive" -C "$dest"
+      ;;
+    *)
+      tar -xzf "$archive" -C "$dest"
+      ;;
+  esac
 }
 
 _find_extract_root() {
@@ -213,7 +256,10 @@ _find_extract_root() {
 
 _apply_release_installer() {
   [[ -n "$TARBALL_URL" ]] || { _log "missing NEXUS_UPDATE_TARBALL_URL"; return 1; }
-  local archive="${STAGING}/nexus-shield-${TARGET}-source.tar.gz"
+  local archive_name
+  archive_name="$(basename "${TARBALL_URL%%\?*}")"
+  [[ -n "$archive_name" ]] || archive_name="nexus-shield-${TARGET}-source.tar.gz"
+  local archive="${STAGING}/${archive_name}"
   mkdir -p "$STAGING"
   nexus_update_lock_phase download_tarball "--token=${TOKEN}" 2>/dev/null || true
   if ! _download_release "$TARBALL_URL" "$archive"; then

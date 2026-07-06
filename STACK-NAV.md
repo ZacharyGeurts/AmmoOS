@@ -16,8 +16,6 @@
 
 Doctrine: `data/field-stack-layer-doctrine.json` (v2)
 
-**Textbook:** `Textbook/exploring-the-stack.txt` — components, boot process, health checks (Hostess 7 shelf `exploring_the_stack`)
-
 ## Load OS
 
 ```bash
@@ -48,7 +46,7 @@ cd AmmoOS
 
 | Component | Version |
 |-----------|---------|
-| AmmoOS | `2.0.0-beta4` |
+| AmmoOS | `2.0.0-beta3.1` |
 | KILROY | `1.1.0 Sanctuary` |
 | Grok16 | `5.2.0` |
 | Queen | ships in AmmoOS tree + Queen hub |

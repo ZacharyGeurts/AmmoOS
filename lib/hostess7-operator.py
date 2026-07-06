@@ -24,11 +24,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -183,6 +198,18 @@ def build_panel() -> dict[str, Any]:
     doc = _load(DOCTRINE, {})
     cat = task_catalog()
     ev = evaluate()
+    change_awareness: dict[str, Any] = {}
+    ca_py = INSTALL / "lib" / "hostess7-change-awareness.py"
+    if ca_py.is_file():
+        try:
+            spec = importlib.util.spec_from_file_location("h7_ca_op", ca_py)
+            if spec and spec.loader:
+                cam = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(cam)
+                if hasattr(cam, "build_panel"):
+                    change_awareness = cam.build_panel(write=False)
+        except Exception:
+            pass
     panel = {
         "schema": "hostess7-operator-panel/v1",
         "ok": True,
@@ -194,6 +221,12 @@ def build_panel() -> dict[str, Any]:
         "task_catalog_count": cat.get("count"),
         "principles": (_load(PRINCIPLES, {}).get("principles") or [])[:5],
         "virtual_first": True,
+        "change_awareness": {
+            "hostess7_knows_changes": change_awareness.get("hostess7_knows_changes", True),
+            "presume_verdict": change_awareness.get("presume_verdict"),
+            "presume_timing": change_awareness.get("presume_timing"),
+            "recent_change_count": len(change_awareness.get("recent_changes") or []),
+        },
         "apis": {
             "brief": "/api/hostess7/operator/brief",
             "evaluate": "/api/hostess7/operator/evaluate",

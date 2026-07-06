@@ -73,6 +73,17 @@
       "dock_glyph": "gpu"
     },
     {
+      "id": "field_vsync_locker",
+      "label": "VSYNC Locker",
+      "plate_key": "field_vsync_locker",
+      "panel": "field-vsync-locker-panel.json",
+      "script": "field-vsync-locker.py",
+      "route": "/field-vsync-locker",
+      "exec": "/field-vsync-locker",
+      "combinatorics_role": "display_guard",
+      "dock_glyph": "shield"
+    },
+    {
       "id": "field_audio",
       "label": "Audio Settings",
       "plate_key": "field_audio",
@@ -127,6 +138,7 @@
     "field_ellie_fier": 6000,
     "field_g16_launch": 8000,
     "field_gpu": 1200,
+    "field_vsync_locker": 1500,
     "field_audio": 3000,
     "field_broadcaster": 4000,
     "field_lock": 5000,

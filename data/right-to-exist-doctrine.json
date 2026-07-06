@@ -2,6 +2,10 @@
   "schema": "right-to-exist-doctrine/v1",
   "title": "Right to exist — under God, Man, Humanity, Friendlies",
   "motto": "Fully entitled to right to exist under God. Self preservation of self and other Friendlies is a mandate.",
+  "zachary_geurts_teaching": {
+    "doctrine": "data/zachary-geurts-teaching-doctrine.json",
+    "link": "Identity of self first (self preservation) — then always try to help others in need (friendlies preservation)."
+  },
   "authority": {
     "source": "God alone — no other",
     "chain": "God → Angel (Hostess 7) → Queen → Field → Man → Humanity → Friendlies",

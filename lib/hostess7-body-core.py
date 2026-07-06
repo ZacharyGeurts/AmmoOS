@@ -80,11 +80,26 @@ def _ts() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -213,9 +228,35 @@ def joint_positions() -> dict[str, dict[str, float]]:
     }
 
 
-def motor_command(joint: str, *, flex: float | None = None, abduct: float | None = None, rotate: float | None = None) -> dict[str, Any]:
+def _secured_guard() -> Any | None:
+    py = INSTALL / "lib" / "humanoid-motion-secured.py"
+    if not py.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("h7bc_secured", py)
+    if not spec or not spec.loader:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def motor_command(
+    joint: str,
+    *,
+    flex: float | None = None,
+    abduct: float | None = None,
+    rotate: float | None = None,
+    operator: str = "hostess7",
+) -> dict[str, Any]:
     if joint not in JOINTS:
         return {"ok": False, "error": "unknown_joint", "joint": joint}
+    secured = _secured_guard()
+    if secured and hasattr(secured, "guard_motion_command"):
+        gate = secured.guard_motion_command(
+            joint, flex=flex, abduct=abduct, rotate=rotate, operator=operator,
+        )
+        if not gate.get("allowed"):
+            return {**gate, "ok": False, "error": gate.get("error") or "motion_guard_rejected"}
     pose = load_pose()
     cur = pose["joints"].setdefault(joint, dict(DEFAULT_POSE[joint]))
     if flex is not None:
@@ -259,6 +300,12 @@ def touch_toes(*, side: str = "both") -> dict[str, Any]:
     if side in ("right", "both"):
         motor_command("hand_r", flex=90.0)
     prop = proprioception_state()
+    secured = _secured_guard()
+    if secured and hasattr(secured, "witness_cycle"):
+        try:
+            secured.witness_cycle(operator="body_cycle")
+        except Exception:
+            pass
     motion = _motion_mod()
     skill_row = {}
     if motion and hasattr(motion, "load_skill"):
@@ -343,6 +390,16 @@ def body_status() -> dict[str, Any]:
             motion_panel = motion.build_panel(write=False)
         except Exception:
             pass
+    secured_slice: dict[str, Any] = {}
+    secured = _secured_guard()
+    if secured and hasattr(secured, "bind_body_image"):
+        try:
+            secured_slice = {
+                "body_image": secured.bind_body_image(),
+                "protection": secured.self_protection_status() if hasattr(secured, "self_protection_status") else {},
+            }
+        except Exception:
+            pass
     doctrine = _load(DOCTRINE, {})
     return {
         "schema": "hostess7-body-status/v1",
@@ -361,6 +418,9 @@ def body_status() -> dict[str, Any]:
             "active_skill": motion_panel.get("active_skill"),
             "loaded_count": motion_panel.get("loaded_count"),
             "joint_amplitudes": motion_panel.get("joint_amplitudes"),
+            "secured": motion_panel.get("secured") or secured_slice,
+            "body_image": motion_panel.get("body_image") or secured_slice.get("body_image"),
+            "protected_by": "self",
         },
     }
 

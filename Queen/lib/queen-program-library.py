@@ -1005,8 +1005,39 @@ def _generate_icon_png(entry_id: str, *, size: int = 48, row: dict[str, Any] | N
         return None
 
 
+def _serve_icon_from_h7s_bundle(entry_id: str) -> tuple[bytes, str, dict[str, str]] | None:
+    """Fast path — desktop H7s condenser slice (no filesystem scan)."""
+    bundle_py = NEXUS / "lib" / "field-h7s-desktop-bundle.py"
+    if not bundle_py.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("field_h7s_desktop_serve", bundle_py)
+        if not spec or not spec.loader:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if not hasattr(mod, "read_icon"):
+            return None
+        hit = mod.read_icon(entry_id)
+        if not hit:
+            return None
+        data, meta = hit
+        mime = (meta.get("blob") or {}).get("mime") or "image/png"
+        return data, mime, {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "X-Queen-Serve-Mode": "h7s_slice",
+            "X-Queen-Icon-Source": "field-desktop.h7s",
+            "X-Queen-Icon-Ref": entry_id,
+        }
+    except Exception:
+        return None
+
+
 def serve_icon_bytes(entry_id: str, *, size: int = 48) -> tuple[bytes, str, dict[str, str]] | None:
-    """Stream icon from source path — generate locally on miss (unlimited)."""
+    """Stream icon from H7s bundle, source path, or local generate on miss."""
+    bundled = _serve_icon_from_h7s_bundle(entry_id)
+    if bundled:
+        return bundled
     row = _find_entry(entry_id)
     raw = row.get("icon_path") if row else None
     if raw:

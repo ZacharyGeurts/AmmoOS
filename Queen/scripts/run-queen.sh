@@ -1,5 +1,4 @@
-#!/bin/bash
-# AmmoLang subfolder route — AML_BUILD=1 (default)
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
 _aml_find_root() {
   local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   while [[ "$d" != "/" ]]; do
@@ -8,14 +7,16 @@ _aml_find_root() {
   done
   return 1
 }
-if [[ "${AML_BUILD:-1}" != "0" ]]; then
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
   _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
   if [[ -n "$_AML_ROOT" ]]; then
-    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" forge "$@"
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:Queen/scripts/run-queen.sh" "$@"
   fi
 fi
 unset -f _aml_find_root 2>/dev/null || true
 
+#!/bin/bash
 # Launch Queen sovereign RTX browser — everything inside Queen tree.
 set -euo pipefail
 
@@ -170,11 +171,8 @@ ensure_nexus_panel() {
 
 ensure_nexus_panel || true
 
-export QUEEN_BROWSER_STRIPPED="${QUEEN_BROWSER_STRIPPED:-1}"
-export QUEEN_BOOT_OS="${QUEEN_BOOT_OS:-0}"
-export NEXUS_C2_DESKTOP_LAUNCH="${NEXUS_C2_DESKTOP_LAUNCH:-0}"
-export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-http://127.0.0.1:${QUEEN_WORLD_PORT}/world/kilroy-home.html}"
-export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${QUEEN_WORLD_PORT}/world/kilroy-home.html}"
+export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${NEXUS_THREAT_PANEL_PORT}/field}"
+export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-$QUEEN_BROWSER_HOME}"
 export NEXUS_FIELD_BROWSER_QUEEN="${NEXUS_FIELD_BROWSER_QUEEN:-1}"
 
 mkdir -p "${NEXUS_STATE_DIR}/imports"
@@ -184,14 +182,9 @@ if [[ -f "${ROOT}/scripts/queen-icon-kit.py" ]]; then
   pythong "${ROOT}/scripts/queen-icon-kit.py" >/dev/null 2>&1 || true
 fi
 
-# Queen stripped webbrowser — RTX/AMOURANTHRTX engine when binary exists; HTTP shell fallback.
-if [[ -x "${BIN}" && "${QUEEN_FORCE_HTTP_SHELL:-0}" != "1" ]]; then
-  export QUEEN_SKIP_RTX_BOOT=0
-  export QUEEN_WEB_SHELL=0
-else
-  export QUEEN_WEB_SHELL="${QUEEN_WEB_SHELL:-1}"
-  export QUEEN_SKIP_RTX_BOOT="${QUEEN_SKIP_RTX_BOOT:-1}"
-fi
+# Queen Web Browser shell — HTTP surface at browser.html (no RTX boot / DVD splash).
+export QUEEN_WEB_SHELL="${QUEEN_WEB_SHELL:-1}"
+export QUEEN_SKIP_RTX_BOOT="${QUEEN_SKIP_RTX_BOOT:-1}"
 export NEXUS_EMBED_PANEL_IN_ENGINE=0
 # Internal Queen shell only — never spawn host browsers/xdg-open unless explicitly opted in.
 export QUEEN_NO_OS_BROWSER="${QUEEN_NO_OS_BROWSER:-1}"
@@ -227,16 +220,10 @@ launch_integrated_browser() {
   exec pythong "${ROOT}/lib/queen-world.py" --host 127.0.0.1 --port "${QUEEN_WORLD_PORT}"
 }
 
-if [[ -x "${BIN}" && "${QUEEN_SKIP_RTX_BOOT}" == "0" ]]; then
-  echo "Queen launch: AMOURANTHRTX RTX engine → ${BIN}"
-  queen_internal_urls
-  exec "${BIN}" --url "${QUEEN_BROWSER_HOME}" "$@"
-fi
-
 if [[ "${QUEEN_WEB_SHELL}" == "1" && "${QUEEN_RTX_CHROME:-0}" != "1" ]]; then
   queen_internal_urls
   if [[ "${QUEEN_NO_OS_BROWSER}" == "1" ]]; then
-    echo "Queen launch: PASS (world daemon · stripped web shell)"
+    echo "Queen launch: PASS (world daemon · internal only)"
     exit 0
   fi
   launch_integrated_browser
@@ -245,11 +232,12 @@ fi
 if [[ ! -x "${BIN}" ]]; then
   queen_internal_urls
   if [[ "${QUEEN_NO_OS_BROWSER}" == "1" ]]; then
-    echo "Queen launch: PASS (no RTX binary · world daemon · field-gecko fallback)"
+    echo "Queen launch: PASS (no RTX binary · world daemon · integrated shell)"
     exit 0
   fi
   launch_integrated_browser
 fi
 
+echo "Queen launch: RTX binary present but disabled — use integrated field browser (QUEEN_WEB_SHELL=1)" >&2
 queen_internal_urls
 exit 0

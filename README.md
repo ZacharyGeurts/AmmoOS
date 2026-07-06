@@ -1,105 +1,106 @@
-<div align="center">
+# AmmoOS
 
-# AmmoOS 2.0 — CANVAS
+![Release](https://img.shields.io/badge/release-1.9.9h-brightgreen)
+![Edition](https://img.shields.io/badge/edition-Grok_Expert_Review-blue)
+![G16](https://img.shields.io/badge/Grok16-5.1.0-gold)
+![Queen](https://img.shields.io/badge/Queen-browser-purple)
+![License](https://img.shields.io/badge/license-GPLv3-green)
 
-![AmmoOS](https://img.shields.io/badge/AmmoOS-2.0.0--beta4-22c55e?style=for-the-badge)
-![Queen](https://img.shields.io/badge/Queen-Browser-3ecf8e?style=for-the-badge)
-![ZNetwork](https://img.shields.io/badge/ZNetwork-2.1.0--Stack-38bdf8?style=for-the-badge)
-![KILROY](https://img.shields.io/badge/KILROY-1.0.0--Taco-a78bfa?style=for-the-badge)
+**AmmoOS** is the **2.0.0-beta3.1** field operating system on **`127.0.0.1`**. **KILROY** is the PC core (ZNetwork absorbed). AmmoOS desktop runs on **AMOURANTHRTX** display technology. **Queen** is a standalone secured browser on `:9481` — not an AmmoOS container. Stack: Hardware → NEXUS C2 → KILROY → AmmoOS → Queen. Load with `./scripts/kilroy-load-os.sh`.
 
-**Field OS on loopback — NEXUS C2 commands, ZNetwork pipes, Queen defends, AmmoOS lives inside Queen.**
+## Live surfaces (after install)
 
-[Stack navigation](STACK-NAV.md) · [Manual](https://zacharygeurts.github.io/AmmoOS/) · [Profile hub](https://github.com/ZacharyGeurts) · [@ZacharyGeurts](https://x.com/ZacharyGeurts)
+| Surface | URL | Kind |
+|---------|-----|------|
+| **Host desktop** | http://127.0.0.1:9477/field | Browser — first page |
+| **Field command** | http://127.0.0.1:9477/command | Browser — full C2 |
+| **Queen Browser** | http://127.0.0.1:9481/world/browser.html | Browser — standalone shell |
+| **Underlay F9** | http://127.0.0.1:9477/underlay-f9?sector=underlay | Browser — Tristate installer |
+| **Training** | http://127.0.0.1:9477/command#training | Browser — Hostess7 tab |
+| **Queen shell** | `Queen/build/rtx/bin/Linux/queen-browser` | Native — RTX program |
+| **Dev launcher** | `./nexus.sh` | Native — panel + browser |
 
-</div>
-
-## Code first
+## Quick install (Linux x86_64)
 
 ```bash
 git clone https://github.com/ZacharyGeurts/AmmoOS.git
 cd AmmoOS
-./scripts/wire-stack.sh
 sudo ./install-all.sh
-# → http://127.0.0.1:9477/field
 ```
 
-**Beta 4 (WATCHGUARD):** Hostess 7 seal · vision handshake · brain guard verified. Tag `v2.0.0-beta4`.
+Browser opens **http://127.0.0.1:9477/field** on start.
 
----
-
-## Stack layers
-
-```
-Hardware
-  → NEXUS C2 (:9477)     ← you are here (AmmoOS)
-  → ZNetwork             ← sole internet pipe
-  → Queen CANVAS         ← RTX display technology
-  → Queen Browser (:9481)← secured shell
-  → AmmoOS inside Queen  ← Start tab / field desktop
-```
-
-| Layer | Repo | Surface |
-|-------|------|---------|
-| **AmmoOS / NEXUS C2** | **this repo** | http://127.0.0.1:9477/field |
-| ZNetwork Hub | [ZNetwork](https://github.com/ZacharyGeurts/ZNetwork) | http://127.0.0.1:9477/field-znetwork |
-| Queen Browser | [Queen](https://github.com/ZacharyGeurts/Queen) | http://127.0.0.1:9481/world/browser.html |
-| KILROY boot | [KILROY](https://github.com/ZacharyGeurts/KILROY) | Field kernel under stack |
-| Compiler | [Grok16](https://github.com/ZacharyGeurts/Grok16) | `g16` @ 16.2.0 |
-
-Full map: **[STACK-NAV.md](STACK-NAV.md)** · Pages: [stack hub](https://zacharygeurts.github.io/ZacharyGeurts/stack.html)
-
----
-
-## Surfaces
-
-| URL | Role |
-|-----|------|
-| http://127.0.0.1:9477/field | Host desktop + field startbar |
-| http://127.0.0.1:9477/command | Full C2 threat panel |
-| http://127.0.0.1:9477/field-znetwork | ZNetwork Hub + Hostess 7 wire |
-| http://127.0.0.1:9481/world/browser.html | Queen Browser |
-| http://127.0.0.1:9481/world/queen-game-room.html | Game Room + emulator info |
-
----
-
-## Install
+## Release pipeline (1.0)
 
 ```bash
-chmod +x install-all.sh nexus.sh
-sudo ./install-all.sh          # production
-./nexus.sh                     # dev tree
-Queen/scripts/run-queen.sh     # Queen on :9481
+export SG_ROOT=/path/to/SG
+./scripts/ammoos-beta-pipeline.sh    # combinatronic · plate · engine · integrate
+./scripts/ammoos-launch-verify.sh     # surfaces · sovereignty · local DNS/DHCP
+./scripts/pack-ammoos-release.sh --version 1.0.0
 ```
 
-| Script | Purpose |
-|--------|---------|
-| `install-all.sh` | Full Linux install |
-| `nexus.sh` | Dev launcher — panel + browser |
-| `scripts/wire-stack.sh` | Symlink Queen, ZNetwork, KILROY, Grok16 |
-| `scripts/integrate-znetwork.sh` | Wire ZNetwork relayer |
+## Combinatronic integration
 
----
+AmmoOS runs the full **g16 combinatronic optimal** cycle before release:
+
+- **Rebalance** — chip + program batteries, universal leaf ordering
+- **Condense** — plate width × length consolidation
+- **Combine** — universal panel + combinatorics publish
+- **Connect** — chip ISA ↔ language driver edges
+- **Spider wire** — ironclad outward lane optimization
+
+Doctrine: `lib/g16-combinatronic-rebalance.py` · State: `.nexus-state/ammoos-*.json`
+
+## Platform matrix
+
+AmmoOS 1.0 ships **source bootstrap** for:
+
+| Platform | Installer |
+|----------|-----------|
+| Linux x86_64 | `install-all.sh` |
+| Linux aarch64 / arm / riscv64 / i386 | `install-all.sh` on target |
+| Windows x86_64 | `stealth.ps1` or WSL2 + `install-all.sh` |
+| macOS (Intel / Apple Silicon) | `./nexus.sh` dev tree |
+| FreeBSD amd64 | `install.sh` |
+| Android aarch64 | Queen `browser.html` WebView shell |
+
+Full matrix: [ammoos-2.0.0-beta-PLATFORMS.md](dist/ammoos-2.0.0-beta-PLATFORMS.md) · JSON: `data/ammoos-platform-release.json`
+
+## Architecture
+
+```
+Host browser (:9477)
+  ├─ /field        → host desktop (apps + startbar)
+  ├─ /command      → threat panel + training
+  └─ /underlay-f9  → Tristate installer
+
+Queen Browser (:9481)
+  └─ /world/browser.html → field OS inside Start tab
+
+Native programs
+  ├─ queen-browser     → RTX shell (FIELDC / AmmoOS guest)
+  ├─ nexus.sh          → dev launcher
+  └─ install-all.sh    → production deploy
+
+Combinatronic engine
+  ├─ g16-combinatronic-rebalance.py
+  ├─ field-program-combinatronic.py
+  └─ Queen/AmmoOS/net/*.fld plates
+```
 
 ## Manual
 
-| Page | Contents |
-|------|----------|
-| [AmmoOS manual](https://zacharygeurts.github.io/AmmoOS/) | Install, surfaces, architecture |
-| [Queen hub](https://zacharygeurts.github.io/Queen/) | Browser shell + taskbar icon |
-| [ZNetwork](https://zacharygeurts.github.io/ZNetwork/) | Relayer design + gates |
-| [KILROY](https://zacharygeurts.github.io/KILROY/) | Field boot kernel |
-| [Profile stack](https://zacharygeurts.github.io/ZacharyGeurts/stack.html) | Cross-repo navigation |
+| Doc | URL |
+|-----|-----|
+| **Web manual** | https://zacharygeurts.github.io/AmmoOS/ |
+| Getting Started | https://zacharygeurts.github.io/AmmoOS/getting-started.html |
+| Launch surfaces | https://zacharygeurts.github.io/AmmoOS/launch-surfaces.html |
+| Combinatronic | https://zacharygeurts.github.io/AmmoOS/combinatronic.html |
+| Platforms | https://zacharygeurts.github.io/AmmoOS/platforms.html |
+| Field I/O | https://zacharygeurts.github.io/AmmoOS/io.html |
 
-Local: `docs/index.html` · Wiki: `./scripts/publish-wiki.sh`
+## Lineage
 
----
+AmmoOS beta **2.0.0-beta** packages **NEXUS-Shield / NewLatest 10.4.1** with Grok16 **4.7.1** pairing and **KILROY Field Die** syscall truth. Full SG stack siblings are wired and materialized in release archives.
 
-## Integrated examples
-
-**AMOURANTHRTX** is display technology for Queen CANVAS — not a separate GUI. Documented as an [integrated example](https://zacharygeurts.github.io/ZacharyGeurts/display-example.html), repo: [AMOURANTHRTX](https://github.com/ZacharyGeurts/AMOURANTHRTX).
-
----
-
-## License
-
-AmmoOS stack components — see per-tree `LICENSE` files.
+**Release notes:** [RELEASE-2.0.0-beta.md](RELEASE-2.0.0-beta.md)

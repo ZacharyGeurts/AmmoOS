@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:lib/nexus-boot-impl.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 # NEXUS boot implementation — reload field tech on every startup/reboot.
 # First install: full wire + migrate + meld + paths. Later boots: lighter refresh, then normal daemon.
@@ -357,12 +375,27 @@ nexus_boot_impl_kill_rekill() {
   return 1
 }
 
+nexus_boot_impl_war_harden() {
+  [[ "${NEXUS_WAR_MACHINE:-1}" == "1" ]] || return 0
+  [[ -f "${NEXUS_INSTALL_ROOT}/lib/field-war-hardening.sh" ]] || return 0
+  nexus_boot_impl_script_trusted "${NEXUS_INSTALL_ROOT}/lib/field-war-hardening.sh" || return 1
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/field-war-hardening.sh"
+  nexus_field_war_harden >>"$(nexus_boot_impl_log_path)" 2>&1 && {
+    nexus_log "INFO" "boot-impl" "war_harden_ok"
+    return 0
+  }
+  nexus_log "WARN" "boot-impl" "war_harden_partial"
+  return 1
+}
+
 nexus_boot_impl_ensure_dirs() {
   mkdir -p "${NEXUS_STATE_DIR}" "${NEXUS_STATE_DIR}/hostess7-cache" 2>/dev/null || true
   touch "$(nexus_boot_impl_log_path)" 2>/dev/null || true
   nexus_boot_impl_rotate_log
   nexus_boot_impl_thermal_guard_init
   nexus_boot_impl_kill_rekill || true
+  nexus_boot_impl_war_harden || true
   nexus_boot_impl_grok_lab || true
 }
 

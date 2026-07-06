@@ -118,15 +118,29 @@ def run_hostess_verify(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
         if rc != 0:
             failures.append("sdf-verify-redata")
     else:
-        engine.log("SKIP sdf-verify-redata — no segments in Hostess7 brain (run textbook_ingest or sdf-segment)")
+        engine.log("SKIP sdf-verify-redata — no segments in Hostess7 brain (run textbook_zac or sdf-segment)")
     if failures:
         return fail_result(engine, "hostess_verify", ", ".join(failures))
     return ok_result(engine, "hostess_verify")
 
 
-def check_textbook_field(ctx: ForgeContext) -> bool:
-    plain = _textbook_root(ctx) / "field-technology-v5.txt"
-    return plain.is_file() and plain.stat().st_size > 1000
+def check_textbook_zac(ctx: ForgeContext) -> bool:
+    zac = _textbook_root(ctx) / "field-technology-v5.zac"
+    return zac.is_file() and zac.stat().st_size > 1000
+
+
+def run_textbook_zac(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
+    engine.log("=== forge:textbook_zac — Field Technology monolith ===")
+    tb = _textbook_root(ctx)
+    build = tb / "build-field-technology-zac.py"
+    if not build.is_file():
+        return fail_result(engine, "textbook_zac", f"missing {build}")
+    if check_textbook_zac(ctx) and os.environ.get("QUEEN_FORGE_REBUILD_TEXTBOOK", "0") != "1":
+        engine.log("ZAC present — verify-only")
+        rc, _ = _run_py(engine, build, "--verify-only", cwd=tb)
+    else:
+        rc, _ = _run_py(engine, build, cwd=tb)
+    return ok_result(engine, "textbook_zac") if rc == 0 else fail_result(engine, "textbook_zac", "build/verify failed", rc)
 
 
 def check_forge_test(ctx: ForgeContext) -> bool:
@@ -321,7 +335,7 @@ def run_forge_test(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
         ("queen-hostess-brain", root / "lib/queen-hostess-brain.py"),
         ("queen-forge", root / "lib/queen-forge.py"),
         ("Hostess7.sh", _hostess_root(ctx) / "Hostess7.sh"),
-        ("textbook_plain", _textbook_root(ctx) / "field-technology-v5.txt"),
+        ("textbook_build", _textbook_root(ctx) / "build-field-technology-zac.py"),
     ):
         record(label, path.is_file(), str(path))
 
@@ -338,7 +352,11 @@ def run_forge_test(ctx: ForgeContext, engine: ForgeEngine) -> ForgeResult:
             record(script.replace(".py", ""), rc == 0)
 
     tb = _textbook_root(ctx)
-    record("textbook_plain", check_textbook_field(ctx), str(tb / "field-technology-v5.txt"))
+    if (tb / "field-technology-v5.zac").is_file():
+        rc, _ = _run_py(engine, tb / "build-field-technology-zac.py", "--verify-only", cwd=tb)
+        record("textbook_zac_verify", rc == 0)
+    else:
+        record("textbook_zac_verify", False, "zac missing — run forge textbook_zac")
 
     record("textbook_ingest", check_textbook_ingest(ctx), "Hostess7 brain segments")
     record("final_eye_sink", (_final_eye_root(ctx) / "zocr.py").is_file())
@@ -375,7 +393,7 @@ HOSTESS_TOOLS: dict[str, tuple[str, str, Any, Any, str | None]] = {
     "hostess_teach": ("Teach Hostess Queen redata + build tools", "hostess", run_hostess_teach, check_hostess_teach, "Hostess7.sh queen-teach-redata"),
     "textbook_ingest": ("Ingest textbook SDF brain into Hostess7", "hostess", run_textbook_ingest, check_textbook_ingest, "lib/queen-hostess-brain.py ingest-textbook"),
     "hostess_verify": ("QA redata truth + sdf verify", "hostess", run_hostess_verify, check_hostess_verify, "Hostess7.sh sdf-verify-redata"),
-
+    "textbook_zac": ("Field Technology ZAC monolith build/verify", "hostess", run_textbook_zac, check_textbook_zac, "NewLatest/Textbook/build-field-technology-zac.py"),
     "queen_zocr": ("Browser smoke OCR → Final_Eye/out", "hostess", run_queen_zocr, check_queen_zocr, "lib/queen-zocr.py browser-smoke"),
     "queen_eyeball": ("Final_Eye assist verify — offense mesh + Hostess 7", "hostess", run_queen_eyeball, check_queen_eyeball, "lib/queen-eyeball.py verify"),
     "queen_earball": ("Final_Ear assist verify — truth filter + Hostess 7", "hostess", run_queen_earball, check_queen_earball, "lib/queen-earball.py verify"),
@@ -383,6 +401,6 @@ HOSTESS_TOOLS: dict[str, tuple[str, str, Any, Any, str | None]] = {
 }
 
 HOSTESS_ORDER = [
-    "compiler_probe", "hostess_teach", "textbook_ingest",
+    "compiler_probe", "hostess_teach", "textbook_zac", "textbook_ingest",
     "hostess_verify", "queen_zocr", "queen_eyeball", "queen_earball", "forge_test",
 ]

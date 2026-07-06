@@ -10,7 +10,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src"))
 DOCS = ROOT / "docs"
+ZAC = ROOT / "zac"
 STORAGE = ROOT / "cache" / "fieldstorage"
 
 
@@ -18,6 +20,12 @@ def _ensure_brain() -> None:
     marker = STORAGE / "brain" / "superintel"
     if marker.is_dir() and any(marker.rglob("*.json")):
         return
+    index = ZAC / "fieldstorage.zac"
+    if not index.is_file():
+        return
+    from field_zac import restore_storage  # noqa: WPS433
+
+    restore_storage(zac_dir=ZAC, storage=STORAGE, verify=True)
 
 
 def _ask(query: str) -> dict:
@@ -54,21 +62,63 @@ def create_app():
     def health():
         return jsonify({"ok": True, "service": "Hostess7", "owner": "ZacharyGeurts"})
 
+    def _ping(url: str) -> bool:
+        import urllib.error
+        import urllib.request
+
+        try:
+            with urllib.request.urlopen(url, timeout=2) as resp:
+                return 200 <= getattr(resp, "status", 200) < 400
+        except (urllib.error.URLError, OSError, ValueError):
+            return False
+
     @app.route("/api/status")
     def status():
-        from field_license_status import format_notice, is_demo, license_mode  # noqa: WPS433
+        from field_license_status import format_notice, is_war_ready, license_mode  # noqa: WPS433
 
-        brain_ok = (STORAGE / "brain").is_dir()
+        zac_ok = (ZAC / "fieldstorage.zac").is_file()
+        brain_ok = (STORAGE / "brain").is_dir() and any(STORAGE.rglob("brain/**/*.json"))
+        panel_up = _ping("http://127.0.0.1:9477/field")
+        queen_up = _ping("http://127.0.0.1:9481/api/status")
+        training_up = _ping("http://127.0.0.1:9488/")
+        live = brain_ok
+        from hostess7 import __version__  # noqa: WPS433
+
         return jsonify({
             "ok": True,
-            "field_storage": (STORAGE).is_dir(),
+            "name": "Hostess 7",
+            "version": __version__,
+            "mode": "live" if live else "field-web",
+            "zac": zac_ok,
             "brain": brain_ok,
+            "kilroy": panel_up,
+            "stack": {
+                "panel": panel_up,
+                "queen": queen_up,
+                "training": training_up,
+            },
+            "surfaces": {
+                "panel": "http://127.0.0.1:9477/field",
+                "command": "http://127.0.0.1:9477/command",
+                "queen": "http://127.0.0.1:9481/world/browser.html",
+                "training": "http://127.0.0.1:9488/",
+            },
             "hearing": True,
             "license_mode": license_mode(),
-            "demo": is_demo(),
+            "posture": "war-ready",
+            "war_ready": is_war_ready(),
+            "demo": False,
             "license_notice": format_notice(short=True),
             "library_h7": len(list((STORAGE / "textbooks").glob("*.h7"))) if (STORAGE / "textbooks").is_dir() else 0,
         })
+
+    @app.route("/api/sovereign-time")
+    def api_sovereign_time():
+        from hostess7_sovereign_wait import sovereign_status  # noqa: WPS433
+
+        st = sovereign_status()
+        st["ok"] = st.get("immutable_linear", False) or "linear_ns" in st
+        return jsonify(st)
 
     @app.route("/api/ask", methods=["POST"])
     def api_ask():
@@ -134,6 +184,91 @@ def create_app():
         ensure_db()
         q = request.args.get("q", "mario zelda")
         return jsonify({"ok": True, "query": q, "hits": search_games(q, limit=12)})
+
+    @app.route("/api/status/full")
+    def api_status_full():
+        from hostess7.core import stack_status  # noqa: WPS433
+        from hostess7.state import status as state_status  # noqa: WPS433
+
+        base = status()
+        full = stack_status()
+        full["state_full"] = state_status()
+        from hostess7 import __version__  # noqa: WPS433
+
+        full["version"] = __version__
+        return jsonify(full)
+
+    @app.route("/api/brain")
+    def api_brain():
+        from hostess7.core import brain_api_payload  # noqa: WPS433
+
+        return jsonify(brain_api_payload())
+
+    @app.route("/api/war-train", methods=["GET", "POST"])
+    def api_war_train():
+        from field_warfare_realism import run_wargame  # noqa: WPS433
+
+        data = request.get_json(silent=True) or {}
+        level = str(data.get("level") or request.args.get("level", "intermediate")).strip()
+        cycles = int(data.get("cycles") or request.args.get("cycles", 3))
+        out = run_wargame(cycles=max(1, min(cycles, 8)), level=level)
+        return jsonify(out)
+
+    @app.route("/api/protect-friendlies", methods=["GET", "POST"])
+    def api_protect_friendlies():
+        from field_warfare_realism import protect_friendlies_cycle  # noqa: WPS433
+        from field_warfare_training_sessions import run_protect_friendlies  # noqa: WPS433
+
+        realism = protect_friendlies_cycle()
+        training = run_protect_friendlies()
+        return jsonify({
+            "ok": bool(realism.get("ok")) and bool(training.get("ok")),
+            "schema": "hostess7-protect-friendlies/v1",
+            "war_realism": realism,
+            "training_session": training,
+            "roe": realism.get("roe_explicit") or realism.get("roe"),
+        })
+
+    @app.route("/api/reflect", methods=["POST", "GET"])
+    def api_reflect():
+        from hostess7.daemon import _cycle  # noqa: WPS433
+
+        low = os.environ.get("HOSTESS7_LOW_POWER", "0") in ("1", "true", "yes")
+        return jsonify(_cycle(low_power=low))
+
+    @app.route("/api/teach", methods=["POST"])
+    def api_teach():
+        if os.environ.get("HOSTESS7_GITHUB_BRAIN", "0") in ("1", "true", "yes"):
+            return jsonify({
+                "ok": False,
+                "error": "teach on sovereign brain blocked in github-brain mode",
+                "lane": "github-mirror",
+            }), 403
+        from hostess7.state import load_cortex, save_cortex  # noqa: WPS433
+
+        data = request.get_json(silent=True) or {}
+        topic = str(data.get("topic", "") or request.form.get("topic", "")).strip()
+        content = str(data.get("content", "") or request.form.get("content", "")).strip()
+        if not topic:
+            return jsonify({"ok": False, "error": "topic required"}), 400
+        cortex = load_cortex()
+        taught = list(cortex.get("taught") or [])
+        entry = {"topic": topic, "content": content[:8000]}
+        taught.append(entry)
+        cortex["taught"] = taught[-256:]
+        save_cortex(cortex)
+        if content:
+            proc = subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "field_superintelligence.py"), "ask", f"teach: {topic} — {content[:500]}"],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                timeout=90,
+                env={**os.environ, "HOSTESS7_WEB": "1"},
+                check=False,
+            )
+            return jsonify({"ok": True, "topic": topic, "brain_ok": proc.returncode == 0, "taught_count": len(cortex["taught"])})
+        return jsonify({"ok": True, "topic": topic, "stored": True, "taught_count": len(cortex["taught"])})
 
     return app
 

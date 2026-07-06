@@ -3,28 +3,30 @@
   "product": "AmmoOS",
   "edition": "grok-expert-review",
   "channel": "beta",
-  "version": "2.0.0-beta4",
-  "tag": "v2.0.0-beta4",
-  "codename": "WATCHGUARD",
+  "version": "2.0.0-beta6",
+  "tag": "v2.0.0-beta6",
+  "codename": "CLASSIC_START",
   "build_status": "shipping",
-  "build_note": "AmmoOS 2.0.0-beta4 — Hostess 7 seal, vision handshake, brain guard verified",
+  "build_note": "AmmoOS 2.0.0-beta6 CLASSIC_START — restored classic Start · F-key HUD hidden · botnet panel wired",
   "nexus_lineage": "NewLatest",
   "g16_pairing": "5.2.0",
   "pythong_pairing": "16.1.0-gpy16",
-  "kilroy_pairing": "1.0.0-taco",
+  "kilroy_pairing": "1.1.0",
   "release_model": "source_bootstrap_per_platform",
-  "statement": "AmmoOS 2.0.0 — Queen CANVAS renderer above ZNetwork; Thermal Manager ironclad block; AMOURANTHRTX display technology only in NewLatest.",
+  "statement": "AmmoOS 2.0.0 — KILROY PC core absorbs ZNetwork; AmmoOS desktop on AMOURANTHRTX; Queen standalone browser on :9481.",
   "stack_model": {
     "doctrine": "data/field-stack-layer-doctrine.json",
     "order": [
       "hardware",
       "nexus_c2",
-      "znetwork",
-      "queen_canvas",
-      "queen",
-      "ammoos"
+      "kilroy",
+      "ammoos",
+      "queen"
     ],
-    "ammoos_inside_queen": true
+    "ammoos_inside_queen": false,
+    "queen_standalone_browser": true,
+    "kilroy_znetwork_absorbed": true,
+    "load_os": "scripts/kilroy-load-os.sh"
   },
   "surfaces": {
     "host_desktop": "http://127.0.0.1:9477/field",
@@ -49,9 +51,14 @@
     "lib/field-dhcp.py",
     "lib/field-local-dns-connect.py",
     "lib/field-thermal-manager-block.py",
+    "lib/field-final-eye-block.py",
     "lib/field-final-ear-block.py",
     "lib/field-final-mouth-block.py",
-    "lib/field-rtx-canvas-block.py"
+    "lib/field-sense-secure-kill.py",
+    "lib/field-rtx-canvas-block.py",
+    "lib/field-vsync-locker.py",
+    "lib/field-vsync-locker-launch.sh",
+    "lib/field-vsync-locker-guard.sh"
   ],
   "stack_siblings": [
     "KILROY",
@@ -59,7 +66,7 @@
     "Final_Eye",
     "Final_Ear",
     "Final_Mouth",
-    "ZNetwork",
+
     "World_Redata",
     "World_Repack",
     "Field_Primer",
@@ -88,6 +95,8 @@
     "final_mouth_block",
     "rtx_canvas_block",
     "final_eye_ocr",
-    "grok16_stack_fabric"
+    "grok16_stack_fabric",
+    "vsync_locker",
+    "vsync_locker_platform_pack"
   ]
 }

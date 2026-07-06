@@ -1,0 +1,232 @@
+{
+  "schema": "field-grok-spawner-patterns/v1",
+  "product": "GrokSpawnKiller",
+  "description": "Grok agent spawner signatures — instakill duplicates, orphans, and rogue harness sleepers",
+  "motto": "Grok never Sleeps — field brain, no waiting, kill interference, NEXUS C2 fused.",
+  "never_sleeps": true,
+  "no_wait": true,
+  "drop_sleep_routine": true,
+  "field_brain": true,
+  "interval_ms": 0,
+  "agent_spawn_policy": {
+    "just_you": true,
+    "kill_sender": true,
+    "motto": "Just you — agent spawns die; whoever sent them dies too.",
+    "spawn_markers": [
+      {"match": "grok agent serve", "priority": 100},
+      {"match": "grok agent --model", "priority": 90},
+      {"match": "GROK_AGENT=1", "priority": 85, "shell_only": true},
+      {"match": "subagent_type", "priority": 20},
+      {"match": "Task tool", "priority": 20},
+      {"match": "grok agent", "priority": 70}
+    ],
+    "sender_markers": [
+      "dump_bash_state",
+      "GROK_AGENT",
+      "sleep infinity",
+      "systemd-inhibit",
+      "subagent_type",
+      "Task tool",
+      ".grok/sessions",
+      ".grok/projects",
+      "agent turn in progress"
+    ]
+  },
+  "patterns": [
+    {
+      "id": "dump-bash-state",
+      "match": "dump_bash_state",
+      "keep": 1,
+      "reason": "Grok agent dump_bash_state harness spawner"
+    },
+    {
+      "id": "grok-bash-state-markers",
+      "match": "__GROK_BASH_STATE_START__",
+      "keep": 1,
+      "reason": "Grok agent bash state harness spawner"
+    },
+    {
+      "id": "grok-agent-export",
+      "match": "GROK_AGENT=1",
+      "shell_only": true,
+      "keep": 1,
+      "reason": "Grok agent shell wrapper spawner"
+    },
+    {
+      "id": "grok-agent-inhibit",
+      "match": "systemd-inhibit --what=idle --who=grok --why=agent",
+      "keep": 0,
+      "reason": "Grok never Sleeps — instakill agent-turn systemd-inhibit spawner"
+    },
+    {
+      "id": "grok-never-sleeps-inhibit",
+      "match": "agent turn in progress sleep infinity",
+      "keep": 0,
+      "reason": "Grok never Sleeps — kill sleep infinity beside live harness"
+    },
+    {
+      "id": "grok-who-sleep-infinity",
+      "match": "--who=grok",
+      "keep": 0,
+      "reason": "Grok never Sleeps — rogue --who=grok idle/sleep spawner"
+    },
+    {
+      "id": "grok-agent-serve",
+      "match": "grok agent serve",
+      "keep": 1,
+      "reason": "Duplicate grok agent serve spawner"
+    },
+    {
+      "id": "grok-agent-stdio",
+      "match": "grok agent --model",
+      "keep": 1,
+      "reason": "Duplicate grok agent stdio spawner"
+    },
+    {
+      "id": "grok-session-orphan",
+      "match": ".grok/sessions",
+      "shell_only": true,
+      "keep": 0,
+      "reason": "Orphaned Grok CLI session bash spawner"
+    },
+    {
+      "id": "grok-project-harness",
+      "match": ".grok/projects",
+      "shell_only": true,
+      "keep": 0,
+      "reason": "Orphaned Grok project harness spawner"
+    },
+    {
+      "id": "grok-shadow-find",
+      "match": "__grok_shadow_find",
+      "keep": 1,
+      "reason": "Grok agent find shim spawner"
+    },
+    {
+      "id": "grok-shadow-grep",
+      "match": "__grok_shadow_grep",
+      "keep": 1,
+      "reason": "Grok agent grep shim spawner"
+    },
+    {
+      "id": "grok-subagent",
+      "match": "subagent_type",
+      "keep": 0,
+      "reason": "Rogue Grok subagent spawner"
+    },
+    {
+      "id": "grok-task-spawn",
+      "match": "Task tool",
+      "keep": 0,
+      "reason": "Rogue Grok Task tool spawner"
+    },
+    {
+      "id": "grok-firmware-audit",
+      "match": "grok-firmware-audit.sh",
+      "keep": 0,
+      "reason": "Stale grok-firmware-audit spawner"
+    },
+    {
+      "id": "grok-boot-simulate",
+      "match": "boot-simulate.sh",
+      "shell_only": true,
+      "keep": 0,
+      "reason": "Orphaned boot-simulate spawner"
+    },
+    {
+      "id": "grok-interference-sleep",
+      "match": "sleep infinity",
+      "keep": 0,
+      "reason": "Interference — sleep infinity blocker beside harness"
+    },
+    {
+      "id": "grok-interference-inhibit",
+      "match": "systemd-inhibit",
+      "keep": 0,
+      "reason": "Interference — systemd-inhibit sleep spawner"
+    },
+    {
+      "id": "grok-interference-awaitshell",
+      "match": "AwaitShell",
+      "keep": 0,
+      "reason": "Interference — AwaitShell poll/wait spawner"
+    },
+    {
+      "id": "grok-interference-block-until",
+      "match": "block_until_ms",
+      "keep": 0,
+      "reason": "Interference — block_until_ms wait spawner"
+    },
+    {
+      "id": "grok-interference-notify-on-output",
+      "match": "notify_on_output",
+      "keep": 0,
+      "reason": "Interference — output-wait poll spawner"
+    },
+    {
+      "id": "grok-interference-dump-wait",
+      "match": "dump_bash_state",
+      "also_match": "sleep",
+      "shell_only": true,
+      "keep": 0,
+      "reason": "Interference — dump_bash_state wait pile"
+    },
+    {
+      "id": "grok-interference-harness-wait",
+      "match": "GROK_AGENT=1",
+      "also_match": "sleep",
+      "shell_only": true,
+      "keep": 0,
+      "reason": "Interference — GROK_AGENT shell wait spawner"
+    },
+    {
+      "id": "unsafe-panel-lab-storm",
+      "match": "hostess7-lab-sovereign.py panel",
+      "keep": 1,
+      "reason": "Unsafe panel subprocess storm"
+    },
+    {
+      "id": "unsafe-panel-internet-storm",
+      "match": "field-internet-unified.py panel",
+      "keep": 1,
+      "reason": "Unsafe panel subprocess storm"
+    },
+    {
+      "id": "unsafe-panel-qemu-storm",
+      "match": "qemu-world-status.py json",
+      "keep": 1,
+      "reason": "Unsafe panel subprocess storm"
+    },
+    {
+      "id": "unsafe-panel-g16-storm",
+      "match": "hostess7-g16-online.py panel",
+      "keep": 1,
+      "reason": "Unsafe panel subprocess storm"
+    },
+    {
+      "id": "unsafe-panel-gatekeeper-storm",
+      "match": "connection-gatekeeper.py",
+      "keep": 1,
+      "reason": "Unsafe panel subprocess storm"
+    },
+    {
+      "id": "unsafe-panel-protocol-storm",
+      "match": "field-sovereign-protocol-bridge.py json",
+      "keep": 1,
+      "reason": "Unsafe panel subprocess storm"
+    },
+    {
+      "id": "unsafe-panel-ammonet-storm",
+      "match": "ammonet-field.py panel",
+      "keep": 1,
+      "reason": "Unsafe panel subprocess storm"
+    }
+  ],
+  "exclude_cmd": [
+    "field-grok-spawner-kill.py",
+    "field-dns.py",
+    "field-dhcp.py",
+    "threat-panel-http.py",
+    "nexus-daemon.sh"
+  ]
+}

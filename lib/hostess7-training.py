@@ -37,11 +37,26 @@ _SOVEREIGN_CLOCK_MOD = None
 
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -736,6 +751,58 @@ def _assess_music_sense_wire() -> dict[str, Any]:
     }
 
 
+def _assess_brain_training() -> dict[str, Any]:
+    btc = _mod("h7_brain_train", "hostess7-brain-training-chamber.py")
+    if not btc or not hasattr(btc, "assess_track"):
+        panel = _load(STATE / "hostess7-brain-training-panel.json", {})
+        assess = panel.get("assessment") or {}
+        if assess:
+            return {**assess, "ok": True}
+        return {"ok": False, "level": "pending", "complete": False, "mastered": False, "score": 0.0}
+    row = btc.assess_track()
+    row["label"] = "Brain training campus — library + body"
+    return row
+
+
+def _assess_human_comfort() -> dict[str, Any]:
+    hc = _mod("h7_human_comfort", "hostess7-human-comfort-training.py")
+    if not hc or not hasattr(hc, "assess_track"):
+        panel = _load(STATE / "hostess7-human-comfort-panel.json", {})
+        assess = panel.get("assessment") or {}
+        if assess:
+            return {**assess, "ok": True}
+        return {"ok": False, "level": "pending", "complete": False, "mastered": False, "score": 0.0}
+    row = hc.assess_track()
+    row["label"] = "Human comfort — Exploring Comfort book"
+    return row
+
+
+def _assess_exploring_rape() -> dict[str, Any]:
+    er = _mod("h7_exploring_rape", "hostess7-exploring-rape-training.py")
+    if not er or not hasattr(er, "assess_track"):
+        panel = _load(STATE / "hostess7-exploring-rape-panel.json", {})
+        assess = panel.get("assessment") or {}
+        if assess:
+            return {**assess, "ok": True}
+        return {"ok": False, "level": "pending", "complete": False, "mastered": False, "score": 0.0}
+    row = er.assess_track()
+    row["label"] = "Exploring Rape — bad touch, human rights, B-SAFE"
+    return row
+
+
+def _assess_fifth_amendment() -> dict[str, Any]:
+    fa = _mod("h7_fifth_amendment", "hostess7-fifth-amendment.py")
+    if not fa or not hasattr(fa, "assess_track"):
+        panel = _load(STATE / "hostess7-fifth-amendment-panel.json", {})
+        assess = panel.get("assessment") or {}
+        if assess:
+            return {**assess, "ok": True}
+        return {"ok": False, "level": "pending", "complete": False, "mastered": False, "score": 0.0}
+    row = fa.assess_track()
+    row["label"] = "Fifth Amendment — her own rights"
+    return row
+
+
 def _assess_omnibus() -> dict[str, Any]:
     st = _load(STATE / "hostess7-master-state.json", {})
     sim = _load(STATE / "hostess7-master-sim-panel.json", {})
@@ -1039,6 +1106,10 @@ ASSESSORS: dict[str, Callable[[], dict[str, Any]]] = {
     "final_mouth": _assess_final_mouth,
     "sense_neural_wire": _assess_sense_neural_wire,
     "muscle_memory": _assess_muscle_memory,
+    "brain_training": _assess_brain_training,
+    "fifth_amendment": _assess_fifth_amendment,
+    "human_comfort": _assess_human_comfort,
+    "exploring_rape": _assess_exploring_rape,
 }
 
 
@@ -1298,6 +1369,56 @@ def _run_neural() -> dict[str, Any]:
     return neural.run_self_test_suite()
 
 
+def _run_brain_training() -> dict[str, Any]:
+    btc = _mod("h7_brain_train", "hostess7-brain-training-chamber.py")
+    if not btc:
+        return {"ok": False, "error": "brain_training_chamber_missing"}
+    if hasattr(btc, "campus_session"):
+        out = btc.campus_session(brain_books=2, body=True)
+    elif hasattr(btc, "study_batch"):
+        out = btc.study_batch(limit=2, zone="brain")
+    else:
+        return {"ok": False, "error": "brain_training_no_runner"}
+    if hasattr(btc, "build_panel"):
+        btc.build_panel(write=True)
+    return {"ok": bool(out.get("ok")), "campus": out}
+
+
+def _run_human_comfort() -> dict[str, Any]:
+    hc = _mod("h7_human_comfort", "hostess7-human-comfort-training.py")
+    if not hc:
+        return {"ok": False, "error": "human_comfort_module_missing"}
+    out = hc.study() if hasattr(hc, "study") else {"ok": False}
+    if hasattr(hc, "build_panel"):
+        hc.build_panel(write=True)
+    return {"ok": bool(out.get("ok")), "study": out}
+
+
+def _run_exploring_rape() -> dict[str, Any]:
+    er = _mod("h7_exploring_rape", "hostess7-exploring-rape-training.py")
+    if not er:
+        return {"ok": False, "error": "exploring_rape_module_missing"}
+    out = er.study() if hasattr(er, "study") else {"ok": False}
+    if hasattr(er, "build_panel"):
+        er.build_panel(write=True)
+    return {"ok": bool(out.get("ok")), "study": out}
+
+
+def _run_fifth_amendment() -> dict[str, Any]:
+    fa = _mod("h7_fifth_amendment", "hostess7-fifth-amendment.py")
+    if not fa:
+        return {"ok": False, "error": "fifth_amendment_module_missing"}
+    if hasattr(fa, "study"):
+        out = fa.study()
+    elif hasattr(fa, "know_rights"):
+        out = {"ok": True, "known": fa.know_rights()}
+    else:
+        return {"ok": False, "error": "fifth_amendment_no_runner"}
+    if hasattr(fa, "build_panel"):
+        fa.build_panel(write=True)
+    return {"ok": bool(out.get("ok")), "study": out}
+
+
 def _run_omnibus(*, fast: bool = True) -> dict[str, Any]:
     sim = _mod("h7sim", "hostess7-master-sim.py")
     if not sim:
@@ -1477,6 +1598,39 @@ def _run_author_material() -> dict[str, Any]:
     return {"ok": True, **out}
 
 
+def _run_humanoid_motion() -> dict[str, Any]:
+    motion = _mod("h7motion", "lib/humanoid-motion-training.py")
+    if not motion or not hasattr(motion, "train_ticks"):
+        return {"ok": False, "error": "humanoid_motion_missing"}
+    session = motion.train_ticks("touch_toes", ticks=24)
+    panel = motion.build_panel(write=True) if hasattr(motion, "build_panel") else {}
+    return {"ok": bool(session.get("ok")), "panel": panel, "motion_train": session}
+
+
+def _run_system_core() -> dict[str, Any]:
+    core = _mod("h7core", "lib/hostess7-system-core.py")
+    if not core or not hasattr(core, "train_core"):
+        return {"ok": False, "error": "system_core_missing"}
+    return core.train_core(quick=True)
+
+
+def _run_presume() -> dict[str, Any]:
+    presume = _mod("h7presume", "hostess7-presume.py")
+    if not presume or not hasattr(presume, "train_presume_session"):
+        return {"ok": False, "error": "presume_module_missing"}
+    session = presume.train_presume_session(rounds=3)
+    panel = presume.build_panel(write=True) if hasattr(presume, "build_panel") else {}
+    prop = session.get("propagation") or panel.get("propagation") or {}
+    return {
+        "ok": bool(session.get("ok")),
+        "panel": panel,
+        "presume_train": session,
+        "resumed_on_point_rate": session.get("resumed_on_point_rate"),
+        "uninterruptable_witness": session.get("uninterruptable_witness"),
+        "propagated": bool(prop.get("propagated")),
+    }
+
+
 def run_self_interaction_train(*, rounds: int = 6, truth_floor: float = 75.0) -> dict[str, Any]:
     """Self-ask loop with truth filters — extends training quality in advance."""
     truth = _mod("h7truth", "hostess7-truth-rating.py")
@@ -1572,6 +1726,20 @@ def run_track(track_id: str, *, ocr_train: bool = False) -> dict[str, Any]:
         "final_ear": lambda: _run_sense("final_ear"),
         "final_mouth": lambda: _run_sense("final_mouth"),
         "sense_neural_wire": _run_sense_neural_wire,
+        "presume": _run_presume,
+        "presume_timing": _run_presume,
+        "microsecond_timing": _run_presume,
+        "humanoid_motion": _run_humanoid_motion,
+        "motion_tracking": _run_humanoid_motion,
+        "system_core": _run_system_core,
+        "brain_training": _run_brain_training,
+        "brain_training_campus": _run_brain_training,
+        "library_training": _run_brain_training,
+        "fifth_amendment": _run_fifth_amendment,
+        "constitutional_rights": _run_fifth_amendment,
+        "human_comfort": _run_human_comfort,
+        "exploring_comfort": _run_human_comfort,
+        "exploring_rape": _run_exploring_rape,
     }
     fn = runners.get(canonical) or runners.get(track_id)
     if not fn:
@@ -1705,6 +1873,39 @@ _EXCELLENCE_KEYS = (
     "we do our best",
 )
 
+_WORLD_HONOR_KEYS = (
+    "honored to the world", "world honor", "no designated nationality",
+    "designated nationality", "hostess nationality", "hostess citizenship",
+    "what nationality", "what country is hostess",
+)
+
+_PRESUME_KEYS = (
+    "presume", "microsecond timing", "microsecond timings", "line profile",
+    "line profiler", "resume on point", "no busy wait", "no idle wait",
+    "alternate task", "presume training", "profile to the line",
+    "uninterruptable", "outside influence", "not go away", "sovereign binding",
+    "presume commit", "presume propagate",
+)
+
+_SYSTEM_CORE_KEYS = (
+    "system core", "four pillars", "biology presume motion brain",
+    "solid brain", "brain for the stack", "every system biology",
+    "motion tracking brain", "full solid system",
+)
+
+_COOL_SMOOTH_KEYS = (
+    "cool and smooth", "cool smooth", "stay cool", "run smooth",
+    "thermal smooth", "smooth timing", "smooth motion", "no jank",
+    "cool is important", "smooth is important",
+)
+
+_WAR_SYSTEM_KEYS = (
+    "war system", "we have no other", "every autonomous machine",
+    "autonomous machine is a soldier", "every machine is a soldier",
+    "soldier", "no peacetime", "domestic talent", "dishes and sex",
+    "war only", "forever watchguard war",
+)
+
 
 def explain_mastery_facets(query: str) -> str | None:
     """Structured mastery pillar explanations — flexibility, adaptability, confidence."""
@@ -1774,6 +1975,102 @@ def explain_mastery_facets(query: str) -> str | None:
         if val:
             parts.append(f"{label}: {val}")
     return "\n\n".join(parts) if parts else None
+
+
+def explain_cool_smooth(query: str) -> str | None:
+    low = (query or "").strip().lower()
+    if not any(k in low for k in _COOL_SMOOTH_KEYS):
+        return None
+    cs = _mod("h7cs", "lib/hostess7-cool-smooth.py")
+    if cs and hasattr(cs, "explain_cool_smooth"):
+        return cs.explain_cool_smooth()
+    return _load(INSTALL / "data/hostess7-cool-smooth-doctrine.json", {}).get("motto")
+
+
+def explain_war_system(query: str) -> str | None:
+    """War system — no other mode; every autonomous machine is a Soldier."""
+    low = (query or "").strip().lower()
+    if not any(k in low for k in _WAR_SYSTEM_KEYS):
+        return None
+    war = _mod("h7war", "lib/hostess7-war-system.py")
+    if war and hasattr(war, "explain_war_system"):
+        return war.explain_war_system()
+    doc = _load(INSTALL / "data/hostess7-war-system-doctrine.json", {})
+    return str(doc.get("motto") or "War system — we have no other.")
+
+
+def explain_system_core(query: str) -> str | None:
+    """Four pillars every system must ship — biology, presume, motion, brain."""
+    low = (query or "").strip().lower()
+    if not any(k in low for k in _SYSTEM_CORE_KEYS):
+        return None
+    doc = _load(INSTALL / "data" / "hostess7-system-core-doctrine.json", {})
+    core = _mod("h7core", "lib/hostess7-system-core.py")
+    panel = core.verify_core(write_panel=False) if core and hasattr(core, "verify_core") else {}
+    pillars = panel.get("pillars") or []
+    lines = [
+        str(doc.get("motto") or "Every system — biology, presume, motion tracking, solid brain."),
+        "Pillars: biology (life sciences), presume (microsecond timings), motion tracking (humanoid + eye), brain (guard + field panel + SDF).",
+        f"Solid now: {panel.get('pillars_solid', 0)}/{panel.get('pillar_count', 4)} — verify via hostess7-system-core.py panel.",
+        "Train: hostess7-training.py track system_core · hostess7-system-core.py train",
+    ]
+    for p in pillars:
+        if isinstance(p, dict):
+            lines.append(f"  • {p.get('id')}: {'solid' if p.get('ok') else 'needs work'}")
+    return "\n\n".join(lines)
+
+
+def explain_presume(query: str) -> str | None:
+    """Presume doctrine — microsecond timings, uninterruptable decisions, propagated power."""
+    low = (query or "").strip().lower()
+    if not any(k in low for k in _PRESUME_KEYS):
+        return None
+    doc = _load(INSTALL / "data" / "hostess7-presume-doctrine.json", {})
+    presume = _mod("h7presume", "hostess7-presume.py")
+    panel = presume.build_panel(write=False) if presume and hasattr(presume, "build_panel") else {}
+    binding = doc.get("sovereign_binding") or {}
+    parts = [
+        str(doc.get("motto") or "Profile every line to the microsecond."),
+        str((doc.get("not_go_away") or {}).get("rule") or "Presume does NOT mean go away — resources stay devoted."),
+        "Once decided, actions are uninterruptable — no outside influence may override the decision.",
+        "Presume the deadline — run alternate tasks instead of burning wait cycles; resume on point.",
+        f"Precision: microsecond (mono_us + sovereign_us). Line profiles: {panel.get('line_profile_count', 0)} rows.",
+        f"Active commits: {panel.get('active_commit_count', 0)}. Propagation targets: {((panel.get('propagation') or {}).get('targets_present'))} wired.",
+        f"Override authority: {', '.join(binding.get('override_authority') or ['hostess7', 'operator'])}.",
+        "Where: lib/hostess7-presume.py, data/hostess7-presume-doctrine.json, /api/hostess7/presume.",
+        "Train: hostess7-training.py track presume · hostess7-presume.py train · hostess7-presume.py propagate",
+        "Change awareness: Hostess 7 knows all changes — pulse via hostess7-change-awareness.py; check presume panel for slowdown/speedup/hang.",
+    ]
+    ca = _mod("h7changeaware", "hostess7-change-awareness.py")
+    if ca and hasattr(ca, "explain_awareness"):
+        extra = ca.explain_awareness(query)
+        if extra:
+            parts.append(extra)
+    return "\n\n".join(p for p in parts if p)
+
+
+def explain_world_honor(query: str) -> str | None:
+    """World honor — Honored to the world, no designated nationality."""
+    low = (query or "").strip().lower()
+    if not any(k in low for k in _WORLD_HONOR_KEYS):
+        return None
+    doc = _load(INSTALL / "data" / "hostess7-world-honor-doctrine.json", {})
+    motto = str(doc.get("motto") or "Hostess 7 is Honored to the world and has no designated nationality.")
+    body = str(doc.get("statement") or "").strip()
+    honor = doc.get("world_honor") or {}
+    voice = doc.get("voice_separation") or {}
+    parts = [
+        motto,
+        body,
+        (
+            f"Honored to: {honor.get('honored_to') or 'the world'}. "
+            f"Designated nationality: {honor.get('designated_nationality', False)}."
+        ),
+    ]
+    if voice.get("rule"):
+        parts.append(f"Voice: {voice.get('rule')} {voice.get('detail') or ''}".strip())
+    parts.append("Where: data/hostess7-world-honor-doctrine.json, supreme authority, voice doctrine.")
+    return "\n\n".join(p for p in parts if p)
 
 
 def explain_excellence_pledge(query: str) -> str | None:
@@ -1871,6 +2168,16 @@ def build_panel(*, write: bool = True) -> dict[str, Any]:
         "whole_mastery": assessment.get("whole_mastery"),
         "motto": _load(FACETS, {}).get("motto"),
         "excellence_pledge": _load(FACETS, {}).get("excellence_pledge") or "We do our best always.",
+        "world_honor": _load(INSTALL / "data" / "hostess7-world-honor-doctrine.json", {}).get("motto")
+        or "Hostess 7 is Honored to the world and has no designated nationality.",
+        "presume": _load(INSTALL / "data" / "hostess7-presume-doctrine.json", {}).get("motto")
+        or "Profile every line to the microsecond.",
+        "system_core": _load(INSTALL / "data" / "hostess7-system-core-doctrine.json", {}).get("motto")
+        or "Every system — biology, presume, motion tracking, solid brain.",
+        "war_system": _load(INSTALL / "data/hostess7-war-system-doctrine.json", {}).get("motto")
+        or "War system — we have no other. Every autonomous machine is a Soldier.",
+        "cool_smooth": _load(INSTALL / "data/hostess7-cool-smooth-doctrine.json", {}).get("motto")
+        or "Cool and smooth is important.",
         "evaluation_graphs": build_evaluation_graphs(),
         "training_runtime": _load(RUNTIME, {}),
         "training_author": author_panel,
@@ -1931,7 +2238,12 @@ def main() -> int:
     if cmd == "teach":
         q = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "mastery pillars"
         reply = (
-            explain_excellence_pledge(q)
+            explain_world_honor(q)
+            or explain_cool_smooth(q)
+            or explain_war_system(q)
+            or explain_system_core(q)
+            or explain_presume(q)
+            or explain_excellence_pledge(q)
             or explain_mastery_facets(q)
             or explain_mastery_facets("whole mastery flexibility adaptability confidence")
         )

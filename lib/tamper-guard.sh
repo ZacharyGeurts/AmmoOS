@@ -1,5 +1,29 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:lib/tamper-guard.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
-# Tamper Guard — verify manifest, auto-restore from seal, refuse tampered loads.
+# Tamper Guard — verify protective shell, auto-restore from seal vault.
+# Never restores training, brain expansion, or Hostess 7 biology paths.
+
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-biology-mutable.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/nexus-biology-mutable.sh"
+}
 
 nexus_tamper_guard_cycle() {
   [[ "${NEXUS_TAMPER_GUARD:-1}" == "1" ]] || return 0
@@ -19,6 +43,7 @@ nexus_tamper_restore_from_seal() {
     [[ -n "$hash" && -n "$path" ]] || continue
     rel="${path#./}"
     install_path="${NEXUS_INSTALL_ROOT}/${rel}"
+    declare -f nexus_path_is_biology_mutable >/dev/null 2>&1 && nexus_path_is_biology_mutable "$install_path" && continue
     [[ -f "$install_path" ]] || { nexus_seal_restore_path "$install_path" || fail=1; continue; }
     current="$(sha256sum "$install_path" | awk '{print $1}')"
     [[ "$current" == "$hash" ]] && continue

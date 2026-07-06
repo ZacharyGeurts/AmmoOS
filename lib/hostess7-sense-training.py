@@ -47,11 +47,26 @@ _SOVEREIGN_CLOCK_MOD = None
 
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -160,6 +175,51 @@ def _run_music_step(step: dict[str, Any]) -> dict[str, Any]:
     return music.run_sense_step(step)
 
 
+def _run_mechanical_learn(step: dict[str, Any]) -> dict[str, Any]:
+    ml_py = INSTALL / "lib" / "field-sense-mechanical-learn.py"
+    neural = QUEEN / "lib" / "queen-sense-neural.py"
+    target = str(step.get("target") or "all")
+    argv = ["learn-all"]
+    if target == "camera":
+        argv = ["learn-camera"]
+    elif target == "ear":
+        argv = ["learn-ear", str(step.get("mechanism") or "kinetic_eardrum")]
+    elif target == "mouth_ear":
+        argv = ["mouth-ear"]
+    if ml_py.is_file():
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(ml_py), *argv],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                env=_env(),
+                cwd=str(INSTALL),
+            )
+            result = json.loads(proc.stdout or "{}")
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as exc:
+            result = {"ok": False, "error": str(exc)[:120]}
+    else:
+        result = {"ok": False, "error": "mechanical_learn_missing"}
+    if neural.is_file() and step.get("reinforce_triad"):
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(neural), "dispatch"],
+                input=json.dumps({"action": "mechanical_learn", "auto": True, **step}, ensure_ascii=False),
+                capture_output=True,
+                text=True,
+                timeout=120,
+                env=_env(),
+                cwd=str(QUEEN),
+            )
+            neural_out = json.loads(proc.stdout or "{}")
+            result["neural"] = neural_out
+            result["ok"] = bool(result.get("ok")) and neural_out.get("ok", True)
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+            pass
+    return result
+
+
 def _step_ok(result: dict[str, Any], *, action: str = "") -> bool:
     """Training pass — verify steps accept sealed ZOCR code when mesh/bench is advisory."""
     if str(action).startswith("music_"):
@@ -199,6 +259,8 @@ def run_sense_track(track_id: str) -> dict[str, Any]:
         action = str(body.get("action") or "")
         if action in MUSIC_ACTIONS:
             result = _run_music_step(step)
+        elif action == "mechanical_learn":
+            result = _run_mechanical_learn(step)
         else:
             result = _dispatch(bridge, body, timeout=180 if action in ("eye_ear_fusion", "fused_analyze") else 90)
         ok = _step_ok(result, action=action)

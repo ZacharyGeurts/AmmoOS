@@ -15,7 +15,7 @@ POLICY = {
     "pages_url": "https://zacharygeurts.github.io/Hostess7",
     "rules": [
         "HTTPS only — GitHub Pages enforces TLS; no http:// embeds",
-        "Demo mode on Pages — brain API optional; fallback replies offline-safe",
+        "Pages runs full exported package — /api/* via static shim + brain corpus; Codespaces for live agents",
         "Sanitize user chat input — strip script tags, max length 2000 chars",
         "No secrets in docs/ or committed JSON — use Codespaces secrets",
         "Content-Security-Policy meta in index.html",

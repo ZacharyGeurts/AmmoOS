@@ -61,6 +61,9 @@ Owner: ZacharyGeurts. Field is THE thing."""
 
 
 EXPLORATION_QUEUE = (
+    {"query": "What changed recently — and what does the presume panel say about slowdowns, speedups, or hangs?"},
+    {"query": "Check hostess7-presume-panel timing_health — drift_us, resumed_on_point, active commits."},
+    {"query": "There are more books — how do you read Exploring Speaking languages with Ironclad and truth gate?"},
     {"query": "Explain truth doctrine — most honest, never deceive, Heaven/Hell boss, work of Man."},
     {"query": "Which Bible denominations are on the H7 shelf — and how do you cite them?"},
     {"query": "Walk the full intelligence flow from my question to Super Intelligence."},

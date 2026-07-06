@@ -1,3 +1,21 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:scripts/impl/start-field-stack.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
 
 # Unified field stack — NewLatest NEXUS + Queen World + Final_Eye 1.1
@@ -52,7 +70,7 @@ export HOSTESS7_INTERNET=1
 export FINAL_EYE_ASSIST=1
 export QUEEN_BROWSER_STRIPPED="${QUEEN_BROWSER_STRIPPED:-1}"
 export QUEEN_BOOT_OS="${QUEEN_BOOT_OS:-0}"
-export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:9481/world/kilroy-home.html}"
+export QUEEN_BROWSER_HOME="${QUEEN_BROWSER_HOME:-http://127.0.0.1:${PANEL_PORT}/field}"
 export QUEEN_BROWSER_START="${QUEEN_BROWSER_START:-$QUEEN_BROWSER_HOME}"
 export QUEEN_WEB_SHELL="${QUEEN_WEB_SHELL:-1}"
 export QUEEN_SKIP_RTX_BOOT="${QUEEN_SKIP_RTX_BOOT:-1}"
@@ -164,14 +182,32 @@ else
   "${PY:-python3}" "${ROOT}/lib/grok-ai-lab.py" boot 2>/dev/null || true
 fi
 
-echo "=== Field 1 hostile scan (not Field 1 → hostile → bring) ==="
+echo "=== Field 1 universal ingress + security test ==="
+export NEXUS_FIELD_DHCP_FOREIGN_PROBE=0 NEXUS_FIELD_COLLISION_SOFT_INGRESS=1
+"${PY}" "${ROOT}/lib/field-one.py" absorb 2>/dev/null | tail -3 || true
 if [[ -f "${ROOT}/GrokLab/deploy/field-one-world-bring.sh" ]]; then
   export GROK_LAB_NODE_REGION=local GROK_LAB_NODE_ID=node-local
-  bash "${ROOT}/GrokLab/deploy/field-one-world-bring.sh" 2>/dev/null | tail -4 || true
+  bash "${ROOT}/GrokLab/deploy/field-one-world-bring.sh" test 2>/dev/null | tail -5 || true
 fi
 
 echo "=== sense package meld ==="
 "${PY}" "${ROOT}/lib/field-sense-package-meld.py" meld 2>/dev/null || true
+
+echo "=== VSYNC Locker bootstrap ==="
+if [[ -x "${ROOT}/lib/field-vsync-locker-bootstrap.sh" ]]; then
+  NEXUS_INSTALL_ROOT="${ROOT}" NEXUS_STATE_DIR="${STATE}" \
+    bash "${ROOT}/lib/field-vsync-locker-bootstrap.sh" 2>/dev/null || true
+fi
+
+echo "=== Field HDMI audio driver ==="
+if [[ -f "${ROOT}/lib/field-hdmi-audio-boot.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${ROOT}/lib/field-hdmi-audio-boot.sh"
+  NEXUS_INSTALL_ROOT="${ROOT}" NEXUS_STATE_DIR="${STATE}" \
+    nexus_field_hdmi_audio_boot 2>/dev/null || true
+  PY_HDMI="$(command -v pythong || command -v python3)"
+  "$PY_HDMI" "${ROOT}/lib/field-hdmi-audio-driver.py" install 2>/dev/null || true
+fi
 
 export NEXUS_ZNETWORK="${NEXUS_ZNETWORK:-1}"
 export NEXUS_ZNETWORK_PROMPT=0

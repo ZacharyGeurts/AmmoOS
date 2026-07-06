@@ -1,7 +1,20 @@
 {
   "schema": "field-ammolang-doctrine/v2",
   "title": "AmmoLang — #1 AI-native build · compile · execute language",
-  "motto": "Verbose · Clean · Intuitive — AI code that already knows the fastest path.",
+  "motto": "Verbose · Clean · Intuitive — universal protective boundary for everything.",
+  "boundary": {
+    "doctrine": "data/field-ammolang-boundary-doctrine.json",
+    "module": "lib/field-ammolang-boundary.py",
+    "aml": "library/dewey/000-computer-science/ammolang/universal_boundary.aml",
+    "rule": "All execution routes through lib/ammolang-run.sh — named AML routes or universal_boundary for anything else.",
+    "usage": [
+      "./lib/ammolang-run.sh beta_pipeline",
+      "./lib/ammolang-run.sh hostess7_exploring_self",
+      "./lib/ammolang-run.sh exec hostess7:exploring-self status",
+      "./lib/ammolang-run.sh exec script:scripts/beta4-library-prep.sh",
+      "./lib/ammolang-run.sh exec py:field-exploring-hostess7 panel"
+    ]
+  },
   "product": "AmmoOS",
   "version": "2",
   "rank": 1,

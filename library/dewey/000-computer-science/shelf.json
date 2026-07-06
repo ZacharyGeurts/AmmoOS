@@ -5,19 +5,9 @@
   "title": "Computer science, information & general works",
   "updated": "2026-06-29T09:43:43Z",
   "format_primary": "h7c",
-  "book_count": 60,
+  "book_count": 59,
   "h7c_count": 0,
   "books": [
-    {
-      "id": "exploring_the_stack",
-      "title": "Exploring the Stack",
-      "author": "Hostess 7 · Field Stack",
-      "dewey": "000",
-      "format": "textbook",
-      "text": "Textbook/exploring-the-stack.txt",
-      "cover": "/world/assets/combinatronic/books/field.png",
-      "ready": true
-    },
     {
       "id": "explaining_apl",
       "title": "Explaining APL",

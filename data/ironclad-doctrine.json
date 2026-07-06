@@ -122,8 +122,17 @@
       "ironclad_bible → sense_neural_wire → agents7_hub → hostess7_core",
       "ironclad_bible → final_eye_node → eye_neural",
       "ironclad_bible → final_ear_node → ear_neural",
-      "ironclad_bible → final_mouth_node → mouth_neural"
+      "ironclad_bible → final_mouth_node → mouth_neural",
+      "ironclad_bible → field_qubes_drive → aia_accelerator"
     ]
+  },
+  "component_certs": {
+    "final_eye": "ironclad:final_eye:1",
+    "final_ear": "ironclad:final_ear:1",
+    "final_mouth": "ironclad:final_mouth:1",
+    "aia_accelerator": "ironclad:aia:1",
+    "module": "lib/field-ironclad-component-cert.py",
+    "full_cert_required": true
   },
   "books": [
     {
@@ -270,10 +279,15 @@
     "truth_rating": "lib/hostess7-truth-rating.py",
     "neural_selftest": "lib/hostess7-neural.py",
     "geography_training": "data/hostess7-geography-doctrine.json",
+    "archaeology_training": "data/hostess7-archaeology-doctrine.json",
+    "geology_training": "data/hostess7-geology-doctrine.json",
     "operator_location": "lib/operator-location.py",
     "postal_address_corpus": "data/hostess7-geography-addresses.json",
     "secure_api_singleton": "lib/ironclad-secure-api.py",
     "secure_api_doctrine": "data/ironclad-secure-api-doctrine.json",
-    "best_sort": "lib/field-best-sort.py"
+    "best_sort": "lib/field-best-sort.py",
+    "hostess7_library": "data/hostess7-library-doctrine.json",
+    "exploring_speaking": "data/exploring-speaking-doctrine.json",
+    "library_truth_gate": "lib/h7-library-truth.py"
   }
 }

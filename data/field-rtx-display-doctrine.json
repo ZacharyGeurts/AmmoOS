@@ -6,11 +6,12 @@
   "role": "display_technology",
   "is_gui": false,
   "stack_layer": {
-    "id": "queen_canvas",
-    "label": "Queen CANVAS renderer",
+    "id": "ammoos_desktop",
+    "label": "AmmoOS desktop display",
     "order": 3,
-    "above": "znetwork",
+    "above": "kilroy",
     "below": "queen",
+    "owner": "AmmoOS",
     "module": "Queen/lib/queen-canvas-renderer.py"
   },
   "os_shaders": {
@@ -52,7 +53,7 @@
     "default_canvas_env": "QUEEN_CANVAS_SHADER",
     "default_value": "CANVAS",
     "desktop_comp_shader": false,
-    "operator_surface": "Queen Browser web shell — RTX is chip layer only"
+    "operator_surface": "AmmoOS desktop (/field) — AMOURANTHRTX chip layer; Queen Browser is standalone sibling"
   },
   "fabric_map": "data/amouranthrtx-field-fabric-map.json",
   "sovereign": "data/field-rtx-sovereign.json"

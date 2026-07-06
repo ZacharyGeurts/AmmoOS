@@ -64,6 +64,10 @@ suite core ·
     assert grep:lib/hostess7-command.py:_excellence_cadence_reply
     assert grep:lib/hostess7-training.py:explain_excellence_pledge
     assert py:hostess7-command.py ask 'we do our best always' match:hostess7_training
+    assert file:data/hostess7-world-honor-doctrine.json
+    assert grep:data/hostess7-world-honor-doctrine.json:Honored to the world
+    assert grep:lib/hostess7-training.py:explain_world_honor
+    assert py:hostess7-training.py teach 'hostess nationality' match:no designated nationality
   group field unified device
     assert script:field_unified_device
   group field host desktop module

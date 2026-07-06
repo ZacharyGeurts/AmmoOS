@@ -25,11 +25,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save(path: Path, doc: dict[str, Any]) -> None:
@@ -221,6 +236,17 @@ def recompile_queen_browser(*, force: bool = False) -> dict[str, Any]:
         return {"ok": False, "error": str(exc)[:200]}
 
 
+def recompile_lib_scripts(*, force: bool = False) -> dict[str, Any]:
+    """Compile hot field scripts to g16-built executables (lib/bin)."""
+    mod = _import_mod("field_g16_script_compile", INSTALL / "lib" / "field-g16-script-compile.py")
+    if not mod or not hasattr(mod, "compile_batch"):
+        return {"ok": False, "error": "script_compile_module_missing"}
+    try:
+        return mod.compile_batch(force=force)
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)[:200]}
+
+
 def recompile_asm_probes() -> dict[str, Any]:
     """Rebuild field-outside-asm and field-wave-asm with g16 when available."""
     results: dict[str, Any] = {"ok": True, "targets": []}
@@ -268,7 +294,14 @@ def recompile_asm_probes() -> dict[str, Any]:
     return results
 
 
-def recompile_all(*, browser: bool = True, asm: bool = True, integrate: bool = True, force: bool = False) -> dict[str, Any]:
+def recompile_all(
+    *,
+    browser: bool = True,
+    asm: bool = True,
+    scripts: bool = True,
+    integrate: bool = True,
+    force: bool = False,
+) -> dict[str, Any]:
     """Full NewLatest recompile — integrate, balance, then rebuild compiled surfaces."""
     t0 = time.perf_counter()
     steps: list[dict[str, Any]] = []
@@ -283,6 +316,16 @@ def recompile_all(*, browser: bool = True, asm: bool = True, integrate: bool = T
     if asm:
         asm_doc = recompile_asm_probes()
         steps.append({"step": "asm_probes", "ok": asm_doc.get("ok"), "targets": asm_doc.get("targets")})
+
+    if scripts:
+        script_doc = recompile_lib_scripts(force=force)
+        steps.append({
+            "step": "lib_scripts",
+            "ok": script_doc.get("ok"),
+            "compiled": script_doc.get("compiled"),
+            "cached": script_doc.get("cached"),
+            "failed": script_doc.get("failed"),
+        })
 
     if browser:
         browser_doc = recompile_queen_browser(force=force)
@@ -343,13 +386,21 @@ def main() -> int:
         doc["balance"] = bal
         print(json.dumps(doc, ensure_ascii=False, indent=2))
         return 0 if doc.get("ok") else 1
+    if cmd in ("scripts", "script"):
+        bal = balance_combinatronics()
+        doc = recompile_lib_scripts(force=force)
+        doc["balance"] = bal
+        print(json.dumps(doc, ensure_ascii=False, indent=2))
+        return 0 if doc.get("ok") else 1
     if cmd in ("recompile", "all", "full"):
         skip_browser = "--no-browser" in sys.argv
         skip_asm = "--no-asm" in sys.argv
+        skip_scripts = "--no-scripts" in sys.argv
         skip_integrate = "--no-integrate" in sys.argv
         doc = recompile_all(
             browser=not skip_browser,
             asm=not skip_asm,
+            scripts=not skip_scripts,
             integrate=not skip_integrate,
             force=force,
         )
@@ -357,8 +408,8 @@ def main() -> int:
         return 0 if doc.get("ok") else 1
     print(json.dumps({
         "error": "usage",
-        "cmds": ["json", "integrate", "balance", "browser", "asm", "recompile"],
-        "flags": ["--force", "--full", "--no-browser", "--no-asm", "--no-integrate"],
+        "cmds": ["json", "integrate", "balance", "browser", "asm", "scripts", "recompile"],
+        "flags": ["--force", "--full", "--no-browser", "--no-asm", "--no-scripts", "--no-integrate"],
     }, ensure_ascii=False, indent=2))
     return 2
 

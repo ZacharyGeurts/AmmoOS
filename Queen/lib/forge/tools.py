@@ -838,7 +838,7 @@ for _hid, (_label, _track, _run, _check, _replaces) in HOSTESS_TOOLS.items():
         _hid, _label, _track, _run, _check,
         replaces=_replaces or "",
         kind="core",
-        optional=_hid in ("hostess_verify",),
+        optional=_hid in ("textbook_zac", "hostess_verify"),
     )
 
 for _gid, (_label, _track, _run, _check, _replaces) in GCC_TOOLS.items():

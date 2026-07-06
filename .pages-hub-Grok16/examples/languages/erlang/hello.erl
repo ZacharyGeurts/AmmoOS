@@ -1,1 +1,0 @@
--module(hello). -export([main/0]). main() -> io:format("grok16 erlang~n").

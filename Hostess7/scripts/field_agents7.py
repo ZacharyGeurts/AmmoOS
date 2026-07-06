@@ -14,10 +14,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from field_paths import ROOT
+_SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPTS))
+from field_paths import ROOT  # noqa: E402
 
 BRAIN = ROOT / "scripts" / "field_superintelligence.py"
-sys.path.insert(0, str(ROOT / "scripts"))
 
 try:
     from hostess7_filter import professional_filter as _strip_brain_output  # noqa: E402

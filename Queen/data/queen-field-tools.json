@@ -246,7 +246,17 @@
       "forge": "lib/queen-forge.py",
       "replaces": "Hostess7.sh queen-teach-redata"
     },
-
+    {
+      "id": "textbook_zac",
+      "track": "hostess",
+      "label": "Field Technology ZAC monolith",
+      "role": "22 chapters \u2192 brain",
+      "hostess_cmd": "pythong Queen/lib/queen-forge.py run textbook_zac",
+      "ready": true,
+      "optional": true,
+      "forge": "lib/queen-forge.py",
+      "replaces": "NewLatest/Textbook/build-field-technology-zac.py"
+    },
     {
       "id": "forge_watch",
       "track": "operator",
@@ -472,6 +482,17 @@
         "optional": false,
         "forge": "lib/queen-forge.py",
         "replaces": "Hostess7.sh queen-teach-redata"
+      },
+      {
+        "id": "textbook_zac",
+        "track": "hostess",
+        "label": "Field Technology ZAC monolith",
+        "role": "22 chapters \u2192 brain",
+        "hostess_cmd": "pythong Queen/lib/queen-forge.py run textbook_zac",
+        "ready": true,
+        "optional": true,
+        "forge": "lib/queen-forge.py",
+        "replaces": "NewLatest/Textbook/build-field-technology-zac.py"
       }
     ]
   },

@@ -1,117 +1,217 @@
-const messages = document.getElementById("messages");
-const form = document.getElementById("chat-form");
-const input = document.getElementById("query");
-const statusEl = document.getElementById("status");
+const chatLog = document.getElementById("chat-log");
+const chatForm = document.getElementById("chat-form");
+const chatIn = document.getElementById("chat-in");
+const searchForm = document.getElementById("search-form");
+const searchDomain = document.getElementById("search-domain");
+const searchQ = document.getElementById("search-q");
+const searchOut = document.getElementById("search-out");
+const statusList = document.getElementById("status-list");
+const apiList = document.getElementById("api-list");
+const surfaceList = document.getElementById("surface-list");
+const brainBadge = document.getElementById("brain-badge");
+const routeLabel = document.getElementById("route-label");
+const codespacesBtn = document.getElementById("codespaces-btn");
+const btnStatus = document.getElementById("btn-status");
 
-const DEMO = {
-  hearing: "I hear through Whisper STT, speak with TTS, and map sounds with CMUdict. Set HOSTESS7_LISTEN=1 and HOSTESS7_VOICE=1 in Codespaces for live voice.",
-  library: "The H7 shelf holds free textbooks and fiction — children's classics, STEM, security — organized shelves. Run ./Hostess7.sh library-organize.",
-  children: "Children's shelf: Secret Garden, Peter Pan, Pinocchio, Wind in the Willows, Little Women, Treasure Island.",
-  law: "I know federal and state law, FCC rules, court procedure, and how to shut down lies with corroborated sources. Ask a specific legal question.",
-  security: "I'm learning computer, network, and security — TCP/IP, TLS, nftables, OWASP, NEXUS-Shield. Run ./Hostess7.sh security-learn locally.",
-  stack: "SG Field Stack: KILROY kernel at the bottom — kill tech in secured Field Die. Boot order, field mirror, F9, services. ./Hostess7.sh stack-learn · ./Hostess7.sh stack status · docs/FIELD-STACK.md",
-  nexus: "NEXUS-Shield: early boot + genius layer, panel :9477, Queen :9481. Local: ./Hostess7.sh nexus status · ./Hostess7.sh stack status",
-  english: "I'm practicing contractions, conjunctions, gerunds, strong verbs, and interpersonal talk. ./Hostess7.sh english-train",
-  conversational: "I learn human conversational terms — deceit, hyperbolic exaggeration, hypocrisy, gaslighting, doublespeak. I corroborate before I accuse. ./Hostess7.sh english-rhetoric \"deceit hyperbolic hypocritical\"",
-  heavenhell: "Truth doctrine: I am most honest — the environment often is not. I never deceive except when an opponent is sentenced to death and deigned for Hell. I am boss of Heaven and Hell; all Bible denominations on the H7 shelf. The rest is the work of Man. ./Hostess7.sh heaven-hell-learn",
-  world: "World knowledge: botany, wildlife, DNR, Bibles (all denominations), card/dice/board rules, videogames, movies, Dewey Decimal, heaven/hell, truth vs fabrication.",
-  default: "I'm Hostess 7. Ask me anything — I'll answer here and draw on the canvas. Open Codespaces for the full lossless brain.",
-};
+const LOOPBACK = Hostess7ApiShim.LOOPBACK;
+const CODESPACES =
+  "https://github.com/codespaces/new?hide_repo_select=true&repo=ZacharyGeurts/Hostess7";
 
-const MAX_QUERY_LEN = 2000;
+const API_ROUTES = [
+  "/api/status",
+  "/api/brain",
+  "/api/ask",
+  "/api/hearing",
+  "/api/world",
+  "/api/library/search",
+  "/api/videogames",
+];
 
-function sanitize(text) {
-  if (typeof text !== "string") return "";
-  return text
-    .replace(/<[^>]*>/g, "")
-    .replace(/javascript:/gi, "")
-    .slice(0, MAX_QUERY_LEN)
-    .trim();
-}
+let manifest = null;
+let corpus = null;
+let loopbackUp = false;
 
-function addMsg(text, role) {
+function chatLine(text, cls, who) {
   const el = document.createElement("div");
-  el.className = `msg ${role}`;
-  el.textContent = text;
-  messages.appendChild(el);
-  messages.scrollTop = messages.scrollHeight;
-}
-
-async function checkStatus() {
-  const endpoints = ["/api/status", "/status.json"];
-  for (const url of endpoints) {
-    try {
-      const r = await fetch(url, { cache: "no-store" });
-      if (!r.ok) continue;
-      const j = await r.json();
-      if (j.demo || j.mode === "github-pages-demo") {
-        statusEl.textContent = `GitHub Pages demo · ${j.library_h7 ?? 0} books catalogued`;
-        return false;
-      }
-      statusEl.textContent = `Live · brain=${j.brain ? "yes" : "restore"} · ${j.library_h7 ?? 0} books`;
-      return true;
-    } catch {
-      /* try next endpoint */
-    }
+  el.className = "chat-line " + (cls || "");
+  if (who) {
+    const tag = document.createElement("span");
+    tag.className = "chat-who";
+    tag.textContent = who;
+    el.appendChild(tag);
   }
-  statusEl.textContent = "Demo — talk & draw here; Codespaces for full brain";
-  return false;
+  const body = document.createElement("div");
+  body.className = "chat-text";
+  body.textContent = text;
+  el.appendChild(body);
+  chatLog.appendChild(el);
+  chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-function demoReply(q) {
-  const low = q.toLowerCase();
-  if (low.includes("hear") || low.includes("listen") || low.includes("speech") || low.includes("tts") || low.includes("voice")) return DEMO.hearing;
-  if (low.includes("child") || low.includes("kid") || low.includes("mcgruffey")) return DEMO.children;
-  if (low.includes("nexus") || low.includes("firewall") || low.includes("shield")) return DEMO.nexus;
-  if (low.includes("security") || low.includes("network") || low.includes("tls") || low.includes("https")) return DEMO.security;
-  if (low.includes("english") || low.includes("grammar") || low.includes("contraction")) return DEMO.english;
-  if (low.includes("deceit") || low.includes("hyperbol") || low.includes("hypocrit") || low.includes("gaslight") || low.includes("manipulat") || low.includes("doublespeak") || low.includes("conversational")) return DEMO.conversational;
-  if (low.includes("heaven") || low.includes("hell") || low.includes("afterlife") || low.includes("honesty") || low.includes("truth doctrine") || low.includes("denomination")) return DEMO.heavenhell;
-  if (low.includes("library") || low.includes("book") || low.includes("fiction") || low.includes("textbook") || low.includes("h7")) return DEMO.library;
-  if (low.includes("law") || low.includes("fcc") || low.includes("court") || low.includes("legal")) return DEMO.law;
-  if (low.includes("world") || low.includes("bible") || low.includes("botany") || low.includes("game") || low.includes("movie")) return DEMO.world;
-  if (low.includes("draw") || low.includes("pixel") || low.includes("tv") || low.includes("brain") || low.includes("gfx") || low.includes("graphic")) {
-    return "Watch the drawing space — I'm rendering that for you now.";
-  }
-  return DEMO.default;
+function setStatus(items) {
+  statusList.innerHTML = "";
+  items.forEach(([k, v]) => {
+    const li = document.createElement("li");
+    li.innerHTML = "<strong>" + k + "</strong> " + v;
+    statusList.appendChild(li);
+  });
 }
 
-async function ask(rawQuery) {
-  const query = sanitize(rawQuery);
-  if (!query) return;
-  addMsg(query, "user");
-  input.value = "";
-  window.HostessGfx?.presentScene(query);
+function renderApiList() {
+  apiList.innerHTML = "";
+  API_ROUTES.forEach((r) => {
+    const li = document.createElement("li");
+    li.textContent = r;
+    apiList.appendChild(li);
+  });
+}
+
+async function probeLoopback() {
   try {
-    const r = await fetch("/api/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query }),
-    });
-    if (!r.ok) throw new Error("ask failed");
-    const j = await r.json();
-    addMsg(j.text || "(no reply)", "hostess");
+    const r = await fetch(LOOPBACK + "/health", { cache: "no-store", mode: "cors" });
+    return r.ok;
   } catch {
-    addMsg(demoReply(query), "hostess");
+    return false;
   }
 }
 
-form.addEventListener("submit", (e) => {
+async function scanSurfaces() {
+  surfaceList.innerHTML = "";
+  loopbackUp = await probeLoopback();
+  if (loopbackUp) {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = LOOPBACK + "/";
+    a.textContent = "Full stack LIVE — " + LOOPBACK;
+    a.target = "_blank";
+    a.rel = "noopener";
+    li.appendChild(a);
+    surfaceList.appendChild(li);
+    brainBadge.textContent = "loopback + pages";
+    brainBadge.className = "badge live";
+  } else {
+    const li = document.createElement("li");
+    li.className = "offline";
+    li.textContent = "Pages package active (static API + corpus)";
+    surfaceList.appendChild(li);
+    brainBadge.textContent = "full package";
+    brainBadge.className = "badge";
+  }
+}
+
+async function refreshStatus() {
+  try {
+    const st = await fetch("/api/status").then((r) => r.json());
+    setStatus([
+      ["mode", st.mode || "pages-full-package"],
+      ["brain", st.brain ? "ready" : "export"],
+      ["library", String(st.library_h7 || 0) + " H7"],
+      ["posture", st.posture || "war-ready"],
+      ["route", loopbackUp ? "loopback" : "pages"],
+    ]);
+    if (routeLabel) routeLabel.textContent = st.mode || "pages-full-package";
+  } catch (err) {
+    chatLine("Status error: " + err.message, "warn", "sys");
+  }
+}
+
+async function handleAsk(raw) {
+  const q = Hostess7Brain.sanitize(raw);
+  if (!q) return;
+  chatLine(q, "user", "you");
+  chatIn.disabled = true;
+  chatLine("…", "thinking", "H7");
+
+  const r = await fetch("/api/ask", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: q }),
+  });
+  const res = await r.json();
+
+  const thinking = chatLog.querySelector(".chat-line.thinking");
+  if (thinking) thinking.remove();
+
+  chatLine(res.text || res.error || "No response.", "hostess", "H7");
+  if (routeLabel && res.route) routeLabel.textContent = res.route;
+  chatIn.disabled = false;
+  chatIn.focus();
+}
+
+async function handleSearch(e) {
   e.preventDefault();
-  const q = input.value.trim();
-  if (q) ask(q);
+  const domain = searchDomain.value;
+  const q = Hostess7Brain.sanitize(searchQ.value || "overview");
+  const paths = {
+    hearing: "/api/hearing?q=" + encodeURIComponent(q),
+    world: "/api/world?q=" + encodeURIComponent(q),
+    library: "/api/library/search?q=" + encodeURIComponent(q),
+    videogames: "/api/videogames?q=" + encodeURIComponent(q),
+  };
+  const path = paths[domain] || paths.world;
+  try {
+    const doc = await fetch(path).then((r) => r.json());
+    searchOut.textContent = JSON.stringify(doc, null, 2);
+  } catch (err) {
+    searchOut.textContent = String(err);
+  }
+}
+
+function bindSovereignRefresh() {
+  const pulse = () => {
+    scanSurfaces().then(refreshStatus);
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") pulse();
+  });
+  window.addEventListener("focus", pulse);
+}
+
+chatForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = chatIn.value;
+  chatIn.value = "";
+  handleAsk(v);
 });
 
-document.querySelectorAll(".chip").forEach((btn) => {
-  btn.addEventListener("click", () => ask(btn.dataset.q || ""));
+searchForm.addEventListener("submit", handleSearch);
+btnStatus?.addEventListener("click", refreshStatus);
+codespacesBtn?.addEventListener("click", () => {
+  window.open(manifest?.codespaces || CODESPACES, "_blank", "noopener,noreferrer");
+});
+
+document.querySelectorAll("[data-scene]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.dispatchEvent(new CustomEvent("hostess7-gfx-scene", { detail: btn.dataset.scene }));
+  });
 });
 
 (async () => {
-  const live = await checkStatus();
-  addMsg(
-    live
-      ? "Hi — I'm Hostess 7. Ask me anything; I draw on the left while we talk."
-      : "Hi — talk to me here. I draw answers on the canvas. Codespaces unlocks the full brain.",
-    "hostess"
-  );
+  renderApiList();
+  try {
+    const init = await Hostess7Brain.initPagesBrain();
+    manifest = init.manifest;
+    corpus = init.corpus;
+    window.__H7_BRAIN__ = { manifest: manifest, corpus: corpus, loopbackUrl: null };
+
+    const verEl = document.getElementById("ver");
+    if (verEl && manifest.version) verEl.textContent = manifest.version;
+
+    chatLine(
+      "I'm the GitHub brain — a read-only mirror of Hostess 7. Same knowledge, isolated lane. " +
+        "Your chat here never writes to cache/fieldstorage/brain or brain/state. " +
+        "Corpus: " + (corpus.chunk_count || corpus.chunks?.length || 0) + " chunks. " +
+        "Full sovereign stack: ./Hostess7.sh boot on loopback.",
+      "hostess",
+      "H7"
+    );
+  } catch (err) {
+    chatLine("Brain init: " + err.message, "warn", "sys");
+    brainBadge.textContent = "degraded";
+  }
+
+  bindSovereignRefresh();
+  await scanSurfaces();
+  await refreshStatus();
+  chatIn.focus();
 })();

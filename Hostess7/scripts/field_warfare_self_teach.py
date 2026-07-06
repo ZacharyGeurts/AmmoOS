@@ -35,6 +35,7 @@ SELF_QUIZ_PROMPTS: tuple[str, ...] = (
     "How do measures, countermeasures, and invincibility tactics layer in Byzantine defense?",
     "What three layers apply to stun weapons and RF violations under heightened alert?",
     "Thermopylae delay — what went wrong when flanking bypassed the measure?",
+    "Protect friendlies doctrine — morality clause and Owner authority on lethal decisions?",
 )
 
 

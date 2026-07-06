@@ -2,6 +2,7 @@
 """Queen CHIPS / Game Room bridge — retro systems, G16-optimized silicon, Webbrowser surface."""
 from __future__ import annotations
 
+import importlib.util
 import json
 import mimetypes
 import os
@@ -17,7 +18,10 @@ QUEEN = Path(__file__).resolve().parents[1]
 SG = QUEEN.parent.parent
 NEXUS = Path(os.environ.get("NEXUS_INSTALL_ROOT", SG / "NewLatest"))
 NEXUS_STATE = Path(os.environ.get("NEXUS_STATE_DIR", NEXUS / ".nexus-state"))
-RTX = Path(os.environ.get("AMOURANTHRTX_ROOT", SG / "NewLatest" / "AMOURANTHRTX"))
+RTX = Path(os.environ.get(
+    "AMOURANTHRTX_ROOT",
+    SG / "NewLatest" / ".pages-hub-AMOURANTHRTX",
+))
 _SG_PATHS_LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_SG_PATHS_LIB) not in sys.path:
     sys.path.insert(0, str(_SG_PATHS_LIB))
@@ -35,6 +39,7 @@ PUMP_LOG = QUEEN / ".queen-emulator-pump.log"
 RETRO_SYSTEMS = frozenset({
     "nes", "snes", "genesis", "sms", "a2600", "gameboy", "gamegear",
     "n64", "pce", "neogeo", "msx", "spectrum", "c64", "c64_ultimate", "apple2", "amiga",
+    "dos", "steam_bridge",
 })
 
 # Game Room system id → ironclad platform_stack (CHIPS catalog facet)
@@ -112,12 +117,16 @@ def _chips_tree_stats() -> dict[str, Any]:
 
 def _engine_binary() -> Path | None:
     """RTX engine for CHIPS emulation — AMOURANTHRTX or queen-browser build."""
+    hub_rtx = SG / "NewLatest" / ".pages-hub-AMOURANTHRTX"
     for p in (
         RTX / "build" / "bin" / "Linux" / "AMOURANTHRTX",
         RTX / "build-release" / "bin" / "Linux" / "AMOURANTHRTX",
         RTX / "build" / "bin" / "Linux" / "queen-browser",
         RTX / "build-release" / "bin" / "Linux" / "queen-browser",
         QUEEN / "build" / "rtx" / "bin" / "Linux" / "queen-browser",
+        QUEEN / "build" / "rtx" / "bin" / "Linux" / "AMOURANTHRTX",
+        hub_rtx / "build" / "bin" / "Linux" / "AMOURANTHRTX",
+        hub_rtx / "build-release" / "bin" / "Linux" / "AMOURANTHRTX",
         SG / "AMOURANTHRTX" / "build" / "bin" / "Linux" / "AMOURANTHRTX",
     ):
         if p.is_file():
@@ -269,6 +278,12 @@ def _catalog_rom_entry(*, nes_id: str | None = None, title: str | None = None) -
 
 def _resolve_rom_path(body: dict[str, Any], system: str) -> tuple[Path | None, str | None]:
     """Resolve playable ROM — explicit path, catalog id, or probe dirs."""
+    if (system or "").strip().lower() == "steam_bridge":
+        marker = QUEEN / "data" / "steam-bridge.marker"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        if not marker.is_file():
+            marker.write_text('{"layer":3,"launch":"steam://","third_party":true}\n', encoding="utf-8")
+        return marker, "steam_bridge"
     raw = (
         body.get("rom_path")
         or body.get("rom")
@@ -348,9 +363,10 @@ def _ppm_to_png(ppm: Path, png: Path) -> bool:
     return False
 
 
-def _capture_nes_frame(engine: Path, rom_path: Path, *, snap_ppm: Path, snap_png: Path) -> dict[str, Any]:
-    snap_ppm.unlink(missing_ok=True)
-    env = {
+def _capture_env_for_system(system: str, rom_path: Path, snap_ppm: Path) -> dict[str, str]:
+    """Per-system CHIPS headless capture — NES path plus generic retro env for all active systems."""
+    sys_id = (system or "nes").strip().lower()
+    base = {
         **os.environ,
         "AMOURANTHRTX_HEADLESS": "1",
         "AMOURANTHRTX_NO_VALIDATION": "1",
@@ -358,18 +374,47 @@ def _capture_nes_frame(engine: Path, rom_path: Path, *, snap_ppm: Path, snap_png
         "QUEEN_SKIP_RTX_BOOT": "0",
         "QUEEN_WEB_SHELL": "0",
         "QUEEN_BROWSER_BUILD": "0",
-        "AMOURANTHRTX_NES_TEST": "1",
         "AMOURANTHRTX_BENCH_W": "640",
         "AMOURANTHRTX_BENCH_H": "480",
         "AMOURANTHRTX_MAX_FRAMES": "360",
-        "AMOURANTHRTX_NES_FB_SNAP": str(snap_ppm),
-        "AMOURANTHRTX_NES_FB_FRAME": "240",
-        "AMOURANTHRTX_NES_ROM": str(rom_path),
+        "AMOURANTHRTX_RETRO_SYSTEM": sys_id.upper(),
+        "AMOURANTHRTX_RETRO_ROM": str(rom_path),
+        "AMOURANTHRTX_FB_SNAP": str(snap_ppm),
+        "AMOURANTHRTX_FB_FRAME": "240",
         "NEXUS_INSTALL_ROOT": str(NEXUS),
         "QUEEN_ROOT": str(QUEEN),
         "SG_ROOT": str(SG),
         "AMOURANTHRTX_ROOT": str(RTX),
     }
+    if sys_id == "nes":
+        base.update({
+            "AMOURANTHRTX_NES_TEST": "1",
+            "AMOURANTHRTX_NES_FB_SNAP": str(snap_ppm),
+            "AMOURANTHRTX_NES_FB_FRAME": "240",
+            "AMOURANTHRTX_NES_ROM": str(rom_path),
+        })
+    elif sys_id in RETRO_SYSTEMS:
+        base[f"AMOURANTHRTX_{sys_id.upper()}_TEST"] = "1"
+        base[f"AMOURANTHRTX_{sys_id.upper()}_ROM"] = str(rom_path)
+        base[f"AMOURANTHRTX_{sys_id.upper()}_FB_SNAP"] = str(snap_ppm)
+    elif sys_id == "dos":
+        base["AMOURANTHRTX_X86_TEST"] = "1"
+    elif sys_id == "steam_bridge":
+        base["AMOURANTHRTX_LAYER"] = "3"
+        base["AMOURANTHRTX_STEAM_BRIDGE"] = "1"
+    return {k: str(v) for k, v in base.items()}
+
+
+def _capture_system_frame(
+    system: str,
+    engine: Path,
+    rom_path: Path,
+    *,
+    snap_ppm: Path,
+    snap_png: Path,
+) -> dict[str, Any]:
+    snap_ppm.unlink(missing_ok=True)
+    env = _capture_env_for_system(system, rom_path, snap_ppm)
     try:
         proc = subprocess.run(
             [str(engine)],
@@ -391,9 +436,18 @@ def _capture_nes_frame(engine: Path, rom_path: Path, *, snap_ppm: Path, snap_png
         "returncode": proc.returncode,
         "snap": str(snap_ppm) if ok else None,
         "image": str(snap_png) if snap_png.is_file() else None,
-        "launched": "[NES_QA] launched" in log,
+        "launched": "[NES_QA] launched" in log or "[RETRO_QA] launched" in log,
+        "qa_lane": "nes" if "[NES_QA] launched" in log else ("retro" if "[RETRO_QA] launched" in log else None),
+        "system": system,
         "log_tail": log[-800:],
     }
+
+
+def _snap_paths(system: str) -> tuple[Path, Path]:
+    sid = (system or "nes").strip().lower()
+    ppm = SNAP_DIR / f"{sid}_fb.ppm"
+    png = SNAP_DIR / f"{sid}_fb.png"
+    return ppm, png
 
 
 def emulator_pump_loop(system: str, rom_path: str) -> int:
@@ -403,8 +457,7 @@ def emulator_pump_loop(system: str, rom_path: str) -> int:
     rom = Path(rom_path)
     if not engine or not rom.is_file():
         return 1
-    ppm = SNAP_DIR / "nes_fb.ppm"
-    png = SNAP_DIR / "nes_fb.png"
+    ppm, png = _snap_paths(system)
     sess = _load_session()
     sess["pump_pid"] = os.getpid()
     sess["pump_started"] = _now()
@@ -418,7 +471,7 @@ def emulator_pump_loop(system: str, rom_path: str) -> int:
             break
         if sess.get("pump_pid") not in (None, os.getpid()) and not _pid_alive(int(sess.get("pump_pid") or 0)):
             break
-        out = _capture_nes_frame(engine, rom, snap_ppm=ppm, snap_png=png)
+        out = _capture_system_frame(system, engine, rom, snap_ppm=ppm, snap_png=png)
         sess = _load_session()
         sess["last_capture"] = _now()
         sess["last_capture_ok"] = out.get("ok")
@@ -528,8 +581,11 @@ def _queen_process_running() -> bool:
 
 
 def _fb_snap_paths() -> list[Path]:
-    names = ("nes_fb.ppm", "snap.ppm", "game_room_fb.ppm", "framebuffer.ppm")
+    sess = _load_session()
+    sid = str(sess.get("system") or "nes").strip().lower()
+    names = (f"{sid}_fb.ppm", f"{sid}_fb.png", "nes_fb.ppm", "snap.ppm", "game_room_fb.ppm", "framebuffer.ppm")
     dirs = (
+        SNAP_DIR,
         RTX / "build" / "snap",
         RTX / "build",
         RTX / "cache" / "snap",
@@ -782,7 +838,7 @@ def system_emulator_info(system_id: str) -> dict[str, Any]:
         "stack_page": stack_page,
         "urls": {
             "info": f"/world/queen-system-info.html?system={system_id}",
-            "game_room": f"/world/queen-game-room.html?system={system_id}",
+            "game_room": f"/queen-game-room.html?system={system_id}",
             "catalog_stack": catalog_stack_url,
             "chip_detail": f"/world/queen-chips-detail.html?id={chip_id}",
             "chips_catalog": "/world/queen-chips-catalog.html",
@@ -821,7 +877,7 @@ def game_room_status() -> dict[str, Any]:
         "grok16": _g16_status(),
         "surface": "webbrowser",
         "web_surface": True,
-        "game_room_url": "/world/queen-game-room.html",
+        "game_room_url": "/queen-game-room.html",
         "chips_cores_url": "/world/queen-chips-cores.html",
         "combinatronic_url": "/world/queen-chips-cores.html#combinatronic",
         "combinatronic": comb,
@@ -851,6 +907,150 @@ def game_room_status() -> dict[str, Any]:
             "aspect": "16/9",
         },
     }
+
+
+def _final_eye_witness(image_path: Path, *, label: str = "emulator_snap") -> dict[str, Any]:
+    """Final_Eye OCR witness on emulator framebuffer — Hostess 7 vision lane."""
+    ocr_py = NEXUS / "lib" / "final-eye-ocr-core.py"
+    if not ocr_py.is_file():
+        return {"ok": False, "error": "final_eye_ocr_missing"}
+    try:
+        spec = importlib.util.spec_from_file_location("fe_ocr_qc", ocr_py)
+        if not spec or not spec.loader:
+            return {"ok": False, "error": "final_eye_import_failed"}
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "ocr_image_path"):
+            return mod.ocr_image_path(image_path, label=label)
+    except Exception as exc:
+        return {"ok": False, "error": "final_eye_witness_failed", "detail": str(exc)[:160]}
+    return {"ok": False, "error": "final_eye_unavailable"}
+
+
+def export_captures_zacs(
+    rows: list[dict[str, Any]],
+    *,
+    manifest_path: Path | None = None,
+) -> dict[str, Any]:
+    """Copy emulator framebuffer PNGs into SG/ZACS/png/emulator-captures/."""
+    import shutil
+
+    zacs = Path(os.environ.get("SG_ZACS_ROOT", str(SG / "ZACS")))
+    out_dir = zacs / "png" / "emulator-captures"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    exports: list[dict[str, Any]] = []
+    for row in rows:
+        sid = str(row.get("system") or "unknown")
+        cap = row.get("capture") or {}
+        img = cap.get("image")
+        if not img:
+            continue
+        src = Path(str(img))
+        if not src.is_file():
+            continue
+        dest = out_dir / f"queen-emulator-{sid}.png"
+        shutil.copy2(src, dest)
+        exports.append({
+            "system": sid,
+            "ok": True,
+            "src": str(src),
+            "dest": str(dest),
+            "bytes": dest.stat().st_size,
+            "capture_ok": bool(row.get("capture_ok")),
+            "final_eye_ok": bool(row.get("final_eye_ok")),
+        })
+    manifest = {
+        "schema": "sg-zacs-emulator-captures/v1",
+        "product": "Queen Game Room",
+        "auditor": "Final_Eye",
+        "engine": "CHIPS/AMOURANTHRTX",
+        "updated": _now(),
+        "zacs_root": str(zacs),
+        "png_dir": str(out_dir),
+        "layout": {"theater_pct": 75, "arcade_pct": 25},
+        "exports": exports,
+        "ok": len(exports) > 0,
+        "capture_ok": sum(1 for e in exports if e.get("capture_ok")),
+    }
+    path = manifest_path or (zacs / "emulator-captures-latest.json")
+    path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {"ok": bool(exports), "manifest": str(path), "exports": exports, "png_dir": str(out_dir)}
+
+
+def verify_emulators(
+    *,
+    systems: list[str] | None = None,
+    capture: bool = False,
+    final_eye: bool = False,
+    export_zacs: bool = False,
+    stop_after: bool = True,
+) -> dict[str, Any]:
+    """Verify test ROM resolution and optional CHIPS capture + Final_Eye witness."""
+    room = _load(MANIFEST)
+    active = list(systems or [])
+    if not active:
+        gr = _load(QUEEN / "data" / "queen-game-room.json")
+        active = [
+            str(s.get("id") or "")
+            for s in (gr.get("systems") or [])
+            if str(s.get("status") or "") == "active" and str(s.get("id") or "") in RETRO_SYSTEMS
+        ]
+    if not active:
+        active = ["nes", "snes", "genesis", "sms", "a2600"]
+
+    engine = _engine_binary()
+    rows: list[dict[str, Any]] = []
+    for sid in active:
+        sid = sid.strip().lower()
+        if sid not in RETRO_SYSTEMS and sid != "steam_bridge":
+            continue
+        rom = resolve_test_rom(sid)
+        row: dict[str, Any] = {
+            "system": sid,
+            "rom_ok": bool(rom.get("ok")),
+            "rom": rom,
+            "engine_ok": bool(engine),
+        }
+        if capture and engine and rom.get("ok") and rom.get("path"):
+            ppm, png = _snap_paths(sid)
+            cap = _capture_system_frame(
+                sid,
+                engine,
+                Path(str(rom["path"])),
+                snap_ppm=ppm,
+                snap_png=png,
+            )
+            row["capture"] = cap
+            row["capture_ok"] = bool(cap.get("ok"))
+            if final_eye and cap.get("image"):
+                img = Path(str(cap["image"]))
+                if img.is_file():
+                    row["final_eye"] = _final_eye_witness(img, label=f"emulator_{sid}")
+                    row["final_eye_ok"] = bool((row.get("final_eye") or {}).get("ok"))
+        rows.append(row)
+
+    rom_ok_n = sum(1 for r in rows if r.get("rom_ok"))
+    cap_ok_n = sum(1 for r in rows if r.get("capture_ok"))
+    eye_ok_n = sum(1 for r in rows if r.get("final_eye_ok"))
+    out = {
+        "ok": rom_ok_n > 0 and (not capture or cap_ok_n > 0),
+        "schema": "queen-emulator-verify/v1",
+        "updated": _now(),
+        "systems_checked": len(rows),
+        "rom_ready": rom_ok_n,
+        "capture_ok": cap_ok_n,
+        "final_eye_ok": eye_ok_n,
+        "engine": str(engine) if engine else None,
+        "engine_missing": not bool(engine),
+        "rows": rows,
+        "hint": None if engine else "Build queen-browser: Queen/scripts/g16-build.sh",
+        "game_room_layout": {"theater_pct": 75, "arcade_pct": 25},
+    }
+    if export_zacs and capture:
+        out["zacs"] = export_captures_zacs(rows)
+    if stop_after:
+        _stop_session()
+    return out
 
 
 def dispatch(body: dict[str, Any]) -> dict[str, Any]:
@@ -905,7 +1105,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             out["system"] = sel
             out["host_cpu"] = host_cpu
             out["memory"] = memory
-            out["url"] = "/world/queen-game-room.html"
+            out["url"] = "/queen-game-room.html"
             out["grok16_profile"] = status["grok16"].get("profile")
             out["combinatronic"] = status.get("combinatronic")
             return out
@@ -918,7 +1118,7 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
             "system": sel,
             "host_cpu": host_cpu,
             "memory": memory,
-            "url": "/world/queen-game-room.html",
+            "url": "/queen-game-room.html",
             "grok16_profile": status["grok16"].get("profile"),
             "message": f"{sel.get('label')} configured — pass spawn_rtx=true to start CHIPS pump",
         }
@@ -964,10 +1164,23 @@ def dispatch(body: dict[str, Any]) -> dict[str, Any]:
         panel = combinatronic_status(refresh=refresh) if action != "chip-battery" else chip_battery_panel()
         return {"ok": True, **panel}
 
+    if action in ("verify", "verify_emulators", "verify_roms", "qa"):
+        return verify_emulators(
+            systems=body.get("systems") or ([str(body.get("system") or "")] if body.get("system") else None),
+            capture=bool(body.get("capture", body.get("run_capture"))),
+            final_eye=bool(body.get("final_eye", body.get("witness"))),
+            export_zacs=bool(body.get("export_zacs", body.get("zacs"))),
+            stop_after=body.get("stop_after", True) is not False,
+        )
+
+    if action in ("resolve_rom", "test_rom", "resolve"):
+        system = str(body.get("system") or body.get("system_id") or "nes").strip().lower()
+        return {"ok": True, **resolve_test_rom(system)}
+
     return {
         "ok": False,
         "error": "unknown_action",
-        "actions": ["status", "configure", "launch", "stop", "rebuild", "combinatronic", "chip_battery"],
+        "actions": ["status", "configure", "launch", "stop", "rebuild", "combinatronic", "chip_battery", "verify", "resolve_rom"],
     }
 
 
@@ -1045,6 +1258,25 @@ def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "system":
         sid = sys.argv[2] if len(sys.argv) > 2 else "nes"
         print(json.dumps(system_emulator_info(sid), ensure_ascii=False))
+        return 0
+    if len(sys.argv) > 1 and sys.argv[1] == "resolve":
+        sid = sys.argv[2] if len(sys.argv) > 2 else "nes"
+        print(json.dumps(resolve_test_rom(sid), ensure_ascii=False))
+        return 0
+    if len(sys.argv) > 1 and sys.argv[1] == "verify":
+        capture = "--capture" in sys.argv[2:]
+        final_eye = "--final-eye" in sys.argv[2:] or "--witness" in sys.argv[2:]
+        export_zacs = "--zacs" in sys.argv[2:] or "--export-zacs" in sys.argv[2:]
+        systems = [a for a in sys.argv[2:] if not a.startswith("--")]
+        print(json.dumps(
+            verify_emulators(
+                systems=systems or None,
+                capture=capture,
+                final_eye=final_eye,
+                export_zacs=export_zacs,
+            ),
+            ensure_ascii=False,
+        ))
         return 0
     if len(sys.argv) > 1 and sys.argv[1] == "dispatch":
         try:

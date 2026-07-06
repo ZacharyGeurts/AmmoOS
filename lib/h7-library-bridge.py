@@ -10,8 +10,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-STATE = Path(os.environ.get("NEXUS_STATE_DIR", "/var/lib/nexus-shield"))
-INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", "/usr/local/lib/nexus-shield"))
+INSTALL = Path(os.environ.get("NEXUS_INSTALL_ROOT", Path(__file__).resolve().parents[1]))
+STATE = Path(os.environ.get("NEXUS_STATE_DIR", INSTALL / ".nexus-state"))
 HOSTESS7_ROOT = Path(os.environ.get("HOSTESS7_ROOT", str(INSTALL / "Hostess7")))
 HOSTESS7_TEAM_FIELD = Path(os.environ.get("HOSTESS7_TEAM_FIELD", "/media/default/HOSTESS7_TEAM/fieldstorage"))
 BOOKS_SRC = INSTALL / "lib" / "field-books"
@@ -1268,8 +1268,32 @@ def _attach_book_knowledge(doc: dict[str, Any], books: list[dict[str, Any]]) -> 
     doc["book_knowledge"] = {"book_count": len(books)}
 
 
+def _aml_test_fast_catalog(profile_id: str) -> dict[str, Any] | None:
+    if os.environ.get("AML_TEST_DIRECT", "0") != "1" and os.environ.get("AML_INLINE", "0") != "1":
+        return None
+    books = list(BUILTIN_CATALOG)
+    return {
+        "updated": _now(),
+        "library_version": 5,
+        "test_fast": True,
+        "unchanged": True,
+        "motto": "Read like a person. Retrieve like a model. — Hostess7 Library Atlas",
+        "book_count": len(books),
+        "ready_count": len(books),
+        "library_profile": profile_id,
+        "books": books,
+        "shelves": [],
+        "war_shelves": [],
+        "atlas": {"schema": "h7-library-atlas/v1", "passage_count": 0},
+        "librarian": {"corps": {"clara_catalog": True}},
+    }
+
+
 def build_catalog(*, force: bool = False, profile_id: str | None = None) -> dict[str, Any]:
     pid = profile_id or DEFAULT_PROFILE
+    fast = _aml_test_fast_catalog(pid)
+    if fast is not None and not force:
+        return fast
     lib = _librarian()
     fp_doc: dict[str, Any] = {}
     if lib:

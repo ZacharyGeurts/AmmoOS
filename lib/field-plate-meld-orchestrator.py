@@ -58,11 +58,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load(path: Path, default: Any = None) -> Any:
+def _h7s_read_json(path: Path, default: Any = None) -> Any:
+    fs_py = INSTALL / "lib" / "field-h7s-fs.py"
+    if path.suffix.lower() == ".json" and fs_py.is_file():
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_h7s_fs_io", fs_py)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "read_json"):
+                    return mod.read_json(path, default=default)
+        except Exception:
+            pass
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return default if default is not None else {}
+
+def _load(path: Path, default: Any = None) -> Any:
+    return _h7s_read_json(path, default=default)
 
 
 def _save_atomic(path: Path, doc: dict[str, Any]) -> None:
@@ -451,7 +466,7 @@ def build_connection_graph() -> dict[str, Any]:
         {"id": "truth_blocks", "module": "Grok16/lib/field_truth_blocks.py", "panel": "g16-truth-blocks-panel.json", "feeds": ["combinatorics", "condense"]},
         {"id": "combinatorics", "module": "Grok16/lib/field_combinatorics.py", "panel": "g16-field-combinatorics-panel.json", "feeds": ["bridge", "condense", "studio"]},
         {"id": "bridge", "module": "lib/field-plate-combinatorics-bridge.py", "panel": "field-plate-combinatorics-bridge.json", "feeds": ["meld", "comb", "studio"]},
-        {"id": "meld", "module": "lib/field-plate-meld.py", "panel": "field-plate-meld.json", "feeds": ["bus", "copilot", "threat_panel"]},
+        {"id": "meld", "module": "lib/field-plate-meld.py", "panel": "field-plate-meld.json", "feeds": ["bus", "hot_router", "threat_panel"]},
         {"id": "surfaces", "module": "lib/field-field-surfaces-doctrine.json", "panel": "field-*-panel.json", "feeds": ["bridge", "meld", "condense"]},
         {"id": "c2_taskbar", "module": "lib/field-c2-taskbar-plate.py", "panel": "field-c2-taskbar-panel.json", "feeds": ["bridge", "meld", "bsp"]},
         {"id": "studio", "module": "lib/field-combinatorics-studio.py", "panel": "combinatorics API", "feeds": ["operator"]},

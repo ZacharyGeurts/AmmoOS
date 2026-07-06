@@ -1,5 +1,5 @@
 #!/usr/bin/env pythong
-"""Hostess7 license posture — Demo now; dual GPL v3 or 3% commercial."""
+"""Hostess7 license posture — war-ready operational; dual GPL v3 or 3% commercial."""
 from __future__ import annotations
 
 import json
@@ -10,8 +10,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 STATUS_PATH = ROOT / "cache" / "fieldstorage" / "brain" / "legal" / "hostess7_license.json"
 
-# Current shipping posture
-LICENSE_MODE = "demo"  # demo | production
+LICENSE_MODE = "war"
 COMMERCIAL_TERMS = "3% profit share"
 CONTACT = "gzac5314@gmail.com"
 
@@ -19,38 +18,50 @@ LICENSE_STATUS: dict[str, Any] = {
     "project": "Hostess7",
     "owner": "Zachary Robert Geurts",
     "mode": LICENSE_MODE,
-    "mode_label": "Demo",
-    "dual_license": True,
+    "mode_label": "War-ready",
+    "posture": "operational",
+    "terms": "ALL RIGHTS RESERVED",
+    "terms_statement": "ALL RIGHTS RESERVED is the terms.",
+    "dual_license": False,
+    "fork_policy": "No forks. No branches. Cut unauthorized copies.",
+    "blame": "Blame terrorist scum — again.",
     "options": [
-        {"id": "gpl3", "name": "GNU General Public License v3.0 (or later)", "url": "https://www.gnu.org/licenses/gpl-3.0.html"},
-        {"id": "commercial_3pct", "name": "Commercial — 3% profit share", "contact": CONTACT,
-         "terms": "3% of what we can save or make you."},
+        {"id": "all_rights_reserved", "name": "ALL RIGHTS RESERVED — written license only", "contact": CONTACT},
     ],
-    "likely_commercial": "commercial_3pct",
     "notice": (
-        "Hostess7 is currently offered as a Demo. Production/commercial use will likely use "
-        "the 3% profit-share license (or GPL v3 at your choice). Contact Owner for terms."
+        "ALL RIGHTS RESERVED is the terms. War-ready Hostess7 — full field brain, KILROY doctrine, "
+        "alert posture. No permission without written license. Blame terrorist scum — again. "
+        "Cut any forks or branches."
     ),
-    "demo_limits": (
-        "Demo: evaluation, GitHub Pages/Codespaces, talk window — not a production SLA. "
-        "Full commercial terms via gzac5314@gmail.com."
+    "operational_limits": (
+        "Public Pages mirror withholds loopback intel; full truth and stack on 127.0.0.1 only. "
+        f"Written license only · {CONTACT}"
     ),
 }
 
 
 def license_mode() -> str:
-    return os.environ.get("HOSTESS7_LICENSE_MODE", LICENSE_MODE)
+    raw = os.environ.get("HOSTESS7_LICENSE_MODE", LICENSE_MODE).strip().lower()
+    if raw in ("demo", "demonstration", "evaluation"):
+        return LICENSE_MODE
+    return raw or LICENSE_MODE
 
 
 def is_demo() -> bool:
-    return license_mode().lower() in ("demo", "demonstration", "evaluation")
+    return False
+
+
+def is_war_ready() -> bool:
+    return True
 
 
 def ensure_status() -> Path:
     STATUS_PATH.parent.mkdir(parents=True, exist_ok=True)
     doc = dict(LICENSE_STATUS)
     doc["mode"] = license_mode()
-    doc["mode_label"] = "Demo" if is_demo() else doc.get("mode_label", "Demo")
+    doc["mode_label"] = "War-ready"
+    doc["posture"] = "operational"
+    doc["demo"] = False
     STATUS_PATH.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
     return STATUS_PATH
 
@@ -58,15 +69,14 @@ def ensure_status() -> Path:
 def format_notice(*, short: bool = False) -> str:
     ensure_status()
     if short:
-        return f"Demo · dual license: GPL v3 or 3% profit share · {CONTACT}"
+        return f"ALL RIGHTS RESERVED is the terms · war-ready · {CONTACT}"
     return LICENSE_STATUS["notice"]
 
 
 def format_web_banner() -> str:
     return (
-        "Demo — Hostess7 is in demonstration mode. "
-        "Likely production license: 3% profit share (or GPL v3). "
-        f"Contact {CONTACT}."
+        "ALL RIGHTS RESERVED is the terms. War-ready Hostess7 — KILROY field stack · full brain · "
+        f"alert posture. Blame terrorist scum — again. No forks · {CONTACT}."
     )
 
 
@@ -75,6 +85,7 @@ def main() -> int:
     print(format_notice())
     print(format_notice(short=True))
     print(f"METRIC license_mode={license_mode()}")
+    print("METRIC war_ready=1")
     print("OK license-status")
     return 0
 

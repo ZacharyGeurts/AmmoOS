@@ -1,8 +1,32 @@
+# AmmoLang boundary route — AML_BUILD=1 universal boundary
+_aml_find_root() {
+  local d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/lib/ammolang-run.sh" ]] && echo "$d" && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if [[ "${AML_BUILD:-1}" != "0" ]] && [[ -z "${AML_BOUNDARY_ACTIVE:-}" ]]; then
+  _AML_ROOT="$(_aml_find_root 2>/dev/null || true)"
+  if [[ -n "$_AML_ROOT" ]]; then
+    export AML_BOUNDARY_ACTIVE=1
+    exec bash "${_AML_ROOT}/lib/ammolang-run.sh" exec "script:lib/seal-vault.sh" "$@"
+  fi
+fi
+unset -f _aml_find_root 2>/dev/null || true
+
 #!/bin/bash
-# Seal Vault — Hostess7 ZAC-inspired lossless sealed backup (tamper restore source).
+# Seal Vault — protective shell snapshot only (lib/bin/panel/config).
+# Never snapshots Hostess 7 biology, training, brain cache, or runtime state.
 
 NEXUS_SEAL_DIR="${NEXUS_SEAL_DIR:-${NEXUS_STATE_DIR}/sealed}"
 NEXUS_SEAL_MANIFEST="${NEXUS_SEAL_MANIFEST:-${NEXUS_SEAL_DIR}/MANIFEST.sealed}"
+
+[[ -f "${NEXUS_INSTALL_ROOT}/lib/nexus-biology-mutable.sh" ]] && {
+  # shellcheck source=/dev/null
+  source "${NEXUS_INSTALL_ROOT}/lib/nexus-biology-mutable.sh"
+}
 
 nexus_seal_unseal() {
   command -v chattr >/dev/null 2>&1 || return 0
@@ -45,6 +69,7 @@ nexus_seal_verify() {
 nexus_seal_restore_path() {
   local install_path="$1"
   local rel sealed_src
+  declare -f nexus_path_is_biology_mutable >/dev/null 2>&1 && nexus_path_is_biology_mutable "$install_path" && return 0
   rel="${install_path#${NEXUS_INSTALL_ROOT}/}"
   sealed_src="${NEXUS_SEAL_DIR}/${rel}"
   [[ -f "$sealed_src" ]] || return 1

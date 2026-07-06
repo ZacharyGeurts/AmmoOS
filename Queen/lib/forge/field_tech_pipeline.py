@@ -61,7 +61,7 @@ FIELD_TECH_HOSTESS: list[str] = [
     "compiler_probe",
     "gpu_probe",
     "hostess_teach",
-
+    "textbook_zac",
     "textbook_ingest",
     "hostess_verify",
     "forge_test",

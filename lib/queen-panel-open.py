@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -79,6 +80,36 @@ def _http_json(method: str, url: str, body: dict[str, Any] | None = None, *, tim
         return {"ok": False, "error": str(exc)}
 
 
+def ensure_nexus_panel() -> dict[str, Any]:
+    """Start local NEXUS panel :9477 if down — required before AmmoOS desktop program launch."""
+    url = f"http://127.0.0.1:{PANEL_PORT}/field"
+    probe = _http_json("GET", url, timeout=2.0)
+    if probe.get("ok") is not False:
+        return {"ok": True, "already": True, "url": url, "port": PANEL_PORT}
+    script = INSTALL / "GrokLab" / "deploy" / "world-node-panel-ensure.sh"
+    if script.is_file():
+        try:
+            subprocess.run(
+                ["bash", str(script)],
+                env={
+                    **os.environ,
+                    "NEXUS_INSTALL_ROOT": str(INSTALL),
+                    "NEXUS_STATE_DIR": os.environ.get("NEXUS_STATE_DIR", str(INSTALL / ".nexus-state")),
+                    "AML_BUILD": "0",
+                },
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    for _ in range(30):
+        if _http_json("GET", url, timeout=2.0).get("ok") is not False:
+            return {"ok": True, "spawned": True, "url": url, "port": PANEL_PORT}
+    return {"ok": False, "error": "nexus_panel_unavailable", "url": url, "port": PANEL_PORT}
+
+
 def ensure_queen_world() -> dict[str, Any]:
     st = _http_json("GET", f"{_world_base()}/api/status?fast=1", timeout=2.0)
     if st.get("ok") is not False and (st.get("schema") or st.get("port") or st.get("queen_verdict")):
@@ -147,6 +178,9 @@ def _launch_integrated_browser() -> dict[str, Any]:
             "url": _browser_shell_url(),
             "hint": "queen-integrated-browser.py missing — world daemon only",
         }
+    rtx_bin = QUEEN / "build" / "rtx" / "bin" / "Linux" / "queen-browser"
+    rtx_ready = rtx_bin.is_file() and os.access(rtx_bin, os.X_OK)
+    skip_rtx = os.environ.get("QUEEN_SKIP_RTX_BOOT", "0" if rtx_ready else "1")
     try:
         proc = subprocess.run(
             [sys.executable, str(py), "open"],
@@ -155,8 +189,8 @@ def _launch_integrated_browser() -> dict[str, Any]:
                 "NEXUS_INSTALL_ROOT": str(INSTALL),
                 "QUEEN_ROOT": str(QUEEN),
                 "QUEEN_NO_OS_BROWSER": "1",
-                "QUEEN_WEB_SHELL": "1",
-                "QUEEN_SKIP_RTX_BOOT": "1",
+                "QUEEN_WEB_SHELL": "0" if skip_rtx == "0" else "1",
+                "QUEEN_SKIP_RTX_BOOT": skip_rtx,
             },
             capture_output=True,
             text=True,
@@ -179,6 +213,8 @@ def launch_queen_display(*, focus_url: str = "") -> dict[str, Any]:
     panel_url = (focus_url or kilroy_home).strip()
     world = ensure_queen_world()
     display = _launch_integrated_browser()
+    rtx_bin = QUEEN / "build" / "rtx" / "bin" / "Linux" / "queen-browser"
+    spawn_rtx = rtx_bin.is_file() and os.access(rtx_bin, os.X_OK)
     return {
         **display,
         "ok": display.get("ok") is not False and world.get("ok") is not False,
@@ -187,17 +223,58 @@ def launch_queen_display(*, focus_url: str = "") -> dict[str, Any]:
         "shell_url": browser_shell,
         "launch_url": launch_url,
         "gecko_url_arg": f"--url={launch_url}",
-        "surface": "queen-webbrowser",
-        "spawn_rtx": False,
+        "surface": "queen-rtx" if spawn_rtx else "queen-webbrowser",
+        "spawn_rtx": spawn_rtx,
+        "rtx_binary": str(rtx_bin) if spawn_rtx else None,
         "comp_shader_boot": False,
     }
 
 
+def _desktop_tab_id() -> str:
+    st = _http_json("GET", f"{_world_base()}/api/status?fast=1", timeout=3.0)
+    for tab in st.get("tabs") or []:
+        if tab.get("role") in ("start", "desktop"):
+            tid = str(tab.get("id") or "").strip()
+            if tid:
+                return tid
+    return str(st.get("start_tab") or st.get("active_tab") or "").strip()
+
+
 def open_nexus_panel(*, route: str = "", new_tab: bool = True, launch_display: bool = True) -> dict[str, Any]:
+    panel = ensure_nexus_panel()
+    if not panel.get("ok"):
+        return panel
     url = _panel_field_url(route)
     tab = open_in_queen_tab(url, new_tab=new_tab)
     out = {"ok": tab.get("ok"), "nexus_url": url, "tab": tab}
     if launch_display:
+        out["display"] = launch_queen_display()
+    return out
+
+
+def open_desktop_program(program_id: str, *, launch_display: bool = False) -> dict[str, Any]:
+    """AmmoOS desktop first — then launch program inside NexusFieldShell (Queen + AMOURANTHRTX GDI)."""
+    program_id = (program_id or "").strip()
+    if not program_id:
+        return {"ok": False, "error": "program_id_required"}
+    panel = ensure_nexus_panel()
+    if not panel.get("ok"):
+        return panel
+    world = ensure_queen_world()
+    if not world.get("ok"):
+        return world
+    desktop_url = f"http://127.0.0.1:{PANEL_PORT}/field?launch={urllib.parse.quote(program_id)}"
+    tab_id = _desktop_tab_id()
+    tab = open_in_queen_tab(desktop_url, new_tab=False, tab_id=tab_id)
+    out: dict[str, Any] = {
+        "ok": tab.get("ok") is not False,
+        "engine": "ammoos-desktop",
+        "desktop_url": desktop_url,
+        "program": program_id,
+        "tab": tab,
+        "world": world,
+    }
+    if launch_display or os.environ.get("QUEEN_LAUNCH_DISPLAY", "").strip() in ("1", "yes", "true"):
         out["display"] = launch_queen_display()
     return out
 
@@ -209,6 +286,10 @@ def main() -> int:
         out = open_nexus_panel(route=route)
         print(json.dumps(out, ensure_ascii=False))
         return 0 if out.get("ok") else 1
+    if cmd in ("program", "desktop-program", "launch-program") and len(sys.argv) > 2:
+        out = open_desktop_program(sys.argv[2])
+        print(json.dumps(out, ensure_ascii=False))
+        return 0 if out.get("ok") else 1
     if cmd == "url" and len(sys.argv) > 2:
         out = open_in_queen_tab(" ".join(sys.argv[2:]))
         print(json.dumps(out, ensure_ascii=False))
@@ -216,8 +297,12 @@ def main() -> int:
     if cmd == "ensure":
         print(json.dumps(ensure_queen_world(), ensure_ascii=False))
         return 0
+    if cmd in ("ensure-panel", "panel-ensure"):
+        out = ensure_nexus_panel()
+        print(json.dumps(out, ensure_ascii=False))
+        return 0 if out.get("ok") else 1
     print(json.dumps({
-        "error": "usage: queen-panel-open.py [nexus [route]|url URL|ensure]",
+        "error": "usage: queen-panel-open.py [nexus [route]|program ID|url URL|ensure|ensure-panel]",
     }, ensure_ascii=False))
     return 1
 

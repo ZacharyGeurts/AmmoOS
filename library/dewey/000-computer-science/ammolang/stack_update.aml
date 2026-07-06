@@ -24,8 +24,10 @@ seq ·
   run route:stack_tests timeout:7200 stall:3600
   post "Mint pre-reboot posture"
   run route:mint_pre_reboot
-  post "Push AmmoOS + stack Pages hubs + wikis"
-  run script:push-newlatest-githubs timeout:3600 stall:1800
+  post "Git publish — commit + push origin (normal git, no push lane)"
+  run script:git-publish arg:--siblings timeout:1800 stall:900
+  post "Seal built executables — MANIFEST + tamper vault"
+  run script:seal-built-executables timeout:300 stall:120
   assist freeze
   say "Stack update complete — inspect ammolang-timing-ledger.json + hang-freeze panel"
   post "STACK_UPDATE COMPLETE"
