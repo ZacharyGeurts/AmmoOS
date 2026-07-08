@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZacharyGeurts — Stack Pages</title>
+  <meta name="description" content="Simple navigation for AmmoOS stack GitHub Pages." />
+  <link rel="canonical" href="https://zacharygeurts.github.io/AmmoOS/stack.html" />
+  <style>
+    :root { --bg:#0b1220; --card:#121a2b; --fg:#e2e8f0; --muted:#94a3b8; --accent:#4ade80; --line:#1e293b; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, sans-serif; background:var(--bg); color:var(--fg); line-height:1.45; }
+    header { padding:1.25rem 1.5rem; border-bottom:1px solid var(--line); }
+    header h1 { margin:0; font-size:1.35rem; }
+    header p { margin:0.35rem 0 0; color:var(--muted); font-size:0.95rem; }
+    main { max-width:960px; margin:0 auto; padding:1.25rem 1.5rem 3rem; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:0.85rem; }
+    a.card { display:block; text-decoration:none; color:inherit; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:0.9rem 1rem; }
+    a.card:hover { border-color:var(--accent); }
+    a.card strong { display:block; color:var(--accent); margin-bottom:0.25rem; }
+    a.card span { color:var(--muted); font-size:0.88rem; }
+    .bar { display:flex; flex-wrap:wrap; gap:0.5rem 0.85rem; margin:1rem 0 1.5rem; }
+    .bar a { color:var(--accent); text-decoration:none; font-size:0.92rem; }
+    .bar a:hover { text-decoration:underline; }
+    footer { margin-top:2rem; color:var(--muted); font-size:0.85rem; }
+    code { background:#0f172a; padding:0.1rem 0.35rem; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AmmoOS Stack — GitHub Pages</h1>
+    <p>Simple navigation. Each card opens the live <code>github.io</code> surface for that repo.</p>
+  </header>
+  <main>
+    <nav class="bar" aria-label="Quick">
+      <a href="https://zacharygeurts.github.io/AmmoOS/">AmmoOS</a>
+      <a href="https://zacharygeurts.github.io/Hostess7/">Hostess7</a>
+      <a href="https://zacharygeurts.github.io/AmmoOS/AmmoCode/">AmmoCode</a>
+      <a href="https://zacharygeurts.github.io/Grok16/">Grok16</a>
+      <a href="https://zacharygeurts.github.io/KILROY/">KILROY</a>
+      <a href="https://zacharygeurts.github.io/Kill-Grok-Orphans/">Kill-Grok-Orphans</a>
+      <a href="https://github.com/ZacharyGeurts">GitHub</a>
+    </nav>
+    <div class="grid">
+      <a class="card" href="https://zacharygeurts.github.io/AmmoOS/"><strong>AmmoOS</strong><span>Field OS manual · NEXUS C2</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/Hostess7/"><strong>Hostess7</strong><span>Boot · field command · agents</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/AmmoOS/AmmoCode/"><strong>AmmoCode</strong><span>NEXUS C2 stack editor</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/Grok16/"><strong>Grok16</strong><span>Sovereign g16 compiler</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/KILROY/"><strong>KILROY</strong><span>PC core · load-os</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/KILROY_iPXE/"><strong>KILROY_iPXE</strong><span>Network boot</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/Kill-Grok-Orphans/"><strong>Kill-Grok-Orphans</strong><span>Orphan killer · Ironclad</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/Field_Primer/"><strong>Field_Primer</strong><span>Field technology textbook</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/Final_Eye/"><strong>Final_Eye</strong><span>Vision textbook</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/Final_Ear/docs/"><strong>Final_Ear</strong><span>Audio textbook</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/Final_Mouth/docs/"><strong>Final_Mouth</strong><span>Speech / mouth stack</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/AMOURANTHRTX/"><strong>AMOURANTHRTX</strong><span>Desktop display tech</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/H7updater/"><strong>H7updater</strong><span>Hostess7 updater</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/World_Redata/"><strong>World_Redata</strong><span>World data surfaces</span></a>
+      <a class="card" href="https://zacharygeurts.github.io/ZNetwork/"><strong>ZNetwork</strong><span>Legacy network layer</span></a>
+    </div>
+    <footer>
+      Operator: <a href="https://github.com/ZacharyGeurts" style="color:var(--accent)">@ZacharyGeurts</a>
+      · Hub: this page on AmmoOS Pages
+      · Loopback stacks run from the repos; Pages is the public manual/UI mirror.
+    </footer>
+  </main>
+</body>
+</html>
