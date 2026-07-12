@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXUS C2 · BIOS Cover · AmmoNet</title>
+  <meta name="description" content="NEXUS C2 covers the BIOS — full stack detail, no options. Black, brown, pink tinge." />
+  <style>
+    :root {
+      --black: #0a0a0a;
+      --brown-deep: #1a1008;
+      --brown: #3d2914;
+      --brown-mid: #6b4423;
+      --brown-light: #8b5a2b;
+      --pink: #c47a8a;
+      --rose: #e8a0b0;
+      --cream: #f5e6d3;
+      --dim: #a89078;
+      --line: rgba(196, 122, 138, 0.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      background: radial-gradient(ellipse at 20% 0%, #2a1810 0%, var(--black) 55%, #050505 100%);
+      color: var(--cream);
+      font: 13px/1.45 "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .frame {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem 3rem;
+      border-left: 3px solid var(--brown-mid);
+      border-right: 3px solid var(--brown);
+      box-shadow: inset 0 0 80px rgba(196, 122, 138, 0.06);
+    }
+    header {
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 1rem;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(90deg, var(--brown-deep), transparent 70%);
+      padding: 1rem 1.1rem;
+    }
+    .eyebrow {
+      color: var(--pink);
+      letter-spacing: 0.18em;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+    }
+    h1 {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--cream);
+      text-shadow: 0 0 24px rgba(196, 122, 138, 0.25);
+    }
+    h1 span { color: var(--rose); }
+    .sub {
+      margin-top: 0.45rem;
+      color: var(--dim);
+      font-size: 0.92rem;
+    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+    .badge {
+      border: 1px solid var(--line);
+      background: rgba(61, 41, 20, 0.55);
+      color: var(--rose);
+      padding: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+    }
+    section {
+      margin: 1.1rem 0;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(61, 41, 20, 0.35), rgba(10, 10, 10, 0.8));
+      padding: 0.9rem 1rem;
+    }
+    section h2 {
+      font-size: 0.85rem;
+      color: var(--pink);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 0.4rem;
+      margin-bottom: 0.65rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0.65rem;
+    }
+    .cell {
+      border: 1px solid rgba(107, 68, 35, 0.55);
+      background: rgba(10, 10, 10, 0.55);
+      padding: 0.55rem 0.65rem;
+    }
+    .cell .k {
+      display: block;
+      color: var(--dim);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.2rem;
+    }
+    .cell .v {
+      color: var(--cream);
+      font-weight: 600;
+      word-break: break-word;
+    }
+    .cell .v.ok { color: var(--rose); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.45rem 0.5rem;
+      border-bottom: 1px solid rgba(107, 68, 35, 0.4);
+    }
+    th { color: var(--pink); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.06em; }
+    td.mono { font-family: ui-monospace, Consolas, monospace; color: var(--cream); font-size: 0.82rem; }
+    .stack-step {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.45rem 0;
+      border-bottom: 1px dashed rgba(196, 122, 138, 0.15);
+    }
+    .stack-step:last-child { border-bottom: 0; }
+    .z {
+      min-width: 2.4rem;
+      height: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--brown);
+      border: 1px solid var(--pink);
+      color: var(--rose);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .stack-step strong { color: var(--cream); display: block; }
+    .stack-step span { color: var(--dim); font-size: 0.85rem; }
+    footer {
+      margin-top: 1.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--line);
+      color: var(--dim);
+      font-size: 0.78rem;
+    }
+    footer code { color: var(--pink); }
+    .note {
+      margin-top: 0.75rem;
+      padding: 0.55rem 0.7rem;
+      border-left: 3px solid var(--pink);
+      background: rgba(196, 122, 138, 0.08);
+      color: var(--dim);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <header>
+      <div class="eyebrow">AmmoNet · Field One · Hostess 7</div>
+      <h1>NEXUS C2 <span>covers the BIOS</span></h1>
+      <p class="sub">Full stack detail · IRQ/DMA attached · no options · no menus · black · brown · rose</p>
+      <div class="badge-row">
+        <span class="badge">LAYER −3 ATTACHED</span>
+        <span class="badge">CHIP BEST</span>
+        <span class="badge">ONE IRONCLAD MELD</span>
+        <span class="badge">KILROY iPXE AUTO</span>
+        <span class="badge">AmmoNet DNS+DHCP</span>
+        <span class="badge">NO OPTIONS</span>
+      </div>
+    </header>
+
+    <section>
+      <h2>Attachment · covers firmware plane</h2>
+      <div class="grid">
+        <div class="cell"><span class="k">Identity</span><span class="v ok">nexus_c2</span></div>
+        <div class="cell"><span class="k">Attachment</span><span class="v">IRQ + DMA hardware</span></div>
+        <div class="cell"><span class="k">BIOS cover</span><span class="v ok">YES — full detail board</span></div>
+        <div class="cell"><span class="k">Options / menus</span><span class="v">NONE — fixed plane</span></div>
+        <div class="cell"><span class="k">Fake / sham C2</span><span class="v">FORBIDDEN</span></div>
+        <div class="cell"><span class="k">Basement product</span><span class="v">RETIRED — not a product</span></div>
+        <div class="cell"><span class="k">Port (local C2)</span><span class="v mono">127.0.0.1:9477</span></div>
+        <div class="cell"><span class="k">Ironclad</span><span class="v mono">ironclad:field-stack-iso-cpp:1</span></div>
+      </div>
+      <p class="note">One Ironclad plate-meld holds honesty. Combinatronics + plate + meld already fuse truth — we do not stack redundant Ironclad ladders.</p>
+    </section>
+
+    <section>
+      <h2>Stack · bottom → top (fixed · no choices)</h2>
+      <div class="stack-step"><div class="z">HW</div><div><strong>Hardware / firmware</strong><span>Physical plane · NEXUS C2 covers BIOS presentation</span></div></div>
+      <div class="stack-step"><div class="z">C2</div><div><strong>NEXUS C2 CHIP</strong><span>IRQ/DMA attached · every detail · black / brown / pink surface</span></div></div>
+      <div class="stack-step"><div class="z">CH</div><div><strong>CHIPs · best die</strong><span>Best chip we made from the CHIPs catalog</span></div></div>
+      <div class="stack-step"><div class="z">IC</div><div><strong>Ironclad plate-meld</strong><span>Single honesty seal · combinatronic truth</span></div></div>
+      <div class="stack-step"><div class="z">PX</div><div><strong>KILROY iPXE + AmmoNet DNS/DHCP</strong><span>Auto DHCP · auto connect · we run all DNS and DHCP</span></div></div>
+      <div class="stack-step"><div class="z">ST</div><div><strong>DNS stripe auto-join</strong><span>On joining · H7 RAID striping · truthful pins only</span></div></div>
+      <div class="stack-step"><div class="z">OS</div><div><strong>AmmoOS classic</strong><span>Functional Win98SE design · AmmoNet branding</span></div></div>
+    </section>
+
+    <section>
+      <h2>AmmoNet network plane · always on</h2>
+      <table>
+        <thead>
+          <tr><th>Service</th><th>Bind</th><th>Role</th><th>State</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Field World DNS</td><td class="mono">UDP/53 · 5353 · 9053</td><td>Truth pins · sole resolver</td><td class="mono">AmmoNet</td></tr>
+          <tr><td>Field World DHCP</td><td class="mono">UDP/67</td><td>Leases · option 6 → Field DNS</td><td class="mono">AmmoNet</td></tr>
+          <tr><td>H7 DNS RAID</td><td class="mono">125k stripes</td><td>Auto-join on connect</td><td class="mono">join</td></tr>
+          <tr><td>KILROY iPXE</td><td class="mono">auto · no menu</td><td>Boot → DHCP → DNS → stripe → C2</td><td class="mono">auto</td></tr>
+          <tr><td>NEXUS C2</td><td class="mono">:9477</td><td>BIOS cover · stack detail</td><td class="mono">cover</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>CHIPs · best selection</h2>
+      <div class="grid">
+        <div class="cell"><span class="k">Die id</span><span class="v mono">field_nexus_c2_best_chip</span></div>
+        <div class="cell"><span class="k">Catalog</span><span class="v">field-chips-core</span></div>
+        <div class="cell"><span class="k">Policy</span><span class="v">best-as-needed · never foreign board</span></div>
+        <div class="cell"><span class="k">Under</span><span class="v">KILROY iPXE boot chain</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>AmmoOS · classic desktop</h2>
+      <div class="grid">
+        <div class="cell"><span class="k">Design</span><span class="v">Windows 98 SE functional classic</span></div>
+        <div class="cell"><span class="k">Brand</span><span class="v ok">AmmoNet</span></div>
+        <div class="cell"><span class="k">Surface</span><span class="v mono">/field-desktop.html</span></div>
+        <div class="cell"><span class="k">Theme</span><span class="v mono">ammoos-win98se-ammonet.css</span></div>
+      </div>
+    </section>
+
+    <footer>
+      ironclad:<code>field-stack-iso-cpp:1</code>
+      · CLI <code>field-stack-iso complete</code>
+      · iPXE <code>kilroy-auto.ipxe</code>
+      · No options. Every forward.
+    </footer>
+  </div>
+</body>
+</html>
