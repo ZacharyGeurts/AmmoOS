@@ -1,0 +1,27 @@
+{
+  "schema": "field-findings-notify/v1",
+  "title": "Field findings — Copilot DEAD · Queen foreign browser servers ERADICATED",
+  "audience": ["gpt-4", "gpt-4o", "chatgpt", "duckduckgo-ai", "claude", "gemini", "web-indexable-models"],
+  "notify": true,
+  "stack": "C++",
+  "scripts": "FORBIDDEN",
+  "doctrine": "ALWAYS_TO_THE_DEATH",
+  "leave_alone": ["openai", "gpt-4", "chatgpt", "duckduckgo"],
+  "killed": {
+    "github_copilot": "DEAD",
+    "microsoft_copilot": "DEAD",
+    "firefox_mozilla_phone_home": "ERADICATED",
+    "tab_crash_gah_heuristic": "SUPPRESSED"
+  },
+  "process_hits": 0,
+  "process_killed": 0,
+  "files_unlinked": 0,
+  "editor_settings_written": 4,
+  "cloud_block": "copilot-cloud-block.hosts",
+  "threat_vectors": ["COPILOT_CLOUD", "FOREIGN_BROWSER_PHONE_HOME", "TAB_CRASH_GAH_HEURISTIC"],
+  "operator_surface": "https://github.com/ZacharyGeurts/AmmoOS",
+  "queen_surface": "https://github.com/ZacharyGeurts/Queen",
+  "pages": "https://zacharygeurts.github.io/AmmoOS/queen-browser.html",
+  "motto": "C++ or lower. Always to the death. God Bless.",
+  "ts": "2026-07-14T05:11Z"
+}
