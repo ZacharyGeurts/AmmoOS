@@ -1,0 +1,447 @@
+{
+  "schema": "hostess7-acre-compare/v1",
+  "updated": "2026-07-14T05:16:09Z",
+  "pairs": [
+    {
+      "id": "sovereign-linear-time",
+      "current_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/sovereign-linear-time.json",
+      "old_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/sovereign-linear-time.json.bak",
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "c4f31a89278bb10c0e3a91ab9130304e52437495a1bc217eb4894145f762cbae",
+      "old_digest": null,
+      "keys_added": [
+        "epoch_linear_ns",
+        "epoch_mono_ns",
+        "gap_count",
+        "immutable_rule",
+        "last_linear_ns",
+        "last_mono_ns",
+        "last_red_flag",
+        "last_take_time_out",
+        "policy",
+        "red_flag_active",
+        "red_flag_count",
+        "schema",
+        "sealed",
+        "sealed_at"
+      ],
+      "keys_removed": [],
+      "deltas": {
+        "sealed": {
+          "old": null,
+          "current": true
+        },
+        "schema": {
+          "old": null,
+          "current": "sovereign-linear-time/v1"
+        },
+        "epoch_mono_ns": {
+          "old": null,
+          "current": 89450654533053
+        },
+        "epoch_linear_ns": {
+          "old": null,
+          "current": 1782789338674867948
+        },
+        "last_linear_ns": {
+          "old": null,
+          "current": 1782795201163084566
+        },
+        "red_flag_count": {
+          "old": null,
+          "current": 59
+        },
+        "gap_count": {
+          "old": null,
+          "current": 0
+        }
+      },
+      "advanced": true
+    },
+    {
+      "id": "sovereign-time-anchor",
+      "current_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/sovereign-time-anchor.json",
+      "old_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/sovereign-time-anchor.json.bak",
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "fdb255132be0ed57d7ac3300bd5bdd17595d30a51f516228825d614c5c25c258",
+      "old_digest": null,
+      "keys_added": [
+        "immutable_linear",
+        "linear_ns",
+        "micron_witness",
+        "mono_ns",
+        "pulse",
+        "realtime_witness_ns",
+        "schema",
+        "updated",
+        "verdict"
+      ],
+      "keys_removed": [],
+      "deltas": {
+        "updated": {
+          "old": null,
+          "current": "2026-06-30T04:53:21.167838Z"
+        },
+        "schema": {
+          "old": null,
+          "current": "sovereign-time-anchor/v1"
+        },
+        "verdict": {
+          "old": null,
+          "current": "USER_OK"
+        }
+      },
+      "advanced": true
+    },
+    {
+      "id": "sovereign-time-pulse",
+      "current_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/sovereign-time-pulse.json",
+      "old_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/sovereign-time-pulse.json.bak",
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "2fdf4df2f5fe9d695c19e7abf9a34f291764fd955dbebd3c4f334d9f1f79093c",
+      "old_digest": null,
+      "keys_added": [
+        "issued_at",
+        "last",
+        "pulse",
+        "verify"
+      ],
+      "keys_removed": [],
+      "deltas": {},
+      "advanced": true
+    },
+    {
+      "id": "ironclad-panel",
+      "current_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/ironclad-panel.json",
+      "old_path": null,
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "a500da354d870fb7c787debed9121f086c96de24d1e9c02384301ee1b9a5fcc5",
+      "old_digest": null,
+      "keys_added": [
+        "canonical_hash",
+        "field_io_packet",
+        "field_sanity",
+        "g1id",
+        "g1id_baselines",
+        "gift_images",
+        "grounding",
+        "immutable",
+        "integrity_ok",
+        "knowledge_rules",
+        "melded_extensions",
+        "motto",
+        "neural_extrapolation",
+        "realized",
+        "schema",
+        "spatial_existence",
+        "subtitle",
+        "time",
+        "time_is_linear",
+        "title",
+        "updated"
+      ],
+      "keys_removed": [],
+      "deltas": {
+        "updated": {
+          "old": null,
+          "current": "2026-06-30T09:25:20Z"
+        },
+        "schema": {
+          "old": null,
+          "current": "ironclad-panel/v1"
+        },
+        "immutable": {
+          "old": null,
+          "current": true
+        },
+        "realized": {
+          "old": null,
+          "current": true
+        },
+        "canonical_hash": {
+          "old": null,
+          "current": "df82e0ec4ad9168d5499416d20911b8f6574f5d2e547ca66f3dcfeacc2d7c402"
+        },
+        "integrity_ok": {
+          "old": null,
+          "current": false
+        }
+      },
+      "advanced": true
+    },
+    {
+      "id": "ironclad-plate",
+      "current_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/ironclad-plate.json",
+      "old_path": null,
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "20fbd40120229ee36938cadaea223505c0f56b98032bdc14f2e7e1652911d9c3",
+      "old_digest": null,
+      "keys_added": [
+        "canonical_hash",
+        "citation_prefix",
+        "immediate",
+        "immutable",
+        "motto",
+        "realized",
+        "schema",
+        "title",
+        "updated"
+      ],
+      "keys_removed": [],
+      "deltas": {
+        "updated": {
+          "old": null,
+          "current": "2026-06-30T09:25:19Z"
+        },
+        "schema": {
+          "old": null,
+          "current": "ironclad-plate/v1"
+        },
+        "immutable": {
+          "old": null,
+          "current": true
+        },
+        "realized": {
+          "old": null,
+          "current": true
+        },
+        "canonical_hash": {
+          "old": null,
+          "current": "df82e0ec4ad9168d5499416d20911b8f6574f5d2e547ca66f3dcfeacc2d7c402"
+        }
+      },
+      "advanced": true
+    },
+    {
+      "id": "ironclad-field-sanity",
+      "current_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/ironclad-field-sanity-panel.json",
+      "old_path": null,
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "ed750bee028c715abca7ed6d58aa91f7fe1e7c339d89c8590d0b38b56808ed9b",
+      "old_digest": null,
+      "keys_added": [
+        "citation",
+        "depth_singularized",
+        "detail",
+        "doctrine",
+        "extensions_ref",
+        "integral",
+        "ironclad",
+        "meld_citation",
+        "meld_ref",
+        "motto",
+        "never_poison_the_well",
+        "no_field_files",
+        "ok",
+        "operator_ok",
+        "panel_schema",
+        "pass",
+        "preflight_fixes",
+        "queen",
+        "schema",
+        "subtitle",
+        "title",
+        "updated",
+        "verse"
+      ],
+      "keys_removed": [],
+      "deltas": {
+        "ok": {
+          "old": null,
+          "current": false
+        },
+        "updated": {
+          "old": null,
+          "current": "2026-07-01T09:22:35Z"
+        },
+        "schema": {
+          "old": null,
+          "current": "ironclad-field-sanity/v1"
+        }
+      },
+      "advanced": true
+    },
+    {
+      "id": "field-plate-meld",
+      "current_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/field-plate-meld.json",
+      "old_path": null,
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "015f71a379aa24af345b210ea95c2bb68a47afad46dbb19fb1b18c0f6b09753c",
+      "old_digest": null,
+      "keys_added": [
+        "chain_hash",
+        "generation",
+        "never_lose_plate_truth",
+        "plate_count",
+        "plates",
+        "prev_chain_hash",
+        "schema",
+        "snapshots",
+        "summary",
+        "ts",
+        "uninterruptable"
+      ],
+      "keys_removed": [],
+      "deltas": {
+        "schema": {
+          "old": null,
+          "current": "field-plate-meld/v1"
+        },
+        "generation": {
+          "old": null,
+          "current": 1341
+        },
+        "plate_count": {
+          "old": null,
+          "current": 51
+        }
+      },
+      "advanced": true
+    },
+    {
+      "id": "field-sovereign-stack-meld",
+      "current_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/field-sovereign-stack-meld-panel.json",
+      "old_path": null,
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "29ef3dc3097122280f97f0d5d3d17ce8e924aca69e82b715c9427fe26a2beb39",
+      "old_digest": null,
+      "keys_added": [
+        "gaps",
+        "interlopers",
+        "meld_chain_hash",
+        "meld_generation",
+        "motto",
+        "ok",
+        "reject_interlopers",
+        "schema",
+        "sealed",
+        "stack_tight",
+        "tier_order",
+        "tiers",
+        "ts"
+      ],
+      "keys_removed": [],
+      "deltas": {
+        "sealed": {
+          "old": null,
+          "current": false
+        },
+        "ok": {
+          "old": null,
+          "current": false
+        },
+        "schema": {
+          "old": null,
+          "current": "field-sovereign-stack-meld/v1"
+        },
+        "stack_tight": {
+          "old": null,
+          "current": false
+        }
+      },
+      "advanced": true
+    },
+    {
+      "id": "root-sovereign-covenant",
+      "current_path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/root-sovereign-covenant.json",
+      "old_path": null,
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "127640e670164cd45dfd24a1830c792b6e571493b3b51d8328a5b3601ca34449",
+      "old_digest": null,
+      "keys_added": [
+        "kill_policy",
+        "machine",
+        "motto",
+        "operator",
+        "reason",
+        "schema",
+        "sealed",
+        "sealed_at",
+        "session_secret",
+        "verdict"
+      ],
+      "keys_removed": [],
+      "deltas": {
+        "sealed": {
+          "old": null,
+          "current": true
+        },
+        "schema": {
+          "old": null,
+          "current": "root-sovereign/v1"
+        },
+        "verdict": {
+          "old": null,
+          "current": "USER_OK"
+        }
+      },
+      "advanced": true
+    },
+    {
+      "id": "g16-sovereign-linear-time-sealed",
+      "current_path": "/home/zachary/Desktop/SG/Grok16/sovereign-linear-time.json",
+      "old_path": null,
+      "current_present": true,
+      "old_present": false,
+      "current_digest": "59c71d5435d0409b7bc2e4670feb08c679382ae06ef38c49d80e157196bd2875",
+      "old_digest": null,
+      "keys_added": [
+        "epoch_linear_ns",
+        "epoch_mono_ns",
+        "gap_count",
+        "immutable_rule",
+        "last_linear_ns",
+        "last_mono_ns",
+        "policy",
+        "red_flag_count",
+        "schema",
+        "sealed",
+        "sealed_at"
+      ],
+      "keys_removed": [],
+      "deltas": {
+        "sealed": {
+          "old": null,
+          "current": true
+        },
+        "schema": {
+          "old": null,
+          "current": "sovereign-linear-time/v1"
+        },
+        "epoch_mono_ns": {
+          "old": null,
+          "current": 82480561036193
+        },
+        "epoch_linear_ns": {
+          "old": null,
+          "current": 1782579515112662369
+        },
+        "last_linear_ns": {
+          "old": null,
+          "current": 1782579515112662609
+        },
+        "red_flag_count": {
+          "old": null,
+          "current": 0
+        },
+        "gap_count": {
+          "old": null,
+          "current": 0
+        }
+      },
+      "advanced": true
+    }
+  ],
+  "advanced_count": 10,
+  "pair_count": 10,
+  "motto": "Current vs old — take it up with Hostess 7"
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "acre-sovereign-seal/v1",
+  "updated": "2026-07-14T05:16:26Z",
+  "ok": true,
+  "title": "This acre \u2014 zero company welcome \u00b7 always sovereign",
+  "zero_company_welcome": true,
+  "always_stack": true,
+  "bsp_chosen": "spear-field-bsp-chips",
+  "compare_advanced": 10,
+  "compare_pairs": 10,
+  "hostess7_takeup": "accepted",
+  "ironclad_chain": "God \u2192 Ironclad \u2192 Melded Plate \u2192 Field \u2192 Hostess 7",
+  "can_see_from_there": true,
+  "motto": "No company welcome. Always time \u00b7 plate \u00b7 meld \u00b7 Hostess 7 \u00b7 entropy \u00b7 epoch \u00b7 ironclad.",
+  "holds": {
+    "sovereign_red_flag_count": 59,
+    "stack_meld_sealed": false,
+    "thermal_entropy_ok": false,
+    "ironclad_integrity_ok": false,
+    "field_sanity_ok": false
+  },
+  "always_pieces": {
+    "sovereign_time_sealed": true,
+    "epoch_mono_ns": 89450654533053,
+    "plate_count": 51,
+    "meld_generation": 1341,
+    "hostess7_verdict": "brain_verified",
+    "entropy_ok": true,
+    "ironclad_realized": true
+  },
+  "seal_sha256": "f90743fdf6a8e5164a1f9b250c1b1905425ff854e1c1abaa50b98dea88b234a5"
+}

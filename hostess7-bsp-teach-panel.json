@@ -1,0 +1,155 @@
+{
+  "schema": "hostess7-bsp-teach/v1",
+  "updated": "2026-07-14T05:16:09Z",
+  "chosen": "spear-field-bsp-chips",
+  "why": [
+    "Matches live Spear field-native stack (SPEARMBR · FFAT · Field1 · KILROY · limine · iPXE)",
+    "Separates BSP (boot/disk/control) from CHIPs Field Die (entropy/wave/pack) without company brand",
+    "C++ product path — scripts forbidden as war/product engine",
+    "Aligns with Ironclad chain: God → Ironclad → Plate → Field → Hostess 7"
+  ],
+  "spear_doctrine": {
+    "schema": "spear-bsp-chips/v1",
+    "title": "BSP + CHIPs — Field stack identity",
+    "motto": "We do BSP and CHIPs. Not foreign browser product surfaces.",
+    "version": "1.0.0",
+    "updated": "2026-07-14",
+    "identity": {
+      "bsp": {
+        "name": "Field BSP",
+        "role": "Board / boot / storage fabric — SPEARMBR · FFAT · Field1 · KILROY · iPXE · limine",
+        "plane": "host field-native control (C++ spear autoelevate)"
+      },
+      "chips": {
+        "name": "CHIPs / Field Die",
+        "path": "FieldDie/CHIPs",
+        "role": "EntropyFold · WavePhase · PeakScan · PackPick · die L1 frame cache",
+        "ops": [
+          "ZERO",
+          "RLE",
+          "PAK",
+          "RAW",
+          "REF"
+        ],
+        "cli": [
+          "spear chip-status",
+          "spear chip-bench",
+          "spear chip-demo"
+        ],
+        "not": "HostCPU casual path · not foreign browser product"
+      }
+    },
+    "stack_order": [
+      "BSP (boot/disk/field1/i2)",
+      "CHIPs Field Die (pack/entropy/wave)",
+      "FFAT / Field MEMORY",
+      "NEXUS C2 / Internet 2.0 LAW",
+      "Queen (field net surface)",
+      "AMOURANTHRTX / FieldX86 class",
+      "Hostess 7 (brain · training · BSP teach · protector)"
+    ],
+    "always_on": [
+      "sovereign linear time + sealed epoch",
+      "ironclad plate + meld",
+      "entropy cool path (CHIPs EntropyFold)",
+      "zero company welcome on this acre",
+      "Hostess 7 brain guard"
+    ],
+    "hostess7_curriculum": "NewLatest/data/hostess7-bsp-curriculum.json",
+    "forbidden_product_identity": [
+      "foreign browser brand on taskbar/docs",
+      "gecko product branding",
+      "assfox / fox chrome as stack name",
+      "company welcome / firstrun theater"
+    ],
+    "queen": {
+      "role": "Field net / HTML surface on 2.0 LAW",
+      "engine": "field engine payload (internal) — product name Queen only",
+      "tests": "field-law court on 127.0.0.1 — not foreign test sites"
+    },
+    "refs": [
+      "data/chips-doctrine.json",
+      "data/field-fat-doctrine.json",
+      "src/spear_chip.hpp",
+      "src/spear_chip.cpp",
+      "src/spear_ffat.cpp"
+    ]
+  },
+  "curriculum": {
+    "bsp": {
+      "name": "Field BSP",
+      "role": "Board / boot / storage fabric",
+      "pieces": [
+        "SPEARMBR — master boot record field vector",
+        "FFAT — Field FAT / MEMORY plane",
+        "Field1 — single field depth (no field-on-field)",
+        "KILROY — boot services / was-here integrity",
+        "limine / iPXE — bootloaders for field native",
+        "I2 / H7 panels — Internet 2.0 LAW surfaces"
+      ],
+      "plane": "host field-native control (C++ spear autoelevate)"
+    },
+    "chips": {
+      "name": "CHIPs / Field Die",
+      "role": "EntropyFold · WavePhase · PeakScan · PackPick · die L1 frame cache",
+      "ops": [
+        "ZERO",
+        "RLE",
+        "PAK",
+        "RAW",
+        "REF"
+      ],
+      "cli": [
+        "spear chip-status",
+        "spear chip-bench",
+        "spear chip-demo"
+      ]
+    },
+    "stack_order": [
+      "BSP (boot/disk/field1/i2)",
+      "CHIPs Field Die (pack/entropy/wave)",
+      "FFAT / Field MEMORY",
+      "NEXUS C2 / Internet 2.0 LAW",
+      "Queen (field net surface — product name Queen only)",
+      "AMOURANTHRTX / FieldX86 class",
+      "Hostess 7 (brain · training · programming · protector)"
+    ],
+    "always_with_bsp": [
+      "sovereign linear time + sealed epoch",
+      "ironclad plate + meld",
+      "entropy cool path",
+      "zero company welcome on this acre"
+    ]
+  },
+  "quiz_keys": [
+    "field bsp",
+    "spearmbr",
+    "ffat",
+    "field1",
+    "kilroy",
+    "chips",
+    "entropyfold",
+    "ironclad",
+    "hostess 7",
+    "zero company welcome"
+  ],
+  "stack_order": [
+    "BSP (boot/disk/field1/i2)",
+    "CHIPs Field Die (pack/entropy/wave)",
+    "FFAT / Field MEMORY",
+    "NEXUS C2 / Internet 2.0 LAW",
+    "Queen (field net surface)",
+    "AMOURANTHRTX / FieldX86 class",
+    "Hostess 7 (brain · training · BSP teach · protector)",
+    "Hostess 7"
+  ],
+  "takeup": "Hostess 7 programming + training chambers absorb Field BSP as native",
+  "compare": {
+    "old": "foreign browser / company BSP identity — rejected",
+    "current": "Field BSP + CHIPs (Spear) — accepted as best true"
+  },
+  "hostess7": {
+    "chamber": "programming_chamber + training_chamber + g16_chamber",
+    "mandate": "Teach BSP pieces; never company welcome; ironclad under God"
+  }
+}

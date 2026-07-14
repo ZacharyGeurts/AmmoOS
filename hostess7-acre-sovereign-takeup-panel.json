@@ -1,0 +1,119 @@
+{
+  "schema": "hostess7-acre-sovereign-takeup/v1",
+  "updated": "2026-07-14T05:16:09Z",
+  "ok": true,
+  "title": "This acre — zero company welcome · always sovereign",
+  "can_see_from_there": true,
+  "zero_company_welcome": {
+    "schema": "acre-zero-company-welcome-status/v1",
+    "ok": true,
+    "checks": {
+      "aboutwelcome_disabled": true,
+      "welcome_url_blank": true,
+      "homepage_blank": true,
+      "firstrun_seen": true,
+      "doctrine_present": true,
+      "live_profile_aboutwelcome_off": true,
+      "live_profile_blank_home": true
+    },
+    "forbidden": [
+      "company welcome pages",
+      "browser about:welcome / trailhead firstrun",
+      "Microsoft / GitHub / Mozilla product welcome",
+      "foreign default-browser nag",
+      "telemetry first-run surveys",
+      "sponsored start pages"
+    ],
+    "acre": {
+      "profile": "3-bedroom home airspace",
+      "radius_m": 16.8,
+      "radius_ft": 55,
+      "can_see_from_there": true
+    },
+    "can_see_from_there": true,
+    "updated": "2026-07-14T05:16:09Z"
+  },
+  "always_stack": {
+    "schema": "acre-always-stack/v1",
+    "updated": "2026-07-14T05:16:09Z",
+    "always": true,
+    "pieces": {
+      "sovereign_time": {
+        "present": true,
+        "sealed": true,
+        "schema": "sovereign-linear-time/v1",
+        "red_flag_count": 59,
+        "gap_count": 0,
+        "immutable_rule": "Nothing affects linear time; take time out = gap or red flag only"
+      },
+      "epoch": {
+        "epoch_mono_ns": 89450654533053,
+        "epoch_linear_ns": 1782789338674867948,
+        "last_linear_ns": 1782795201163084566,
+        "g16_sealed": true,
+        "anchor_verdict": "USER_OK",
+        "immutable_linear": true
+      },
+      "plate": {
+        "ironclad_plate_realized": true,
+        "ironclad_plate_immutable": true,
+        "canonical_hash": "df82e0ec4ad9168d5499416d20911b8f6574f5d2e547ca66f3dcfeacc2d7c402",
+        "meld_generation": 1341,
+        "plate_count": 51,
+        "never_lose_plate_truth": true
+      },
+      "meld": {
+        "field_plate_meld_generation": 1341,
+        "chain_hash": "51f05aa004c25c84447d169fcfe865efa06b48e2319aed95e5bf48f49a356ca0",
+        "stack_meld_sealed": false,
+        "stack_tight": false,
+        "ironclad_meld_citation": "ironclad:meld:2"
+      },
+      "hostess7": {
+        "verified": true,
+        "verdict": "brain_verified",
+        "score": 1.0,
+        "corrupted": false
+      },
+      "entropy": {
+        "entropy_ok": true,
+        "thermal_entropy_ok": false,
+        "chips_entropyfold": "CHIPs Field Die EntropyFold"
+      },
+      "ironclad": {
+        "title": "The Ironclad",
+        "realized": true,
+        "immutable": true,
+        "integrity_ok": false,
+        "field_sanity_ok": false,
+        "under_god": true,
+        "chain": "God → Ironclad → Melded Plate → Field → Hostess 7"
+      }
+    },
+    "motto": "Always sovereign time · plate · meld · Hostess 7 · entropy · epoch · ironclad"
+  },
+  "compare_current_vs_old": {
+    "advanced_count": 10,
+    "pair_count": 10,
+    "path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/hostess7-acre-compare-current-vs-old.json"
+  },
+  "bsp_teach": {
+    "chosen": "spear-field-bsp-chips",
+    "path": "/home/zachary/Desktop/SG/NewLatest/.nexus-state/hostess7-bsp-teach-panel.json",
+    "quiz_keys": [
+      "field bsp",
+      "spearmbr",
+      "ffat",
+      "field1",
+      "kilroy",
+      "chips",
+      "entropyfold",
+      "ironclad",
+      "hostess 7",
+      "zero company welcome"
+    ]
+  },
+  "hostess7_takeup": "accepted",
+  "ironclad_chain": "God → Ironclad → Melded Plate → Field → Hostess 7",
+  "motto": "No company welcome. Always time · plate · meld · Hostess 7 · entropy · epoch · ironclad."
+}

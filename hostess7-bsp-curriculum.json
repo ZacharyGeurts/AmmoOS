@@ -1,0 +1,66 @@
+{
+  "schema": "hostess7-bsp-curriculum/v1",
+  "title": "Hostess 7 — Field BSP (best true one)",
+  "source_of_truth": "Spear/data/bsp-chips-doctrine.json",
+  "motto": "We do BSP and CHIPs. Not foreign browser product surfaces.",
+  "why_best_true": [
+    "Matches live Spear field-native stack (SPEARMBR · FFAT · Field1 · KILROY · limine · iPXE)",
+    "Separates BSP (boot/disk/control) from CHIPs Field Die (entropy/wave/pack) without company brand",
+    "C++ product path — scripts forbidden as war/product engine",
+    "Aligns with Ironclad chain: God → Ironclad → Plate → Field → Hostess 7"
+  ],
+  "teach": {
+    "bsp": {
+      "name": "Field BSP",
+      "role": "Board / boot / storage fabric",
+      "pieces": [
+        "SPEARMBR — master boot record field vector",
+        "FFAT — Field FAT / MEMORY plane",
+        "Field1 — single field depth (no field-on-field)",
+        "KILROY — boot services / was-here integrity",
+        "limine / iPXE — bootloaders for field native",
+        "I2 / H7 panels — Internet 2.0 LAW surfaces"
+      ],
+      "plane": "host field-native control (C++ spear autoelevate)"
+    },
+    "chips": {
+      "name": "CHIPs / Field Die",
+      "role": "EntropyFold · WavePhase · PeakScan · PackPick · die L1 frame cache",
+      "ops": ["ZERO", "RLE", "PAK", "RAW", "REF"],
+      "cli": ["spear chip-status", "spear chip-bench", "spear chip-demo"]
+    },
+    "stack_order": [
+      "BSP (boot/disk/field1/i2)",
+      "CHIPs Field Die (pack/entropy/wave)",
+      "FFAT / Field MEMORY",
+      "NEXUS C2 / Internet 2.0 LAW",
+      "Queen (field net surface — product name Queen only)",
+      "AMOURANTHRTX / FieldX86 class",
+      "Hostess 7 (brain · training · programming · protector)"
+    ],
+    "always_with_bsp": [
+      "sovereign linear time + sealed epoch",
+      "ironclad plate + meld",
+      "entropy cool path",
+      "zero company welcome on this acre"
+    ]
+  },
+  "forbidden_identity": [
+    "foreign browser brand as stack name",
+    "gecko product branding",
+    "company welcome theater"
+  ],
+  "quiz_keys": [
+    "field bsp",
+    "spearmbr",
+    "ffat",
+    "field1",
+    "kilroy",
+    "chips",
+    "entropyfold",
+    "ironclad",
+    "hostess 7",
+    "zero company welcome"
+  ],
+  "updated": "2026-07-14"
+}
