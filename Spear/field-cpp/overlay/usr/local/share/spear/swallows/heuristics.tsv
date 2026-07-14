@@ -1,0 +1,96 @@
+# pattern	points	note
+# SPEAR heuristics plate — DATA ONLY (never executed). Scored in C++ hunt.
+# NEVER SCRIPTS as engine. Always secure C++ or lower. Plate + Angel Meld.
+# format: pattern(alts | )	points	kind_note
+xmrig|minerd|cpuminer|kdevtmpfsi|kinsing|watchbog	55	crypto_miner
+stratum+tcp|nicehash|moneroocean|nanopool|supportxmr	50	pool_connect
+bash -i|/dev/tcp/|nc -e |ncat -e|ncat -c 	45	reverse_shell
+python -c |python3 -c |python3 -c.*socket|python3 -c.*connect	40	py_shell
+/tmp/|/var/tmp/|/dev/shm/	20	ephemeral_exe
+curl |sh|curl | bash|wget |sh|wget | bash	35	pipe_dropper
+base64 -d|base64 --decode|echo | base64	35	encoded_payload
+# --- AI / C2 soft shapes ---
+LOLBin|spawn|Office	15	ai_malware_polymorph
+egress|browser	15	ai_malware_polymorph
+Inter|arrival|below	15	ai_c2_beacon
+Persistent|daemon|session	15	ai_c2_beacon
+fatigue|burst	15	ai_phish_fraud
+Honorability|lookalike|domain	15	ai_phish_fraud
+probes	15	ai_autoscan_exploit
+Exploit|class|transmit	15	ai_autoscan_exploit
+browser|bytes|hosting	15	ai_exfil_shape
+Throttled|egress|under	15	ai_exfil_shape
+GATEWAY_SHIFT|ARP_SPOOF|router	15	ai_dns_dhcp_abuse
+DNS_POISON|resolv|drift	15	ai_dns_dhcp_abuse
+C2_CORRELATION|score	15	ai_ml_c2_stack
+Multiple|vectors|single	15	ai_ml_c2_stack
+# --- Hotdog / copilot (hard) ---
+hotdog.*hallway|hallway.*hotdog|hotdog-down	90	hotdog_hallway
+zocr_copilot|zocr-copilot|zocrcopilot	90	zocr_copilot
+github.copilot|copilot-language-server|copilot-agent|copilot-chat	90	github_ms_copilot
+microsoft.copilot|copilot.exe|copilot.microsoft|api.githubcopilot	85	microsoft_copilot
+# --- Field One · TRAPS as TERRORIST THREAT ---
+pingsender|crashreporter|crashhelper	90	terrorist_trap_mozilla_phonehome
+firefox-bin|/usr/lib/firefox/|mozilla.org|firefox.com|/snap/firefox/	85	terrorist_trap_foreign_browser
+trap.sh|honeypot|honey-pot|honey_pot|credential-trap|phish-kit|phishkit	90	terrorist_trap_kit
+PATH trap|silent field trap|NoDisplay=true	80	terrorist_trap_path_impostor
+Hidden=true|firefox.desktop	75	terrorist_trap_desktop_mask
+telemetry.mozilla|incoming.telemetry|normandy.cdn|detectportal.firefox	85	terrorist_trap_server_lurk
+updater.ini|aus5.mozilla|update.libreoffice	80	terrorist_trap_auto_update
+browser.safebrowsing|shavar.services|contile.services|getpocket.com	75	terrorist_trap_phonehome_svc
+.local/bin/firefox|/usr/local/bin/firefox	80	terrorist_trap_path_shadow
+soft trap|impostor browser|foreign product surface	85	terrorist_trap_product_impostor
+location.services.mozilla|push.services.mozilla|firefox.settings.services	80	terrorist_trap_server_lurk
+clients2.google|safebrowsing.googleapis|update.googleapis.com	70	terrorist_trap_chrome_phonehome
+librewolf|waterfox|palemoon|basilisk|icecat	70	terrorist_trap_foreign_browser
+# --- NEVER SCRIPTS / interpreter war paths ---
+threat-panel-http.py|threat-panel-http	95	script_engine_forbidden
+hostess7-.*\.py|lib/hostess7-	90	script_engine_product_path
+field-plate-meld.py|plate-meld.*python|combinatorics-tree	85	terrorist_trap_plate_storm
+python3 .*/lib/|python .*/lib/nexus|python .*/lib/field-	90	script_engine_product_path
+http.server|BaseHTTPServer|ThreadingHTTPServer|SimpleHTTPServer	85	terrorist_trap_script_server
+cgi-bin|mod_php|php-fpm.*9477|node.*9477|ruby.*webrick	80	terrorist_trap_script_server
+qbasic|qb64|gwbasic|basica|\.bas 	75	terrorist_trap_legacy_basic
+perl -e |ruby -e |php -r |node -e 	80	script_engine_one_liner
+pkexec python|sudo python|sudo bash|doas python	85	script_engine_elevate
+subprocess.*kill|os.system.*kill	70	script_engine_kill_path
+# --- shell / dropper expansions ---
+busybox nc|busybox wget|busybox ftpget	70	terrorist_trap_busybox_dropper
+chmod +x /tmp/|chmod 777 /tmp/|chmod +x /dev/shm/	65	terrorist_trap_ephemeral_exe
+nohup .*\.sh|setsid .*\.sh|screen -dm.*\.sh	60	terrorist_trap_script_daemon
+powershell|pwsh |cmd.exe|/c start 	70	terrorist_trap_windows_shell
+mshta|wscript|cscript|regsvr32 /s	75	terrorist_trap_lolbin
+# --- network abuse ---
+mitmproxy|ettercap|bettercap|dsniff|arpspoof	80	terrorist_trap_mitm
+dns2tcp|iodine |ptunnel|proxytunnel	75	terrorist_trap_tunnel
+masscan|zmap |unicornscan	60	terrorist_trap_mass_scan
+# --- supply chain / soft update traps ---
+chrome-sandbox|google-chrome-stable.*--no-sandbox	55	terrorist_trap_chrome_unsafe
+firefox.*--headless.*http|chromium.*--headless.*http	55	terrorist_trap_headless_lurk
+# --- plate identity violations ---
+fake.*dns|fake.*dhcp|demo.?only.?war|masked.?firefox	80	terrorist_trap_product_impostor
+assfox|gecko product|foreign browser brand	75	terrorist_trap_product_impostor
+# --- PATH stuffed tools (smart-guy dig/curl/ping shadows) ---
+.local/bin/dig|.local/bin/curl|.local/bin/ping|.local/bin/host|.local/bin/wget	90	terrorist_trap_path_stuffed_tool
+.local/bin/nc|.local/bin/traceroute|.local/bin/telnet|.local/bin/nslookup	85	terrorist_trap_path_stuffed_tool
+field-net-common.sh|source .*field-net	85	terrorist_trap_stuffed_net_script
+exec .*/field-curl|FieldNet Internet 2.0 shadow	90	terrorist_trap_stuffed_curl_shadow
+dig TXT|dig.*null.|dns2tcp|iodine |dnscat	85	terrorist_trap_dns_exfil_dig
+echo .*resolv.conf|tee .*resolv.conf|sed .*resolv.conf	75	terrorist_trap_resolv_stuff
+stuffed dig|PATH shadow dig|impostor dig|fake dig wrapper	85	terrorist_trap_path_stuffed_tool
+mdns-scan|dns-zone-transfer|axfr 	70	terrorist_trap_dns_recon
+# --- never sudo autoelevate · never pkill theater ---
+pkexec python|sudo python|sudo bash|doas python|sudo spear|sudo install|sudo chmod	95	script_engine_sudo_autoelevate
+pkill |killall |pkill -9|killall -9|pkill -f 	90	terrorist_trap_pkill_theater
+.local/bin/pkill|.local/bin/kill|.local/bin/sudo|.local/bin/pkexec|.local/bin/killall	95	terrorist_trap_path_stuffed_tool
+autoelevate.*sudo|sudo.*autoelevate|polkit.*spear|pkexec spear	95	terrorist_trap_sudo_elevate
+# dig stuffed (again)
+.local/bin/dig|stuffed dig|PATH shadow dig|impostor dig	90	terrorist_trap_path_stuffed_tool
+dig TXT|dns2tcp|iodine |dnscat	85	terrorist_trap_dns_exfil_dig
+# --- Hostess 7 steel plate whole stack ---
+hostess7-.*\.py|lib/hostess7-|hostess7_command\.py	95	h7_steel_script_forbidden
+threat-panel-http|python3.*9477|python.*threat-panel	95	h7_steel_no_python_c2
+sudo spear|pkexec spear|pkill.*hostess|pkill.*spear	95	h7_steel_no_sudo_pkill
+loopback.only.*war|bind 127 only	80	h7_steel_no_loopback_only
+plate-meld.*python|field-plate-meld|combinatorics-tree	90	h7_steel_no_plate_storm
+soft trap|demo war|fake dns|fake dhcp	90	h7_steel_no_demo_fake

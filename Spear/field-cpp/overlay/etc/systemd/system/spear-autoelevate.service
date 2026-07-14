@@ -1,0 +1,15 @@
+[Unit]
+Description=Spear autoelevate — ensure setuid spear (NEVER sudo/pkexec/pkill)
+After=local-fs.target
+ConditionPathExists=/usr/local/bin/spear
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# setuid only — operator install; this unit only records status, never sudo
+ExecStart=/usr/local/bin/spear elevate-status
+StandardOutput=truncate:/run/spear-autoelevate.status
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target

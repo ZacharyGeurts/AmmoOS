@@ -1,0 +1,17 @@
+[Unit]
+Description=Spear Internet 2.0 War Device stack (BSP+CHIPs · Hostess7 · honest DNS/DHCP status)
+After=network-online.target spear-autoelevate.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# C++ only ensure — no scripts, no fake listeners
+ExecStart=/usr/local/bin/spear-i2-war ensure
+ExecStartPost=/usr/local/bin/spear-i2-war status
+Environment=SPEAR_SWALLOWS_ROOT=/tmp/spear-swallows-www
+# War posture
+Environment=SPEAR_ALWAYS_WAR=1
+
+[Install]
+WantedBy=multi-user.target
